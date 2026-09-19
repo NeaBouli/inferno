@@ -188,9 +188,14 @@ event EmergencyTriggered(address indexed caller, string reason); // governance o
 
 ## Integration Requirements
 
+> **Executed-state correction (20.09.2026):** The checklist below originated as
+> a planning document. Chain records show 144.75M IFR from Treasury and 50M IFR
+> from Community on 11.03.2026, followed by a 5.25M IFR Treasury top-up on
+> 15.03.2026. The final funded total was 200M IFR.
+
 ### Pre-Deploy Checklist
 
-- [x] Treasury Safe sends 144.75M IFR + Community Safe sends 50M IFR → BootstrapVaultV3 (~194.75M total)
+- [x] Treasury Safe sent 144.75M IFR + Community Safe sent 50M IFR, then Treasury sent a 5.25M IFR top-up → BootstrapVaultV3 (200M total)
 - [ ] Governance proposal: setFeeExempt(BootstrapVault, true)
 - [x] Mainnet locker configuration verified as `address(0)`; `lpLockId = 0`
 - [ ] Uniswap V2 Router address verified on Mainnet
@@ -202,9 +207,10 @@ event EmergencyTriggered(address indexed caller, string reason); // governance o
 2. Governance: setFeeExempt(BootstrapVault, true)
 3. Treasury Safe: transfer(BootstrapVaultV3, 144,750,000 IFR)
 4. Community Safe: transfer(BootstrapVaultV3, 50,000,000 IFR)
-4. Announce bootstrap start on all channels
-5. After 90 days: anyone calls finalise()
-6. Contributors call claim()
+5. Treasury Safe: top up BootstrapVaultV3 with 5,250,000 IFR
+6. Announce bootstrap start on all channels
+7. After 90 days: anyone calls finalise()
+8. Contributors call claim()
 
 ---
 

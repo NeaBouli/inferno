@@ -950,7 +950,7 @@ cast call 0x0Cab0A9440643128540222acC6eF5028736675d3 \
           </tr>
           <tr>
             <td>Ethers.js version</td>
-            <td>v5 (CommonJS)</td>
+            <td>v6</td>
           </tr>
           <tr>
             <td>Uniswap Router (Sepolia)</td>
@@ -1034,7 +1034,7 @@ cast call 0x0Cab0A9440643128540222acC6eF5028736675d3 \
       <ol>
         <li><strong>Builder Registration:</strong> Governance creates a builder entry in PartnerVault with a beneficiary address, max allocation, and vesting schedule.</li>
         <li><strong>User Locks IFR:</strong> When a user locks IFR for the builder's product via IFRLock, the lock event is recorded.</li>
-        <li><strong>Reward Accrual:</strong> <code>recordLockReward(partnerId, lockAmount)</code> credits the builder with <code>lockAmount &times; rewardBps / 10000</code> IFR from the pool.</li>
+        <li><strong>Reward Accrual:</strong> An authorized caller invokes <code>recordLockReward(bytes32 partnerId, uint256 lockAmount, address wallet)</code>. The wallet argument enforces one reward per wallet and partner; the reward is <code>lockAmount &times; effectiveRewardBps / 10000</code>.</li>
         <li><strong>Vested Claiming:</strong> Builders call <code>claim(partnerId)</code> to withdraw vested rewards. Linear vesting ensures long-term alignment.</li>
       </ol>
 
@@ -1046,20 +1046,21 @@ cast call 0x0Cab0A9440643128540222acC6eF5028736675d3 \
       <span class="code-label">Query builder rewards and claim</span>
       <pre><code>const VAULT_ADDR = "0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D"; // Ethereum Mainnet
 const VAULT_ABI = [
-  "function claimable(uint256 partnerId) view returns (uint256)",
-  "function partners(uint256 partnerId) view returns (address,uint256,uint256,uint256,uint256,uint256,uint256,uint256,bool,bool,string)",
-  "function claim(uint256 partnerId)",
+  "function claimable(bytes32 partnerId) view returns (uint256)",
+  "function partners(bytes32 partnerId) view returns (address beneficiary,uint256 maxAllocation,uint256 unlockedTotal,uint256 rewardAccrued,uint256 claimedTotal,uint32 vestingStart,uint32 vestingDuration,uint32 cliff,bool active,bool milestonesFinal,uint8 tier)",
+  "function claim(bytes32 partnerId)",
 ];
 
 const vault = new ethers.Contract(VAULT_ADDR, VAULT_ABI, provider);
+const partnerId = ethers.id("example-partner");
 
-// Check claimable amount for builder #0
-const amount = await vault.claimable(0);
+// Check claimable amount for the bytes32 partner key
+const amount = await vault.claimable(partnerId);
 console.log("Claimable:", ethers.formatUnits(amount, 9), "IFR");
 
 // Claim vested rewards (requires signer)
 const vaultSigner = vault.connect(signer);
-await vaultSigner.claim(0);</code></pre>
+await vaultSigner.claim(partnerId);</code></pre>
 
       <!-- ============================================================
            Section 12: Full Integration Example
@@ -1180,7 +1181,7 @@ async function checkLicense(wallet) {
       <!-- ======================================== -->
       <!-- 15. Creator Gateway Integration -->
       <!-- ======================================== -->
-      <h2>15. Creator Gateway Integration</h2>
+      <h2 id="creator-gateway">15. Creator Gateway Integration</h2>
       <p>
         The <strong>Creator Gateway</strong> enables YouTube creators and content platforms to gate premium content
         behind an IFR Lock &mdash; as an alternative (or addition) to traditional memberships.
@@ -1211,7 +1212,7 @@ async function checkLicense(wallet) {
       <!-- ======================================== -->
       <!-- 16. Points Backend Integration -->
       <!-- ======================================== -->
-      <h2>16. Points Backend Integration</h2>
+      <h2 id="e2e-flow">16. Points Backend Integration</h2>
       <p>
         The IFR Points Backend provides off-chain points tracking and EIP-712 discount voucher issuance.
         Points reduce the protocol fee on swaps via FeeRouterV1.
@@ -1221,7 +1222,7 @@ async function checkLicense(wallet) {
       <table>
         <thead><tr><th>Endpoint</th><th>Method</th><th>Description</th></tr></thead>
         <tbody>
-          <tr><td><code>/auth/siwe/nonce</code></td><td>GET</td><td>Get SIWE nonce</td></tr>
+          <tr><td><code>/auth/siwe/nonce</code></td><td>POST</td><td>Create a single-use SIWE nonce</td></tr>
           <tr><td><code>/auth/siwe/verify</code></td><td>POST</td><td>Verify SIWE signature &rarr; JWT</td></tr>
           <tr><td><code>/points/balance</code></td><td>GET</td><td>Get wallet points balance</td></tr>
           <tr><td><code>/points/event</code></td><td>POST</td><td>Record points event</td></tr>
@@ -1231,7 +1232,7 @@ async function checkLicense(wallet) {
 
       <h3>SIWE Authentication Flow</h3>
       <ol>
-        <li>Frontend calls <code>GET /auth/siwe/nonce</code></li>
+        <li>Frontend calls <code>POST /auth/siwe/nonce</code></li>
         <li>User signs SIWE message with wallet</li>
         <li>Frontend sends signature to <code>POST /auth/siwe/verify</code></li>
         <li>Backend returns JWT (24h expiry)</li>
@@ -1264,25 +1265,27 @@ async function checkLicense(wallet) {
       <h3>Key Functions</h3>
 <pre><code>// Execute swap with protocol fee (+ optional discount voucher)
 function swapWithFee(
-    address adapter,      // whitelisted swap adapter
-    bytes calldata data,  // adapter-specific swap calldata
-    address tokenIn,      // input token
-    uint256 amountIn,     // input amount
-    DiscountVoucher calldata voucher  // EIP-712 voucher (or empty)
+    address adapter,                    // whitelisted swap adapter
+    bytes calldata swapData,            // adapter-specific calldata
+    DiscountVoucher calldata voucher,  // ignored when useVoucher=false
+    bytes calldata voucherSig,          // ignored when useVoucher=false
+    bool useVoucher
 ) external payable;
 
 // Voucher Struct (EIP-712)
 struct DiscountVoucher {
-    address user;         // beneficiary
-    uint256 discountBps;  // discount in basis points
-    uint256 nonce;        // replay protection
-    uint256 deadline;     // expiry timestamp
-    bytes signature;      // EIP-712 signature from voucherSigner
+    address user;
+    uint16 discountBps;
+    uint32 maxUses;
+    uint64 expiry;
+    uint256 nonce;
 }
 
 // Off-chain voucher validation
-function isVoucherValid(DiscountVoucher calldata voucher)
-    external view returns (bool);</code></pre>
+function isVoucherValid(
+    DiscountVoucher calldata voucher,
+    bytes calldata voucherSig
+) external view returns (bool valid, string memory reason);</code></pre>
 
       <h3>Sepolia Deployment</h3>
       <table>

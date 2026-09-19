@@ -852,7 +852,7 @@
       <p><strong style="color:var(--text);">Ideal for:</strong> Strongest form of commitment</p>
 
       <div class="callout" style="background:rgba(34,197,94,0.06);border-left-color:var(--green);">
-        <p><strong>Once unlocked, stays unlocked</strong> &mdash; When a tranche opens, it stays open. Even if the price drops afterwards.</p>
+        <p><strong>Conditions are checked at execution.</strong> <code>unlock()</code> re-evaluates the configured condition. <code>markConditionMet()</code> records when the condition was observed and starts the 30-day public-unlock timer, but it does not bypass the condition check if a price condition later falls below its target.</p>
       </div>
 
       <!-- ======================================== -->
@@ -884,7 +884,7 @@
       </table>
 
       <div class="callout-green">
-        <p><strong>Example:</strong> At P0 = $0.0000002: Tranche 3 opens at $0.000002 (10x price). Value: 10M &times; $0.000002 = $20</p>
+        <p><strong>Canonical basis:</strong> P0 is 300,000,000 wei per IFR. A 10&times; price condition therefore evaluates against 3,000,000,000 wei per IFR; any fiat conversion is external and time-dependent.</p>
       </div>
 
       <!-- ======================================== -->
@@ -895,7 +895,7 @@
       <div class="stake-grid">
         <div class="stake-card">
           <div class="stake-card-title">Contributor</div>
-          <p>100M IFR in 10 tranches. Earns ETH yield via LendingVault during the lock phase.</p>
+          <p>100M IFR in 10 tranches. A separate LendingVault offer can earn IFR interest only after borrowing is activated and used; mainnet borrowing is currently disabled and no loan interest has accrued.</p>
         </div>
         <div class="stake-card">
           <div class="stake-card-title">Team / Core Dev</div>
@@ -1074,7 +1074,7 @@
             <option value="100000">P0 &times; 1,000</option>
             <option value="500000">P0 &times; 5,000</option>
           </select>
-          <div class="cv-hint">P0 = 0.030 ETH / 200,000,000 IFR &mdash; set immutably via Proposal #16 (ETA 09.06.2026). CommitmentVault: <code style="font-size:10px;">0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3</code></div>
+          <div class="cv-hint">P0 = 0.030 ETH / 100,000,000 IFR = 300,000,000 wei per IFR &mdash; set immutably by Proposal #16 on 09.06.2026. CommitmentVault: <code style="font-size:10px;">0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3</code></div>
         </div>
 
         <div class="cv-form-group" style="background:rgba(255,255,255,0.035);border:1px solid var(--border);border-radius:8px;padding:12px 14px;">

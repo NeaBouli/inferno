@@ -60,6 +60,6 @@ For Uniswap V2 swaps:
 ---
 ## Fee Collector
 
-Since 18.04.2026 (Governance Proposal #14), the `feeCollector` on FeeRouterV1 is set to the **BuybackController** (`0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c`). Protocol pool fees flow directly into the 50/50 buyback+burn / LP-deepening flywheel.
+Since 18.04.2026 (Governance Proposal #14), the `feeCollector` on FeeRouterV1 is set to the **BuybackController** (`0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c`). This setting applies to native ETH fees charged by `FeeRouterV1.swapWithFee()`. It does not forward IFR transfer-pool fees already held by FeeRouterV1. Controller execution remains subject to its ETH trigger, cooldown, pause state and available IFR balance; there is no PartnerVault refill path.
 
 *Version 1.2 | 26 August 2026 | Mainnet Live*

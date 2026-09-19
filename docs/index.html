@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- content baseline 2026-08-22 -->
+<!-- content baseline 2026-09-19 -->
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -2055,7 +2055,7 @@ render();
             <button class="copy-btn" data-addr="0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b" style="font-size:10px;background:none;border:1px solid #333;color:#8a8a96;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
           </div>
           <div style="font-size:13px;font-weight:600;color:#9B59B6;" data-live-key="card-treasury">loading&hellip;</div>
-          <div style="font-size:10px;color:#666;margin-top:2px;">Protocol treasury. 144.75M IFR transferred to Bootstrap. Balance: 0 IFR. Refills via protocol fees (Phase 3).</div>
+          <div style="font-size:10px;color:#666;margin-top:2px;">Protocol treasury. Funded Bootstrap with 144.75M IFR plus a 5.25M IFR top-up. Balance: 0 IFR. No deployed mechanism automatically refills this Safe.</div>
         </div>
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
@@ -2263,7 +2263,7 @@ render();
             <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(59,130,246,0.15);color:#3b82f6;">Phase 3</span>
           </div>
           <a href="https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0x0719d9eb...C4F73d3</a>
-          <div style="font-size:10px;color:#666;margin-top:4px;">Irrevocable IFR lock. 4 condition types (time/price/OR/AND). Auto-unlock after 30 days.</div>
+          <div style="font-size:10px;color:#666;margin-top:4px;">Conditional IFR tranches: time, price, OR or AND. The owner can unlock while the condition is met; after a successful <code>markConditionMet</code>, anyone may complete the unlock after 30 days and tokens always return to the owner.</div>
         </div>
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
@@ -2306,8 +2306,8 @@ render();
         <g class="token-flow-snapshot">
           <rect x="38" y="34" width="224" height="74" rx="12" fill="#0d1117" stroke="#b0481e" stroke-width="1.4"/>
           <text x="56" y="56" fill="#b0481e" font-size="10" font-weight="bold" letter-spacing="1.2">LIVE MAINNET</text>
-          <text x="56" y="76" fill="#475569" font-size="9" data-live-key="flow-snapshot-supply">997.7M supply &middot; 2.3M burned</text>
-          <text x="56" y="94" fill="#475569" font-size="9" data-live-key="flow-snapshot-lp">LP 18.0M IFR + 0.167 ETH</text>
+          <text x="56" y="76" fill="#475569" font-size="9" data-live-key="flow-snapshot-supply">997.571M supply &middot; 2.429M burned</text>
+          <text x="56" y="94" fill="#475569" font-size="9" data-live-key="flow-snapshot-lp">LP 11.899M IFR + 0.254 ETH</text>
         </g>
 
         <!-- Connection Lines -->
@@ -2327,7 +2327,7 @@ render();
             <animate attributeName="r" values="35;39;35" dur="3s" repeatCount="indefinite"/>
           </circle>
           <text x="400" y="256" text-anchor="middle" fill="#f97316" font-size="14" font-weight="bold">IFR</text>
-          <text x="400" y="272" text-anchor="middle" fill="#9ca3af" font-size="9" data-live-key="supply-flow">997.7M supply</text>
+          <text x="400" y="272" text-anchor="middle" fill="#9ca3af" font-size="9" data-live-key="supply-flow">997.571M supply</text>
         </g>
 
         <!-- LP Reserve Safe -->
@@ -2343,7 +2343,7 @@ render();
         <!-- Uniswap -->
         <rect x="510" y="318" width="140" height="42" rx="10" fill="#0d1117" stroke="#60a5fa" stroke-width="1.5"/>
         <text x="580" y="336" text-anchor="middle" fill="#60a5fa" font-size="11" font-weight="bold">Uniswap V2</text>
-        <text x="580" y="352" text-anchor="middle" fill="#9ca3af" font-size="9" data-live-key="lp-flow">18.0M IFR + 0.167 ETH</text>
+        <text x="580" y="352" text-anchor="middle" fill="#9ca3af" font-size="9" data-live-key="lp-flow">11.899M IFR + 0.254 ETH</text>
 
         <!-- LiquidityReserve -->
         <rect x="150" y="158" width="140" height="42" rx="10" fill="#0d1117" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="5,3"/>
@@ -2368,7 +2368,7 @@ render();
         <!-- FeeRouter -->
         <rect x="340" y="338" width="120" height="42" rx="10" fill="#0d1117" stroke="#fbbf24" stroke-width="1.5"/>
         <text x="400" y="356" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="bold">FeeRouter</text>
-        <text x="400" y="372" text-anchor="middle" fill="#9ca3af" font-size="9" data-live-key="feerouter-flow">314.2K IFR fees held</text>
+        <text x="400" y="372" text-anchor="middle" fill="#9ca3af" font-size="9" data-live-key="feerouter-flow">371.544K IFR fees held</text>
 
         <!-- BuybackVault (Phase 3) -->
         <rect x="510" y="420" width="130" height="42" rx="10" fill="#0d1117" stroke="#fbbf24" stroke-width="1" stroke-dasharray="5,3"/>
@@ -2709,7 +2709,7 @@ if (isLocked) {
         <div class="trust-check">&check;</div>
         <div>
           <h4>Timelock Governance</h4>
-          <p>No instant admin changes &mdash; every action requires a 48-hour public delay. Guardian emergency cancel.</p>
+          <p>Governance proposals use a 48-hour public delay. Documented exception: TreasurySafe can rotate the guardian through untimelocked <code>setGuardian</code>; the guardian can emergency-cancel proposals.</p>
         </div>
       </div>
       <div class="trust-item reveal">
@@ -2754,7 +2754,7 @@ if (isLocked) {
         <div style="color:#666;font-size:13px;margin-top:4px;">12-month cliff, then 36-month linear release</div>
       </div>
       <div style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:28px 24px;text-align:center;">
-        <div style="font-size:32px;font-weight:700;color:#ff6a00;"><span data-live-key="burned-stat">2.33M</span></div>
+        <div style="font-size:32px;font-weight:700;color:#ff6a00;"><span data-live-key="burned-stat">2.429M</span></div>
         <div style="color:#aaa;margin-top:8px;">IFR Burned</div>
         <div style="color:#666;font-size:13px;margin-top:4px;">Deflation active since deploy</div>
       </div>
@@ -2826,7 +2826,7 @@ if (isLocked) {
     {q:"How does the Bootstrap work?",
      a:"The 90-day community event ended on 05.06.2026. finalise() paired 0.030 ETH with 100M IFR to create the Uniswap V2 LP and reserved 100M IFR for contributor claims. Fully permissionless, no team action needed."},
     {q:"Who controls the protocol?",
-     a:"All changes require a 48-hour timelock via the Governance contract \u2014 nothing can change instantly. Gnosis Safe multisig active (3-of-5 with 5 signers, 3-of-5 active) for distributed control. Bootstrap ENDED 05.06.2026 \u2014 IFR now live on Uniswap V2."},
+     a:"Governance proposals use a 48-hour timelock. The documented exception is guardian rotation through untimelocked setGuardian by TreasurySafe 3-of-5; the guardian can cancel pending proposals. Bootstrap ENDED 05.06.2026 \u2014 IFR now live on Uniswap V2."},
     {q:"What is the token distribution?",
      a:"1B IFR fixed. 6 buckets: 40% DEX Liquidity \u00b7 20% LiqRes (locked) \u00b7 15% Team Vesting (12m cliff) \u00b7 15% Treasury \u00b7 6% Community \u00b7 4% BuilderVault. <a href='wiki/tokenomics.html'>Tokenomics \u2192</a>"},
     {q:"Is the code open source and audited?",
@@ -2971,7 +2971,7 @@ if (isLocked) {
         <div style="font-size:0.75rem;font-weight:800;color:#b45309;letter-spacing:0.1em;margin-bottom:8px;">CHAMBER 1</div>
         <h3 style="color:#211c17;font-size:1.4rem;margin:0 0 12px;">The Council</h3>
         <p style="color:#24563a;font-weight:700;">Planned voting system &mdash; not live</p>
-        <p style="color:#2f271f;font-size:0.9rem;line-height:1.7;margin:0 0 20px;">Strategic governance for the core team. Merkle-tree anchored votes. On-chain verified via <code style="background:#fffbeb;color:#92400e;border-radius:4px;padding:2px 5px;">RatVoting.sol</code>.</p>
+        <p style="color:#2f271f;font-size:0.9rem;line-height:1.7;margin:0 0 20px;">Strategic governance for the Council is planned. Ballot privacy, eligibility proofs and result publication still require implementation and review; no Council voting contract is deployed.</p>
         <div style="display:flex;flex-direction:column;gap:8px;">
           <div style="display:flex;align-items:center;gap:10px;color:#2f271f;font-size:0.85rem;"><span style="color:#b45309;">&rarr;</span> Gnosis Safe Signers only</div>
           <div style="display:flex;align-items:center;gap:10px;color:#2f271f;font-size:0.85rem;"><span style="color:#b45309;">&rarr;</span> Protocol parameters + upgrades</div>
@@ -2983,7 +2983,7 @@ if (isLocked) {
         <div style="font-size:0.75rem;font-weight:800;color:#b45309;letter-spacing:0.1em;margin-bottom:8px;">CHAMBER 2</div>
         <h3 style="color:#211c17;font-size:1.4rem;margin:0 0 12px;">The Forum</h3>
         <p style="color:#24563a;font-weight:700;">Planned voting system &mdash; not live</p>
-        <p style="color:#2f271f;font-size:0.9rem;line-height:1.7;margin:0 0 20px;">Community innovation layer. Token-weighted proposals. Spam protection via <code style="background:#fff7ed;color:#9a3412;border-radius:4px;padding:2px 5px;">IFRSpamProtection.sol</code>.</p>
+        <p style="color:#2f271f;font-size:0.9rem;line-height:1.7;margin:0 0 20px;">Proposed community-innovation layer. Voting weights, proposal deposits and the future spam-protection contract remain subject to ratification, audit and deployment.</p>
         <div style="display:flex;flex-direction:column;gap:8px;">
           <div style="display:flex;align-items:center;gap:10px;color:#2f271f;font-size:0.85rem;"><span style="color:#b45309;">&rarr;</span> Proposed: eligible locked-IFR voting weight, subject to ratification</div>
           <div style="display:flex;align-items:center;gap:10px;color:#2f271f;font-size:0.85rem;"><span style="color:#b45309;">&rarr;</span> 10 IFR spam protection per proposal</div>

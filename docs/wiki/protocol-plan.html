@@ -788,8 +788,8 @@
           <code style="font-size:11px;color:var(--muted);word-break:break-all;">0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b</code>
           <p style="font-size:13px;color:var(--muted);margin:10px 0;">
             Protocol treasury controlled by Gnosis Safe multisig (3-of-5 active).
-            Originally held 150M IFR &mdash; 144.75M transferred to Bootstrap Vault (Plan B).
-            Current balance: 0 IFR. Refills via protocol fees (Phase 3).
+            Originally held 150M IFR &mdash; 144.75M initial funding plus a 5.25M top-up transferred to BootstrapVaultV3 (Plan B).
+            Current balance: 0 IFR. No deployed mechanism automatically refills this Safe.
           </p>
           <div style="display:flex;gap:12px;font-size:12px;">
             <span style="color:#f97316;">0 IFR</span>
@@ -912,9 +912,11 @@
           </div>
           <code style="font-size:11px;color:var(--muted);">0x670D...F812 | 0xaA14...6fCF</code>
           <p style="font-size:13px;color:var(--muted);margin:10px 0;">
-            Both accumulate from the 1% protocol pool fee. Zero IFR at genesis &mdash; fill over time.
-            BuybackVault feeds the BuybackController (Phase 3) for PartnerVault auto-refill.
-            BurnReserve permanently destroys IFR via <code>burn()</code>.
+            BuybackVault is a separate ETH-to-IFR buyback contract whose configured execution
+            splits bought IFR between BurnReserve and Treasury. BuybackController separately
+            accepts ETH and implements the 50/50 burn/LP path described below. Neither contract
+            refills PartnerVault. BurnReserve destroys received IFR only when <code>burn()</code>
+            is called.
           </p>
           <div style="display:flex;gap:12px;font-size:12px;">
             <span style="color:var(--muted);">0 IFR (fills after LP)</span>
@@ -930,8 +932,9 @@
           </div>
           <code style="font-size:11px;color:var(--muted);word-break:break-all;">0xc43d48E7FDA576C5022d0670B652A622E8caD041</code>
           <p style="font-size:13px;color:var(--muted);margin:10px 0;">
-            All protocol parameter changes go through this contract with a mandatory 48-hour Timelock.
-            No change can take effect instantly. Owner of InfernoToken. 7 proposals executed so far.
+            Protocol proposals go through this contract with a mandatory 48-hour Timelock.
+            Documented exception: owner-only guardian rotation through <code>setGuardian</code>
+            is not timelocked. Governance owns InfernoToken.
           </p>
           <div style="display:flex;gap:12px;font-size:12px;">
             <span style="color:var(--muted);">48h Timelock</span>
@@ -971,14 +974,14 @@
           <div style="flex:1;text-align:center;">
             <div style="background:#f97316;width:16px;height:16px;border-radius:50%;margin:0 auto;border:2px solid #f97316;animation:pulse 2s infinite;"></div>
             <div style="height:3px;background:linear-gradient(90deg,#22c55e,#f97316);margin-top:-9px;margin-bottom:6px;"></div>
-            <div style="font-size:11px;color:#f97316;font-weight:600;">NOW</div>
-            <div style="font-size:10px;color:var(--muted);">LIVE &mdash; accepting ETH</div>
+            <div style="font-size:11px;color:#22c55e;font-weight:600;">05.06.2026</div>
+            <div style="font-size:10px;color:var(--muted);">FINALIZED</div>
           </div>
           <div style="flex:1;text-align:center;">
             <div style="background:var(--border);width:16px;height:16px;border-radius:50%;margin:0 auto;"></div>
             <div style="height:3px;background:var(--border);margin-top:-9px;margin-bottom:6px;"></div>
-            <div style="font-size:11px;color:var(--muted);font-weight:600;">05.06.2026</div>
-            <div style="font-size:10px;color:var(--muted);">Bootstrap Closes</div>
+            <div style="font-size:11px;color:#22c55e;font-weight:600;">08.06.2026</div>
+            <div style="font-size:10px;color:var(--muted);">Trading live</div>
           </div>
           <div style="flex:1;text-align:center;">
             <div style="background:var(--border);width:16px;height:16px;border-radius:50%;margin:0 auto;"></div>
@@ -1043,9 +1046,9 @@
       <!-- LP Phases Visual -->
       <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin:20px 0;">
         <div style="display:flex;gap:4px;height:40px;border-radius:8px;overflow:hidden;margin-bottom:16px;">
-          <div style="flex:150;background:#22c55e;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#000;">Phase 1 &mdash; 150M</div>
-          <div style="flex:100;background:#3b82f6;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;">Phase 2 &mdash; 100M</div>
-          <div style="flex:150;background:#8b5cf6;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;">Phase 3 &mdash; 150M</div>
+          <div style="flex:100;background:#22c55e;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#000;">Executed Bootstrap &mdash; 100M</div>
+          <div style="flex:50;background:#3b82f6;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;">LiqRes cap &mdash; 50M</div>
+          <div style="flex:400.6;background:#8b5cf6;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;">LP Reserve Safe &mdash; 400.6M</div>
         </div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
           <div>
@@ -1057,8 +1060,8 @@
             <div style="font-size:12px;color:var(--muted);">Not scheduled. The initial LiqRes lock ended 01.09.2026, but the current cap is 50M IFR per 90 days. A 100M phase would require at least two periods or a separately proposed cap change, plus Governance proposal, 48h timelock and a distinct LP action.</div>
           </div>
           <div>
-            <div style="font-size:11px;color:#8b5cf6;font-weight:600;">Phase 3 &mdash; Flexible</div>
-            <div style="font-size:12px;color:var(--muted);">Remaining 150M via Governance. 3-of-5 Multisig + 48h Timelock. Timing based on market conditions.</div>
+            <div style="font-size:11px;color:#8b5cf6;font-weight:600;">Separate LP Reserve Safe</div>
+            <div style="font-size:12px;color:var(--muted);">400.6M IFR is held separately by the 3-of-5 LP Reserve Safe. No fixed future tranche schedule is approved; any use requires an explicit Safe/governance decision and proportional counter-asset planning.</div>
           </div>
         </div>
         <div style="margin-top:16px;padding:10px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;font-size:12px;color:#ef4444;">
@@ -1071,58 +1074,61 @@
            ============================================================ -->
       <h2 id="buyback">5. The Buyback Mechanism</h2>
       <p>
-        The &ldquo;buyback&rdquo; in IFR is an <strong>ecosystem buyback</strong>:
-        the protocol automatically reinvests accumulated fee IFR back into the builder
-        ecosystem via the PartnerVault. It is not a market buyback with ETH.
+        The deployed BuybackController implements an <strong>ETH-to-IFR market buyback</strong>
+        plus an attempted liquidity addition. It has no PartnerVault refill, operating-pool,
+        SOS-reserve or 12-day voting path. The controller is deployed and governance-owned,
+        but the execution path is dormant while its native-ETH threshold is not met.
       </p>
 
       <!-- Fee Flow Visual -->
       <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin:20px 0;">
         <div style="font-size:12px;color:var(--muted);margin-bottom:16px;text-transform:uppercase;letter-spacing:1px;">Fee Flow</div>
         <div style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;">
-          <div style="background:#f97316;color:#000;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;">IFR Transfer (1% fee)</div>
+          <div style="background:#f97316;color:#000;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;">FeeRouterV1 native-ETH fee or direct ETH</div>
           <span style="color:var(--muted);font-size:18px;">&rarr;</span>
-          <div style="background:#3b82f6;color:#fff;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;">FeeRouterV1</div>
+          <div style="background:#3b82f6;color:#fff;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;">BuybackController</div>
           <span style="color:var(--muted);font-size:18px;">&rarr;</span>
           <div style="display:flex;flex-direction:column;gap:6px;">
-            <div style="background:rgba(34,197,94,0.15);border:1px solid #22c55e;color:#22c55e;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:600;">BuybackVault</div>
-            <div style="background:rgba(239,68,68,0.15);border:1px solid #ef4444;color:#ef4444;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:600;">BurnReserve</div>
+            <div style="background:rgba(239,68,68,0.15);border:1px solid #ef4444;color:#ef4444;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:600;">50% ETH buys IFR &rarr; BurnReserve</div>
+            <div style="background:rgba(34,197,94,0.15);border:1px solid #22c55e;color:#22c55e;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:600;">50% ETH + held IFR &rarr; LP receiver</div>
           </div>
         </div>
       </div>
 
       <h3>BuybackController (Phase 3 &mdash; Deployed)</h3>
       <p>
-        BuybackController was deployed on 14.04.2026 and governance-wired through Proposals #13 and #14. Its permissionless execution remains guarded by the controller's on-chain balance threshold and cooldown; it is not an unconditional timed automation.
-        Parameters will be set based on real accumulation data:
+        BuybackController was deployed on 14.04.2026, before the LP launch, and governance-wired
+        through Proposals #13 and #14. Execution is permissionless only when the controller is
+        unpaused, its native-ETH balance reaches <code>minTriggerAmount</code>, and the cooldown
+        has elapsed. It is not an unconditional timed automation.
       </p>
 
       <!-- 4-State Cards -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0;">
         <div style="background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2);border-radius:10px;padding:16px;">
-          <div style="color:#22c55e;font-weight:700;font-size:13px;margin-bottom:4px;">&#x2705; Normal</div>
-          <div style="font-size:12px;color:var(--muted);">PartnerVault &ge; 85% (34M). No action needed. Fees accumulate in BuybackVault.</div>
+          <div style="color:#22c55e;font-weight:700;font-size:13px;margin-bottom:4px;">1. Trigger check</div>
+          <div style="font-size:12px;color:var(--muted);">Requires an unpaused controller, elapsed cooldown and enough native ETH.</div>
         </div>
         <div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:10px;padding:16px;">
-          <div style="color:#3b82f6;font-weight:700;font-size:13px;margin-bottom:4px;">&#x1F504; Refill</div>
-          <div style="font-size:12px;color:var(--muted);">PartnerVault &lt; 85% (34M). Auto-refill to 90% (36M) from BuybackVault Operating Pool.</div>
+          <div style="color:#3b82f6;font-weight:700;font-size:13px;margin-bottom:4px;">2. Burn half</div>
+          <div style="font-size:12px;color:var(--muted);">50% of ETH buys IFR on Uniswap and sends the output to BurnReserve.</div>
         </div>
         <div style="background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.2);border-radius:10px;padding:16px;">
-          <div style="color:#f97316;font-weight:700;font-size:13px;margin-bottom:4px;">&#x1F4B0; Overflow</div>
-          <div style="font-size:12px;color:var(--muted);">Operating Pool &gt; 2M IFR. Governance routes excess to Treasury.</div>
+          <div style="color:#f97316;font-weight:700;font-size:13px;margin-bottom:4px;">3. LP half</div>
+          <div style="font-size:12px;color:var(--muted);">The remaining ETH attempts to pair with IFR already held by the controller; LP tokens go to <code>lpReceiver</code>.</div>
         </div>
         <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:16px;">
-          <div style="color:#ef4444;font-weight:700;font-size:13px;margin-bottom:4px;">&#x1F6A8; SOS Reserve</div>
-          <div style="font-size:12px;color:var(--muted);">30% of BuybackVault. Community Vote (12 days) + 48h Timelock required to access.</div>
+          <div style="color:#ef4444;font-weight:700;font-size:13px;margin-bottom:4px;">4. Fallback</div>
+          <div style="font-size:12px;color:var(--muted);">If no IFR is available or adding liquidity fails, the remaining ETH also buys IFR for BurnReserve.</div>
         </div>
       </div>
 
       <!-- Vault Split -->
       <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin:20px 0;">
-        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">BuybackVault Split</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">BuybackController ETH allocation before fallback</div>
         <div style="display:flex;height:28px;border-radius:6px;overflow:hidden;">
-          <div style="flex:70;background:#3b82f6;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">70% Operating Pool</div>
-          <div style="flex:30;background:#ef4444;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">30% SOS Reserve</div>
+          <div style="flex:50;background:#ef4444;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">50% Buy IFR &rarr; BurnReserve</div>
+          <div style="flex:50;background:#3b82f6;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">50% Attempt LP</div>
         </div>
       </div>
 
@@ -1131,9 +1137,11 @@
            ============================================================ -->
       <h2 id="governance">6. Governance</h2>
       <p>
-        All protocol parameter changes go through the Governance contract with a mandatory 48-hour Timelock.
-        No change can take effect instantly, giving the community time to review.
-        The Guardian (Deployer EOA) can cancel proposals during the timelock window. The Governance Owner is TreasurySafe 3-of-5 (since 20.03.2026).
+        Governance proposals use the mandatory 48-hour timelock, giving the community time to
+        review. The documented exception is guardian rotation: TreasurySafe 3-of-5 can call
+        <code>setGuardian</code> without the timelock. The Guardian (Deployer EOA) can cancel
+        proposals during the timelock window. The Governance Owner is TreasurySafe 3-of-5
+        (since 20.03.2026).
       </p>
 
       <h3>Multisig Signers</h3>
@@ -1263,7 +1271,7 @@
             <span style="background:#3b82f6;color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">PHASE 3</span>
             <strong style="font-size:13px;">BuybackController</strong>
           </div>
-          <div style="font-size:12px;color:var(--muted);">Auto-rebalancing contract for PartnerVault refill + overflow routing. Deployed after LP launch.</div>
+          <div style="font-size:12px;color:var(--muted);">Deployed 14.04.2026 before LP launch. The dormant controller can split native ETH between IFR buyback-to-BurnReserve and an LP attempt; it has no PartnerVault refill or overflow-routing mechanism.</div>
         </div>
         <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">

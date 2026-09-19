@@ -832,7 +832,10 @@
           <strong>90 days later: Builder buys IFR back on Uniswap</strong> &rarr; <span style="color:var(--green);font-weight:700;">BUY PRESSURE</span> &mdash; to repay the loan.
         </li>
         <li>
-          <strong>Interest is split:</strong> 50% &rarr; Contributor (ETH yield), 50% &rarr; Uniswap LP (pool becomes deeper and more stable).
+          <strong>If borrowing is activated, interest accrues in IFR:</strong> 50% &rarr; lender,
+          50% &rarr; the configured <code>protocolFeeReceiver</code>. V1 has no automatic
+          Uniswap-LP interest route. Mainnet borrowing is currently disabled and no loan
+          interest has accrued.
         </li>
         <li>
           <strong>Deeper pool</strong> &rarr; less slippage &rarr; more builders want to borrow &rarr; <span style="color:var(--accent);font-weight:700;">CYCLE</span>

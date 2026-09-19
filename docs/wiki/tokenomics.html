@@ -994,7 +994,7 @@
             <td>Treasury</td>
             <td>15%</td>
             <td>150,000,000</td>
-            <td>Gnosis Safe multisig. 150M IFR committed to Bootstrap. Refills via protocol fees (Phase 3).</td>
+            <td>Gnosis Safe multisig. Funded Bootstrap with 144.75M IFR plus a 5.25M IFR top-up. No automatic refill path is deployed.</td>
           </tr>
           <tr>
             <td>Community &amp; Grants</td>
@@ -1084,7 +1084,7 @@
       <p><strong>Treasury (15% &mdash; 150M IFR)</strong></p>
       <ul>
         <li>Held in Gnosis Safe multisig (<code>0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b</code>)</li>
-        <li>150M IFR committed to Bootstrap (transferred to BootstrapVaultV3)</li>
+        <li>150M IFR funded BootstrapVaultV3 in two Treasury transfers: 144.75M IFR plus a 5.25M IFR top-up</li>
         <li>Remaining balance used for development, operations, and strategic initiatives</li>
         <li>All disbursements require multisig approval</li>
       </ul>
@@ -1119,12 +1119,12 @@
       </div>
 
       <p style="margin-top:24px;padding:12px 16px;background:rgba(255,255,255,0.03);border-left:3px solid var(--accent);border-radius:4px;font-size:13px;color:var(--muted);">
-        <strong>Note:</strong> BuybackVault and BurnReserve are <em>not</em> genesis allocations. They accumulate from the 1% protocol pool fee on every non-exempt IFR transfer. Bootstrap is funded via Plan B from Treasury + Community Safe &mdash; not a standalone genesis bucket.
+        <strong>Note:</strong> BuybackVault and BurnReserve are <em>not</em> genesis allocations. The 1% IFR transfer-pool fee currently accrues in FeeRouterV1 and is not automatically forwarded to either contract. Bootstrap was funded via Plan B from Treasury + Community Safe &mdash; not a standalone genesis bucket.
       </p>
 
       <p><strong>Bootstrap Event (Plan B &mdash; COMPLETED &#x2705; 05.06.2026)</strong></p>
       <ul>
-        <li>Funded via Plan B (decision 08.03.2026): Treasury Safe (150M) + Community Safe (50M) = ~200M IFR in BootstrapVaultV3</li>
+        <li>Funded via Plan B: Treasury Safe (144.75M initial + 5.25M top-up) + Community Safe (50M) = 200M IFR in BootstrapVaultV3</li>
         <li>Bootstrap period: 07.03.2026 &ndash; 05.06.2026 &mdash; finalise() executed 05.06.2026 23:51 UTC</li>
         <li>totalETHRaised: 0.030 ETH &mdash; LP Token: <a href="https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" style="color:var(--accent);">0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</a></li>
         <li>BootstrapVaultV3 contract: <code>0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141</code> &mdash; FINALIZED &mdash; Block 25254575 &mdash; TX: <a href="https://etherscan.io/tx/0x949848bdd09f4c867a2593afffb0137c7db2c1457d8a8f5ff4428f8ecce69c5f" target="_blank" style="color:var(--accent);font-size:11px;">0x949848bd&hellip;</a></li>
@@ -1167,21 +1167,21 @@
 
       <p><strong>BuybackVault (protocol contract &mdash; not a genesis allocation)</strong></p>
       <ul>
-        <li>Accumulates from the 1% protocol pool fee on every non-exempt IFR transfer</li>
+        <li>Accepts ETH for a governed ETH-to-IFR buyback; it does not receive the 1% IFR transfer-pool fee automatically</li>
         <li>Not pre-funded at genesis. Current balance: 0 IFR.</li>
         <li><strong>BuybackController.sol</strong> &mdash; <strong style="color:#22c55e;">Deployed 14.04.2026</strong> (<a href="https://etherscan.io/address/0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c#code" target="_blank" style="color:var(--accent);">0x1e05...F7c</a>):
           <ul>
             <li>50/50 split: buyback+burn / LP deepening</li>
             <li>Permissionless <code>execute()</code> with 24h cooldown</li>
             <li>Slippage protection (minIFR/minETH parameters)</li>
-            <li>Governance wiring: Proposal #13 (feeExempt) executed 16.04.2026, Proposal #14 (setFeeCollector) executed 18.04.2026 &mdash; fully active &#x2705;</li>
+            <li>Governance wiring: Proposal #13 (feeExempt) executed 16.04.2026, Proposal #14 (native-ETH <code>feeCollector</code>) executed 18.04.2026. Execution remains trigger-, cooldown- and balance-dependent; IFR transfer-pool fees held by FeeRouterV1 are not forwarded automatically.</li>
           </ul>
         </li>
       </ul>
 
       <p><strong>BurnReserve (protocol contract &mdash; not a genesis allocation)</strong></p>
       <ul>
-        <li>Accumulates from the 1% protocol pool fee on every non-exempt IFR transfer</li>
+        <li>Receives IFR only through explicit transfers or buyback execution; it is not the automatic 1% fee receiver</li>
         <li>Not pre-funded at genesis. Current balance: 0 IFR.</li>
         <li>Structured token burning to accelerate deflation</li>
         <li>Burns are executed via governance &mdash; transparent and verifiable on-chain</li>
@@ -1221,8 +1221,8 @@
             <td>All token transfers executed via the public deploy script on-chain</td>
           </tr>
           <tr>
-            <td>Deployer exemption removed</td>
-            <td>Deployer's <code>feeExempt</code> status is explicitly revoked after distribution</td>
+            <td>Deployer exemption disclosed</td>
+            <td>The Deployer EOA remains <code>feeExempt = true</code> after executed Proposal #7 (18.03.2026); no revocation proposal is recorded through #16</td>
           </tr>
           <tr>
             <td>Team tokens vested</td>
@@ -1240,7 +1240,7 @@
         <li>The deploy script mints the entire 1B IFR supply to the deployer</li>
         <li>The deployer distributes tokens to all allocation contracts (Vesting, LiquidityReserve, Treasury, Community wallet)</li>
         <li>40% is paired with ETH on Uniswap V2, creating the initial liquidity pool</li>
-        <li>The deployer's <code>feeExempt</code> status is <strong>removed</strong> so the deployer is subject to the same fees as everyone else</li>
+        <li>Executed Proposal #7 set the Deployer EOA <code>feeExempt = true</code>; the active exemption is publicly disclosed and remains governance-revocable</li>
         <li>Ownership of InfernoToken (and all admin functions) is transferred to the Governance contract with its 48-hour timelock</li>
         <li>From this point, no single entity has privileged access to the token</li>
       </ol>
@@ -1294,12 +1294,16 @@
           <div class="reason">Lending deposits, repayments, and liquidations must be exact &mdash; feeExempt since 06.04.2026</div>
         </div>
         <div class="exempt-item">
-          <div class="name">BuybackController <span style="color:#22c55e;font-size:0.75rem;">&#x2705; active</span></div>
-          <div class="reason">Automated buyback+burn and LP deepening operations &mdash; feeExempt since 16.04.2026 (Proposal #13), feeCollector since 18.04.2026 (Proposal #14)</div>
+          <div class="name">BuybackController <span style="color:#fbbf24;font-size:0.75rem;">deployed / wired</span></div>
+          <div class="reason">Fee-exempt since 16.04.2026 and configured as FeeRouterV1's native-ETH fee collector since 18.04.2026. Permissionless execution still depends on controller balance, cooldown and pause state.</div>
         </div>
         <div class="exempt-item">
           <div class="name">LP Token (IFR/WETH) <span style="color:#22c55e;font-size:0.75rem;">&#x2705; active</span></div>
           <div class="reason">Uniswap V2 LP Token (<code>0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</code>) &mdash; Proposal #15 executed 08.06.2026, feeExempt = true.</div>
+        </div>
+        <div class="exempt-item">
+          <div class="name">Deployer EOA <span style="color:#fbbf24;font-size:0.75rem;">active disclosed exception</span></div>
+          <div class="reason"><code>0x6b36687b0cd4386fb14cf565B67D7862110Fed67</code> &mdash; Proposal #7 executed 18.03.2026. The exemption is visible in <code>feeExempt(address)</code> and can be revoked only through Governance.</div>
         </div>
       </div>
 
@@ -1307,7 +1311,7 @@
       <ul>
         <li>If <strong>either</strong> the sender or recipient is <code>feeExempt</code>, the entire transfer is fee-free</li>
         <li>Exemptions are set via <code>setFeeExempt(address, bool)</code> by the owner (Governance contract)</li>
-        <li>The <strong>deployer's exemption is explicitly removed</strong> after the initial distribution to prevent any privileged fee-free trading</li>
+        <li>The <strong>Deployer EOA is currently exempt</strong> under Proposal #7; this is an active disclosed governance-controlled exception, not a revoked historical permission</li>
         <li>Adding or removing exemptions requires a governance proposal with 48-hour timelock</li>
       </ul>
 
@@ -1460,10 +1464,10 @@ if (from != address(0) && to != address(0)
       </div>
 
       <!-- ═══════════════════════════════════════════════════ -->
-      <!--  Section 7: Protocol Fee & FeeRouter                -->
+      <!--  Section 8: Protocol Fee & FeeRouter                -->
       <!-- ═══════════════════════════════════════════════════ -->
 
-      <h2 id="feerouter">7. Protocol Fee &amp; FeeRouter</h2>
+      <h2 id="feerouter">8. Protocol Fee &amp; FeeRouter</h2>
       <p>
         The FeeRouterV1 contract handles protocol-level fees on IFR swaps.
         These are <strong>separate</strong> from the token's built-in transfer fees (2.5% burn + 1% pool fee).
@@ -1499,8 +1503,10 @@ if (from != address(0) && to != address(0)
 
       <div class="callout">
         <p>
-          <strong>Voucher threshold:</strong> 100 points &rarr;
-          15 bps discount on protocol fee, valid 7 days, single-use.
+          <strong>Voucher status:</strong> the points-to-voucher issuer is not live. Under the
+          deployed FeeRouterV1, <code>discountBps</code> must be less than or equal to the
+          current 5-bps protocol fee. A larger discount fails validation and reverts instead
+          of clamping the fee to zero.
         </p>
       </div>
 

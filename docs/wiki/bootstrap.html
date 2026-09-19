@@ -865,7 +865,7 @@
           <strong>LiquidityReserve (200M IFR)</strong> was smart-contract-locked until 01.09.2026. The Bootstrap period ended on 05.06.2026, so the reserve could not fund the Bootstrap. This historical timing mismatch led to Plan B.
         </p>
         <p style="margin-top: 12px;">
-          <strong>Solution (decided 08.03.2026):</strong> Fund the BootstrapVaultV3 directly from the Treasury Safe and Community Safe. No smart-contract lock needs to be broken, no governance override required. The funds are sent as standard ERC-20 transfers (subject to 3.5% fee-on-transfer until feeExempt is set).
+          <strong>Solution (decided 08.03.2026):</strong> Fund BootstrapVaultV3 from the Treasury and Community Safes. Chain records show 144.75M IFR from Treasury and 50M IFR from Community on 11.03.2026, followed by a 5.25M IFR Treasury top-up on 15.03.2026. The three transfers brought the vault to the required 200M IFR.
         </p>
       </div>
 
@@ -879,38 +879,44 @@
           <tr>
             <th>Source</th>
             <th>Sent</th>
-            <th>Received (after burn)</th>
+            <th>Received by vault</th>
             <th>Use</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td>Treasury Safe</td>
-            <td>150M IFR</td>
-            <td>150M IFR</td>
-            <td>Bootstrap funding</td>
+            <td>144.75M IFR</td>
+            <td>144.75M IFR</td>
+            <td><a href="https://etherscan.io/tx/0x6f08eaa67cf7562af2f9098d3bdfd177ac86cb00a365b354881accf3aa41d5b0" target="_blank" rel="noopener">Initial Bootstrap funding</a></td>
           </tr>
           <tr>
             <td>Community Safe</td>
-            <td>60M IFR</td>
-            <td>57.9M IFR</td>
-            <td>50M Bootstrap + ~7.9M operational reserve</td>
+            <td>50M IFR</td>
+            <td>50M IFR</td>
+            <td><a href="https://etherscan.io/tx/0x4394bec13c809084a4e669d2bb51fb35a4d2c2c050963c156c525fdb1cfbbf1c" target="_blank" rel="noopener">Bootstrap funding</a>; 7.9M IFR remained in the Community Safe</td>
+          </tr>
+          <tr>
+            <td>Treasury Safe top-up</td>
+            <td>5.25M IFR</td>
+            <td>5.25M IFR</td>
+            <td><a href="https://etherscan.io/tx/0x47e9a6096b2088ffafaa1d04f2d435aa59777c29a26078d1b2e4b07106083fc0" target="_blank" rel="noopener">Completed the 200M IFR requirement on 15.03.2026</a></td>
           </tr>
           <tr>
             <td><strong>Total in BootstrapVaultV3</strong></td>
             <td>&mdash;</td>
-            <td><strong>~200M IFR</strong></td>
+            <td><strong>200M IFR</strong></td>
             <td>LP creation + contributor claims</td>
           </tr>
         </tbody>
       </table>
 
       <p style="font-size:12px; color:var(--muted); margin-top:-8px;">
-        * Transfers were subject to the 3.5% fee-on-transfer (2.5% burn + 1% pool fee) because feeExempt was not yet active at time of funding. Treasury sent 150M, vault received 150M. Community Safe sent 60M, vault received ~57.9M (50M allocated to Bootstrap, ~7.9M operational reserve).
+        * The earlier Community EOA &rarr; Community Safe migration sent 60M IFR and delivered 57.9M after the 3.5% transfer fee. That was a separate migration. Bootstrap funding itself arrived in three transfers: 144.75M + 50M + 5.25M IFR.
       </p>
 
       <div class="callout callout-green">
-        <p><strong>Note:</strong> Vault funded on 11.03.2026 with 200,000,000 IFR (confirmed on-chain). BootstrapVaultV3 is feeExempt since Governance Proposal #4 execution (11.03.2026 08:45 CET), so all internal transfers incur no fees.</p>
+        <p><strong>Note:</strong> The initial 194.75M IFR arrived on 11.03.2026 and the 5.25M IFR top-up completed the on-chain 200,000,000 IFR funding on 15.03.2026. BootstrapVaultV3 is feeExempt under executed Governance Proposal #4.</p>
       </div>
 
       <!-- ============================================================
@@ -952,7 +958,7 @@
 
       <div class="callout" style="margin:20px 0;padding:16px;background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.3);border-radius:10px;">
         <p style="margin:0 0 8px 0;font-weight:700;color:#f97316;">&#x23F3; GOVERNANCE — POST-FINALISE()</p>
-        <p style="margin:0;font-size:0.88rem;"><strong>Bootstrap FINALIZED 05.06.2026 23:51 UTC.</strong> Both post-finalise governance proposals executed: <strong>Proposal #15</strong> — setFeeExempt(LP Token, true) — <span style="color:#22c55e;">EXECUTED 08.06.2026</span> &#x2705; (<a href="https://etherscan.io/tx/0xd5a3bc95" target="_blank" rel="noopener" style="color:#f97316;font-size:0.85em;">TX</a>). LP swaps now fee-exempt. <strong>Proposal #16</strong> — setP0(CommitmentVault) — <span style="color:#22c55e;">EXECUTED 09.06.2026</span> &#x2705;. P0 = 0.3 Gwei (IMMUTABLE on-chain).</p>
+        <p style="margin:0;font-size:0.88rem;"><strong>Bootstrap FINALIZED 05.06.2026 23:51 UTC.</strong> Both post-finalise governance proposals executed: <strong>Proposal #15</strong> — setFeeExempt(LP Token, true) — <span style="color:#22c55e;">EXECUTED 08.06.2026</span> &#x2705;. LP swaps now fee-exempt. <strong>Proposal #16</strong> — setP0(CommitmentVault) — <span style="color:#22c55e;">EXECUTED 09.06.2026</span> &#x2705;. P0 = 0.3 Gwei (IMMUTABLE on-chain).</p>
       </div>
 
       <h3>Step 3 &mdash; Claim IFR</h3>
@@ -1046,7 +1052,7 @@
         <li>No admin keys &mdash; all parameters immutable at deployment</li>
         <li>No pause, no admin withdraw &mdash; fully trustless (V3 adds permissionless <code>refund()</code> after 30-day grace period)</li>
         <li>Reviewed in <a href="https://ifrunit.tech/wiki/security.html">Security Audit</a> (8 PASS, 2 WARN, 0 FAIL)</li>
-        <li>27 automated tests, all passing</li>
+        <li>30 focused BootstrapVaultV3 tests in the canonical contract suite</li>
       </ul>
 
       <!-- ============================================================
@@ -1171,7 +1177,7 @@
           <tr><td>Duration</td><td>90 days</td><td>Sufficient time for organic community growth</td></tr>
           <tr><td>Min contribution</td><td>0.01 ETH</td><td>Anti-spam, accessible entry</td></tr>
           <tr><td>Max contribution</td><td>2 ETH</td><td>Anti-whale, fair distribution</td></tr>
-          <tr><td>IFR allocation</td><td>~200M IFR</td><td>Funded by Treasury Safe (150M) + Community Safe (50M)</td></tr>
+          <tr><td>IFR allocation</td><td>200M IFR</td><td>Treasury Safe (144.75M + 5.25M) + Community Safe (50M)</td></tr>
           <tr><td>Soft cap</td><td>None</td><td>LP always created regardless of ETH amount</td></tr>
           <tr><td>Hard cap</td><td>None</td><td>More ETH = deeper liquidity</td></tr>
           <tr><td>LP custody</td><td>BootstrapVaultV3</td><td>Team.Finance disabled on Mainnet; no LP withdrawal function</td></tr>
@@ -1192,7 +1198,7 @@
         </div>
         <div class="phase-item done" id="phase-lp">
           <div class="phase-label">&#x2705; Bootstrap ENDED &mdash; ETH Contributions Closed</div>
-          <div class="phase-date">07.03.2026 &mdash; 05.06.2026 &mdash; contract deployed, finalised 23:51 UTC</div>
+          <div class="phase-date">V1 opened 07.03.2026; V3 deployed 08.03.2026 and became the canonical vault before funding; V3 finalised 05.06.2026 23:51 UTC</div>
         </div>
         <div class="phase-item done" id="phase-active">
           <div class="phase-label">&#x2705; Bootstrap ENDED &mdash; finalise() executed</div>
@@ -1228,23 +1234,28 @@
           </tr>
           <tr>
             <td style="color: var(--green); font-weight: 600;">DONE</td>
-            <td>feeExempt Proposal #4 &mdash; Executed (<a href="https://etherscan.io/tx/0xdb1590bf" target="_blank" style="font-size:12px;">TX</a>)</td>
+            <td>feeExempt Proposal #4 &mdash; Executed</td>
             <td>11.03.2026 08:45 CET</td>
           </tr>
           <tr>
             <td style="color: var(--green); font-weight: 600;">DONE</td>
-            <td>Treasury Safe &rarr; Vault: 150M IFR (<a href="https://etherscan.io/tx/0x6f08eaa6" target="_blank" style="font-size:12px;">TX</a>)</td>
+            <td>Treasury Safe &rarr; Vault: 144.75M IFR</td>
             <td>11.03.2026</td>
           </tr>
           <tr>
             <td style="color: var(--green); font-weight: 600;">DONE</td>
-            <td>Community Safe &rarr; Vault: 50M IFR (<a href="https://etherscan.io/tx/0x4394bec1" target="_blank" style="font-size:12px;">TX</a>)</td>
+            <td>Treasury Safe &rarr; Vault top-up: 5.25M IFR</td>
+            <td>15.03.2026</td>
+          </tr>
+          <tr>
+            <td style="color: var(--green); font-weight: 600;">DONE</td>
+            <td>Community Safe &rarr; Vault: 50M IFR</td>
             <td>11.03.2026</td>
           </tr>
           <tr>
             <td style="color: var(--green); font-weight: 600;">DONE</td>
-            <td>Bootstrap Launch &mdash; ETH contributions open</td>
-            <td>07.03.2026 &#x2705;</td>
+            <td>Bootstrap V1 launch; V3 superseded it on 08.03.2026 before V3 funding</td>
+            <td>07&ndash;08.03.2026 &#x2705;</td>
           </tr>
           <tr>
             <td style="color: var(--green); font-weight: 600;">DONE &#x2705;</td>
@@ -1404,7 +1415,7 @@
       <p>The Bootstrap Event ran from <strong>07.03.2026 to 05.06.2026</strong> and is now finalized. finalise() was executed on 05.06.2026 23:51 UTC (Block 25254575, TX <a href="https://etherscan.io/tx/0x949848bdd09f4c867a2593afffb0137c7db2c1457d8a8f5ff4428f8ecce69c5f" target="_blank" rel="noopener" style="color:#f97316;">0x949848bd&hellip;</a>). IFR is now tradeable on <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="color:#f97316;">Uniswap V2 &#x2197;</a>.</p>
 
       <h3>How much IFR will I receive?</h3>
-      <p>Your IFR share is calculated as: <code>(your_ETH / total_ETH) &times; IFR_in_vault</code>. The total IFR in the vault is ~200M. For example, if total ETH raised is 10 ETH and you contributed 1 ETH, you receive ~19,475,000 IFR (10% of the claim allocation).</p>
+      <p>Your claim is calculated as <code>(your_ETH / total_ETH) &times; 100,000,000 IFR</code>. The other 100M IFR funded the LP side. For example, if total ETH raised were 10 ETH and you contributed 1 ETH, the 10% claim would be 10,000,000 IFR.</p>
 
       <h3>Who can call finalise()?</h3>
       <p>Anyone. The <code>finalise()</code> function is fully permissionless. After the 90-day window closes, any Ethereum address can trigger it. The result is identical regardless of who calls it.</p>
@@ -2229,7 +2240,7 @@ async function bwRefund() {
       upd("bw-total-eth",ethN>0?ethN.toFixed(4)+" ETH":"0.0000 ETH");
       upd("bw-contributors",cnt.toString());
       if(eth > 0n){
-        var alloc=ethers.parseUnits("200000000",9);
+        var alloc=ethers.parseUnits("100000000",9);
         var ratio=(alloc * ethers.parseEther("1")) / eth;
         var ratioN=parseFloat(ethers.formatUnits(ratio,9));
         upd("bw-ifr-per-eth",ratioN>=1e6?(ratioN/1e6).toFixed(3)+"M":ratioN.toFixed(0));

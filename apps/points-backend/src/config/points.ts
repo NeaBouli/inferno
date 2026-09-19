@@ -8,8 +8,9 @@ export const POINTS_CONFIG = {
   } as Record<string, { points: number; dailyLimit: number }>,
   voucher: {
     threshold: 100,
-    discountBps: 15,
-    maxDiscountBps: 25,
+    // FeeRouterV1 rejects vouchers above its deployed 5 bps protocol fee.
+    discountBps: 5,
+    maxDiscountBps: 5,
     expiryDays: 7,
     dailyIssuanceCap: 100,
   },

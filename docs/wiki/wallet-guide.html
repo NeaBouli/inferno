@@ -633,7 +633,7 @@
            SECTION 1 — PROJECT WALLETS
            ================================================================ -->
       <h2 id="wallets">&#x1F45B; Project Wallets</h2>
-      <p>All 7 wallets that hold or interact with IFR tokens. Active wallets manage protocol operations; historical wallets were used during migration to multisig infrastructure.</p>
+      <p>Project wallets and operational roles are listed below. Active wallets manage protocol operations; historical wallets are retained to explain the migration to multisig infrastructure.</p>
 
       <div class="wg-grid">
 
@@ -688,7 +688,7 @@
             <a href="https://etherscan.io/address/0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b" target="_blank" class="wg-es-btn">Etherscan</a>
           </div>
           <div class="wg-field"><strong>Genesis Balance:</strong> 150,000,000 IFR (15%)</div>
-          <div class="wg-field"><strong>Current Role:</strong> Protocol treasury. Funded Bootstrap Plan B (144.75M IFR). Current balance: 0 IFR (all funds deployed to Bootstrap + operations).</div>
+          <div class="wg-field"><strong>Current Role:</strong> Protocol treasury. Funded Bootstrap Plan B with 144.75M IFR on 11.03.2026 and a 5.25M IFR top-up on 15.03.2026. Current balance: 0 IFR.</div>
           <div class="wg-role-box">
             <strong>Ecosystem Role:</strong> Controls protocol development spend AND Governance ownership (since 20.03.2026). All transactions require 3-of-5 multisig approval.
           </div>
@@ -832,9 +832,9 @@
           <div class="wg-field"><strong>Owner:</strong> TreasurySafe 3-of-5 (transferred 20.03.2026 &mdash; <a href="https://etherscan.io/tx/0xcd9f99d2e5df5c28b81f885c7ebf7e2d42a873bd1c81bef9d94aa5c2d19c46c3" target="_blank">TX</a>)</div>
           <div class="wg-field"><strong>feeExempt:</strong> <span class="wg-fee-status wg-fee-yes">&#x2705; Yes</span></div>
           <div class="wg-role-box">
-            <strong>Function:</strong> 48-hour timelock for all protocol changes. No parameter change can take effect instantly. Guardian can emergency-cancel any pending proposal.
+            <strong>Function:</strong> governance proposals use the 48-hour timelock. Owner-only guardian rotation through <code>setGuardian</code> is the documented untimelocked exception. Guardian can emergency-cancel any pending proposal.
           </div>
-          <div class="wg-field"><strong>Proposals:</strong> #0&ndash;#9 executed | #10 cancelled (ownership transferred directly 20.03.2026)</div>
+          <div class="wg-field"><strong>Proposals:</strong> History documented through #16; #1, #3 and #10 were cancelled or replaced, while #11&ndash;#16 were executed.</div>
           <div class="wg-field"><strong>Phase:</strong> Active &mdash; controls all protocol parameters</div>
         </div>
 
@@ -976,7 +976,7 @@
           <div class="wg-field"><strong>Owner:</strong> Governance</div>
           <div class="wg-field"><strong>feeExempt:</strong> <span class="wg-fee-status wg-fee-yes">&#x2705; Yes</span></div>
           <div class="wg-role-box">
-            <strong>Function:</strong> The deployed BuybackController can route its configured distribution after on-chain execution conditions are met. PartnerVault refill behavior remains governed by the deployed controller parameters; it is not an unconditional automatic transfer on every fee.
+            <strong>Function:</strong> Governance-owned IFR custody contract. It is separate from BuybackController; the deployed controller contains no PartnerVault or BuybackVault refill path.
           </div>
           <div class="wg-field"><strong>Balance:</strong> 0 IFR</div>
           <div class="wg-field"><strong>Phase:</strong> Inactive &mdash; activates Phase 3</div>
@@ -1103,7 +1103,7 @@
             <button class="wg-copy-btn" data-addr="0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c">Copy</button>
             <a href="https://etherscan.io/address/0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c#code" target="_blank" class="wg-es-btn">Etherscan</a>
           </div>
-          <div class="wg-field"><strong>Purpose:</strong> Routes FeeRouter fees to BuybackVault &amp; BurnReserve</div>
+          <div class="wg-field"><strong>Purpose:</strong> Uses eligible native ETH fee balance for buyback-to-BurnReserve and attempted LP deepening; it does not forward IFR transfer fees or refill PartnerVault</div>
           <div class="wg-role-box">
             <strong>Function:</strong> Automates fee distribution from FeeRouterV1. Deployed 14.04.2026, feeExempt via Proposal #13 and FeeRouter collector via Proposal #14.
           </div>

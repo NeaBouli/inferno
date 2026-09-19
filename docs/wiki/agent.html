@@ -736,7 +736,7 @@
       <!-- ========== 1. IFR AI Copilot ========== -->
       <h2 class="section-title">1. IFR AI Copilot</h2>
       <p>
-        The IFR AI Copilot is an embedded AI assistant available on the Inferno website. It provides contextual, role-aware guidance to every user type &mdash; from first-time token holders to integration developers. Users can ask general questions for free. After wallet connection and IFR lock verification, Premium Copilot can communicate more personally because it can use wallet balance, lock status, tier, and on-chain context instead of only generic documentation. The copilot is powered by <strong>Claude Haiku 4.5</strong> and answers exclusively from the curated <code>IFR_KNOWLEDGE</code> base.
+        The IFR AI Copilot is an embedded AI assistant available on the Inferno website. It provides contextual, role-aware guidance to every user type &mdash; from first-time token holders to integration developers. Users can ask general questions for free. After wallet connection and IFR lock verification, Premium Copilot can communicate more personally because it can use wallet balance, lock status, tier, and on-chain context instead of only generic documentation. The copilot is powered by <strong>Claude Haiku 4.5</strong> and uses the curated <code>IFR_KNOWLEDGE</code> base together with the maintained same-project Wiki context loaded by the server.
       </p>
       <p>
         The copilot appears as a floating widget in the bottom-right corner of the main site, Wiki, Web3 app and IFR Benefits app. It understands the Inferno protocol, token mechanics, lock system, governance, Benefits checkout and builder integrations &mdash; and adapts its responses based on the selected mode.
@@ -796,8 +796,8 @@
       <ul>
         <li><strong>Never asks for seed phrase or private key</strong> &mdash; under no circumstances will the copilot request sensitive credentials</li>
         <li><strong>Seed phrase warning</strong> &mdash; if a user mentions or pastes anything resembling a seed phrase, the copilot immediately displays a warning and refuses to process it</li>
-        <li><strong>Source citation</strong> &mdash; every answer includes a <code>Source: ...</code> reference pointing to the specific documentation page or contract</li>
-        <li><strong>Knowledge-bound</strong> &mdash; the copilot only answers from <code>IFR_KNOWLEDGE</code>; it will not hallucinate information about features, prices, or timelines that are not in the knowledge base</li>
+        <li><strong>Source boundary</strong> &mdash; the interface identifies the IFR knowledge context; a response may summarize the curated base and maintained Wiki context, but a page-specific citation is not guaranteed on every answer</li>
+        <li><strong>Knowledge-bound</strong> &mdash; the copilot is instructed to stay within maintained IFR knowledge and Wiki context and to state uncertainty rather than invent features, prices or timelines</li>
         <li><strong>No financial advice</strong> &mdash; the copilot does not provide price predictions, investment advice, or trading recommendations</li>
       </ul>
 
@@ -860,17 +860,20 @@
 
       <h3>Discount Voucher</h3>
       <p>
-        When a wallet accumulates <strong>100 points</strong>, a <strong>Discount Voucher</strong> is automatically issued:
+        The points-to-voucher issuer is <strong>not live</strong>. If it is activated after review,
+        every voucher must stay within the deployed FeeRouterV1 bound:
+        <code>discountBps &lt;= protocolFeeBps</code>.
       </p>
       <ul>
-        <li><strong>Discount:</strong> 15 bps (0.15%) reduction on the IFR Protocol Fee</li>
-        <li><strong>Validity:</strong> 7 days from issuance</li>
-        <li><strong>Usage:</strong> Single use &mdash; consumed on the next qualifying transaction</li>
+        <li><strong>Current executable maximum:</strong> 5 bps (0.05%), because the deployed protocol fee is 5 bps</li>
+        <li><strong>Above the fee:</strong> validation fails and the FeeRouter transaction reverts</li>
+        <li><strong>Replay protection:</strong> a signed voucher nonce can be consumed only once</li>
       </ul>
 
       <div class="callout callout-green">
         <p>
-          <strong>Example:</strong> A user connects their wallet (10 pts), completes wallet setup (20 pts), adds the IFR token (20 pts), locks IFR (30 pts), and completes builder onboarding (50 pts) = <strong>130 points</strong>. They receive a Discount Voucher after reaching 100 points.
+          <strong>Planning example only:</strong> point accumulation can be demonstrated in the
+          interface, but no production issuer currently converts points into a voucher.
         </p>
       </div>
 
@@ -896,8 +899,8 @@
           </tr>
           <tr>
             <td>Voucher Discount</td>
-            <td><strong>up to 15 bps</strong></td>
-            <td>Fee drops to 0 when discount exceeds fee</td>
+            <td><strong>up to the current fee (5 bps)</strong></td>
+            <td>Discounts above the fee are rejected; there is no executable clamp path</td>
           </tr>
           <tr>
             <td>Hard Cap (MAX_PROTOCOL_FEE)</td>
@@ -971,7 +974,9 @@
 
       <div class="callout callout-green">
         <p>
-          <strong>Design principle:</strong> The points system is intentionally low-value and high-friction for attackers. A 15 bps fee discount on a single transaction is not economically viable to farm at scale, especially when each qualifying action requires on-chain gas costs and real protocol interaction.
+          <strong>Activation boundary:</strong> any future issuer must cap vouchers at the live
+          protocol fee, bind them to the intended wallet and nonce, and pass the published
+          voucher-boundary tests before the benefit is advertised as available.
         </p>
       </div>
 

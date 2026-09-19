@@ -1044,7 +1044,7 @@
               <td>~150,000,000</td>
               <td>~150,000,000</td>
               <td>Bootstrap Plan B funding &mdash; feeExempt (Proposal #4 executed)</td>
-              <td class="status-ok">&#x2705; Done &mdash; <a href="https://etherscan.io/tx/0x6f08eaa6" target="_blank" style="font-size:11px;">TX: 0x6f08eaa6&hellip;</a></td>
+              <td class="status-ok">&#x2705; Done &mdash; execution hash not published in the current evidence set</td>
             </tr>
             <tr>
               <td>11.03.2026</td>
@@ -1053,7 +1053,7 @@
               <td>50,000,000</td>
               <td>50,000,000</td>
               <td>Bootstrap Plan B funding &mdash; feeExempt (Proposal #4 executed)</td>
-              <td class="status-ok">&#x2705; Done &mdash; <a href="https://etherscan.io/tx/0x4394bec1" target="_blank" style="font-size:11px;">TX: 0x4394bec1&hellip;</a></td>
+              <td class="status-ok">&#x2705; Done &mdash; execution hash not published in the current evidence set</td>
             </tr>
             <tr>
               <td>10.03.2026</td>
@@ -1172,8 +1172,8 @@
             <tr>
               <td><strong>BootstrapVaultV3</strong></td>
               <td class="address"><a href="https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141" target="_blank">0xf725...e141</a></td>
-              <td>Community Bootstrap. Holds ~200M IFR (Treasury 150M + Community 50M) &mdash; funded 11.03.2026. Creates Uniswap LP via finalise().</td>
-              <td id="cur-bootstrap">200,000,000 IFR (funded 11.03.2026 &#x2705;)</td>
+              <td>Community Bootstrap. Funding: Treasury 144.75M + Community 50M on 11.03.2026, then Treasury 5.25M top-up on 15.03.2026. Creates Uniswap LP via finalise().</td>
+              <td id="cur-bootstrap">200,000,000 IFR (funding completed 15.03.2026 &#x2705;)</td>
               <td>Smart contract &mdash; permissionless</td>
             </tr>
             <tr>
@@ -1193,15 +1193,15 @@
             <tr>
               <td><strong>FeeRouterV1</strong></td>
               <td class="address"><a href="https://etherscan.io/address/0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a" target="_blank">0x4807...C60a</a></td>
-              <td>Routes the 1% protocol pool fee to BuybackVault and BurnReserve. Pass-through &mdash; holds no IFR.</td>
-              <td>0 IFR</td>
-              <td>Smart contract &mdash; immutable routing</td>
+              <td>Receives the token's 1% pool-fee allocation in IFR. Its separate swap function forwards native-asset protocol fees to the configured collector; IFR already received by the contract is not forwarded automatically.</td>
+              <td>371,543.991017522 IFR at block 26,013,776</td>
+              <td>Smart contract &mdash; Governance-configurable fee collector</td>
             </tr>
             <tr>
               <td><strong>IFRLock</strong></td>
               <td class="address"><a href="https://etherscan.io/address/0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb" target="_blank">0x7699...54Eb</a></td>
-              <td>On-chain lock registry. Users lock IFR here for product access. Guardian can pause. No IFR held by contract itself (user balances tracked internally).</td>
-              <td>0 IFR contract balance</td>
+              <td>On-chain access lock. <code>lock()</code> transfers IFR into this contract, which custodies the aggregate locked balance until each user calls <code>unlock()</code>. The internal ledger attributes the custodial balance to users.</td>
+              <td>2,000 IFR at block 26,013,776</td>
               <td>Smart contract &mdash; guardian pausable</td>
             </tr>
             <tr>
@@ -1221,9 +1221,9 @@
             <tr>
               <td><strong>Governance</strong></td>
               <td class="address"><a href="https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041" target="_blank">0xc43d...D041</a></td>
-              <td>48-hour timelock for all protocol changes. Proposals require multisig submission. Immutable timelock hardcoded.</td>
+              <td>Governance proposals use the 48-hour configured delay. TreasurySafe can change the bounded delay and can rotate the guardian through untimelocked <code>setGuardian</code>.</td>
               <td>0 IFR</td>
-              <td>Smart contract &mdash; timelock</td>
+              <td>Smart contract &mdash; timelock with documented guardian-rotation exception</td>
             </tr>
           </tbody>
         </table>
@@ -1325,7 +1325,7 @@
         </table>
       </div>
 
-      <h3>Post-Genesis: Community &amp; Treasury Migration (06.03.2026)</h3>
+      <h3>Post-Genesis: Community &amp; Treasury Migration (07.03.2026)</h3>
       <div class="table-wrap">
         <table>
           <thead>
@@ -1389,7 +1389,7 @@
 
       <!-- ===== Token Supply Distribution ===== -->
       <h2>Token Supply Distribution</h2>
-      <p>Complete breakdown of where every IFR token is held. Updated to reflect Safe migrations (06.03.2026).</p>
+      <p>Block-pinned custody snapshot at Ethereum block 26,013,776. Named balances, the residual held by all other addresses and permanently burned supply sum exactly to the 1,000,000,000 IFR genesis supply. Percentages use genesis supply as the denominator.</p>
 
       <div class="table-wrap">
         <table>
@@ -1397,23 +1397,35 @@
             <tr><th>Wallet</th><th>IFR</th><th>%</th><th>Note</th></tr>
           </thead>
           <tbody>
-            <tr><td>LP Reserve Safe (ex-Deployer)</td><td>400,600,000</td><td>40.06%</td><td>Transferred to LP Reserve Safe 0x5D93... on 18.03.2026</td></tr>
-            <tr><td>LiquidityReserve</td><td>200,000,000</td><td>20.00%</td><td>Initial lock ended 01.09.2026; 50M-per-90-day cap; 0 withdrawn</td></tr>
-            <tr><td>Vesting (Team)</td><td>150,000,000</td><td>15.00%</td><td>12-month cliff, then 36-month linear release (48 months total)</td></tr>
-            <tr><td>Treasury Safe</td><td>0</td><td>0.00%</td><td>144.75M transferred to Bootstrap (Plan B). Balance: 0 IFR.</td></tr>
-            <tr><td>Community Safe</td><td>7,900,000</td><td>0.79%</td><td>50M sent to Bootstrap. 7.9M operations reserve remaining.</td></tr>
-            <tr><td>PartnerVault</td><td>40,000,000</td><td>4.00%</td><td>Builder ecosystem rewards</td></tr>
+            <tr><td>LP Reserve Safe</td><td>400,600,000</td><td>40.0600%</td><td>Governance-controlled LP reserve held by the 3-of-5 Safe</td></tr>
+            <tr><td>LiquidityReserve</td><td>200,000,000</td><td>20.0000%</td><td>50M IFR per 90-day withdrawal cap; availability does not mean deployment</td></tr>
+            <tr><td>Vesting</td><td>150,000,000</td><td>15.0000%</td><td>12-month cliff, then 36-month linear vesting</td></tr>
+            <tr><td>Community Safe</td><td>7,900,000</td><td>0.7900%</td><td>Current operations reserve</td></tr>
+            <tr><td>PartnerVault</td><td>40,000,000</td><td>4.0000%</td><td>Builder reward custody</td></tr>
+            <tr><td>Uniswap V2 IFR/WETH pair</td><td>11,899,172.061166225</td><td>1.189917206%</td><td>IFR reserve held by the live liquidity pair</td></tr>
+            <tr><td>CommitmentVault</td><td>47,952,476.871794375</td><td>4.795247687%</td><td>User tranches held under configured unlock conditions</td></tr>
+            <tr><td>LendingVault</td><td>52,155,440.952845656</td><td>5.215544095%</td><td>Deposited IFR; mainnet borrowing remains disabled</td></tr>
+            <tr><td>FeeRouterV1</td><td>371,543.991017522</td><td>0.037154399%</td><td>Accumulated IFR pool fees; no automatic IFR forwarding path</td></tr>
+            <tr><td>IFRLock</td><td>2,000</td><td>0.0002%</td><td>Aggregate refundable access locks held in custody</td></tr>
+            <tr><td>Treasury Safe</td><td>0</td><td>0.0000%</td><td>Current IFR balance is zero</td></tr>
+            <tr><td>All other addresses</td><td>86,690,506.145632418</td><td>8.669050615%</td><td>Residual across user wallets and other unlisted addresses</td></tr>
+            <tr style="border-top:2px solid var(--border)">
+              <td><strong>Current total supply</strong></td>
+              <td><strong>997,571,140.022456196</strong></td>
+              <td><strong>99.757114002%</strong></td>
+              <td>ERC-20 <code>totalSupply()</code> at block 26,013,776</td>
+            </tr>
             <tr style="border-top:2px solid var(--border)">
               <td><strong>Burned (permanent)</strong></td>
-              <td><strong id="supply-burned" data-live-key="supply-burned">loading&hellip;</strong></td>
-              <td><strong id="supply-burned-pct" data-live-key="supply-burned-pct">loading&hellip;</strong></td>
-              <td>1.5M burn fee + 0.6M pool fee (Community transfer) + ongoing burns</td>
+              <td><strong>2,428,859.977543804</strong></td>
+              <td><strong>0.242885998%</strong></td>
+              <td>Genesis supply minus current <code>totalSupply()</code></td>
             </tr>
             <tr>
               <td><strong>Total</strong></td>
               <td><strong>1,000,000,000</strong></td>
               <td><strong>100%</strong></td>
-              <td>Initial supply (no mint function)</td>
+              <td>Exact invariant: current supply + burned supply (no mint function)</td>
             </tr>
           </tbody>
         </table>
@@ -1493,21 +1505,21 @@
               <td><code>setFeeExempt(BootstrapVaultV3, true)</code><br><span style="font-size:11px;color:var(--muted);"><a href="https://etherscan.io/tx/0x625a6618fe2643259638e1b044b735bea99e96d2269404c078c7771fea0a06ba">TX: 0x625a6618&hellip;</a></span></td>
               <td>InfernoToken</td>
               <td>11.03.2026 08:45 CET</td>
-              <td><span class="status-ok">Executed</span> &mdash; <a href="https://etherscan.io/tx/0xdb1590bf" target="_blank" style="font-size:11px;">TX: 0xdb1590bf&hellip;</a></td>
+              <td><span class="status-ok">Executed</span></td>
             </tr>
             <tr>
               <td>#5</td>
               <td><code>setFeeExempt(FeeRouterV1, true)</code><br><span style="font-size:11px;color:var(--muted);"><a href="https://etherscan.io/tx/0x82d2d1b8c2015481155c9d8c22fd983f84ddfb72f9a2033929495b7ae64c2d26">TX: 0x82d2d1b8&hellip;</a></span></td>
               <td>InfernoToken</td>
               <td>11.03.2026 08:46 CET</td>
-              <td><span class="status-ok">Executed</span> &mdash; <a href="https://etherscan.io/tx/0x1c885fbe" target="_blank" style="font-size:11px;">TX: 0x1c885fbe&hellip;</a></td>
+              <td><span class="status-ok">Executed</span></td>
             </tr>
             <tr>
               <td>#6</td>
-              <td><code>setFeeExempt(BootstrapVaultV3, true)</code><br><span style="font-size:11px;color:var(--muted);">Re-verification after funding</span></td>
+              <td><code>setPoolFeeReceiver(FeeRouterV1)</code></td>
               <td>InfernoToken</td>
               <td>13.03.2026 09:23 CET</td>
-              <td><span class="status-done">Executed</span> &mdash; <a href="https://etherscan.io/tx/0x89eebca7" target="_blank" style="font-size:11px;">TX: 0x89eebca7&hellip;</a></td>
+              <td><span class="status-done">Executed</span></td>
             </tr>
             <tr>
               <td>#7</td>
