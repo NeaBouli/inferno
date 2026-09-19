@@ -1,8 +1,11 @@
 import { ethers } from "ethers";
+import { pointsSecurityConfig } from "../config/security.js";
 
-const CHAIN_ID = parseInt(process.env.CHAIN_ID || "11155111", 10);
+const CHAIN_ID = pointsSecurityConfig.chainId;
 const FEE_ROUTER_ADDRESS = process.env.FEE_ROUTER_ADDRESS || (() => {
-  if (process.env.NODE_ENV === "production") throw new Error("FEE_ROUTER_ADDRESS is required in production");
+  if (pointsSecurityConfig.isProduction) {
+    throw new Error("FEE_ROUTER_ADDRESS is required in production-safe mode");
+  }
   return ethers.ZeroAddress;
 })();
 
