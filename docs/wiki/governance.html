@@ -1040,7 +1040,7 @@ await governance.execute(proposalId);</code></pre>
           <tr>
             <td>#4</td>
             <td><code>setFeeExempt(BootstrapVaultV3, true)</code><br>
-              <span class="address">Execution recorded on-chain; no full execution hash is published in the current evidence set.</span>
+              <span class="address">TX: <code><a href="https://etherscan.io/tx/0x625a6618fe2643259638e1b044b735bea99e96d2269404c078c7771fea0a06ba" target="_blank" rel="noopener">0x625a6618&hellip;</a></code></span>
             </td>
             <td>09.03.2026</td>
             <td>11.03.2026 08:45 CET</td>
@@ -1049,7 +1049,7 @@ await governance.execute(proposalId);</code></pre>
           <tr>
             <td>#5</td>
             <td><code>setFeeExempt(FeeRouterV1, true)</code><br>
-              <span class="address">Execution recorded on-chain; no full execution hash is published in the current evidence set.</span>
+              <span class="address">TX: <code><a href="https://etherscan.io/tx/0x82d2d1b8c2015481155c9d8c22fd983f84ddfb72f9a2033929495b7ae64c2d26" target="_blank" rel="noopener">0x82d2d1b8&hellip;</a></code></span>
             </td>
             <td>09.03.2026</td>
             <td>11.03.2026 08:46 CET</td>
@@ -1339,7 +1339,7 @@ await governance.execute(proposalId);</code></pre>
         <summary>Current governance and transition options</summary>
       <h2>Current Governance Model</h2>
       <p>
-        Inferno currently operates under an <strong>Admin + Timelock</strong> governance model. This is a deliberate choice for the early phase of the protocol.
+        Inferno currently operates through the <strong>3-of-5 Treasury Safe + Governance Timelock</strong>. This is a deliberate choice for the early phase of the protocol.
       </p>
 
       <table>
@@ -1352,7 +1352,7 @@ await governance.execute(proposalId);</code></pre>
         <tbody>
           <tr>
             <td>Model</td>
-            <td><strong>Single Admin + 48h Timelock</strong></td>
+            <td><strong>3-of-5 Treasury Safe + 48h Timelock</strong></td>
           </tr>
           <tr>
             <td>Token Voting</td>
@@ -1379,7 +1379,7 @@ await governance.execute(proposalId);</code></pre>
 
       <div class="callout">
         <p>
-          <strong>Important:</strong> Inferno is <strong>not a DAO</strong> today. The current governance is admin-controlled with a mandatory timelock. This is intentional &mdash; see below for the rationale and roadmap.
+          <strong>Important:</strong> Inferno is <strong>not a DAO</strong> today. The current Governance owner is the 3-of-5 Treasury Safe and governed actions use the mandatory timelock, except for the separately disclosed guardian rotation path. This is intentional &mdash; see below for the rationale and roadmap.
         </p>
       </div>
 
@@ -1434,40 +1434,40 @@ await governance.execute(proposalId);</code></pre>
         <thead>
           <tr>
             <th>Capability</th>
-            <th>Admin+Timelock (now)</th>
-            <th>Multisig (next)</th>
+            <th>3-of-5 Safe + Timelock (now)</th>
+            <th>Council tooling + signer expansion (next)</th>
             <th>Full DAO (future)</th>
           </tr>
         </thead>
         <tbody>
           <tr>
             <td>Fee Rate Changes</td>
-            <td>Owner only</td>
-            <td>3/5 signers</td>
+            <td>Treasury Safe proposal</td>
+            <td>Council recommendation; Safe execution</td>
             <td>Community vote</td>
           </tr>
           <tr>
             <td>Guardian Updates</td>
-            <td>Owner only</td>
-            <td>3/5 signers</td>
+            <td>Treasury Safe direct owner call</td>
+            <td>Council recommendation; Safe execution</td>
             <td>Community vote</td>
           </tr>
           <tr>
             <td>Emergency Cancel</td>
             <td>Guardian</td>
-            <td>Any signer</td>
+            <td>Guardian under Council policy</td>
             <td>Guardian + vote</td>
           </tr>
           <tr>
             <td>Delay Changes</td>
-            <td>Self-governance</td>
-            <td>Self-governance</td>
+            <td>Treasury Safe self-proposal</td>
+            <td>Council recommendation; Safe self-proposal</td>
             <td>Community vote</td>
           </tr>
           <tr>
             <td>Builder Onboarding</td>
-            <td>Team decision</td>
-            <td>Multisig vote</td>
+            <td>Governance/admin decision</td>
+            <td>Council process; Safe-administered</td>
             <td>Community proposal</td>
           </tr>
           <tr>

@@ -127,11 +127,35 @@ requireText("docs/SECURITY_AUDIT_SKYWALKER.md", [
 
 const totalSupply = 997571140022456196n;
 const burned = 2428859977543804n;
-const namedBalances = 910880633876823778n;
+const custodyBalances = {
+  lpReserveSafe: 400600000000000000n,
+  liquidityReserve: 200000000000000000n,
+  vesting: 150000000000000000n,
+  communitySafe: 7900000000000000n,
+  partnerVault: 40000000000000000n,
+  uniswapPair: 11899172061166225n,
+  commitmentVault: 47952476871794375n,
+  lendingVault: 52155440952845656n,
+  feeRouter: 371543991017522n,
+  ifrLock: 2000000000000n,
+  treasurySafe: 0n,
+};
+const namedBalances = Object.values(custodyBalances).reduce((sum, balance) => sum + balance, 0n);
 const otherBalances = 86690506145632418n;
+assert.equal(namedBalances, 910880633876823778n);
 assert.equal(namedBalances + otherBalances, totalSupply);
 assert.equal(totalSupply + burned, 1_000_000_000_000_000_000n);
 requireText("docs/wiki/transparency.html", [
+  "400,600,000",
+  "200,000,000",
+  "150,000,000",
+  "7,900,000",
+  "40,000,000",
+  "11,899,172.061166225",
+  "47,952,476.871794375",
+  "52,155,440.952845656",
+  "371,543.991017522",
+  "2,000",
   "997,571,140.022456196",
   "2,428,859.977543804",
   "86,690,506.145632418",

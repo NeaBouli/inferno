@@ -106,7 +106,7 @@ Token `0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4` · Governance `0x6050b22E4EAF
   1h–7d), minTrigger 0.01 ETH, slippage 500 (max 1000). 50% buy-and-burn → immutable burnReserve,
   50% add-liquidity → lpReceiver; LP failure falls back to buyback. Emergency
   `withdrawETH`/`withdrawIFR` onlyOwner; **unchecked ERC20 return in withdrawIFR** (Slither
-  baseline entry). **Mainnet owner = Deployer EOA** (verify current).
+  baseline entry). **Mainnet owner = Governance** (verified through `owner()`).
 - **LiquidityReserve.sol** (5.7 KB) — immutable lockEnd/periodDuration (180d lock ended
   01.09.2026; 90-day periods); mutable maxWithdrawPerPeriod 50M IFR; withdraw onlyOwner + guardian
   pause. Held 200M IFR, 0 withdrawn at block 25918433. **Withdrawal capability is live now.**
