@@ -22,6 +22,7 @@ on:
       - 'scripts/test-status-baseline.cjs'
       - 'scripts/test-functionality-status.cjs'
       - 'scripts/check-cwa-remediation-register.cjs'
+      - 'scripts/test-cwa-content-coherence.cjs'
       - 'scripts/check-july-audit-remediation-register.cjs'
       - 'scripts/test-docs-workflow.cjs'
       - 'scripts/check-markdownlint-baseline.cjs'
@@ -60,6 +61,7 @@ on:
       - 'scripts/test-status-baseline.cjs'
       - 'scripts/test-functionality-status.cjs'
       - 'scripts/check-cwa-remediation-register.cjs'
+      - 'scripts/test-cwa-content-coherence.cjs'
       - 'scripts/check-july-audit-remediation-register.cjs'
       - 'scripts/test-docs-workflow.cjs'
       - 'scripts/check-markdownlint-baseline.cjs'
@@ -198,6 +200,9 @@ jobs:
 
       - name: Check CWA remediation register and public audit evidence
         run: npm run test:cwa-register
+
+      - name: Check CWA content-coherence remediations
+        run: npm run test:cwa-content
 
       - name: Check July community-audit remediation status
         run: npm run test:july-audit-register

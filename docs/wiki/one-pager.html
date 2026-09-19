@@ -675,7 +675,7 @@
 
       <ul>
         <li><strong>Burn-on-transfer:</strong> 2.5% of each standard transfer between non-exempt addresses is permanently burned (2% sender + 0.5% recipient), making IFR continuously deflationary.</li>
-        <li><strong>Buyback mechanism:</strong> BuybackVault collects ETH and buys IFR on Uniswap V2, splitting 50/50 between burn and treasury.</li>
+        <li><strong>Buyback mechanism:</strong> BuybackVault can use deposited ETH to buy IFR and split output between BurnReserve and Treasury. It is currently separate from the IFR transfer-pool fee held by FeeRouterV1.</li>
         <li><strong>Lock = Tier:</strong> Lock IFR in the IFRLock contract to unlock Bronze / Silver / Gold / Platinum access across all partner products.</li>
         <li><strong>Builder rewards:</strong> PartnerVault distributes IFR to builders when users lock through their integrations &mdash; 4% of supply reserved.</li>
       </ul>
@@ -698,7 +698,7 @@
         <li><strong>Ethereum Mainnet</strong> &mdash; deployed and verified on March 5, 2026.</li>
         <li><strong>Solidity 0.8.20 + OpenZeppelin v5</strong> &mdash; battle-tested base contracts with modern security patterns.</li>
         <li><strong>Full internal audits + automated test evidence</strong> &mdash; public source records; independent professional third-party audit pending.</li>
-        <li><strong>48h Timelock + Guardian</strong> &mdash; all parameter changes are delayed and publicly visible before execution.</li>
+        <li><strong>48h Timelock + Guardian</strong> &mdash; governance proposals are delayed and publicly visible; owner-only guardian rotation through <code>setGuardian</code> is the documented untimelocked exception.</li>
       </ul>
 
       <!-- ========== Post-Launch Roadmap ========== -->
@@ -708,7 +708,7 @@
         <li><span class="badge-done">DONE</span> Mainnet deployment &mdash; 17 on-chain components deployed and verified</li>
         <li><span class="badge-done">DONE</span> Contract verification on Etherscan</li>
         <li><span class="badge-done">DONE</span> Gnosis Safe multisig created</li>
-        <li><span class="badge-done">DONE</span> Wiki documentation &mdash; 35 pages</li>
+        <li><span class="badge-done">DONE</span> Wiki documentation &mdash; 36 HTML pages</li>
         <li><span class="badge-done">DONE</span> Uniswap V2 LP creation via BootstrapVaultV3.finalise() (100M IFR + 0.030 ETH)</li>
         <li><span class="badge-done">DONE</span> LP custody verified: retained in withdrawal-less BootstrapVaultV3; Team.Finance disabled</li>
         <li><span class="badge-done">DONE</span> Transfer InfernoToken ownership to Governance / TreasurySafe control</li>
@@ -723,7 +723,7 @@
       <h2>Team</h2>
 
       <p>
-        Pseudonymous team &mdash; transparency through open-source code and on-chain governance. All contracts verified on Etherscan. No admin backdoors. Treasury controlled by 3-of-5 Gnosis Safe multisig.
+        Pseudonymous team &mdash; transparency through open-source code and on-chain governance. Treasury is controlled by 3-of-5 Gnosis Safe multisig. Governance proposals use the 48-hour timelock; guardian rotation via owner-only <code>setGuardian</code> is the documented untimelocked exception.
       </p>
 
       <ul>

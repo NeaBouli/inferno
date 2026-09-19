@@ -722,7 +722,7 @@
           this community submission is not a professional third-party security certification.
         </p>
         <p style="color:#c9d1d9;font-size:0.9rem;margin:0 0 14px">
-          Current evidence-backed status: <strong>8 fixed and verified</strong>, 6 partially
+          Current evidence-backed status: <strong>9 fixed and verified</strong>, 5 partially
           remediated, 1 outdated snapshot corrected, 3 governance or future-version gated,
           2 accepted or monitored and 3 open actionable. Red severity labels in the unchanged
           report describe the 27 July snapshot; they do not by themselves mean a finding is
@@ -741,9 +741,9 @@
         <div style="color:#8a8a96;font-size:0.85rem;margin-bottom:10px">Repository, contracts, applications, public content and AI-readiness &middot; Dated, reproducible evidence &middot; Not a professional certification</div>
         <p style="color:#c9d1d9;font-size:0.9rem;margin:0 0 12px">
           The complete series is public with report hashes and a consolidated PDF. Publication is
-          not remediation. At the 19 September checkpoint, <strong>0 findings are fixed and
+          not remediation. At the 19 September checkpoint, <strong>17 findings are fixed and
           verified</strong>; 11 require Governance or owner action, 2 are accepted or monitored,
-          58 remain directly actionable and 11 are informational.
+          41 remain directly actionable and 11 are informational.
         </p>
         <p style="color:#8a8a96;font-size:0.9rem;margin:0 0 14px">
           The corrected aggregate is 0 Critical, 3 High, 29 Medium, 34 Low and 16 Informational.
@@ -802,40 +802,6 @@
 </style>
 <button id="ifr-btn" onclick="var p=document.getElementById('ifr-panel');p.style.display=p.style.display==='block'?'none':'block';"><img src="../assets/CoPilot.jpg" alt="IFR Copilot"></button>
 <div id="ifr-panel"><iframe src="https://copilot-api.ifrunit.tech" allow="clipboard-write"></iframe></div>
-
-<script>
-(function() {
-  var PROXY = 'https://copilot-api.ifrunit.tech';
-  var dot = document.getElementById('deflation-dot');
-  var status = document.getElementById('deflation-status');
-  var burnEl = document.getElementById('burn-amount');
-  var pctEl = document.getElementById('burn-pct');
-  if (!dot || !status || !burnEl || !pctEl) return;
-
-  function showOk() {
-    dot.style.background = '#22c55e';
-    status.innerHTML = '<span style="color:#22c55e">\u25CF</span> Live via copilot-api.ifrunit.tech \u2192 Ethereum \u2014 refreshes every 30s';
-  }
-  function showFail() {
-    dot.style.background = '#ef4444';
-    status.innerHTML = '<span style="color:#ef4444">\u25CF</span> \u26A0 Connection failed \u2014 retry in 30s';
-  }
-  function update() {
-    fetch(PROXY + '/api/ifr/supply')
-      .then(function(r) { return r.json(); })
-      .then(function(d) {
-        if (d.burned != null && d.totalSupply != null) {
-          burnEl.textContent = Number(d.burned).toLocaleString();
-          pctEl.textContent = (d.burned / 1000000000 * 100).toFixed(4) + '%';
-          showOk();
-        } else { showFail(); }
-      })
-      .catch(function() { showFail(); });
-  }
-  update();
-  setInterval(update, 30000);
-})();
-</script>
 
 <script>
 async function lpConnect(){

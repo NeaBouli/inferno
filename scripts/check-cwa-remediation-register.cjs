@@ -66,7 +66,6 @@ for (const [index, finding] of register.findings.entries()) {
 
 assert.deepEqual(dispositionTotals, register.expectedDispositionTotals);
 assert.deepEqual(severityTotals, register.expectedSeverityTotals);
-assert.equal(dispositionTotals.fixed_and_verified, 0, "no CWA finding is fixed and verified yet");
 
 const pdf = register.artifacts.consolidatedPdf;
 const pdfPath = path.join(auditDir, pdf.path);
@@ -126,6 +125,43 @@ for (const relative of publicLinks) {
     content.includes("CWA_REMEDIATION_REGISTER"),
     `${relative} must link to the authoritative CWA remediation register`
   );
+}
+
+const publicStatusMarkers = {
+  "README.md": [
+    `${dispositionTotals.fixed_and_verified} fixed and verified`,
+    `${dispositionTotals.open_actionable} findings remain directly actionable`,
+  ],
+  "docs/community-audits/README.md": [
+    `${dispositionTotals.fixed_and_verified} fixed and verified`,
+    `${dispositionTotals.open_actionable} open actionable`,
+  ],
+  "docs/wiki/open-audit.html": [
+    `<strong>${dispositionTotals.fixed_and_verified} findings are fixed and`,
+    `${dispositionTotals.open_actionable} remain directly actionable`,
+  ],
+  "docs/wiki/security.html": [
+    `${dispositionTotals.fixed_and_verified} findings are fixed and verified`,
+    `${dispositionTotals.open_actionable} open actionable items`,
+  ],
+  "docs/CURRENT_FUNCTIONALITY_STATUS.md": [
+    `${dispositionTotals.fixed_and_verified} fixed and verified`,
+    `${dispositionTotals.open_actionable} open actionable`,
+  ],
+  "docs/llms.txt": [
+    `${dispositionTotals.fixed_and_verified} fixed and verified`,
+    `${dispositionTotals.open_actionable} open actionable`,
+  ],
+  "apps/ai-copilot/src/context/ifr-knowledge.ts": [
+    `${dispositionTotals.fixed_and_verified} findings are fixed and verified`,
+    `${dispositionTotals.open_actionable} are open actionable`,
+  ],
+};
+for (const [relative, markers] of Object.entries(publicStatusMarkers)) {
+  const content = fs.readFileSync(path.join(root, relative), "utf8");
+  for (const marker of markers) {
+    assert.ok(content.includes(marker), `${relative} missing current CWA status marker: ${marker}`);
+  }
 }
 
 for (const relative of [
@@ -208,7 +244,7 @@ function renderMarkdown(data) {
     "This is the authoritative public status register for the seven Collateral Web3 Open",
     "Audits reports. Publishing a finding does not mean it has been remediated. A finding",
     "moves to **Fixed and verified** only after its change is integrated and the required",
-    "verification evidence passes. At this baseline, no finding meets that standard.",
+    `verification evidence passes. ${data.expectedDispositionTotals.fixed_and_verified} findings currently meet that standard.`,
     "",
     "## Status Summary",
     "",

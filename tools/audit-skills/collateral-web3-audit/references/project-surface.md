@@ -51,8 +51,9 @@ Public `GET /api/health` → `{"status":"ok","chainId":1}`.
 `/api/health` → 404. Documented-but-unprobed (auth-gated): `/auth/siwe/nonce`,
 `/auth/siwe/verify` → JWT 24h, `/points/balance`, `/points/event`, `/voucher/issue`.
 **Docs say the Points system is "designed, not yet live" while the live service answers healthy
-— verify status.** Claimed limits: 1 voucher/wallet/day, 100 pts → 15 bps voucher (7 days,
-single use), 60 req/min/IP.
+— verify status.** Current configured limits: 1 voucher/wallet/day, 100 pts -> 5 bps voucher
+(7 days, single use), 60 req/min/IP. The 5 bps cap matches the deployed FeeRouter fee;
+higher vouchers revert.
 
 **`verify-api.ifrunit.tech`** — Express. `/`, `/health`, `/api/health` all 404. CORS preflight:
 `access-control-allow-origin: *`, methods POST/GET/OPTIONS. Used by `wiki/verify.html` for

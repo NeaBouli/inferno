@@ -597,7 +597,7 @@
             <td>15%</td>
             <td>150M IFR</td>
             <td>Gnosis Safe multisig</td>
-            <td>Protocol treasury. 150M IFR committed to Bootstrap. Refills via protocol fees (Phase 3). Ecosystem development, audits, partnerships.</td>
+            <td>Protocol treasury. Funded Bootstrap with 144.75M IFR plus a 5.25M IFR top-up. No automatic refill path is deployed.</td>
           </tr>
           <tr>
             <td>Community &amp; Grants</td>
@@ -616,7 +616,7 @@
         </tbody>
       </table>
       <p style="margin-top:12px;font-size:13px;color:var(--text-muted);line-height:1.6;">
-        <strong>Note:</strong> BuybackVault and BurnReserve are protocol contracts that accumulate from the 1% pool fee on every non-exempt transfer &mdash; they are not pre-funded genesis allocations. Bootstrap is funded via Plan B from Treasury + Community Safe (~200M IFR to BootstrapVaultV3).
+        <strong>Note:</strong> BuybackVault and BurnReserve are protocol contracts, not pre-funded genesis allocations. The 1% IFR transfer-pool fee currently accrues in FeeRouterV1 and is not automatically forwarded to either contract. Bootstrap was funded via Plan B from Treasury + Community Safe (~200M IFR to BootstrapVaultV3).
       </p>
 
       <!-- ========== Comparison ========== -->
@@ -725,7 +725,7 @@
 
       <ul>
         <li><strong>Open source contracts</strong> &mdash; audited + verified on Etherscan</li>
-        <li><strong>On-chain governance</strong> &mdash; 48h timelock, no admin backdoors</li>
+        <li><strong>On-chain governance</strong> &mdash; proposals use a 48h timelock; owner-only guardian rotation via <code>setGuardian</code> is the documented untimelocked exception</li>
         <li><strong>Smart contract-enforced rules</strong> &mdash; not promises</li>
         <li><strong>Gnosis Safe 3-of-5</strong> &mdash; no single point of failure</li>
       </ul>

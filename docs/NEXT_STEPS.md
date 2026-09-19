@@ -54,8 +54,8 @@ Argument: 0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c  (BuybackController)
 4. Wait 48h timelock
 
 ### What this does:
-- Routes all protocol fees (1% pool fee from FeeRouterV1) to BuybackController
-- Currently fees go to deployer address — this redirects to the automated controller
+- Routes native ETH fees charged by FeeRouterV1 swaps to BuybackController
+- Does not move the 1% IFR transfer-pool fees already held by FeeRouterV1
 
 ---
 

@@ -58,7 +58,7 @@ governance activation gate is complete.
 - [x] Gnosis Safe Multisig deployed (3-of-5 active) — `0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`
 - [x] Mainnet deploy (9 contracts, all verified on Etherscan)
 - [x] Token distribution complete (1B IFR, CFLM)
-- [x] Mainnet feeExempt configuration (8 addresses set, deployer removed)
+- [x] Mainnet feeExempt configuration completed; the Deployer EOA was later re-enabled by executed Proposal #7 and remains a disclosed governance-controlled exception
 - [x] Etherscan verification (mainnet, all 9 contracts)
 - [x] Ownership transfer to Governance (InfernoToken, LiquidityReserve, BuybackVault, BurnReserve)
 - [x] ~~BootstrapVault V1/V2~~ deprecated; BootstrapVaultV3 deployed and finalized (`0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141`)

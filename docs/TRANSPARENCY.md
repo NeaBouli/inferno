@@ -81,7 +81,9 @@ proposal, the 48-hour timelock and execution.
 | Burn Share | 50% |
 | Activation | 60 days after deploy |
 
-BuybackVault is initially empty — it collects 1% pool fees from transfers. Activation delay ensures no premature buyback.
+BuybackVault is empty and accepts ETH deposits; it is not the current receiver of
+the 1% IFR transfer-pool fee. That IFR fee is held by FeeRouterV1. The vault's
+activation delay prevents premature execution if ETH is deposited.
 
 ---
 

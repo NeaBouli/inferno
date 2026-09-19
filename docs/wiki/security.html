@@ -789,8 +789,8 @@
             <tr>
               <td>W1</td>
               <td>Governance</td>
-              <td><code>setOwner()</code> bypasses timelock &mdash; immediate ownership transfer</td>
-              <td>Multisig planned</td>
+              <td>Deployed <code>setOwner()</code> bypasses the timelock; repository source uses <code>onlySelf</code></td>
+              <td>Open on-chain / fixed in source &mdash; bundle with a reviewed Governance replacement (CWA-25)</td>
             </tr>
             <tr>
               <td>W2</td>
@@ -801,8 +801,8 @@
             <tr>
               <td>W3</td>
               <td>BuybackVault</td>
-              <td><code>setParams</code> has no bounds on burnShareBps, slippageBps, cooldown</td>
-              <td>Fix in v3</td>
+              <td>Deployed <code>setParams</code> predates current bounds; repository source is bounded</td>
+              <td>Open on-chain / fixed in source &mdash; dormant and unfunded; address in a future version (CWA-26)</td>
             </tr>
             <tr>
               <td>W4</td>
@@ -835,7 +835,7 @@
         <p style="margin-bottom:8px;"><strong>July 2026 Community Audit &mdash; current finding status</strong></p>
         <p style="margin-bottom:10px;">
           The unchanged historical report is paired with a maintained evidence register:
-          8 findings are fixed and verified, 6 partially remediated, 1 dated snapshot corrected,
+          9 findings are fixed and verified, 5 partially remediated, 1 dated snapshot corrected,
           3 governance or future-version gated, 2 accepted or monitored and 3 open actionable.
           Historical severity colors are not presented as current remediation status.
         </p>
@@ -851,8 +851,8 @@
         <p style="margin-bottom:10px;">
           Seven community audit reports cover contracts, applications, public claims and AI
           readiness. They are public evidence, not a professional certification. At the current
-          checkpoint, no finding is both remediated and verified; the status register records
-          11 governance or owner gates, 2 accepted or monitored items, 58 open actionable items
+          checkpoint, 17 findings are fixed and verified; the status register records
+          11 governance or owner gates, 2 accepted or monitored items, 41 open actionable items
           and 11 informational items.
         </p>
         <p>
@@ -1301,7 +1301,7 @@
           <tr><td>Voucher Replay</td><td><code>usedNonces[wallet][nonce] = true</code> (on-chain)</td></tr>
           <tr><td>Expired Voucher</td><td><code>block.timestamp &gt; expiry</code> check</td></tr>
           <tr><td>Falscher Signer</td><td><code>ECDSA.recover == voucherSigner</code></td></tr>
-          <tr><td>Discount &gt; Fee</td><td>Clamp: <code>max(fee - discount, 0)</code></td></tr>
+          <tr><td>Discount &gt; Fee</td><td>Rejected: <code>discountBps &lt;= protocolFeeBps</code> is required before execution</td></tr>
           <tr><td>Arbitrary Adapter</td><td><code>whitelistedAdapters</code> mapping</td></tr>
           <tr><td>Signer kompromittiert</td><td><code>pause()</code> + <code>setVoucherSigner()</code> via Governance</td></tr>
           <tr><td>Fee ueber Cap</td><td><code>FEE_CAP_BPS = 25</code> hard-coded</td></tr>
@@ -1466,7 +1466,7 @@
         <p style="margin-bottom:0.75rem;">The audit correctly identified that Owner control is a risk in fee-on-transfer tokens. In IFR, this risk is eliminated by architecture:</p>
         <ul style="margin-bottom:1.5rem;padding-left:1.25rem;">
           <li>The token owner is the <strong>Governance Contract</strong> &mdash; not a person</li>
-          <li>All changes require a <strong>48-hour Timelock</strong></li>
+          <li>Governance proposals require a <strong>48-hour Timelock</strong>; owner-only guardian rotation through <code>setGuardian</code> is the documented untimelocked exception</li>
           <li>Governance is controlled by <strong>TreasurySafe 3-of-5</strong> (5 signers, 3 required)</li>
           <li>Every feeExempt address is <strong>on-chain verifiable</strong></li>
         </ul>

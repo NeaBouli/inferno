@@ -44,7 +44,7 @@ Server runs on http://localhost:3004
 | `guide_lock` | 30 | 1 |
 | `partner_onboarding` | 50 | 1 |
 
-**Voucher threshold:** 100 points → 0.15% protocol fee discount (EIP-712 signed)
+**Voucher threshold:** 100 points → 0.05% protocol fee discount (5 bps, EIP-712 signed). The configured discount must not exceed the deployed FeeRouter protocol fee.
 
 ## Rate Limits
 

@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Native Governance &mdash; Inferno (IFR)</title>
   <meta name="keywords" content="Inferno, IFR, ERC-20, Ethereum, deflationary token, DeFi, blockchain, smart contract, governance, bootstrap">
-  <meta name="description" content="Two-Chamber DAO System: Telegram-native governance with RatVoting + ForumVoting. IFR Lock as voting credential.">
+  <meta name="description" content="Planned Phase 4 two-chamber governance architecture for Inferno (IFR); no RatVoting or ForumVoting contract is deployed.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -821,24 +821,36 @@
 
       <div class="status-badge coming-soon">Phase 4 &mdash; Planned</div>
 
+      <div class="callout">
+        <p><strong>Architecture specification, not a live service.</strong> RatVoting,
+        ForumVoting, IFRSpamProtection, the Telegram voting bot and the flows below are
+        proposed Phase 4 components. None is deployed or available for voting today.
+        Current executable governance remains the documented Safe and Governance
+        timelock process.</p>
+      </div>
+
       <!-- ============================================================
            Section 1: Overview
            ============================================================ -->
       <h2 id="overview">What is IFR Native Governance?</h2>
 
       <p>
-        IFR governance happens where the community already lives: <strong>Telegram</strong>. Instead of building a separate voting dApp, the governance system is integrated directly into Telegram groups and channels.
+        This proposal would place community participation where it already happens:
+        <strong>Telegram</strong>. The planned system is not currently integrated into
+        Telegram groups or channels.
       </p>
 
       <p>
-        The system uses a hybrid on-chain/off-chain model. Voting is free and happens off-chain (via Telegram reactions and polls), while results are permanently anchored on-chain for transparency and tamper-proofing.
+        The proposed system would use a hybrid on-chain/off-chain model. Voting would
+        happen off-chain via Telegram reactions and polls, while a future contract could
+        anchor finalized results on-chain.
       </p>
 
       <ul>
         <li><strong>No gas costs for voting:</strong> IFR is a deflationary token &mdash; standard transfers between non-exempt addresses burn tokens. Off-chain voting avoids unnecessary burns.</li>
-        <li><strong>IFR Lock = voting power:</strong> 1 IFR locked in the IFRLock contract = 1 vote. No minimum threshold for voting.</li>
-        <li><strong>Two chambers:</strong> The Council (team governance) + The Forum (community innovation).</li>
-        <li><strong>On-chain truth:</strong> Every vote result is finalized on-chain with a Merkle root for cryptographic verification.</li>
+        <li><strong>Proposed credential:</strong> a future ratified policy may use eligible locked IFR as voting weight.</li>
+        <li><strong>Proposed chambers:</strong> The Council (strategic governance) and The Forum (community innovation).</li>
+        <li><strong>Proposed verification:</strong> finalized results could be anchored with a Merkle root after the contracts and policy are implemented.</li>
       </ul>
 
       <div class="callout-green callout">
@@ -976,12 +988,12 @@
         <div class="step-card">
           <div class="step-num">4</div>
           <div class="step-card-title">Finalize On-Chain</div>
-          <div class="step-card-desc">Bot aggregates results, builds Merkle Tree, sends single TX to <code>RatVoting.sol</code>.</div>
+          <div class="step-card-desc">Planned bot aggregates results, builds a Merkle tree and would submit one transaction to a future <code>RatVoting.sol</code>.</div>
         </div>
       </div>
 
       <div class="callout-green callout">
-        <p><strong>Verifiable votes:</strong> Every voter can cryptographically prove their vote was correctly included in the Merkle Tree using the public <code>verifyVote()</code> function on RatVoting.sol.</p>
+        <p><strong>Planned verification:</strong> the design proposes a public <code>verifyVote()</code> function so voters could verify Merkle inclusion after the contract is implemented and deployed.</p>
       </div>
 
       <!-- ============================================================
@@ -997,7 +1009,7 @@
         <div class="step-card">
           <div class="step-num">1</div>
           <div class="step-card-title">Submit Proposal</div>
-          <div class="step-card-desc"><code>/propose</code> in the <a href="https://t.me/IFR_token" target="_blank" rel="noopener">Community Forum</a> (t.me/IFR_token). 10 IFR deposited to IFRSpamProtection.sol.</div>
+          <div class="step-card-desc">Proposed <code>/propose</code> flow in the <a href="https://t.me/IFR_token" target="_blank" rel="noopener">Community Forum</a>. The 10 IFR deposit mechanism is not live.</div>
         </div>
         <div class="step-arrow">&rarr;</div>
         <div class="step-card">
@@ -1023,12 +1035,12 @@
         <div class="step-card">
           <div class="step-num">5</div>
           <div class="step-card-title">On-Chain Result</div>
-          <div class="step-card-desc">Bot bundles signatures, sends single TX to ForumVoting.sol. Result permanent on-chain.</div>
+          <div class="step-card-desc">A future bot would bundle signatures and submit one transaction to a deployed ForumVoting contract.</div>
         </div>
       </div>
 
       <div class="callout">
-        <p><strong>Deflationary mechanic:</strong> The 10 IFR spam fee reinforces IFR&rsquo;s deflationary design. Bad proposals burn IFR permanently. Good proposals earn it back. Every rejected proposal reduces total supply.</p>
+        <p><strong>Proposed mechanic:</strong> a future, audited and ratified spam-fee design could refund accepted proposals and burn rejected deposits. No proposal-fee contract is deployed today.</p>
       </div>
 
       <!-- ============================================================
@@ -1050,7 +1062,7 @@
 
       <div class="journey-step"><div class="journey-num">4</div><div class="journey-text"><strong>No gas costs:</strong> All voting happens off-chain (reactions and polls). Only the final result is sent on-chain &mdash; and the bot pays for that transaction.</div></div>
 
-      <div class="journey-step"><div class="journey-num">5</div><div class="journey-text"><strong>Verify:</strong> After finalization, anyone can verify their vote was counted correctly via the Merkle proof on RatVoting.sol (public view function).</div></div>
+      <div class="journey-step"><div class="journey-num">5</div><div class="journey-text"><strong>Verify (planned):</strong> after future deployment, the proposed Merkle-proof function would allow inclusion checks.</div></div>
 
       <h3>Cost Overview</h3>
 
@@ -1168,7 +1180,7 @@
       <p>Signer selection is planned as a mixed model: eligibility filter, public nomination, community vote, security review, rotation, and emergency replacement rules. It is not pure whale voting and not pure random selection. Full details: <a href="community-signer-expansion.html">Community Signer Expansion Plan</a>.</p>
 
       <h3>Can I verify my vote was counted?</h3>
-      <p>Yes. After finalization, every voter can verify their vote via the Merkle proof on RatVoting.sol. The <code>verifyVote()</code> function is a public view function &mdash; anyone can call it at any time, for free.</p>
+      <p>Not today. The planned RatVoting design includes a public <code>verifyVote()</code> view function, but that contract is not deployed and no production vote proof currently exists.</p>
 
       <!-- ============================================================
            Join the Governance
