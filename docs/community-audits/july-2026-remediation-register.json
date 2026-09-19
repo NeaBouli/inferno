@@ -1,0 +1,353 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-09-19",
+  "baseline": "564a7c4504c8da7a24a302204f4fd5e39d1abece",
+  "originalAudit": {
+    "path": "IFR_Protocol_Audit_2026-07-27.md",
+    "sha256": "ec7f99b0b74c51e04091727a0b69f49f67c36409a52c9ea7b55ba545b6b3e375"
+  },
+  "statusDefinitions": {
+    "fixed_and_verified": "The correction is integrated and current repository evidence verifies the claimed scope.",
+    "partially_remediated": "Material safeguards or wording corrections are integrated, but a stated part of the finding remains open.",
+    "corrected_outdated_snapshot": "The dated observation no longer describes current state; current facts and their evidence are published separately.",
+    "governance_or_future_version_gated": "The remaining change needs an authorized governance action, migration or separately reviewed future contract version.",
+    "documented_accepted_or_monitored": "The current limitation is explicitly documented and monitored; it must be revisited before the affected path is activated or replaced.",
+    "open_actionable": "Repository, hosting or product work remains directly actionable."
+  },
+  "expectedStatusTotals": {
+    "fixed_and_verified": 8,
+    "partially_remediated": 6,
+    "corrected_outdated_snapshot": 1,
+    "governance_or_future_version_gated": 3,
+    "documented_accepted_or_monitored": 2,
+    "open_actionable": 3
+  },
+  "expectedSeverityTotals": {
+    "Critical": 1,
+    "High": 5,
+    "Medium": 10,
+    "Low": 7
+  },
+  "findings": [
+    {
+      "id": "JUL-01",
+      "severity": "Critical",
+      "title": "Project-wide legal, privacy and risk disclosures",
+      "sourceSection": "3.1",
+      "status": "partially_remediated",
+      "currentAssessment": "Benefits now has a dedicated privacy surface and public claims carry narrower risk boundaries, but project-wide operator, privacy, terms and regulatory texts still require qualified German/EU legal review.",
+      "remainingAction": "Complete qualified legal review and publish only the approved project-wide disclosures; keep lending fail-closed until its legal and technical activation gates are satisfied.",
+      "verification": "Legal approval, route/link checks on every public surface and a privacy data-flow review.",
+      "evidence": [
+        {"path": "apps/benefits-network/frontend/src/app/privacy/page.tsx", "marker": "Privacy &amp; data, stated plainly."},
+        {"path": "docs/community-audits/README.md", "marker": "qualified German/EU legal review"}
+      ]
+    },
+    {
+      "id": "JUL-02",
+      "severity": "High",
+      "title": "Unqualified lifetime-access marketing",
+      "sourceSection": "3.2",
+      "status": "fixed_and_verified",
+      "currentAssessment": "Active core copy now states that access remains active only while each product's required IFR stays locked and the integration remains available.",
+      "remainingAction": "Keep the content-trust guard and review new product copy against the same qualified-access rule.",
+      "verification": "Content-trust test plus public Landing/Wiki claim checks.",
+      "evidence": [
+        {"path": "README.md", "marker": "access remains active while each product's required IFR stays locked and that integration remains available"},
+        {"path": "scripts/test-content-trust.cjs", "marker": "unqualified permanent-access claim"}
+      ]
+    },
+    {
+      "id": "JUL-03",
+      "severity": "High",
+      "title": "LendingVault manual price and activation risk",
+      "sourceSection": "3.3",
+      "status": "governance_or_future_version_gated",
+      "currentAssessment": "V1 borrowing remains fail-closed with ifrPriceWei = 0. Lender offers are live, but borrower activation is not approved and requires a bounded, fresh, pausable price path.",
+      "remainingAction": "Design and independently review the V2 price path, caps, expiry behavior and emergency controls before any governed activation.",
+      "verification": "Oracle freshness/bounds tests, hostile-price tests, independent review, governance execution and post-execution chain checks.",
+      "evidence": [
+        {"path": "docs/wiki/roadmap.html", "marker": "ifrPriceWei = 0"},
+        {"path": "docs/community-audits/cwa-remediation-register.json", "marker": "LendingVault activation price risk"}
+      ]
+    },
+    {
+      "id": "JUL-04",
+      "severity": "High",
+      "title": "Internal reviews presented as an external audit",
+      "sourceSection": "3.4",
+      "status": "fixed_and_verified",
+      "currentAssessment": "Current public copy distinguishes internal audits, community reviews and automated evidence from an independent professional certification, which remains pending.",
+      "remainingAction": "Preserve the wording guard and do not use professional-certification language until a qualifying audit exists.",
+      "verification": "Content-trust test and Landing/Wiki/Copilot claim checks.",
+      "evidence": [
+        {"path": "docs/wiki/faq.html", "marker": "These are internal audits, not an independent professional certification."},
+        {"path": "docs/index.html", "marker": "a professional third-party audit remains a planned security milestone"}
+      ]
+    },
+    {
+      "id": "JUL-05",
+      "severity": "High",
+      "title": "Dated adoption, liquidity and live-state snapshot",
+      "sourceSection": "3.5",
+      "status": "corrected_outdated_snapshot",
+      "currentAssessment": "The original zero-offer and zero-lock statements are historical. Current public status records live CommitmentVault locks and three LendingVault offers while still disclosing that borrowing is disabled and adoption remains limited.",
+      "remainingAction": "Continue dated, source-labeled live-state reporting and never convert snapshots into evergreen adoption claims.",
+      "verification": "Block-pinned chain reads, current status tests and stale-data behavior on live surfaces.",
+      "evidence": [
+        {"path": "docs/wiki/roadmap.html", "marker": "three offers provide 52,155,440.952845656 IFR"},
+        {"path": "docs/llms.txt", "marker": "Three contributor offers provide 52,155,440.952845656 IFR"}
+      ]
+    },
+    {
+      "id": "JUL-06",
+      "severity": "High",
+      "title": "Guardian and signer centralization",
+      "sourceSection": "3.6",
+      "status": "governance_or_future_version_gated",
+      "currentAssessment": "Safe ownership and timelock controls are public, but guardian concentration and signer independence remain governance/key-custody questions rather than completed remediations.",
+      "remainingAction": "Approve and execute a reviewed guardian/key-custody model or explicitly accept the current model with bounded operational controls.",
+      "verification": "Role inventory, proposal simulation, signer/key separation evidence and post-execution chain checks.",
+      "evidence": [
+        {"path": "docs/community-audits/cwa-remediation-register.json", "marker": "Guardian powers are concentrated in one EOA"},
+        {"path": "contracts/governance/Governance.sol", "marker": "address public guardian"}
+      ]
+    },
+    {
+      "id": "JUL-07",
+      "severity": "Medium",
+      "title": "Vault fee-exemption solvency dependency",
+      "sourceSection": "4.1",
+      "status": "partially_remediated",
+      "currentAssessment": "Mainnet exemptions and balance coverage are monitored fail-closed, with negative regression tests. Deployed V1 still depends on the exemptions; balance-diff accounting is a V2 requirement.",
+      "remainingAction": "Keep invariant monitoring active and implement runtime exemption checks plus balance-diff accounting in a separately reviewed V2.",
+      "verification": "Scheduled chain monitor, negative exemption tests and future V2 deposit/withdraw lifecycle tests.",
+      "evidence": [
+        {"path": "docs/VAULT_FEE_EXEMPT_HARDENING.md", "marker": "Monitoring and negative tests implemented; V2 hardening remains future work"},
+        {"path": "scripts/test-vault-invariants.cjs", "marker": "feeExempt"}
+      ]
+    },
+    {
+      "id": "JUL-08",
+      "severity": "Medium",
+      "title": "Fee-on-transfer buyback swap accounting",
+      "sourceSection": "4.2",
+      "status": "open_actionable",
+      "currentAssessment": "The dormant buyback contracts still call swapExactETHForTokens and do not use a fee-on-transfer supporting output path.",
+      "remainingAction": "Keep the path dormant and address token-receipt accounting in a future contract version before activation.",
+      "verification": "Taxed-token router tests, received-balance assertions, independent review and governed deployment evidence.",
+      "evidence": [
+        {"path": "contracts/buyback/BuybackController.sol", "marker": "swapExactETHForTokens"},
+        {"path": "contracts/buyback/BuybackVault.sol", "marker": "swapExactETHForTokens"}
+      ]
+    },
+    {
+      "id": "JUL-09",
+      "severity": "Medium",
+      "title": "Apex security-header limitations",
+      "sourceSection": "4.3",
+      "status": "open_actionable",
+      "currentAssessment": "Application-level safety controls have improved, but GitHub Pages does not provide the full desired response-header policy at the apex host.",
+      "remainingAction": "Select a serving-layer solution that can enforce CSP, HSTS, frame protection, nosniff and permissions policy without breaking wallet flows.",
+      "verification": "Live response-header contract and desktop/mobile wallet regression suite.",
+      "evidence": [
+        {"path": "docs/community-audits/cwa-remediation-register.json", "marker": "Web3 host lacks hardening headers"}
+      ]
+    },
+    {
+      "id": "JUL-10",
+      "severity": "Medium",
+      "title": "Public operational TODO artifacts",
+      "sourceSection": "4.4",
+      "status": "fixed_and_verified",
+      "currentAssessment": "The public TODO files were removed and CI now fails if either file reappears under docs.",
+      "remainingAction": "Keep operational notes outside the public docs tree and retain the content-trust guard.",
+      "verification": "Content-trust test and public link scan.",
+      "evidence": [
+        {"path": "scripts/test-content-trust.cjs", "marker": "internal TODO must not be published under docs/"}
+      ]
+    },
+    {
+      "id": "JUL-11",
+      "severity": "Medium",
+      "title": "Wallet-critical browser dependencies",
+      "sourceSection": "4.5",
+      "status": "partially_remediated",
+      "currentAssessment": "Ethers v6 is pinned and self-hosted, but a legacy wallet-core path still imports WalletConnect from esm.sh at runtime.",
+      "remainingAction": "Bundle and pin WalletConnect locally or replace the legacy path, then verify connector parity across supported browsers and devices.",
+      "verification": "Asset integrity check, no-runtime-CDN assertion and full wallet/browser regression matrix.",
+      "evidence": [
+        {"path": "docs/web3/index.html", "marker": "/assets/vendor/ethers-6.17.0.umd.min.js"},
+        {"path": "docs/assets/wallet-core.js", "marker": "WalletConnect v2 via esm.sh"}
+      ]
+    },
+    {
+      "id": "JUL-12",
+      "severity": "Medium",
+      "title": "Unreproducible coverage and drifting test counts",
+      "sourceSection": "4.6",
+      "status": "fixed_and_verified",
+      "currentAssessment": "Current canonical test counts are centralized and checked. The old coverage percentage is labeled as a historical subset snapshot rather than current full-repository evidence.",
+      "remainingAction": "Update the canonical matrix only with reproducible test evidence and keep historical coverage explicitly dated.",
+      "verification": "Status-baseline, functionality-status and CWA-register CI guards.",
+      "evidence": [
+        {"path": "README.md", "marker": "Current canonical matrix"},
+        {"path": "README.md", "marker": "not a current full-repository coverage claim"}
+      ]
+    },
+    {
+      "id": "JUL-13",
+      "severity": "Medium",
+      "title": "Cross-surface numeric and narrative drift",
+      "sourceSection": "4.7",
+      "status": "partially_remediated",
+      "currentAssessment": "Burn, vesting, component and current test claims now have CI guards, but the September content audit still identifies a larger documentation-drift backlog.",
+      "remainingAction": "Resolve the CWA-57 through CWA-74 content findings against chain/source truth and update their public register entries with proof.",
+      "verification": "Content-trust, status-baseline, cross-surface routing/link tests and finding-specific chain evidence.",
+      "evidence": [
+        {"path": "scripts/test-content-trust.cjs", "marker": "incorrect burn claim"},
+        {"path": "docs/community-audits/cwa-remediation-register.json", "marker": "CWA-57"}
+      ]
+    },
+    {
+      "id": "JUL-14",
+      "severity": "Medium",
+      "title": "LP custody and lock explanation",
+      "sourceSection": "4.8",
+      "status": "fixed_and_verified",
+      "currentAssessment": "Public surfaces now state that Team.Finance was disabled, LP tokens remain in finalized BootstrapVaultV3 and the deployed vault exposes no LP withdrawal path.",
+      "remainingAction": "Preserve exact custody wording and direct users to the verified contract/pair rather than an inapplicable locker claim.",
+      "verification": "Content-trust guard, bytecode/source review and current custody chain check.",
+      "evidence": [
+        {"path": "README.md", "marker": "retained in BootstrapVaultV3; Mainnet Team.Finance locker disabled"},
+        {"path": "docs/wiki/bootstrap.html", "marker": "LP tokens created by <code>finalise()</code> therefore remained in BootstrapVaultV3"}
+      ]
+    },
+    {
+      "id": "JUL-15",
+      "severity": "Medium",
+      "title": "License and deployment-record completeness",
+      "sourceSection": "4.9",
+      "status": "partially_remediated",
+      "currentAssessment": "Contract files carry SPDX MIT headers and deployment references improved, but the repository still has no root license file and the license policy remains unresolved.",
+      "remainingAction": "Owner/legal review must choose and publish a repository license that matches source headers and public claims; deployment evidence must remain source/chain consistent.",
+      "verification": "Root license presence, SPDX consistency test and deployment-record/chain audit.",
+      "evidence": [
+        {"path": "contracts/token/InfernoToken.sol", "marker": "SPDX-License-Identifier: MIT"},
+        {"path": "docs/community-audits/cwa-remediation-register.json", "marker": "License statements are inconsistent"}
+      ]
+    },
+    {
+      "id": "JUL-16",
+      "severity": "Medium",
+      "title": "Reputation and AI-risk wording",
+      "sourceSection": "4.10",
+      "status": "partially_remediated",
+      "currentAssessment": "Unverifiable external no-risk and harmlessness claims are blocked from active public content. The reputation page now carries a reviewer boundary, but broader reputation framing remains an editorial governance concern.",
+      "remainingAction": "Keep factual source-linked language and remove or qualify any remaining advocacy phrasing that cannot be independently verified.",
+      "verification": "Content-trust test and claim-by-claim editorial review.",
+      "evidence": [
+        {"path": "scripts/test-content-trust.cjs", "marker": "unverifiable external no-risk claim"},
+        {"path": "docs/wiki/reputation.html", "marker": "This page is not financial advice and does not make price claims."}
+      ]
+    },
+    {
+      "id": "JUL-17",
+      "severity": "Low",
+      "title": "Ambiguous Telegram destinations",
+      "sourceSection": "Low findings",
+      "status": "fixed_and_verified",
+      "currentAssessment": "Current FAQ and footer copy explicitly distinguish the read-only announcement channel from the community discussion group and warn about impersonators.",
+      "remainingAction": "Keep both roles labeled wherever Telegram links are shown.",
+      "verification": "Public link/label checks and content-trust review.",
+      "evidence": [
+        {"path": "docs/wiki/faq.html", "marker": "Telegram Announcements"},
+        {"path": "docs/wiki/faq.html", "marker": "Telegram Community"}
+      ]
+    },
+    {
+      "id": "JUL-18",
+      "severity": "Low",
+      "title": "Outdated WalletConnect roadmap wording",
+      "sourceSection": "Low findings",
+      "status": "fixed_and_verified",
+      "currentAssessment": "WalletConnect and connector support are described as current Web3 functionality with explicit device-test boundaries, not as a future Phase 2 promise.",
+      "remainingAction": "Keep connector claims aligned with the verified wallet matrix.",
+      "verification": "Web3 browser suite plus the remaining physical-device acceptance matrix.",
+      "evidence": [
+        {"path": "docs/llms.txt", "marker": "Primary Web3 app"},
+        {"path": "docs/CURRENT_FUNCTIONALITY_STATUS.md", "marker": "WalletConnect"}
+      ]
+    },
+    {
+      "id": "JUL-19",
+      "severity": "Low",
+      "title": "Duplicate Web3 host canonicalization",
+      "sourceSection": "Low findings",
+      "status": "fixed_and_verified",
+      "currentAssessment": "The deployable Web3 document declares web3.ifrunit.tech as its canonical and Open Graph URL, while project routing names that host as the primary app.",
+      "remainingAction": "Retain canonical-host checks whenever mirrors or deployment paths change.",
+      "verification": "Canonical/meta tests and live host routing checks.",
+      "evidence": [
+        {"path": "docs/web3/index.html", "marker": "<link rel=\"canonical\" href=\"https://web3.ifrunit.tech/\">"},
+        {"path": "docs/llms.txt", "marker": "Primary Web3 app: https://web3.ifrunit.tech/"}
+      ]
+    },
+    {
+      "id": "JUL-20",
+      "severity": "Low",
+      "title": "Oversized social preview image",
+      "sourceSection": "Low findings",
+      "status": "open_actionable",
+      "currentAssessment": "The landing and Web3 metadata still reference the 4096px IFR image for social previews.",
+      "remainingAction": "Provide an optimized social-card asset at platform-appropriate dimensions and update OG/Twitter metadata without changing the official token icon.",
+      "verification": "Metadata tests, image dimensions/weight checks and social-card preview inspection.",
+      "evidence": [
+        {"path": "docs/index.html", "marker": "ifr_icon_4096_v2.png"},
+        {"path": "docs/web3/index.html", "marker": "ifr_icon_4096_v2.png"}
+      ]
+    },
+    {
+      "id": "JUL-21",
+      "severity": "Low",
+      "title": "Compiler and toolchain provenance",
+      "sourceSection": "Low findings",
+      "status": "documented_accepted_or_monitored",
+      "currentAssessment": "The mixed 0.8.20/0.8.28 compiler configuration and verified analysis toolchain are explicitly documented and pinned; floating deployment provenance remains monitored through the larger CWA register.",
+      "remainingAction": "Preserve compiler/build metadata for every future deployment and reconcile any bytecode-era drift before redeployment.",
+      "verification": "Pinned build, bytecode/source comparison and deployment record review.",
+      "evidence": [
+        {"path": "hardhat.config.js", "marker": "version: \"0.8.28\""},
+        {"path": "README.md", "marker": "solc 0.8.28"}
+      ]
+    },
+    {
+      "id": "JUL-22",
+      "severity": "Low",
+      "title": "FeeRouter voucher maxUses is not enforced",
+      "sourceSection": "Low findings",
+      "status": "documented_accepted_or_monitored",
+      "currentAssessment": "The field remains part of dormant V1 voucher data but is not treated as an enforced use counter. The CWA register requires reassessment before voucher activation or replacement.",
+      "remainingAction": "Do not advertise maxUses enforcement; implement and test one-time/use-count semantics in any future active voucher path.",
+      "verification": "Replay/use-count regression tests and future contract review before activation.",
+      "evidence": [
+        {"path": "contracts/FeeRouterV1.sol", "marker": "uint32 maxUses"},
+        {"path": "docs/community-audits/cwa-remediation-register.json", "marker": "dead maxUses field"}
+      ]
+    },
+    {
+      "id": "JUL-23",
+      "severity": "Low",
+      "title": "Governance execute, expiry and minimum-delay design",
+      "sourceSection": "Low findings",
+      "status": "governance_or_future_version_gated",
+      "currentAssessment": "Deployed Governance keeps owner-only execute, no proposal expiry and a one-hour contract minimum while the live configured delay is documented as 48 hours. Changing immutable design requires a reviewed redeploy/migration.",
+      "remainingAction": "Bundle permissionless execution, proposal expiry and delay-floor decisions into the planned Governance replacement and migration review.",
+      "verification": "Governance lifecycle tests, migration simulation, independent review and governed deployment evidence.",
+      "evidence": [
+        {"path": "contracts/governance/Governance.sol", "marker": "function execute(uint256 proposalId) external onlyOwner"},
+        {"path": "contracts/governance/Governance.sol", "marker": "MIN_DELAY = 1 hours"}
+      ]
+    }
+  ]
+}
