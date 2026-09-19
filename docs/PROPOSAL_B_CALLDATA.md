@@ -1,9 +1,10 @@
 # Proposal B — setFeeCollector(BuybackController)
 
 ## Ziel
-Der FeeRouterV1 soll protocol fees an den **BuybackController** senden statt
-an den bisherigen feeCollector (Deployer-EOA Treasury). Damit fließen
-Protocol-Fees in den 50/50 Buyback+Burn / LP-Deepening Flywheel.
+Der FeeRouterV1 soll seine nativen ETH-Swapgebühren an den
+**BuybackController** senden statt an den bisherigen feeCollector
+(Deployer-EOA Treasury). Die Änderung betrifft nicht die 1-%-IFR-Transfergebühr,
+die bereits im FeeRouterV1 liegt.
 
 ## On-chain verifiziert (16.04.2026)
 

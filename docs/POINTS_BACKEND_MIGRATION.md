@@ -30,7 +30,9 @@ EIP-712-signierte Discount-Vouchers ab einem Threshold.
 | guide_lock | 30 | 1 |
 | partner_onboarding | 50 | 1 |
 
-Voucher-Threshold: **100 Punkte** → 15 BPS Discount, 7 Tage gültig
+Voucher-Threshold: **100 Punkte** → 5 BPS Discount, 7 Tage gültig. Der
+Issuer-Wert entspricht der aktuell deployten `protocolFeeBps`-Grenze; höhere
+Discounts werden vom FeeRouterV1 abgelehnt.
 
 ## Prisma Schema
 

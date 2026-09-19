@@ -115,19 +115,20 @@ All notable changes to the Inferno ($IFR) project.
 ## [Bootstrap Funded] — 2026-03-11
 
 ### Executed
-- **Proposal #4** executed: `setFeeExempt(BootstrapVaultV3, true)` — [TX: 0xdb1590bf…](https://etherscan.io/tx/0xdb1590bf)
-- **Proposal #5** executed: `setFeeExempt(FeeRouterV1, true)` — [TX: 0x1c885fbe…](https://etherscan.io/tx/0x1c885fbe)
-- **Treasury Safe → BootstrapVaultV3:** ~144,750,000 IFR — [TX: 0x6f08eaa6…](https://etherscan.io/tx/0x6f08eaa6)
-- **Community Safe → BootstrapVaultV3:** 50,000,000 IFR — [TX: 0x4394bec1…](https://etherscan.io/tx/0x4394bec1)
-- **Total in BootstrapVaultV3:** ~194,750,000 IFR (confirmed on-chain)
+- **Proposal #4** executed: `setFeeExempt(BootstrapVaultV3, true)` (full execution hash not retained in this historical entry)
+- **Proposal #5** executed: `setFeeExempt(FeeRouterV1, true)` (full execution hash not retained in this historical entry)
+- **Treasury Safe → BootstrapVaultV3:** 144,750,000 IFR — [TX](https://etherscan.io/tx/0x6f08eaa67cf7562af2f9098d3bdfd177ac86cb00a365b354881accf3aa41d5b0)
+- **Community Safe → BootstrapVaultV3:** 50,000,000 IFR — [TX](https://etherscan.io/tx/0x4394bec13c809084a4e669d2bb51fb35a4d2c2c050963c156c525fdb1cfbbf1c)
+- **Initial total in BootstrapVaultV3:** 194,750,000 IFR
+- **15.03.2026 Treasury top-up:** 5,250,000 IFR — [TX](https://etherscan.io/tx/0x47e9a6096b2088ffafaa1d04f2d435aa59777c29a26078d1b2e4b07106083fc0); final funded total 200,000,000 IFR
 
 ### Queued
-- **Proposal #6** queued: ETA 13.03.2026 09:23 CET — [TX: 0x89eebca7…](https://etherscan.io/tx/0x89eebca7)
+- **Proposal #6** queued: ETA 13.03.2026 09:23 CET (historical entry; full transaction hash not retained)
 
 ### Updated
 - All status pages updated (transparency, bootstrap, faq, mainnet-checklist, roadmap)
 - Proposal #4+#5: "Queued/Pending" → "Executed" across all wiki pages
-- BootstrapVaultV3 balance: "0 IFR (pending)" → "194,750,000 IFR (funded ✅)"
+- BootstrapVaultV3 balance: "0 IFR (pending)" → "194,750,000 IFR initial funding"; completed to 200,000,000 IFR on 15.03.2026
 
 ---
 
@@ -136,7 +137,7 @@ All notable changes to the Inferno ($IFR) project.
 ### Changed
 - **Bootstrap funding source changed from Plan A to Plan B**
   - Plan A (original): LiquidityReserve → BootstrapVaultV3 (100M IFR)
-  - Plan B (active): Treasury Safe (144.75M) + Community Safe (50M) → BootstrapVaultV3 (~194.75M IFR total)
+  - Plan B (active): Treasury Safe (144.75M initial + 5.25M top-up) + Community Safe (50M) → BootstrapVaultV3 (200M IFR total)
   - Reason: LiquidityReserve hard-locked until 01.09.2026 — inaccessible for Bootstrap without governance risk. Plan B uses liquid multisig funds with zero smart contract risk.
 
 ### Decision Details
@@ -150,7 +151,7 @@ All notable changes to the Inferno ($IFR) project.
 
 ### Why Plan B is superior
 - No governance proposal required to unlock funds
-- Higher IFR allocation (~194.75M vs 100M) → deeper initial liquidity
+- 200M IFR funding supports the immutable 100M claim allocation plus 100M IFR for initial liquidity
 - Fully transparent — both Safe addresses publicly documented
 - Community-held funds used for community Bootstrap event
 

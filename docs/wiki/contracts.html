@@ -2297,7 +2297,7 @@ console.<span class="function">log</span>(<span class="string">"Reserve1:"</span
                         </tr>
                         <tr>
                             <td>Sepolia</td>
-                            <td><a href="https://sepolia.etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code" target="_blank"><code>0x77e99917Eca8539c62F509ED1193ac36580A6e7B</code></a></td>
+                            <td><a href="testnet.html">See the canonical Sepolia deployment registry</a> (not duplicated here to prevent network/address drift)</td>
                         </tr>
                     </tbody>
                 </table>
@@ -2330,7 +2330,7 @@ console.<span class="function">log</span>(<span class="string">"Reserve1:"</span
                         </tr>
                         <tr>
                             <td>Sepolia</td>
-                            <td><a href="https://sepolia.etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041#code" target="_blank"><code>0xc43d48E7FDA576C5022d0670B652A622E8caD041</code></a></td>
+                            <td><a href="testnet.html">See the canonical Sepolia deployment registry</a> (not duplicated here to prevent network/address drift)</td>
                         </tr>
                         <tr>
                             <td>Status</td>
@@ -2360,7 +2360,7 @@ console.<span class="function">log</span>(<span class="string">"Reserve1:"</span
                         </tr>
                         <tr>
                             <td>Sepolia</td>
-                            <td><a href="https://sepolia.etherscan.io/address/0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb#code" target="_blank"><code>0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb</code></a></td>
+                            <td><a href="testnet.html">See the canonical Sepolia deployment registry</a> (not duplicated here to prevent network/address drift)</td>
                         </tr>
                         <tr>
                             <td>Status</td>
@@ -2379,10 +2379,10 @@ console.<span class="function">log</span>(<span class="string">"Reserve1:"</span
             <div class="contract-header">
                 <h2>BuybackController</h2>
                 <span class="contract-badge">Buyback</span>
-                <span class="contract-badge status-active">Active</span>
+                <span class="contract-badge">Deployed / wired</span>
             </div>
             <div class="contract-path">contracts/buyback/BuybackController.sol</div>
-            <p>Automated fee distribution controller. Receives protocol fees from FeeRouterV1 and splits 50/50: half buys IFR from Uniswap and sends to BurnReserve (permanent burn), half adds IFR+ETH liquidity to Uniswap LP (deepening). Permissionless <code>execute()</code> with 24h cooldown. Slippage protection via <code>minIFR</code>/<code>minETH</code> parameters.</p>
+            <p>Native-ETH fee execution controller. FeeRouterV1 is configured to send the ETH fee from routed swaps to this contract. When the controller holds at least its configured trigger amount, permissionless <code>execute()</code> attempts a 50/50 ETH allocation: buy IFR to BurnReserve and add IFR+ETH liquidity. Without an IFR balance, the LP half falls back to another buyback. IFR transfer-pool fees already held by FeeRouterV1 are not forwarded automatically.</p>
             <div class="table-wrap">
                 <table>
                     <tbody>
@@ -2392,7 +2392,7 @@ console.<span class="function">log</span>(<span class="string">"Reserve1:"</span
                         </tr>
                         <tr>
                             <td>Sepolia</td>
-                            <td><a href="https://sepolia.etherscan.io/address/0xaA1496133B6c274190A2113410B501C5802b6fCF#code" target="_blank"><code>0xaA1496133B6c274190A2113410B501C5802b6fCF</code></a></td>
+                            <td><a href="testnet.html">See the canonical Sepolia deployment registry</a> (not duplicated here to prevent network/address drift)</td>
                         </tr>
                         <tr>
                             <td>Deploy TX</td>
@@ -2400,7 +2400,7 @@ console.<span class="function">log</span>(<span class="string">"Reserve1:"</span
                         </tr>
                         <tr>
                             <td>Owner</td>
-                            <td>Deployer (<code>0x6b36687b0cd4386fb14cf565B67D7862110Fed67</code>)</td>
+                            <td>Governance (<code>0xc43d48E7FDA576C5022d0670B652A622E8caD041</code>)</td>
                         </tr>
                         <tr>
                             <td>Cooldown</td>
@@ -2418,7 +2418,7 @@ console.<span class="function">log</span>(<span class="string">"Reserve1:"</span
                             <td>Status</td>
                             <td><strong style="color:#22c55e;">&#x2705; Proposal #13 (setFeeExempt) &mdash; executed 16.04.2026</strong><br>
                             <strong style="color:#22c55e;">&#x2705; Proposal #14 (setFeeCollector) &mdash; executed 18.04.2026</strong><br>
-                            <strong style="color:#22c55e;">Buyback system fully active</strong></td>
+                            <strong style="color:#fbbf24;">Deployed and wired; execution remains balance-, cooldown- and pause-dependent</strong></td>
                         </tr>
                     </tbody>
                 </table>

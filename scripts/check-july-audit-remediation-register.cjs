@@ -85,6 +85,39 @@ for (const relative of [
   assert.ok(content.includes("JULY_2026_REMEDIATION_REGISTER"), `${relative} must link to July status register`);
 }
 
+const publicStatusMarkers = {
+  "README.md": [
+    `${statusTotals.fixed_and_verified} fixed and verified`,
+    `${statusTotals.partially_remediated} partially remediated`,
+  ],
+  "docs/community-audits/README.md": [
+    `${statusTotals.fixed_and_verified} fixed and verified`,
+    `${statusTotals.partially_remediated} partially`,
+  ],
+  "docs/wiki/open-audit.html": [
+    `${statusTotals.fixed_and_verified} fixed and verified`,
+    `${statusTotals.partially_remediated} partially`,
+  ],
+  "docs/wiki/security.html": [
+    `${statusTotals.fixed_and_verified} findings are fixed and verified`,
+    `${statusTotals.partially_remediated} partially remediated`,
+  ],
+  "docs/llms.txt": [
+    `${statusTotals.fixed_and_verified} fixed and verified`,
+    `${statusTotals.partially_remediated} partially remediated`,
+  ],
+  "apps/ai-copilot/src/context/ifr-knowledge.ts": [
+    `${statusTotals.fixed_and_verified} fixed and verified`,
+    `${statusTotals.partially_remediated} partially remediated`,
+  ],
+};
+for (const [relative, markers] of Object.entries(publicStatusMarkers)) {
+  const content = fs.readFileSync(path.join(root, relative), "utf8");
+  for (const marker of markers) {
+    assert.ok(content.includes(marker), `${relative} missing current July status marker: ${marker}`);
+  }
+}
+
 console.log(
   `[july-audit-register] PASS - ${data.findings.length} findings; statuses ${JSON.stringify(statusTotals)}`
 );

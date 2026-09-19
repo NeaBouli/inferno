@@ -137,7 +137,8 @@ the repo under `apps/ai-copilot/server/`, `apps/points-backend/`, `apps/benefits
   error verbosity, CORS policy (`access-control-allow-origin: *` on verify-api observed),
   rate-limit evidence (60 req/min/IP claimed), input validation on `/api/ifr/check?wallet=`.
 - SIWE/JWT flow review at source: nonce generation/expiry, signature verification, JWT lifetime
-  (24h claimed), voucher issuance rules (1/wallet/day, 100 pts → 15 bps voucher, single use).
+  (24h claimed), voucher issuance rules (1/wallet/day, 100 pts -> 5 bps voucher, single use).
+  Confirm that the configured discount never exceeds the deployed FeeRouter protocol fee.
 - Cross-check API-reported numbers (supply, balances, locked) against direct chain reads —
   divergence between the API and chain is a finding.
 
@@ -161,7 +162,7 @@ set oracle price, set guardian, set owner, execute timelock proposals, withdraw 
 and under which delay/threshold. Explicitly cover the documented exceptions:
 
 - `Governance.setGuardian()` is **not** timelocked (W15) — verify.
-- `BuybackController.owner()` was the Deployer EOA, not Governance — verify current state.
+- `BuybackController.owner()` is Governance at the pinned audit block — verify current state.
 - Guardians of IFRLock/Vesting = Deployer EOA (pause-only) — verify; assess impact of compromise.
 - `LendingVault.ifrPriceWei` single governance-set price: model the "one proposal can
   liquidate/enable everything" scenario with concrete numbers.

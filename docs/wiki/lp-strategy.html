@@ -823,10 +823,13 @@
         The Uniswap V2 AMM formula is simple: <code>x * y = k</code>. Every trade changes the ratio of the two reserves, and the price is derived from <code>y / x</code>.
       </p>
       <p>
-        At the bootstrap price P<sub>0</sub> = <code>$0.0000002</code>, 400M IFR are worth only <strong>$80</strong>.
+        The canonical Bootstrap price is P<sub>0</sub> = <code>300,000,000 wei per IFR</code>, derived from 0.030 ETH / 100,000,000 IFR. A USD conversion depends on the ETH/USD rate at the time and is not a protocol constant.
       </p>
       <p>
-        Key point: Adding LP does <strong>not</strong> change the price. You must maintain the existing ratio. But deploying 400M IFR for $80 is a <strong>catastrophic waste</strong>.
+        Key point: Adding assets in the pool's current ratio does <strong>not</strong> change the
+        instantaneous spot price. Any reserve deployment therefore requires the matching WETH
+        amount and a governance-approved objective; an IFR amount alone is not a liquidity-depth
+        measurement.
       </p>
 
       <div class="callout">
@@ -853,7 +856,7 @@ x * y = k
       <!-- Phase 0 -->
       <div class="phase-card">
         <div class="phase-label blue">PHASE 0 &mdash; After Bootstrap</div>
-        <h3>Initial Pool: 100M IFR + ETH (~$20 depth)</h3>
+        <h3>Initial Pool: 100M IFR + 0.030 ETH</h3>
         <ul>
           <li>Team adds <strong>NO LP</strong></li>
           <li>Protection via <a href="https://ifrunit.tech/wiki/commitment-vault.html">CommitmentVault</a> + <a href="https://ifrunit.tech/wiki/lending-vault.html">LendingVault</a></li>
@@ -863,12 +866,12 @@ x * y = k
 
       <!-- Milestone 1 -->
       <div class="phase-card">
-        <div class="phase-label green">MILESTONE 1 &mdash; Pool = 1 ETH (~$2,000)</div>
-        <h3>Governance Proposal: +50M IFR + 0.5 ETH</h3>
+        <div class="phase-label green">MILESTONE 1 &mdash; illustrative deeper pool</div>
+        <h3>Example target: 150M IFR + 1.5 ETH</h3>
         <ul>
-          <li>Pool after: ~150M IFR + 1.5 ETH (<strong>$3,000 depth</strong>)</li>
-          <li>Buying 99% costs: ~$30,000 instead of $2,000</li>
-          <li>Significantly more manipulation-resistant</li>
+          <li>To buy 99% of the IFR reserve under the fee-free constant-product model requires 148.5 ETH input before the 0.30% V2 fee.</li>
+          <li>The actual initial 100M IFR / 0.030 ETH pool requires 2.97 ETH on the same curve-only basis.</li>
+          <li>These are reserve-depletion examples, not execution quotes; fees, routes, gas and market movement remain separate.</li>
         </ul>
       </div>
 
@@ -910,36 +913,36 @@ x * y = k
       <!-- ======================================== -->
       <!-- 3. Effizienz-Beweis -->
       <!-- ======================================== -->
-      <h2>3. Efficiency Proof</h2>
+      <h2>3. Constant-product depth comparison</h2>
       <p>
-        The same 400M IFR generate exponentially more liquidity at a higher price:
+        For a Uniswap V2 pool with IFR reserve <code>x</code> and WETH reserve <code>y</code>, buying a fraction <code>f</code> of the IFR reserve requires <code>&Delta;y = y &times; f / (1 - f)</code> before fees. At <code>f = 99%</code>, the required input is <code>99 &times; y</code>. The result depends on the WETH reserve, not on an assumed USD price.
       </p>
 
       <table>
         <thead>
           <tr>
             <th>Scenario</th>
-            <th>400M IFR Value</th>
-            <th>Pool depth</th>
+            <th>Reserves</th>
+            <th>ETH input to buy 99% (curve only)</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>At P<sub>0</sub> ($0.0000002)</td>
-            <td>$80</td>
-            <td>$0.016</td>
+            <td>Executed initial pool</td>
+            <td>100M IFR / 0.030 ETH</td>
+            <td>2.97 ETH</td>
           </tr>
           <tr>
-            <td>At P<sub>0</sub> &times; 1,000 ($0.0002)</td>
-            <td>$80,000</td>
-            <td>$1,600,000</td>
+            <td>Illustrative deeper pool</td>
+            <td>150M IFR / 1.5 ETH</td>
+            <td>148.5 ETH</td>
           </tr>
         </tbody>
       </table>
 
       <div class="callout-green">
         <p>
-          <strong>SAME 400M IFR = 100,000,000x more liquidity.</strong> Waiting is the only rational strategy.
+          <strong>Depth must be measured from both reserves and a stated trade size.</strong> Adding proportional IFR and ETH increases executable depth without changing the instantaneous reserve ratio. Governance must evaluate capital, expected trade sizes and price impact before any reserve deployment.
         </p>
       </div>
 

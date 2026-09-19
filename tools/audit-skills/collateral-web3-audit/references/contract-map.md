@@ -25,7 +25,7 @@ baseline before relying on it. Repo framework: Hardhat 3.15.0 (dual compilers 0.
 | `0xdfe6636DA47F8949330697e1dC5391267CEf0EE3` | BuilderRegistry | owner = Governance; 0 builders registered (OPS-005) |
 | `0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3` | CommitmentVault | owner = Governance; priceOracle = 0x0 |
 | `0x974305Ab0EC905172e697271C3d7d385194EB9DF` | LendingVault | owner = Governance; ifrPriceWei = 0 (fail-closed) |
-| `0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c` | BuybackController (14.04.2026) | **owner = Deployer EOA** — centralization exception |
+| `0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c` | BuybackController (14.04.2026) | owner = Governance |
 
 ### Market / external
 
@@ -106,13 +106,13 @@ Token `0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4` · Governance `0x6050b22E4EAF
   1h–7d), minTrigger 0.01 ETH, slippage 500 (max 1000). 50% buy-and-burn → immutable burnReserve,
   50% add-liquidity → lpReceiver; LP failure falls back to buyback. Emergency
   `withdrawETH`/`withdrawIFR` onlyOwner; **unchecked ERC20 return in withdrawIFR** (Slither
-  baseline entry). **Mainnet owner = Deployer EOA** (verify current).
+  baseline entry). **Mainnet owner = Governance** (verified through `owner()`).
 - **LiquidityReserve.sol** (5.7 KB) — immutable lockEnd/periodDuration (180d lock ended
   01.09.2026; 90-day periods); mutable maxWithdrawPerPeriod 50M IFR; withdraw onlyOwner + guardian
   pause. Held 200M IFR, 0 withdrawn at block 25918433. **Withdrawal capability is live now.**
-- **Vesting.sol** (5.1 KB) — immutable except guardian. 150M IFR, 12m cliff (~05.03.2027) + 36m
+- **Vesting.sol** (5.1 KB) — beneficiary and schedule immutable; guardian transferable. 150M IFR, 12m cliff (~05.03.2027) + 36m
   linear; `release()` onlyBeneficiary. **Not feeExempt → each release pays ~3.5% transfer fees
-  (W6, accepted)**; guardian pause not rotatable (W18).
+  (W6, accepted)**; historical W18 is not current because <code>transferGuardian</code> exists.
 - **BurnReserve.sol** (3.6 KB) — deposit public; `burn`/`burnAll` onlyOwnerOrGuardian via
   ERC20Burnable; tokens can only be burned, never withdrawn.
 - **BootstrapVaultV3.sol** (10.1 KB) — ReentrancyGuard only; zero admin surface. contribute
@@ -137,7 +137,7 @@ Token `0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4` · Governance `0x6050b22E4EAF
   "onlyOwner bug"); W3 unbounded setParams (partially addressed); W4 MEV; W6 Vesting pays
   transfer fees (accepted); W10 FeeRouter zero-address setters; W11 FeeRouter no nonReentrant;
   W13 bootstrap 0-min LP add (accepted); W15 setGuardian not timelocked (OPEN); W17 LP stranded
-  in BootstrapVaultV3 (accepted, irreversible); W18 Vesting guardian not rotatable; W19 voucher
+  in BootstrapVaultV3 (accepted, irreversible); W18 historical guardian-rotation claim corrected; W19 voucher
   maxUses unenforced.
 - **OPS register** (`docs/KNOWN-ISSUES.md`): OPS-001 LendingVault ifrPriceWei=0 (fail-closed);
   OPS-002 CommitmentVault priceOracle=0x0 + stub; OPS-005 BuilderRegistry empty.

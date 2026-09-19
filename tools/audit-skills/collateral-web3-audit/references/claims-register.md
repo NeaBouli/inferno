@@ -27,7 +27,7 @@ source, and how to verify it. Add new rows as you find new claims.
 | S2 | Mythril: 17 concrete contracts, bounded, "no signals at any severity", 4 clean runs 04.09.2026 | README + `audit/mythril-config.json` | check `mythril-analysis.yml` CI run history (`gh run list`); optionally re-run |
 | S3 | Internal audit "0 FAIL / 20 WARN (1 fixed) / 81 PASS" (Skywalker, Claude Opus 4.6, 04.03.2026) | `docs/SECURITY_AUDIT_SKYWALKER.md` | cross-check W1–W21 statuses against current source |
 | S4 | App security review "12 findings (2 CRITICAL, 5 HIGH — all fixed)" | `docs/APP_SECURITY_REVIEW.md` | spot-check fixes in `apps/` |
-| S5 | "All contracts governed by 48h timelock + Gnosis Safe multisig" | README header | chain reads: every `owner()`/`admin()`/`governance()`; **known exceptions: BuybackController owner = Deployer EOA; setGuardian not timelocked; guardians = Deployer EOA** — does the claim survive? |
+| S5 | "All contracts governed by 48h timelock + Gnosis Safe multisig" | README header | chain reads: every `owner()`/`admin()`/`governance()`; **known exceptions: Governance.setGuardian is not timelocked and several guardians remain the Deployer EOA; BuybackController owner is Governance** — qualify the claim accordingly. |
 | S6 | "No private keys in code / .env never committed" | `AUDIT_REPORT_20260316.md` | gitleaks at HEAD (`--config .gitleaks.toml`) |
 | S7 | 4-hour vault-invariant monitor active | `vault-invariant-monitor.yml` | `gh run list` — recent runs green? |
 | S8 | GitHub Actions pinned by full SHA; Node 22; gitleaks weekly; npm audit gates | `security-audit.yml` + 15 other workflows | read all workflow files; check run history |

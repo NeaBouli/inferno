@@ -212,4 +212,4 @@ Ends June 5, 2026.
 - On-chain startTime: 2026-03-07 (contract deployed, accepting contributions)
 - On-chain endTime: 2026-06-05 (90 days from deploy)
 - Status: **LIVE** since March 7, 2026
-- Vault funded: 200M IFR (Treasury 150M + Community 50M)
+- Vault funded: 200M IFR (Treasury 144.75M + 5.25M top-up; Community 50M)

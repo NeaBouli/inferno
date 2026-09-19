@@ -133,6 +133,11 @@ async function run() {
 
   // ---- Voucher Under Threshold ----
   console.log("\nVoucher:");
+  assert(POINTS_CONFIG.voucher.discountBps === 5, "voucher matches deployed FeeRouterV1 fee");
+  assert(
+    POINTS_CONFIG.voucher.discountBps <= POINTS_CONFIG.voucher.maxDiscountBps,
+    "voucher discount stays within configured maximum"
+  );
   {
     const { status } = await api("POST", "/voucher/issue", {}, authToken);
     // 400 = under threshold, 403 = no IFR lock, 503 = lock RPC unavailable

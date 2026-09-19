@@ -50,7 +50,8 @@ Check in ALL files whether the following numbers are consistent:
 Check whether FeeRouter parameters are correctly documented:
 - protocolFeeBps = 5 (0.05%) — not 50, not 0.5%
 - FEE_CAP_BPS = 25 (0.25%) — hard cap
-- Voucher discount: max 15 bps (from Points Config)
+- Voucher discount: 5 bps issuer default and cap (must not exceed the deployed
+  `protocolFeeBps`; the separate contract hard cap remains 25 bps)
 - EIP-712 Domain: name="InfernoFeeRouter", version="1", chainId=11155111
 
 ### C) Points System Communication

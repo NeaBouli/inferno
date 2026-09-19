@@ -28,7 +28,7 @@ These items MUST be completed before public launch:
 ### Current Status (2026-03-05)
 - Mainnet Deploy: 13/13 contracts deployed + verified
 - Token Distribution: 1B IFR correctly distributed (CFLM)
-- Fee Exemptions: 8 addresses set, deployer removed
+- Fee Exemptions: 8 addresses set; the deployer was removed at this 05.03 snapshot and was later re-enabled by executed Proposal #7 (18.03.2026)
 - Ownership Transfer: Done (2026-03-05, 4 contracts → Governance)
 - ~~BootstrapVault V1~~: Deployed + verified (`0xA820540936d18e1377C39dd9445E5b36F3F1261a`) — **DEPRECATED**, use V3: `0x16086d4f7F191047d8A4fFf2090126E12e865A7E`
 - Governance Proposal #0: feeExempt(BootstrapVault V1) — **executed 07.03.2026; V1 later deprecated**
@@ -123,7 +123,7 @@ These items MUST be completed before public launch:
   - Etherscan verified
 - [x] FeeRouterV1.sol deployed
   - governance = Governance
-  - feeCollector = Treasury
+  - feeCollector = Treasury at deployment; changed to BuybackController by executed Proposal #14 (18.04.2026)
   - voucherSigner = `0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4`
   - Address: `0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a`
   - Etherscan verified
@@ -154,7 +154,7 @@ These items MUST be completed before public launch:
 - [x] 60M IFR → Community & Grants (`0x61aF4E72C77b58F4b50964Ee93d420750Cd9857E`)
 - [x] 40M IFR → PartnerVault contract
 - [x] Total check: 400+200+150+150+60+40 = 1,000,000,000
-- [x] Deployer feeExempt removed
+- [x] Deployer feeExempt removed after distribution; executed Proposal #7 later re-enabled it on 18.03.2026 and it remains an active disclosed exception
 
 ### Step 6 — Uniswap V2 LP
 - [ ] DEX Liquidity wallet approves Router for 400M IFR

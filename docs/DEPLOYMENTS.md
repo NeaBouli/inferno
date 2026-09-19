@@ -35,7 +35,7 @@
 | IFRLock | `token, deployer (guardian)` |
 | PartnerVault | `token, governance (admin), deployer (guardian), 1500 (rewardBps), 4000000000000000 (4M*1e9 annualCap)` |
 | FeeRouterV1 | `governance, deployer (feeCollector), deployer (voucherSigner)` |
-| BootstrapVault | `token, LiquidityReserve v2 (ifrSource), router, address(0) (TF locker disabled), 1772604468 (startTime), 7776000 (90d), 100000000000000000 (100M*1e9 ifrAllocation), 10000000000000000 (0.01 ETH), 2000000000000000000 (2 ETH), 31536000 (365d)` — ⚠️ Plan A (deprecated 08.03.2026). Active: Plan B — Treasury Safe 144.75M + Community Safe 50M. See CHANGELOG.md. |
+| BootstrapVault | `token, LiquidityReserve v2 (ifrSource), router, address(0) (TF locker disabled), 1772604468 (startTime), 7776000 (90d), 100000000000000000 (100M*1e9 ifrAllocation), 10000000000000000 (0.01 ETH), 2000000000000000000 (2 ETH), 31536000 (365d)` — ⚠️ Plan A (deprecated 08.03.2026). Active Plan B funding reached 200M IFR: Treasury Safe 144.75M + 5.25M top-up, Community Safe 50M. See CHANGELOG.md. |
 
 ### Token Distribution
 
@@ -82,7 +82,7 @@
 | 0 | `setFeeExempt(0xA4A1ea...6A36f90, true)` | InfernoToken | 2026-02-20 10:14 CET | [`0x13ff46d8...cbbe982d`](https://sepolia.etherscan.io/tx/0x13ff46d8a113f25b9ab0037ee06d6108c62d0f16e25d28799e4f45a8cbbe982d) | Executed |
 | 1 | `setFeeExempt(IFRLock, true)` | InfernoToken | 2026-02-22 21:15 CET | [`0x211b7949...4253a909`](https://sepolia.etherscan.io/tx/0x211b794970abe147b3ab2f3c92bb79b3b3c5a72bc8be8cfb7e1d00fd4253a909) | Executed |
 | 2 | `setFeeExempt(PartnerVault v1, true)` | InfernoToken | — | — | Cancelled (v1 deprecated) |
-| 3 | `setFeeExempt(PartnerVault v2, true)` | InfernoToken | 2026-02-26 | [`0x3f28690a...57de6e8`](https://sepolia.etherscan.io/tx/0x3f28690a57de6e8) | Executed |
+| 3 | `setFeeExempt(PartnerVault v2, true)` | InfernoToken | 2026-02-26 | Historical entry; full transaction hash not retained | Executed |
 | 4 | `transferOwnership(Governance)` | LiquidityReserve | 2026-02-28 | — | Cancelled (contract upgraded, re-deploy needed) |
 | 5 | `transferOwnership(Governance)` | BuybackVault | 2026-02-28 | — | Cancelled (contract upgraded, re-deploy needed) |
 | 6 | `transferOwnership(Governance)` | BurnReserve | 2026-02-28 | — | Cancelled (contract upgraded, re-deploy needed) |
@@ -216,7 +216,7 @@ All ownable contracts transferred to Governance (48h Timelock). Parameter change
 | BuilderRegistry | `owner()` | Governance — [`0xdfe6636D...CEf0EE3`](https://etherscan.io/address/0xdfe6636DA47F8949330697e1dC5391267CEf0EE3) (deployed 20.03.2026) |
 | CommitmentVault | `owner()` | Governance — [`0x0719d9eb...73d3`](https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3) (deployed 04.04.2026) |
 | LendingVault | `owner()` | Governance — [`0x974305Ab...9DF`](https://etherscan.io/address/0x974305Ab0EC905172e697271C3d7d385194EB9DF) (deployed 04.04.2026) |
-| BuybackController | `owner()` | Deployer — [`0x1e0547D5...F7c`](https://etherscan.io/address/0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c) (deployed 14.04.2026; feeExempt executed via Proposal #13 on 16.04.2026) |
+| BuybackController | `owner()` | Governance — [`0x1e0547D5...F7c`](https://etherscan.io/address/0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c) (deployed 14.04.2026; feeExempt executed via Proposal #13 on 16.04.2026) |
 | IFRLock | `guardian()` | Deployer (emergency pause only) |
 | Vesting | `guardian()` | Deployer (emergency pause only) |
 | Governance | `owner()` | TreasurySafe 3-of-5 (transferred 20.03.2026, TX `0xcd9f99d2...19c46c3`) |

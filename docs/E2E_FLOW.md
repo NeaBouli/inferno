@@ -23,7 +23,7 @@ User earns points → receives voucher → saves on swap fees
    ```json
    {
      "user": "0xUSER...",
-     "discountBps": 15,
+     "discountBps": 5,
      "maxUses": 1,
      "expiry": "now + 7 days",
      "nonce": "<unique>"
@@ -40,7 +40,7 @@ User earns points → receives voucher → saves on swap fees
    - Not expired
    - Nonce not used
    - `discount <= protocolFee`
-10. Effective fee: 5 bps - 15 bps → 0 bps (clamped)
+10. Effective fee: 5 bps - 5 bps -> 0 bps
 11. No protocol fee for this swap
 12. Nonce marked as "used" → no replay possible
 
@@ -72,7 +72,7 @@ FeeRouter → Uniswap Adapter: execute swap
 ```
 Swap: 1 ETH → IFR
 Without voucher: 0.0005 ETH Protocol Fee (5 bps)
-With voucher (15 bps discount): 0 ETH Protocol Fee (clamp)
+With voucher (5 bps discount): 0 ETH Protocol Fee
 Savings: ~$1.50 at ETH = $3000
 ```
 

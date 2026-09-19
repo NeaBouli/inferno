@@ -529,7 +529,7 @@
     {
       "@type": "Question",
       "name": "Where does the Bootstrap funding come from?",
-      "acceptedAnswer": {"@type":"Answer","text":"BootstrapVaultV3 was funded on 11.03.2026 with ~200M IFR from Treasury Safe (150M) and Community Safe (50M). Fee-exempt since Governance Proposal #4 execution."}
+      "acceptedAnswer": {"@type":"Answer","text":"BootstrapVaultV3 received 144.75M IFR from Treasury and 50M IFR from Community on 11.03.2026; a 5.25M IFR Treasury top-up on 15.03.2026 completed the 200M IFR funding."}
     },
     {
       "@type": "Question",
@@ -867,7 +867,7 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>What can be changed through governance?</span><span class="icon">+</span></button>
-          <div class="faq-a">Governance can change: fee rates (sender burn, recipient burn, pool fee), fee exemptions, the pool fee receiver, guardian address, timelock delay, PartnerVault parameters (reward rate, emission cap, authorized callers), and FeeRouter parameters (protocol fee, voucher signer, fee collector). All changes require the full timelock delay.</div>
+          <div class="faq-a">Governance can change: fee rates (sender burn, recipient burn, pool fee), fee exemptions, the pool fee receiver, guardian address, timelock delay, PartnerVault parameters (reward rate, emission cap, authorized callers), and FeeRouter parameters (protocol fee, voucher signer, fee collector). Proposals use the full timelock delay. The documented exception is owner-only guardian rotation through <code>setGuardian</code>, which is not timelocked.</div>
         </div>
 
         <div class="faq-item">
@@ -932,7 +932,7 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>Who can call finalise()?</span><span class="icon">+</span></button>
-          <div class="faq-a">Anyone. The <code>finalise()</code> function is permissionless &mdash; any wallet can call it once the minimum ETH threshold is met. The function creates the Uniswap V2 LP pair, adds all ETH + IFR as liquidity, and locks the LP tokens. No admin intervention required.</div>
+          <div class="faq-a">Anyone. After the Bootstrap end time, any wallet could call <code>finalise()</code> while the required IFR balance was present and the vault was not already finalised. The contract had no minimum-ETH finalisation threshold. The function created the Uniswap V2 LP pair, added the raised ETH and configured IFR liquidity, and retained the LP tokens in BootstrapVaultV3.</div>
         </div>
 
         <div class="faq-item">
@@ -947,7 +947,7 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>Where does the Bootstrap funding come from?</span><span class="icon">+</span></button>
-          <div class="faq-a">The BootstrapVaultV3 was funded on 11.03.2026 with ~200M IFR from the Treasury Safe (150M) and Community Safe (50M). This was the &ldquo;Plan B&rdquo; approach because the original LiquidityReserve remained locked through the Bootstrap end date and could not be used at that time. BootstrapVaultV3 is fee-exempt since Governance Proposal #4 execution (11.03.2026). See <a href="https://ifrunit.tech/wiki/bootstrap.html" >Bootstrap Event</a> for full details.</div>
+          <div class="faq-a">BootstrapVaultV3 received 144.75M IFR from Treasury Safe and 50M IFR from Community Safe on 11.03.2026. A 5.25M IFR Treasury top-up on 15.03.2026 completed the 200M IFR funding required for 100M claims and 100M initial LP. This was the &ldquo;Plan B&rdquo; approach because the original LiquidityReserve remained locked through the Bootstrap end date. See <a href="https://ifrunit.tech/wiki/bootstrap.html">Bootstrap Event</a> for transaction links and details.</div>
         </div>
       </div>
 
@@ -1052,7 +1052,7 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>What is the 10 IFR spam protection fee?</span><span class="icon">+</span></button>
-          <div class="faq-a">To submit a proposal in The Forum (Chamber 2), 10 IFR are required as a spam protection fee. This prevents low-quality or spam proposals.<br><br>&bull; If the proposal reaches consensus (top 3 after voting period), the 10 IFR are <strong>refunded</strong>.<br>&bull; If the proposal is downvoted below 50%, the IFR are <strong>burned</strong> &mdash; adding deflationary pressure.<br><br>This creates an economic incentive to submit quality proposals. The mechanism is implemented in <code>IFRSpamProtection.sol</code> (Phase 4).</div>
+          <div class="faq-a">A 10 IFR proposal deposit is a <strong>Phase 4 design option</strong>, not a live fee. The draft proposes refunding accepted proposals and burning rejected deposits, but <code>IFRSpamProtection.sol</code> is not deployed and the amount, criteria and implementation still require ratification, audit and deployment.</div>
         </div>
 
         <div class="faq-item">
@@ -1088,7 +1088,7 @@ const hasLock = await ifrLock.isLocked(walletAddress, ethers.parseUnits("1000", 
 
         <div class="faq-item">
           <button class="faq-q"><span>Where are the contract ABIs?</span><span class="icon">+</span></button>
-          <div class="faq-a">ABIs are available in two locations:<br><br>&bull; <code>/abi/</code> directory in the <a href="https://github.com/NeaBouli/inferno" target="_blank" rel="noopener">GitHub repository</a> (JSON files)<br>&bull; Etherscan &ldquo;Contract&rdquo; &rarr; &ldquo;ABI&rdquo; tab for each verified contract<br><br>For the IFRLock contract, the key functions are: <code>lock(uint256, string)</code>, <code>unlock()</code>, <code>isLocked(address, uint256)</code>, and <code>lockedBalance(address)</code>.</div>
+          <div class="faq-a">ABIs are available in two locations:<br><br>&bull; <code>/abi/</code> directory in the <a href="https://github.com/NeaBouli/inferno" target="_blank" rel="noopener">GitHub repository</a> (JSON files)<br>&bull; Etherscan &ldquo;Contract&rdquo; &rarr; &ldquo;ABI&rdquo; tab for each verified contract<br><br>For IFRLock, the key functions are <code>lock(uint256)</code>, <code>lockWithType(uint256, bytes32)</code>, <code>unlock()</code>, <code>isLocked(address, uint256)</code>, and <code>lockedBalance(address)</code>.</div>
         </div>
 
         <div class="faq-item">
@@ -1211,7 +1211,7 @@ const hasLock = await ifrLock.isLocked(walletAddress, ethers.parseUnits("1000", 
       <div class="faq-section">
         <div class="faq-item">
           <button class="faq-q"><span>The owner can change fees &mdash; is that safe?</span><span class="icon">+</span></button>
-          <div class="faq-a">The token owner is the <strong>Governance Contract</strong> &mdash; not a single person. All changes require: (1) A public governance proposal, (2) 48-hour timelock (community can review), (3) Execution by TreasurySafe (3-of-5 Gnosis Safe). No individual can change fees unilaterally. The fee cap is hardcoded at max 5% and cannot be exceeded even by governance.</div>
+          <div class="faq-a">The token owner is the <strong>Governance Contract</strong> &mdash; not a single person. Token fee changes require: (1) a public governance proposal, (2) the 48-hour timelock, and (3) execution under TreasurySafe 3-of-5 control. The documented untimelocked exception is Governance guardian rotation through owner-only <code>setGuardian</code>; it does not change token fees. The token fee cap is hardcoded at max 5%.</div>
         </div>
         <div class="faq-item">
           <button class="faq-q"><span>Can fee-exempt wallets be abused?</span><span class="icon">+</span></button>
