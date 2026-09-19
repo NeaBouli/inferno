@@ -31,11 +31,23 @@ No finding text, severity label or technical conclusion was changed.
 
 - Original report:
   [IFR_Protocol_Audit_2026-07-27.md](IFR_Protocol_Audit_2026-07-27.md)
+- Current finding status:
+  [JULY_2026_REMEDIATION_REGISTER.md](JULY_2026_REMEDIATION_REGISTER.md)
 - Original SHA-256:
   `ec7f99b0b74c51e04091727a0b69f49f67c36409a52c9ea7b55ba545b6b3e375`
 - Publication status: preserved unchanged as submitted
 - Review type: community-submitted project and security review
 - Certification status: not an independent professional third-party audit
+
+### Current status — 19 September 2026
+
+The maintained register normalizes the report into 23 traceable findings. The
+current evidence-backed disposition is **8 fixed and verified / 6 partially
+remediated / 1 corrected outdated snapshot / 3 governance or future-version
+gated / 2 accepted or monitored / 3 open actionable**. Severity colors in the
+unchanged report describe the dated audit assessment, not current remediation
+status. Every later status change must carry integrated evidence and pass the
+register's CI guard.
 
 ### Editorial status note — 28 July 2026
 

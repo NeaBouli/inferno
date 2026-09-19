@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "updatedAt": "2026-09-19",
-  "baseline": "53a005438940dc7397332c1e3d451d2d22bf9fe1",
+  "baseline": "564a7c4504c8da7a24a302204f4fd5e39d1abece",
   "statusDefinitions": {
     "fixed_and_verified": "A remediation is merged and covered by current verification evidence.",
     "governance_or_owner_gated": "The next action requires governance, a repository owner setting, key custody work or a future contract version.",

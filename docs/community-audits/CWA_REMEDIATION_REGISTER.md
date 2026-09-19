@@ -1,7 +1,7 @@
 # CWA-01...CWA-82 Remediation Register
 
 **Updated:** 2026-09-19
-**Repository baseline:** `53a005438940dc7397332c1e3d451d2d22bf9fe1`
+**Repository baseline:** `564a7c4504c8da7a24a302204f4fd5e39d1abece`
 
 This is the authoritative public status register for the seven Collateral Web3 Open
 Audits reports. Publishing a finding does not mean it has been remediated. A finding
