@@ -17,7 +17,7 @@ export function getIFRKnowledge() {
 
   return {
     audits: {
-      status: "The seven Collateral Web3 Open Audits reports cover CWA-01 through CWA-82. At the 2026-09-20 remediation checkpoint, 21 findings are fixed and verified, 11 are governance or owner gated, 2 are accepted or monitored, 37 are open actionable, and 11 are informational.",
+      status: "The seven Collateral Web3 Open Audits reports cover CWA-01 through CWA-82. At the 2026-09-20 remediation checkpoint, 31 findings are fixed and verified, 11 are governance or owner gated, 2 are accepted or monitored, 27 are open actionable, and 11 are informational.",
       register: "https://github.com/NeaBouli/inferno/blob/main/docs/community-audits/CWA_REMEDIATION_REGISTER.md",
       july2026Status: "The unchanged 27 July community audit is paired with an evidence-backed register: 9 fixed and verified, 5 partially remediated, 1 outdated snapshot corrected, 3 governance or future-version gated, 2 accepted or monitored, and 3 open actionable. Historical red or high-severity labels are not proof that an item remains open today.",
       july2026Register: "https://github.com/NeaBouli/inferno/blob/main/docs/community-audits/JULY_2026_REMEDIATION_REGISTER.md",
