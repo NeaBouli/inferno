@@ -45,5 +45,5 @@ npm run dev
 
 ```bash
 curl https://ifr-copilot.vercel.app/api/health
-# → { "status": "ok", "apiKeySet": true }
+# → { "status": "ok" }
 ```

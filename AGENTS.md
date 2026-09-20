@@ -11,7 +11,8 @@ handoff and task source of truth.
 - Benefits frontend: Next.js, TypeScript, Wagmi, PWA.
 - Full Benefits release gate: `npm run preflight:benefits`.
 - Documentation and routing gates: `npm run test:benefits-docs`,
-  `npm run test:surface-routing`, and `npm run test:wiki-heads`.
+  `npm run test:surface-routing`, `npm run test:web3-headers`, and
+  `npm run test:wiki-heads`.
 - CI workflows live in `.github/workflows/`. Inspect the matching workflow
   before changing a gate.
 
