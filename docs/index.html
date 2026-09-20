@@ -7,11 +7,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>IFR Protocol — Inferno ($IFRp social) Deflationary Utility Token</title>
   <meta name="keywords" content="IFR Protocol, Inferno Protocol, Inferno, IFR, ERC-20, Ethereum, deflationary token, DeFi, smart contract, governance, multisig signer expansion, community signer distribution, bootstrap, fair launch, burn mechanism, lock to access, CommitmentVault, LendingVault, lending market">
-  <meta name="description" content="IFR Protocol is the Inferno deflationary ERC-20 utility protocol. IFR is the on-chain token symbol; $IFRp is used for social posts. Live Mainnet locks, LendingVault offers, and AI Copilot guidance are active.">
+  <meta name="description" content="IFR Protocol is the Inferno deflationary ERC-20 utility protocol. IFR is the on-chain token symbol; $IFRp is used for social posts. Live Mainnet locks, LendingVault offers, and documentation-only AI Copilot guidance are active.">
 
   <!-- Open Graph -->
   <meta property="og:title" content="IFR Protocol — Inferno ($IFRp social) Deflationary Utility Token">
-  <meta property="og:description" content="IFR Protocol: live Mainnet locks, LendingVault offers, AI Copilot guidance for IFR lockers, community multisig signer expansion, and 2.5% burned per transfer.">
+  <meta property="og:description" content="IFR Protocol: live Mainnet locks, LendingVault offers, documentation-only AI Copilot guidance, community multisig signer expansion, and 2.5% burned per transfer.">
   <meta property="og:locale" content="en_US">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://ifrunit.tech/">
@@ -22,7 +22,7 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:site" content="@IFRtoken">
   <meta name="twitter:title" content="IFR Protocol — Inferno ($IFRp social) Deflationary Utility Token">
-  <meta name="twitter:description" content="IFR Protocol: live Mainnet locks, LendingVault offers, AI Copilot guidance for IFR lockers, community multisig signer expansion, and 2.5% burned per transfer.">
+  <meta name="twitter:description" content="IFR Protocol: live Mainnet locks, LendingVault offers, documentation-only AI Copilot guidance, community multisig signer expansion, and 2.5% burned per transfer.">
   <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_4096_v2.png">
 
   <!-- Additional SEO -->
@@ -1260,7 +1260,7 @@
       "applicationCategory": "FinanceApplication",
       "operatingSystem": "Ethereum Mainnet",
       "url": "https://ifrunit.tech",
-      "description": "Deflationary ERC-20 token with lock-to-access utility, live CommitmentVault locks, LendingVault lender offers, lending market data, AI Copilot guidance, and a planned security-filtered community multisig signer distribution process.",
+      "description": "Deflationary ERC-20 token with lock-to-access utility, live CommitmentVault locks, LendingVault lender offers, lending market data, documentation-only AI Copilot guidance, and a planned security-filtered community multisig signer distribution process.",
       "offers": {
         "@type": "Offer",
         "price": "0",
@@ -1306,7 +1306,7 @@
         {"@type":"PropertyValue","name":"Social Cashtag","value":"$IFRp"},
         {"@type":"PropertyValue","name":"CommitmentVault","value":"Live self-service locks on Ethereum Mainnet"},
         {"@type":"PropertyValue","name":"LendingVault","value":"Live self-service lender offers; borrower transactions require ifrPriceWei collateral price"},
-        {"@type":"PropertyValue","name":"AI Copilot Premium","value":"Lock IFR to unlock more personalized assistant guidance based on wallet and lock context"},
+        {"@type":"PropertyValue","name":"IFRLock Access","value":"Lock 1,000 IFR in IFRLock for refundable first-party IFRLock access. The AI Copilot chat stays documentation-only and receives no wallet, balance, lock or tier context."},
         {"@type":"PropertyValue","name":"Community Signer Distribution","value":"Planned security-filtered multisig expansion: eligibility review, public nomination, community vote, security review, term limits, and emergency replacement rules"}
       ]
     }
@@ -1372,19 +1372,19 @@
         </div>
         <div id="lp-drop-lock" style="display:none;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;text-align:left;">
           <div style="display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:6px;">
-            <span id="lp-drop-lock-label" style="color:#86efac;font-size:0.8rem;font-weight:700;">&#x26A1; Premium Locked</span>
+            <span id="lp-drop-lock-label" style="color:#86efac;font-size:0.8rem;font-weight:700;">&#x26A1; IFRLock Access Active</span>
             <span id="lp-drop-locked-amount" style="color:#e5e7eb;font-size:0.72rem;font-family:monospace;">0 IFR</span>
           </div>
-          <div style="color:#9ca3af;font-size:0.72rem;line-height:1.35;margin-bottom:8px;">Unlock returns all IFR from IFRLock and disables premium access if the balance falls below 1,000 IFR.</div>
+          <div style="color:#9ca3af;font-size:0.72rem;line-height:1.35;margin-bottom:8px;">Unlock returns all IFR from IFRLock and ends IFRLock access if the balance falls below 1,000 IFR.</div>
           <button id="lp-premium-unlock-btn" onclick="lpUnlockPremium()" style="width:100%;background:#15803d;color:white;border:none;border-radius:8px;padding:9px 10px;cursor:pointer;font-size:0.8rem;font-weight:700;">Unlock all IFRLock</button>
         </div>
         <div id="lp-drop-nolock" style="background:rgba(107,114,128,0.1);border:1px solid #374151;border-radius:8px;padding:10px 12px;margin-bottom:12px;text-align:left;">
-          <div style="color:#e5e7eb;font-size:0.8rem;font-weight:700;margin-bottom:4px;">Premium Access</div>
-          <div style="color:#9ca3af;font-size:0.76rem;line-height:1.35;margin-bottom:8px;">Lock &ge;1,000 IFR in IFRLock to unlock Premium and more personalized Copilot guidance. Refundable anytime.</div>
+          <div style="color:#e5e7eb;font-size:0.8rem;font-weight:700;margin-bottom:4px;">IFRLock Access</div>
+          <div style="color:#9ca3af;font-size:0.76rem;line-height:1.35;margin-bottom:8px;">Lock &ge;1,000 IFR in IFRLock to activate IFRLock access. Refundable anytime &mdash; unlock returns all locked IFR. The AI Copilot chat stays documentation-only and receives no wallet, balance, lock or tier context.</div>
           <div style="color:#d1d5db;font-size:0.72rem;line-height:1.35;margin-bottom:8px;background:#1f2937;border:1px solid #374151;border-radius:6px;padding:7px 8px;">
             Wallet safety: approve only IFRLock <span style="font-family:monospace;color:#fbbf24;">0x769928...3954Eb</span> and only the exact amount shown.
           </div>
-          <button id="lp-premium-lock-btn" onclick="lpLockPremium()" style="width:100%;background:#16a34a;color:white;border:none;border-radius:8px;padding:9px 10px;cursor:pointer;font-size:0.8rem;font-weight:700;">Lock 1,000 IFR for Premium</button>
+          <button id="lp-premium-lock-btn" onclick="lpLockPremium()" style="width:100%;background:#16a34a;color:white;border:none;border-radius:8px;padding:9px 10px;cursor:pointer;font-size:0.8rem;font-weight:700;">Lock 1,000 IFR for IFRLock Access</button>
         </div>
         <div id="lp-premium-lock-status" style="display:none;margin:-4px 0 12px;color:#fbbf24;font-size:0.72rem;line-height:1.35;"></div>
         <a href="https://web3.ifrunit.tech/?action=commitment-lock#access" style="display:block;text-align:center;padding:9px 10px;background:#1f2937;border:1px solid #374151;color:#e5e7eb;border-radius:8px;font-size:0.8rem;font-weight:700;text-decoration:none;margin-bottom:8px;">&#x1F512; CommitmentVault Lock</a>
@@ -1618,7 +1618,7 @@
           <span style="color:#ff6600;font-family:'Orbitron',sans-serif;font-size:0.75rem;font-weight:700;flex-shrink:0;margin-top:2px;">PHASE 2</span>
           <div>
             <div style="color:#eee;font-size:0.9rem;font-weight:600;margin-bottom:4px;">IFR Lock Gate</div>
-            <div style="color:#777;font-size:0.83rem;line-height:1.5;">Lock &ge; 1,000 IFR &rarr; unlock AI Copilot Premium with more personalized answers based on wallet and lock context. On-chain verification via IFRLock &mdash; no trust required.<span style="color:#ff6600;margin-left:6px;font-size:0.78rem;">Phase 2</span></div>
+            <div style="color:#777;font-size:0.83rem;line-height:1.5;">Lock &ge; 1,000 IFR &rarr; refundable IFRLock access for first-party lock-gated features. On-chain verification via IFRLock &mdash; no trust required. The AI Copilot chat stays documentation-only and receives no wallet, balance, lock or tier context.<span style="color:#ff6600;margin-left:6px;font-size:0.78rem;">Phase 2</span></div>
           </div>
         </div>
         <div style="background:#1a1a2e;border:1px solid #222;border-radius:8px;padding:16px 18px;display:flex;gap:14px;align-items:flex-start;">
@@ -1741,7 +1741,7 @@ liquidity:{q:"What would you like to do with liquidity?",sub:"Read-only tools he
 {i:"&#x1F4D6;",t:"Understand fees and risks",d:"LP tokens, impermanent loss and the difference from IFR access locks",a:"wiki/liquidity.html#risks"}
 ]},
 lock:{q:"How do you want to lock IFR?",sub:"Live wallet actions run in the Web3 app; the Wiki remains the reference guide:",s:2,t:2,o:[
-{i:"&#x1F513;",t:"Simple access lock",d:"Refundable IFRLock access: approve, lock, check Premium status, or unlock all",a:"https://web3.ifrunit.tech/?action=access-lock#access",h:1},
+{i:"&#x1F513;",t:"Simple access lock",d:"Refundable IFRLock access: approve, lock, check IFRLock access status, or unlock all",a:"https://web3.ifrunit.tech/?action=access-lock#access",h:1},
 {i:"&#x1F512;",t:"CommitmentVault lock",d:"Create time-, price-, combined-, or indefinite-lock tranches",a:"https://web3.ifrunit.tech/?action=commitment-lock#access"},
 {i:"&#x2696;&#xFE0F;",t:"Manage existing tranches",d:"Review conditions and unlock each matured CommitmentVault tranche",a:"https://web3.ifrunit.tech/?action=commitment-lock#access"},
 {i:"&#x1F4D6;",t:"Read how locking works",d:"CommitmentVault rules, conditions, and safety guarantees",a:"wiki/commitment-vault.html"}
@@ -2163,7 +2163,7 @@ render();
               <div style="font-size:13px;font-weight:700;color:#22c55e;" data-live-key="card-ifrlock-unlocked">loading&hellip;</div>
             </div>
           </div>
-          <div style="font-size:10px;color:#666;margin-top:8px;">Simple access locks for Premium and builder products. Unlock returns all IFRLock tokens to the user.</div>
+          <div style="font-size:10px;color:#666;margin-top:8px;">Simple access locks for IFRLock access and builder products. Unlock returns all IFRLock tokens to the user.</div>
         </div>
 
         <div style="background:#111113;border:1px solid rgba(34,197,94,0.35);border-radius:8px;padding:14px 16px;">
@@ -2423,7 +2423,7 @@ render();
         <!-- User -->
         <rect x="640" y="328" width="130" height="42" rx="10" fill="#0d1117" stroke="#9ca3af" stroke-width="1" stroke-dasharray="4,3"/>
         <text x="705" y="346" text-anchor="middle" fill="#9ca3af" font-size="11">User</text>
-        <text x="705" y="362" text-anchor="middle" fill="#6b7280" font-size="9">Locks IFR &rarr; Premium</text>
+        <text x="705" y="362" text-anchor="middle" fill="#6b7280" font-size="9">Locks IFR &rarr; Access</text>
 
         <!-- User → IFRLock (green locking) -->
         <circle r="3" fill="#22c55e" opacity="0.9"><animateMotion dur="2.5s" repeatCount="indefinite" path="M705,350 L705,274"/></circle>
@@ -2564,7 +2564,7 @@ if (isLocked) {
       <h2 class="section-title">IFR AI Copilot</h2>
       <p class="section-desc" style="margin:0 auto;">
         Your on-chain guide &mdash; from wallet setup to builder integration.
-        Lock IFR to make the assistant more personalized through wallet and lock context.
+        The chat is documentation-only and receives no wallet, balance, lock or tier context.
       </p>
     </div>
     <div style="display:flex;flex-wrap:wrap;gap:24px;justify-content:center;margin-top:40px;" class="reveal">
@@ -2585,7 +2585,7 @@ if (isLocked) {
       </div>
     </div>
     <p class="reveal" style="text-align:center;margin-top:32px;color:var(--text-muted);font-size:13px;">
-      &#x1f525; Click the <strong>AI Copilot</strong> button &mdash; bottom right of this page. Premium guidance improves after wallet connection and IFR lock verification.
+      &#x1f525; Click the <strong>AI Copilot</strong> button &mdash; bottom right of this page. Answers come from the maintained IFR documentation only &mdash; connecting a wallet or locking IFR does not change them.
     </p>
   </div>
 </section>
@@ -2821,6 +2821,8 @@ if (isLocked) {
      a:"IFR is the on-chain token symbol. $IFRp is used for social posts. Fixed supply of 1 billion IFR \u2014 no minting ever. Every standard transfer between non-exempt addresses burns 2.5% of the transferred amount permanently. Verified fee-exempt paths, including the IFR/WETH pair and future activated CEX addresses, bypass the transfer fee. A buyback loop from protocol fees adds further pressure. Supply can only decrease over time."},
     {q:"Can the team rug the liquidity?",
      a:"BootstrapVaultV3 has no admin or LP withdrawal function. Team.Finance was not configured on Mainnet; the LP tokens created by finalise() remain in the vault and are not withdrawable by the team. <a href='wiki/faq.html#rugpull'>Full details \u2192</a>"},
+    {q:"Does locking IFR or connecting a wallet change what the AI Copilot knows?",
+     a:"No. The AI Copilot chat stays documentation-only and receives no wallet, balance, lock or tier context. Locking 1,000 IFR in IFRLock activates refundable first-party IFRLock access, not personalized or verified assistant answers. Wallet status panels read the chain locally for display only. <a href='wiki/agent.html'>Copilot details \u2192</a>"},
     {q:"What is the lock mechanism?",
      a:"Any wallet locks IFR in IFRLock. Locked tokens cannot be sold or transferred. The on-chain lock state is the canonical source for access control, builder discounts, and governance power."},
     {q:"How does the Bootstrap work?",
@@ -4008,7 +4010,7 @@ function lpPremiumLockErrorMessage(e) {
   ) {
     return "Not enough free IFR for this lock. Your existing IFRLock balance remains active.";
   }
-  return message || "Premium lock failed.";
+  return message || "IFRLock access lock failed.";
 }
 
 async function lpLockPremium() {
@@ -4045,7 +4047,7 @@ async function lpLockPremium() {
     }
     var locked = await lock.lockedBalance(address);
     if (locked >= minLock) {
-      lpSetPremiumLockStatus("Premium already active.", "#86efac");
+      lpSetPremiumLockStatus("IFRLock access already active.", "#86efac");
       var activeState = await IFRState.load(address);
       lpUpdateUI(activeState);
       return false;
@@ -4054,7 +4056,7 @@ async function lpLockPremium() {
     var balance = await token.balanceOf(address);
     if (balance < missing) {
       lpSetPremiumLockStatus(
-        "Premium needs " + ethers.formatUnits(missing, 9).replace(/\.?0+$/, "") +
+        "IFRLock access needs " + ethers.formatUnits(missing, 9).replace(/\.?0+$/, "") +
         " more IFR, but this wallet has " + ethers.formatUnits(balance, 9).replace(/\.?0+$/, "") +
         " free. Existing IFRLock stays active.",
         "#fca5a5"
@@ -4074,11 +4076,11 @@ async function lpLockPremium() {
     var lockTx = await lock.lock(missing);
     lpSetPremiumLockStatus("Lock submitted. Waiting for confirmation...", "#fbbf24");
     await lockTx.wait();
-    lpSetPremiumLockStatus("Premium lock complete.", "#86efac");
+    lpSetPremiumLockStatus("IFRLock access lock complete.", "#86efac");
     var state = await IFRState.load(address);
     lpUpdateUI(state);
   } catch(e) {
-    console.error("Premium lock error:", e);
+    console.error("IFRLock access lock error:", e);
     if (e.code === 4001 || e.code === "ACTION_REJECTED") {
       lpSetPremiumLockStatus("Transaction cancelled in wallet.", "#fbbf24");
     } else {
@@ -4087,7 +4089,7 @@ async function lpLockPremium() {
   } finally {
     if (button) {
       button.disabled = false;
-      button.textContent = "Lock 1,000 IFR for Premium";
+      button.textContent = "Lock 1,000 IFR for IFRLock Access";
     }
   }
   return false;
@@ -4129,12 +4131,12 @@ async function lpUnlockPremium() {
     var tx = await lock.unlock();
     lpSetPremiumLockStatus("Unlock submitted. Waiting for confirmation...", "#fbbf24");
     await tx.wait();
-    lpSetPremiumLockStatus("IFRLock unlock complete. Premium access updates now.", "#86efac");
+    lpSetPremiumLockStatus("IFRLock unlock complete. IFRLock access status updates now.", "#86efac");
     var state = await IFRState.load(address);
     lpUpdateUI(state);
     if (typeof refreshAllLiveData === "function") refreshAllLiveData();
   } catch(e) {
-    console.error("Premium unlock error:", e);
+    console.error("IFRLock access unlock error:", e);
     if (e.code === 4001 || e.code === "ACTION_REJECTED") {
       lpSetPremiumLockStatus("Transaction cancelled in wallet.", "#fbbf24");
     } else {
@@ -4258,7 +4260,7 @@ function lpUpdateUI(state) {
     if (lockDiv) lockDiv.style.display = hasAnyLock ? "" : "none";
     if (noLockDiv) noLockDiv.style.display = state.isLocked1000 ? "none" : "";
     el = document.getElementById("lp-drop-lock-label");
-    if (el) el.innerHTML = state.isLocked1000 ? "&#x26A1; Premium Locked" : "&#x1F512; IFRLock Active";
+    if (el) el.innerHTML = state.isLocked1000 ? "&#x26A1; IFRLock Access Active" : "&#x1F512; IFRLock Active";
     el = document.getElementById("lp-drop-locked-amount");
     if (el) {
       var lockedFmt = hasAnyLock && typeof ethers !== "undefined"

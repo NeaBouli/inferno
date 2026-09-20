@@ -13,8 +13,8 @@ now have integrated corrections and dedicated verification evidence. The
 authoritative status is maintained in the
 [finding-by-finding remediation register](CWA_REMEDIATION_REGISTER.md).
 
-- Disposition: **21 fixed and verified / 11 governance or owner gated / 2
-  accepted or monitored / 37 open actionable / 11 informational**.
+- Disposition: **31 fixed and verified / 11 governance or owner gated / 2
+  accepted or monitored / 27 open actionable / 11 informational**.
 - Corrected severity aggregate: **0 Critical / 3 High / 29 Medium / 34 Low /
   16 Informational**.
 - [Download the consolidated 55-page CWA report

@@ -63,7 +63,6 @@ window.IFRState = (() => {
       // Abgeleitete Berechtigungen
       access: {
         copilotFree: true,               // immer
-        copilotPremium: false,           // lockedBalance >= 1000 IFR (Phase 2)
         builderTools: false,             // Builder Registry (Phase 3)
         governanceTools: false,          // Core Team Whitelist (Phase 3)
       }
@@ -151,7 +150,6 @@ window.IFRState = (() => {
         result.lockedAmount = locked;
         result.lockedFormatted = parseFloat(ethers.formatUnits(locked, 9)).toLocaleString();
         result.isLocked1000 = locked >= ethers.parseUnits("1000", 9);
-        result.access.copilotPremium = result.isLocked1000;
       }
 
     } catch(e) { console.warn("Wallet state load error:", e.message); }
