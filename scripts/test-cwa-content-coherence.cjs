@@ -282,4 +282,4 @@ for (let number = 57; number <= 73; number += 1) {
   assert.equal(finding.disposition, "fixed_and_verified", `${id} status must match evidence`);
 }
 
-console.log("[cwa-content-coherence] PASS - CWA source, math, copy and status evidence");
+console.log("[cwa-content-coherence] PASS - CWA-57...CWA-73 source, math, copy and status evidence");
