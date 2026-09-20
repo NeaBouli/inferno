@@ -5,6 +5,7 @@ on:
     branches: [main, master, develop, dev]
     paths:
       - 'docs/**'
+      - 'infra/web3/**'
       - '**/*.md'
       - 'audit/markdownlint-baseline.json'
       - 'internal/operations/TODO.md'
@@ -32,6 +33,7 @@ on:
       - 'scripts/test-wiki-head-integrity.cjs'
       - 'scripts/test-wiki-jsonld.cjs'
       - 'scripts/test-surface-routing.cjs'
+      - 'scripts/test-web3-headers.cjs'
       - 'scripts/test-security-reporting-config.cjs'
       - 'scripts/check-browser-ethers6.cjs'
       - '.github/ISSUE_TEMPLATE/**'
@@ -44,6 +46,7 @@ on:
     branches: [main, master]
     paths:
       - 'docs/**'
+      - 'infra/web3/**'
       - '**/*.md'
       - 'audit/markdownlint-baseline.json'
       - 'internal/operations/TODO.md'
@@ -70,6 +73,7 @@ on:
       - 'scripts/test-roadmap-status-sync.cjs'
       - 'scripts/test-wiki-head-integrity.cjs'
       - 'scripts/test-surface-routing.cjs'
+      - 'scripts/test-web3-headers.cjs'
       - 'scripts/test-security-reporting-config.cjs'
       - 'scripts/check-browser-ethers6.cjs'
       - '.github/ISSUE_TEMPLATE/**'
@@ -224,6 +228,9 @@ jobs:
 
       - name: Check public surface routing
         run: npm run test:surface-routing
+
+      - name: Check Web3 serving-layer security headers contract
+        run: npm run test:web3-headers
 
       - name: Check browser Ethers 6 baseline
         run: npm run test:browser-ethers6

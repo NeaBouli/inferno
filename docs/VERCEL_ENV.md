@@ -54,7 +54,7 @@ Backend allows the following origins (fallback when `ALLOWED_ORIGINS` is not set
 
 ```bash
 curl https://ifr-ai-copilot-production.up.railway.app/api/health
-# -> { "status": "ok", "apiKeySet": true }
+# -> { "status": "ok" }
 ```
 
 ## Security

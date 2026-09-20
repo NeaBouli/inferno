@@ -32,6 +32,8 @@ for (const watchedPath of [
   "scripts/test-check-links.cjs",
   "scripts/test-workflow-triggers.cjs",
   "scripts/test-roadmap-status-sync.cjs",
+  "scripts/test-web3-headers.cjs",
+  "infra/web3/**",
   "tests/browser/**",
   "package.json",
   "package-lock.json",
@@ -62,6 +64,7 @@ for (const command of [
   "npm run test:benefits-docs",
   "npm run test:wallet-connect",
   "npm run test:web3-write",
+  "npm run test:web3-headers",
 ]) {
   assert.ok(
     workflow.includes(`run: ${command}`),
