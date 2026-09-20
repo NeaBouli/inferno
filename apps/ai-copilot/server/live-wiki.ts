@@ -304,10 +304,12 @@ export class LiveWikiRefresher {
         continue;
       }
       if (res.status !== 200) {
+        try { await res.body?.cancel(); } catch { /* best effort */ }
         throw new Error(`unexpected status ${res.status} for ${current}`);
       }
       const contentType = (res.headers.get("content-type") || "").toLowerCase();
       if (!contentType.includes("text/html")) {
+        try { await res.body?.cancel(); } catch { /* best effort */ }
         throw new Error(`non-HTML content-type for ${current}`);
       }
       return await readBoundedText(res, this.config.maxBytesPerResponse);
