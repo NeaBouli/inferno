@@ -112,6 +112,7 @@ async function postRetiredVote(): Promise<Response> {
   while (Date.now() < deadline) {
     try {
       return await fetch(`http://127.0.0.1:${port}/api/bootstrap/vote`, {
+        signal: AbortSignal.timeout(Math.max(1, deadline - Date.now())),
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -135,6 +136,13 @@ try {
     error: "Bootstrap voting closed after finalization on June 5, 2026.",
     code: "bootstrap_vote_closed",
   });
+  const pageResponse = await fetch(`http://127.0.0.1:${port}/`, {
+    signal: AbortSignal.timeout(5_000),
+  });
+  assert.equal(pageResponse.status, 200);
+  const pageBody = await pageResponse.text();
+  assert.ok(pageBody.includes(ACCESS_TIER_SUMMARY), "Rendered welcome must contain canonical access tiers");
+  assert.doesNotMatch(pageBody, /\$\{ACCESS_TIER_SUMMARY\}/);
   await assert.rejects(stat(voteFile), { code: "ENOENT" });
 } catch (error) {
   if (childStderr) console.error(childStderr);

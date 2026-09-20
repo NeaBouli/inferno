@@ -31,6 +31,11 @@ for (const [name, appPath] of [
   assert.equal(selfPathCount, 2, `${name} must self-trigger on push and pull_request`);
 }
 
+requireMarkers("ai-copilot.yml", [
+  "branches: [main, master, develop, dev]",
+  "branches: [main, master]",
+]);
+
 for (const name of ["docs-validator.yml", "benefits-network.yml"]) {
   const workflow = readWorkflow(name);
   const lockfileCount = workflow.split("- 'package-lock.json'").length - 1;
