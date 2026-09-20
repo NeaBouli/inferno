@@ -3,10 +3,12 @@ name: AI Copilot CI
 on:
   workflow_dispatch:
   push:
+    branches: [main, master, develop, dev]
     paths:
       - 'apps/ai-copilot/**'
       - '.github/workflows/ai-copilot.yml'
   pull_request:
+    branches: [main, master]
     paths:
       - 'apps/ai-copilot/**'
       - '.github/workflows/ai-copilot.yml'
@@ -41,4 +43,6 @@ jobs:
       - run: npm run test:daily-budget
       - run: npm run test:live-wiki
       - run: npm run test:chat-budget
+      - run: npm run test:correctness
+      - run: npm run test:lending-loans
       - run: npm run build
