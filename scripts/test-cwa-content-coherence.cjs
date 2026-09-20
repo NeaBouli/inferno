@@ -274,6 +274,75 @@ requireText("docs/wiki/dao-governance.html", [
   "None is deployed or available for voting today.",
 ]);
 
+// CWA-78: no public surface may promise the Copilot wallet, balance, lock or tier context.
+// Scope is the maintained public files only; published audit reports are immutable evidence
+// and are deliberately excluded from this sweep.
+const copilotClaimSurfaces = [
+  "docs/index.html",
+  "docs/wiki/agent.html",
+  "docs/wiki/roadmap.html",
+  "docs/assets/ifr-state.js",
+];
+const staleCopilotClaims = [
+  "AI Copilot Premium",
+  "AI Copilot Gate",
+  "Premium Copilot",
+  "Premium guidance",
+  "Premium Access",
+  "Premium Locked",
+  "Lock 1,000 IFR for Premium",
+  "&#x26A1; Premium",
+  "Premium &#x2197;",
+  "Free/Premium tier",
+  "more personalized",
+  "personalized responses",
+  "wallet and lock context",
+  "verify wallet context",
+  "tier via URL params",
+  "copilotPremium",
+  "?wallet=",
+];
+for (const relative of copilotClaimSurfaces) {
+  forbidText(relative, staleCopilotClaims);
+}
+
+const copilotBoundary =
+  "The AI Copilot chat stays documentation-only and receives no wallet, balance, lock or tier context.";
+requireText("docs/index.html", [
+  copilotBoundary,
+  '{"@type":"PropertyValue","name":"IFRLock Access","value":"Lock 1,000 IFR in IFRLock for refundable first-party IFRLock access.',
+  "documentation-only AI Copilot guidance",
+  "Lock &ge;1,000 IFR in IFRLock to activate IFRLock access. Refundable anytime",
+  "Lock 1,000 IFR for IFRLock Access",
+  "&#x26A1; IFRLock Access Active",
+  "Lock &ge; 1,000 IFR &rarr; refundable IFRLock access for first-party lock-gated features.",
+  "The chat is documentation-only and receives no wallet, balance, lock or tier context.",
+  "connecting a wallet or locking IFR does not change them",
+  "Does locking IFR or connecting a wallet change what the AI Copilot knows?",
+]);
+// The refundable first-party 1,000 IFR IFRLock access action must stay intact.
+requireText("docs/index.html", [
+  'id="lp-premium-lock-btn"',
+  'onclick="lpLockPremium()"',
+  'onclick="lpUnlockPremium()"',
+  "Unlock all IFRLock",
+]);
+requireText("docs/wiki/agent.html", [
+  "The chat is documentation-only and receives no wallet, balance, lock or tier context.",
+  "&#x26A1; IFRLock Access</span>",
+  "IFRLock access &#x2197;",
+]);
+requireText("docs/wiki/roadmap.html", [
+  "Copilot privacy boundary implemented",
+  "no wallet address, balance, lock status or tier is passed to the Copilot chat",
+  "local IFRLock access status display from an on-chain read, shown on the page only",
+  "Gated content platform &mdash; separate future product concept, not part of the Copilot chat and without an activation schedule",
+  "&#x26A1; IFRLock Access</span>",
+]);
+const ifrState = read("docs/assets/ifr-state.js");
+assert.ok(ifrState.includes("copilotFree: true"), "ifr-state.js must keep the free copilot flag");
+assert.ok(ifrState.includes("result.isLocked1000 = locked >="), "ifr-state.js must keep the IFRLock read");
+
 const register = JSON.parse(read("docs/community-audits/cwa-remediation-register.json"));
 for (let number = 57; number <= 73; number += 1) {
   const id = `CWA-${number}`;
@@ -282,4 +351,4 @@ for (let number = 57; number <= 73; number += 1) {
   assert.equal(finding.disposition, "fixed_and_verified", `${id} status must match evidence`);
 }
 
-console.log("[cwa-content-coherence] PASS - CWA-57...CWA-73 source, math, copy and status evidence");
+console.log("[cwa-content-coherence] PASS - CWA-57...CWA-73 plus CWA-78 source, math, copy and status evidence");
