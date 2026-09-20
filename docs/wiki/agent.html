@@ -672,9 +672,9 @@
           <div style="background:rgba(249,115,22,0.05);border:1px solid rgba(249,115,22,0.2);
                       border-radius:16px;padding:24px;text-align:center;">
             <p style="color:#9ca3af;margin-bottom:16px;">
-              Connect your wallet to check your IFR lock status.<br>
+              Optionally connect your wallet to check its IFR status on this page.<br>
               <span style="font-size:0.85rem;color:#6b7280;">
-                Free access available &middot; Premium guidance unlocked with &ge;1,000 IFR locked
+                The Copilot chat remains documentation-only and receives no wallet, balance, lock or tier data.
               </span>
             </p>
             <button onclick="agConnect()"
@@ -712,21 +712,10 @@
             </button>
           </div>
 
-          <!-- Tier-Badge -->
-          <div id="ag-tier-free" style="display:none;margin-top:12px;padding:10px 16px;
+          <div style="margin-top:12px;padding:10px 16px;
                background:rgba(107,114,128,0.1);border:1px solid #374151;border-radius:8px;">
             <span style="color:#9ca3af;font-size:0.85rem;">
-              &#x2726; <strong style="color:#e5e7eb;">Free Tier</strong> &mdash;
-              Lock &ge;1,000 IFR to unlock Premium Copilot with more personalized guidance
-              <a href="https://ifrunit.tech/wiki/lock-mechanism.html" style="color:#f97316;margin-left:8px;font-size:0.8rem;">
-                Learn more &rarr;
-              </a>
-            </span>
-          </div>
-          <div id="ag-tier-premium" style="display:none;margin-top:12px;padding:10px 16px;
-               background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:8px;">
-            <span style="color:#fbbf24;font-size:0.85rem;font-weight:600;">
-              &#x26A1; Premium Copilot Active &mdash; more personalized guidance enabled by &ge;1,000 IFR locked
+              &#x2726; This status panel performs a local read for display only. It does not pass the connected wallet or its on-chain state to the Copilot chat.
             </span>
           </div>
         </div>
@@ -736,7 +725,7 @@
       <!-- ========== 1. IFR AI Copilot ========== -->
       <h2 class="section-title">1. IFR AI Copilot</h2>
       <p>
-        The IFR AI Copilot is an embedded AI assistant available on the Inferno website. It provides contextual, role-aware guidance to every user type &mdash; from first-time token holders to integration developers. Users can ask general questions for free. After wallet connection and IFR lock verification, Premium Copilot can communicate more personally because it can use wallet balance, lock status, tier, and on-chain context instead of only generic documentation. The copilot is powered by <strong>Claude Haiku 4.5</strong> and uses the curated <code>IFR_KNOWLEDGE</code> base together with the maintained same-project Wiki context loaded by the server.
+        The IFR AI Copilot is an embedded AI assistant available on the Inferno website. It provides contextual, role-aware guidance to every user type &mdash; from first-time token holders to integration developers. Users can ask general questions without connecting a wallet. The chat uses the curated <code>IFR_KNOWLEDGE</code> base together with maintained same-project Wiki context loaded by the server. It does not receive a connected wallet address, balance, lock status or access tier. Wallet-specific status and transactions remain in the dedicated Web3 and IFR Benefits interfaces.
       </p>
       <p>
         The copilot appears as a floating widget in the bottom-right corner of the main site, Wiki, Web3 app and IFR Benefits app. It understands the Inferno protocol, token mechanics, lock system, governance, Benefits checkout and builder integrations &mdash; and adapts its responses based on the selected mode.
@@ -1036,17 +1025,6 @@ function agUpdateUI(state) {
     document.getElementById("ag-ifr-balance").textContent = (state.ifrBalanceFormatted || "0") + " IFR";
     document.getElementById("ag-locked-amount").textContent = (state.lockedFormatted || "0") + " IFR";
 
-    var isPremium = state.isLocked1000;
-    document.getElementById("ag-tier-free").style.display = isPremium ? "none" : "";
-    document.getElementById("ag-tier-premium").style.display = isPremium ? "" : "none";
-
-    // Copilot iframe/widget: Premium-Kontext übergeben
-    var copilotFrame = document.getElementById("copilot-frame");
-    if (copilotFrame) {
-      var base = copilotFrame.dataset.src || copilotFrame.src.split("?")[0];
-      var tier = isPremium ? "premium" : "free";
-      copilotFrame.src = base + "?wallet=" + IFRWallet.getAddress() + "&tier=" + tier;
-    }
   }
 }
 
