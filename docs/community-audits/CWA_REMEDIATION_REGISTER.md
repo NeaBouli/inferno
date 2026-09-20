@@ -1,21 +1,21 @@
 # CWA-01...CWA-82 Remediation Register
 
 **Updated:** 2026-09-20
-**Repository baseline:** `a8e80c7eda74218f45d079cce4b43537423a9b54`
+**Repository baseline:** `cbaf4bcbf10c0ad8d1ca0823f3c89803819f584b`
 
 This is the authoritative public status register for the seven Collateral Web3 Open
 Audits reports. Publishing a finding does not mean it has been remediated. A finding
 moves to **Fixed and verified** only after its change is integrated and the required
-verification evidence passes. 19 findings currently meet that standard.
+verification evidence passes. 21 findings currently meet that standard.
 
 ## Status Summary
 
 | Disposition | Count | Meaning |
 | --- | ---: | --- |
-| Fixed and verified | 19 | A remediation is merged and covered by current verification evidence. |
+| Fixed and verified | 21 | A remediation is merged and covered by current verification evidence. |
 | Governance or owner gated | 11 | The next action requires governance, a repository owner setting, key custody work or a future contract version. |
 | Accepted or monitored | 2 | The condition is explicitly accepted for the current dormant configuration and must be reviewed before activation or redeployment. |
-| Open actionable | 39 | Repository, documentation or operations work remains and can be handled without an on-chain governance action. |
+| Open actionable | 37 | Repository, documentation or operations work remains and can be handled without an on-chain governance action. |
 | Informational, no action | 11 | The item records methodology, context or an optional improvement and has no required remediation. |
 
 | Severity | Count |
@@ -64,8 +64,8 @@ do not convert an open audit finding into a verified fix.
 | **CWA-07** Branch protection does not enforce advertised gates | Medium | Governance or owner gated | Repository owner | Require the canonical CI checks on main and enable enforcement for administrators. | Read-only branch-protection API evidence showing required checks and admin enforcement. | [Report](CWA_IFR_Protocol_Audit_2026-09-14.md) |
 | **CWA-08** LendingVault pre-activation configuration gaps | Low | Governance or owner gated | Governance and future contract engineering | Set a valid fee receiver and address collateral-return and loan-expiry behavior before any borrow activation or redeploy. | Full lending lifecycle, expiry, receiver and hostile-recipient regression tests. | [Report](CWA_IFR_Protocol_Audit_2026-09-14.md) |
 | **CWA-09** Guardian powers are concentrated in one EOA | Low | Governance or owner gated | Governance and key custody owner | Define the accepted guardian model or migrate guardian control through an audited governed path. | Role inventory, proposal tests and post-migration role checks. | [Report](CWA_IFR_Protocol_Audit_2026-09-14.md) |
-| **CWA-10** Web3 host lacks hardening headers | Low | Open actionable | Web3 operations | Apply CSP, frame protection, HSTS, nosniff and an explicit permissions policy at the serving layer. | Automated live header contract plus browser smoke tests. | [Report](CWA_IFR_Protocol_Audit_2026-09-14.md) |
-| **CWA-11** Copilot health endpoint discloses configuration | Low | Open actionable | AI Copilot backend | Return only readiness state and remove key-presence and version details from the public endpoint. | Endpoint response-shape regression test and production-safe health smoke. | [Report](CWA_IFR_Protocol_Audit_2026-09-14.md) |
+| **CWA-10** Web3 host lacks hardening headers | Low | Fixed and verified | Web3 operations | Keep the repository header contract synchronized with Web3 resource changes and repeat serving-layer probes after each deployment. | PR #109 head b4dc9b95 passed 23/23 checks; main cbaf4bcb passed seven runs including Pages; live nginx, root, app, asset and health header probes; browser page, wallet-chooser and Copilot-embed smoke. | [Report](CWA_IFR_Protocol_Audit_2026-09-14.md) |
+| **CWA-11** Copilot health endpoint discloses configuration | Low | Fixed and verified | AI Copilot backend | Preserve the exact minimal public health shape while keeping detailed diagnostics private. | PR #109 head b4dc9b95 passed 23/23 checks; main cbaf4bcb passed seven runs including Pages; spawned response-shape regression; live public response exactly {"status":"ok"} and healthy container. | [Report](CWA_IFR_Protocol_Audit_2026-09-14.md) |
 | **CWA-12** Copilot aggregate cost guard is warn-only | Low | Open actionable | AI Copilot backend | Enforce an aggregate spend or request budget with a fail-closed response and observable reset policy. | Budget exhaustion, concurrency and reset-window tests. | [Report](CWA_IFR_Protocol_Audit_2026-09-14.md) |
 | **CWA-13** Bootstrap vote accepts unsigned wallet identity | Low | Open actionable | AI Copilot backend | Retire the historical endpoint or require nonce-bound wallet signatures and a closed voting state. | Impersonation, replay and finalized-event regression tests. | [Report](CWA_IFR_Protocol_Audit_2026-09-14.md) |
 | **CWA-14** Voucher issuance does not redeem points and validation leaks wallet identity | Low | Open actionable | Points backend | Make issuance and point redemption atomic and return only the minimum public validation data. | Atomicity, replay, insufficient-points and privacy response tests. | [Report](CWA_IFR_Protocol_Audit_2026-09-14.md) |
