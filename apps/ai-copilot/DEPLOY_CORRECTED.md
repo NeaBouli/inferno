@@ -62,7 +62,7 @@ npm run dev
 ## Health Check
 ```bash
 curl https://ifr-copilot-api.railway.app/api/health
-# → { "status": "ok", "apiKeySet": true }
+# → { "status": "ok" }
 ```
 
 ---
