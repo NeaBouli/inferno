@@ -6,16 +6,16 @@
 This is the authoritative public status register for the seven Collateral Web3 Open
 Audits reports. Publishing a finding does not mean it has been remediated. A finding
 moves to **Fixed and verified** only after its change is integrated and the required
-verification evidence passes. 31 findings currently meet that standard.
+verification evidence passes. 29 findings currently meet that standard.
 
 ## Status Summary
 
 | Disposition | Count | Meaning |
 | --- | ---: | --- |
-| Fixed and verified | 31 | A remediation is merged and covered by current verification evidence. |
+| Fixed and verified | 29 | A remediation is merged and covered by current verification evidence. |
 | Governance or owner gated | 11 | The next action requires governance, a repository owner setting, key custody work or a future contract version. |
 | Accepted or monitored | 2 | The condition is explicitly accepted for the current dormant configuration and must be reviewed before activation or redeployment. |
-| Open actionable | 27 | Repository, documentation or operations work remains and can be handled without an on-chain governance action. |
+| Open actionable | 29 | Repository, documentation or operations work remains and can be handled without an on-chain governance action. |
 | Informational, no action | 11 | The item records methodology, context or an optional improvement and has no required remediation. |
 
 | Severity | Count |
@@ -132,8 +132,8 @@ do not convert an open audit finding into a verified fix.
 | **CWA-75** Copilot wiki failure destroys the last-good cache | Medium | Fixed and verified | AI Copilot backend | Keep stale-if-error serving with refresh outside the chat request path; failed refreshes must never replace last-known-good data. | PR #111 head 1df488cc merged as main 5000417f with exact-main CI green; Wiki outage, timeout, concurrent-chat, cache-retention and single-flight tests pass. | [Report](CWA_IFR_AI_Readiness_Audit_2026-09-14.md) |
 | **CWA-76** Copilot crawler follows off-origin HTML | Medium | Fixed and verified | AI Copilot backend | Keep crawler discovery restricted to explicitly allowed IFR origins and reject every foreign host. | PR #111 head 1df488cc merged as main 5000417f with exact-main CI green; off-origin, redirect and lookalike-host rejection tests pass against local fixtures. | [Report](CWA_IFR_AI_Readiness_Audit_2026-09-14.md) |
 | **CWA-77** Copilot teaches conflicting tier systems | Medium | Fixed and verified | AI Copilot and product configuration | Keep the single canonical tier configuration imported into prompts, knowledge and API checks. | PR #112 head e86f6fcc merged as main 2c68ca98 with exact-main runs green; shared-tier contract tests; live Copilot renders Basic >=500, Premium >=2,000 and Pro >=10,000 without placeholder. | [Report](CWA_IFR_AI_Readiness_Audit_2026-09-14.md) |
-| **CWA-78** Advertised premium on-chain context is not implemented | Medium | Fixed and verified | AI Copilot product and backend | Keep the repository guard that no public surface promises wallet, balance, lock or tier context in Copilot chat. | PR #112 head e86f6fcc merged as main 2c68ca98 removed the claim from Copilot prompts, knowledge, widget and the agent page; this branch removes the residual landing, roadmap and state copy and adds the repository-wide removal guard via npm run test:cwa-content; corrected public copy goes live when this combined branch merges and publishes. | [Report](CWA_IFR_AI_Readiness_Audit_2026-09-14.md) |
-| **CWA-79** Copilot static knowledge contains stale rows | Low | Fixed and verified | AI Copilot knowledge maintenance | Refresh supply, test counts, proposal ledger and network registry rows from canonical sources whenever they change. | PR #112 head e86f6fcc merged as main 2c68ca98: supply defers to the live /api/supply endpoint, the proposal ledger and registry rows match canonical sources and the knowledge guards pass; this branch refreshes the RAG snapshot. | [Report](CWA_IFR_AI_Readiness_Audit_2026-09-14.md) |
+| **CWA-78** Advertised premium on-chain context is not implemented | Medium | Open actionable | AI Copilot product and backend | Merge and publish the repository-wide claim removal, then verify the live Landing, Copilot Wiki, Roadmap and RAG no longer promise wallet, balance, lock or tier context in Copilot chat. | Exact-head claim-removal guard plus live public-page and Copilot RAG verification after publication. | [Report](CWA_IFR_AI_Readiness_Audit_2026-09-14.md) |
+| **CWA-79** Copilot static knowledge contains stale rows | Low | Open actionable | AI Copilot knowledge maintenance | Merge and deploy the refreshed static and RAG knowledge, then verify the runtime snapshot matches the canonical supply, test, proposal and registry sources. | Exact-head knowledge guards plus runtime source-hash and RAG-load verification after deployment. | [Report](CWA_IFR_AI_Readiness_Audit_2026-09-14.md) |
 | **CWA-80** Copilot policy and UX limits contradict each other | Low | Fixed and verified | AI Copilot backend and frontend | Keep address policy, the 20-message cap, ABI mutability and retired vote actions aligned across prompts, server and widget. | PR #112 head e86f6fcc merged as main 2c68ca98; prompt policy, 20-message boundary and retired vote-state assertions pass in the exact-main correctness test and the stale checkHealth view fragment is absent from the server ABI. | [Report](CWA_IFR_AI_Readiness_Audit_2026-09-14.md) |
 | **CWA-81** AI anchors and Web3 sitemap contain defects | Low | Open actionable | Web and AI-discovery documentation | Restore the fee-exemption qualifier, use same-host sitemap URLs, add missing pages and JSON-LD, and refresh lastmod values. | Sitemap, canonical, llms.txt and JSON-LD validation across all hosts. | [Report](CWA_IFR_AI_Readiness_Audit_2026-09-14.md) |
 | **CWA-82** Optional AI anchor completeness notes | Informational | Informational, no action | AI-discovery policy | Keep the crawler policy explicit; optional anchors can be added only when they have maintained content. | No mandatory remediation in the current register. | [Report](CWA_IFR_AI_Readiness_Audit_2026-09-14.md) |
