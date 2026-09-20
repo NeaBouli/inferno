@@ -432,11 +432,17 @@ app.post("/api/chat", async (req, res) => {
     system: systemPrompt,
     messages,
   });
-  const reservation = dailyBudget.tryReserve(
-    estimateReservationMicroUsd(Buffer.byteLength(anthropicRequest, "utf8"))
+  const reservationMicroUsd = estimateReservationMicroUsd(
+    Buffer.byteLength(anthropicRequest, "utf8")
   );
+  const reservation = dailyBudget.tryReserve(reservationMicroUsd);
   if (!reservation) {
     const snapshot = dailyBudget.snapshot();
+    if (reservationMicroUsd > snapshot.budgetMicroUsd) {
+      console.error(
+        "[budget] one request reservation exceeds the configured daily budget; no request can be admitted"
+      );
+    }
     console.warn(
       `[budget] daily budget exhausted (day=${snapshot.dayUtc} spent=${snapshot.spentMicroUsd} reserved=${snapshot.reservedMicroUsd} budget=${snapshot.budgetMicroUsd} micro-USD)`
     );

@@ -83,6 +83,12 @@ try {
     const retryAfter = Number(res.headers.get('retry-after'));
     assert.ok(Number.isInteger(retryAfter) && retryAfter >= 1 && retryAfter <= 86_400, 'Retry-After bounds the next UTC reset');
   }
+  await new Promise((resolve) => setTimeout(resolve, 50));
+  assert.match(
+    childStderr,
+    /one request reservation exceeds the configured daily budget/,
+    'operator receives a generic diagnostic when no request can fit the configured budget',
+  );
   console.log('PASS: chat budget gate — exhaustion, Retry-After, no model call when closed');
 } catch (error) {
   if (childStderr) console.error(childStderr);
