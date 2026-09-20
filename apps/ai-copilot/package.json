@@ -14,6 +14,9 @@
     "test:surface-ui": "node scripts/test-surface-ui.cjs",
     "test:surface-context": "tsx scripts/test-surface-context.ts",
     "test:liquidity-context": "node --import tsx scripts/test-liquidity-context.ts",
+    "test:daily-budget": "tsx scripts/test-daily-budget.ts",
+    "test:live-wiki": "tsx scripts/test-live-wiki.ts",
+    "test:chat-budget": "node scripts/test-chat-budget.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "start": "tsx server/index.ts"

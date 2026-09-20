@@ -38,4 +38,7 @@ jobs:
       - run: npm run test:surface-ui
       - run: npm run test:surface-context
       - run: npm run test:liquidity-context
+      - run: npm run test:daily-budget
+      - run: npm run test:live-wiki
+      - run: npm run test:chat-budget
       - run: npm run build

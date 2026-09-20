@@ -8,6 +8,18 @@ import { SYSTEM_PROMPTS } from "../src/context/system-prompts.js";
 import { loadWikiDocs, buildSystemPrompt, WikiDoc } from "./wiki-rag.js";
 import { buildSurfaceContext, normalizeCopilotSurface } from "./surface-context.js";
 import { toJsonSafeUint32 } from "./json-values.js";
+import {
+  DailyBudget,
+  parseDailyBudgetMicroUsd,
+  estimateReservationMicroUsd,
+  actualCostMicroUsd,
+  CHAT_MAX_OUTPUT_TOKENS,
+} from "./budget.js";
+import {
+  LiveWikiRefresher,
+  loadLiveWikiConfigFromEnv,
+  buildLiveWikiSection,
+} from "./live-wiki.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -19,6 +31,7 @@ app.use(cors({
 app.use(express.json({ limit: '50kb' }));
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+const ANTHROPIC_MESSAGES_URL = "https://api.anthropic.com/v1/messages";
 const POINTS_BACKEND_URL = process.env.POINTS_BACKEND_URL || "http://localhost:3004";
 
 // ── Anti-Abuse: In-memory rate limiter ──────────────────────────────
@@ -60,23 +73,9 @@ function checkRateLimit(ip: string): string | null {
   return null;
 }
 
-// ── Cost tracking ───────────────────────────────────────────────────
-let dailyCostEstimate = 0;
-let lastCostReset = new Date().toDateString();
-
-function trackCost(inputTokens: number, outputTokens: number): void {
-  const today = new Date().toDateString();
-  if (today !== lastCostReset) {
-    dailyCostEstimate = 0;
-    lastCostReset = today;
-  }
-  // Haiku 4.5 pricing: $1/M input, $5/M output
-  const cost = (inputTokens / 1_000_000) * 1 + (outputTokens / 1_000_000) * 5;
-  dailyCostEstimate += cost;
-  if (dailyCostEstimate > 1.0) {
-    console.warn(`[COST WARNING] Daily estimate: $${dailyCostEstimate.toFixed(4)}`);
-  }
-}
+// ── CWA-12: Aggregate daily cost budget (fail-closed, integer micro-USD) ──
+// Invalid COPILOT_DAILY_BUDGET_USD aborts startup instead of disabling the budget.
+const dailyBudget = new DailyBudget(parseDailyBudgetMicroUsd(process.env.COPILOT_DAILY_BUDGET_USD));
 
 // Load wiki docs for RAG at startup (local/pre-built JSON)
 const WIKI_DIR = resolve(__dirname, "../../../docs/wiki");
@@ -88,76 +87,15 @@ try {
   console.warn("Wiki RAG failed to load (non-critical):", err);
 }
 
-// ── Live Wiki Fetcher — auto-discover + fetch ALL wiki pages from ifrunit.tech ──
-let liveWikiContext = "";
-let liveWikiLastFetched = 0;
-const WIKI_CACHE_TTL = 1000 * 60 * 60; // 1 hour refresh
-
-async function fetchLiveWikiContext(): Promise<string> {
-  const now = Date.now();
-  if (liveWikiContext && now - liveWikiLastFetched < WIKI_CACHE_TTL) return liveWikiContext;
-
-  const BASE = "https://ifrunit.tech";
-  const results: string[] = [];
-
-  try {
-    // Step 1: fetch wiki index to discover all links
-    const pagesToFetch = new Set<string>();
-
-    const indexRes = await fetch(`${BASE}/wiki/index.html`, { signal: AbortSignal.timeout(8000) });
-    const indexHtml = await indexRes.text();
-
-    // Extract all wiki page links
-    const linkMatches = indexHtml.matchAll(/href="([^"]*\.html)"/g);
-    for (const match of linkMatches) {
-      const href = match[1];
-      if (href.startsWith("http")) {
-        pagesToFetch.add(href);
-      } else if (href.startsWith("/wiki/") || href.startsWith("wiki/")) {
-        pagesToFetch.add(`${BASE}/${href.replace(/^\//, "")}`);
-      } else if (!href.startsWith("http") && href.endsWith(".html")) {
-        pagesToFetch.add(`${BASE}/wiki/${href}`);
-      }
-    }
-
-    // Also fetch main landing page
-    pagesToFetch.add(`${BASE}/index.html`);
-
-    console.log(`[wiki-fetch] Fetching ${pagesToFetch.size} pages for Ali context...`);
-
-    // Step 2: fetch each page
-    for (const url of pagesToFetch) {
-      try {
-        const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
-        const html = await res.text();
-        const text = html
-          .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
-          .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
-          .replace(/<nav[^>]*>[\s\S]*?<\/nav>/gi, "")
-          .replace(/<[^>]+>/g, " ")
-          .replace(/&nbsp;/g, " ")
-          .replace(/&amp;/g, "&")
-          .replace(/&mdash;/g, "—")
-          .replace(/\s+/g, " ")
-          .trim()
-          .slice(0, 4000);
-        results.push(`=== ${url} ===\n${text}`);
-      } catch {
-        console.error(`[wiki-fetch] Failed: ${url}`);
-      }
-    }
-  } catch (err) {
-    console.error("[wiki-fetch] Wiki discovery failed:", err);
-  }
-
-  liveWikiContext = results.join("\n\n");
-  liveWikiLastFetched = Date.now();
-  console.log(`[wiki-fetch] Ali wiki context ready: ${results.length} pages, ${liveWikiContext.length} chars`);
-  return liveWikiContext;
+// ── CWA-24/75/76: bounded-trust live Wiki snapshot ──────────────────────
+// Refreshes at startup and on a background interval only — never from a chat
+// request. Chat reads the last good snapshot synchronously; errors keep the
+// last good snapshot. Allowlist defaults to https://ifrunit.tech and can be
+// overridden with COPILOT_WIKI_ALLOWED_ORIGINS (invalid entries abort startup).
+const liveWiki = new LiveWikiRefresher(loadLiveWikiConfigFromEnv());
+if (process.env.NODE_ENV !== "test") {
+  liveWiki.start();
 }
-
-// Pre-warm wiki context on startup
-fetchLiveWikiContext().catch(() => {});
 
 // Detect guide-completion in AI responses
 function detectGuideCompletion(userMessage: string, assistantReply: string): string | null {
@@ -478,27 +416,47 @@ app.post("/api/chat", async (req, res) => {
   const basePrompt = SYSTEM_PROMPTS[mode] || SYSTEM_PROMPTS.customer;
   let systemPrompt = buildSystemPrompt(basePrompt, mode || "customer", wikiDocs);
 
-  // Append live wiki context (fetched from ifrunit.tech, 1h cache)
-  const liveWiki = await fetchLiveWikiContext();
-  if (liveWiki) {
-    systemPrompt += `\n\n--- LIVE WIKI CONTEXT (auto-fetched from ifrunit.tech) ---\n${liveWiki.slice(0, 80000)}\n--- END WIKI CONTEXT ---\nAlways prioritize this context for accurate IFR information.`;
+  // CWA-24/75/76: synchronous last-good live wiki snapshot — chat never crawls.
+  const liveWikiContext = liveWiki.getContext();
+  if (liveWikiContext) {
+    systemPrompt += buildLiveWikiSection(liveWikiContext);
   }
   systemPrompt += `\n\n${buildSurfaceContext(surface)}`;
 
+  // CWA-12: reserve a conservative maximum request cost BEFORE the upstream
+  // call so concurrent requests cannot all pass the same remaining-budget
+  // check. No reservation → no Anthropic call.
+  const anthropicRequest = JSON.stringify({
+    model: "claude-haiku-4-5-20251001",
+    max_tokens: CHAT_MAX_OUTPUT_TOKENS,
+    system: systemPrompt,
+    messages,
+  });
+  const reservation = dailyBudget.tryReserve(
+    estimateReservationMicroUsd(Buffer.byteLength(anthropicRequest, "utf8"))
+  );
+  if (!reservation) {
+    const snapshot = dailyBudget.snapshot();
+    console.warn(
+      `[budget] daily budget exhausted (day=${snapshot.dayUtc} spent=${snapshot.spentMicroUsd} reserved=${snapshot.reservedMicroUsd} budget=${snapshot.budgetMicroUsd} micro-USD)`
+    );
+    res.set("Retry-After", String(dailyBudget.retryAfterSeconds()));
+    res.status(429).json({
+      reply: "The AI assistant has reached its daily capacity. Please try again later.",
+      code: "budget_exhausted",
+    });
+    return;
+  }
+
   try {
-    const response = await fetch("https://api.anthropic.com/v1/messages", {
+    const response = await fetch(ANTHROPIC_MESSAGES_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "x-api-key": ANTHROPIC_API_KEY,
         "anthropic-version": "2023-06-01"
       },
-      body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 500,
-        system: systemPrompt,
-        messages
-      })
+      body: anthropicRequest,
     });
 
     const data = await response.json() as Record<string, unknown>;
@@ -508,6 +466,9 @@ app.post("/api/chat", async (req, res) => {
     }
 
     if (!response.ok) {
+      // Once dispatched, billing is ambiguous on failure. Charge the full
+      // reservation rather than under-count a request that may have run.
+      dailyBudget.settle(reservation);
       const errMsg = (data as { error?: { message?: string } }).error?.message || "Unknown API error";
       console.error("Anthropic API error:", errMsg);
       res.status(500).json({ reply: "AI service temporarily unavailable. Please try again." });
@@ -517,12 +478,20 @@ app.post("/api/chat", async (req, res) => {
     const content = data.content as { text?: string }[] | undefined;
     const text = content?.[0]?.text || "Sorry, I couldn't process that.";
 
-    // Cost tracking
+    // Settle the reservation against actual usage (full reservation when the
+    // upstream response carries no usage — fail-safe, never under-count).
     const usage = data.usage as { input_tokens?: number; output_tokens?: number } | undefined;
-    if (usage) {
-      trackCost(usage.input_tokens || 0, usage.output_tokens || 0);
-      console.log(`[API] ip=${clientIp} mode=${mode || "explorer"} surface=${surface} in=${usage.input_tokens} out=${usage.output_tokens} cost_today=$${dailyCostEstimate.toFixed(4)}`);
-    }
+    const inputTokens = typeof usage?.input_tokens === "number" ? usage.input_tokens : undefined;
+    const outputTokens = typeof usage?.output_tokens === "number" ? usage.output_tokens : undefined;
+    const settledMicroUsd =
+      inputTokens !== undefined && outputTokens !== undefined
+        ? actualCostMicroUsd(inputTokens, outputTokens)
+        : undefined;
+    dailyBudget.settle(reservation, settledMicroUsd);
+    const snapshot = dailyBudget.snapshot();
+    console.log(
+      `[API] ip=${clientIp} mode=${mode || "explorer"} surface=${surface} in=${inputTokens ?? "?"} out=${outputTokens ?? "?"} budget_spent=${snapshot.spentMicroUsd}/${snapshot.budgetMicroUsd} micro-USD day=${snapshot.dayUtc}`
+    );
 
     // Optional: record points for guide completion
     const walletAddress = req.headers["x-wallet-address"] as string;
@@ -539,6 +508,9 @@ app.post("/api/chat", async (req, res) => {
 
     res.json({ reply: text });
   } catch (err) {
+    // A dispatched request may have reached the provider before a network or
+    // parse failure. Charge the full reservation to remain fail-closed.
+    dailyBudget.settle(reservation);
     console.error("Anthropic API error:", err);
     res.status(500).json({ reply: "API error - please try again." });
   }
