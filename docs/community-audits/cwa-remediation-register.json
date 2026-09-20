@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "updatedAt": "2026-09-20",
-  "baseline": "a8e80c7eda74218f45d079cce4b43537423a9b54",
+  "baseline": "cbaf4bcbf10c0ad8d1ca0823f3c89803819f584b",
   "statusDefinitions": {
     "fixed_and_verified": "A remediation is merged and covered by current verification evidence.",
     "governance_or_owner_gated": "The next action requires governance, a repository owner setting, key custody work or a future contract version.",
@@ -10,10 +10,10 @@
     "informational_no_action": "The item records methodology, context or an optional improvement and has no required remediation."
   },
   "expectedDispositionTotals": {
-    "fixed_and_verified": 19,
+    "fixed_and_verified": 21,
     "governance_or_owner_gated": 11,
     "documented_accepted_or_monitored": 2,
-    "open_actionable": 39,
+    "open_actionable": 37,
     "informational_no_action": 11
   },
   "expectedSeverityTotals": {
@@ -58,8 +58,8 @@
     {"id":"CWA-07","severity":"Medium","title":"Branch protection does not enforce advertised gates","disposition":"governance_or_owner_gated","owner":"Repository owner","nextAction":"Require the canonical CI checks on main and enable enforcement for administrators.","verification":"Read-only branch-protection API evidence showing required checks and admin enforcement.","source":"CWA_IFR_Protocol_Audit_2026-09-14.md"},
     {"id":"CWA-08","severity":"Low","title":"LendingVault pre-activation configuration gaps","disposition":"governance_or_owner_gated","owner":"Governance and future contract engineering","nextAction":"Set a valid fee receiver and address collateral-return and loan-expiry behavior before any borrow activation or redeploy.","verification":"Full lending lifecycle, expiry, receiver and hostile-recipient regression tests.","source":"CWA_IFR_Protocol_Audit_2026-09-14.md"},
     {"id":"CWA-09","severity":"Low","title":"Guardian powers are concentrated in one EOA","disposition":"governance_or_owner_gated","owner":"Governance and key custody owner","nextAction":"Define the accepted guardian model or migrate guardian control through an audited governed path.","verification":"Role inventory, proposal tests and post-migration role checks.","source":"CWA_IFR_Protocol_Audit_2026-09-14.md"},
-    {"id":"CWA-10","severity":"Low","title":"Web3 host lacks hardening headers","disposition":"open_actionable","owner":"Web3 operations","nextAction":"Apply CSP, frame protection, HSTS, nosniff and an explicit permissions policy at the serving layer.","verification":"Automated live header contract plus browser smoke tests.","source":"CWA_IFR_Protocol_Audit_2026-09-14.md"},
-    {"id":"CWA-11","severity":"Low","title":"Copilot health endpoint discloses configuration","disposition":"open_actionable","owner":"AI Copilot backend","nextAction":"Return only readiness state and remove key-presence and version details from the public endpoint.","verification":"Endpoint response-shape regression test and production-safe health smoke.","source":"CWA_IFR_Protocol_Audit_2026-09-14.md"},
+    {"id":"CWA-10","severity":"Low","title":"Web3 host lacks hardening headers","disposition":"fixed_and_verified","owner":"Web3 operations","nextAction":"Keep the repository header contract synchronized with Web3 resource changes and repeat serving-layer probes after each deployment.","verification":"PR #109 head b4dc9b95 passed 23/23 checks; main cbaf4bcb passed seven runs including Pages; live nginx, root, app, asset and health header probes; browser page, wallet-chooser and Copilot-embed smoke.","source":"CWA_IFR_Protocol_Audit_2026-09-14.md"},
+    {"id":"CWA-11","severity":"Low","title":"Copilot health endpoint discloses configuration","disposition":"fixed_and_verified","owner":"AI Copilot backend","nextAction":"Preserve the exact minimal public health shape while keeping detailed diagnostics private.","verification":"PR #109 head b4dc9b95 passed 23/23 checks; main cbaf4bcb passed seven runs including Pages; spawned response-shape regression; live public response exactly {\"status\":\"ok\"} and healthy container.","source":"CWA_IFR_Protocol_Audit_2026-09-14.md"},
     {"id":"CWA-12","severity":"Low","title":"Copilot aggregate cost guard is warn-only","disposition":"open_actionable","owner":"AI Copilot backend","nextAction":"Enforce an aggregate spend or request budget with a fail-closed response and observable reset policy.","verification":"Budget exhaustion, concurrency and reset-window tests.","source":"CWA_IFR_Protocol_Audit_2026-09-14.md"},
     {"id":"CWA-13","severity":"Low","title":"Bootstrap vote accepts unsigned wallet identity","disposition":"open_actionable","owner":"AI Copilot backend","nextAction":"Retire the historical endpoint or require nonce-bound wallet signatures and a closed voting state.","verification":"Impersonation, replay and finalized-event regression tests.","source":"CWA_IFR_Protocol_Audit_2026-09-14.md"},
     {"id":"CWA-14","severity":"Low","title":"Voucher issuance does not redeem points and validation leaks wallet identity","disposition":"open_actionable","owner":"Points backend","nextAction":"Make issuance and point redemption atomic and return only the minimum public validation data.","verification":"Atomicity, replay, insufficient-points and privacy response tests.","source":"CWA_IFR_Protocol_Audit_2026-09-14.md"},
