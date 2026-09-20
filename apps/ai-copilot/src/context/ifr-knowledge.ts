@@ -1,3 +1,5 @@
+import { ACCESS_TIERS, ACCESS_TIER_SUMMARY } from "./copilot-policy";
+
 const BOOTSTRAP_END = new Date("2026-06-05T00:00:00Z").getTime();
 
 function getBootstrapStatus(): string {
@@ -11,6 +13,8 @@ function getBootstrapStatus(): string {
 }
 
 export function getIFRKnowledge() {
+  const [basicTier, premiumTier, proTier] = ACCESS_TIERS;
+
   return {
     audits: {
       status: "The seven Collateral Web3 Open Audits reports cover CWA-01 through CWA-82. At the 2026-09-20 remediation checkpoint, 21 findings are fixed and verified, 11 are governance or owner gated, 2 are accepted or monitored, 37 are open actionable, and 11 are informational.",
@@ -46,7 +50,7 @@ export function getIFRKnowledge() {
     },
     tokenomics: {
       genesisSupply: "1,000,000,000 IFR",
-      currentSupply: "997,673,879.091903855 IFR at block 25812380 (decreasing — 2,326,120.908096145 IFR burned from genesis)",
+      currentSupply: "Use the live /api/supply endpoint or a current Ethereum read for current supply. Historical audit snapshots are block-pinned evidence and must not be presented as live values.",
       burnPerTransfer: "2.5% permanent",
       poolFee: "1.0%",
       totalFee: "3.5%",
@@ -70,7 +74,7 @@ export function getIFRKnowledge() {
       agenda: "https://ifrunit.tech/wiki/governance.html#council-agenda"
     },
     aiCopilot: {
-      premiumThreshold: "The current standalone IFR check API uses Basic >=500 IFR, Premium >=2,000 IFR and Pro >=10,000 IFR. A separate 1,000-IFR lock claim remains under CWA-77 reconciliation and must not be presented as the same tier table.",
+      accessTiers: `The canonical access tiers are ${ACCESS_TIER_SUMMARY}. Tier calculations use integer base units with 9 IFR decimals.`,
       premiumBenefit: "The current /api/chat path provides general and surface-specific guidance. It does not inject verified wallet balance, lock status or tier into chat; wallet-specific state must be checked in the signed Web3 interfaces or direct chain reads.",
       safety: "The assistant never needs private keys or seed phrases. It cannot sign or submit wallet transactions."
     },
@@ -145,7 +149,7 @@ export function getIFRKnowledge() {
       daoPhase: "Full DAO transition remains planned; current governance is TreasurySafe 3-of-5 plus the 48-hour timelock",
       multisig: "3-of-5 on all Safes (Treasury, Community, LP Reserve) — 5 signers: A.K./M.G./A.M./Y.K./A.P.",
       communitySignerExpansion: "Planned after community voting is live. This is the multisig signer distribution process. Preferred path: keep 3-of-5 now, expand to 4-of-7 using a mixed model (3 core/protocol, 2 contributor/builder, 2 community-elected), then consider 5-of-9 only after one stable term. Selection is not pure whale voting and not pure random selection; it requires eligibility, public nomination, community vote, security review, rotation, and emergency replacement rules. Full plan: https://ifrunit.tech/wiki/community-signer-expansion.html",
-      proposals: "#0,#4-#9,#11,#12,#15,#16 executed; #1-#3,#10 cancelled.",
+      proposals: "#0, #4-#9 and #11-#16 executed; #1-#3 and #10 cancelled.",
       nextPlanned: "No claim that seller rewards are active: PartnerVault registration and an authorized reward caller require separate governance execution.",
       feeExempt: "Deployer, TreasurySafe, CommunitySafe, CommitmentVault, LendingVault and LP Token are active fee exemptions.",
       vaultInvariantMonitoring: "A read-only four-hour Mainnet monitor fails closed if CommitmentVault or LendingVault loses feeExempt status or liquid custody falls below accounting. CommitmentVault balance is checked against totalLocked. LendingVault balance is checked against totalAvailable; totalLent is a separate borrower-held receivable. At block 25900438 both vaults were fee-exempt and exactly covered. V2 balance-diff accounting and runtime guards remain future work."
@@ -159,7 +163,6 @@ export function getIFRKnowledge() {
     },
     builderRegistry: {
       mainnet: "0xdfe6636DA47F8949330697e1dC5391267CEf0EE3",
-      sepolia: "Use the verified testnet deployment register; do not reuse the mainnet IFR token address as BuilderRegistry.",
       owner: "Governance (TreasurySafe 3-of-5)",
       deployed: "20.03.2026",
       tests: "30/30 Generator Engine tests passing",
@@ -235,9 +238,9 @@ export function getIFRKnowledge() {
         tests: "45/45 passing"
       },
       tiers: {
-        tier1: "≥500 IFR → Basic Access",
-        tier2: "≥2,000 IFR → Premium",
-        tier3: "≥10,000 IFR → Pro / Full Access",
+        tier1: `≥${basicTier.minIFR.toLocaleString("en-US")} IFR → ${basicTier.name} Access`,
+        tier2: `≥${premiumTier.minIFR.toLocaleString("en-US")} IFR → ${premiumTier.name}`,
+        tier3: `≥${proTier.minIFR.toLocaleString("en-US")} IFR → ${proTier.name} / Full Access`,
         note: "Uses locked balance (not wallet balance) for tier calculation"
       },
       securityScoring: {
@@ -251,9 +254,9 @@ export function getIFRKnowledge() {
       }
     },
     tiers: {
-      tier1: { minIFR: 500,   level: "Basic" },
-      tier2: { minIFR: 2000,  level: "Premium" },
-      tier3: { minIFR: 10000, level: "Pro" }
+      tier1: { minIFR: basicTier.minIFR, level: basicTier.name },
+      tier2: { minIFR: premiumTier.minIFR, level: premiumTier.name },
+      tier3: { minIFR: proTier.minIFR, level: proTier.name }
     },
     bootstrap: {
       status: getBootstrapStatus(),

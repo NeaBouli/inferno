@@ -17,6 +17,8 @@
     "test:daily-budget": "tsx scripts/test-daily-budget.ts",
     "test:live-wiki": "tsx scripts/test-live-wiki.ts",
     "test:chat-budget": "node scripts/test-chat-budget.mjs",
+    "test:correctness": "tsx scripts/test-copilot-correctness.ts",
+    "test:lending-loans": "tsx scripts/test-lending-loans.ts",
     "build": "vite build",
     "preview": "vite preview",
     "start": "tsx server/index.ts"

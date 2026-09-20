@@ -258,6 +258,13 @@ forbidText("apps/ai-copilot/src/context/system-prompts.ts", ["fully active"]);
 requireText("docs/wiki/agent.html", [
   "maintained same-project Wiki context",
   "a page-specific citation is not guaranteed on every answer",
+  "does not pass the connected wallet or its on-chain state to the Copilot chat",
+]);
+forbidText("docs/wiki/agent.html", [
+  "?wallet=",
+  "Premium Copilot Active",
+  "more personalized guidance",
+  "wallet balance, lock status, tier, and on-chain context",
 ]);
 forbidText("docs/wiki/open-audit.html", ["document.getElementById('deflation-dot')"]);
 requireText("docs/builder.html", ['id="scNum">90</div>']);
