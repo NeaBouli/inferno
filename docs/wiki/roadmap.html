@@ -569,11 +569,11 @@
               </div>
             </div>
             <div id="lp-drop-lock" style="display:none;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:8px 10px;margin-bottom:10px;text-align:center;">
-              <span style="color:#fbbf24;font-size:0.78rem;font-weight:600;">&#x26A1; Premium</span>
+              <span style="color:#fbbf24;font-size:0.78rem;font-weight:600;">&#x26A1; IFRLock Access</span>
             </div>
             <div id="lp-drop-nolock" style="background:rgba(107,114,128,0.1);border:1px solid #374151;border-radius:8px;padding:8px 10px;margin-bottom:10px;text-align:center;">
               <span style="color:#9ca3af;font-size:0.78rem;">Lock &#x2265;1,000 IFR &#x2192; </span>
-              <a href="https://ifrunit.tech/wiki/lock-mechanism.html" style="color:#f97316;font-size:0.78rem;">Premium &#x2197;</a>
+              <a href="https://ifrunit.tech/wiki/lock-mechanism.html" style="color:#f97316;font-size:0.78rem;">IFRLock access &#x2197;</a>
             </div>
             <div style="display:flex;gap:8px;">
               <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="flex:1;text-align:center;padding:8px;background:#f97316;color:white;border-radius:8px;font-size:0.78rem;font-weight:600;text-decoration:none;">&#x1F525; Buy IFR</a>
@@ -757,14 +757,14 @@
           <li>&#x2705; <code>ifr-state.js</code> &mdash; On-chain state reader (IFR balance, lock status, bootstrap contribution)</li>
           <li>&#x2705; Bootstrap Widget &mdash; contribute() / claim() / refund() fully functional</li>
           <li>&#x2705; Landing Page &mdash; Connect button in header with wallet dropdown</li>
-          <li>&#x2705; Agent Page &mdash; Free/Premium tier display based on IFRLock on-chain check</li>
+          <li>&#x2705; Agent Page &mdash; local IFRLock access status display from an on-chain read, shown on the page only</li>
         </ul>
       </div>
 
       <div style="border-left:3px solid #f97316;padding-left:16px;margin:20px 0;">
-        <h3 style="color:#f97316;">&#x23F3; Phase 2 &mdash; Personalization (after Bootstrap Start, April 2026)</h3>
+        <h3 style="color:#f97316;">&#x23F3; Phase 2 &mdash; Live Market Data (after Bootstrap Start, April 2026)</h3>
         <ul>
-          <li>&#x23F3; Copilot receives wallet address + tier via URL params &rarr; personalized responses</li>
+          <li>&#x2705; Copilot privacy boundary implemented &mdash; no wallet address, balance, lock status or tier is passed to the Copilot chat; the chat stays documentation-only</li>
           <li>&#x2705; &ldquo;Buy IFR&rdquo; button &rarr; Uniswap live after LP launch</li>
           <li>&#x2705; Live IFR token price display wired to the API price feed</li>
           <li>&#x2705; Bootstrap countdown widget &mdash; Bootstrap ENDED 05.06.2026, LP live</li>
@@ -774,7 +774,7 @@
       <div style="border-left:3px solid #6b7280;padding-left:16px;margin:20px 0;">
         <h3 style="color:#6b7280;">&#x1F512; Phase 3 &mdash; Full Ecosystem (after LP live, Q3 2026+)</h3>
         <ul>
-          <li>&#x1F512; AI Copilot Gate &mdash; &ge;1,000 IFR locked &rarr; gated content platform</li>
+          <li>&#x1F512; Gated content platform &mdash; separate future product concept, not part of the Copilot chat and without an activation schedule</li>
           <li>&#x2705; Builder Tools &mdash; BuilderRegistry.sol deployed, on-chain <code>isBuilder()</code> check integrated in Telegram Bot</li>
           <li>&#x1F512; Telegram Wallet Whitelist &mdash; WalletConnect &rarr; IFRLock check &rarr; Topic access</li>
           <li>&#x1F512; Governance Tools &mdash; Core Team whitelist &rarr; Proposal creation/voting UI</li>
