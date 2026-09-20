@@ -41,4 +41,6 @@ jobs:
       - run: npm run test:daily-budget
       - run: npm run test:live-wiki
       - run: npm run test:chat-budget
+      - run: npm run test:correctness
+      - run: npm run test:lending-loans
       - run: npm run build

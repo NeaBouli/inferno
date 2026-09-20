@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { ACCESS_TIER_SUMMARY, COPILOT_MESSAGE_LIMIT } from "../context/copilot-policy";
 
 type Mode = "customer" | "partner" | "developer";
 type Surface = "landing" | "web3" | "benefits" | "standalone";
@@ -66,7 +67,7 @@ export default function IFRCopilot() {
 
   async function sendMessage() {
     const trimmed = input.trim();
-    if (!trimmed || isLoading) return;
+    if (!trimmed || isLoading || messages.length >= COPILOT_MESSAGE_LIMIT) return;
 
     const safetyWarning = checkSafety(trimmed);
     if (safetyWarning) {
@@ -88,12 +89,10 @@ export default function IFRCopilot() {
     setIsLoading(true);
 
     try {
-      // Optional: pass wallet info for points tracking
-      const walletAddress = (window as unknown as Record<string, unknown>).__IFR_WALLET_ADDRESS as string | undefined;
+      // Optional bearer token is used only by the separate Points backend.
       const authToken = (window as unknown as Record<string, unknown>).__IFR_AUTH_TOKEN as string | undefined;
 
       const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (walletAddress) headers["x-wallet-address"] = walletAddress;
       if (authToken) headers["x-auth-token"] = authToken;
 
       const response = await fetch("/api/chat", {
@@ -206,19 +205,18 @@ export default function IFRCopilot() {
                 <li>Understand how IFR creates real utility</li>
               </ul>
 
-              <p className="text-white font-semibold text-xs mb-1">Connect your wallet to unlock:</p>
+              <p className="text-white font-semibold text-xs mb-1">For wallet-specific status:</p>
               <ul className="text-ifr-muted text-xs mb-3 space-y-0.5 list-disc list-inside">
-                <li>Your personal IFR balance and lock position</li>
-                <li>Your vesting schedule (if applicable)</li>
-                <li>Personalized guidance based on your on-chain state</li>
+                <li>Use Web3 for protocol balances, locks, lending and transactions</li>
+                <li>Use IFR Benefits for offer eligibility and checkout</li>
+                <li>This chat does not receive verified wallet, balance, lock or tier context</li>
               </ul>
 
-              <p className="text-white font-semibold text-xs mb-1">Lock &ge;1,000 IFR to unlock:</p>
+              <p className="text-white font-semibold text-xs mb-1">Canonical access tiers:</p>
               <ul className="text-ifr-muted text-xs mb-3 space-y-0.5 list-disc list-inside">
-                <li>Premium Copilot access with more personalized communication based on wallet and lock context</li>
-                <li>Deeper on-chain guidance for your IFR position</li>
-                <li>AI Copilot Gate and builder onboarding pathway</li>
-                <li>Your lock is verified on-chain &mdash; no account needed</li>
+                <li>{ACCESS_TIER_SUMMARY}</li>
+                <li>Tier checks use 9-decimal IFR integer amounts</li>
+                <li>Verify your current status in the relevant signed product interface</li>
               </ul>
 
               <p className="text-ifr-muted text-xs italic">
@@ -273,6 +271,11 @@ export default function IFRCopilot() {
 
       {/* Input */}
       <div className="border-t border-ifr-border p-3">
+        {messages.length >= COPILOT_MESSAGE_LIMIT ? (
+          <p className="mb-2 text-xs text-ifr-muted" role="status">
+            Conversation limit reached. Switch mode or reopen the assistant to start again.
+          </p>
+        ) : null}
         <div className="flex gap-2">
           <input
             ref={inputRef}
@@ -280,13 +283,13 @@ export default function IFRCopilot() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-            placeholder={MODE_PLACEHOLDERS[mode]}
-            disabled={isLoading}
+            placeholder={messages.length >= COPILOT_MESSAGE_LIMIT ? "Start a new conversation" : MODE_PLACEHOLDERS[mode]}
+            disabled={isLoading || messages.length >= COPILOT_MESSAGE_LIMIT}
             className="flex-1 bg-ifr-card border border-ifr-border rounded-lg px-3 py-2 text-sm text-white placeholder-ifr-muted outline-none focus:border-ifr-red transition-colors"
           />
           <button
             onClick={sendMessage}
-            disabled={isLoading || !input.trim()}
+            disabled={isLoading || messages.length >= COPILOT_MESSAGE_LIMIT || !input.trim()}
             className="bg-ifr-red hover:bg-red-700 disabled:opacity-40 disabled:hover:bg-ifr-red text-white rounded-lg px-4 py-2 text-sm font-medium transition-colors"
           >
             Send

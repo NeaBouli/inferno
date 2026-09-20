@@ -3,8 +3,14 @@ import express from "express";
 import cors from "cors";
 import { resolve, dirname, join } from "path";
 import { fileURLToPath } from "url";
-import { existsSync, readFileSync, writeFileSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 import { SYSTEM_PROMPTS } from "../src/context/system-prompts.js";
+import {
+  ACCESS_TIER_SUMMARY,
+  COPILOT_MESSAGE_LIMIT,
+  IFR_DECIMALS,
+  getAccessTier,
+} from "../src/context/copilot-policy.js";
 import { loadWikiDocs, buildSystemPrompt, WikiDoc } from "./wiki-rag.js";
 import { buildSurfaceContext, normalizeCopilotSurface } from "./surface-context.js";
 import { toJsonSafeUint32 } from "./json-values.js";
@@ -20,6 +26,7 @@ import {
   loadLiveWikiConfigFromEnv,
   buildLiveWikiSection,
 } from "./live-wiki.js";
+import { LENDING_LOAN_ABI, serializeLendingLoan } from "./lending-loans.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -119,7 +126,6 @@ function detectGuideCompletion(userMessage: string, assistantReply: string): str
 
 // Send points event to Points Backend (fire-and-forget)
 async function recordPointsEvent(
-  walletAddress: string,
   eventType: string,
   authToken: string
 ): Promise<void> {
@@ -294,7 +300,7 @@ function getBootstrapWelcomeText() {
 }
 var welcomes = {
   explorer: "Welcome to IFR Copilot. &#x1f44b;\\n\\n" + surfaceHelp[surface] + "\\n\\nYou're browsing without a wallet connected to the copilot \\u2014 no problem.\\n\\n\\u2756 You can ask about:\\n\\u2022 IFR tokenomics, governance, contracts and security\\n\\u2022 " + getBootstrapWelcomeText() + "\\n\\u2022 Wallet, IFRLock, CommitmentVault and LendingVault guidance on web3.ifrunit.tech\\n\\u2022 Customer offers, #customer-pass flow, seller setup, and privacy-preserving QR checkout on shop.ifrunit.tech\\n\\n\\u2756 Connect your wallet only in the relevant Web3 or Benefits app to view live on-chain status. IFR Copilot never asks for a seed phrase or private key.\\n\\nOr just ask me anything! &#x1f525;",
-  user: "Hey! &#x1f48e; Ready to help you get the most out of your IFR tokens.\\n\\nI can assist with:\\n\\u2022 Locking IFR for benefits\\n\\u2022 Understanding your tier (Bronze/Silver/Gold/Platinum)\\n\\u2022 Partner discounts \\u0026 Benefits Network\\n\\u2022 Step-by-step guides",
+  user: "Hey! &#x1f48e; Ready to help you get the most out of your IFR tokens.\\n\\nI can assist with:\\n\\u2022 Locking IFR for benefits\\n\\u2022 Understanding the canonical tiers (${ACCESS_TIER_SUMMARY})\\n\\u2022 Partner discounts \\u0026 Benefits Network\\n\\u2022 Step-by-step guides\\n\\nWallet-specific state is checked in Web3 or IFR Benefits; this chat does not receive verified wallet or lock context.",
   dev: "Dev mode active. &#x2699;&#xfe0f;\\n\\n14 contracts + 3 Safes \\u2022 644 contract tests \\u2022 30 Generator Engine \\u2022 36 SDK\\n\\nI can help with:\\n\\u2022 Contract addresses \\u0026 ABIs\\n\\u2022 Wiki examples in ethers.js v5 and IFR SDK v0.2 in ethers v6\\n\\u2022 Governance \\u0026 Timelock\\n\\u2022 Security audit results"
 };
 var modeColors = { explorer: '#ff6600', user: '#9b59b6', dev: '#2ecc71' };
@@ -333,7 +339,7 @@ async function send() {
   var text = input.value.trim();
   if (!text) return;
   if (text.length > 500) { alert('Max 500 characters.'); return; }
-  if (histories[currentMode].length >= 40) {
+  if (histories[currentMode].length >= ${COPILOT_MESSAGE_LIMIT}) {
     alert('Conversation too long. Please switch tabs or reload to start fresh.');
     return;
   }
@@ -401,8 +407,8 @@ app.post("/api/chat", async (req, res) => {
     return;
   }
 
-  if (messages.length > 20) {
-    res.status(400).json({ reply: "Conversation too long (max 20 messages). Please start a new conversation." });
+  if (messages.length > COPILOT_MESSAGE_LIMIT) {
+    res.status(400).json({ reply: `Conversation too long (max ${COPILOT_MESSAGE_LIMIT} messages). Please start a new conversation.` });
     return;
   }
 
@@ -500,15 +506,14 @@ app.post("/api/chat", async (req, res) => {
     );
 
     // Optional: record points for guide completion
-    const walletAddress = req.headers["x-wallet-address"] as string;
     const authToken = req.headers["x-auth-token"] as string;
-    if (walletAddress && authToken) {
+    if (authToken) {
       const guideEvent = detectGuideCompletion(
         messages[messages.length - 1]?.content || "",
         text
       );
       if (guideEvent) {
-        recordPointsEvent(walletAddress, guideEvent, authToken); // fire-and-forget
+        recordPointsEvent(guideEvent, authToken); // fire-and-forget
       }
     }
 
@@ -530,7 +535,6 @@ app.get("/api/health", (_req, res) => {
 // ── Etherscan Proxy — CORS-safe on-chain data for Landing + Transparency ──
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || "";
 const IFR_TOKEN = "0x77e99917Eca8539c62F509ED1193ac36580A6e7B";
-const IFR_DECIMALS = 9;
 const IFR_UNISWAP_V2_PAIR = "0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0";
 const WETH_TOKEN = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
 const TOTAL_MINTED = 1_000_000_000; // 1B IFR minted at deploy, supply only decreases
@@ -1075,19 +1079,13 @@ app.get("/api/ifr/price", async (_req, res) => {
   }
 });
 
-// ── Bootstrap Community Consensus Votes ─────────────────────────────
-// Persistence priority:
+// ── Finalized Bootstrap Community Consensus Archive ─────────────────
+// Historical read-only persistence priority:
 //   1. BOOTSTRAP_VOTES env var (base64 JSON — survives deploys via Railway GraphQL API)
 //   2. File /tmp/ifr_bootstrap_votes.json (survives restarts within same deploy)
 const VOTES_FILE = join(process.env.RAILWAY_VOLUME_MOUNT_PATH || "/tmp", "ifr_bootstrap_votes.json");
 
 type VoteEntry = { vote: string; ethWeight: number; timestamp: number };
-
-function votesToObj(votes: Map<string, VoteEntry>): Record<string, VoteEntry> {
-  const obj: Record<string, VoteEntry> = {};
-  for (const [k, v] of votes.entries()) obj[k] = v;
-  return obj;
-}
 
 // ── Load: env var → file → empty ────────────────────
 function loadVotes(): Map<string, VoteEntry> {
@@ -1120,84 +1118,14 @@ function loadVotes(): Map<string, VoteEntry> {
   return new Map();
 }
 
-// ── Save: file + Railway API ────────────────────────
-function saveVotesToFile(votes: Map<string, VoteEntry>): void {
-  try {
-    writeFileSync(VOTES_FILE, JSON.stringify(votesToObj(votes), null, 2), "utf8");
-  } catch (e) {
-    console.error("[votes] File save error:", (e as Error).message);
-  }
-}
-
-async function saveVotesToRailway(votes: Map<string, VoteEntry>): Promise<void> {
-  // Always save to file first (immediate)
-  saveVotesToFile(votes);
-
-  // Then try Railway GraphQL API for cross-deploy persistence
-  const token = process.env.RAILWAY_TOKEN;
-  const projectId = process.env.RAILWAY_PROJECT_ID;
-  const serviceId = process.env.RAILWAY_SERVICE_ID;
-  const envId = process.env.RAILWAY_ENVIRONMENT_ID;
-  if (!token || !projectId || !serviceId || !envId) return;
-
-  try {
-    const encoded = Buffer.from(JSON.stringify(votesToObj(votes))).toString("base64");
-    const body = JSON.stringify({
-      query: `mutation { variableUpsert(input: { projectId: "${projectId}", serviceId: "${serviceId}", environmentId: "${envId}", name: "BOOTSTRAP_VOTES", value: "${encoded}" }) }`
-    });
-    const r = await fetch("https://backboard.railway.app/graphql/v2", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body,
-    });
-    const result = (await r.json()) as { errors?: { message: string }[] };
-    if (result.errors) {
-      console.error("[votes] Railway API error:", result.errors[0].message);
-    } else {
-      console.log("[votes] Saved to Railway env var");
-    }
-  } catch (e) {
-    console.error("[votes] Railway API fetch error:", (e as Error).message);
-  }
-}
-
 const bootstrapVotes = loadVotes();
 
-async function verifyContribution(wallet: string): Promise<number> {
-  // Use Etherscan eth_call to read contributions(address) from BootstrapVaultV3
-  // contributions(address) selector = 0x42e94c90
-  const addr = wallet.toLowerCase().replace("0x", "").padStart(64, "0");
-  const data = "0x42e94c90" + addr;
-  const params = `&module=proxy&action=eth_call&to=${PROTOCOL_ADDRESSES.BootstrapVaultV3}&data=${data}&tag=latest`;
-  const result = (await esApiFetch(params)) as { result?: string };
-  if (!result.result || result.result === "0x") return 0;
-  return parseInt(result.result, 16) / 1e18;
-}
-
-app.post("/api/bootstrap/vote", async (req, res) => {
-  const { wallet, vote } = req.body as { wallet?: string; vote?: string };
-  if (!wallet || !vote) {
-    res.status(400).json({ error: "Missing wallet or vote" });
-    return;
-  }
-  if (!["finalise", "refund"].includes(vote)) {
-    res.status(400).json({ error: "Invalid vote type" });
-    return;
-  }
-  try {
-    const ethWeight = await verifyContribution(wallet);
-    if (ethWeight <= 0) {
-      res.status(403).json({ error: "No contribution found on-chain" });
-      return;
-    }
-    bootstrapVotes.set(wallet.toLowerCase(), { vote, ethWeight, timestamp: Date.now() });
-    saveVotesToRailway(bootstrapVotes).catch(() => {});
-    console.log(`[vote] ${wallet.slice(0, 8)} → ${vote} (${ethWeight.toFixed(4)} ETH)`);
-    res.json({ success: true, ethWeight });
-  } catch (e) {
-    console.error("[vote] error:", (e as Error).message);
-    res.status(500).json({ error: "Verification failed" });
-  }
+app.post("/api/bootstrap/vote", (_req, res) => {
+  res.set("Cache-Control", "no-store");
+  res.status(410).json({
+    error: "Bootstrap voting closed after finalization on June 5, 2026.",
+    code: "bootstrap_vote_closed",
+  });
 });
 
 app.get("/api/bootstrap/votes", (_req, res) => {
@@ -1468,14 +1396,17 @@ app.get("/api/commitment/status/:address", async (req, res) => {
     const cv = new ethersLib.Contract(COMMITMENT_VAULT_ADDR, CV_ABI, provider);
 
     const [locked, hasLock] = await Promise.all([cv.lockedBalance(addr), cv.hasActiveLock(addr)]);
-    const lockedNum = parseFloat(ethersLib.formatUnits(locked, IFR_DECIMALS));
+    const lockedBaseUnits = BigInt(locked);
+    const lockedAmount = ethersLib.formatUnits(lockedBaseUnits, IFR_DECIMALS);
+    const tier = getAccessTier(lockedBaseUnits);
 
-    let tier = 0;
-    if (lockedNum >= 10000) tier = 3;
-    else if (lockedNum >= 2000) tier = 2;
-    else if (lockedNum >= 500) tier = 1;
-
-    res.json({ wallet: addr, isLocked: hasLock, totalLocked: lockedNum.toFixed(0), tier });
+    res.json({
+      wallet: addr,
+      isLocked: hasLock,
+      totalLocked: lockedAmount,
+      tier: tier.id,
+      tierName: tier.name,
+    });
   } catch (err) {
     console.error("CV status error:", err);
     res.status(502).json({ error: "Failed to fetch status" });
@@ -1542,13 +1473,6 @@ if (COMMITMENT_VAULT_ADDR) {
 
 // ── LendingVault — Additional Endpoints ──────────────────────────────
 
-const LV_LOAN_ABI = [
-  "function getLoanCount() view returns (uint256)",
-  "function getLoan(uint256 loanId) view returns (tuple(address borrower, uint256 ifrAmount, uint256 ethCollateral, uint256 startTime, uint256 duration, uint256 monthlyRateBps, uint256 repaidAt, bool active))",
-  "function getCollateralRatio(uint256 loanId) view returns (uint256)",
-  "function checkHealth(uint256 loanId) view returns (uint256)",
-];
-
 // GET /api/lending/loans/:address — active loans for a borrower
 app.get("/api/lending/loans/:address", async (req, res) => {
   res.set("Cache-Control", "no-store");
@@ -1563,25 +1487,16 @@ app.get("/api/lending/loans/:address", async (req, res) => {
 
     const ethersLib = (await import("ethers")).ethers;
     const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
-    const lv = new ethersLib.Contract(LENDING_VAULT_ADDR, LV_LOAN_ABI, provider);
+    const lv = new ethersLib.Contract(LENDING_VAULT_ADDR, LENDING_LOAN_ABI, provider);
 
     const count = Number(await lv.getLoanCount());
     const myLoans: Array<Record<string, unknown>> = [];
 
     for (let i = 0; i < Math.min(count, 100); i++) {
       try {
-        const loan = await lv.getLoan(i);
+        const loan = serializeLendingLoan(i, await lv.getLoan(i));
         if (loan.active && loan.borrower.toLowerCase() === addr.toLowerCase()) {
-          const dueTs = Number(loan.startTime) + Number(loan.duration);
-          myLoans.push({
-            id: i,
-            ifrAmount: ethersLib.formatUnits(loan.ifrAmount, IFR_DECIMALS),
-            ethCollateral: ethersLib.formatEther(loan.ethCollateral),
-            startTime: Number(loan.startTime),
-            dueDate: new Date(dueTs * 1000).toISOString().split("T")[0],
-            monthlyRate: Number(loan.monthlyRateBps) / 100 + "%",
-            active: loan.active,
-          });
+          myLoans.push(loan);
         }
       } catch { /* skip invalid loan */ }
     }
@@ -1597,8 +1512,9 @@ app.get("/api/lending/loans/:address", async (req, res) => {
 app.get("/api/lending/health/:loanId", async (req, res) => {
   res.set("Cache-Control", "no-store");
   try {
-    const loanId = parseInt(req.params.loanId, 10);
-    if (isNaN(loanId) || loanId < 0) {
+    const loanIdParam = req.params.loanId;
+    const loanId = /^\d+$/.test(loanIdParam) ? Number(loanIdParam) : Number.NaN;
+    if (!Number.isSafeInteger(loanId) || loanId < 0) {
       return res.status(400).json({ error: "Invalid loanId" });
     }
     if (!LENDING_VAULT_ADDR || LENDING_VAULT_ADDR.startsWith("0x000")) {
@@ -1607,9 +1523,9 @@ app.get("/api/lending/health/:loanId", async (req, res) => {
 
     const ethersLib = (await import("ethers")).ethers;
     const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
-    const lv = new ethersLib.Contract(LENDING_VAULT_ADDR, LV_LOAN_ABI, provider);
+    const lv = new ethersLib.Contract(LENDING_VAULT_ADDR, LENDING_LOAN_ABI, provider);
 
-    const loan = await lv.getLoan(loanId);
+    const loan = serializeLendingLoan(loanId, await lv.getLoan(loanId));
     if (!loan.active) {
       return res.status(404).json({ error: "Loan not active" });
     }
@@ -1626,8 +1542,9 @@ app.get("/api/lending/health/:loanId", async (req, res) => {
 
     res.json({
       loanId,
-      ethCollateral: ethersLib.formatEther(loan.ethCollateral),
-      ifrAmount: ethersLib.formatUnits(loan.ifrAmount, IFR_DECIMALS),
+      offerId: loan.offerId,
+      ethCollateral: loan.ethCollateral,
+      ifrAmount: loan.ifrAmount,
       collateralRatio: collateralRatio > 0 ? collateralRatio + "%" : "N/A (price not set)",
       health,
       warningThreshold: "150%",
@@ -1698,14 +1615,14 @@ async function checkLoanHealth() {
   try {
     const ethersLib = (await import("ethers")).ethers;
     const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
-    const lv = new ethersLib.Contract(LENDING_VAULT_ADDR, LV_LOAN_ABI, provider);
+    const lv = new ethersLib.Contract(LENDING_VAULT_ADDR, LENDING_LOAN_ABI, provider);
 
     const count = Number(await lv.getLoanCount());
     let warnings = 0;
 
     for (let i = 0; i < count; i++) {
       try {
-        const loan = await lv.getLoan(i);
+        const loan = serializeLendingLoan(i, await lv.getLoan(i));
         if (!loan.active) continue;
 
         const ratio = Number(await lv.getCollateralRatio(i));
@@ -1861,10 +1778,14 @@ app.get("/api/ifr/check", async (req, res) => {
   res.set("Cache-Control", "public, max-age=30");
   try {
     const wallet = req.query.wallet as string;
-    const required = parseInt(req.query.required as string || "1000", 10);
+    const requiredParam = typeof req.query.required === "string" ? req.query.required : "1000";
+    const required = /^\d+$/.test(requiredParam) ? Number(requiredParam) : Number.NaN;
 
     if (!wallet || !/^0x[0-9a-fA-F]{40}$/.test(wallet)) {
       return res.status(400).json({ error: "Invalid wallet address" });
+    }
+    if (!Number.isSafeInteger(required) || required < 0) {
+      return res.status(400).json({ error: "Invalid required IFR amount" });
     }
 
     const ethersLib = (await import("ethers")).ethers;
@@ -1881,21 +1802,20 @@ app.get("/api/ifr/check", async (req, res) => {
       lock.lockedBalance(wallet).catch(() => 0n),
     ]);
 
-    const balance = parseFloat(ethersLib.formatUnits(balRaw, IFR_DECIMALS));
-    const locked = parseFloat(ethersLib.formatUnits(lockedRaw, IFR_DECIMALS));
-    const total = balance + locked;
-
-    const tier = total >= 10000 ? 3 : total >= 2000 ? 2 : total >= 500 ? 1 : 0;
-    const tierNames = ["None", "Basic", "Premium", "Pro"];
+    const balanceBaseUnits = BigInt(balRaw);
+    const lockedBaseUnits = BigInt(lockedRaw);
+    const totalBaseUnits = balanceBaseUnits + lockedBaseUnits;
+    const requiredBaseUnits = BigInt(required) * (10n ** BigInt(IFR_DECIMALS));
+    const tier = getAccessTier(totalBaseUnits);
 
     res.json({
-      hasAccess: total >= required,
-      balance: balance.toFixed(0),
-      locked: locked.toFixed(0),
-      total: total.toFixed(0),
+      hasAccess: totalBaseUnits >= requiredBaseUnits,
+      balance: ethersLib.formatUnits(balanceBaseUnits, IFR_DECIMALS),
+      locked: ethersLib.formatUnits(lockedBaseUnits, IFR_DECIMALS),
+      total: ethersLib.formatUnits(totalBaseUnits, IFR_DECIMALS),
       required,
-      tier,
-      tierName: tierNames[tier],
+      tier: tier.id,
+      tierName: tier.name,
     });
   } catch (err) {
     console.error("IFR check error:", err);
@@ -1908,6 +1828,10 @@ console.log("[SDK] GET /api/ifr/check active");
 const PORT = parseInt(process.env.PORT || "3003", 10);
 app.listen(PORT, () => {
   console.log(`IFR Copilot API on :${PORT}`);
+
+  if (process.env.NODE_ENV === "test") {
+    return;
+  }
 
   // Pre-warm cache on startup so first user never waits
   (async () => {

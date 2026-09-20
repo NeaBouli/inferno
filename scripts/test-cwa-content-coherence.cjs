@@ -258,6 +258,13 @@ forbidText("apps/ai-copilot/src/context/system-prompts.ts", ["fully active"]);
 requireText("docs/wiki/agent.html", [
   "maintained same-project Wiki context",
   "a page-specific citation is not guaranteed on every answer",
+  "does not pass the connected wallet or its on-chain state to the Copilot chat",
+]);
+forbidText("docs/wiki/agent.html", [
+  "?wallet=",
+  "Premium Copilot Active",
+  "more personalized guidance",
+  "wallet balance, lock status, tier, and on-chain context",
 ]);
 forbidText("docs/wiki/open-audit.html", ["document.getElementById('deflation-dot')"]);
 requireText("docs/builder.html", ['id="scNum">90</div>']);
@@ -275,4 +282,4 @@ for (let number = 57; number <= 73; number += 1) {
   assert.equal(finding.disposition, "fixed_and_verified", `${id} status must match evidence`);
 }
 
-console.log("[cwa-content-coherence] PASS - CWA-57...CWA-73 source, math, copy and status evidence");
+console.log("[cwa-content-coherence] PASS - CWA source, math, copy and status evidence");
