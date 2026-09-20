@@ -3,10 +3,12 @@ name: AI Copilot CI
 on:
   workflow_dispatch:
   push:
+    branches: [main, master, develop, dev]
     paths:
       - 'apps/ai-copilot/**'
       - '.github/workflows/ai-copilot.yml'
   pull_request:
+    branches: [main, master]
     paths:
       - 'apps/ai-copilot/**'
       - '.github/workflows/ai-copilot.yml'
