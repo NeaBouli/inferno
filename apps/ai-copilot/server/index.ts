@@ -544,13 +544,9 @@ app.post("/api/chat", async (req, res) => {
   }
 });
 
+// CWA-11: public readiness only — no key-presence or deploy-version disclosure.
 app.get("/api/health", (_req, res) => {
-  res.json({
-    status: "ok",
-    apiKeySet: !!ANTHROPIC_API_KEY,
-    etherscanKeySet: !!process.env.ETHERSCAN_API_KEY,
-    version: "2026-03-07-proxy",
-  });
+  res.json({ status: "ok" });
 });
 
 // ── Etherscan Proxy — CORS-safe on-chain data for Landing + Transparency ──
