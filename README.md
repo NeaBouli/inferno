@@ -65,15 +65,15 @@ Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every transfer
 
 | Allocation | Share | Amount | Note |
 |-----------|-------|--------|------|
-| DEX Liquidity | 40% | 400M IFR | Held by the LP Reserve Safe (3-of-5) for governance-controlled LP expansion. The Bootstrap pool was created separately with 100M IFR + 0.030 ETH. |
-| Liquidity Reserve | 20% | 200M IFR | Initial timelock ended 01.09.2026. The contract still holds all 200M IFR; the current withdrawal cap is 50M IFR per 90-day period. No withdrawal or LP deployment has occurred. NOT used for Bootstrap. |
+| DEX Liquidity | 40% | 400M IFR | Original allocation. Current custody: LP Reserve Safe (3-of-5) [`0x5D93...C04`](https://etherscan.io/address/0x5D93E7919a71d725054e31017eCA86B026F86C04), which holds 400.6M IFR — the DEX allocation plus the aggregated Treasury and Community remainders. The Bootstrap pool was created separately with 100M IFR + 0.030 ETH. |
+| Liquidity Reserve | 20% | 200M IFR | Initial timelock ended 01.09.2026. The contract still holds all 200M IFR; the current withdrawal cap is 50M IFR per 90-day period. That cap is a governed parameter (`setMaxWithdrawPerPeriod`, owner = Governance), not a hardcoded invariant — changing it requires a proposal and the 48-hour timelock. No withdrawal or LP deployment has occurred. NOT used for Bootstrap. |
 | Team Vesting | 15% | 150M IFR | 12-month cliff, 36-month linear vesting. 0 tokens available before March 2027. |
-| Treasury | 15% | 150M IFR | Gnosis Safe multisig (0x5ad6193...). Funded Bootstrap through 144.75M IFR initial funding plus a 5.25M IFR top-up. No automatic refill path is deployed. |
-| Community & Grants | 6% | 60M IFR | Community Safe (57.9M received after burn). 50M → Bootstrap. ~7.9M operational reserve. |
+| Treasury | 15% | 150M IFR | Original allocation. The Treasury Safe [`0x5ad6193...`](https://etherscan.io/address/0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b) funded Bootstrap with 144.75M IFR plus a 5.25M IFR top-up and therefore **currently holds 0 IFR**; the remainder is aggregated in the LP Reserve Safe. No automatic refill path is deployed. |
+| Community & Grants | 6% | 60M IFR | Original allocation. 57.9M reached the Community Safe after the 3.5% transfer fee; 50M went on to BootstrapVaultV3 (Plan B, 11.03.2026), so the Safe **currently holds 7.9M IFR** as its permanent operational reserve. |
 | Builder Ecosystem | 4% | 40M IFR | PartnerVault contract. Lock-triggered Creator Rewards, milestone vesting. |
 
-BuybackVault and BurnReserve accumulate from the 1% protocol pool fee — not pre-funded genesis allocations.
-Team tokens: 48-month vesting, 12-month cliff. Liquidity reserve: initial lock ended 01.09.2026; staged Governance-controlled withdrawals remain unused.
+BuybackVault and BurnReserve are not pre-funded genesis allocations. The 1% protocol pool fee is IFR-denominated and is routed to FeeRouterV1, which has no IFR withdrawal or forwarding function, so those fees accumulate there and BuybackVault and BurnReserve currently hold 0 IFR. Since Governance Proposal #14 the FeeRouterV1 `feeCollector` is the BuybackController, which applies to native ETH fees from `swapWithFee()` only — it does not move the IFR pool fees already held. See [Fee Design](docs/FEE_DESIGN.md) and the [Transparency page](https://ifrunit.tech/wiki/transparency.html) for current balances.
+Team tokens: 48-month vesting, 12-month cliff. Liquidity reserve: initial lock ended 01.09.2026; staged Governance-controlled withdrawals remain unused, and the per-period withdrawal cap itself is Governance-changeable under the 48-hour timelock.
 
 ## Fair Launch
 
@@ -179,7 +179,7 @@ All smart contracts are open source and community review is explicitly encourage
 
 - **Internal Audit:** [docs/SECURITY_AUDIT_SKYWALKER.md](docs/SECURITY_AUDIT_SKYWALKER.md) — 0 FAIL, 20 active WARN, 1 fixed, 81 PASS
 - **OKComputer Community Audit (27.07.2026):** [current finding-by-finding status](docs/community-audits/JULY_2026_REMEDIATION_REGISTER.md) · [unchanged original and provenance](docs/community-audits/README.md) — 9 fixed and verified, 5 partially remediated, 1 outdated snapshot corrected, 3 governance/future-version gated, 2 accepted or monitored and 3 open actionable; not a professional third-party certification
-- **Collateral Web3 Open Audits (14.09.2026):** [seven reports and provenance](docs/community-audits/README.md) · [CWA-01…CWA-82 remediation register](docs/community-audits/CWA_REMEDIATION_REGISTER.md) · [consolidated PDF](docs/community-audits/IFR_Protocol_CWA_Consolidated_Audit_Report_2026-09-14.pdf) — 31 fixed and verified; 27 findings remain directly actionable
+- **Collateral Web3 Open Audits (14.09.2026):** [seven reports and provenance](docs/community-audits/README.md) · [CWA-01…CWA-82 remediation register](docs/community-audits/CWA_REMEDIATION_REGISTER.md) · [consolidated PDF](docs/community-audits/IFR_Protocol_CWA_Consolidated_Audit_Report_2026-09-14.pdf) — 37 fixed and verified; 21 findings remain directly actionable
 - **Submit a Finding:** [GitHub Private Vulnerability Reporting](https://github.com/NeaBouli/inferno/security/advisories/new)
 - **Security Policy:** [SECURITY.md](SECURITY.md)
 
@@ -245,7 +245,7 @@ Embedded chat widget with RAG knowledge base — helps users, builders, and deve
 
 **Modes:** Customer · Builder · Developer
 
-**Safety:** Automatic seed phrase / private key detection, instant warnings, source citation tags.
+**Safety:** The chat widget matches inbound messages against a fixed keyword list ("seed phrase", "private key", "mnemonic", "secret recovery") and answers with an immediate do-not-share warning instead of forwarding the message; the served surfaces additionally carry a permanent never-share disclaimer, prompt-level safety rules and source citation tags. There is no pattern-based detector for secret values themselves.
 
 **Start:** `cd apps/ai-copilot && npm ci && cp .env.example .env && npm run dev` → http://localhost:5175
 

@@ -198,7 +198,7 @@ inferno/
 - **Tests:** 95 (PartnerVault.test.js)
 - **Description:** Builder Ecosystem Pool (40M IFR) with Milestone-Unlocking + Lock-triggered Creator Rewards
 - **Features:** createPartner, activatePartner, recordMilestone, recordLockReward (lockAmount x effectiveBps, wallet), claim (linear vesting with cliff), finalizeMilestones, SafeERC20, ReentrancyGuard, Pausable, Guardian Auth, Governance-controlled parameters (rewardBps 5-25%, annualEmissionCap, partnerCap) with min/max bounds, Annual Cap Reset, authorizedCaller Whitelist, Anti-Double-Count (wallet->partner), Algo Emission Throttle (lockRatio-based BPS scaling via IIFRLock)
-- **Mainnet:** rewardBps=1000 (10%), annualCap=4M IFR, Address: `0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D`
+- **Mainnet:** rewardBps=1500 (15%), annualCap=4M IFR, Address: `0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D`. The algorithmic emission throttle is dormant: `ifrLock` is unset (`address(0)`) on the deployed vault, so the flat `rewardBps` applies until Governance sets it.
 - **CRITICAL:** feeExempt MUST be set BEFORE the 40M transfer (Sepolia lesson: 1.4M IFR fee loss)
 
 ### 9. FeeRouterV1 (`contracts/FeeRouterV1.sol`) -- 228 LOC, 33 Tests

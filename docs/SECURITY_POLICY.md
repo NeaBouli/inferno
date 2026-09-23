@@ -11,6 +11,7 @@ security vulnerabilities.
 - **Private Vulnerability Reporting is enabled** for this repository
 - **Response Time:** We aim to respond promptly, but no response time is guaranteed
 - **Language:** English or German
+- **Machine-readable contact:** <https://ifrunit.tech/.well-known/security.txt> (RFC 9116)
 
 ### What we need (submitted privately):
 - Description of the vulnerability and its potential **impact**

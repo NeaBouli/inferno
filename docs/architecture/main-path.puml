@@ -1,0 +1,28 @@
+' The simulated path is the one that exists in code today:
+' evidence -> register -> public surface -> validator -> Docs CI.
+@startuml
+title Main path — closing one CWA finding
+
+participant "Protocol/deployment\nevidence" as Evidence
+participant "Community audit\nreport" as Report
+participant "CWA register\n(JSON)" as Register
+participant "Register view\n(Markdown)" as RegisterMd
+participant "Public surfaces" as Surfaces
+participant "Docs validators" as Validators
+participant "Docs CI" as CI
+
+Evidence -> Report : verified value at a pinned block/commit
+Report -> Register : finding id + frozen severity
+Evidence -> Surfaces : the value a surface is allowed to state
+Register -> Surfaces : expectedDispositionTotals status markers
+Register -> RegisterMd : renderMarkdown (build:cwa-register --write)
+
+Surfaces -> Validators : text under assertion
+Register -> Validators : disposition under assertion
+Evidence -> Validators : source of truth under assertion
+
+Validators -> Validators : check-cwa-remediation-register.cjs\ntest-cwa-docs-closure.cjs\ntest-security-reporting-config.cjs
+Validators -> CI : npm run test:* exit status
+CI -> CI : test-docs-workflow.cjs asserts the command set
+CI --> Register : green == the finding is closed with evidence
+@enduml

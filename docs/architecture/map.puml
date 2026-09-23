@@ -1,0 +1,59 @@
+' Inferno — Public Protocol Documentation node
+' Scope: the documentation-evidence trail used by T-116.
+' Leaves are built symbols or explicit gaps; nothing is drawn to balance the picture.
+
+@startmindmap
+* Public Protocol Documentation
+** Protocol and deployment evidence
+*** gebaut: contracts/liquidity/LiquidityReserve.sol::setMaxWithdrawPerPeriod
+*** gebaut: docs/DEPLOYMENTS.md::Ethereum Mainnet
+*** gebaut: deployments/mainnet.json
+** Community audit record
+*** gebaut: docs/community-audits/CWA_IFR_Protocol_Audit_2026-09-14.md
+*** gebaut: cwa-remediation-register.json::findings
+*** gebaut: check-cwa-remediation-register.cjs::renderMarkdown
+** Public surfaces
+*** gebaut: README.md
+*** gebaut: docs/wiki/*.html
+*** gebaut: docs/llms.txt
+*** gebaut: docs/sitemap.xml
+*** teilweise: security reporting surface — no security.txt published
+*** offen: LICENSE file — repository-owner and legal decision
+** Docs validators
+*** gebaut: scripts/check-cwa-remediation-register.cjs
+*** gebaut: scripts/test-cwa-content-coherence.cjs
+*** gebaut: scripts/test-cwa-docs-closure.cjs
+*** gebaut: scripts/test-security-reporting-config.cjs
+*** gebaut: scripts/test-wiki-jsonld.cjs
+** Docs CI
+*** gebaut: .github/workflows/docs-validator.yml::validate-structure
+*** gebaut: scripts/test-docs-workflow.cjs
+*** offen: web3.ifrunit.tech anchors — served outside this repository
+@endmindmap
+
+@startuml
+title Public Protocol Documentation — components and the finding-closure hop
+
+component "Protocol source\ncontracts/**" as Source
+component "Deployment evidence\ndocs/DEPLOYMENTS.md" as DeployDocs
+component "Deployment manifest\ndeployments/mainnet.json" as Manifest
+component "Community audit reports\ndocs/community-audits/CWA_IFR_*.md" as Reports
+component "CWA register\ncwa-remediation-register.json" as Register
+component "Register view\nCWA_REMEDIATION_REGISTER.md" as RegisterMd
+component "Public surfaces\nREADME.md, docs/**, wiki, llms.txt" as Surfaces
+component "Docs validators\nscripts/*.cjs" as Validators
+component "Docs CI\n.github/workflows/docs-validator.yml" as CI
+
+Source --> Reports : finding evidence
+Source --> Surfaces : setMaxWithdrawPerPeriod
+DeployDocs --> Manifest : mainnet addresses + provenance
+DeployDocs --> Surfaces : deployment truth
+Reports --> Register : id + frozen severity
+Register --> RegisterMd : renderMarkdown
+Register --> Surfaces : expectedDispositionTotals
+Manifest --> Validators : manifest assertions
+Surfaces --> Validators : claim assertions
+Register --> Validators : disposition assertions
+Validators --> CI : npm run test:*
+CI --> Validators : test-docs-workflow.cjs contract
+@enduml
