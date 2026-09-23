@@ -21,6 +21,9 @@
  *     This check fails if either public template is reintroduced.
  *  5. Published security entry points do not retain links to the removed
  *     public template, and the Docs workflow keeps this test enabled.
+ *  6. The apex host publishes an RFC 9116 security.txt that names the same
+ *     private reporting channel, has not expired, promises no bounty, and is
+ *     cross-linked from both policy documents (CWA-22).
  */
 
 const assert = require("node:assert/strict");
@@ -147,6 +150,55 @@ for (const doc of [
   assert.ok(
     !text.includes("issues/new?template=security-audit.md"),
     `${doc} must not link to the removed public security issue template`
+  );
+}
+
+// --- 6. RFC 9116 security.txt ----------------------------------------------
+const securityTxtPath = "docs/.well-known/security.txt";
+assert.ok(
+  fs.existsSync(path.join(root, securityTxtPath)),
+  `${securityTxtPath} must exist so the apex host serves /.well-known/security.txt`
+);
+const securityTxt = read(securityTxtPath);
+assert.ok(
+  securityTxt.includes(`Contact: ${ADVISORY_URL}`),
+  `${securityTxtPath} must name the private advisory channel as its contact`
+);
+assert.ok(
+  securityTxt.includes("Canonical: https://ifrunit.tech/.well-known/security.txt"),
+  `${securityTxtPath} must declare its canonical location`
+);
+assert.ok(
+  /^Policy: https:\/\/github\.com\/NeaBouli\/inferno\/blob\/main\/SECURITY\.md$/m.test(securityTxt),
+  `${securityTxtPath} must point at the authoritative security policy`
+);
+const securityTxtExpires = securityTxt.match(/^Expires:\s*(\S+)$/m);
+assert.ok(securityTxtExpires, `${securityTxtPath} must carry an Expires field (RFC 9116 section 2.5.5)`);
+const securityTxtExpiresAt = new Date(securityTxtExpires[1]);
+assert.ok(
+  !Number.isNaN(securityTxtExpiresAt.getTime()),
+  `${securityTxtPath} Expires must be a valid timestamp`
+);
+assert.ok(
+  securityTxtExpiresAt > new Date(),
+  `${securityTxtPath} expired on ${securityTxtExpires[1]} — renew it before publishing`
+);
+assert.ok(
+  (securityTxtExpiresAt - Date.now()) / 86400000 <= 366,
+  `${securityTxtPath} Expires must stay within one year, as RFC 9116 recommends`
+);
+assert.ok(
+  /no bug bounty/i.test(securityTxt),
+  `${securityTxtPath} must keep the bounty status truthful`
+);
+assert.ok(
+  !/(reward|bounty)\s+(of|up to)\s*[$€]/i.test(securityTxt),
+  `${securityTxtPath} must not advertise an unfunded reward`
+);
+for (const doc of ["SECURITY.md", "docs/SECURITY_POLICY.md"]) {
+  assert.ok(
+    read(doc).includes("https://ifrunit.tech/.well-known/security.txt"),
+    `${doc} must link to the machine-readable security contact`
   );
 }
 

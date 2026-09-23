@@ -1,9 +1,134 @@
 {
+  "_manifest": {
+    "network": "mainnet",
+    "chainId": 1,
+    "deployer": "0x6b36687b0cd4386fb14cf565B67D7862110Fed67",
+    "source": "docs/DEPLOYMENTS.md#ethereum-mainnet",
+    "note": "Authoritative mainnet component list. Addresses, deployment dates and verification status are transcribed from docs/DEPLOYMENTS.md; per-contract deployment transaction hashes are recorded only where the deployment record contains them."
+  },
+  "InfernoToken": {
+    "address": "0x77e99917Eca8539c62F509ED1193ac36580A6e7B",
+    "deployer": "0x6b36687b0cd4386fb14cf565B67D7862110Fed67",
+    "deployedOn": "2026-03-05",
+    "verified": true,
+    "network": "mainnet",
+    "source": "docs/DEPLOYMENTS.md"
+  },
+  "Governance": {
+    "address": "0xc43d48E7FDA576C5022d0670B652A622E8caD041",
+    "deployer": "0x6b36687b0cd4386fb14cf565B67D7862110Fed67",
+    "deployedOn": "2026-03-05",
+    "verified": true,
+    "network": "mainnet",
+    "source": "docs/DEPLOYMENTS.md"
+  },
+  "IFRLock": {
+    "address": "0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb",
+    "deployer": "0x6b36687b0cd4386fb14cf565B67D7862110Fed67",
+    "deployedOn": "2026-03-05",
+    "verified": true,
+    "network": "mainnet",
+    "source": "docs/DEPLOYMENTS.md"
+  },
+  "BurnReserve": {
+    "address": "0xaA1496133B6c274190A2113410B501C5802b6fCF",
+    "deployer": "0x6b36687b0cd4386fb14cf565B67D7862110Fed67",
+    "deployedOn": "2026-03-05",
+    "verified": true,
+    "network": "mainnet",
+    "source": "docs/DEPLOYMENTS.md"
+  },
+  "BuybackVault": {
+    "address": "0x670D293e3D65f96171c10DdC8d88B96b0570F812",
+    "deployer": "0x6b36687b0cd4386fb14cf565B67D7862110Fed67",
+    "deployedOn": "2026-03-05",
+    "verified": true,
+    "network": "mainnet",
+    "source": "docs/DEPLOYMENTS.md"
+  },
+  "PartnerVault": {
+    "address": "0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D",
+    "deployer": "0x6b36687b0cd4386fb14cf565B67D7862110Fed67",
+    "deployedOn": "2026-03-05",
+    "verified": true,
+    "network": "mainnet",
+    "source": "docs/DEPLOYMENTS.md"
+  },
+  "FeeRouterV1": {
+    "address": "0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a",
+    "deployer": "0x6b36687b0cd4386fb14cf565B67D7862110Fed67",
+    "deployedOn": "2026-03-05",
+    "verified": true,
+    "network": "mainnet",
+    "source": "docs/DEPLOYMENTS.md"
+  },
+  "Vesting": {
+    "address": "0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271",
+    "deployer": "0x6b36687b0cd4386fb14cf565B67D7862110Fed67",
+    "deployedOn": "2026-03-05",
+    "verified": true,
+    "network": "mainnet",
+    "source": "docs/DEPLOYMENTS.md"
+  },
+  "LiquidityReserve": {
+    "address": "0xdc0309804803b3A105154f6073061E3185018f64",
+    "deployer": "0x6b36687b0cd4386fb14cf565B67D7862110Fed67",
+    "deployedOn": "2026-03-05",
+    "verified": true,
+    "network": "mainnet",
+    "source": "docs/DEPLOYMENTS.md"
+  },
+  "BootstrapVaultV3": {
+    "address": "0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141",
+    "deployer": "0x6b36687b0cd4386fb14cf565B67D7862110Fed67",
+    "deployedOn": "2026-03-07",
+    "verified": true,
+    "status": "finalized",
+    "network": "mainnet",
+    "source": "docs/DEPLOYMENTS.md"
+  },
+  "BuilderRegistry": {
+    "address": "0xdfe6636DA47F8949330697e1dC5391267CEf0EE3",
+    "deployer": "0x6b36687b0cd4386fb14cf565B67D7862110Fed67",
+    "deployedOn": "2026-03-20",
+    "verified": true,
+    "network": "mainnet",
+    "source": "docs/DEPLOYMENTS.md"
+  },
+  "CommitmentVault": {
+    "address": "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3",
+    "deployer": "0x6b36687b0cd4386fb14cf565B67D7862110Fed67",
+    "deployedOn": "2026-04-04",
+    "verified": true,
+    "network": "mainnet",
+    "source": "docs/DEPLOYMENTS.md"
+  },
+  "LendingVault": {
+    "address": "0x974305Ab0EC905172e697271C3d7d385194EB9DF",
+    "deployer": "0x6b36687b0cd4386fb14cf565B67D7862110Fed67",
+    "deployedOn": "2026-04-04",
+    "verified": true,
+    "network": "mainnet",
+    "source": "docs/DEPLOYMENTS.md"
+  },
   "BuybackController": {
     "address": "0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c",
     "deployer": "0x6b36687b0cd4386fb14cf565B67D7862110Fed67",
     "tx": "0x761ee37c87d528317c5f7da13a2581e037f2fe39c71bfc58ce83a32930391677",
     "timestamp": "2026-04-14T05:20:56.856Z",
-    "network": "mainnet"
+    "deployedOn": "2026-04-14",
+    "verified": true,
+    "network": "mainnet",
+    "source": "docs/DEPLOYMENTS.md"
+  },
+  "BootstrapVaultV1": {
+    "address": "0xA820540936d18e1377C39dd9445E5b36F3F1261a",
+    "deployer": "0x6b36687b0cd4386fb14cf565B67D7862110Fed67",
+    "deployedOn": "2026-03-05",
+    "verified": true,
+    "status": "deprecated",
+    "supersededBy": "BootstrapVaultV3",
+    "network": "mainnet",
+    "source": "docs/DEPLOYMENTS.md"
   }
 }

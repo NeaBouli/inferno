@@ -1,0 +1,21 @@
+# Inferno ($IFR) — security contact information (RFC 9116)
+# Published at https://ifrunit.tech/.well-known/security.txt
+# Authoritative policy: https://github.com/NeaBouli/inferno/blob/main/SECURITY.md
+
+Contact: https://github.com/NeaBouli/inferno/security/advisories/new
+Expires: 2027-09-24T00:00:00.000Z
+Policy: https://github.com/NeaBouli/inferno/blob/main/SECURITY.md
+Policy: https://ifrunit.tech/wiki/security.html
+Preferred-Languages: en, de
+Canonical: https://ifrunit.tech/.well-known/security.txt
+
+# GitHub Private Vulnerability Reporting is enabled for this repository and is
+# the only private reporting channel. Public issues must not contain
+# undisclosed vulnerabilities.
+#
+# There is no bug bounty programme. Reports are handled without a monetary
+# reward and without a guaranteed response time.
+#
+# Duplicates and findings already published as known issues
+# (docs/SECURITY_AUDIT_SKYWALKER.md W1-W21, docs/community-audits/) are not new
+# findings.

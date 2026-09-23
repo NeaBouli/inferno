@@ -24,6 +24,7 @@ on:
       - 'scripts/test-functionality-status.cjs'
       - 'scripts/check-cwa-remediation-register.cjs'
       - 'scripts/test-cwa-content-coherence.cjs'
+      - 'scripts/test-cwa-docs-closure.cjs'
       - 'scripts/check-july-audit-remediation-register.cjs'
       - 'scripts/test-docs-workflow.cjs'
       - 'scripts/check-markdownlint-baseline.cjs'
@@ -65,6 +66,7 @@ on:
       - 'scripts/test-functionality-status.cjs'
       - 'scripts/check-cwa-remediation-register.cjs'
       - 'scripts/test-cwa-content-coherence.cjs'
+      - 'scripts/test-cwa-docs-closure.cjs'
       - 'scripts/check-july-audit-remediation-register.cjs'
       - 'scripts/test-docs-workflow.cjs'
       - 'scripts/check-markdownlint-baseline.cjs'
@@ -207,6 +209,9 @@ jobs:
 
       - name: Check CWA content-coherence remediations
         run: npm run test:cwa-content
+
+      - name: Check public documentation CWA closure evidence
+        run: npm run test:cwa-docs-closure
 
       - name: Check July community-audit remediation status
         run: npm run test:july-audit-register

@@ -8,11 +8,11 @@ This document is the canonical boundary between implemented, operational and
 still-pending functionality. Historical test counts and roadmap snapshots do
 not override this status.
 
-**Audit remediation checkpoint:** 20 September 2026. The seven CWA reports are
+**Audit remediation checkpoint:** 24 September 2026. The seven CWA reports are
 published, but publication is not remediation. The authoritative
 [CWA-01…CWA-82 register](community-audits/CWA_REMEDIATION_REGISTER.md) records
-31 fixed and verified, 11 governance or owner gated, 2 accepted or monitored,
-27 open actionable and 11 informational findings.
+37 fixed and verified, 11 governance or owner gated, 2 accepted or monitored,
+21 open actionable and 11 informational findings.
 
 ## Public Surfaces
 

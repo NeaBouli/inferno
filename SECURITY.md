@@ -16,6 +16,9 @@ https://github.com/NeaBouli/inferno/security/advisories/new
 This ensures confidential handling. We aim to respond promptly,
 but no response time is guaranteed.
 
+The same contact is published in machine-readable form as
+<https://ifrunit.tech/.well-known/security.txt> (RFC 9116).
+
 ### What to Include (privately)
 
 - **Impact:** what an attacker could do and what is at risk
