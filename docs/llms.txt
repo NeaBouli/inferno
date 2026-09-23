@@ -30,7 +30,7 @@ IFR includes a read-only AI Copilot assistant for general protocol and surface-s
 
 - The seven Collateral Web3 Open Audits reports are published for transparency; they are not a professional certification.
 - The unchanged 27 July community audit has a separate maintained register: 9 fixed and verified, 5 partially remediated, 1 outdated snapshot corrected, 3 governance or future-version gated, 2 accepted or monitored, and 3 open actionable. Historical severity colors are not current status.
-- Current remediation disposition: 31 fixed and verified, 11 governance or owner gated, 2 accepted or monitored, 27 open actionable, 11 informational.
+- Current remediation disposition: 37 fixed and verified, 11 governance or owner gated, 2 accepted or monitored, 21 open actionable, 11 informational.
 - Current canonical evidence: contracts 644/644, Generator Engine 30/30, IFR SDK 36/36, Landing/Wiki browser 20/20, Web3 browser 24/24.
 - Benefits physical device/wallet acceptance remains 1/10; automated browser tests are not a substitute for the pending physical cases.
 
@@ -54,7 +54,7 @@ IFR includes a read-only AI Copilot assistant for general protocol and surface-s
 
 - LP Reserve Safe: 400,600,000 IFR (40.06%) — Gnosis Safe 3-of-5
 - BootstrapVaultV3: finalized on June 5, 2026 — community price discovery completed
-- LiquidityReserve: 200,000,000 IFR (20%) still held after the initial lock ended on September 1, 2026; 50,000,000 IFR per 90-day period is currently withdrawable by Governance, with 0 IFR withdrawn and no automatic LP deployment
+- LiquidityReserve: 200,000,000 IFR (20%) still held after the initial lock ended on September 1, 2026; 50,000,000 IFR per 90-day period is currently withdrawable by Governance, with 0 IFR withdrawn and no automatic LP deployment; the per-period cap is a governed parameter (setMaxWithdrawPerPeriod), not a hardcoded invariant, and Governance can change it under the 48-hour timelock
 - Vesting (Team): 150,000,000 IFR (15%) — 12-month cliff, then 36-month linear release (48 months total)
 - PartnerVault: 40,000,000 IFR (4%) — Governance-locked builder rewards
 - Community Safe: 7,900,000 IFR (0.79%) — Operations reserve
