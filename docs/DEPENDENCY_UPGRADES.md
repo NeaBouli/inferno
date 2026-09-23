@@ -330,3 +330,22 @@ migration and its full contract-suite evidence exist.
 - Publication requires full Benefits regression, contract tests and exact-head
   CI. This entry describes the candidate, not proof of production deployment.
   No audit thresholds or security exceptions have been relaxed.
+
+## 2026-09-24 Playwright 1.63 Browser Toolchain Update
+
+- The isolated browser-test dependency moves from `@playwright/test@1.61.1` to
+  `@playwright/test@1.63.0`, with matching `playwright` and `playwright-core`
+  lock entries. Playwright 1.63 no longer carries the optional `fsevents`
+  dependency, so that lock entry is removed; its engine floor rises to Node 20,
+  which the repository already exceeds with `>=22.13.0`.
+- The earlier deferral reason no longer applies: the development host now runs
+  macOS 14.8.9 x86_64, and `npx playwright install chromium` provides the
+  required local Chromium (Chrome for Testing 153.0.8010.12, build v1243).
+- No test, configuration, application or documentation behavior was changed to
+  accommodate the new release. The `lock`, `frameLocator()` and `locator.visible()`
+  additions in 1.62/1.63 are not used by any suite in this repository.
+- Local verification passed 44 root browser tests (wallet-connect and Web3
+  write-flow), the liquidity and governance browser suites, the Benefits
+  browser gates (pass, discovery, support, wallet lock, seller loader,
+  offline shell, service worker, WCAG, route recovery, CSP) and the composed
+  Benefits full-stack E2E. Exact-head Linux CI remains mandatory before merge.
