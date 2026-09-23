@@ -22,10 +22,26 @@ function run(command, args, options = {}) {
   return result;
 }
 
+// Agent coordination files (Fleet briefs and reports) live inside the checkout but are
+// not part of the published repository. They are normally untracked and differ per
+// worker environment, so the inventory drops them unconditionally instead of relying on
+// the local ignore state.
+const coordinationPrefixes = [".fleet/"];
+
+function toPosixPath(file) {
+  return file.split(path.sep).join("/");
+}
+
+function isPublishedMarkdown(file) {
+  const normalized = toPosixPath(file);
+  if (!normalized.endsWith(".md")) return false;
+  return !coordinationPrefixes.some((prefix) => normalized.startsWith(prefix));
+}
+
 function listTrackedMarkdown() {
-  const result = run("git", ["ls-files", "-z", "--", "*.md"]);
+  const result = run("git", ["ls-files", "-z", "--", "*.md", ":(exclude).fleet/**"]);
   if (result.status !== 0) throw new Error(`Unable to list tracked Markdown files: ${result.stderr.trim()}`);
-  return result.stdout.split("\0").filter(Boolean).sort();
+  return result.stdout.split("\0").filter(Boolean).filter(isPublishedMarkdown).sort();
 }
 
 function defaultSourceLoader(fileName) {
@@ -194,6 +210,7 @@ module.exports = {
   createBaseline,
   disabledRules,
   expandFingerprint,
+  isPublishedMarkdown,
   issueKey,
   listTrackedMarkdown,
   neighborhoodHash,

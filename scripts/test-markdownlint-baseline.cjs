@@ -8,6 +8,7 @@ const {
   createBaseline,
   disabledRules,
   expandFingerprint,
+  isPublishedMarkdown,
   listTrackedMarkdown,
   normalizeIssue,
   parseMarkdownlintResult,
@@ -73,9 +74,26 @@ const serialized = serializeBaseline(generated);
 assert.equal(serialized.split("\n").length, generated.fingerprints.length + 10);
 assert.deepEqual(expandFingerprint(JSON.parse(serialized).fingerprints[0]), generated.fingerprints[0]);
 
+for (const published of ["README.md", "docs/architecture/MAP.md", "docs/fleet/notes.md"]) {
+  assert.equal(isPublishedMarkdown(published), true, `${published} belongs to the published inventory`);
+}
+for (const coordination of [
+  ".fleet/tasks/T-116f-markdown-fleet-isolation.md",
+  ".fleet/reports/T-116f-markdown-fleet-isolation.md",
+  ".fleet/BRIEF.md",
+]) {
+  assert.equal(isPublishedMarkdown(coordination), false, `${coordination} must never enter the published inventory`);
+}
+assert.equal(isPublishedMarkdown(".fleet/tasks/brief.txt"), false);
+assert.equal(isPublishedMarkdown("package.json"), false);
+
 const trackedMarkdown = listTrackedMarkdown();
 assert.equal(trackedMarkdown.length, baseline.filesScanned);
 assert.ok(trackedMarkdown.every((file) => file.endsWith(".md") && !file.includes("node_modules")));
+assert.ok(
+  trackedMarkdown.every((file) => !file.startsWith(".fleet/")),
+  "Fleet coordination files must not reach the Markdown baseline even when present in the checkout",
+);
 
 for (const marker of [
   "runs-on: ubuntu-24.04",
