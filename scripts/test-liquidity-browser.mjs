@@ -197,6 +197,7 @@ try {
       const section = document.querySelector('#trade-impact'), stats = document.querySelector('#about .what-stats'), container = document.querySelector('#about .container');
       const [intro, tool] = [section.querySelector('.ti-intro'), section.querySelector('.ti-tool')].map(box);
       const segments = [...section.querySelectorAll('.ti-thresholds span')].map(box);
+      const sectionStyle = getComputedStyle(section);
       const overlap = (a, b) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
       return {
         below: box(section).top >= box(stats).bottom, afterStats: stats.parentElement.nextElementSibling === section,
@@ -204,6 +205,7 @@ try {
         overflow: document.documentElement.scrollWidth > innerWidth || [...section.querySelectorAll('*')].some(el => el.scrollWidth > el.clientWidth + 1 && getComputedStyle(el).overflow !== 'visible'),
         overlap: overlap(intro, tool), sideBySide: intro.top === tool.top,
         segments: segments.every(r => r.height >= 44) && segments.every((r, i) => !i || r.left >= segments[i - 1].right - 1 && r.top === segments[0].top),
+        padding: ['paddingLeft', 'paddingRight', 'paddingBottom'].every(name => parseFloat(sectionStyle[name]) >= 20),
         nested: section.querySelector('.stat-card, .card') !== null
       };
     });
@@ -213,6 +215,7 @@ try {
     assert.equal(layout.overlap, false, name + ': intro and tool do not overlap');
     assert.equal(layout.sideBySide, width > 900, name + ': two columns only on wide layouts');
     assert.ok(layout.segments, name + ': one-row segmented control with 44px targets');
+    assert.ok(layout.padding, name + ': content keeps at least 20px from every card edge');
     assert.equal(layout.nested, false, name + ': no nested cards');
     await ref.scrollIntoViewIfNeeded();
     await ref.screenshot({ path: `/tmp/ifr-trade-impact-${name}.png` });
