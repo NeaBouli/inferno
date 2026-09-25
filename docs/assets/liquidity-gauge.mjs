@@ -1,7 +1,7 @@
 import { readPool, units } from './liquidity-calculator.mjs';
-import { parseETH, capacity, depth, decimal } from './liquidity-depth.mjs';
+import { parseETH, capacity, depth, decimal, usd } from './liquidity-depth.mjs?v=impact1';
 
-export function mountGauge(root, loadPool = signal => readPool(window.ethers, signal)) {
+export function mountGauge(root, loadPool = signal => readPool(window.ethers, signal), reference = null) {
   const get = name => root.querySelector(`[data-${name}]`);
   const input = get('buy');
   const needle = get('needle');
@@ -10,6 +10,30 @@ export function mountGauge(root, loadPool = signal => readPool(window.ethers, si
     root.dataset.state = name;
     get('live').textContent = name === 'live' ? 'Live' : name === 'loading' ? 'Updating' : 'Unavailable';
     get('status').textContent = message;
+    renderReference();
+  }
+  // The trade-impact reference shares this poller's snapshot, sequencing and expiry; it never reads on its own.
+  function renderReference() {
+    if (!reference) return;
+    const field = name => reference.querySelector(`[data-${name}]`);
+    let eth = null, dollars = null;
+    try {
+      if (snapshot && Math.abs(Date.now() / 1000 - snapshot.timestamp) <= 180) {
+        const ceiling = capacity(snapshot.eth, BigInt(reference.querySelector('input:checked').value));
+        [eth, dollars] = [`${decimal(ceiling)} ETH`, `≈ ${usd(ceiling, snapshot.ethUsd)}`];
+      }
+    } catch { eth = dollars = null; }
+    const loading = root.dataset.state === 'loading';
+    reference.dataset.state = eth ? 'live' : loading ? 'loading' : 'unavailable';
+    field('reference-live').textContent = loading ? 'Updating' : eth ? 'Live' : 'Unavailable';
+    field('guidance').hidden = !eth;
+    field('reference-unavailable').hidden = !!eth;
+    field('ceiling-eth').textContent = eth || '--';
+    field('ceiling-usd').textContent = dollars || '--';
+    field('reference-block').textContent = eth ? `Pool reserves and ETH/USD at block ${snapshot.block} · ${new Date(snapshot.timestamp * 1000).toLocaleString()}.` : '';
+    const status = eth ? '' : loading && !snapshot ? 'Reading current pool reserves on Ethereum Mainnet.' : 'Current pool reserves or the ETH/USD price could not be verified, so no trade-size figure is shown. Check the live Uniswap quote instead.';
+    // Polite live region: only rewrite on change so the 10-second freshness tick does not repeat announcements.
+    if (field('reference-status').textContent !== status) field('reference-status').textContent = status;
   }
   function clearCalculations() {
     for (const name of ['capacity', 'impact', 'target', 'missing', 'mid', 'end']) get(name).textContent = '--';
@@ -27,6 +51,7 @@ export function mountGauge(root, loadPool = signal => readPool(window.ethers, si
   function render() {
     if (!snapshot) return;
     if (Math.abs(Date.now() / 1000 - snapshot.timestamp) > 180) { unavailable('Data expired. Retrying automatically.'); return; }
+    renderReference();
     get('capacity').textContent = `${decimal(capacity(snapshot.eth, 100n))} ETH`;
     root.querySelectorAll('[data-cap]').forEach(el => { el.textContent = `${decimal(capacity(snapshot.eth, BigInt(el.dataset.cap)))} ETH`; });
     try {
@@ -77,13 +102,14 @@ export function mountGauge(root, loadPool = signal => readPool(window.ethers, si
   }
   const visibility = () => { render(); if (!document.hidden) refresh(); };
   input.addEventListener('input', render);
+  reference?.addEventListener('change', renderReference);
   document.addEventListener('visibilitychange', visibility);
   const freshness = setInterval(render, 10000);
   const updates = setInterval(refresh, 60000);
   refresh();
-  return () => { disposed = true; generation++; controller?.abort(); clearTimeout(deadline); clearTimeout(expiry); clearInterval(freshness); clearInterval(updates); input.removeEventListener('input', render); document.removeEventListener('visibilitychange', visibility); };
+  return () => { disposed = true; generation++; controller?.abort(); clearTimeout(deadline); clearTimeout(expiry); clearInterval(freshness); clearInterval(updates); input.removeEventListener('input', render); reference?.removeEventListener('change', renderReference); document.removeEventListener('visibilitychange', visibility); };
 }
 if (typeof document !== 'undefined') {
   const root = document.getElementById('liquidity-gauge');
-  if (root) mountGauge(root);
+  if (root) mountGauge(root, undefined, document.getElementById('trade-impact'));
 }
