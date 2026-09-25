@@ -89,7 +89,7 @@ try {
         window.gaugeReads = (window.gaugeReads || 0) + 1;
         if(window.gaugeOffline) throw new Error('Offline');
         if(window.gaugeHang) await new Promise(resolve => { window.resolveGauge = resolve; });
-        return { eth:250000000000000000n, ifr:1000000000000000n, block:123, timestamp:Math.floor(Date.now()/1000) - (window.gaugeAge || 0), ethUsd: 'gaugeUsd' in window ? window.gaugeUsd : 250000000000n };
+        return { eth:250000000000000000n, ifr:1000000000000000n, block:123, timestamp:Math.floor(Date.now()/1000) - (window.gaugeAge || 0), ethUsd: 'gaugeUsd' in window ? window.gaugeUsd : 250000000000n, ethUsdUpdatedAt: Math.floor(Date.now()/1000) - (window.gaugeAge || 0) - 60 };
       }` }));
     await page.goto(`http://127.0.0.1:${server.address().port}/index.html`);
     const gauge = page.locator('#liquidity-gauge');
@@ -154,7 +154,7 @@ try {
         try {
           if(window.poolOffline) throw new Error('Offline');
           if(window.poolHang) await new Promise(resolve => { window.resolvePool = resolve; });
-          return { eth:window.poolEth || 250000000000000000n, ifr:1000000000000000n, block:123, timestamp:Math.floor(Date.now()/1000) - (window.poolAge || 0), ethUsd: 'poolUsd' in window ? window.poolUsd : 250000000000n };
+          return { eth:window.poolEth || 250000000000000000n, ifr:1000000000000000n, block:123, timestamp:Math.floor(Date.now()/1000) - (window.poolAge || 0), ethUsd: 'poolUsd' in window ? window.poolUsd : 250000000000n, ethUsdUpdatedAt: window.poolUsdAt === 'future' ? Math.floor(Date.now()/1000) - (window.poolAge || 0) + 5 : 'poolUsdAt' in window ? window.poolUsdAt : Math.floor(Date.now()/1000) - (window.poolAge || 0) - 60 };
         } finally { window.poolPending--; }
       }` }));
     await page.goto(`http://127.0.0.1:${server.address().port}/index.html`);
@@ -227,9 +227,25 @@ try {
       await closed('ETH/USD ' + String(value));
       assert.equal(await page.locator('#liquidity-gauge').evaluate(el => el.dataset.state), 'live', 'gauge unaffected by missing USD');
     }
+    // Feed rejected by the reader (null price and round time) or a round not bound to this snapshot block.
+    const gaugeText = () => page.evaluate(() => ['reserve', 'details', 'capacity', 'target'].map(n => document.querySelector(`#liquidity-gauge [data-${n}]`).textContent));
     await page.evaluate(() => { delete window.poolUsd; });
     await page.clock.fastForward(60000);
     await live();
+    const liveGauge = await gaugeText();
+    for (const [label, usd, at] of [['feed rejected', null, null], ['round time missing', 250000000000n, undefined], ['round after block', 250000000000n, 'future']]) {
+      await page.evaluate(([u, t]) => { window.poolUsd = u; window.poolUsdAt = t; }, [usd, at]);
+      await page.clock.fastForward(60000);
+      await closed(label);
+      assert.equal(await page.locator('#liquidity-gauge').evaluate(el => el.dataset.state), 'live', label + ': gauge stays live');
+      assert.deepEqual(await gaugeText(), liveGauge, label + ': gauge values unchanged');
+      assert.equal(await page.locator('#liquidity-gauge [data-needle]').evaluate(el => el.hidden), false, label + ': needle visible');
+    }
+    await page.evaluate(() => { delete window.poolUsd; delete window.poolUsdAt; });
+    await page.clock.fastForward(60000);
+    await live();
+    assert.match(await ref.locator('[data-reference-block]').textContent(), /^Pool reserves and ETH\/USD at block 123 · .+; ETH\/USD round updated .+\.$/, 'feed freshness text');
+    assert.equal(await ref.locator('[data-guidance] a[href="https://data.chain.link/feeds/ethereum/mainnet/eth-usd"]').textContent(), 'Chainlink ETH/USD', 'feed source link');
     // Stale snapshot expires without a new read.
     await page.evaluate(() => { window.poolAge = 170; });
     await page.clock.fastForward(60000);
@@ -273,6 +289,13 @@ try {
     assert.match(await page.locator('#eth-estimate').textContent(), / ETH$/);
     console.log('PASS live browser public RPC/CORS/ethers bundle', await page.locator('#pool-status').textContent());
     await page.close();
+    // Landing reference over the same public RPC: reserves and Chainlink ETH/USD from one block.
+    const landingLive = await browser.newPage();
+    await landingLive.goto(`http://127.0.0.1:${server.address().port}/index.html`);
+    await landingLive.waitForFunction(() => document.querySelector('#trade-impact').dataset.state === 'live', undefined, { timeout: 25000 });
+    assert.match(await landingLive.locator('#trade-impact [data-ceiling-usd]').textContent(), /^≈ \$[\d,]+\.\d{2}$/);
+    console.log('PASS live landing trade-impact', await landingLive.locator('#trade-impact [data-ceiling-eth]').textContent(), await landingLive.locator('#trade-impact [data-ceiling-usd]').textContent(), await landingLive.locator('#trade-impact [data-reference-block]').textContent());
+    await landingLive.close();
   }
   const landing = await browser.newPage({ viewport: { width: 390, height: 844 } });
   await landing.route('**/*', route => new URL(route.request().url()).hostname === '127.0.0.1' ? route.continue() : route.abort());

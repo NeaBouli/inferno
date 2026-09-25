@@ -1315,7 +1315,7 @@
 </script>
 <script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
 <link rel="stylesheet" href="/assets/liquidity-gauge.css?v=impact1">
-<script type="module" src="/assets/liquidity-gauge.mjs?v=impact1"></script>
+<script type="module" src="/assets/liquidity-gauge.mjs?v=impact2"></script>
 <script src="assets/wallet-core.js?v=20260708-readable-mobile-modal"></script>
 <script src="assets/ifr-state.js"></script>
   <link rel="stylesheet" href="assets/redesign-skin.css">
@@ -1715,7 +1715,7 @@
         <div class="ti-guidance" data-guidance hidden>
           <p class="ti-label">Approximate maximum modeled trade size for the selected price-impact threshold</p>
           <p class="ti-values"><strong data-ceiling-eth>--</strong> <span data-ceiling-usd>--</span></p>
-          <p class="ti-meta">Model estimate based on current pool reserves for an ETH-to-IFR buy on Uniswap V2, including the 0.30% pool fee. <span data-reference-block></span></p>
+          <p class="ti-meta">Model estimate based on current pool reserves for an ETH-to-IFR buy on Uniswap V2, including the 0.30% pool fee. USD reference: <a href="https://data.chain.link/feeds/ethereum/mainnet/eth-usd" target="_blank" rel="noopener noreferrer">Chainlink ETH/USD</a>, read at the same block and hidden if the round is missing, invalid or older than the feed heartbeat plus 5 minutes. <span data-reference-block></span></p>
         </div>
         <div class="ti-unavailable" data-reference-unavailable>
           <p data-reference-status aria-live="polite">Current pool data requires JavaScript and a public Ethereum RPC connection. No trade-size figure is shown.</p>

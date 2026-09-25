@@ -34,13 +34,22 @@ for (const phrase of ['grow steadily and organically', 'pool is still thin, so o
 assert.doesNotMatch(tradeImpact.replace(/not slippage tolerance|Price impact is not slippage tolerance/g, ''), /\bsafe\b|slippage-safe|recommended investment|guarantee/i);
 assert.deepEqual([...tradeImpact.matchAll(/name="trade-impact-threshold" value="(\d+)"( checked)?/g)].map(m => m[1] + (m[2] ? '*' : '')), ['50*', '100', '200']);
 assert.ok(tradeImpact.includes('href="wiki/liquidity.html"'));
-for (const href of tradeImpact.match(/href="https?:[^"]+"/g)) assert.ok(['href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B"', 'href="https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0"'].includes(href), 'non-canonical link ' + href);
+for (const href of tradeImpact.match(/href="https?:[^"]+"/g)) assert.ok(['href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B"', 'href="https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0"', 'href="https://data.chain.link/feeds/ethereum/mainnet/eth-usd"'].includes(href), 'non-canonical link ' + href);
 assert.match(tradeImpact, /data-guidance hidden/, 'numeric guidance hidden until a verified snapshot renders');
 assert.doesNotMatch(tradeImpact, /<button|\d\.\d+ ETH|\$\d/, 'no refresh button or static amount');
 const gaugeSource = read('docs/assets/liquidity-gauge.mjs');
 assert.equal((gaugeSource.match(/setInterval\(refresh, 60000\)/g) || []).length, 1, 'one shared poller');
 assert.equal((gaugeSource.match(/readPool\(/g) || []).length, 1, 'no second reader');
 assert.doesNotMatch(gaugeSource, /fetch\(|localStorage|sessionStorage|indexedDB|document\.cookie|sendBeacon|300000000|Bootstrap/, 'no extra network, storage, tracking or Bootstrap ratio');
-assert.ok(landing.includes('/assets/liquidity-gauge.mjs?v=impact1'), 'cache-busted gauge module');
+assert.ok(landing.includes('/assets/liquidity-gauge.mjs?v=impact2'), 'cache-busted gauge module');
+assert.match(tradeImpact, /data-guidance hidden>[\s\S]*USD reference: <a href="https:\/\/data\.chain\.link\/feeds\/ethereum\/mainnet\/eth-usd"[^>]*>Chainlink ETH\/USD<\/a>[^<]*hidden if the round is missing, invalid or older than the feed heartbeat plus 5 minutes/, 'USD source link and fail-closed copy');
+assert.match(tradeImpact, /data-reference-status[^>]*>[^<]*No trade-size figure is shown/, 'fail-closed default copy');
+// The feed is read by the one existing reader over the one existing RPC; no second endpoint, poller, storage or tracking.
+const reader = read('docs/assets/liquidity-calculator.mjs');
+assert.equal((reader.match(/https:\/\/[a-z0-9.-]+/g) || []).filter(url => url !== 'https://data.chain.link').length, 1, 'single RPC endpoint');
+assert.equal((reader.match(/new ethers\.JsonRpcProvider\(/g) || []).length, 1, 'single provider');
+assert.equal((reader.match(/setInterval\(/g) || []).length, 1, 'no feed poller (only the wiki calculator freshness tick)');
+assert.doesNotMatch(reader, /fetch\(|XMLHttpRequest|WebSocket|localStorage|sessionStorage|indexedDB|document\.cookie|sendBeacon|coingecko|geckoterminal/i, 'no extra network, storage, tracking or off-chain price source');
+assert.match(reader, /ETH_USD_FEED = '0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419'/);
 for (const block of guide.matchAll(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/g)) assert.equal(JSON.parse(block[1])['@context'], 'https://schema.org');
 console.log('PASS: Wiki shell/discovery, first-step wizard, FAQ, README/SEO/AI retrieval, trade-impact wording/links/single-poller and read-only boundary');

@@ -18,7 +18,8 @@ export function mountGauge(root, loadPool = signal => readPool(window.ethers, si
     const field = name => reference.querySelector(`[data-${name}]`);
     let eth = null, dollars = null;
     try {
-      if (snapshot && Math.abs(Date.now() / 1000 - snapshot.timestamp) <= 180) {
+      // USD needs the feed round bound to this same snapshot block; otherwise both amounts stay hidden.
+      if (snapshot && Math.abs(Date.now() / 1000 - snapshot.timestamp) <= 180 && Number.isSafeInteger(snapshot.ethUsdUpdatedAt) && snapshot.ethUsdUpdatedAt <= snapshot.timestamp) {
         const ceiling = capacity(snapshot.eth, BigInt(reference.querySelector('input:checked').value));
         [eth, dollars] = [`${decimal(ceiling)} ETH`, `≈ ${usd(ceiling, snapshot.ethUsd)}`];
       }
@@ -30,7 +31,7 @@ export function mountGauge(root, loadPool = signal => readPool(window.ethers, si
     field('reference-unavailable').hidden = !!eth;
     field('ceiling-eth').textContent = eth || '--';
     field('ceiling-usd').textContent = dollars || '--';
-    field('reference-block').textContent = eth ? `Pool reserves and ETH/USD at block ${snapshot.block} · ${new Date(snapshot.timestamp * 1000).toLocaleString()}.` : '';
+    field('reference-block').textContent = eth ? `Pool reserves and ETH/USD at block ${snapshot.block} · ${new Date(snapshot.timestamp * 1000).toLocaleString()}; ETH/USD round updated ${new Date(snapshot.ethUsdUpdatedAt * 1000).toLocaleString()}.` : '';
     const status = eth ? '' : loading && !snapshot ? 'Reading current pool reserves on Ethereum Mainnet.' : 'Current pool reserves or the ETH/USD price could not be verified, so no trade-size figure is shown. Check the live Uniswap quote instead.';
     // Polite live region: only rewrite on change so the 10-second freshness tick does not repeat announcements.
     if (field('reference-status').textContent !== status) field('reference-status').textContent = status;
