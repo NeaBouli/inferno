@@ -27,3 +27,9 @@ export function decimal(value, decimals = 18, places = 6) {
   if (value > 0n && value < base / 10n ** BigInt(places)) return '<0.' + '0'.repeat(places - 1) + '1';
   return (value / base).toString() + (fraction ? '.' + fraction : '');
 }
+// ETH/USD price uses 8 decimals. Rounded down so a modeled ceiling is never overstated.
+export function usd(wei, price) {
+  if (typeof wei !== 'bigint' || wei < 0n || typeof price !== 'bigint' || price <= 0n) throw new Error('ETH/USD price is unavailable');
+  const cents = wei * price / 10n ** 24n;
+  return '$' + (cents / 100n).toLocaleString('en-US') + '.' + String(cents % 100n).padStart(2, '0');
+}

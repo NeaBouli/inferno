@@ -1314,8 +1314,8 @@
 }
 </script>
 <script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
-<link rel="stylesheet" href="/assets/liquidity-gauge.css?v=horizontal2">
-<script type="module" src="/assets/liquidity-gauge.mjs?v=depth1"></script>
+<link rel="stylesheet" href="/assets/liquidity-gauge.css?v=impact1">
+<script type="module" src="/assets/liquidity-gauge.mjs?v=impact2"></script>
 <script src="assets/wallet-core.js?v=20260708-readable-mobile-modal"></script>
 <script src="assets/ifr-state.js"></script>
   <link rel="stylesheet" href="assets/redesign-skin.css">
@@ -1696,6 +1696,37 @@
         </div>
       </div>
     </div>
+    <section class="trade-impact" id="trade-impact" aria-labelledby="trade-impact-title" data-state="unavailable">
+      <div class="ti-intro">
+        <div class="ti-heading">
+          <h3 id="trade-impact-title">Live trade-impact reference</h3>
+          <span class="ti-live"><i aria-hidden="true"></i><span data-reference-live>Unavailable</span></span>
+        </div>
+        <p>IFR aims to grow steadily and organically. The current IFR / WETH pool is still thin, so oversized trades can move the price sharply.</p>
+        <p>No trade size is risk-free. Always inspect the <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener noreferrer">live Uniswap quote</a> before you confirm.</p>
+      </div>
+      <div class="ti-tool">
+        <fieldset class="ti-thresholds">
+          <legend>Estimated price impact</legend>
+          <label><input type="radio" name="trade-impact-threshold" value="50" checked><span>0.5%</span></label>
+          <label><input type="radio" name="trade-impact-threshold" value="100"><span>1%</span></label>
+          <label><input type="radio" name="trade-impact-threshold" value="200"><span>2%</span></label>
+        </fieldset>
+        <div class="ti-guidance" data-guidance hidden>
+          <p class="ti-label">Approximate maximum modeled trade size for the selected price-impact threshold</p>
+          <p class="ti-values"><strong data-ceiling-eth>--</strong> <span data-ceiling-usd>--</span></p>
+          <p class="ti-meta">Model estimate based on current pool reserves for an ETH-to-IFR buy on Uniswap V2, including the 0.30% pool fee. USD reference: <a href="https://data.chain.link/feeds/ethereum/mainnet/eth-usd" target="_blank" rel="noopener noreferrer">Chainlink ETH/USD</a>, read at the same block and hidden if the round is missing, invalid or older than the feed heartbeat plus 5 minutes. <span data-reference-block></span></p>
+        </div>
+        <div class="ti-unavailable" data-reference-unavailable>
+          <p data-reference-status aria-live="polite">Current pool data requires JavaScript and a public Ethereum RPC connection. No trade-size figure is shown.</p>
+          <p><a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener noreferrer">Current Uniswap quote</a> · <a href="https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" rel="noopener noreferrer">IFR / WETH pool on Etherscan</a></p>
+        </div>
+      </div>
+      <div class="ti-notes">
+        <p><strong>Price impact is not slippage tolerance.</strong> Price impact is how far your own trade moves the pool price. Slippage tolerance is the extra movement your wallet accepts before a swap fails. <a href="wiki/liquidity.html">How pool depth works &rarr;</a></p>
+        <p>The figure is an approximate maximum modeled trade size for the selected price-impact threshold. It is not a quote, not slippage tolerance and not financial advice. Gas, interface fees and route-dependent IFR fees are excluded. Updates every 60 seconds; no wallet connection.</p>
+      </div>
+    </section>
   </div>
 </section>
 
