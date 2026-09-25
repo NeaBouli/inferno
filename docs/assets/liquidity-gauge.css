@@ -36,3 +36,37 @@
 .liquidity-gauge :is(a, button):focus-visible { outline: 3px solid #245f48; outline-offset: 3px; }
 @media (prefers-reduced-motion: reduce) { .liquidity-gauge .gauge-needle { transition: none; } }
 @media (prefers-reduced-motion: reduce) { .liquidity-gauge .gauge-live i { animation: none; } }
+.trade-impact { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px 48px; margin-top: 48px; padding-top: 28px; border-top: 1px solid var(--line, #E6DDD0); color: var(--text, #211C17); text-align: left; }
+.trade-impact > div { min-width: 0; }
+.trade-impact h3 { margin: 0; font-size: 21px; line-height: 1.3; letter-spacing: 0; }
+.trade-impact p { margin: 8px 0; font-size: 14px; line-height: 1.6; color: var(--text-muted, #756B60); overflow-wrap: anywhere; }
+.trade-impact a { color: var(--accent-deep, #8E3814); text-underline-offset: 2px; }
+.trade-impact .ti-heading { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; margin-bottom: 8px; }
+.trade-impact .ti-live { display: inline-flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 700; color: #5c5144; }
+.trade-impact .ti-live i { width: 8px; height: 8px; border-radius: 50%; background: #9a6a16; }
+.trade-impact[data-state="live"] .ti-live { color: #225b40; }
+.trade-impact[data-state="live"] .ti-live i { background: #277949; }
+.trade-impact[data-state="unavailable"] .ti-live i { background: #8a4239; }
+.trade-impact .ti-thresholds { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0 0 16px; padding: 0; border: 0; }
+.trade-impact .ti-thresholds legend { grid-column: 1 / -1; padding: 0; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: var(--text, #211C17); }
+.trade-impact .ti-thresholds label { position: relative; display: block; }
+.trade-impact .ti-thresholds input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; opacity: 0; cursor: pointer; }
+.trade-impact .ti-thresholds span { display: flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 8px 10px; border: 1px solid var(--line-strong, #D7CCBB); background: var(--surface, #fff); color: var(--text, #211C17); font-size: 14px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.trade-impact .ti-thresholds label + label span { border-left: 0; }
+.trade-impact .ti-thresholds label:first-of-type span { border-radius: var(--radius-sm, 4px) 0 0 var(--radius-sm, 4px); }
+.trade-impact .ti-thresholds label:last-of-type span { border-radius: 0 var(--radius-sm, 4px) var(--radius-sm, 4px) 0; }
+.trade-impact .ti-thresholds input:checked + span { background: var(--accent-deep, #8E3814); color: #fff; font-weight: 700; box-shadow: inset 0 -3px 0 #211C17; }
+.trade-impact .ti-thresholds input:checked + span::before { content: '\2713'; }
+.trade-impact .ti-thresholds input:focus-visible + span { outline: 3px solid #245f48; outline-offset: 2px; position: relative; z-index: 1; }
+.trade-impact .ti-label { margin-top: 0; font-size: 13px; }
+.trade-impact .ti-values { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin: 4px 0; color: var(--text, #211C17); font-variant-numeric: tabular-nums; }
+.trade-impact .ti-values strong { font-size: 26px; line-height: 1.25; color: var(--text, #211C17); }
+.trade-impact .ti-values span { font-size: 17px; font-weight: 600; }
+.trade-impact .ti-meta { font-size: 12px; }
+.trade-impact .ti-unavailable p:first-child { margin-top: 0; color: var(--text, #211C17); }
+.trade-impact .ti-notes { grid-column: 1 / -1; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 0 48px; padding-top: 8px; border-top: 1px solid var(--line, #E6DDD0); }
+.trade-impact .ti-notes p { font-size: 13px; }
+.trade-impact .ti-notes strong { color: var(--text, #211C17); }
+.trade-impact a:focus-visible { outline: 3px solid #245f48; outline-offset: 3px; }
+@media (max-width: 900px) { .trade-impact { grid-template-columns: minmax(0, 1fr); gap: 16px; margin-top: 40px; } .trade-impact .ti-notes { gap: 0 28px; } }
+@media (max-width: 600px) { .trade-impact .ti-notes { display: block; } }
