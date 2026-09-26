@@ -25,7 +25,7 @@ const rulesCommand    = require('./commands/rules');
 const express  = require('express');
 const { ethers } = require('ethers');
 const {
-  getNonce, consumeNonce, setVerified, getUser, isVerified: isUserVerified,
+  getNonce, consumeNonce, setVerified, isVerified: isUserVerified,
   hasTopicAccess, autoRestoreAll, reverifyFromMap
 } = require('./services/verificationStore');
 const { determineTier } = require('./services/onChainReader');
@@ -266,12 +266,6 @@ verifyApp.post('/api/verify', async (req, res) => {
     logger.error({ err: e.message }, 'Verify API error');
     res.status(500).json({ success: false, error: 'Internal error' });
   }
-});
-
-verifyApp.get('/api/verify/status/:userId', (req, res) => {
-  const user = getUser(req.params.userId);
-  if (!user) return res.json({ verified: false });
-  res.json({ verified: true, wallet: user.wallet, tier: user.tier });
 });
 
 const VERIFY_PORT = process.env.VERIFY_PORT || 3006;
