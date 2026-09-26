@@ -1,4 +1,5 @@
 @startuml
+title Verification/authorization trace (main path)
 actor User
 participant "commands/verify.js" as Cmd
 participant "middleware/rateLimit.js" as RL
@@ -41,4 +42,44 @@ RL -> Cmd : next()
 Cmd -> Store : unverify(userId)
 Store --> Cmd : binding removed
 Cmd --> User : confirmation
+@enduml
+
+@startuml
+title Privilege/CORS/content-trust trace (main path)
+actor Browser
+participant "middleware/verifyCors.js" as Cors
+participant "index.js::verifyApp" as Api
+participant "handlers/channelSync.js" as Sync
+participant "commands/ask.js" as Ask
+participant "services/skywalker.js" as AI
+participant "services/telegramText.js" as Text
+participant "Telegram" as Tg
+
+== browser origin -> verify API CORS ==
+Browser -> Cors : POST /api/verify (Origin header)
+Cors -> Cors : resolveAllowedOrigin: parse URL,\nexact https origin allowlist
+alt origin allowlisted
+  Cors -> Api : forward + ACAO=<exact origin>, Vary: Origin
+else other/malformed/null origin
+  Cors -> Api : forward without CORS headers (browser blocks)
+else no Origin header
+  Cors -> Api : non-browser client policy:\nprocessed, no CORS headers
+end
+
+== channel content -> community output + pin ==
+Tg -> Sync : channel_post update
+Sync -> Sync : isTrustedChannelPost:\nchat == TELEGRAM_CHANNEL_ID,\nnot forwarded/relayed, sender_chat == channel
+alt trusted
+  Sync -> Text : toPlainText(text, 4096 budget)
+  Sync -> Tg : sendMessage(group, plain text, no parse_mode)
+  Sync -> Tg : pinChatMessage(group, sent id)
+else unknown/forwarded/missing metadata
+  Sync -> Tg : nothing (fail closed)
+end
+
+== ask content -> Telegram output ==
+Ask -> AI : askSkywalker(userId, question)
+AI --> Ask : untrusted answer string
+Ask -> Text : toPlainText(answer, 4096 - header)
+Ask -> Tg : editMessageText(plain text, no parse_mode)
 @enduml

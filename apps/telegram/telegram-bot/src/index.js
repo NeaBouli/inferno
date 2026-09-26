@@ -44,7 +44,9 @@ const { startBootstrapListener } = require('./services/bootstrapListener');
 const rateLimit  = require('./middleware/rateLimit');
 const apiRateLimit = require('./middleware/apiRateLimit');
 const adminOnly  = require('./middleware/adminCheck');
+const { verifyCors } = require('./middleware/verifyCors');
 const { moderationMiddleware } = require('./services/moderation');
+const { handleChannelPost } = require('./handlers/channelSync');
 
 // Validation
 if (!process.env.BOT_TOKEN) {
@@ -77,9 +79,12 @@ bot.action(/^verify_\d+$/, onVerifyCallback);
 // Registered BEFORE the command handlers so a command posted in a protected
 // thread passes this gate first and cannot leak protected output (CWA-40).
 const PROTECTED_TOPICS = [58, 21, 23, 11]; // Core Dev, Council, Vote, Dev&Builder
-const PROTECTED_ADMIN_IDS = process.env.ADMIN_USER_IDS
-  ? process.env.ADMIN_USER_IDS.split(',').map(id => parseInt(id.trim()))
-  : [579949616];
+// Fail closed (CWA-38): no hardcoded admin fallback. Unset/unparsable
+// ADMIN_USER_IDS yields an empty list — nobody gets the admin bypass.
+const PROTECTED_ADMIN_IDS = (process.env.ADMIN_USER_IDS || '')
+  .split(',')
+  .map((id) => parseInt(id.trim(), 10))
+  .filter((id) => Number.isInteger(id));
 
 bot.on('message', async (ctx, next) => {
   try {
@@ -157,35 +162,8 @@ bot.command('ban',      adminOnly, banCommand);
 bot.command('warn',     adminOnly, warnCommand);
 bot.command('pin',      adminOnly, pinCommand);
 
-// ── Channel → Community auto-sync ────────────────────────────────────────────
-bot.on('channel_post', async (ctx) => {
-  // Ignore posts made by the bot itself to prevent loop
-  if (ctx.channelPost.sender_chat) return;
-  try {
-    const groupId = process.env.TELEGRAM_GROUP_ID;
-    const topicId = process.env.TELEGRAM_ANNOUNCEMENTS_TOPIC_ID;
-    if (!groupId) return;
-    const text = ctx.channelPost.text || ctx.channelPost.caption;
-    if (!text) return;
-    const sentMsg = await ctx.telegram.sendMessage(
-      groupId,
-      `📡 *Channel Update*\n\n${text}\n\n💬 [Join the community](https://t.me/IFR_token)`,
-      {
-        parse_mode: 'Markdown',
-        message_thread_id: topicId ? parseInt(topicId) : undefined,
-        disable_web_page_preview: true
-      }
-    );
-    // Auto-pin synced announcement in community
-    try {
-      await ctx.telegram.pinChatMessage(groupId, sentMsg.message_id, { disable_notification: true });
-    } catch (pinErr) {
-      logger.warn({ err: pinErr.message }, 'Failed to pin synced channel post');
-    }
-  } catch (err) {
-    logger.error({ err: err.message }, 'Channel sync error');
-  }
-});
+// ── Channel → Community auto-sync (trusted source only, CWA-45) ─────────────
+bot.on('channel_post', handleChannelPost);
 
 // ── Admin test commands ──────────────────────────────────────────────────────
 const { sendDailyWelcome } = require('./handlers/dailyWelcome');
@@ -217,6 +195,9 @@ bot.on('text', async (ctx) => {
 });
 
 // ── Verify API (Express) ─────────────────────────────────────────────────────
+// CORS (CWA-39): exact HTTPS origin allowlist in middleware/verifyCors.js.
+// Requests without an Origin header are non-browser clients: processed
+// normally, but they receive no Access-Control-* headers (see README).
 const verifyApp = express();
 
 // Trusted-proxy policy (CWA-31): production serves this API as
@@ -235,16 +216,7 @@ if (!/^(none|off|false)$/i.test(trustProxyEnv)) {
 }
 
 verifyApp.use(express.json());
-verifyApp.use((req, res, next) => {
-  const origin = req.headers.origin || '';
-  if (origin.includes('ifrunit.tech') || origin === '') {
-    res.header('Access-Control-Allow-Origin', origin || '*');
-    res.header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Content-Type');
-  }
-  if (req.method === 'OPTIONS') return res.sendStatus(200);
-  next();
-});
+verifyApp.use(verifyCors());
 
 // Per-IP throttle for the signature endpoint, keyed on req.ip as resolved by
 // the trusted-proxy policy above: the real client IP behind Traefik, the raw
