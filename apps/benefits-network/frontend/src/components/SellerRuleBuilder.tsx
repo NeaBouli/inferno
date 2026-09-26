@@ -1008,7 +1008,6 @@ export function SellerRuleBuilder() {
     setError('');
     setStatus('Preparing the masked full history export...');
     try {
-      let auth = await signSellerAction('sessions:list', requestBusinessId);
       const exportSessions: SellerSessionSummary[] = [];
       const seenSessions = new Set<string>();
       const seenCursors = new Set<string>();
@@ -1017,26 +1016,14 @@ export function SellerRuleBuilder() {
       let hasMore = true;
 
       while (hasMore) {
-        let result: Awaited<ReturnType<typeof getSellerBusinessSessions>>;
-        try {
-          result = await getSellerBusinessSessions(
-            requestBusinessId,
-            auth,
-            SELLER_SESSION_PAGE_LIMIT,
-            cursor,
-            snapshot
-          );
-        } catch (err) {
-          if (!(err instanceof Error) || !err.message.toLowerCase().includes('authorization expired')) throw err;
-          auth = await signSellerAction('sessions:list', requestBusinessId);
-          result = await getSellerBusinessSessions(
-            requestBusinessId,
-            auth,
-            SELLER_SESSION_PAGE_LIMIT,
-            cursor,
-            snapshot
-          );
-        }
+        // Each page needs a fresh one-time authorization; read proofs cannot be replayed.
+        const result = await getSellerBusinessSessions(
+          requestBusinessId,
+          await signSellerAction('sessions:list', requestBusinessId),
+          SELLER_SESSION_PAGE_LIMIT,
+          cursor,
+          snapshot
+        );
         for (const session of result.sessions) {
           if (!seenSessions.has(session.id)) {
             seenSessions.add(session.id);
@@ -1500,12 +1487,8 @@ export function SellerRuleBuilder() {
     scope?: string
   ): Promise<SellerAuth> {
     if (!address) throw new Error('Connect the seller wallet first.');
-    const challenge = await getSellerAuthMessage(
-      action,
-      targetBusinessId,
-      scope ? { walletAddress: address, scope } : undefined
-    );
-    if (scope && !challenge.nonce) throw new Error('Seller authorization challenge is incomplete');
+    const challenge = await getSellerAuthMessage(action, targetBusinessId, { walletAddress: address, scope });
+    if (!challenge.nonce) throw new Error('Seller authorization challenge is incomplete');
     const signature = await signMessageAsync({ message: challenge.message });
     return {
       walletAddress: address,

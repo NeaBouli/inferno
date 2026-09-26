@@ -6,7 +6,9 @@ INFERNO-SECURITY-S2A-TELEGRAM-STATUS-20260926,
 INFERNO-SECURITY-S2B-TELEGRAM-IDENTITY-20260926 and
 INFERNO-SECURITY-S2C-TELEGRAM-TRUST-20260926, integrated on one base), and the
 Creator Gateway login trace inside `apps/creator-gateway` (task
-INFERNO-SECURITY-S2D-CREATOR-AUTH-20260926).
+INFERNO-SECURITY-S2D-CREATOR-AUTH-20260926), and the Benefits seller
+authorization/session trace inside `apps/benefits-network/backend` (task
+INFERNO-SECURITY-S2E-BENEFITS-SELLER-AUTH-20260927).
 The rest of the repository is intentionally unmapped.
 
 ## 1. Grundidee
@@ -87,6 +89,34 @@ Creator Gateway login trace (`apps/creator-gateway`):
    (`services/lock-checker.ts` on-chain, `services/youtube-checker.ts` with the
    server-held token) — Daten: JWT claims → granted/reasons
 
+Benefits seller authorization/session trace (`apps/benefits-network/backend`):
+
+1. seller client (frontend `lib/api.ts::getSellerAuthMessage`, SDK
+   `benefits.ts::requestSellerChallenge`) → `src/routes/seller.ts::GET /auth-message`
+   (`challengeRateLimiter`) → `services/sellerAuthorizationChallenge.ts::issueSellerAuthorizationChallenge`
+   — Daten: action, businessId, walletAddress, scope (`read` for reads) → 32-byte
+   CSPRNG nonce row (bounded expired-row prune) + message with `Domain`, `Chain ID`,
+   `Expires` from `config.ts` (`SELLER_AUTH_DOMAIN`, `CHAIN_ID`)
+2. seller request (`x-ifr-wallet/-signature/-timestamp/-nonce`) →
+   `src/routes/seller.ts::requireSellerAuth` (also `routes/sessions.ts::requireSession{Creator,Redeemer}`,
+   `routes/passes.ts::POST /:id/bind`) → `services/sellerAuth.ts::verifySellerSignature`
+   — Daten: headers + configured context → recovered wallet (known action, nonce
+   format, TTL window, domain/chain-bound message)
+3. `requireSellerAuth` → `services/authenticatedRateLimiter.ts::assertSellerWalletActionAllowed`
+   → `services/sellerAuthorizationChallenge.ts::consumeSellerAuthorizationChallenge`
+   — Daten: nonce+wallet+action+business+scope → atomic single-use `updateMany`
+   (count must be 1)
+4. public checkout status → `src/routes/sessions.ts::GET /:id` (`sessionStatusRateLimiter`)
+   → `services/sessionService.ts::getSession` — Daten: sessionId → status
+   (stale PENDING/APPROVED reported as EXPIRED, no write)
+5. customer → `src/routes/attest.ts::POST /attest` (`attestRateLimiter`) →
+   `services/sessionService.ts::attest` → `recoverSigner`; unrecoverable →
+   `assertAttestable` (read-only, no attempt consumed); recovered wallet →
+   `reserveAttestAttempt` (locked transaction, attempt + wallet binding) — Daten:
+   sessionId + signature → attempt budget / eligibility
+6. public catalog → `src/routes/businesses.ts::GET /:id{,/rules,/products}`
+   (`discoveryRateLimiter`) — Daten: business reference → public profile/rules/products
+
 ## 3. Module
 
 | Modul | Eine Aufgabe | Einstieg | Stand |
@@ -112,6 +142,12 @@ Creator Gateway login trace (`apps/creator-gateway`):
 | gateway entitlement | OR/AND decision over IFR lock + YouTube membership | `apps/creator-gateway/src/services/entitlement.ts` | gebaut |
 | gateway lock checker | on-chain IFRLock reads, fail-closed | `apps/creator-gateway/src/services/lock-checker.ts` | gebaut |
 | gateway youtube checker | membership check with server-held token, fail-closed | `apps/creator-gateway/src/services/youtube-checker.ts` | gebaut |
+| benefits config | env validation; production requires explicit `SELLER_AUTH_DOMAIN` and `CHAIN_ID` | `apps/benefits-network/backend/src/config.ts` + `services/sellerAuthConfigPolicy.ts` | gebaut |
+| benefits seller auth | domain/chain/expiry/nonce-bound message build + signature verification | `apps/benefits-network/backend/src/services/sellerAuth.ts::verifySellerSignature` | gebaut |
+| benefits seller challenge store | one-time challenge issue (bounded prune) and atomic consumption for every seller action | `apps/benefits-network/backend/src/services/sellerAuthorizationChallenge.ts` | gebaut |
+| benefits seller routes | seller API entry, challenge issuance, owner checks | `apps/benefits-network/backend/src/routes/seller.ts::requireSellerAuth` | gebaut |
+| benefits session service | session status read, attest attempt budget, redeem | `apps/benefits-network/backend/src/services/sessionService.ts` | gebaut |
+| benefits public rate limits | per-IP limits for public reads and polling | `apps/benefits-network/backend/src/middleware/rateLimiter.ts` | gebaut |
 
 ## 4. Verdrahtung
 
@@ -159,6 +195,25 @@ Creator Gateway login trace (`apps/creator-gateway`):
 - JWT sign/verify pin HS256; `JWT_SECRET` is required at startup in every
   environment; `CHAIN_ID` and `IFRLOCK_ADDRESS` must be configured together or
   default as one consistent Sepolia pair (CWA-42).
+- Benefits: every seller action — reads included — consumes a server-issued
+  one-time nonce bound to wallet, action, business and scope; reads use the
+  fixed `read` scope and a fresh challenge per request, so a captured read
+  signature cannot be replayed within the TTL (CWA-35).
+- Benefits seller messages carry `Domain: <SELLER_AUTH_DOMAIN>`,
+  `Chain ID: <CHAIN_ID>` and `Expires:`; a missing/malformed context fails
+  closed per request and production startup refuses to run without explicit
+  values. The SDK refuses challenges whose domain differs from its API host
+  or whose chain differs from its configured chain (CWA-36).
+- Benefits attest is read-only until an eligible wallet is proven: invalid
+  signatures, valid-but-ineligible wallets and eligibility-RPC failures leave
+  `attestAttempts`, `recoveredAddress`, status and audit untouched. Only after
+  `checkBenefitEligibility` succeeds does one transaction lock the row,
+  revalidate status/expiry/pass/binding and bind + count + approve + audit, so
+  racing eligible wallets yield exactly one approval (CWA-37).
+- Benefits public reads (`GET /api/businesses/:id[/rules|/products]`,
+  `GET /api/sessions/:id`) are IP rate-limited; `getSession` no longer writes,
+  persisted expiry happens only in the conditional attest/redeem transitions
+  (CWA-43).
 
 ## 5. Widerspruch und Lücken
 
@@ -180,6 +235,18 @@ Creator Gateway login trace (`apps/creator-gateway`):
 - Concurrent Google flows from one browser share the single `cg_oauth`
   verifier cookie: the latest flow wins, earlier states fail closed at the
   callback (one verifier per browser, standard cookie-bound OAuth).
+- Benefits SELLER_QR sessions stay bearer-style by design: a session-ID
+  holder who controls a wallet that *is* eligible can still claim the open
+  session first (the seller sees the approved wallet before redeeming).
+  Ineligible or unsigned holders can no longer bind or burn it (CWA-37).
+  Binding the QR to one customer would need a QR-held secret — a product and
+  schema change outside this block. The three-attempt ceiling is still
+  enforced but is now only counted on approval; retries of ineligible
+  wallets are bounded by the IP rate limit and the session TTL.
+- Benefits `GET /api/seller/auth-message` remains a GET that inserts a
+  challenge row (existing client contract); it creates no session state and
+  is IP rate-limited. Stale open sessions are only persisted as EXPIRED on
+  attest/redeem; seller history may still show PENDING for untouched ones.
 
 ## 6. Diagrammdateien
 
@@ -232,6 +299,17 @@ mindmap
       gebaut: middleware/auth.ts::authMiddleware
       gebaut: routes/access.ts::GET /access/check
       gebaut: services/entitlement.ts::checkEntitlement
+    benefits seller auth
+      gebaut: routes/seller.ts::GET /auth-message
+      gebaut: routes/seller.ts::requireSellerAuth
+      gebaut: services/sellerAuth.ts::verifySellerSignature
+      gebaut: services/sellerAuthorizationChallenge.ts::issue/consume
+      gebaut: services/sellerAuthConfigPolicy.ts::getSellerAuthConfigIssues
+    benefits session
+      gebaut: routes/sessions.ts::GET /:id
+      gebaut: services/sessionService.ts::getSession
+      gebaut: services/sessionService.ts::attest/assertAttestable/reserveAttestAttempt
+      offen: per-wallet attest budget
 ```
 
 ## 7. Nächster Schritt

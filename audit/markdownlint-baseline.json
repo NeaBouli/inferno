@@ -66,7 +66,7 @@
     ["apps/benefits-network/backend/docs/THREAT_MODEL.md","MD032","","- On-chain errors are propagat...","df2b016909c96083",1],
     ["apps/benefits-network/backend/docs/THREAT_MODEL.md","MD032","","- Product CRUD is owner-wallet...","f99140eccfeb7cc2",1],
     ["apps/benefits-network/backend/docs/THREAT_MODEL.md","MD032","","- Public session status never ...","e86863d10d2c26b9",1],
-    ["apps/benefits-network/backend/docs/THREAT_MODEL.md","MD032","","- Seller actions require short...","5e666c346c858345",1],
+    ["apps/benefits-network/backend/docs/THREAT_MODEL.md","MD032","","- Seller actions require short...","75f1c7db3939154f",1],
     ["apps/benefits-network/backend/docs/THREAT_MODEL.md","MD032","","- Seller registration never en...","09627a30352324e9",1],
     ["apps/benefits-network/backend/docs/THREAT_MODEL.md","MD032","","- Session creation: pre-auth I...","835ab82207cd73ff",1],
     ["apps/benefits-network/backend/docs/THREAT_MODEL.md","MD032","","- Session history is not publi...","fc68a4e7aa428cd8",1],
