@@ -1,0 +1,58 @@
+@startmindmap
+* Telegram topic access via wallet verification
+** commands
+*** gebaut: src/commands/verify.js::handleVerify
+*** gebaut: src/commands/verify.js::handleUnverify
+*** gebaut: src/commands/verify.js::handleMyStatus
+** nonce store
+*** gebaut: services/nonceStore.js::createNonce
+*** gebaut: services/nonceStore.js::claimNonce
+** verification store
+*** gebaut: services/verificationStore.js::setVerified
+*** gebaut: services/verificationStore.js::unverify
+*** gebaut: services/verificationStore.js::tierHasTopicAccess
+** verify HTTP API
+*** gebaut: src/index.js::verifyApp POST /api/verify
+** protected-topic gate
+*** gebaut: src/index.js::bot.on message guard
+** tier reader
+*** gebaut: services/onChainReader.js::determineTier
+** rate limit
+*** gebaut: middleware/rateLimit.js
+*** gebaut: middleware/apiRateLimit.js
+@endmindmap
+
+@startuml
+package "commands" {
+  [commands/verify.js]
+}
+package "nonce store" {
+  [services/nonceStore.js]
+}
+package "verification store" {
+  [services/verificationStore.js]
+}
+package "verify HTTP API" {
+  [src/index.js verifyApp]
+}
+package "protected-topic gate" {
+  [src/index.js message guard]
+}
+package "tier reader" {
+  [services/onChainReader.js]
+}
+package "rate limit" {
+  [middleware/rateLimit.js]
+  [middleware/apiRateLimit.js]
+}
+
+[src/index.js verifyApp] --> [services/nonceStore.js] : claimNonce (atomic)
+[src/index.js verifyApp] --> [services/verificationStore.js] : setVerified
+[src/index.js verifyApp] --> [services/onChainReader.js] : determineTier
+[src/index.js verifyApp] --> [middleware/apiRateLimit.js] : per-IP throttle (req.ip via trust proxy)
+[commands/verify.js] --> [services/nonceStore.js] : createNonce
+[commands/verify.js] --> [services/verificationStore.js] : unverify
+[commands/verify.js] --> [middleware/rateLimit.js] : per-user throttle
+[src/index.js message guard] --> [services/verificationStore.js] : getWallet/reverifyFromMap/tierHasTopicAccess
+[src/index.js message guard] --> [services/onChainReader.js] : determineTier (live)
+@enduml
