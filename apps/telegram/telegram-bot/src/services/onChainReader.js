@@ -46,12 +46,11 @@ async function getSignerWallets() {
     signerCache = { owners: normalized, ts: Date.now() };
     return normalized;
   } catch (e) {
-    // Fallback: env variable if Safe unreachable
-    const fallback = (process.env.SIGNER_WALLETS || '')
+    // Fail closed (CWA-38): on Safe RPC failure only an explicitly configured
+    // SIGNER_WALLETS list may authorize signers. There is no built-in fallback
+    // identity — without configuration nobody is granted signer authority.
+    return (process.env.SIGNER_WALLETS || '')
       .split(',').map(a => a.trim().toLowerCase()).filter(a => a.startsWith('0x'));
-    if (fallback.length > 0) return fallback;
-    // Last resort: deployer address
-    return ['0x6b36687b0cd4386fb14cf565b67d7862110fed67'];
   }
 }
 

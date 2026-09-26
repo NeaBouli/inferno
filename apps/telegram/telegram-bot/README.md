@@ -53,6 +53,29 @@ Der Bot nutzt die ABIs aus `/abi/` im Root-Repo:
 
 Siehe `.env.example` für alle Variablen.
 
+## Verify API — CORS-Policy (CWA-39)
+
+Die Verify API (`POST /api/verify`) akzeptiert Browser-Aufrufe ausschließlich
+von exakt allowlisteten HTTPS-Origins: `https://ifrunit.tech` und
+`https://www.ifrunit.tech` (siehe `src/middleware/verifyCors.js`). Der
+Origin-Header wird als URL geparst und als serialisierter Origin verglichen —
+keine Substring-/Suffix-Matches, keine Credentials, keine alternativen Ports
+oder Schemes; `null` und malformed Origins erhalten keine CORS-Header.
+
+Requests **ohne** Origin-Header gelten als Nicht-Browser-Clients (curl,
+Server-zu-Server, Health-Checks): CORS greift fuer sie nicht, sie werden
+normal verarbeitet, erhalten aber keine `Access-Control-*`-Header.
+
+## Channel → Community Sync — Trusted Source (CWA-45)
+
+Der Auto-Sync (inkl. Auto-Pin) repostet nur Posts aus dem explizit ueber
+`TELEGRAM_CHANNEL_ID` konfigurierten offiziellen Channel in
+`TELEGRAM_GROUP_ID`. Unbekannte, weitergeleitete (`forward_*`/
+`is_automatic_forward`) oder im Namen fremder Chats gesendete Posts sowie
+fehlende Quell-Metadaten werden verworfen (fail closed). Channel-Text und
+`/ask`-Antworten werden als Plain Text (ohne `parse_mode`, max. 4096 Zeichen)
+ausgegeben.
+
 ## Git-Konventionen
 
 - Branch: `main` (kein Feature-Branch)

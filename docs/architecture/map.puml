@@ -1,5 +1,5 @@
 @startmindmap
-* Telegram topic access via wallet verification
+* Telegram wallet verification and trust boundaries
 ** commands
 *** gebaut: src/commands/verify.js::handleVerify
 *** gebaut: src/commands/verify.js::handleUnverify
@@ -15,14 +15,28 @@
 *** gebaut: src/index.js::verifyApp POST /api/verify
 ** protected-topic gate
 *** gebaut: src/index.js::bot.on message guard
+*** gebaut: src/index.js::PROTECTED_ADMIN_IDS
 ** tier reader
 *** gebaut: services/onChainReader.js::determineTier
+*** gebaut: services/onChainReader.js::getSignerWallets
 ** rate limit
 *** gebaut: middleware/rateLimit.js
 *** gebaut: middleware/apiRateLimit.js
+** verify API CORS
+*** gebaut: middleware/verifyCors.js::resolveAllowedOrigin
+*** gebaut: middleware/verifyCors.js::verifyCors
+** channel sync
+*** gebaut: handlers/channelSync.js::isTrustedChannelPost
+*** gebaut: handlers/channelSync.js::handleChannelPost
+** ask command
+*** gebaut: commands/ask.js::askCommand
+*** gebaut: services/skywalker.js::askSkywalker
+** telegram text guard
+*** gebaut: services/telegramText.js::toPlainText
 @endmindmap
 
 @startuml
+title Verification/authorization trace
 package "commands" {
   [commands/verify.js]
 }
@@ -55,4 +69,27 @@ package "rate limit" {
 [commands/verify.js] --> [middleware/rateLimit.js] : per-user throttle
 [src/index.js message guard] --> [services/verificationStore.js] : getWallet/reverifyFromMap/tierHasTopicAccess
 [src/index.js message guard] --> [services/onChainReader.js] : determineTier (live)
+@enduml
+
+@startuml
+title Privilege/CORS/content-trust trace
+package "telegram-bot" {
+  [privilege decision\nindex.js::PROTECTED_ADMIN_IDS] as priv
+  [tier reader\nonChainReader.js::getSignerWallets] as tier
+  [verify CORS\nmiddleware/verifyCors.js] as cors
+  [verify API\nindex.js::verifyApp] as api
+  [channel sync\nhandlers/channelSync.js] as sync
+  [ask command\ncommands/ask.js] as ask
+  [AI service\nservices/skywalker.js] as ai
+  [text guard\nservices/telegramText.js] as text
+}
+[env config] --> priv : ADMIN_USER_IDS
+[env config / Safe RPC] --> tier : SIGNER_WALLETS / getOwners()
+tier --> priv : signer set (empty on failure)
+[browser Origin] --> cors : origin header
+cors --> api : exact allowlisted ACAO or none
+[channel_post] --> sync : trusted source only
+sync --> text : plain text <=4096
+ask --> ai : question
+ask --> text : answer
 @enduml
