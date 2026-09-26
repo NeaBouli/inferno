@@ -1,0 +1,44 @@
+@startuml
+actor User
+participant "commands/verify.js" as Cmd
+participant "middleware/rateLimit.js" as RL
+participant "services/nonceStore.js" as Nonce
+participant "services/verificationStore.js" as Store
+participant "Traefik (trusted proxy hop)" as Proxy
+participant "src/index.js verifyApp" as API
+participant "middleware/apiRateLimit.js" as ARL
+participant "services/onChainReader.js" as Chain
+participant "src/index.js message guard" as Gate
+
+User -> RL : /verify (private chat)
+RL -> Cmd : next()
+Cmd -> Nonce : createNonce(userId)
+Nonce --> Cmd : nonce (CSPRNG, TTL 10min)
+Cmd --> User : nonce via DM
+
+User -> Proxy : POST /api/verify {nonce, signature, wallet}
+Proxy -> ARL : forward + X-Forwarded-For (client IP)
+ARL -> API : next() [req.ip = client IP]
+API -> Nonce : claimNonce(nonce) [atomic, before any await]
+API -> Chain : determineTier(wallet)
+Chain --> API : tier
+API -> Store : setVerified(userId, wallet, tier) [unique wallet]
+API --> User : { success, tier }
+
+User -> Gate : message in protected topic
+Gate -> Store : getWallet / reverifyFromMap(userId)
+Gate -> Chain : determineTier(wallet) [live]
+Chain --> Gate : tier
+Gate -> Store : tierHasTopicAccess(tier, threadId)
+alt access granted
+  Gate -> Cmd : next() -> command handler runs
+else denied
+  Gate -> User : deleteMessage + DM reason
+end
+
+User -> RL : /unverify
+RL -> Cmd : next()
+Cmd -> Store : unverify(userId)
+Store --> Cmd : binding removed
+Cmd --> User : confirmation
+@enduml

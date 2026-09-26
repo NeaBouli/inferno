@@ -18,16 +18,17 @@ const banCommand      = require('./commands/ban');
 const warnCommand     = require('./commands/warn');
 const pinCommand      = require('./commands/pin');
 const priceCommand    = require('./commands/price');
-const { handleVerify, handleMyStatus } = require('./commands/verify');
+const { handleVerify, handleMyStatus, handleUnverify } = require('./commands/verify');
 const rulesCommand    = require('./commands/rules');
 
 // Verification System
 const express  = require('express');
 const { ethers } = require('ethers');
 const {
-  getNonce, consumeNonce, setVerified, isVerified: isUserVerified,
-  hasTopicAccess, autoRestoreAll, reverifyFromMap
+  setVerified, getWallet, isVerified: isUserVerified,
+  tierHasTopicAccess, autoRestoreAll, reverifyFromMap
 } = require('./services/verificationStore');
+const { claimNonce } = require('./services/nonceStore');
 const { determineTier } = require('./services/onChainReader');
 
 // Handlers
@@ -41,6 +42,7 @@ const { startBootstrapListener } = require('./services/bootstrapListener');
 
 // Middleware
 const rateLimit  = require('./middleware/rateLimit');
+const apiRateLimit = require('./middleware/apiRateLimit');
 const adminOnly  = require('./middleware/adminCheck');
 const { moderationMiddleware } = require('./services/moderation');
 
@@ -71,6 +73,65 @@ bot.use(moderationMiddleware());
 bot.on('new_chat_members', onNewMember);
 bot.action(/^verify_\d+$/, onVerifyCallback);
 
+// ── Protected Topics — 3-Tier Wallet Verification ────────────────────────────
+// Registered BEFORE the command handlers so a command posted in a protected
+// thread passes this gate first and cannot leak protected output (CWA-40).
+const PROTECTED_TOPICS = [58, 21, 23, 11]; // Core Dev, Council, Vote, Dev&Builder
+const PROTECTED_ADMIN_IDS = process.env.ADMIN_USER_IDS
+  ? process.env.ADMIN_USER_IDS.split(',').map(id => parseInt(id.trim()))
+  : [579949616];
+
+bot.on('message', async (ctx, next) => {
+  try {
+    const threadId = ctx.message?.message_thread_id;
+    if (!threadId || !PROTECTED_TOPICS.includes(threadId)) return next();
+    const userId = ctx.from?.id;
+    if (!userId) return next();
+    if (PROTECTED_ADMIN_IDS.includes(userId)) return next();
+    const member = await ctx.telegram.getChatMember(ctx.chat.id, userId);
+    if (['creator', 'administrator'].includes(member.status)) return next();
+
+    // Live tier re-derivation at every protected access decision (CWA-44):
+    // stored tier metadata is display data, never an authorization source.
+    let wallet = isUserVerified(userId) ? getWallet(userId) : null;
+    if (!wallet) {
+      // Post-restart recovery from the persisted wallet map
+      const restored = await reverifyFromMap(userId);
+      if (restored) wallet = getWallet(userId);
+    }
+
+    let access = false;
+    let tierUnavailable = false;
+    if (wallet) {
+      try {
+        const tier = await determineTier(wallet);
+        access = tierHasTopicAccess(tier, threadId);
+      } catch (e) {
+        // Fail closed when the current tier cannot be derived
+        tierUnavailable = true;
+        logger.warn({ err: e.message, userId }, 'Tier derivation failed — denying protected access');
+      }
+    }
+    if (access) return next();
+
+    await ctx.deleteMessage();
+    const reason = !wallet
+      ? 'Use /verify to link your wallet first.'
+      : tierUnavailable
+        ? 'Your wallet tier could not be checked right now. Please try again shortly.'
+        : 'Your wallet tier does not grant access to this topic.\n\nUse /mystatus to check your access level.';
+    try {
+      await ctx.telegram.sendMessage(
+        userId,
+        `🚫 *Access denied*\n\n${reason}\n\n🔐 Verify: https://ifrunit.tech/wiki/verify.html`,
+        { parse_mode: 'Markdown', disable_web_page_preview: true }
+      );
+    } catch (e) { /* user may have blocked DMs */ }
+  } catch (err) {
+    logger.error({ err: err.message }, 'Protected topic error');
+  }
+});
+
 // ── Commands ────────────────────────────────────────────────────────────────
 
 bot.command('start', startCommand);
@@ -86,6 +147,7 @@ bot.command('roadmap',    rateLimit('roadmap'),     roadmapCommand);
 bot.command('ask',        rateLimit('ask'),         askCommand);
 bot.command('price',      rateLimit('price'),       priceCommand);
 bot.command('verify',     rateLimit('verify'),      handleVerify);
+bot.command('unverify',   rateLimit('verify'),      handleUnverify);
 bot.command('mystatus',   rateLimit('verify'),      handleMyStatus);
 
 // Admin — Whitelist only (silent ignore für Nicht-Admins)
@@ -125,47 +187,6 @@ bot.on('channel_post', async (ctx) => {
   }
 });
 
-// ── Protected Topics — 3-Tier Wallet Verification ────────────────────────────
-const PROTECTED_TOPICS = [58, 21, 23, 11]; // Core Dev, Council, Vote, Dev&Builder
-const PROTECTED_ADMIN_IDS = process.env.ADMIN_USER_IDS
-  ? process.env.ADMIN_USER_IDS.split(',').map(id => parseInt(id.trim()))
-  : [579949616];
-
-bot.on('message', async (ctx, next) => {
-  try {
-    const threadId = ctx.message?.message_thread_id;
-    if (!threadId || !PROTECTED_TOPICS.includes(threadId)) return next();
-    const userId = ctx.from?.id;
-    if (!userId) return next();
-    if (PROTECTED_ADMIN_IDS.includes(userId)) return next();
-    const member = await ctx.telegram.getChatMember(ctx.chat.id, userId);
-    if (['creator', 'administrator'].includes(member.status)) return next();
-
-    // 3-Tier check: verified wallet with topic access?
-    if (hasTopicAccess(userId, threadId)) return next();
-
-    // Try on-demand re-verify from persistent wallet map (post-restart recovery)
-    if (!isUserVerified(userId)) {
-      const restored = await reverifyFromMap(userId);
-      if (restored && hasTopicAccess(userId, threadId)) return next();
-    }
-
-    await ctx.deleteMessage();
-    const reason = !isUserVerified(userId)
-      ? 'Use /verify to link your wallet first.'
-      : 'Your wallet tier does not grant access to this topic.\n\nUse /mystatus to check your access level.';
-    try {
-      await ctx.telegram.sendMessage(
-        userId,
-        `🚫 *Access denied*\n\n${reason}\n\n🔐 Verify: https://ifrunit.tech/wiki/verify.html`,
-        { parse_mode: 'Markdown', disable_web_page_preview: true }
-      );
-    } catch (e) { /* user may have blocked DMs */ }
-  } catch (err) {
-    logger.error({ err: err.message }, 'Protected topic error');
-  }
-});
-
 // ── Admin test commands ──────────────────────────────────────────────────────
 const { sendDailyWelcome } = require('./handlers/dailyWelcome');
 const { sendDailyBurnReport } = require('./handlers/dailyReport');
@@ -197,6 +218,22 @@ bot.on('text', async (ctx) => {
 
 // ── Verify API (Express) ─────────────────────────────────────────────────────
 const verifyApp = express();
+
+// Trusted-proxy policy (CWA-31): production serves this API as
+// verify-api.ifrunit.tech behind Traefik (TLS termination on the Hetzner host,
+// one proxy hop over the shared Docker network — internal/operations/TODO.md,
+// docs/POINTS_BACKEND_MIGRATION.md), so the client IP arrives via
+// X-Forwarded-For. Trust only the proxy hop: VERIFY_TRUST_PROXY pins the
+// trusted peers (comma-separated proxy-addr entries — IPs, CIDRs or names
+// like 'loopback'; default is the Docker network pool the Traefik container
+// speaks from). 'none' disables trust for direct exposure. A peer outside the
+// trusted list always gets its X-Forwarded-For ignored, so a directly
+// connecting attacker cannot spoof req.ip.
+const trustProxyEnv = (process.env.VERIFY_TRUST_PROXY || '172.16.0.0/12').trim();
+if (!/^(none|off|false)$/i.test(trustProxyEnv)) {
+  verifyApp.set('trust proxy', trustProxyEnv.split(',').map((s) => s.trim()).filter(Boolean));
+}
+
 verifyApp.use(express.json());
 verifyApp.use((req, res, next) => {
   const origin = req.headers.origin || '';
@@ -209,13 +246,22 @@ verifyApp.use((req, res, next) => {
   next();
 });
 
-verifyApp.post('/api/verify', async (req, res) => {
+// Per-IP throttle for the signature endpoint, keyed on req.ip as resolved by
+// the trusted-proxy policy above: the real client IP behind Traefik, the raw
+// socket peer on direct connections (CWA-31).
+const verifyApiLimiter = apiRateLimit({ windowMs: 10 * 60 * 1000, max: 10 });
+
+verifyApp.post('/api/verify', verifyApiLimiter, async (req, res) => {
   try {
     const { nonce, signature, wallet } = req.body;
     if (!nonce || !signature || !wallet)
       return res.status(400).json({ success: false, error: 'Missing fields' });
 
-    const nonceData = getNonce(nonce);
+    // Atomic claim before any await: the nonce is validated and deleted in one
+    // synchronous step, so a concurrent replay can never pass this check twice.
+    // The nonce stays burned on any downstream failure (fail closed) — the user
+    // requests a fresh code via /verify.
+    const nonceData = claimNonce(nonce);
     if (!nonceData)
       return res.status(400).json({ success: false, error: 'Invalid or expired code' });
 
@@ -229,10 +275,19 @@ verifyApp.post('/api/verify', async (req, res) => {
     if (recovered.toLowerCase() !== wallet.toLowerCase())
       return res.status(401).json({ success: false, error: 'Signature mismatch' });
 
-    consumeNonce(nonce);
-
     const tier = await determineTier(recovered);
-    setVerified(nonceData.userId, recovered, tier);
+    try {
+      // Enforces one-wallet-per-account; throws WALLET_CONFLICT otherwise (CWA-33)
+      setVerified(nonceData.userId, recovered, tier);
+    } catch (e) {
+      if (e.code === 'WALLET_CONFLICT') {
+        return res.status(409).json({
+          success: false,
+          error: 'Wallet already linked to another Telegram account. Run /unverify there first.'
+        });
+      }
+      throw e;
+    }
 
     const tierLabel = {
       signer: '🔑 Signer / Core Team', voter: '🗳️ IFR Holder / Voter',

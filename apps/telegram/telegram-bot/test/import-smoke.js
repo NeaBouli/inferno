@@ -35,6 +35,8 @@ const sourceFiles = [];
 const emptyWorkingDirectory = fs.mkdtempSync(
   path.join(os.tmpdir(), 'ifr-telegram-import-')
 );
+// Modules must never touch the real wallet map during the import smoke test.
+process.env.WALLET_MAP_PATH = path.join(emptyWorkingDirectory, 'wallet-map.json');
 
 function collectSourceFiles(directory) {
   for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
