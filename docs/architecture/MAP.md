@@ -1,10 +1,12 @@
-# Architecture Map — Telegram Bot Security Traces
+# Architecture Map — Security Traces
 
 Scope: the verification/authorization trace and the privilege/CORS/content-trust
 traces inside `apps/telegram/telegram-bot` (tasks
 INFERNO-SECURITY-S2A-TELEGRAM-STATUS-20260926,
 INFERNO-SECURITY-S2B-TELEGRAM-IDENTITY-20260926 and
-INFERNO-SECURITY-S2C-TELEGRAM-TRUST-20260926, integrated on one base).
+INFERNO-SECURITY-S2C-TELEGRAM-TRUST-20260926, integrated on one base), and the
+Creator Gateway login trace inside `apps/creator-gateway` (task
+INFERNO-SECURITY-S2D-CREATOR-AUTH-20260926).
 The rest of the repository is intentionally unmapped.
 
 ## 1. Grundidee
@@ -57,6 +59,34 @@ Trust-boundary trace:
    `src/services/telegramText.js::toPlainText` → `editMessageText` — Daten:
    LLM answer string → plain-text Telegram message ≤ 4096 chars, no parse_mode.
 
+Creator Gateway login trace (`apps/creator-gateway`):
+
+1. browser (+ optional SIWE bearer JWT) → `src/routes/auth.ts::GET /auth/google` →
+   `src/services/session-store.ts::createOAuthState` + HttpOnly/SameSite=Lax
+   initiator cookie (`cg_oauth`, Secure in production) — Daten: wallet only from
+   the verified bearer (query/body wallet rejected as untrusted input) → opaque
+   single-use state + stored verifier hash (CSPRNG, 10-min TTL)
+2. Google redirect → `src/routes/auth.ts::GET /auth/google/callback` →
+   initiator-cookie check + `src/services/session-store.ts::claimOAuthState`
+   (single-use, expiry-checked, verifier hash must match — missing-cookie,
+   cross-session, replay and expired attempts all fail),
+   `oauth2Client.getToken` and `src/services/session-store.ts::createYouTubeSession`
+   → `issueJwt` — Daten: state → stored wallet; Google tokens → server-side
+   session (1h TTL); JWT carries only `{ walletAddress?, sid }`
+3. browser → `src/routes/auth.ts::GET /auth/siwe/nonce` →
+   `src/services/session-store.ts::createSiweNonce` — Daten: → hex nonce
+   (single-use, 10-min TTL)
+4. browser → `src/routes/auth.ts::POST /auth/siwe/verify` →
+   `SiweMessage.verify({ signature, domain, time })` with exact URI/chain-ID
+   checks and `src/services/session-store.ts::claimSiweNonce` → `issueJwt` —
+   Daten: message + signature → JWT `{ walletAddress }`
+5. API request → `src/middleware/auth.ts::authMiddleware` (pinned HS256 verify)
+   → `src/routes/access.ts::GET /access/check` →
+   `src/services/session-store.ts::getYouTubeSession` +
+   `src/services/entitlement.ts::checkEntitlement`
+   (`services/lock-checker.ts` on-chain, `services/youtube-checker.ts` with the
+   server-held token) — Daten: JWT claims → granted/reasons
+
 ## 3. Module
 
 | Modul | Eine Aufgabe | Einstieg | Stand |
@@ -74,6 +104,14 @@ Trust-boundary trace:
 | ask command | AI answer delivered as untrusted plain text | `src/commands/ask.js::askCommand` | gebaut |
 | telegram text guard | control-char strip + 4096 truncation for outbound text | `src/services/telegramText.js::toPlainText` | gebaut |
 | AI service | LLM answer source (rate-limited, 500-char input cap) | `src/services/skywalker.js::askSkywalker` | gebaut |
+| gateway auth routes | SIWE + Google OAuth entry, JWT issuance with minimal claims | `apps/creator-gateway/src/routes/auth.ts` | gebaut |
+| gateway session/state store | browser-bound one-time OAuth state (cookie verifier hash) + SIWE nonces + server-side YouTube sessions | `apps/creator-gateway/src/services/session-store.ts` | gebaut |
+| gateway config | fail-closed env resolution, single-pair network default | `apps/creator-gateway/src/config/index.ts` | gebaut |
+| gateway auth middleware | pinned-algorithm JWT verification | `apps/creator-gateway/src/middleware/auth.ts` | gebaut |
+| gateway access route | entitlement decision endpoint | `apps/creator-gateway/src/routes/access.ts` | gebaut |
+| gateway entitlement | OR/AND decision over IFR lock + YouTube membership | `apps/creator-gateway/src/services/entitlement.ts` | gebaut |
+| gateway lock checker | on-chain IFRLock reads, fail-closed | `apps/creator-gateway/src/services/lock-checker.ts` | gebaut |
+| gateway youtube checker | membership check with server-held token, fail-closed | `apps/creator-gateway/src/services/youtube-checker.ts` | gebaut |
 
 ## 4. Verdrahtung
 
@@ -103,6 +141,24 @@ Trust-boundary trace:
   after a successful send to the configured community group (CWA-45).
 - `askCommand` sends the AI answer through `toPlainText` with the Telegram
   4096-character limit and no Markdown/HTML parsing (CWA-45).
+- Creator Gateway: the legacy `POST /auth/wallet` route is removed; SIWE is the
+  single canonical wallet-auth flow (CWA-28).
+- Google OAuth state is a server-side single-use verifier with a 10-min TTL,
+  bound to the initiating browser via an HttpOnly/SameSite=Lax cookie (Secure in
+  production) whose SHA-256 hash is stored with the state; the callback rejects
+  missing, foreign, replayed or expired cookie bindings. A wallet enters the
+  flow only from a verified SIWE bearer JWT — `?wallet=` is rejected as
+  untrusted input, so a Google login can never carry an unproven wallet
+  (CWA-29).
+- SIWE verification binds the exact configured domain, URI, chain ID,
+  single-use nonce and time window; `SIWE_DOMAIN`/`SIWE_URI` are required with
+  no fallback (CWA-30).
+- Google access/refresh tokens stay in the server-side session store (1h TTL,
+  fail-closed afterwards); JWTs carry only `{ walletAddress?, sid }` and
+  provider tokens never appear in responses (CWA-41).
+- JWT sign/verify pin HS256; `JWT_SECRET` is required at startup in every
+  environment; `CHAIN_ID` and `IFRLOCK_ADDRESS` must be configured together or
+  default as one consistent Sepolia pair (CWA-42).
 
 ## 5. Widerspruch und Lücken
 
@@ -115,6 +171,15 @@ Trust-boundary trace:
   explicit (`isTrustedChannelPost`) instead of accidental.
 - Signer tier during a Safe RPC outage without `SIGNER_WALLETS` degrades to
   `community` for everyone — deliberate fail-closed availability trade-off.
+- Creator Gateway session/state stores are in-memory and single-process, like
+  the nonce store they replace; horizontal scaling would need a shared store
+  (out of scope for this block).
+- YouTube session TTL is fixed at 1h (Google access-token lifetime); after
+  expiry `hasYouTubeAuth` degrades to false — fail-closed, same effective
+  semantics as the removed JWT-carried token.
+- Concurrent Google flows from one browser share the single `cg_oauth`
+  verifier cookie: the latest flow wins, earlier states fail closed at the
+  callback (one verifier per browser, standard cookie-bound OAuth).
 
 ## 6. Diagrammdateien
 
@@ -158,6 +223,15 @@ mindmap
       gebaut: services/skywalker.js::askSkywalker
     telegram text guard
       gebaut: services/telegramText.js::toPlainText
+    creator-gateway login
+      gebaut: routes/auth.ts::GET /auth/google + /auth/google/callback
+      gebaut: routes/auth.ts::GET /auth/siwe/nonce + POST /auth/siwe/verify
+      gebaut: services/session-store.ts::createOAuthState/claimOAuthState
+      gebaut: services/session-store.ts::createSiweNonce/claimSiweNonce
+      gebaut: services/session-store.ts::createYouTubeSession/getYouTubeSession
+      gebaut: middleware/auth.ts::authMiddleware
+      gebaut: routes/access.ts::GET /access/check
+      gebaut: services/entitlement.ts::checkEntitlement
 ```
 
 ## 7. Nächster Schritt
