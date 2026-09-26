@@ -93,3 +93,27 @@ sync --> text : plain text <=4096
 ask --> ai : question
 ask --> text : answer
 @enduml
+
+@startuml
+title Benefits seller authorization/session trace
+package "benefits-network backend" {
+  [config.ts + sellerAuthConfigPolicy.ts] as bcfg
+  [routes/seller.ts] as sroutes
+  [routes/sessions.ts] as sessroutes
+  [routes/attest.ts] as attroute
+  [routes/businesses.ts] as bizroutes
+  [services/sellerAuth.ts] as sauth
+  [services/sellerAuthorizationChallenge.ts] as schal
+  [services/sessionService.ts] as sess
+  [middleware/rateLimiter.ts] as rl
+}
+bcfg --> sauth : resolveSellerAuthContext(SELLER_AUTH_DOMAIN, CHAIN_ID)
+sroutes --> schal : issueSellerAuthorizationChallenge
+sroutes --> sauth : verifySellerSignature
+sroutes --> schal : consumeSellerAuthorizationChallenge
+sessroutes --> sauth : verifySellerSignature
+sessroutes --> sess : getSession (read-only)
+attroute --> sess : attest
+rl --> sessroutes : sessionStatusRateLimiter
+rl --> bizroutes : discoveryRateLimiter
+@enduml

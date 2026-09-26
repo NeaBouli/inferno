@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import { getRateLimitTopologyIssues } from './services/rateLimitTopology';
 import { getAdminSecretPolicyIssue } from './services/adminSecretPolicy';
 import { getSellerBusinessLimitConfigIssue } from './services/sellerLimitPolicy';
+import { getSellerAuthConfigIssues } from './services/sellerAuthConfigPolicy';
 
 dotenv.config();
 
@@ -17,6 +18,11 @@ const optionalUrl = z.preprocess(
 );
 
 const envSchema = z.object({
+  NODE_ENV: z.string().optional(),
+  SELLER_AUTH_DOMAIN: z.preprocess(
+    (value) => value === '' ? undefined : value,
+    z.string().optional()
+  ),
   CHAIN_ID: z.coerce.number().int().positive().default(11155111),
   RPC_URL: z.string().url(),
   IFR_TOKEN_ADDRESS: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
@@ -34,6 +40,17 @@ const envSchema = z.object({
   RATE_LIMIT_REDIS_URL: optionalUrl,
   BACKEND_REPLICA_COUNT: z.coerce.number().int().min(1).max(100).default(1),
 }).superRefine((env, context) => {
+  for (const issue of getSellerAuthConfigIssues({
+    nodeEnv: env.NODE_ENV,
+    rawChainId: process.env.CHAIN_ID,
+    sellerAuthDomain: env.SELLER_AUTH_DOMAIN,
+  })) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: [issue.path],
+      message: issue.message,
+    });
+  }
   const sellerBusinessLimitIssue = getSellerBusinessLimitConfigIssue(
     env.MAX_ACTIVE_SELLER_BUSINESSES_PER_WALLET,
     env.MAX_TOTAL_SELLER_BUSINESSES_PER_WALLET
@@ -74,4 +91,8 @@ if (!parsed.success) {
   process.exit(1);
 }
 
-export const config = parsed.data;
+export const config = {
+  ...parsed.data,
+  // Development default only; production refuses to start without an explicit value.
+  SELLER_AUTH_DOMAIN: parsed.data.SELLER_AUTH_DOMAIN ?? 'localhost',
+};

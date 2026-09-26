@@ -83,3 +83,30 @@ AI --> Ask : untrusted answer string
 Ask -> Text : toPlainText(answer, 4096 - header)
 Ask -> Tg : editMessageText(plain text, no parse_mode)
 @enduml
+
+@startuml
+title Benefits seller authorization (read or mutation) and attest budget
+actor Seller
+participant "routes/seller.ts" as Routes
+participant "sellerAuthorizationChallenge.ts" as Chal
+participant "sellerAuth.ts" as Auth
+participant "sessionService.ts" as Sess
+actor Customer
+Seller -> Routes : GET /auth-message(action, businessId, walletAddress, scope?)
+Routes -> Chal : issueSellerAuthorizationChallenge (bounded prune + insert nonce)
+Routes --> Seller : message(Domain, Chain ID, Scope, Nonce, Timestamp, Expires)
+Seller -> Routes : request + x-ifr-wallet/signature/timestamp/nonce
+Routes -> Auth : verifySellerSignature(context, action, business, scope, nonce)
+Routes -> Chal : consumeSellerAuthorizationChallenge (updateMany count == 1)
+alt replayed or concurrent duplicate
+  Routes --> Seller : 401 already used
+else first use
+  Routes --> Seller : 200 / action result
+end
+Customer -> Sess : attest(sessionId, signature)
+alt signature not recoverable
+  Sess -> Sess : assertAttestable (read-only, no attempt consumed)
+else wallet recovered
+  Sess -> Sess : reserveAttestAttempt (locked tx, attempt + wallet bind)
+end
+@enduml

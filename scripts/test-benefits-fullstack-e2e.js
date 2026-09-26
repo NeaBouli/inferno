@@ -86,6 +86,7 @@ async function configureRuntime() {
     ...process.env,
     NODE_ENV: 'production',
     CHAIN_ID: '1',
+    SELLER_AUTH_DOMAIN: 'shop.example.test',
     RPC_URL: 'http://127.0.0.1:1',
     IFRLOCK_ADDRESS: zeroAddress,
     IFR_TOKEN_ADDRESS: '0x0000000000000000000000000000000000000002',
@@ -189,10 +190,9 @@ async function fetchJson(urlPath, options = {}) {
 }
 
 async function sellerAuth(wallet, action, businessId, scope) {
-  const query = new URLSearchParams({ action, businessId });
+  const query = new URLSearchParams({ action, businessId, walletAddress: wallet.address });
   const mutatingActions = new Set(['business:create', 'products:create', 'rules:create']);
   if (mutatingActions.has(action)) {
-    query.set('walletAddress', wallet.address);
     query.set('scope', scope || businessId);
   }
   const challenge = await fetchJson(`/api/seller/auth-message?${query.toString()}`);
