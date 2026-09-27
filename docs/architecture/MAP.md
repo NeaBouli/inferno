@@ -8,7 +8,10 @@ INFERNO-SECURITY-S2C-TELEGRAM-TRUST-20260926, integrated on one base), and the
 Creator Gateway login trace inside `apps/creator-gateway` (task
 INFERNO-SECURITY-S2D-CREATOR-AUTH-20260926), and the Benefits seller
 authorization/session trace inside `apps/benefits-network/backend` (task
-INFERNO-SECURITY-S2E-BENEFITS-SELLER-AUTH-20260927).
+INFERNO-SECURITY-S2E-BENEFITS-SELLER-AUTH-20260927), and the shared Web3
+browser runtime trace `docs/web3/index.html` → `docs/web3-wallet-core.js` /
+`docs/assets/wallet-core.js` → `docs/assets/ifr-state.js` → Web3 status
+renderers (task INFERNO-SECURITY-S2F-WEB3-RUNTIME-20260927).
 The rest of the repository is intentionally unmapped.
 
 ## 1. Grundidee
@@ -117,6 +120,22 @@ Benefits seller authorization/session trace (`apps/benefits-network/backend`):
 6. public catalog → `src/routes/businesses.ts::GET /:id{,/rules,/products}`
    (`discoveryRateLimiter`) — Daten: business reference → public profile/rules/products
 
+Web3 browser runtime trace (`docs/web3/index.html`, landing + wiki pages):
+
+1. page `<script>` tags → `docs/web3-wallet-core.js` (`/web3/` dApp) or
+   `docs/assets/wallet-core.js` (landing/wiki) `window.IFRWallet` — Daten: EIP-1193
+   provider (injected or WalletConnect) → ethers BrowserProvider/Signer
+2. `IFRWallet._loadWalletConnect` → same-origin pinned artifact
+   `docs/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js` — Daten:
+   → `EthereumProvider.init` (no runtime third-party code fetch, CWA-47)
+3. page → `docs/assets/ifr-state.js::load` (bootstrap/token/lock reads) — Daten:
+   RPC → state; aggregate and individual bootstrap read failure yields
+   `bootstrapStatus.available === false` with all value fields null, never a
+   fabricated chain value (CWA-48)
+4. `IFRState` → `docs/wiki/bootstrap.html::bwUpdateUI/bwUpdateStats/bwUpdateEstimate`
+   — Daten: state → rendered stats; unavailable status renders "—" and leaves
+   claim/refund write controls hidden (fail closed)
+
 ## 3. Module
 
 | Modul | Eine Aufgabe | Einstieg | Stand |
@@ -148,6 +167,11 @@ Benefits seller authorization/session trace (`apps/benefits-network/backend`):
 | benefits seller routes | seller API entry, challenge issuance, owner checks | `apps/benefits-network/backend/src/routes/seller.ts::requireSellerAuth` | gebaut |
 | benefits session service | session status read, attest attempt budget, redeem | `apps/benefits-network/backend/src/services/sessionService.ts` | gebaut |
 | benefits public rate limits | per-IP limits for public reads and polling | `apps/benefits-network/backend/src/middleware/rateLimiter.ts` | gebaut |
+| web3 wallet core (dApp) | provider discovery, WalletConnect v2 session lifecycle, mainnet fail-closed connect | `docs/web3-wallet-core.js::IFRWallet` | gebaut |
+| wallet core (landing/wiki) | shared minimalist wallet connect, desktop-only policy | `docs/assets/wallet-core.js::IFRWallet` | gebaut |
+| walletconnect provider artifact | pinned, repository-owned, hash-gated WC provider bundle served same-origin | `docs/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js` | gebaut |
+| ifr state reader | bootstrap/token/lock reads with explicit unavailable failure state | `docs/assets/ifr-state.js::load` | gebaut |
+| bootstrap status renderer | stats + claim/refund UI, fail-closed on unavailable status | `docs/wiki/bootstrap.html::bwUpdateUI` | gebaut |
 
 ## 4. Verdrahtung
 
@@ -247,6 +271,17 @@ Benefits seller authorization/session trace (`apps/benefits-network/backend`):
   challenge row (existing client contract); it creates no session state and
   is IP rate-limited. Stale open sessions are only persisted as EXPIRED on
   attest/redeem; seller history may still show PENDING for untouched ones.
+- Web3 runtime: both `IFRWallet` implementations lazy-`import()` the WalletConnect
+  provider from the same-origin pinned artifact
+  `docs/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js`; the web3
+  host CSP `script-src` no longer allows any third-party host (CWA-47). The
+  artifact is reproducible from `infra/web3/walletconnect-provider/` and its
+  SHA-256 is gate-enforced.
+- `ifr-state.js::load` marks bootstrap status `available: false` with null
+  values when both the aggregate and the individual reads fail; the bootstrap
+  renderer shows "—" and never enables claim/refund from unavailable state
+  (CWA-48). Injected-wallet connect, wrong-chain fail-closed behavior,
+  disconnect/reconnect and contract addresses are unchanged.
 
 ## 6. Diagrammdateien
 
@@ -310,6 +345,12 @@ mindmap
       gebaut: services/sessionService.ts::getSession
       gebaut: services/sessionService.ts::attest/assertAttestable/reserveAttestAttempt
       offen: per-wallet attest budget
+    web3 browser runtime
+      gebaut: docs/web3-wallet-core.js::IFRWallet
+      gebaut: docs/assets/wallet-core.js::IFRWallet
+      gebaut: docs/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js
+      gebaut: docs/assets/ifr-state.js::load
+      gebaut: docs/wiki/bootstrap.html::bwUpdateUI
 ```
 
 ## 7. Nächster Schritt
@@ -317,3 +358,9 @@ mindmap
 Modul: verification store + topic gate. Hop 6 der Verification-Spur (guard re-derives
 tier live). Unberührt bleiben: `services/moderation.js`, `services/onchain.js`, alle
 anderen Commands, Deployment-Dateien und das oeffentliche CWA-Register.
+
+Für die Web3-Browser-Runtime (S2F): Modul `web3 wallet core (dApp)` + `ifr state
+reader`; Hop 2 (`_loadWalletConnect` → provider artifact, CWA-47) und Hop 3→4
+(`ifr-state.js::load` → `bootstrap.html` renderer, CWA-48). Unberührt bleiben:
+write-flow contracts, Lending/Commitment UIs, Benefits-Flächen und die öffentlichen
+Remediation-Totals.

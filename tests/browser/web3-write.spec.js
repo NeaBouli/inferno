@@ -556,11 +556,10 @@ test("WalletConnect initialization can be retried after a transient loader failu
   const context = await browser.newContext({ serviceWorkers: "block" });
   const warnings = [];
   try {
-    await context.route("https://esm.sh/@walletconnect/ethereum-provider@2.17.3", async (route) => {
+    await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js", async (route) => {
       await route.fulfill({
         status: 200,
         contentType: "application/javascript",
-        headers: { "Access-Control-Allow-Origin": "*" },
         body: "export const unavailable = true;",
       });
     });
@@ -603,11 +602,10 @@ test("persisted WalletConnect wrong-network recovery fails closed without an unh
   const context = await browser.newContext({ serviceWorkers: "block" });
   const pageErrors = [];
   try {
-    await context.route("https://esm.sh/@walletconnect/ethereum-provider@2.17.3", async (route) => {
+    await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js", async (route) => {
       await route.fulfill({
         status: 200,
         contentType: "application/javascript",
-        headers: { "Access-Control-Allow-Origin": "*" },
         body: `
           const listeners = new Map();
           const provider = {
@@ -763,6 +761,89 @@ test("self-hosted Ethers asset matches the published 6.17.0 bundle", () => {
   );
 });
 
+test("self-hosted WalletConnect artifact matches the recorded 2.17.3 build", () => {
+  const asset = readFileSync("docs/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js");
+  expect(createHash("sha256").update(asset).digest("hex")).toBe(
+    "30273eb8eb78e88e29ecdb73606fa3e41e66a646a2b33f5c864014a065c709fc",
+  );
+});
+
+test("self-hosted WalletConnect artifact executes in the browser and exposes EthereumProvider", async ({ browser }) => {
+  const context = await browser.newContext({ serviceWorkers: "block" });
+  const pageErrors = [];
+  try {
+    const page = await context.newPage();
+    page.on("pageerror", (error) => pageErrors.push(error.message));
+    await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+    const shape = await page.evaluate(async () => {
+      const mod = await import("/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js");
+      const EthereumProvider = mod.EthereumProvider || mod.default;
+      return {
+        hasExport: Boolean(EthereumProvider),
+        hasInit: Boolean(EthereumProvider && typeof EthereumProvider.init === "function"),
+      };
+    });
+    expect(shape).toEqual({ hasExport: true, hasInit: true });
+    expect(pageErrors).toEqual([]);
+  } finally {
+    await context.close();
+  }
+});
+
+test("WalletConnect connect loads the provider only from the pinned same-origin artifact", async ({ browser }) => {
+  const context = await browser.newContext({ serviceWorkers: "block" });
+  const pageErrors = [];
+  try {
+    const artifactRequests = [];
+    const thirdPartyScriptRequests = [];
+    await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js", async (route) => {
+      artifactRequests.push(route.request().url());
+      await route.fulfill({
+        status: 200,
+        contentType: "application/javascript",
+        body: `
+          const provider = {
+            session: null,
+            accounts: ["${ACCOUNT}"],
+            enable: async () => ["${ACCOUNT}"],
+            request: async ({ method }) => {
+              if (method === "eth_chainId") return "0x1";
+              if (method === "eth_accounts" || method === "eth_requestAccounts") return ["${ACCOUNT}"];
+              if (method === "net_version") return "1";
+              if (method === "eth_blockNumber") return "0x1";
+              if (method === "eth_getBalance") return "0x0";
+              if (method === "eth_call") return "0x" + "00".repeat(32);
+              return null;
+            },
+            on: () => {},
+            removeListener: () => {},
+            disconnect: async () => null,
+          };
+          export const EthereumProvider = { init: async () => provider };
+        `,
+      });
+    });
+    const page = await context.newPage();
+    page.on("pageerror", (error) => pageErrors.push(error.message));
+    page.on("request", (request) => {
+      const url = request.url();
+      if (request.resourceType() === "script" && !url.startsWith("http://localhost:8787")) {
+        thirdPartyScriptRequests.push(url);
+      }
+      if (/esm\.sh|jsdelivr|unpkg|cdnjs/i.test(url)) thirdPartyScriptRequests.push(url);
+    });
+    await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+    await page.evaluate(() => { delete window.ethereum; });
+    const address = await page.evaluate(() => window.IFRWallet.connectWalletConnect());
+    expect(address).toBe(ACCOUNT);
+    expect(artifactRequests).toEqual(["http://localhost:8787/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js"]);
+    expect(thirdPartyScriptRequests).toEqual([]);
+    expect(pageErrors).toEqual([]);
+  } finally {
+    await context.close();
+  }
+});
+
 test("Add IFR to wallet submits the canonical token metadata", async ({ browser }) => {
   const { context, page, writes, pageErrors } = await preparePage(browser);
   await page.goto("/web3/", { waitUntil: "domcontentloaded" });
@@ -808,7 +889,7 @@ test("Android 9 stays in browser mode instead of launching an incompatible WebAP
 
 test("Web3 service worker bounds offline navigation before using the cache", () => {
   const source = readFileSync("docs/web3-sw.js", "utf8");
-  expect(source).toContain('const CACHE_NAME = "ifr-web3-v15"');
+  expect(source).toContain('const CACHE_NAME = "ifr-web3-v16"');
   expect(source).toContain("const NAVIGATION_TIMEOUT_MS = 5000");
   expect(source).toContain("fetchNavigation(request)");
   expect(source).toContain('fetch(request, { cache: "no-store", signal: controller.signal })');

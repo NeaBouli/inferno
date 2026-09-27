@@ -34,6 +34,8 @@ on:
       - 'scripts/test-wiki-jsonld.cjs'
       - 'scripts/test-surface-routing.cjs'
       - 'scripts/test-web3-headers.cjs'
+      - 'scripts/check-web3-wallet-runtime.cjs'
+      - 'scripts/test-ifr-state-unavailable.cjs'
       - 'scripts/test-security-reporting-config.cjs'
       - 'scripts/check-browser-ethers6.cjs'
       - '.github/ISSUE_TEMPLATE/**'
@@ -74,6 +76,8 @@ on:
       - 'scripts/test-wiki-head-integrity.cjs'
       - 'scripts/test-surface-routing.cjs'
       - 'scripts/test-web3-headers.cjs'
+      - 'scripts/check-web3-wallet-runtime.cjs'
+      - 'scripts/test-ifr-state-unavailable.cjs'
       - 'scripts/test-security-reporting-config.cjs'
       - 'scripts/check-browser-ethers6.cjs'
       - '.github/ISSUE_TEMPLATE/**'
@@ -231,6 +235,9 @@ jobs:
 
       - name: Check Web3 serving-layer security headers contract
         run: npm run test:web3-headers
+
+      - name: Check Web3 wallet runtime (artifact integrity, no remote imports, unavailable state)
+        run: npm run test:web3-wallet-runtime
 
       - name: Check browser Ethers 6 baseline
         run: npm run test:browser-ethers6
