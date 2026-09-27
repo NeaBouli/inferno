@@ -56,7 +56,7 @@ const currentBaseline = [
   "Current repository verification",
   "Hardhat `3.15.0`",
   "contracts `644/644`",
-  "`24/24` passed",
+  "`27/27` passed",
   "8 low transitive development-tool findings",
   "Benefits physical device/wallet acceptance remains `1/10`",
   "LendingVault.ifrPriceWei = 0",

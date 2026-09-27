@@ -46,8 +46,30 @@ LiquidityReserve row was refreshed at block `25918433`:
 | Benefits embedded wallet (`apps/benefits-wallet-prototype`) | Isolated prototype; not used by production and not approved for custody or recovery. |
 | IFR SDK (`apps/sdk`) | Tested local package; public npm publication remains a separate release gate. |
 | Dashboard and governance dashboard | Repository applications; not represented as the primary production user interface. |
-| Creator Gateway, Points Backend and AI Copilot | Implemented repository services with their own configuration/deployment requirements; availability must not be inferred from source presence alone. |
+| Points Backend, AI Copilot and Telegram bot | Deployed services listed under Deployed Application Inventory below. |
+| Creator Gateway | Implemented repository service; the repository holds no production deployment record, so availability must not be inferred from source presence alone. |
 | Admin console and investor web placeholders | Not implemented applications. |
+
+## Deployed Application Inventory
+
+The "four" public surfaces in the table above (Landing, Wiki, Web3, IFR
+Benefits) are what users open directly. They run as seven deployment units.
+The repository evidence below shows where each unit is configured. It records
+deployment, not current health: live availability needs the release/health
+evidence of the respective deploy.
+
+| # | Deployment unit | Host | Repository evidence |
+| --- | --- | --- | --- |
+| 1 | Landing and Wiki (static, GitHub Pages) | `ifrunit.tech` | `docs/CNAME` |
+| 2 | Web3 static PWA (nginx) | `web3.ifrunit.tech` | `infra/web3/web3-security-headers.conf` |
+| 3 | IFR Benefits frontend | `shop.ifrunit.tech` | `scripts/deploy-benefits-network.sh` |
+| 4 | IFR Benefits backend | `shop.ifrunit.tech/api` | `scripts/deploy-benefits-network.sh` |
+| 5 | Points Backend | `points-api.ifrunit.tech` | `docs/POINTS_BACKEND_MIGRATION.md`, `docs/runbooks/SERVER_CAPACITY_RUNBOOK.md` |
+| 6 | AI Copilot | `copilot-api.ifrunit.tech` | embedded by Web3 via `infra/web3/web3-security-headers.conf` |
+| 7 | Telegram bot and wallet-verification API | `verify-api.ifrunit.tech` | `docs/wiki/verify.html` |
+
+Creator Gateway, the dashboards, the SDK and the embedded-wallet prototype are
+not deployment units in this inventory.
 
 ## Verification Evidence
 
@@ -58,8 +80,8 @@ browser/application verification retained by the release gates:
   LendingVault fee-exemption deficit regressions.
 - Generator Engine: `30/30` passing.
 - IFR SDK legacy suite: `36/36` passing.
-- Landing/Wiki wallet browser suite: `20/20` passing.
-- Web3 write-path browser suite: `24/24` passing.
+- Landing/Wiki wallet browser suite: `24/24` passing.
+- Web3 write-path browser suite: `27/27` passing.
 - Surface routing, wiki head integrity, wiki RAG freshness, content trust,
   status baseline and dependency-advisory checks: passing.
 - Benefits full preflight: frontend/backend dependency audits, TypeScript,

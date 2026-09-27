@@ -24,8 +24,8 @@ governance-gated contract path is active.
   longer active root dependencies; native Hardhat 3 coverage is used.
 - Current repository verification: contracts `644/644`, Generator Engine
   `30/30`, IFR SDK `36/36`.
-- Landing/Wiki wallet browser tests `20/20` and Web3 write-path browser tests
-  `24/24` passed. The complete Benefits preflight passed.
+- Landing/Wiki wallet browser tests `24/24` and Web3 write-path browser tests
+  `27/27` passed. The complete Benefits preflight passed.
 - Benefits physical device/wallet acceptance remains `1/10` passed and `9`
   pending; this is not represented as complete production acceptance.
 - Mainnet borrowing remains disabled with `LendingVault.ifrPriceWei = 0`.
@@ -53,7 +53,10 @@ the current operational state and must not override the baseline above.
 
 ### On-Chain (Ethereum Mainnet)
 
-17 on-chain components (14 deployed contracts + 3 Gnosis Safes). All verified on Etherscan. Ownership transferred to Governance (48h Timelock).
+17 documented on-chain components (14 protocol contracts + 3 Gnosis Safes); the counted list is in
+[`DEPLOYMENTS.md`](docs/DEPLOYMENTS.md#canonical-mainnet-component-count-17). The table below is the
+10-row March 2026 launch snapshot, not the full inventory. Current ownership, including the
+documented exceptions, is recorded in the same file.
 
 | # | Contract | Address | Status |
 |---|----------|---------|--------|
