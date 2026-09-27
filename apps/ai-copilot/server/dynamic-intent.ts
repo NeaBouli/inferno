@@ -38,6 +38,16 @@ const PAST_TENSE = /\b(was|were|did)\b/i;
 const DOCUMENTATION =
   /\b(how does|how do|how to|what is impermanent|what are the risks|explain|mechanism|concept|guide|tutorial|why|range|difference between|price impact|fee ratio|value proposition|what value (?:does|do|can|will)|determined?|determines)\b/i;
 
+// Procedural "how do I / how to" questions stay documentation even with
+// time wording ("How do I add liquidity today?"): the time word describes
+// when the user acts, not a current value. A named quantity or a concrete
+// ETH amount keeps the question on the fail-closed path.
+const PROCEDURAL =
+  /\b(how (?:do|can|should|would) (?:i|we|you|one)|how to|wie (?:kann|muss|soll|füge|stelle) ich)\b/i;
+
+const CURRENT_QUANTITY =
+  /\b(reserves?|ratio|amount|depth|tvl|price|spot|quote|worth|value|market ?cap|mcap|fdv|how much|how many|wie viele?|kurs|preis|wert|menge|betrag|balance|guthaben|supply|burn(?:ed|t)?|locked|rate|apr|apy)\b/i;
+
 interface IntentRule {
   intent: DynamicDataIntent;
   topic: RegExp;
@@ -136,6 +146,13 @@ const RULES: IntentRule[] = [
  */
 export function classifyDynamicIntent(message: string): DynamicDataIntent | null {
   if (!message || typeof message !== "string") return null;
+  if (
+    PROCEDURAL.test(message) &&
+    !CURRENT_QUANTITY.test(message) &&
+    !ETH_AMOUNT.test(message)
+  ) {
+    return null;
+  }
 
   const current = EXPLICIT_CURRENT.test(message) || ETH_AMOUNT.test(message);
   if (!current && (HISTORICAL.test(message) || DOCUMENTATION.test(message))) {
