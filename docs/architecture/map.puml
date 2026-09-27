@@ -131,3 +131,58 @@ proute --> pdb : prisma.$transaction
 proute --> psigner : signVoucher
 proute --> pdb : findFirst(nonce)
 @enduml
+
+@startmindmap
+* IFR Copilot chat
+** copilot-server
+*** gebaut: server/index.ts::app.post("/api/chat")
+** dynamic-intent
+*** gebaut: server/dynamic-intent.ts::classifyDynamicIntent
+*** gebaut: server/dynamic-intent.ts::buildDynamicDataFallback
+** prompt-policy
+*** gebaut: src/context/system-prompts.ts::SYSTEM_PROMPTS
+** knowledge
+*** gebaut: src/context/ifr-knowledge.ts::getIFRKnowledge
+** tier-policy
+*** gebaut: src/context/copilot-policy.ts
+** wiki-rag
+*** gebaut: server/wiki-rag.ts::buildSystemPrompt
+** live-wiki
+*** gebaut: server/live-wiki.ts::LiveWikiRefresher
+** surface-context
+*** gebaut: server/surface-context.ts::buildSurfaceContext
+** budget
+*** gebaut: server/budget.ts::DailyBudget
+@endmindmap
+
+@startuml
+package "copilot-server" {
+  [server/index.ts::chat]
+}
+package "dynamic-intent" {
+  [server/dynamic-intent.ts::classifyDynamicIntent]
+  [server/dynamic-intent.ts::buildDynamicDataFallback]
+}
+package "prompt-policy" {
+  [system-prompts.ts::SYSTEM_PROMPTS]
+}
+package "wiki-rag" {
+  [wiki-rag.ts::buildSystemPrompt]
+}
+package "live-wiki" {
+  [live-wiki.ts::LiveWikiRefresher]
+}
+package "surface-context" {
+  [surface-context.ts::buildSurfaceContext]
+}
+package "budget" {
+  [budget.ts::DailyBudget]
+}
+[server/index.ts::chat] --> [server/dynamic-intent.ts::classifyDynamicIntent] : last user message
+[server/dynamic-intent.ts::classifyDynamicIntent] --> [server/dynamic-intent.ts::buildDynamicDataFallback] : intent class
+[server/index.ts::chat] --> [system-prompts.ts::SYSTEM_PROMPTS] : unguarded request
+[server/index.ts::chat] --> [wiki-rag.ts::buildSystemPrompt] : mode + docs
+[server/index.ts::chat] --> [live-wiki.ts::LiveWikiRefresher] : getContext()
+[server/index.ts::chat] --> [surface-context.ts::buildSurfaceContext] : surface
+[server/index.ts::chat] --> [budget.ts::DailyBudget] : tryReserve (unguarded only)
+@enduml
