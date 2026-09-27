@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const assert = require("node:assert/strict");
+const { spawnSync } = require("node:child_process");
 const fs = require("node:fs");
 const path = require("node:path");
 const {
@@ -84,6 +85,53 @@ assert.match(copilotCi, /^  workflow_dispatch:/m, "AI Copilot CI must be dispatc
 
 for (const section of ["## Preflight", "## Release", "## Health", "## Functional smoke", "## Rollback", "## Fail-closed"]) {
   assert.ok(runbook.includes(section), `runbook must document ${section}`);
+}
+
+// --- Trusted SHA guard: presence, ordering, fail-closed behavior -------------
+
+const GUARD_NAME = "name: Require release SHA to equal dispatched commit";
+const guardScripts = [preflightJob, releaseJob].map((job, i) => {
+  const label = i === 0 ? "preflight" : "release";
+  const jobSteps = job.split(/^      - /m);
+  assert.equal(jobSteps.filter((s) => s.includes(GUARD_NAME)).length, 1, `${label} job must have exactly one SHA guard`);
+  assert.ok(jobSteps[1].startsWith(GUARD_NAME), `${label} SHA guard must be the first step`);
+  const firstInputUse = jobSteps.findIndex((s, idx) => idx > 1 && /uses: actions\/checkout@|inputs\.sha|run: node /.test(s));
+  assert.ok(firstInputUse > 1, `${label} SHA guard must precede checkout and scripts from inputs.sha`);
+  assert.ok(jobSteps[firstInputUse].includes("uses: actions/checkout@"), `${label} first step after the guard must be the checkout`);
+  const guardStep = jobSteps[1];
+  assert.match(guardStep, /^        shell: bash$/m, `${label} SHA guard must run in bash`);
+  assert.match(guardStep, /^          RELEASE_SHA: \$\{\{ inputs\.sha \}\}$/m, `${label} SHA guard must read inputs.sha via env`);
+  assert.doesNotMatch(guardStep, /continue-on-error|\bif:/, `${label} SHA guard must not be skippable`);
+  const body = guardStep.split(/^        run: \|\n/m)[1];
+  assert.ok(body, `${label} SHA guard must have a run block`);
+  return body.replace(/^ {10}/gm, "");
+});
+assert.equal(guardScripts[0], guardScripts[1], "both jobs must run the identical SHA guard");
+
+const runGuard = (releaseSha, githubSha) =>
+  spawnSync("bash", ["-e", "-c", guardScripts[0]], {
+    env: { PATH: process.env.PATH, RELEASE_SHA: releaseSha, GITHUB_SHA: githubSha },
+    encoding: "utf8",
+  });
+const TRUSTED = "c".repeat(40);
+const accepted = runGuard(TRUSTED, TRUSTED);
+assert.equal(accepted.status, 0, `guard must accept inputs.sha equal to GITHUB_SHA: ${accepted.stderr}`);
+for (const [releaseSha, githubSha, why] of [
+  ["d".repeat(40), TRUSTED, "another full SHA"],
+  [TRUSTED.slice(0, 7), TRUSTED, "short SHA prefix"],
+  [TRUSTED.toUpperCase(), TRUSTED, "uppercase SHA"],
+  [` ${TRUSTED}`, TRUSTED, "leading whitespace"],
+  [`${TRUSTED}\n`, TRUSTED, "trailing newline"],
+  [`${TRUSTED}\n${"d".repeat(40)}`, TRUSTED, "multi-line input"],
+  ["main", TRUSTED, "branch name"],
+  ["", TRUSTED, "empty input"],
+  ["", "", "empty input and empty GITHUB_SHA"],
+  ["main", "main", "non-SHA GITHUB_SHA"],
+  ["*", "*", "glob pattern"],
+]) {
+  const res = runGuard(releaseSha, githubSha);
+  assert.notEqual(res.status, 0, `guard must fail closed on ${why}`);
+  assert.match(res.stdout, /::error::inputs\.sha must be exactly the dispatched commit/, `guard must explain ${why}`);
 }
 
 // --- Gate logic: positive and negative cases ---------------------------------
