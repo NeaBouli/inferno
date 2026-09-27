@@ -62,6 +62,7 @@
     "test:mythril": "node scripts/test-mythril.cjs",
     "check:vault-invariants": "node scripts/check-vault-invariants.js",
     "test:vault-invariants": "node scripts/test-vault-invariants.cjs",
+    "test:railway-release": "node scripts/test-railway-release.cjs",
     "ops:benefits-capacity": "scripts/deploy-benefits-network.sh capacity && LIMIT=20 scripts/audit-docker-capacity.sh",
     "qa:benefits-devices": "node scripts/validate-benefits-device-checklist.js",
     "test:benefits-device-checklist": "node scripts/test-benefits-device-checklist.js",
