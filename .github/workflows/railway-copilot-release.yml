@@ -1,0 +1,101 @@
+name: Railway Copilot Release
+
+# Manual, exact-SHA release of apps/ai-copilot to Railway production.
+# Runbook: docs/RAILWAY_COPILOT_RELEASE.md
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: 'Full 40-character origin/main commit SHA to release'
+        required: true
+        type: string
+      mode:
+        description: 'preflight = read-only gate, no provider call; release = deploy after production approval'
+        required: true
+        type: choice
+        default: preflight
+        options:
+          - preflight
+          - release
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: railway-copilot-production
+  cancel-in-progress: false
+
+jobs:
+  preflight:
+    name: Exact-SHA preflight
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '20'
+
+      - name: Verify main SHA and required CI
+        env:
+          RELEASE_SHA: ${{ inputs.sha }}
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/railway-release-preflight.cjs
+
+  release:
+    name: Railway production release
+    needs: preflight
+    if: inputs.mode == 'release'
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.sha }}
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '20'
+
+      - name: Re-verify main SHA and required CI after approval
+        env:
+          RELEASE_SHA: ${{ inputs.sha }}
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/railway-release-preflight.cjs
+
+      - name: Verify checkout is pinned to release SHA
+        env:
+          RELEASE_SHA: ${{ inputs.sha }}
+        run: test "$(git rev-parse HEAD)" = "$RELEASE_SHA"
+
+      - name: Require Railway target and token
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ vars.RAILWAY_COPILOT_PROJECT_ID }}
+          RAILWAY_SERVICE: ${{ vars.RAILWAY_COPILOT_SERVICE }}
+        run: |
+          if [ -z "$RAILWAY_TOKEN" ]; then echo "::error::RAILWAY_TOKEN missing in production environment"; exit 1; fi
+          if [ -z "$RAILWAY_PROJECT_ID" ]; then echo "::error::RAILWAY_COPILOT_PROJECT_ID variable missing"; exit 1; fi
+          if [ -z "$RAILWAY_SERVICE" ]; then echo "::error::RAILWAY_COPILOT_SERVICE variable missing"; exit 1; fi
+
+      - name: Install pinned Railway CLI
+        run: npm install -g @railway/cli@5.62.1
+
+      - name: Deploy release SHA to Railway production
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          RAILWAY_PROJECT_ID: ${{ vars.RAILWAY_COPILOT_PROJECT_ID }}
+          RAILWAY_SERVICE: ${{ vars.RAILWAY_COPILOT_SERVICE }}
+          RELEASE_SHA: ${{ inputs.sha }}
+        run: >-
+          railway up --ci
+          --project "$RAILWAY_PROJECT_ID"
+          --service "$RAILWAY_SERVICE"
+          --environment production
+          --message "release $RELEASE_SHA"
