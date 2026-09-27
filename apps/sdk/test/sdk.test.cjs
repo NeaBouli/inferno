@@ -9,6 +9,24 @@ const {
   parseIFRAmount,
 } = require("../dist");
 
+const SELLER_DOMAIN = "shop.ifrunit.tech";
+const SELLER_CHAIN_ID = 1;
+
+function buildSellerMessage(action, businessId, timestamp, scope, nonce, domain = SELLER_DOMAIN, chainId = SELLER_CHAIN_ID) {
+  return [
+    "IFR Benefits Network - Seller Authorization",
+    `Domain: ${domain}`,
+    `Chain ID: ${chainId}`,
+    `Action: ${action}`,
+    `Business: ${businessId}`,
+    `Scope: ${scope}`,
+    `Nonce: ${nonce}`,
+    `Timestamp: ${timestamp}`,
+    `Expires: ${new Date(Number(timestamp) + 10 * 60 * 1000).toISOString()}`,
+    `Only sign this message inside ${domain}.`,
+  ].join("\n");
+}
+
 function jsonResponse(status, body) {
   return {
     ok: status >= 200 && status < 300,
@@ -25,15 +43,7 @@ async function testBenefitsCheckout() {
   const timestamp = String(Date.now());
   const issuedAt = new Date(Number(timestamp)).toISOString();
   const expiresAt = new Date(Number(timestamp) + 10 * 60 * 1000).toISOString();
-  const expectedMessage = [
-    "IFR Benefits Network - Seller Authorization",
-    "Action: sessions:create",
-    "Business: coffee-shop",
-    `Timestamp: ${timestamp}`,
-    "Scope: rule-premium",
-    `Nonce: ${nonce}`,
-    "Only sign this message inside shop.ifrunit.tech.",
-  ].join("\n");
+  const expectedMessage = buildSellerMessage("sessions:create", "coffee-shop", timestamp, "rule-premium", nonce);
   const mockFetch = async (url, init = {}) => {
     requests.push({ url, init });
     if (requests.length === 1) {
@@ -42,6 +52,8 @@ async function testBenefitsCheckout() {
         businessId: "coffee-shop",
         walletAddress: sellerWallet,
         scope: "rule-premium",
+        domain: SELLER_DOMAIN,
+        chainId: SELLER_CHAIN_ID,
         timestamp,
         issuedAt,
         expiresAt,
@@ -125,7 +137,7 @@ async function testChallengeMismatchFailsBeforeWrite() {
   assert.equal(signed, false);
 }
 
-async function assertChallengeRejectedBeforeSigning(overrides, expectedPattern) {
+async function assertChallengeRejectedBeforeSigning(overrides, expectedPattern, clientConfig = {}) {
   let requests = 0;
   let signed = false;
   const walletAddress = "0x1111111111111111111111111111111111111111";
@@ -136,22 +148,17 @@ async function assertChallengeRejectedBeforeSigning(overrides, expectedPattern) 
     businessId: "coffee-shop",
     walletAddress,
     scope: "default",
+    domain: SELLER_DOMAIN,
+    chainId: SELLER_CHAIN_ID,
     timestamp,
     issuedAt: new Date(Number(timestamp)).toISOString(),
     expiresAt: new Date(Number(timestamp) + 10 * 60 * 1000).toISOString(),
     nonce,
-    message: [
-      "IFR Benefits Network - Seller Authorization",
-      "Action: sessions:create",
-      "Business: coffee-shop",
-      `Timestamp: ${timestamp}`,
-      "Scope: default",
-      `Nonce: ${nonce}`,
-      "Only sign this message inside shop.ifrunit.tech.",
-    ].join("\n"),
+    message: buildSellerMessage("sessions:create", "coffee-shop", timestamp, "default", nonce),
     ...overrides,
   };
   const client = new IFRBenefitsClient({
+    ...clientConfig,
     fetch: async () => {
       requests += 1;
       return jsonResponse(200, challenge);
@@ -172,18 +179,6 @@ async function assertChallengeRejectedBeforeSigning(overrides, expectedPattern) 
   assert.equal(signed, false);
 }
 
-function buildSellerMessage(action, businessId, timestamp, scope, nonce) {
-  return [
-    "IFR Benefits Network - Seller Authorization",
-    `Action: ${action}`,
-    `Business: ${businessId}`,
-    `Timestamp: ${timestamp}`,
-    `Scope: ${scope}`,
-    `Nonce: ${nonce}`,
-    "Only sign this message inside shop.ifrunit.tech.",
-  ].join("\n");
-}
-
 function validRedeemChallenge(sessionId, walletAddress, overrides = {}) {
   const timestamp = String(Date.now());
   const nonce = "ab".repeat(32);
@@ -192,6 +187,8 @@ function validRedeemChallenge(sessionId, walletAddress, overrides = {}) {
     businessId: sessionId,
     walletAddress,
     scope: sessionId,
+    domain: SELLER_DOMAIN,
+    chainId: SELLER_CHAIN_ID,
     timestamp,
     issuedAt: new Date(Number(timestamp)).toISOString(),
     expiresAt: new Date(Number(timestamp) + 10 * 60 * 1000).toISOString(),
@@ -492,18 +489,41 @@ async function main() {
       timestamp: staleTimestamp,
       issuedAt: new Date(Number(staleTimestamp)).toISOString(),
       expiresAt: new Date(Number(staleTimestamp) + 10 * 60 * 1000).toISOString(),
-      message: [
-        "IFR Benefits Network - Seller Authorization",
-        "Action: sessions:create",
-        "Business: coffee-shop",
-        `Timestamp: ${staleTimestamp}`,
-        "Scope: default",
-        `Nonce: ${staleNonce}`,
-        "Only sign this message inside shop.ifrunit.tech.",
-      ].join("\n"),
+      message: buildSellerMessage("sessions:create", "coffee-shop", staleTimestamp, "default", staleNonce),
     },
     /mismatched/
   );
+  // Domain and chain binding: a challenge for another deployment is refused before signing.
+  const boundTimestamp = String(Date.now());
+  const boundNonce = "ab".repeat(32);
+  await assertChallengeRejectedBeforeSigning(
+    {
+      domain: "shop.attacker.example",
+      timestamp: boundTimestamp,
+      issuedAt: new Date(Number(boundTimestamp)).toISOString(),
+      expiresAt: new Date(Number(boundTimestamp) + 10 * 60 * 1000).toISOString(),
+      message: buildSellerMessage(
+        "sessions:create", "coffee-shop", boundTimestamp, "default", boundNonce, "shop.attacker.example"
+      ),
+    },
+    /mismatched/
+  );
+  await assertChallengeRejectedBeforeSigning({ chainId: undefined }, /mismatched/);
+  await assertChallengeRejectedBeforeSigning({ chainId: "1" }, /mismatched/);
+  await assertChallengeRejectedBeforeSigning(
+    {
+      chainId: 11155111,
+      timestamp: boundTimestamp,
+      issuedAt: new Date(Number(boundTimestamp)).toISOString(),
+      expiresAt: new Date(Number(boundTimestamp) + 10 * 60 * 1000).toISOString(),
+      message: buildSellerMessage(
+        "sessions:create", "coffee-shop", boundTimestamp, "default", boundNonce, SELLER_DOMAIN, 11155111
+      ),
+    },
+    /mismatched/,
+    { chainId: 1 }
+  );
+  assert.throws(() => new IFRBenefitsClient({ chainId: 0 }), /Invalid Benefits chain ID/);
   await testGetCheckoutStatus();
   await testGetCheckoutStatusRedeemed();
   await testGetCheckoutStatusMalformed();

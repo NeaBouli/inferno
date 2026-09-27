@@ -24,6 +24,7 @@ on:
       - 'scripts/test-functionality-status.cjs'
       - 'scripts/check-cwa-remediation-register.cjs'
       - 'scripts/test-cwa-content-coherence.cjs'
+      - 'scripts/check-sitemap-anchors.cjs'
       - 'scripts/check-july-audit-remediation-register.cjs'
       - 'scripts/test-docs-workflow.cjs'
       - 'scripts/check-markdownlint-baseline.cjs'
@@ -34,6 +35,8 @@ on:
       - 'scripts/test-wiki-jsonld.cjs'
       - 'scripts/test-surface-routing.cjs'
       - 'scripts/test-web3-headers.cjs'
+      - 'scripts/check-web3-wallet-runtime.cjs'
+      - 'scripts/test-ifr-state-unavailable.cjs'
       - 'scripts/test-security-reporting-config.cjs'
       - 'scripts/check-browser-ethers6.cjs'
       - '.github/ISSUE_TEMPLATE/**'
@@ -65,6 +68,7 @@ on:
       - 'scripts/test-functionality-status.cjs'
       - 'scripts/check-cwa-remediation-register.cjs'
       - 'scripts/test-cwa-content-coherence.cjs'
+      - 'scripts/check-sitemap-anchors.cjs'
       - 'scripts/check-july-audit-remediation-register.cjs'
       - 'scripts/test-docs-workflow.cjs'
       - 'scripts/check-markdownlint-baseline.cjs'
@@ -74,6 +78,8 @@ on:
       - 'scripts/test-wiki-head-integrity.cjs'
       - 'scripts/test-surface-routing.cjs'
       - 'scripts/test-web3-headers.cjs'
+      - 'scripts/check-web3-wallet-runtime.cjs'
+      - 'scripts/test-ifr-state-unavailable.cjs'
       - 'scripts/test-security-reporting-config.cjs'
       - 'scripts/check-browser-ethers6.cjs'
       - '.github/ISSUE_TEMPLATE/**'
@@ -130,6 +136,9 @@ jobs:
 
       - name: Validate Wiki JSON-LD
         run: npm run test:wiki-jsonld
+
+      - name: Validate sitemaps and AI anchors
+        run: npm run test:sitemap-anchors
 
   validate-links:
     name: Internal Link Check
@@ -231,6 +240,9 @@ jobs:
 
       - name: Check Web3 serving-layer security headers contract
         run: npm run test:web3-headers
+
+      - name: Check Web3 wallet runtime (artifact integrity, no remote imports, unavailable state)
+        run: npm run test:web3-wallet-runtime
 
       - name: Check browser Ethers 6 baseline
         run: npm run test:browser-ethers6

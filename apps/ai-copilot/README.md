@@ -7,7 +7,7 @@ with token mechanics, lock integration, and the Benefits Network.
 
 - **3 Modes**: Customer, Builder, Developer — each with tailored system prompts
 - **RAG Knowledge Base**: All IFR facts (contracts, tokenomics, tiers, governance) embedded as structured context
-- **Safety Guards**: Automatic seed phrase / private key detection with instant warnings
+- **Safety Guards**: no automatic seed-phrase/private-key detector. The served widget (`server/index.ts`) shows a static "never share private keys" notice and the system prompts refuse seed phrases, private keys and mnemonics; the React component (`src/components/IFRCopilot.tsx`) adds a client-side keyword warning for "seed phrase", "private key", "mnemonic" and "secret recovery" (no raw-key or word-list recognition)
 - **Source Tags**: Every response cites its source (IFR_KNOWLEDGE)
 - **Dark Theme**: Matches IFR branding (dark bg, red accents)
 

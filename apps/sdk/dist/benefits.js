@@ -54,21 +54,28 @@ async function readJson(response) {
         throw new Error(`IFR Benefits API request failed (${response.status})`);
     return response.json();
 }
-function buildSellerAuthorizationMessage(action, businessId, timestamp, scope, nonce) {
+function buildSellerAuthorizationMessage(domain, chainId, action, businessId, timestamp, scope, nonce) {
     return [
         "IFR Benefits Network - Seller Authorization",
+        `Domain: ${domain}`,
+        `Chain ID: ${chainId}`,
         `Action: ${action}`,
         `Business: ${businessId}`,
-        `Timestamp: ${timestamp}`,
         `Scope: ${scope}`,
         `Nonce: ${nonce}`,
-        "Only sign this message inside shop.ifrunit.tech.",
+        `Timestamp: ${timestamp}`,
+        `Expires: ${new Date(Number(timestamp) + SELLER_AUTH_TTL_MS).toISOString()}`,
+        `Only sign this message inside ${domain}.`,
     ].join("\n");
 }
 class IFRBenefitsClient {
     constructor(config = {}) {
         this.baseUrl = normalizeBaseUrl(config.baseUrl || exports.DEFAULT_BENEFITS_API);
         this.fetchImpl = config.fetch || fetch;
+        if (config.chainId !== undefined && (!Number.isSafeInteger(config.chainId) || config.chainId <= 0)) {
+            throw new Error("Invalid Benefits chain ID");
+        }
+        this.chainId = config.chainId;
     }
     async requestSellerChallenge(action, businessId, scope, walletAddress) {
         const challengeUrl = new URL("/api/seller/auth-message", this.baseUrl);
@@ -86,6 +93,11 @@ class IFRBenefitsClient {
         if (challenge.action !== action ||
             challenge.businessId !== businessId ||
             challenge.scope !== scope ||
+            // The signed message must name the exact API origin host this client talks to.
+            challenge.domain !== this.baseUrl.host ||
+            !Number.isSafeInteger(challenge.chainId) ||
+            challenge.chainId <= 0 ||
+            (this.chainId !== undefined && challenge.chainId !== this.chainId) ||
             !/^0x[0-9a-fA-F]{40}$/.test(challenge.walletAddress || "") ||
             challenge.walletAddress.toLowerCase() !== walletAddress.toLowerCase() ||
             !/^\d{10,16}$/.test(challenge.timestamp || "") ||
@@ -96,7 +108,7 @@ class IFRBenefitsClient {
             timestampMs > now + MAX_FUTURE_SKEW_MS ||
             expiresAtMs <= now ||
             !/^[0-9a-f]{64}$/.test(challenge.nonce || "") ||
-            challenge.message !== buildSellerAuthorizationMessage(action, businessId, challenge.timestamp, scope, challenge.nonce)) {
+            challenge.message !== buildSellerAuthorizationMessage(challenge.domain, challenge.chainId, action, businessId, challenge.timestamp, scope, challenge.nonce)) {
             throw new Error("IFR Benefits API returned a mismatched seller authorization challenge");
         }
         return challenge;

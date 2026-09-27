@@ -336,8 +336,11 @@ export interface SellerAuthMessage {
   issuedAt: string;
   expiresAt: string;
   message: string;
-  nonce?: string;
-  scope?: string;
+  nonce: string;
+  scope: string;
+  walletAddress: string;
+  domain: string;
+  chainId: number;
 }
 
 export interface SessionCreated {
@@ -525,33 +528,19 @@ function adminHeaders(adminSecret: string) {
   return { Authorization: `Bearer ${adminSecret}` };
 }
 
-export function buildSellerAuthMessage(
-  action: string,
-  businessId: string,
-  timestamp: string,
-  binding?: { nonce: string; scope: string }
-) {
-  const lines = [
-    'IFR Benefits Network - Seller Authorization',
-    `Action: ${action}`,
-    `Business: ${businessId || 'new'}`,
-    `Timestamp: ${timestamp}`,
-  ];
-  if (binding) lines.push(`Scope: ${binding.scope}`, `Nonce: ${binding.nonce}`);
-  lines.push('Only sign this message inside shop.ifrunit.tech.');
-  return lines.join('\n');
-}
-
+// Every seller action (read or mutation) uses a one-time, wallet-bound challenge.
+// Read-only actions omit the scope; the backend binds them to its fixed read scope.
 export function getSellerAuthMessage(
   action: string,
   businessId: string,
-  binding?: { walletAddress: string; scope: string }
+  binding: { walletAddress: string; scope?: string }
 ) {
-  const query = new URLSearchParams({ action, businessId: businessId || 'new' });
-  if (binding) {
-    query.set('walletAddress', binding.walletAddress);
-    query.set('scope', binding.scope);
-  }
+  const query = new URLSearchParams({
+    action,
+    businessId: businessId || 'new',
+    walletAddress: binding.walletAddress,
+  });
+  if (binding.scope) query.set('scope', binding.scope);
   return fetchJSON<SellerAuthMessage>(`/api/seller/auth-message?${query.toString()}`);
 }
 

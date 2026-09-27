@@ -1,10 +1,11 @@
 import { Request, Response, Router } from 'express';
 import { z } from 'zod';
 import { createAuthorizedSession, getSession, prisma, redeem } from '../services/sessionService';
-import { SellerAuthError, verifySellerSignature } from '../services/sellerAuth';
+import { config } from '../config';
+import { SellerAuthError, resolveSellerAuthContext, verifySellerSignature } from '../services/sellerAuth';
 import { resolveCheckoutActor } from '../services/sellerAccess';
 import { validate } from '../middleware/validator';
-import { sessionRateLimiter } from '../middleware/rateLimiter';
+import { sessionRateLimiter, sessionStatusRateLimiter } from '../middleware/rateLimiter';
 import {
   AuthenticatedRateLimitError,
   assertSellerWalletActionAllowed,
@@ -49,6 +50,7 @@ async function requireSessionRedeemer(req: Request, sessionId: string) {
   if (!auth.nonce) throw new SellerAuthError('Seller authorization nonce is required');
   const wallet = verifySellerSignature({
     ...auth,
+    context: resolveSellerAuthContext(config),
     action: 'sessions:redeem',
     businessId: sessionId,
     scope: sessionId,
@@ -71,6 +73,7 @@ async function requireSessionCreator(req: Request, businessId: string, scope: st
   if (!auth.nonce) throw new SellerAuthError('Seller authorization nonce is required');
   const wallet = verifySellerSignature({
     ...auth,
+    context: resolveSellerAuthContext(config),
     action: 'sessions:create',
     businessId,
     scope,
@@ -153,7 +156,7 @@ router.post('/', sessionRateLimiter, validate(createSessionSchema), async (req, 
   }
 });
 
-router.get('/:id', async (req, res, next) => {
+router.get('/:id', sessionStatusRateLimiter, async (req, res, next) => {
   res.set('Cache-Control', 'private, no-store');
   res.set('Pragma', 'no-cache');
   try {

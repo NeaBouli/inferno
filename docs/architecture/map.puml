@@ -1,0 +1,133 @@
+@startmindmap
+* Telegram wallet verification and trust boundaries
+** commands
+*** gebaut: src/commands/verify.js::handleVerify
+*** gebaut: src/commands/verify.js::handleUnverify
+*** gebaut: src/commands/verify.js::handleMyStatus
+** nonce store
+*** gebaut: services/nonceStore.js::createNonce
+*** gebaut: services/nonceStore.js::claimNonce
+** verification store
+*** gebaut: services/verificationStore.js::setVerified
+*** gebaut: services/verificationStore.js::unverify
+*** gebaut: services/verificationStore.js::tierHasTopicAccess
+** verify HTTP API
+*** gebaut: src/index.js::verifyApp POST /api/verify
+** protected-topic gate
+*** gebaut: src/index.js::bot.on message guard
+*** gebaut: src/index.js::PROTECTED_ADMIN_IDS
+** tier reader
+*** gebaut: services/onChainReader.js::determineTier
+*** gebaut: services/onChainReader.js::getSignerWallets
+** rate limit
+*** gebaut: middleware/rateLimit.js
+*** gebaut: middleware/apiRateLimit.js
+** verify API CORS
+*** gebaut: middleware/verifyCors.js::resolveAllowedOrigin
+*** gebaut: middleware/verifyCors.js::verifyCors
+** channel sync
+*** gebaut: handlers/channelSync.js::isTrustedChannelPost
+*** gebaut: handlers/channelSync.js::handleChannelPost
+** ask command
+*** gebaut: commands/ask.js::askCommand
+*** gebaut: services/skywalker.js::askSkywalker
+** telegram text guard
+*** gebaut: services/telegramText.js::toPlainText
+@endmindmap
+
+@startuml
+title Verification/authorization trace
+package "commands" {
+  [commands/verify.js]
+}
+package "nonce store" {
+  [services/nonceStore.js]
+}
+package "verification store" {
+  [services/verificationStore.js]
+}
+package "verify HTTP API" {
+  [src/index.js verifyApp]
+}
+package "protected-topic gate" {
+  [src/index.js message guard]
+}
+package "tier reader" {
+  [services/onChainReader.js]
+}
+package "rate limit" {
+  [middleware/rateLimit.js]
+  [middleware/apiRateLimit.js]
+}
+
+[src/index.js verifyApp] --> [services/nonceStore.js] : claimNonce (atomic)
+[src/index.js verifyApp] --> [services/verificationStore.js] : setVerified
+[src/index.js verifyApp] --> [services/onChainReader.js] : determineTier
+[src/index.js verifyApp] --> [middleware/apiRateLimit.js] : per-IP throttle (req.ip via trust proxy)
+[commands/verify.js] --> [services/nonceStore.js] : createNonce
+[commands/verify.js] --> [services/verificationStore.js] : unverify
+[commands/verify.js] --> [middleware/rateLimit.js] : per-user throttle
+[src/index.js message guard] --> [services/verificationStore.js] : getWallet/reverifyFromMap/tierHasTopicAccess
+[src/index.js message guard] --> [services/onChainReader.js] : determineTier (live)
+@enduml
+
+@startuml
+title Privilege/CORS/content-trust trace
+package "telegram-bot" {
+  [privilege decision\nindex.js::PROTECTED_ADMIN_IDS] as priv
+  [tier reader\nonChainReader.js::getSignerWallets] as tier
+  [verify CORS\nmiddleware/verifyCors.js] as cors
+  [verify API\nindex.js::verifyApp] as api
+  [channel sync\nhandlers/channelSync.js] as sync
+  [ask command\ncommands/ask.js] as ask
+  [AI service\nservices/skywalker.js] as ai
+  [text guard\nservices/telegramText.js] as text
+}
+[env config] --> priv : ADMIN_USER_IDS
+[env config / Safe RPC] --> tier : SIGNER_WALLETS / getOwners()
+tier --> priv : signer set (empty on failure)
+[browser Origin] --> cors : origin header
+cors --> api : exact allowlisted ACAO or none
+[channel_post] --> sync : trusted source only
+sync --> text : plain text <=4096
+ask --> ai : question
+ask --> text : answer
+@enduml
+
+@startuml
+title Benefits seller authorization/session trace
+package "benefits-network backend" {
+  [config.ts + sellerAuthConfigPolicy.ts] as bcfg
+  [routes/seller.ts] as sroutes
+  [routes/sessions.ts] as sessroutes
+  [routes/attest.ts] as attroute
+  [routes/businesses.ts] as bizroutes
+  [services/sellerAuth.ts] as sauth
+  [services/sellerAuthorizationChallenge.ts] as schal
+  [services/sessionService.ts] as sess
+  [middleware/rateLimiter.ts] as rl
+}
+bcfg --> sauth : resolveSellerAuthContext(SELLER_AUTH_DOMAIN, CHAIN_ID)
+sroutes --> schal : issueSellerAuthorizationChallenge
+sroutes --> sauth : verifySellerSignature
+sroutes --> schal : consumeSellerAuthorizationChallenge
+sessroutes --> sauth : verifySellerSignature
+sessroutes --> sess : getSession (read-only)
+attroute --> sess : attest
+rl --> sessroutes : sessionStatusRateLimiter
+rl --> bizroutes : discoveryRateLimiter
+@enduml
+
+@startuml
+title Points voucher issue/validation trace
+component "HTTP composition" as papp
+component "Voucher route" as proute
+component "Auth + lock proof" as pguard
+component "Voucher signer" as psigner
+database "Points DB" as pdb
+papp --> proute : voucherRoutes
+proute --> pguard : requireAuth / requireLockProof
+proute --> pdb : prisma.$transaction
+proute --> psigner : signVoucher
+proute --> pdb : findFirst(nonce)
+@enduml

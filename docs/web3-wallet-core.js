@@ -1,6 +1,10 @@
 /**
- * IFR Web3 Wallet Core v1.0 — Mobile + WalletConnect v2 via esm.sh
+ * IFR Web3 Wallet Core v1.0 — Mobile + WalletConnect v2 via self-hosted artifact
  * Usage: await IFRWallet.connect(); IFRWallet.getAddress();
+ *
+ * v4.3.1 — WalletConnect provider loads from the pinned same-origin artifact
+ *   /assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js instead of
+ *   a third-party CDN (CWA-47). No third-party code executes at runtime.
  *
  * v4.3 — Mobile/tablet wallet connect restored.
  *   Supports injected EIP-1193 wallets in wallet browsers first, then
@@ -9,14 +13,14 @@
  *
  * v4.2 — Historical release with desktop-only mobile policy.
  *
- * v4.1 — dynamic import() from esm.sh CDN.
+ * v4.1 — dynamic import() from a CDN (superseded by v4.3.1).
  * v4.0 — Fixes v3.0 broken UMD bundles
  *
  * FLOW:
  *   - Mobile/tablet WITH wallet browser: injected EIP-1193 provider
  *   - Mobile/tablet WITHOUT injected wallet: WalletConnect mobile selector
  *   - Desktop WITH extension: injected EIP-1193 provider
- *   - Desktop WITHOUT extension: WalletConnect QR modal (esm.sh)
+ *   - Desktop WITHOUT extension: WalletConnect QR modal (self-hosted)
  *   - Auto-reconnect from localStorage + WC session persistence
  *
  * Web3-only connector. Main ifrunit.tech and wiki keep the shared
@@ -41,10 +45,10 @@ window.IFRWallet = (function() {
   var IFR_TOKEN_DECIMALS = 9;
   var IFR_TOKEN_IMAGE = "https://ifrunit.tech/assets/ifr_icon_256.png";
 
-  // esm.sh resolves WC dependency tree at runtime (verified on Samsung S10 Chrome).
-  // jsdelivr +esm FAILS: elliptic@6.6.1 named export 'ec' missing after Rollup bundling.
-  // esm.sh (default, without ?bundle-deps) works — internal deps resolve individually.
-  var WC_ESM_URL = "https://esm.sh/@walletconnect/ethereum-provider@2.17.3";
+  // Self-hosted pinned artifact (built reproducibly from
+  // infra/web3/walletconnect-provider; SHA-256 gated in CI). Same-origin ESM,
+  // no runtime third-party code fetch (CWA-47).
+  var WC_PROVIDER_URL = "/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js";
 
   var _provider = null;        // ethers Web3Provider (for ifr-state.js compat)
   var _signer = null;
@@ -282,10 +286,10 @@ window.IFRWallet = (function() {
 
     _wcLoading = (async function() {
       try {
-        // dynamic import() from esm.sh — works in all modern browsers.
-        // esm.sh resolves WC dependency tree at runtime.
+        // dynamic import() of the self-hosted pinned artifact — same origin,
+        // works in all modern browsers.
         // Internally imports @walletconnect/modal for QR display.
-        var mod = await import(WC_ESM_URL);
+        var mod = await import(WC_PROVIDER_URL);
         var EthereumProvider = mod.EthereumProvider || mod.default;
 
         if (!EthereumProvider) {
@@ -332,7 +336,7 @@ window.IFRWallet = (function() {
           _emit("walletconnectUri", uri);
         });
 
-        console.log("[IFR Web3 Wallet] WalletConnect v2 ready (esm.sh)");
+        console.log("[IFR Web3 Wallet] WalletConnect v2 ready (self-hosted)");
         return _wcProvider;
       } catch (e) {
         console.warn("[IFR Web3 Wallet] WalletConnect init failed:", e);

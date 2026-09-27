@@ -59,7 +59,7 @@ All data is verifiable on-chain via Etherscan. No hidden wallets, no insider dea
 | Address | [`0xdc0309804803b3A105154f6073061E3185018f64`](https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64) |
 | IFR Balance | 200,000,000 IFR (20% of supply) |
 | Initial Lock | Ended 01.09.2026 |
-| Release Rate | Maximum 50M IFR per 90-day period |
+| Release Rate | Currently maximum 50M IFR per 90-day period (Governance parameter via `setMaxWithdrawPerPeriod`, 48h timelock; period length immutable) |
 | Withdrawn | 0 IFR (verified at block 25918433) |
 | Pending Governance Proposal | None |
 

@@ -22,9 +22,13 @@ docker-compose up -d
 
 ## API Endpoints
 - GET /health — Status
-- GET /auth/google?wallet=0x... — Google OAuth start
-- GET /auth/google/callback — OAuth callback -> JWT
-- POST /auth/wallet — Wallet-only auth -> JWT
+- GET /auth/siwe/nonce — SIWE nonce (single-use, 10 min TTL)
+- POST /auth/siwe/verify — SIWE signature check -> JWT (canonical wallet auth)
+- GET /auth/google — Google OAuth start (server-side one-time state bound to an
+  HttpOnly/SameSite=Lax initiator cookie, Secure in production; send a SIWE
+  bearer token to link a wallet — ?wallet= is rejected as untrusted input)
+- GET /auth/google/callback — OAuth callback -> JWT (requires the matching
+  initiator cookie; minimal claims; YouTube tokens stay server-side)
 - GET /access/check — Entitlement check (auth required)
 
 ## Entitlement Logic
