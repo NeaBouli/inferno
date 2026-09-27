@@ -637,6 +637,147 @@ test.describe("S14: No third-party executable requests", () => {
 });
 
 /* ══════════════════════════════════════════════════════════
+   Scenario 15 — Web3 tablet WalletConnect retry lifecycle
+   ══════════════════════════════════════════════════════════ */
+const WC_MOCK_MODULE = `
+  const state = { pending: null, provider: null, uriCount: 0 };
+  function makeProvider() {
+    const listeners = new Map();
+    const provider = {
+      session: null,
+      accounts: [],
+      enable: function() {
+        state.uriCount += 1;
+        (listeners.get("display_uri") || []).forEach((fn) => fn("wc:mock-uri-" + state.uriCount));
+        return new Promise((resolve, reject) => { state.pending = { resolve, reject }; });
+      },
+      request: async ({ method }) => {
+        if (method === "eth_accounts" || method === "eth_requestAccounts") return provider.accounts;
+        if (method === "eth_chainId") return "0x1";
+        if (method === "net_version") return "1";
+        if (method === "eth_getBalance") return "0x0";
+        if (method === "eth_blockNumber") return "0x10";
+        if (method === "eth_call") return "0x" + "0".repeat(64);
+        return null;
+      },
+      on: (event, fn) => listeners.set(event, (listeners.get(event) || []).concat(fn)),
+      removeListener: (event, fn) => listeners.set(event, (listeners.get(event) || []).filter((f) => f !== fn)),
+      disconnect: async () => null,
+    };
+    state.provider = provider;
+    return provider;
+  }
+  window.__wcMock = {
+    uriCount: () => state.uriCount,
+    approve: (address) => {
+      if (state.provider) state.provider.accounts = [address];
+      if (state.pending) state.pending.resolve([address]);
+    },
+    reject: (error) => state.pending && state.pending.reject(error),
+  };
+  export const EthereumProvider = { init: async () => makeProvider() };
+`;
+
+test.describe("S15: Web3 tablet pending WalletConnect session", () => {
+  test("cancel, re-tap, approve, disconnect and reconnect stay usable", async ({ browser }) => {
+    const { context, page, deeplinks } = await newMobilePage(
+      browser,
+      { width: 820, height: 1180 },
+      TABLET_UA
+    );
+    try {
+      const assertNoPageErrors = monitorPageErrors(page);
+      await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js", async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/javascript",
+          headers: { "Access-Control-Allow-Origin": "*" },
+          body: WC_MOCK_MODULE,
+        });
+      });
+      await gotoWalletPage(page, "/web3/");
+      await page.evaluate(() => { delete window.ethereum; });
+
+      const btn = page.locator(".nav-actions [data-wallet-connect]");
+      const walletState = page.locator("[data-wallet-state]").first();
+      const walletDialog = page.locator("[data-wallet-dialog]");
+      const walletChooser = page.locator("[data-wallet-chooser]");
+      const walletConnectOption = page.locator('[data-wallet-option="walletconnect"]');
+
+      await btn.click();
+      await expect(walletChooser).toHaveClass(/is-open/);
+      await walletConnectOption.click();
+      await expect(walletDialog).toHaveClass(/is-open/);
+      await expect.poll(() => page.evaluate(() => Boolean(window.__wcMock))).toBe(true);
+      await expect.poll(() => page.evaluate(() => window.__wcMock.uriCount())).toBe(1);
+
+      await page.evaluate(() => {
+        const error = new Error("User rejected.");
+        error.code = 4001;
+        window.__wcMock.reject(error);
+      });
+      await expect(walletState).toHaveText("Rejected");
+      await expect(btn).toBeEnabled();
+      await expect(btn).toHaveText("Connect Wallet");
+
+      await page.locator("[data-wallet-dialog-close]").click();
+      await expect(walletDialog).not.toHaveClass(/is-open/);
+      await btn.click();
+      await walletConnectOption.click();
+      await expect.poll(() => page.evaluate(() => window.__wcMock.uriCount())).toBe(2);
+
+      await page.evaluate((addr) => window.__wcMock.approve(addr), MOCK_ADDR);
+      await expect(walletState).toContainText("Connected", { timeout: 10000 });
+      await expect(btn).toHaveText(/connected/i);
+      expect(await page.evaluate(() => window.IFRWallet.isConnected())).toBe(true);
+
+      await page.evaluate(() => window.IFRWallet.disconnect());
+      expect(await page.evaluate(() => window.IFRWallet.isConnected())).toBe(false);
+      await btn.click();
+      await walletConnectOption.click();
+      await expect.poll(() => page.evaluate(() => window.__wcMock.uriCount())).toBe(3);
+      await page.evaluate((addr) => window.__wcMock.approve(addr), MOCK_ADDR);
+      await expect(walletState).toContainText("Connected", { timeout: 10000 });
+
+      expect(deeplinks).toEqual([]);
+      assertNoPageErrors();
+    } finally {
+      await context.close();
+    }
+  });
+});
+
+/* ══════════════════════════════════════════════════════════
+   Scenario 16 — Web3 tablet injected-session reload
+   ══════════════════════════════════════════════════════════ */
+test.describe("S16: Web3 tablet session reload", () => {
+  test("reload with existing injected session auto-reconnects", async ({ browser }) => {
+    const { context, page } = await newMobilePage(
+      browser,
+      { width: 820, height: 1180 },
+      TABLET_UA
+    );
+    try {
+      const assertNoPageErrors = monitorPageErrors(page);
+      await context.addInitScript(mockMetaMask(MOCK_ADDR));
+      await gotoWalletPage(page, "/web3/");
+
+      await page.locator(".nav-actions [data-wallet-connect]").click();
+      await page.locator('[data-wallet-option-type="injected"]').first().click();
+      await expect(page.locator("[data-wallet-state]").first()).toContainText("Connected", { timeout: 10000 });
+
+      await page.reload({ waitUntil: "domcontentloaded" });
+      await waitForWalletRuntime(page);
+      await expect(page.locator("[data-wallet-state]").first()).toContainText("Connected", { timeout: 10000 });
+      expect(await page.evaluate(() => window.IFRWallet.isConnected())).toBe(true);
+      assertNoPageErrors();
+    } finally {
+      await context.close();
+    }
+  });
+});
+
+/* ══════════════════════════════════════════════════════════
    Scenario 12 — Quick Connect→Disconnect→Connect
    ══════════════════════════════════════════════════════════ */
 test.describe("S12: Rapid connect/disconnect cycle", () => {
