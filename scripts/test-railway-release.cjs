@@ -33,6 +33,8 @@ assert.ok(releaseJob, "release job must exist");
 assert.doesNotMatch(preflightJob, /secrets\./, "preflight job must not read any secret");
 assert.doesNotMatch(preflightJob, /railway (up|redeploy|deploy)/, "preflight job must not call the provider");
 assert.doesNotMatch(preflightJob, /environment:/, "preflight job must not unlock the production environment");
+assert.match(preflightJob, /ref: \$\{\{ inputs\.sha \}\}/, "preflight checkout must use the supplied SHA");
+assert.match(preflightJob, /run: node scripts\/test-railway-release\.cjs/, "preflight must verify its release contract");
 assert.match(preflightJob, /run: node scripts\/railway-release-preflight\.cjs/, "preflight must run the gate");
 
 assert.match(releaseJob, /needs: preflight/, "release must depend on preflight");

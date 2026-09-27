@@ -25,7 +25,8 @@ Read-only; no secret, no provider call.
 2. If `AI Copilot CI` has no successful run on that SHA (main head did not touch
    `apps/ai-copilot/`), dispatch `AI Copilot CI` on `main` and wait for it to finish.
 3. Actions → **Railway Copilot Release** → Run workflow on `main`, `sha=<SHA>`, `mode=preflight`.
-4. Pass means: dispatch ref is `main`, SHA equals current `origin/main`, and the latest runs of
+4. The job checks out `<SHA>` and runs the release-workflow contract before evaluating CI.
+5. Pass means: dispatch ref is `main`, SHA equals current `origin/main`, and the latest runs of
    `ai-copilot.yml` and `security-audit.yml` on that SHA (push or dispatch on main, this repo)
    are `completed/success`.
 
