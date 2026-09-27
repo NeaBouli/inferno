@@ -29,6 +29,7 @@ jest.mock('../src/services/ifrLockService', () => ({
 jest.mock('../src/config', () => ({
   config: {
     CHAIN_ID: 11155111,
+    SELLER_AUTH_DOMAIN: 'shop.example.test',
     RPC_URL: 'https://mock-rpc.example.com',
     IFRLOCK_ADDRESS: '0x0000000000000000000000000000000000000001',
     ADMIN_SECRET: 'test-secret-12345',
@@ -261,13 +262,18 @@ describe('E2E: IFR Lock → Benefits Network Verification', () => {
     expect(result.status).toBe('REJECTED');
     expect(result.reason).toContain('Insufficient lock');
     expect(result.reason).toContain('2000.0');
-    expect(result.attemptsRemaining).toBe(2);
+    expect(result.reason).toContain('retry this QR session');
+    expect(result.attemptsRemaining).toBe(3);
 
+    // CWA-37: an ineligible wallet leaves the session untouched and unbound.
     const saved = await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } });
-    expect(saved.status).toBe('PENDING');
-    expect(saved.recoveredAddress).toBe(TEST_WALLET);
-    expect(saved.lockAmountRaw).toBe('2000.0');
-    expect(saved.reason).toContain('retry this QR session');
+    expect(saved).toMatchObject({
+      status: 'PENDING',
+      attestAttempts: 0,
+      recoveredAddress: null,
+      lockAmountRaw: null,
+      reason: null,
+    });
   });
 
   it('binds a QR session to a selected benefit rule', async () => {
@@ -569,10 +575,12 @@ describe('E2E: IFR Lock → Benefits Network Verification', () => {
     const result = await attest(session.sessionId, '0xinvalid');
     expect(result.status).toBe('REJECTED');
     expect(result.reason).toBe('Invalid signature. You can retry this QR session.');
-    expect(result.attemptsRemaining).toBe(2);
+    // An unrecoverable signature proves no wallet authority and burns no attempt.
+    expect(result.attemptsRemaining).toBe(3);
 
     const saved = await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } });
     expect(saved.status).toBe('PENDING');
+    expect(saved.attestAttempts).toBe(0);
   });
 });
 

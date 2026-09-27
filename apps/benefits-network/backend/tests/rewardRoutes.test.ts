@@ -23,6 +23,7 @@ jest.mock('../src/services/ifrLockService', () => ({
 jest.mock('../src/config', () => ({
   config: {
     CHAIN_ID: 1,
+    SELLER_AUTH_DOMAIN: 'shop.example.test',
     RPC_URL: 'https://mock-rpc.example.com',
     IFRLOCK_ADDRESS: '0x0000000000000000000000000000000000000001',
     PARTNER_VAULT_ADDRESS: '0x0000000000000000000000000000000000000002',
@@ -51,9 +52,8 @@ function baseUrl() {
 }
 
 async function sellerHeaders(wallet: TestWallet, action: string, businessId: string, scope = businessId) {
-  const query = new URLSearchParams({ action, businessId });
+  const query = new URLSearchParams({ action, businessId, walletAddress: wallet.address });
   if (['rewards:apply', 'rewards:disable', 'rewards:reward-wallet', 'sessions:redeem', 'business:create'].includes(action)) {
-    query.set('walletAddress', wallet.address);
     query.set('scope', scope);
   }
   const challengeResponse = await fetch(`${baseUrl()}/api/seller/auth-message?${query}`);

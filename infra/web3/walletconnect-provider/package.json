@@ -1,0 +1,18 @@
+{
+  "name": "ifr-walletconnect-provider-vendor",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Reproducible pinned build of the self-hosted WalletConnect Ethereum provider artifact (CWA-47). Not published.",
+  "type": "module",
+  "scripts": {
+    "build": "node build.mjs"
+  },
+  "dependencies": {
+    "@walletconnect/ethereum-provider": "2.17.3",
+    "buffer": "6.0.3",
+    "process": "0.11.10"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

@@ -4,10 +4,15 @@ import { SellerAuthError } from './sellerAuth';
 export {
   MUTATING_SELLER_ACTIONS,
   READ_ONLY_SELLER_ACTIONS,
+  READ_ONLY_SELLER_SCOPE,
   isKnownSellerAction,
+  isReadOnlySellerAction,
   isSafeSellerAuthorizationField,
   requiresSingleUseSellerChallenge,
 } from './sellerAuthorizationActions';
+
+// Opportunistic cleanup on issuance is bounded; bulk pruning stays in the retention CLI.
+export const SELLER_CHALLENGE_PRUNE_BATCH = 100;
 
 type ChallengeConsumer = {
   sellerAuthorizationChallenge: {
@@ -28,14 +33,23 @@ export async function issueSellerAuthorizationChallenge(
   }
 ) {
   const nonce = crypto.randomBytes(32).toString('hex');
-  await db.$transaction([
-    db.sellerAuthorizationChallenge.deleteMany({
-      where: { expiresAt: { lt: new Date() } },
-    }),
-    db.sellerAuthorizationChallenge.create({
+  await db.$transaction(async (tx) => {
+    const now = new Date();
+    const expired = await tx.sellerAuthorizationChallenge.findMany({
+      where: { expiresAt: { lt: now } },
+      orderBy: [{ expiresAt: 'asc' }, { nonce: 'asc' }],
+      take: SELLER_CHALLENGE_PRUNE_BATCH,
+      select: { nonce: true },
+    });
+    if (expired.length > 0) {
+      await tx.sellerAuthorizationChallenge.deleteMany({
+        where: { nonce: { in: expired.map((row) => row.nonce) }, expiresAt: { lt: now } },
+      });
+    }
+    await tx.sellerAuthorizationChallenge.create({
       data: { nonce, ...input },
-    }),
-  ]);
+    });
+  });
   return nonce;
 }
 

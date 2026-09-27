@@ -1991,6 +1991,13 @@ function fmtETH(num) {
 function bwUpdateStats(status) {
   if (!status) return;
   if (window._publicStatsLoaded) return; // public RPC has priority
+  if (status.available === false) {
+    // CWA-48: unavailable status must never render a fabricated chain value.
+    document.getElementById("bw-total-eth").textContent = "—";
+    document.getElementById("bw-contributors").textContent = "—";
+    document.getElementById("bw-ifr-per-eth").textContent = "—";
+    return;
+  }
   var totalEth = parseFloat(status.totalETHRaised) || 0;
   document.getElementById("bw-total-eth").textContent = fmtETH(totalEth);
   document.getElementById("bw-contributors").textContent = status.contributorCount || "0";
@@ -2012,7 +2019,12 @@ function bwUpdateEstimate() {
   var elVal = document.getElementById("bw-estimate-ifr");
   if (!el || !elVal) return;
   if (!input || input <= 0) { el.style.display = "none"; return; }
-  var totalEth = parseFloat(status ? status.totalETHRaised : "0") + input;
+  if (!status || status.available === false) {
+    // No real total available — an estimate would be fabricated (CWA-48).
+    el.style.display = "none";
+    return;
+  }
+  var totalEth = parseFloat(status.totalETHRaised) + input;
   var estimated = fmtIFR((input / totalEth) * BW.IFR_ALLOCATION);
   elVal.textContent = estimated;
   el.style.display = "block";
@@ -2025,12 +2037,14 @@ function bwUpdateUI(state) {
   var bootstrapNotStarted = now < BW.START;
   var bootstrapActive = now >= BW.START && now < BW.END;
   var bootstrapEnded = now >= BW.END;
-  var finalized = state && state.bootstrapStatus ? state.bootstrapStatus.finalized : false;
+  var bsStatus = state ? state.bootstrapStatus : null;
+  var statusUnavailable = !!(bsStatus && bsStatus.available === false);
+  var finalized = bsStatus && !statusUnavailable ? bsStatus.finalized === true : false;
   var myContrib = parseFloat((state && state.bootstrapContributionETH) ? state.bootstrapContributionETH : "0");
   var alreadyClaimed = state ? !!state.bootstrapClaimed : false;
 
   // Stats immer updaten
-  bwUpdateStats(state ? state.bootstrapStatus : null);
+  bwUpdateStats(bsStatus);
 
   // Sections togglen (wallet notice hidden when connected)
   var walletNotice = document.getElementById("bw-wallet-notice");
@@ -2043,7 +2057,7 @@ function bwUpdateUI(state) {
   if (connected && state) {
     // Meine Contribution (auch wenn bereits geclaimed \u2014 zeige historischen Betrag aus IFR-Balance)
     if (myContrib > 0) {
-      var totalEth = parseFloat(state.bootstrapStatus ? state.bootstrapStatus.totalETHRaised : "0");
+      var totalEth = !statusUnavailable && bsStatus ? parseFloat(bsStatus.totalETHRaised) : 0;
       var myIFR = totalEth > 0
         ? ((myContrib / totalEth) * BW.IFR_ALLOCATION).toLocaleString(undefined, {maximumFractionDigits: 0})
         : "\u2014";
@@ -2054,7 +2068,14 @@ function bwUpdateUI(state) {
 
     // Claim/Refund Logic
     if (bootstrapEnded && (myContrib > 0 || alreadyClaimed)) {
-      if (finalized && myContrib > 0 && !alreadyClaimed) {
+      if (statusUnavailable) {
+        // CWA-48: unknown chain state must never enable a write. Show the
+        // honest state and keep every write control hidden (fail closed).
+        document.getElementById("bw-claim-title").textContent = "\u26A0\uFE0F Status unavailable";
+        document.getElementById("bw-claim-desc").textContent = "Bootstrap status could not be loaded from the network. Reload the page or check your connection before claiming or refunding.";
+        document.getElementById("bw-claim-btn").style.display = "none";
+        document.getElementById("bw-refund-btn").style.display = "none";
+      } else if (finalized && myContrib > 0 && !alreadyClaimed) {
         document.getElementById("bw-claim-title").textContent = "\uD83C\uDF81 Claim Your IFR";
         document.getElementById("bw-claim-desc").textContent = "Bootstrap finalized. Claim your pro-rata IFR allocation.";
         document.getElementById("bw-claim-btn").style.display = "";

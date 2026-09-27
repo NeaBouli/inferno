@@ -1,8 +1,13 @@
 /**
- * IFR State — v1.0
+ * IFR State — v1.1
  * On-chain state reader for all IFR pages.
  * Reads: IFR balance, lock status, bootstrap contribution.
  * Auto-refresh every 60s when wallet connected.
+ *
+ * v1.1 — CWA-48: when the aggregate and individual bootstrap reads both fail,
+ *        bootstrapStatus is `{ available: false, ...null }` instead of
+ *        hardcoded defaults. Consumers must not render fabricated values or
+ *        enable writes from unavailable status.
  */
 window.IFRState = (() => {
 
@@ -79,6 +84,7 @@ window.IFRState = (() => {
         const startTime = await bootstrap.startTime();
         const endTime = await bootstrap.endTime();
         result.bootstrapStatus = {
+          available: true,
           active: status.active,
           finalized: status._finalised,
           totalETHRaised: ethers.formatEther(totalETHRaised),
@@ -100,6 +106,7 @@ window.IFRState = (() => {
           const now = Date.now();
           const endMs = Number(endTime) * 1000;
           result.bootstrapStatus = {
+            available: true,
             active: !finalised && now < endMs,
             finalized: finalised,
             totalETHRaised: ethers.formatEther(totalETHRaised),
@@ -110,13 +117,16 @@ window.IFRState = (() => {
             ifrAllocation: ethers.formatUnits(ifrAllocation, 9),
           };
         } catch(e2) {
-          console.warn("Individual bootstrap calls failed, using defaults:", e2.message);
-          // Hardcoded defaults from deployment
+          console.warn("Individual bootstrap calls failed, status unavailable:", e2.message);
+          // CWA-48: never fabricate a plausible chain value. Represent the
+          // status as explicitly unavailable so consumers cannot render a
+          // false zero/not-finalized state or enable a write from it.
           result.bootstrapStatus = {
-            active: false, finalized: false,
-            totalETHRaised: "0.0", contributorCount: 0,
-            timeRemaining: 0, startTime: 1772841600000, endTime: 1780617600000,
-            ifrAllocation: "200000000",
+            available: false,
+            active: null, finalized: null,
+            totalETHRaised: null, contributorCount: null,
+            timeRemaining: null, startTime: null, endTime: null,
+            ifrAllocation: null,
           };
         }
       }

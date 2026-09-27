@@ -21,6 +21,7 @@ const TEST_ADMIN_SECRET = 'test-admin-secret-0123456789abcdef0123456789';
 jest.mock('../src/config', () => ({
   config: {
     CHAIN_ID: 11155111,
+    SELLER_AUTH_DOMAIN: 'shop.example.test',
     RPC_URL: 'https://mock-rpc.example.com',
     IFR_TOKEN_ADDRESS: '0x0000000000000000000000000000000000000002',
     IFRLOCK_ADDRESS: '0x0000000000000000000000000000000000000001',

@@ -1,0 +1,133 @@
+@startuml
+title Verification/authorization trace (main path)
+actor User
+participant "commands/verify.js" as Cmd
+participant "middleware/rateLimit.js" as RL
+participant "services/nonceStore.js" as Nonce
+participant "services/verificationStore.js" as Store
+participant "Traefik (trusted proxy hop)" as Proxy
+participant "src/index.js verifyApp" as API
+participant "middleware/apiRateLimit.js" as ARL
+participant "services/onChainReader.js" as Chain
+participant "src/index.js message guard" as Gate
+
+User -> RL : /verify (private chat)
+RL -> Cmd : next()
+Cmd -> Nonce : createNonce(userId)
+Nonce --> Cmd : nonce (CSPRNG, TTL 10min)
+Cmd --> User : nonce via DM
+
+User -> Proxy : POST /api/verify {nonce, signature, wallet}
+Proxy -> ARL : forward + X-Forwarded-For (client IP)
+ARL -> API : next() [req.ip = client IP]
+API -> Nonce : claimNonce(nonce) [atomic, before any await]
+API -> Chain : determineTier(wallet)
+Chain --> API : tier
+API -> Store : setVerified(userId, wallet, tier) [unique wallet]
+API --> User : { success, tier }
+
+User -> Gate : message in protected topic
+Gate -> Store : getWallet / reverifyFromMap(userId)
+Gate -> Chain : determineTier(wallet) [live]
+Chain --> Gate : tier
+Gate -> Store : tierHasTopicAccess(tier, threadId)
+alt access granted
+  Gate -> Cmd : next() -> command handler runs
+else denied
+  Gate -> User : deleteMessage + DM reason
+end
+
+User -> RL : /unverify
+RL -> Cmd : next()
+Cmd -> Store : unverify(userId)
+Store --> Cmd : binding removed
+Cmd --> User : confirmation
+@enduml
+
+@startuml
+title Privilege/CORS/content-trust trace (main path)
+actor Browser
+participant "middleware/verifyCors.js" as Cors
+participant "index.js::verifyApp" as Api
+participant "handlers/channelSync.js" as Sync
+participant "commands/ask.js" as Ask
+participant "services/skywalker.js" as AI
+participant "services/telegramText.js" as Text
+participant "Telegram" as Tg
+
+== browser origin -> verify API CORS ==
+Browser -> Cors : POST /api/verify (Origin header)
+Cors -> Cors : resolveAllowedOrigin: parse URL,\nexact https origin allowlist
+alt origin allowlisted
+  Cors -> Api : forward + ACAO=<exact origin>, Vary: Origin
+else other/malformed/null origin
+  Cors -> Api : forward without CORS headers (browser blocks)
+else no Origin header
+  Cors -> Api : non-browser client policy:\nprocessed, no CORS headers
+end
+
+== channel content -> community output + pin ==
+Tg -> Sync : channel_post update
+Sync -> Sync : isTrustedChannelPost:\nchat == TELEGRAM_CHANNEL_ID,\nnot forwarded/relayed, sender_chat == channel
+alt trusted
+  Sync -> Text : toPlainText(text, 4096 budget)
+  Sync -> Tg : sendMessage(group, plain text, no parse_mode)
+  Sync -> Tg : pinChatMessage(group, sent id)
+else unknown/forwarded/missing metadata
+  Sync -> Tg : nothing (fail closed)
+end
+
+== ask content -> Telegram output ==
+Ask -> AI : askSkywalker(userId, question)
+AI --> Ask : untrusted answer string
+Ask -> Text : toPlainText(answer, 4096 - header)
+Ask -> Tg : editMessageText(plain text, no parse_mode)
+@enduml
+
+@startuml
+title Benefits seller authorization (read or mutation) and attest budget
+actor Seller
+participant "routes/seller.ts" as Routes
+participant "sellerAuthorizationChallenge.ts" as Chal
+participant "sellerAuth.ts" as Auth
+participant "sessionService.ts" as Sess
+actor Customer
+Seller -> Routes : GET /auth-message(action, businessId, walletAddress, scope?)
+Routes -> Chal : issueSellerAuthorizationChallenge (bounded prune + insert nonce)
+Routes --> Seller : message(Domain, Chain ID, Scope, Nonce, Timestamp, Expires)
+Seller -> Routes : request + x-ifr-wallet/signature/timestamp/nonce
+Routes -> Auth : verifySellerSignature(context, action, business, scope, nonce)
+Routes -> Chal : consumeSellerAuthorizationChallenge (updateMany count == 1)
+alt replayed or concurrent duplicate
+  Routes --> Seller : 401 already used
+else first use
+  Routes --> Seller : 200 / action result
+end
+Customer -> Sess : attest(sessionId, signature)
+alt signature not recoverable
+  Sess -> Sess : assertAttestable (read-only, no attempt consumed)
+else wallet recovered
+  Sess -> Sess : reserveAttestAttempt (locked tx, attempt + wallet bind)
+end
+@enduml
+
+@startuml
+title Points voucher issue and identity-free validation
+actor User as PointsUser
+participant "routes/voucher.ts" as VoucherRoute
+participant "Auth + lock proof" as PointsGuard
+database "Points DB" as PointsDB
+participant "voucher-signer.ts" as VoucherSigner
+PointsUser -> VoucherRoute : POST /voucher/issue
+VoucherRoute -> PointsGuard : requireAuth + requireLockProof
+PointsGuard --> VoucherRoute : eligible wallet
+VoucherRoute -> PointsDB : transaction: caps + conditional threshold debit
+VoucherRoute -> VoucherSigner : signVoucher(voucher)
+VoucherSigner --> VoucherRoute : signature
+VoucherRoute -> PointsDB : redemption event + voucher, commit
+VoucherRoute --> PointsUser : voucher + signature
+PointsUser -> VoucherRoute : GET /voucher/validate/:nonce
+VoucherRoute -> PointsDB : findFirst(nonce), no wallet join
+PointsDB --> VoucherRoute : status fields
+VoucherRoute --> PointsUser : status without wallet identity
+@enduml
