@@ -33,6 +33,10 @@ on:
       - 'scripts/test-markdownlint-baseline.cjs'
       - 'scripts/test-workflow-triggers.cjs'
       - 'scripts/test-roadmap-status-sync.cjs'
+      - 'scripts/railway-release-preflight.cjs'
+      - 'scripts/test-railway-release.cjs'
+      - '.github/workflows/railway-copilot-release.yml'
+      - '.github/workflows/ai-copilot.yml'
       - 'scripts/test-wiki-head-integrity.cjs'
       - 'scripts/test-wiki-jsonld.cjs'
       - 'scripts/test-surface-routing.cjs'
@@ -79,6 +83,10 @@ on:
       - 'scripts/test-markdownlint-baseline.cjs'
       - 'scripts/test-workflow-triggers.cjs'
       - 'scripts/test-roadmap-status-sync.cjs'
+      - 'scripts/railway-release-preflight.cjs'
+      - 'scripts/test-railway-release.cjs'
+      - '.github/workflows/railway-copilot-release.yml'
+      - '.github/workflows/ai-copilot.yml'
       - 'scripts/test-wiki-head-integrity.cjs'
       - 'scripts/test-surface-routing.cjs'
       - 'scripts/test-web3-headers.cjs'
@@ -199,6 +207,9 @@ jobs:
 
       - name: Check roadmap and status consistency
         run: npm run test:roadmap-status-sync
+
+      - name: Check Railway release gate contract
+        run: npm run test:railway-release
 
       - name: Check public content trust
         run: npm run test:content-trust

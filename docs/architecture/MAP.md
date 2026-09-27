@@ -447,6 +447,7 @@ provider call.
 | live-wiki | bounded-trust live wiki snapshot | `server/live-wiki.ts::LiveWikiRefresher` | gebaut |
 | surface-context | surface routing context | `server/surface-context.ts::buildSurfaceContext` | gebaut |
 | budget | daily cost gate (fail-closed) | `server/budget.ts::DailyBudget` | gebaut |
+| deploy-lane | manual exact-SHA Railway release of `apps/ai-copilot` (preflight gate, `production` approval, single `railway up`) | `.github/workflows/railway-copilot-release.yml` + `scripts/railway-release-preflight.cjs` | gebaut (not yet executed; runbook `docs/RAILWAY_COPILOT_RELEASE.md`) |
 
 ### 8.4 Verdrahtung
 
@@ -459,6 +460,11 @@ provider call.
   by the dynamic-data policy inside prompt-policy.
 - server → budget → Anthropic: only unguarded requests reserve budget and
   call the provider.
+- deploy-lane → Railway: out-of-band of the chat trace. `workflow_dispatch` on
+  `main` with `sha` + `mode`; the preflight gate requires SHA == `origin/main`
+  and green `ai-copilot.yml` + `security-audit.yml` runs on that SHA, re-runs
+  after `production` approval, then one `railway up` of the asserted checkout.
+  Railway GitHub autodeploy remains a second path until disabled by Gio.
 
 ### 8.5 Widerspruch und Lücken
 
@@ -497,6 +503,9 @@ mindmap
       gebaut: server/surface-context.ts::buildSurfaceContext
     budget
       gebaut: server/budget.ts::DailyBudget
+    deploy-lane
+      gebaut: .github/workflows/railway-copilot-release.yml
+      gebaut: scripts/railway-release-preflight.cjs
 ```
 
 ### 8.7 Nächster Schritt

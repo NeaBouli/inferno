@@ -153,6 +153,9 @@ proute --> pdb : findFirst(nonce)
 *** gebaut: server/surface-context.ts::buildSurfaceContext
 ** budget
 *** gebaut: server/budget.ts::DailyBudget
+** deploy-lane
+*** gebaut: .github/workflows/railway-copilot-release.yml
+*** gebaut: scripts/railway-release-preflight.cjs
 @endmindmap
 
 @startuml
@@ -178,6 +181,10 @@ package "surface-context" {
 package "budget" {
   [budget.ts::DailyBudget]
 }
+package "deploy-lane" {
+  [railway-copilot-release.yml]
+  [railway-release-preflight.cjs]
+}
 [server/index.ts::chat] --> [server/dynamic-intent.ts::classifyDynamicIntent] : last user message
 [server/dynamic-intent.ts::classifyDynamicIntent] --> [server/dynamic-intent.ts::buildDynamicDataFallback] : intent class
 [server/index.ts::chat] --> [system-prompts.ts::SYSTEM_PROMPTS] : unguarded request
@@ -185,4 +192,5 @@ package "budget" {
 [server/index.ts::chat] --> [live-wiki.ts::LiveWikiRefresher] : getContext()
 [server/index.ts::chat] --> [surface-context.ts::buildSurfaceContext] : surface
 [server/index.ts::chat] --> [budget.ts::DailyBudget] : tryReserve (unguarded only)
+[railway-copilot-release.yml] --> [railway-release-preflight.cjs] : exact SHA gate (pre + post approval)
 @enduml
