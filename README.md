@@ -5,7 +5,7 @@
 # Inferno Protocol ($IFR)
 
 > Deflationary ERC-20 utility token on Ethereum Mainnet.
-> Every transfer burns 2.5% permanently.
+> Every standard transfer between non-exempt addresses burns 2.5% permanently.
 > Lock IFR once — activate premium access while the required IFR remains locked and the integration remains available.
 
 **Contract:** [`0x77e99917Eca8539c62F509ED1193ac36580A6e7B`](https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code) | **Network:** Ethereum Mainnet | **Bootstrap:** FINALIZED ✅ June 5, 2026 | **LP Token:** [`0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0`](https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0)
@@ -34,7 +34,7 @@
 
 ## What is Inferno?
 
-Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every transfer burns 2.5% permanently, reducing total supply over time. Users lock IFR tokens on-chain to activate builder-product access without a recurring subscription; access remains active while each product's required IFR stays locked and that integration remains available.
+Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every standard transfer between non-exempt addresses burns 2.5% permanently, reducing total supply over time. Users lock IFR tokens on-chain to activate builder-product access without a recurring subscription; access remains active while each product's required IFR stays locked and that integration remains available.
 
 **Community Fair Launch Model** — No presale, no VC, no insider allocations.
 
@@ -55,7 +55,7 @@ Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every transfer
 
 ## Key Features
 
-- **Deflationary**: 2.5% burned per transfer (2% sender + 0.5% recipient). 1% pool fee. Hard cap: 5% max.
+- **Deflationary**: 2.5% burned per standard transfer between non-exempt addresses (2% sender + 0.5% recipient), plus a 1% pool fee; transfers where either side is fee-exempt pay no fee. Hard cap: 5% max.
 - **Utility Lock**: Lock IFR → access while the required amount remains locked and the integration remains available → unlock anytime.
 - **Timelock Governance**: 48-hour delay on all changes. Guardian cancel. No instant admin access.
 - **No Mint Function**: Supply can only decrease, never increase.
@@ -64,15 +64,17 @@ Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every transfer
 ## Token Allocation
 
 | Allocation | Share | Amount | Note |
-|-----------|-------|--------|------|
-| DEX Liquidity | 40% | 400M IFR | Held by the LP Reserve Safe (3-of-5) for governance-controlled LP expansion. The Bootstrap pool was created separately with 100M IFR + 0.030 ETH. |
-| Liquidity Reserve | 20% | 200M IFR | Initial timelock ended 01.09.2026. The contract still holds all 200M IFR; the current withdrawal cap is 50M IFR per 90-day period. No withdrawal or LP deployment has occurred. NOT used for Bootstrap. |
+| --- | --- | --- | --- |
+| DEX Liquidity | 40% | 400M IFR | Original intent: governance-controlled LP expansion. Current custody: the LP Reserve Safe (3-of-5, `0x5D93...C04`) holds 400.6M IFR, received from the Deployer on 18.03.2026; it does not hold the Treasury or Community allocations. The Bootstrap pool was created separately with 100M IFR + 0.030 ETH. |
+| Liquidity Reserve | 20% | 200M IFR | Initial timelock ended 01.09.2026. The contract still holds all 200M IFR; the current withdrawal cap is 50M IFR per 90-day period — a Governance parameter (`setMaxWithdrawPerPeriod`, 48h timelock), not an immutable limit; only the 90-day period length is immutable. No withdrawal or LP deployment has occurred. NOT used for Bootstrap. |
 | Team Vesting | 15% | 150M IFR | 12-month cliff, 36-month linear vesting. 0 tokens available before March 2027. |
-| Treasury | 15% | 150M IFR | Gnosis Safe multisig (0x5ad6193...). Funded Bootstrap through 144.75M IFR initial funding plus a 5.25M IFR top-up. No automatic refill path is deployed. |
-| Community & Grants | 6% | 60M IFR | Community Safe (57.9M received after burn). 50M → Bootstrap. ~7.9M operational reserve. |
+| Treasury | 15% | 150M IFR | Original intent: genesis allocation to the Treasury Safe (3-of-5, `0x5ad6193...`). Current custody: the Treasury Safe holds 0 IFR — the full 150M funded BootstrapVaultV3 (144.75M IFR initial funding plus a 5.25M IFR top-up). No automatic refill path is deployed. |
+| Community & Grants | 6% | 60M IFR | Original intent: genesis allocation to the Community Safe (3-of-5); 57.9M arrived after the 2.5% burn and 1% pool fee on the non-exempt migration transfer. Current custody: 50M funded BootstrapVaultV3 (Plan B, 11.03.2026); the Community Safe holds the remaining 7.9M operational reserve. |
 | Builder Ecosystem | 4% | 40M IFR | PartnerVault contract. Lock-triggered Creator Rewards, milestone vesting. |
 
-BuybackVault and BurnReserve accumulate from the 1% protocol pool fee — not pre-funded genesis allocations.
+Custody figures verified on-chain at block 26,065,893; the block-pinned breakdown lives on the [transparency page](https://ifrunit.tech/wiki/transparency.html).
+
+The 1% IFR transfer-pool fee accrues to FeeRouterV1, which has no IFR withdrawal or forwarding function: these fees stay there as a de-facto sink and are not forwarded to BuybackVault or BurnReserve (at block 26,065,893 both held 0 IFR while FeeRouterV1 held 722,304.949548316 IFR). No buyback/burn flywheel is fed by the pool fee today.
 Team tokens: 48-month vesting, 12-month cliff. Liquidity reserve: initial lock ended 01.09.2026; staged Governance-controlled withdrawals remain unused.
 
 ## Fair Launch
@@ -245,7 +247,7 @@ Embedded chat widget with RAG knowledge base — helps users, builders, and deve
 
 **Modes:** Customer · Builder · Developer
 
-**Safety:** Automatic seed phrase / private key detection, instant warnings, source citation tags.
+**Safety:** No surface runs an automatic seed-phrase or private-key detector. The served chat widget (`copilot-api.ifrunit.tech`, embedded on the site) shows a static "never share private keys" notice, and the system prompts instruct the model never to ask for or accept seed phrases, private keys or mnemonics. The standalone React component (`apps/ai-copilot/src/components/IFRCopilot.tsx`) adds a client-side keyword warning for the phrases "seed phrase", "private key", "mnemonic" and "secret recovery"; it does not recognise raw keys or word lists. Source citation tags.
 
 **Start:** `cd apps/ai-copilot && npm ci && cp .env.example .env && npm run dev` → http://localhost:5175
 
@@ -287,7 +289,7 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [Investor One-Pager](docs/ONE-PAGER.md) — Key numbers, products, technology, pre-mainnet checklist
 - [E2E Flow: Points → Voucher → FeeRouter](docs/E2E_FLOW.md) — Complete end-to-end flow
 - [YouTube Integration Guide](docs/YOUTUBE_INTEGRATION.md) — Hybrid Model B, Creator Gateway, Entitlement Config
-- [Security Policy](docs/SECURITY_POLICY.md) — Responsible Disclosure, Bug Bounty, Scope
+- [Security Policy](docs/SECURITY_POLICY.md) — Responsible Disclosure, bug bounty status (no program), Scope
 - [Tokenomics Model](docs/TOKENOMICS_MODEL.md) — Deflation curve, emission model, lock economics
 - [Builder Rewards Spec](docs/PARTNER_REWARDS_SPEC.md) — Reward formula, vesting, anti-gaming, builder types
 - [Benefits Network Test Guide](docs/BENEFITS_NETWORK_TEST.md) — E2E test, API endpoints, lock tiers

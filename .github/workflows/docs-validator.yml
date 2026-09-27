@@ -24,6 +24,7 @@ on:
       - 'scripts/test-functionality-status.cjs'
       - 'scripts/check-cwa-remediation-register.cjs'
       - 'scripts/test-cwa-content-coherence.cjs'
+      - 'scripts/check-sitemap-anchors.cjs'
       - 'scripts/check-july-audit-remediation-register.cjs'
       - 'scripts/test-docs-workflow.cjs'
       - 'scripts/check-markdownlint-baseline.cjs'
@@ -67,6 +68,7 @@ on:
       - 'scripts/test-functionality-status.cjs'
       - 'scripts/check-cwa-remediation-register.cjs'
       - 'scripts/test-cwa-content-coherence.cjs'
+      - 'scripts/check-sitemap-anchors.cjs'
       - 'scripts/check-july-audit-remediation-register.cjs'
       - 'scripts/test-docs-workflow.cjs'
       - 'scripts/check-markdownlint-baseline.cjs'
@@ -134,6 +136,9 @@ jobs:
 
       - name: Validate Wiki JSON-LD
         run: npm run test:wiki-jsonld
+
+      - name: Validate sitemaps and AI anchors
+        run: npm run test:sitemap-anchors
 
   validate-links:
     name: Internal Link Check

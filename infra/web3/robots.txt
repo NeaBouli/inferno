@@ -1,0 +1,27 @@
+User-agent: *
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: cohere-ai
+Allow: /
+
+Disallow: /.env
+Disallow: /node_modules/
+
+# web3.ifrunit.tech lists only its own URLs. Documentation lives on ifrunit.tech,
+# which publishes its own sitemap; shop.ifrunit.tech publishes its own as well.
+Sitemap: https://web3.ifrunit.tech/sitemap.xml

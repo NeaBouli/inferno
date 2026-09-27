@@ -880,7 +880,9 @@ console.<span class="function">log</span>(<span class="string">"Net received:"</
             <p class="contract-description">
                 Holds <strong>200M IFR</strong> as a strategic liquidity reserve with a time-lock and staged withdrawal
                 mechanism. Tokens are locked for an initial lock period (6 months in production). After the lock expires,
-                withdrawals are rate-limited to a maximum amount per period (e.g. 50M per quarter) to prevent supply shocks.
+                withdrawals are rate-limited to a maximum amount per period (currently 50M IFR per 90 days) to prevent supply shocks.
+                The per-period maximum is owner-settable via <code>setMaxWithdrawPerPeriod</code> (owner: Governance, 48h timelock);
+                only the period length is immutable.
                 Includes a guardian role for emergency pause/unpause.
             </p>
 
@@ -2055,7 +2057,7 @@ console.<span class="function">log</span>(<span class="string">"Since:"</span>, 
                 <li>Milestone replay protection via <code>milestoneDone</code> mapping</li>
                 <li><strong>AuthorizedCaller whitelist:</strong> <code>recordLockReward</code> callable by admin OR whitelisted backend wallet</li>
                 <li><strong>Anti-double-count:</strong> each <code>(wallet, partnerId)</code> pair can only be rewarded once</li>
-                <li><strong>Algorithmic emission throttle:</strong> reward rate scales from <code>rewardBps</code> down to <code>MIN_REWARD_BPS</code> (500) as global lock ratio rises from 1% to 50%</li>
+                <li><strong>Algorithmic emission throttle (inactive on Mainnet):</strong> when <code>setIFRLock</code> is configured, reward rate scales from <code>rewardBps</code> down to <code>MIN_REWARD_BPS</code> (500) as global lock ratio rises from 1% to 50%; Mainnet <code>ifrLock</code> is unset (address(0)), so the flat <code>rewardBps</code> of 1500 applies</li>
                 <li>SafeERC20 for all token transfers</li>
             </ul>
         </div>
