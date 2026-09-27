@@ -889,7 +889,7 @@ test("Android 9 stays in browser mode instead of launching an incompatible WebAP
 
 test("Web3 service worker bounds offline navigation before using the cache", () => {
   const source = readFileSync("docs/web3-sw.js", "utf8");
-  expect(source).toContain('const CACHE_NAME = "ifr-web3-v16"');
+  expect(source).toContain('const CACHE_NAME = "ifr-web3-v17"');
   expect(source).toContain("const NAVIGATION_TIMEOUT_MS = 5000");
   expect(source).toContain("fetchNavigation(request)");
   expect(source).toContain('fetch(request, { cache: "no-store", signal: controller.signal })');
@@ -909,4 +909,211 @@ test("Web3 app shell reloads from the service-worker cache while offline", async
   await expect(page.locator("h1")).toContainText("Lock IFR");
   await context.setOffline(false);
   await context.close();
+});
+
+/* ──────────────────────────────────────────────────────────
+   T-121 header regression: the single-row nav band above
+   980px let .nav-links shrink (min-width: 0) and paint its
+   centered links over the brand tags and the install button
+   ("$IFRp" / "Add to Home Screen" overlap on iPad widths).
+   ────────────────────────────────────────────────────────── */
+const IPAD_UA =
+  "Mozilla/5.0 (iPad; CPU OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1";
+const IPHONE_UA =
+  "Mozilla/5.0 (iPhone; CPU iPhone OS 15_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.0 Mobile/15E148 Safari/604.1";
+
+const HEADER_CASES = [
+  { name: "1280x800", width: 1280, height: 800, ua: IPAD_UA },
+  { name: "820x1180", width: 820, height: 1180, ua: IPAD_UA },
+  { name: "1180x820", width: 1180, height: 820, ua: IPAD_UA },
+  { name: "768x1024", width: 768, height: 1024, ua: IPAD_UA },
+  { name: "1024x768", width: 1024, height: 768, ua: IPAD_UA },
+  { name: "390x844", width: 390, height: 844, ua: IPHONE_UA },
+];
+
+function measureHeaderGeometry() {
+  const items = [];
+  const push = (name, el) => {
+    if (!el) return;
+    const cs = getComputedStyle(el);
+    const r = el.getBoundingClientRect();
+    if (r.width <= 0 || r.height <= 0 || cs.display === "none" || cs.visibility === "hidden") return;
+    items.push({ name, left: r.left, right: r.right, top: r.top, bottom: r.bottom, height: r.height });
+  };
+  push("brand", document.querySelector(".nav .brand"));
+  document.querySelectorAll(".nav .nav-links a").forEach((a, index) => push(`link-${index}`, a));
+  document.querySelectorAll(".nav .nav-actions > *").forEach((el, index) => push(`action-${index}`, el));
+  const overlaps = [];
+  for (let i = 0; i < items.length; i++) {
+    for (let j = i + 1; j < items.length; j++) {
+      const a = items[i];
+      const b = items[j];
+      const x = Math.min(a.right, b.right) - Math.max(a.left, b.left);
+      const y = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top);
+      if (x > 0.5 && y > 0.5) overlaps.push(`${a.name} x ${b.name}`);
+    }
+  }
+  const install = document.querySelector(".nav-actions [data-install-app]");
+  const installRect = install ? install.getBoundingClientRect() : { width: 0 };
+  return {
+    innerWidth: window.innerWidth,
+    pageOverflow: document.documentElement.scrollWidth - window.innerWidth,
+    overlaps,
+    actionHeights: items.filter((item) => item.name.startsWith("action-")).map((item) => item.height),
+    installVisible: Boolean(install && !install.hidden && installRect.width > 0 && getComputedStyle(install).display !== "none"),
+    installLabel: install ? install.textContent.trim() : null,
+  };
+}
+
+for (const standalone of [false, true]) {
+  for (const device of HEADER_CASES) {
+    test(`Web3 header shows no overlap or overflow at ${device.name} (${standalone ? "standalone" : "browser tab"})`, async ({ browser }) => {
+      const context = await browser.newContext({
+        viewport: { width: device.width, height: device.height },
+        userAgent: device.ua,
+        hasTouch: true,
+        isMobile: true,
+        serviceWorkers: "block",
+      });
+      if (standalone) {
+        await context.addInitScript(() => {
+          Object.defineProperty(window.navigator, "standalone", { value: true, configurable: true });
+        });
+      }
+      const page = await context.newPage();
+      await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+      await expect(page.locator(".nav-actions [data-wallet-connect]")).toBeVisible();
+      await page.evaluate(() => document.fonts.ready);
+      const geometry = await page.evaluate(measureHeaderGeometry);
+      expect(geometry.innerWidth).toBe(device.width);
+      expect(geometry.overlaps).toEqual([]);
+      expect(geometry.pageOverflow).toBeLessThanOrEqual(0);
+      for (const height of geometry.actionHeights) expect(height).toBeGreaterThanOrEqual(44);
+      if (standalone) {
+        expect(geometry.installVisible).toBe(false);
+      } else if (device.width > 680) {
+        expect(geometry.installVisible).toBe(true);
+        expect(geometry.installLabel).toBe("Add to Home Screen");
+      }
+      await context.close();
+    });
+  }
+}
+
+/* ──────────────────────────────────────────────────────────
+   T-121 wallet regression: WalletConnect module load failures
+   must surface an honest, recoverable error.
+   Class 1 (fetch failure): the browser caches a failed dynamic
+   import for the document lifetime, so recovery is a reload —
+   the failure must not poison anything else.
+   Class 2 (init failure, e.g. storage unavailable): the module
+   stays cached, so the next user tap must retry init instead of
+   serving the permanently cached null.
+   ────────────────────────────────────────────────────────── */
+const WC_GOOD_MODULE = `
+  const provider = {
+    session: null,
+    accounts: [],
+    enable: async () => {
+      provider.accounts = ["${ACCOUNT}"];
+      return provider.accounts;
+    },
+    request: async ({ method }) => {
+      if (method === "eth_accounts" || method === "eth_requestAccounts") return provider.accounts;
+      if (method === "eth_chainId") return "0x1";
+      if (method === "net_version") return "1";
+      if (method === "eth_getBalance") return "0x0";
+      if (method === "eth_blockNumber") return "0x10";
+      if (method === "eth_call") return "0x" + "0".repeat(64);
+      return null;
+    },
+    on: () => {},
+    removeListener: () => {},
+    disconnect: async () => null,
+  };
+  export const EthereumProvider = { init: async () => provider };
+`;
+
+const WC_FLAKY_INIT_MODULE = `
+  let initAttempts = 0;
+  ${WC_GOOD_MODULE.replace("export const EthereumProvider = { init: async () => provider };", `
+  export const EthereumProvider = {
+    init: async () => {
+      initAttempts += 1;
+      if (initAttempts === 1) throw new Error("transient init failure");
+      return provider;
+    },
+  };`)}
+`;
+
+async function routeWalletConnectModule(context, shouldFail, body) {
+  await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js", async (route) => {
+    if (shouldFail()) return route.abort();
+    await route.fulfill({
+      status: 200,
+      contentType: "application/javascript",
+      headers: { "Access-Control-Allow-Origin": "*" },
+      body,
+    });
+  });
+}
+
+test("WalletConnect fetch failure shows an honest error and recovers after reload", async ({ browser }) => {
+  const context = await browser.newContext({ serviceWorkers: "block" });
+  const pageErrors = [];
+  let failImport = true;
+  try {
+    await routeWalletConnectModule(context, () => failImport, WC_GOOD_MODULE);
+    const page = await context.newPage();
+    page.on("pageerror", (error) => pageErrors.push(error.message));
+    await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+    await expect.poll(() => page.evaluate(() => typeof window.IFRWallet)).toBe("object");
+
+    await page.locator("[data-wallet-connect]").first().click();
+    await page.locator('[data-wallet-option="walletconnect"]').click();
+    await expect(page.locator("#ifr-wallet-help-modal")).toBeVisible();
+    await expect(page.locator("[data-wallet-state]").first()).toHaveText("Connect failed");
+    expect(await page.evaluate(() => window.IFRWallet.isConnected())).toBe(false);
+
+    failImport = false;
+    await page.reload({ waitUntil: "domcontentloaded" });
+    await expect.poll(() => page.evaluate(() => typeof window.IFRWallet)).toBe("object");
+    await page.locator("[data-wallet-connect]").first().click();
+    await page.locator('[data-wallet-option="walletconnect"]').click();
+    await expect(page.locator("[data-wallet-state]").first()).toContainText("Connected", { timeout: 10_000 });
+    expect(await page.evaluate(() => window.IFRWallet.isConnected())).toBe(true);
+    expect(pageErrors).toEqual([]);
+  } finally {
+    await context.close();
+  }
+});
+
+test("WalletConnect init failure stays recoverable on the next attempt", async ({ browser }) => {
+  const context = await browser.newContext({ serviceWorkers: "block" });
+  const pageErrors = [];
+  try {
+    await routeWalletConnectModule(context, () => false, WC_FLAKY_INIT_MODULE);
+    const page = await context.newPage();
+    page.on("pageerror", (error) => pageErrors.push(error.message));
+    await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+    await expect.poll(() => page.evaluate(() => typeof window.IFRWallet)).toBe("object");
+
+    // First attempt: init throws once — honest fallback, no connection.
+    await page.locator("[data-wallet-connect]").first().click();
+    await page.locator('[data-wallet-option="walletconnect"]').click();
+    await expect(page.locator("#ifr-wallet-help-modal")).toBeVisible();
+    await expect(page.locator("[data-wallet-state]").first()).toHaveText("Connect failed");
+    expect(await page.evaluate(() => window.IFRWallet.isConnected())).toBe(false);
+    await page.locator("#ifr-wallet-help-close").click();
+    await expect(page.locator("#ifr-wallet-help-modal")).toHaveCount(0);
+
+    // The next user tap must retry init (module itself stays cached).
+    await page.locator("[data-wallet-connect]").first().click();
+    await page.locator('[data-wallet-option="walletconnect"]').click();
+    await expect(page.locator("[data-wallet-state]").first()).toContainText("Connected", { timeout: 10_000 });
+    expect(await page.evaluate(() => window.IFRWallet.isConnected())).toBe(true);
+    expect(pageErrors).toEqual([]);
+  } finally {
+    await context.close();
+  }
 });
