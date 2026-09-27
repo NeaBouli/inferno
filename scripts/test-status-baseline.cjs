@@ -25,7 +25,7 @@ const packageJson = JSON.parse(read("package.json"));
 const packageLock = JSON.parse(read("package-lock.json"));
 assert.equal(packageJson.engines?.node, ">=22.13.0");
 assert.equal(packageJson.dependencies?.ethers, "6.17.0");
-assert.equal(packageJson.devDependencies?.hardhat, "3.15.0");
+assert.equal(packageJson.devDependencies?.hardhat, "3.17.0");
 assert.equal(packageJson.devDependencies?.["@nomicfoundation/hardhat-verify"], "3.1.0");
 assert.equal(packageJson.overrides?.["serialize-javascript"], "7.0.5");
 assert.equal(packageJson.devDependencies?.chai, "6.2.2");
@@ -34,7 +34,7 @@ assert.equal(
   packageJson.scripts?.["test:mocha-serializer"],
   "mocha --parallel --jobs 2 test/mocha-serializer-compat.test.cjs"
 );
-assert.equal(packageLock.packages?.["node_modules/hardhat"]?.version, "3.15.0");
+assert.equal(packageLock.packages?.["node_modules/hardhat"]?.version, "3.17.0");
 assert.equal(
   packageLock.packages?.["node_modules/@nomicfoundation/hardhat-verify"]?.version,
   "3.1.0"
@@ -54,7 +54,7 @@ assert.equal(
 const currentBaseline = [
   "**Current engineering baseline:** 6 September 2026",
   "Current repository verification",
-  "Hardhat `3.15.0`",
+  "Hardhat `3.17.0`",
   "contracts `644/644`",
   "`24/24` passed",
   "8 low transitive development-tool findings",
@@ -166,7 +166,7 @@ requireText("BACKLOG.md", [
 ]);
 requireText("SKYWALKER.md", [
   "**Hinweis 04.09.2026:**",
-  "Hardhat 3.15.0",
+  "Hardhat 3.17.0",
   "lokale Tests forken nicht automatisch",
   "HARDHAT_FORK_BLOCK_NUMBER=<block>",
   "## Historischer Stand (05.03.2026)",
