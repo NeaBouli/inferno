@@ -150,6 +150,21 @@ Legacy deployment: ~~BootstrapVault V1~~
 [`0xA820540936d18e1377C39dd9445E5b36F3F1261a`](https://etherscan.io/address/0xA820540936d18e1377C39dd9445E5b36F3F1261a#code)
 is deprecated and superseded by BootstrapVaultV3.
 
+### Canonical Mainnet Component Count (17)
+
+The public "17 documented on-chain components" figure is defined as the 14
+current protocol contracts in the table above (mirrored in
+[`deployments/mainnet.json`](../deployments/mainnet.json)) plus the 3 project
+Gnosis Safes listed under [Gnosis Safes (Mainnet)](#gnosis-safes-mainnet).
+The Safes are standard Safe proxy wallets, not IFR protocol contracts, so
+"17 protocol contracts" or "17 immutable contracts" is not a correct reading.
+
+Not counted: the Uniswap V2 IFR/WETH LP pair
+[`0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0`](https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0)
+(external Uniswap contract), the deprecated BootstrapVault V1 above, the
+external Uniswap V2 router and all EOAs. `npm run test:docs-truth` checks this
+definition against `deployments/mainnet.json` and the public surfaces.
+
 ### Token Distribution (CFLM)
 
 The Treasury and Community rows below preserve the original distribution EOAs.
@@ -256,12 +271,14 @@ All ownable contracts transferred to Governance (48h Timelock). Parameter change
 
 ---
 
-## Gnosis Safe (Mainnet)
+## Gnosis Safes (Mainnet)
 
-| Detail | Value |
-|--------|------|
-| Address | [`0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`](https://etherscan.io/address/0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b) |
-| Network | Ethereum Mainnet |
-| Threshold | 3-of-5 (5 active signers: A.K., M.G., A.M., Y.K., A.P.) |
-| Deployed | 2026-03-04 |
-| Safe URL | [app.safe.global](https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b) |
+All three project Safes are documented as 3-of-5 with the same five signers
+(A.K., M.G., A.M., Y.K., A.P.). Verify `getThreshold()` and `getOwners()` on
+chain before relying on this record.
+
+| Safe | Address | Role |
+| --- | --- | --- |
+| Treasury Safe | [`0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`](https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b) | Governance owner since 20.03.2026; deployed 2026-03-04 |
+| Community Safe | [`0xaC5687547B2B21d80F8fd345B51e608d476667C7`](https://app.safe.global/home?safe=eth:0xaC5687547B2B21d80F8fd345B51e608d476667C7) | Bootstrap Plan B contribution and community operations reserve |
+| LP Reserve Safe | [`0x5D93E7919a71d725054e31017eCA86B026F86C04`](https://app.safe.global/home?safe=eth:0x5D93E7919a71d725054e31017eCA86B026F86C04) | LP reserve for later Uniswap phases; received 400.6M IFR from the deployer on 18.03.2026 |
