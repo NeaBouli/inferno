@@ -31,11 +31,22 @@ const interceptCases: Array<[string, string[]]> = [
     "0.1 ETH liquidity: IFR amount?",
     // A concrete ETH amount cancels the historical-word suppression.
     "How much IFR for 0.1 ETH in the pool, the one launched in June?",
+    // Round-2 review: symmetric ETH-for-IFR / IFR-in-ETH direction.
+    "How much ETH do I need for 1M IFR?",
+    "How much is 1000 IFR in ETH?",
+    "Wie viel ETH brauche ich für 1M IFR?",
+    // Round-2 review: market cap and pool TVL are current market state.
+    "IFR market cap?",
+    "IFR TVL in the pool?",
+    "What is the current IFR market cap?",
   ]],
   ["balance", [
     "What is my IFR balance?",
     "How much IFR does the treasury hold?",
     "Check the current balance of wallet 0x1234abcdef",
+    // Round-2 review: treasury holdings without "balance" wording.
+    "How many IFR are in the treasury?",
+    "What is the treasury balance?",
   ]],
   ["ifrlock", [
     "Is my IFR still locked?",
@@ -50,10 +61,14 @@ const interceptCases: Array<[string, string[]]> = [
   ["supply", [
     "What is the total supply of IFR?",
     "How much IFR is in circulation now?",
+    "What was the total supply?",
   ]],
   ["burned", [
     "How many IFR have been burned so far?",
     "What is the current burned supply?",
+    // Round-2 review: past tense alone must not hide the current total.
+    "How many tokens were burned?",
+    "How much IFR was burned?",
   ]],
 ];
 for (const [intent, prompts] of interceptCases) {
@@ -84,6 +99,15 @@ const allowCases = [
   "What is the Uniswap price impact of a trade?",
   "What is the fee ratio between burn and pool fee?",
   "Can I add LP tokens to the lock?",
+  // Round-2 review: conceptual value/price-determination documentation.
+  "What value does IFR provide to holders?",
+  "What is the value proposition of IFR?",
+  "How is the IFR price determined?",
+  // Historical burn/supply and governance questions stay on the docs path.
+  "How many IFR were burned in the bootstrap?",
+  "Who controls the treasury multisig?",
+  "How many signers does the treasury multisig have?",
+  "What was the IFR price in June?",
 ];
 for (const prompt of allowCases) {
   assert.equal(classifyDynamicIntent(prompt), null, `allow: ${prompt}`);
@@ -200,6 +224,13 @@ try {
     ["What lending offers are available right now?", "lending"],
     ["What is the total supply of IFR?", "supply"],
     ["What is the current burned supply?", "burned"],
+    // Round-2 review probes.
+    ["How much ETH do I need for 1M IFR?", "pair"],
+    ["How much is 1000 IFR in ETH?", "pair"],
+    ["IFR market cap?", "pair"],
+    ["IFR TVL in the pool?", "pair"],
+    ["How many IFR are in the treasury?", "balance"],
+    ["How many tokens were burned?", "burned"],
   ];
   for (const [prompt, intent] of serverIntents) {
     const result = await postChat(prompt);
@@ -216,6 +247,10 @@ try {
     "How does the fee burn work?",
     // Narrowed pair interception: product pricing stays on the docs path.
     "What is the price of Copilot Premium?",
+    // Round-2 review: conceptual questions stay on the docs path.
+    "What value does IFR provide to holders?",
+    "What is the value proposition of IFR?",
+    "How is the IFR price determined?",
   ];
   for (const prompt of allowedPrompts) {
     const result = await postChat(prompt);

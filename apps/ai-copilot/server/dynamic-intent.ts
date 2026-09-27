@@ -28,15 +28,22 @@ const EXPLICIT_CURRENT =
 const ETH_AMOUNT = /\b\d+(?:[.,]\d+)?\s*w?eth\b/i;
 
 const HISTORICAL =
-  /\b(bootstrap|genesis|initial|originally|original|historical|history|example|illustrat|launch|launched|deploy|deployed|finalis|finaliz|raised|past|ago|was|were|did)\b/i;
+  /\b(bootstrap|genesis|initial|originally|original|historical|history|example|illustrat|launch|launched|deploy|deployed|finalis|finaliz|raised|past|ago)\b/i;
+
+// Past-tense verbs alone are weak history markers: they suppress most rules,
+// but not the burned/supply totals ("How many tokens were burned?" asks for
+// the current cumulative figure).
+const PAST_TENSE = /\b(was|were|did)\b/i;
 
 const DOCUMENTATION =
-  /\b(how does|how do|how to|what is impermanent|what are the risks|explain|mechanism|concept|guide|tutorial|why|range|difference between|price impact|fee ratio)\b/i;
+  /\b(how does|how do|how to|what is impermanent|what are the risks|explain|mechanism|concept|guide|tutorial|why|range|difference between|price impact|fee ratio|value proposition|what value (?:does|do|can|will)|determined?|determines)\b/i;
 
 interface IntentRule {
   intent: DynamicDataIntent;
   topic: RegExp;
   value: RegExp;
+  // Cumulative totals stay current even in past tense.
+  ignoresPastTense?: boolean;
 }
 
 const RULES: IntentRule[] = [
@@ -49,6 +56,13 @@ const RULES: IntentRule[] = [
     value: /\b(eth|weth)\b/i,
   },
   {
+    // Symmetric direction: ETH needed for, or IFR expressed in, ETH
+    // ("How much ETH do I need for 1M IFR?", "How much is 1000 IFR in ETH?").
+    intent: "pair",
+    topic: /\b(how much|how many|wie viele?)\s+w?eth\b|\bifr\s+(in|to|into)\s+w?eth\b/i,
+    value: /\bifr\b/i,
+  },
+  {
     // Pool price/ratio/reserves/depth and liquidity-amount calculations.
     // The topic must name the pool or the IFR/ETH pair itself — a generic
     // "price", "ratio" or "add" alone must not intercept product pricing
@@ -57,15 +71,15 @@ const RULES: IntentRule[] = [
     topic:
       /\b(liquidity|liquidit[äa]t|pools?|pairs?|uniswap|reserves?|depth|geckoterminal)\b|ifr\s*\/\s*w?eth|\bw?eth\s*\/\s*ifr/i,
     value:
-      /\b(price|ratio|reserves?|depth|spot|quote|worth|value|how much|how many|do i need|will i need|would i need|should i|calculate|estimate|deposit|add|provide|amount|current|now|today|live|latest|kurs|preis|wie viele?|menge|betrag)\b|\b\d+(?:[.,]\d+)?\s*w?eth\b/i,
+      /\b(price|ratio|reserves?|depth|spot|quote|worth|value|tvl|market ?cap|mcap|fdv|how much|how many|do i need|will i need|would i need|should i|calculate|estimate|deposit|add|provide|amount|current|now|today|live|latest|kurs|preis|wie viele?|menge|betrag)\b|\b\d+(?:[.,]\d+)?\s*w?eth\b/i,
   },
   {
-    // IFR price/worth phrasings without pool wording ("IFR price?",
-    // "What is IFR worth in USD?", "IFR Kurs?"). Product prices never
-    // match: the topic requires the IFR token itself.
+    // IFR price/worth/market-value phrasings without pool wording ("IFR
+    // price?", "What is IFR worth in USD?", "IFR market cap?", "IFR Kurs?").
+    // Product prices never match: the topic requires the IFR token itself.
     intent: "pair",
     topic: /\bifr\b/i,
-    value: /\b(price|worth|value|kurs|preis|wert)\b/i,
+    value: /\b(price|worth|value|tvl|market ?cap|mcap|fdv|kurs|preis|wert)\b/i,
   },
   {
     // LendingVault live offers, loans, utilization and current rates.
@@ -89,12 +103,22 @@ const RULES: IntentRule[] = [
       /\b(my|current|currently|now|live|how much|how many|treasury|vault|reserve|safe|wallet|guthaben|0x[0-9a-f]{4,})\b/i,
   },
   {
+    // Current treasury holdings, also without "balance" wording ("How many
+    // IFR are in the treasury?"). Governance questions about the treasury
+    // (signers, address, control) name no amount and pass.
+    intent: "balance",
+    topic: /\b(treasury|multisig)\b/i,
+    value:
+      /\b(how much|how many)\s+(ifr|w?eth|usd|tokens?|funds?)\b|\b(balance|holdings?|holds?|funds?|worth|value)\b/i,
+  },
+  {
     // Current burned total (checked before supply: "burned supply" belongs
     // to the burn handoff).
     intent: "burned",
     topic: /\b(burn|burned|burnt|burning|dead address|verbrannt)\b/i,
     value:
       /\b(current|currently|now|today|total|so far|how much|how many|supply|latest)\b/i,
+    ignoresPastTense: true,
   },
   {
     // Current total / circulating supply (genesis mint is static history).
@@ -102,6 +126,7 @@ const RULES: IntentRule[] = [
     topic: /\b(supply|circulating|circulation|minted|mint)\b/i,
     value:
       /\b(current|currently|now|today|live|total|circulating|how much|how many|latest)\b/i,
+    ignoresPastTense: true,
   },
 ];
 
@@ -112,13 +137,14 @@ const RULES: IntentRule[] = [
 export function classifyDynamicIntent(message: string): DynamicDataIntent | null {
   if (!message || typeof message !== "string") return null;
 
-  const suppressed =
-    (HISTORICAL.test(message) || DOCUMENTATION.test(message)) &&
-    !EXPLICIT_CURRENT.test(message) &&
-    !ETH_AMOUNT.test(message);
-  if (suppressed) return null;
+  const current = EXPLICIT_CURRENT.test(message) || ETH_AMOUNT.test(message);
+  if (!current && (HISTORICAL.test(message) || DOCUMENTATION.test(message))) {
+    return null;
+  }
+  const pastTense = !current && PAST_TENSE.test(message);
 
   for (const rule of RULES) {
+    if (pastTense && !rule.ignoresPastTense) continue;
     if (rule.topic.test(message) && rule.value.test(message)) {
       return rule.intent;
     }
@@ -127,7 +153,7 @@ export function classifyDynamicIntent(message: string): DynamicDataIntent | null
 }
 
 const FALLBACKS: Record<DynamicDataIntent, string> = {
-  pair: `I can't calculate that from documentation — the IFR/WETH ratio moves with every trade and this chat has no live pool read.
+  pair: `I can't calculate that from documentation — the IFR/WETH ratio, IFR price, pool TVL and market cap move with every trade and this chat has no live pool read.
 For the exact IFR amount matching your ETH, use the read-only ratio calculator at ifrunit.tech/wiki/liquidity.html (fresh same-block reserves; quotes expire after 3 minutes), the official Uniswap V2 add-liquidity interface (app.uniswap.org), or the GeckoTerminal IFR/WETH pool page. Developers can verify via getReserves on the pair contract (listed at ifrunit.tech/wiki/contracts.html).
 Note: the Bootstrap pairing (100M IFR + 0.030 ETH, June 2026) is a historical record — not the current pool ratio.
 This is not financial advice.`,
