@@ -6,7 +6,7 @@ Evidence is attached to existing register entries CWA-20, CWA-55 and CWA-70.
 **Guard:** `npm run test:docs-truth`
 
 | Claim under test | Result | Canonical value and evidence |
-|---|---|---|
+| --- | --- | --- |
 | 17 vs 16 on-chain components | **17 confirmed, definition-bound** | 14 protocol contracts (`deployments/mainnet.json`, `docs/DEPLOYMENTS.md` table) + 3 Gnosis Safes (Treasury `0x5ad6…cE3b`, Community `0xaC56…67C7`, LP Reserve `0x5D93…6C04`). LP pair, BootstrapVault V1, router and EOAs are not counted. "16 (13 + 3)" is the pre-BuybackController snapshot (before 14.04.2026) and was stale in `docs/STATUS-REPORT.md`. |
 | "17 protocol contracts" / "17 immutable contracts" | **Diverged, corrected** | The 3 Safes are Safe proxy wallets. Wiki FAQ, security and fair-launch pages now say 14 protocol contracts. |
 | Safe-address coverage | **Diverged, corrected** | Before: README and `docs/DEPLOYMENTS.md` listed only the Treasury Safe; the landing list showed 2 Safes and 13 contracts (BuybackController missing) under "14 + 3 = 17". All three surfaces now list the full set. Thresholds are documented 3-of-5 and were not re-read on chain here. |
