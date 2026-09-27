@@ -117,3 +117,17 @@ attroute --> sess : attest
 rl --> sessroutes : sessionStatusRateLimiter
 rl --> bizroutes : discoveryRateLimiter
 @enduml
+
+@startuml
+title Points voucher issue/validation trace
+component "HTTP composition" as papp
+component "Voucher route" as proute
+component "Auth + lock proof" as pguard
+component "Voucher signer" as psigner
+database "Points DB" as pdb
+papp --> proute : voucherRoutes
+proute --> pguard : requireAuth / requireLockProof
+proute --> pdb : prisma.$transaction
+proute --> psigner : signVoucher
+proute --> pdb : findFirst(nonce)
+@enduml

@@ -110,3 +110,24 @@ else wallet recovered
   Sess -> Sess : reserveAttestAttempt (locked tx, attempt + wallet bind)
 end
 @enduml
+
+@startuml
+title Points voucher issue and identity-free validation
+actor User as PointsUser
+participant "routes/voucher.ts" as VoucherRoute
+participant "Auth + lock proof" as PointsGuard
+database "Points DB" as PointsDB
+participant "voucher-signer.ts" as VoucherSigner
+PointsUser -> VoucherRoute : POST /voucher/issue
+VoucherRoute -> PointsGuard : requireAuth + requireLockProof
+PointsGuard --> VoucherRoute : eligible wallet
+VoucherRoute -> PointsDB : transaction: caps + conditional threshold debit
+VoucherRoute -> VoucherSigner : signVoucher(voucher)
+VoucherSigner --> VoucherRoute : signature
+VoucherRoute -> PointsDB : redemption event + voucher, commit
+VoucherRoute --> PointsUser : voucher + signature
+PointsUser -> VoucherRoute : GET /voucher/validate/:nonce
+VoucherRoute -> PointsDB : findFirst(nonce), no wallet join
+PointsDB --> VoucherRoute : status fields
+VoucherRoute --> PointsUser : status without wallet identity
+@enduml

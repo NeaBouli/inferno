@@ -12,6 +12,8 @@ INFERNO-SECURITY-S2E-BENEFITS-SELLER-AUTH-20260927), and the shared Web3
 browser runtime trace `docs/web3/index.html` → `docs/web3-wallet-core.js` /
 `docs/assets/wallet-core.js` → `docs/assets/ifr-state.js` → Web3 status
 renderers (task INFERNO-SECURITY-S2F-WEB3-RUNTIME-20260927).
+It also maps the Points voucher issue/validation trace inside `apps/points-backend`
+(task INFERNO-SECURITY-S2G-POINTS-CWA14-20260927).
 The rest of the repository is intentionally unmapped.
 
 ## 1. Grundidee
@@ -136,6 +138,18 @@ Web3 browser runtime trace (`docs/web3/index.html`, landing + wiki pages):
    — Daten: state → rendered stats; unavailable status renders "—" and leaves
    claim/refund write controls hidden (fail closed)
 
+Points voucher trace (`apps/points-backend`):
+
+1. `src/app.ts::voucherRoutes` → `src/routes/voucher.ts::POST /issue` — Daten:
+   authenticated request → wallet from JWT
+2. `POST /issue` → `middleware/auth.ts::requireAuth` →
+   `middleware/lockProof.ts::requireLockProof` — Daten: wallet → authenticated,
+   lock-qualified wallet
+3. `POST /issue` → `prisma.$transaction` → `services/voucher-signer.ts::signVoucher`
+   — Daten: points threshold → atomic debit + redemption event + signed voucher
+4. `src/routes/voucher.ts::GET /validate/:nonce` → `prisma.voucher.findFirst` —
+   Daten: nonce → minimal status response without wallet relation
+
 ## 3. Module
 
 | Modul | Eine Aufgabe | Einstieg | Stand |
@@ -172,6 +186,9 @@ Web3 browser runtime trace (`docs/web3/index.html`, landing + wiki pages):
 | walletconnect provider artifact | pinned, repository-owned, hash-gated WC provider bundle served same-origin | `docs/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js` | gebaut |
 | ifr state reader | bootstrap/token/lock reads with explicit unavailable failure state | `docs/assets/ifr-state.js::load` | gebaut |
 | bootstrap status renderer | stats + claim/refund UI, fail-closed on unavailable status | `docs/wiki/bootstrap.html::bwUpdateUI` | gebaut |
+| points voucher route | atomically redeem points, sign/persist voucher, expose identity-free status | `apps/points-backend/src/routes/voucher.ts` | gebaut |
+| points voucher signer | produce the EIP-712 FeeRouter signature | `apps/points-backend/src/services/voucher-signer.ts::signVoucher` | gebaut |
+| points persistence | store wallet balance, redemption event and voucher in one transaction | `apps/points-backend/prisma/schema.prisma` | gebaut |
 
 ## 4. Verdrahtung
 
@@ -364,3 +381,7 @@ reader`; Hop 2 (`_loadWalletConnect` → provider artifact, CWA-47) und Hop 3→
 (`ifr-state.js::load` → `bootstrap.html` renderer, CWA-48). Unberührt bleiben:
 write-flow contracts, Lending/Commitment UIs, Benefits-Flächen und die öffentlichen
 Remediation-Totals.
+
+Für Points CWA-14: Modul `points voucher route`; Hop 3 (atomarer Threshold-Verbrauch,
+Signatur und Persistenz) und Hop 4 (öffentliche Validierungsantwort ohne Walletbezug).
+Unberührt bleiben Schema/Migrationen, On-Chain-FeeRouter und andere Points-Ereignisse.

@@ -7,7 +7,8 @@ Points system for Inferno ($IFR) — SIWE authentication, points events, and EIP
 - **SIWE Authentication**: Sign-In with Ethereum — wallet-based auth, JWT sessions
 - **Points Events**: Track user actions (wallet connect, guide completion, builder onboarding)
 - **Daily Limits**: Per-event-type daily caps to prevent abuse
-- **EIP-712 Vouchers**: Signed discount vouchers redeemable on-chain via FeeRouter
+- **EIP-712 Vouchers**: Signed discount vouchers redeemable on-chain via FeeRouter; issuance
+  atomically consumes the configured points threshold
 - **Anti-Sybil**: Rate limiting per IP + per wallet + global daily caps
 
 ## Setup
@@ -31,7 +32,8 @@ Server runs on http://localhost:3004
 | POST | `/auth/siwe/verify` | No | Verify SIWE signature, get JWT |
 | POST | `/points/event` | JWT | Record a points event |
 | GET | `/points/balance` | JWT | Get wallet balance + event history |
-| POST | `/voucher/issue` | JWT | Issue signed EIP-712 voucher |
+| POST | `/voucher/issue` | JWT + lock proof | Atomically redeem points and issue a signed EIP-712 voucher |
+| GET | `/voucher/validate/:nonce` | No | Validate status without disclosing wallet identity |
 | GET | `/health` | No | Health check |
 
 ## Points Events
@@ -44,13 +46,15 @@ Server runs on http://localhost:3004
 | `guide_lock` | 30 | 1 |
 | `partner_onboarding` | 50 | 1 |
 
-**Voucher threshold:** 100 points → 0.05% protocol fee discount (5 bps, EIP-712 signed). The configured discount must not exceed the deployed FeeRouter protocol fee.
+**Voucher threshold:** 100 available points → 0.05% protocol fee discount (5 bps, EIP-712 signed).
+Issuance consumes those 100 points, so `pointsTotal` is the wallet's spendable points balance.
+The configured discount must not exceed the deployed FeeRouter protocol fee.
 
 ## Rate Limits
 
 - 60 requests per IP per minute (general)
 - 5 SIWE verifies per IP per hour
-- 1 voucher per wallet per day
+- 1 voucher per wallet per rolling 24 hours (database-enforced)
 - 100 vouchers global daily cap
 
 ## Security
