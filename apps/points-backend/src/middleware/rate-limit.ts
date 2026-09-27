@@ -54,8 +54,3 @@ export function siweVerifyLimit(req: Request, res: Response, next: NextFunction)
   }
   next();
 }
-
-/** Max 1 voucher per wallet per day */
-export function voucherWalletLimit(wallet: string): boolean {
-  return checkLimit(`voucher:${wallet}`, 1, 86400_000);
-}
