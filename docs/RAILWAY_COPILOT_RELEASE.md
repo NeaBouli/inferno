@@ -25,7 +25,9 @@ Read-only; no secret, no provider call.
 2. If `AI Copilot CI` has no successful run on that SHA (main head did not touch
    `apps/ai-copilot/`), dispatch `AI Copilot CI` on `main` and wait for it to finish.
 3. Actions → **Railway Copilot Release** → Run workflow on `main`, `sha=<SHA>`, `mode=preflight`.
-4. The job checks out `<SHA>` and runs the release-workflow contract before evaluating CI.
+4. Before any checkout, the trusted workflow file requires `<SHA>` to equal the dispatched
+   commit (`GITHUB_SHA`) exactly; then the job checks out `<SHA>` and runs the
+   release-workflow contract before evaluating CI.
 5. Pass means: dispatch ref is `main`, SHA equals current `origin/main`, and the latest runs of
    `ai-copilot.yml` and `security-audit.yml` on that SHA (push or dispatch on main, this repo)
    are `completed/success`.
@@ -72,7 +74,8 @@ a deployment message other than `release <SHA>`.
 
 ## Fail-closed
 
-The workflow stops before any provider command when: the SHA is not 40 lowercase hex characters,
+The workflow stops before any checkout when the SHA is not exactly the dispatched commit
+(`GITHUB_SHA`). It stops before any provider command when: the SHA is not 40 lowercase hex characters,
 the dispatch ref is not `main`, the SHA is not current `origin/main`, a required workflow run is
 missing, running, failed or from a fork/PR/other branch, the run list is incomplete, approval is
 not given, `RAILWAY_TOKEN` is missing, or the project/service variables are missing.
