@@ -22,11 +22,16 @@ export const DYNAMIC_DATA_HANDOFF_CODE = "dynamic_data_handoff";
 const EXPLICIT_CURRENT =
   /\b(current|currently|now|today|live|latest|right now|so far|to date|up to date|aktuell|aktuelle|jetzt|derzeit)\b/i;
 
+// A concrete ETH amount marks a calculation request and cancels suppression
+// too: "...0.1 ETH in the pool, the one launched in June?" is current-state
+// even with a historical word in it.
+const ETH_AMOUNT = /\b\d+(?:[.,]\d+)?\s*w?eth\b/i;
+
 const HISTORICAL =
   /\b(bootstrap|genesis|initial|originally|original|historical|history|example|illustrat|launch|launched|deploy|deployed|finalis|finaliz|raised|past|ago|was|were|did)\b/i;
 
 const DOCUMENTATION =
-  /\b(how does|how do|how to|what is impermanent|what are the risks|explain|mechanism|concept|guide|tutorial|why|range|difference between)\b/i;
+  /\b(how does|how do|how to|what is impermanent|what are the risks|explain|mechanism|concept|guide|tutorial|why|range|difference between|price impact|fee ratio)\b/i;
 
 interface IntentRule {
   intent: DynamicDataIntent;
@@ -37,18 +42,30 @@ interface IntentRule {
 const RULES: IntentRule[] = [
   {
     // ETH-denominated IFR amount questions are pool-ratio questions even
-    // without explicit pool wording ("How much IFR for 0.5 ETH?").
+    // without explicit pool wording ("How much IFR for 0.5 ETH?",
+    // "How many IFR tokens per ETH?", "Wie viel IFR für 0,1 ETH?").
     intent: "pair",
-    topic: /\bhow much ifr\b/i,
+    topic: /\b(how much|how many|wie viele?)\s+ifr\b/i,
     value: /\b(eth|weth)\b/i,
   },
   {
     // Pool price/ratio/reserves/depth and liquidity-amount calculations.
+    // The topic must name the pool or the IFR/ETH pair itself — a generic
+    // "price", "ratio" or "add" alone must not intercept product pricing
+    // or LP-lock documentation questions.
     intent: "pair",
     topic:
-      /\b(liquidity|pool|pair|uniswap|lp|reserves?|ratio|price|spot|depth|geckoterminal|liquidit[äa]t)\b/i,
+      /\b(liquidity|liquidit[äa]t|pools?|pairs?|uniswap|reserves?|depth|geckoterminal)\b|ifr\s*\/\s*w?eth|\bw?eth\s*\/\s*ifr/i,
     value:
-      /\b(price|ratio|reserves?|depth|spot|quote|worth|how much|how many|do i need|will i need|would i need|should i|calculate|estimate|deposit|add|provide|current|now|today|live|latest|kurs|preis|wie viel)\b/i,
+      /\b(price|ratio|reserves?|depth|spot|quote|worth|value|how much|how many|do i need|will i need|would i need|should i|calculate|estimate|deposit|add|provide|amount|current|now|today|live|latest|kurs|preis|wie viele?|menge|betrag)\b|\b\d+(?:[.,]\d+)?\s*w?eth\b/i,
+  },
+  {
+    // IFR price/worth phrasings without pool wording ("IFR price?",
+    // "What is IFR worth in USD?", "IFR Kurs?"). Product prices never
+    // match: the topic requires the IFR token itself.
+    intent: "pair",
+    topic: /\bifr\b/i,
+    value: /\b(price|worth|value|kurs|preis|wert)\b/i,
   },
   {
     // LendingVault live offers, loans, utilization and current rates.
@@ -97,7 +114,8 @@ export function classifyDynamicIntent(message: string): DynamicDataIntent | null
 
   const suppressed =
     (HISTORICAL.test(message) || DOCUMENTATION.test(message)) &&
-    !EXPLICIT_CURRENT.test(message);
+    !EXPLICIT_CURRENT.test(message) &&
+    !ETH_AMOUNT.test(message);
   if (suppressed) return null;
 
   for (const rule of RULES) {

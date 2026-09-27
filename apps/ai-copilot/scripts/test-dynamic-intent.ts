@@ -25,6 +25,12 @@ const interceptCases: Array<[string, string[]]> = [
     "How deep is the pool today?",
     "Show me the live reserves of the pair",
     "Wie viel IFR brauche ich aktuell für 0.1 ETH Liquidität?",
+    "Wie viel IFR brauche ich für 0,1 ETH?",
+    "How many IFR tokens per ETH?",
+    "What is IFR worth in USD?",
+    "0.1 ETH liquidity: IFR amount?",
+    // A concrete ETH amount cancels the historical-word suppression.
+    "How much IFR for 0.1 ETH in the pool, the one launched in June?",
   ]],
   ["balance", [
     "What is my IFR balance?",
@@ -72,6 +78,12 @@ const allowCases = [
   "Has the LendingVault launched?",
   "What is the IFR token contract address?",
   "How does the Copilot Premium tier work?",
+  // Narrow pair interception: generic price/ratio/add terms without pool or
+  // IFR/ETH current-value context must pass through to documentation.
+  "What is the price of Copilot Premium?",
+  "What is the Uniswap price impact of a trade?",
+  "What is the fee ratio between burn and pool fee?",
+  "Can I add LP tokens to the lock?",
 ];
 for (const prompt of allowCases) {
   assert.equal(classifyDynamicIntent(prompt), null, `allow: ${prompt}`);
@@ -199,7 +211,13 @@ try {
 
   // Documentation and historical questions are not intercepted: without a
   // provider key they reach the normal provider gate instead of a fallback.
-  for (const prompt of ["What was the bootstrap ratio?", "How does the fee burn work?"]) {
+  const allowedPrompts = [
+    "What was the bootstrap ratio?",
+    "How does the fee burn work?",
+    // Narrowed pair interception: product pricing stays on the docs path.
+    "What is the price of Copilot Premium?",
+  ];
+  for (const prompt of allowedPrompts) {
     const result = await postChat(prompt);
     assert.equal(result.status, 500, prompt);
     assert.equal(result.body.reply, "ANTHROPIC_API_KEY not configured.", prompt);
