@@ -17,7 +17,7 @@ The canonical surface, application and Mainnet capability matrix is
 particular, source presence does not mean that an app is publicly deployed or
 that a governance-gated contract path is active.
 
-- Root: Node.js `>=22.13.0`, Ethers `6.17.0`, Hardhat `3.15.0`,
+- Root: Node.js `>=22.13.0`, Ethers `6.17.0`, Hardhat `3.17.0`,
   Chai `6.2.2`, Mocha `11.8.0`, OpenZeppelin Contracts `5.6.x`.
 - Root is ESM with explicit CommonJS boundaries for legacy scripts and
   standalone test packages. Waffle, Ganache and `solidity-coverage` are no
