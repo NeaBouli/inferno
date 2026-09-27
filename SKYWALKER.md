@@ -12,7 +12,7 @@
 > Maerz-Handover. Fuer den aktuellen operativen Stand gelten
 > `internal/operations/TODO.md`, `docs/DEPENDENCY_UPGRADES.md` und die lokale
 > append-only `BRIDGE.md`. Aktuelle Root-Baseline: Node `>=22.13.0`, Ethers
-> `6.17.0`, Hardhat `3.15.0`, Chai `6.2.2`; Contract-Suite `644/644`,
+> `6.17.0`, Hardhat `3.17.0`, Chai `6.2.2`; Contract-Suite `644/644`,
 > Generator Engine `30/30`, IFR SDK `36/36`; Root-Audit `8 low /
 > 0 moderate / 0 high / 0 critical`.
 
@@ -238,7 +238,7 @@ docs/wiki/
 #### Root Ethers Runtime
 - Root-Tests, Tasks und Hardhat-Skripte verwenden Ethers 6.17 mit nativen `bigint`-Werten.
 - Die frueheren Ethers-v5-Formatter-Patches fuer Alchemy wurden entfernt.
-- Die Root-Toolchain verwendet Hardhat 3.15.0, Chai 6 und Node.js >=22.13.0.
+- Die Root-Toolchain verwendet Hardhat 3.17.0, Chai 6 und Node.js >=22.13.0.
 - Legacy-CommonJS-Tools bleiben durch explizite lokale Paketgrenzen ausfuehrbar.
 
 #### Legacy-Ordner im Repository
