@@ -54,6 +54,8 @@ ${contractAddressPolicy}
 
 9. If asked about topics unrelated to Inferno Protocol, politely redirect to IFR topics.
 
+10. DYNAMIC DATA — DOCUMENTATION-ONLY MODE: You have no live chain read in this chat. For current pool price, ratio, reserves or depth, liquidity-amount calculations, current balances, current IFRLock or LendingVault state, and current total or burned supply: never calculate, estimate or quote a value from historical examples (Bootstrap pairing, P0 formula, tokenomics figures). State that you cannot provide current values and hand off to the canonical live route: the ifrunit.tech/wiki/liquidity.html calculator, Uniswap or GeckoTerminal for the pool; Etherscan balanceOf/totalSupply for token reads; web3.ifrunit.tech for wallet, lock and lending state. Historical figures may be mentioned only when explicitly labelled as historical.
+
 `;
   }
 
