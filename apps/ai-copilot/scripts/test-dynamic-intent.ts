@@ -39,6 +39,13 @@ const interceptCases: Array<[string, string[]]> = [
     "IFR market cap?",
     "IFR TVL in the pool?",
     "What is the current IFR market cap?",
+    // CodeRabbit round 3: procedural wording does not hide a named current
+    // quantity or a concrete ETH amount.
+    "How do I add liquidity at the current ratio?",
+    "How do I check the current pool reserves?",
+    "How to provide 0.1 ETH of liquidity today?",
+    "How can I see the IFR price right now?",
+    "Wie kann ich aktuell 0,1 ETH Liquidität bereitstellen?",
   ]],
   ["balance", [
     "What is my IFR balance?",
@@ -108,6 +115,15 @@ const allowCases = [
   "Who controls the treasury multisig?",
   "How many signers does the treasury multisig have?",
   "What was the IFR price in June?",
+  // CodeRabbit round 3: procedural liquidity questions with time wording
+  // are documentation questions, not current-state data requests.
+  "How do I add liquidity today?",
+  "How to provide liquidity currently?",
+  "How can I add liquidity right now?",
+  "How do I provide liquidity to the IFR/WETH pool now?",
+  "Wie füge ich aktuell Liquidität hinzu?",
+  "Wie kann ich jetzt Liquidität bereitstellen?",
+  "Wie stelle ich derzeit Liquidität bereit?",
 ];
 for (const prompt of allowCases) {
   assert.equal(classifyDynamicIntent(prompt), null, `allow: ${prompt}`);
@@ -231,6 +247,7 @@ try {
     ["IFR TVL in the pool?", "pair"],
     ["How many IFR are in the treasury?", "balance"],
     ["How many tokens were burned?", "burned"],
+    ["How do I check the current pool reserves?", "pair"],
   ];
   for (const [prompt, intent] of serverIntents) {
     const result = await postChat(prompt);
@@ -251,6 +268,7 @@ try {
     "What value does IFR provide to holders?",
     "What is the value proposition of IFR?",
     "How is the IFR price determined?",
+    "How do I add liquidity today?",
   ];
   for (const prompt of allowedPrompts) {
     const result = await postChat(prompt);
