@@ -595,7 +595,7 @@
       <!-- ========== Fee-Exempt Addresses ========== -->
       <h2>Fee-Exempt Addresses</h2>
 
-      <p>Protocol-internal transfers incur zero fees. These addresses are fee-exempt:</p>
+      <p>A transfer incurs no fee when the sender or the recipient is fee-exempt. The table lists every address among the checked protocol contracts, Safes and the Deployer for which <code>feeExempt(address)</code> returned <code>true</code> at block 26,065,893:</p>
 
       <table>
         <thead>
@@ -642,8 +642,36 @@
             <td>&#x2705; feeExempt = TRUE since 08.06.2026 &mdash; <a href="https://etherscan.io/tx/0xd5a3bc9527b6cc5288b892a9ba99a3af37b940f273856ab6ba938403cd2b4204" target="_blank" style="font-size:11px;">Proposal #15 executed</a> &middot; Block 25271071. IFR tradeable on Uniswap without 3.5% swap fee.</td>
           </tr>
           <tr>
+            <td>FeeRouterV1</td>
+            <td>Protocol fee router; holds IFR transfer-pool fees without an IFR withdrawal path</td>
+          </tr>
+          <tr>
+            <td>Vesting</td>
+            <td>Team vesting contract; releases are fee-free</td>
+          </tr>
+          <tr>
+            <td>BootstrapVaultV3</td>
+            <td>Finalized Bootstrap vault</td>
+          </tr>
+          <tr>
+            <td>BootstrapVault V1 (legacy)</td>
+            <td>Deprecated vault; exemption still set on-chain</td>
+          </tr>
+          <tr>
+            <td>Treasury Safe</td>
+            <td>3-of-5 Safe</td>
+          </tr>
+          <tr>
+            <td>Community Safe</td>
+            <td>3-of-5 Safe</td>
+          </tr>
+          <tr>
+            <td>Deployer EOA</td>
+            <td>Active, disclosed governance-controlled exception (re-enabled by executed Proposal #7)</td>
+          </tr>
+          <tr>
             <td>DEX Router</td>
-            <td>Not fee-exempt. The IFR/WETH pair is the exempt transfer counterparty used by Uniswap V2 swaps.</td>
+            <td>Not fee-exempt. The IFR/WETH pair is the exempt transfer counterparty used by Uniswap V2 swaps. Also not exempt at block 26,065,893: Governance, BuilderRegistry and the LP Reserve Safe.</td>
           </tr>
         </tbody>
       </table>
