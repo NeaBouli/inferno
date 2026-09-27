@@ -131,3 +131,34 @@ VoucherRoute -> PointsDB : findFirst(nonce), no wallet join
 PointsDB --> VoucherRoute : status fields
 VoucherRoute --> PointsUser : status without wallet identity
 @enduml
+
+@startuml
+actor User
+participant "IFRCopilot.tsx" as UI
+participant "server/index.ts\n/api/chat" as Server
+participant "server/dynamic-intent.ts" as Guard
+participant "system-prompts.ts\n+ wiki-rag + live-wiki\n+ surface-context" as Prompt
+participant "budget.ts" as Budget
+participant "Anthropic API" as Model
+
+User -> UI : ask question
+UI -> Server : POST /api/chat {messages, mode, surface}
+Server -> Server : checkRateLimit + validate
+Server -> Guard : classifyDynamicIntent(last user message)
+alt current-state intent
+  Guard --> Server : intent class
+  Server -> Guard : buildDynamicDataFallback(intent)
+  Guard --> Server : typed handoff text
+  Server --> UI : {reply: fallback, code: "dynamic_data_handoff"}
+else documentation question (null)
+  Server -> Prompt : compose system prompt
+  Prompt --> Server : policy + RAG + snapshot + surface
+  Server -> Budget : tryReserve
+  Budget --> Server : reservation
+  Server -> Model : POST /v1/messages
+  Model --> Server : answer text
+  Server -> Budget : settle
+  Server --> UI : {reply}
+end
+UI --> User : render textContent
+@enduml

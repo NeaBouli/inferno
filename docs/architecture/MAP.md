@@ -14,6 +14,8 @@ browser runtime trace `docs/web3/index.html` → `docs/web3-wallet-core.js` /
 renderers (task INFERNO-SECURITY-S2F-WEB3-RUNTIME-20260927).
 It also maps the Points voucher issue/validation trace inside `apps/points-backend`
 (task INFERNO-SECURITY-S2G-POINTS-CWA14-20260927).
+It also maps the IFR Copilot chat trace inside `apps/ai-copilot` (task
+INFERNO-COPILOT-DYNAMIC-DATA-GUARD-20260924, section 8).
 The rest of the repository is intentionally unmapped.
 
 ## 1. Grundidee
@@ -385,3 +387,121 @@ Remediation-Totals.
 Für Points CWA-14: Modul `points voucher route`; Hop 3 (atomarer Threshold-Verbrauch,
 Signatur und Persistenz) und Hop 4 (öffentliche Validierungsantwort ohne Walletbezug).
 Unberührt bleiben Schema/Migrationen, On-Chain-FeeRouter und andere Points-Ereignisse.
+
+---
+
+## 8. IFR Copilot chat trace
+
+Scope: the one trace this task touches — Copilot chat request → intent
+classification → retrieval/context → answer policy. Baseline: `main` 8b2a4ba0.
+
+### 8.1 Grundidee
+
+The IFR Copilot (`apps/ai-copilot`) answers visitor/user/developer questions
+about the Inferno Protocol from committed documentation (wiki RAG snapshot +
+structured knowledge JSON) and an untrusted live-wiki snapshot, via a single
+Anthropic model call per message (`apps/ai-copilot/server/index.ts`). The chat
+path is documentation-only: no wallet connection, no live chain reads, no
+tools. Live REST reads (`/api/ifr/*`, `/api/lending/*`) exist on the same
+server but are never injected into the chat context.
+
+### 8.2 Spur (Hop-Liste)
+
+1. `src/components/IFRCopilot.tsx::sendMessage` (and the embedded UI in
+   `server/index.ts` GET `/`) → `POST /api/chat` — `{messages, mode, surface}`
+2. `server/index.ts::app.post("/api/chat")` → `checkRateLimit`, message
+   validation (`COPILOT_MESSAGE_LIMIT`, `MAX_MESSAGE_LENGTH`) — abuse/shape gate
+3. `server/index.ts` → `src/context/system-prompts.ts::SYSTEM_PROMPTS[mode]` —
+   static answer policy (security policy, mode topics, knowledge JSON from
+   `src/context/ifr-knowledge.ts::getIFRKnowledge`)
+4. `server/index.ts` → `server/wiki-rag.ts::buildSystemPrompt` →
+   `selectDocsForMode` — retrieval from `src/context/wiki-content.json`
+5. `server/index.ts` → `server/live-wiki.ts::LiveWikiRefresher.getContext` +
+   `buildLiveWikiSection` — untrusted live snapshot (last good, never crawled
+   from chat)
+6. `server/index.ts` → `server/surface-context.ts::buildSurfaceContext` —
+   surface routing context
+7. `server/index.ts` → `server/budget.ts::DailyBudget.tryReserve` — cost gate
+8. `server/index.ts` → fetch `ANTHROPIC_MESSAGES_URL` — model inference
+9. `server/index.ts` → `{reply}` → client render (`textContent`)
+
+Gap found (this task): between hop 2 and 3 there was no intent-classification
+hop. Answer policy for current-state (dynamic) financial data existed only as
+prompt text — model-enforced, not code-enforced. New node added on this map:
+hop 2b `server/dynamic-intent.ts::classifyDynamicIntent` →
+`buildDynamicDataFallback` — fail-closed typed handoff for current-state
+intents (pair reserves/ratio/price/depth, token balance, IFRLock state,
+LendingVault offers, total supply, burned supply), returned before any
+provider call.
+
+### 8.3 Module
+
+| Modul | Eine Aufgabe | Einstieg | Stand |
+| --- | --- | --- | --- |
+| copilot-server | HTTP API, chat orchestration, live REST reads | `server/index.ts::app.post("/api/chat")` | gebaut |
+| dynamic-intent | current-state intent classification + typed handoff | `server/dynamic-intent.ts::classifyDynamicIntent` | gebaut |
+| prompt-policy | static system prompts + security/dynamic-data policy | `src/context/system-prompts.ts::SYSTEM_PROMPTS` | gebaut |
+| knowledge | structured protocol facts | `src/context/ifr-knowledge.ts::getIFRKnowledge` | gebaut |
+| tier-policy | canonical tiers/limits/decimals | `src/context/copilot-policy.ts` | gebaut |
+| wiki-rag | doc loading + retrieval selection | `server/wiki-rag.ts::buildSystemPrompt` | gebaut |
+| live-wiki | bounded-trust live wiki snapshot | `server/live-wiki.ts::LiveWikiRefresher` | gebaut |
+| surface-context | surface routing context | `server/surface-context.ts::buildSurfaceContext` | gebaut |
+| budget | daily cost gate (fail-closed) | `server/budget.ts::DailyBudget` | gebaut |
+
+### 8.4 Verdrahtung
+
+- UI → server: chat request carries messages/mode/surface, never wallet data.
+- server → dynamic-intent: last user message in, intent class (or null) out;
+  a classified intent short-circuits to the typed fallback — no retrieval, no
+  budget reservation, no provider call.
+- server → prompt-policy/wiki-rag/live-wiki/surface-context: unguarded
+  requests get the composed system prompt; the model answer remains bounded
+  by the dynamic-data policy inside prompt-policy.
+- server → budget → Anthropic: only unguarded requests reserve budget and
+  call the provider.
+
+### 8.5 Widerspruch und Lücken
+
+- `ifr-knowledge.ts` and the wiki RAG snapshot contain historical Bootstrap
+  figures (100M IFR + 0.030 ETH, P0 formula). They are legitimate history but
+  are sufficient for a model to derive a stale "current" ratio; the
+  dynamic-intent guard now makes the safe outcome deterministic for the
+  classified intents. Unguarded phrasings still rely on prompt policy.
+- Live chat reads remain out of scope by decision (separate
+  architecture/security gate); documentation-only mode is the designed state.
+
+### 8.6 Diagrammdateien
+
+- `docs/architecture/map.puml`
+- `docs/architecture/main-path.puml`
+
+```mermaid
+mindmap
+  root((IFR Copilot chat))
+    copilot-server
+      gebaut: server/index.ts::app.post("/api/chat")
+    dynamic-intent
+      gebaut: server/dynamic-intent.ts::classifyDynamicIntent
+      gebaut: server/dynamic-intent.ts::buildDynamicDataFallback
+    prompt-policy
+      gebaut: src/context/system-prompts.ts::SYSTEM_PROMPTS
+    knowledge
+      gebaut: src/context/ifr-knowledge.ts::getIFRKnowledge
+    tier-policy
+      gebaut: src/context/copilot-policy.ts
+    wiki-rag
+      gebaut: server/wiki-rag.ts::buildSystemPrompt
+    live-wiki
+      gebaut: server/live-wiki.ts::LiveWikiRefresher
+    surface-context
+      gebaut: server/surface-context.ts::buildSurfaceContext
+    budget
+      gebaut: server/budget.ts::DailyBudget
+```
+
+### 8.7 Nächster Schritt
+
+Done in this diff: dynamic-intent node (classification + typed fallback),
+guard wiring in `server/index.ts`, dynamic-data policy block in
+`src/context/system-prompts.ts`. Untouched by design: live-wiki, budget,
+wiki-rag retrieval selection, all live REST endpoints, client UI.
