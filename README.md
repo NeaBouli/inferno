@@ -10,7 +10,7 @@
 
 **Contract:** [`0x77e99917Eca8539c62F509ED1193ac36580A6e7B`](https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code) | **Network:** Ethereum Mainnet | **Bootstrap:** FINALIZED ✅ June 5, 2026 | **LP Token:** [`0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0`](https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0)
 
-**17 documented on-chain components** | **Full internal audits** | **Public automated test evidence** | **Independent professional third-party audit pending**
+**[17 documented on-chain components](docs/DEPLOYMENTS.md#canonical-mainnet-component-count-17)** (14 protocol contracts + 3 Gnosis Safes) | **Full internal audits** | **Public automated test evidence** | **Independent professional third-party audit pending**
 
 ### Quick Links
 
@@ -107,10 +107,14 @@ with a 1-year cliff. See [Fair Launch Statement](docs/FAIR_LAUNCH.md).
 ### Gnosis Safe (Mainnet)
 
 | Role | Address |
-|------|---------|
-| Treasury Multisig | [`0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`](https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b) |
+| --- | --- |
+| Treasury Safe (Governance owner) | [`0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`](https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b) |
+| Community Safe | [`0xaC5687547B2B21d80F8fd345B51e608d476667C7`](https://app.safe.global/home?safe=eth:0xaC5687547B2B21d80F8fd345B51e608d476667C7) |
+| LP Reserve Safe | [`0x5D93E7919a71d725054e31017eCA86B026F86C04`](https://app.safe.global/home?safe=eth:0x5D93E7919a71d725054e31017eCA86B026F86C04) |
 
-Threshold: 3-of-5 (5 active signers: A.K., M.G., A.M., Y.K., A.P.).
+Documented threshold for all three Safes: 3-of-5 (5 active signers: A.K., M.G., A.M., Y.K., A.P.).
+The 14 protocol contracts above (LP token and deprecated BootstrapVault V1 excluded) plus these
+3 Safes form the [17 documented on-chain components](docs/DEPLOYMENTS.md#canonical-mainnet-component-count-17).
 
 ## Builder Ecosystem
 
@@ -134,7 +138,7 @@ The ecosystem is open and permissionless. Any product can integrate IFR Lock.
 **Automated test evidence** — current exact results are recorded by CI and release preflights. The tables below preserve an older internal inventory and must not be read as a current deduplicated total.
 
 **Current canonical matrix:** contracts **644/644**, Generator Engine **30/30**,
-IFR SDK **36/36**, Landing/Wiki browser **20/20**, Web3 browser **24/24**.
+IFR SDK **36/36**, Landing/Wiki browser **24/24**, Web3 browser **27/27**.
 See [Current Functionality Status](docs/CURRENT_FUNCTIONALITY_STATUS.md) for
 scope and limitations.
 
@@ -155,7 +159,7 @@ scope and limitations.
 | Bot Announcements | 10 | Mocha |
 | Browser / WalletConnect | 12 | Playwright |
 
-- Historical coverage snapshot: 91% branches / 99% statements for the contract subset recorded in `docs/COVERAGE_REPORT.md`; not a current full-repository coverage claim
+- Historical coverage snapshot: 90.79% branches / 99.45% statements (solidity-coverage, 544 tests, 05.03.2026) for the contract subset recorded in `docs/COVERAGE_REPORT.md`; not a current full-repository coverage claim. Current Hardhat 3 native coverage reports lines and statements only, so no current branch-coverage figure is published
 - GitHub Actions CI contains scoped workflows for contracts/tooling, Benefits Network, SDK, Creator Gateway, Points Backend, AI Copilot, dashboards, Telegram bot, wallet prototype, documentation and security checks. Deployment availability is verified separately and must not be inferred from a passing source-validation workflow.
 - Slither CI analyzes all 21 production Solidity sources and fails on every
   Critical signal and every new, changed or stale High signal. The current baseline contains six reviewed
@@ -293,7 +297,7 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [Tokenomics Model](docs/TOKENOMICS_MODEL.md) — Deflation curve, emission model, lock economics
 - [Builder Rewards Spec](docs/PARTNER_REWARDS_SPEC.md) — Reward formula, vesting, anti-gaming, builder types
 - [Benefits Network Test Guide](docs/BENEFITS_NETWORK_TEST.md) — E2E test, API endpoints, lock tiers
-- [Coverage Report](docs/COVERAGE_REPORT.md) — Solidity coverage (99% Stmts, 91% Branch)
+- [Coverage Report](docs/COVERAGE_REPORT.md) — historical solidity-coverage snapshot, 05.03.2026 (99.45% Stmts, 90.79% Branch)
 - [Patch Guidelines](docs/PATCH-GUIDELINES.md) — Patch process, severity, versioning
 - [Contributing Guide](docs/CONTRIBUTING.md) — Bug reports, code standards, git conventions
 - [Transparency Report](docs/TRANSPARENCY.md) — On-chain audit (8 checks), supply distribution, vesting, LP status

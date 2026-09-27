@@ -24,6 +24,8 @@ on:
       - 'scripts/test-functionality-status.cjs'
       - 'scripts/check-cwa-remediation-register.cjs'
       - 'scripts/test-cwa-content-coherence.cjs'
+      - 'scripts/test-docs-truth.cjs'
+      - 'deployments/mainnet.json'
       - 'scripts/check-sitemap-anchors.cjs'
       - 'scripts/check-july-audit-remediation-register.cjs'
       - 'scripts/test-docs-workflow.cjs'
@@ -68,6 +70,8 @@ on:
       - 'scripts/test-functionality-status.cjs'
       - 'scripts/check-cwa-remediation-register.cjs'
       - 'scripts/test-cwa-content-coherence.cjs'
+      - 'scripts/test-docs-truth.cjs'
+      - 'deployments/mainnet.json'
       - 'scripts/check-sitemap-anchors.cjs'
       - 'scripts/check-july-audit-remediation-register.cjs'
       - 'scripts/test-docs-workflow.cjs'
@@ -216,6 +220,9 @@ jobs:
 
       - name: Check CWA content-coherence remediations
         run: npm run test:cwa-content
+
+      - name: Check docs truth matrix (components, Safes, tests, coverage, apps)
+        run: npm run test:docs-truth
 
       - name: Check July community-audit remediation status
         run: npm run test:july-audit-register
