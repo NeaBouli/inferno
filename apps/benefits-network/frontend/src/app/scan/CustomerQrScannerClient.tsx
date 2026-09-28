@@ -298,7 +298,7 @@ export function CustomerQrScannerClient() {
           </p>
           <a
             href="/"
-            className="mt-4 inline-flex rounded-2xl border border-white/15 px-4 py-3 text-xs font-black uppercase text-stone-100 transition hover:border-orange-200/60"
+            className="mt-4 inline-flex min-h-11 items-center rounded-2xl border border-white/15 px-4 py-3 text-xs font-black uppercase text-stone-100 transition hover:border-orange-200/60"
           >
             Back to benefits
           </a>

@@ -569,7 +569,7 @@ function WalletStarterKit() {
       <div className="mt-5 grid gap-3 sm:grid-cols-3">
         <a
           href="#customer-wallet"
-          className="rounded-2xl bg-green-200 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-green-950/25 transition hover:-translate-y-0.5 hover:bg-green-100"
+          className="flex min-h-11 items-center justify-center rounded-2xl bg-green-200 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-green-950/25 transition hover:-translate-y-0.5 hover:bg-green-100"
         >
           Connect or lock
         </a>
@@ -578,7 +578,7 @@ function WalletStarterKit() {
             href={ETHEREUM_GET_ETH_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-2xl border border-green-200/35 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-green-50 transition hover:bg-green-200/10"
+            className="flex min-h-11 items-center justify-center rounded-2xl border border-green-200/35 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-green-50 transition hover:bg-green-200/10"
           >
             Get ETH guide
           </a>
@@ -591,7 +591,7 @@ function WalletStarterKit() {
           href={UNISWAP_IFR_URL}
           target="_blank"
           rel="noopener"
-          className="rounded-2xl border border-white/15 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-green-200/60"
+          className="flex min-h-11 items-center justify-center rounded-2xl border border-white/15 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-green-200/60"
         >
           Buy IFR
         </a>

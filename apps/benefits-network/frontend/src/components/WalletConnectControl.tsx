@@ -261,7 +261,7 @@ export function WalletConnectControl() {
                     data-wallet-launch={wallet.id}
                     href={wallet.href}
                     rel="noopener"
-                    className="rounded-xl border border-orange-200/20 bg-white/[0.07] px-3 py-3 text-center text-xs font-black uppercase tracking-[0.1em] text-stone-100 transition hover:border-orange-200/60 hover:bg-orange-200/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-200"
+                    className="flex min-h-11 items-center justify-center rounded-xl border border-orange-200/20 bg-white/[0.07] px-3 py-3 text-center text-xs font-black uppercase tracking-[0.1em] text-stone-100 transition hover:border-orange-200/60 hover:bg-orange-200/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-orange-200"
                   >
                     {wallet.label}
                   </a>

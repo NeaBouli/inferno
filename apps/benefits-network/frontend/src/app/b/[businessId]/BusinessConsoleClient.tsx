@@ -611,7 +611,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
           </p>
           <a
             href={`/s/${encodeURIComponent(business ? businessPublicReference(business) : businessId)}`}
-            className="mt-4 inline-flex rounded-full border border-green-200/35 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-green-50"
+            className="mt-4 inline-flex min-h-11 items-center rounded-full border border-green-200/35 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-green-50"
           >
             Open customer catalog
           </a>
@@ -931,7 +931,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
               <select
                 value={selectedRuleId}
                 onChange={(event) => setSelectedRuleId(event.target.value)}
-                className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
+                className="w-full min-w-0 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
               >
                 {rules.map((rule) => (
                   <option key={rule.id} value={rule.id}>

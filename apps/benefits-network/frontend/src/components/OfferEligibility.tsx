@@ -265,12 +265,12 @@ export function OfferEligibility({
         commitmentAction ? (
           <a
             href="https://web3.ifrunit.tech/?action=commitment-lock#access"
-            className="mt-2 inline-flex text-xs font-black text-orange-100 underline decoration-orange-300/60 underline-offset-4"
+            className="mt-1 inline-flex min-h-11 items-center text-xs font-black text-orange-100 underline decoration-orange-300/60 underline-offset-4"
           >
             Open TIME_ONLY commitment lock
           </a>
         ) : (
-          <Link href="/#customer-wallet" className="mt-2 inline-flex text-xs font-black text-orange-100 underline decoration-orange-300/60 underline-offset-4">
+          <Link href="/#customer-wallet" className="mt-1 inline-flex min-h-11 items-center text-xs font-black text-orange-100 underline decoration-orange-300/60 underline-offset-4">
             Open wallet and lock panel
           </Link>
         )

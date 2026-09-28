@@ -81,7 +81,7 @@ export function SellerCustomerPassScanner({ onPass }: { onPass: (passId: string)
         <button type="button" onClick={active ? stop : start} className="rounded-xl border border-green-200/30 px-3 py-3 text-xs font-black uppercase tracking-[0.1em] text-green-50">
           {active ? 'Stop camera' : 'Scan customer QR'}
         </button>
-        <label className="cursor-pointer rounded-xl border border-white/15 px-3 py-3 text-center text-xs font-black uppercase tracking-[0.1em] text-stone-100">
+        <label className="flex min-h-11 cursor-pointer items-center justify-center rounded-xl border border-white/15 px-3 py-3 text-center text-xs font-black uppercase tracking-[0.1em] text-stone-100">
           {imageLoading ? 'Reading image' : 'Choose QR image'}
           <input type="file" accept="image/*" className="sr-only" disabled={imageLoading} onChange={(event) => { void scanImage(event.target.files?.[0]); event.currentTarget.value = ''; }} />
         </label>
