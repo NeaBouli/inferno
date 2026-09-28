@@ -754,6 +754,10 @@ Wiki shell:
 - The distribution section's other `data-live-key` values keep their existing
   behavior (not part of this trace).
 - The SVG flow snapshot text stays a dated snapshot (pinned by `test:cwa-content`).
+- T-158f: the legacy hero canvas loop (`docs/index.html::loop`, hero is
+  `display:none` in the redesign) runs only while `#legacy-hero` intersects the
+  viewport; unbounded off-screen frames had starved the renderer and delayed
+  the transparency cards. No new node; the card state path is unchanged.
 
 ### 11.6 Diagrammdateien
 
