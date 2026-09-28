@@ -15,7 +15,8 @@ renderers (task INFERNO-SECURITY-S2F-WEB3-RUNTIME-20260927).
 It also maps the Points voucher issue/validation trace inside `apps/points-backend`
 (task INFERNO-SECURITY-S2G-POINTS-CWA14-20260927).
 It also maps the IFR Copilot chat trace inside `apps/ai-copilot` (task
-INFERNO-COPILOT-DYNAMIC-DATA-GUARD-20260924, section 8).
+INFERNO-COPILOT-DYNAMIC-DATA-GUARD-20260924, section 8) and the Deploy/Ops
+mainnet continuation trace (task T-137 S3 hardening, section 9).
 The rest of the repository is intentionally unmapped.
 
 ## 1. Grundidee
@@ -514,3 +515,93 @@ Done in this diff: dynamic-intent node (classification + typed fallback),
 guard wiring in `server/index.ts`, dynamic-data policy block in
 `src/context/system-prompts.ts`. Untouched by design: live-wiki, budget,
 wiki-rag retrieval selection, all live REST endpoints, client UI.
+
+## 9. Deploy/Ops mainnet continuation trace
+
+Scope: the one trace task T-137 touches — `scripts/deploy-mainnet-continue.js`
+(Steps 3-12 after InfernoToken + Governance) plus the CI workflows that run
+Hardhat scripts with repository secrets. Baseline: `main` 7157931e.
+
+### 9.1 Grundidee
+
+Operator-run Hardhat scripts deploy the protocol contracts. The continuation
+script resumes a partial mainnet deployment and wires deployer-held supply
+into vaults and role addresses. Production role addresses must never silently
+fall back to the deployer EOA (CWA-09 guardian/role concentration).
+
+### 9.2 Spur (Hop-Liste)
+
+1. `npx hardhat run scripts/deploy-mainnet-continue.js --network <net>` →
+   `scripts/lib/hardhat-runtime.js::connectHardhat` — signer + provider
+2. `scripts/deploy-mainnet-continue.js::main` — resolve role addresses from
+   env (`TREASURY_ADDRESS`, `COMMUNITY_ADDRESS`, `TEAM_BENEFICIARY`,
+   `VOUCHER_SIGNER_ADDRESS`, `GUARDIAN_ADDRESS`, `UNISWAP_ROUTER`)
+3. `main` → deployment boundary gate — reject Sepolia; on chain 1 every
+   production role must be set and differ from the deployer
+4. `main` → supply gate — deployer must hold the full token supply
+5. `main` → `safeDeploy` / `safeTx` — contract deployment and wiring
+
+Gap found (this task): hop 3 did not exist (deployer fallback reached
+`safeDeploy` on chain 1 and Sepolia), and hop 4 compared `!BigInt(a) === b`
+(always false), so a distributed supply never aborted. New node added:
+hop 3 inline in `main`, fail-closed `process.exit(1)` before hop 5; hop 4
+repaired to a strict inequality check. Same boundary as
+`scripts/deploy-mainnet.js::main` (not touched).
+
+Side lane: `.github/workflows/update-stats.yml` and `post-deploy.yml` run
+read-only `scripts/update-stats.js` on Sepolia but injected
+`secrets.DEPLOYER_PRIVATE_KEY`; the injection is removed and
+`scripts/test-workflow-permissions.cjs` now rejects any private-key secret
+reference in any workflow.
+
+### 9.3 Module
+
+| Modul | Eine Aufgabe | Einstieg | Stand |
+| --- | --- | --- | --- |
+| deploy-continue | resume mainnet deployment Steps 3-12 | `scripts/deploy-mainnet-continue.js::main` | gebaut |
+| deploy-gate | fail-closed network/role boundary + supply gate | inline in `deploy-continue::main` before `safeDeploy` | gebaut (this task) |
+| deploy-helpers | deploy/tx send + wait | `scripts/deploy-mainnet-continue.js::safeDeploy`, `::safeTx` | gebaut |
+| stats-workflows | scheduled/post-deploy stats refresh (`contents: write`) | `.github/workflows/update-stats.yml`, `post-deploy.yml` | gebaut |
+| workflow-policy | token permission + no-private-key policy test | `scripts/test-workflow-permissions.cjs` | gebaut |
+
+### 9.4 Verdrahtung
+
+- deploy-continue → deploy-gate: chainId, deployer address and raw role env
+  in; abort (exit 1) or pass. No call reaches `safeDeploy` before the gate.
+- deploy-gate → deploy-helpers: only on pass and full deployer supply.
+- stats-workflows → Hardhat: `SEPOLIA_RPC_URL` only; no signing key.
+- workflow-policy → all workflows: fails on any `secrets.*PRIVATE_KEY*`.
+
+### 9.5 Widerspruch und Lücken
+
+- Deployed guardian concentration (CWA-09) is on-chain state; this trace only
+  prevents a new continuation run from recreating it. Owner/governance work.
+- Chains other than 1, 31337 and Sepolia are not gated (same as
+  `deploy-mainnet.js`).
+
+### 9.6 Diagrammdateien
+
+- `docs/architecture/map.puml`
+
+```mermaid
+mindmap
+  root((Deploy/Ops continuation))
+    deploy-continue
+      gebaut: scripts/deploy-mainnet-continue.js::main
+    deploy-gate
+      gebaut: inline boundary + supply gate in main
+    deploy-helpers
+      gebaut: scripts/deploy-mainnet-continue.js::safeDeploy
+    stats-workflows
+      gebaut: .github/workflows/update-stats.yml
+      gebaut: .github/workflows/post-deploy.yml
+    workflow-policy
+      gebaut: scripts/test-workflow-permissions.cjs
+```
+
+### 9.7 Nächster Schritt
+
+Done in this diff: deploy-gate in `main`, supply comparison fix, removal of
+the unused private-key injection, no-private-key workflow rule, focused test
+`scripts/test-deploy-mainnet-continue-gate.cjs`. Untouched by design:
+`scripts/deploy-mainnet.js`, contracts, Hardhat config, workflow permissions.
