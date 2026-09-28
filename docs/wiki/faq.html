@@ -519,7 +519,7 @@
     {
       "@type": "Question",
       "name": "Are the contracts upgradeable?",
-      "acceptedAnswer": {"@type":"Answer","text":"No. All 17 deployed protocol contracts are immutable — no proxy pattern, no UUPS. Bytecode cannot be changed after deployment. The Treasury and Community Safe use Gnosis Safe proxy (audited multisig standard). This prevents rug-pulls via contract upgrades."}
+      "acceptedAnswer": {"@type":"Answer","text":"No. All 14 deployed protocol contracts are immutable — no proxy pattern, no UUPS. Bytecode cannot be changed after deployment. The three project Safes (Treasury, Community and LP Reserve) use the Gnosis Safe proxy (audited multisig standard). This prevents rug-pulls via contract upgrades."}
     },
     {
       "@type": "Question",
@@ -847,7 +847,7 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>Are the contracts upgradeable?</span><span class="icon">+</span></button>
-          <div class="faq-a">No. All 17 deployed protocol contracts are immutable &mdash; there is no proxy pattern, no UUPS, no transparent proxy. Once deployed, the bytecode cannot be changed. This means no rug-pull via contract upgrade is possible. The trade-off is that bugs cannot be patched in-place, but this is a deliberate security decision: immutability over convenience.<br><br>The exception are the Treasury Safe and Community Safe, which use the Gnosis Safe proxy architecture. Gnosis Safe is a battle-tested, audited multisig standard &mdash; any upgrade requires explicit multisig consensus and is publicly verifiable on-chain. This is not a protocol risk but an industry-standard operational security pattern.</div>
+          <div class="faq-a">No. All 14 deployed protocol contracts are immutable &mdash; there is no proxy pattern, no UUPS, no transparent proxy. Once deployed, the bytecode cannot be changed. This means no rug-pull via contract upgrade is possible. The trade-off is that bugs cannot be patched in-place, but this is a deliberate security decision: immutability over convenience.<br><br>The exceptions are the three project Safes (Treasury, Community and LP Reserve), which use the Gnosis Safe proxy architecture and complete the 17 documented on-chain components. Gnosis Safe is a battle-tested, audited multisig standard &mdash; any upgrade requires explicit multisig consensus and is publicly verifiable on-chain. This is not a protocol risk but an industry-standard operational security pattern.</div>
         </div>
       </div>
 
@@ -1007,7 +1007,7 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>What is the Community Safe used for?</span><span class="icon">+</span></button>
-          <div class="faq-a">The Community Safe (<code>0xaC5687547B2B21d80F8fd345B51e608d476667C7</code>) holds the 6% Community &amp; Grants allocation (60M IFR). It funds: community initiatives, developer grants, bug bounties, marketing, and Bootstrap funding (50M IFR contributed to BootstrapVaultV3). All transactions are visible on the Safe interface.</div>
+          <div class="faq-a">The Community Safe (<code>0xaC5687547B2B21d80F8fd345B51e608d476667C7</code>) received the 6% Community &amp; Grants allocation (60M IFR sent, 57.9M received after transfer fees). 50M IFR funded BootstrapVaultV3; the Safe currently holds the remaining 7.9M IFR operational reserve for community initiatives, developer grants and ecosystem incentives. No bug bounty program exists today. All transactions are visible on the Safe interface.</div>
         </div>
 
         <div class="faq-item">

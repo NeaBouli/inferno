@@ -213,10 +213,11 @@ Compatible seller-QR verification:
 
 This prevents screenshots/replay from being enough.
 
-All seller-side mutations use the same security boundary: request a random
-server-issued challenge bound to wallet, action, business and exact target
-resource, sign it, then submit the nonce once. Read-only seller actions stay
-timestamp-signed without persisting a challenge row.
+All seller-side actions use the same security boundary: request a random
+server-issued challenge bound to wallet, action, business, scope, the configured
+domain and chain ID, sign it, then submit the nonce once. Mutations bind the exact
+target resource; read-only actions bind the fixed `read` scope and need a fresh
+challenge per request.
 
 ### 4.5 Seller Benefit Rules
 
@@ -499,7 +500,7 @@ Critical rules:
 - Limit values are frozen into each QR session; later rule edits cannot change an issued checkout.
 - Concurrent redemption attempts serialize before counting usage, so a limit cannot be overrun by two counters.
 - Rate limits per seller and wallet.
-- Every seller mutation requires a resource-bound one-time authorization nonce; read-only seller actions remain stateless and timestamp-bound.
+- Every seller action requires a one-time authorization nonce bound to domain, chain ID, wallet, action and business; mutations also bind the exact resource.
 - Seller staff can scan/redeem through owner-managed checkout wallets but cannot change owner wallet, profile, rule, history, delegation or reward settings.
 - Reward writes to PartnerVault only after seller is governance-approved.
 - Admin actions must be audited.

@@ -30,10 +30,18 @@ for (const app of apps) {
 const workflow = fs.readFileSync(path.join(root, '.github', 'workflows', 'benefits-network.yml'), 'utf8');
 const walletConnectCiProjectId = '0123456789abcdef0123456789abcdef';
 const workflowNodeVersions = [...workflow.matchAll(/node-version:\s*['"]?(\d+)['"]?/g)].map((match) => match[1]);
+const backendImageStep = workflow.slice(
+  workflow.indexOf('- name: Build and verify Node 22 backend image'),
+  workflow.indexOf('  test-frontend:')
+);
 assert.equal(workflowNodeVersions.length, 4, 'Benefits CI must define four explicit Node runtimes');
 assert.ok(workflowNodeVersions.every((version) => version === '22'), 'Every Benefits CI job must use Node 22');
 assert.equal((workflow.match(/docker run -d/g) || []).length, 2, 'Both Benefits runner images must start normally in CI');
 assert.ok(workflow.includes('/api/ready'), 'Backend runner image must pass database readiness in CI');
+assert.ok(
+  backendImageStep.includes('-e SELLER_AUTH_DOMAIN=shop.example.test'),
+  'Backend runner image must provide the production-required seller auth domain in CI'
+);
 assert.equal((workflow.match(/docker exec \"\$container\" node --version/g) || []).length, 2, 'Both running images must report Node 22');
 
 const frontendDockerfile = fs.readFileSync(

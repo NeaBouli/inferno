@@ -5,6 +5,8 @@ export interface SellerAuthorizationChallenge {
     businessId: string;
     walletAddress: string;
     scope: string;
+    domain: string;
+    chainId: number;
     timestamp: string;
     issuedAt: string;
     expiresAt: string;
@@ -54,10 +56,13 @@ export interface BenefitsCheckoutRedemption {
 export interface IFRBenefitsClientConfig {
     baseUrl?: string;
     fetch?: typeof fetch;
+    /** Expected chain ID of the Benefits deployment; seller challenges for another chain are refused. */
+    chainId?: number;
 }
 export declare class IFRBenefitsClient {
     private readonly baseUrl;
     private readonly fetchImpl;
+    private readonly chainId?;
     constructor(config?: IFRBenefitsClientConfig);
     private requestSellerChallenge;
     private signSellerChallenge;

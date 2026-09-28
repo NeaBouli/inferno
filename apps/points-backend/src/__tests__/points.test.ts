@@ -329,8 +329,9 @@ async function run() {
   );
   {
     const { status } = await api("POST", "/voucher/issue", {}, authToken);
-    // 400 = under threshold, 403 = no IFR lock, 503 = lock RPC unavailable
-    assert([400, 403, 503].includes(status), "voucher rejected (threshold, lock proof, or RPC unavailable)");
+    assert(status === 400, "voucher below threshold is rejected");
+    const belowThreshold = await prisma.wallet.findUniqueOrThrow({ where: { address: TEST_WALLET } });
+    assert(belowThreshold.pointsTotal === 30, "threshold rejection leaves points unchanged");
   }
 
   // ---- Reach Threshold and Issue Voucher ----
@@ -347,10 +348,82 @@ async function run() {
       assert(status === 200, "voucher issued at threshold");
       assert(typeof data.signature === "string", "voucher has signature");
       assert((data.voucher as { discountBps: number }).discountBps === POINTS_CONFIG.voucher.discountBps, "voucher discountBps correct");
+      const issuedNonce = (data.voucher as { nonce: string }).nonce;
+      const afterIssue = await prisma.wallet.findUniqueOrThrow({ where: { address: TEST_WALLET } });
+      assert(afterIssue.pointsTotal === 0, "voucher issuance consumes the threshold points");
+      const redemption = await prisma.pointEvent.findFirst({
+        where: { walletId: afterIssue.id, type: "voucher_redemption" },
+      });
+      assert(redemption?.points === -POINTS_CONFIG.voucher.threshold, "voucher redemption is recorded");
+
+      const validation = await api("GET", `/voucher/validate/${issuedNonce}`);
+      assert(validation.status === 200 && validation.data.valid === true, "issued voucher validates");
+      assert(!Object.hasOwn(validation.data, "wallet"), "public validation omits wallet identity");
 
       // ---- Daily Wallet Limit ----
       const { status: status2 } = await api("POST", "/voucher/issue", {}, authToken);
       assert(status2 === 429, "second voucher same day rejected");
+
+      // ---- Transaction rollback on signer failure ----
+      await prisma.voucher.deleteMany();
+      await prisma.pointEvent.deleteMany({ where: { type: "voucher_redemption" } });
+      await prisma.wallet.update({
+        where: { address: TEST_WALLET },
+        data: { pointsTotal: POINTS_CONFIG.voucher.threshold },
+      });
+      const testSignerKey = process.env.VOUCHER_SIGNER_PRIVATE_KEY;
+      delete process.env.VOUCHER_SIGNER_PRIVATE_KEY;
+      const failedIssue = await api("POST", "/voucher/issue", {}, authToken);
+      process.env.VOUCHER_SIGNER_PRIVATE_KEY = testSignerKey;
+      assert(failedIssue.status === 500, "signer failure rejects voucher issuance");
+      const afterFailure = await prisma.wallet.findUniqueOrThrow({ where: { address: TEST_WALLET } });
+      assert(afterFailure.pointsTotal === POINTS_CONFIG.voucher.threshold, "signer failure rolls back points");
+      assert(await prisma.voucher.count() === 0, "signer failure creates no voucher");
+      assert(
+        await prisma.pointEvent.count({ where: { type: "voucher_redemption" } }) === 0,
+        "signer failure creates no redemption event",
+      );
+
+      // ---- Concurrent issuance ----
+      const concurrent = await Promise.all([
+        api("POST", "/voucher/issue", {}, authToken),
+        api("POST", "/voucher/issue", {}, authToken),
+      ]);
+      const concurrentStatuses = concurrent.map(({ status }) => status).sort();
+      assert(
+        concurrentStatuses[0] === 200 && [400, 429].includes(concurrentStatuses[1]),
+        "concurrent issuance produces one winner without server error",
+      );
+      const afterConcurrent = await prisma.wallet.findUniqueOrThrow({ where: { address: TEST_WALLET } });
+      assert(afterConcurrent.pointsTotal === 0, "concurrent issuance consumes points once");
+      assert(await prisma.voucher.count() === 1, "concurrent issuance creates one voucher");
+      assert(
+        await prisma.pointEvent.count({ where: { type: "voucher_redemption" } }) === 1,
+        "concurrent issuance records one redemption",
+      );
+
+      // ---- Concurrent issuance with surplus points still respects the wallet window ----
+      await prisma.voucher.deleteMany();
+      await prisma.pointEvent.deleteMany({ where: { type: "voucher_redemption" } });
+      await prisma.wallet.update({
+        where: { address: TEST_WALLET },
+        data: { pointsTotal: POINTS_CONFIG.voucher.threshold * 2 },
+      });
+      const surplusConcurrent = await Promise.all([
+        api("POST", "/voucher/issue", {}, authToken),
+        api("POST", "/voucher/issue", {}, authToken),
+      ]);
+      const surplusStatuses = surplusConcurrent.map(({ status }) => status).sort();
+      assert(
+        surplusStatuses[0] === 200 && surplusStatuses[1] === 429,
+        "wallet window allows one concurrent voucher even with surplus points",
+      );
+      const afterSurplus = await prisma.wallet.findUniqueOrThrow({ where: { address: TEST_WALLET } });
+      assert(
+        afterSurplus.pointsTotal === POINTS_CONFIG.voucher.threshold,
+        "surplus concurrency consumes one threshold",
+      );
+      assert(await prisma.voucher.count() === 1, "surplus concurrency creates one voucher");
     } else {
       console.log("  ⊘ voucher signing tests skipped (no VOUCHER_SIGNER_PRIVATE_KEY)");
     }

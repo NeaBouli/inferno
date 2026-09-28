@@ -4,7 +4,7 @@ import { CONFIG } from '../config';
 
 export interface AuthPayload {
   walletAddress?: string;
-  youtubeAccessToken?: string;
+  sid?: string;
   iat: number;
   exp: number;
 }
@@ -14,7 +14,9 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction) 
   if (!token) return res.status(401).json({ error: 'No token' });
 
   try {
-    const payload = jwt.verify(token, CONFIG.jwtSecret) as AuthPayload;
+    const payload = jwt.verify(token, CONFIG.jwtSecret, {
+      algorithms: [CONFIG.jwtAlgorithm],
+    }) as AuthPayload;
     (req as any).auth = payload;
     next();
   } catch {

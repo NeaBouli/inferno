@@ -1,9 +1,149 @@
 {
+  "_manifest": {
+    "chainId": 1,
+    "addressSource": "docs/DEPLOYMENTS.md (Ethereum Mainnet contract table, Etherscan-verified entries)",
+    "components": "Current Mainnet protocol contracts (14). Legacy BootstrapVault V1 is deprecated and listed only in docs/DEPLOYMENTS.md.",
+    "unknownPolicy": "deployer, tx and timestamp are null when no deployment record exists in this repository; they are unknown, not omitted by accident. Fill them only from a verified deployment transaction.",
+    "abiDirectory": "abi/ (only BuilderRegistry, BuybackController, CommitmentVault, LendingVault have committed ABIs)"
+  },
+  "InfernoToken": {
+    "address": "0x77e99917Eca8539c62F509ED1193ac36580A6e7B",
+    "deployer": null,
+    "tx": null,
+    "timestamp": null,
+    "network": "mainnet",
+    "source": "contracts/token/InfernoToken.sol",
+    "abi": null,
+    "provenance": "address from docs/DEPLOYMENTS.md; deployment transaction unknown in repository"
+  },
+  "Governance": {
+    "address": "0xc43d48E7FDA576C5022d0670B652A622E8caD041",
+    "deployer": null,
+    "tx": null,
+    "timestamp": null,
+    "network": "mainnet",
+    "source": "contracts/governance/Governance.sol",
+    "abi": null,
+    "provenance": "address from docs/DEPLOYMENTS.md; deployment transaction unknown in repository"
+  },
+  "IFRLock": {
+    "address": "0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb",
+    "deployer": null,
+    "tx": null,
+    "timestamp": null,
+    "network": "mainnet",
+    "source": "contracts/lock/IFRLock.sol",
+    "abi": null,
+    "provenance": "address from docs/DEPLOYMENTS.md; deployment transaction unknown in repository"
+  },
+  "BurnReserve": {
+    "address": "0xaA1496133B6c274190A2113410B501C5802b6fCF",
+    "deployer": null,
+    "tx": null,
+    "timestamp": null,
+    "network": "mainnet",
+    "source": "contracts/burnreserve/BurnReserve.sol",
+    "abi": null,
+    "provenance": "address from docs/DEPLOYMENTS.md; deployment transaction unknown in repository"
+  },
+  "BuybackVault": {
+    "address": "0x670D293e3D65f96171c10DdC8d88B96b0570F812",
+    "deployer": null,
+    "tx": null,
+    "timestamp": null,
+    "network": "mainnet",
+    "source": "contracts/buyback/BuybackVault.sol",
+    "abi": null,
+    "provenance": "address from docs/DEPLOYMENTS.md; deployment transaction unknown in repository"
+  },
+  "PartnerVault": {
+    "address": "0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D",
+    "deployer": null,
+    "tx": null,
+    "timestamp": null,
+    "network": "mainnet",
+    "source": "contracts/partner/PartnerVault.sol",
+    "abi": null,
+    "provenance": "address from docs/DEPLOYMENTS.md; deployment transaction unknown in repository"
+  },
+  "FeeRouterV1": {
+    "address": "0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a",
+    "deployer": null,
+    "tx": null,
+    "timestamp": null,
+    "network": "mainnet",
+    "source": "contracts/FeeRouterV1.sol",
+    "abi": null,
+    "provenance": "address from docs/DEPLOYMENTS.md; deployment transaction unknown in repository"
+  },
+  "Vesting": {
+    "address": "0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271",
+    "deployer": null,
+    "tx": null,
+    "timestamp": null,
+    "network": "mainnet",
+    "source": "contracts/vesting/Vesting.sol",
+    "abi": null,
+    "provenance": "address from docs/DEPLOYMENTS.md; deployment transaction unknown in repository"
+  },
+  "LiquidityReserve": {
+    "address": "0xdc0309804803b3A105154f6073061E3185018f64",
+    "deployer": null,
+    "tx": null,
+    "timestamp": null,
+    "network": "mainnet",
+    "source": "contracts/liquidity/LiquidityReserve.sol",
+    "abi": null,
+    "provenance": "address from docs/DEPLOYMENTS.md; deployment transaction unknown in repository"
+  },
+  "BootstrapVaultV3": {
+    "address": "0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141",
+    "deployer": null,
+    "tx": null,
+    "timestamp": null,
+    "network": "mainnet",
+    "source": "contracts/bootstrap/BootstrapVaultV3.sol",
+    "abi": null,
+    "provenance": "address from docs/DEPLOYMENTS.md; deployment transaction unknown in repository"
+  },
+  "CommitmentVault": {
+    "address": "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3",
+    "deployer": null,
+    "tx": null,
+    "timestamp": null,
+    "network": "mainnet",
+    "source": "contracts/vault/CommitmentVault.sol",
+    "abi": "abi/CommitmentVault.json",
+    "provenance": "address from docs/DEPLOYMENTS.md; deployment transaction unknown in repository"
+  },
+  "LendingVault": {
+    "address": "0x974305Ab0EC905172e697271C3d7d385194EB9DF",
+    "deployer": null,
+    "tx": null,
+    "timestamp": null,
+    "network": "mainnet",
+    "source": "contracts/vault/LendingVault.sol",
+    "abi": "abi/LendingVault.json",
+    "provenance": "address from docs/DEPLOYMENTS.md; deployment transaction unknown in repository"
+  },
+  "BuilderRegistry": {
+    "address": "0xdfe6636DA47F8949330697e1dC5391267CEf0EE3",
+    "deployer": null,
+    "tx": null,
+    "timestamp": null,
+    "network": "mainnet",
+    "source": "contracts/BuilderRegistry.sol",
+    "abi": "abi/BuilderRegistry.json",
+    "provenance": "address from docs/DEPLOYMENTS.md; deployment transaction unknown in repository"
+  },
   "BuybackController": {
     "address": "0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c",
     "deployer": "0x6b36687b0cd4386fb14cf565B67D7862110Fed67",
     "tx": "0x761ee37c87d528317c5f7da13a2581e037f2fe39c71bfc58ce83a32930391677",
     "timestamp": "2026-04-14T05:20:56.856Z",
-    "network": "mainnet"
+    "network": "mainnet",
+    "source": "contracts/buyback/BuybackController.sol",
+    "abi": "abi/BuybackController.json",
+    "provenance": "deployment script record (scripts/deploy-buyback-controller.js)"
   }
 }

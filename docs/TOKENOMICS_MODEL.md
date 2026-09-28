@@ -47,7 +47,8 @@ Assumption: 100,000 transfers/year at average of 1,000 IFR
 ## PartnerVault Emission Model
 
 ### Parameters (Mainnet):
-- rewardBps: 1000 (10%)
+- rewardBps: 1500 (15%)
+- ifrLock: unset (address(0)) — algorithmic throttle inactive, flat rewardBps applies
 - annualEmissionCap: 4,000,000 IFR
 - BuilderPool: 40,000,000 IFR total
 
@@ -59,9 +60,9 @@ At a constant annualEmissionCap of 4M IFR:
 
 ### Creator Reward Example:
 - User A locks: 10,000 IFR
-- Creator B rewardBps: 1000 (10%)
-- Creator B Reward: 1,000 IFR (from BuilderPool)
-- Net Effect: 10,000 locked - 1,000 reward = 9,000 net deflationary
+- Creator B rewardBps: 1500 (15%)
+- Creator B Reward: 1,500 IFR (from BuilderPool)
+- Net Effect: 10,000 locked - 1,500 reward = 8,500 net deflationary
 
 **Important: Reward < Lock -> always net deflationary**
 

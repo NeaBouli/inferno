@@ -297,7 +297,7 @@ those remain production configuration and physical-wallet acceptance gates.
 - A QR must never be treated as wallet ownership or eligibility. Customer-presented passes require
   separate customer creation and exact-offer confirmation signatures; linked session challenge and
   attest endpoints reject the public legacy path.
-- Every seller mutation must remain bound to a persisted random nonce, wallet, action, business and exact resource scope; read-only seller actions must not create challenge rows.
+- Every seller action must remain bound to a persisted random nonce, wallet, action, business, scope (exact resource for mutations, fixed `read` for reads), configured domain and chain ID, and is consumed once; replayed read proofs are rejected.
 - Challenge text must include rule metadata so the user signs exactly what is being verified.
 - Production logs must avoid storing full signatures unless required for audit and retention is defined.
 - Shop and API responses suppress framework disclosure and enforce tested MIME, framing,

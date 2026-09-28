@@ -98,6 +98,8 @@
 
 **Note:** Immutable guardian means it cannot be rotated. If the guardian key is lost, pause/unpause is permanently unavailable (but release continues working when unpaused, which is the default).
 
+**Status correction (2026-09-26):** The note above reflects the 2026-03-04 audit state and is preserved as recorded. In current source the guardian is no longer `immutable`: `transferGuardian(address)` exists but is `onlyGuardian` (self-rotation only, zero-address check, `GuardianTransferred` event). Vesting has no owner role, so a lost or hostile guardian still cannot be displaced by an owner — the W18 risk remains **open**. See the W18 entry for the current remediation status.
+
 ---
 
 ## 5. LiquidityReserve.sol (161 LOC)
@@ -271,6 +273,15 @@ function setFeeCollector(address newCollector) external onlyGovernance {
 | W18 | Vesting | F | ~~`guardian` is immutable — cannot be rotated.~~ **CORRECTED 20.09.2026:** `transferGuardian(address)` exists and is restricted to the current guardian. | No remediation required for the stated finding; continue protecting and monitoring the guardian key. |
 | W21 | System-wide | F | `feeExempt` is an operational dependency (not enforced in contract constructors). If a Governance proposal revokes feeExempt on IFRLock or PartnerVault, user funds become trapped (unlock/claim returns less than locked). | Document as governance invariant. Consider on-chain enforcement: IFRLock constructor could `require(token.isFeeExempt(address(this)))`. |
 
+**W18 — current remediation status (2026-09-26): OPEN.**
+
+- Source capability: guardian self-rotation exists in source (`transferGuardian(address)` with `onlyGuardian`, zero-address check, `GuardianTransferred` event); `guardian` is no longer `immutable`.
+- Owner-recoverable remediation: none — Vesting has no owner role, so a lost or hostile guardian cannot be displaced by an owner.
+- Deployed-state proof: outstanding — this register holds no on-chain evidence that the deployed Vesting instance includes `transferGuardian`; a source change alone does not remediate an already-deployed contract.
+- Evidence: audit runs 1-3; S0 on-chain read at mainnet block 26062273.
+
+**W21 — coverage note (2026-09-26):** Audit-run finding M2 (fee-rate / custody accounting) is covered by this entry together with W6 (Vesting fee-rate); no separate register identifier allocated. Evidence: audit runs 1-3; S0 on-chain read at mainnet block 26062273.
+
 ### Low / Informational
 
 | # | Contract | Check | Finding | Recommendation |
@@ -371,3 +382,5 @@ All 20 warnings are documented above. W16 (`pendingExpectedOut` DoS) has been fi
 Fixes for W1, W2 (Multisig migration) are planned before mainnet.
 W13 (pair pre-existence) mitigated by pre-deploy verification. W14 (no refund) is a design trade-off (trustlessness vs. liveness).
 W15-W21 added 2026-03-04 based on ChatGPT Audit V5 cross-check.
+
+**Register reconciliation (2026-09-26):** W18 reclassified **OPEN** — source-only guardian self-rotation (`onlyGuardian`), no owner-recoverable remediation, deployed-state proof outstanding; see the W18 status note above and F10 in [APP_SECURITY_REVIEW.md](APP_SECURITY_REVIEW.md). Audit-run finding M2 (fee-rate / custody accounting) from audit runs 1-3 is folded into the existing W21/W6 coverage without a new register identifier. Evidence labels: audit runs 1-3; S0 on-chain read at mainnet block 26062273.

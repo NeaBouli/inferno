@@ -25,6 +25,16 @@ export const sessionRateLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Public checkout status polling (seller console and customer page poll every 3 s).
+export const sessionStatusRateLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000,
+  max: 7200,
+  store: createPublicRateLimitStore('session-status'),
+  message: { error: 'Too many session status requests. Try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 export const attestRateLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 50,

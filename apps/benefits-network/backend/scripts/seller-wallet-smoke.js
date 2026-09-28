@@ -79,14 +79,14 @@ async function fetchNoContent(path, options = {}) {
 }
 
 async function signSellerAction(wallet, action, businessId, scope) {
-  const query = new URLSearchParams({ action, businessId });
+  // Every seller action, read or mutation, uses a one-time wallet-bound challenge.
+  const query = new URLSearchParams({ action, businessId, walletAddress: wallet.address });
   const mutatingActions = new Set([
     'business:create', 'business:delete', 'operators:create', 'operators:delete',
     'products:create', 'products:update', 'products:delete', 'rewards:apply',
     'rules:create', 'rules:update', 'rules:delete', 'sessions:create', 'sessions:redeem',
   ]);
   if (mutatingActions.has(action)) {
-    query.set('walletAddress', wallet.address);
     query.set('scope', scope || businessId);
   }
   const challenge = await fetchJson(`/api/seller/auth-message?${query.toString()}`);

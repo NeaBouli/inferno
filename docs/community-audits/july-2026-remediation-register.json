@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-19",
+  "updatedAt": "2026-09-27",
   "baseline": "564a7c4504c8da7a24a302204f4fd5e39d1abece",
   "originalAudit": {
     "path": "IFR_Protocol_Audit_2026-07-27.md",
@@ -173,12 +173,22 @@
       "title": "Wallet-critical browser dependencies",
       "sourceSection": "4.5",
       "status": "partially_remediated",
-      "currentAssessment": "Ethers v6 is pinned and self-hosted, but a legacy wallet-core path still imports WalletConnect from esm.sh at runtime.",
-      "remainingAction": "Bundle and pin WalletConnect locally or replace the legacy path, then verify connector parity across supported browsers and devices.",
+      "currentAssessment": "Ethers v6 is pinned and self-hosted. On the local integration branch (merge and release still pending) the WalletConnect provider is also bundled as a pinned, reproducibly built same-origin artifact instead of a runtime CDN import; the finding stays partially remediated until that integrated build is merged, released and connector parity is re-verified.",
+      "remainingAction": "Verify WalletConnect connector parity across supported browsers and devices on the integrated build.",
       "verification": "Asset integrity check, no-runtime-CDN assertion and full wallet/browser regression matrix.",
       "evidence": [
-        {"path": "docs/web3/index.html", "marker": "/assets/vendor/ethers-6.17.0.umd.min.js"},
-        {"path": "docs/assets/wallet-core.js", "marker": "WalletConnect v2 via esm.sh"}
+        {
+          "path": "docs/web3/index.html",
+          "marker": "/assets/vendor/ethers-6.17.0.umd.min.js"
+        },
+        {
+          "path": "docs/assets/wallet-core.js",
+          "marker": "walletconnect-ethereum-provider-2.17.3.esm.js"
+        },
+        {
+          "path": "scripts/check-web3-wallet-runtime.cjs",
+          "marker": "EXPECTED_SHA256"
+        }
       ]
     },
     {

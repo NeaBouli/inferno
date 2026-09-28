@@ -49,12 +49,11 @@ export function SellerRewardStatus({ businessId, ownerAddress }: { businessId: s
   async function signAction(action: string, scope?: string): Promise<SellerAuth> {
     if (!address || !isConnected) throw new Error('Connect the seller owner wallet first.');
     const mutating = action !== 'rewards:read';
-    const challenge = await getSellerAuthMessage(
-      action,
-      businessId,
-      mutating ? { walletAddress: address, scope: scope ?? businessId } : undefined
-    );
-    if (mutating && !challenge.nonce) throw new Error('Seller authorization challenge is incomplete');
+    const challenge = await getSellerAuthMessage(action, businessId, {
+      walletAddress: address,
+      scope: mutating ? scope ?? businessId : undefined,
+    });
+    if (!challenge.nonce) throw new Error('Seller authorization challenge is incomplete');
     const signature = await signMessageAsync({ message: challenge.message });
     return {
       walletAddress: address,
