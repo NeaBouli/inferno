@@ -75,8 +75,10 @@ governance activation gate is complete.
 - [ ] First real builder integration live
 - [ ] Sustained community reach and independent coverage beyond project-owned
       X/Telegram channels
-- [x] CoinGecko and CoinMarketCap listing applications submitted; external
-      review/listing remains pending
+- [x] CoinGecko and CoinMarketCap listing applications submitted (status
+      2026-09-28: CoinMarketCap ticket `1453378` in free review; CoinGecko
+      request `CL0309260050` rejected for insufficient organic attention,
+      reapplication only after improved evidence/traction)
 
 ---
 
