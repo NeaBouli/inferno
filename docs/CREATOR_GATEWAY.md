@@ -118,9 +118,13 @@ docker-compose up -d
 - Creator operates their own server → their own data privacy responsibility
 
 ## Status
+
 - Specification: Complete
-- Implementation: Planned (Phase 3)
-- Repository: github.com/NeaBouli/ifr-creator-gateway (planned)
+- Implementation: source in `apps/creator-gateway`; no production deployment
+  record, so availability must not be inferred from source presence
+- Separate repository: planned; `apps/creator-gateway` is the maintained source
+- Open decisions (hosting model, first creator pilot, reward caller):
+  [decision register](GOVERNANCE_PRODUCT_DECISION_REGISTER.md#lane-7--embedded-wallet-sdk-creator-gateway-and-private-follow-on-boundary)
 
 ---
 *As of: March 2026 | IFR Creator Gateway v0.1 Spec*

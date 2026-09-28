@@ -1,7 +1,7 @@
 # Memo an das IFR-Team — PartnerVault, Seller-Rewards und nachhaltige Attraktivität
 
 > **An:** Core Developer / Keyholder Council, IFR Protocol
-> **Von:** externe Analyse (George / MG) auf Basis der öffentlichen Wiki, der Mainnet-Darstellung und der Tokenomics-Dokumente
+> **Von:** externe Analyse (Verfasserangabe entfernt; keine Autorenzuordnung in Agenda-Unterlagen) auf Basis der öffentlichen Wiki, der Mainnet-Darstellung und der Tokenomics-Dokumente
 > **Datum:** 15. September 2026
 > **Betreff:** Das PartnerVault kann leer laufen – und die aktuelle Formel koppelt den Use-Case an eine Subvention, die sich selbst nicht trägt
 > **Status:** Diskussionsvorlage, keine Anlageempfehlung
