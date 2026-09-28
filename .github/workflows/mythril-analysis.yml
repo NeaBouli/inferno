@@ -61,6 +61,7 @@ jobs:
           python -m venv .mythril-venv
           .mythril-venv/bin/pip install --require-hashes \
             -r audit/requirements-mythril.txt
+          .mythril-venv/bin/python -c "import pkg_resources"
           .mythril-venv/bin/solc-select install 0.8.28
           .mythril-venv/bin/solc-select use 0.8.28
 

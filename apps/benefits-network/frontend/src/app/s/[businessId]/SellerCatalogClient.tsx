@@ -121,7 +121,7 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
                   href={business.website}
                   target="_blank"
                   rel="noopener"
-                  className="rounded-full border border-green-200/35 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-green-50"
+                  className="inline-flex min-h-11 items-center rounded-full border border-green-200/35 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-green-50"
                 >
                   Seller website
                 </a>
@@ -195,7 +195,7 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
                             <p className="mt-1 text-xs text-stone-400">
                               Per wallet: {rule.dailyRedemptionLimit || 'unlimited'} / UTC day and {rule.monthlyRedemptionLimit || 'unlimited'} / UTC month.
                             </p>
-                            <Link href={`/?seller=${encodeURIComponent(publicReference)}&offer=${encodeURIComponent(rule.id)}#customer-pass`} className="mt-3 inline-flex rounded-full bg-orange-300 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-stone-950">
+                            <Link href={`/?seller=${encodeURIComponent(publicReference)}&offer=${encodeURIComponent(rule.id)}#customer-pass`} className="mt-3 inline-flex min-h-11 items-center rounded-full bg-orange-300 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-stone-950">
                               Use this offer
                             </Link>
                           </div>
@@ -237,7 +237,7 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
                   <p className="mt-1 text-xs text-stone-400">
                     {rule.category} / Per wallet: {rule.dailyRedemptionLimit || 'unlimited'} / UTC day and {rule.monthlyRedemptionLimit || 'unlimited'} / UTC month.
                   </p>
-                  <Link href={`/?seller=${encodeURIComponent(publicReference)}&offer=${encodeURIComponent(rule.id)}#customer-pass`} className="mt-3 inline-flex rounded-full bg-orange-300 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-stone-950">
+                  <Link href={`/?seller=${encodeURIComponent(publicReference)}&offer=${encodeURIComponent(rule.id)}#customer-pass`} className="mt-3 inline-flex min-h-11 items-center rounded-full bg-orange-300 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-stone-950">
                     Use this offer
                   </Link>
                 </article>
@@ -247,8 +247,8 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
         ) : null}
 
         <section className="mt-8 flex flex-wrap gap-3 border-t border-white/10 pt-6">
-          <Link href="/#customer-wallet" className="rounded-full bg-green-300 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-950">Check or lock IFR</Link>
-          <Link href="/guide" className="rounded-full border border-white/15 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-100">Checkout guide</Link>
+          <Link href="/#customer-wallet" className="inline-flex min-h-11 items-center rounded-full bg-green-300 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-950">Check or lock IFR</Link>
+          <Link href="/guide" className="inline-flex min-h-11 items-center rounded-full border border-white/15 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-100">Checkout guide</Link>
         </section>
       </div>
     </AppShell>

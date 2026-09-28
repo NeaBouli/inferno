@@ -37,6 +37,31 @@ for (const stale of [
   assert.ok(!wiki.includes(stale), `Wiki roadmap must not include stale marker: ${stale}`);
 }
 
+// T-152: proposed governance/product items must not read as approved or scheduled.
+const register = read("docs/GOVERNANCE_PRODUCT_DECISION_REGISTER.md");
+for (let lane = 1; lane <= 7; lane += 1) {
+  assert.ok(register.includes(`## Lane ${lane} — `), `Decision register must include lane ${lane}`);
+}
+for (const field of ["**Current truth:**", "**Decision needed:**", "**Production gate:**", "**Next evidence:**"]) {
+  assert.equal(register.split(field).length - 1, 7, `Every register lane must include ${field}`);
+}
+assert.ok(!/0x[0-9a-fA-F]{40}/.test(register), "Decision register must not contain wallet addresses");
+for (const relative of ["docs/ROADMAP.md", "docs/wiki/roadmap.html", "docs/wiki/governance.html"]) {
+  assert.ok(read(relative).includes("GOVERNANCE_PRODUCT_DECISION_REGISTER.md"), `${relative} must link the decision register`);
+}
+assert.ok(roadmap.includes("(EX-01/EX-02):\n      undated Council discussion drafts, not approved policy"));
+assert.ok(wiki.includes("(EX-01/EX-02) &mdash; undated Council discussion drafts, not approved policy"));
+assert.ok(!wiki.includes("Creator Rewards live (automated)"));
+const daoWiki = read("docs/wiki/dao-governance.html");
+for (const stale of [
+  "Three new contracts will be deployed",
+  "Sole private key holder for TXs",
+  "Only the Executor component holds private keys",
+  "1 IFR locked = 1 vote",
+  "Voting is completely free.",
+]) {
+  assert.ok(!daoWiki.includes(stale), `DAO governance page must not include: ${stale}`);
+}
 for (const relative of ["internal/operations/TODO.md", "internal/operations/TODO.html"]) {
   const todo = read(relative);
   assert.ok(todo.includes("8 transitive low findings"));

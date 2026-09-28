@@ -176,7 +176,7 @@ export function CustomerProofHistory() {
         <div className="flex flex-wrap gap-2">
           <a
             href="/scan"
-            className="rounded-full bg-orange-300 px-3 py-2 text-xs font-black uppercase text-stone-950 transition hover:bg-orange-200"
+            className="inline-flex min-h-11 items-center justify-center rounded-full bg-orange-300 px-3 py-2 text-xs font-black uppercase text-stone-950 transition hover:bg-orange-200"
           >
             Scan QR
           </a>
@@ -300,7 +300,7 @@ export function CustomerProofHistory() {
               </div>
               <a
                 href={`/r/${item.sessionId}`}
-                className="mt-3 inline-flex rounded-2xl border border-orange-200/35 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-orange-50 transition hover:bg-orange-200/10"
+                className="mt-3 inline-flex min-h-11 items-center rounded-2xl border border-orange-200/35 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-orange-50 transition hover:bg-orange-200/10"
               >
                 Reopen proof
               </a>

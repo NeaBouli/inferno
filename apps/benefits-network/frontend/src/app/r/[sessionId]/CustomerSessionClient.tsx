@@ -353,7 +353,7 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
             <div className="mt-4 grid gap-2 sm:grid-cols-3">
               <a
                 href="/#customer-wallet"
-                className="rounded-2xl bg-green-300 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-green-950/25 transition hover:bg-green-200"
+                className="flex min-h-11 items-center justify-center rounded-2xl bg-green-300 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-green-950/25 transition hover:bg-green-200"
               >
                 Lock IFR
               </a>
@@ -361,13 +361,13 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
                 href={UNISWAP_IFR_URL}
                 target="_blank"
                 rel="noopener"
-                className="rounded-2xl border border-green-200/35 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-green-50 transition hover:bg-green-200/10"
+                className="flex min-h-11 items-center justify-center rounded-2xl border border-green-200/35 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-green-50 transition hover:bg-green-200/10"
               >
                 Buy IFR
               </a>
               <a
                 href="/guide"
-                className="rounded-2xl border border-white/15 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-green-200/60"
+                className="flex min-h-11 items-center justify-center rounded-2xl border border-white/15 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-green-200/60"
               >
                 Open guide
               </a>

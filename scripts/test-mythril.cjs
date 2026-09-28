@@ -66,6 +66,13 @@ for (const pin of ["setuptools==80.10.2", "mythril==0.24.8", "solc-select==1.2.0
   assert.ok(requirementsLock.includes(pin), `Mythril lock must contain ${pin}`);
 }
 assert.ok(requirementsLock.includes("--generate-hashes"));
+// Mythril 0.24.8 and its pinned py-evm import pkg_resources, which setuptools removed in 82.0.0.
+const setuptoolsPins = [requirementsInput, requirementsLock].map((text) => text.match(/^setuptools==(\d+)\.\d+\.\d+/m));
+for (const pin of setuptoolsPins) {
+  assert.ok(pin, "Mythril requirements must pin setuptools");
+  assert.ok(Number(pin[1]) < 82, "Mythril requires setuptools < 82 because it imports pkg_resources");
+}
+assert.equal(Number(config.tool.setuptools.split(".")[0]) < 82, true, "Mythril toolchain gate must require setuptools < 82");
 assert.ok(requirementsLock.includes("--hash=sha256:"));
 assert.equal(requirementsLock.includes("--index-url"), false, "Mythril lock must use the configured default package index");
 
@@ -172,12 +179,17 @@ fs.rmSync(digestFixture, { force: true });
     "python-version: '3.12.13'",
     "--require-hashes",
     "-r audit/requirements-mythril.txt",
+    ".mythril-venv/bin/python -c \"import pkg_resources\"",
     "solc-select install 0.8.28",
     "sha256sum -c",
     "SOLC_BIN=$SOLC_ARTIFACT",
     "npm run test:mythril",
     "npm run check:mythril",
   ]) assert.ok(workflow.includes(marker), `Mythril workflow must include ${marker}`);
+  const pkgResourcesPreflight = workflow.indexOf(".mythril-venv/bin/python -c \"import pkg_resources\"");
+  assert.ok(workflow.indexOf("-r audit/requirements-mythril.txt") < pkgResourcesPreflight
+    && pkgResourcesPreflight < workflow.indexOf("npm run check:mythril"),
+  "Mythril workflow must verify pkg_resources after the locked install and before analysis");
   assert.match(runner, /--no-onchain-data/);
   assert.match(runner, /--strategy", "bfs"/);
   assert.ok(runner.includes('["error", "fatal", "critical"]'));

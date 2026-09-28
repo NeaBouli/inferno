@@ -403,6 +403,31 @@ test("wallet chooser keeps WalletConnect available with zero or multiple injecte
   }
 });
 
+test("new Web3 HTML fails visibly when an old cached wallet core lacks the chooser API", async ({ browser }) => {
+  const context = await browser.newContext({ serviceWorkers: "block" });
+  await context.route("**/web3-wallet-core.js?v=20260928-wc-cancel", (route) => route.fulfill({
+    contentType: "application/javascript",
+    body: `window.IFRWallet = {
+      autoReconnect: async () => false,
+      isConnected: () => false,
+      on: () => {},
+      off: () => {},
+      getAddress: () => null
+    };`,
+  }));
+  try {
+    const page = await context.newPage();
+    await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+    await page.locator("[data-wallet-connect]").first().click();
+    await expect(page.locator("[data-wallet-state]").first()).toHaveText(
+      "Wallet update required · reload page",
+    );
+    await expect(page.locator("[data-wallet-chooser]")).toHaveAttribute("aria-hidden", "true");
+  } finally {
+    await context.close();
+  }
+});
+
 test("closing the wallet chooser stays disconnected and requests no account access", async ({ browser }) => {
   const { context, page, writes, pageErrors } = await preparePage(browser);
   try {
@@ -552,11 +577,299 @@ test("Web3 header stays compact and non-overlapping before and after wallet conn
   }
 });
 
+test("Web3 header has no overlap and 44px targets with the install control visible", async ({ browser }) => {
+  // SM-T835 Chrome portrait reported 711 CSS px; the tablet-width brand used to
+  // overflow its grid track and run under the Install App button.
+  const viewports = [
+    { width: 711, height: 970 },
+    { width: 820, height: 1180 },
+    { width: 1180, height: 820 },
+    { width: 1440, height: 1000 },
+    { width: 390, height: 844 },
+  ];
+  for (const viewport of viewports) {
+    const { context, page, pageErrors } = await preparePage(browser, { contextOptions: { viewport } });
+    try {
+      await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+      for (const phase of ["disconnected", "connected"]) {
+        if (phase === "connected") await connect(page);
+        // Legacy Android (SM-T835 ships Android 9) renders the longest label.
+        await page.evaluate(() => {
+          document.querySelectorAll(".nav-actions [data-install-app]").forEach((button) => {
+            button.hidden = false;
+            button.textContent = "App requirements";
+          });
+        });
+        const geometry = await page.evaluate(() => {
+          const visible = (element) => {
+            const style = getComputedStyle(element);
+            const bounds = element.getBoundingClientRect();
+            return style.display !== "none" && style.visibility !== "hidden" && bounds.width > 0 && bounds.height > 0;
+          };
+          const box = (element) => {
+            const bounds = element.getBoundingClientRect();
+            return {
+              label: (element.textContent || element.getAttribute("alt") || "").trim(),
+              left: bounds.left,
+              right: bounds.right,
+              top: bounds.top,
+              bottom: bounds.bottom,
+              width: bounds.width,
+              height: bounds.height,
+              clipped: element.scrollWidth > element.clientWidth + 1,
+            };
+          };
+          const links = document.querySelector(".nav-links");
+          return {
+            brandContent: [...document.querySelectorAll(".brand img, .brand-main, .brand-tag")].map(box),
+            actions: [...document.querySelectorAll(".nav-actions > *")].filter(visible).map(box),
+            targets: [document.querySelector(".brand"), ...document.querySelectorAll(".nav-links a")].map(box),
+            linksClipped: links.scrollWidth > links.clientWidth + 1,
+            viewportWidth: document.documentElement.clientWidth,
+            scrollWidth: document.documentElement.scrollWidth,
+          };
+        });
+        const where = `${viewport.width}x${viewport.height} ${phase}`;
+        const overlaps = (a, b) => a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+        expect(geometry.scrollWidth, `${where} horizontal overflow`).toBe(geometry.viewportWidth);
+        expect(geometry.linksClipped, `${where} navigation links clipped`).toBe(false);
+        expect(geometry.actions.map((action) => action.label), where).toContain(
+          viewport.width > 680 ? "App requirements" : (phase === "connected" ? "Disconnect" : "Connect Wallet"),
+        );
+        for (const content of geometry.brandContent) {
+          for (const action of geometry.actions) {
+            expect(overlaps(content, action), `${where} ${content.label} overlaps ${action.label}`).toBe(false);
+          }
+        }
+        for (const target of [...geometry.targets, ...geometry.actions]) {
+          expect(target.width, `${where} ${target.label} width`).toBeGreaterThanOrEqual(44);
+          expect(target.height, `${where} ${target.label} height`).toBeGreaterThanOrEqual(44);
+          expect(target.clipped, `${where} ${target.label} text clipped`).toBe(false);
+        }
+      }
+      expect(pageErrors, `${viewport.width}x${viewport.height}`).toEqual([]);
+    } finally {
+      await context.close();
+    }
+  }
+});
+
+const WC_PENDING_MOCK_MODULE = `
+  const state = { pending: null, provider: null, uriCount: 0 };
+  function makeProvider() {
+    const listeners = new Map();
+    const emit = (event, value) => (listeners.get(event) || []).forEach((fn) => fn(value));
+    const provider = {
+      session: null,
+      accounts: [],
+      enable: function() {
+        state.uriCount += 1;
+        emit("display_uri", "wc:mock-uri-" + state.uriCount);
+        return new Promise((resolve, reject) => { state.pending = { resolve, reject, provider }; });
+      },
+      request: async ({ method }) => {
+        if (method === "eth_accounts" || method === "eth_requestAccounts") return provider.accounts;
+        if (method === "eth_chainId") return "0x1";
+        if (method === "net_version") return "1";
+        if (method === "eth_getBalance") return "0x0";
+        if (method === "eth_blockNumber") return "0x10";
+        if (method === "eth_call") return "0x" + "0".repeat(64);
+        return null;
+      },
+      on: (event, fn) => listeners.set(event, (listeners.get(event) || []).concat(fn)),
+      removeListener: (event, fn) => listeners.set(event, (listeners.get(event) || []).filter((f) => f !== fn)),
+      disconnect: async () => { state.disconnects += 1; },
+      emit,
+    };
+    state.provider = provider;
+    return provider;
+  }
+  state.disconnects = 0;
+  window.__wcMock = {
+    uriCount: () => state.uriCount,
+    disconnects: () => state.disconnects,
+    approve: (address, emitConnect) => {
+      const pending = state.pending;
+      if (!pending) return;
+      pending.provider.accounts = [address];
+      pending.provider.session = { topic: "mock" };
+      if (emitConnect) pending.provider.emit("connect", { chainId: "0x1" });
+      pending.resolve([address]);
+    },
+  };
+  export const EthereumProvider = { init: async () => makeProvider() };
+`;
+
+test("closing a pending tablet WalletConnect dialog cancels it and a retry still connects", async ({ browser }) => {
+  const context = await browser.newContext({
+    serviceWorkers: "block",
+    viewport: { width: 711, height: 970 },
+    userAgent: "Mozilla/5.0 (Linux; Android 9; SM-T835) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36",
+    isMobile: true,
+    hasTouch: true,
+  });
+  const pageErrors = [];
+  try {
+    await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js", (route) => route.fulfill({
+      status: 200,
+      contentType: "application/javascript",
+      body: WC_PENDING_MOCK_MODULE,
+    }));
+    await context.route("https://eth.llamarpc.com/**", async (route) => {
+      let payload;
+      try {
+        payload = route.request().postDataJSON();
+      } catch {
+        return route.abort();
+      }
+      const respond = (item) => ({ jsonrpc: "2.0", id: item.id, result: `0x${"0".repeat(64)}` });
+      const body = Array.isArray(payload) ? payload.map(respond) : respond(payload);
+      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
+    });
+    const page = await context.newPage();
+    page.on("pageerror", (error) => pageErrors.push(error.message));
+    await page.clock.install();
+    await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+    await page.waitForFunction(() => window.IFRWallet && typeof window.IFRWallet.cancelWalletConnect === "function");
+
+    const button = page.locator(".nav-actions [data-wallet-connect]");
+    const walletState = page.locator("[data-wallet-state]").first();
+    const walletDialog = page.locator("[data-wallet-dialog]");
+    const walletConnectOption = page.locator('[data-wallet-option="walletconnect"]');
+
+    await button.click();
+    await walletConnectOption.click();
+    await expect(walletDialog).toHaveClass(/is-open/);
+    await expect.poll(() => page.evaluate(() => window.__wcMock && window.__wcMock.uriCount())).toBe(1);
+    await expect(button).toBeDisabled();
+
+    await page.locator("[data-wallet-dialog-close]").click();
+    expect(await walletState.textContent()).toBe("Cancelled · retry");
+    await expect(walletDialog).not.toHaveClass(/is-open/);
+    await expect(button).toBeEnabled();
+    await expect(button).toHaveText("Connect Wallet");
+    expect(await page.evaluate(() => window.__wcMock.disconnects())).toBe(1);
+
+    // Late approval and the 45 s watchdog of the cancelled attempt must not
+    // overwrite the cancelled state or claim a connection.
+    await page.evaluate((address) => window.__wcMock.approve(address, true), ACCOUNT);
+    await page.clock.fastForward(46_000);
+    await expect(walletState).toHaveText("Cancelled · retry");
+    expect(await page.evaluate(() => window.IFRWallet.isConnected())).toBe(false);
+    await expect(button).toHaveText("Connect Wallet");
+
+    await button.click();
+    await walletConnectOption.click();
+    await expect.poll(() => page.evaluate(() => window.__wcMock.uriCount())).toBe(2);
+    await page.evaluate((address) => window.__wcMock.approve(address, false), ACCOUNT);
+    await expect(walletState).toContainText("Connected", { timeout: 10_000 });
+    await expect(walletDialog).not.toHaveClass(/is-open/);
+    expect(await page.evaluate(() => window.IFRWallet.isConnected())).toBe(true);
+    expect(pageErrors).toEqual([]);
+  } finally {
+    await context.close();
+  }
+});
+
+// Every EthereumProvider.init() stays pending until the test resolves it, so a
+// cancel can land while no provider exists yet.
+const WC_DEFERRED_INIT_MOCK_MODULE = WC_PENDING_MOCK_MODULE
+  .replace("const state = { pending: null, provider: null, uriCount: 0 };", `
+  const state = { pending: null, provider: null, uriCount: 0, inits: [], providers: [] };`)
+  .replace("state.provider = provider;", `state.provider = provider;
+    provider.id = state.providers.push(provider);`)
+  .replace("disconnect: async () => { state.disconnects += 1; },", `disconnect: async () => {
+        state.disconnects += 1;
+        provider.disconnected = true;
+      },`)
+  .replace("uriCount: () => state.uriCount,", `uriCount: () => state.uriCount,
+    initCount: () => state.inits.length,
+    resolveInit: (index) => state.inits[index](makeProvider()),
+    providerState: () => state.providers.map((p) => ({ id: p.id, disconnected: Boolean(p.disconnected) })),
+    pendingProviderId: () => state.pending && state.pending.provider.id,`)
+  .replace("export const EthereumProvider = { init: async () => makeProvider() };",
+    "export const EthereumProvider = { init: () => new Promise((resolve) => { state.inits.push(resolve); }) };");
+
+test("cancelling while WalletConnect init is pending drops the late provider and a retry pairs fresh", async ({ browser }) => {
+  expect(WC_DEFERRED_INIT_MOCK_MODULE).toContain("state.inits.push(resolve)");
+  expect(WC_DEFERRED_INIT_MOCK_MODULE).toContain("provider.disconnected = true");
+  const context = await browser.newContext({
+    serviceWorkers: "block",
+    viewport: { width: 711, height: 970 },
+    userAgent: "Mozilla/5.0 (Linux; Android 9; SM-T835) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36",
+    isMobile: true,
+    hasTouch: true,
+  });
+  const pageErrors = [];
+  try {
+    await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js", (route) => route.fulfill({
+      status: 200,
+      contentType: "application/javascript",
+      body: WC_DEFERRED_INIT_MOCK_MODULE,
+    }));
+    await context.route("https://eth.llamarpc.com/**", async (route) => {
+      let payload;
+      try {
+        payload = route.request().postDataJSON();
+      } catch {
+        return route.abort();
+      }
+      const respond = (item) => ({ jsonrpc: "2.0", id: item.id, result: `0x${"0".repeat(64)}` });
+      const body = Array.isArray(payload) ? payload.map(respond) : respond(payload);
+      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
+    });
+    const page = await context.newPage();
+    page.on("pageerror", (error) => pageErrors.push(error.message));
+    await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+    await page.waitForFunction(() => window.IFRWallet && typeof window.IFRWallet.cancelWalletConnect === "function");
+
+    const button = page.locator(".nav-actions [data-wallet-connect]");
+    const walletState = page.locator("[data-wallet-state]").first();
+    const walletDialog = page.locator("[data-wallet-dialog]");
+    const walletConnectOption = page.locator('[data-wallet-option="walletconnect"]');
+    const mock = (fn) => page.evaluate(fn);
+
+    await button.click();
+    await walletConnectOption.click();
+    await expect(walletDialog).toHaveClass(/is-open/);
+    await expect.poll(() => mock(() => window.__wcMock && window.__wcMock.initCount())).toBe(1);
+
+    // Cancel while init #1 is still pending: no provider exists yet.
+    await page.locator("[data-wallet-dialog-close]").click();
+    expect(await walletState.textContent()).toBe("Cancelled · retry");
+    await expect(button).toBeEnabled();
+
+    // Retry before the stale init resolves: it must start its own init
+    // instead of joining the cancelled one.
+    await button.click();
+    await walletConnectOption.click();
+    await expect.poll(() => mock(() => window.__wcMock.initCount())).toBe(2);
+
+    // The late provider of the cancelled attempt is disconnected and never pairs.
+    await mock(() => window.__wcMock.resolveInit(0));
+    await expect.poll(() => mock(() => window.__wcMock.providerState()))
+      .toEqual([{ id: 1, disconnected: true }]);
+    expect(await mock(() => window.__wcMock.uriCount())).toBe(0);
+
+    await mock(() => window.__wcMock.resolveInit(1));
+    await expect.poll(() => mock(() => window.__wcMock.uriCount())).toBe(1);
+    expect(await mock(() => window.__wcMock.pendingProviderId())).toBe(2);
+    await page.evaluate((address) => window.__wcMock.approve(address, false), ACCOUNT);
+    await expect(walletState).toContainText("Connected", { timeout: 10_000 });
+    expect(await mock(() => window.IFRWallet.isConnected())).toBe(true);
+    expect(await mock(() => window.__wcMock.providerState()))
+      .toEqual([{ id: 1, disconnected: true }, { id: 2, disconnected: false }]);
+    expect(pageErrors).toEqual([]);
+  } finally {
+    await context.close();
+  }
+});
+
 test("WalletConnect initialization can be retried after a transient loader failure", async ({ browser }) => {
   const context = await browser.newContext({ serviceWorkers: "block" });
   const warnings = [];
   try {
-    await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js", async (route) => {
+    await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js", async (route) => {
       await route.fulfill({
         status: 200,
         contentType: "application/javascript",
@@ -602,7 +915,7 @@ test("persisted WalletConnect wrong-network recovery fails closed without an unh
   const context = await browser.newContext({ serviceWorkers: "block" });
   const pageErrors = [];
   try {
-    await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js", async (route) => {
+    await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js", async (route) => {
       await route.fulfill({
         status: 200,
         contentType: "application/javascript",
@@ -761,10 +1074,10 @@ test("self-hosted Ethers asset matches the published 6.17.0 bundle", () => {
   );
 });
 
-test("self-hosted WalletConnect artifact matches the recorded 2.17.3 build", () => {
-  const asset = readFileSync("docs/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js");
+test("self-hosted WalletConnect artifact matches the recorded 2.25.0 build", () => {
+  const asset = readFileSync("docs/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js");
   expect(createHash("sha256").update(asset).digest("hex")).toBe(
-    "30273eb8eb78e88e29ecdb73606fa3e41e66a646a2b33f5c864014a065c709fc",
+    "77843c24c6c5aa5b4f743af3f2dd3a9d94e16b15bb8c5ff1bba58db2b14cd63e",
   );
 });
 
@@ -776,7 +1089,7 @@ test("self-hosted WalletConnect artifact executes in the browser and exposes Eth
     page.on("pageerror", (error) => pageErrors.push(error.message));
     await page.goto("/web3/", { waitUntil: "domcontentloaded" });
     const shape = await page.evaluate(async () => {
-      const mod = await import("/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js");
+      const mod = await import("/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js");
       const EthereumProvider = mod.EthereumProvider || mod.default;
       return {
         hasExport: Boolean(EthereumProvider),
@@ -796,7 +1109,7 @@ test("WalletConnect connect loads the provider only from the pinned same-origin 
   try {
     const artifactRequests = [];
     const thirdPartyScriptRequests = [];
-    await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js", async (route) => {
+    await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js", async (route) => {
       artifactRequests.push(route.request().url());
       await route.fulfill({
         status: 200,
@@ -836,7 +1149,7 @@ test("WalletConnect connect loads the provider only from the pinned same-origin 
     await page.evaluate(() => { delete window.ethereum; });
     const address = await page.evaluate(() => window.IFRWallet.connectWalletConnect());
     expect(address).toBe(ACCOUNT);
-    expect(artifactRequests).toEqual(["http://localhost:8787/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js"]);
+    expect(artifactRequests).toEqual(["http://localhost:8787/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js"]);
     expect(thirdPartyScriptRequests).toEqual([]);
     expect(pageErrors).toEqual([]);
   } finally {
@@ -889,7 +1202,11 @@ test("Android 9 stays in browser mode instead of launching an incompatible WebAP
 
 test("Web3 service worker bounds offline navigation before using the cache", () => {
   const source = readFileSync("docs/web3-sw.js", "utf8");
-  expect(source).toContain('const CACHE_NAME = "ifr-web3-v17"');
+  const html = readFileSync("docs/web3/index.html", "utf8");
+  expect(source).toContain('const CACHE_NAME = "ifr-web3-v19"');
+  expect(source).toContain('"/web3-wallet-core.js?v=20260928-wc-cancel"');
+  expect(html).toContain('<script src="/web3-wallet-core.js?v=20260928-wc-cancel"></script>');
+  expect(html).toContain('updateViaCache: "none"');
   expect(source).toContain("const NAVIGATION_TIMEOUT_MS = 5000");
   expect(source).toContain("fetchNavigation(request)");
   expect(source).toContain('fetch(request, { cache: "no-store", signal: controller.signal })');
@@ -1047,7 +1364,7 @@ const WC_FLAKY_INIT_MODULE = `
 `;
 
 async function routeWalletConnectModule(context, shouldFail, body) {
-  await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js", async (route) => {
+  await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js", async (route) => {
     if (shouldFail()) return route.abort();
     await route.fulfill({
       status: 200,

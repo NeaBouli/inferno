@@ -8,7 +8,7 @@
     "build": "node build.mjs"
   },
   "dependencies": {
-    "@walletconnect/ethereum-provider": "2.17.3",
+    "@walletconnect/ethereum-provider": "2.25.0",
     "buffer": "6.0.3",
     "process": "0.11.10"
   },

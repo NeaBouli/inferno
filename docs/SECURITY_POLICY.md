@@ -74,7 +74,7 @@ source, is retained as a future V2 hardening item.
 
 The Mythril gate is intentionally a separate path-scoped, weekly and
 manual workflow. It uses a hash-locked Python dependency set with Mythril
-0.24.8 and setuptools 80.10.2 plus a repository-pinned SHA-256 for the Linux
+0.24.8 and setuptools 83.0.0 plus a repository-pinned SHA-256 for the Linux
 amd64 solc 0.8.28 artifact, rejects hidden
 compiler/tool errors even when Mythril exits successfully, and gates every
 Critical, High or Medium signal. Its bounded search is complementary evidence;

@@ -128,28 +128,27 @@ describe("CommitmentVault", function () {
       expect(await vault.totalLocked()).to.equal(parse("10000"));
     });
 
-    it("T12: lock PRICE_ONLY creates tranche", async () => {
+    it("T12: lock rejects PRICE_ONLY while price conditions are disabled", async () => {
       await token.connect(userA).approve(vault.target, parse("5000"));
-      await vault.connect(userA).lock(parse("5000"), 1, 0, 200); // 2x P0
-      const t = await vault.getTranche(userA.address, 0);
-      expect(t.cType).to.equal(1);
-      expect(t.p0Multiplier).to.equal(200);
+      await expect(
+        vault.connect(userA).lock(parse("5000"), 1, 0, 200)
+      ).to.be.revertedWith("price conditions disabled");
     });
 
-    it("T13: lock TIME_OR_PRICE creates tranche", async () => {
+    it("T13: lock rejects TIME_OR_PRICE while price conditions are disabled", async () => {
       const now = await getTimestamp();
       await token.connect(userA).approve(vault.target, parse("5000"));
-      await vault.connect(userA).lock(parse("5000"), 2, now + 365 * ONE_DAY, 500);
-      const t = await vault.getTranche(userA.address, 0);
-      expect(t.cType).to.equal(2);
+      await expect(
+        vault.connect(userA).lock(parse("5000"), 2, now + 365 * ONE_DAY, 500)
+      ).to.be.revertedWith("price conditions disabled");
     });
 
-    it("T14: lock TIME_AND_PRICE creates tranche", async () => {
+    it("T14: lock rejects TIME_AND_PRICE while price conditions are disabled", async () => {
       const now = await getTimestamp();
       await token.connect(userA).approve(vault.target, parse("5000"));
-      await vault.connect(userA).lock(parse("5000"), 3, now + 365 * ONE_DAY, 1000);
-      const t = await vault.getTranche(userA.address, 0);
-      expect(t.cType).to.equal(3);
+      await expect(
+        vault.connect(userA).lock(parse("5000"), 3, now + 365 * ONE_DAY, 1000)
+      ).to.be.revertedWith("price conditions disabled");
     });
 
     it("T15: reverts on amount=0", async () => {
@@ -167,11 +166,14 @@ describe("CommitmentVault", function () {
       ).to.be.revertedWith("unlockTime must be future");
     });
 
-    it("T17: reverts PRICE_ONLY with multiplier=0", async () => {
+    it("T17: rejected price lock never takes custody", async () => {
+      const before = await token.balanceOf(userA.address);
       await token.connect(userA).approve(vault.target, parse("1000"));
       await expect(
-        vault.connect(userA).lock(parse("1000"), 1, 0, 0)
-      ).to.be.revertedWith("multiplier=0");
+        vault.connect(userA).lock(parse("1000"), 1, 0, 200)
+      ).to.be.revertedWith("price conditions disabled");
+      expect(await token.balanceOf(userA.address)).to.equal(before);
+      expect(await vault.getTrancheCount(userA.address)).to.equal(0);
     });
 
     it("T18: transfers tokens from user to vault", async () => {
@@ -376,12 +378,13 @@ describe("CommitmentVault", function () {
       const now = await getTimestamp();
       await token.connect(userA).approve(vault.target, parse("20000"));
       await vault.connect(userA).lock(parse("10000"), 0, now + ONE_DAY, 0);
-      await vault.connect(userA).lock(parse("10000"), 1, 0, 200);
+      await vault.connect(userA).lock(parse("10000"), 0, now + 2 * ONE_DAY, 0);
 
       const all = await vault.getTranches(userA.address);
       expect(all.length).to.equal(2);
       expect(all[0].cType).to.equal(0);
-      expect(all[1].cType).to.equal(1);
+      expect(all[1].cType).to.equal(0);
+      expect(all[1].unlockTime).to.be.greaterThan(all[0].unlockTime);
     });
 
     it("T34: lockedBalance sums active tranches only", async () => {
@@ -417,14 +420,12 @@ describe("CommitmentVault", function () {
   // ── T36–T40: Edge Cases & Oracle ───────────────────────────
 
   describe("Edge Cases & Oracle", () => {
-    it("T36: PRICE_ONLY with no oracle returns condition not met", async () => {
+    it("T36: setting an oracle address does not enable stubbed price conditions", async () => {
+      await vault.connect(governance).setPriceOracle(userB.address);
       await token.connect(userA).approve(vault.target, parse("10000"));
-      await vault.connect(userA).lock(parse("10000"), 1, 0, 200);
-
-      // Set P0 but no oracle
-      await vault.connect(governance).setP0(ethers.parseEther("0.000001"));
-
-      expect(await vault.isConditionMet(userA.address, 0)).to.be.false;
+      await expect(
+        vault.connect(userA).lock(parse("10000"), 1, 0, 200)
+      ).to.be.revertedWith("price conditions disabled");
     });
 
     it("T37: setPriceOracle only by governance", async () => {
@@ -496,27 +497,22 @@ describe("CommitmentVault", function () {
       ).to.be.revertedWith("invalid trancheId");
     });
 
-    it("T44: TIME_OR_PRICE unlocks on time alone", async () => {
+    it("T44: TIME_OR_PRICE stays disabled even with a valid time", async () => {
       const now = await getTimestamp();
       await token.connect(userA).approve(vault.target, parse("10000"));
-      await vault.connect(userA).lock(parse("10000"), 2, now + ONE_DAY, 500);
-
-      // Time passes, no price oracle
-      await advanceTime(ONE_DAY + 1);
-      expect(await vault.isConditionMet(userA.address, 0)).to.be.true;
-
-      await vault.connect(userA).unlock(userA.address, 0);
-      expect((await vault.getTranche(userA.address, 0)).unlocked).to.be.true;
+      await expect(
+        vault.connect(userA).lock(parse("10000"), 2, now + ONE_DAY, 500)
+      ).to.be.revertedWith("price conditions disabled");
     });
 
-    it("T45: TIME_AND_PRICE requires both (time alone not enough)", async () => {
+    it("T45: TIME_AND_PRICE stays disabled even with P0 and oracle configured", async () => {
       const now = await getTimestamp();
+      await vault.connect(governance).setP0(ethers.parseEther("0.000001"));
+      await vault.connect(governance).setPriceOracle(userB.address);
       await token.connect(userA).approve(vault.target, parse("10000"));
-      await vault.connect(userA).lock(parse("10000"), 3, now + ONE_DAY, 500);
-
-      await advanceTime(ONE_DAY + 1);
-      // Time met, but price not met (no oracle)
-      expect(await vault.isConditionMet(userA.address, 0)).to.be.false;
+      await expect(
+        vault.connect(userA).lock(parse("10000"), 3, now + ONE_DAY, 500)
+      ).to.be.revertedWith("price conditions disabled");
     });
 
     it("T46: missing fee exemption creates a detectable custody deficit", async () => {

@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 /// @title CommitmentVault
-/// @notice Irrevocable token lock with 4 condition types.
+/// @notice Irrevocable token lock with time-based custody enabled.
 ///         Users lock IFR tokens with conditions that must be met before unlock.
 ///         Auto-unlock: 30 days after condition met, anyone can trigger unlock.
 ///         Tokens ALWAYS return to the original depositor — never the caller.
@@ -81,7 +81,7 @@ contract CommitmentVault is Ownable, ReentrancyGuard {
 
     /// @notice Lock IFR tokens in a new tranche with conditions
     /// @param amount Amount of IFR to lock (requires prior approval)
-    /// @param cType Condition type (TIME_ONLY, PRICE_ONLY, TIME_OR_PRICE, TIME_AND_PRICE)
+    /// @param cType Condition type; only TIME_ONLY is accepted until a real price oracle ships
     /// @param unlockTime Timestamp for time-based conditions (0 if not applicable)
     /// @param p0Multiplier Price multiplier in bps (200 = 2x P0, 0 if not applicable)
     function lock(
@@ -92,6 +92,7 @@ contract CommitmentVault is Ownable, ReentrancyGuard {
     ) external nonReentrant {
         require(amount > 0, "amount=0");
         require(_tranches[msg.sender].length < MAX_TRANCHES, "max tranches reached");
+        require(cType == ConditionType.TIME_ONLY, "price conditions disabled");
 
         // Validate condition parameters
         if (cType == ConditionType.TIME_ONLY || cType == ConditionType.TIME_OR_PRICE || cType == ConditionType.TIME_AND_PRICE) {

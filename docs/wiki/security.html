@@ -713,7 +713,7 @@
       <h3>Complementary Mythril Analysis</h3>
 
       <p>
-        A separate bounded CI gate uses a hash-locked Python dependency set with <strong>Mythril v0.24.8</strong> and setuptools 80.10.2 plus a repository-pinned SHA-256 for the Linux amd64 solc 0.8.28 artifact. It performs bounded symbolic execution of all 17 concrete production contracts. Four complete local runs on 4 September 2026 reported <strong>zero signals at any severity</strong> and completed in roughly six to seven minutes. The gate was integrated through PR #77 after exact-head and Main CI passed.
+        A separate bounded CI gate uses a hash-locked Python dependency set with <strong>Mythril v0.24.8</strong> and setuptools 83.0.0 plus a repository-pinned SHA-256 for the Linux amd64 solc 0.8.28 artifact. It performs bounded symbolic execution of all 17 concrete production contracts. Four complete local runs on 4 September 2026 reported <strong>zero signals at any severity</strong> and completed in roughly six to seven minutes. The gate was integrated through PR #77 after exact-head and Main CI passed; the setuptools security pin was later updated without changing the analysis policy.
       </p>
 
       <div class="callout callout-green">

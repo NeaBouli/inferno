@@ -131,7 +131,7 @@ Web3 browser runtime trace (`docs/web3/index.html`, landing + wiki pages):
    `docs/assets/wallet-core.js` (landing/wiki) `window.IFRWallet` — Daten: EIP-1193
    provider (injected or WalletConnect) → ethers BrowserProvider/Signer
 2. `IFRWallet._loadWalletConnect` → same-origin pinned artifact
-   `docs/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js` — Daten:
+   `docs/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js` — Daten:
    → `EthereumProvider.init` (no runtime third-party code fetch, CWA-47)
 3. page → `docs/assets/ifr-state.js::load` (bootstrap/token/lock reads) — Daten:
    RPC → state; aggregate and individual bootstrap read failure yields
@@ -186,7 +186,7 @@ Points voucher trace (`apps/points-backend`):
 | benefits public rate limits | per-IP limits for public reads and polling | `apps/benefits-network/backend/src/middleware/rateLimiter.ts` | gebaut |
 | web3 wallet core (dApp) | provider discovery, WalletConnect v2 session lifecycle, mainnet fail-closed connect | `docs/web3-wallet-core.js::IFRWallet` | gebaut |
 | wallet core (landing/wiki) | shared minimalist wallet connect, desktop-only policy | `docs/assets/wallet-core.js::IFRWallet` | gebaut |
-| walletconnect provider artifact | pinned, repository-owned, hash-gated WC provider bundle served same-origin | `docs/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js` | gebaut |
+| walletconnect provider artifact | pinned, repository-owned, hash-gated WC provider bundle served same-origin | `docs/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js` | gebaut |
 | ifr state reader | bootstrap/token/lock reads with explicit unavailable failure state | `docs/assets/ifr-state.js::load` | gebaut |
 | bootstrap status renderer | stats + claim/refund UI, fail-closed on unavailable status | `docs/wiki/bootstrap.html::bwUpdateUI` | gebaut |
 | points voucher route | atomically redeem points, sign/persist voucher, expose identity-free status | `apps/points-backend/src/routes/voucher.ts` | gebaut |
@@ -293,7 +293,7 @@ Points voucher trace (`apps/points-backend`):
   attest/redeem; seller history may still show PENDING for untouched ones.
 - Web3 runtime: both `IFRWallet` implementations lazy-`import()` the WalletConnect
   provider from the same-origin pinned artifact
-  `docs/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js`; the web3
+  `docs/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js`; the web3
   host CSP `script-src` no longer allows any third-party host (CWA-47). The
   artifact is reproducible from `infra/web3/walletconnect-provider/` and its
   SHA-256 is gate-enforced.
@@ -368,7 +368,7 @@ mindmap
     web3 browser runtime
       gebaut: docs/web3-wallet-core.js::IFRWallet
       gebaut: docs/assets/wallet-core.js::IFRWallet
-      gebaut: docs/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js
+      gebaut: docs/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js
       gebaut: docs/assets/ifr-state.js::load
       gebaut: docs/wiki/bootstrap.html::bwUpdateUI
 ```
@@ -605,3 +605,75 @@ Done in this diff: deploy-gate in `main`, supply comparison fix, removal of
 the unused private-key injection, no-private-key workflow rule, focused test
 `scripts/test-deploy-mainnet-continue-gate.cjs`. Untouched by design:
 `scripts/deploy-mainnet.js`, contracts, Hardhat config, workflow permissions.
+
+## 10. S4 vault hardening trace
+
+Scope: future-deployment source candidates for existing findings CWA-03 and
+CWA-08. These source changes do not alter the deployed Mainnet contracts and
+must not be represented as Mainnet remediation before governance, deployment
+and on-chain verification.
+
+### 10.1 Grundidee
+
+CommitmentVault must not accept a lock whose only release path depends on the
+currently stubbed price oracle. LendingVault must not activate borrowing before
+its protocol fee destination is configured, and ETH collateral payouts must
+work for contract wallets without the 2,300-gas restriction of `transfer`.
+
+### 10.2 Spur (Hop-Liste)
+
+1. `contracts/vault/CommitmentVault.sol::lock` -> condition-type gate ->
+   `IERC20::transferFrom` -- price-dependent requests stop before custody.
+2. `contracts/vault/LendingVault.sol::borrow` -> activation gate -> loan state
+   creation -- borrowing stops while `protocolFeeReceiver == address(0)`.
+3. `contracts/vault/LendingVault.sol::repay` -> borrower ETH call -- settled
+   collateral returns after effects; a failed receiver reverts atomically.
+4. `contracts/vault/LendingVault.sol::liquidate` -> liquidator/lender ETH calls
+   -- both payouts use checked calls after effects; failure reverts atomically.
+
+### 10.3 Module
+
+| Modul | Eine Aufgabe | Einstieg | Stand |
+| --- | --- | --- | --- |
+| commitment custody gate | reject unsupported price-conditioned custody | `CommitmentVault.sol::lock` | source candidate |
+| lending activation gate | require a configured protocol fee receiver | `LendingVault.sol::borrow` | source candidate |
+| lending ETH settlement | return collateral to EOAs and contract wallets | `LendingVault.sol::repay`, `::liquidate` | source candidate |
+
+### 10.4 Verdrahtung
+
+- Commitment requests reach token custody only for `TIME_ONLY` tranches.
+- Borrowing reaches collateral/accounting mutation only after price and fee
+  destination prerequisites are configured.
+- Repayment and liquidation finalize only when every required ETH payout
+  succeeds; `nonReentrant` and transaction rollback protect state consistency.
+
+### 10.5 Widerspruch und Lücken
+
+- CWA-03 remains open on Mainnet; the deployed bytecode is unchanged.
+- CWA-08 remains partly open: overdue-loan policy still requires an economic
+  design and independent review before a future LendingVault deployment.
+- CWA-01 remains governance-gated; this task does not introduce a price oracle,
+  freshness checks, borrow caps or activate lending.
+
+### 10.6 Diagrammdateien
+
+- `docs/architecture/map.puml`
+- `docs/architecture/main-path.puml`
+
+```mermaid
+mindmap
+  root((S4 vault hardening))
+    commitment custody gate
+      source candidate: CommitmentVault.lock
+    lending activation gate
+      source candidate: LendingVault.borrow
+    lending ETH settlement
+      source candidate: LendingVault.repay
+      source candidate: LendingVault.liquidate
+```
+
+### 10.7 Nächster Schritt
+
+Implement only the three mapped gates/settlement hops and focused regression
+tests. Keep FeeRouter, guardian rotation, ownership, reserve parameters,
+governance, deployment scripts and Mainnet state untouched.
