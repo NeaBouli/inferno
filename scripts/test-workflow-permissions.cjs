@@ -49,6 +49,17 @@ function assertNoJobLevelPermissions(source, fileName) {
   );
 }
 
+// Workflows must never receive a signing key from repository secrets.
+const privateKeySecretPattern = /secrets\.[A-Za-z0-9_]*PRIVATE_?KEY/i;
+
+function assertNoPrivateKeySecret(source, fileName) {
+  assert.doesNotMatch(
+    source,
+    privateKeySecretPattern,
+    `${fileName} must not reference a private-key repository secret`,
+  );
+}
+
 const workflowFiles = fs.readdirSync(workflowsDirectory)
   .filter((file) => file.endsWith(".yml") || file.endsWith(".yaml"))
   .sort();
@@ -61,6 +72,7 @@ assert.deepEqual(
 for (const fileName of workflowFiles) {
   const source = fs.readFileSync(path.join(workflowsDirectory, fileName), "utf8");
   assertNoJobLevelPermissions(source, fileName);
+  assertNoPrivateKeySecret(source, fileName);
   const permissions = topLevelPermissions(source, fileName);
   assert.equal(permissions.contents, expectedWriteWorkflows.has(fileName) ? "write" : "read", `${fileName} contents permission`);
   const allowedKeys = expectedExtraReadScopes[fileName] ? ["contents", expectedExtraReadScopes[fileName]] : ["contents"];
@@ -72,6 +84,15 @@ assert.throws(
   () => assertNoJobLevelPermissions("permissions:\n  contents: read\njobs:\n  test:\n    permissions:\n      contents: write\n", "fixture.yml"),
   /must not override permissions at job level/,
 );
+
+for (const fixture of [
+  "env:\n  PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}\n",
+  "env:\n  KEY: ${{ secrets.PRIVATE_KEY }}\n",
+  "env:\n  KEY: ${{ secrets.signer_privatekey }}\n",
+]) {
+  assert.throws(() => assertNoPrivateKeySecret(fixture, "fixture.yml"), /private-key repository secret/);
+}
+assertNoPrivateKeySecret("env:\n  SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}\n", "fixture.yml");
 
 const securityWorkflow = fs.readFileSync(path.join(workflowsDirectory, "security-audit.yml"), "utf8");
 assert.ok(securityWorkflow.includes("run: npm run test:workflow-permissions"));
