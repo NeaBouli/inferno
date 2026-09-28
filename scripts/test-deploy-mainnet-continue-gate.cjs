@@ -20,6 +20,9 @@ function installStub() {
   const supply = 1_000_000_000n * 10n ** 9n;
   const deployerBal = process.env.T137_SUPPLY_MISMATCH === "1" ? supply - 1n : supply;
   const ethers = {
+    ZeroAddress: "0x0000000000000000000000000000000000000000",
+    isAddress: (value) => /^0x[0-9a-fA-F]{40}$/.test(value),
+    getAddress: (value) => value.toLowerCase(),
     parseUnits: (n, d) => BigInt(n) * 10n ** BigInt(d),
     formatUnits: (v) => String(v),
     formatEther: (v) => String(v),
@@ -85,6 +88,10 @@ function runCases() {
     assert.match(mainnetUnset.output, new RegExp(`- ${key}\\b`), `mainnet unset roles: ${key} listed`);
   }
 
+  assertAborted("mainnet malformed role", run(1, { ...roles, COMMUNITY_ADDRESS: "not-an-address" }), /- COMMUNITY_ADDRESS\b/);
+  assertAborted("mainnet zero role", run(1, { ...roles, COMMUNITY_ADDRESS: ethersZeroAddress() }), /- COMMUNITY_ADDRESS\b/);
+  assertAborted("mainnet duplicate roles", run(1, { ...roles, COMMUNITY_ADDRESS: roles.TREASURY_ADDRESS }), /- COMMUNITY_ADDRESS\b/);
+
   // Chain 1 with each single role missing or reusing the deployer (any case).
   for (const key of Object.keys(roles)) {
     const { [key]: _omitted, ...withoutKey } = roles;
@@ -103,6 +110,10 @@ function runCases() {
   }
 
   console.log("[deploy-mainnet-continue-gate] PASS");
+}
+
+function ethersZeroAddress() {
+  return "0x0000000000000000000000000000000000000000";
 }
 
 if (process.env.T137_GATE_STUB === "1") {
