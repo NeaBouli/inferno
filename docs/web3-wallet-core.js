@@ -59,6 +59,7 @@ window.IFRWallet = (function() {
   var _wcProvider = null;       // WalletConnect provider instance
   var _wcLoading = null;        // promise guard
   var _wcUri = null;
+  var _wcAttempt = 0;           // bumped per WalletConnect attempt and on cancel
   var _connectionLabel = null;
   var _announcedProviders = [];
   var _lastWalletList = [];
@@ -298,7 +299,7 @@ window.IFRWallet = (function() {
           return null;
         }
 
-        _wcProvider = await EthereumProvider.init({
+        var wcInstance = await EthereumProvider.init({
           projectId: WC_PROJECT_ID,
           chains: [CHAIN_ID],
           optionalChains: [CHAIN_ID],
@@ -319,19 +320,24 @@ window.IFRWallet = (function() {
             }
           }
         });
+        _wcProvider = wcInstance;
 
-        // Listen for WC session events (fires when user approves in wallet app)
+        // Listen for WC session events (fires when user approves in wallet app).
+        // Events from a provider dropped by cancelWalletConnect() are ignored.
         _wcProvider.on("connect", function() {
+          if (wcInstance !== _wcProvider) return;
           if (_wcProvider.accounts && _wcProvider.accounts.length > 0 && !_address) {
             _finishConnectSafely(_wcProvider, _wcProvider.accounts);
           }
         });
         _wcProvider.on("session_event", function() {
+          if (wcInstance !== _wcProvider) return;
           if (_wcProvider.accounts && _wcProvider.accounts.length > 0 && !_address) {
             _finishConnectSafely(_wcProvider, _wcProvider.accounts);
           }
         });
         _wcProvider.on("display_uri", function(uri) {
+          if (wcInstance !== _wcProvider) return;
           _wcUri = uri;
           _emit("walletconnectUri", uri);
         });
@@ -454,14 +460,44 @@ window.IFRWallet = (function() {
     return _finishConnect(wallet.provider, accounts);
   }
 
+  function _cancelledError() {
+    var error = new Error("WalletConnect attempt cancelled.");
+    error.code = "WC_CANCELLED";
+    return error;
+  }
+
+  function _dropWalletConnect(wc) {
+    if (_wcProvider === wc) {
+      _wcProvider = null;
+      _wcLoading = null;
+      _wcUri = null;
+    }
+    try { Promise.resolve(wc && wc.disconnect()).catch(function() {}); } catch (e) {}
+  }
+
   async function connectWalletConnect() {
+    var attempt = ++_wcAttempt;
     var wc = await _loadWalletConnect();
+    if (attempt !== _wcAttempt) throw _cancelledError();
     if (!wc) {
       _showWalletHelpModal("WalletConnect could not load. Check your connection and try again, or choose a browser wallet.");
       throw new Error("NO_WALLETCONNECT");
     }
     var accounts = await wc.enable();
+    if (attempt !== _wcAttempt) {
+      _dropWalletConnect(wc);
+      throw _cancelledError();
+    }
     return _finishConnect(wc, accounts);
+  }
+
+  // Abandons a pending WalletConnect pairing: its late approval or rejection
+  // can no longer connect, and the next attempt pairs with a fresh URI.
+  function cancelWalletConnect() {
+    if (_address) return false;
+    _wcAttempt += 1;
+    if (_wcProvider) _dropWalletConnect(_wcProvider);
+    return true;
   }
 
   // ── Add IFR Token To Wallet (EIP-747) ─────────────
@@ -674,7 +710,7 @@ window.IFRWallet = (function() {
   return {
     connect: connect, disconnect: disconnect, autoReconnect: autoReconnect,
     listWallets: listWallets, connectInjected: connectInjected,
-    connectWalletConnect: connectWalletConnect,
+    connectWalletConnect: connectWalletConnect, cancelWalletConnect: cancelWalletConnect,
     isConnected: isConnected, getAddress: getAddress, getShortAddress: getShortAddress,
     getSigner: getSigner, getProvider: getProvider, getConnectionLabel: getConnectionLabel,
     ensureMainnet: ensureMainnet,
