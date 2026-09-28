@@ -3,7 +3,9 @@
 Current operational capability and acceptance boundaries are maintained in
 [`CURRENT_FUNCTIONALITY_STATUS.md`](CURRENT_FUNCTIONALITY_STATUS.md). Completed
 historical milestones below do not imply that every later production or
-governance activation gate is complete.
+governance activation gate is complete. Open governance and product decisions,
+with their audit, testnet and on-chain authorization gates, are tracked in the
+[Governance and Product Decision Register](GOVERNANCE_PRODUCT_DECISION_REGISTER.md).
 
 ## Phase 1: Foundation & Testnet (Q4 2025 - Q1 2026) — DONE
 
@@ -39,7 +41,7 @@ governance activation gate is complete.
 - [x] Governance Dashboard (React 18 + TS + Tailwind, calldata generator)
 - [x] AI Copilot (Claude-powered, 3 modes, safety guards)
 - [x] Points Backend (SIWE auth, EIP-712 voucher issuance)
-- [x] Creator Gateway (YouTube x IFR Lock Bridge)
+- [x] Creator Gateway source (YouTube x IFR Lock Bridge); no production deployment record
 - [x] Benefits Network (QR-based lock verification, Next.js PWA)
 
 ### Documentation & Release
@@ -107,6 +109,11 @@ governance activation gate is complete.
       monitoring and negative regression tests cover CommitmentVault and
       LendingVault. Mainnet V1 accounting was healthy at block 25900438.
       See [hardening status](VAULT_FEE_EXEMPT_HARDENING.md).
+- [ ] LendingVault V2 and CommitmentVault price-lock V2 decisions: price
+      source, caps, pause and overdue-loan policy remain undecided; V1
+      borrowing and price-conditioned locks stay disabled
+- [ ] PartnerVault reward policy, authorized caller and pilot-partner gate:
+      the checkout-based reward memo is a discussion draft, not approved policy
 - [ ] Vault V2 hardening: combine balance-diff inflow accounting with runtime
       exemption guards that fail closed. This requires separate design review,
       migration planning, tests, audit and governance-approved deployment.
@@ -167,6 +174,8 @@ governance activation gate is complete.
 - [ ] Community grants program
 - [x] CEX fee-exemption policy approved (26.08.2026, 00:17 MET, vote 4-1)
 - [ ] Per-exchange address verification and governance activation (no CEX address active yet)
+- [ ] Exchange IFR incentives and any exchange governance role (EX-01/EX-02):
+      undated Council discussion drafts, not approved policy
 - [ ] Ecosystem fund
 
 ---
@@ -177,4 +186,4 @@ governance activation gate is complete.
 See [Mainnet Checklist](MAINNET_CHECKLIST.md) for detailed progress.
 
 ---
-*Last updated: 6 September 2026*
+*Last updated: 28 September 2026*

@@ -827,6 +827,11 @@
         proposed Phase 4 components. None is deployed or available for voting today.
         Current executable governance remains the documented Safe and Governance
         timelock process.</p>
+        <p><strong>Superseded parts:</strong> the bot executor holding a private key and
+        lock-weighted Council ballots come from the historical March 2026 concept. The
+        current proposed direction has no backend key custody or executor and one vote
+        per eligible Council member; see the
+        <a href="governance.html#council-privacy">Council portal requirements</a>.</p>
       </div>
 
       <!-- ============================================================
@@ -928,7 +933,7 @@
             </div>
             <div class="layer-cell">
               <div class="layer-cell-name">Executor</div>
-              <div class="layer-cell-desc">Sole private key holder for TXs</div>
+              <div class="layer-cell-desc">Superseded: no backend key custody; binding actions stay with Safe + timelock</div>
             </div>
           </div>
         </div>
@@ -959,7 +964,7 @@
       <h2 id="council">Chamber 1 &mdash; The Council</h2>
 
       <p>
-        Team governance for strategic decisions, treasury allocation, and partnerships. Only the dev team and multisig signers can create proposals. The community can discuss and vote, but proposal rights are restricted.
+        Team governance for strategic decisions, treasury allocation, and partnerships. Only the dev team and multisig signers can create proposals. The community can discuss; under the current proposal, Council ballots are limited to eligible Council members.
       </p>
 
       <div class="callout">
@@ -982,7 +987,7 @@
         <div class="step-card">
           <div class="step-num">3</div>
           <div class="step-card-title">Snapshot Vote</div>
-          <div class="step-card-desc">IFR Lockers vote off-chain. Weighted by lock balance: 1 IFR = 1 vote.</div>
+          <div class="step-card-desc">Historical concept: lock-weighted off-chain vote. Current proposal: one vote per eligible Council member, subject to ratification.</div>
         </div>
         <div class="step-arrow">&rarr;</div>
         <div class="step-card">
@@ -1049,14 +1054,14 @@
       <h2 id="voting">How Voting Works</h2>
 
       <p>
-        Voting is designed to be free, simple, and verifiable. No gas costs, no wallet popups, no dApp switching.
+        The proposed design aims for free, simple and verifiable voting without gas costs. It is not live.
       </p>
 
       <h3>Step-by-Step</h3>
 
       <div class="journey-step"><div class="journey-num">1</div><div class="journey-text"><strong>Connect wallet:</strong> Send <code>/connect</code> in @IFR_Forum. The bot opens a Mini-App where you sign a free message with MetaMask. This links your Telegram account to your Ethereum address (one-time only).</div></div>
 
-      <div class="journey-step"><div class="journey-num">2</div><div class="journey-text"><strong>Voting power:</strong> Automatically calculated from the IFR Lock Contract (read-only query, no transaction needed). 1 IFR locked = 1 vote.</div></div>
+      <div class="journey-step"><div class="journey-num">2</div><div class="journey-text"><strong>Voting power:</strong> Proposed to be read from eligible locks at a fixed snapshot (read-only query, no transaction needed). Forum weight is not yet ratified; Council ballots are proposed as one vote per eligible member.</div></div>
 
       <div class="journey-step"><div class="journey-num">3</div><div class="journey-text"><strong>Cast vote:</strong> React with thumbs up or thumbs down on proposals in the <a href="https://t.me/IFR_token" target="_blank" rel="noopener">Community Forum</a>, or cast your vote in the <a href="https://t.me/IFR_token/23" target="_blank" rel="noopener">Vote thread</a> (t.me/IFR_token/23). The bot records your vote and weights it by your lock balance.</div></div>
 
@@ -1088,7 +1093,7 @@
       <h2 id="bot">Bot Architecture</h2>
 
       <p>
-        A single Node.js bot serves both chambers with strict role separation. Only the Executor component holds private keys.
+        The historical concept proposed a single Node.js bot for both chambers. Its Executor component is superseded: the current direction holds no Council, Safe or protocol-admin key in any backend.
       </p>
 
       <table>
@@ -1106,7 +1111,7 @@
           <tr><td><strong>Cron: Ranking</strong></td><td>Runs daily, calculates top proposals by weighted score (upvotes minus downvotes)</td></tr>
           <tr><td><strong>Cron: Consensus</strong></td><td>Monitors whether a proposal has stayed 10 consecutive days in Top 3</td></tr>
           <tr><td><strong>Cron: Finalizer</strong></td><td>Submits collected votes on-chain after the signature phase ends</td></tr>
-          <tr><td><strong>Executor</strong></td><td>Sole component with private key / multisig access for on-chain transactions</td></tr>
+          <tr><td><strong>Executor</strong></td><td>Superseded &mdash; no private key or multisig access in the bot; binding execution remains a TreasurySafe proposal plus 48-hour timelock</td></tr>
         </tbody>
       </table>
 
@@ -1115,7 +1120,7 @@
            ============================================================ -->
       <h2 id="contracts">Smart Contracts</h2>
 
-      <p>Three new contracts will be deployed for the governance system.</p>
+      <p>The historical concept proposed three new contracts. None is approved, audited or scheduled for deployment.</p>
 
       <div class="contract-card">
         <h3>RatVoting.sol <span class="contract-status">Phase 4</span></h3>
@@ -1148,7 +1153,7 @@
            ============================================================ -->
       <h2 id="journey">User Journey</h2>
 
-      <p>How a new user named Max discovers IFR governance:</p>
+      <p>Illustrative journey from the historical concept; nothing below is live, and lock-weighted Council voting is superseded by the current proposal:</p>
 
       <div class="journey-step"><div class="journey-num">1</div><div class="journey-text"><strong>Discover:</strong> Max joins @IFR_News and sees governance announcements.</div></div>
       <div class="journey-step"><div class="journey-num">2</div><div class="journey-text"><strong>Join Forum:</strong> Max wants to participate &mdash; joins @IFR_Forum.</div></div>
@@ -1168,13 +1173,13 @@
       <p>The community lives in Telegram. No extra app to install means higher participation. Governance should meet users where they already are, not force them to a new platform.</p>
 
       <h3>Do I need ETH to vote?</h3>
-      <p>No. Voting is completely free. Only submitting new proposals costs 10 IFR (spam protection). The bot pays all on-chain transaction fees for finalization.</p>
+      <p>No voting is live today. In the proposed design, voting would be off-chain and gas-free; a 10 IFR proposal deposit remains an unapproved proposal.</p>
 
       <h3>What determines my voting power?</h3>
-      <p>Your IFR Lock balance at the time of voting. 1 IFR locked = 1 vote. There is no minimum threshold for voting &mdash; only for proposing (you need IFR locked to submit a proposal).</p>
+      <p>Not yet ratified. The current proposal is one vote per eligible Council member for Council ballots and eligible locked IFR at a fixed snapshot for the Forum; splitting locks must not increase weight.</p>
 
       <h3>When will this launch?</h3>
-      <p>Phase 4 of the IFR roadmap. Follow <a href="https://x.com/IFRtoken" target="_blank" rel="noopener">@IFRtoken on X</a> for updates.</p>
+      <p>No launch date is set. Phase 4 requires ratified rules, an independent security review and a separate decision; see the <a href="https://github.com/NeaBouli/inferno/blob/main/docs/GOVERNANCE_PRODUCT_DECISION_REGISTER.md" target="_blank" rel="noopener">decision register</a>. Follow <a href="https://x.com/IFRtoken" target="_blank" rel="noopener">@IFRtoken on X</a> for updates.</p>
 
       <h3>How will community multisig signers be selected?</h3>
       <p>Signer selection is planned as a mixed model: eligibility filter, public nomination, community vote, security review, rotation, and emergency replacement rules. It is not pure whale voting and not pure random selection. Full details: <a href="community-signer-expansion.html">Community Signer Expansion Plan</a>.</p>
