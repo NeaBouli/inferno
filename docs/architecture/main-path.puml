@@ -193,3 +193,24 @@ else documentation question (null)
 end
 UI --> User : render textContent
 @enduml
+
+@startuml
+title T-158 Landing live transparency cards
+participant "landing live tracker" as Tracker
+participant "burn source" as Burn
+participant "mainnet RPC reader" as Rpc
+participant "transparency snapshot" as Snap
+Tracker -> Snap : renderTransparencyCards (age check → stale)
+Tracker -> Burn : doRefresh (copilot-api /api/ifr/supply)
+alt supply ok
+  Burn -> Snap : setTransparencyMetric('burned')
+else read failed
+  Burn -> Snap : failTransparencyMetric('burned')
+end
+Tracker -> Rpc : loadCommitmentVaultLive (single in-flight)
+alt RPC ok
+  Rpc -> Snap : setTransparencyMetric('commitment' | 'vesting') bigint
+else RPC failed
+  Rpc -> Snap : failTransparencyMetric('commitment' | 'vesting')
+end
+@enduml

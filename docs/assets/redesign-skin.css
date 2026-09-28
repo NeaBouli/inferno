@@ -338,6 +338,55 @@ button[style*="#ff4500"] {
   background: var(--line) !important;
 }
 
+.sidebar-nav a:focus-visible,
+.sidebar-logo:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: -3px;
+}
+
+/* Wiki action controls: shared .btn-primary / .btn-secondary treatment */
+.wiki-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.wiki-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  min-width: 44px;
+  max-width: 100%;
+  padding: 10px 20px;
+  border: 1px solid transparent;
+  font-size: 0.85rem;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+}
+
+.wiki-actions .btn-secondary {
+  background: var(--surface) !important;
+}
+
+.wiki-actions .btn-secondary:hover {
+  background: var(--bg-alt) !important;
+  border-color: var(--ink-2) !important;
+}
+
+.wiki-actions .btn:active {
+  transform: translateY(1px);
+}
+
+.wiki-actions .btn:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .hamburger {
   background: var(--surface) !important;
   border-color: var(--line-strong) !important;

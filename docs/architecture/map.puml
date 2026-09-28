@@ -265,3 +265,34 @@ package "workflow-policy" {
 [test-workflow-permissions.cjs] --> [update-stats.yml] : no private-key secret
 [test-workflow-permissions.cjs] --> [post-deploy.yml] : no private-key secret
 @enduml
+
+@startmindmap
+* Live transparency + Wiki shell (T-158)
+** landing live tracker
+*** gebaut: docs/index.html::refreshAllLiveData
+** burn source
+*** gebaut: docs/index.html::doRefresh
+** mainnet RPC reader
+*** gebaut: docs/index.html::loadCommitmentVaultLive
+** transparency snapshot
+*** gebaut: docs/index.html::renderTransparencyCards
+** wiki shell markup
+*** gebaut: docs/wiki/*.html::aside.sidebar
+** wiki design skin
+*** gebaut: docs/assets/redesign-skin.css
+@endmindmap
+
+@startuml
+title T-158 Landing transparency + Wiki shell
+component "landing live tracker" as Tracker
+component "burn source" as Burn
+component "mainnet RPC reader" as Rpc
+component "transparency snapshot" as Snap
+component "wiki shell markup" as Shell
+component "wiki design skin" as Skin
+Tracker --> Burn : doRefresh
+Tracker --> Rpc : loadCommitmentVaultLive
+Burn --> Snap : setTransparencyMetric / failTransparencyMetric
+Rpc --> Snap : setTransparencyMetric / failTransparencyMetric
+Shell --> Skin : redesign-skin.css
+@enduml
