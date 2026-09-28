@@ -559,6 +559,17 @@
     }
 
     .live-updated-at { color: #065f46 !important; }
+    /* On-Chain Transparent: legacy dark-theme inline colors mapped to AA-contrast skin tokens. */
+    #onchain-transparency [style*="color:#ff6a00"] { color: #B0481E !important; }
+    #onchain-transparency [style*="color:#aaa"],
+    #onchain-transparency [style*="color:#666"] { color: #574F45 !important; }
+    .transparency-card { min-width: 0; }
+    .transparency-card .transparency-value { overflow-wrap: anywhere; line-height: 1.2; }
+    #onchain-transparency .transparency-card:not([data-state="live"]) .transparency-value { font-size: 22px !important; color: #574F45 !important; }
+    .transparency-status { margin: 12px 0 0; font-size: 13px; line-height: 1.4; font-weight: 600; color: #574F45 !important; overflow-wrap: anywhere; }
+    .transparency-card[data-state="live"] .transparency-status { color: #2F6A45 !important; }
+    .transparency-card[data-state="stale"] .transparency-status,
+    .transparency-card[data-state="unavailable"] .transparency-status { color: #8E3814 !important; }
 
     .alloc-row { margin-bottom: 10px; }
     .alloc-row:last-child { margin-bottom: 0; }
@@ -2771,7 +2782,7 @@ if (isLocked) {
 </section>
 
 <!-- ── On-Chain Transparency ───────────────────────── -->
-<section style="padding:80px 0;">
+<section id="onchain-transparency" style="padding:80px 0;">
   <div class="container">
     <div class="reveal" style="text-align:center;">
       <p class="section-label">Transparency</p>
@@ -2779,20 +2790,23 @@ if (isLocked) {
       <p style="color:#aaa;max-width:600px;margin:0 auto 40px;">Every number is verifiable on Etherscan. No hidden wallets, no insider deals.</p>
     </div>
     <div class="reveal" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:24px;max-width:960px;margin:0 auto;">
-      <div style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:28px 24px;text-align:center;">
-        <div style="font-size:32px;font-weight:700;color:#ff6a00;">150M IFR</div>
-        <div style="color:#aaa;margin-top:8px;">Team Vesting</div>
-        <div style="color:#666;font-size:13px;margin-top:4px;">12-month cliff, then 36-month linear release</div>
+      <div class="transparency-card" data-transparency-metric="vesting" data-state="loading" aria-busy="true" style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:28px 24px;text-align:center;">
+        <div class="transparency-value" data-transparency-value style="font-size:32px;font-weight:700;color:#ff6a00;">Loading&hellip;</div>
+        <div style="color:#aaa;margin-top:8px;">Team Vesting &mdash; Unvested</div>
+        <div data-transparency-detail style="color:#666;font-size:13px;margin-top:4px;">Vesting contract: totalAllocation &minus; vestedAmount</div>
+        <p class="transparency-status" data-transparency-status>Reading Ethereum Mainnet&hellip;</p>
       </div>
-      <div style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:28px 24px;text-align:center;">
-        <div style="font-size:32px;font-weight:700;color:#ff6a00;"><span data-live-key="burned-stat">2.429M</span></div>
+      <div class="transparency-card" data-transparency-metric="burned" data-state="loading" aria-busy="true" style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:28px 24px;text-align:center;">
+        <div class="transparency-value" data-transparency-value style="font-size:32px;font-weight:700;color:#ff6a00;">Loading&hellip;</div>
         <div style="color:#aaa;margin-top:8px;">IFR Burned</div>
-        <div style="color:#666;font-size:13px;margin-top:4px;">Deflation active since deploy</div>
+        <div data-transparency-detail style="color:#666;font-size:13px;margin-top:4px;">1B genesis &minus; live totalSupply</div>
+        <p class="transparency-status" data-transparency-status>Reading Ethereum Mainnet&hellip;</p>
       </div>
-      <div style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:28px 24px;text-align:center;">
-        <div style="font-size:32px;font-weight:700;color:#ff6a00;"><span data-live-key="commitment-locked-stat">loading&hellip;</span></div>
+      <div class="transparency-card" data-transparency-metric="commitment" data-state="loading" aria-busy="true" style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:28px 24px;text-align:center;">
+        <div class="transparency-value" data-transparency-value style="font-size:32px;font-weight:700;color:#ff6a00;">Loading&hellip;</div>
         <div style="color:#aaa;margin-top:8px;">CommitmentVault Locked</div>
-        <div style="color:#666;font-size:13px;margin-top:4px;">Live Mainnet read</div>
+        <div data-transparency-detail style="color:#666;font-size:13px;margin-top:4px;">CommitmentVault totalLocked()</div>
+        <p class="transparency-status" data-transparency-status>Reading Ethereum Mainnet&hellip;</p>
       </div>
       <div style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:28px 24px;text-align:center;">
         <div style="font-size:32px;font-weight:700;color:#ff6a00;"><span data-live-key="lending-available-stat">loading&hellip;</span></div>
@@ -3530,6 +3544,15 @@ if (isLocked) {
   var GENESIS_SUPPLY = 1000000000;
   var liveDistributionData = null;
   var liveIFRPriceData = null;
+  var LIVE_REFRESH_MS = 60000;
+  var TRANSPARENCY_STALE_MS = 2 * LIVE_REFRESH_MS + 30000;
+  var IFR_UNIT = 1000000000n;
+  // Bounded snapshot for the On-Chain Transparent cards: exactly these keys, text only.
+  var transparencySnapshot = {
+    vesting:    { text: null, detail: null, at: 0, failed: false },
+    burned:     { text: null, detail: null, at: 0, failed: false },
+    commitment: { text: null, detail: null, at: 0, failed: false }
+  };
 
   var CATS = [
     { key: 'burned',    label: '\uD83D\uDD25 Burned',             color: '#FF2D2D' },
@@ -3549,6 +3572,7 @@ if (isLocked) {
   ];
 
   function showNotAvailable() {
+    failTransparencyMetric('burned');
     document.querySelectorAll('[data-live-key]').forEach(function(el) {
       if (el.getAttribute('data-live-key') === 'ifr-price') return;
       el.textContent = 'N/A';
@@ -3556,7 +3580,7 @@ if (isLocked) {
     var supplyEl = document.getElementById('donut-supply');
     if (supplyEl) supplyEl.textContent = 'N/A';
     document.querySelectorAll('.live-status').forEach(function(el) {
-      el.textContent = '\u26A0 Data unavailable \u2014 retry in 30s';
+      el.textContent = '\u26A0 Data unavailable \u2014 retry in 60s';
     });
     document.querySelectorAll('.live-updated-at').forEach(function(el) {
       el.textContent = 'Connection failed';
@@ -3568,6 +3592,75 @@ if (isLocked) {
     if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
     if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
     return n.toFixed(0);
+  }
+
+  // Compact IFR amount from bigint base units (9 decimals); truncates, never rounds through Number.
+  function fmtIfrUnits(raw) {
+    var whole = raw / IFR_UNIT;
+    function scaled(div, suffix) {
+      var thousandths = (raw * 1000n) / (IFR_UNIT * div);
+      var frac = String(thousandths % 1000n);
+      while (frac.length < 3) frac = '0' + frac;
+      return String(thousandths / 1000n) + '.' + frac + suffix;
+    }
+    if (whole >= 1000000n) return scaled(1000000n, 'M') + ' IFR';
+    if (whole >= 1000n) return scaled(1000n, 'K') + ' IFR';
+    return String(whole) + ' IFR';
+  }
+
+  function utcDate(seconds) {
+    return new Date(Number(seconds) * 1000).toISOString().slice(0, 10);
+  }
+
+  function clockTime(ms) {
+    return new Date(ms).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  }
+
+  function setTransparencyMetric(key, text, detail) {
+    transparencySnapshot[key] = { text: text, detail: detail || null, at: Date.now(), failed: false };
+    renderTransparencyCards();
+  }
+
+  function failTransparencyMetric(key) {
+    var entry = transparencySnapshot[key];
+    entry.text = null;
+    entry.detail = null;
+    entry.failed = true;
+    renderTransparencyCards();
+  }
+
+  function renderTransparencyCards() {
+    var now = Date.now();
+    document.querySelectorAll('[data-transparency-metric]').forEach(function(card) {
+      var entry = transparencySnapshot[card.getAttribute('data-transparency-metric')];
+      if (!entry) return;
+      var state, value, status;
+      var last = entry.at ? 'last successful read ' + clockTime(entry.at) : 'no successful read yet';
+      if (entry.failed) {
+        state = 'unavailable'; value = 'Unavailable';
+        status = 'Unavailable \u2014 Mainnet read failed; ' + last;
+      } else if (entry.text === null) {
+        state = 'loading'; value = 'Loading\u2026';
+        status = 'Reading Ethereum Mainnet\u2026';
+      } else if (now - entry.at > TRANSPARENCY_STALE_MS) {
+        state = 'stale'; value = 'Stale';
+        status = 'Stale \u2014 ' + last + '; refreshing';
+      } else {
+        state = 'live'; value = entry.text;
+        status = 'Live \u2014 updated ' + clockTime(entry.at);
+      }
+      card.setAttribute('data-state', state);
+      card.setAttribute('aria-busy', state === 'loading' ? 'true' : 'false');
+      var valueEl = card.querySelector('[data-transparency-value]');
+      var statusEl = card.querySelector('[data-transparency-status]');
+      var detailEl = card.querySelector('[data-transparency-detail]');
+      if (valueEl) valueEl.textContent = value;
+      if (statusEl) statusEl.textContent = status;
+      if (detailEl) {
+        if (!detailEl.hasAttribute('data-default')) detailEl.setAttribute('data-default', detailEl.textContent);
+        detailEl.textContent = state === 'live' && entry.detail ? entry.detail : detailEl.getAttribute('data-default');
+      }
+    });
   }
 
   function pct(n, total) {
@@ -3736,11 +3829,12 @@ if (isLocked) {
       var bal = res[1].balances;
       var lockMeta = res[1].ifrLock || {};
       if (!supply || !supply.totalSupply || !bal) { showNotAvailable(); return; }
+      var burnedValue = Math.max(0, supply.burned || (GENESIS_SUPPLY - supply.totalSupply));
 
       function v(label) { return (bal[label] && bal[label].formatted != null) ? bal[label].formatted : 0; }
       var data = {
         supply:    supply.totalSupply,
-        burned:    Math.max(0, supply.burned || (GENESIS_SUPPLY - supply.totalSupply)),
+        burned:    burnedValue,
         deployer:  v('Deployer'),
         lpReserve: v('LPReserveSafe'),
         treasury:  v('GnosisSafe'),
@@ -3768,6 +3862,7 @@ if (isLocked) {
       renderLegend(data);
       renderMetrics(data);
       updateLiveDisplay(data);
+      setTransparencyMetric('burned', fmt(burnedValue) + ' IFR');
       loadCommitmentVaultLive();
 
       document.querySelectorAll('.live-updated-at').forEach(function(el) {
@@ -3813,14 +3908,35 @@ if (isLocked) {
     }).catch(function() {});
   }
 
+  var mainnetReadInFlight = false;
+  var MAINNET_READ_TIMEOUT_MS = 15000;
+
+  function withTimeout(promise, ms) {
+    return Promise.race([promise, new Promise(function(_, reject) {
+      setTimeout(function() { reject(new Error('Mainnet read timed out')); }, ms);
+    })]);
+  }
+
   function loadCommitmentVaultLive() {
-    if (typeof ethers === 'undefined') return;
+    if (mainnetReadInFlight) return;
+    if (typeof ethers === 'undefined') {
+      failTransparencyMetric('commitment');
+      failTransparencyMetric('vesting');
+      return;
+    }
     var rpc = 'https://ethereum-rpc.publicnode.com';
     var tokenAddr = '0x77e99917Eca8539c62F509ED1193ac36580A6e7B';
     var cvAddr = '0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3';
     var lvAddr = '0x974305Ab0EC905172e697271C3d7d385194EB9DF';
     var partnerAddr = '0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D';
     var c2Addr = '0x80fF32c5441cBCbFa5c3ce0dC70359BDD05B6958';
+    var vestingAddr = '0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271';
+    var vestingAbi = [
+      'function totalAllocation() view returns (uint256)',
+      'function vestedAmount() view returns (uint256)',
+      'function released() view returns (uint256)',
+      'function vestingSchedule() view returns (uint256 _start, uint256 _cliff, uint256 _duration)'
+    ];
     var tokenAbi = ['function balanceOf(address wallet) view returns (uint256)'];
     var cvAbi = [
       'function totalLocked() view returns (uint256)',
@@ -3835,11 +3951,15 @@ if (isLocked) {
       'function ifrPriceWei() view returns (uint256)'
     ];
     try {
-      var provider = new ethers.JsonRpcProvider(rpc);
+      // Chain ID is pinned so an unreachable RPC fails the read instead of retrying network detection forever.
+      var provider = new ethers.JsonRpcProvider(rpc, 1, { staticNetwork: ethers.Network.from(1) });
       var token = new ethers.Contract(tokenAddr, tokenAbi, provider);
       var cv = new ethers.Contract(cvAddr, cvAbi, provider);
       var lv = new ethers.Contract(lvAddr, lvAbi, provider);
-      Promise.all([cv.totalLocked(), cv.lockedBalance(c2Addr), cv.getTrancheCount(c2Addr)]).then(function(values) {
+      var vesting = new ethers.Contract(vestingAddr, vestingAbi, provider);
+      mainnetReadInFlight = true;
+      var cvRead = withTimeout(Promise.all([cv.totalLocked(), cv.lockedBalance(c2Addr), cv.getTrancheCount(c2Addr)]), MAINNET_READ_TIMEOUT_MS).then(function(values) {
+        setTransparencyMetric('commitment', fmtIfrUnits(values[0]), 'Sum of active tranches \u00B7 CommitmentVault totalLocked()');
         var total = Number(ethers.formatUnits(values[0], 9));
         var c2 = Number(ethers.formatUnits(values[1], 9));
         var tranches = values[2].toString();
@@ -3856,7 +3976,18 @@ if (isLocked) {
         setLive('card-commitment-locked', fmt(total) + ' IFR');
         setLive('c2-commitment-lock', fmt(c2) + ' IFR');
         setLive('c2-commitment-tranches', tranches + ' tranches');
-      }).catch(function() {});
+      }).catch(function() { failTransparencyMetric('commitment'); });
+      var vestingRead = withTimeout(Promise.all([vesting.totalAllocation(), vesting.vestedAmount(), vesting.released(), vesting.vestingSchedule()]), MAINNET_READ_TIMEOUT_MS).then(function(values) {
+        var allocation = values[0];
+        var vested = values[1];
+        if (vested > allocation) throw new Error('vested exceeds allocation');
+        var schedule = values[3];
+        var cliffEnd = schedule[0] + schedule[1];
+        var vestingEnd = schedule[0] + schedule[2];
+        setTransparencyMetric('vesting', fmtIfrUnits(allocation - vested),
+          'Released ' + fmtIfrUnits(values[2]) + ' \u00B7 cliff ends ' + utcDate(cliffEnd) + ', linear to ' + utcDate(vestingEnd));
+      }).catch(function() { failTransparencyMetric('vesting'); });
+      Promise.all([cvRead, vestingRead]).then(function() { mainnetReadInFlight = false; });
       Promise.all([lv.totalAvailable(), lv.totalLent(), lv.getInterestRate(), lv.getOfferCount(), lv.ifrPriceWei()]).then(function(values) {
         var available = Number(ethers.formatUnits(values[0], 9));
         var lent = Number(ethers.formatUnits(values[1], 9));
@@ -3891,10 +4022,18 @@ if (isLocked) {
           if (canvas3) drawDonut(canvas3, liveDistributionData);
         }
       }).catch(function() {});
-    } catch(e) {}
+    } catch(e) {
+      mainnetReadInFlight = false;
+      failTransparencyMetric('commitment');
+      failTransparencyMetric('vesting');
+    }
   }
 
+  var lastRefreshAt = 0;
+
   function refreshAllLiveData() {
+    lastRefreshAt = Date.now();
+    renderTransparencyCards();
     doRefresh().catch(function(e) {
       console.error('Live data failed, retrying in 3s:', e);
       setTimeout(function() {
@@ -3911,24 +4050,34 @@ if (isLocked) {
   // Lazy-load live data — only start when section is visible
   var liveStarted = false;
   var liveSection = document.getElementById('live-distribution') || document.querySelector('.live-tracking') || document.getElementById('live-tracking') || document.querySelector('[id*="live"]');
+  var transparencySection = document.getElementById('onchain-transparency');
   renderMetrics({ supply: 0, burned: 0, lpReserve: 0 });
+  renderTransparencyCards();
   setTimeout(loadIFRPrice, 1000);
   setTimeout(loadCommitmentVaultLive, 1200);
-  if (liveSection) {
+  if (liveSection || transparencySection) {
     var liveObserver = new IntersectionObserver(function(entries) {
-      if (entries[0].isIntersecting && !liveStarted) {
+      var visible = entries.some(function(entry) { return entry.isIntersecting; });
+      if (visible && !liveStarted) {
         liveStarted = true;
-        fetch(PROXY_BASE + '/api/ifr/supply').catch(function() {});
+        liveObserver.disconnect();
         setTimeout(refreshAllLiveData, 500);
-        setInterval(refreshAllLiveData, 30000);
+        setInterval(refreshAllLiveData, LIVE_REFRESH_MS);
       }
     }, { threshold: 0.1 });
-    liveObserver.observe(liveSection);
+    if (liveSection) liveObserver.observe(liveSection);
+    if (transparencySection) liveObserver.observe(transparencySection);
   } else {
     // Fallback: start after 3s if section not found
+    liveStarted = true;
     setTimeout(refreshAllLiveData, 3000);
-    setInterval(refreshAllLiveData, 30000);
+    setInterval(refreshAllLiveData, LIVE_REFRESH_MS);
   }
+  document.addEventListener('visibilitychange', function() {
+    if (document.visibilityState !== 'visible') return;
+    renderTransparencyCards();
+    if (liveStarted && Date.now() - lastRefreshAt > 10000) refreshAllLiveData();
+  });
 })();
 </script>
 

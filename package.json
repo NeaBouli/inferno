@@ -79,7 +79,9 @@
     "post:x:dry": "X_DRY_RUN=true node scripts/post-x.js docs/social/x-geckoterminal-thread.md",
     "post:x:daily:promo": "X_DRY_RUN=true node scripts/x-daily-bot.js promo",
     "post:x:daily:status": "X_DRY_RUN=true node scripts/x-daily-bot.js status",
-    "test:wiki-nav": "node scripts/check-wiki-nav-consistency.cjs"
+    "test:wiki-nav": "node scripts/check-wiki-nav-consistency.cjs",
+    "test:wiki-shell": "node scripts/test-wiki-shell-consistency.cjs",
+    "test:landing-wiki-ui": "playwright test tests/browser/landing-transparency.spec.js tests/browser/wiki-shell.spec.js"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "4.0.15",

@@ -1,0 +1,93 @@
+#!/usr/bin/env node
+
+// Guards the shared Wiki shell (T-158): every sidebar page uses the same brand
+// wording, marks exactly one active menu link with aria-current="page" that
+// points to the page itself, and styles the sidebar subtitle the same way.
+// open-audit.html action links must use the shared skin buttons, not inline colors.
+
+const assert = require("node:assert/strict");
+const fs = require("node:fs");
+const path = require("node:path");
+
+const root = path.join(__dirname, "..");
+const wikiDir = path.join(root, "docs", "wiki");
+const NAV_RE = /<ul class="sidebar-nav">([\s\S]*?)<\/ul>/;
+const failures = [];
+
+function check(condition, message) {
+  if (!condition) failures.push(message);
+}
+
+const pages = fs.readdirSync(wikiDir).filter((name) => name.endsWith(".html")).sort();
+let sidebarPages = 0;
+for (const page of pages) {
+  const src = fs.readFileSync(path.join(wikiDir, page), "utf8");
+  const nav = src.match(NAV_RE);
+  if (!nav) continue;
+  sidebarPages += 1;
+  check(/class="sidebar-logo">IFR PROTOCOL<\/a>/.test(src), `${page}: sidebar brand must read "IFR PROTOCOL"`);
+  check(/<div class="sidebar-subtitle">Documentation<\/div>/.test(src), `${page}: sidebar subtitle must read "Documentation"`);
+  const active = [...nav[1].matchAll(/<a href="([^"]+)"([^>]*)>/g)].filter((m) => /class="active"/.test(m[2]));
+  check(active.length === 1, `${page}: exactly one active sidebar link expected, found ${active.length}`);
+  if (active.length === 1) {
+    check(/aria-current="page"/.test(active[0][2]), `${page}: active sidebar link must carry aria-current="page"`);
+    const target = active[0][1].replace(/^https:\/\/ifrunit\.tech\/wiki\//, "") || "index.html";
+    check(target === page, `${page}: active sidebar link points to ${target}`);
+  }
+  const current = nav[1].match(/aria-current="page"/g) || [];
+  check(current.length === 1, `${page}: exactly one aria-current="page" expected, found ${current.length}`);
+  if (src.includes('id="wiki-wallet-bar"')) {
+    check(src.includes('font-size:0.9rem;">&larr; Inferno</a>'), `${page}: wallet bar back link must read "← Inferno"`);
+  }
+}
+check(sidebarPages >= 30, `expected the Wiki shell on at least 30 pages, found ${sidebarPages}`);
+
+const index = fs.readFileSync(path.join(wikiDir, "index.html"), "utf8");
+check(/\.sidebar-subtitle \{\s*font-size: 12px;/.test(index), "index.html: .sidebar-subtitle must use the canonical shell style");
+check(!index.includes("&larr; IFR Protocol</a>"), "index.html: legacy back-link wording remains");
+
+const audit = fs.readFileSync(path.join(wikiDir, "open-audit.html"), "utf8");
+const groups = audit.match(/<div class="wiki-actions">[\s\S]*?<\/div>/g) || [];
+check(groups.length === 3, `open-audit.html: expected 3 .wiki-actions groups, found ${groups.length}`);
+for (const group of groups) {
+  for (const link of group.match(/<a [^>]*>/g) || []) {
+    check(/class="btn btn-(primary|secondary)"/.test(link), `open-audit.html: action link without shared button class: ${link}`);
+    check(!/style=/.test(link), `open-audit.html: action link keeps inline colors: ${link}`);
+  }
+}
+
+// Contrast of the shared button tokens (WCAG 2.x relative luminance).
+const skin = fs.readFileSync(path.join(root, "docs", "assets", "redesign-skin.css"), "utf8");
+const token = (name) => {
+  const m = skin.match(new RegExp(`--${name}:\\s*(#[0-9A-Fa-f]{6})`));
+  assert.ok(m, `redesign-skin.css: missing --${name}`);
+  return m[1];
+};
+function luminance(hex) {
+  const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255)
+    .map((v) => (v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4));
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+}
+function contrast(a, b) {
+  const [x, y] = [luminance(a), luminance(b)].sort((m, n) => n - m);
+  return (x + 0.05) / (y + 0.05);
+}
+for (const [fg, bg, label] of [
+  ["#FFFFFF", token("accent"), "primary button text"],
+  ["#FFFFFF", token("accent-deep"), "primary button hover text"],
+  [token("ink"), token("surface"), "secondary button text"],
+  [token("ink"), token("bg-alt"), "secondary button hover text"],
+]) {
+  const ratio = contrast(fg, bg);
+  check(ratio >= 4.5, `${label}: contrast ${ratio.toFixed(2)} < 4.5`);
+}
+check(/\.wiki-actions \.btn \{[^}]*min-height: 44px;/.test(skin), "redesign-skin.css: .wiki-actions .btn must keep a 44px minimum height");
+check(/\.wiki-actions \.btn:focus-visible \{[^}]*outline: 3px solid/.test(skin), "redesign-skin.css: .wiki-actions .btn needs a visible focus outline");
+
+if (failures.length) {
+  console.error(`[wiki-shell] FAIL - ${failures.length} issue(s):`);
+  for (const failure of failures) console.error(`  - ${failure}`);
+  process.exitCode = 1;
+} else {
+  console.log(`[wiki-shell] PASS - ${sidebarPages} sidebar pages share brand, active-link semantics and button contrast`);
+}
