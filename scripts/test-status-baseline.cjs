@@ -197,8 +197,12 @@ requireText("docs/WALLET_ICON_DISTRIBUTION_STATUS_20260708.md", [
   "IFR-8f9ccb3d-2e3b-4c3c-bda1-5040d80548f6",
 ]);
 requireText("docs/TOKEN_ICON_DISTRIBUTION.md", [
-  "Last checked: 2026-09-04",
+  "Last checked: 2026-09-28",
   "PR open / review required",
+  "mergeable state `clean`",
+  "open and mergeable with state `unstable`",
+  "rejected\n   in early September 2026 for insufficient organic attention",
+  "follow-up ticket `1453378`",
   "Replacement open / review pending",
   "External-data path / no verification form",
   "Not eligible / do not pay",
@@ -228,7 +232,8 @@ requireText("docs/COINGECKO_FOLLOWUP_PACK_20260716.md", [
 ]);
 requireText("docs/COINMARKETCAP_SUBMISSION.md", [
   "GeckoTerminal: live",
-  "CoinGecko: active request `CL0309260050` submitted",
+  "CoinGecko: request `CL0309260050` was submitted on 2026-09-04 and rejected",
+  "current follow-up ticket `1453378` remains in free review",
   "`coin not found` as of 2026-09-04",
   "submitted as ticket `1390230`",
   "not verified by CoinMarketCap",
@@ -256,6 +261,8 @@ requireText("docs/wiki/reputation.html", [
   "Rainbow",
   "IFR-8f9ccb3d-2e3b-4c3c-bda1-5040d80548f6",
   "not counted as formal audit or trust evidence",
+  "rejected in early September for insufficient organic attention",
+  "Follow-up ticket 1453378 remains in free review",
 ]);
 requireText("docs/llms.txt", [
   "Three contributor offers provide 52,155,440.952845656 IFR",
@@ -274,5 +281,21 @@ requireText("docs/wiki/contributing.html", [
   "Use ethers v6 syntax with 9 decimals in current packages",
   'ethers.parseUnits("1000", 9)',
 ]);
+
+for (const file of [
+  "docs/llms.txt",
+  "docs/wiki/reputation.html",
+  "docs/wiki/roadmap.html",
+  "docs/ROADMAP.md",
+  "docs/TOKEN_ICON_DISTRIBUTION.md",
+  "docs/COINMARKETCAP_SUBMISSION.md",
+  "apps/ai-copilot/src/context/ifr-knowledge.ts",
+  "apps/ai-copilot/src/context/system-prompts.ts",
+]) {
+  assert.ok(
+    !/CL0309260050[^.]{0,160}(remains pending|is pending)/.test(read(file)),
+    `${file} must not describe CoinGecko request CL0309260050 as pending`
+  );
+}
 
 console.log("[status-baseline] PASS");

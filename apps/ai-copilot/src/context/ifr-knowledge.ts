@@ -157,8 +157,8 @@ export function getIFRKnowledge() {
     reputation: {
       positioning: "IFR is a utility-first, community-driven ERC-20 protocol built around lock-to-access use cases, builder integrations, lending/locking flows, open-source code, and on-chain transparency. It should not be described as a pure speculation token.",
       trustSignals: "Community Fair Launch; no presale, no VC, no private sale; no post-deploy mint function; open-source repository; verified Mainnet contracts; public wiki; live transparency pages; documented safes, governance, locks, lending, and LP status.",
-      marketStatus: "IFR/WETH is live on Uniswap V2 and GeckoTerminal. A standalone CoinGecko coin listing is not yet confirmed.",
-      pendingReviews: "Etherscan reports Neutral. MetaMask contract-metadata PR #1858 remains open for maintainer/code-owner approval. Project owner reports a Blockbit/external no-risk confirmation; public reference is pending, so do not call it a formal third-party audit until it is linkable.",
+      marketStatus: "IFR/WETH is live on Uniswap V2 and GeckoTerminal (GeckoTerminal is not a CoinGecko listing). CoinGecko request CL0309260050 was rejected in early September 2026 for insufficient organic attention; no reapplication is confirmed. CoinMarketCap ticket 1453378 remains in free review with no promised timeline; coinmarketcap.com/currencies/inferno is an unrelated INF asset, not IFR.",
+      pendingReviews: "Etherscan reports Neutral. MetaMask contract-metadata PR #1858 remains open and unmerged with no review; Uniswap issue #2509 and ethereum-lists PR #1049 remain open and unaccepted. Project owner reports a Blockbit/external no-risk confirmation; public reference is pending, so do not call it a formal third-party audit until it is linkable.",
       wiki: "https://ifrunit.tech/wiki/reputation.html"
     },
     builderRegistry: {

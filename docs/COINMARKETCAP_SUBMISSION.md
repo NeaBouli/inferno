@@ -1,15 +1,20 @@
 # CoinMarketCap Submission Pack — Inferno (IFR)
 
-Updated: 2026-09-04
+Updated: 2026-09-28
 
 ## Status
 
-- GeckoTerminal: live, verified pool URL available.
-- CoinGecko: active request `CL0309260050` submitted on 2026-09-04, but the
-  exact-contract API still returns `coin not found` as of 2026-09-04; no
-  standalone coin listing is confirmed.
+- GeckoTerminal: live, verified pool URL available. GeckoTerminal indexing is
+  separate from a CoinGecko coin listing.
+- CoinGecko: request `CL0309260050` was submitted on 2026-09-04 and rejected
+  in early September 2026 for insufficient organic attention. The
+  exact-contract API returned `coin not found` as of 2026-09-04; no standalone
+  coin listing is confirmed. No reapplication or duplicate submission is
+  confirmed; the next step is improving evidence/traction, then a deliberate
+  reapplication decision.
 - CoinMarketCap standard listing request: submitted as ticket `1390230`;
-  response/approval remains pending.
+  current follow-up ticket `1453378` remains in free review with no promised
+  timeline (status as of 2026-09-28).
 - CoinMarketCap DexScan: IFR token and IFR/WETH pool pages are live, but CMC
   explicitly labels IFR as `not verified by CoinMarketCap`. DexScan visibility
   is not a standalone tracked CMC coin listing.
@@ -26,8 +31,10 @@ Updated: 2026-09-04
   do not submit a duplicate.
 
 CoinMarketCap states that the online submission form is the only official way to request listings or updates. Do not use third-party listing agents or unofficial contacts.
-CoinMarketCap discourages duplicate requests. Ticket `1390230` is the
-canonical request; wait for its response.
+CoinMarketCap discourages duplicate requests. Current follow-up ticket
+`1453378` (following original ticket `1390230`) is the canonical request;
+wait for its response. Do not submit a duplicate or send an external bump
+without material new evidence.
 
 ## Copy/Paste Submission
 
