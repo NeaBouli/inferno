@@ -76,6 +76,50 @@ async function main() {
   const UNISWAP_ROUTER   = process.env.UNISWAP_ROUTER        || UNISWAP_V2_ROUTER_MAINNET;
   const GUARDIAN_ADDR    = process.env.GUARDIAN_ADDRESS        || deployer.address;
 
+  const isMainnet = network.chainId === 1n;
+  const isSepolia = network.chainId === 11155111n;
+
+  // ── Deployment boundary (fail closed before any safeDeploy) ─
+  if (isSepolia) {
+    console.error("  ABORT: This script is for mainnet (or hardhat dry run).");
+    console.error("  Use deploy-testnet.js for Sepolia.");
+    process.exit(1);
+  }
+
+  if (isMainnet) {
+    const required = {
+      TREASURY_ADDRESS: process.env.TREASURY_ADDRESS,
+      COMMUNITY_ADDRESS: process.env.COMMUNITY_ADDRESS,
+      TEAM_BENEFICIARY: process.env.TEAM_BENEFICIARY,
+      VOUCHER_SIGNER_ADDRESS: process.env.VOUCHER_SIGNER_ADDRESS,
+      GUARDIAN_ADDRESS: process.env.GUARDIAN_ADDRESS,
+    };
+    const invalid = [];
+    const seen = new Set();
+    for (const [key, value] of Object.entries(required)) {
+      if (!value || !ethers.isAddress(value)) {
+        invalid.push(key);
+        continue;
+      }
+      const normalized = ethers.getAddress(value);
+      if (normalized === ethers.ZeroAddress
+          || normalized.toLowerCase() === deployer.address.toLowerCase()
+          || seen.has(normalized.toLowerCase())) {
+        invalid.push(key);
+        continue;
+      }
+      seen.add(normalized.toLowerCase());
+    }
+
+    if (invalid.length > 0) {
+      console.error("\n  ABORT: Required env vars must be valid, nonzero, distinct, and not the deployer:");
+      invalid.forEach(k => console.error(`    - ${k}`));
+      console.error("\n  Set these env vars before mainnet deployment.");
+      console.error("  For DRY RUN, use: --network hardhat\n");
+      process.exit(1);
+    }
+  }
+
   console.log("\n" + "=".repeat(60));
   console.log("  INFERNO — MAINNET DEPLOY CONTINUE (Steps 3-12)");
   console.log("=".repeat(60));
@@ -106,7 +150,7 @@ async function main() {
   console.log(`  Owner:            ${await governance.owner()}`);
 
   // Verify deployer has all tokens
-  if (!BigInt(deployerBal)===BigInt(supply)) {
+  if (BigInt(deployerBal) !== BigInt(supply)) {
     console.error(`  ERROR: Deployer doesn't hold full supply. Already distributed?`);
     console.error(`  Expected: ${fmt(supply)}, Got: ${fmt(deployerBal)}`);
     process.exit(1);

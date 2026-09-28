@@ -47,7 +47,6 @@ jobs:
         run: npx hardhat run scripts/update-stats.js --network sepolia
         env:
           SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
-          PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}
 
       - name: Commit stats
         if: steps.rpc.outputs.available == 'true'
