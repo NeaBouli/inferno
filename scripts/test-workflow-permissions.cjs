@@ -50,7 +50,7 @@ function assertNoJobLevelPermissions(source, fileName) {
 }
 
 // Workflows must never receive a signing key from repository secrets.
-const privateKeySecretPattern = /secrets\.[A-Za-z0-9_]*PRIVATE_?KEY/i;
+const privateKeySecretPattern = /secrets(?:\.[A-Za-z0-9_]*PRIVATE_?KEY|\s*\[\s*['"][^'"]*PRIVATE_?KEY['"]\s*\])/i;
 
 function assertNoPrivateKeySecret(source, fileName) {
   assert.doesNotMatch(
@@ -89,6 +89,7 @@ for (const fixture of [
   "env:\n  PRIVATE_KEY: ${{ secrets.DEPLOYER_PRIVATE_KEY }}\n",
   "env:\n  KEY: ${{ secrets.PRIVATE_KEY }}\n",
   "env:\n  KEY: ${{ secrets.signer_privatekey }}\n",
+  "env:\n  KEY: ${{ secrets['DEPLOYER_PRIVATE_KEY'] }}\n",
 ]) {
   assert.throws(() => assertNoPrivateKeySecret(fixture, "fixture.yml"), /private-key repository secret/);
 }

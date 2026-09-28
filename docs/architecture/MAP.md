@@ -537,7 +537,7 @@ fall back to the deployer EOA (CWA-09 guardian/role concentration).
    env (`TREASURY_ADDRESS`, `COMMUNITY_ADDRESS`, `TEAM_BENEFICIARY`,
    `VOUCHER_SIGNER_ADDRESS`, `GUARDIAN_ADDRESS`, `UNISWAP_ROUTER`)
 3. `main` → deployment boundary gate — reject Sepolia; on chain 1 every
-   production role must be set and differ from the deployer
+   production role must be valid, nonzero, distinct and differ from the deployer
 4. `main` → supply gate — deployer must hold the full token supply
 5. `main` → `safeDeploy` / `safeTx` — contract deployment and wiring
 

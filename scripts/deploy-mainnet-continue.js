@@ -94,13 +94,26 @@ async function main() {
       VOUCHER_SIGNER_ADDRESS: process.env.VOUCHER_SIGNER_ADDRESS,
       GUARDIAN_ADDRESS: process.env.GUARDIAN_ADDRESS,
     };
-    const missing = Object.entries(required)
-      .filter(([, v]) => !v || v.toLowerCase() === deployer.address.toLowerCase())
-      .map(([k]) => k);
+    const invalid = [];
+    const seen = new Set();
+    for (const [key, value] of Object.entries(required)) {
+      if (!value || !ethers.isAddress(value)) {
+        invalid.push(key);
+        continue;
+      }
+      const normalized = ethers.getAddress(value);
+      if (normalized === ethers.ZeroAddress
+          || normalized.toLowerCase() === deployer.address.toLowerCase()
+          || seen.has(normalized.toLowerCase())) {
+        invalid.push(key);
+        continue;
+      }
+      seen.add(normalized.toLowerCase());
+    }
 
-    if (missing.length > 0) {
-      console.error("\n  ABORT: Required env vars not set or equal to the deployer:");
-      missing.forEach(k => console.error(`    - ${k}`));
+    if (invalid.length > 0) {
+      console.error("\n  ABORT: Required env vars must be valid, nonzero, distinct, and not the deployer:");
+      invalid.forEach(k => console.error(`    - ${k}`));
       console.error("\n  Set these env vars before mainnet deployment.");
       console.error("  For DRY RUN, use: --network hardhat\n");
       process.exit(1);
