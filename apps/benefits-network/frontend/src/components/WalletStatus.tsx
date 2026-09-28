@@ -847,7 +847,7 @@ export function WalletStatus() {
             href={UNISWAP_IFR_URL}
             target="_blank"
             rel="noopener"
-            className="rounded-2xl border border-white/15 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-orange-200/60"
+            className="flex min-h-11 items-center justify-center rounded-2xl border border-white/15 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-orange-200/60"
           >
             Buy IFR
           </a>

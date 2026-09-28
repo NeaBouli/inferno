@@ -1931,14 +1931,14 @@ export function SellerRuleBuilder() {
           {!profileReady ? (
             <a
               href="#seller-profile"
-              className="rounded-2xl bg-orange-300 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/30 transition hover:bg-orange-200"
+              className="flex min-h-11 items-center justify-center rounded-2xl bg-orange-300 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/30 transition hover:bg-orange-200"
             >
               Create or load profile
             </a>
           ) : !ruleReady ? (
             <a
               href={activeCatalogCount > 0 ? '#seller-rule-editor' : '#seller-catalog'}
-              className="rounded-2xl bg-orange-300 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/30 transition hover:bg-orange-200"
+              className="flex min-h-11 items-center justify-center rounded-2xl bg-orange-300 px-4 py-3 text-center text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/30 transition hover:bg-orange-200"
             >
               {activeCatalogCount > 0 ? 'Create benefit rule' : 'Add product or service'}
             </a>
@@ -1954,7 +1954,7 @@ export function SellerRuleBuilder() {
           ) : (
             <a
               href={catalogUrl}
-              className="rounded-2xl bg-orange-300 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/30 transition hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex min-h-11 items-center justify-center rounded-2xl bg-orange-300 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/30 transition hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Open public catalog
             </a>
@@ -2014,7 +2014,7 @@ export function SellerRuleBuilder() {
         </div>
         {!selectedBusiness ? (
           <details className="mt-4 rounded-2xl border border-green-200/20 bg-green-200/[0.06] p-4">
-            <summary className="cursor-pointer text-sm font-black text-green-50">
+            <summary className="-my-3 cursor-pointer py-3 text-sm font-black text-green-50">
               Open an existing seller setup
             </summary>
             <p className="mt-2 text-xs leading-5 text-stone-400">
@@ -3142,7 +3142,7 @@ export function SellerRuleBuilder() {
             </p>
             <a
               href="#seller-profile"
-              className="mt-4 inline-flex rounded-2xl bg-orange-300 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/30 transition hover:bg-orange-200"
+              className="mt-4 inline-flex min-h-11 items-center rounded-2xl bg-orange-300 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/30 transition hover:bg-orange-200"
             >
               Continue seller profile
             </a>
