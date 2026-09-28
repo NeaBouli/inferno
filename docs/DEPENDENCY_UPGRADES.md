@@ -331,7 +331,29 @@ migration and its full contract-suite evidence exist.
   CI. This entry describes the candidate, not proof of production deployment.
   No audit thresholds or security exceptions have been relaxed.
 
-## 2026-09-24 Playwright 1.63 Browser Toolchain Update
+## 2026-09-27 Web3 Wallet Runtime Self-Hosting (CWA-47/48, local candidate)
+
+- The browser signing/wallet path no longer executes third-party code at
+  runtime. The WalletConnect v2 provider is bundled once from the exact
+  `@walletconnect/ethereum-provider@2.17.3` npm package (esbuild `0.28.2`,
+  browser shims `buffer@6.0.3`/`process@0.11.10`, all exact-pinned under
+  `infra/web3/walletconnect-provider/` with a committed lockfile) and served
+  same-origin as `docs/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js`
+  (SHA-256 `30273eb8eb78e88e29ecdb73606fa3e41e66a646a2b33f5c864014a065c709fc`),
+  following the vendored Ethers pattern. The web3 host CSP `script-src`
+  carries no third-party host anymore.
+- `docs/assets/ifr-state.js` no longer fabricates a finalized-zero bootstrap
+  state on RPC failure: aggregate and individual read failure yields an
+  explicit unavailable status with null values, and the bootstrap renderer
+  keeps claim/refund write controls hidden in that state.
+- Deterministic gates: `npm run test:web3-wallet-runtime` (artifact hash,
+  no-remote-import scan, precache, locked build inputs, unavailable-state unit
+  test) plus the updated `test:web3-headers`, `test:browser-ethers6`,
+  `test:wallet-connect` and `test:web3-write` suites.
+- This entry describes the local integration candidate; public remediation
+  totals are unchanged until integration and independent review complete.
+
+## 2026-09-28 Playwright 1.63 Browser Toolchain Update
 
 - The isolated browser-test dependency moves from `@playwright/test@1.61.1` to
   `@playwright/test@1.63.0`, with matching `playwright` and `playwright-core`

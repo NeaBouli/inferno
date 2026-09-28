@@ -2,6 +2,7 @@ import request from 'supertest';
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import authRouter from '../routes/auth';
+import { authMiddleware } from '../middleware/auth';
 import { CONFIG } from '../config';
 import { LockChecker } from '../services/lock-checker';
 
@@ -70,49 +71,194 @@ describe('Security Fixes', () => {
     });
   });
 
-  // F7: Wallet address validation
-  describe('F7: Wallet address validation on /auth/wallet', () => {
-    test('rejects invalid wallet address', async () => {
-      const res = await request(app)
-        .post('/auth/wallet')
-        .send({ walletAddress: 'not-an-address' });
-      expect(res.status).toBe(400);
-      expect(res.body.error).toBe('Invalid wallet address');
-    });
-
-    test('rejects wallet address with wrong length', async () => {
-      const res = await request(app)
-        .post('/auth/wallet')
-        .send({ walletAddress: '0x1234' });
-      expect(res.status).toBe(400);
-      expect(res.body.error).toBe('Invalid wallet address');
-    });
-
-    test('accepts valid checksummed address', async () => {
+  // CWA-28: the legacy wallet-only route bypassed SIWE proof entirely
+  describe('CWA-28: legacy wallet-only auth removed', () => {
+    test('POST /auth/wallet is gone (404), even for valid addresses', async () => {
       const res = await request(app)
         .post('/auth/wallet')
         .send({ walletAddress: '0x70997970C51812dc3A010C7d01b50e0d17dc79C8' });
-      expect(res.status).toBe(200);
-      expect(res.body).toHaveProperty('token');
-      expect(res.body.deprecated).toBe(true);
-      expect(res.body.useInstead).toBe('/auth/siwe/verify');
+      expect(res.status).toBe(404);
+      expect(res.body.token).toBeUndefined();
     });
 
-    test('accepts valid lowercase address and checksums it', async () => {
-      const res = await request(app)
-        .post('/auth/wallet')
-        .send({ walletAddress: '0x1234567890123456789012345678901234567890' });
-      expect(res.status).toBe(200);
-      // Verify JWT contains checksummed address
-      const decoded = jwt.verify(res.body.token, CONFIG.jwtSecret) as any;
-      expect(decoded.walletAddress).toBe('0x1234567890123456789012345678901234567890');
+    test('POST /auth/wallet does not issue tokens for malformed input', async () => {
+      const res = await request(app).post('/auth/wallet').send({ walletAddress: 'not-an-address' });
+      expect(res.status).toBe(404);
+      expect(res.body.token).toBeUndefined();
     });
+  });
+});
 
-    test('includes deprecation header', async () => {
-      const res = await request(app)
-        .post('/auth/wallet')
-        .send({ walletAddress: '0x1234567890123456789012345678901234567890' });
-      expect(res.headers['x-deprecated']).toBe('Use /auth/siwe/verify instead');
+describe('CWA-42: JWT algorithm pinning', () => {
+  const protectedApp = express();
+  protectedApp.use(express.json());
+  protectedApp.get('/protected', authMiddleware, (_req, res) => res.json({ ok: true }));
+
+  const b64url = (obj: Record<string, unknown>) =>
+    Buffer.from(JSON.stringify(obj)).toString('base64url');
+
+  test('alg=none token is rejected', async () => {
+    const noneToken = `${b64url({ alg: 'none', typ: 'JWT' })}.${b64url({
+      walletAddress: '0x1234567890123456789012345678901234567890',
+      exp: Math.floor(Date.now() / 1000) + 3600,
+    })}.`;
+    const res = await request(protectedApp)
+      .get('/protected')
+      .set('Authorization', `Bearer ${noneToken}`);
+    expect(res.status).toBe(401);
+  });
+
+  test('HS512 token signed with the same secret is rejected (not pinned)', async () => {
+    const token = jwt.sign({ walletAddress: '0xabc' }, CONFIG.jwtSecret, {
+      algorithm: 'HS512',
     });
+    const res = await request(protectedApp)
+      .get('/protected')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(401);
+  });
+
+  test('HS256 token signed with a different secret is rejected', async () => {
+    const token = jwt.sign({ walletAddress: '0xabc' }, 'some-other-secret', {
+      algorithm: 'HS256',
+    });
+    const res = await request(protectedApp)
+      .get('/protected')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(401);
+  });
+
+  test('pinned HS256 token with the configured secret is accepted', async () => {
+    const token = jwt.sign({ walletAddress: '0xabc' }, CONFIG.jwtSecret, {
+      algorithm: 'HS256',
+      expiresIn: '1h',
+    });
+    const res = await request(protectedApp)
+      .get('/protected')
+      .set('Authorization', `Bearer ${token}`);
+    expect(res.status).toBe(200);
+    expect(res.body.ok).toBe(true);
+  });
+});
+
+describe('CWA-42/CWA-30: fail-closed configuration', () => {
+  function withPatchedEnv(patch: Record<string, string | undefined>): () => void {
+    const saved: Record<string, string | undefined> = {};
+    for (const key of Object.keys(patch)) {
+      saved[key] = process.env[key];
+      if (patch[key] === undefined) delete process.env[key];
+      else process.env[key] = patch[key];
+    }
+    return () => {
+      for (const key of Object.keys(patch)) {
+        if (saved[key] === undefined) delete process.env[key];
+        else process.env[key] = saved[key] as string;
+      }
+    };
+  }
+
+  function loadConfig(): typeof CONFIG {
+    let loaded: typeof CONFIG | undefined;
+    jest.isolateModules(() => {
+      loaded = require('../config').CONFIG;
+    });
+    return loaded as typeof CONFIG;
+  }
+
+  test('missing JWT_SECRET aborts startup (no dev fallback secret)', () => {
+    const restore = withPatchedEnv({ JWT_SECRET: undefined });
+    try {
+      jest.isolateModules(() => {
+        expect(() => require('../config')).toThrow(/JWT_SECRET/);
+      });
+    } finally {
+      restore();
+    }
+  });
+
+  test('missing SIWE_DOMAIN aborts startup (no permissive fallback)', () => {
+    const restore = withPatchedEnv({ SIWE_DOMAIN: undefined });
+    try {
+      jest.isolateModules(() => {
+        expect(() => require('../config')).toThrow(/SIWE_DOMAIN/);
+      });
+    } finally {
+      restore();
+    }
+  });
+
+  test('missing SIWE_URI aborts startup (no permissive fallback)', () => {
+    const restore = withPatchedEnv({ SIWE_URI: undefined });
+    try {
+      jest.isolateModules(() => {
+        expect(() => require('../config')).toThrow(/SIWE_URI/);
+      });
+    } finally {
+      restore();
+    }
+  });
+
+  test('CHAIN_ID without IFRLOCK_ADDRESS aborts startup (no mixed-network default)', () => {
+    const restore = withPatchedEnv({ CHAIN_ID: '1', IFRLOCK_ADDRESS: undefined });
+    try {
+      jest.isolateModules(() => {
+        expect(() => require('../config')).toThrow(/together/);
+      });
+    } finally {
+      restore();
+    }
+  });
+
+  test('IFRLOCK_ADDRESS without CHAIN_ID aborts startup (no mixed-network default)', () => {
+    const restore = withPatchedEnv({
+      CHAIN_ID: undefined,
+      IFRLOCK_ADDRESS: '0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb',
+    });
+    try {
+      jest.isolateModules(() => {
+        expect(() => require('../config')).toThrow(/together/);
+      });
+    } finally {
+      restore();
+    }
+  });
+
+  test('explicit CHAIN_ID + IFRLOCK_ADDRESS pair is honored', () => {
+    const restore = withPatchedEnv({
+      CHAIN_ID: '1',
+      IFRLOCK_ADDRESS: '0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb',
+    });
+    try {
+      const cfg = loadConfig();
+      expect(cfg.chainId).toBe(1);
+      expect(cfg.ifrLockAddress).toBe('0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb');
+    } finally {
+      restore();
+    }
+  });
+
+  test('default network is one consistent Sepolia pair', () => {
+    const restore = withPatchedEnv({ CHAIN_ID: undefined, IFRLOCK_ADDRESS: undefined });
+    try {
+      const cfg = loadConfig();
+      expect(cfg.chainId).toBe(11155111);
+      expect(cfg.ifrLockAddress).toBe('0x0Cab0A9440643128540222acC6eF5028736675d3');
+    } finally {
+      restore();
+    }
+  });
+
+  test('test env is not production (OAuth cookie without Secure flag)', () => {
+    expect(CONFIG.isProduction).toBe(false);
+  });
+
+  test('NODE_ENV=production enables isProduction (Secure OAuth cookie)', () => {
+    const restore = withPatchedEnv({ NODE_ENV: 'production' });
+    try {
+      const cfg = loadConfig();
+      expect(cfg.isProduction).toBe(true);
+    } finally {
+      restore();
+    }
   });
 });

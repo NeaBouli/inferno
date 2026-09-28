@@ -58,9 +58,9 @@
 - SQLite is explicitly rejected when more than one backend replica is declared; a shared limiter
   alone does not make the application database safe for horizontal scaling
 - Only private/loopback proxy hops are trusted when resolving the public client IP; arbitrary forwarded headers are not trusted directly
-- Failed attestations before the third attempt keep the stored session PENDING so a real customer can recover from an insufficient lock or bad wallet prompt without asking the seller for a new QR
-- After 3 failed attempts, the session becomes terminal REJECTED and cannot accept more attestations
-- TTL, nonce binding and the three-attempt limit still bound the retry window
+- Failed attestations (invalid signature, ineligible wallet, eligibility RPC failure) are read-only: the stored session stays PENDING with no attempt consumed, no wallet bound and no audit row, so a session-ID holder cannot grief a real customer and the customer can retry the same QR after locking more IFR
+- Only an eligible wallet is bound, counted and approved, in one transaction that revalidates status, expiry, pass and binding; concurrent eligible wallets yield exactly one approval
+- TTL, nonce binding and the IP rate limit bound the retry window
 
 ## 6. Seller Account Takeover / Unauthorized Staff Actions
 
@@ -68,8 +68,9 @@
 
 **Mitigation:**
 - Seller actions require short-lived, server-issued wallet messages
-- Every mutating seller action uses a persisted random nonce bound to wallet, action, business and exact target resource; replay, wrong-action and wrong-scope use are rejected
-- Read-only seller actions remain timestamp-bound and do not write challenge rows
+- Every seller action uses a persisted random nonce bound to wallet, action, business and scope (exact target resource for mutations, fixed `read` scope for reads); replay, wrong-action and wrong-scope use are rejected and concurrent reuse is consumed atomically once
+- Seller messages bind the configured `SELLER_AUTH_DOMAIN`, `CHAIN_ID` and an explicit expiry; production fails closed without explicit values
+- Invalid, ineligible and RPC-failed attestations never consume attest attempts or bind a wallet; public session status reads never write
 - Pre-auth rate limits never key on the claimed wallet; wallet budgets are charged only after signature recovery
 - Owner-only actions require the recovered signer to match `Business.ownerAddress`
 - Session history uses `Action: sessions:list` and is limited to the owned business

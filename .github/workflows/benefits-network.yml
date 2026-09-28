@@ -126,6 +126,7 @@ jobs:
           container="$(docker run -d --tmpfs /data -p 127.0.0.1:3001:3001 \
             -e DATABASE_URL=file:/data/ci.db \
             -e CHAIN_ID=11155111 \
+            -e SELLER_AUTH_DOMAIN=shop.example.test \
             -e RPC_URL=https://mock-rpc.example.com \
             -e IFR_TOKEN_ADDRESS=0x0000000000000000000000000000000000000002 \
             -e IFRLOCK_ADDRESS=0x0000000000000000000000000000000000000001 \

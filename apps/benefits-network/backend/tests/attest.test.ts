@@ -30,6 +30,7 @@ jest.mock('../src/services/ifrLockService', () => ({
 jest.mock('../src/config', () => ({
   config: {
     CHAIN_ID: 11155111,
+    SELLER_AUTH_DOMAIN: 'shop.example.test',
     RPC_URL: 'https://mock-rpc.example.com',
     IFRLOCK_ADDRESS: '0x0000000000000000000000000000000000000001',
     ADMIN_SECRET: 'test-secret-12345',
@@ -192,8 +193,37 @@ describe('Replay Prevention', () => {
     expect(outcomes.filter((outcome) => outcome.status === 'rejected')).toHaveLength(1);
     const stored = await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } });
     expect(stored.status).toBe('APPROVED');
+    expect(stored.attestAttempts).toBe(1);
     expect([TEST_WALLET, otherWallet]).toContain(stored.recoveredAddress);
+    const winner = outcomes.find((outcome) => outcome.status === 'fulfilled') as PromiseFulfilledResult<{ wallet?: string }>;
+    expect(winner.value.wallet).toBe(stored.recoveredAddress);
+    const audits = await prisma.auditLog.findMany({ where: { sessionId: session.sessionId } });
+    expect(audits.filter((entry) => entry.type === 'ATTEST_FAIL')).toHaveLength(0);
+    expect(audits.filter((entry) => entry.type === 'ATTEST_OK')).toHaveLength(1);
   });
+
+  it('keeps the approval unique when many eligible wallets race', async () => {
+    const session = await createSession(testBusinessId);
+    const wallets = Array.from({ length: 3 }, () => ethers.Wallet.createRandom().address);
+    wallets.forEach((wallet) => mockRecoverSigner.mockReturnValueOnce(wallet));
+    mockCheckLock.mockImplementation(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 10));
+      return { eligible: true, lockedAmount: '10000.0' };
+    });
+
+    const outcomes = await Promise.allSettled(wallets.map((_, index) => attest(session.sessionId, `0x${index}`)));
+    expect(outcomes.filter((outcome) => outcome.status === 'fulfilled')).toHaveLength(1);
+    for (const outcome of outcomes) {
+      if (outcome.status === 'rejected') {
+        // Losers fail closed: state check, binding check or SQLite lock contention.
+        expect(String(outcome.reason)).toMatch(/cannot attest|already bound|Transaction/);
+      }
+    }
+    const stored = await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } });
+    expect(stored).toMatchObject({ status: 'APPROVED', attestAttempts: 1 });
+    expect(wallets).toContain(stored.recoveredAddress);
+    expect(await prisma.auditLog.count({ where: { sessionId: session.sessionId, type: 'ATTEST_OK' } })).toBe(1);
+  }, 30_000);
 });
 
 // ── Test 4: Redeem-Once ────────────────────────────────────────────
@@ -275,7 +305,7 @@ describe('Lock Threshold', () => {
     expect(rejected).toMatchObject({
       status: 'REJECTED',
       eligible: false,
-      attemptsRemaining: 2,
+      attemptsRemaining: 3,
     });
     expect(rejected.reason).toContain('Insufficient wallet balance');
     expect(mockCheckBenefitEligibility).toHaveBeenCalledWith(TEST_WALLET, 5000, 1250, 'ifrlock');
@@ -285,7 +315,10 @@ describe('Lock Threshold', () => {
       status: 'PENDING',
       benefitSnapshotVersion: 5,
       benefitMinIFRHeld: 1250,
-      walletBalanceRaw: '1249999999999',
+      attestAttempts: 0,
+      recoveredAddress: null,
+      walletBalanceRaw: null,
+      reason: null,
     });
 
     jest.clearAllMocks();
@@ -325,56 +358,118 @@ describe('Attest Attempt Limit', () => {
 
     const first = await attest(session.sessionId, TEST_SIGNATURE);
     expect(first.status).toBe('REJECTED');
-    expect(first.attemptsRemaining).toBe(2);
+    expect(first.reason).toContain('retry this QR session');
+    expect(first.attemptsRemaining).toBe(3);
 
     const savedAfterFirst = await prisma.session.findUniqueOrThrow({
       where: { id: session.sessionId },
     });
-    expect(savedAfterFirst.status).toBe('PENDING');
-    expect(savedAfterFirst.reason).toContain('retry this QR session');
+    expect(savedAfterFirst).toMatchObject({
+      status: 'PENDING', attestAttempts: 0, recoveredAddress: null, reason: null,
+    });
 
     const second = await attest(session.sessionId, TEST_SIGNATURE);
     expect(second.status).toBe('APPROVED');
+    const savedAfterSecond = await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } });
+    expect(savedAfterSecond).toMatchObject({ status: 'APPROVED', attestAttempts: 1, recoveredAddress: TEST_WALLET });
   });
 
-  it('marks the session rejected after 3 failed attest attempts', async () => {
-    // Create business with high TTL to avoid expiry
+  it('lets neither invalid nor valid-but-ineligible signatures burn attempts or bind the session', async () => {
     const biz = await prisma.business.create({
-      data: {
-        name: 'Rate Limit Test',
-        discountPercent: 10,
-        requiredLockIFR: 1000,
-        ttlSeconds: 300,
-      },
+      data: { name: 'Griefing Test', discountPercent: 10, requiredLockIFR: 1000, ttlSeconds: 300 },
     });
     const session = await createSession(biz.id);
+    const auditsBefore = await prisma.auditLog.count({ where: { sessionId: session.sessionId } });
+    const pristine = { status: 'PENDING', attestAttempts: 0, recoveredAddress: null, reason: null };
 
-    // Simulate invalid signatures that don't change status
+    // Session-ID holders without wallet authority (CWA-37).
     mockRecoverSigner.mockImplementation(() => {
       throw new Error('invalid signature');
     });
+    for (let index = 0; index < 5; index += 1) {
+      const griefing = await attest(session.sessionId, TEST_SIGNATURE);
+      expect(griefing.status).toBe('REJECTED');
+      expect(griefing.attemptsRemaining).toBe(3);
+    }
+    expect(await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } })).toMatchObject(pristine);
 
-    const r1 = await attest(session.sessionId, TEST_SIGNATURE);
-    expect(r1.status).toBe('REJECTED');
-    expect(r1.attemptsRemaining).toBe(2);
-    const afterFirst = await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } });
-    expect(afterFirst.status).toBe('PENDING');
+    // A valid signature from a foreign, ineligible wallet is equally read-only.
+    const foreignWallet = ethers.Wallet.createRandom().address;
+    mockRecoverSigner.mockReset();
+    mockRecoverSigner.mockReturnValue(foreignWallet);
+    mockCheckBenefitEligibility.mockResolvedValue({ eligible: false, lockedAmount: '0' });
+    for (let index = 0; index < 5; index += 1) {
+      const foreign = await attest(session.sessionId, TEST_SIGNATURE);
+      expect(foreign).toMatchObject({ status: 'REJECTED', eligible: false, wallet: foreignWallet, attemptsRemaining: 3 });
+    }
+    expect(await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } })).toMatchObject(pristine);
+    expect(await prisma.auditLog.count({ where: { sessionId: session.sessionId } })).toBe(auditsBefore);
 
-    const r2 = await attest(session.sessionId, TEST_SIGNATURE);
-    expect(r2.status).toBe('REJECTED');
-    expect(r2.attemptsRemaining).toBe(1);
-    const afterSecond = await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } });
-    expect(afterSecond.status).toBe('PENDING');
+    // The legitimate eligible customer can still bind and approve afterwards.
+    mockRecoverSigner.mockReturnValue(TEST_WALLET);
+    mockCheckBenefitEligibility.mockResolvedValue({ eligible: true, lockedAmount: '5000.0' });
+    await expect(attest(session.sessionId, TEST_SIGNATURE)).resolves.toMatchObject({ status: 'APPROVED', wallet: TEST_WALLET });
+    expect(await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } }))
+      .toMatchObject({ status: 'APPROVED', attestAttempts: 1, recoveredAddress: TEST_WALLET });
+  });
 
-    const r3 = await attest(session.sessionId, TEST_SIGNATURE);
-    expect(r3.status).toBe('REJECTED');
-    expect(r3.attemptsRemaining).toBe(0);
-    const afterThird = await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } });
-    expect(afterThird.status).toBe('REJECTED');
-    expect(afterThird.reason).toContain('attempts exhausted');
+  it('leaves attempts, binding, status and audit untouched when the eligibility RPC fails', async () => {
+    const biz = await prisma.business.create({
+      data: { name: 'RPC Failure', discountPercent: 10, requiredLockIFR: 1000, ttlSeconds: 300 },
+    });
+    const session = await createSession(biz.id);
+    const auditsBefore = await prisma.auditLog.count({ where: { sessionId: session.sessionId } });
+    mockRecoverSigner.mockReturnValue(TEST_WALLET);
+    mockCheckBenefitEligibility.mockRejectedValue(new Error('rpc down'));
 
-    await expect(attest(session.sessionId, TEST_SIGNATURE)).rejects.toThrow(
-      'Session is REJECTED, cannot attest'
-    );
+    for (let index = 0; index < 4; index += 1) {
+      await expect(attest(session.sessionId, TEST_SIGNATURE)).rejects.toThrow('On-chain verification failed: rpc down');
+    }
+    expect(await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } }))
+      .toMatchObject({ status: 'PENDING', attestAttempts: 0, recoveredAddress: null, reason: null });
+    expect(await prisma.auditLog.count({ where: { sessionId: session.sessionId } })).toBe(auditsBefore);
+
+    mockCheckBenefitEligibility.mockResolvedValue({ eligible: true, lockedAmount: '5000.0' });
+    await expect(attest(session.sessionId, TEST_SIGNATURE)).resolves.toMatchObject({ status: 'APPROVED' });
+  });
+
+  it('rejects a second wallet once a session is bound and approved', async () => {
+    const session = await createSession(testBusinessId);
+    mockRecoverSigner.mockReturnValue(TEST_WALLET);
+    mockCheckBenefitEligibility.mockResolvedValue({ eligible: true, lockedAmount: '5000.0' });
+    await attest(session.sessionId, TEST_SIGNATURE);
+
+    mockRecoverSigner.mockReturnValue(ethers.Wallet.createRandom().address);
+    await expect(attest(session.sessionId, TEST_SIGNATURE)).rejects.toThrow('Session is APPROVED, cannot attest');
+    expect(await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } }))
+      .toMatchObject({ status: 'APPROVED', attestAttempts: 1, recoveredAddress: TEST_WALLET });
+  });
+
+  it('still enforces the stored attempt ceiling', async () => {
+    const session = await createSession(testBusinessId);
+    await prisma.session.update({ where: { id: session.sessionId }, data: { attestAttempts: 3 } });
+    mockRecoverSigner.mockReturnValue(TEST_WALLET);
+    mockCheckBenefitEligibility.mockResolvedValue({ eligible: true, lockedAmount: '5000.0' });
+    await expect(attest(session.sessionId, TEST_SIGNATURE)).rejects.toThrow('Maximum attest attempts exceeded');
+    expect(mockCheckBenefitEligibility).not.toHaveBeenCalled();
+    expect(await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } }))
+      .toMatchObject({ status: 'PENDING', attestAttempts: 3, recoveredAddress: null });
+  });
+
+  it('does not expire a session on invalid-signature input', async () => {
+    const biz = await prisma.business.create({
+      data: { name: 'Expired Attest', discountPercent: 10, requiredLockIFR: 1000, ttlSeconds: 300 },
+    });
+    const session = await createSession(biz.id);
+    await prisma.session.update({
+      where: { id: session.sessionId },
+      data: { expiresAt: new Date(Date.now() - 1000) },
+    });
+    mockRecoverSigner.mockImplementation(() => {
+      throw new Error('invalid signature');
+    });
+    await expect(attest(session.sessionId, TEST_SIGNATURE)).rejects.toThrow('Session expired');
+    const saved = await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } });
+    expect(saved.status).toBe('PENDING');
   });
 });

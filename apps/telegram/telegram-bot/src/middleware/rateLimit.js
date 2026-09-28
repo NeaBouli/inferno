@@ -8,6 +8,8 @@ const LIMITS = {
   bootstrap:  { max: 10, windowSec: 60 },
   partner:    { max: 10, windowSec: 60 },
   roadmap:    { max: 10, windowSec: 60 },
+  // /verify + /unverify share one bucket, keyed on the Telegram-authenticated user id
+  verify:     { max: 5,  windowSec: 60 },
   default:    { max: parseInt(process.env.RATE_LIMIT_PER_MIN || '5'), windowSec: 60 },
 };
 

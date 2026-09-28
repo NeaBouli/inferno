@@ -1,0 +1,8 @@
+# Security contact for ifrunit.tech (RFC 9116).
+# Report vulnerabilities privately via GitHub Private Vulnerability Reporting.
+# There is no bug bounty program; no reward is promised for reports.
+Contact: https://github.com/NeaBouli/inferno/security/advisories/new
+Policy: https://github.com/NeaBouli/inferno/blob/main/SECURITY.md
+Expires: 2027-06-30T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://ifrunit.tech/.well-known/security.txt

@@ -222,7 +222,7 @@ router.get('/catalog-index', discoveryRateLimiter, async (_req, res, next) => {
   }
 });
 
-router.get('/:id', async (req, res, next) => {
+router.get('/:id', discoveryRateLimiter, async (req, res, next) => {
   try {
     const resolved = await resolveBusinessReference(req.params.id);
     if (!resolved) {
@@ -261,7 +261,7 @@ router.get('/:id', async (req, res, next) => {
   }
 });
 
-router.get('/:id/rules', async (req, res, next) => {
+router.get('/:id/rules', discoveryRateLimiter, async (req, res, next) => {
   try {
     const resolved = await resolveBusinessReference(req.params.id);
     if (!resolved) {
@@ -311,7 +311,7 @@ router.get('/:id/rules', async (req, res, next) => {
   }
 });
 
-router.get('/:id/products', async (req, res, next) => {
+router.get('/:id/products', discoveryRateLimiter, async (req, res, next) => {
   try {
     const resolved = await resolveBusinessReference(req.params.id);
     if (!resolved) {

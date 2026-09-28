@@ -1,5 +1,6 @@
-// commands/verify.js — /verify (wallet verification) + /mystatus
-const { createNonce, isVerified, getUser, hasTopicAccess } = require('../services/verificationStore');
+// commands/verify.js — /verify (wallet verification) + /unverify + /mystatus
+const { isVerified, getUser, hasTopicAccess, unverify } = require('../services/verificationStore');
+const { createNonce } = require('../services/nonceStore');
 
 const VERIFY_URL = 'https://ifrunit.tech/wiki/verify.html';
 
@@ -11,6 +12,15 @@ const TIER_LABELS = {
 };
 
 async function handleVerify(ctx) {
+  // Private chat only: a nonce posted in a group is a public bearer token (CWA-32).
+  if (ctx.chat?.type !== 'private') {
+    return ctx.reply(
+      '🔒 *Wallet verification works only in a private chat with this bot.*\n\n' +
+      'Open a direct message and send /verify there — never share your code in a group.',
+      { parse_mode: 'Markdown' }
+    );
+  }
+
   const userId = ctx.from.id;
   const username = ctx.from.username || ctx.from.first_name;
 
@@ -75,4 +85,23 @@ async function handleMyStatus(ctx) {
   );
 }
 
-module.exports = { handleVerify, handleMyStatus };
+async function handleUnverify(ctx) {
+  const userId = ctx.from.id;
+
+  // Telegram authenticates the sender: only the bound account can unbind itself.
+  if (!unverify(userId)) {
+    return ctx.reply(
+      '❌ *No linked wallet*\n\nThis account has no verified wallet.',
+      { parse_mode: 'Markdown' }
+    );
+  }
+
+  await ctx.reply(
+    '🗑️ *Wallet unlinked*\n\n' +
+    'Your verification and topic access were removed.\n' +
+    'Use /verify anytime to link a wallet again.',
+    { parse_mode: 'Markdown' }
+  );
+}
+
+module.exports = { handleVerify, handleMyStatus, handleUnverify };

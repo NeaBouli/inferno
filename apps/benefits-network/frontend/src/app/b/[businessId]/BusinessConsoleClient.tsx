@@ -425,12 +425,15 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
     setError('');
     setAccessStatus('');
     try {
-      const challenge = await getSellerAuthMessage('operators:status', resolvedBusinessId);
+      const challenge = await getSellerAuthMessage('operators:status', resolvedBusinessId, {
+        walletAddress: address,
+      });
       const signature = await signMessageAsync({ message: challenge.message });
       const access = await getCheckoutOperatorStatus(resolvedBusinessId, {
         walletAddress: address,
         signature,
         timestamp: challenge.timestamp,
+        nonce: challenge.nonce,
       });
       setCheckoutAccess(access);
       setAccessStatus(access.role === 'OWNER'

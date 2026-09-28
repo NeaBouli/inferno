@@ -7,6 +7,8 @@ const path = require("node:path");
 const root = path.resolve(__dirname, "..");
 const workflowsDirectory = path.join(root, ".github", "workflows");
 const expectedWriteWorkflows = new Set(["post-deploy.yml", "update-stats.yml"]);
+// Railway release gate reads workflow runs for the exact SHA (scripts/railway-release-preflight.cjs).
+const expectedExtraReadScopes = { "security-audit.yml": "pull-requests", "railway-copilot-release.yml": "actions" };
 const expectedWorkflowFiles = [
   "ai-copilot.yml",
   "benefits-network.yml",
@@ -19,6 +21,7 @@ const expectedWorkflowFiles = [
   "mythril-analysis.yml",
   "points-backend.yml",
   "post-deploy.yml",
+  "railway-copilot-release.yml",
   "sdk-ci.yml",
   "security-audit.yml",
   "telegram-bot.yml",
@@ -60,9 +63,9 @@ for (const fileName of workflowFiles) {
   assertNoJobLevelPermissions(source, fileName);
   const permissions = topLevelPermissions(source, fileName);
   assert.equal(permissions.contents, expectedWriteWorkflows.has(fileName) ? "write" : "read", `${fileName} contents permission`);
-  const allowedKeys = fileName === "security-audit.yml" ? ["contents", "pull-requests"] : ["contents"];
+  const allowedKeys = expectedExtraReadScopes[fileName] ? ["contents", expectedExtraReadScopes[fileName]] : ["contents"];
   assert.deepEqual(Object.keys(permissions).sort(), allowedKeys.sort(), `${fileName} must not receive unrelated token scopes`);
-  if (fileName === "security-audit.yml") assert.equal(permissions["pull-requests"], "read");
+  if (expectedExtraReadScopes[fileName]) assert.equal(permissions[expectedExtraReadScopes[fileName]], "read");
 }
 
 assert.throws(

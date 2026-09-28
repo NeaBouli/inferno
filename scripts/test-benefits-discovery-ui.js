@@ -636,12 +636,13 @@ async function run() {
         const mutating = action === 'business:delete' || action === 'business:reactivate';
         assert.ok(action === 'business:list' || mutating, `unexpected seller lifecycle action: ${action}`);
         assert.equal(url.searchParams.get('businessId'), mutating ? offer.business.id : 'seller');
-        assert.equal(url.searchParams.has('scope'), mutating, 'only lifecycle mutations require an exact scope');
-        assert.equal(url.searchParams.has('walletAddress'), mutating, 'only lifecycle mutations issue a single-use challenge');
-        if (mutating) {
-          assert.equal(url.searchParams.get('scope'), offer.business.id);
-          assert.equal(url.searchParams.get('walletAddress')?.toLowerCase(), sellerWallet.toLowerCase());
-        }
+        assert.equal(url.searchParams.has('scope'), mutating, 'only lifecycle mutations send an exact scope');
+        assert.equal(
+          url.searchParams.get('walletAddress')?.toLowerCase(),
+          sellerWallet.toLowerCase(),
+          'every seller action issues a wallet-bound single-use challenge'
+        );
+        if (mutating) assert.equal(url.searchParams.get('scope'), offer.business.id);
         const timestamp = String(Date.now());
         const message = `${sellerAuthMessage}:${action}`;
         return route.fulfill({
@@ -654,7 +655,7 @@ async function run() {
             timestamp,
             issuedAt: new Date(Number(timestamp)).toISOString(),
             expiresAt: new Date(Number(timestamp) + 60_000).toISOString(),
-            nonce: mutating ? `nonce-${action}` : undefined,
+            nonce: `nonce-${action}`,
             message,
           }),
         });
@@ -662,7 +663,7 @@ async function run() {
       if (url.pathname === '/api/seller/businesses' && request.method() === 'GET') {
         assert.equal(request.headers()['x-ifr-wallet'], sellerWallet.toLowerCase());
         assert.equal(request.headers()['x-ifr-signature'], sellerSignature);
-        assert.equal(request.headers()['x-ifr-nonce'], undefined, 'read-only profile listing must not send a mutation nonce');
+        assert.equal(request.headers()['x-ifr-nonce'], 'nonce-business:list', 'read-only profile listing must send its one-time nonce');
         return route.fulfill({
           status: 200,
           contentType: 'application/json',

@@ -17,12 +17,6 @@ export { prisma };
 type SessionStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED' | 'REDEEMED';
 export const CUSTOMER_CHALLENGE_DOMAIN = 'shop.ifrunit.tech';
 
-function auditLog(sessionId: string, type: string, payload: Record<string, unknown>) {
-  return prisma.auditLog.create({
-    data: { sessionId, type, payload: JSON.stringify(payload) },
-  });
-}
-
 function benefitFromSession(session: {
   benefitRuleId: string | null;
   benefitSnapshotVersion: number | null;
@@ -483,30 +477,25 @@ export async function attest(
   try {
     recoveredAddress = recoverSigner(message, signature);
   } catch {
-    const reserved = await reserveAttestAttempt(sessionId, null, options.expectedWallet);
-    const attemptsExhausted = reserved.nextAttempts >= 3;
-    const reason = attemptsExhausted
-      ? 'Invalid signature. Verification attempts exhausted.'
-      : 'Invalid signature. You can retry this QR session.';
-    await prisma.session.updateMany({
-      where: { id: sessionId, status: 'PENDING', attestAttempts: reserved.nextAttempts },
-      data: { status: attemptsExhausted ? 'REJECTED' : 'PENDING', reason },
-    });
-    await auditLog(sessionId, 'ATTEST_FAIL', {
-      reason: 'Invalid signature',
-      attempts: reserved.nextAttempts,
-      terminal: attemptsExhausted,
-    });
+    // An unrecoverable signature proves no wallet authority, so it must not
+    // consume the session's attempt budget or mutate session state (CWA-37).
+    const current = await assertAttestable(sessionId, options.expectedWallet);
     return {
       status: 'REJECTED' as SessionStatus,
-      reason,
-      attemptsRemaining: Math.max(0, 3 - reserved.nextAttempts),
+      reason: 'Invalid signature. You can retry this QR session.',
+      attemptsRemaining: Math.max(0, 3 - current.attestAttempts),
     };
   }
 
-  const reserved = await reserveAttestAttempt(sessionId, recoveredAddress, options.expectedWallet);
-  const { benefit, nextAttempts } = reserved;
-  const attemptsExhausted = nextAttempts >= 3;
+  // CWA-37: everything up to the approval commit is read-only. Invalid,
+  // valid-but-ineligible and RPC-failed attestations never touch attempts,
+  // the wallet binding, status or the audit log, so a session-ID holder cannot
+  // bind a foreign wallet or burn the budget.
+  const { benefit, attestAttempts } = await readAttestContext(
+    sessionId,
+    recoveredAddress,
+    options.expectedWallet
+  );
 
   let eligibilityResult: {
     eligible: boolean;
@@ -529,7 +518,6 @@ export async function attest(
     );
   } catch (err) {
     const msg = err instanceof Error ? err.message : 'RPC error';
-    await auditLog(sessionId, 'ATTEST_FAIL', { reason: `On-chain error: ${msg}` });
     throw new Error(`On-chain verification failed: ${msg}`);
   }
 
@@ -561,66 +549,18 @@ export async function attest(
       : !eligibilityResult.lockEligible
         ? 'Insufficient lock'
         : 'Insufficient wallet balance';
-    const reason = `${reasonLabel}: ${deficits.join('; ')}. ${
-      attemptsExhausted ? 'Verification attempts exhausted.' : retryAction
-    }`;
-    await prisma.session.updateMany({
-      where: { id: sessionId, status: 'PENDING', recoveredAddress },
-      data: {
-        status: attemptsExhausted ? 'REJECTED' : 'PENDING',
-        recoveredAddress,
-        lockAmountRaw: eligibilityResult.lockedAmount,
-        walletBalanceRaw: eligibilityResult.walletBalanceRaw,
-        verifiedLockSource: null,
-        verificationBlock: eligibilityResult.verificationBlock,
-        reason,
-      },
-    });
-    await auditLog(sessionId, 'ATTEST_FAIL', {
-      wallet: recoveredAddress,
-      locked: eligibilityResult.lockedAmount,
-      requiredLockIFR: benefit.requiredLockIFR,
-      lockSource: benefit.lockSource,
-      held: eligibilityResult.walletAmount,
-      minIFRHeld: benefit.minIFRHeld,
-      verificationBlock: eligibilityResult.verificationBlock,
-      benefitRuleId: benefit.benefitRuleId,
-      attempts: nextAttempts,
-      terminal: attemptsExhausted,
-    });
     return {
       status: 'REJECTED' as SessionStatus,
       wallet: recoveredAddress,
       eligible: false,
-      reason,
-      attemptsRemaining: Math.max(0, 3 - nextAttempts),
+      reason: `${reasonLabel}: ${deficits.join('; ')}. ${retryAction}`,
+      attemptsRemaining: Math.max(0, 3 - attestAttempts),
     };
   }
 
-  // Approved
-  const approved = await prisma.session.updateMany({
-    where: { id: sessionId, status: 'PENDING', recoveredAddress },
-    data: {
-      status: 'APPROVED',
-      lockAmountRaw: eligibilityResult.lockedAmount,
-      walletBalanceRaw: eligibilityResult.walletBalanceRaw,
-      verifiedLockSource: eligibilityResult.verifiedLockSource,
-      verificationBlock: eligibilityResult.verificationBlock,
-      reason: null,
-    },
-  });
-  if (approved.count !== 1) {
-    const latest = await prisma.session.findUnique({ where: { id: sessionId } });
-    throw new Error(`Session is ${latest?.status ?? 'missing'}, cannot attest`);
-  }
-  await auditLog(sessionId, 'ATTEST_OK', {
-    wallet: recoveredAddress,
-    locked: eligibilityResult.lockedAmount,
+  await commitApprovedAttest(sessionId, recoveredAddress, options.expectedWallet, eligibilityResult, {
     lockSource: benefit.lockSource,
-    verifiedLockSource: eligibilityResult.verifiedLockSource,
-    held: eligibilityResult.walletAmount,
     minIFRHeld: benefit.minIFRHeld,
-    verificationBlock: eligibilityResult.verificationBlock,
     benefitRuleId: benefit.benefitRuleId,
   });
 
@@ -632,12 +572,82 @@ export async function attest(
   };
 }
 
-async function reserveAttestAttempt(
-  sessionId: string,
-  recoveredAddress: string | null,
+// Read-only precondition check for requests that proved no wallet authority.
+async function assertAttestable(sessionId: string, expectedWallet?: string) {
+  const session = await prisma.session.findUnique({
+    where: { id: sessionId },
+    select: { status: true, attestAttempts: true, expiresAt: true, customerPassId: true },
+  });
+  if (!session) throw new Error('Session not found');
+  if (session.customerPassId && !expectedWallet) {
+    throw new Error('Customer pass confirmation required');
+  }
+  if (session.status !== 'PENDING') {
+    throw new Error(`Session is ${session.status}, cannot attest`);
+  }
+  if (session.attestAttempts >= 3) throw new Error('Maximum attest attempts exceeded');
+  if (session.expiresAt <= new Date()) throw new Error('Session expired');
+  return session;
+}
+
+type AttestSession = Prisma.SessionGetPayload<{
+  include: { business: true; benefitRule: true; customerPass: true };
+}>;
+
+// Wallet/pass/binding checks shared by the read-only precheck and the commit.
+function assertWalletMayAttest(
+  session: AttestSession,
+  recoveredAddress: string,
   expectedWallet?: string
 ) {
-  return prisma.$transaction(async (tx) => {
+  const normalizedExpected = expectedWallet ? normalizeAddress(expectedWallet) : null;
+  if (normalizedExpected && normalizeAddress(session.customerPass?.walletAddress || '') !== normalizedExpected) {
+    throw new Error('Customer pass wallet mismatch');
+  }
+  const normalizedRecovered = normalizeAddress(recoveredAddress);
+  if (normalizedExpected && normalizedRecovered !== normalizedExpected) {
+    throw new Error('Customer signature does not match this checkout pass');
+  }
+  if (
+    session.recoveredAddress &&
+    normalizeAddress(session.recoveredAddress) !== normalizedRecovered
+  ) {
+    throw new Error('Session is already bound to another customer wallet');
+  }
+  return normalizedRecovered;
+}
+
+async function readAttestContext(
+  sessionId: string,
+  recoveredAddress: string,
+  expectedWallet?: string
+) {
+  await assertAttestable(sessionId, expectedWallet);
+  const session = await prisma.session.findUnique({
+    where: { id: sessionId },
+    include: { business: true, benefitRule: true, customerPass: true },
+  });
+  if (!session) throw new Error('Session not found');
+  assertWalletMayAttest(session, recoveredAddress, expectedWallet);
+  return { benefit: benefitFromSession(session), attestAttempts: session.attestAttempts };
+}
+
+// Single atomic transition for an eligible wallet: lock the row, revalidate
+// every precondition, then bind, count the attempt, approve and audit together.
+async function commitApprovedAttest(
+  sessionId: string,
+  recoveredAddress: string,
+  expectedWallet: string | undefined,
+  eligibility: {
+    lockedAmount: string;
+    walletAmount: string | null;
+    walletBalanceRaw: string | null;
+    verifiedLockSource: VerifiedLockSource | null;
+    verificationBlock: number;
+  },
+  audit: { lockSource: string; minIFRHeld: number; benefitRuleId: string | null }
+) {
+  const expired = await prisma.$transaction(async (tx) => {
     const locked = await tx.$executeRaw`
       UPDATE "Session" SET "attestAttempts" = "attestAttempts" WHERE "id" = ${sessionId}
     `;
@@ -663,34 +673,48 @@ async function reserveAttestAttempt(
           payload: JSON.stringify({ reason: 'TTL expired during attest' }),
         },
       });
-      throw new Error('Session expired');
+      return true;
     }
+    const normalizedRecovered = assertWalletMayAttest(session, recoveredAddress, expectedWallet);
 
-    const normalizedExpected = expectedWallet ? normalizeAddress(expectedWallet) : null;
-    if (normalizedExpected && normalizeAddress(session.customerPass?.walletAddress || '') !== normalizedExpected) {
-      throw new Error('Customer pass wallet mismatch');
-    }
-    const normalizedRecovered = recoveredAddress ? normalizeAddress(recoveredAddress) : null;
-    if (normalizedExpected && normalizedRecovered && normalizedRecovered !== normalizedExpected) {
-      throw new Error('Customer signature does not match this checkout pass');
-    }
-    if (
-      normalizedRecovered && session.recoveredAddress &&
-      normalizeAddress(session.recoveredAddress) !== normalizedRecovered
-    ) {
-      throw new Error('Session is already bound to another customer wallet');
-    }
-
-    const nextAttempts = session.attestAttempts + 1;
-    await tx.session.update({
-      where: { id: sessionId },
+    const approved = await tx.session.updateMany({
+      where: {
+        id: sessionId,
+        status: 'PENDING',
+        attestAttempts: session.attestAttempts,
+        OR: [{ recoveredAddress: null }, { recoveredAddress: session.recoveredAddress }],
+      },
       data: {
-        attestAttempts: nextAttempts,
-        ...(normalizedRecovered ? { recoveredAddress: normalizedRecovered } : {}),
+        status: 'APPROVED',
+        attestAttempts: session.attestAttempts + 1,
+        recoveredAddress: normalizedRecovered,
+        lockAmountRaw: eligibility.lockedAmount,
+        walletBalanceRaw: eligibility.walletBalanceRaw,
+        verifiedLockSource: eligibility.verifiedLockSource,
+        verificationBlock: eligibility.verificationBlock,
+        reason: null,
       },
     });
-    return { session, benefit: benefitFromSession(session), nextAttempts };
+    if (approved.count !== 1) throw new Error('Session is no longer PENDING, cannot attest');
+    await tx.auditLog.create({
+      data: {
+        sessionId,
+        type: 'ATTEST_OK',
+        payload: JSON.stringify({
+          wallet: recoveredAddress,
+          locked: eligibility.lockedAmount,
+          lockSource: audit.lockSource,
+          verifiedLockSource: eligibility.verifiedLockSource,
+          held: eligibility.walletAmount,
+          minIFRHeld: audit.minIFRHeld,
+          verificationBlock: eligibility.verificationBlock,
+          benefitRuleId: audit.benefitRuleId,
+        }),
+      },
+    });
+    return false;
   });
+  if (expired) throw new Error('Session expired');
 }
 
 /**
@@ -880,7 +904,9 @@ export async function redeem(
 }
 
 /**
- * Get session status (for merchant polling).
+ * Get session status (for merchant polling). Read-only: a stale open session is
+ * reported as EXPIRED here, while the persisted transition happens only in the
+ * conditional attest/redeem state transitions (CWA-43).
  */
 export async function getSession(sessionId: string) {
   const session = await prisma.session.findUnique({
@@ -890,15 +916,10 @@ export async function getSession(sessionId: string) {
   if (!session) throw new Error('Session not found');
   const benefit = benefitFromSession(session);
 
-  // Auto-expire stale sessions
   if (
     (session.status === 'PENDING' || session.status === 'APPROVED') &&
     new Date() > session.expiresAt
   ) {
-    await prisma.session.update({
-      where: { id: sessionId },
-      data: { status: 'EXPIRED' },
-    });
     return { ...session, status: 'EXPIRED', benefit };
   }
 

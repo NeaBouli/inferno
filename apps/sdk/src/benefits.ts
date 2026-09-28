@@ -9,6 +9,8 @@ export interface SellerAuthorizationChallenge {
   businessId: string;
   walletAddress: string;
   scope: string;
+  domain: string;
+  chainId: number;
   timestamp: string;
   issuedAt: string;
   expiresAt: string;
@@ -78,6 +80,8 @@ export interface BenefitsCheckoutRedemption {
 export interface IFRBenefitsClientConfig {
   baseUrl?: string;
   fetch?: typeof fetch;
+  /** Expected chain ID of the Benefits deployment; seller challenges for another chain are refused. */
+  chainId?: number;
 }
 
 function safeAuthorizationField(value: string, label: string) {
@@ -130,6 +134,8 @@ async function readJson<T>(response: Response): Promise<T> {
 }
 
 function buildSellerAuthorizationMessage(
+  domain: string,
+  chainId: number,
   action: SellerAuthorizationAction,
   businessId: string,
   timestamp: string,
@@ -138,22 +144,30 @@ function buildSellerAuthorizationMessage(
 ) {
   return [
     "IFR Benefits Network - Seller Authorization",
+    `Domain: ${domain}`,
+    `Chain ID: ${chainId}`,
     `Action: ${action}`,
     `Business: ${businessId}`,
-    `Timestamp: ${timestamp}`,
     `Scope: ${scope}`,
     `Nonce: ${nonce}`,
-    "Only sign this message inside shop.ifrunit.tech.",
+    `Timestamp: ${timestamp}`,
+    `Expires: ${new Date(Number(timestamp) + SELLER_AUTH_TTL_MS).toISOString()}`,
+    `Only sign this message inside ${domain}.`,
   ].join("\n");
 }
 
 export class IFRBenefitsClient {
   private readonly baseUrl: URL;
   private readonly fetchImpl: typeof fetch;
+  private readonly chainId?: number;
 
   constructor(config: IFRBenefitsClientConfig = {}) {
     this.baseUrl = normalizeBaseUrl(config.baseUrl || DEFAULT_BENEFITS_API);
     this.fetchImpl = config.fetch || fetch;
+    if (config.chainId !== undefined && (!Number.isSafeInteger(config.chainId) || config.chainId <= 0)) {
+      throw new Error("Invalid Benefits chain ID");
+    }
+    this.chainId = config.chainId;
   }
 
   private async requestSellerChallenge(
@@ -181,6 +195,11 @@ export class IFRBenefitsClient {
       challenge.action !== action ||
       challenge.businessId !== businessId ||
       challenge.scope !== scope ||
+      // The signed message must name the exact API origin host this client talks to.
+      challenge.domain !== this.baseUrl.host ||
+      !Number.isSafeInteger(challenge.chainId) ||
+      challenge.chainId <= 0 ||
+      (this.chainId !== undefined && challenge.chainId !== this.chainId) ||
       !/^0x[0-9a-fA-F]{40}$/.test(challenge.walletAddress || "") ||
       challenge.walletAddress.toLowerCase() !== walletAddress.toLowerCase() ||
       !/^\d{10,16}$/.test(challenge.timestamp || "") ||
@@ -192,6 +211,8 @@ export class IFRBenefitsClient {
       expiresAtMs <= now ||
       !/^[0-9a-f]{64}$/.test(challenge.nonce || "") ||
       challenge.message !== buildSellerAuthorizationMessage(
+        challenge.domain,
+        challenge.chainId,
         action,
         businessId,
         challenge.timestamp,

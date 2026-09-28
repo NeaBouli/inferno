@@ -14,6 +14,7 @@ jest.mock('../src/services/ifrLockService', () => ({
 jest.mock('../src/config', () => ({
   config: {
     CHAIN_ID: 11155111,
+    SELLER_AUTH_DOMAIN: 'shop.example.test',
     RPC_URL: 'https://mock-rpc.example.com',
     IFRLOCK_ADDRESS: '0x0000000000000000000000000000000000000001',
     ADMIN_SECRET: 'test-secret-12345',
@@ -70,15 +71,20 @@ async function sellerHeaders(
     };
   }
   const challengeResponse = await fetch(
-    `${baseUrl()}/api/seller/auth-message?${new URLSearchParams({ action, businessId })}`
+    `${baseUrl()}/api/seller/auth-message?${new URLSearchParams({
+      action,
+      businessId,
+      walletAddress: wallet.address,
+    })}`
   );
   expect(challengeResponse.status).toBe(200);
-  const challenge = await challengeResponse.json() as { message: string; timestamp: string };
+  const challenge = await challengeResponse.json() as { message: string; timestamp: string; nonce: string };
   return {
     'content-type': 'application/json',
     'x-ifr-wallet': wallet.address,
     'x-ifr-signature': await wallet.signMessage(challenge.message),
     'x-ifr-timestamp': challenge.timestamp,
+    'x-ifr-nonce': challenge.nonce,
   };
 }
 
@@ -833,14 +839,15 @@ describe('Redeem route authorization', () => {
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       select: { id: true },
     });
-    const headers = await sellerHeaders(seller, 'sessions:list', businessId);
     const collected: string[] = [];
     let cursor: string | undefined;
     let snapshot: string | undefined;
     let insertedAfterSnapshot = false;
 
     do {
-      const response = await getSellerSessions(businessId, headers, { limit: 2, cursor, snapshot });
+      // Each page is a fresh one-time authorization; read proofs are never replayed.
+      const pageHeaders = await sellerHeaders(seller, 'sessions:list', businessId);
+      const response = await getSellerSessions(businessId, pageHeaders, { limit: 2, cursor, snapshot });
       expect(response.status).toBe(200);
       const page = await response.json() as {
         sessions: Array<{ id: string }>;
@@ -885,9 +892,21 @@ describe('Redeem route authorization', () => {
         expiresAt: new Date(Date.now() + 300_000),
       },
     });
-    expect((await getSellerSessions(businessId, headers, { cursor: foreignSession.id })).status).toBe(400);
-    expect((await getSellerSessions(businessId, headers, { limit: 51 })).status).toBe(400);
-    expect((await getSellerSessions(businessId, headers, { snapshot: 'not-a-date' })).status).toBe(400);
+    expect((await getSellerSessions(
+      businessId,
+      await sellerHeaders(seller, 'sessions:list', businessId),
+      { cursor: foreignSession.id }
+    )).status).toBe(400);
+    expect((await getSellerSessions(
+      businessId,
+      await sellerHeaders(seller, 'sessions:list', businessId),
+      { limit: 51 }
+    )).status).toBe(400);
+    expect((await getSellerSessions(
+      businessId,
+      await sellerHeaders(seller, 'sessions:list', businessId),
+      { snapshot: 'not-a-date' }
+    )).status).toBe(400);
   }, 15_000);
 
   it('updates a benefit rule only for its seller owner and preserves paused state', async () => {
