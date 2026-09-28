@@ -8,7 +8,8 @@ import {
   customerPassReadRateLimiter,
   sellerRateLimiter,
 } from '../middleware/rateLimiter';
-import { SellerAuthError, verifySellerSignature } from '../services/sellerAuth';
+import { config } from '../config';
+import { SellerAuthError, resolveSellerAuthContext, verifySellerSignature } from '../services/sellerAuth';
 import { assertSellerWalletActionAllowed, AuthenticatedRateLimitError } from '../services/authenticatedRateLimiter';
 import { RateLimitStoreUnavailableError } from '../services/rateLimitInfrastructure';
 import {
@@ -127,6 +128,7 @@ router.post('/:id/bind', sellerRateLimiter, validate(z.object({
     if (!sellerAuth.nonce) throw new SellerAuthError('Seller authorization nonce is required');
     const sellerWallet = verifySellerSignature({
       ...sellerAuth,
+      context: resolveSellerAuthContext(config),
       action: 'passes:bind',
       businessId: req.body.businessId,
       scope,

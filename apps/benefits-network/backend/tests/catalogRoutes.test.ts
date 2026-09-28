@@ -29,6 +29,7 @@ jest.mock('../src/services/ifrLockService', () => ({
 jest.mock('../src/config', () => ({
   config: {
     CHAIN_ID: 11155111,
+    SELLER_AUTH_DOMAIN: 'shop.example.test',
     RPC_URL: 'https://mock-rpc.example.com',
     IFRLOCK_ADDRESS: '0x0000000000000000000000000000000000000001',
     ADMIN_SECRET: 'test-secret-12345',
@@ -84,15 +85,20 @@ async function sellerHeaders(
     };
   }
   const challengeResponse = await fetch(
-    `${baseUrl()}/api/seller/auth-message?${new URLSearchParams({ action, businessId })}`
+    `${baseUrl()}/api/seller/auth-message?${new URLSearchParams({
+      action,
+      businessId,
+      walletAddress: wallet.address,
+    })}`
   );
   expect(challengeResponse.status).toBe(200);
-  const challenge = await challengeResponse.json() as { message: string; timestamp: string };
+  const challenge = await challengeResponse.json() as { message: string; timestamp: string; nonce: string };
   return {
     'content-type': 'application/json',
     'x-ifr-wallet': wallet.address,
     'x-ifr-signature': await wallet.signMessage(challenge.message),
     'x-ifr-timestamp': challenge.timestamp,
+    'x-ifr-nonce': challenge.nonce,
   };
 }
 
@@ -392,13 +398,98 @@ describe('Seller catalog routes', () => {
       .toMatchObject({ slug: 'catalog-seller' });
   });
 
-  it('keeps read-only authorizations stateless', async () => {
+  it('binds read-only authorizations to a one-time challenge and rejects replay', async () => {
     expect(await prisma.sellerAuthorizationChallenge.count()).toBe(0);
     const headers = await sellerHeaders(owner, 'business:list', 'seller');
-    expect(headers['x-ifr-nonce']).toBeUndefined();
-    expect(await prisma.sellerAuthorizationChallenge.count()).toBe(0);
+    expect(headers['x-ifr-nonce']).toMatch(/^[0-9a-f]{64}$/);
+    expect(await prisma.sellerAuthorizationChallenge.findUniqueOrThrow({
+      where: { nonce: headers['x-ifr-nonce'] },
+    })).toMatchObject({ action: 'business:list', businessId: 'seller', scope: 'read', consumedAt: null });
+
     expect((await fetch(`${baseUrl()}/api/seller/businesses`, { headers })).status).toBe(200);
-    expect(await prisma.sellerAuthorizationChallenge.count()).toBe(0);
+    const replay = await fetch(`${baseUrl()}/api/seller/businesses`, { headers });
+    expect(replay.status).toBe(401);
+    expect((await replay.json() as { error: string }).error).toMatch(/already used/);
+
+    // A fresh authorization, not a replay, serves the legitimate repeated read.
+    const fresh = await sellerHeaders(owner, 'business:list', 'seller');
+    expect((await fetch(`${baseUrl()}/api/seller/businesses`, { headers: fresh })).status).toBe(200);
+
+    const { 'x-ifr-nonce': _nonce, ...unbound } = await sellerHeaders(owner, 'business:list', 'seller');
+    expect((await fetch(`${baseUrl()}/api/seller/businesses`, { headers: unbound })).status).toBe(401);
+  });
+
+  it('prunes expired seller challenges in bounded batches on issuance', async () => {
+    const expiredAt = new Date(Date.now() - 60_000);
+    await prisma.sellerAuthorizationChallenge.createMany({
+      data: Array.from({ length: 150 }, (_, index) => ({
+        nonce: index.toString(16).padStart(64, '0'),
+        walletAddress: owner.address,
+        action: 'business:list',
+        businessId: 'seller',
+        scope: 'read',
+        expiresAt: expiredAt,
+      })),
+    });
+    await sellerHeaders(owner, 'business:list', 'seller');
+    expect(await prisma.sellerAuthorizationChallenge.count({ where: { expiresAt: { lt: new Date() } } })).toBe(50);
+    expect(await prisma.sellerAuthorizationChallenge.count({ where: { expiresAt: { gt: new Date() } } })).toBe(1);
+  });
+
+  it('rejects a read proof reused for a different read action or business', async () => {
+    const business = await prisma.business.create({
+      data: { name: 'Read Scope Seller', ownerAddress: owner.address, discountPercent: 5, requiredLockIFR: 100 },
+    });
+    const rulesProof = await sellerHeaders(owner, 'rules:list', business.id);
+    expect((await fetch(`${baseUrl()}/api/seller/businesses/${business.id}/products`, {
+      headers: rulesProof,
+    })).status).toBe(401);
+    expect(await prisma.sellerAuthorizationChallenge.findUniqueOrThrow({
+      where: { nonce: rulesProof['x-ifr-nonce'] },
+    })).toMatchObject({ consumedAt: null });
+
+    const listProof = await sellerHeaders(owner, 'business:list', 'seller');
+    expect((await fetch(`${baseUrl()}/api/seller/businesses/${business.id}/rules`, {
+      headers: listProof,
+    })).status).toBe(401);
+  });
+
+  it('consumes one read proof exactly once under concurrent use', async () => {
+    const headers = await sellerHeaders(owner, 'business:list', 'seller');
+    const statuses = await Promise.all(Array.from({ length: 5 }, () =>
+      fetch(`${baseUrl()}/api/seller/businesses`, { headers }).then((response) => response.status)
+    ));
+    expect(statuses.filter((status) => status === 200)).toHaveLength(1);
+    expect(statuses.filter((status) => status === 401)).toHaveLength(4);
+  });
+
+  it('requires a wallet and the fixed read scope when issuing read challenges', async () => {
+    expect((await fetch(`${baseUrl()}/api/seller/auth-message?${new URLSearchParams({
+      action: 'business:list',
+      businessId: 'seller',
+    })}`)).status).toBe(400);
+    expect((await fetch(`${baseUrl()}/api/seller/auth-message?${new URLSearchParams({
+      action: 'business:list',
+      businessId: 'seller',
+      walletAddress: owner.address,
+      scope: 'other',
+    })}`)).status).toBe(400);
+    const response = await fetch(`${baseUrl()}/api/seller/auth-message?${new URLSearchParams({
+      action: 'business:list',
+      businessId: 'seller',
+      walletAddress: owner.address,
+    })}`);
+    expect(response.status).toBe(200);
+    expect(response.headers.get('cache-control')).toBe('private, no-store, max-age=0');
+    const challenge = await response.json() as Record<string, unknown>;
+    expect(challenge).toMatchObject({
+      domain: 'shop.example.test',
+      chainId: 11155111,
+      scope: 'read',
+      walletAddress: owner.address,
+    });
+    expect(String(challenge.message)).toContain('Domain: shop.example.test\nChain ID: 11155111\n');
+    expect(String(challenge.message)).toContain(`Expires: ${challenge.expiresAt}`);
   });
 
   it('separates active and inactive seller profiles in the owner list', async () => {
@@ -1430,6 +1521,66 @@ describe('Seller catalog routes', () => {
     expect(limited.status).toBe(429);
     expect(Number(limited.headers.get('retry-after'))).toBeGreaterThan(0);
     expect(await limited.json()).toEqual({ error: 'Too many offer searches. Try again shortly.' });
+  });
+
+  it('rate limits public business profile, rule and product reads by client IP', async () => {
+    const headers = { 'x-forwarded-for': '203.0.113.82' };
+    const paths = [
+      `/api/businesses/${businessId}`,
+      `/api/businesses/${businessId}/rules`,
+      `/api/businesses/${businessId}/products`,
+    ];
+    for (let request = 0; request < 60; request += 1) {
+      expect((await fetch(`${baseUrl()}${paths[request % paths.length]}`, { headers })).status).toBe(200);
+    }
+    for (const path of paths) {
+      const limited = await fetch(`${baseUrl()}${path}`, { headers });
+      expect(limited.status).toBe(429);
+      expect(await limited.json()).toEqual({ error: 'Too many offer searches. Try again shortly.' });
+    }
+  });
+
+  it('rate limits public checkout status polling and never writes on read', async () => {
+    const session = await createSession(businessId);
+    await prisma.session.update({
+      where: { id: session.sessionId },
+      data: { expiresAt: new Date(Date.now() - 1000) },
+    });
+    const before = await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } });
+    const auditBefore = await prisma.auditLog.count({ where: { sessionId: session.sessionId } });
+    const headers = { 'x-forwarded-for': '203.0.113.83' };
+
+    const first = await fetch(`${baseUrl()}/api/sessions/${session.sessionId}`, { headers });
+    expect(first.status).toBe(200);
+    expect(first.headers.get('ratelimit-limit')).toBe('7200');
+    expect(first.headers.get('ratelimit-remaining')).toBe('7199');
+    expect(await first.json()).toMatchObject({ status: 'EXPIRED', reason: 'Session expired.' });
+    const second = await fetch(`${baseUrl()}/api/sessions/${session.sessionId}`, { headers });
+    expect(second.headers.get('ratelimit-remaining')).toBe('7198');
+
+    const after = await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } });
+    expect(after.status).toBe('PENDING');
+    expect(after.updatedAt.getTime()).toBe(before.updatedAt.getTime());
+    expect(await prisma.auditLog.count({ where: { sessionId: session.sessionId } })).toBe(auditBefore);
+  });
+
+  it('does not let a session-ID holder without wallet authority burn attest attempts', async () => {
+    const session = await createSession(businessId);
+    mockRecoverSigner.mockImplementation(() => {
+      throw new Error('invalid signature');
+    });
+    const headers = { 'content-type': 'application/json', 'x-forwarded-for': '203.0.113.84' };
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      const response = await fetch(`${baseUrl()}/api/attest`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ sessionId: session.sessionId, signature: '0xdeadbeef' }),
+      });
+      expect(response.status).toBe(200);
+      expect(await response.json()).toMatchObject({ status: 'REJECTED', attemptsRemaining: 3 });
+    }
+    expect(await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } }))
+      .toMatchObject({ status: 'PENDING', attestAttempts: 0, recoveredAddress: null });
   });
 
   it('binds rules only to active products from the same business and preserves snapshots', async () => {

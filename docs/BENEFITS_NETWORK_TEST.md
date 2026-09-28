@@ -297,7 +297,7 @@ npm run smoke:http
 ```
 
 This verifies the real Express HTTP surface for `/api/health`, `/api/ready`,
-the stateless read-only `/api/seller/auth-message` path and signed seller profile listing with a throwaway
+the wallet-bound one-time `/api/seller/auth-message` read challenge and signed seller profile listing with a throwaway
 wallet. `/api/ready` runs a database probe so CI catches a backend that can
 listen on HTTP but cannot serve sessions. It does not mutate production or
 require secrets. `MUTATE=true` remains manual-only for

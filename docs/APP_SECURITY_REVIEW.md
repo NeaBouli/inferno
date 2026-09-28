@@ -17,6 +17,8 @@
 | LOW | 2 | 2 |
 | **Total** | **12** | **12** |
 
+**Status correction (2026-09-26):** F10 is reclassified from FIXED to OPEN (source-only mitigation — see the F10 entry). The counts above reflect the original 2026-03-04 assessment and are preserved as recorded. Currently established here: F10 is open, pending owner-recoverable remediation or deployed-state proof. This review holds no deployed-state proof for the findings historically marked FIXED, so the effective deployed remediation count is not established here.
+
 ---
 
 ## Findings
@@ -169,11 +171,19 @@
 | App | Smart Contracts |
 | File | `contracts/vesting/Vesting.sol` |
 | Category | Access Control |
-| Status | **FIXED** |
+| Status | **OPEN** — source-only mitigation (reclassified 2026-09-26; originally recorded as FIXED) |
 
 **Description:** Guardian address was immutable — could not be rotated. If compromised, attacker could permanently pause releases (DoS on beneficiary). Cross-referenced from W18.
 
 **Fix:** Removed `immutable` from guardian. Added `transferGuardian(address newGuardian)` function with `onlyGuardian` modifier, zero-address check, and `GuardianTransferred` event. +6 tests.
+
+**Status correction (2026-09-26):** The entry above called this a full fix. Corrected assessment, distinguishing capability from remediation:
+
+- **Source capability:** present — `guardian` is no longer `immutable`; `transferGuardian(address)` (`onlyGuardian`, zero-address check, `GuardianTransferred` event) allows guardian self-rotation.
+- **Owner-recoverable remediation:** absent — Vesting has no owner role, so a lost or hostile guardian cannot be displaced by an owner. The original DoS risk is mitigated only for a cooperative guardian, not eliminated.
+- **Deployed-state proof:** outstanding — this review holds no on-chain evidence that the deployed Vesting instance includes `transferGuardian`; the source change alone does not remediate an already-deployed contract.
+
+Evidence: audit runs 1-3; S0 on-chain read at mainnet block 26062273. Cross-reference: W18 in [SECURITY_AUDIT_SKYWALKER.md](SECURITY_AUDIT_SKYWALKER.md). Historical description and fix text above preserved as recorded on 2026-03-04.
 
 ---
 

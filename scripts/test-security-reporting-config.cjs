@@ -21,6 +21,8 @@
  *     This check fails if either public template is reintroduced.
  *  5. Published security entry points do not retain links to the removed
  *     public template, and the Docs workflow keeps this test enabled.
+ *  6. docs/.well-known/security.txt (RFC 9116) names only the public
+ *     advisory contact, states the no-bounty status and has not expired.
  */
 
 const assert = require("node:assert/strict");
@@ -149,6 +151,37 @@ for (const doc of [
     `${doc} must not link to the removed public security issue template`
   );
 }
+
+// --- 5. RFC 9116 security.txt on the apex host (CWA-22) --------------------
+// Only the public advisory URL is allowed as contact; no private e-mail or phone
+// data, no reward promise, and an Expires date that still lies in the future.
+const securityTxt = read("docs/.well-known/security.txt");
+const securityFields = Object.fromEntries(
+  securityTxt
+    .split("\n")
+    .filter((line) => line && !line.startsWith("#"))
+    .map((line) => {
+      const separator = line.indexOf(":");
+      return [line.slice(0, separator), line.slice(separator + 1).trim()];
+    })
+);
+assert.equal(securityFields.Contact, ADVISORY_URL, "security.txt Contact must be the private advisory URL");
+assert.equal(
+  (securityTxt.match(/^Contact:/gm) || []).length,
+  1,
+  "security.txt must list exactly one contact"
+);
+assert.ok(!/mailto:|tel:|@[a-z0-9-]+\./i.test(securityTxt), "security.txt must not expose private contact data");
+assert.equal(securityFields.Policy, "https://github.com/NeaBouli/inferno/blob/main/SECURITY.md");
+assert.equal(securityFields.Canonical, "https://ifrunit.tech/.well-known/security.txt");
+const expires = Date.parse(securityFields.Expires);
+assert.ok(Number.isFinite(expires), "security.txt must carry a parseable Expires field");
+assert.ok(expires > Date.now(), "security.txt Expires has passed; refresh it");
+assert.ok(/no bug bounty/i.test(securityTxt), "security.txt must state that there is no bug bounty");
+assert.ok(
+  !/reward/i.test(securityTxt.replace(/no reward is promised/gi, "")),
+  "security.txt must not promise rewards"
+);
 
 const workflow = read(".github/workflows/docs-validator.yml");
 assert.ok(

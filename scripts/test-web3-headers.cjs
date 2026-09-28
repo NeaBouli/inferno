@@ -50,7 +50,7 @@ const csp = cspDirectives(requireHeader('Content-Security-Policy'));
 
 const expectedCsp = new Map([
   ['default-src', ["'self'"]],
-  ['script-src', ["'self'", "'unsafe-inline'", 'https://esm.sh']],
+  ['script-src', ["'self'", "'unsafe-inline'"]],
   ['style-src', ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com']],
   ['font-src', ["'self'", 'https://fonts.gstatic.com']],
   ['img-src', ["'self'", 'data:', 'blob:', 'https://explorer-api.walletconnect.com', 'https://*.walletconnect.com']],
@@ -112,16 +112,23 @@ requireCspTokens(csp, 'form-action', ["'self'"]);
 // ── Contract with the actual Web3 app resources ──────────────────────
 const web3App = fs.readFileSync(path.join(root, 'docs', 'web3', 'index.html'), 'utf8');
 const walletCore = fs.readFileSync(path.join(root, 'docs', 'web3-wallet-core.js'), 'utf8');
+const sharedWalletCore = fs.readFileSync(path.join(root, 'docs', 'assets', 'wallet-core.js'), 'utf8');
 
 // Inline script/style blocks in docs/web3/index.html require 'unsafe-inline'.
 assert.ok(web3App.includes('<script>'), 'Web3 app must keep its inline bootstrap script (CSP allows it)');
 requireCspTokens(csp, 'script-src', ["'self'", "'unsafe-inline'"]);
 requireCspTokens(csp, 'style-src', ["'self'", "'unsafe-inline'"]);
 
-// WalletConnect provider is imported from esm.sh at runtime (CWA-47).
-assert.ok(walletCore.includes('https://esm.sh/@walletconnect/ethereum-provider'),
-  'WalletConnect esm.sh provider import changed — re-check CSP script-src');
-requireCspTokens(csp, 'script-src', ['https://esm.sh']);
+// CWA-47: the WalletConnect provider is a pinned same-origin artifact; no
+// third-party script host may remain in the runtime or in CSP script-src.
+const WC_VENDOR_SRC = '/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js';
+for (const [name, source] of [['docs/web3-wallet-core.js', walletCore], ['docs/assets/wallet-core.js', sharedWalletCore]]) {
+  assert.ok(!source.includes('https://esm.sh'), `${name} must not import from esm.sh (CWA-47)`);
+  assert.ok(!/import\(\s*["']https?:\/\//.test(source), `${name} must not import remote code at runtime (CWA-47)`);
+  assert.ok(source.includes(WC_VENDOR_SRC), `${name} must load the pinned same-origin WalletConnect artifact`);
+}
+const scriptSrcHosts = csp.get('script-src').filter((token) => token.startsWith('https:') || token.startsWith('http:'));
+assert.deepEqual(scriptSrcHosts, [], 'CSP script-src must not allow any third-party host (CWA-47)');
 
 // WalletConnect relay/modal/verify endpoints required by the connector flow.
 requireCspTokens(csp, 'connect-src', ['wss://*.walletconnect.com', 'https://*.walletconnect.com']);

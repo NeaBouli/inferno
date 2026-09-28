@@ -1258,11 +1258,7 @@
       text-decoration: underline;
     }
 
-    @media (max-width: 980px) {
-      .shell {
-        width: min(100% - 32px, 1180px);
-      }
-
+    @media (max-width: 1220px) {
       .nav {
         min-height: auto;
         display: grid;
@@ -1293,6 +1289,12 @@
       }
 
       .nav-links::-webkit-scrollbar { display: none; }
+    }
+
+    @media (max-width: 980px) {
+      .shell {
+        width: min(100% - 32px, 1180px);
+      }
 
       .hero-grid,
       .section-head,

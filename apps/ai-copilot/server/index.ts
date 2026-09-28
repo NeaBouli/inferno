@@ -27,6 +27,11 @@ import {
   buildLiveWikiSection,
 } from "./live-wiki.js";
 import { LENDING_LOAN_ABI, serializeLendingLoan } from "./lending-loans.js";
+import {
+  classifyDynamicIntent,
+  buildDynamicDataFallback,
+  DYNAMIC_DATA_HANDOFF_CODE,
+} from "./dynamic-intent.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -385,11 +390,6 @@ switchMode('explorer');
 });
 
 app.post("/api/chat", async (req, res) => {
-  if (!ANTHROPIC_API_KEY) {
-    res.status(500).json({ reply: "ANTHROPIC_API_KEY not configured." });
-    return;
-  }
-
   // Rate limit check
   const clientIp = (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim()
     || req.socket.remoteAddress || "unknown";
@@ -416,6 +416,29 @@ app.post("/api/chat", async (req, res) => {
   const lastMsg = messages[messages.length - 1];
   if (lastMsg?.role === "user" && typeof lastMsg.content === "string" && lastMsg.content.length > MAX_MESSAGE_LENGTH) {
     res.status(400).json({ reply: `Message too long (max ${MAX_MESSAGE_LENGTH} characters).` });
+    return;
+  }
+
+  // Fail-closed dynamic-data guard: current-state financial intents get a
+  // typed documentation-only handoff. No retrieval, no budget reservation,
+  // no provider call — the safe answer never depends on model compliance or
+  // provider configuration.
+  const dynamicIntent =
+    lastMsg?.role === "user" && typeof lastMsg.content === "string"
+      ? classifyDynamicIntent(lastMsg.content)
+      : null;
+  if (dynamicIntent) {
+    console.log(`[guard] dynamic intent=${dynamicIntent} ip=${clientIp} mode=${mode || "explorer"} surface=${surface}`);
+    res.json({
+      reply: buildDynamicDataFallback(dynamicIntent),
+      code: DYNAMIC_DATA_HANDOFF_CODE,
+      intent: dynamicIntent,
+    });
+    return;
+  }
+
+  if (!ANTHROPIC_API_KEY) {
+    res.status(500).json({ reply: "ANTHROPIC_API_KEY not configured." });
     return;
   }
 

@@ -29,6 +29,7 @@ jest.mock('../src/services/ifrLockService', () => ({
 jest.mock('../src/config', () => ({
   config: {
     CHAIN_ID: 11155111,
+    SELLER_AUTH_DOMAIN: 'shop.example.test',
     RPC_URL: 'https://mock-rpc.example.com',
     IFRLOCK_ADDRESS: '0x0000000000000000000000000000000000000001',
     ADMIN_SECRET: 'test-secret-12345',
