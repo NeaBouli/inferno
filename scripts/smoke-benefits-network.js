@@ -2,7 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { createHash } = require('crypto');
+const { createHash, randomBytes } = require('crypto');
 const { ethers: ethersUtils } = require('ethers');
 const { chromium, devices } = require('playwright');
 
@@ -132,8 +132,15 @@ async function verifyHttpSurface() {
   assert((await serviceWorker.text()).includes("ifr-benefits-v23"), 'service worker cache version mismatch');
   log('PWA assets OK');
 
-  const auth = await fetchJson('/api/seller/auth-message?action=business:list&businessId=seller');
+  // Throwaway address: issues one expiring read challenge, never signs or consumes it.
+  const smokeWallet = `0x${randomBytes(20).toString('hex')}`;
+  const auth = await fetchJson(
+    `/api/seller/auth-message?action=business:list&businessId=seller&walletAddress=${smokeWallet}`
+  );
   assert(auth.message.includes('IFR Benefits Network - Seller Authorization'), 'seller auth message header mismatch');
+  assert(auth.message.includes('Domain: shop.ifrunit.tech\n'), 'seller auth domain binding missing');
+  assert(/\nChain ID: \d+\n/.test(auth.message), 'seller auth chain binding missing');
+  assert(/^[0-9a-f]{64}$/.test(auth.nonce || ''), 'seller auth nonce missing');
   assert(auth.message.includes('Only sign this message inside shop.ifrunit.tech.'), 'seller auth safety line missing');
   assert(auth.timestamp && auth.expiresAt, 'seller auth challenge missing timestamp/expiry');
   log('Seller auth challenge OK');
@@ -908,7 +915,7 @@ async function verifyRuleTemplateAuthorization() {
       const scope = url.searchParams.get('scope');
       challengeRequests.push({ action, businessId: targetBusinessId, scope });
       const timestamp = String(Date.now());
-      const nonce = scope ? `nonce-${action}` : undefined;
+      const nonce = `nonce-${action}`;
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -918,7 +925,8 @@ async function verifyRuleTemplateAuthorization() {
             `Action: ${action}`,
             `Business: ${targetBusinessId}`,
             `Timestamp: ${timestamp}`,
-            ...(scope && nonce ? [`Scope: ${scope}`, `Nonce: ${nonce}`] : []),
+            `Scope: ${scope || 'read'}`,
+            `Nonce: ${nonce}`,
             'Only sign this message inside shop.ifrunit.tech.',
           ].join('\n'),
           timestamp,

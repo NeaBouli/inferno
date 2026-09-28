@@ -1142,7 +1142,7 @@ const locked = await ifrLock.isLocked(walletAddress, minAmount);
         <li><strong>No flashloan attacks:</strong> Lock is persistent (stored in contract state), not per-transaction. A flashloan cannot fake a lock status because <code>isLocked()</code> reads stored balances, not transient ones.</li>
         <li><strong>authorizedCaller pattern:</strong> Only whitelisted addresses (set via Governance) can call <code>recordLockReward()</code>. Random contracts cannot trigger rewards.</li>
         <li><strong>Anti-double-count:</strong> <code>walletRewardClaimed[wallet][partnerId]</code> mapping ensures each wallet can only be rewarded once per builder. Re-locking after unlock does not generate a second reward.</li>
-        <li><strong>Algorithmic throttle:</strong> As more IFR is locked protocol-wide, the effective reward rate decreases automatically (1% &rarr; 50% lock ratio scales reward from <code>rewardBps</code> down to <code>MIN_REWARD_BPS</code>).</li>
+        <li><strong>Algorithmic throttle (implemented, not active on Mainnet):</strong> once Governance sets <code>ifrLock</code>, the effective reward rate decreases as more IFR is locked protocol-wide (1% &rarr; 50% lock ratio scales reward from <code>rewardBps</code> down to <code>MIN_REWARD_BPS</code>). On Mainnet <code>ifrLock</code> is unset (address(0)), so the flat <code>rewardBps</code> of 1500 applies.</li>
       </ul>
 
       <!-- Footer -->

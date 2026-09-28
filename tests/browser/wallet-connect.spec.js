@@ -1,19 +1,23 @@
 // @ts-check
 const { test, expect } = require("@playwright/test");
+const { ethers } = require("ethers");
 
 /**
  * Landing/Wiki wallet browser suite.
  *
  * Covers the current wallet contract of docs/index.html, docs/wiki/*.html
- * and docs/assets/wallet-core.js (v4.2.1):
+ * and docs/assets/wallet-core.js (v4.2.2):
  *   - Desktop + MetaMask extension: classic connect/disconnect flow.
  *     Landing button is `#connect`, wiki button is `#lp-header-connect-btn`.
- *   - Desktop without extension: WalletConnect QR path; with the esm.sh CDN
- *     unavailable the landing honestly falls back to "Install MetaMask".
+ *   - Desktop without extension: WalletConnect QR path; with the self-hosted
+ *     WalletConnect provider artifact unavailable the landing honestly falls
+ *     back to "Install MetaMask".
  *   - Mobile/Tablet: connect is blocked with MOBILE_NOT_SUPPORTED and the
  *     "Desktop browser only" modal (#ifr-desktop-only-modal). Mobile
  *     deep-link fallbacks were removed in wallet-core v4.2.1 — the tests
  *     assert that NO metamask.app.link navigation happens.
+ *   - Bootstrap status (CWA-48): RPC failure renders an explicit unavailable
+ *     state and keeps claim/refund write controls hidden.
  *
  * No signatures, no transactions, no external writes. The mock EIP-1193
  * provider only answers read calls.
@@ -157,14 +161,15 @@ test.describe("S1: Desktop Connect + Disconnect", () => {
 });
 
 /* ══════════════════════════════════════════════════════════
-   Scenario 2 — Landing, Desktop: no extension + no
-   WalletConnect CDN → honest "Install MetaMask" fallback
+   Scenario 2 — Landing, Desktop: no extension + WalletConnect
+   provider artifact unreachable → honest "Install MetaMask"
+   fallback
    ══════════════════════════════════════════════════════════ */
 test.describe("S2: No wallet provider", () => {
-  test("button changes to Install MetaMask when WC CDN unreachable", async ({ page }) => {
-    // Make the WalletConnect esm.sh import fail deterministically so
-    // wallet-core throws NO_METAMASK instead of waiting on the QR modal.
-    await page.route("**/esm.sh/**", (route) => route.abort());
+  test("button changes to Install MetaMask when the WC artifact is unreachable", async ({ page }) => {
+    // Make the self-hosted WalletConnect artifact import fail deterministically
+    // so wallet-core throws NO_METAMASK instead of waiting on the QR modal.
+    await page.route("**/assets/vendor/walletconnect-ethereum-provider-*.esm.js", (route) => route.abort());
     const assertNoPageErrors = monitorPageErrors(page);
     await gotoWalletPage(page, "/");
 
@@ -516,6 +521,259 @@ test.describe("S11: Wiki disconnect reset", () => {
     expect(text).toContain("Connect Wallet");
     expect(text).not.toContain("Connecting");
     assertNoPageErrors();
+  });
+});
+
+/* ══════════════════════════════════════════════════════════
+   Scenario 13 — Bootstrap page, RPC failure (CWA-48): the
+   bootstrap status must render as explicitly unavailable,
+   never as a fabricated zero/not-finalized chain value, and
+   the claim/refund write controls must stay hidden
+   ══════════════════════════════════════════════════════════ */
+
+// Bootstrap reads that must fail in this scenario (aggregate + individual),
+// while contributions()/claimed() keep answering so the wallet-specific UI
+// reaches the claim section with a real contribution.
+const BW_FAIL_SELECTORS = ["0xab0f8db3", "0x28f5c7b3", "0x8a1bb1a8", "0x78e97925", "0x3197cbb6", "0x214bb60f"];
+const BW_CONTRIB_SELECTOR = "0x42e94c90";
+const BW_CLAIMED_SELECTOR = "0xc884ef83";
+const BW_CONTRIB_WORD = "0x0000000000000000000000000000000000000000000000000011c37937e08000"; // 0.005 ETH
+const BW_VAULT = "0xf72565c4cdb9575c9d3aee6b9ae3fdbd7f56e141";
+
+function mockBootstrapRpcFailure(address) {
+  return `
+    window.ethereum = {
+      isMetaMask: true,
+      request: async function(req) {
+        if (req.method === "eth_requestAccounts") return ["${address}"];
+        if (req.method === "eth_accounts") return ["${address}"];
+        if (req.method === "eth_chainId") return "0x1";
+        if (req.method === "net_version") return "1";
+        if (req.method === "eth_blockNumber") return "0x1";
+        if (req.method === "eth_getBalance") return "0x0";
+        if (req.method === "eth_call") {
+          const call = (req.params && req.params[0]) || {};
+          const to = String(call.to || "").toLowerCase();
+          const selector = String(call.data || "").slice(0, 10).toLowerCase();
+          if (to === "${BW_VAULT}") {
+            if (${JSON.stringify(BW_FAIL_SELECTORS)}.includes(selector)) {
+              throw new Error("RPC unreachable");
+            }
+            if (selector === "${BW_CONTRIB_SELECTOR}") return "${BW_CONTRIB_WORD}";
+            if (selector === "${BW_CLAIMED_SELECTOR}") return "${ZERO32}";
+          }
+          return "${ZERO32}";
+        }
+        if (req.method === "wallet_switchEthereumChain") return null;
+        return null;
+      },
+      on: function() {},
+      removeListener: function() {},
+    };
+  `;
+}
+
+test.describe("S13: Bootstrap RPC failure renders unavailable, writes fail closed", () => {
+  test("unavailable status shows no fabricated values and hides claim/refund", async ({ page }) => {
+    const assertNoPageErrors = monitorPageErrors(page);
+    // Deterministic offline environment: both public RPC paths are dead.
+    await page.route("**/eth.llamarpc.com/**", (route) => route.abort());
+    await page.route("**/ethereum-rpc.publicnode.com/**", (route) => route.abort());
+    await page.addInitScript(mockBootstrapRpcFailure(MOCK_ADDR));
+    await gotoWalletPage(page, "/wiki/bootstrap.html");
+
+    // Initial public read failed too: stats must be unavailable, not "0 ETH".
+    await expect(page.locator("#bw-total-eth")).toHaveText("—", { timeout: 15000 });
+    await expect(page.locator("#bw-contributors")).toHaveText("—");
+    await expect(page.locator("#bw-ifr-per-eth")).toHaveText("—");
+
+    // Connect the wallet (contribution read succeeds, status reads keep failing).
+    await page.locator("#lp-header-connect-btn").click();
+    await expect(page.locator("#lp-header-connected")).toBeVisible({ timeout: 10000 });
+
+    // Claim section appears (bootstrap ended, contribution exists) but must
+    // show the honest unavailable state with every write control hidden.
+    await expect(page.locator("#bw-claim-section")).toBeVisible({ timeout: 15000 });
+    await expect(page.locator("#bw-claim-title")).toContainText("Status unavailable");
+    await expect(page.locator("#bw-claim-btn")).toBeHidden();
+    await expect(page.locator("#bw-refund-btn")).toBeHidden();
+    await expect(page.locator("#bw-total-eth")).toHaveText("—");
+    await expect(page.locator("#bw-contribution-ifr")).toHaveText("—");
+
+    // No estimate can be computed without a real total — it must stay hidden.
+    // (The estimate input lives in the contribute section, hidden since the
+    // bootstrap ended; the guard is exercised directly.)
+    await page.evaluate(() => {
+      const input = document.getElementById("bw-eth-input");
+      input.value = "0.5";
+      bwUpdateEstimate();
+    });
+    await expect(page.locator("#bw-estimate")).toBeHidden();
+    assertNoPageErrors();
+  });
+});
+
+/* ══════════════════════════════════════════════════════════
+   Scenario 14 — Wallet surfaces execute only same-origin code
+   (CWA-47): no third-party script/CDN request may fire while
+   loading the landing and wiki wallet runtime
+   ══════════════════════════════════════════════════════════ */
+test.describe("S14: No third-party executable requests", () => {
+  for (const path of ["/", "/wiki/bootstrap.html", "/wiki/verify.html"]) {
+    test(`${path} fires no third-party script or CDN requests`, async ({ page }) => {
+      const thirdParty = [];
+      page.on("request", (request) => {
+        const url = request.url();
+        if (/esm\.sh|jsdelivr|unpkg|cdnjs|esm\.run/i.test(url)) thirdParty.push(url);
+        if (request.resourceType() === "script" && !url.startsWith("http://localhost:8787")) thirdParty.push(url);
+      });
+      const assertNoPageErrors = monitorPageErrors(page);
+      await gotoWalletPage(page, path);
+      await page.waitForTimeout(500);
+      expect(thirdParty).toEqual([]);
+      assertNoPageErrors();
+    });
+  }
+});
+
+/* ══════════════════════════════════════════════════════════
+   Scenario 15 — Web3 tablet WalletConnect retry lifecycle
+   ══════════════════════════════════════════════════════════ */
+const WC_MOCK_MODULE = `
+  const state = { pending: null, provider: null, uriCount: 0 };
+  function makeProvider() {
+    const listeners = new Map();
+    const provider = {
+      session: null,
+      accounts: [],
+      enable: function() {
+        state.uriCount += 1;
+        (listeners.get("display_uri") || []).forEach((fn) => fn("wc:mock-uri-" + state.uriCount));
+        return new Promise((resolve, reject) => { state.pending = { resolve, reject }; });
+      },
+      request: async ({ method }) => {
+        if (method === "eth_accounts" || method === "eth_requestAccounts") return provider.accounts;
+        if (method === "eth_chainId") return "0x1";
+        if (method === "net_version") return "1";
+        if (method === "eth_getBalance") return "0x0";
+        if (method === "eth_blockNumber") return "0x10";
+        if (method === "eth_call") return "0x" + "0".repeat(64);
+        return null;
+      },
+      on: (event, fn) => listeners.set(event, (listeners.get(event) || []).concat(fn)),
+      removeListener: (event, fn) => listeners.set(event, (listeners.get(event) || []).filter((f) => f !== fn)),
+      disconnect: async () => null,
+    };
+    state.provider = provider;
+    return provider;
+  }
+  window.__wcMock = {
+    uriCount: () => state.uriCount,
+    approve: (address) => {
+      if (state.provider) state.provider.accounts = [address];
+      if (state.pending) state.pending.resolve([address]);
+    },
+    reject: (error) => state.pending && state.pending.reject(error),
+  };
+  export const EthereumProvider = { init: async () => makeProvider() };
+`;
+
+test.describe("S15: Web3 tablet pending WalletConnect session", () => {
+  test("cancel, re-tap, approve, disconnect and reconnect stay usable", async ({ browser }) => {
+    const { context, page, deeplinks } = await newMobilePage(
+      browser,
+      { width: 820, height: 1180 },
+      TABLET_UA
+    );
+    try {
+      const assertNoPageErrors = monitorPageErrors(page);
+      await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js", async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: "application/javascript",
+          headers: { "Access-Control-Allow-Origin": "*" },
+          body: WC_MOCK_MODULE,
+        });
+      });
+      await gotoWalletPage(page, "/web3/");
+      await page.evaluate(() => { delete window.ethereum; });
+
+      const btn = page.locator(".nav-actions [data-wallet-connect]");
+      const walletState = page.locator("[data-wallet-state]").first();
+      const walletDialog = page.locator("[data-wallet-dialog]");
+      const walletChooser = page.locator("[data-wallet-chooser]");
+      const walletConnectOption = page.locator('[data-wallet-option="walletconnect"]');
+
+      await btn.click();
+      await expect(walletChooser).toHaveClass(/is-open/);
+      await walletConnectOption.click();
+      await expect(walletDialog).toHaveClass(/is-open/);
+      await expect.poll(() => page.evaluate(() => Boolean(window.__wcMock))).toBe(true);
+      await expect.poll(() => page.evaluate(() => window.__wcMock.uriCount())).toBe(1);
+
+      await page.evaluate(() => {
+        const error = new Error("User rejected.");
+        error.code = 4001;
+        window.__wcMock.reject(error);
+      });
+      await expect(walletState).toHaveText("Rejected");
+      await expect(btn).toBeEnabled();
+      await expect(btn).toHaveText("Connect Wallet");
+
+      await page.locator("[data-wallet-dialog-close]").click();
+      await expect(walletDialog).not.toHaveClass(/is-open/);
+      await btn.click();
+      await walletConnectOption.click();
+      await expect.poll(() => page.evaluate(() => window.__wcMock.uriCount())).toBe(2);
+
+      await page.evaluate((addr) => window.__wcMock.approve(addr), MOCK_ADDR);
+      await expect(walletState).toContainText("Connected", { timeout: 10000 });
+      await expect(btn).toHaveText(/connected/i);
+      expect(await page.evaluate(() => window.IFRWallet.isConnected())).toBe(true);
+
+      await page.evaluate(() => window.IFRWallet.disconnect());
+      expect(await page.evaluate(() => window.IFRWallet.isConnected())).toBe(false);
+      await btn.click();
+      await walletConnectOption.click();
+      await expect.poll(() => page.evaluate(() => window.__wcMock.uriCount())).toBe(3);
+      await page.evaluate((addr) => window.__wcMock.approve(addr), MOCK_ADDR);
+      await expect(walletState).toContainText("Connected", { timeout: 10000 });
+
+      expect(deeplinks).toEqual([]);
+      assertNoPageErrors();
+    } finally {
+      await context.close();
+    }
+  });
+});
+
+/* ══════════════════════════════════════════════════════════
+   Scenario 16 — Web3 tablet injected-session reload
+   ══════════════════════════════════════════════════════════ */
+test.describe("S16: Web3 tablet session reload", () => {
+  test("reload with existing injected session auto-reconnects", async ({ browser }) => {
+    const { context, page } = await newMobilePage(
+      browser,
+      { width: 820, height: 1180 },
+      TABLET_UA
+    );
+    try {
+      const assertNoPageErrors = monitorPageErrors(page);
+      await context.addInitScript(mockMetaMask(MOCK_ADDR));
+      await gotoWalletPage(page, "/web3/");
+
+      await page.locator(".nav-actions [data-wallet-connect]").click();
+      await page.locator('[data-wallet-option-type="injected"]').first().click();
+      await expect(page.locator("[data-wallet-state]").first()).toContainText("Connected", { timeout: 10000 });
+
+      await page.reload({ waitUntil: "domcontentloaded" });
+      await waitForWalletRuntime(page);
+      await expect(page.locator("[data-wallet-state]").first()).toContainText("Connected", { timeout: 10000 });
+      expect(await page.evaluate(() => window.IFRWallet.isConnected())).toBe(true);
+      assertNoPageErrors();
+    } finally {
+      await context.close();
+    }
   });
 });
 

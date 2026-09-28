@@ -343,6 +343,96 @@ const ifrState = read("docs/assets/ifr-state.js");
 assert.ok(ifrState.includes("copilotFree: true"), "ifr-state.js must keep the free copilot flag");
 assert.ok(ifrState.includes("result.isLocked1000 = locked >="), "ifr-state.js must keep the IFRLock read");
 
+// CWA-15: the LiquidityReserve 50M cap is an owner-settable parameter; only the period is immutable.
+const liquidityReserve = requireText("contracts/liquidity/LiquidityReserve.sol", [
+  "uint256 public immutable periodDuration;",
+  "function setMaxWithdrawPerPeriod(uint256 _max) external onlyOwner",
+]);
+assert.ok(!/immutable\s+maxWithdrawPerPeriod/.test(liquidityReserve));
+requireText("README.md", ["a Governance parameter (`setMaxWithdrawPerPeriod`, 48h timelock), not an immutable limit"]);
+requireText("docs/llms.txt", ["the 50M cap is a Governance parameter changeable via setMaxWithdrawPerPeriod"]);
+requireText("docs/wiki/security.html", ["The 50M cap is a Governance parameter (<code>setMaxWithdrawPerPeriod</code>, 48h timelock), not an immutable invariant"]);
+requireText("docs/wiki/contracts.html", ["The per-period maximum is owner-settable via <code>setMaxWithdrawPerPeriod</code>"]);
+requireText("docs/TRANSPARENCY.md", ["Governance parameter via `setMaxWithdrawPerPeriod`, 48h timelock; period length immutable"]);
+forbidText("docs/wiki/security.html", ["the contract limits withdrawals to 50M IFR per 90-day period"]);
+forbidText("docs/wiki/contracts.html", ["(e.g. 50M per quarter)"]);
+
+// CWA-20: chain-verified values (block 26,065,893) for vesting start, PartnerVault rate/throttle,
+// Community Safe custody, fee exemptions and the README burn qualifier.
+forbidText("docs/wiki/vesting.html", ["1741168424"]);
+requireText("docs/wiki/vesting.html", ["start:         1772670647"]);
+forbidText("docs/DOCS.md", ["rewardBps=1000 (10%)"]);
+forbidText("docs/TOKENOMICS_MODEL.md", ["rewardBps: 1000 (10%)"]);
+requireText("docs/wiki/lock-mechanism.html", ["On Mainnet <code>ifrLock</code> is unset (address(0))"]);
+requireText("docs/wiki/contracts.html", ["Mainnet <code>ifrLock</code> is unset (address(0))"]);
+forbidText("docs/wiki/integration.html", ["The remaining 57.9M IFR (6%) is reserved"]);
+forbidText("docs/wiki/faq.html", ["holds the 6% Community &amp; Grants allocation (60M IFR)"]);
+requireText("docs/wiki/fee-design.html", [
+  "returned <code>true</code> at block 26,065,893",
+  "<td>FeeRouterV1</td>",
+  "<td>Vesting</td>",
+  "<td>BootstrapVaultV3</td>",
+  "<td>Treasury Safe</td>",
+  "<td>Community Safe</td>",
+  "<td>Deployer EOA</td>",
+  "Governance, BuilderRegistry and the LP Reserve Safe",
+]);
+forbidText("README.md", ["Every transfer burns 2.5%", "2.5% burned per transfer ("]);
+
+// CWA-23: the Mainnet manifest lists exactly the contracts of the DEPLOYMENTS.md Mainnet table;
+// unknown provenance stays null and the recorded BuybackController deployment stays intact.
+const mainnetTable = read("docs/DEPLOYMENTS.md").split("## Ethereum Mainnet")[1].split("Legacy deployment")[0];
+const documentedContracts = Object.fromEntries(
+  [...mainnetTable.matchAll(/\| \d+ \| \*\*(\w+)\*\* \| \[`(0x[0-9a-fA-F]{40})`\]/g)].map((match) => [match[1], match[2]])
+);
+const manifest = JSON.parse(read("deployments/mainnet.json"));
+const { _manifest: manifestMeta, ...manifestContracts } = manifest;
+assert.equal(manifestMeta.chainId, 1);
+assert.deepEqual(Object.keys(manifestContracts).sort(), Object.keys(documentedContracts).sort());
+for (const [name, entry] of Object.entries(manifestContracts)) {
+  assert.equal(entry.address, documentedContracts[name], `${name} manifest address must match DEPLOYMENTS.md`);
+  assert.equal(entry.network, "mainnet");
+  assert.ok(fs.existsSync(path.join(root, entry.source)), `${name} source must exist`);
+  assert.ok(entry.abi === null || fs.existsSync(path.join(root, entry.abi)), `${name} ABI path must exist`);
+  assert.ok(entry.tx === null || /^0x[0-9a-f]{64}$/.test(entry.tx), `${name} tx must be a hash or null`);
+  if (entry.tx === null) {
+    assert.equal(entry.deployer, null, `${name} deployer must stay unknown without a tx record`);
+    assert.match(entry.provenance, /deployment transaction unknown/);
+  }
+}
+assert.equal(
+  manifestContracts.BuybackController.tx,
+  "0x761ee37c87d528317c5f7da13a2581e037f2fe39c71bfc58ce83a32930391677"
+);
+
+// CWA-51 and CWA-52: README separates allocation intent from current custody and states the
+// FeeRouterV1 sink instead of a BuybackVault/BurnReserve flywheel.
+requireText("README.md", [
+  "Current custody: the Treasury Safe holds 0 IFR",
+  "Current custody: 50M funded BootstrapVaultV3",
+  "it does not hold the Treasury or Community allocations",
+  "Custody figures verified on-chain at block 26,065,893",
+  "which has no IFR withdrawal or forwarding function",
+]);
+forbidText("README.md", [
+  "BuybackVault and BurnReserve accumulate from the 1% protocol pool fee",
+  "| Gnosis Safe multisig (0x5ad6193...). Funded",
+]);
+const feeRouter = read("contracts/FeeRouterV1.sol");
+assert.ok(!/function\s+(withdraw|sweep|rescue|recover)\w*\s*\(/i.test(feeRouter), "FeeRouterV1 gained an IFR exit; update CWA-52 copy");
+
+// CWA-53: secret-handling copy stays limited to the controls each Copilot surface ships.
+forbidText("README.md", ["Automatic seed phrase / private key detection"]);
+forbidText("apps/ai-copilot/README.md", ["Automatic seed phrase / private key detection"]);
+requireText("README.md", ["No surface runs an automatic seed-phrase or private-key detector."]);
+requireText("apps/ai-copilot/src/components/IFRCopilot.tsx", [
+  'const SAFETY_WORDS = ["seed phrase", "private key", "mnemonic", "secret recovery"];',
+]);
+assert.ok(
+  !/SAFETY_WORDS|checkSafety|detectSecret|containsSecret/.test(read("apps/ai-copilot/server/index.ts")),
+  "served widget gained a secret check; update CWA-53 copy"
+);
+
 const register = JSON.parse(read("docs/community-audits/cwa-remediation-register.json"));
 for (let number = 57; number <= 73; number += 1) {
   const id = `CWA-${number}`;
@@ -351,4 +441,4 @@ for (let number = 57; number <= 73; number += 1) {
   assert.equal(finding.disposition, "fixed_and_verified", `${id} status must match evidence`);
 }
 
-console.log("[cwa-content-coherence] PASS - CWA-57...CWA-73 plus CWA-78 source, math, copy and status evidence");
+console.log("[cwa-content-coherence] PASS - CWA-15, CWA-20, CWA-23, CWA-51...CWA-53, CWA-57...CWA-73 plus CWA-78 source, math, copy and status evidence");

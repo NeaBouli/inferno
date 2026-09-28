@@ -42,6 +42,7 @@ async function main() {
       NODE_ENV: 'production',
       PORT: String(port),
       CHAIN_ID: '1',
+      SELLER_AUTH_DOMAIN: 'shop.example.test',
       RPC_URL: 'https://mock-rpc.example.com',
       IFR_TOKEN_ADDRESS: '0x0000000000000000000000000000000000000002',
       IFRLOCK_ADDRESS: '0x0000000000000000000000000000000000000001',

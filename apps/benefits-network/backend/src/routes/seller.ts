@@ -1,20 +1,23 @@
 import { NextFunction, Request, Response, Router } from 'express';
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
+import { config } from '../config';
 import { prisma } from '../services/sessionService';
 import {
   SellerAuthError,
   SELLER_AUTH_TTL_MS,
   buildSellerAuthMessage,
   normalizeAddress,
+  resolveSellerAuthContext,
   verifySellerSignature,
 } from '../services/sellerAuth';
 import {
+  READ_ONLY_SELLER_SCOPE,
   consumeSellerAuthorizationChallenge,
+  isReadOnlySellerAction,
   isSafeSellerAuthorizationField,
   isKnownSellerAction,
   issueSellerAuthorizationChallenge,
-  requiresSingleUseSellerChallenge,
 } from '../services/sellerAuthorizationChallenge';
 import { assertSellerBusinessCreationLimit, assertSellerBusinessLimit } from '../services/sellerLimits';
 import { pauseSellerBusinessDependents } from '../services/businessLifecycle';
@@ -267,27 +270,28 @@ function getSellerAuth(req: Request) {
 
 async function requireSellerAuth(req: Request, action: string, businessId: string, scope?: string) {
   const auth = getSellerAuth(req);
-  const singleUse = requiresSingleUseSellerChallenge(action);
-  if (singleUse && (!auth.nonce || !scope)) {
+  const boundScope = isReadOnlySellerAction(action) ? READ_ONLY_SELLER_SCOPE : scope;
+  if (!auth.nonce || !boundScope) {
     throw new SellerAuthError('Seller authorization nonce and scope are required');
   }
   const wallet = verifySellerSignature({
     ...auth,
+    context: resolveSellerAuthContext(config),
     action,
     businessId,
-    nonce: singleUse ? auth.nonce : undefined,
-    scope: singleUse ? scope : undefined,
+    nonce: auth.nonce,
+    scope: boundScope,
   });
   await assertSellerWalletActionAllowed(wallet);
-  if (singleUse) {
-    await consumeSellerAuthorizationChallenge(prisma, {
-      nonce: auth.nonce,
-      walletAddress: wallet,
-      action,
-      businessId,
-      scope: scope!,
-    });
-  }
+  // Atomic single-use consumption: a replayed or concurrent duplicate proof
+  // matches zero unconsumed rows and is rejected.
+  await consumeSellerAuthorizationChallenge(prisma, {
+    nonce: auth.nonce,
+    walletAddress: wallet,
+    action,
+    businessId,
+    scope: boundScope,
+  });
   return wallet;
 }
 
@@ -401,6 +405,7 @@ async function lockActiveProduct(
 }
 
 router.get('/auth-message', challengeRateLimiter, async (req, res, next) => {
+  setPrivateNoStore(res);
   try {
     const action = String(req.query.action || 'business:create');
     const businessId = String(req.query.businessId || 'new');
@@ -412,46 +417,45 @@ router.get('/auth-message', challengeRateLimiter, async (req, res, next) => {
       res.status(400).json({ error: 'Invalid seller authorization business' });
       return;
     }
+    let walletAddress: string;
+    try {
+      walletAddress = normalizeAddress(String(req.query.walletAddress || ''));
+    } catch {
+      res.status(400).json({ error: 'Valid walletAddress is required for this authorization' });
+      return;
+    }
+    const readOnly = isReadOnlySellerAction(action);
+    const scope = String(req.query.scope || (readOnly ? READ_ONLY_SELLER_SCOPE : ''));
+    if (!isSafeSellerAuthorizationField(scope) || (readOnly && scope !== READ_ONLY_SELLER_SCOPE)) {
+      res.status(400).json({ error: 'Invalid seller authorization scope' });
+      return;
+    }
+    const context = resolveSellerAuthContext(config);
     const timestamp = String(Date.now());
-    const response: Record<string, string> = {
+    const expiresAt = new Date(Number(timestamp) + SELLER_AUTH_TTL_MS);
+    const nonce = await issueSellerAuthorizationChallenge(prisma, {
+      walletAddress,
       action,
       businessId,
+      scope,
+      expiresAt,
+    });
+
+    res.json({
+      action,
+      businessId,
+      walletAddress,
+      scope,
+      nonce,
+      domain: context.domain,
+      chainId: context.chainId,
       timestamp,
       issuedAt: new Date(Number(timestamp)).toISOString(),
-      expiresAt: new Date(Number(timestamp) + SELLER_AUTH_TTL_MS).toISOString(),
-      message: buildSellerAuthMessage(action, businessId, timestamp),
-    };
-
-    if (requiresSingleUseSellerChallenge(action)) {
-      let walletAddress: string;
-      try {
-        walletAddress = normalizeAddress(String(req.query.walletAddress || ''));
-      } catch {
-        res.status(400).json({ error: 'Valid walletAddress is required for this authorization' });
-        return;
-      }
-      const scope = String(req.query.scope || '');
-      if (!isSafeSellerAuthorizationField(scope)) {
-        res.status(400).json({ error: 'Invalid seller authorization scope' });
-        return;
-      }
-      const expiresAt = new Date(Number(timestamp) + SELLER_AUTH_TTL_MS);
-      const nonce = await issueSellerAuthorizationChallenge(prisma, {
-        walletAddress,
-        action,
-        businessId,
-        scope,
-        expiresAt,
-      });
-      response.walletAddress = walletAddress;
-      response.scope = scope;
-      response.nonce = nonce;
-      response.message = buildSellerAuthMessage(action, businessId, timestamp, { nonce, scope });
-    }
-
-    res.json(response);
+      expiresAt: expiresAt.toISOString(),
+      message: buildSellerAuthMessage(context, action, businessId, timestamp, { nonce, scope }),
+    });
   } catch (err) {
-    next(err);
+    handleSellerError(err, res, next);
   }
 });
 
@@ -1249,6 +1253,7 @@ router.post(
         // server-issued, business-bound single-use challenge. An address is
         // never accepted without proof of control.
         proofWallet = verifySellerSignature({
+          context: resolveSellerAuthContext(config),
           walletAddress: rewardWallet,
           signature: String(req.body.rewardWalletSignature),
           timestamp: String(req.body.rewardWalletTimestamp),

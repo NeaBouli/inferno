@@ -127,7 +127,7 @@ Compatible seller-issued flow:
 3. Customer scans QR → connects wallet → signs challenge with the selected benefit details.
 4. Backend verifies signature → checks the rule's immutable `ifrlock`, `commitment_time_only` or
    `either` source at one Ethereum block. `either` requires the full threshold in one source.
-5. If the wallet is not eligible yet, the customer response is `REJECTED` but the stored session stays `PENDING` until the three-attempt limit is exhausted, so the customer can lock more IFR and retry the same QR while it is valid.
+5. If the wallet is not eligible yet, the customer response is `REJECTED` but the stored session stays `PENDING` and unchanged (no attempt consumed, no wallet bound), so the customer can lock more IFR and retry the same QR while it is valid.
 6. Merchant sees APPROVED → owner or active checkout operator signs Redeem → backend atomically marks the session as redeemed once.
 
 Customer signatures are bound to the fixed canonical domain
@@ -214,10 +214,12 @@ state before its database transaction, and reward queue reconciliation updates
 individual events before its final summary audit; those external/iterative
 boundaries cannot be made one atomic database operation.
 The frontend first requests `/api/seller/auth-message` so the timestamp is issued
-by the backend, then the seller signs that short-lived EIP-191 message. Read-only
-actions remain timestamp-bound and do not create authorization rows. Every seller
-mutation receives a random server-issued nonce bound to the recovered wallet,
-action, business and exact resource scope; the nonce is consumed once. The backend
+by the backend, then the seller signs that short-lived EIP-191 message. Every seller
+action receives a random server-issued nonce bound to the recovered wallet, action,
+business and scope (the exact resource for mutations, the fixed `read` scope for
+read-only actions); the nonce is consumed once, so reads need a fresh challenge per
+request. The message names `SELLER_AUTH_DOMAIN`, `CHAIN_ID` and an explicit expiry;
+production startup refuses to run unless both are set explicitly. The backend
 also checks the recovered address against `Business.ownerAddress` before owner-only
 management actions. Active, unexpired checkout operators may create and redeem QR
 sessions but cannot perform owner-only mutations.
