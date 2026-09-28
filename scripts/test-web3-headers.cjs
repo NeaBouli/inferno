@@ -121,7 +121,7 @@ requireCspTokens(csp, 'style-src', ["'self'", "'unsafe-inline'"]);
 
 // CWA-47: the WalletConnect provider is a pinned same-origin artifact; no
 // third-party script host may remain in the runtime or in CSP script-src.
-const WC_VENDOR_SRC = '/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js';
+const WC_VENDOR_SRC = '/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js';
 for (const [name, source] of [['docs/web3-wallet-core.js', walletCore], ['docs/assets/wallet-core.js', sharedWalletCore]]) {
   assert.ok(!source.includes('https://esm.sh'), `${name} must not import from esm.sh (CWA-47)`);
   assert.ok(!/import\(\s*["']https?:\/\//.test(source), `${name} must not import remote code at runtime (CWA-47)`);
