@@ -210,18 +210,19 @@ On errors: fix immediately, commit with `seo:` prefix.
       Resume trigger: maintainer response or new CoinGecko/CMC/listing proof.
 - [ ] ethereum-lists PR #1049 — external maintainer wait
       PR: https://github.com/ethereum-lists/tokens/pull/1049
-      Status verified 2026-09-04: replacement PR open and BLOCKED, with no
-      submitted review, reported check or maintainer comment. Original PR
+      Status verified 2026-09-28: replacement PR open and mergeable with state
+      `unstable`, zero reviews, zero comments and zero check-runs. Original PR
       #1036 was closed stale and now points to this single replacement.
       Resume trigger: maintainer review, CI approval or status change.
 - [ ] CoinGecko standalone coin listing — traction / resubmission preparation
       Request `CL0309260050` submitted 2026-09-04; rejected for insufficient
-      organic traction. Local status reconciled 2026-09-08. Prepare updated
-      evidence for 2026-09-19; no automatic resubmission or approval claimed.
+      organic traction. Status reconciled 2026-09-28. Improve verifiable
+      evidence and traction before a deliberate reapplication decision; no
+      automatic resubmission or approval claimed.
       Verification post: <https://x.com/IFRtoken/status/2095640632739959130>
       Exact-contract API still returns `coin not found`; GeckoTerminal is live separately.
       Resume trigger: CoinGecko response or a public exact-contract coin page.
-- [ ] CoinMarketCap standard listing — ticket pending
+- [ ] CoinMarketCap standard listing — free review
       Script: `bash scripts/cmc/check_ifr_listing.sh`
       Current follow-up ticket `1453378` replaces the waiting state of `1390230`.
       Response 2026-09-08: free review has no guaranteed ETA; no further

@@ -46,6 +46,7 @@ describe("LendingVault", function () {
 
     // Set IFR price via governance
     await vault.connect(governance).setIFRPrice(IFR_PRICE);
+    await vault.connect(governance).setProtocolFeeReceiver(owner.address);
   });
 
   // ── T01–T05: Deployment ─────────────────────────────────────
@@ -556,6 +557,23 @@ describe("LendingVault", function () {
 
       await vault.connect(governance).setProtocolFeeReceiver(lenderB.address);
       expect(await vault.protocolFeeReceiver()).to.equal(lenderB.address);
+
+      await expect(
+        vault.connect(governance).setProtocolFeeReceiver(ethers.ZeroAddress)
+      ).to.be.revertedWith("receiver=0");
+
+      const LV = await ethers.getContractFactory("LendingVault");
+      const inactive = await LV.deploy(token.target, governance.address);
+      await inactive.waitForDeployment();
+      await token.setFeeExempt(inactive.target, true);
+      await inactive.connect(governance).setIFRPrice(IFR_PRICE);
+      await token.connect(lenderA).approve(inactive.target, parse("20000"));
+      await inactive.connect(lenderA).createOffer(parse("20000"));
+      const amount = parse("1000");
+      const collateral = await inactive.getRequiredCollateral(amount);
+      await expect(
+        inactive.connect(borrowerA).borrow(0, amount, 30, { value: collateral })
+      ).to.be.revertedWith("fee receiver not set");
     });
 
     it("T51: protocol fee receiver gets interest share on repay", async () => {
@@ -577,6 +595,45 @@ describe("LendingVault", function () {
 
       const protocolShare = BigInt(interest)-BigInt(BigInt(interest)/BigInt(2)); // 50%
       expect(BigInt(afterFee)-BigInt(beforeFee)).to.equal(protocolShare);
+
+      const Actor = await ethers.getContractFactory("LendingVaultActor");
+      const borrowerActor = await Actor.deploy();
+      const lenderActor = await Actor.deploy();
+      await borrowerActor.waitForDeployment();
+      await lenderActor.waitForDeployment();
+      await token.setFeeExempt(borrowerActor.target, true);
+      await token.setFeeExempt(lenderActor.target, true);
+
+      await token.transfer(lenderActor.target, parse("20000"));
+      await lenderActor.approveToken(token.target, vault.target, parse("20000"));
+      await lenderActor.createOffer(vault.target, parse("20000"));
+      await borrowerActor.borrow(vault.target, 1, amount, 30, { value: col });
+      const actorInterest = await vault.calculateInterest(1);
+      await token.transfer(borrowerActor.target, actorInterest);
+      await borrowerActor.approveToken(
+        token.target,
+        vault.target,
+        BigInt(amount) + BigInt(actorInterest)
+      );
+      await borrowerActor.setRejectETH(true);
+      await expect(
+        borrowerActor.repay(vault.target, 1)
+      ).to.be.revertedWith("collateral return failed");
+      expect((await vault.getLoan(1)).active).to.be.true;
+      await borrowerActor.setRejectETH(false);
+      await borrowerActor.repay(vault.target, 1);
+      expect(await borrowerActor.received()).to.equal(col);
+
+      await borrowerActor.borrow(vault.target, 1, amount, 30, { value: col });
+      await vault.connect(governance).setIFRPrice(BigInt(IFR_PRICE) * 2n);
+      await lenderActor.setRejectETH(true);
+      await expect(
+        vault.connect(liquidator).liquidate(2)
+      ).to.be.revertedWith("lender payment failed");
+      expect((await vault.getLoan(2)).active).to.be.true;
+      await lenderActor.setRejectETH(false);
+      await vault.connect(liquidator).liquidate(2);
+      expect(await lenderActor.received()).to.equal(col * 95n / 100n);
     });
 
     it("T52: getRequiredCollateral calculates correctly", async () => {

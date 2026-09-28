@@ -1,4 +1,4 @@
-const CACHE_NAME = "ifr-web3-v17";
+const CACHE_NAME = "ifr-web3-v19";
 const NAVIGATION_TIMEOUT_MS = 5000;
 const PRECACHE_URLS = [
   "/",
@@ -10,9 +10,9 @@ const PRECACHE_URLS = [
   "/assets/ifr_icon_4096_v2.png",
   "/assets/inferno-redesign-masthead-opaque.jpg",
   "/assets/inferno-redesign-masthead-opaque@2x.jpg",
-  "/web3-wallet-core.js",
+  "/web3-wallet-core.js?v=20260928-wc-cancel",
   "/assets/vendor/ethers-6.17.0.umd.min.js",
-  "/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js",
+  "/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js",
   "/assets/ifr-state.js"
 ];
 

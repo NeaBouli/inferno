@@ -28,6 +28,20 @@ textarea {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Native controls keep a 44x44 CSS px minimum touch target (WCAG 2.5.5). */
+@layer base {
+  button,
+  select,
+  textarea,
+  input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="hidden"]):not([type="range"]) {
+    min-height: 44px;
+  }
+
+  button {
+    min-width: 44px;
+  }
+}
+
 :focus-visible {
   outline: 3px solid rgba(176, 72, 30, 0.32);
   outline-offset: 3px;
@@ -76,6 +90,7 @@ textarea {
 .shop-brand {
   display: inline-flex;
   min-width: max-content;
+  min-height: 44px;
   align-items: center;
   gap: 11px;
   color: var(--shop-ink);
@@ -117,7 +132,8 @@ textarea {
 .shop-nav-link,
 .shop-nav-project {
   display: inline-flex;
-  min-height: 40px;
+  min-width: 44px;
+  min-height: 44px;
   align-items: center;
   justify-content: center;
   padding: 9px 13px;
@@ -307,10 +323,15 @@ textarea {
 .shop-footer nav {
   display: flex;
   flex-wrap: wrap;
-  gap: 18px;
+  column-gap: 18px;
 }
 
 .shop-footer a {
+  display: inline-flex;
+  min-width: 44px;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
   color: var(--shop-ember-deep);
   font-weight: 700;
   text-decoration: none;
@@ -438,7 +459,7 @@ textarea {
 
   .shop-nav-link,
   .shop-nav-project {
-    min-height: 36px;
+    min-height: 44px;
     padding: 8px 11px;
     font-size: 0.7rem;
   }
@@ -478,7 +499,7 @@ textarea {
 
   .shop-nav-link,
   .shop-nav-project {
-    min-height: 36px;
+    min-height: 44px;
     padding: 6px 4px;
     font-size: 0.7rem;
   }

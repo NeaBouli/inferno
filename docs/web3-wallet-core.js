@@ -3,7 +3,7 @@
  * Usage: await IFRWallet.connect(); IFRWallet.getAddress();
  *
  * v4.3.1 — WalletConnect provider loads from the pinned same-origin artifact
- *   /assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js instead of
+ *   /assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js instead of
  *   a third-party CDN (CWA-47). No third-party code executes at runtime.
  *
  * v4.3 — Mobile/tablet wallet connect restored.
@@ -48,7 +48,7 @@ window.IFRWallet = (function() {
   // Self-hosted pinned artifact (built reproducibly from
   // infra/web3/walletconnect-provider; SHA-256 gated in CI). Same-origin ESM,
   // no runtime third-party code fetch (CWA-47).
-  var WC_PROVIDER_URL = "/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js";
+  var WC_PROVIDER_URL = "/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js";
 
   var _provider = null;        // ethers Web3Provider (for ifr-state.js compat)
   var _signer = null;
@@ -59,6 +59,7 @@ window.IFRWallet = (function() {
   var _wcProvider = null;       // WalletConnect provider instance
   var _wcLoading = null;        // promise guard
   var _wcUri = null;
+  var _wcAttempt = 0;           // bumped per WalletConnect attempt and on cancel
   var _connectionLabel = null;
   var _announcedProviders = [];
   var _lastWalletList = [];
@@ -284,7 +285,7 @@ window.IFRWallet = (function() {
     if (_wcProvider) return _wcProvider;
     if (_wcLoading) return _wcLoading;
 
-    _wcLoading = (async function() {
+    var loading = _wcLoading = (async function() {
       try {
         // dynamic import() of the self-hosted pinned artifact — same origin,
         // works in all modern browsers.
@@ -294,11 +295,11 @@ window.IFRWallet = (function() {
 
         if (!EthereumProvider) {
           console.warn("[IFR Web3 Wallet] EthereumProvider not found in ESM module");
-          _wcLoading = null;
+          if (_wcLoading === loading) _wcLoading = null;
           return null;
         }
 
-        _wcProvider = await EthereumProvider.init({
+        var wcInstance = await EthereumProvider.init({
           projectId: WC_PROJECT_ID,
           chains: [CHAIN_ID],
           optionalChains: [CHAIN_ID],
@@ -319,19 +320,30 @@ window.IFRWallet = (function() {
             }
           }
         });
+        // cancelWalletConnect() superseded this init while it was pending:
+        // drop the late instance so no retry reuses its pairing state.
+        if (_wcLoading !== loading) {
+          _dropWalletConnect(wcInstance);
+          return null;
+        }
+        _wcProvider = wcInstance;
 
-        // Listen for WC session events (fires when user approves in wallet app)
+        // Listen for WC session events (fires when user approves in wallet app).
+        // Events from a provider dropped by cancelWalletConnect() are ignored.
         _wcProvider.on("connect", function() {
+          if (wcInstance !== _wcProvider) return;
           if (_wcProvider.accounts && _wcProvider.accounts.length > 0 && !_address) {
             _finishConnectSafely(_wcProvider, _wcProvider.accounts);
           }
         });
         _wcProvider.on("session_event", function() {
+          if (wcInstance !== _wcProvider) return;
           if (_wcProvider.accounts && _wcProvider.accounts.length > 0 && !_address) {
             _finishConnectSafely(_wcProvider, _wcProvider.accounts);
           }
         });
         _wcProvider.on("display_uri", function(uri) {
+          if (wcInstance !== _wcProvider) return;
           _wcUri = uri;
           _emit("walletconnectUri", uri);
         });
@@ -340,8 +352,10 @@ window.IFRWallet = (function() {
         return _wcProvider;
       } catch (e) {
         console.warn("[IFR Web3 Wallet] WalletConnect init failed:", e);
-        _wcProvider = null;
-        _wcLoading = null;
+        if (_wcLoading === loading) {
+          _wcProvider = null;
+          _wcLoading = null;
+        }
         return null;
       }
     })();
@@ -454,14 +468,45 @@ window.IFRWallet = (function() {
     return _finishConnect(wallet.provider, accounts);
   }
 
+  function _cancelledError() {
+    var error = new Error("WalletConnect attempt cancelled.");
+    error.code = "WC_CANCELLED";
+    return error;
+  }
+
+  function _dropWalletConnect(wc) {
+    if (_wcProvider === wc) {
+      _wcProvider = null;
+      _wcLoading = null;
+      _wcUri = null;
+    }
+    try { Promise.resolve(wc && wc.disconnect()).catch(function() {}); } catch (e) {}
+  }
+
   async function connectWalletConnect() {
+    var attempt = ++_wcAttempt;
     var wc = await _loadWalletConnect();
+    if (attempt !== _wcAttempt) throw _cancelledError();
     if (!wc) {
       _showWalletHelpModal("WalletConnect could not load. Check your connection and try again, or choose a browser wallet.");
       throw new Error("NO_WALLETCONNECT");
     }
     var accounts = await wc.enable();
+    if (attempt !== _wcAttempt) {
+      _dropWalletConnect(wc);
+      throw _cancelledError();
+    }
     return _finishConnect(wc, accounts);
+  }
+
+  // Abandons a pending WalletConnect pairing: its late approval or rejection
+  // can no longer connect, and the next attempt pairs with a fresh URI.
+  function cancelWalletConnect() {
+    if (_address) return false;
+    _wcAttempt += 1;
+    if (_wcProvider) _dropWalletConnect(_wcProvider);
+    else _wcLoading = null;  // a pending init is superseded; see _loadWalletConnect
+    return true;
   }
 
   // ── Add IFR Token To Wallet (EIP-747) ─────────────
@@ -674,7 +719,7 @@ window.IFRWallet = (function() {
   return {
     connect: connect, disconnect: disconnect, autoReconnect: autoReconnect,
     listWallets: listWallets, connectInjected: connectInjected,
-    connectWalletConnect: connectWalletConnect,
+    connectWalletConnect: connectWalletConnect, cancelWalletConnect: cancelWalletConnect,
     isConnected: isConnected, getAddress: getAddress, getShortAddress: getShortAddress,
     getSigner: getSigner, getProvider: getProvider, getConnectionLabel: getConnectionLabel,
     ensureMainnet: ensureMainnet,

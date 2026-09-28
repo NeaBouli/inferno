@@ -128,6 +128,7 @@ run "customer-pass browser flow" npm run test:benefits-pass-ui
 run "offer discovery browser flow" npm run test:benefits-discovery-ui
 run "wallet lock browser flow" npm run test:benefits-wallet-ui
 run "composed fullstack flow" npm run test:benefits-fullstack
+run "touch target regression gate" npm run test:benefits-touch-targets
 
 run "final frontend production build" npm --prefix "$FRONTEND" run build
 if ! node -e '

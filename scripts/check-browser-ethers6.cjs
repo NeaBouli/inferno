@@ -6,7 +6,8 @@ const ROOT = process.cwd();
 const DOCS = join(ROOT, "docs");
 const V6_ASSET = join(DOCS, "assets/vendor/ethers-6.17.0.umd.min.js");
 const V5_ASSET = join(DOCS, "assets/vendor/ethers-5.7.2.umd.min.js");
-const WC_PROVIDER_ASSET = join(DOCS, "assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js");
+const WC_PROVIDER_ASSET = join(DOCS, "assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js");
+const HISTORICAL_WC_PROVIDER_ASSET = join(DOCS, "assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js");
 const EXPECTED_SHA256 = "532950515fd29ae9f7a21ceb2b68100815024d7944c3d5a92246d5b900bd703b";
 const V6_SRC = "/assets/vendor/ethers-6.17.0.umd.min.js";
 const FORWARD_GUIDES = [
@@ -45,7 +46,7 @@ const forbidden = [
 ];
 
 for (const file of filesBelow(DOCS)) {
-  if (!/\.(?:html|js)$/.test(file) || file === V6_ASSET || file === WC_PROVIDER_ASSET) continue;
+  if (!/\.(?:html|js)$/.test(file) || [V6_ASSET, WC_PROVIDER_ASSET, HISTORICAL_WC_PROVIDER_ASSET].includes(file)) continue;
   const source = readFileSync(file, "utf8");
   const executableText = source.replace(/<[^>]+>/g, "");
   const name = relative(ROOT, file);
@@ -68,8 +69,8 @@ for (const name of FORWARD_GUIDES) {
 }
 
 const serviceWorker = readFileSync(join(DOCS, "web3-sw.js"), "utf8");
-if (!serviceWorker.includes('const CACHE_NAME = "ifr-web3-v17"')) {
-  errors.push("Web3 service-worker cache was not bumped to v17.");
+if (!serviceWorker.includes('const CACHE_NAME = "ifr-web3-v19"')) {
+  errors.push("Web3 service-worker cache was not bumped to v19.");
 }
 if (!serviceWorker.includes(V6_SRC) || /ethers-5/.test(serviceWorker)) {
   errors.push("Web3 service-worker precache does not exclusively use Ethers 6.");

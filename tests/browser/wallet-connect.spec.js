@@ -687,7 +687,7 @@ test.describe("S15: Web3 tablet pending WalletConnect session", () => {
     );
     try {
       const assertNoPageErrors = monitorPageErrors(page);
-      await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js", async (route) => {
+      await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js", async (route) => {
         await route.fulfill({
           status: 200,
           contentType: "application/javascript",

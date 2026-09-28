@@ -71,6 +71,37 @@ package "rate limit" {
 [src/index.js message guard] --> [services/onChainReader.js] : determineTier (live)
 @enduml
 
+@startmindmap
+* S4 vault hardening
+** commitment custody gate
+*** source candidate: CommitmentVault.sol::lock
+** lending activation gate
+*** source candidate: LendingVault.sol::borrow
+** lending ETH settlement
+*** source candidate: LendingVault.sol::repay
+*** source candidate: LendingVault.sol::liquidate
+@endmindmap
+
+@startuml
+package "CommitmentVault" {
+  [lock]
+  [condition-type gate]
+  [IERC20.transferFrom]
+}
+package "LendingVault" {
+  [borrow]
+  [activation gate]
+  [repay]
+  [liquidate]
+  [checked ETH call]
+}
+[lock] --> [condition-type gate] : condition type
+[condition-type gate] --> [IERC20.transferFrom] : TIME_ONLY
+[borrow] --> [activation gate] : fee receiver + price
+[repay] --> [checked ETH call] : borrower collateral
+[liquidate] --> [checked ETH call] : bonus + lender settlement
+@enduml
+
 @startuml
 title Privilege/CORS/content-trust trace
 package "telegram-bot" {

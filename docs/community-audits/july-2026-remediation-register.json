@@ -183,7 +183,7 @@
         },
         {
           "path": "docs/assets/wallet-core.js",
-          "marker": "walletconnect-ethereum-provider-2.17.3.esm.js"
+          "marker": "walletconnect-ethereum-provider-2.25.0.esm.js"
         },
         {
           "path": "scripts/check-web3-wallet-runtime.cjs",
