@@ -131,7 +131,7 @@ Web3 browser runtime trace (`docs/web3/index.html`, landing + wiki pages):
    `docs/assets/wallet-core.js` (landing/wiki) `window.IFRWallet` — Daten: EIP-1193
    provider (injected or WalletConnect) → ethers BrowserProvider/Signer
 2. `IFRWallet._loadWalletConnect` → same-origin pinned artifact
-   `docs/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js` — Daten:
+   `docs/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js` — Daten:
    → `EthereumProvider.init` (no runtime third-party code fetch, CWA-47)
 3. page → `docs/assets/ifr-state.js::load` (bootstrap/token/lock reads) — Daten:
    RPC → state; aggregate and individual bootstrap read failure yields
@@ -186,7 +186,7 @@ Points voucher trace (`apps/points-backend`):
 | benefits public rate limits | per-IP limits for public reads and polling | `apps/benefits-network/backend/src/middleware/rateLimiter.ts` | gebaut |
 | web3 wallet core (dApp) | provider discovery, WalletConnect v2 session lifecycle, mainnet fail-closed connect | `docs/web3-wallet-core.js::IFRWallet` | gebaut |
 | wallet core (landing/wiki) | shared minimalist wallet connect, desktop-only policy | `docs/assets/wallet-core.js::IFRWallet` | gebaut |
-| walletconnect provider artifact | pinned, repository-owned, hash-gated WC provider bundle served same-origin | `docs/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js` | gebaut |
+| walletconnect provider artifact | pinned, repository-owned, hash-gated WC provider bundle served same-origin | `docs/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js` | gebaut |
 | ifr state reader | bootstrap/token/lock reads with explicit unavailable failure state | `docs/assets/ifr-state.js::load` | gebaut |
 | bootstrap status renderer | stats + claim/refund UI, fail-closed on unavailable status | `docs/wiki/bootstrap.html::bwUpdateUI` | gebaut |
 | points voucher route | atomically redeem points, sign/persist voucher, expose identity-free status | `apps/points-backend/src/routes/voucher.ts` | gebaut |
@@ -293,7 +293,7 @@ Points voucher trace (`apps/points-backend`):
   attest/redeem; seller history may still show PENDING for untouched ones.
 - Web3 runtime: both `IFRWallet` implementations lazy-`import()` the WalletConnect
   provider from the same-origin pinned artifact
-  `docs/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js`; the web3
+  `docs/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js`; the web3
   host CSP `script-src` no longer allows any third-party host (CWA-47). The
   artifact is reproducible from `infra/web3/walletconnect-provider/` and its
   SHA-256 is gate-enforced.
@@ -368,7 +368,7 @@ mindmap
     web3 browser runtime
       gebaut: docs/web3-wallet-core.js::IFRWallet
       gebaut: docs/assets/wallet-core.js::IFRWallet
-      gebaut: docs/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js
+      gebaut: docs/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js
       gebaut: docs/assets/ifr-state.js::load
       gebaut: docs/wiki/bootstrap.html::bwUpdateUI
 ```

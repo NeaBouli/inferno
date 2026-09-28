@@ -3,7 +3,7 @@
  * Usage: await IFRWallet.connect(); IFRWallet.getAddress();
  *
  * v4.3.1 — WalletConnect provider loads from the pinned same-origin artifact
- *   /assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js instead of
+ *   /assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js instead of
  *   a third-party CDN (CWA-47). No third-party code executes at runtime.
  *
  * v4.3 — Mobile/tablet wallet connect restored.
@@ -48,7 +48,7 @@ window.IFRWallet = (function() {
   // Self-hosted pinned artifact (built reproducibly from
   // infra/web3/walletconnect-provider; SHA-256 gated in CI). Same-origin ESM,
   // no runtime third-party code fetch (CWA-47).
-  var WC_PROVIDER_URL = "/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js";
+  var WC_PROVIDER_URL = "/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js";
 
   var _provider = null;        // ethers Web3Provider (for ifr-state.js compat)
   var _signer = null;

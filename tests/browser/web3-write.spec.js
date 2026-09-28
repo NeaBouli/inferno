@@ -581,7 +581,7 @@ test("WalletConnect initialization can be retried after a transient loader failu
   const context = await browser.newContext({ serviceWorkers: "block" });
   const warnings = [];
   try {
-    await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js", async (route) => {
+    await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js", async (route) => {
       await route.fulfill({
         status: 200,
         contentType: "application/javascript",
@@ -627,7 +627,7 @@ test("persisted WalletConnect wrong-network recovery fails closed without an unh
   const context = await browser.newContext({ serviceWorkers: "block" });
   const pageErrors = [];
   try {
-    await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js", async (route) => {
+    await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js", async (route) => {
       await route.fulfill({
         status: 200,
         contentType: "application/javascript",
@@ -786,10 +786,10 @@ test("self-hosted Ethers asset matches the published 6.17.0 bundle", () => {
   );
 });
 
-test("self-hosted WalletConnect artifact matches the recorded 2.17.3 build", () => {
-  const asset = readFileSync("docs/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js");
+test("self-hosted WalletConnect artifact matches the recorded 2.25.0 build", () => {
+  const asset = readFileSync("docs/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js");
   expect(createHash("sha256").update(asset).digest("hex")).toBe(
-    "30273eb8eb78e88e29ecdb73606fa3e41e66a646a2b33f5c864014a065c709fc",
+    "77843c24c6c5aa5b4f743af3f2dd3a9d94e16b15bb8c5ff1bba58db2b14cd63e",
   );
 });
 
@@ -801,7 +801,7 @@ test("self-hosted WalletConnect artifact executes in the browser and exposes Eth
     page.on("pageerror", (error) => pageErrors.push(error.message));
     await page.goto("/web3/", { waitUntil: "domcontentloaded" });
     const shape = await page.evaluate(async () => {
-      const mod = await import("/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js");
+      const mod = await import("/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js");
       const EthereumProvider = mod.EthereumProvider || mod.default;
       return {
         hasExport: Boolean(EthereumProvider),
@@ -821,7 +821,7 @@ test("WalletConnect connect loads the provider only from the pinned same-origin 
   try {
     const artifactRequests = [];
     const thirdPartyScriptRequests = [];
-    await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js", async (route) => {
+    await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js", async (route) => {
       artifactRequests.push(route.request().url());
       await route.fulfill({
         status: 200,
@@ -861,7 +861,7 @@ test("WalletConnect connect loads the provider only from the pinned same-origin 
     await page.evaluate(() => { delete window.ethereum; });
     const address = await page.evaluate(() => window.IFRWallet.connectWalletConnect());
     expect(address).toBe(ACCOUNT);
-    expect(artifactRequests).toEqual(["http://localhost:8787/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js"]);
+    expect(artifactRequests).toEqual(["http://localhost:8787/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js"]);
     expect(thirdPartyScriptRequests).toEqual([]);
     expect(pageErrors).toEqual([]);
   } finally {
@@ -915,7 +915,7 @@ test("Android 9 stays in browser mode instead of launching an incompatible WebAP
 test("Web3 service worker bounds offline navigation before using the cache", () => {
   const source = readFileSync("docs/web3-sw.js", "utf8");
   const html = readFileSync("docs/web3/index.html", "utf8");
-  expect(source).toContain('const CACHE_NAME = "ifr-web3-v18"');
+  expect(source).toContain('const CACHE_NAME = "ifr-web3-v19"');
   expect(source).toContain('"/web3-wallet-core.js?v=20260928-multiwallet"');
   expect(html).toContain('<script src="/web3-wallet-core.js?v=20260928-multiwallet"></script>');
   expect(html).toContain('updateViaCache: "none"');
@@ -1076,7 +1076,7 @@ const WC_FLAKY_INIT_MODULE = `
 `;
 
 async function routeWalletConnectModule(context, shouldFail, body) {
-  await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js", async (route) => {
+  await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js", async (route) => {
     if (shouldFail()) return route.abort();
     await route.fulfill({
       status: 200,

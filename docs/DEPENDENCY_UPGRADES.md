@@ -371,3 +371,24 @@ migration and its full contract-suite evidence exist.
   browser gates (pass, discovery, support, wallet lock, seller loader,
   offline shell, service worker, WCAG, route recovery, CSP) and the composed
   Benefits full-stack E2E. Exact-head Linux CI remains mandatory before merge.
+
+## 2026-09-28 S4 Supply-Chain Candidate
+
+- The reproducible same-origin WalletConnect provider build moves from 2.17.3
+  to exact-pinned 2.25.0. Its resolved lock graph no longer contains the
+  vulnerable `lodash`, `decode-uri-component`, `@stablelib/ed25519` or
+  `elliptic` paths and `npm audit` reports zero findings for the isolated build.
+- The generated 2.25.0 browser artifact is separately versioned and hash-gated.
+  The prior 2.17.3 artifact remains only as an unreferenced historical build;
+  active wallet runtimes and the service-worker precache use 2.25.0.
+- Mythril remains pinned at 0.24.8, while its direct build dependency moves to
+  patched `setuptools@83.0.0` in the universal hash lock. Mythril's compatible
+  dependency graph still resolves `eth-abi@4.2.1`; the advisory requires v5,
+  which is outside Mythril's current compatibility range, so this path remains
+  monitored rather than falsely marked fixed.
+- Benefits wallet `stream-json@1.9.1` remains the existing browser-unreachable,
+  fail-closed exception: Jayson 4 requires the 1.x API and the patched 3.x line
+  is incompatible. The root development-only `elliptic@6.6.1` exception also
+  remains unchanged because no patched upstream version exists.
+- This entry records a local candidate only. Alert closure requires the full
+  wallet/Mythril regression matrix, independent security review and Exact-Head CI.

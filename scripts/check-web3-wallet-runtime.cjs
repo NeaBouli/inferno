@@ -19,10 +19,12 @@ const path = require("node:path");
 const root = path.resolve(__dirname, "..");
 const DOCS = path.join(root, "docs");
 const VENDOR_DIR = path.join(root, "infra", "web3", "walletconnect-provider");
-const ARTIFACT_REL = "docs/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js";
+const ARTIFACT_REL = "docs/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js";
 const ARTIFACT = path.join(root, ARTIFACT_REL);
-const ARTIFACT_SRC = "/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js";
-const EXPECTED_SHA256 = "30273eb8eb78e88e29ecdb73606fa3e41e66a646a2b33f5c864014a065c709fc";
+const HISTORICAL_ARTIFACT = path.join(root, "docs/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js");
+const ARTIFACT_SRC = "/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js";
+const EXPECTED_SHA256 = "77843c24c6c5aa5b4f743af3f2dd3a9d94e16b15bb8c5ff1bba58db2b14cd63e";
+const HISTORICAL_SHA256 = "30273eb8eb78e88e29ecdb73606fa3e41e66a646a2b33f5c864014a065c709fc";
 
 // ── Artifact presence and integrity ──────────────────────────────────
 assert.ok(fs.existsSync(ARTIFACT), `missing self-hosted WalletConnect artifact: ${ARTIFACT_REL}`);
@@ -30,6 +32,8 @@ const artifact = fs.readFileSync(ARTIFACT);
 const sha = createHash("sha256").update(artifact).digest("hex");
 assert.equal(sha, EXPECTED_SHA256,
   `WalletConnect artifact SHA-256 drifted (${sha}); rebuild via infra/web3/walletconnect-provider and re-record`);
+assert.equal(createHash("sha256").update(fs.readFileSync(HISTORICAL_ARTIFACT)).digest("hex"), HISTORICAL_SHA256,
+  "historical WalletConnect artifact drifted; retain it byte-for-byte or remove it in an authorized cleanup");
 
 const artifactText = artifact.toString("utf8");
 assert.ok(!/import\s*\(\s*["']https?:\/\//.test(artifactText), "artifact must not dynamically import remote code");
@@ -81,8 +85,14 @@ for (const rel of ["package.json", "package-lock.json", "build.mjs", "entry.mjs"
 const lock = JSON.parse(fs.readFileSync(path.join(VENDOR_DIR, "package-lock.json"), "utf8"));
 const wcEntry = lock.packages && lock.packages["node_modules/@walletconnect/ethereum-provider"];
 assert.ok(wcEntry, "vendor lockfile must contain @walletconnect/ethereum-provider");
-assert.equal(wcEntry.version, "2.17.3", "vendor lockfile must pin @walletconnect/ethereum-provider to 2.17.3");
+assert.equal(wcEntry.version, "2.25.0", "vendor lockfile must pin @walletconnect/ethereum-provider to 2.25.0");
 assert.ok(/^sha512-/.test(wcEntry.integrity || ""), "vendor lockfile must record the source package integrity hash");
+for (const dependency of ["decode-uri-component", "lodash", "@stablelib/ed25519", "elliptic"]) {
+  assert.ok(
+    !lock.packages[`node_modules/${dependency}`],
+    `vendor lockfile must not restore removed vulnerable dependency ${dependency}`,
+  );
+}
 const esbuildEntry = lock.packages && lock.packages["node_modules/esbuild"];
 assert.ok(esbuildEntry && esbuildEntry.version, "vendor lockfile must pin esbuild");
 

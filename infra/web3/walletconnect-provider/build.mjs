@@ -1,6 +1,6 @@
-// Reproducible bundling of @walletconnect/ethereum-provider@2.17.3 into a
+// Reproducible bundling of @walletconnect/ethereum-provider@2.25.0 into a
 // single-file browser ESM artifact served same-origin at
-// docs/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js (CWA-47).
+// docs/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js (CWA-47).
 //
 // Determinism: pinned npm lockfile inputs + pinned esbuild. Rebuild with
 // `npm ci && npm run build` in this directory; the output SHA-256 must match
@@ -22,7 +22,7 @@ import { fileURLToPath } from "node:url";
 const here = dirname(fileURLToPath(import.meta.url));
 const outfile = resolve(
   here,
-  "../../../docs/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js",
+  "../../../docs/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js",
 );
 const legalFile = `${outfile}.LEGAL.txt`;
 
