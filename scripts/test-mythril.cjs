@@ -53,7 +53,7 @@ assert.equal(config.schemaVersion, 1);
 assert.equal(config.tool.mythril, "0.24.8");
 assert.equal(config.tool.solc, "0.8.28");
 assert.equal(config.tool.solcLinuxAmd64Sha256, "9a0fb7e0db2c0641dbae1c5cc645dc686820c83af516226abb1c0a2f76636f25");
-assert.equal(config.tool.setuptools, "83.0.0");
+assert.equal(config.tool.setuptools, "80.10.2");
 assert.equal(config.contracts.length, 17, "all concrete production contracts must be explicit");
 assert.equal(new Set(config.contracts.map((item) => `${item.source}:${item.contract}`)).size, 17);
 assert.equal(config.contracts.some((item) => item.source.includes("/mocks/")), false);
@@ -61,11 +61,18 @@ assert.deepEqual(config.analysis.gatedSeverities, ["Critical", "High", "Medium"]
 assert.deepEqual(config.analysis.informationalSeverities, ["Low"]);
 assert.deepEqual(discoverConcreteContracts(), [...config.contracts].sort((left, right) =>
   `${left.source}:${left.contract}`.localeCompare(`${right.source}:${right.contract}`)));
-for (const pin of ["setuptools==83.0.0", "mythril==0.24.8", "solc-select==1.2.0"]) {
+for (const pin of ["setuptools==80.10.2", "mythril==0.24.8", "solc-select==1.2.0"]) {
   assert.ok(requirementsInput.includes(pin), `Mythril input must pin ${pin}`);
   assert.ok(requirementsLock.includes(pin), `Mythril lock must contain ${pin}`);
 }
 assert.ok(requirementsLock.includes("--generate-hashes"));
+// Mythril 0.24.8 and its pinned py-evm import pkg_resources, which setuptools removed in 82.0.0.
+const setuptoolsPins = [requirementsInput, requirementsLock].map((text) => text.match(/^setuptools==(\d+)\.\d+\.\d+/m));
+for (const pin of setuptoolsPins) {
+  assert.ok(pin, "Mythril requirements must pin setuptools");
+  assert.ok(Number(pin[1]) < 82, "Mythril requires setuptools < 82 because it imports pkg_resources");
+}
+assert.equal(Number(config.tool.setuptools.split(".")[0]) < 82, true, "Mythril toolchain gate must require setuptools < 82");
 assert.ok(requirementsLock.includes("--hash=sha256:"));
 assert.equal(requirementsLock.includes("--index-url"), false, "Mythril lock must use the configured default package index");
 
@@ -110,7 +117,7 @@ fs.rmSync(digestFixture, { force: true });
   const toolEnv = {
     ...process.env,
     MYTHRIL_BIN: fakeTool("myth", "Mythril version v0.24.8"),
-    MYTHRIL_PYTHON: fakeTool("python", "83.0.0"),
+    MYTHRIL_PYTHON: fakeTool("python", "80.10.2"),
     SOLC_BIN: fakeTool("solc", "Version: 0.8.28+commit.7893614a"),
   };
   await assert.doesNotReject(assertToolchain(config, toolEnv, { platform: "darwin", architecture: "x64" }));
@@ -172,12 +179,17 @@ fs.rmSync(digestFixture, { force: true });
     "python-version: '3.12.13'",
     "--require-hashes",
     "-r audit/requirements-mythril.txt",
+    ".mythril-venv/bin/python -c \"import pkg_resources\"",
     "solc-select install 0.8.28",
     "sha256sum -c",
     "SOLC_BIN=$SOLC_ARTIFACT",
     "npm run test:mythril",
     "npm run check:mythril",
   ]) assert.ok(workflow.includes(marker), `Mythril workflow must include ${marker}`);
+  const pkgResourcesPreflight = workflow.indexOf(".mythril-venv/bin/python -c \"import pkg_resources\"");
+  assert.ok(workflow.indexOf("-r audit/requirements-mythril.txt") < pkgResourcesPreflight
+    && pkgResourcesPreflight < workflow.indexOf("npm run check:mythril"),
+  "Mythril workflow must verify pkg_resources after the locked install and before analysis");
   assert.match(runner, /--no-onchain-data/);
   assert.match(runner, /--strategy", "bfs"/);
   assert.ok(runner.includes('["error", "fatal", "critical"]'));
