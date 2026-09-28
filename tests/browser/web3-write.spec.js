@@ -771,6 +771,100 @@ test("closing a pending tablet WalletConnect dialog cancels it and a retry still
   }
 });
 
+// Every EthereumProvider.init() stays pending until the test resolves it, so a
+// cancel can land while no provider exists yet.
+const WC_DEFERRED_INIT_MOCK_MODULE = WC_PENDING_MOCK_MODULE
+  .replace("const state = { pending: null, provider: null, uriCount: 0 };", `
+  const state = { pending: null, provider: null, uriCount: 0, inits: [], providers: [] };`)
+  .replace("state.provider = provider;", `state.provider = provider;
+    provider.id = state.providers.push(provider);`)
+  .replace("disconnect: async () => { state.disconnects += 1; },", `disconnect: async () => {
+        state.disconnects += 1;
+        provider.disconnected = true;
+      },`)
+  .replace("uriCount: () => state.uriCount,", `uriCount: () => state.uriCount,
+    initCount: () => state.inits.length,
+    resolveInit: (index) => state.inits[index](makeProvider()),
+    providerState: () => state.providers.map((p) => ({ id: p.id, disconnected: Boolean(p.disconnected) })),
+    pendingProviderId: () => state.pending && state.pending.provider.id,`)
+  .replace("export const EthereumProvider = { init: async () => makeProvider() };",
+    "export const EthereumProvider = { init: () => new Promise((resolve) => { state.inits.push(resolve); }) };");
+
+test("cancelling while WalletConnect init is pending drops the late provider and a retry pairs fresh", async ({ browser }) => {
+  expect(WC_DEFERRED_INIT_MOCK_MODULE).toContain("state.inits.push(resolve)");
+  expect(WC_DEFERRED_INIT_MOCK_MODULE).toContain("provider.disconnected = true");
+  const context = await browser.newContext({
+    serviceWorkers: "block",
+    viewport: { width: 711, height: 970 },
+    userAgent: "Mozilla/5.0 (Linux; Android 9; SM-T835) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36",
+    isMobile: true,
+    hasTouch: true,
+  });
+  const pageErrors = [];
+  try {
+    await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js", (route) => route.fulfill({
+      status: 200,
+      contentType: "application/javascript",
+      body: WC_DEFERRED_INIT_MOCK_MODULE,
+    }));
+    await context.route("https://eth.llamarpc.com/**", async (route) => {
+      let payload;
+      try {
+        payload = route.request().postDataJSON();
+      } catch {
+        return route.abort();
+      }
+      const respond = (item) => ({ jsonrpc: "2.0", id: item.id, result: `0x${"0".repeat(64)}` });
+      const body = Array.isArray(payload) ? payload.map(respond) : respond(payload);
+      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
+    });
+    const page = await context.newPage();
+    page.on("pageerror", (error) => pageErrors.push(error.message));
+    await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+    await page.waitForFunction(() => window.IFRWallet && typeof window.IFRWallet.cancelWalletConnect === "function");
+
+    const button = page.locator(".nav-actions [data-wallet-connect]");
+    const walletState = page.locator("[data-wallet-state]").first();
+    const walletDialog = page.locator("[data-wallet-dialog]");
+    const walletConnectOption = page.locator('[data-wallet-option="walletconnect"]');
+    const mock = (fn) => page.evaluate(fn);
+
+    await button.click();
+    await walletConnectOption.click();
+    await expect(walletDialog).toHaveClass(/is-open/);
+    await expect.poll(() => mock(() => window.__wcMock && window.__wcMock.initCount())).toBe(1);
+
+    // Cancel while init #1 is still pending: no provider exists yet.
+    await page.locator("[data-wallet-dialog-close]").click();
+    expect(await walletState.textContent()).toBe("Cancelled · retry");
+    await expect(button).toBeEnabled();
+
+    // Retry before the stale init resolves: it must start its own init
+    // instead of joining the cancelled one.
+    await button.click();
+    await walletConnectOption.click();
+    await expect.poll(() => mock(() => window.__wcMock.initCount())).toBe(2);
+
+    // The late provider of the cancelled attempt is disconnected and never pairs.
+    await mock(() => window.__wcMock.resolveInit(0));
+    await expect.poll(() => mock(() => window.__wcMock.providerState()))
+      .toEqual([{ id: 1, disconnected: true }]);
+    expect(await mock(() => window.__wcMock.uriCount())).toBe(0);
+
+    await mock(() => window.__wcMock.resolveInit(1));
+    await expect.poll(() => mock(() => window.__wcMock.uriCount())).toBe(1);
+    expect(await mock(() => window.__wcMock.pendingProviderId())).toBe(2);
+    await page.evaluate((address) => window.__wcMock.approve(address, false), ACCOUNT);
+    await expect(walletState).toContainText("Connected", { timeout: 10_000 });
+    expect(await mock(() => window.IFRWallet.isConnected())).toBe(true);
+    expect(await mock(() => window.__wcMock.providerState()))
+      .toEqual([{ id: 1, disconnected: true }, { id: 2, disconnected: false }]);
+    expect(pageErrors).toEqual([]);
+  } finally {
+    await context.close();
+  }
+});
+
 test("WalletConnect initialization can be retried after a transient loader failure", async ({ browser }) => {
   const context = await browser.newContext({ serviceWorkers: "block" });
   const warnings = [];
