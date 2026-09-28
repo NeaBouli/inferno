@@ -4,7 +4,7 @@
     "mythril": "0.24.8",
     "solc": "0.8.28",
     "solcLinuxAmd64Sha256": "9a0fb7e0db2c0641dbae1c5cc645dc686820c83af516226abb1c0a2f76636f25",
-    "setuptools": "83.0.0"
+    "setuptools": "80.10.2"
   },
   "analysis": {
     "executionTimeoutSeconds": 30,
