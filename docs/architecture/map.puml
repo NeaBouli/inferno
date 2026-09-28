@@ -194,3 +194,43 @@ package "deploy-lane" {
 [server/index.ts::chat] --> [budget.ts::DailyBudget] : tryReserve (unguarded only)
 [railway-copilot-release.yml] --> [railway-release-preflight.cjs] : exact SHA gate (pre + post approval)
 @enduml
+
+@startmindmap
+* Deploy/Ops mainnet continuation
+** deploy-continue
+*** gebaut: scripts/deploy-mainnet-continue.js::main
+** deploy-gate
+*** gebaut: inline boundary + supply gate in main
+** deploy-helpers
+*** gebaut: scripts/deploy-mainnet-continue.js::safeDeploy
+** stats-workflows
+*** gebaut: .github/workflows/update-stats.yml
+*** gebaut: .github/workflows/post-deploy.yml
+** workflow-policy
+*** gebaut: scripts/test-workflow-permissions.cjs
+@endmindmap
+
+@startuml
+package "deploy-continue" {
+  [deploy-mainnet-continue.js::main]
+}
+package "deploy-gate" {
+  [boundary gate (Sepolia, chain 1 roles)]
+  [supply gate]
+}
+package "deploy-helpers" {
+  [deploy-mainnet-continue.js::safeDeploy]
+}
+package "stats-workflows" {
+  [update-stats.yml]
+  [post-deploy.yml]
+}
+package "workflow-policy" {
+  [test-workflow-permissions.cjs]
+}
+[deploy-mainnet-continue.js::main] --> [boundary gate (Sepolia, chain 1 roles)] : chainId + role env
+[boundary gate (Sepolia, chain 1 roles)] --> [supply gate] : pass
+[supply gate] --> [deploy-mainnet-continue.js::safeDeploy] : deployer holds full supply
+[test-workflow-permissions.cjs] --> [update-stats.yml] : no private-key secret
+[test-workflow-permissions.cjs] --> [post-deploy.yml] : no private-key secret
+@enduml
