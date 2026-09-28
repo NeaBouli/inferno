@@ -22,6 +22,7 @@
     "test:benefits-seller-loader": "node scripts/test-benefits-seller-loader.js",
     "test:benefits-wallet-ui": "BENEFITS_WALLET_WRONG_CHAIN_ONLY=1 node scripts/test-benefits-wallet-lock-ui.js && BENEFITS_WALLET_ZERO_ETH_ONLY=1 node scripts/test-benefits-wallet-lock-ui.js && BENEFITS_WALLET_READ_FAILURE_ONLY=1 node scripts/test-benefits-wallet-lock-ui.js && BENEFITS_WALLET_RECONNECT_ONLY=1 node scripts/test-benefits-wallet-lock-ui.js && node scripts/test-benefits-wallet-lock-ui.js",
     "test:benefits-a11y": "node scripts/test-benefits-accessibility.js",
+    "test:benefits-touch-targets": "node scripts/test-benefits-touch-targets.js",
     "test:benefits-recovery": "node scripts/test-benefits-route-recovery.js",
     "test:benefits-csp": "node scripts/test-benefits-csp.js",
     "test:benefits-support": "node scripts/test-benefits-support-ui.js",
