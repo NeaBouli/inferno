@@ -31,7 +31,7 @@
   <link rel="dns-prefetch" href="https://eth.llamarpc.com">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
   <script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
-  <script src="/web3-wallet-core.js?v=20260928-multiwallet"></script>
+  <script src="/web3-wallet-core.js?v=20260928-wc-cancel"></script>
   <script src="/assets/ifr-state.js"></script>
   <script type="application/ld+json">
   {
@@ -157,6 +157,7 @@
       text-decoration: none;
       white-space: nowrap;
       flex: 0 0 auto;
+      min-height: 44px;
     }
 
     .brand img {
@@ -218,7 +219,11 @@
     }
 
     .nav-links a {
-      display: block;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      min-height: 44px;
       color: var(--ink-soft);
       text-decoration: none;
       font-size: 14px;
@@ -1284,16 +1289,30 @@
         justify-content: flex-start;
         gap: 18px;
         overflow-x: auto;
-        padding: 10px 0 2px;
+        padding: 0;
         scrollbar-width: none;
       }
 
       .nav-links::-webkit-scrollbar { display: none; }
+
+      /* The scrollable link row clips outer outlines; keep focus inside. */
+      .nav-links a:focus-visible {
+        outline: 2px solid currentColor;
+        outline-offset: -2px;
+        border-radius: 4px;
+      }
     }
 
     @media (max-width: 980px) {
       .shell {
         width: min(100% - 32px, 1180px);
+      }
+
+      /* Stack the token tags under the name so the brand never runs under
+         the header actions on tablet widths. */
+      .brand-name {
+        display: grid;
+        gap: 3px;
       }
 
       .hero-grid,
@@ -1342,11 +1361,6 @@
       .brand img {
         width: 30px;
         height: 30px;
-      }
-
-      .brand-name {
-        display: grid;
-        gap: 3px;
       }
 
       .brand-main {
@@ -2537,11 +2551,27 @@
         if (firstOption) firstOption.focus();
       }
 
+      let walletConnectAttempt = 0;
+      let walletConnectPending = false;
+
+      function cancelWalletConnectAttempt() {
+        closeWalletDialog();
+        if (!walletConnectPending) return;
+        walletConnectAttempt += 1;
+        walletConnectPending = false;
+        if (window.IFRWallet && typeof IFRWallet.cancelWalletConnect === "function") IFRWallet.cancelWalletConnect();
+        setWalletLoading(false);
+        walletState.textContent = "Cancelled · retry";
+      }
+
       async function runWalletConnect(connectAction, mobileWalletConnect, label) {
+        const attempt = ++walletConnectAttempt;
+        walletConnectPending = true;
         if (mobileWalletConnect) openWalletDialog(IFRWallet.getWalletConnectUri && IFRWallet.getWalletConnectUri());
         setWalletLoading(true);
         walletState.textContent = label || (mobileWalletConnect ? "Open wallet" : "Connecting");
         const connectWatchdog = window.setTimeout(() => {
+          if (attempt !== walletConnectAttempt) return;
           if (window.IFRWallet && !IFRWallet.isConnected()) {
             walletState.textContent = mobileWalletConnect ? "Approve in wallet" : "Check wallet";
             setWalletLoading(false);
@@ -2549,9 +2579,11 @@
         }, mobileWalletConnect ? 45000 : 15000);
         try {
           const address = await connectAction();
+          if (attempt !== walletConnectAttempt) return null;
           closeWalletDialog();
           return address || null;
         } catch (error) {
+          if (attempt !== walletConnectAttempt) return null;
           if (error && error.code === "WRONG_NETWORK") walletState.textContent = error.message;
           else if (error && (error.code === 4001 || error.message === "User rejected.")) walletState.textContent = "Rejected";
           else if (error && error.code === -32002) walletState.textContent = "Open wallet";
@@ -2559,7 +2591,10 @@
           return null;
         } finally {
           window.clearTimeout(connectWatchdog);
-          setWalletLoading(false);
+          if (attempt === walletConnectAttempt) {
+            walletConnectPending = false;
+            setWalletLoading(false);
+          }
         }
       }
 
@@ -3961,9 +3996,9 @@
         if (event.target === installDialog) installClose.click();
       });
 
-      walletDialogClose.addEventListener("click", closeWalletDialog);
+      walletDialogClose.addEventListener("click", cancelWalletConnectAttempt);
       walletDialog.addEventListener("click", (event) => {
-        if (event.target === walletDialog) closeWalletDialog();
+        if (event.target === walletDialog) cancelWalletConnectAttempt();
       });
       walletChooser.addEventListener("click", (event) => {
         if (event.target === walletChooser) closeWalletChooser();
