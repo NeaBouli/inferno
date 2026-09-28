@@ -605,3 +605,75 @@ Done in this diff: deploy-gate in `main`, supply comparison fix, removal of
 the unused private-key injection, no-private-key workflow rule, focused test
 `scripts/test-deploy-mainnet-continue-gate.cjs`. Untouched by design:
 `scripts/deploy-mainnet.js`, contracts, Hardhat config, workflow permissions.
+
+## 10. S4 vault hardening trace
+
+Scope: future-deployment source candidates for existing findings CWA-03 and
+CWA-08. These source changes do not alter the deployed Mainnet contracts and
+must not be represented as Mainnet remediation before governance, deployment
+and on-chain verification.
+
+### 10.1 Grundidee
+
+CommitmentVault must not accept a lock whose only release path depends on the
+currently stubbed price oracle. LendingVault must not activate borrowing before
+its protocol fee destination is configured, and ETH collateral payouts must
+work for contract wallets without the 2,300-gas restriction of `transfer`.
+
+### 10.2 Spur (Hop-Liste)
+
+1. `contracts/vault/CommitmentVault.sol::lock` -> condition-type gate ->
+   `IERC20::transferFrom` -- price-dependent requests stop before custody.
+2. `contracts/vault/LendingVault.sol::borrow` -> activation gate -> loan state
+   creation -- borrowing stops while `protocolFeeReceiver == address(0)`.
+3. `contracts/vault/LendingVault.sol::repay` -> borrower ETH call -- settled
+   collateral returns after effects; a failed receiver reverts atomically.
+4. `contracts/vault/LendingVault.sol::liquidate` -> liquidator/lender ETH calls
+   -- both payouts use checked calls after effects; failure reverts atomically.
+
+### 10.3 Module
+
+| Modul | Eine Aufgabe | Einstieg | Stand |
+| --- | --- | --- | --- |
+| commitment custody gate | reject unsupported price-conditioned custody | `CommitmentVault.sol::lock` | source candidate |
+| lending activation gate | require a configured protocol fee receiver | `LendingVault.sol::borrow` | source candidate |
+| lending ETH settlement | return collateral to EOAs and contract wallets | `LendingVault.sol::repay`, `::liquidate` | source candidate |
+
+### 10.4 Verdrahtung
+
+- Commitment requests reach token custody only for `TIME_ONLY` tranches.
+- Borrowing reaches collateral/accounting mutation only after price and fee
+  destination prerequisites are configured.
+- Repayment and liquidation finalize only when every required ETH payout
+  succeeds; `nonReentrant` and transaction rollback protect state consistency.
+
+### 10.5 Widerspruch und Lücken
+
+- CWA-03 remains open on Mainnet; the deployed bytecode is unchanged.
+- CWA-08 remains partly open: overdue-loan policy still requires an economic
+  design and independent review before a future LendingVault deployment.
+- CWA-01 remains governance-gated; this task does not introduce a price oracle,
+  freshness checks, borrow caps or activate lending.
+
+### 10.6 Diagrammdateien
+
+- `docs/architecture/map.puml`
+- `docs/architecture/main-path.puml`
+
+```mermaid
+mindmap
+  root((S4 vault hardening))
+    commitment custody gate
+      source candidate: CommitmentVault.lock
+    lending activation gate
+      source candidate: LendingVault.borrow
+    lending ETH settlement
+      source candidate: LendingVault.repay
+      source candidate: LendingVault.liquidate
+```
+
+### 10.7 Nächster Schritt
+
+Implement only the three mapped gates/settlement hops and focused regression
+tests. Keep FeeRouter, guardian rotation, ownership, reserve parameters,
+governance, deployment scripts and Mainnet state untouched.

@@ -38,10 +38,10 @@
       "rationale": "The owner-only emergency path ignores the ERC-20 boolean return. Canonical IFR returns true or reverts, but a future controller should use SafeERC20 or require the returned value."
     },
     {
-      "fingerprint": "b1f5bed99beb3845299cdd1aa1f4b5cb7994a5a998b1bbeb1e270c308cea2541",
+      "fingerprint": "bc20adfd1f10e0a20b01482a1a09ba901e09e82121fcad89ca287e54d1263efe",
       "subject": "LendingVault.liquidate(uint256) arbitrary-send-eth",
       "classification": "By-design destination",
-      "rationale": "The liquidator bonus is intentionally paid to msg.sender, the permissionless liquidate() caller. The function is nonReentrant and the recipient cannot be chosen independently of the caller."
+      "rationale": "The liquidator bonus is intentionally paid with a checked call to msg.sender, the permissionless liquidate() caller. The function is nonReentrant, state changes precede the call, a failed payment reverts atomically, and the recipient cannot be chosen independently of the caller."
     }
   ]
 }

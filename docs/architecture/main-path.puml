@@ -45,6 +45,37 @@ Cmd --> User : confirmation
 @enduml
 
 @startuml
+title S4 future-deployment vault hardening
+actor User
+participant "CommitmentVault.lock" as Lock
+participant "LendingVault.borrow" as Borrow
+participant "LendingVault.repay/liquidate" as Settle
+participant "ETH receiver" as Receiver
+
+User -> Lock : lock(amount, condition, time, multiplier)
+alt condition is TIME_ONLY
+  Lock -> Lock : validate then transferFrom
+else price-dependent condition
+  Lock --> User : revert before custody
+end
+
+User -> Borrow : borrow(offer, amount, duration) + ETH
+alt protocol fee receiver configured and price available
+  Borrow -> Borrow : validate and create loan
+else activation incomplete
+  Borrow --> User : revert before loan mutation
+end
+
+User -> Settle : repay or liquidate
+Settle -> Receiver : checked call{value: amount}("")
+alt receiver accepts ETH
+  Settle --> User : settlement complete
+else receiver rejects ETH
+  Settle --> User : revert; state rolls back
+end
+@enduml
+
+@startuml
 title Privilege/CORS/content-trust trace (main path)
 actor Browser
 participant "middleware/verifyCors.js" as Cors

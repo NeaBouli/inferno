@@ -183,6 +183,7 @@ contract LendingVault is Ownable, ReentrancyGuard {
         require(offer.active, "offer not active");
         require(offer.availableIFR >= ifrAmount, "insufficient IFR");
         require(offer.lender != msg.sender, "cannot self-borrow");
+        require(protocolFeeReceiver != address(0), "fee receiver not set");
 
         // Validate collateral (200% of IFR value)
         uint256 requiredCollateral = getRequiredCollateral(ifrAmount);
@@ -252,7 +253,8 @@ contract LendingVault is Ownable, ReentrancyGuard {
         loan.ethCollateral = 0;
         activeLoanCount[msg.sender]--;
 
-        payable(msg.sender).transfer(collateral);
+        (bool collateralReturned, ) = payable(msg.sender).call{value: collateral}("");
+        require(collateralReturned, "collateral return failed");
 
         emit LoanRepaid(loanId, loan.ifrAmount, interest);
     }
@@ -294,9 +296,11 @@ contract LendingVault is Ownable, ReentrancyGuard {
         activeLoanCount[loan.borrower]--;
 
         // Liquidator gets bonus
-        payable(msg.sender).transfer(bonus);
+        (bool bonusPaid, ) = payable(msg.sender).call{value: bonus}("");
+        require(bonusPaid, "liquidator payment failed");
         // Lender gets remaining collateral (compensates for lost IFR)
-        payable(offer.lender).transfer(lenderReceived);
+        (bool lenderPaid, ) = payable(offer.lender).call{value: lenderReceived}("");
+        require(lenderPaid, "lender payment failed");
 
         emit LoanLiquidated(loanId, msg.sender, bonus, lenderReceived);
     }
@@ -400,6 +404,7 @@ contract LendingVault is Ownable, ReentrancyGuard {
 
     /// @notice Set protocol fee receiver. Governance only.
     function setProtocolFeeReceiver(address _receiver) external onlyOwner {
+        require(_receiver != address(0), "receiver=0");
         protocolFeeReceiver = _receiver;
         emit ProtocolFeeReceiverUpdated(_receiver);
     }
