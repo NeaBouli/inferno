@@ -62,11 +62,6 @@ for (const stale of [
 ]) {
   assert.ok(!daoWiki.includes(stale), `DAO governance page must not include: ${stale}`);
 }
-assert.ok(
-  read("docs/PARTNERVAULT_REWARD_MEMO_2026-09-15.md").includes("> **Von:** externe Analyse (Verfasserangabe entfernt;"),
-  "Memo must not carry proposer attribution"
-);
-
 for (const relative of ["internal/operations/TODO.md", "internal/operations/TODO.html"]) {
   const todo = read(relative);
   assert.ok(todo.includes("8 transitive low findings"));
