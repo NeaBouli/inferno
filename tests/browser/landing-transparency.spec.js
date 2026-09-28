@@ -145,6 +145,50 @@ test("failed reads fail closed to unavailable without any number", async ({ page
   await expectNoNumbers(page);
 });
 
+test("every unavailable render carries its explanatory status in the same mutation", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__unavailableRenders = [];
+    new MutationObserver((records) => {
+      for (const record of records) {
+        const target = record.target;
+        if (!target.hasAttribute("data-transparency-metric") || target.getAttribute("data-state") !== "unavailable") continue;
+        window.__unavailableRenders.push(target.querySelector("[data-transparency-status]").textContent);
+      }
+    }).observe(document, { subtree: true, attributes: true, attributeFilter: ["data-state"] });
+  });
+  await blockNetwork(page);
+  await openTransparency(page);
+  for (const key of CARDS) await expect(card(page, key)).toHaveAttribute("data-state", "unavailable", { timeout: 20000 });
+  const renders = await page.evaluate(() => window.__unavailableRenders);
+  expect(renders.length).toBeGreaterThanOrEqual(CARDS.length);
+  for (const status of renders) expect(status).toMatch(/^Unavailable — Mainnet read failed; no successful read yet$/);
+});
+
+// T-158f: the hidden legacy hero canvas loop kept rendering and starved the renderer.
+test("hidden hero animation schedules no frames and resumes once the hero is shown", async ({ page }) => {
+  await page.addInitScript(() => {
+    window.__heroFrames = 0;
+    const raf = window.requestAnimationFrame.bind(window);
+    window.requestAnimationFrame = (cb) => { if (cb.name === "loop") window.__heroFrames += 1; return raf(cb); };
+  });
+  await blockNetwork(page);
+  await openTransparency(page);
+  await page.evaluate(() => document.fonts.ready);
+  // Hero loop frame requests during `frames` frames of our own rAF chain.
+  const heroFramesDuring = (frames) => page.evaluate((n) => new Promise((resolve) => {
+    const start = window.__heroFrames;
+    let left = n;
+    const tick = () => { if (--left === 0) resolve(window.__heroFrames - start); else requestAnimationFrame(tick); };
+    requestAnimationFrame(tick);
+  }), frames);
+
+  await expect(page.locator("#legacy-hero")).toBeHidden();
+  expect(await heroFramesDuring(10)).toBe(0);
+  await page.addStyleTag({ content: ".legacy-hero { display: block !important; }" });
+  await page.locator("#legacy-hero").scrollIntoViewIfNeeded();
+  await expect.poll(() => heroFramesDuring(5)).toBeGreaterThan(0);
+});
+
 test("a failed refresh after a live read hides the previous value", async ({ page }) => {
   await page.clock.install();
   await blockNetwork(page);
