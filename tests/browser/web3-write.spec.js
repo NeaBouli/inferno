@@ -403,6 +403,31 @@ test("wallet chooser keeps WalletConnect available with zero or multiple injecte
   }
 });
 
+test("new Web3 HTML fails visibly when an old cached wallet core lacks the chooser API", async ({ browser }) => {
+  const context = await browser.newContext({ serviceWorkers: "block" });
+  await context.route("**/web3-wallet-core.js?v=20260928-multiwallet", (route) => route.fulfill({
+    contentType: "application/javascript",
+    body: `window.IFRWallet = {
+      autoReconnect: async () => false,
+      isConnected: () => false,
+      on: () => {},
+      off: () => {},
+      getAddress: () => null
+    };`,
+  }));
+  try {
+    const page = await context.newPage();
+    await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+    await page.locator("[data-wallet-connect]").first().click();
+    await expect(page.locator("[data-wallet-state]").first()).toHaveText(
+      "Wallet update required · reload page",
+    );
+    await expect(page.locator("[data-wallet-chooser]")).toHaveAttribute("aria-hidden", "true");
+  } finally {
+    await context.close();
+  }
+});
+
 test("closing the wallet chooser stays disconnected and requests no account access", async ({ browser }) => {
   const { context, page, writes, pageErrors } = await preparePage(browser);
   try {
@@ -889,7 +914,11 @@ test("Android 9 stays in browser mode instead of launching an incompatible WebAP
 
 test("Web3 service worker bounds offline navigation before using the cache", () => {
   const source = readFileSync("docs/web3-sw.js", "utf8");
-  expect(source).toContain('const CACHE_NAME = "ifr-web3-v17"');
+  const html = readFileSync("docs/web3/index.html", "utf8");
+  expect(source).toContain('const CACHE_NAME = "ifr-web3-v18"');
+  expect(source).toContain('"/web3-wallet-core.js?v=20260928-multiwallet"');
+  expect(html).toContain('<script src="/web3-wallet-core.js?v=20260928-multiwallet"></script>');
+  expect(html).toContain('updateViaCache: "none"');
   expect(source).toContain("const NAVIGATION_TIMEOUT_MS = 5000");
   expect(source).toContain("fetchNavigation(request)");
   expect(source).toContain('fetch(request, { cache: "no-store", signal: controller.signal })');
