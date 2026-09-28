@@ -31,7 +31,7 @@
   <link rel="dns-prefetch" href="https://eth.llamarpc.com">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
   <script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
-  <script src="/web3-wallet-core.js"></script>
+  <script src="/web3-wallet-core.js?v=20260928-multiwallet"></script>
   <script src="/assets/ifr-state.js"></script>
   <script type="application/ld+json">
   {
@@ -2564,7 +2564,15 @@
       }
 
       async function connectWithChooser(label) {
-        if (!window.IFRWallet || typeof IFRWallet.listWallets !== "function") return null;
+        if (!window.IFRWallet || typeof IFRWallet.listWallets !== "function") {
+          walletState.textContent = "Wallet update required · reload page";
+          if ("serviceWorker" in navigator) {
+            navigator.serviceWorker.getRegistration("/")
+              .then((registration) => registration && registration.update())
+              .catch(() => null);
+          }
+          return null;
+        }
         const wallets = await IFRWallet.listWallets();
         return new Promise((resolve) => {
           openWalletChooser(wallets, async (wallet) => {
@@ -3989,7 +3997,7 @@
 
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
-          navigator.serviceWorker.register("/web3-sw.js", { scope: "/" }).catch(() => null);
+          navigator.serviceWorker.register("/web3-sw.js", { scope: "/", updateViaCache: "none" }).catch(() => null);
         });
       }
 
