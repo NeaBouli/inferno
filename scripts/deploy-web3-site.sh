@@ -29,6 +29,13 @@ HELPER="$ROOT/scripts/web3-release.cjs"
 remote() { ssh "$SSH_HOST" "$@"; }
 die() { echo "ERROR: $*" >&2; exit 1; }
 
+# Values below are interpolated into remote shell strings; allow plain names/paths only.
+for var in SSH_HOST REMOTE_ROOT CONTAINER; do
+  [[ "${!var}" =~ ^[A-Za-z0-9._/@-]+$ ]] || die "$var contains characters outside [A-Za-z0-9._/@-]"
+done
+[[ "$MIN_FREE_MB" =~ ^[0-9]+$ ]] || die "MIN_FREE_MB must be an integer"
+[[ "$PUBLIC_URL" =~ ^https://[A-Za-z0-9.-]+$ ]] || die "PUBLIC_URL must be https://<host>"
+
 require_sha() {
   [[ "${EXPECTED_SHA:-}" =~ ^[0-9a-f]{40}$ ]] || die "set EXPECTED_SHA to the full 40-char release commit"
   git -C "$ROOT" cat-file -e "${EXPECTED_SHA}^{commit}" 2>/dev/null || die "commit $EXPECTED_SHA is not in this clone; git fetch first"
