@@ -20,7 +20,7 @@ const { execFileSync } = require("node:child_process");
 const root = path.resolve(__dirname, "..");
 const writeMode = process.argv.includes("--write");
 const read = (relative) => fs.readFileSync(path.join(root, relative), "utf8");
-const git = (args) => execFileSync("git", args, { cwd: root, encoding: "utf8" }).trim();
+const git = (args) => execFileSync("git", args, { cwd: root, encoding: "utf8", env: { ...process.env, TZ: "UTC" } }).trim();
 
 const hosts = [
   { origin: "https://ifrunit.tech", sitemap: "docs/sitemap.xml", robots: "docs/robots.txt", docroot: "docs" },
@@ -38,7 +38,8 @@ function localFile(host, loc) {
 
 function lastCommitDate(file) {
   if (dirty.has(file)) return today;
-  return git(["log", "-1", "--format=%cs", "--", file]);
+  // UTC like `today`; %cs uses the committer offset and reads as "future" east of UTC after midnight.
+  return git(["log", "-1", "--date=format-local:%Y-%m-%d", "--format=%cd", "--", file]);
 }
 
 function canonicalOf(source) {
