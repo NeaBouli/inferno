@@ -77,13 +77,19 @@ ensure_space() {
   fi
 }
 
+# Excluded paths are never deleted remotely (no --delete-excluded): this keeps
+# remote-only env files and SQLite files safe even though none are expected in
+# this tree (production data lives in the inferno_benefits_data volume).
 sync_app() {
   rsync -az --delete \
     --exclude node_modules \
     --exclude .next \
     --exclude dist \
-    --exclude test.db \
-    --exclude dev.db \
+    --exclude '*.db' \
+    --exclude '*.db-journal' \
+    --exclude .env \
+    --exclude .env.local \
+    --exclude .env.production \
     "$LOCAL_APP" "$SSH_HOST:$REMOTE_APP"
 }
 
@@ -146,6 +152,23 @@ if [[ "$MODE" == "capacity" ]]; then
   exit 0
 fi
 
+# Deploy modes ship the local working tree; bind it to one reviewed commit.
+require_exact_release() {
+  if [[ ! "${EXPECTED_SHA:-}" =~ ^[0-9a-f]{40}$ ]]; then
+    echo "Set EXPECTED_SHA to the full 40-char release commit before $MODE deploys." >&2
+    exit 64
+  fi
+  if [[ "$(git -C "$LOCAL_ROOT" rev-parse HEAD)" != "$EXPECTED_SHA" ]]; then
+    echo "Refusing deploy: HEAD is not $EXPECTED_SHA." >&2
+    exit 65
+  fi
+  if [[ -n "$(git -C "$LOCAL_ROOT" status --porcelain -- apps/benefits-network scripts/deploy-benefits-network.sh)" ]]; then
+    echo "Refusing deploy: apps/benefits-network has uncommitted or untracked changes." >&2
+    exit 65
+  fi
+}
+
+require_exact_release
 ensure_space "pre-deploy" 1
 assert_single_backend
 sync_app
