@@ -117,6 +117,14 @@ grep -Fq "dirty" <<< "$OUT"
 git -C "$REPO" checkout -q -- docs/llms.txt
 refute_log "ssh "
 
+# --- web3: env values that reach remote shell strings are allow-listed -------------
+CONTAINER="x'; touch $TMP/injected; '" run 1 "$REPO/scripts/deploy-web3-site.sh" plan
+grep -Fq "CONTAINER contains characters" <<< "$OUT"
+REMOTE_ROOT='/opt/inferno;id' run 1 "$REPO/scripts/deploy-web3-site.sh" plan
+MIN_FREE_MB='1+1' run 1 "$REPO/scripts/deploy-web3-site.sh" plan
+test ! -e "$TMP/injected"
+refute_log "ssh "
+
 # --- web3: plan is read-only -----------------------------------------------------
 cp -R "$SITE" "$TMP/site.before"
 : > "$LOG"
@@ -212,6 +220,7 @@ EXPECTED_SHA="$SHA" MIN_FREE_GB=0 REMOTE_VOLUME=/opt/inferno run 0 "$REPO/script
 assert_log "--exclude .env --exclude"
 assert_log "--exclude .env.local"
 assert_log "--exclude *.db"
+assert_log "--exclude *.db-wal"
 assert_log "up -d --build --no-deps benefits-frontend"
 refute_log "prune"
 # capacity stays usable without a release commit

@@ -87,6 +87,8 @@ sync_app() {
     --exclude dist \
     --exclude '*.db' \
     --exclude '*.db-journal' \
+    --exclude '*.db-wal' \
+    --exclude '*.db-shm' \
     --exclude .env \
     --exclude .env.local \
     --exclude .env.production \
