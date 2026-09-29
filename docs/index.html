@@ -3820,11 +3820,17 @@ if (isLocked) {
     return '\u039E' + n.toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
   }
 
+  // Overlapping refreshes (interval, visibility, retry) may resolve out of order; only the
+  // newest one may render, so a late older response never shows an outdated value as live.
+  var refreshGeneration = 0;
+
   function doRefresh() {
+    var generation = ++refreshGeneration;
     return Promise.all([
       fetchWithTimeout(PROXY_BASE + '/api/ifr/supply', 8000),
       fetchWithTimeout(PROXY_BASE + '/api/ifr/balances', 8000)
     ]).then(function(res) {
+      if (generation !== refreshGeneration) return;
       var supply = res[0];
       var bal = res[1].balances;
       var lockMeta = res[1].ifrLock || {};
@@ -4034,12 +4040,16 @@ if (isLocked) {
   function refreshAllLiveData() {
     lastRefreshAt = Date.now();
     renderTransparencyCards();
-    doRefresh().catch(function(e) {
+    var attempt = doRefresh();
+    var generation = refreshGeneration;
+    attempt.catch(function(e) {
+      if (generation !== refreshGeneration) return; // a newer refresh already took over
       console.error('Live data failed, retrying in 3s:', e);
       setTimeout(function() {
+        if (generation !== refreshGeneration) return;
         doRefresh().catch(function(e2) {
           console.error('Retry also failed:', e2);
-          showNotAvailable();
+          if (generation + 1 === refreshGeneration) showNotAvailable();
         });
       }, 3000);
     });

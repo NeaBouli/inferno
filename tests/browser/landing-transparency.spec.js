@@ -227,3 +227,39 @@ test("visibility return after a missed refresh shows stale, not the old value", 
   }
   await expectNoNumbers(page);
 });
+
+test("a late response from an older refresh never overwrites a newer live value", async ({ page }) => {
+  await page.clock.install();
+  await blockNetwork(page);
+  const held = [];
+  let supplyRequests = 0;
+  await page.route(`${PROXY}/api/ifr/supply`, (route) => {
+    supplyRequests += 1;
+    const body = supplyRequests === 1
+      ? { totalSupply: 998900000, burned: 1100000 } // older snapshot, answered last
+      : { totalSupply: 996694237.626, burned: 3305762.374 };
+    const reply = () => route.fulfill({ contentType: "application/json", body: JSON.stringify(body) });
+    if (supplyRequests === 1) held.push(reply);
+    else return reply();
+  });
+  await page.route(`${PROXY}/api/ifr/balances`, (route) => route.fulfill({
+    contentType: "application/json",
+    body: JSON.stringify({ balances: {} }),
+  }));
+  await page.route(RPC_URL, answerRpc(LIVE_FIXTURE));
+  await openTransparency(page);
+  await expect.poll(() => held.length).toBe(1);
+
+  // A newer refresh (tab returns after >10s) completes while the first one is still pending.
+  // Jump wall time without firing timers so the first request has not timed out yet.
+  await page.clock.setSystemTime(Date.now() + 11000);
+  await page.evaluate(() => document.dispatchEvent(new Event("visibilitychange")));
+  const burned = card(page, "burned").locator("[data-transparency-value]");
+  await expect(burned).toHaveText("3.3M IFR");
+
+  // The older response now arrives; it must be discarded, not rendered as current.
+  await held[0]();
+  await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 0)));
+  await expect(burned).toHaveText("3.3M IFR");
+  await expect(card(page, "burned")).toHaveAttribute("data-state", "live");
+});
