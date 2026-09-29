@@ -392,3 +392,15 @@ migration and its full contract-suite evidence exist.
   remains unchanged because no patched upstream version exists.
 - This entry records a local candidate only. Alert closure requires the full
   wallet/Mythril regression matrix, independent security review and Exact-Head CI.
+
+## 2026-09-30 fast-uri Host-Confusion Advisory
+
+- `GHSA-58mr-gqgx-xq4g` (High, published after the S4 merge) affects exactly
+  `fast-uri@3.1.6`, which both the root development graph and the Points
+  backend runtime graph pinned through `overrides` (via `ajv`).
+- Both exact overrides and lock entries move to `fast-uri@3.1.7`; `ajv`'s
+  `^3.0.1` range already admits it, so no other package changes. The 3.1.7
+  tarball was compared with 3.1.6: the only code change is the IP-literal
+  bracket validation fix, with no install scripts or new dependencies.
+- Gates: clean `npm ci`, Points backend type check, build and test suite, and
+  the root contract/tooling suites that load `ajv`.
