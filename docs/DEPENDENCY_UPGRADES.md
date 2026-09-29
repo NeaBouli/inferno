@@ -404,3 +404,14 @@ migration and its full contract-suite evidence exist.
   bracket validation fix, with no install scripts or new dependencies.
 - Gates: clean `npm ci`, Points backend type check, build and test suite, and
   the root contract/tooling suites that load `ajv`.
+- The same day `GHSA-r3ph-w7gj-g6xm` (Moderate, js-yaml `>=5.0.0 <=5.4.0`) reached
+  the development-only `markdownlint-cli@0.49.1`, whose `~5.2.1` range excludes
+  the patched line. It would fail the root `npm audit --audit-level=moderate`
+  gates in Contract Tests and Security Audit on the next run. A scoped nested
+  override `markdownlint-cli > js-yaml@5.4.2` resolves it; markdownlint only
+  calls `load()` for its config and reports the identical 3774 baseline
+  findings. Mocha's separate `js-yaml@4.3.2` is unaffected.
+- Every repository lockfile was rescanned: no vulnerable fast-uri or js-yaml 5.x
+  remains. Root audit is 8 Low (the documented development-only elliptic
+  chain) and 0 Moderate or higher; Benefits wallet keeps its documented
+  stream-json exception.
