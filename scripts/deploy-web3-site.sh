@@ -33,6 +33,7 @@ die() { echo "ERROR: $*" >&2; exit 1; }
 for var in SSH_HOST REMOTE_ROOT CONTAINER; do
   [[ "${!var}" =~ ^[A-Za-z0-9._/@-]+$ ]] || die "$var contains characters outside [A-Za-z0-9._/@-]"
 done
+[[ "$SSH_HOST" =~ ^[A-Za-z0-9] ]] || die "SSH_HOST must start with a letter or digit (ssh would read '-' as an option)"
 [[ "$MIN_FREE_MB" =~ ^[0-9]+$ ]] || die "MIN_FREE_MB must be an integer"
 [[ "$PUBLIC_URL" =~ ^https://[A-Za-z0-9.-]+$ ]] || die "PUBLIC_URL must be https://<host>"
 

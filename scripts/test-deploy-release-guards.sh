@@ -92,6 +92,7 @@ EOF
 # curl: serve the fake docroot; -I returns the CSP from the deployed headers file.
 cat > "$FAKES/curl" <<'EOF'
 #!/usr/bin/env bash
+printf 'curl %s\n' "$*" >> "$LOG"
 url="${@: -1}"; path="${url#https://web3.ifrunit.tech/}"; path="${path%%\?*}"
 html="$REMOTE/opt/inferno/web3-site/html"
 if [[ " $* " == *" -fsSI "* ]]; then
@@ -106,7 +107,7 @@ chmod +x "$FAKES"/*
 run() { # run <expected-exit> <cmd...>
   local expected="$1"; shift
   set +e
-  OUT="$(PATH="$FAKES:$PATH" LOG="$LOG" REMOTE="$REMOTE" REAL_RSYNC="$REAL_RSYNC" SSH_HOST=web3-test-host "$@" 2>&1)"
+  OUT="$(PATH="$FAKES:$PATH" LOG="$LOG" REMOTE="$REMOTE" REAL_RSYNC="$REAL_RSYNC" SSH_HOST="${SSH_HOST:-web3-test-host}" "$@" 2>&1)"
   local status=$?
   set -e
   if [[ "$status" != "$expected" ]]; then
@@ -117,6 +118,8 @@ run() { # run <expected-exit> <cmd...>
 }
 assert_log() { grep -Fq -- "$1" "$LOG" || { echo "FAIL: log lacks: $1" >&2; cat "$LOG" >&2; exit 1; }; }
 refute_log() { if grep -Fq -- "$1" "$LOG"; then echo "FAIL: log has: $1" >&2; exit 1; fi; }
+# A rejected env value must stop the script before ssh, rsync, docker or curl run.
+assert_no_calls() { [[ ! -s "$LOG" ]] || { echo "FAIL: guard let calls through:" >&2; cat "$LOG" >&2; exit 1; }; }
 
 # --- web3: guards refuse before any remote access ------------------------------
 run 1 "$REPO/scripts/deploy-web3-site.sh" deploy
@@ -129,12 +132,28 @@ git -C "$REPO" checkout -q -- docs/llms.txt
 refute_log "ssh "
 
 # --- web3: env values that reach remote shell strings are allow-listed -------------
+# Every rejection happens before any remote or public call and leaves the host as is.
+cp -R "$SITE" "$TMP/site.guard"
+: > "$LOG"
 CONTAINER="x'; touch $TMP/injected; '" run 1 "$REPO/scripts/deploy-web3-site.sh" plan
 grep -Fq "CONTAINER contains characters" <<< "$OUT"
 REMOTE_ROOT='/opt/inferno;id' run 1 "$REPO/scripts/deploy-web3-site.sh" plan
 MIN_FREE_MB='1+1' run 1 "$REPO/scripts/deploy-web3-site.sh" plan
-test ! -e "$TMP/injected"
-refute_log "ssh "
+for host in "web3-test-host; touch $TMP/injected" 'web3-test-host $(touch '"$TMP"'/injected)' \
+            "-oProxyCommand=touch $TMP/injected" "-F$TMP/injected"; do
+  SSH_HOST="$host" EXPECTED_SHA="$SHA" run 1 "$REPO/scripts/deploy-web3-site.sh" deploy
+  grep -Fq "SSH_HOST" <<< "$OUT" || { echo "FAIL: SSH_HOST '$host' not named in rejection" >&2; exit 1; }
+done
+for url in "http://web3.ifrunit.tech" "https://web3.ifrunit.tech/" "https://web3.ifrunit.tech/x" \
+           "https://web3.ifrunit.tech;touch $TMP/injected" "https://web3.ifrunit.tech\$(touch $TMP/injected)" \
+           "https://user@web3.ifrunit.tech" "https://" "web3.ifrunit.tech"; do
+  PUBLIC_URL="$url" EXPECTED_SHA="$SHA" run 1 "$REPO/scripts/deploy-web3-site.sh" verify
+  grep -Fq "PUBLIC_URL must be https://<host>" <<< "$OUT" || { echo "FAIL: PUBLIC_URL '$url' not rejected by the guard" >&2; exit 1; }
+done
+test ! -e "$TMP/injected" || { echo "FAIL: a rejected env value was executed" >&2; exit 1; }
+assert_no_calls
+diff -r "$TMP/site.guard" "$SITE" >/dev/null || { echo "FAIL: a rejected run changed the host" >&2; exit 1; }
+test -z "$(ls "$REMOTE/opt/inferno/backups")" || { echo "FAIL: a rejected run created a backup" >&2; exit 1; }
 
 # --- web3: plan is read-only -----------------------------------------------------
 cp -R "$SITE" "$TMP/site.before"
@@ -169,7 +188,6 @@ refute_log "nginx -s reload"
 grep -q "esm.sh" "$SITE/html/.nginx/web3-security-headers.conf" || { echo "FAIL: headers not restored after nginx -t failure" >&2; exit 1; }
 
 # --- web3: deploy backs up, ships docroot + headers, reloads, verifies ----------
-sleep 1   # distinct backup timestamp; a same-second backup dir is refused (tested below)
 : > "$LOG"
 EXPECTED_SHA="$SHA" run 0 "$REPO/scripts/deploy-web3-site.sh" deploy
 first_backup="$(ls -d "$REMOTE"/opt/inferno/backups/web3-site-* | head -1)"   # from the aborted run: pristine host
@@ -219,6 +237,20 @@ refute_log "ssh "                                    # invalid paths never reach
 run 0 "$REPO/scripts/deploy-web3-site.sh" rollback "/opt/inferno/backups/$(basename "$first_backup")"
 diff -r "$TMP/site.before/html" "$SITE/html" || { echo "FAIL: rollback did not restore the docroot" >&2; exit 1; }
 assert_log "nginx -s reload"
+
+# --- benefits: env values that reach ssh and remote shell strings are allow-listed -
+: > "$LOG"
+for env in "SSH_HOST=web3-test-host;touch $TMP/injected" "SSH_HOST=-oProxyCommand=touch" "SSH_HOST=-Fconfig" "SSH_HOST=user/host" \
+           "REMOTE_ROOT=/opt/inferno';touch $TMP/injected;'" "REMOTE_ROOT=opt/inferno" \
+           "REMOTE_VOLUME=/mnt/v \$(touch $TMP/injected)" "REMOTE_VOLUME=-/mnt" \
+           "REMOTE_COMPOSE_ENV_FILE=/opt/inferno/.env.benefits';touch $TMP/injected;'"; do
+  for mode in frontend status capacity; do
+    EXPECTED_SHA="$SHA" MIN_FREE_GB=0 run 64 env "$env" "$REPO/scripts/deploy-benefits-network.sh" "$mode"
+    grep -Fq "${env%%=*} must" <<< "$OUT" || { echo "FAIL: $env not rejected by the guard" >&2; echo "$OUT" >&2; exit 1; }
+  done
+done
+test ! -e "$TMP/injected" || { echo "FAIL: a rejected env value was executed" >&2; exit 1; }
+assert_no_calls
 
 # --- benefits: deploy modes require the exact clean release commit ---------------
 : > "$LOG"

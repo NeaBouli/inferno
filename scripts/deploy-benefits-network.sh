@@ -24,6 +24,19 @@ case "$MODE" in
     ;;
 esac
 
+# Values below are interpolated into ssh arguments and remote shell strings; allow
+# a plain host alias (no leading '-': ssh would read it as an option) and absolute paths only.
+if [[ ! "$SSH_HOST" =~ ^[A-Za-z0-9][A-Za-z0-9._@-]*$ ]]; then
+  echo "SSH_HOST must match ^[A-Za-z0-9][A-Za-z0-9._@-]*\$." >&2
+  exit 64
+fi
+for var in REMOTE_ROOT REMOTE_VOLUME REMOTE_COMPOSE_ENV_FILE; do
+  if [[ ! "${!var}" =~ ^/[A-Za-z0-9._/@-]+$ ]]; then
+    echo "$var must be an absolute path of characters [A-Za-z0-9._/@-]." >&2
+    exit 64
+  fi
+done
+
 remote() {
   ssh "$SSH_HOST" "$@"
 }
