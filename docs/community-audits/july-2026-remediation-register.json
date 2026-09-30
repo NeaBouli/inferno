@@ -4,7 +4,9 @@
   "baseline": "564a7c4504c8da7a24a302204f4fd5e39d1abece",
   "originalAudit": {
     "path": "IFR_Protocol_Audit_2026-07-27.md",
-    "sha256": "57ec9eeb3fa2de0b9ac4f62680a62ff8d2ea79dc19b89a0726e9b41b70fb3f12"
+    "sha256": "57ec9eeb3fa2de0b9ac4f62680a62ff8d2ea79dc19b89a0726e9b41b70fb3f12",
+    "preRedactionSha256": "ec7f99b0b74c51e04091727a0b69f49f67c36409a52c9ea7b55ba545b6b3e375",
+    "redactionNotice": "[Firmenname auf Wunsch des Betreibers entfernt, 2026-09-30]"
   },
   "statusDefinitions": {
     "fixed_and_verified": "The correction is integrated and current repository evidence verifies the claimed scope.",

@@ -4,13 +4,15 @@
 **Repository baseline:** `564a7c4504c8da7a24a302204f4fd5e39d1abece`
 
 This register shows the current status of every normalized finding in the community
-audit submitted on 27 July 2026. The original report remains unchanged and preserves
-the severity and project snapshot recorded on that date. A red or high-severity label
+audit submitted on 27 July 2026. The published report keeps the submitted text apart from
+one disclosed company-name redaction and preserves the severity and project snapshot
+recorded on that date. A red or high-severity label
 in the original report is therefore historical severity, not proof that the issue is
 still open today. Current status is authoritative only in this evidence-backed register.
 
-- [Original report](IFR_Protocol_Audit_2026-07-27.md) (unchanged except one owner-requested company-name redaction, 2026-09-30)
-- Original SHA-256: `57ec9eeb3fa2de0b9ac4f62680a62ff8d2ea79dc19b89a0726e9b41b70fb3f12`
+- [Published report](IFR_Protocol_Audit_2026-07-27.md) (submitted text with one disclosed owner-requested company-name redaction, 2026-09-30)
+- Published (redacted) SHA-256: `57ec9eeb3fa2de0b9ac4f62680a62ff8d2ea79dc19b89a0726e9b41b70fb3f12`
+- Pre-redaction original SHA-256: `ec7f99b0b74c51e04091727a0b69f49f67c36409a52c9ea7b55ba545b6b3e375`
 - [Audit index](README.md)
 - [Current CWA-01...CWA-82 register](CWA_REMEDIATION_REGISTER.md)
 
