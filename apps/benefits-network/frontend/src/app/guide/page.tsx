@@ -54,7 +54,7 @@ const sellerSteps = [
   },
   {
     title: 'Keep rewards optional',
-    body: 'Registering a seller profile never enables rewards; they stay off until the owner wallet signs a separate reward application, and an owner-signed disable stops them at any time. Sellers that want a separate standard EVM payout account (StealthX-style setups) prove control of that account with its own fresh signature before governance compares it on-chain; smart-contract wallet proof is not supported yet. Sellers that opt out entirely (VLABS-style setups) simply never apply.',
+    body: 'Registering a seller profile never enables rewards; they stay off until the owner wallet signs a separate reward application, and an owner-signed disable stops them at any time. Sellers that want a separate standard EVM payout account (StealthX-style setups) prove control of that account with its own fresh signature before governance compares it on-chain; smart-contract wallet proof is not supported yet. Sellers that opt out entirely simply never apply.',
   },
   {
     title: 'Review recent customer checks',

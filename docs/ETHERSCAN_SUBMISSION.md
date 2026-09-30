@@ -58,7 +58,6 @@
    **INTEGRATED BUILDERS:**
    - K-9 Academy (dog training platform)
    - StealthX/SecureCall (encrypted voice calls)
-   - Vendetta (price transparency network)
    - NEXUS GR (B2B/P2P marketplace — coming soon)
 
 7. **Sector:** DeFi / Utility Token

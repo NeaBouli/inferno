@@ -8,7 +8,7 @@
 
 ## 1. Executive Summary
 
-**IFR Protocol („Inferno")** ist ein deflationärer ERC-20-Token auf Ethereum Mainnet (0x77e99917Eca8539c62F509ED1193ac36580A6e7B): Jeder Transfer burned 2,5 %, plus 1 % Pool-Fee (3,5 % gesamt, Cap 5 %). Nutzer sollen IFR einmalig on-chain locken für „lebenslangen Premium-Zugang" zu einem Ökosystem aus Builder-Produkten (Web3 Access Layer, Commerce-PWA, AI Copilot, Lending Vaults). Betrieben von einer Einzelperson unter dem Pseudonym „NeaBouli / VENDETTA LABS".
+**IFR Protocol („Inferno")** ist ein deflationärer ERC-20-Token auf Ethereum Mainnet (0x77e99917Eca8539c62F509ED1193ac36580A6e7B): Jeder Transfer burned 2,5 %, plus 1 % Pool-Fee (3,5 % gesamt, Cap 5 %). Nutzer sollen IFR einmalig on-chain locken für „lebenslangen Premium-Zugang" zu einem Ökosystem aus Builder-Produkten (Web3 Access Layer, Commerce-PWA, AI Copilot, Lending Vaults). Betrieben von einer Einzelperson unter dem Pseudonym „NeaBouli" [Firmenname auf Wunsch des Betreibers entfernt, 2026-09-30].
 
 **Gesamturteil:**
 

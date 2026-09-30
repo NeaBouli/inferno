@@ -12,6 +12,9 @@ test('validates anonymous bounded text', () => {
   assert.throws(() => validateText('pRoPoSeD bY Alice'), /proposer attribution/);
   assert.throws(() => validateText('AUTHOR: Alice'), /proposer attribution/);
   assert.throws(() => validateText('x'.repeat(4097)), /4096-character limit/);
+  // Personal names are hash-matched; the fixture is built from char codes so no name is stored.
+  assert.throws(() => validateText(`Agenda item from ${String.fromCharCode(71,101,111,114,103,105,111,115)}`), /personal name/);
+  assert.doesNotThrow(() => validateText('Agenda item from the Council'));
 });
 
 test('defaults to dry-run without network access', async () => {

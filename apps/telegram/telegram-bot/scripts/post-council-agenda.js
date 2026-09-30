@@ -13,12 +13,30 @@ const FORBIDDEN_ATTRIBUTIONS = [
   /proposed by/i,
   /submitted by/i,
   /author\s*:/i,
-  /IFR Core Developer/i,
-  /redacted/i,
   /codex/i,
   /kimi/i,
   /claude/i
 ];
+
+// Personal names are matched by SHA-256 of lowercase words and word pairs so the
+// names themselves never appear in the repository.
+const FORBIDDEN_NAME_HASHES = new Set([
+  'a7addf2c6e799b2417259e5ea4d6f0b4bc0012da6a37d20058258a61a63e45fb',
+  'd5bdd6d052dfcb41386fc253d1c2b3ca379412dfedfae0ee06c215362d1dadf8'
+]);
+
+function containsForbiddenName(text) {
+  const words = String(text).toLowerCase().match(/[a-z]+/g) || [];
+  for (let i = 0; i < words.length; i += 1) {
+    const candidates = [words[i]];
+    if (i + 1 < words.length) candidates.push(`${words[i]} ${words[i + 1]}`);
+    for (const candidate of candidates) {
+      const digest = require('node:crypto').createHash('sha256').update(candidate).digest('hex');
+      if (FORBIDDEN_NAME_HASHES.has(digest)) return true;
+    }
+  }
+  return false;
+}
 
 function validateText(text) {
   if (!text.trim()) throw new Error('Council agenda draft is empty');
@@ -26,6 +44,7 @@ function validateText(text) {
   for (const pattern of FORBIDDEN_ATTRIBUTIONS) {
     if (pattern.test(text)) throw new Error(`Council agenda contains proposer attribution: ${pattern}`);
   }
+  if (containsForbiddenName(text)) throw new Error('Council agenda contains a personal name');
 }
 
 function confirmationCode(text) {
