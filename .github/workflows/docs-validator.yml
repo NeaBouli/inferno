@@ -256,6 +256,9 @@ jobs:
       - name: Check security reporting configuration
         run: npm run test:security-reporting
 
+      - name: Check MIT license consistency and absence of operator branding/personal data
+        run: npm run test:license-privacy
+
       - name: Check public surface routing
         run: npm run test:surface-routing
 

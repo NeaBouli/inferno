@@ -81,7 +81,8 @@
     "post:x:daily:status": "X_DRY_RUN=true node scripts/x-daily-bot.js status",
     "test:wiki-nav": "node scripts/check-wiki-nav-consistency.cjs",
     "test:wiki-shell": "node scripts/test-wiki-shell-consistency.cjs",
-    "test:landing-wiki-ui": "playwright test tests/browser/landing-transparency.spec.js tests/browser/wiki-shell.spec.js"
+    "test:landing-wiki-ui": "playwright test tests/browser/landing-transparency.spec.js tests/browser/wiki-shell.spec.js tests/browser/footer-contact.spec.js",
+    "test:license-privacy": "node scripts/test-license-privacy.cjs"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "4.0.15",

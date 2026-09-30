@@ -1,6 +1,6 @@
 # July 2026 Community Audit Remediation Register
 
-**Updated:** 2026-09-27
+**Updated:** 2026-09-30
 **Repository baseline:** `564a7c4504c8da7a24a302204f4fd5e39d1abece`
 
 This register shows the current status of every normalized finding in the community
@@ -9,8 +9,8 @@ the severity and project snapshot recorded on that date. A red or high-severity 
 in the original report is therefore historical severity, not proof that the issue is
 still open today. Current status is authoritative only in this evidence-backed register.
 
-- [Original unchanged report](IFR_Protocol_Audit_2026-07-27.md)
-- Original SHA-256: `ec7f99b0b74c51e04091727a0b69f49f67c36409a52c9ea7b55ba545b6b3e375`
+- [Original report](IFR_Protocol_Audit_2026-07-27.md) (unchanged except one owner-requested company-name redaction, 2026-09-30)
+- Original SHA-256: `57ec9eeb3fa2de0b9ac4f62680a62ff8d2ea79dc19b89a0726e9b41b70fb3f12`
 - [Audit index](README.md)
 - [Current CWA-01...CWA-82 register](CWA_REMEDIATION_REGISTER.md)
 
@@ -18,8 +18,8 @@ still open today. Current status is authoritative only in this evidence-backed r
 
 | Status | Count | Meaning |
 | --- | ---: | --- |
-| Fixed and verified | 9 | The correction is integrated and current repository evidence verifies the claimed scope. |
-| Partially remediated | 5 | Material safeguards or wording corrections are integrated, but a stated part of the finding remains open. |
+| Fixed and verified | 10 | The correction is integrated and current repository evidence verifies the claimed scope. |
+| Partially remediated | 4 | Material safeguards or wording corrections are integrated, but a stated part of the finding remains open. |
 | Corrected outdated snapshot | 1 | The dated observation no longer describes current state; current facts and their evidence are published separately. |
 | Governance or future-version gated | 3 | The remaining change needs an authorized governance action, migration or separately reviewed future contract version. |
 | Accepted or monitored | 2 | The current limitation is explicitly documented and monitored; it must be revisited before the affected path is activated or replaced. |
@@ -43,7 +43,7 @@ still open today. Current status is authoritative only in this evidence-backed r
 | **JUL-12** Unreproducible coverage and drifting test counts (section 4.6) | Medium | **Fixed and verified** | Current canonical test counts are centralized and checked. The old coverage percentage is labeled as a historical subset snapshot rather than current full-repository evidence. | Update the canonical matrix only with reproducible test evidence and keep historical coverage explicitly dated. | Status-baseline, functionality-status and CWA-register CI guards. | [README.md](../../README.md); [README.md](../../README.md) |
 | **JUL-13** Cross-surface numeric and narrative drift (section 4.7) | Medium | **Fixed and verified** | The CWA-57 through CWA-73 content-drift findings are corrected against contract, route and block-pinned chain evidence; CWA-74 is informational. | Retain the dedicated CWA content-coherence guard and update dated values only with matching evidence. | CWA content-coherence, content-trust, status-baseline, cross-surface routing/link tests and block-pinned supply evidence. | [scripts/test-content-trust.cjs](../../scripts/test-content-trust.cjs); [docs/community-audits/cwa-remediation-register.json](../../docs/community-audits/cwa-remediation-register.json); [scripts/test-cwa-content-coherence.cjs](../../scripts/test-cwa-content-coherence.cjs) |
 | **JUL-14** LP custody and lock explanation (section 4.8) | Medium | **Fixed and verified** | Public surfaces now state that Team.Finance was disabled, LP tokens remain in finalized BootstrapVaultV3 and the deployed vault exposes no LP withdrawal path. | Preserve exact custody wording and direct users to the verified contract/pair rather than an inapplicable locker claim. | Content-trust guard, bytecode/source review and current custody chain check. | [README.md](../../README.md); [docs/wiki/bootstrap.html](../../docs/wiki/bootstrap.html) |
-| **JUL-15** License and deployment-record completeness (section 4.9) | Medium | **Partially remediated** | Contract files carry SPDX MIT headers and deployment references improved, but the repository still has no root license file and the license policy remains unresolved. | Owner/legal review must choose and publish a repository license that matches source headers and public claims; deployment evidence must remain source/chain consistent. | Root license presence, SPDX consistency test and deployment-record/chain audit. | [contracts/token/InfernoToken.sol](../../contracts/token/InfernoToken.sol); [docs/community-audits/cwa-remediation-register.json](../../docs/community-audits/cwa-remediation-register.json) |
+| **JUL-15** License and deployment-record completeness (section 4.9) | Medium | **Fixed and verified** | The owner chose MIT on 2026-09-30: a root MIT LICENSE matches every SPDX MIT source header, and README and public footers reference it. The Mainnet deployment record is complete and chain/source consistent (CWA-23). | Keep new sources on SPDX MIT and deployments/mainnet.json in lockstep with the chain. | `npm run test:license-privacy` (root LICENSE, SPDX, public wording) and `npm run test:cwa-content` (deployment manifest parity). | [LICENSE](../../LICENSE); [contracts/token/InfernoToken.sol](../../contracts/token/InfernoToken.sol); [docs/community-audits/cwa-remediation-register.json](../../docs/community-audits/cwa-remediation-register.json) |
 | **JUL-16** Reputation and AI-risk wording (section 4.10) | Medium | **Partially remediated** | Unverifiable external no-risk and harmlessness claims are blocked from active public content. The reputation page now carries a reviewer boundary, but broader reputation framing remains an editorial governance concern. | Keep factual source-linked language and remove or qualify any remaining advocacy phrasing that cannot be independently verified. | Content-trust test and claim-by-claim editorial review. | [scripts/test-content-trust.cjs](../../scripts/test-content-trust.cjs); [docs/wiki/reputation.html](../../docs/wiki/reputation.html) |
 | **JUL-17** Ambiguous Telegram destinations (section Low findings) | Low | **Fixed and verified** | Current FAQ and footer copy explicitly distinguish the read-only announcement channel from the community discussion group and warn about impersonators. | Keep both roles labeled wherever Telegram links are shown. | Public link/label checks and content-trust review. | [docs/wiki/faq.html](../../docs/wiki/faq.html); [docs/wiki/faq.html](../../docs/wiki/faq.html) |
 | **JUL-18** Outdated WalletConnect roadmap wording (section Low findings) | Low | **Fixed and verified** | WalletConnect and connector support are described as current Web3 functionality with explicit device-test boundaries, not as a future Phase 2 promise. | Keep connector claims aligned with the verified wallet matrix. | Web3 browser suite plus the remaining physical-device acceptance matrix. | [docs/llms.txt](../../docs/llms.txt); [docs/CURRENT_FUNCTIONALITY_STATUS.md](../../docs/CURRENT_FUNCTIONALITY_STATUS.md) |

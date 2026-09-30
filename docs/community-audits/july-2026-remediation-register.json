@@ -1,10 +1,10 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-09-27",
+  "updatedAt": "2026-09-30",
   "baseline": "564a7c4504c8da7a24a302204f4fd5e39d1abece",
   "originalAudit": {
     "path": "IFR_Protocol_Audit_2026-07-27.md",
-    "sha256": "ec7f99b0b74c51e04091727a0b69f49f67c36409a52c9ea7b55ba545b6b3e375"
+    "sha256": "57ec9eeb3fa2de0b9ac4f62680a62ff8d2ea79dc19b89a0726e9b41b70fb3f12"
   },
   "statusDefinitions": {
     "fixed_and_verified": "The correction is integrated and current repository evidence verifies the claimed scope.",
@@ -15,8 +15,8 @@
     "open_actionable": "Repository, hosting or product work remains directly actionable."
   },
   "expectedStatusTotals": {
-    "fixed_and_verified": 9,
-    "partially_remediated": 5,
+    "fixed_and_verified": 10,
+    "partially_remediated": 4,
     "corrected_outdated_snapshot": 1,
     "governance_or_future_version_gated": 3,
     "documented_accepted_or_monitored": 2,
@@ -239,11 +239,12 @@
       "severity": "Medium",
       "title": "License and deployment-record completeness",
       "sourceSection": "4.9",
-      "status": "partially_remediated",
-      "currentAssessment": "Contract files carry SPDX MIT headers and deployment references improved, but the repository still has no root license file and the license policy remains unresolved.",
-      "remainingAction": "Owner/legal review must choose and publish a repository license that matches source headers and public claims; deployment evidence must remain source/chain consistent.",
-      "verification": "Root license presence, SPDX consistency test and deployment-record/chain audit.",
+      "status": "fixed_and_verified",
+      "currentAssessment": "The owner chose MIT on 2026-09-30: a root MIT LICENSE matches every SPDX MIT source header, and README and public footers reference it. The Mainnet deployment record is complete and chain/source consistent (CWA-23).",
+      "remainingAction": "Keep new sources on SPDX MIT and deployments/mainnet.json in lockstep with the chain.",
+      "verification": "`npm run test:license-privacy` (root LICENSE, SPDX, public wording) and `npm run test:cwa-content` (deployment manifest parity).",
       "evidence": [
+        {"path": "LICENSE", "marker": "MIT License"},
         {"path": "contracts/token/InfernoToken.sol", "marker": "SPDX-License-Identifier: MIT"},
         {"path": "docs/community-audits/cwa-remediation-register.json", "marker": "License statements are inconsistent"}
       ]

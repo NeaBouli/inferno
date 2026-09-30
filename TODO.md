@@ -87,14 +87,14 @@ Stand: 07.04.2026 | Konsolidiert (Claude + Core Dev)
 - [x] ✅ MIRROR_ARTICLE.md vorbereitet (17.03.2026)
 - [x] ✅ FARCASTER_POSTS.md vorbereitet (17.03.2026)
 - [x] ✅ GUILD_SETUP.md vorbereitet (17.03.2026)
-- [x] ✅ Contact Email kaspartisan@proton.me → Footer + press-kit.html (16.03.2026)
+- [x] ✅ Core Dev contact → click-to-reveal footer link (16.03.2026, hardened 30.09.2026)
 
 **🔴 Noch offen:**
 - [x] ✅ Etherscan resubmission v2 prepared (03.04.2026)
       Template: docs/ETHERSCAN_SUBMISSION.md
-      Email: kaspartisan@proton.me (kein info@)
+      Email: Core Dev contact address (kein info@)
 - [ ] 🔴 Etherscan Token Update resubmittieren
-      Von: kaspartisan@proton.me
+      Von: Core Dev contact address
       Template: docs/ETHERSCAN_SUBMISSION.md
       Guide: https://info.etherscan.com/how-to-update-token-info/
 - [x] ✅ README: Team + Tokenomics + Quick Links + Builders (03.04.2026)
@@ -198,7 +198,7 @@ Stand: 07.04.2026 | Konsolidiert (Claude + Core Dev)
 
 ## MITTEL — Builder Registry
 
-- [x] ✅ StealthX, Vendetta, K-9 Academy — GitHub Issues #9/#10/#11 (17.03.2026)
+- [x] ✅ StealthX, K-9 Academy — GitHub Issues #9/#11 (17.03.2026)
       BUILDERS.md entfernt — GitHub Issues ist das richtige Format
 
 ## MITTEL — Infrastruktur

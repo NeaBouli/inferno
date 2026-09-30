@@ -184,8 +184,8 @@ scope and limitations.
 All smart contracts are open source and community review is explicitly encouraged.
 
 - **Internal Audit:** [docs/SECURITY_AUDIT_SKYWALKER.md](docs/SECURITY_AUDIT_SKYWALKER.md) — 0 FAIL, 20 active WARN, 1 fixed, 81 PASS
-- **OKComputer Community Audit (27.07.2026):** [current finding-by-finding status](docs/community-audits/JULY_2026_REMEDIATION_REGISTER.md) · [unchanged original and provenance](docs/community-audits/README.md) — 9 fixed and verified, 5 partially remediated, 1 outdated snapshot corrected, 3 governance/future-version gated, 2 accepted or monitored and 3 open actionable; not a professional third-party certification
-- **Collateral Web3 Open Audits (14.09.2026):** [seven reports and provenance](docs/community-audits/README.md) · [CWA-01…CWA-82 remediation register](docs/community-audits/CWA_REMEDIATION_REGISTER.md) · [consolidated PDF](docs/community-audits/IFR_Protocol_CWA_Consolidated_Audit_Report_2026-09-14.pdf) — 38 fixed and verified; 19 findings remain directly actionable
+- **OKComputer Community Audit (27.07.2026):** [current finding-by-finding status](docs/community-audits/JULY_2026_REMEDIATION_REGISTER.md) · [preserved original and provenance](docs/community-audits/README.md) — 10 fixed and verified, 4 partially remediated, 1 outdated snapshot corrected, 3 governance/future-version gated, 2 accepted or monitored and 3 open actionable; not a professional third-party certification
+- **Collateral Web3 Open Audits (14.09.2026):** [seven reports and provenance](docs/community-audits/README.md) · [CWA-01…CWA-82 remediation register](docs/community-audits/CWA_REMEDIATION_REGISTER.md) · [consolidated PDF](docs/community-audits/IFR_Protocol_CWA_Consolidated_Audit_Report_2026-09-14.pdf) — 39 fixed and verified; 19 findings remain directly actionable
 - **Submit a Finding:** [GitHub Private Vulnerability Reporting](https://github.com/NeaBouli/inferno/security/advisories/new)
 - **Security Policy:** [SECURITY.md](SECURITY.md)
 
@@ -279,7 +279,7 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [Builder Integration Spec](docs/PARTNER_INTEGRATION_SPEC.md) — Technical spec: IFRLock + PartnerVault ABI, Rewards, Algo Throttle
 - [Mainnet Checklist](docs/MAINNET_CHECKLIST.md) — Deployment order, verification, post-deploy
 - [Security Audit Brief](docs/AUDIT_BRIEF.md) — Scope, audit areas, auditor recommendations
-- [OKComputer Community Audit Status](docs/community-audits/JULY_2026_REMEDIATION_REGISTER.md) — Current evidence-backed status for all 23 normalized findings; original report remains unchanged
+- [OKComputer Community Audit Status](docs/community-audits/JULY_2026_REMEDIATION_REGISTER.md) — Current evidence-backed status for all 23 normalized findings; original report preserved (one owner-requested company-name redaction)
 - [CWA Remediation Register](docs/community-audits/CWA_REMEDIATION_REGISTER.md) — Authoritative CWA-01…CWA-82 status, ownership, next action and verification requirement
 - [CWA Consolidated PDF](docs/community-audits/IFR_Protocol_CWA_Consolidated_Audit_Report_2026-09-14.pdf) — Seven-report community audit series with disclosed aggregate correction
 - [Multisig Setup Guide](docs/MULTISIG_SETUP.md) — Gnosis Safe, signer structure, ownership transfer
@@ -378,9 +378,10 @@ Inferno Protocol is developed by a pseudonymous team in the open-source DeFi tra
 |---|---|---|
 | K-9 Academy | Education | IFR Lock for course access |
 | StealthX/SecureCall/SecureChat/Chameleon | Privacy | IFR holder verification for 50% checkout discount |
-| Vendetta | DeFi | IFR Lock + Rewards |
 | NEXUS GR | B2B Marketplace | Coming Soon |
 
 ## License
 
-© 2026 Inferno Protocol. All rights reserved.
+The source code in this repository is released under the [MIT License](LICENSE).
+The names "Inferno", "Inferno Protocol" and "IFR", and the project logos, are not
+licensed for use as trademarks.

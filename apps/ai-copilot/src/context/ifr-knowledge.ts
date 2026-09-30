@@ -17,9 +17,9 @@ export function getIFRKnowledge() {
 
   return {
     audits: {
-      status: "The seven Collateral Web3 Open Audits reports cover CWA-01 through CWA-82. At the 2026-09-30 remediation checkpoint, 38 findings are fixed and verified, 12 are governance or owner gated, 2 are accepted or monitored, 19 are open actionable, and 11 are informational.",
+      status: "The seven Collateral Web3 Open Audits reports cover CWA-01 through CWA-82. At the 2026-09-30 remediation checkpoint, 39 findings are fixed and verified, 11 are governance or owner gated, 2 are accepted or monitored, 19 are open actionable, and 11 are informational.",
       register: "https://github.com/NeaBouli/inferno/blob/main/docs/community-audits/CWA_REMEDIATION_REGISTER.md",
-      july2026Status: "The unchanged 27 July community audit is paired with an evidence-backed register: 9 fixed and verified, 5 partially remediated, 1 outdated snapshot corrected, 3 governance or future-version gated, 2 accepted or monitored, and 3 open actionable. Historical red or high-severity labels are not proof that an item remains open today.",
+      july2026Status: "The preserved 27 July community audit (one owner-requested company-name redaction) is paired with an evidence-backed register: 10 fixed and verified, 4 partially remediated, 1 outdated snapshot corrected, 3 governance or future-version gated, 2 accepted or monitored, and 3 open actionable. Historical red or high-severity labels are not proof that an item remains open today.",
       july2026Register: "https://github.com/NeaBouli/inferno/blob/main/docs/community-audits/JULY_2026_REMEDIATION_REGISTER.md",
       pdf: "https://github.com/NeaBouli/inferno/raw/main/docs/community-audits/IFR_Protocol_CWA_Consolidated_Audit_Report_2026-09-14.pdf",
       tests: "Current canonical evidence: contracts 644/644, Generator Engine 30/30, IFR SDK 36/36, Landing/Wiki browser 24/24, Web3 browser 27/27. Benefits physical device/wallet acceptance remains 1/10.",
@@ -167,7 +167,7 @@ export function getIFRKnowledge() {
       deployed: "20.03.2026",
       tests: "30/30 Generator Engine tests passing",
       railwayEndpoints: "GET /api/builders/count, GET /api/builders/check/:address",
-      builders: "Legacy off-chain directory entries include StealthX, K-9 Academy, Vendetta, NEXUS GR and ORIGO. Mainnet BuilderRegistry currently has 0 registered and 0 active builders."
+      builders: "Legacy off-chain directory entries include StealthX, K-9 Academy and NEXUS GR. Mainnet BuilderRegistry currently has 0 registered and 0 active builders."
     },
     phase3: {
       commitmentVault: {

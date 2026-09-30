@@ -182,7 +182,7 @@ a CoinMarketCap request for updated evidence.
 
 ### Identity / Request
 
-- Your email address: `kaspartisan@proton.me`
+- Your email address: the Core Dev contact address (entered by the submitter, not stored here)
 - Subject Field: `Inferno - IFR - Add cryptoasset`
 - Terms & Conditions: check / accept.
 - Relationship with the Project: `Founder / core developer / official representative of Inferno Protocol.`

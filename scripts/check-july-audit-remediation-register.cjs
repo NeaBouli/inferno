@@ -51,7 +51,7 @@ assert.equal(originalHash, data.originalAudit.sha256, "original July audit hash 
 
 assert.equal(fs.existsSync(path.join(root, "docs", "TODO.md")), false, "public TODO.md returned");
 assert.equal(fs.existsSync(path.join(root, "docs", "TODO.html")), false, "public TODO.html returned");
-assert.equal(fs.existsSync(path.join(root, "LICENSE")), false, "JUL-15 status must be reviewed when a root license is added");
+assert.match(fs.readFileSync(path.join(root, "LICENSE"), "utf8"), /^MIT License\n/, "JUL-15 relies on the root MIT LICENSE");
 
 const buybackSources = [
   "contracts/buyback/BuybackController.sol",
@@ -151,7 +151,7 @@ function renderMarkdown(register) {
     "in the original report is therefore historical severity, not proof that the issue is",
     "still open today. Current status is authoritative only in this evidence-backed register.",
     "",
-    `- [Original unchanged report](${register.originalAudit.path})`,
+    `- [Original report](${register.originalAudit.path}) (unchanged except one owner-requested company-name redaction, 2026-09-30)`,
     `- Original SHA-256: \`${register.originalAudit.sha256}\``,
     "- [Audit index](README.md)",
     "- [Current CWA-01...CWA-82 register](CWA_REMEDIATION_REGISTER.md)",
