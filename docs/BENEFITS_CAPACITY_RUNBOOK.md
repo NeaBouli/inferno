@@ -95,7 +95,8 @@ The latest audit also reported one unhealthy container:
 1. Keep using `scripts/deploy-benefits-network.sh capacity` for read-only capacity checks.
 2. Use `scripts/deploy-benefits-network.sh frontend` only when the deploy floor is met, from a
    clean checkout of the reviewed release commit with `EXPECTED_SHA=<full sha>` set; the script
-   refuses other trees. Add `MIN_FREE_GB=0` to fail closed below the floor without pruning.
+   refuses other trees, including ignored or assume-unchanged files it would upload (e.g.
+   `.env.development.local`, `coverage/`). Add `MIN_FREE_GB=0` to fail closed below the floor without pruning.
 3. Before backend/all deploys, run `scripts/deploy-benefits-network.sh capacity`.
 4. If free space remains below `MIN_FREE_GB`, inspect owners of large images/volumes.
 5. Confirm whether non-Benefits services can be stopped, migrated, archived or resized.

@@ -52,7 +52,7 @@ EOF
 cat > "$FAKES/rsync" <<'EOF'
 #!/usr/bin/env bash
 printf 'rsync %s\n' "$*" >> "$LOG"
-[[ "$*" == *benefits-network* ]] && exit 0   # benefits tree is not modelled
+[[ "$*" == *:/opt/inferno/benefits-network/* ]] && exit 0   # remote benefits tree is not modelled
 [[ "${RSYNC_FAIL:-0}" == 1 && "$*" == *-rlt* ]] && exit 23
 args=()
 for a in "$@"; do
@@ -260,11 +260,41 @@ echo "dirty" >> "$REPO/apps/benefits-network/frontend/package.json"
 EXPECTED_SHA="$SHA" run 65 "$REPO/scripts/deploy-benefits-network.sh" frontend
 git -C "$REPO" checkout -q -- apps/benefits-network/frontend/package.json
 refute_log "rsync"
+
+# --- benefits: ignored or index-hidden files that sync_app would upload are refused -
+APP="$REPO/apps/benefits-network"
+echo "scratch.txt" >> "$REPO/.git/info/exclude"      # arbitrary ignore rule
+mkdir -p "$APP/backend/coverage"
+for f in frontend/.env.development.local backend/coverage/lcov.info scratch.txt; do
+  echo "local only" > "$APP/$f"
+  [[ -z "$(git -C "$REPO" status --porcelain -- apps/benefits-network)" ]] || { echo "FAIL: $f is not ignored" >&2; exit 1; }
+  : > "$LOG"
+  EXPECTED_SHA="$SHA" MIN_FREE_GB=0 REMOTE_VOLUME=/opt/inferno run 65 "$REPO/scripts/deploy-benefits-network.sh" frontend
+  grep -Fxq "  $f" <<< "$OUT" || { echo "FAIL: $f not named in refusal" >&2; echo "$OUT" >&2; exit 1; }
+  refute_log ":/opt/inferno/benefits-network"
+  refute_log "docker"
+  rm "$APP/$f"
+done
+echo "hidden edit" >> "$APP/frontend/package.json"
+git -C "$REPO" update-index --assume-unchanged apps/benefits-network/frontend/package.json
+: > "$LOG"
+EXPECTED_SHA="$SHA" MIN_FREE_GB=0 REMOTE_VOLUME=/opt/inferno run 65 "$REPO/scripts/deploy-benefits-network.sh" frontend
+grep -Fq "assume-unchanged or skip-worktree" <<< "$OUT"
+refute_log "rsync"
+git -C "$REPO" update-index --no-assume-unchanged apps/benefits-network/frontend/package.json
+git -C "$REPO" checkout -q -- apps/benefits-network/frontend/package.json
+# Intentional excludes never reach the host, so they may exist locally.
+mkdir -p "$APP/frontend/node_modules/pkg" "$APP/frontend/.next/cache" "$APP/backend/dist"
+for f in .env frontend/.env.local backend/.env.production backend/app.db backend/app.db-journal \
+         frontend/node_modules/pkg/index.js frontend/.next/cache/x backend/dist/index.js; do
+  echo "local only" > "$APP/$f"
+done
 EXPECTED_SHA="$SHA" MIN_FREE_GB=0 REMOTE_VOLUME=/opt/inferno run 0 "$REPO/scripts/deploy-benefits-network.sh" frontend
 assert_log "--exclude .env --exclude"
 assert_log "--exclude .env.local"
 assert_log "--exclude *.db"
 assert_log "--exclude *.db-wal"
+assert_log "--dry-run --out-format=%n --exclude node_modules"
 assert_log "up -d --build --no-deps benefits-frontend"
 refute_log "prune"
 # capacity stays usable without a release commit
