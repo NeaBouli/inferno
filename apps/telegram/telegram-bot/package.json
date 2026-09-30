@@ -12,7 +12,7 @@
     "post:council-agenda": "node scripts/post-council-agenda.js"
   },
   "dependencies": {
-    "axios": "1.18.1",
+    "axios": "1.20.0",
     "dotenv": "^16.4.5",
     "ethers": "6.17.0",
     "express": "^5.2.1",
