@@ -73,6 +73,18 @@ case "$*" in
 esac
 exit 0
 EOF
+# date: every UTC backup timestamp is unique and increasing, so fast CI hosts
+# never run two deploys "in the same second" (the scripts refuse to reuse a backup dir).
+cat > "$FAKES/date" <<'EOF_DATE'
+#!/usr/bin/env bash
+if [[ "$*" == "-u +%Y%m%dT%H%M%SZ" ]]; then
+  n=$(( $(cat "$REMOTE/../clock" 2>/dev/null || echo 0) + 1 ))
+  echo "$n" > "$REMOTE/../clock"
+  printf '20260101T00%04dZ\n' "$n"
+else
+  exec /bin/date "$@"
+fi
+EOF_DATE
 cat > "$FAKES/df" <<'EOF'
 #!/usr/bin/env bash
 printf 'Avail\n%sM\n' "${FREE_MB:-9000}"
@@ -105,7 +117,6 @@ run() { # run <expected-exit> <cmd...>
 }
 assert_log() { grep -Fq -- "$1" "$LOG" || { echo "FAIL: log lacks: $1" >&2; cat "$LOG" >&2; exit 1; }; }
 refute_log() { if grep -Fq -- "$1" "$LOG"; then echo "FAIL: log has: $1" >&2; exit 1; fi; }
-csp_file() { cat "$SITE/html/.nginx/web3-security-headers.conf"; }
 
 # --- web3: guards refuse before any remote access ------------------------------
 run 1 "$REPO/scripts/deploy-web3-site.sh" deploy
@@ -155,7 +166,7 @@ refute_log "nginx -s reload"
 NGINX_T_FAIL=1 EXPECTED_SHA="$SHA" run 1 "$REPO/scripts/deploy-web3-site.sh" deploy
 grep -Fq "previous .nginx/web3-security-headers.conf restored" <<< "$OUT"
 refute_log "nginx -s reload"
-csp_file | grep -q "esm.sh" || { echo "FAIL: headers not restored after nginx -t failure" >&2; exit 1; }
+grep -q "esm.sh" "$SITE/html/.nginx/web3-security-headers.conf" || { echo "FAIL: headers not restored after nginx -t failure" >&2; exit 1; }
 
 # --- web3: deploy backs up, ships docroot + headers, reloads, verifies ----------
 sleep 1   # distinct backup timestamp; a same-second backup dir is refused (tested below)
@@ -163,7 +174,8 @@ sleep 1   # distinct backup timestamp; a same-second backup dir is refused (test
 EXPECTED_SHA="$SHA" run 0 "$REPO/scripts/deploy-web3-site.sh" deploy
 first_backup="$(ls -d "$REMOTE"/opt/inferno/backups/web3-site-* | head -1)"   # from the aborted run: pristine host
 backup="$(ls -d "$REMOTE"/opt/inferno/backups/web3-site-* | tail -1)"
-tar -tzf "$backup/html.tgz" | grep -q "html/.nginx/web3-security-headers.conf"
+tar -tzf "$backup/html.tgz" > "$TMP/backup.list"   # no pipe into grep -q: SIGPIPE + pipefail
+grep -q "html/.nginx/web3-security-headers.conf" "$TMP/backup.list"
 cmp -s "$backup/nginx.conf" "$TMP/nginx.conf.orig"
 cmp -s "$SITE/nginx.conf" "$TMP/nginx.conf.orig" || { echo "FAIL: nginx.conf was modified" >&2; exit 1; }
 cmp -s "$SITE/html/.nginx/web3-security-headers.conf" "$ROOT/infra/web3/web3-security-headers.conf"

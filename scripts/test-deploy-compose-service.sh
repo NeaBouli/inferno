@@ -91,6 +91,18 @@ case "$*" in
   *) echo "unexpected docker call: $*" >&2; exit 99 ;;
 esac
 EOF
+# date: every UTC backup timestamp is unique and increasing, so fast CI hosts
+# never run two deploys "in the same second" (the scripts refuse to reuse a backup dir).
+cat > "$FAKES/date" <<'EOF_DATE'
+#!/usr/bin/env bash
+if [[ "$*" == "-u +%Y%m%dT%H%M%SZ" ]]; then
+  n=$(( $(cat "$REMOTE/../clock" 2>/dev/null || echo 0) + 1 ))
+  echo "$n" > "$REMOTE/../clock"
+  printf '20260101T00%04dZ\n' "$n"
+else
+  exec /bin/date "$@"
+fi
+EOF_DATE
 cat > "$FAKES/df" <<'EOF'
 #!/usr/bin/env bash
 printf 'Avail\n%sM\n' "${FREE_MB:-4600}"
@@ -223,7 +235,8 @@ refute_log "prune"
 # --- backup is complete before the first write; excludes are kept out of it ----------
 [[ "$(line_of "tar -C")" -lt "$(line_of "--itemize-changes")" ]] || fail "source written before backup"
 [[ "$(line_of "image tag inferno-points-backend:latest")" -lt "$(line_of "compose up -d --build")" ]] || fail "image replaced before rollback tag"
-tar -tzf "$backup/source.tgz" | grep -q "points-backend/src/old-only-on-host.js" || fail "backup lacks the source"
+tar -tzf "$backup/source.tgz" > "$TMP/backup.list"   # no pipe into grep -q: SIGPIPE + pipefail
+grep -q "points-backend/src/old-only-on-host.js" "$TMP/backup.list" || fail "backup lacks the source"
 if tar -tzf "$backup/source.tgz" | grep -Eq "/(\.env|\.env\.local|app\.db|app\.db-wal|node_modules|data|dist)(/|$)"; then
   fail "backup contains env/db/node_modules/data/dist"
 fi
