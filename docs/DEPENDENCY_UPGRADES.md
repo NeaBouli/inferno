@@ -415,3 +415,13 @@ migration and its full contract-suite evidence exist.
   remains. Root audit is 8 Low (the documented development-only elliptic
   chain) and 0 Moderate or higher; Benefits wallet keeps its documented
   stream-json exception.
+- Overnight (published 2026-09-29 23:44–23:54 UTC) three brace-expansion
+  advisories (`GHSA-6j4f-fj2g-mc7p` High, `GHSA-qhr7-859c-m2p7` High,
+  `GHSA-q2hr-2g5m-vwhr` Moderate) and a further fast-uri advisory
+  (`GHSA-hrr3-gc8f-f4qj` Moderate, `<3.1.8`) turned every PR's audit gates red.
+  Each affected lock entry moves to the first release that fixes all of them
+  within its own major line: brace-expansion `1.1.21`, `2.1.7`, `5.0.12`
+  (root, markdownlint-cli, serve-handler, Benefits backend, Creator Gateway)
+  and fast-uri `3.1.8` (root, Points). No other package changes; each new
+  version has the same dependency map as the one it replaces. Exact overrides
+  and the Points and status baseline tests move with them.

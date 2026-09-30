@@ -102,7 +102,7 @@
   "overrides": {
     "diff": "8.0.3",
     "elliptic": "6.6.1",
-    "fast-uri": "3.1.7",
+    "fast-uri": "3.1.8",
     "markdownlint-cli": {
       "js-yaml": "5.4.2"
     },
