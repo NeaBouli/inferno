@@ -24,6 +24,19 @@ case "$MODE" in
     ;;
 esac
 
+# Values below are interpolated into ssh arguments and remote shell strings; allow
+# a plain host alias (no leading '-': ssh would read it as an option) and absolute paths only.
+if [[ ! "$SSH_HOST" =~ ^[A-Za-z0-9][A-Za-z0-9._@-]*$ ]]; then
+  echo "SSH_HOST must match ^[A-Za-z0-9][A-Za-z0-9._@-]*\$." >&2
+  exit 64
+fi
+for var in REMOTE_ROOT REMOTE_VOLUME REMOTE_COMPOSE_ENV_FILE; do
+  if [[ ! "${!var}" =~ ^/[A-Za-z0-9._/@-]+$ ]]; then
+    echo "$var must be an absolute path of characters [A-Za-z0-9._/@-]." >&2
+    exit 64
+  fi
+done
+
 remote() {
   ssh "$SSH_HOST" "$@"
 }
@@ -77,14 +90,16 @@ ensure_space() {
   fi
 }
 
+# Excluded paths are never deleted remotely (no --delete-excluded): this keeps
+# remote-only env files and SQLite files safe even though none are expected in
+# this tree (production data lives in the inferno_benefits_data volume).
+RSYNC_EXCLUDES=()
+for x in node_modules .next dist '*.db' '*.db-journal' '*.db-wal' '*.db-shm' .env .env.local .env.production; do
+  RSYNC_EXCLUDES+=(--exclude "$x")
+done
+
 sync_app() {
-  rsync -az --delete \
-    --exclude node_modules \
-    --exclude .next \
-    --exclude dist \
-    --exclude test.db \
-    --exclude dev.db \
-    "$LOCAL_APP" "$SSH_HOST:$REMOTE_APP"
+  rsync -az --delete "${RSYNC_EXCLUDES[@]}" "$LOCAL_APP" "$SSH_HOST:$REMOTE_APP"
 }
 
 compose() {
@@ -146,6 +161,46 @@ if [[ "$MODE" == "capacity" ]]; then
   exit 0
 fi
 
+# Deploy modes ship the local working tree; bind it to one reviewed commit.
+require_exact_release() {
+  if [[ ! "${EXPECTED_SHA:-}" =~ ^[0-9a-f]{40}$ ]]; then
+    echo "Set EXPECTED_SHA to the full 40-char release commit before $MODE deploys." >&2
+    exit 64
+  fi
+  if [[ "$(git -C "$LOCAL_ROOT" rev-parse HEAD)" != "$EXPECTED_SHA" ]]; then
+    echo "Refusing deploy: HEAD is not $EXPECTED_SHA." >&2
+    exit 65
+  fi
+  if [[ -n "$(git -C "$LOCAL_ROOT" status --porcelain -- apps/benefits-network scripts/deploy-benefits-network.sh)" ]]; then
+    echo "Refusing deploy: apps/benefits-network has uncommitted or untracked changes." >&2
+    exit 65
+  fi
+  # git status hides local edits behind assume-unchanged/skip-worktree bits.
+  if git -C "$LOCAL_APP" ls-files -v | grep -q '^[a-zS]'; then
+    echo "Refusing deploy: apps/benefits-network has assume-unchanged or skip-worktree files." >&2
+    exit 65
+  fi
+  # git status also hides ignored files. Ask rsync, with the excludes sync_app uses,
+  # which files it would upload; every one must be a tracked file of the release commit.
+  local dry uploads extra
+  dry="$(mktemp -d)"
+  uploads="$(rsync -a --dry-run --out-format='%n' "${RSYNC_EXCLUDES[@]}" "$LOCAL_APP" "$dry/")" || {
+    rmdir "$dry"
+    echo "Refusing deploy: could not list the files sync_app would upload." >&2
+    exit 65
+  }
+  rmdir "$dry"
+  extra="$(LC_ALL=C comm -23 <(grep -v '/$' <<< "$uploads" | LC_ALL=C sort) \
+    <(git -C "$LOCAL_APP" -c core.quotePath=false ls-files | LC_ALL=C sort))"
+  if [[ -n "$extra" ]]; then
+    echo "Refusing deploy: apps/benefits-network holds files outside $EXPECTED_SHA that would be uploaded:" >&2
+    sed 's/^/  /' <<< "$extra" >&2
+    echo "Release from a fresh checkout of the release commit." >&2
+    exit 65
+  fi
+}
+
+require_exact_release
 ensure_space "pre-deploy" 1
 assert_single_backend
 sync_app
