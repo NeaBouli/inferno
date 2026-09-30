@@ -29,14 +29,16 @@ No finding text, severity label or technical conclusion was changed.
 
 ## OKComputer Community Audit — 27 July 2026
 
-- Original report:
+- Published report (redacted):
   [IFR_Protocol_Audit_2026-07-27.md](IFR_Protocol_Audit_2026-07-27.md)
 - Current finding status:
   [JULY_2026_REMEDIATION_REGISTER.md](JULY_2026_REMEDIATION_REGISTER.md)
-- Original SHA-256:
+- Published (redacted) SHA-256:
   `57ec9eeb3fa2de0b9ac4f62680a62ff8d2ea79dc19b89a0726e9b41b70fb3f12`
+- Pre-redaction original SHA-256:
+  `ec7f99b0b74c51e04091727a0b69f49f67c36409a52c9ea7b55ba545b6b3e375`
 - Publication status: preserved as submitted except one owner-requested redaction of the
-  operator's company name (2026-09-30; pre-redaction SHA-256 `ec7f99b0b74c51e04091727a0b69f49f67c36409a52c9ea7b55ba545b6b3e375`)
+  operator's company name (2026-09-30), disclosed in the report text; no other change
 - Review type: community-submitted project and security review
 - Certification status: not an independent professional third-party audit
 
