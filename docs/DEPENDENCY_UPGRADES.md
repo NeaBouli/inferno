@@ -392,3 +392,36 @@ migration and its full contract-suite evidence exist.
   remains unchanged because no patched upstream version exists.
 - This entry records a local candidate only. Alert closure requires the full
   wallet/Mythril regression matrix, independent security review and Exact-Head CI.
+
+## 2026-09-30 fast-uri Host-Confusion Advisory
+
+- `GHSA-58mr-gqgx-xq4g` (High, published after the S4 merge) affects exactly
+  `fast-uri@3.1.6`, which both the root development graph and the Points
+  backend runtime graph pinned through `overrides` (via `ajv`).
+- Both exact overrides and lock entries move to `fast-uri@3.1.7`; `ajv`'s
+  `^3.0.1` range already admits it, so no other package changes. The 3.1.7
+  tarball was compared with 3.1.6: the only code change is the IP-literal
+  bracket validation fix, with no install scripts or new dependencies.
+- Gates: clean `npm ci`, Points backend type check, build and test suite, and
+  the root contract/tooling suites that load `ajv`.
+- The same day `GHSA-r3ph-w7gj-g6xm` (Moderate, js-yaml `>=5.0.0 <=5.4.0`) reached
+  the development-only `markdownlint-cli@0.49.1`, whose `~5.2.1` range excludes
+  the patched line. It would fail the root `npm audit --audit-level=moderate`
+  gates in Contract Tests and Security Audit on the next run. A scoped nested
+  override `markdownlint-cli > js-yaml@5.4.2` resolves it; markdownlint only
+  calls `load()` for its config and reports the identical 3774 baseline
+  findings. Mocha's separate `js-yaml@4.3.2` is unaffected.
+- Every repository lockfile was rescanned: no vulnerable fast-uri or js-yaml 5.x
+  remains. Root audit is 8 Low (the documented development-only elliptic
+  chain) and 0 Moderate or higher; Benefits wallet keeps its documented
+  stream-json exception.
+- Overnight (published 2026-09-29 23:44–23:54 UTC) three brace-expansion
+  advisories (`GHSA-6j4f-fj2g-mc7p` High, `GHSA-qhr7-859c-m2p7` High,
+  `GHSA-q2hr-2g5m-vwhr` Moderate) and a further fast-uri advisory
+  (`GHSA-hrr3-gc8f-f4qj` Moderate, `<3.1.8`) turned every PR's audit gates red.
+  Each affected lock entry moves to the first release that fixes all of them
+  within its own major line: brace-expansion `1.1.21`, `2.1.7`, `5.0.12`
+  (root, markdownlint-cli, serve-handler, Benefits backend, Creator Gateway)
+  and fast-uri `3.1.8` (root, Points). No other package changes; each new
+  version has the same dependency map as the one it replaces. Exact overrides
+  and the Points and status baseline tests move with them.
