@@ -237,7 +237,7 @@ refute_log "prune"
 [[ "$(line_of "image tag inferno-points-backend:latest")" -lt "$(line_of "compose up -d --build")" ]] || fail "image replaced before rollback tag"
 tar -tzf "$backup/source.tgz" > "$TMP/backup.list"   # no pipe into grep -q: SIGPIPE + pipefail
 grep -q "points-backend/src/old-only-on-host.js" "$TMP/backup.list" || fail "backup lacks the source"
-if tar -tzf "$backup/source.tgz" | grep -Eq "/(\.env|\.env\.local|app\.db|app\.db-wal|node_modules|data|dist)(/|$)"; then
+if grep -Eq "/(\.env|\.env\.local|app\.db|app\.db-wal|node_modules|data|dist)(/|$)" "$TMP/backup.list"; then
   fail "backup contains env/db/node_modules/data/dist"
 fi
 
