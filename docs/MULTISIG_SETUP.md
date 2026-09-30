@@ -11,7 +11,7 @@ Goal: no single key can control the protocol.
 - **Type:** Gnosis Safe (https://safe.global)
 - **Threshold:** 4-of-7 (4 signers must approve)
 - **Signer Profiles:**
-  - 2x founders/core team (hardware wallets)
+  - 2x core contributors (hardware wallets)
   - 2x trusted community members
   - 2x builder representatives
   - 1x reserve signer (cold storage)
@@ -34,13 +34,13 @@ Goal: no single key can control the protocol.
 
 | Slot | Role | Wallet Type | Rationale |
 |------|------|------------|-----------|
-| Founder 1+2 | Core Team | Hardware Wallet (Ledger/Trezor) | Mandatory — highest risk |
+| Core contributor 1+2 | Core Team | Hardware Wallet (Ledger/Trezor) | Mandatory — highest risk |
 | Community 1+2 | Elected | Hardware wallet recommended, MetaMask acceptable | |
 | Builder 1+2 | Accredited | MetaMask/WalletConnect acceptable | |
 | Reserve | Cold Storage | Air-gapped hardware wallet | Mandatory |
 
 > For testnet phase, hot wallets (MetaMask) are OK for all slots.
-> For mainnet: founder slots MUST use hardware wallets.
+> For mainnet: core-contributor slots MUST use hardware wallets.
 
 - Sepolia ETH on all 3 wallets for gas
 - Separate devices for each signer
@@ -74,7 +74,7 @@ Expansion by 2 community representatives:
 ### Phase 3: 4-of-7 Multisig (Q1 2027)
 
 Full decentralization:
-- 2 founders (hardware wallet)
+- 2 core contributors (hardware wallet)
 - 2 community (Snapshot elected)
 - 2 builder representatives (first accredited builders)
 - 1 reserve (cold storage)
@@ -83,7 +83,7 @@ Full decentralization:
 ### Guardian Multisig
 
 Separate Safe for emergency cancel only:
-- 1 founder
+- 1 core contributor
 - 1 independent security reviewer
 - 1 community representative
 - Threshold: TBD
@@ -130,7 +130,7 @@ Separate Safe for emergency cancel only:
 ## Important Notes
 
 - **Separation:** Owner multisig and guardian multisig MUST be different Safes
-- **Hardware:** Founder slots always require hardware wallets on mainnet
+- **Hardware:** Core-contributor slots always require hardware wallets on mainnet
 - **Rotation:** Signer rotation recommended every 12 months
 - **Backup:** Document all Safe settings
 - **Recovery:** Keep at least 2 signers always reachable

@@ -185,7 +185,7 @@ a CoinMarketCap request for updated evidence.
 - Your email address: the Core Dev contact address (entered by the submitter, not stored here)
 - Subject Field: `Inferno - IFR - Add cryptoasset`
 - Terms & Conditions: check / accept.
-- Relationship with the Project: `Founder / core developer / official representative of Inferno Protocol.`
+- Relationship with the Project: `Core contributor / official representative of the Inferno Protocol open-source project.`
 - Project Launch Date: `2026-03-05 (5 March 2026) - Inferno token deployed on Ethereum Mainnet. Evidence: https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code`
 - Project Name: `Inferno`
 - Project Ticker/Symbol: `IFR`
