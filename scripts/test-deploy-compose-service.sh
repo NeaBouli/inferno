@@ -86,7 +86,7 @@ case "$*" in
   inspect*)
     c="${@: -1}"
     [[ -f "$DOCKER_STATE/running-$c" ]] || exit 1
-    if grep -q bad "$DOCKER_STATE/running-$c"; then h=unhealthy; else h=healthy; fi
+    if grep -qx 'sha256:bad' "$DOCKER_STATE/running-$c"; then h=unhealthy; else h=healthy; fi
     if [[ "$*" == *State.Status* ]]; then echo "running $h"; else echo "$h"; fi ;;
   *) echo "unexpected docker call: $*" >&2; exit 99 ;;
 esac
