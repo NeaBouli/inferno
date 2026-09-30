@@ -12,7 +12,7 @@
 #
 # deploy: capacity floor (never prunes) -> new backup dir with a source tar and the
 # current image id -> rollback image tag -> rsync of the git-archived app dir
-# (env files, SQLite files, node_modules, dist and data are excluded and never
+# (env and SQLite files at any depth, root node_modules, dist and data are excluded and never
 # deleted) -> compose rebuild of that one service -> bounded health wait ->
 # public checks. Any failure after the backup rolls back automatically and exits
 # non-zero. Runbook: docs/COMPOSE_SERVICE_RELEASE.md
@@ -49,13 +49,20 @@ for var in HEALTH_ATTEMPTS HEALTH_INTERVAL; do
   [[ "${!var}" =~ ^[0-9]+$ ]] || die "$var must be an integer"
 done
 
-# Remote-only files that a release must never ship, overwrite or delete.
-EXCLUDES=('.env*' '*.db*' node_modules dist data)
+# Remote-only files that a release must never ship, overwrite or delete. Env and
+# SQLite files match at any depth; runtime dirs only at the service root, so nested
+# source such as src/data is shipped, backed up and restored. rsync anchors a
+# leading '/' to the transfer root ($SRC); tar members start with "$SERVICE/" (tar
+# matches excludes after any '/', so it would also skip a nested "<service>/data").
+EXCLUDES=('.env*' '*.db*' /node_modules /dist /data)
 EXCLUDE_ARGS=()
 REMOTE_EXCLUDES=""
+TAR_EXCLUDES=""
 for x in "${EXCLUDES[@]}"; do
   EXCLUDE_ARGS+=(--exclude "$x")
   REMOTE_EXCLUDES="$REMOTE_EXCLUDES --exclude '$x'"
+  [[ "$x" == /* ]] && x="$SERVICE$x"
+  TAR_EXCLUDES="$TAR_EXCLUDES --exclude '$x'"
 done
 
 require_sha() {
@@ -176,7 +183,7 @@ case "$MODE" in
     backup="$REMOTE_ROOT/backups/$SERVICE-$stamp"
     # mkdir without -p on the final dir: a same-second second run must not overwrite a backup.
     remote "set -e; mkdir -p '$REMOTE_ROOT/backups'; mkdir '$backup'
-      tar -C '$REMOTE_ROOT'$REMOTE_EXCLUDES -czf '$backup/source.tgz' '$SERVICE'
+      tar -C '$REMOTE_ROOT'$TAR_EXCLUDES -czf '$backup/source.tgz' '$SERVICE'
       docker image inspect -f '{{.Id}}' '$IMAGE:latest' > '$backup/image-id'
       docker image tag '$IMAGE:latest' '$IMAGE:rollback-$stamp'"
     echo "backup: $backup  (rollback: scripts/deploy-compose-service.sh $SERVICE rollback $backup)"

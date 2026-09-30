@@ -22,6 +22,13 @@ mkdir -p "$FAKES" "$HOST/backups" "$DOCKER_STATE/images"
 # against a real, clean exact-SHA checkout even before these edits are committed.
 git clone -q --local "$ROOT" "$TMP/repo"
 cp "$ROOT/$SCRIPT" "$TMP/repo/$SCRIPT"
+# Nested source dirs that share a name with a root runtime dir must ship.
+NESTED=(src/data/nested.json src/dist/nested.js src/node_modules/nested/index.js)
+for f in "${NESTED[@]}"; do
+  mkdir -p "$(dirname "$TMP/repo/apps/points-backend/$f")"
+  echo "release $f" > "$TMP/repo/apps/points-backend/$f"
+  git -C "$TMP/repo" add -f "apps/points-backend/$f"
+done
 git -C "$TMP/repo" add -A scripts
 git -C "$TMP/repo" -c user.name=test -c user.email=test@example.invalid commit -qm "test overlay" --allow-empty
 REPO="$TMP/repo"
@@ -31,9 +38,10 @@ SHA="$(git -C "$REPO" rev-parse HEAD)"
 # compose file; remote-only env, SQLite and data files inside a source dir must survive.
 echo "services: {}" > "$HOST/docker-compose.yml"
 for svc in telegram-bot points-backend ai-copilot; do
-  mkdir -p "$HOST/$svc/src" "$HOST/$svc/node_modules/pkg" "$HOST/$svc/data" "$HOST/$svc/dist"
+  mkdir -p "$HOST/$svc/src/data" "$HOST/$svc/node_modules/pkg" "$HOST/$svc/data" "$HOST/$svc/dist"
   echo "FROM node:20" > "$HOST/$svc/Dockerfile"
   echo "old code" > "$HOST/$svc/src/old-only-on-host.js"
+  echo "old nested" > "$HOST/$svc/src/data/old-nested.json"
   echo "SECRET_PLACEHOLDER=1" > "$HOST/$svc/.env"
   echo "LOCAL=1" > "$HOST/$svc/.env.local"
   echo "sqlite" > "$HOST/$svc/app.db"
@@ -187,9 +195,11 @@ EXPECTED_SHA="$SHA" run 0 "$C" points-backend plan
 assert_log "--dry-run"
 assert_out "RELEASE_SHA"
 grep -Eq -- "^\*deleting +src/old-only-on-host.js" <<< "$OUT" || fail "plan does not show the stale file deletion"
+grep -Eq -- "^\*deleting +src/data/old-nested.json" <<< "$OUT" || fail "plan treats nested src/data as a runtime dir"
+grep -Eq -- "^[<>]f\S* +src/data/nested.json" <<< "$OUT" || fail "plan does not ship nested src/data"
 assert_out "4600M free"
 assert_out "running healthy"
-if grep -Eq -- "deleting (\.env|app\.db|node_modules|data|dist)" <<< "$OUT"; then fail "plan would delete an excluded file"; fi
+if grep -Eq -- "^\*deleting +(\.env|app\.db|node_modules/|data/|dist/)" <<< "$OUT"; then fail "plan would delete an excluded file"; fi
 diff -r "$TMP/host.before" "$HOST" >/dev/null || fail "plan changed the host"
 refute_log "image tag"
 refute_log "compose up"
@@ -237,9 +247,11 @@ refute_log "prune"
 [[ "$(line_of "image tag inferno-points-backend:latest")" -lt "$(line_of "compose up -d --build")" ]] || fail "image replaced before rollback tag"
 tar -tzf "$backup/source.tgz" > "$TMP/backup.list"   # no pipe into grep -q: SIGPIPE + pipefail
 grep -q "points-backend/src/old-only-on-host.js" "$TMP/backup.list" || fail "backup lacks the source"
-if grep -Eq "/(\.env|\.env\.local|app\.db|app\.db-wal|node_modules|data|dist)(/|$)" "$TMP/backup.list"; then
-  fail "backup contains env/db/node_modules/data/dist"
+grep -q "points-backend/src/data/old-nested.json" "$TMP/backup.list" || fail "backup lacks nested src/data"
+if grep -Eq "/(\.env|\.env\.local|app\.db|app\.db-wal)$|^points-backend/(node_modules|data|dist)(/|$)" "$TMP/backup.list"; then
+  fail "backup contains env/db or root node_modules/data/dist"
 fi
+assert_log "--exclude '.env*' --exclude '*.db*' --exclude 'points-backend/node_modules' --exclude 'points-backend/dist' --exclude 'points-backend/data' -czf"
 
 # --- telegram: status route still 200 (CWA-34) fails the release and rolls back -----
 : > "$LOG"
@@ -274,12 +286,16 @@ assert_out "ok    200 https://points-api.ifrunit.tech/health"
 [[ "$(cat "$HOST/points-backend/RELEASE_SHA")" == "$SHA" ]] || fail "RELEASE_SHA not written"
 [[ "$(running points-backend)" == "sha256:new-$SHA" ]] || fail "container not rebuilt"
 test ! -e "$HOST/points-backend/src/old-only-on-host.js" || fail "--delete did not remove stale source"
+test ! -e "$HOST/points-backend/src/data/old-nested.json" || fail "nested src/data treated as a runtime dir"
+for f in "${NESTED[@]}"; do
+  cmp -s "$HOST/points-backend/$f" "$REPO/apps/points-backend/$f" || fail "nested $f not shipped"
+done
 cmp -s "$HOST/points-backend/package.json" "$ROOT/apps/points-backend/package.json" || fail "package.json not shipped"
 for f in .env .env.local app.db app.db-wal node_modules/pkg/index.js data/state.json dist/main.js; do
   cmp -s "$HOST/points-backend/$f" "$TMP/host.before/points-backend/$f" || fail "excluded $f was changed or deleted"
 done
 test ! -e "$HOST/points-backend/.env.example" || fail ".env* file shipped"
-assert_log "--exclude .env* --exclude *.db* --exclude node_modules --exclude dist --exclude data"
+assert_log "--exclude .env* --exclude *.db* --exclude /node_modules --exclude /dist --exclude /data"
 refute_log "--delete-excluded"
 refute_log "prune"
 same_tree telegram-bot                                # other services untouched

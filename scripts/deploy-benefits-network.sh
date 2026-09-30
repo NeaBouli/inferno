@@ -93,19 +93,13 @@ ensure_space() {
 # Excluded paths are never deleted remotely (no --delete-excluded): this keeps
 # remote-only env files and SQLite files safe even though none are expected in
 # this tree (production data lives in the inferno_benefits_data volume).
+RSYNC_EXCLUDES=()
+for x in node_modules .next dist '*.db' '*.db-journal' '*.db-wal' '*.db-shm' .env .env.local .env.production; do
+  RSYNC_EXCLUDES+=(--exclude "$x")
+done
+
 sync_app() {
-  rsync -az --delete \
-    --exclude node_modules \
-    --exclude .next \
-    --exclude dist \
-    --exclude '*.db' \
-    --exclude '*.db-journal' \
-    --exclude '*.db-wal' \
-    --exclude '*.db-shm' \
-    --exclude .env \
-    --exclude .env.local \
-    --exclude .env.production \
-    "$LOCAL_APP" "$SSH_HOST:$REMOTE_APP"
+  rsync -az --delete "${RSYNC_EXCLUDES[@]}" "$LOCAL_APP" "$SSH_HOST:$REMOTE_APP"
 }
 
 compose() {
@@ -179,6 +173,29 @@ require_exact_release() {
   fi
   if [[ -n "$(git -C "$LOCAL_ROOT" status --porcelain -- apps/benefits-network scripts/deploy-benefits-network.sh)" ]]; then
     echo "Refusing deploy: apps/benefits-network has uncommitted or untracked changes." >&2
+    exit 65
+  fi
+  # git status hides local edits behind assume-unchanged/skip-worktree bits.
+  if git -C "$LOCAL_APP" ls-files -v | grep -q '^[a-zS]'; then
+    echo "Refusing deploy: apps/benefits-network has assume-unchanged or skip-worktree files." >&2
+    exit 65
+  fi
+  # git status also hides ignored files. Ask rsync, with the excludes sync_app uses,
+  # which files it would upload; every one must be a tracked file of the release commit.
+  local dry uploads extra
+  dry="$(mktemp -d)"
+  uploads="$(rsync -a --dry-run --out-format='%n' "${RSYNC_EXCLUDES[@]}" "$LOCAL_APP" "$dry/")" || {
+    rmdir "$dry"
+    echo "Refusing deploy: could not list the files sync_app would upload." >&2
+    exit 65
+  }
+  rmdir "$dry"
+  extra="$(LC_ALL=C comm -23 <(grep -v '/$' <<< "$uploads" | LC_ALL=C sort) \
+    <(git -C "$LOCAL_APP" -c core.quotePath=false ls-files | LC_ALL=C sort))"
+  if [[ -n "$extra" ]]; then
+    echo "Refusing deploy: apps/benefits-network holds files outside $EXPECTED_SHA that would be uploaded:" >&2
+    sed 's/^/  /' <<< "$extra" >&2
+    echo "Release from a fresh checkout of the release commit." >&2
     exit 65
   fi
 }

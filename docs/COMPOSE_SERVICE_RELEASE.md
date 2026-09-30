@@ -19,7 +19,7 @@ operator-run: the Fleet diagnosis identity has no Docker and no write access to 
 
 | Target | Change | Not changed |
 | --- | --- | --- |
-| `/opt/inferno/<service>/` | app dir of the release commit (`git archive`, never the working tree) plus `RELEASE_SHA`; rsync `--delete` | `.env*`, `*.db*`, `node_modules`, `dist`, `data` are excluded and never deleted (no `--delete-excluded`) |
+| `/opt/inferno/<service>/` | app dir of the release commit (`git archive`, never the working tree) plus `RELEASE_SHA`; rsync `--delete` | `.env*` and `*.db*` at any depth and the root `node_modules/`, `dist/`, `data/` are excluded and never deleted (no `--delete-excluded`); nested dirs such as `src/data/` ship |
 | image `inferno-<service>` | current `latest` tagged `rollback-<UTC>`, then `docker compose up -d --build --no-deps <service>` | no other service, no volume, no env file, no prune |
 | `/opt/inferno/backups/<service>-<UTC>/` | new, never reused: `source.tgz` (same excludes) and `image-id` | earlier backups |
 
