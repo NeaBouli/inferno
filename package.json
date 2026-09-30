@@ -82,7 +82,8 @@
     "test:wiki-nav": "node scripts/check-wiki-nav-consistency.cjs",
     "test:wiki-shell": "node scripts/test-wiki-shell-consistency.cjs",
     "test:landing-wiki-ui": "playwright test tests/browser/landing-transparency.spec.js tests/browser/wiki-shell.spec.js tests/browser/footer-contact.spec.js",
-    "test:license-privacy": "node scripts/test-license-privacy.cjs"
+    "test:license-privacy": "node scripts/test-license-privacy.cjs",
+    "test:social-card": "node scripts/test-social-card.cjs"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "4.0.15",

@@ -259,6 +259,9 @@ jobs:
       - name: Check MIT license consistency and absence of operator branding/personal data
         run: npm run test:license-privacy
 
+      - name: Check social preview card (JUL-20)
+        run: npm run test:social-card
+
       - name: Check public surface routing
         run: npm run test:surface-routing
 

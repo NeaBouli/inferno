@@ -15,12 +15,12 @@
     "open_actionable": "Repository, hosting or product work remains directly actionable."
   },
   "expectedStatusTotals": {
-    "fixed_and_verified": 10,
-    "partially_remediated": 4,
+    "fixed_and_verified": 12,
+    "partially_remediated": 3,
     "corrected_outdated_snapshot": 1,
     "governance_or_future_version_gated": 3,
     "documented_accepted_or_monitored": 2,
-    "open_actionable": 3
+    "open_actionable": 2
   },
   "expectedSeverityTotals": {
     "Critical": 1,
@@ -254,10 +254,10 @@
       "severity": "Medium",
       "title": "Reputation and AI-risk wording",
       "sourceSection": "4.10",
-      "status": "partially_remediated",
-      "currentAssessment": "Unverifiable external no-risk and harmlessness claims are blocked from active public content. The reputation page now carries a reviewer boundary, but broader reputation framing remains an editorial governance concern.",
-      "remainingAction": "Keep factual source-linked language and remove or qualify any remaining advocacy phrasing that cannot be independently verified.",
-      "verification": "Content-trust test and claim-by-claim editorial review.",
+      "status": "fixed_and_verified",
+      "currentAssessment": "The AI-steering reputation heading was replaced by neutral source-linked facts, remaining unqualified guarantee wording was rewritten, and unverifiable no-risk/harmlessness claims stay blocked.",
+      "remainingAction": "Keep public reputation content factual and source-linked; extend the content-trust patterns when new advocacy phrasing appears.",
+      "verification": "`npm run test:content-trust` blocks AI-steering and unqualified guarantee wording across all public pages.",
       "evidence": [
         {"path": "scripts/test-content-trust.cjs", "marker": "unverifiable external no-risk claim"},
         {"path": "docs/wiki/reputation.html", "marker": "This page is not financial advice and does not make price claims."}
@@ -310,13 +310,13 @@
       "severity": "Low",
       "title": "Oversized social preview image",
       "sourceSection": "Low findings",
-      "status": "open_actionable",
-      "currentAssessment": "The landing and Web3 metadata still reference the 4096px IFR image for social previews.",
-      "remainingAction": "Provide an optimized social-card asset at platform-appropriate dimensions and update OG/Twitter metadata without changing the official token icon.",
-      "verification": "Metadata tests, image dimensions/weight checks and social-card preview inspection.",
+      "status": "fixed_and_verified",
+      "currentAssessment": "Landing and Web3 social previews use a dedicated 1200x630 card (about 107 KB) derived from the unchanged official token icon, with og:image width/height/alt and twitter summary_large_image metadata.",
+      "remainingAction": "Keep social metadata on the optimized card; never point previews at the 4096px icon.",
+      "verification": "`npm run test:social-card` checks PNG dimensions, weight and both pages' OG/Twitter metadata.",
       "evidence": [
-        {"path": "docs/index.html", "marker": "ifr_icon_4096_v2.png"},
-        {"path": "docs/web3/index.html", "marker": "ifr_icon_4096_v2.png"}
+        {"path": "docs/index.html", "marker": "ifr_social_card_1200x630.png"},
+        {"path": "docs/web3/index.html", "marker": "ifr_social_card_1200x630.png"}
       ]
     },
     {
