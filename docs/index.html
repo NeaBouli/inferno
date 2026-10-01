@@ -640,7 +640,7 @@
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 1px;
-      color: var(--accent);
+      color: var(--accent-deep, #8E3814);
       background: var(--accent-dim);
       padding: 4px 10px;
       border-radius: 4px;
@@ -686,10 +686,10 @@
     }
 
     .arch-layer:nth-child(1) { background: rgba(255, 69, 0, 0.06); }
-    .arch-layer:nth-child(1) .arch-layer-tag { color: var(--accent); }
+    .arch-layer:nth-child(1) .arch-layer-tag { color: var(--accent-deep, #8E3814); }
 
     .arch-layer:nth-child(2) { background: rgba(100, 100, 255, 0.04); }
-    .arch-layer:nth-child(2) .arch-layer-tag { color: #818cf8; }
+    .arch-layer:nth-child(2) .arch-layer-tag { color: #4338ca; }
 
     .arch-layer:nth-child(3) { background: rgba(34, 197, 94, 0.04); }
     .arch-layer:nth-child(3) .arch-layer-tag { color: var(--green); }
@@ -1363,7 +1363,7 @@
     <!-- Wallet: Connected -->
       <div id="lp-header-connected" style="display:none;align-items:center;gap:8px;margin-left:16px;position:relative;">
       <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:5px 8px;cursor:pointer;max-width:100px;white-space:nowrap;overflow:hidden;" onclick="lpToggleDropdown()">
-        <span id="lp-header-addr" style="color:#22c55e;font-family:monospace;font-size:0.72rem;font-weight:600;"></span>
+        <span id="lp-header-addr" style="color:#166534;font-family:monospace;font-size:0.72rem;font-weight:600;"></span>
       </div>
       <!-- Dropdown -->
       <div id="lp-header-dropdown" style="display:none;position:fixed;top:60px;right:12px;background:#111827;border:1px solid #374151;border-radius:12px;padding:16px;width:280px;max-width:calc(100vw - 24px);z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.6);">
@@ -1372,7 +1372,7 @@
           <button onclick="lpCloseDropdown()" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:1.1rem;line-height:1;padding:2px 6px;border-radius:4px;" title="Close">&#x2715;</button>
         </div>
         <div style="margin-bottom:12px;">
-          <div id="lp-drop-addr" style="color:#22c55e;font-family:monospace;font-size:0.85rem;font-weight:600;word-break:break-all;"></div>
+          <div id="lp-drop-addr" style="color:#166534;font-family:monospace;font-size:0.85rem;font-weight:600;word-break:break-all;"></div>
         </div>
         <div style="display:flex;gap:12px;margin-bottom:12px;">
           <div style="flex:1;background:#1f2937;border-radius:8px;padding:10px;text-align:center;">
@@ -1381,7 +1381,7 @@
           </div>
           <div style="flex:1;background:#1f2937;border-radius:8px;padding:10px;text-align:center;">
             <div style="color:#9ca3af;font-size:0.7rem;">IFR Balance</div>
-            <div id="lp-drop-ifr" style="color:#f97316;font-weight:700;font-size:0.9rem;"></div>
+            <div id="lp-drop-ifr" style="color:#b3300b;font-weight:700;font-size:0.9rem;"></div>
           </div>
         </div>
         <div id="lp-drop-lock" style="display:none;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:8px;padding:10px 12px;margin-bottom:12px;text-align:left;">
@@ -1396,11 +1396,11 @@
           <div style="color:#e5e7eb;font-size:0.8rem;font-weight:700;margin-bottom:4px;">IFRLock Access</div>
           <div style="color:#9ca3af;font-size:0.76rem;line-height:1.35;margin-bottom:8px;">Lock &ge;1,000 IFR in IFRLock to activate IFRLock access. Refundable anytime &mdash; unlock returns all locked IFR. The AI Copilot chat stays documentation-only and receives no wallet, balance, lock or tier context.</div>
           <div style="color:#d1d5db;font-size:0.72rem;line-height:1.35;margin-bottom:8px;background:#1f2937;border:1px solid #374151;border-radius:6px;padding:7px 8px;">
-            Wallet safety: approve only IFRLock <span style="font-family:monospace;color:#fbbf24;">0x769928...3954Eb</span> and only the exact amount shown.
+            Wallet safety: approve only IFRLock <span style="font-family:monospace;color:#92400e;">0x769928...3954Eb</span> and only the exact amount shown.
           </div>
           <button id="lp-premium-lock-btn" onclick="lpLockPremium()" style="width:100%;background:#16a34a;color:white;border:none;border-radius:8px;padding:9px 10px;cursor:pointer;font-size:0.8rem;font-weight:700;">Lock 1,000 IFR for IFRLock Access</button>
         </div>
-        <div id="lp-premium-lock-status" style="display:none;margin:-4px 0 12px;color:#fbbf24;font-size:0.72rem;line-height:1.35;"></div>
+        <div id="lp-premium-lock-status" style="display:none;margin:-4px 0 12px;color:#92400e;font-size:0.72rem;line-height:1.35;"></div>
         <a href="https://web3.ifrunit.tech/?action=commitment-lock#access" style="display:block;text-align:center;padding:9px 10px;background:#1f2937;border:1px solid #374151;color:#e5e7eb;border-radius:8px;font-size:0.8rem;font-weight:700;text-decoration:none;margin-bottom:8px;">&#x1F512; CommitmentVault Lock</a>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
           <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="flex:1 1 80px;text-align:center;padding:8px;background:#f97316;color:white;border-radius:8px;font-size:0.8rem;font-weight:600;text-decoration:none;">&#x1F525; Buy IFR</a>
@@ -1599,14 +1599,14 @@
     </div>
     <p class="hero-tagline"><span style="color:rgba(255,60,20,0.95);font-weight:900;text-shadow:0 0 10px rgba(255,60,20,0.5);">$IFRp</span> The Deflationary Utility Token on Socials</p>
     <p class="hero-subtitle">Lock. Use. Benefit. Across Every Product.</p>
-    <p style="margin-top:12px;margin-bottom:16px;"><span style="display:inline-block;background:rgba(34,197,94,0.15);color:#22c55e;border:1px solid rgba(34,197,94,0.3);padding:6px 18px;border-radius:20px;font-size:13px;font-weight:600;letter-spacing:0.5px;">Ethereum Mainnet</span></p>
+    <p style="margin-top:12px;margin-bottom:16px;"><span style="display:inline-block;background:rgba(34,197,94,0.15);color:#166534;border:1px solid rgba(34,197,94,0.3);padding:6px 18px;border-radius:20px;font-size:13px;font-weight:600;letter-spacing:0.5px;">Ethereum Mainnet</span></p>
     <div class="hero-buttons">
       <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" class="btn btn-primary" target="_blank" rel="noopener">Buy IFR on Uniswap</a>
       <a href="#" class="btn btn-secondary" onclick="lpAddIFRToken();return false;">Add IFR to MetaMask</a>
       <a href="https://github.com/NeaBouli/inferno" class="btn btn-github" target="_blank" rel="noopener">View on GitHub</a>
       <a href="wiki/index.html" class="btn btn-secondary">Read the Docs</a>
     </div>
-    <div style="margin-top:12px"><a href="#wizard" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,107,0,0.1);border:1px solid rgba(255,107,0,0.4);color:#ff6b00;padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:600;font-size:0.85rem">&#x1F9ED; Find your path &rarr;</a></div>
+    <div style="margin-top:12px"><a href="#wizard" style="display:inline-flex;align-items:center;gap:8px;background:rgba(255,107,0,0.1);border:1px solid rgba(255,107,0,0.4);color:#b3300b;padding:10px 22px;border-radius:8px;text-decoration:none;font-weight:600;font-size:0.85rem">&#x1F9ED; Find your path &rarr;</a></div>
 
   </div>
 
@@ -1619,20 +1619,20 @@
         <h3 style="color:#fff;font-family:'Orbitron',sans-serif;font-size:1.1rem;margin:0;letter-spacing:1px;">WalletConnect</h3>
         <span style="background:#f97316;color:#fff;font-size:0.7rem;padding:3px 10px;border-radius:20px;font-family:'Orbitron',sans-serif;">PHASE 1 LIVE</span>
       </div>
-      <p style="color:#b8b2aa;font-size:0.88rem;margin-bottom:28px;line-height:1.6;">The landing keeps its established minimal injected-wallet flow and focused lock controls. For broader connector selection and WalletConnect support, use the dedicated <a href="https://web3.ifrunit.tech/" style="color:#f97316;">Web3 app</a>.</p>
+      <p style="color:#b8b2aa;font-size:0.88rem;margin-bottom:28px;line-height:1.6;">The landing keeps its established minimal injected-wallet flow and focused lock controls. For broader connector selection and WalletConnect support, use the dedicated <a href="https://web3.ifrunit.tech/" style="color:#b3300b;">Web3 app</a>.</p>
       <div style="display:flex;flex-direction:column;gap:12px;">
         <div style="background:#1a1a2e;border:1px solid #222;border-radius:8px;padding:16px 18px;display:flex;gap:14px;align-items:flex-start;">
-          <span style="color:#22c55e;font-family:'Orbitron',sans-serif;font-size:0.75rem;font-weight:700;flex-shrink:0;margin-top:2px;">PHASE 1</span>
+          <span style="color:#166534;font-family:'Orbitron',sans-serif;font-size:0.75rem;font-weight:700;flex-shrink:0;margin-top:2px;">PHASE 1</span>
           <div>
             <div style="color:#eee;font-size:0.9rem;font-weight:600;margin-bottom:4px;">Basic Connect &#x2705;</div>
-            <div style="color:#777;font-size:0.83rem;line-height:1.5;">Connect MetaMask on desktop (extension) or mobile (deep link). View your IFR balance, lock status, and bootstrap contribution.<span style="color:#22c55e;margin-left:6px;font-size:0.78rem;">LIVE</span></div>
+            <div style="color:#777;font-size:0.83rem;line-height:1.5;">Connect MetaMask on desktop (extension) or mobile (deep link). View your IFR balance, lock status, and bootstrap contribution.<span style="color:#166534;margin-left:6px;font-size:0.78rem;">LIVE</span></div>
           </div>
         </div>
         <div style="background:#1a1a2e;border:1px solid #222;border-radius:8px;padding:16px 18px;display:flex;gap:14px;align-items:flex-start;">
-          <span style="color:#ff6600;font-family:'Orbitron',sans-serif;font-size:0.75rem;font-weight:700;flex-shrink:0;margin-top:2px;">PHASE 2</span>
+          <span style="color:#b3300b;font-family:'Orbitron',sans-serif;font-size:0.75rem;font-weight:700;flex-shrink:0;margin-top:2px;">PHASE 2</span>
           <div>
             <div style="color:#eee;font-size:0.9rem;font-weight:600;margin-bottom:4px;">IFR Lock Gate</div>
-            <div style="color:#777;font-size:0.83rem;line-height:1.5;">Lock &ge; 1,000 IFR &rarr; refundable IFRLock access for first-party lock-gated features. On-chain verification via IFRLock &mdash; no trust required. The AI Copilot chat stays documentation-only and receives no wallet, balance, lock or tier context.<span style="color:#ff6600;margin-left:6px;font-size:0.78rem;">Phase 2</span></div>
+            <div style="color:#777;font-size:0.83rem;line-height:1.5;">Lock &ge; 1,000 IFR &rarr; refundable IFRLock access for first-party lock-gated features. On-chain verification via IFRLock &mdash; no trust required. The AI Copilot chat stays documentation-only and receives no wallet, balance, lock or tier context.<span style="color:#b3300b;margin-left:6px;font-size:0.78rem;">Phase 2</span></div>
           </div>
         </div>
         <div style="background:#1a1a2e;border:1px solid #222;border-radius:8px;padding:16px 18px;display:flex;gap:14px;align-items:flex-start;">
@@ -1657,7 +1657,7 @@
           </div>
         </div>
       </div>
-      <p style="color:#444;font-size:0.78rem;margin-top:20px;text-align:center;line-height:1.5;">Follow <a href="https://t.me/IFRtoken" target="_blank" style="color:#ff6600;text-decoration:none;">@IFRtoken</a> for the launch announcement.</p>
+      <p style="color:#444;font-size:0.78rem;margin-top:20px;text-align:center;line-height:1.5;">Follow <a href="https://t.me/IFRtoken" target="_blank" style="color:#b3300b;text-decoration:none;">@IFRtoken</a> for the launch announcement.</p>
     </div>
   </div>
 </section>
@@ -1748,7 +1748,7 @@
 <section id="wizard" style="padding:56px 0;background:#f8f1e8;border-top:1px solid #eadfce;border-bottom:1px solid #eadfce">
   <div style="max-width:720px;margin:0 auto;padding:0 24px">
     <div style="text-align:center;margin-bottom:36px">
-      <div style="display:inline-block;background:rgba(255,107,0,0.1);border:1px solid rgba(255,107,0,0.3);border-radius:20px;padding:6px 20px;font-size:0.85rem;color:#ff6b00;margin-bottom:16px;font-weight:600">&#x1F9ED; Quick Start Guide</div>
+      <div style="display:inline-block;background:rgba(255,107,0,0.1);border:1px solid rgba(255,107,0,0.3);border-radius:20px;padding:6px 20px;font-size:0.85rem;color:#b3300b;margin-bottom:16px;font-weight:600">&#x1F9ED; Quick Start Guide</div>
       <h2 style="font-size:1.8rem;font-weight:800;margin-bottom:10px;color:#211c17">What brings you here today?</h2>
       <p style="color:#6f675d;font-size:0.95rem;max-width:460px;margin:0 auto;line-height:1.6">Select your goal &mdash; we guide you step by step to exactly what you need.</p>
     </div>
@@ -1972,11 +1972,11 @@ render();
           <p style="text-align:center;font-size:13px;color:#6f675d;margin-bottom:16px;text-transform:uppercase;letter-spacing:0.05em;">Every Standard Transfer Burns IFR Permanently</p>
           <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;font-size:14px;">
             <div style="padding:10px 16px;background:#f4eadb;border:1px solid #ddceb9;border-radius:8px;color:#211c17;font-weight:bold;">10,000 IFR sent</div>
-            <div style="color:#8c8273;font-size:20px;">&rarr;</div>
+            <div style="color:#6F655A;font-size:20px;">&rarr;</div>
             <div style="padding:10px 16px;background:#e8efe8;border:1px solid #bfd5c4;border-radius:8px;color:#2f6a45;font-weight:bold;">9,650 IFR received</div>
-            <div style="color:#8c8273;font-size:20px;">+</div>
+            <div style="color:#6F655A;font-size:20px;">+</div>
             <div style="padding:10px 16px;background:#f8e4df;border:1px solid #e7c3ba;border-radius:8px;color:#b0481e;font-weight:bold;">250 IFR burned</div>
-            <div style="color:#8c8273;font-size:20px;">+</div>
+            <div style="color:#6F655A;font-size:20px;">+</div>
             <div style="padding:10px 16px;background:#eef3f5;border:1px solid #d3dde2;border-radius:8px;color:#4b6473;font-weight:bold;">100 IFR &rarr; pool</div>
           </div>
         </div>
@@ -1997,7 +1997,7 @@ render();
       <div class="allocation reveal live-tracking" id="live-distribution">
         <h3><span class="live-dot"></span> Live Token Distribution</h3>
         <p style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">Live via copilot-api.ifrunit.tech &rarr; Ethereum &mdash; refreshes every 30s</p>
-        <p style="font-size:11px;margin-bottom:20px;"><span class="live-updated-at" style="color:#065f46;">Loading live data&hellip;</span> <span class="live-status" style="color:#ff4500;"></span></p>
+        <p style="font-size:11px;margin-bottom:20px;"><span class="live-updated-at" style="color:#065f46;">Loading live data&hellip;</span> <span class="live-status" style="color:#b3300b;"></span></p>
         <div id="dist-chart-row" style="display:flex;flex-direction:row;align-items:center;gap:2rem;justify-content:center;">
           <div style="position:relative;flex:0 0 auto;width:260px;height:260px;">
             <canvas id="dist-donut" width="520" height="520" style="width:260px;height:260px;"></canvas>
@@ -2048,7 +2048,7 @@ render();
 
     <div class="reveal" style="margin-top:24px;">
       <div id="dist-metrics" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;"></div>
-      <p style="font-size:11px;color:var(--text-muted);margin-top:14px;text-align:center;">&#x1F512; User IFR Locks (IFRLock): <span data-live-key="ifrlock-stat" style="color:#ff8c00;font-weight:600;">loading&hellip;</span> IFR &mdash; live on-chain</p>
+      <p style="font-size:11px;color:var(--text-muted);margin-top:14px;text-align:center;">&#x1F512; User IFR Locks (IFRLock): <span data-live-key="ifrlock-stat" style="color:#92400e;font-weight:600;">loading&hellip;</span> IFR &mdash; live on-chain</p>
       <p style="font-size:11px;color:var(--text-muted);margin-top:8px;text-align:center;"><span class="live-updated-at">Loading&hellip;</span> <span class="live-status"></span></p>
     </div>
 
@@ -2058,7 +2058,7 @@ render();
         padding: 14px 48px;
         border: 1.5px solid rgba(4,120,87,0.75);
         background: rgba(4,120,87,0.10);
-        color: #047857;
+        color: #065f46;
         font-family: 'Orbitron', monospace;
         font-size: 13px;
         font-weight: 700;
@@ -2080,55 +2080,55 @@ render();
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <span style="font-size:13px;font-weight:600;">&#x1F4B0; LP Reserve Safe</span>
-            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(59,130,246,0.15);color:#3b82f6;">Gnosis Multisig &#x1F512;</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(59,130,246,0.15);color:#1d4ed8;">Gnosis Multisig &#x1F512;</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <a href="https://etherscan.io/address/0x5D93E7919a71d725054e31017eCA86B026F86C04" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0x5D93E791...C04</a>
-            <button class="copy-btn" data-addr="0x5D93E7919a71d725054e31017eCA86B026F86C04" style="font-size:10px;background:none;border:1px solid #333;color:#8a8a96;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
+            <a href="https://etherscan.io/address/0x5D93E7919a71d725054e31017eCA86B026F86C04" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#6F655A;text-decoration:none;">0x5D93E791...C04</a>
+            <button class="copy-btn" data-addr="0x5D93E7919a71d725054e31017eCA86B026F86C04" style="font-size:10px;background:none;border:1px solid #333;color:#6F655A;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
           </div>
-          <div style="font-size:13px;font-weight:600;color:#3b82f6;" data-live-key="card-deployer">loading&hellip;</div>
+          <div style="font-size:13px;font-weight:600;color:#1d4ed8;" data-live-key="card-deployer">loading&hellip;</div>
           <div style="font-size:10px;color:#666;margin-top:2px;">400.6M IFR LP Reserve. Governance-controlled LP expansion reserve; not used for the Bootstrap LP. Ex-Deployer, transferred 18.03.2026.</div>
         </div>
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <span style="font-size:13px;font-weight:600;">&#x1F3DB;&#xFE0F; Treasury Safe</span>
-            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(155,89,182,0.15);color:#9B59B6;">Gnosis Multisig &#x1F512;</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(155,89,182,0.15);color:#7e22ce;">Gnosis Multisig &#x1F512;</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <a href="https://etherscan.io/address/0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0x5ad6193e...cE3b</a>
-            <button class="copy-btn" data-addr="0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b" style="font-size:10px;background:none;border:1px solid #333;color:#8a8a96;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
+            <a href="https://etherscan.io/address/0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#6F655A;text-decoration:none;">0x5ad6193e...cE3b</a>
+            <button class="copy-btn" data-addr="0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b" style="font-size:10px;background:none;border:1px solid #333;color:#6F655A;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
           </div>
-          <div style="font-size:13px;font-weight:600;color:#9B59B6;" data-live-key="card-treasury">loading&hellip;</div>
+          <div style="font-size:13px;font-weight:600;color:#7e22ce;" data-live-key="card-treasury">loading&hellip;</div>
           <div style="font-size:10px;color:#666;margin-top:2px;">Protocol treasury. Funded Bootstrap with 144.75M IFR plus a 5.25M IFR top-up. Balance: 0 IFR. No deployed mechanism automatically refills this Safe.</div>
         </div>
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <span style="font-size:13px;font-weight:600;">&#x1F465; Community Safe</span>
-            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(26,188,156,0.15);color:#1ABC9C;">Gnosis Multisig &#x1F512;</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(26,188,156,0.15);color:#115e59;">Gnosis Multisig &#x1F512;</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <a href="https://etherscan.io/address/0xaC5687547B2B21d80F8fd345B51e608d476667C7" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0xaC568754...67C7</a>
-            <button class="copy-btn" data-addr="0xaC5687547B2B21d80F8fd345B51e608d476667C7" style="font-size:10px;background:none;border:1px solid #333;color:#8a8a96;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
+            <a href="https://etherscan.io/address/0xaC5687547B2B21d80F8fd345B51e608d476667C7" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#6F655A;text-decoration:none;">0xaC568754...67C7</a>
+            <button class="copy-btn" data-addr="0xaC5687547B2B21d80F8fd345B51e608d476667C7" style="font-size:10px;background:none;border:1px solid #333;color:#6F655A;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
           </div>
-          <div style="font-size:13px;font-weight:600;color:#1ABC9C;" data-live-key="card-community">loading&hellip;</div>
+          <div style="font-size:13px;font-weight:600;color:#115e59;" data-live-key="card-community">loading&hellip;</div>
           <div style="font-size:10px;color:#666;margin-top:2px;">50M &rarr; Bootstrap. 7.9M = Community Operations Reserve.</div>
         </div>
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <span style="font-size:13px;font-weight:600;">&#x23F3; Team Vesting Contract</span>
-            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(192,57,43,0.15);color:#C0392B;">Locked &#x1F512;</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(192,57,43,0.15);color:#b91c1c;">Locked &#x1F512;</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
-            <a href="https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0x2694Bc84...6271</a>
-            <button class="copy-btn" data-addr="0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271" style="font-size:10px;background:none;border:1px solid #333;color:#8a8a96;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
+            <a href="https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#6F655A;text-decoration:none;">0x2694Bc84...6271</a>
+            <button class="copy-btn" data-addr="0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271" style="font-size:10px;background:none;border:1px solid #333;color:#6F655A;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
           </div>
-          <div style="font-size:13px;font-weight:600;color:#C0392B;" data-live-key="card-vesting">loading&hellip;</div>
+          <div style="font-size:13px;font-weight:600;color:#b91c1c;" data-live-key="card-vesting">loading&hellip;</div>
           <div style="font-size:10px;color:#666;margin-top:2px;">Smart contract holding 150M IFR. 12-month cliff (~March 2027), then 36-month linear release. Tokens locked here until cliff ends.</div>
           <div style="border-top:1px solid #222;margin-top:6px;padding-top:6px;">
-            <div style="font-size:10px;color:#fbbf24;font-weight:600;margin-bottom:2px;">Beneficiary (receives tokens after cliff):</div>
+            <div style="font-size:10px;color:#92400e;font-weight:600;margin-bottom:2px;">Beneficiary (receives tokens after cliff):</div>
             <div style="display:flex;align-items:center;gap:6px;">
               <a href="https://etherscan.io/address/0x04FABC52c51d1F8ced6974E7C25a34249b1E6239" target="_blank" rel="noopener" style="font-size:10px;font-family:monospace;color:#666;text-decoration:none;">0x04FA...6239</a>
               <span style="font-size:9px;color:#555;">Core Dev trustee for team &middot; 0 IFR until Mar 2027</span>
@@ -2142,8 +2142,8 @@ render();
             <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(146,43,33,0.15);color:#922B21;">Staged Governance</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <a href="https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0xdc030980...8f64</a>
-            <button class="copy-btn" data-addr="0xdc0309804803b3A105154f6073061E3185018f64" style="font-size:10px;background:none;border:1px solid #333;color:#8a8a96;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
+            <a href="https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#6F655A;text-decoration:none;">0xdc030980...8f64</a>
+            <button class="copy-btn" data-addr="0xdc0309804803b3A105154f6073061E3185018f64" style="font-size:10px;background:none;border:1px solid #333;color:#6F655A;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
           </div>
           <div style="font-size:13px;font-weight:600;color:#922B21;" data-live-key="card-liqres">loading&hellip;</div>
           <div style="font-size:10px;color:#666;margin-top:2px;">Initial lock ended. 200M held; 50M staged cap per 90 days; 0 withdrawn.</div>
@@ -2152,13 +2152,13 @@ render();
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <span style="font-size:13px;font-weight:600;">&#x1F3D7;&#xFE0F; Builder Vault</span>
-            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(69,123,157,0.15);color:#457B9D;">Active</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(69,123,157,0.15);color:#1d4ed8;">Active</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <a href="https://etherscan.io/address/0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0xc6eb7714...4F7D</a>
-            <button class="copy-btn" data-addr="0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D" style="font-size:10px;background:none;border:1px solid #333;color:#8a8a96;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
+            <a href="https://etherscan.io/address/0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#6F655A;text-decoration:none;">0xc6eb7714...4F7D</a>
+            <button class="copy-btn" data-addr="0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D" style="font-size:10px;background:none;border:1px solid #333;color:#6F655A;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
           </div>
-          <div style="font-size:13px;font-weight:600;color:#457B9D;" data-live-key="card-partner">loading&hellip;</div>
+          <div style="font-size:13px;font-weight:600;color:#1d4ed8;" data-live-key="card-partner">loading&hellip;</div>
           <div style="font-size:10px;color:#666;margin-top:2px;">Governance-locked. Flows only through real usage: when users lock IFR for a Builder product, a % is released as reward. Cannot be withdrawn directly.</div>
           <div style="font-size:9px;color:#555;margin-top:4px;">&#x1F512; 40M IFR cannot be spent &mdash; only earned through user adoption</div>
         </div>
@@ -2166,46 +2166,46 @@ render();
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <span style="font-size:13px;font-weight:600;">&#x1F680; Bootstrap Vault V3</span>
-            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(107,114,128,0.2);color:#9ca3af;">&#x2705; FINALIZED &mdash; 05.06.2026</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(107,114,128,0.2);color:#4b5563;">&#x2705; FINALIZED &mdash; 05.06.2026</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <a href="https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0xf72565C4...e141</a>
-            <button class="copy-btn" data-addr="0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141" style="font-size:10px;background:none;border:1px solid #333;color:#8a8a96;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
+            <a href="https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#6F655A;text-decoration:none;">0xf72565C4...e141</a>
+            <button class="copy-btn" data-addr="0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141" style="font-size:10px;background:none;border:1px solid #333;color:#6F655A;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
           </div>
-          <div style="font-size:13px;font-weight:600;color:#22c55e;" data-live-key="card-bootstrap">loading&hellip;</div>
-          <div style="font-size:10px;color:#666;margin-top:2px;">Bootstrap FINALIZED 05.06.2026. LP Token: <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="color:#22c55e;">Buy IFR on Uniswap</a> &mdash; <a href="wiki/bootstrap.html" style="color:#f97316;">details</a></div>
+          <div style="font-size:13px;font-weight:600;color:#166534;" data-live-key="card-bootstrap">loading&hellip;</div>
+          <div style="font-size:10px;color:#666;margin-top:2px;">Bootstrap FINALIZED 05.06.2026. LP Token: <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="color:#166534;">Buy IFR on Uniswap</a> &mdash; <a href="wiki/bootstrap.html" style="color:#b3300b;">details</a></div>
         </div>
 
         <div style="background:#111113;border:1px solid rgba(251,191,36,0.35);border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <span style="font-size:13px;font-weight:600;">&#x1F512; CommitmentVault User Locks</span>
-            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(251,191,36,0.15);color:#fbbf24;">Live</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(251,191,36,0.15);color:#92400e;">Live</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <a href="https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0x0719d9eb...C4F73d3</a>
-            <a href="https://web3.ifrunit.tech/?action=commitment-lock#access" style="font-size:10px;color:#f97316;text-decoration:none;">Lock IFR</a>
+            <a href="https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#6F655A;text-decoration:none;">0x0719d9eb...C4F73d3</a>
+            <a href="https://web3.ifrunit.tech/?action=commitment-lock#access" style="font-size:10px;color:#b3300b;text-decoration:none;">Lock IFR</a>
           </div>
-        <div style="font-size:13px;font-weight:600;color:#fbbf24;" data-live-key="card-commitment-locked">loading&hellip;</div>
+        <div style="font-size:13px;font-weight:600;color:#92400e;" data-live-key="card-commitment-locked">loading&hellip;</div>
         <div style="font-size:10px;color:#666;margin-top:2px;">Total CommitmentVault locked IFR. C2 verified: <span data-live-key="c2-commitment-lock">loading&hellip;</span>, <span data-live-key="c2-commitment-tranches">10 tranches</span>, unlock 29.07.2026.</div>
       </div>
 
         <div style="background:#111113;border:1px solid rgba(255,140,0,0.35);border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <span style="font-size:13px;font-weight:600;">&#x1F512; IFRLock Access Locks</span>
-            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(255,140,0,0.15);color:#ff8c00;">Live</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(255,140,0,0.15);color:#92400e;">Live</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <a href="https://etherscan.io/address/0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0x769928aB...3954Eb</a>
-            <a href="#top" onclick="lpToggleDropdown();return false;" style="font-size:10px;color:#ff8c00;text-decoration:none;">Lock IFR</a>
+            <a href="https://etherscan.io/address/0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#6F655A;text-decoration:none;">0x769928aB...3954Eb</a>
+            <a href="#top" onclick="lpToggleDropdown();return false;" style="font-size:10px;color:#92400e;text-decoration:none;">Lock IFR</a>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;">
             <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.25);border-radius:6px;padding:8px;">
-              <div style="font-size:10px;color:#ef4444;font-weight:700;text-transform:uppercase;">Locked</div>
-              <div style="font-size:13px;font-weight:700;color:#ef4444;" data-live-key="card-ifrlock-locked">loading&hellip;</div>
+              <div style="font-size:10px;color:#b91c1c;font-weight:700;text-transform:uppercase;">Locked</div>
+              <div style="font-size:13px;font-weight:700;color:#b91c1c;" data-live-key="card-ifrlock-locked">loading&hellip;</div>
             </div>
             <div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);border-radius:6px;padding:8px;">
-              <div style="font-size:10px;color:#22c55e;font-weight:700;text-transform:uppercase;">Unlocked</div>
-              <div style="font-size:13px;font-weight:700;color:#22c55e;" data-live-key="card-ifrlock-unlocked">loading&hellip;</div>
+              <div style="font-size:10px;color:#166534;font-weight:700;text-transform:uppercase;">Unlocked</div>
+              <div style="font-size:13px;font-weight:700;color:#166534;" data-live-key="card-ifrlock-unlocked">loading&hellip;</div>
             </div>
           </div>
           <div style="font-size:10px;color:#666;margin-top:8px;">Simple access locks for IFRLock access and builder products. Unlock returns all IFRLock tokens to the user.</div>
@@ -2214,39 +2214,39 @@ render();
         <div style="background:#111113;border:1px solid rgba(34,197,94,0.35);border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <span style="font-size:13px;font-weight:600;">&#x1F4B8; LendingVault Offers</span>
-            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(34,197,94,0.15);color:#22c55e;">Live</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(34,197,94,0.15);color:#166534;">Live</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <a href="https://etherscan.io/address/0x974305Ab0EC905172e697271C3d7d385194EB9DF" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0x974305Ab...94EB9DF</a>
-            <a href="https://web3.ifrunit.tech/?action=lending-offer#access" style="font-size:10px;color:#22c55e;text-decoration:none;">Offer IFR</a>
+            <a href="https://etherscan.io/address/0x974305Ab0EC905172e697271C3d7d385194EB9DF" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#6F655A;text-decoration:none;">0x974305Ab...94EB9DF</a>
+            <a href="https://web3.ifrunit.tech/?action=lending-offer#access" style="font-size:10px;color:#166534;text-decoration:none;">Offer IFR</a>
           </div>
-          <div style="font-size:13px;font-weight:600;color:#22c55e;"><span data-live-key="card-lending-available">loading&hellip;</span> available</div>
+          <div style="font-size:13px;font-weight:600;color:#166534;"><span data-live-key="card-lending-available">loading&hellip;</span> available</div>
           <div style="font-size:10px;color:#666;margin-top:2px;"><span data-live-key="lending-offer-count">0</span> live offers. <span data-live-key="card-lending-lent">loading&hellip;</span> lent. Borrower transactions require <span data-live-key="lending-price-status">price check</span>.</div>
         </div>
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <span style="font-size:13px;font-weight:600;">&#x267B;&#xFE0F; Buyback Vault</span>
-            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(231,76,60,0.15);color:#E74C3C;">Pool Fee Contract</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(231,76,60,0.15);color:#b91c1c;">Pool Fee Contract</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <a href="https://etherscan.io/address/0x670D293e3D65f96171c10DdC8d88B96b0570F812" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0x670D293e...F812</a>
-            <button class="copy-btn" data-addr="0x670D293e3D65f96171c10DdC8d88B96b0570F812" style="font-size:10px;background:none;border:1px solid #333;color:#8a8a96;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
+            <a href="https://etherscan.io/address/0x670D293e3D65f96171c10DdC8d88B96b0570F812" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#6F655A;text-decoration:none;">0x670D293e...F812</a>
+            <button class="copy-btn" data-addr="0x670D293e3D65f96171c10DdC8d88B96b0570F812" style="font-size:10px;background:none;border:1px solid #333;color:#6F655A;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
           </div>
-          <div style="font-size:13px;font-weight:600;color:#E74C3C;" data-live-key="card-buyback">loading&hellip;</div>
+          <div style="font-size:13px;font-weight:600;color:#b91c1c;" data-live-key="card-buyback">loading&hellip;</div>
           <div style="font-size:10px;color:#666;margin-top:2px;">Accumulates from 1% protocol fee. Not pre-funded at genesis.</div>
         </div>
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <span style="font-size:13px;font-weight:600;">&#x1F525; Burn Reserve</span>
-            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(255,69,0,0.15);color:#ff4500;">Pool Fee Contract</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(255,69,0,0.15);color:#b3300b;">Pool Fee Contract</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <a href="https://etherscan.io/address/0xaA1496133B6c274190A2113410B501C5802b6fCF" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0xaA149613...6fCF</a>
-            <button class="copy-btn" data-addr="0xaA1496133B6c274190A2113410B501C5802b6fCF" style="font-size:10px;background:none;border:1px solid #333;color:#8a8a96;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
+            <a href="https://etherscan.io/address/0xaA1496133B6c274190A2113410B501C5802b6fCF" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#6F655A;text-decoration:none;">0xaA149613...6fCF</a>
+            <button class="copy-btn" data-addr="0xaA1496133B6c274190A2113410B501C5802b6fCF" style="font-size:10px;background:none;border:1px solid #333;color:#6F655A;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
           </div>
-          <div style="font-size:13px;font-weight:600;color:#ff4500;" data-live-key="card-burnres">loading&hellip;</div>
+          <div style="font-size:13px;font-weight:600;color:#b3300b;" data-live-key="card-burnres">loading&hellip;</div>
           <div style="font-size:10px;color:#666;margin-top:2px;">Permanent burn pool. Accumulates from protocol fee.</div>
         </div>
 
@@ -2260,72 +2260,72 @@ render();
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <span style="font-size:13px;font-weight:600;">&#x1F525; Inferno Token (IFR)</span>
-            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(249,115,22,0.15);color:#f97316;">ERC-20</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(249,115,22,0.15);color:#b3300b;">ERC-20</span>
           </div>
-          <a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0x77e99917...c36580A6e7B</a>
+          <a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#6F655A;text-decoration:none;">0x77e99917...c36580A6e7B</a>
           <div style="font-size:10px;color:#666;margin-top:4px;">Deflationary ERC-20. 2.5% burn + 1% pool fee per transfer. 9 decimals. No mint function.</div>
         </div>
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <span style="font-size:13px;font-weight:600;">&#x1F3DB;&#xFE0F; Governance</span>
-            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(251,191,36,0.15);color:#fbbf24;">Timelock</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(251,191,36,0.15);color:#92400e;">Timelock</span>
           </div>
-          <a href="https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0xc43d48E7...E8caD041</a>
+          <a href="https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#6F655A;text-decoration:none;">0xc43d48E7...E8caD041</a>
           <div style="font-size:10px;color:#666;margin-top:4px;">48h timelock. Owner: TreasurySafe 3-of-5. Guardian: Deployer (cancel only).</div>
         </div>
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <span style="font-size:13px;font-weight:600;">&#x1F512; IFRLock</span>
-            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(34,197,94,0.15);color:#22c55e;">Lock-to-Access</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(34,197,94,0.15);color:#166534;">Lock-to-Access</span>
           </div>
-          <a href="https://etherscan.io/address/0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0x769928aB...3954Eb</a>
+          <a href="https://etherscan.io/address/0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#6F655A;text-decoration:none;">0x769928aB...3954Eb</a>
           <div style="font-size:10px;color:#666;margin-top:4px;">Lock IFR tokens to unlock premium access. isLocked(wallet, minAmount) &rarr; stateless verification.</div>
         </div>
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <span style="font-size:13px;font-weight:600;">&#x1F504; FeeRouter V1</span>
-            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(251,191,36,0.15);color:#fbbf24;">Fee Splitter</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(251,191,36,0.15);color:#92400e;">Fee Splitter</span>
           </div>
-          <a href="https://etherscan.io/address/0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0x4807B77B...580C60a</a>
+          <a href="https://etherscan.io/address/0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#6F655A;text-decoration:none;">0x4807B77B...580C60a</a>
           <div style="font-size:10px;color:#666;margin-top:4px;">Receives the 1% IFR pool fee. ETH protocol fees route to BuybackController.</div>
         </div>
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <span style="font-size:13px;font-weight:600;">&#x1F4DD; BuilderRegistry</span>
-            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(168,85,247,0.15);color:#a855f7;">Registry</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(168,85,247,0.15);color:#7e22ce;">Registry</span>
           </div>
-          <a href="https://etherscan.io/address/0xdfe6636DA47F8949330697e1dC5391267CEf0EE3" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0xdfe6636D...CEf0EE3</a>
+          <a href="https://etherscan.io/address/0xdfe6636DA47F8949330697e1dC5391267CEf0EE3" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#6F655A;text-decoration:none;">0xdfe6636D...CEf0EE3</a>
           <div style="font-size:10px;color:#666;margin-top:4px;">On-chain registry of approved Builders. Governance-controlled.</div>
         </div>
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <span style="font-size:13px;font-weight:600;">&#x1F4A0; CommitmentVault</span>
-            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(59,130,246,0.15);color:#3b82f6;">Phase 3</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(59,130,246,0.15);color:#1d4ed8;">Phase 3</span>
           </div>
-          <a href="https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0x0719d9eb...C4F73d3</a>
+          <a href="https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#6F655A;text-decoration:none;">0x0719d9eb...C4F73d3</a>
           <div style="font-size:10px;color:#666;margin-top:4px;">Conditional IFR tranches: time, price, OR or AND. The owner can unlock while the condition is met; after a successful <code>markConditionMet</code>, anyone may complete the unlock after 30 days and tokens always return to the owner.</div>
         </div>
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <span style="font-size:13px;font-weight:600;">&#x1F4B3; LendingVault</span>
-            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(59,130,246,0.15);color:#3b82f6;">Phase 3</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(59,130,246,0.15);color:#1d4ed8;">Phase 3</span>
           </div>
-          <a href="https://etherscan.io/address/0x974305Ab0EC905172e697271C3d7d385194EB9DF" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#8a8a96;text-decoration:none;">0x974305Ab...94EB9DF</a>
+          <a href="https://etherscan.io/address/0x974305Ab0EC905172e697271C3d7d385194EB9DF" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#6F655A;text-decoration:none;">0x974305Ab...94EB9DF</a>
           <div style="font-size:10px;color:#666;margin-top:4px;">Lend IFR against ETH collateral. Utilization-based interest (2&ndash;25%). 200% initial collateral.</div>
         </div>
 
       </div>
 
-      <p style="text-align:center;font-size:12px;color:var(--text-muted);margin-top:20px;font-weight:600;">14 deployed contracts + 3 Gnosis Safes = 17 on-chain components &mdash; all verified on <a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code" target="_blank" rel="noopener" style="color:#f97316;">Etherscan</a></p>
+      <p style="text-align:center;font-size:12px;color:var(--text-muted);margin-top:20px;font-weight:600;">14 deployed contracts + 3 Gnosis Safes = 17 on-chain components &mdash; all verified on <a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code" target="_blank" rel="noopener" style="color:#b3300b;">Etherscan</a></p>
 
       <div style="text-align:center; margin:24px 0 8px 0;">
-        <a href="wiki/wallet-guide.html" style="display:inline-flex; align-items:center; gap:8px; padding:12px 28px; border-radius:10px; background:rgba(255,102,0,0.1); border:1px solid rgba(255,102,0,0.4); color:#ff6600; font-weight:600; font-size:14px; text-decoration:none; transition:all 0.2s;">&#x1F4D6; Full Wallet &amp; Contract Guide &rarr;</a>
+        <a href="wiki/wallet-guide.html" style="display:inline-flex; align-items:center; gap:8px; padding:12px 28px; border-radius:10px; background:rgba(255,102,0,0.1); border:1px solid rgba(255,102,0,0.4); color:#b3300b; font-weight:600; font-size:14px; text-decoration:none; transition:all 0.2s;">&#x1F4D6; Full Wallet &amp; Contract Guide &rarr;</a>
       </div>
     </div>
 
@@ -2337,7 +2337,7 @@ render();
   <div class="container">
     <div class="reveal" style="text-align:center">
       <p class="section-label">Architecture</p>
-      <h2 style="color:#f97316;margin-bottom:8px;">Token Flow</h2>
+      <h2 style="color:#b3300b;margin-bottom:8px;">Token Flow</h2>
       <p style="color:#9ca3af;margin-bottom:32px;font-size:0.9rem;">How every IFR token moves through the protocol</p>
     </div>
     <div class="token-flow-panel" style="max-width:900px;margin:0 auto;background:rgba(13,17,23,0.8);border:1px solid #1e2730;border-radius:20px;padding:20px;overflow:hidden;">
@@ -2509,7 +2509,7 @@ render();
       </div>
     </div>
     <div style="text-align:center;margin-top:24px;">
-      <a href="wiki/protocol-plan.html" style="display:inline-flex;align-items:center;gap:8px;background:transparent;border:1.5px solid #f97316;color:#f97316;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:0.95rem;transition:background 0.2s;" onmouseover="this.style.background='rgba(249,115,22,0.1)'" onmouseout="this.style.background='transparent'">Full Protocol Plan &rarr;</a>
+      <a href="wiki/protocol-plan.html" style="display:inline-flex;align-items:center;gap:8px;background:transparent;border:1.5px solid #f97316;color:#b3300b;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:0.95rem;transition:background 0.2s;" onmouseover="this.style.background='rgba(249,115,22,0.1)'" onmouseout="this.style.background='transparent'">Full Protocol Plan &rarr;</a>
     </div>
   </div>
 </section>
@@ -2776,7 +2776,7 @@ if (isLocked) {
         <div>
           <h4>Internal Audit Record Open</h4>
           <p>Open-source contracts and full internal audit records are public; security findings remain welcome via private vulnerability reporting. Independent professional third-party review is still pending.
-            <a href="https://github.com/NeaBouli/inferno/security/advisories/new" style="color:#e67e22;font-weight:600;">Report Privately</a>
+            <a href="https://github.com/NeaBouli/inferno/security/advisories/new" style="color:#b3300b;font-weight:600;">Report Privately</a>
           </p>
         </div>
       </div>
@@ -2843,7 +2843,7 @@ if (isLocked) {
 
       <p style="text-align:center;color:#888;font-size:0.93rem;margin-bottom:40px;">
       Quick answers about IFR / $IFRp &mdash;
-      <a href="wiki/faq.html" style="color:#ff6600;text-decoration:none;font-weight:700;">view all 82 questions in the full Wiki FAQ &rarr;</a>
+      <a href="wiki/faq.html" style="color:#b3300b;text-decoration:none;font-weight:700;">view all 82 questions in the full Wiki FAQ &rarr;</a>
     </p>
 
     <!-- 2-column accordion grid -->
@@ -2977,28 +2977,28 @@ if (isLocked) {
     <div class="reveal" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;max-width:960px;margin:0 auto;">
       <a href="wiki/commitment-vault.html" style="background:#111113;border:1px solid #222225;border-radius:12px;padding:20px;text-decoration:none;transition:border-color 0.2s;">
         <div style="font-size:24px;margin-bottom:8px;">&#x1F512;</div>
-        <div style="font-weight:700;color:#e8e8ed;margin-bottom:4px;">CommitmentVault</div>
-        <div style="font-size:13px;color:#8a8a96;">Live wallet flow: approve IFR, then lock with time or price conditions.</div>
+        <div style="font-weight:700;color:#211C17;margin-bottom:4px;">CommitmentVault</div>
+        <div style="font-size:13px;color:#6F655A;">Live wallet flow: approve IFR, then lock with time or price conditions.</div>
       </a>
       <a href="wiki/lending-vault.html" style="background:#111113;border:1px solid #222225;border-radius:12px;padding:20px;text-decoration:none;transition:border-color 0.2s;">
         <div style="font-size:24px;margin-bottom:8px;">&#x1F4B0;</div>
-        <div style="font-weight:700;color:#e8e8ed;margin-bottom:4px;">LendingVault</div>
-        <div style="font-size:13px;color:#8a8a96;">Guided lender flow: connect, choose amount, approve, create offer, verify market status.</div>
+        <div style="font-weight:700;color:#211C17;margin-bottom:4px;">LendingVault</div>
+        <div style="font-size:13px;color:#6F655A;">Guided lender flow: connect, choose amount, approve, create offer, verify market status.</div>
       </a>
       <a href="wiki/lending-market.html" style="background:#111113;border:1px solid #222225;border-radius:12px;padding:20px;text-decoration:none;transition:border-color 0.2s;">
         <div style="font-size:24px;margin-bottom:8px;">&#x1F3EA;</div>
-        <div style="font-weight:700;color:#e8e8ed;margin-bottom:4px;">Lending Market</div>
-        <div style="font-size:13px;color:#8a8a96;">P2P marketplace. Browse offers, compare rates.</div>
+        <div style="font-weight:700;color:#211C17;margin-bottom:4px;">Lending Market</div>
+        <div style="font-size:13px;color:#6F655A;">P2P marketplace. Browse offers, compare rates.</div>
       </a>
       <a href="wiki/lp-strategy.html" style="background:#111113;border:1px solid #222225;border-radius:12px;padding:20px;text-decoration:none;transition:border-color 0.2s;">
         <div style="font-size:24px;margin-bottom:8px;">&#x1F4C8;</div>
-        <div style="font-weight:700;color:#e8e8ed;margin-bottom:4px;">LP Strategy</div>
-        <div style="font-size:13px;color:#8a8a96;">Phased liquidity deployment. AMM mathematics.</div>
+        <div style="font-weight:700;color:#211C17;margin-bottom:4px;">LP Strategy</div>
+        <div style="font-size:13px;color:#6F655A;">Phased liquidity deployment. AMM mathematics.</div>
       </a>
       <a href="builder.html" style="background:#111113;border:1px solid rgba(255,107,0,0.4);border-radius:12px;padding:20px;text-decoration:none;transition:border-color 0.2s;">
         <div style="font-size:24px;margin-bottom:8px;">&#x1F6E0;&#xFE0F;</div>
-        <div style="font-weight:700;color:#ff6b00;margin-bottom:4px;">Integration Builder</div>
-        <div style="font-size:13px;color:#8a8a96;">Generate Web3 access code. Contract + SDK in 60 seconds.</div>
+        <div style="font-weight:700;color:#b3300b;margin-bottom:4px;">Integration Builder</div>
+        <div style="font-size:13px;color:#6F655A;">Generate Web3 access code. Contract + SDK in 60 seconds.</div>
       </a>
     </div>
   </div>
@@ -3009,7 +3009,7 @@ if (isLocked) {
   <span id="dao-governance" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);"></span>
   <div class="container">
     <div class="reveal" style="text-align:center;margin-bottom:60px;">
-      <div style="display:inline-block;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.3);border-radius:20px;padding:6px 16px;font-size:0.8rem;color:#f97316;font-weight:600;letter-spacing:0.05em;margin-bottom:16px;">PHASE 4 &mdash; DAO GOVERNANCE</div>
+      <div style="display:inline-block;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.3);border-radius:20px;padding:6px 16px;font-size:0.8rem;color:#b3300b;font-weight:600;letter-spacing:0.05em;margin-bottom:16px;">PHASE 4 &mdash; DAO GOVERNANCE</div>
       <h2 class="section-title">Two-Chamber Governance</h2>
       <p class="section-desc" style="max-width:600px;margin:0 auto;">Planned Phase 4 architecture, not a live ballot system. Voting weights and fees remain draft choices. Current execution stays with Safe and the Governance timelock.</p>
       <p><a href="wiki/governance.html#council-agenda">Current Council agenda</a> &middot; <a href="wiki/governance.html#council-privacy">Planned voting modes and privacy limits</a></p>
@@ -3018,26 +3018,26 @@ if (isLocked) {
     <div class="dao-chambers reveal" style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:48px;">
       <div class="gov-soft-card gov-readable" style="background:linear-gradient(135deg,rgba(251,191,36,0.05),rgba(31,41,55,0.8));border:1px solid rgba(251,191,36,0.2);border-radius:20px;padding:32px;">
         <div style="font-size:2rem;margin-bottom:12px;">&#x2696;&#xFE0F;</div>
-        <div style="font-size:0.75rem;font-weight:800;color:#b45309;letter-spacing:0.1em;margin-bottom:8px;">CHAMBER 1</div>
+        <div style="font-size:0.75rem;font-weight:800;color:#92400e;letter-spacing:0.1em;margin-bottom:8px;">CHAMBER 1</div>
         <h3 style="color:#211c17;font-size:1.4rem;margin:0 0 12px;">The Council</h3>
         <p style="color:#24563a;font-weight:700;">Planned voting system &mdash; not live</p>
         <p style="color:#2f271f;font-size:0.9rem;line-height:1.7;margin:0 0 20px;">Strategic governance for the Council is planned. Ballot privacy, eligibility proofs and result publication still require implementation and review; no Council voting contract is deployed.</p>
         <div style="display:flex;flex-direction:column;gap:8px;">
-          <div style="display:flex;align-items:center;gap:10px;color:#2f271f;font-size:0.85rem;"><span style="color:#b45309;">&rarr;</span> Gnosis Safe Signers only</div>
-          <div style="display:flex;align-items:center;gap:10px;color:#2f271f;font-size:0.85rem;"><span style="color:#b45309;">&rarr;</span> Protocol parameters + upgrades</div>
-          <div style="display:flex;align-items:center;gap:10px;color:#2f271f;font-size:0.85rem;"><span style="color:#b45309;">&rarr;</span> 48h Timelock on execution</div>
+          <div style="display:flex;align-items:center;gap:10px;color:#2f271f;font-size:0.85rem;"><span style="color:#92400e;">&rarr;</span> Gnosis Safe Signers only</div>
+          <div style="display:flex;align-items:center;gap:10px;color:#2f271f;font-size:0.85rem;"><span style="color:#92400e;">&rarr;</span> Protocol parameters + upgrades</div>
+          <div style="display:flex;align-items:center;gap:10px;color:#2f271f;font-size:0.85rem;"><span style="color:#92400e;">&rarr;</span> 48h Timelock on execution</div>
         </div>
       </div>
       <div class="gov-soft-card gov-readable" style="background:linear-gradient(135deg,rgba(249,115,22,0.05),rgba(31,41,55,0.8));border:1px solid rgba(249,115,22,0.2);border-radius:20px;padding:32px;">
         <div style="font-size:2rem;margin-bottom:12px;">&#x1F3DB;&#xFE0F;</div>
-        <div style="font-size:0.75rem;font-weight:800;color:#b45309;letter-spacing:0.1em;margin-bottom:8px;">CHAMBER 2</div>
+        <div style="font-size:0.75rem;font-weight:800;color:#92400e;letter-spacing:0.1em;margin-bottom:8px;">CHAMBER 2</div>
         <h3 style="color:#211c17;font-size:1.4rem;margin:0 0 12px;">The Forum</h3>
         <p style="color:#24563a;font-weight:700;">Planned voting system &mdash; not live</p>
         <p style="color:#2f271f;font-size:0.9rem;line-height:1.7;margin:0 0 20px;">Proposed community-innovation layer. Voting weights, proposal deposits and the future spam-protection contract remain subject to ratification, audit and deployment.</p>
         <div style="display:flex;flex-direction:column;gap:8px;">
-          <div style="display:flex;align-items:center;gap:10px;color:#2f271f;font-size:0.85rem;"><span style="color:#b45309;">&rarr;</span> Proposed: eligible locked-IFR voting weight, subject to ratification</div>
-          <div style="display:flex;align-items:center;gap:10px;color:#2f271f;font-size:0.85rem;"><span style="color:#b45309;">&rarr;</span> 10 IFR spam protection per proposal</div>
-          <div style="display:flex;align-items:center;gap:10px;color:#2f271f;font-size:0.85rem;"><span style="color:#b45309;">&rarr;</span> Top proposals &rarr; on-chain execution</div>
+          <div style="display:flex;align-items:center;gap:10px;color:#2f271f;font-size:0.85rem;"><span style="color:#92400e;">&rarr;</span> Proposed: eligible locked-IFR voting weight, subject to ratification</div>
+          <div style="display:flex;align-items:center;gap:10px;color:#2f271f;font-size:0.85rem;"><span style="color:#92400e;">&rarr;</span> 10 IFR spam protection per proposal</div>
+          <div style="display:flex;align-items:center;gap:10px;color:#2f271f;font-size:0.85rem;"><span style="color:#92400e;">&rarr;</span> Top proposals &rarr; on-chain execution</div>
         </div>
       </div>
     </div>
@@ -3048,19 +3048,19 @@ if (isLocked) {
       <p style="color:#2f271f;font-size:0.9rem;line-height:1.7;margin:0 0 20px;">When community voting is live, signer seats should be expanded through a mixed process: candidates are pre-qualified for security and reliability, nominated publicly, voted on by the community, reviewed for conflicts, then onboarded through Safe and governance. It is not pure whale voting and not pure random selection.</p>
       <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:18px;">
         <div class="gov-soft-mini" style="background:#fffaf2;border:1px solid #e4d8c7;border-radius:10px;padding:14px;">
-          <div style="color:#b45309;font-size:0.78rem;font-weight:800;margin-bottom:6px;">1. Eligibility</div>
+          <div style="color:#92400e;font-size:0.78rem;font-weight:800;margin-bottom:6px;">1. Eligibility</div>
           <div style="color:#2f271f;font-size:0.8rem;line-height:1.45;">Secure wallet setup, Safe readiness, contact reliability, and conflict review.</div>
         </div>
         <div class="gov-soft-mini" style="background:#fffaf2;border:1px solid #e4d8c7;border-radius:10px;padding:14px;">
-          <div style="color:#b45309;font-size:0.78rem;font-weight:800;margin-bottom:6px;">2. Community Vote</div>
+          <div style="color:#92400e;font-size:0.78rem;font-weight:800;margin-bottom:6px;">2. Community Vote</div>
           <div style="color:#2f271f;font-size:0.8rem;line-height:1.45;">The community chooses from the qualified candidate pool.</div>
         </div>
         <div class="gov-soft-mini" style="background:#fffaf2;border:1px solid #e4d8c7;border-radius:10px;padding:14px;">
-          <div style="color:#b45309;font-size:0.78rem;font-weight:800;margin-bottom:6px;">3. Staged Safe</div>
+          <div style="color:#92400e;font-size:0.78rem;font-weight:800;margin-bottom:6px;">3. Staged Safe</div>
           <div style="color:#2f271f;font-size:0.8rem;line-height:1.45;">Current 3-of-5, then 4-of-7, later optional 5-of-9 after one stable term.</div>
         </div>
         <div class="gov-soft-mini" style="background:#fffaf2;border:1px solid #e4d8c7;border-radius:10px;padding:14px;">
-          <div style="color:#b45309;font-size:0.78rem;font-weight:800;margin-bottom:6px;">4. Rotation</div>
+          <div style="color:#92400e;font-size:0.78rem;font-weight:800;margin-bottom:6px;">4. Rotation</div>
           <div style="color:#2f271f;font-size:0.8rem;line-height:1.45;">Term limits, replacement rules, and emergency removal must be defined first.</div>
         </div>
       </div>
@@ -3076,34 +3076,34 @@ if (isLocked) {
       <div style="display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:0;">
         <div style="text-align:center;padding:16px;min-width:120px;">
           <div style="width:48px;height:48px;background:rgba(249,115,22,0.15);border:1px solid rgba(249,115,22,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:1.2rem;">&#x1F4A1;</div>
-          <div style="color:#b45309;font-size:0.75rem;font-weight:700;">PROPOSE</div>
+          <div style="color:#92400e;font-size:0.75rem;font-weight:700;">PROPOSE</div>
           <div style="color:#2f271f;font-size:0.75rem;margin-top:4px;">Lock 10 IFR<br>Submit idea</div>
         </div>
-        <div style="color:#b45309;font-size:1.5rem;padding:0 4px;">&rarr;</div>
+        <div style="color:#92400e;font-size:1.5rem;padding:0 4px;">&rarr;</div>
         <div style="text-align:center;padding:16px;min-width:120px;">
           <div style="width:48px;height:48px;background:rgba(249,115,22,0.15);border:1px solid rgba(249,115,22,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:1.2rem;">&#x1F5F3;&#xFE0F;</div>
-          <div style="color:#b45309;font-size:0.75rem;font-weight:700;">VOTE</div>
+          <div style="color:#92400e;font-size:0.75rem;font-weight:700;">VOTE</div>
           <div style="color:#2f271f;font-size:0.75rem;margin-top:4px;">Sign via wallet<br>No gas needed</div>
         </div>
-        <div style="color:#b45309;font-size:1.5rem;padding:0 4px;">&rarr;</div>
+        <div style="color:#92400e;font-size:1.5rem;padding:0 4px;">&rarr;</div>
         <div style="text-align:center;padding:16px;min-width:120px;">
           <div style="width:48px;height:48px;background:rgba(249,115,22,0.15);border:1px solid rgba(249,115,22,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:1.2rem;">&#x23F3;</div>
-          <div style="color:#b45309;font-size:0.75rem;font-weight:700;">TIMELOCK</div>
+          <div style="color:#92400e;font-size:0.75rem;font-weight:700;">TIMELOCK</div>
           <div style="color:#2f271f;font-size:0.75rem;margin-top:4px;">48h public<br>review period</div>
         </div>
-        <div style="color:#b45309;font-size:1.5rem;padding:0 4px;">&rarr;</div>
+        <div style="color:#92400e;font-size:1.5rem;padding:0 4px;">&rarr;</div>
         <div style="text-align:center;padding:16px;min-width:120px;">
           <div style="width:48px;height:48px;background:rgba(249,115,22,0.15);border:1px solid rgba(249,115,22,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:1.2rem;">&#x26D3;&#xFE0F;</div>
-          <div style="color:#b45309;font-size:0.75rem;font-weight:700;">EXECUTE</div>
+          <div style="color:#92400e;font-size:0.75rem;font-weight:700;">EXECUTE</div>
           <div style="color:#2f271f;font-size:0.75rem;margin-top:4px;">Permissionless<br>on-chain</div>
         </div>
       </div>
     </div>
 
     <div class="reveal" style="display:flex;gap:16px;flex-wrap:wrap;justify-content:center;">
-      <a href="wiki/governance.html" style="display:inline-flex;align-items:center;gap:8px;background:transparent;border:1.5px solid #f97316;color:#f97316;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:0.95rem;transition:background 0.2s,border-color 0.2s,color 0.2s;" onmouseover="this.style.background='rgba(249,115,22,0.1)'" onmouseout="this.style.background='transparent'">Explore Governance &rarr;</a>
-      <a href="wiki/community-signer-expansion.html" style="display:inline-flex;align-items:center;gap:8px;background:transparent;border:1.5px solid #38bdf8;color:#7dd3fc;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:0.95rem;transition:background 0.2s,border-color 0.2s,color 0.2s;" onmouseover="this.style.background='rgba(56,189,248,0.1)';this.style.borderColor='#7dd3fc'" onmouseout="this.style.background='transparent';this.style.borderColor='#38bdf8'">Signer Expansion Plan &rarr;</a>
-      <a href="wiki/verify.html" style="display:inline-flex;align-items:center;gap:8px;background:transparent;border:1.5px solid #7c3aed;color:#a78bfa;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:0.95rem;transition:background 0.2s,border-color 0.2s,color 0.2s;" onmouseover="this.style.background='rgba(124,58,237,0.1)';this.style.borderColor='#a78bfa'" onmouseout="this.style.background='transparent';this.style.borderColor='#7c3aed'">&#x1F510; Verify Wallet &rarr;</a>
+      <a href="wiki/governance.html" style="display:inline-flex;align-items:center;gap:8px;background:transparent;border:1.5px solid #f97316;color:#b3300b;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:0.95rem;transition:background 0.2s,border-color 0.2s,color 0.2s;" onmouseover="this.style.background='rgba(249,115,22,0.1)'" onmouseout="this.style.background='transparent'">Explore Governance &rarr;</a>
+      <a href="wiki/community-signer-expansion.html" style="display:inline-flex;align-items:center;gap:8px;background:transparent;border:1.5px solid #38bdf8;color:#075985;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:0.95rem;transition:background 0.2s,border-color 0.2s,color 0.2s;" onmouseover="this.style.background='rgba(56,189,248,0.1)';this.style.borderColor='#7dd3fc'" onmouseout="this.style.background='transparent';this.style.borderColor='#38bdf8'">Signer Expansion Plan &rarr;</a>
+      <a href="wiki/verify.html" style="display:inline-flex;align-items:center;gap:8px;background:transparent;border:1.5px solid #7c3aed;color:#6d28d9;padding:12px 28px;border-radius:10px;text-decoration:none;font-weight:700;font-size:0.95rem;transition:background 0.2s,border-color 0.2s,color 0.2s;" onmouseover="this.style.background='rgba(124,58,237,0.1)';this.style.borderColor='#a78bfa'" onmouseout="this.style.background='transparent';this.style.borderColor='#7c3aed'">&#x1F510; Verify Wallet &rarr;</a>
       <p style="color:#374151;font-size:0.8rem;margin-top:12px;">Phase 4 &mdash; after LP live + ecosystem built</p>
     </div>
   </div>
@@ -3121,9 +3121,9 @@ if (isLocked) {
     </div>
     <div style="display:flex; gap:0.75rem; flex-wrap:wrap; margin-bottom:1.5rem; justify-content:center; margin-top:24px;">
       <span style="background:#1a1a1a; border:1px solid #333; border-radius:8px; padding:0.4rem 0.9rem; font-size:0.85rem; color:#888;">Network: <strong style="color:#fff;">Ethereum Mainnet</strong></span>
-      <span style="background:#1a1a1a; border:1px solid #ff6b35; border-radius:8px; padding:0.4rem 0.9rem; font-size:0.85rem; color:#888;">Chain ID: <strong style="color:#ff6b35;">1</strong></span>
+      <span style="background:#1a1a1a; border:1px solid #ff6b35; border-radius:8px; padding:0.4rem 0.9rem; font-size:0.85rem; color:#888;">Chain ID: <strong style="color:#b3300b;">1</strong></span>
       <span style="background:#1a1a1a; border:1px solid #333; border-radius:8px; padding:0.4rem 0.9rem; font-size:0.85rem; color:#888;">On-chain symbol: <strong style="color:#fff;">IFR</strong></span>
-      <span style="background:#1a1a1a; border:1px solid #ff6b35; border-radius:8px; padding:0.4rem 0.9rem; font-size:0.85rem; color:#888;">Social: <strong style="color:#ff6b35;">$IFRp</strong></span>
+      <span style="background:#1a1a1a; border:1px solid #ff6b35; border-radius:8px; padding:0.4rem 0.9rem; font-size:0.85rem; color:#888;">Social: <strong style="color:#b3300b;">$IFRp</strong></span>
       <span style="background:#1a1a1a; border:1px solid #333; border-radius:8px; padding:0.4rem 0.9rem; font-size:0.85rem; color:#888;">Decimals: <strong style="color:#fff;">9</strong></span>
     </div>
     <div class="reveal" style="max-width:720px;margin:40px auto 0;display:flex;flex-direction:column;gap:8px;">
@@ -3249,13 +3249,13 @@ if (isLocked) {
       </div>
       <div style="margin-top:12px;font-size:13px;color:var(--text-muted);border-top:1px solid var(--border);padding-top:10px;line-height:1.8;">
         <strong style="color:var(--text);">14 deployed contracts + 3 Gnosis Safes = 17 on-chain components</strong><br>
-        <span style="display:inline-block;background:rgba(34,197,94,0.15);color:#22c55e;font-size:11px;padding:1px 6px;border-radius:4px;margin-right:4px;">live</span> Uniswap V2 LP Pair &mdash; <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="color:#22c55e;">0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</a><br>
-        <span style="display:inline-block;background:rgba(107,114,128,0.2);color:#9ca3af;font-size:11px;padding:1px 6px;border-radius:4px;margin-right:4px;">Phase 4</span> RatVoting.sol &mdash; Council Governance<br>
-        <span style="display:inline-block;background:rgba(107,114,128,0.2);color:#9ca3af;font-size:11px;padding:1px 6px;border-radius:4px;margin-right:4px;">Phase 4</span> ForumVoting.sol &mdash; Community Governance<br>
-        <span style="display:inline-block;background:rgba(107,114,128,0.2);color:#9ca3af;font-size:11px;padding:1px 6px;border-radius:4px;margin-right:4px;">Phase 4</span> IFRSpamProtection.sol &mdash; Proposal Spam Protection
+        <span style="display:inline-block;background:rgba(34,197,94,0.15);color:#166534;font-size:11px;padding:1px 6px;border-radius:4px;margin-right:4px;">live</span> Uniswap V2 LP Pair &mdash; <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="color:#166534;">0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</a><br>
+        <span style="display:inline-block;background:rgba(107,114,128,0.2);color:#4b5563;font-size:11px;padding:1px 6px;border-radius:4px;margin-right:4px;">Phase 4</span> RatVoting.sol &mdash; Council Governance<br>
+        <span style="display:inline-block;background:rgba(107,114,128,0.2);color:#4b5563;font-size:11px;padding:1px 6px;border-radius:4px;margin-right:4px;">Phase 4</span> ForumVoting.sol &mdash; Community Governance<br>
+        <span style="display:inline-block;background:rgba(107,114,128,0.2);color:#4b5563;font-size:11px;padding:1px 6px;border-radius:4px;margin-right:4px;">Phase 4</span> IFRSpamProtection.sol &mdash; Proposal Spam Protection
       </div>
       <div style="margin:16px 0;">
-        <a href="wiki/wallet-guide.html" style="display:inline-flex; align-items:center; gap:8px; padding:10px 22px; border-radius:8px; background:rgba(255,102,0,0.08); border:1px solid rgba(255,102,0,0.3); color:#ff6600; font-weight:600; font-size:13px; text-decoration:none;">&#x1F4D6; Wallet &amp; Contract Guide &rarr;</a>
+        <a href="wiki/wallet-guide.html" style="display:inline-flex; align-items:center; gap:8px; padding:10px 22px; border-radius:8px; background:rgba(255,102,0,0.08); border:1px solid rgba(255,102,0,0.3); color:#b3300b; font-weight:600; font-size:13px; text-decoration:none;">&#x1F4D6; Wallet &amp; Contract Guide &rarr;</a>
       </div>
     </div>
     <p class="reveal" style="text-align:center;margin-top:20px;">
@@ -3767,7 +3767,7 @@ if (isLocked) {
       }
       return '<div style="display:flex;align-items:center;gap:12px;">' +
         '<div style="width:14px;height:14px;border-radius:3px;background:' + cat.color + ';flex-shrink:0;"></div>' +
-        '<span style="font-size:14px;color:#8a8a96;">' + cat.label + detail + '</span></div>';
+        '<span style="font-size:14px;color:#6F655A;">' + cat.label + detail + '</span></div>';
     }).join('');
   }
 
@@ -3776,20 +3776,20 @@ if (isLocked) {
     if (!el) return;
     var protocolLocked = (data.vesting || 0) + (data.liqRes || 0) + (data.bootstrap || 0) + (data.partner || 0) + (data.lpReserve || 0) + (data.community || 0);
     var items = [
-      { key: 'burned-stat',     label: 'Total Burned',    value: fmt(data.burned),    sub: 'Since genesis \u2014 decreasing forever', color: '#ff4500' },
-      { key: 'protocol-locked', label: 'Protocol Locked', value: fmt(protocolLocked), sub: 'All non-circulating IFR secured', color: '#ff8c00' },
-      { key: 'commitment-locked-stat', label: 'CommitmentVault Locked', value: fmt(data.commitmentLocked || 0), sub: 'Live user locks on Mainnet', color: '#fbbf24' },
-      { key: 'lending-available-stat', label: 'LendingVault Available', value: fmt(data.lendingAvailable || 0), sub: 'Live lender offers on Mainnet', color: '#22c55e' },
+      { key: 'burned-stat',     label: 'Total Burned',    value: fmt(data.burned),    sub: 'Since genesis \u2014 decreasing forever', color: '#b3300b' },
+      { key: 'protocol-locked', label: 'Protocol Locked', value: fmt(protocolLocked), sub: 'All non-circulating IFR secured', color: '#92400e' },
+      { key: 'commitment-locked-stat', label: 'CommitmentVault Locked', value: fmt(data.commitmentLocked || 0), sub: 'Live user locks on Mainnet', color: '#92400e' },
+      { key: 'lending-available-stat', label: 'LendingVault Available', value: fmt(data.lendingAvailable || 0), sub: 'Live lender offers on Mainnet', color: '#166534' },
       { key: '',                label: 'Current Supply',  value: fmt(data.supply),    sub: 'of 1B genesis',        color: '#fff'    },
-      { key: '',                label: 'LP Reserve Safe', value: fmt(data.lpReserve), sub: 'LP allocation (3-of-5)',color: '#FF6B35' },
-      { key: 'ifr-price',       label: 'IFR Price',       value: 'TBD',              sub: 'Live Uniswap V2 spot',color: '#fbbf24' }
+      { key: '',                label: 'LP Reserve Safe', value: fmt(data.lpReserve), sub: 'LP allocation (3-of-5)',color: '#b3300b' },
+      { key: 'ifr-price',       label: 'IFR Price',       value: 'TBD',              sub: 'Live Uniswap V2 spot',color: '#92400e' }
     ];
     el.innerHTML = items.map(function(m) {
       var liveAttr = m.key ? ' data-live-key="' + m.key + '"' : '';
       return '<div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:16px;text-align:center;">' +
-        '<div style="font-size:11px;color:#8a8a96;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">' + m.label + '</div>' +
+        '<div style="font-size:11px;color:#6F655A;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">' + m.label + '</div>' +
         '<div' + liveAttr + ' style="font-size:22px;font-weight:700;color:' + m.color + ';">' + m.value + '</div>' +
-        '<div style="font-size:11px;color:#8a8a96;margin-top:2px;">' + m.sub + '</div></div>';
+        '<div style="font-size:11px;color:#6F655A;margin-top:2px;">' + m.sub + '</div></div>';
     }).join('');
     if (liveIFRPriceData) applyIFRPriceData(liveIFRPriceData);
   }
