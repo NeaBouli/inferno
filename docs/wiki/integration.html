@@ -580,12 +580,12 @@
     <main class="main">
       <!-- Wallet Top Bar -->
       <div id="wiki-wallet-bar" style="position:sticky;top:0;z-index:100;background:rgba(10,10,10,0.95);backdrop-filter:blur(12px);border-bottom:1px solid #1f2937;padding:10px 20px;display:flex;justify-content:space-between;align-items:center;margin:-32px -40px 24px -40px;">
-        <a href="https://ifrunit.tech/index.html" style="color:#f97316;font-weight:700;text-decoration:none;font-size:0.9rem;">&larr; Inferno</a>
+        <a href="https://ifrunit.tech/index.html" style="color:#b3300b;font-weight:700;text-decoration:none;font-size:0.9rem;">&larr; Inferno</a>
         <div id="wiki-wallet-wrap" style="position:relative;">
           <button id="lp-header-connect-btn" onclick="lpConnect()" style="display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:9px 18px;min-height:38px;border:1px solid transparent;background:#B0481E;color:#fff;font-family:var(--sans, -apple-system, system-ui, sans-serif);font-size:0.84rem;font-weight:600;letter-spacing:0;border-radius:4px;cursor:pointer;white-space:nowrap;transition:all .2s;position:relative;flex-shrink:0;margin-left:16px;">Connect Wallet</button>
           <div id="lp-header-connected" style="display:none;">
             <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:5px 8px;cursor:pointer;display:flex;align-items:center;gap:6px;max-width:100px;white-space:nowrap;overflow:hidden;" onclick="lpToggleDropdown()">
-              <span id="lp-header-addr" style="color:#22c55e;font-family:monospace;font-size:0.72rem;font-weight:600;"></span>
+              <span id="lp-header-addr" style="color:#166534;font-family:monospace;font-size:0.72rem;font-weight:600;"></span>
               
             </div>
           </div>
@@ -595,7 +595,7 @@
               <button onclick="lpCloseDropdown()" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:1.1rem;line-height:1;padding:2px 6px;border-radius:4px;" title="Close">&#x2715;</button>
             </div>
             <div style="margin-bottom:12px;">
-              <div id="lp-drop-addr" style="color:#22c55e;font-family:monospace;font-size:0.78rem;font-weight:600;word-break:break-all;"></div>
+              <div id="lp-drop-addr" style="color:#166534;font-family:monospace;font-size:0.78rem;font-weight:600;word-break:break-all;"></div>
             </div>
             <div style="display:flex;gap:8px;margin-bottom:12px;">
               <div style="flex:1;background:#1f2937;border-radius:8px;padding:8px;text-align:center;">
@@ -604,18 +604,18 @@
               </div>
               <div style="flex:1;background:#1f2937;border-radius:8px;padding:8px;text-align:center;">
                 <div style="color:#9ca3af;font-size:0.7rem;">IFR</div>
-                <div id="lp-drop-ifr" style="color:#f97316;font-weight:700;font-size:0.85rem;"></div>
+                <div id="lp-drop-ifr" style="color:#b3300b;font-weight:700;font-size:0.85rem;"></div>
               </div>
             </div>
             <div id="lp-drop-lock" style="display:none;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:8px 10px;margin-bottom:10px;text-align:center;">
-              <span style="color:#fbbf24;font-size:0.78rem;font-weight:600;">&#x26A1; Premium</span>
+              <span style="color:#92400e;font-size:0.78rem;font-weight:600;">&#x26A1; Premium</span>
             </div>
             <div id="lp-drop-nolock" style="background:rgba(107,114,128,0.1);border:1px solid #374151;border-radius:8px;padding:8px 10px;margin-bottom:10px;text-align:center;">
               <span style="color:#9ca3af;font-size:0.78rem;">Lock &#x2265;1,000 IFR &#x2192; </span>
-              <a href="https://ifrunit.tech/wiki/lock-mechanism.html" style="color:#f97316;font-size:0.78rem;">Premium &#x2197;</a>
+              <a href="https://ifrunit.tech/wiki/lock-mechanism.html" style="color:#b3300b;font-size:0.78rem;">Premium &#x2197;</a>
             </div>
             <div style="display:flex;gap:8px;">
-              <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="flex:1;text-align:center;padding:8px;background:#f97316;color:white;border-radius:8px;font-size:0.78rem;font-weight:600;text-decoration:none;">&#x1F525; Buy IFR</a>
+              <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="flex:1;text-align:center;padding:8px;background:#B0481E;color:white;border-radius:8px;font-size:0.78rem;font-weight:600;text-decoration:none;">&#x1F525; Buy IFR</a>
               <button onclick="lpAddIFRToken()" style="flex:1;background:#e9ded0;color:#2f241d;border:none;border-radius:8px;padding:8px;cursor:pointer;font-size:0.78rem;font-weight:700;">Add IFR</button>
               <button onclick="lpDisconnect()" style="flex:1;background:#374151;color:#9ca3af;border:none;border-radius:8px;padding:8px;cursor:pointer;font-size:0.78rem;">Disconnect</button>
             </div>
@@ -1173,8 +1173,8 @@ async function checkLicense(wallet) {
           <strong>Ready to integrate?</strong> The entire process from application to live integration typically takes less than a week. Most of the time is spent on your side implementing and testing the resolver.
         </p>
         <div style="margin-top:24px;padding:16px 20px;background:#1a1a2a;border:1px solid #333;border-radius:8px;">
-          <strong style="color:#e74c3c;">SDK Quickstart</strong> &mdash; Full code examples for Node.js, React + wagmi v2, Python, tier system, and wallet signature verification:
-          <a href="https://ifrunit.tech/wiki/integration.html" style="color:#e74c3c;text-decoration:underline;margin-left:4px;">Integration Guide</a>
+          <strong style="color:#b91c1c;">SDK Quickstart</strong> &mdash; Full code examples for Node.js, React + wagmi v2, Python, tier system, and wallet signature verification:
+          <a href="https://ifrunit.tech/wiki/integration.html" style="color:#b91c1c;text-decoration:underline;margin-left:4px;">Integration Guide</a>
         </div>
       </div>
 
@@ -1204,9 +1204,9 @@ async function checkLicense(wallet) {
 }</code></pre>
 
       <div style="margin-top:16px;padding:16px 20px;background:#1a1a2a;border:1px solid #333;border-radius:8px;">
-        <strong style="color:#e74c3c;">Full Spec:</strong>
-        <a href="integration.html#creator-gateway" style="color:#e74c3c;text-decoration:underline;margin-left:4px;">Creator Gateway Spec</a> &bull;
-        <a href="integration.html#creator-gateway" style="color:#e74c3c;text-decoration:underline;margin-left:4px;">Creator Gateway Guide</a>
+        <strong style="color:#b91c1c;">Full Spec:</strong>
+        <a href="integration.html#creator-gateway" style="color:#b91c1c;text-decoration:underline;margin-left:4px;">Creator Gateway Spec</a> &bull;
+        <a href="integration.html#creator-gateway" style="color:#b91c1c;text-decoration:underline;margin-left:4px;">Creator Gateway Guide</a>
       </div>
 
       <!-- ======================================== -->
@@ -1249,8 +1249,8 @@ async function checkLicense(wallet) {
       </ol>
 
       <div style="margin-top:16px;padding:16px 20px;background:#1a1a2a;border:1px solid #333;border-radius:8px;">
-        <strong style="color:#e74c3c;">Full E2E Flow:</strong>
-        <a href="integration.html#e2e-flow" style="color:#e74c3c;text-decoration:underline;margin-left:4px;">E2E Flow Guide</a>
+        <strong style="color:#b91c1c;">Full E2E Flow:</strong>
+        <a href="integration.html#e2e-flow" style="color:#b91c1c;text-decoration:underline;margin-left:4px;">E2E Flow Guide</a>
       </div>
 
       <!-- ======================================== -->
@@ -1306,25 +1306,25 @@ function isVoucherValid(
         <div style="display:flex;align-items:flex-start;gap:0;flex-wrap:wrap;margin:24px 0;">
           <div style="flex:1;min-width:160px;text-align:center;padding:16px;">
             <div style="width:52px;height:52px;background:rgba(249,115,22,0.15);border:2px solid rgba(249,115,22,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:1.3rem;">1&#xFE0F;&#x20E3;</div>
-            <div style="color:#f97316;font-weight:700;font-size:0.85rem;">APPLY</div>
+            <div style="color:#b3300b;font-weight:700;font-size:0.85rem;">APPLY</div>
             <div style="color:#6b7280;font-size:0.8rem;margin-top:6px;">Submit GitHub Issue via builder-registry.yml template</div>
           </div>
           <div style="color:#374151;font-size:1.5rem;padding:16px 4px;align-self:center;">&rarr;</div>
           <div style="flex:1;min-width:160px;text-align:center;padding:16px;">
             <div style="width:52px;height:52px;background:rgba(249,115,22,0.15);border:2px solid rgba(249,115,22,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:1.3rem;">2&#xFE0F;&#x20E3;</div>
-            <div style="color:#f97316;font-weight:700;font-size:0.85rem;">REVIEW</div>
+            <div style="color:#b3300b;font-weight:700;font-size:0.85rem;">REVIEW</div>
             <div style="color:#6b7280;font-size:0.8rem;margin-top:6px;">Core team reviews application (48h typical)</div>
           </div>
           <div style="color:#374151;font-size:1.5rem;padding:16px 4px;align-self:center;">&rarr;</div>
           <div style="flex:1;min-width:160px;text-align:center;padding:16px;">
             <div style="width:52px;height:52px;background:rgba(249,115,22,0.15);border:2px solid rgba(249,115,22,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:1.3rem;">3&#xFE0F;&#x20E3;</div>
-            <div style="color:#f97316;font-weight:700;font-size:0.85rem;">GOVERNANCE</div>
+            <div style="color:#b3300b;font-weight:700;font-size:0.85rem;">GOVERNANCE</div>
             <div style="color:#6b7280;font-size:0.8rem;margin-top:6px;">Governance proposal: registerBuilder() via Timelock (48h delay)</div>
           </div>
           <div style="color:#374151;font-size:1.5rem;padding:16px 4px;align-self:center;">&rarr;</div>
           <div style="flex:1;min-width:160px;text-align:center;padding:16px;">
             <div style="width:52px;height:52px;background:rgba(34,197,94,0.15);border:2px solid rgba(34,197,94,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 10px;font-size:1.3rem;">&#x2705;</div>
-            <div style="color:#22c55e;font-weight:700;font-size:0.85rem;">REGISTERED</div>
+            <div style="color:#166534;font-weight:700;font-size:0.85rem;">REGISTERED</div>
             <div style="color:#6b7280;font-size:0.8rem;margin-top:6px;">isBuilder(wallet) = true on-chain &rarr; Telegram Dev&amp;Builder access</div>
           </div>
         </div>
@@ -1335,7 +1335,7 @@ function isVoucherValid(
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
             <div>
               <div style="color:#9ca3af;font-size:0.75rem;margin-bottom:4px;">Status</div>
-              <div style="color:#22c55e;font-weight:600;">Deployed and verified on Sepolia and Ethereum Mainnet</div>
+              <div style="color:#166534;font-weight:600;">Deployed and verified on Sepolia and Ethereum Mainnet</div>
             </div>
             <div>
               <div style="color:#9ca3af;font-size:0.75rem;margin-bottom:4px;">Owner</div>
@@ -1351,7 +1351,7 @@ function isVoucherValid(
             </div>
           </div>
           <div style="color:#9ca3af;font-size:0.85rem;">
-            Key functions: <code style="color:#f97316;">registerBuilder()</code> &middot; <code style="color:#f97316;">removeBuilder()</code> &middot; <code style="color:#f97316;">isBuilder(address)</code> &middot; <code style="color:#f97316;">getActiveBuilders()</code>
+            Key functions: <code style="color:#b3300b;">registerBuilder()</code> &middot; <code style="color:#b3300b;">removeBuilder()</code> &middot; <code style="color:#b3300b;">isBuilder(address)</code> &middot; <code style="color:#b3300b;">getActiveBuilders()</code>
           </div>
         </div>
 
@@ -1359,19 +1359,19 @@ function isVoucherValid(
         <h3>Builder Categories</h3>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:16px 0;">
           <div style="background:#1f2937;border:1px solid #374151;border-radius:10px;padding:16px;">
-            <div style="color:#f97316;font-weight:700;margin-bottom:6px;">&#x1F3A8; Creator</div>
+            <div style="color:#b3300b;font-weight:700;margin-bottom:6px;">&#x1F3A8; Creator</div>
             <div style="color:#9ca3af;font-size:0.85rem;">Content creators, YouTubers, educators integrating IFR Lock for premium content access</div>
           </div>
           <div style="background:#1f2937;border:1px solid #374151;border-radius:10px;padding:16px;">
-            <div style="color:#f97316;font-weight:700;margin-bottom:6px;">&#x1F50C; Integration</div>
+            <div style="color:#b3300b;font-weight:700;margin-bottom:6px;">&#x1F50C; Integration</div>
             <div style="color:#9ca3af;font-size:0.85rem;">Products and platforms using IFRLock.isLocked() for feature gating or premium tiers</div>
           </div>
           <div style="background:#1f2937;border:1px solid #374151;border-radius:10px;padding:16px;">
-            <div style="color:#f97316;font-weight:700;margin-bottom:6px;">&#x1F6E0;&#xFE0F; Tooling</div>
+            <div style="color:#b3300b;font-weight:700;margin-bottom:6px;">&#x1F6E0;&#xFE0F; Tooling</div>
             <div style="color:#9ca3af;font-size:0.85rem;">Developer tools, SDKs, analytics, infrastructure built around the IFR ecosystem</div>
           </div>
           <div style="background:#1f2937;border:1px solid #374151;border-radius:10px;padding:16px;">
-            <div style="color:#f97316;font-weight:700;margin-bottom:6px;">&#x1F3DB;&#xFE0F; DAO</div>
+            <div style="color:#b3300b;font-weight:700;margin-bottom:6px;">&#x1F3DB;&#xFE0F; DAO</div>
             <div style="color:#9ca3af;font-size:0.85rem;">Governance participants, community organizations, DAO tooling contributors</div>
           </div>
         </div>
@@ -1379,7 +1379,7 @@ function isVoucherValid(
         <!-- Verify CTA -->
         <div style="background:rgba(249,115,22,0.05);border:1px solid rgba(249,115,22,0.2);border-radius:12px;padding:20px;margin-top:24px;text-align:center;">
           <p style="color:#9ca3af;margin:0 0 12px;">Already registered as a Builder? Verify your wallet to unlock Telegram Dev&amp;Builder topic access.</p>
-          <a href="https://ifrunit.tech/wiki/verify.html" style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#f97316,#ea580c);color:white;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:700;">&#x1F510; Verify Wallet &rarr;</a>
+          <a href="https://ifrunit.tech/wiki/verify.html" style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#c2410c,#9a3412);color:white;padding:10px 24px;border-radius:8px;text-decoration:none;font-weight:700;">&#x1F510; Verify Wallet &rarr;</a>
         </div>
       </div>
 

@@ -657,12 +657,12 @@
     <main class="main">
       <!-- Wallet Top Bar -->
       <div id="wiki-wallet-bar" style="position:sticky;top:0;z-index:100;background:rgba(10,10,10,0.95);backdrop-filter:blur(12px);border-bottom:1px solid #1f2937;padding:10px 20px;display:flex;justify-content:space-between;align-items:center;margin:-32px -40px 24px -40px;">
-        <a href="https://ifrunit.tech/index.html" style="color:#f97316;font-weight:700;text-decoration:none;font-size:0.9rem;">&larr; Inferno</a>
+        <a href="https://ifrunit.tech/index.html" style="color:#b3300b;font-weight:700;text-decoration:none;font-size:0.9rem;">&larr; Inferno</a>
         <div id="wiki-wallet-wrap" style="position:relative;">
           <button id="lp-header-connect-btn" onclick="lpConnect()" style="display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:9px 18px;min-height:38px;border:1px solid transparent;background:#B0481E;color:#fff;font-family:var(--sans, -apple-system, system-ui, sans-serif);font-size:0.84rem;font-weight:600;letter-spacing:0;border-radius:4px;cursor:pointer;white-space:nowrap;transition:all .2s;position:relative;flex-shrink:0;margin-left:16px;">Connect Wallet</button>
           <div id="lp-header-connected" style="display:none;">
             <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:5px 8px;cursor:pointer;display:flex;align-items:center;gap:6px;max-width:100px;white-space:nowrap;overflow:hidden;" onclick="lpToggleDropdown()">
-              <span id="lp-header-addr" style="color:#22c55e;font-family:monospace;font-size:0.72rem;font-weight:600;"></span>
+              <span id="lp-header-addr" style="color:#166534;font-family:monospace;font-size:0.72rem;font-weight:600;"></span>
               
             </div>
           </div>
@@ -672,7 +672,7 @@
               <button onclick="lpCloseDropdown()" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:1.1rem;line-height:1;padding:2px 6px;border-radius:4px;" title="Close">&#x2715;</button>
             </div>
             <div style="margin-bottom:12px;">
-              <div id="lp-drop-addr" style="color:#22c55e;font-family:monospace;font-size:0.78rem;font-weight:600;word-break:break-all;"></div>
+              <div id="lp-drop-addr" style="color:#166534;font-family:monospace;font-size:0.78rem;font-weight:600;word-break:break-all;"></div>
             </div>
             <div style="display:flex;gap:8px;margin-bottom:12px;">
               <div style="flex:1;background:#1f2937;border-radius:8px;padding:8px;text-align:center;">
@@ -681,18 +681,18 @@
               </div>
               <div style="flex:1;background:#1f2937;border-radius:8px;padding:8px;text-align:center;">
                 <div style="color:#9ca3af;font-size:0.7rem;">IFR</div>
-                <div id="lp-drop-ifr" style="color:#f97316;font-weight:700;font-size:0.85rem;"></div>
+                <div id="lp-drop-ifr" style="color:#b3300b;font-weight:700;font-size:0.85rem;"></div>
               </div>
             </div>
             <div id="lp-drop-lock" style="display:none;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:8px 10px;margin-bottom:10px;text-align:center;">
-              <span style="color:#fbbf24;font-size:0.78rem;font-weight:600;">&#x26A1; Premium</span>
+              <span style="color:#92400e;font-size:0.78rem;font-weight:600;">&#x26A1; Premium</span>
             </div>
             <div id="lp-drop-nolock" style="background:rgba(107,114,128,0.1);border:1px solid #374151;border-radius:8px;padding:8px 10px;margin-bottom:10px;text-align:center;">
               <span style="color:#9ca3af;font-size:0.78rem;">Lock &#x2265;1,000 IFR &#x2192; </span>
-              <a href="https://ifrunit.tech/wiki/lock-mechanism.html" style="color:#f97316;font-size:0.78rem;">Premium &#x2197;</a>
+              <a href="https://ifrunit.tech/wiki/lock-mechanism.html" style="color:#b3300b;font-size:0.78rem;">Premium &#x2197;</a>
             </div>
             <div style="display:flex;gap:8px;">
-              <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="flex:1;text-align:center;padding:8px;background:#f97316;color:white;border-radius:8px;font-size:0.78rem;font-weight:600;text-decoration:none;">&#x1F525; Buy IFR</a>
+              <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="flex:1;text-align:center;padding:8px;background:#B0481E;color:white;border-radius:8px;font-size:0.78rem;font-weight:600;text-decoration:none;">&#x1F525; Buy IFR</a>
               <button onclick="lpAddIFRToken()" style="flex:1;background:#e9ded0;color:#2f241d;border:none;border-radius:8px;padding:8px;cursor:pointer;font-size:0.78rem;font-weight:700;">Add IFR</button>
               <button onclick="lpDisconnect()" style="flex:1;background:#374151;color:#9ca3af;border:none;border-radius:8px;padding:8px;cursor:pointer;font-size:0.78rem;">Disconnect</button>
             </div>
@@ -724,22 +724,22 @@
         <div style="display:flex;flex-direction:column;gap:6px;">
           <div style="display:flex;align-items:center;gap:8px;">
             <div style="background:#22c55e;height:24px;border-radius:4px;flex:96.5;"></div>
-            <span style="color:#22c55e;font-size:12px;white-space:nowrap;min-width:180px;">9,650 IFR &rarr; Recipient (96.5%)</span>
+            <span style="color:#166534;font-size:12px;white-space:nowrap;min-width:180px;">9,650 IFR &rarr; Recipient (96.5%)</span>
           </div>
           <div style="display:flex;align-items:center;gap:8px;">
             <div style="background:#ef4444;height:24px;border-radius:4px;flex:2;"></div>
-            <span style="color:#ef4444;font-size:12px;white-space:nowrap;min-width:180px;">200 IFR burned (2.0% sender)</span>
+            <span style="color:#b91c1c;font-size:12px;white-space:nowrap;min-width:180px;">200 IFR burned (2.0% sender)</span>
           </div>
           <div style="display:flex;align-items:center;gap:8px;">
             <div style="background:#f97316;height:24px;border-radius:4px;flex:0.5;min-width:4px;"></div>
-            <span style="color:#f97316;font-size:12px;white-space:nowrap;min-width:180px;">50 IFR burned (0.5% recipient)</span>
+            <span style="color:#b3300b;font-size:12px;white-space:nowrap;min-width:180px;">50 IFR burned (0.5% recipient)</span>
           </div>
           <div style="display:flex;align-items:center;gap:8px;">
             <div style="background:#3b82f6;height:24px;border-radius:4px;flex:1;min-width:4px;"></div>
-            <span style="color:#3b82f6;font-size:12px;white-space:nowrap;min-width:180px;">100 IFR &rarr; FeeRouterV1 (1.0%)</span>
+            <span style="color:#1d4ed8;font-size:12px;white-space:nowrap;min-width:180px;">100 IFR &rarr; FeeRouterV1 (1.0%)</span>
           </div>
         </div>
-        <div style="margin-top:12px;font-size:12px;color:var(--muted);">Total burned per transfer: <strong style="color:#ef4444;">250 IFR (2.5%)</strong></div>
+        <div style="margin-top:12px;font-size:12px;color:var(--muted);">Total burned per transfer: <strong style="color:#b91c1c;">250 IFR (2.5%)</strong></div>
       </div>
 
       <h3>The Lock Mechanism</h3>
@@ -774,7 +774,7 @@
             Transferred from Deployer EOA on 18.03.2026. Tokens will be paired on Uniswap via phased LP releases (see Section 4).
           </p>
           <div style="display:flex;gap:12px;font-size:12px;">
-            <span style="color:#f97316;">400.6M IFR</span>
+            <span style="color:#b3300b;">400.6M IFR</span>
             <span style="color:var(--muted);">Gnosis Safe 3-of-5</span>
           </div>
         </div>
@@ -792,8 +792,8 @@
             Current balance: 0 IFR. No deployed mechanism automatically refills this Safe.
           </p>
           <div style="display:flex;gap:12px;font-size:12px;">
-            <span style="color:#f97316;">0 IFR</span>
-            <span style="color:#22c55e;">3-of-5 Multisig</span>
+            <span style="color:#b3300b;">0 IFR</span>
+            <span style="color:#166534;">3-of-5 Multisig</span>
           </div>
         </div>
 
@@ -810,8 +810,8 @@
             ~7.9M permanent reserve for bug bounties, grants, ecosystem incentives, DAO seed funding.
           </p>
           <div style="display:flex;gap:12px;font-size:12px;">
-            <span style="color:#f97316;">~7.9M IFR</span>
-            <span style="color:#22c55e;">3-of-5 Multisig</span>
+            <span style="color:#b3300b;">~7.9M IFR</span>
+            <span style="color:#166534;">3-of-5 Multisig</span>
           </div>
         </div>
 
@@ -819,7 +819,7 @@
         <div style="background:var(--card);border:1px solid #f97316;border-radius:12px;padding:20px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
             <span style="font-size:1.3rem;">&#x1F525;</span>
-            <strong style="color:#f97316;">Bootstrap Vault V3</strong>
+            <strong style="color:#b3300b;">Bootstrap Vault V3</strong>
             <span style="background:#f97316;color:#000;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">LIVE</span>
           </div>
           <code style="font-size:11px;color:var(--muted);word-break:break-all;">0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141</code>
@@ -830,8 +830,8 @@
             <strong>IFR in this vault cannot be withdrawn by anyone.</strong>
           </p>
           <div style="display:flex;gap:12px;font-size:12px;">
-            <span style="color:#f97316;">200M IFR</span>
-            <span style="color:#22c55e;">Permissionless</span>
+            <span style="color:#b3300b;">200M IFR</span>
+            <span style="color:#166534;">Permissionless</span>
           </div>
         </div>
 
@@ -847,7 +847,7 @@
             Governance may withdraw at most 50M IFR per 90-day period under the current cap; no withdrawal or LP deployment has executed.
           </p>
           <div style="display:flex;gap:12px;font-size:12px;">
-            <span style="color:#f97316;">200M IFR</span>
+            <span style="color:#b3300b;">200M IFR</span>
             <span style="color:var(--muted);">Held &middot; 50M / 90-day cap &middot; 0 withdrawn</span>
           </div>
         </div>
@@ -867,7 +867,7 @@
           </p>
           <div style="border-top:1px solid var(--border);margin-top:10px;padding-top:10px;">
             <p style="font-size:12px;color:var(--muted);margin:0 0 6px 0;">
-              <strong style="color:#fbbf24;">Beneficiary (who receives tokens after cliff):</strong><br>
+              <strong style="color:#92400e;">Beneficiary (who receives tokens after cliff):</strong><br>
               <code style="font-size:10px;">0x04FABC52c51d1F8ced6974E7C25a34249b1E6239</code> &mdash;
               held by the Core Developer as trustee on behalf of the entire team.
               The 150M IFR represents the collective team allocation. Usage decisions
@@ -882,7 +882,7 @@
             the team allocation under shared 3-of-5 control. Migration executed transparently.
           </p>
           <div style="display:flex;gap:12px;font-size:12px;">
-            <span style="color:#f97316;">150M IFR</span>
+            <span style="color:#b3300b;">150M IFR</span>
             <span style="color:var(--muted);">Cliff: Mar 2027</span>
           </div>
         </div>
@@ -899,7 +899,7 @@
             the builder earns from this pool. Rewards vest 6&ndash;12 months. Annual cap: 4M IFR/year.
           </p>
           <div style="display:flex;gap:12px;font-size:12px;">
-            <span style="color:#f97316;">40M IFR</span>
+            <span style="color:#b3300b;">40M IFR</span>
             <span style="color:var(--muted);">Cap: 4M/year</span>
           </div>
         </div>
@@ -962,25 +962,25 @@
           <div style="flex:1;text-align:center;">
             <div style="background:#22c55e;width:16px;height:16px;border-radius:50%;margin:0 auto;"></div>
             <div style="height:3px;background:#22c55e;margin-top:-9px;margin-bottom:6px;"></div>
-            <div style="font-size:11px;color:#22c55e;font-weight:600;">07.03.2026</div>
+            <div style="font-size:11px;color:#166534;font-weight:600;">07.03.2026</div>
             <div style="font-size:10px;color:var(--muted);">Contract Deployed</div>
           </div>
           <div style="flex:1;text-align:center;">
             <div style="background:#22c55e;width:16px;height:16px;border-radius:50%;margin:0 auto;"></div>
             <div style="height:3px;background:#22c55e;margin-top:-9px;margin-bottom:6px;"></div>
-            <div style="font-size:11px;color:#22c55e;font-weight:600;">11.03.2026</div>
+            <div style="font-size:11px;color:#166534;font-weight:600;">11.03.2026</div>
             <div style="font-size:10px;color:var(--muted);">Vault Funded</div>
           </div>
           <div style="flex:1;text-align:center;">
             <div style="background:#f97316;width:16px;height:16px;border-radius:50%;margin:0 auto;border:2px solid #f97316;animation:pulse 2s infinite;"></div>
             <div style="height:3px;background:linear-gradient(90deg,#22c55e,#f97316);margin-top:-9px;margin-bottom:6px;"></div>
-            <div style="font-size:11px;color:#22c55e;font-weight:600;">05.06.2026</div>
+            <div style="font-size:11px;color:#166534;font-weight:600;">05.06.2026</div>
             <div style="font-size:10px;color:var(--muted);">FINALIZED</div>
           </div>
           <div style="flex:1;text-align:center;">
             <div style="background:var(--border);width:16px;height:16px;border-radius:50%;margin:0 auto;"></div>
             <div style="height:3px;background:var(--border);margin-top:-9px;margin-bottom:6px;"></div>
-            <div style="font-size:11px;color:#22c55e;font-weight:600;">08.06.2026</div>
+            <div style="font-size:11px;color:#166534;font-weight:600;">08.06.2026</div>
             <div style="font-size:10px;color:var(--muted);">Trading live</div>
           </div>
           <div style="flex:1;text-align:center;">
@@ -1012,7 +1012,7 @@
       <!-- Scenario Cards -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:20px 0;">
         <div style="background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.3);border-radius:12px;padding:20px;">
-          <div style="font-size:14px;font-weight:700;color:#22c55e;margin-bottom:8px;">&#x2705; Scenario A &mdash; Success</div>
+          <div style="font-size:14px;font-weight:700;color:#166534;margin-bottom:8px;">&#x2705; Scenario A &mdash; Success</div>
           <ul style="font-size:13px;color:var(--muted);padding-left:16px;margin:0;">
             <li>ETH contributed by community</li>
             <li>finalise() creates LP automatically</li>
@@ -1022,7 +1022,7 @@
           </ul>
         </div>
         <div style="background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.3);border-radius:12px;padding:20px;">
-          <div style="font-size:14px;font-weight:700;color:#ef4444;margin-bottom:8px;">&#x26A0; Scenario B &mdash; Fallback</div>
+          <div style="font-size:14px;font-weight:700;color:#b91c1c;margin-bottom:8px;">&#x26A0; Scenario B &mdash; Fallback</div>
           <ul style="font-size:13px;color:var(--muted);padding-left:16px;margin:0;">
             <li>Zero ETH contributed</li>
             <li>200M IFR stays locked in vault</li>
@@ -1046,25 +1046,25 @@
       <!-- LP Phases Visual -->
       <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:24px;margin:20px 0;">
         <div style="display:flex;gap:4px;height:40px;border-radius:8px;overflow:hidden;margin-bottom:16px;">
-          <div style="flex:100;background:#22c55e;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#000;">Executed Bootstrap &mdash; 100M</div>
+          <div style="flex:100;background:#22c55e;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;">Executed Bootstrap &mdash; 100M</div>
           <div style="flex:50;background:#3b82f6;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;">LiqRes cap &mdash; 50M</div>
-          <div style="flex:400.6;background:#8b5cf6;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;">LP Reserve Safe &mdash; 400.6M</div>
+          <div style="flex:400.6;background:#6d28d9;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:white;">LP Reserve Safe &mdash; 400.6M</div>
         </div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
           <div>
-            <div style="font-size:11px;color:#22c55e;font-weight:600;">Phase 1 &mdash; Automatic</div>
+            <div style="font-size:11px;color:#166534;font-weight:600;">Phase 1 &mdash; Automatic</div>
             <div style="font-size:12px;color:var(--muted);">Executed 05.06.2026. 100M IFR + 0.030 ETH &rarr; Uniswap V2 LP. Team.Finance disabled; LP retained in withdrawal-less BootstrapVaultV3.</div>
           </div>
           <div>
-            <div style="font-size:11px;color:#3b82f6;font-weight:600;">Phase 2 &mdash; Governance</div>
+            <div style="font-size:11px;color:#1d4ed8;font-weight:600;">Phase 2 &mdash; Governance</div>
             <div style="font-size:12px;color:var(--muted);">Not scheduled. The initial LiqRes lock ended 01.09.2026, but the current cap is 50M IFR per 90 days. A 100M phase would require at least two periods or a separately proposed cap change, plus Governance proposal, 48h timelock and a distinct LP action.</div>
           </div>
           <div>
-            <div style="font-size:11px;color:#8b5cf6;font-weight:600;">Separate LP Reserve Safe</div>
+            <div style="font-size:11px;color:#6d28d9;font-weight:600;">Separate LP Reserve Safe</div>
             <div style="font-size:12px;color:var(--muted);">400.6M IFR is held separately by the 3-of-5 LP Reserve Safe. No fixed future tranche schedule is approved; any use requires an explicit Safe/governance decision and proportional counter-asset planning.</div>
           </div>
         </div>
-        <div style="margin-top:16px;padding:10px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;font-size:12px;color:#ef4444;">
+        <div style="margin-top:16px;padding:10px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.2);border-radius:8px;font-size:12px;color:#b91c1c;">
           <strong>Iron rule:</strong> ETH in the liquidity pool is never withdrawn by the team. LP tokens locked after each phase.
         </div>
       </div>
@@ -1089,8 +1089,8 @@
           <div style="background:#3b82f6;color:#fff;padding:8px 14px;border-radius:8px;font-size:12px;font-weight:700;">BuybackController</div>
           <span style="color:var(--muted);font-size:18px;">&rarr;</span>
           <div style="display:flex;flex-direction:column;gap:6px;">
-            <div style="background:rgba(239,68,68,0.15);border:1px solid #ef4444;color:#ef4444;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:600;">50% ETH buys IFR &rarr; BurnReserve</div>
-            <div style="background:rgba(34,197,94,0.15);border:1px solid #22c55e;color:#22c55e;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:600;">50% ETH + held IFR &rarr; LP receiver</div>
+            <div style="background:rgba(239,68,68,0.15);border:1px solid #ef4444;color:#b91c1c;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:600;">50% ETH buys IFR &rarr; BurnReserve</div>
+            <div style="background:rgba(34,197,94,0.15);border:1px solid #22c55e;color:#166534;padding:6px 12px;border-radius:8px;font-size:11px;font-weight:600;">50% ETH + held IFR &rarr; LP receiver</div>
           </div>
         </div>
       </div>
@@ -1106,19 +1106,19 @@
       <!-- 4-State Cards -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:20px 0;">
         <div style="background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2);border-radius:10px;padding:16px;">
-          <div style="color:#22c55e;font-weight:700;font-size:13px;margin-bottom:4px;">1. Trigger check</div>
+          <div style="color:#166534;font-weight:700;font-size:13px;margin-bottom:4px;">1. Trigger check</div>
           <div style="font-size:12px;color:var(--muted);">Requires an unpaused controller, elapsed cooldown and enough native ETH.</div>
         </div>
         <div style="background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:10px;padding:16px;">
-          <div style="color:#3b82f6;font-weight:700;font-size:13px;margin-bottom:4px;">2. Burn half</div>
+          <div style="color:#1d4ed8;font-weight:700;font-size:13px;margin-bottom:4px;">2. Burn half</div>
           <div style="font-size:12px;color:var(--muted);">50% of ETH buys IFR on Uniswap and sends the output to BurnReserve.</div>
         </div>
         <div style="background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.2);border-radius:10px;padding:16px;">
-          <div style="color:#f97316;font-weight:700;font-size:13px;margin-bottom:4px;">3. LP half</div>
+          <div style="color:#b3300b;font-weight:700;font-size:13px;margin-bottom:4px;">3. LP half</div>
           <div style="font-size:12px;color:var(--muted);">The remaining ETH attempts to pair with IFR already held by the controller; LP tokens go to <code>lpReceiver</code>.</div>
         </div>
         <div style="background:rgba(239,68,68,0.06);border:1px solid rgba(239,68,68,0.2);border-radius:10px;padding:16px;">
-          <div style="color:#ef4444;font-weight:700;font-size:13px;margin-bottom:4px;">4. Fallback</div>
+          <div style="color:#b91c1c;font-weight:700;font-size:13px;margin-bottom:4px;">4. Fallback</div>
           <div style="font-size:12px;color:var(--muted);">If no IFR is available or adding liquidity fails, the remaining ETH also buys IFR for BurnReserve.</div>
         </div>
       </div>
@@ -1127,7 +1127,7 @@
       <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin:20px 0;">
         <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">BuybackController ETH allocation before fallback</div>
         <div style="display:flex;height:28px;border-radius:6px;overflow:hidden;">
-          <div style="flex:50;background:#ef4444;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">50% Buy IFR &rarr; BurnReserve</div>
+          <div style="flex:50;background:#b91c1c;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:white;">50% Buy IFR &rarr; BurnReserve</div>
           <div style="flex:50;background:#3b82f6;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">50% Attempt LP</div>
         </div>
       </div>
@@ -1155,11 +1155,11 @@
           </tr>
         </thead>
         <tbody>
-          <tr style="border-bottom:1px solid #1f2937;"><td style="padding:10px;color:var(--muted);">1</td><td style="padding:10px;color:#f97316;font-weight:700;">A.K.</td><td style="padding:10px;font-family:monospace;color:var(--muted);font-size:12px;">0x6b36...ed67</td><td style="padding:10px;color:#22c55e;">Active</td></tr>
-          <tr style="border-bottom:1px solid #1f2937;"><td style="padding:10px;color:var(--muted);">2</td><td style="padding:10px;color:#f97316;font-weight:700;">M.G.</td><td style="padding:10px;font-family:monospace;color:var(--muted);font-size:12px;">0x17F8...72d4</td><td style="padding:10px;color:#22c55e;">Active</td></tr>
-          <tr style="border-bottom:1px solid #1f2937;"><td style="padding:10px;color:var(--muted);">3</td><td style="padding:10px;color:#f97316;font-weight:700;">A.M.</td><td style="padding:10px;font-family:monospace;color:var(--muted);font-size:12px;">0x0c48...ED74</td><td style="padding:10px;color:#22c55e;">Active</td></tr>
-          <tr style="border-bottom:1px solid #1f2937;"><td style="padding:10px;color:var(--muted);">4</td><td style="padding:10px;color:#f97316;font-weight:700;">Y.K.</td><td style="padding:10px;font-family:monospace;color:var(--muted);font-size:12px;">0xA086...b275</td><td style="padding:10px;color:#22c55e;">Active</td></tr>
-          <tr><td style="padding:10px;color:var(--muted);">5</td><td style="padding:10px;color:#f97316;font-weight:700;">A.P.</td><td style="padding:10px;font-family:monospace;color:var(--muted);font-size:12px;">0x32cF...0fE9</td><td style="padding:10px;color:#22c55e;">Active</td></tr>
+          <tr style="border-bottom:1px solid #1f2937;"><td style="padding:10px;color:var(--muted);">1</td><td style="padding:10px;color:#b3300b;font-weight:700;">A.K.</td><td style="padding:10px;font-family:monospace;color:var(--muted);font-size:12px;">0x6b36...ed67</td><td style="padding:10px;color:#166534;">Active</td></tr>
+          <tr style="border-bottom:1px solid #1f2937;"><td style="padding:10px;color:var(--muted);">2</td><td style="padding:10px;color:#b3300b;font-weight:700;">M.G.</td><td style="padding:10px;font-family:monospace;color:var(--muted);font-size:12px;">0x17F8...72d4</td><td style="padding:10px;color:#166534;">Active</td></tr>
+          <tr style="border-bottom:1px solid #1f2937;"><td style="padding:10px;color:var(--muted);">3</td><td style="padding:10px;color:#b3300b;font-weight:700;">A.M.</td><td style="padding:10px;font-family:monospace;color:var(--muted);font-size:12px;">0x0c48...ED74</td><td style="padding:10px;color:#166534;">Active</td></tr>
+          <tr style="border-bottom:1px solid #1f2937;"><td style="padding:10px;color:var(--muted);">4</td><td style="padding:10px;color:#b3300b;font-weight:700;">Y.K.</td><td style="padding:10px;font-family:monospace;color:var(--muted);font-size:12px;">0xA086...b275</td><td style="padding:10px;color:#166534;">Active</td></tr>
+          <tr><td style="padding:10px;color:var(--muted);">5</td><td style="padding:10px;color:#b3300b;font-weight:700;">A.P.</td><td style="padding:10px;font-family:monospace;color:var(--muted);font-size:12px;">0x32cF...0fE9</td><td style="padding:10px;color:#166534;">Active</td></tr>
         </tbody>
       </table>
 
@@ -1173,13 +1173,13 @@
       </p>
       <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin:20px 0;">
         <div style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;font-size:12px;">
-          <div style="background:rgba(239,68,68,0.15);border:1px solid #ef4444;color:#ef4444;padding:8px 14px;border-radius:8px;font-weight:600;">0 ETH contributed</div>
+          <div style="background:rgba(239,68,68,0.15);border:1px solid #ef4444;color:#b91c1c;padding:8px 14px;border-radius:8px;font-weight:600;">0 ETH contributed</div>
           <span style="color:var(--muted);">&rarr;</span>
-          <div style="background:rgba(249,115,22,0.15);border:1px solid #f97316;color:#f97316;padding:8px 14px;border-radius:8px;font-weight:600;">Governance Proposal</div>
+          <div style="background:rgba(249,115,22,0.15);border:1px solid #f97316;color:#b3300b;padding:8px 14px;border-radius:8px;font-weight:600;">Governance Proposal</div>
           <span style="color:var(--muted);">&rarr;</span>
-          <div style="background:rgba(59,130,246,0.15);border:1px solid #3b82f6;color:#3b82f6;padding:8px 14px;border-radius:8px;font-weight:600;">48h Timelock</div>
+          <div style="background:rgba(59,130,246,0.15);border:1px solid #3b82f6;color:#1d4ed8;padding:8px 14px;border-radius:8px;font-weight:600;">48h Timelock</div>
           <span style="color:var(--muted);">&rarr;</span>
-          <div style="background:rgba(34,197,94,0.15);border:1px solid #22c55e;color:#22c55e;padding:8px 14px;border-radius:8px;font-weight:600;">Direct LP Creation</div>
+          <div style="background:rgba(34,197,94,0.15);border:1px solid #22c55e;color:#166534;padding:8px 14px;border-radius:8px;font-weight:600;">Direct LP Creation</div>
         </div>
       </div>
 
@@ -1196,12 +1196,12 @@
           </div>
         </div>
         <div style="display:flex;flex-direction:column;gap:6px;font-size:13px;">
-          <div><span style="color:#22c55e;">&#x25CF;</span> 40% DEX Liquidity (400M)</div>
-          <div><span style="color:#3b82f6;">&#x25CF;</span> 20% Liquidity Reserve (200M)</div>
-          <div><span style="color:#f97316;">&#x25CF;</span> 15% Team Vesting (150M)</div>
-          <div><span style="color:#8b5cf6;">&#x25CF;</span> 15% Treasury (150M)</div>
-          <div><span style="color:#eab308;">&#x25CF;</span> 6% Community &amp; Grants (60M)</div>
-          <div><span style="color:#ef4444;">&#x25CF;</span> 4% Partner Ecosystem (40M)</div>
+          <div><span style="color:#166534;">&#x25CF;</span> 40% DEX Liquidity (400M)</div>
+          <div><span style="color:#1d4ed8;">&#x25CF;</span> 20% Liquidity Reserve (200M)</div>
+          <div><span style="color:#b3300b;">&#x25CF;</span> 15% Team Vesting (150M)</div>
+          <div><span style="color:#6d28d9;">&#x25CF;</span> 15% Treasury (150M)</div>
+          <div><span style="color:#8a5a00;">&#x25CF;</span> 6% Community &amp; Grants (60M)</div>
+          <div><span style="color:#b91c1c;">&#x25CF;</span> 4% Partner Ecosystem (40M)</div>
         </div>
       </div>
 
@@ -1209,8 +1209,8 @@
       <div style="background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;margin:20px 0;">
         <div style="font-size:12px;color:var(--muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px;">Unlock Timeline</div>
         <table style="width:100%;border-collapse:collapse;font-size:13px;">
-          <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px;color:var(--muted);">March 2026</td><td style="padding:8px;">Bootstrap opened &mdash; 200M IFR in vault</td><td style="padding:8px;color:#22c55e;">&#x2705; Done</td></tr>
-          <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px;color:var(--muted);">June 2026</td><td style="padding:8px;">Bootstrap finalized &mdash; LP created via finalise()</td><td style="padding:8px;color:#22c55e;">&#x2705; Done</td></tr>
+          <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px;color:var(--muted);">March 2026</td><td style="padding:8px;">Bootstrap opened &mdash; 200M IFR in vault</td><td style="padding:8px;color:#166534;">&#x2705; Done</td></tr>
+          <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px;color:var(--muted);">June 2026</td><td style="padding:8px;">Bootstrap finalized &mdash; LP created via finalise()</td><td style="padding:8px;color:#166534;">&#x2705; Done</td></tr>
           <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px;color:var(--muted);">Sep 2026</td><td style="padding:8px;">Initial LiquidityReserve lock ended &mdash; 200M IFR still held, 50M current staged capacity</td><td style="padding:8px;color:var(--muted);">No withdrawal</td></tr>
           <tr style="border-bottom:1px solid var(--border);"><td style="padding:8px;color:var(--muted);">March 2027</td><td style="padding:8px;">Team Vesting cliff ends &mdash; linear release begins</td><td style="padding:8px;color:var(--muted);">Locked</td></tr>
           <tr><td style="padding:8px;color:var(--muted);">March 2030</td><td style="padding:8px;">Team Vesting fully vested</td><td style="padding:8px;color:var(--muted);">Locked</td></tr>
@@ -1226,28 +1226,28 @@
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin:20px 0;">
         <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-            <span style="background:#22c55e;color:#000;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">DONE</span>
+            <span style="background:#22c55e;color:white;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">DONE</span>
             <strong style="font-size:13px;">feeExempt &mdash; 8 contracts</strong>
           </div>
           <div style="font-size:12px;color:var(--muted);">All 8 protocol contracts are fee-exempt. Verified on-chain via 7 governance proposals.</div>
         </div>
         <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-            <span style="background:#22c55e;color:#000;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">LIVE</span>
+            <span style="background:#22c55e;color:white;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">LIVE</span>
             <strong style="font-size:13px;">Bootstrap Event</strong>
           </div>
           <div style="font-size:12px;color:var(--muted);">Active since 07.03.2026. Vault funded with 200M IFR. Ends 05.06.2026.</div>
         </div>
         <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-            <span style="background:#22c55e;color:#000;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">DONE</span>
+            <span style="background:#22c55e;color:white;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">DONE</span>
             <strong style="font-size:13px;">Governance &rarr; Multisig Transfer</strong>
           </div>
           <div style="font-size:12px;color:var(--muted);">Governance owner transferred to TreasurySafe 3-of-5 on 20.03.2026. <a href="https://etherscan.io/tx/0xcd9f99d2e5df5c28b81f885c7ebf7e2d42a873bd1c81bef9d94aa5c2d19c46c3" target="_blank" style="color:var(--accent);">TX</a></div>
         </div>
         <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-            <span style="background:#22c55e;color:#000;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">DONE</span>
+            <span style="background:#22c55e;color:white;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">DONE</span>
             <strong style="font-size:13px;">Multisig Threshold 3-of-5</strong>
           </div>
           <div style="font-size:12px;color:var(--muted);">3-of-5 active with 5 signers (A.K., M.G., A.M., Y.K., A.P.). Completed 15.03.2026.</div>
@@ -1275,7 +1275,7 @@
         </div>
         <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-            <span style="background:#8b5cf6;color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">PHASE 4</span>
+            <span style="background:#6d28d9;color:white;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">PHASE 4</span>
             <strong style="font-size:13px;">DAO Governance</strong>
           </div>
           <div style="font-size:12px;color:var(--muted);">RatVoting + ForumVoting + IFRSpamProtection. Full on-chain governance. After ecosystem is established.</div>

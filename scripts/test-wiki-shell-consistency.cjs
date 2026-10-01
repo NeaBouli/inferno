@@ -133,6 +133,15 @@ for (const [, hex] of contractsPage.matchAll(/(?<![-\w])color\s*:\s*#(c084fc|a85
 }
 check(/\.wiki-actions \.btn \{[^}]*min-height: 44px;/.test(skin), "redesign-skin.css: .wiki-actions .btn must keep a 44px minimum height");
 check(/\.wiki-actions \.btn:focus-visible \{[^}]*outline: 3px solid/.test(skin), "redesign-skin.css: .wiki-actions .btn needs a visible focus outline");
+// T-181c: inline legacy dark-theme accents render on light wiki surfaces at 1.4-3.8:1.
+const legacyInlineAccent = /style="[^"]*(?<![-\w])color\s*:\s*#(c084fc|a855f7|60a5fa|3b82f6|22c55e|ff4500|f59e0b|eab308|fbbf24|ff8c00|f97316|ef4444|ffc800|38bdf8)\b/gi;
+for (const page of pages) {
+  if (page === "contracts.html") continue; // covered by the T-181 contracts.html check
+  const src = fs.readFileSync(path.join(wikiDir, page), "utf8");
+  for (const [, hex] of src.matchAll(legacyInlineAccent)) {
+    check(false, `${page}: legacy low-contrast inline text colour #${hex} on a light surface`);
+  }
+}
 
 if (failures.length) {
   console.error(`[wiki-shell] FAIL - ${failures.length} issue(s):`);
