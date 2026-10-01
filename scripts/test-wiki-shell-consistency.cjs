@@ -81,6 +81,11 @@ for (const [fg, bg, label] of [
   const ratio = contrast(fg, bg);
   check(ratio >= 4.5, `${label}: contrast ${ratio.toFixed(2)} < 4.5`);
 }
+// T-176a: legacy dark-theme inline colors rendered near-white on the light audit cards.
+for (const [, styleAttr] of audit.matchAll(/style="([^"]*)"/g)) {
+  check(!/color:\s*#(?:e8e8ed|fbbf24)\b/i.test(styleAttr), `open-audit.html: unreadable legacy inline text color: ${styleAttr}`);
+}
+check(contrast("#b45309", "#fef5de") >= 4.5, "open-audit.html: amber badge text below 4.5:1 on its tinted background");
 check(/\.wiki-actions \.btn \{[^}]*min-height: 44px;/.test(skin), "redesign-skin.css: .wiki-actions .btn must keep a 44px minimum height");
 check(/\.wiki-actions \.btn:focus-visible \{[^}]*outline: 3px solid/.test(skin), "redesign-skin.css: .wiki-actions .btn needs a visible focus outline");
 
