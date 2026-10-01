@@ -173,11 +173,26 @@ const VAULT_ABI = new ethers_1.Interface([
     "function ifrToken() view returns (address)",
     "function getTranches(address wallet) view returns (tuple(uint256 amount,uint8 cType,uint256 unlockTime,uint256 p0Multiplier,bool unlocked,uint256 conditionMetAt)[])",
 ]);
-async function ethCall(provider, iface, to, fn, args, blockTag) {
+function blockIdFor(block) {
+    return { blockHash: block.hash, requireCanonical: true };
+}
+/** Maps a failed read at a hash-pinned block to a fail-closed error code (spec §5, §8). */
+function failRead(method, error) {
+    const e = error;
+    const message = String(e?.message ?? error);
+    if (/header not found|unknown block|block not found|not canonical|non-canonical|missing trie node/i.test(message)) {
+        fail("BLOCK_MISMATCH", `${method}: pinned block is no longer available or canonical (${message})`);
+    }
+    if (e?.code === -32602 || /invalid (argument|params)|blockHash/i.test(message)) {
+        fail("RPC_UNAVAILABLE", `${method}: provider must support EIP-1898 block-hash identifiers (${message})`);
+    }
+    return fail("RPC_UNAVAILABLE", `${method} failed: ${message}`);
+}
+async function ethCall(provider, iface, to, fn, args, blockId) {
     const data = iface.encodeFunctionData(fn, args);
     let raw;
     try {
-        raw = (await provider.request({ method: "eth_call", params: [{ to, data }, blockTag] }));
+        raw = (await provider.request({ method: "eth_call", params: [{ to, data }, blockId] }));
     }
     catch (error) {
         // A revert means the address does not behave like the expected contract (spec §2), not an outage.
@@ -185,7 +200,7 @@ async function ethCall(provider, iface, to, fn, args, blockTag) {
         if (e?.code === 3 || /revert/i.test(String(e?.message ?? ""))) {
             fail("CONTRACT_MISMATCH", `${fn} reverted at ${to}`);
         }
-        return fail("RPC_UNAVAILABLE", `eth_call failed: ${e?.message ?? String(error)}`);
+        return failRead("eth_call", error);
     }
     if (typeof raw !== "string" || !raw.startsWith("0x") || raw === "0x") {
         fail("CONTRACT_MISMATCH", `${fn} returned no data at ${to}`);
@@ -197,8 +212,14 @@ async function ethCall(provider, iface, to, fn, args, blockTag) {
         return fail("CONTRACT_MISMATCH", `${fn} returned undecodable data at ${to}`);
     }
 }
-async function requireCode(provider, address, blockTag, label) {
-    const code = await rpcCall(provider, "eth_getCode", [address, blockTag]);
+async function requireCode(provider, address, blockId, label) {
+    let code;
+    try {
+        code = await provider.request({ method: "eth_getCode", params: [address, blockId] });
+    }
+    catch (error) {
+        return failRead("eth_getCode", error);
+    }
     if (typeof code !== "string" || code === "0x" || code.length <= 2)
         fail("CONTRACT_MISMATCH", `${label} has no code`);
 }
@@ -268,7 +289,8 @@ async function verifyIfrBenefit(params) {
         fail("WRONG_CHAIN", `node reports chain ${reportedChain}, expected ${chainId}`);
     }
     const block = await resolveBlock(provider, params.block);
-    const tag = "0x" + block.number.toString(16);
+    // Every read below uses the block hash (EIP-1898), so the result belongs to `block.hash` (spec §5.1).
+    const tag = blockIdFor(block);
     // Contract identity at the pinned block (spec §2).
     await requireCode(provider, contracts.token, tag, "IFR token");
     const [decimals] = await ethCall(provider, TOKEN_ABI, contracts.token, "decimals", [], tag);
@@ -312,6 +334,11 @@ async function verifyIfrBenefit(params) {
             unlocked: t.unlocked,
         })));
         result.sources.COMMITMENT_TIME_ONLY = tierForAmount(amount, tiers);
+    }
+    // Defence in depth: the block number must still map to the same hash after all reads.
+    const after = await rpcCall(provider, "eth_getBlockByNumber", ["0x" + block.number.toString(16), false]);
+    if (!after || typeof after.hash !== "string" || after.hash.toLowerCase() !== block.hash) {
+        fail("BLOCK_MISMATCH", "the pinned block was replaced while reading (reorg)");
     }
     // EITHER: the higher per-source tier; the sources are never added (spec §4).
     const candidates = [result.sources.IFRLOCK ?? null, result.sources.COMMITMENT_TIME_ONLY ?? null];

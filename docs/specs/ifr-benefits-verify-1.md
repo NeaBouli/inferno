@@ -93,8 +93,14 @@ The default source is `IFRLOCK`.
 
 ## 5. Block pinning and freshness
 
-1. **One block per check.** All reads of one check MUST use the same block number. The verifier MUST
-   record that block's number **and** hash. A result is a statement about that block only.
+1. **One block per check, bound by hash.** All reads of one check MUST use the same block. The verifier
+   MUST record that block's number **and** hash.
+   - Every `eth_call` and `eth_getCode` MUST name the block by its hash (EIP-1898,
+     `{ "blockHash": …, "requireCanonical": true }`), not only by its number.
+   - After the last read, the verifier MUST confirm that the block number still maps to the same hash.
+   - A reorg during a check, a provider without EIP-1898 support, or a hash that is no longer canonical
+     yields an error, never a tier.
+   - A result is a statement about that one block only.
 2. **The check is momentary.** IFRLock can be unlocked at any time, all or nothing. A verifier MUST NOT
    treat a past result as current.
    - A benefit that is redeemed later (for example at a till) MUST repeat the check at a block that is at
