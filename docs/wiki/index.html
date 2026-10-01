@@ -68,10 +68,16 @@
       font-weight: 800;
       letter-spacing: 3px;
       color: var(--accent);
-      padding: 0 24px 24px;
-      border-bottom: 1px solid var(--border);
+      padding: 0 24px 4px;
       text-decoration: none;
       display: block;
+    }
+
+    .sidebar-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 0 24px 24px;
+      border-bottom: 1px solid var(--border);
     }
 
     .sidebar-nav {
@@ -475,7 +481,7 @@
       <a href="https://ifrunit.tech/wiki/" class="sidebar-logo">IFR PROTOCOL</a>
       <div class="sidebar-subtitle">Documentation</div>
       <ul class="sidebar-nav">
-        <li><a href="https://ifrunit.tech/wiki/" class="active">Home</a></li>
+        <li><a href="https://ifrunit.tech/wiki/" class="active" aria-current="page">Home</a></li>
         <li><a href="https://ifrunit.tech/wiki/one-pager.html">One Pager</a></li>
         <li><a href="https://ifrunit.tech/wiki/fair-launch.html">Fair Launch</a></li>
         <li class="nav-divider"></li>
@@ -524,7 +530,7 @@
     <main class="main">
       <!-- Wallet Top Bar -->
       <div id="wiki-wallet-bar" style="position:sticky;top:0;z-index:100;background:rgba(10,10,10,0.95);backdrop-filter:blur(12px);border-bottom:1px solid #1f2937;padding:10px 20px;display:flex;justify-content:space-between;align-items:center;margin:-32px -40px 24px -40px;">
-        <a href="https://ifrunit.tech/index.html" style="color:#f97316;font-weight:700;text-decoration:none;font-size:0.9rem;">&larr; IFR Protocol</a>
+        <a href="https://ifrunit.tech/index.html" style="color:#f97316;font-weight:700;text-decoration:none;font-size:0.9rem;">&larr; Inferno</a>
         <div id="wiki-wallet-wrap" style="position:relative;">
           <button id="lp-header-connect-btn" onclick="lpConnect()" style="display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:9px 18px;min-height:38px;border:1px solid transparent;background:#B0481E;color:#fff;font-family:var(--sans, -apple-system, system-ui, sans-serif);font-size:0.84rem;font-weight:600;letter-spacing:0;border-radius:4px;cursor:pointer;white-space:nowrap;transition:all .2s;position:relative;flex-shrink:0;margin-left:16px;">Connect Wallet</button>
           <div id="lp-header-connected" style="display:none;">
