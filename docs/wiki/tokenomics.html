@@ -369,7 +369,7 @@
       padding-left: 10px;
       font-size: 12px;
       font-weight: 700;
-      color: #fff;
+      color: #211C17;
       min-width: fit-content;
     }
 
@@ -657,12 +657,12 @@
     <main class="main">
       <!-- Wallet Top Bar -->
       <div id="wiki-wallet-bar" style="position:sticky;top:0;z-index:100;background:rgba(10,10,10,0.95);backdrop-filter:blur(12px);border-bottom:1px solid #1f2937;padding:10px 20px;display:flex;justify-content:space-between;align-items:center;margin:-32px -40px 24px -40px;">
-        <a href="https://ifrunit.tech/index.html" style="color:#f97316;font-weight:700;text-decoration:none;font-size:0.9rem;">&larr; Inferno</a>
+        <a href="https://ifrunit.tech/index.html" style="color:#b3300b;font-weight:700;text-decoration:none;font-size:0.9rem;">&larr; Inferno</a>
         <div id="wiki-wallet-wrap" style="position:relative;">
           <button id="lp-header-connect-btn" onclick="lpConnect()" style="display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:9px 18px;min-height:38px;border:1px solid transparent;background:#B0481E;color:#fff;font-family:var(--sans, -apple-system, system-ui, sans-serif);font-size:0.84rem;font-weight:600;letter-spacing:0;border-radius:4px;cursor:pointer;white-space:nowrap;transition:all .2s;position:relative;flex-shrink:0;margin-left:16px;">Connect Wallet</button>
           <div id="lp-header-connected" style="display:none;">
             <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:5px 8px;cursor:pointer;display:flex;align-items:center;gap:6px;max-width:100px;white-space:nowrap;overflow:hidden;" onclick="lpToggleDropdown()">
-              <span id="lp-header-addr" style="color:#22c55e;font-family:monospace;font-size:0.72rem;font-weight:600;"></span>
+              <span id="lp-header-addr" style="color:#166534;font-family:monospace;font-size:0.72rem;font-weight:600;"></span>
               
             </div>
           </div>
@@ -672,7 +672,7 @@
               <button onclick="lpCloseDropdown()" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:1.1rem;line-height:1;padding:2px 6px;border-radius:4px;" title="Close">&#x2715;</button>
             </div>
             <div style="margin-bottom:12px;">
-              <div id="lp-drop-addr" style="color:#22c55e;font-family:monospace;font-size:0.78rem;font-weight:600;word-break:break-all;"></div>
+              <div id="lp-drop-addr" style="color:#166534;font-family:monospace;font-size:0.78rem;font-weight:600;word-break:break-all;"></div>
             </div>
             <div style="display:flex;gap:8px;margin-bottom:12px;">
               <div style="flex:1;background:#1f2937;border-radius:8px;padding:8px;text-align:center;">
@@ -681,18 +681,18 @@
               </div>
               <div style="flex:1;background:#1f2937;border-radius:8px;padding:8px;text-align:center;">
                 <div style="color:#9ca3af;font-size:0.7rem;">IFR</div>
-                <div id="lp-drop-ifr" style="color:#f97316;font-weight:700;font-size:0.85rem;"></div>
+                <div id="lp-drop-ifr" style="color:#b3300b;font-weight:700;font-size:0.85rem;"></div>
               </div>
             </div>
             <div id="lp-drop-lock" style="display:none;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:8px 10px;margin-bottom:10px;text-align:center;">
-              <span style="color:#fbbf24;font-size:0.78rem;font-weight:600;">&#x26A1; Premium</span>
+              <span style="color:#92400e;font-size:0.78rem;font-weight:600;">&#x26A1; Premium</span>
             </div>
             <div id="lp-drop-nolock" style="background:rgba(107,114,128,0.1);border:1px solid #374151;border-radius:8px;padding:8px 10px;margin-bottom:10px;text-align:center;">
               <span style="color:#9ca3af;font-size:0.78rem;">Lock &#x2265;1,000 IFR &#x2192; </span>
-              <a href="https://ifrunit.tech/wiki/lock-mechanism.html" style="color:#f97316;font-size:0.78rem;">Premium &#x2197;</a>
+              <a href="https://ifrunit.tech/wiki/lock-mechanism.html" style="color:#b3300b;font-size:0.78rem;">Premium &#x2197;</a>
             </div>
             <div style="display:flex;gap:8px;">
-              <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="flex:1;text-align:center;padding:8px;background:#f97316;color:white;border-radius:8px;font-size:0.78rem;font-weight:600;text-decoration:none;">&#x1F525; Buy IFR</a>
+              <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="flex:1;text-align:center;padding:8px;background:#B0481E;color:white;border-radius:8px;font-size:0.78rem;font-weight:600;text-decoration:none;">&#x1F525; Buy IFR</a>
               <button onclick="lpAddIFRToken()" style="flex:1;background:#e9ded0;color:#2f241d;border:none;border-radius:8px;padding:8px;cursor:pointer;font-size:0.78rem;font-weight:700;">Add IFR</button>
               <button onclick="lpDisconnect()" style="flex:1;background:#374151;color:#9ca3af;border:none;border-radius:8px;padding:8px;cursor:pointer;font-size:0.78rem;">Disconnect</button>
             </div>
@@ -873,7 +873,7 @@
         <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px;">
           <div>
             <div style="font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px;">Current Supply</div>
-            <div style="font-size:20px; font-weight:700; margin-top:4px;"><span id="live-total-supply" style="color:#22c55e;">&mdash;</span></div>
+            <div style="font-size:20px; font-weight:700; margin-top:4px;"><span id="live-total-supply" style="color:#166534;">&mdash;</span></div>
           </div>
           <div>
             <div style="font-size:12px; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px;">Total Burned</div>
@@ -1030,14 +1030,14 @@
         <div class="alloc-row">
           <span class="alloc-label">Team Vesting</span>
           <div class="alloc-bar-track">
-            <div class="alloc-bar-fill" style="width: 15%; background: linear-gradient(90deg, #a855f7, #c084fc);">15%</div>
+            <div class="alloc-bar-fill" style="width: 15%; background: linear-gradient(90deg, #c084fc, #d8b4fe);">15%</div>
           </div>
           <span class="alloc-amount">150M IFR</span>
         </div>
         <div class="alloc-row">
           <span class="alloc-label">Treasury</span>
           <div class="alloc-bar-track">
-            <div class="alloc-bar-fill" style="width: 15%; background: linear-gradient(90deg, #9b59b6, #c084fc);">15%</div>
+            <div class="alloc-bar-fill" style="width: 15%; background: linear-gradient(90deg, #b07cc6, #c084fc);">15%</div>
           </div>
           <span class="alloc-amount">150M IFR</span>
         </div>
@@ -1106,7 +1106,7 @@
       </ul>
 
       <div style="margin-top:16px;padding:16px 20px;background:rgba(249,115,22,0.06);border:1px solid rgba(249,115,22,0.2);border-radius:8px;">
-        <h4 style="margin:0 0 8px;color:#f97316;font-size:14px;">&#x1F512; Builder Vault &mdash; Why are the 40M safe?</h4>
+        <h4 style="margin:0 0 8px;color:#b3300b;font-size:14px;">&#x1F512; Builder Vault &mdash; Why are the 40M safe?</h4>
         <p style="margin:0 0 8px;font-size:13px;color:var(--muted);">The 40M IFR in the Builder Vault are <strong style="color:var(--text);">not freely available</strong>. They can only be released through real usage:</p>
         <ul style="margin:0 0 8px;padding-left:20px;font-size:13px;color:var(--muted);">
           <li>A user locks IFR for a Builder product</li>
@@ -1144,13 +1144,13 @@
         </thead>
         <tbody>
           <tr style="border-bottom:1px solid #1f2937;">
-            <td style="padding:10px;color:#22c55e;font-weight:600;">Phase 1 &#x2705;</td>
+            <td style="padding:10px;color:#166534;font-weight:600;">Phase 1 &#x2705;</td>
             <td style="padding:10px;color:#e5e7eb;">100M IFR</td>
-            <td style="padding:10px;color:#22c55e;">DONE &mdash; finalise() 05.06.2026 23:51 UTC</td>
+            <td style="padding:10px;color:#166534;">DONE &mdash; finalise() 05.06.2026 23:51 UTC</td>
             <td style="padding:10px;color:#9ca3af;">LP created: 100M IFR + 0.030 ETH &rarr; Uniswap V2 LP. 100M IFR reserved for contributor claims. LP Token: <code>0xbE495E9c&hellip;</code>. Team.Finance was disabled; LP remains in BootstrapVaultV3, which exposes no LP withdrawal function.</td>
           </tr>
           <tr style="border-bottom:1px solid #1f2937;">
-            <td style="padding:10px;color:#f97316;font-weight:600;">Phase 2</td>
+            <td style="padding:10px;color:#b3300b;font-weight:600;">Phase 2</td>
             <td style="padding:10px;color:#e5e7eb;">100M IFR</td>
             <td style="padding:10px;color:#9ca3af;">Not scheduled; initial reserve lock ended 01.09.2026</td>
             <td style="padding:10px;color:#9ca3af;">The current 50M-per-90-day cap cannot supply 100M in one period. Any reserve withdrawal needs a Governance proposal + 48h timelock; any cap change and LP action require separate explicit decisions.</td>
@@ -1169,7 +1169,7 @@
       <ul>
         <li>Accepts ETH for a governed ETH-to-IFR buyback; it does not receive the 1% IFR transfer-pool fee automatically</li>
         <li>Not pre-funded at genesis. Current balance: 0 IFR.</li>
-        <li><strong>BuybackController.sol</strong> &mdash; <strong style="color:#22c55e;">Deployed 14.04.2026</strong> (<a href="https://etherscan.io/address/0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c#code" target="_blank" style="color:var(--accent);">0x1e05...F7c</a>):
+        <li><strong>BuybackController.sol</strong> &mdash; <strong style="color:#166534;">Deployed 14.04.2026</strong> (<a href="https://etherscan.io/address/0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c#code" target="_blank" style="color:var(--accent);">0x1e05...F7c</a>):
           <ul>
             <li>50/50 split: buyback+burn / LP deepening</li>
             <li>Permissionless <code>execute()</code> with 24h cooldown</li>
@@ -1294,15 +1294,15 @@
           <div class="reason">Lending deposits, repayments, and liquidations must be exact &mdash; feeExempt since 06.04.2026</div>
         </div>
         <div class="exempt-item">
-          <div class="name">BuybackController <span style="color:#fbbf24;font-size:0.75rem;">deployed / wired</span></div>
+          <div class="name">BuybackController <span style="color:#92400e;font-size:0.75rem;">deployed / wired</span></div>
           <div class="reason">Fee-exempt since 16.04.2026 and configured as FeeRouterV1's native-ETH fee collector since 18.04.2026. Permissionless execution still depends on controller balance, cooldown and pause state.</div>
         </div>
         <div class="exempt-item">
-          <div class="name">LP Token (IFR/WETH) <span style="color:#22c55e;font-size:0.75rem;">&#x2705; active</span></div>
+          <div class="name">LP Token (IFR/WETH) <span style="color:#166534;font-size:0.75rem;">&#x2705; active</span></div>
           <div class="reason">Uniswap V2 LP Token (<code>0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</code>) &mdash; Proposal #15 executed 08.06.2026, feeExempt = true.</div>
         </div>
         <div class="exempt-item">
-          <div class="name">Deployer EOA <span style="color:#fbbf24;font-size:0.75rem;">active disclosed exception</span></div>
+          <div class="name">Deployer EOA <span style="color:#92400e;font-size:0.75rem;">active disclosed exception</span></div>
           <div class="reason"><code>0x6b36687b0cd4386fb14cf565B67D7862110Fed67</code> &mdash; Proposal #7 executed 18.03.2026. The exemption is visible in <code>feeExempt(address)</code> and can be revoked only through Governance.</div>
         </div>
       </div>
