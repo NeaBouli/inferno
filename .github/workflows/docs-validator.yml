@@ -232,6 +232,9 @@ jobs:
       - name: Check wiki sidebar nav consistency
         run: npm run test:wiki-nav
 
+      - name: Check wiki shell brand, active-link and button contrast
+        run: npm run test:wiki-shell
+
       - name: Check current status baseline
         run: npm run test:status-baseline
 
@@ -308,6 +311,9 @@ jobs:
 
       - name: Run Web3 write-flow suite
         run: npm run test:web3-write
+
+      - name: Run Landing live transparency and Wiki shell suite
+        run: npm run test:landing-wiki-ui
 
   docs-summary:
     name: Docs Summary

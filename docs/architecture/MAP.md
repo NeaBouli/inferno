@@ -679,3 +679,114 @@ mindmap
 Implement only the three mapped gates/settlement hops and focused regression
 tests. Keep FeeRouter, guardian rotation, ownership, reserve parameters,
 governance, deployment scripts and Mainnet state untouched.
+
+## 11. Landing transparency and Wiki shell trace
+
+Scope: task T-158. Two user paths only: the Landing "On-Chain Transparent"
+metric cards and the shared Wiki shell (brand, active navigation, action
+controls) on `docs/wiki/index.html` and `docs/wiki/open-audit.html`.
+Existing finding: CWA-71 (Landing fallbacks are stale) — this trace removes
+the static current-value fallbacks from the three cards instead of refreshing
+them again.
+
+### 11.1 Grundidee
+
+The Landing shows Mainnet protocol state that "is verifiable on Etherscan"
+(`docs/index.html` section "On-Chain Transparent"). Values presented as
+current must come from a live read and must fail closed to an explicit
+unavailable/stale state; historical numbers are never shown as current. The
+Wiki is one documentation shell with one sidebar menu and one design skin
+(`scripts/check-wiki-nav-consistency.cjs`, `docs/assets/redesign-skin.css`).
+
+### 11.2 Spur (Hop-Liste)
+
+Landing live metrics:
+
+1. `docs/index.html::IntersectionObserver(#live-distribution, #onchain-transparency)`
+   → `refreshAllLiveData` (every `LIVE_REFRESH_MS` = 60 s, plus
+   `visibilitychange` return) — Daten: none → refresh tick.
+2. `refreshAllLiveData` → `doRefresh` → copilot-api `/api/ifr/supply` — Daten:
+   `burned` (existing burn tracker source and `fmt` formatting) →
+   `setTransparencyMetric('burned')`; failure → `showNotAvailable` →
+   `failTransparencyMetric('burned')`.
+3. `refreshAllLiveData` / initial timer → `loadCommitmentVaultLive` →
+   Ethereum RPC (`https://ethereum-rpc.publicnode.com`, constant) —
+   Daten: `CommitmentVault.totalLocked()` and
+   `Vesting.{totalAllocation, vestedAmount, released, vestingSchedule}()` as
+   `bigint` base units (9 decimals) → `setTransparencyMetric('commitment'|'vesting')`;
+   failure → `failTransparencyMetric`. One in-flight read at a time.
+4. `transparencySnapshot` (three fixed keys) → `renderTransparencyCards` →
+   `[data-transparency-metric]` value/detail/status — Daten: text, last
+   successful read time, state `loading|live|stale|unavailable`.
+
+Wiki shell:
+
+1. `docs/wiki/<page>.html` → `aside.sidebar` (`.sidebar-logo`,
+   `.sidebar-subtitle`, `ul.sidebar-nav a.active[aria-current=page]`) —
+   Daten: static shell markup, identical menu per page.
+2. page → `docs/assets/redesign-skin.css` (Wiki shell rules, `.btn-primary`,
+   `.btn-secondary`, `.wiki-actions`) — Daten: design tokens → rendered colors,
+   focus/hover/active states, 44 px targets.
+3. `docs/wiki/index.html::#wiki-wallet-bar` back link — Daten: brand wording
+   "← Inferno" as on every other shell page.
+
+### 11.3 Module
+
+| Modul | Eine Aufgabe | Einstieg | Stand |
+| --- | --- | --- | --- |
+| landing live tracker | refresh live distribution + transparency snapshot | `docs/index.html::refreshAllLiveData` | gebaut |
+| burn source | burned = genesis − totalSupply via copilot-api | `docs/index.html::doRefresh` | gebaut |
+| mainnet RPC reader | CommitmentVault/Vesting/LendingVault reads | `docs/index.html::loadCommitmentVaultLive` | gebaut |
+| transparency snapshot | bounded 3-key state + fail-closed card render | `docs/index.html::renderTransparencyCards` | gebaut |
+| wiki shell markup | sidebar brand, menu, active link, back link | `docs/wiki/*.html::aside.sidebar` | gebaut |
+| wiki design skin | shared colors, buttons, focus states | `docs/assets/redesign-skin.css` | gebaut |
+
+### 11.4 Verdrahtung
+
+- The observer starts the single refresh loop; visibility return triggers the same loop.
+- `doRefresh` feeds the burned card from the existing burn tracker response.
+- `loadCommitmentVaultLive` feeds the CommitmentVault and Vesting cards from bigint reads.
+- `renderTransparencyCards` is the only writer of the three card values.
+- Every shell page links the shared skin; index/open-audit no longer diverge from it.
+
+### 11.5 Widerspruch und Lücken
+
+- The burned figure still passes through the copilot-api float response; the
+  backend (`apps/ai-copilot/server/index.ts::fetchSupplyData`) is out of scope.
+- The distribution section's other `data-live-key` values keep their existing
+  behavior (not part of this trace).
+- The SVG flow snapshot text stays a dated snapshot (pinned by `test:cwa-content`).
+- T-158f: the legacy hero canvas loop (`docs/index.html::loop`, hero is
+  `display:none` in the redesign) runs only while `#legacy-hero` intersects the
+  viewport; unbounded off-screen frames had starved the renderer and delayed
+  the transparency cards. No new node; the card state path is unchanged.
+
+### 11.6 Diagrammdateien
+
+- `docs/architecture/map.puml` (T-158 mindmap + component diagram)
+- `docs/architecture/main-path.puml` (T-158 sequence)
+
+```mermaid
+mindmap
+  root((Live transparency + Wiki shell))
+    landing live tracker
+      gebaut: refreshAllLiveData
+    burn source
+      gebaut: doRefresh
+    mainnet RPC reader
+      gebaut: loadCommitmentVaultLive
+    transparency snapshot
+      gebaut: renderTransparencyCards
+    wiki shell markup
+      gebaut: aside.sidebar
+    wiki design skin
+      gebaut: redesign-skin.css
+```
+
+### 11.7 Nächster Schritt
+
+Change only `docs/index.html` (tracker + three cards), `docs/wiki/index.html`
+(brand/subtitle/back link), `docs/wiki/open-audit.html` (action controls),
+`docs/assets/redesign-skin.css` (shared wiki action/focus rules) and the
+active-link `aria-current` attribute on sidebar pages. Copilot backend,
+contracts, wallet core and other Landing sections stay untouched.
