@@ -629,7 +629,7 @@
       background: rgba(31,41,55,0.8); border: 1px solid #374151;
       border-radius: 10px; padding: 14px; text-align: center;
     }
-    .bw-stat-label { color: #9ca3af; font-size: 0.8rem; margin-bottom: 4px; }
+    .bw-stat-label { color: #d1d5db; font-size: 0.8rem; margin-bottom: 4px; }
     .bw-stat-value { color: #22c55e; font-size: 1.3rem; font-weight: 700; font-family: monospace; }
     .bw-tx-pending { background: rgba(251,191,36,0.1); border: 1px solid rgba(251,191,36,0.3); color: #fbbf24; }
     .bw-tx-success { background: rgba(34,197,94,0.1); border: 1px solid rgba(34,197,94,0.3); color: #22c55e; }
@@ -775,12 +775,12 @@
     <main class="main">
       <!-- Wallet Top Bar -->
       <div id="wiki-wallet-bar" style="position:sticky;top:0;z-index:100;background:rgba(10,10,10,0.95);backdrop-filter:blur(12px);border-bottom:1px solid #1f2937;padding:10px 20px;display:flex;justify-content:space-between;align-items:center;margin:-32px -40px 24px -40px;">
-        <a href="https://ifrunit.tech/index.html" style="color:#f97316;font-weight:700;text-decoration:none;font-size:0.9rem;">&larr; Inferno</a>
+        <a href="https://ifrunit.tech/index.html" style="color:#b3300b;font-weight:700;text-decoration:none;font-size:0.9rem;">&larr; Inferno</a>
         <div id="wiki-wallet-wrap" style="position:relative;">
           <button id="lp-header-connect-btn" onclick="lpConnect()" style="display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:9px 18px;min-height:38px;border:1px solid transparent;background:#B0481E;color:#fff;font-family:var(--sans, -apple-system, system-ui, sans-serif);font-size:0.84rem;font-weight:600;letter-spacing:0;border-radius:4px;cursor:pointer;white-space:nowrap;transition:all .2s;position:relative;flex-shrink:0;margin-left:16px;">Connect Wallet</button>
           <div id="lp-header-connected" style="display:none;">
             <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:5px 8px;cursor:pointer;display:flex;align-items:center;gap:6px;max-width:100px;white-space:nowrap;overflow:hidden;" onclick="lpToggleDropdown()">
-              <span id="lp-header-addr" style="color:#22c55e;font-family:monospace;font-size:0.72rem;font-weight:600;"></span>
+              <span id="lp-header-addr" style="color:#166534;font-family:monospace;font-size:0.72rem;font-weight:600;"></span>
               
             </div>
           </div>
@@ -790,7 +790,7 @@
               <button onclick="lpCloseDropdown()" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:1.1rem;line-height:1;padding:2px 6px;border-radius:4px;" title="Close">&#x2715;</button>
             </div>
             <div style="margin-bottom:12px;">
-              <div id="lp-drop-addr" style="color:#22c55e;font-family:monospace;font-size:0.78rem;font-weight:600;word-break:break-all;"></div>
+              <div id="lp-drop-addr" style="color:#166534;font-family:monospace;font-size:0.78rem;font-weight:600;word-break:break-all;"></div>
             </div>
             <div style="display:flex;gap:8px;margin-bottom:12px;">
               <div style="flex:1;background:#1f2937;border-radius:8px;padding:8px;text-align:center;">
@@ -799,15 +799,15 @@
               </div>
               <div style="flex:1;background:#1f2937;border-radius:8px;padding:8px;text-align:center;">
                 <div style="color:#9ca3af;font-size:0.7rem;">IFR</div>
-                <div id="lp-drop-ifr" style="color:#f97316;font-weight:700;font-size:0.85rem;"></div>
+                <div id="lp-drop-ifr" style="color:#b3300b;font-weight:700;font-size:0.85rem;"></div>
               </div>
             </div>
             <div id="lp-drop-lock" style="display:none;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:8px 10px;margin-bottom:10px;text-align:center;">
-              <span style="color:#fbbf24;font-size:0.78rem;font-weight:600;">&#x26A1; Premium</span>
+              <span style="color:#92400e;font-size:0.78rem;font-weight:600;">&#x26A1; Premium</span>
             </div>
             <div id="lp-drop-nolock" style="background:rgba(107,114,128,0.1);border:1px solid #374151;border-radius:8px;padding:8px 10px;margin-bottom:10px;text-align:center;">
               <span style="color:#9ca3af;font-size:0.78rem;">Lock &#x2265;1,000 IFR &#x2192; </span>
-              <a href="https://ifrunit.tech/wiki/lock-mechanism.html" style="color:#f97316;font-size:0.78rem;">Premium &#x2197;</a>
+              <a href="https://ifrunit.tech/wiki/lock-mechanism.html" style="color:#b3300b;font-size:0.78rem;">Premium &#x2197;</a>
             </div>
             <div style="display:flex;gap:8px;">
               <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="flex:1;text-align:center;padding:8px;background:#f97316;color:white;border-radius:8px;font-size:0.78rem;font-weight:600;text-decoration:none;">&#x1F525; Buy IFR</a>
@@ -824,7 +824,7 @@
         Plan B &mdash; Treasury + Community Safe Funding. No team ETH. No presale. Pure community price discovery.
       </p>
 
-      <div class="status-badge coming-soon" style="background:rgba(34,197,94,0.15);color:#22c55e;border-color:rgba(34,197,94,0.3);">&#x2705; Bootstrap ENDED 05.06.2026 &mdash; LP Live on Uniswap</div>
+      <div class="status-badge coming-soon" style="background:rgba(34,197,94,0.15);color:#166534;border-color:rgba(34,197,94,0.3);">&#x2705; Bootstrap ENDED 05.06.2026 &mdash; LP Live on Uniswap</div>
 
       <!-- Finalized Bootstrap Widget -->
       <div class="vault-widget">
@@ -847,7 +847,7 @@
           </div>
           <div class="vault-stat">
             <span class="vault-stat-label">Status</span>
-            <span class="vault-stat-value" id="vault-status"><span style="color:#22c55e;">Finalized &#x2705;</span></span>
+            <span class="vault-stat-value" id="vault-status"><span style="color:#166534;">Finalized &#x2705;</span></span>
           </div>
         </div>
         <div class="vault-bar-track">
@@ -957,8 +957,8 @@
       </ul>
 
       <div class="callout" style="margin:20px 0;padding:16px;background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.3);border-radius:10px;">
-        <p style="margin:0 0 8px 0;font-weight:700;color:#f97316;">&#x23F3; GOVERNANCE — POST-FINALISE()</p>
-        <p style="margin:0;font-size:0.88rem;"><strong>Bootstrap FINALIZED 05.06.2026 23:51 UTC.</strong> Both post-finalise governance proposals executed: <strong>Proposal #15</strong> — setFeeExempt(LP Token, true) — <span style="color:#22c55e;">EXECUTED 08.06.2026</span> &#x2705;. LP swaps now fee-exempt. <strong>Proposal #16</strong> — setP0(CommitmentVault) — <span style="color:#22c55e;">EXECUTED 09.06.2026</span> &#x2705;. P0 = 0.3 Gwei (IMMUTABLE on-chain).</p>
+        <p style="margin:0 0 8px 0;font-weight:700;color:#b3300b;">&#x23F3; GOVERNANCE — POST-FINALISE()</p>
+        <p style="margin:0;font-size:0.88rem;"><strong>Bootstrap FINALIZED 05.06.2026 23:51 UTC.</strong> Both post-finalise governance proposals executed: <strong>Proposal #15</strong> — setFeeExempt(LP Token, true) — <span style="color:#166534;">EXECUTED 08.06.2026</span> &#x2705;. LP swaps now fee-exempt. <strong>Proposal #16</strong> — setP0(CommitmentVault) — <span style="color:#166534;">EXECUTED 09.06.2026</span> &#x2705;. P0 = 0.3 Gwei (IMMUTABLE on-chain).</p>
       </div>
 
       <h3>Step 3 &mdash; Claim IFR</h3>
@@ -1020,7 +1020,7 @@
           <tr><td>&gt; 30 ETH</td><td>&#x1F525; Perfect</td><td>Deep liquidity &mdash; excellent foundation for growth</td></tr>
         </tbody>
       </table>
-      <p style="font-size:12px; color:#64748b;">* These are community reference targets, not hard caps or soft caps. The LP is always created regardless of ETH raised.</p>
+      <p style="font-size:12px; color:#475569;">* These are community reference targets, not hard caps or soft caps. The LP is always created regardless of ETH raised.</p>
 
       <!-- ============================================================
            Smart Contract
@@ -1029,19 +1029,19 @@
 
       <table>
         <tbody>
-          <tr><td><strong>Contract</strong></td><td>BootstrapVaultV3 <span style="color: #22c55e; font-weight: 600;">[FINALIZED &#x2705;]</span></td></tr>
+          <tr><td><strong>Contract</strong></td><td>BootstrapVaultV3 <span style="color: #166534; font-weight: 600;">[FINALIZED &#x2705;]</span></td></tr>
           <tr><td><strong>Sepolia</strong></td><td><a href="https://sepolia.etherscan.io/address/0x16086d4f7F191047d8A4fFf2090126E12e865A7E#code" target="_blank" rel="noopener"><code>0x16086d4f7F191047d8A4fFf2090126E12e865A7E</code></a></td></tr>
           <tr><td><strong>Mainnet</strong></td><td><a href="https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141#code" target="_blank" rel="noopener"><code>0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141</code></a></td></tr>
-          <tr><td><strong>LP Token (Uniswap V2)</strong></td><td><a href="https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" rel="noopener"><code>0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</code></a> <span style="color:#22c55e;font-size:0.85em;">&#x2705; Live</span></td></tr>
+          <tr><td><strong>LP Token (Uniswap V2)</strong></td><td><a href="https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" rel="noopener"><code>0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</code></a> <span style="color:#166534;font-size:0.85em;">&#x2705; Live</span></td></tr>
           <tr><td><strong>Source</strong></td><td><a href="https://github.com/NeaBouli/inferno/blob/main/contracts/bootstrap/BootstrapVaultV3.sol" target="_blank" rel="noopener">GitHub (open source)</a></td></tr>
           <tr><td><strong>Verified</strong></td><td>Yes (Etherscan, both networks)</td></tr>
-          <tr><td><strong>Security</strong></td><td><span style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:20px;padding:4px 12px;font-size:0.8rem;color:#22c55e;">Security Reviewed &mdash; 0 Critical Issues</span> <a href="https://ifrunit.tech/wiki/security.html" style="font-size:0.8rem;color:#f97316;margin-left:8px;">Details &rarr;</a></td></tr>
+          <tr><td><strong>Security</strong></td><td><span style="display:inline-flex;align-items:center;gap:6px;background:rgba(34,197,94,0.1);border:1px solid rgba(34,197,94,0.3);border-radius:20px;padding:4px 12px;font-size:0.8rem;color:#166534;">Security Reviewed &mdash; 0 Critical Issues</span> <a href="https://ifrunit.tech/wiki/security.html" style="font-size:0.8rem;color:#b3300b;margin-left:8px;">Details &rarr;</a></td></tr>
         </tbody>
       </table>
 
       <table>
         <tbody>
-          <tr><td><strong>Contract</strong></td><td><s>BootstrapVault V1</s> <span style="color: #ffa500; font-weight: 600;">[DEPRECATED]</span></td></tr>
+          <tr><td><strong>Contract</strong></td><td><s>BootstrapVault V1</s> <span style="color: #92400e; font-weight: 600;">[DEPRECATED]</span></td></tr>
           <tr><td><strong>Mainnet</strong></td><td><code><s>0xA820540936d18e1377C39dd9445E5b36F3F1261a</s></code> &mdash; superseded by V3</td></tr>
         </tbody>
       </table>
@@ -1084,22 +1084,22 @@
 
         <!-- Bootstrap Ended Notice -->
         <div id="bw-wallet-notice" style="text-align:center;padding:20px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.3);border-radius:12px;margin-bottom:20px;">
-          <p style="color:#22c55e;margin:0 0 8px 0;font-size:1rem;font-weight:700;">&#x2705; Bootstrap ENDED &mdash; 05.06.2026 23:51 UTC</p>
-          <p style="color:#9ca3af;margin:0;font-size:0.88rem;">finalise() executed. IFR is now tradeable on <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="color:#f97316;">Uniswap &#x2197;</a>. Contributions are no longer accepted.</p>
+          <p style="color:#166534;margin:0 0 8px 0;font-size:1rem;font-weight:700;">&#x2705; Bootstrap ENDED &mdash; 05.06.2026 23:51 UTC</p>
+          <p style="color:#9ca3af;margin:0;font-size:0.88rem;">finalise() executed. IFR is now tradeable on <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="color:#b3300b;">Uniswap &#x2197;</a>. Contributions are no longer accepted.</p>
         </div>
 
         <!-- My Contribution (shown when connected) -->
         <div id="bw-my-contribution" style="display:none;background:rgba(34,197,94,0.05);border:1px solid rgba(34,197,94,0.2);border-radius:12px;padding:16px;margin-bottom:20px;">
           <div style="color:#9ca3af;font-size:0.85rem;">Your contribution:
             <strong id="bw-contribution-eth" style="color:#e5e7eb;"></strong> ETH &rarr;
-            <strong id="bw-contribution-ifr" style="color:#f97316;"></strong> IFR (estimated)
+            <strong id="bw-contribution-ifr" style="color:#b3300b;"></strong> IFR (estimated)
           </div>
         </div>
 
         <!-- Contribute Form -->
         <div id="bw-contribute-section" style="display:none;">
           <div style="background:rgba(249,115,22,0.05);border:1px solid rgba(249,115,22,0.2);border-radius:16px;padding:24px;">
-            <h3 style="color:#f97316;margin-top:0;">Contribute ETH</h3>
+            <h3 style="color:#b3300b;margin-top:0;">Contribute ETH</h3>
             <p style="color:#9ca3af;font-size:0.9rem;">Min: 0.01 ETH &middot; Max: 2 ETH per wallet &middot; 100% goes to Uniswap LP</p>
             <div style="display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin:20px 0;">
               <div style="flex:1;min-width:200px;">
@@ -1112,7 +1112,7 @@
                 Contribute ETH &rarr;
               </button>
             </div>
-            <div id="bw-estimate" style="color:#f97316;font-size:0.9rem;display:none;">
+            <div id="bw-estimate" style="color:#b3300b;font-size:0.9rem;display:none;">
               You will receive approximately <strong id="bw-estimate-ifr"></strong> IFR
               <span style="color:#6b7280;font-size:0.8rem;">(based on current pool)</span>
             </div>
@@ -1123,7 +1123,7 @@
         <!-- Claim / Refund Section -->
         <div id="bw-claim-section" style="display:none;">
           <div style="background:rgba(34,197,94,0.05);border:1px solid rgba(34,197,94,0.2);border-radius:16px;padding:24px;">
-            <h3 style="color:#22c55e;margin-top:0;" id="bw-claim-title">Claim Your IFR</h3>
+            <h3 style="color:#166534;margin-top:0;" id="bw-claim-title">Claim Your IFR</h3>
             <p id="bw-claim-desc" style="color:#9ca3af;"></p>
             <button id="bw-claim-btn" onclick="bwClaim()" style="display:none;">&#x1F381; Claim IFR</button>
             <button id="bw-refund-btn" onclick="bwRefund()" style="display:none;background:#374151;border-color:#4b5563;">&#x21A9; Request Refund</button>
@@ -1134,8 +1134,8 @@
         <!-- Not yet active notice -->
         <div id="bw-not-active-section" style="display:none;">
           <div style="text-align:center;padding:24px;background:rgba(107,114,128,0.05);border:1px solid #374151;border-radius:16px;">
-            <p style="color:#22c55e;">The Bootstrap Event has <strong style="color:#22c55e;">ENDED</strong> &mdash; finalise() executed 05.06.2026 23:51 UTC.</p>
-            <p style="color:#6b7280;font-size:0.85rem;">LP Token: <code>0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</code> &mdash; IFR is now tradeable on <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="color:#f97316;">Uniswap</a>.</p>
+            <p style="color:#166534;">The Bootstrap Event has <strong style="color:#166534;">ENDED</strong> &mdash; finalise() executed 05.06.2026 23:51 UTC.</p>
+            <p style="color:#6b7280;font-size:0.85rem;">LP Token: <code>0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</code> &mdash; IFR is now tradeable on <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="color:#b3300b;">Uniswap</a>.</p>
           </div>
         </div>
 
@@ -1212,10 +1212,10 @@
 
       <!-- Countdown -->
       <div id="bootstrap-countdown-box" style="background:#0f172a; border:1px solid #22c55e; border-radius:12px; padding:24px; text-align:center; margin:24px 0;">
-        <div style="font-size:12px; color:#22c55e; margin-bottom:8px; text-transform:uppercase; letter-spacing:1px; font-weight:600;">&#x2705; Bootstrap ENDED &mdash; finalise() Executed</div>
-        <div style="font-size:22px; font-weight:700; font-family:monospace; color:#22c55e; letter-spacing:1px;">05.06.2026 23:51 UTC &mdash; Block 25254575</div>
-        <div style="font-size:13px; color:#94a3b8; margin-top:8px;">totalETHRaised: 0.030 ETH &mdash; LP Token: <code style="color:#f97316;">0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</code></div>
-        <div style="font-size:12px; color:#64748b; margin-top:4px;">finalise() TX: <a href="https://etherscan.io/tx/0x949848bdd09f4c867a2593afffb0137c7db2c1457d8a8f5ff4428f8ecce69c5f" target="_blank" rel="noopener" style="color:#f97316;font-size:11px;">0x949848bd&hellip;</a> &mdash; <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="color:#f97316;">Trade IFR on Uniswap &#x2197;</a></div>
+        <div style="font-size:12px; color:#166534; margin-bottom:8px; text-transform:uppercase; letter-spacing:1px; font-weight:600;">&#x2705; Bootstrap ENDED &mdash; finalise() Executed</div>
+        <div style="font-size:22px; font-weight:700; font-family:monospace; color:#166534; letter-spacing:1px;">05.06.2026 23:51 UTC &mdash; Block 25254575</div>
+        <div style="font-size:13px; color:#94a3b8; margin-top:8px;">totalETHRaised: 0.030 ETH &mdash; LP Token: <code style="color:#b3300b;">0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</code></div>
+        <div style="font-size:12px; color:#475569; margin-top:4px;">finalise() TX: <a href="https://etherscan.io/tx/0x949848bdd09f4c867a2593afffb0137c7db2c1457d8a8f5ff4428f8ecce69c5f" target="_blank" rel="noopener" style="color:#b3300b;font-size:11px;">0x949848bd&hellip;</a> &mdash; <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="color:#b3300b;">Trade IFR on Uniswap &#x2197;</a></div>
       </div>
 
       <table>
@@ -1303,7 +1303,7 @@
       <div id="consensus-module" style="margin-top:40px;">
 
         <h2>Community Consensus</h2>
-        <p style="color:#64748b; font-size:13px; max-width:680px;">
+        <p style="color:#475569; font-size:13px; max-width:680px;">
           This is a sentiment indicator, not a binding on-chain vote.
           The team commits to following the community consensus.
           On-chain binding governance comes with BootstrapVaultV4 in Phase 3.
@@ -1335,15 +1335,15 @@
         <!-- Voting Bar -->
         <div style="background:var(--card); border:1px solid var(--border); border-radius:10px; padding:20px; margin:16px 0;">
           <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:600; margin-bottom:8px;">
-            <span style="color:#ef4444;">&#x1F534; Refund</span>
-            <span style="color:#22c55e;">Finalise &#x1F7E2;</span>
+            <span style="color:#b91c1c;">&#x1F534; Refund</span>
+            <span style="color:#166534;">Finalise &#x1F7E2;</span>
           </div>
           <div style="position:relative; height:24px; background:linear-gradient(90deg,#ef4444 0%,#eab308 40%,#22c55e 100%); border-radius:12px; overflow:visible;">
             <div id="cs-marker" style="position:absolute; top:-4px; width:4px; height:32px; background:#fff; border-radius:2px; left:50%; transition:left 0.6s ease; box-shadow:0 0 8px rgba(255,255,255,0.5);"></div>
           </div>
           <div style="text-align:center; margin-top:12px;">
             <span style="font-size:24px; font-weight:800;" id="cs-trust-score">0</span><span style="font-size:14px; color:var(--muted);">% Trust Score</span>
-            <div id="cs-level-badge" style="display:inline-block; padding:4px 12px; border-radius:12px; font-size:12px; font-weight:600; margin-left:12px; background:rgba(100,116,139,0.2); color:#64748b;">No Data</div>
+            <div id="cs-level-badge" style="display:inline-block; padding:4px 12px; border-radius:12px; font-size:12px; font-weight:600; margin-left:12px; background:rgba(100,116,139,0.2); color:#475569;">No Data</div>
           </div>
         </div>
 
@@ -1358,7 +1358,7 @@
         </div>
 
         <!-- Bootstrap Ended Banner -->
-        <div id="consensus-demo-banner" style="background:rgba(34,197,94,0.08); border:1px solid rgba(34,197,94,0.3); border-radius:8px; padding:10px 14px; margin:16px 0 8px 0; font-size:12px; color:#22c55e;">
+        <div id="consensus-demo-banner" style="background:rgba(34,197,94,0.08); border:1px solid rgba(34,197,94,0.3); border-radius:8px; padding:10px 14px; margin:16px 0 8px 0; font-size:12px; color:#166534;">
           &#x2705; Bootstrap closed 05.06.2026. Voting period ended. finalise() executed on-chain.
         </div>
 
@@ -1372,7 +1372,7 @@
           </button>
         </div>
         <div style="display:flex; flex-direction:column; align-items:center; width:100%; margin-top:12px;">
-          <p style="font-size:11px; color:#64748b; margin-top:4px; text-align:center;">
+          <p style="font-size:11px; color:#475569; margin-top:4px; text-align:center;">
             Voting closed &mdash; Bootstrap ENDED 05.06.2026
           </p>
         </div>
@@ -1404,7 +1404,7 @@
       <p>Yes, under specific conditions. If <code>finalise()</code> has not been called within 30 days after the bootstrap window closes, contributors can call <code>refund()</code> to reclaim their full ETH contribution. This is a V3 safety mechanism to protect contributors if LP creation is delayed. Once finalised, all ETH is in the LP and cannot be withdrawn.</p>
 
       <div style="background:#1a1a2e; border:1px solid #f97316; border-radius:8px; padding:12px 16px; margin-top:12px; font-size:13px; color:#94a3b8;">
-        <span style="color:#f97316;">&#x1F5F3; Phase 3 &mdash; BootstrapVaultV4:</span>
+        <span style="color:#b3300b;">&#x1F5F3; Phase 3 &mdash; BootstrapVaultV4:</span>
         Future bootstrap rounds will include on-chain contributor voting.
         If the soft target is not reached, ETH contributors vote (weighted by contribution)
         whether to proceed with LP pairing or trigger a full refund.
@@ -1412,7 +1412,7 @@
       </div>
 
       <h3>When is the Bootstrap Event?</h3>
-      <p>The Bootstrap Event ran from <strong>07.03.2026 to 05.06.2026</strong> and is now finalized. finalise() was executed on 05.06.2026 23:51 UTC (Block 25254575, TX <a href="https://etherscan.io/tx/0x949848bdd09f4c867a2593afffb0137c7db2c1457d8a8f5ff4428f8ecce69c5f" target="_blank" rel="noopener" style="color:#f97316;">0x949848bd&hellip;</a>). IFR is now tradeable on <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="color:#f97316;">Uniswap V2 &#x2197;</a>.</p>
+      <p>The Bootstrap Event ran from <strong>07.03.2026 to 05.06.2026</strong> and is now finalized. finalise() was executed on 05.06.2026 23:51 UTC (Block 25254575, TX <a href="https://etherscan.io/tx/0x949848bdd09f4c867a2593afffb0137c7db2c1457d8a8f5ff4428f8ecce69c5f" target="_blank" rel="noopener" style="color:#b3300b;">0x949848bd&hellip;</a>). IFR is now tradeable on <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="color:#b3300b;">Uniswap V2 &#x2197;</a>.</p>
 
       <h3>How much IFR will I receive?</h3>
       <p>Your claim is calculated as <code>(your_ETH / total_ETH) &times; 100,000,000 IFR</code>. The other 100M IFR funded the LP side. For example, if total ETH raised were 10 ETH and you contributed 1 ETH, the 10% claim would be 10,000,000 IFR.</p>
@@ -1548,7 +1548,7 @@ var ConsensusModule = {
     if (vertrauensScore >= 10) {
       return { emoji: '\uD83D\uDD34', label: 'Weak Consensus \u2014 Leaning towards refund', color: '#ef4444', bg: 'rgba(239,68,68,0.15)' };
     }
-    return { emoji: '\u26D4', label: 'No Consensus / High Resistance', color: '#64748b', bg: 'rgba(100,116,139,0.15)' };
+    return { emoji: '\u26D4', label: 'No Consensus / High Resistance', color: '#475569', bg: 'rgba(100,116,139,0.15)' };
   },
 
   render: function() {
@@ -1625,7 +1625,7 @@ var ConsensusModule = {
 
     if (!walletConnected) {
       // Not connected — show connect prompt, disable buttons
-      if (banner) { banner.innerHTML = '&#x1F5F3; Connect wallet and contribute ETH to vote.'; banner.style.display = 'block'; banner.style.background = 'rgba(234,179,8,0.12)'; banner.style.borderColor = 'rgba(234,179,8,0.4)'; banner.style.color = '#eab308'; }
+      if (banner) { banner.innerHTML = '&#x1F5F3; Connect wallet and contribute ETH to vote.'; banner.style.display = 'block'; banner.style.background = 'rgba(234,179,8,0.12)'; banner.style.borderColor = 'rgba(234,179,8,0.4)'; banner.style.color = '#8a5a00'; }
       if (btnRefund) { btnRefund.disabled = true; btnRefund.style.opacity = '0.4'; btnRefund.style.cursor = 'not-allowed'; }
       if (btnFinalise) { btnFinalise.disabled = true; btnFinalise.style.opacity = '0.4'; btnFinalise.style.cursor = 'not-allowed'; }
     } else if (myContrib <= 0) {
@@ -1885,7 +1885,7 @@ if (document.readyState === 'loading') {
     if (conn) conn.textContent = 'Finalized on-chain \u2192 Uniswap V2 LP live \u2014 ' + dateTime();
     if (balEl) balEl.textContent = '100M IFR + 0.030 ETH';
     if (pctEl) pctEl.textContent = '3/3';
-    if (statusEl) statusEl.innerHTML = '<span style="color:#22c55e;">Finalized \u2705</span>';
+    if (statusEl) statusEl.innerHTML = '<span style="color:#166534;">Finalized \u2705</span>';
     if (barEl) barEl.style.width = '100%';
     updatePhases('completed');
   }

@@ -317,7 +317,7 @@
     }
 
     .flow-box {
-      background: #1a1a1d;
+      background: #fffaf2;
       border: 1px solid var(--border);
       border-radius: 8px;
       padding: 12px 18px;
@@ -330,12 +330,12 @@
 
     .flow-box.state-pending {
       border-color: #f59e0b;
-      color: #f59e0b;
+      color: #92400e;
     }
 
     .flow-box.state-executable {
       border-color: var(--accent);
-      color: var(--accent);
+      color: var(--accent-deep, #8E3814);
     }
 
     .flow-box.state-executed {
@@ -345,7 +345,7 @@
 
     .flow-box.state-cancelled {
       border-color: #ef4444;
-      color: #ef4444;
+      color: #b91c1c;
     }
 
     .flow-box.action {
@@ -621,12 +621,12 @@
     <main class="main">
       <!-- Wallet Top Bar -->
       <div id="wiki-wallet-bar" style="position:sticky;top:0;z-index:100;background:rgba(10,10,10,0.95);backdrop-filter:blur(12px);border-bottom:1px solid #1f2937;padding:10px 20px;display:flex;justify-content:space-between;align-items:center;margin:-32px -40px 24px -40px;">
-        <a href="https://ifrunit.tech/index.html" style="color:#f97316;font-weight:700;text-decoration:none;font-size:0.9rem;">&larr; Inferno</a>
+        <a href="https://ifrunit.tech/index.html" style="color:#b3300b;font-weight:700;text-decoration:none;font-size:0.9rem;">&larr; Inferno</a>
         <div id="wiki-wallet-wrap" style="position:relative;">
           <button id="lp-header-connect-btn" onclick="lpConnect()" style="display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:9px 18px;min-height:38px;border:1px solid transparent;background:#B0481E;color:#fff;font-family:var(--sans, -apple-system, system-ui, sans-serif);font-size:0.84rem;font-weight:600;letter-spacing:0;border-radius:4px;cursor:pointer;white-space:nowrap;transition:all .2s;position:relative;flex-shrink:0;margin-left:16px;">Connect Wallet</button>
           <div id="lp-header-connected" style="display:none;">
             <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:5px 8px;cursor:pointer;display:flex;align-items:center;gap:6px;max-width:100px;white-space:nowrap;overflow:hidden;" onclick="lpToggleDropdown()">
-              <span id="lp-header-addr" style="color:#22c55e;font-family:monospace;font-size:0.72rem;font-weight:600;"></span>
+              <span id="lp-header-addr" style="color:#166534;font-family:monospace;font-size:0.72rem;font-weight:600;"></span>
               
             </div>
           </div>
@@ -636,7 +636,7 @@
               <button onclick="lpCloseDropdown()" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:1.1rem;line-height:1;padding:2px 6px;border-radius:4px;" title="Close">&#x2715;</button>
             </div>
             <div style="margin-bottom:12px;">
-              <div id="lp-drop-addr" style="color:#22c55e;font-family:monospace;font-size:0.78rem;font-weight:600;word-break:break-all;"></div>
+              <div id="lp-drop-addr" style="color:#166534;font-family:monospace;font-size:0.78rem;font-weight:600;word-break:break-all;"></div>
             </div>
             <div style="display:flex;gap:8px;margin-bottom:12px;">
               <div style="flex:1;background:#1f2937;border-radius:8px;padding:8px;text-align:center;">
@@ -645,15 +645,15 @@
               </div>
               <div style="flex:1;background:#1f2937;border-radius:8px;padding:8px;text-align:center;">
                 <div style="color:#9ca3af;font-size:0.7rem;">IFR</div>
-                <div id="lp-drop-ifr" style="color:#f97316;font-weight:700;font-size:0.85rem;"></div>
+                <div id="lp-drop-ifr" style="color:#b3300b;font-weight:700;font-size:0.85rem;"></div>
               </div>
             </div>
             <div id="lp-drop-lock" style="display:none;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:8px 10px;margin-bottom:10px;text-align:center;">
-              <span style="color:#fbbf24;font-size:0.78rem;font-weight:600;">&#x26A1; Premium</span>
+              <span style="color:#92400e;font-size:0.78rem;font-weight:600;">&#x26A1; Premium</span>
             </div>
             <div id="lp-drop-nolock" style="background:rgba(107,114,128,0.1);border:1px solid #374151;border-radius:8px;padding:8px 10px;margin-bottom:10px;text-align:center;">
               <span style="color:#9ca3af;font-size:0.78rem;">Lock &#x2265;1,000 IFR &#x2192; </span>
-              <a href="https://ifrunit.tech/wiki/lock-mechanism.html" style="color:#f97316;font-size:0.78rem;">Premium &#x2197;</a>
+              <a href="https://ifrunit.tech/wiki/lock-mechanism.html" style="color:#b3300b;font-size:0.78rem;">Premium &#x2197;</a>
             </div>
             <div style="display:flex;gap:8px;">
               <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="flex:1;text-align:center;padding:8px;background:#f97316;color:white;border-radius:8px;font-size:0.78rem;font-weight:600;text-decoration:none;">&#x1F525; Buy IFR</a>
@@ -1014,7 +1014,7 @@ await governance.execute(proposalId);</code></pre>
             <td><code>setFeeExempt(BootstrapVault V1, true)</code><br><span style="font-size:11px;color:var(--muted);">V1 deprecated &mdash; transferFrom bug. Replaced by BootstrapVaultV3.</span></td>
             <td>05.03.2026</td>
             <td>07.03.2026 20:12 CET</td>
-            <td><span class="badge" style="background:#22c55e;">Executed</span></td>
+            <td><span class="badge status-ok">Executed</span></td>
           </tr>
           <tr>
             <td>#1</td>
@@ -1044,7 +1044,7 @@ await governance.execute(proposalId);</code></pre>
             </td>
             <td>09.03.2026</td>
             <td>11.03.2026 08:45 CET</td>
-            <td><span class="badge" style="background:#22c55e;">Executed 11.03.2026</span></td>
+            <td><span class="badge status-ok">Executed 11.03.2026</span></td>
           </tr>
           <tr>
             <td>#5</td>
@@ -1053,7 +1053,7 @@ await governance.execute(proposalId);</code></pre>
             </td>
             <td>09.03.2026</td>
             <td>11.03.2026 08:46 CET</td>
-            <td><span class="badge" style="background:#22c55e;">Executed 11.03.2026</span></td>
+            <td><span class="badge status-ok">Executed 11.03.2026</span></td>
           </tr>
           <tr>
             <td>#6</td>
@@ -1062,7 +1062,7 @@ await governance.execute(proposalId);</code></pre>
             </td>
             <td>11.03.2026</td>
             <td>13.03.2026 09:23 CET</td>
-            <td><span class="badge" style="background:#22c55e;">Executed 13.03.2026</span></td>
+            <td><span class="badge status-ok">Executed 13.03.2026</span></td>
           </tr>
           <tr>
             <td>#7</td>
@@ -1071,7 +1071,7 @@ await governance.execute(proposalId);</code></pre>
             </td>
             <td>16.03.2026</td>
             <td>18.03.2026</td>
-            <td><span class="badge" style="background:#22c55e;">Executed 18.03.2026</span></td>
+            <td><span class="badge status-ok">Executed 18.03.2026</span></td>
           </tr>
           <tr>
             <td>#8</td>
@@ -1080,7 +1080,7 @@ await governance.execute(proposalId);</code></pre>
             </td>
             <td>16.03.2026</td>
             <td>18.03.2026</td>
-            <td><span class="badge" style="background:#22c55e;">Executed 18.03.2026</span></td>
+            <td><span class="badge status-ok">Executed 18.03.2026</span></td>
           </tr>
           <tr>
             <td>#9</td>
@@ -1089,7 +1089,7 @@ await governance.execute(proposalId);</code></pre>
             </td>
             <td>16.03.2026</td>
             <td>18.03.2026</td>
-            <td><span class="badge" style="background:#22c55e;">Executed 18.03.2026</span></td>
+            <td><span class="badge status-ok">Executed 18.03.2026</span></td>
           </tr>
           <tr>
             <td>#10</td>
@@ -1098,7 +1098,7 @@ await governance.execute(proposalId);</code></pre>
             </td>
             <td>18.03.2026</td>
             <td>20.03.2026</td>
-            <td><span class="badge" style="background:#22c55e;">&#x2705; Owner transferred 20.03.2026</span></td>
+            <td><span class="badge status-ok">&#x2705; Owner transferred 20.03.2026</span></td>
           </tr>
         </tbody>
       </table>
@@ -1116,7 +1116,7 @@ await governance.execute(proposalId);</code></pre>
               <span class="address"><code>0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3</code></span>
             </td>
             <td>Executed 06.04.2026</td>
-            <td><span class="badge" style="background:#22c55e;">Executed 06.04.2026</span></td>
+            <td><span class="badge status-ok">Executed 06.04.2026</span></td>
           </tr>
           <tr>
             <td>#12</td>
@@ -1125,7 +1125,7 @@ await governance.execute(proposalId);</code></pre>
               <span class="address"><code>0x974305Ab0EC905172e697271C3d7d385194EB9DF</code></span>
             </td>
             <td>Executed 06.04.2026</td>
-            <td><span class="badge" style="background:#22c55e;">Executed 06.04.2026</span></td>
+            <td><span class="badge status-ok">Executed 06.04.2026</span></td>
           </tr>
           <tr>
             <td>#13</td>
@@ -1134,7 +1134,7 @@ await governance.execute(proposalId);</code></pre>
               <span class="address" style="font-size:11px;color:var(--muted);">TX: <a href="https://etherscan.io/tx/0x74a7c9c97800cfe5a68315db68e648ae1631124a748fa5b101e58bea2681404f" target="_blank">0x74a7c9c9&hellip;404f</a> &middot; Block 24890909 &middot; BuybackController feeExempt = TRUE</span>
             </td>
             <td>Submitted 14.04.2026 &middot; Executed 16.04.2026 10:31 Athen</td>
-            <td><span class="badge" style="background:#22c55e;">Executed 16.04.2026</span></td>
+            <td><span class="badge status-ok">Executed 16.04.2026</span></td>
           </tr>
           <tr>
             <td>#14</td>
@@ -1143,7 +1143,7 @@ await governance.execute(proposalId);</code></pre>
               <span class="address" style="font-size:11px;color:var(--muted);">Target: <code>0x4807B77B...C60a</code> &middot; Argument: <code>0x1e0547D5...F7c</code> &middot; FeeRouterV1.feeCollector = BuybackController &#x2705;</span>
             </td>
             <td>Submitted 16.04.2026 &middot; Executed 18.04.2026</td>
-            <td><span class="badge" style="background:#22c55e;">Executed 18.04.2026</span></td>
+            <td><span class="badge status-ok">Executed 18.04.2026</span></td>
           </tr>
           <tr>
             <td>#15</td>
@@ -1152,7 +1152,7 @@ await governance.execute(proposalId);</code></pre>
               <span class="address" style="font-size:11px;color:var(--muted);">Execute TX: <a href="https://etherscan.io/tx/0xd5a3bc9527b6cc5288b892a9ba99a3af37b940f273856ab6ba938403cd2b4204" target="_blank">0xd5a3bc95&hellip;4204</a> &middot; Block 25271071 &middot; LP Token feeExempt = TRUE &mdash; IFR now tradeable on Uniswap &#x1F525;</span>
             </td>
             <td>Executed 08.06.2026</td>
-            <td><span class="badge" style="background:#22c55e;">&#x2705; Executed 08.06.2026</span></td>
+            <td><span class="badge status-ok">&#x2705; Executed 08.06.2026</span></td>
           </tr>
           <tr>
             <td>#16</td>
@@ -1162,7 +1162,7 @@ await governance.execute(proposalId);</code></pre>
               <span class="address" style="font-size:11px;color:var(--muted);">Execute TX: <a href="https://etherscan.io/tx/0xf60b25b97bc7f9dae99b20b246c4149500e3e41b341d395d77df4eec04018cf7" target="_blank">0xf60b25b9&hellip;</a> &middot; Block 25278067 &middot; p0Set = TRUE &#x2705;</span>
             </td>
             <td>Executed 09.06.2026</td>
-            <td><span class="badge" style="background:#22c55e;">&#x2705; Executed 09.06.2026</span></td>
+            <td><span class="badge status-ok">&#x2705; Executed 09.06.2026</span></td>
           </tr>
           <tr>
             <td>Planned</td>
@@ -1176,14 +1176,14 @@ await governance.execute(proposalId);</code></pre>
       <!-- Bootstrap FINALIZED Notice -->
       <div style="margin-top:20px;padding:16px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.3);border-radius:12px;">
         <p style="margin:0;"><strong>&#x2705; Bootstrap FINALIZED (05.06.2026 23:51 UTC)</strong> &mdash; Block 25254575 &mdash;
-        TX: <a href="https://etherscan.io/tx/0x949848bdd09f4c867a2593afffb0137c7db2c1457d8a8f5ff4428f8ecce69c5f" target="_blank" style="color:#22c55e;font-size:11px;">0x949848bd&hellip;</a><br>
-        totalETHRaised: 0.030 ETH &mdash; LP Token: <a href="https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" style="color:#22c55e;font-size:11px;">0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</a><br>
-        <span style="font-size:0.85rem;color:#6b7280;">Proposal #15 (setFeeExempt LP Token) EXECUTED 08.06.2026 &#x2705; &mdash; IFR tradeable on <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" style="color:#22c55e;">Uniswap</a>. Proposal #16 (setP0 CommitmentVault) EXECUTED 09.06.2026 &#x2705; &mdash; P0 = 300,000,000 wei &middot; <a href="https://etherscan.io/tx/0xf60b25b97bc7f9dae99b20b246c4149500e3e41b341d395d77df4eec04018cf7" target="_blank" style="color:#22c55e;font-size:11px;">TX: 0xf60b25b9&hellip;</a></span></p>
+        TX: <a href="https://etherscan.io/tx/0x949848bdd09f4c867a2593afffb0137c7db2c1457d8a8f5ff4428f8ecce69c5f" target="_blank" style="color:#166534;font-size:11px;">0x949848bd&hellip;</a><br>
+        totalETHRaised: 0.030 ETH &mdash; LP Token: <a href="https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" style="color:#166534;font-size:11px;">0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</a><br>
+        <span style="font-size:0.85rem;color:#6b7280;">Proposal #15 (setFeeExempt LP Token) EXECUTED 08.06.2026 &#x2705; &mdash; IFR tradeable on <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" style="color:#166534;">Uniswap</a>. Proposal #16 (setP0 CommitmentVault) EXECUTED 09.06.2026 &#x2705; &mdash; P0 = 300,000,000 wei &middot; <a href="https://etherscan.io/tx/0xf60b25b97bc7f9dae99b20b246c4149500e3e41b341d395d77df4eec04018cf7" target="_blank" style="color:#166534;font-size:11px;">TX: 0xf60b25b9&hellip;</a></span></p>
       </div>
 
       <!-- Telegram Notifications -->
       <div style="margin-top:28px;padding:20px;background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.2);border-radius:12px;">
-        <h3 style="margin:0 0 12px 0;color:#3b82f6;">Telegram Notifications</h3>
+        <h3 style="margin:0 0 12px 0;color:#1d4ed8;">Telegram Notifications</h3>
         <p style="margin:0 0 8px 0;font-size:0.88rem;">New governance proposals are automatically announced in the <a href="https://t.me/IFRtoken" target="_blank" style="color:var(--accent);">@IFRtoken</a> channel and the <a href="https://t.me/IFR_token" target="_blank" style="color:var(--accent);">IFR Community</a> group. Notifications are sent for:</p>
         <ul style="margin:0;padding-left:20px;font-size:0.88rem;">
           <li>New proposals (with action, target, ETA, and verify.html link)</li>
@@ -1247,7 +1247,7 @@ await governance.execute(proposalId);</code></pre>
           <tr>
             <td><strong>#2</strong></td>
             <td><code>setFeeExempt(0x6EF04c...7AF090, true)</code></td>
-            <td><span style="color: #ef4444; font-weight: 600;">Cancelled</span></td>
+            <td><span style="color: #b91c1c; font-weight: 600;">Cancelled</span></td>
             <td>
               Cancelled via Guardian<br>
               Target: InfernoToken &mdash; Fee exemption for PartnerVault v1 (deprecated)<br>
@@ -1258,7 +1258,7 @@ await governance.execute(proposalId);</code></pre>
           <tr>
             <td><strong>#3</strong></td>
             <td><code>setFeeExempt(0x5F12...490A39, true)</code></td>
-            <td><span style="color: #22c55e; font-weight: 600;">Executed</span></td>
+            <td><span style="color: #166534; font-weight: 600;">Executed</span></td>
             <td>
               Executed: 2026-02-26 09:44 CET<br>
               Target: InfernoToken &mdash; Fee exemption for PartnerVault v2<br>
@@ -1269,25 +1269,25 @@ await governance.execute(proposalId);</code></pre>
           <tr>
             <td><strong>#4</strong></td>
             <td><code>transferOwnership(Governance)</code></td>
-            <td><span style="color: #ef4444; font-weight: 600;">Cancelled</span></td>
+            <td><span style="color: #b91c1c; font-weight: 600;">Cancelled</span></td>
             <td>Target: LiquidityReserve (v1) &mdash; immutable owner, cannot transfer. v2 redeployed instead.</td>
           </tr>
           <tr>
             <td><strong>#5</strong></td>
             <td><code>transferOwnership(Governance)</code></td>
-            <td><span style="color: #ef4444; font-weight: 600;">Cancelled</span></td>
+            <td><span style="color: #b91c1c; font-weight: 600;">Cancelled</span></td>
             <td>Target: BuybackVault (v1) &mdash; immutable owner, cannot transfer. v2 redeployed instead.</td>
           </tr>
           <tr>
             <td><strong>#6</strong></td>
             <td><code>transferOwnership(Governance)</code></td>
-            <td><span style="color: #ef4444; font-weight: 600;">Cancelled</span></td>
+            <td><span style="color: #b91c1c; font-weight: 600;">Cancelled</span></td>
             <td>Target: BurnReserve (v1) &mdash; immutable owner, cannot transfer. v2 redeployed instead.</td>
           </tr>
           <tr>
             <td><strong>#7</strong></td>
             <td><code>setFeeExempt(0x3447...1957, true)</code></td>
-            <td><span style="color: #22c55e; font-weight: 600;">Executed</span></td>
+            <td><span style="color: #166534; font-weight: 600;">Executed</span></td>
             <td>
               Executed: 2026-03-02<br>
               Target: InfernoToken &mdash; Fee exemption for LiquidityReserve v2<br>
@@ -1297,7 +1297,7 @@ await governance.execute(proposalId);</code></pre>
           <tr>
             <td><strong>#8</strong></td>
             <td><code>setFeeExempt(0x2E61...b68c, true)</code></td>
-            <td><span style="color: #22c55e; font-weight: 600;">Executed</span></td>
+            <td><span style="color: #166534; font-weight: 600;">Executed</span></td>
             <td>
               Executed: 2026-03-02<br>
               Target: InfernoToken &mdash; Fee exemption for BuybackVault v2<br>
@@ -1307,7 +1307,7 @@ await governance.execute(proposalId);</code></pre>
           <tr>
             <td><strong>#9</strong></td>
             <td><code>setFeeExempt(0xB9Fb...D75, true)</code></td>
-            <td><span style="color: #22c55e; font-weight: 600;">Executed</span></td>
+            <td><span style="color: #166534; font-weight: 600;">Executed</span></td>
             <td>
               Executed: 2026-03-02<br>
               Target: InfernoToken &mdash; Fee exemption for BurnReserve v2<br>
@@ -1624,7 +1624,7 @@ await governance.execute(proposalId);</code></pre>
 
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin:24px 0;">
         <div style="background:rgba(251,191,36,0.05);border:1px solid rgba(251,191,36,0.2);border-radius:12px;padding:24px;">
-          <h4 style="color:#fbbf24;margin:0 0 8px;">&#x2696;&#xFE0F; Chamber 1: The Council</h4>
+          <h4 style="color:#92400e;margin:0 0 8px;">&#x2696;&#xFE0F; Chamber 1: The Council</h4>
           <p style="margin:0 0 12px;font-size:0.9rem;">Planned strategic-governance design for eligible Council members. A future <code>RatVoting.sol</code> could anchor Merkle-root vote results; no such voting contract is deployed today.</p>
           <ul style="font-size:0.85rem;margin:0;padding-left:20px;">
             <li>Gnosis Safe Signers only</li>
@@ -1633,7 +1633,7 @@ await governance.execute(proposalId);</code></pre>
           </ul>
         </div>
         <div style="background:rgba(249,115,22,0.05);border:1px solid rgba(249,115,22,0.2);border-radius:12px;padding:24px;">
-          <h4 style="color:#f97316;margin:0 0 8px;">&#x1F3DB;&#xFE0F; Chamber 2: The Forum</h4>
+          <h4 style="color:#b3300b;margin:0 0 8px;">&#x1F3DB;&#xFE0F; Chamber 2: The Forum</h4>
           <p style="margin:0 0 12px;font-size:0.9rem;">Planned community-innovation design with ratification-gated voting weights and a future spam-protection contract. It is not live.</p>
           <ul style="font-size:0.85rem;margin:0;padding-left:20px;">
             <li>Proposed: eligible locked-IFR voting weight, subject to ratification</li>
@@ -1748,15 +1748,15 @@ await governance.execute(proposalId);</code></pre>
 
         <!-- Step 0: Verify -->
         <div style="background:rgba(249,115,22,0.05);border:1px solid rgba(249,115,22,0.2);border-radius:12px;padding:20px;margin:20px 0;">
-          <h3 style="color:#f97316;margin-top:0;">Step 0 &mdash; Verify Your Wallet</h3>
+          <h3 style="color:#b3300b;margin-top:0;">Step 0 &mdash; Verify Your Wallet</h3>
           <p style="color:#9ca3af;">Before participating, link your wallet to your Telegram account. This proves token ownership without sharing your private key.</p>
-          <a href="https://ifrunit.tech/wiki/verify.html" style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#f97316,#ea580c);color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:700;font-size:0.9rem;">&#x1F510; Verify Wallet &rarr;</a>
+          <a href="https://ifrunit.tech/wiki/verify.html" style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,#c2410c,#9a3412);color:white;padding:10px 20px;border-radius:8px;text-decoration:none;font-weight:700;font-size:0.9rem;">&#x1F510; Verify Wallet &rarr;</a>
           <p style="color:#6b7280;font-size:0.85rem;margin-top:12px;">Required for: Vote topic access, proposal submission, governance voting</p>
         </div>
 
         <!-- Telegram Bot Commands -->
         <h3>Telegram Bot Commands</h3>
-        <p style="color:#9ca3af;">Telegram community access is separate from Council ballots and on-chain execution. The command list below includes planned Phase 4 voting commands, not a live web ballot. The <a href="https://t.me/IFR_token" style="color:#f97316;">@IFR Community</a> bot's identity mapping must not be reused for secret Council voting.</p>
+        <p style="color:#9ca3af;">Telegram community access is separate from Council ballots and on-chain execution. The command list below includes planned Phase 4 voting commands, not a live web ballot. The <a href="https://t.me/IFR_token" style="color:#b3300b;">@IFR Community</a> bot's identity mapping must not be reused for secret Council voting.</p>
 
         <table style="width:100%;border-collapse:collapse;margin:16px 0;">
           <thead>
@@ -1769,49 +1769,49 @@ await governance.execute(proposalId);</code></pre>
           </thead>
           <tbody>
             <tr style="border-bottom:1px solid #1f2937;">
-              <td style="padding:10px;font-family:monospace;color:#22c55e;">/verify</td>
+              <td style="padding:10px;font-family:monospace;color:#166534;">/verify</td>
               <td style="padding:10px;color:#9ca3af;">&mdash;</td>
               <td style="padding:10px;color:#9ca3af;">Everyone</td>
               <td style="padding:10px;color:#9ca3af;">Link wallet to Telegram account</td>
             </tr>
             <tr style="border-bottom:1px solid #1f2937;">
-              <td style="padding:10px;font-family:monospace;color:#22c55e;">/mystatus</td>
+              <td style="padding:10px;font-family:monospace;color:#166534;">/mystatus</td>
               <td style="padding:10px;color:#9ca3af;">&mdash;</td>
               <td style="padding:10px;color:#9ca3af;">Everyone</td>
               <td style="padding:10px;color:#9ca3af;">Show wallet tier and topic access</td>
             </tr>
             <tr style="border-bottom:1px solid #1f2937;">
-              <td style="padding:10px;font-family:monospace;color:#f97316;">/proposals</td>
+              <td style="padding:10px;font-family:monospace;color:#b3300b;">/proposals</td>
               <td style="padding:10px;color:#9ca3af;">Both</td>
               <td style="padding:10px;color:#9ca3af;">Everyone</td>
               <td style="padding:10px;color:#9ca3af;">List active governance proposals</td>
             </tr>
             <tr style="border-bottom:1px solid #1f2937;">
-              <td style="padding:10px;font-family:monospace;color:#f97316;">/propose &quot;title&quot;</td>
+              <td style="padding:10px;font-family:monospace;color:#b3300b;">/propose &quot;title&quot;</td>
               <td style="padding:10px;color:#9ca3af;">The Forum</td>
               <td style="padding:10px;color:#9ca3af;">IFR Holders</td>
               <td style="padding:10px;color:#9ca3af;">Submit proposal (10 IFR spam protection)</td>
             </tr>
             <tr style="border-bottom:1px solid #1f2937;">
-              <td style="padding:10px;font-family:monospace;color:#f97316;">/vote [id] [yes/no]</td>
+              <td style="padding:10px;font-family:monospace;color:#b3300b;">/vote [id] [yes/no]</td>
               <td style="padding:10px;color:#9ca3af;">The Forum</td>
               <td style="padding:10px;color:#9ca3af;">IFR Holders</td>
               <td style="padding:10px;color:#9ca3af;">Vote via cryptographic signature &mdash; no gas</td>
             </tr>
             <tr style="border-bottom:1px solid #1f2937;">
-              <td style="padding:10px;font-family:monospace;color:#f97316;">/result [id]</td>
+              <td style="padding:10px;font-family:monospace;color:#b3300b;">/result [id]</td>
               <td style="padding:10px;color:#9ca3af;">Both</td>
               <td style="padding:10px;color:#9ca3af;">Everyone</td>
               <td style="padding:10px;color:#9ca3af;">Show result + on-chain TX if executed</td>
             </tr>
             <tr style="border-bottom:1px solid #1f2937;">
-              <td style="padding:10px;font-family:monospace;color:#fbbf24;">/ratpropose &quot;title&quot;</td>
+              <td style="padding:10px;font-family:monospace;color:#92400e;">/ratpropose &quot;title&quot;</td>
               <td style="padding:10px;color:#9ca3af;">The Council</td>
               <td style="padding:10px;color:#9ca3af;">Signers only</td>
               <td style="padding:10px;color:#9ca3af;">Strategic proposal (no fee)</td>
             </tr>
             <tr>
-              <td style="padding:10px;font-family:monospace;color:#fbbf24;">/ratvote [id] [yes/no]</td>
+              <td style="padding:10px;font-family:monospace;color:#92400e;">/ratvote [id] [yes/no]</td>
               <td style="padding:10px;color:#9ca3af;">The Council</td>
               <td style="padding:10px;color:#9ca3af;">Signers only</td>
               <td style="padding:10px;color:#9ca3af;">Signer vote &mdash; Merkle tree anchored</td>
@@ -1833,24 +1833,24 @@ await governance.execute(proposalId);</code></pre>
           </thead>
           <tbody>
             <tr style="border-bottom:1px solid #1f2937;">
-              <td style="padding:10px;color:#fbbf24;font-weight:600;">&#x2696;&#xFE0F; Core Dev</td>
+              <td style="padding:10px;color:#92400e;font-weight:600;">&#x2696;&#xFE0F; Core Dev</td>
               <td style="padding:10px;color:#9ca3af;">Gnosis Safe Signer</td>
               <td style="padding:10px;color:#9ca3af;">Added by governance as Safe owner</td>
             </tr>
             <tr style="border-bottom:1px solid #1f2937;">
-              <td style="padding:10px;color:#fbbf24;font-weight:600;">&#x2696;&#xFE0F; Council</td>
+              <td style="padding:10px;color:#92400e;font-weight:600;">&#x2696;&#xFE0F; Council</td>
               <td style="padding:10px;color:#9ca3af;">Gnosis Safe Signer</td>
               <td style="padding:10px;color:#9ca3af;">Same as Core Dev</td>
             </tr>
             <tr style="border-bottom:1px solid #1f2937;">
-              <td style="padding:10px;color:#22c55e;font-weight:600;">&#x1F5F3;&#xFE0F; Vote</td>
+              <td style="padding:10px;color:#166534;font-weight:600;">&#x1F5F3;&#xFE0F; Vote</td>
               <td style="padding:10px;color:#9ca3af;">Any locked IFR &gt; 0</td>
-              <td style="padding:10px;color:#9ca3af;"><a href="https://ifrunit.tech/wiki/lock-mechanism.html" style="color:#f97316;">Lock IFR &rarr;</a> then /verify</td>
+              <td style="padding:10px;color:#9ca3af;"><a href="https://ifrunit.tech/wiki/lock-mechanism.html" style="color:#b3300b;">Lock IFR &rarr;</a> then /verify</td>
             </tr>
             <tr>
-              <td style="padding:10px;color:#f97316;font-weight:600;">&#x1F528; Dev &amp; Builder</td>
+              <td style="padding:10px;color:#b3300b;font-weight:600;">&#x1F528; Dev &amp; Builder</td>
               <td style="padding:10px;color:#9ca3af;">Registered Builder</td>
-              <td style="padding:10px;color:#9ca3af;"><a href="https://ifrunit.tech/wiki/integration.html" style="color:#f97316;">Apply as Builder &rarr;</a> then /verify</td>
+              <td style="padding:10px;color:#9ca3af;"><a href="https://ifrunit.tech/wiki/integration.html" style="color:#b3300b;">Apply as Builder &rarr;</a> then /verify</td>
             </tr>
           </tbody>
         </table>
