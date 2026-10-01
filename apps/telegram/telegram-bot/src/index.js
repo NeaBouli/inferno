@@ -33,6 +33,7 @@ const { determineTier } = require('./services/onChainReader');
 
 // Handlers
 const { onNewMember, onVerifyCallback } = require('./handlers/verification');
+const { onJoinRequest, ALLOWED_UPDATES } = require('./handlers/joinRequest');
 const { scheduleDailyReport } = require('./handlers/dailyReport');
 const { scheduleDailyWelcome } = require('./handlers/dailyWelcome');
 const { startGovernanceNotifier } = require('./handlers/governanceNotifier');
@@ -73,6 +74,7 @@ bot.use(moderationMiddleware());
 
 // ── Verification gate ────────────────────────────────────────────────────────
 bot.on('new_chat_members', onNewMember);
+bot.on('chat_join_request', onJoinRequest);
 bot.action(/^verify_\d+$/, onVerifyCallback);
 
 // ── Protected Topics — 3-Tier Wallet Verification ────────────────────────────
@@ -305,7 +307,7 @@ verifyApp.listen(VERIFY_PORT, () => logger.info({ port: VERIFY_PORT }, 'Verify A
 // while polling. Do NOT use .then() for post-start init; it only fires on shutdown.
 setTimeout(() => {
   // Fire-and-forget: polling loop runs indefinitely
-  bot.launch().catch((err) => {
+  bot.launch({ allowedUpdates: ALLOWED_UPDATES }).catch((err) => {
     logger.fatal({ err: err.message }, 'Fatal polling error');
     process.exit(1);
   });
