@@ -10,12 +10,14 @@ interface IRouter {
     function WETH() external view returns (address);
     function getAmountsOut(uint256 amountIn, address[] calldata path)
         external view returns (uint256[] memory);
-    function swapExactETHForTokens(
+    /// @dev IFR charges a transfer fee, so the fee-on-transfer variant is required (JUL-08):
+    ///      it checks `amountOutMin` against the recipient's actual balance increase.
+    function swapExactETHForTokensSupportingFeeOnTransferTokens(
         uint256 amountOutMin,
         address[] calldata path,
         address to,
         uint256 deadline
-    ) external payable returns (uint256[] memory);
+    ) external payable;
 }
 
 /// @title BuybackVault
@@ -122,11 +124,12 @@ contract BuybackVault {
         uint256[] memory expectedAmounts = router.getAmountsOut(ethBal, path);
         uint256 minOut = (expectedAmounts[1] * (10_000 - slippageBps)) / 10_000;
 
-        uint256[] memory amounts = router.swapExactETHForTokens{value: ethBal}(
+        // Split only what this vault actually received; a taxed transfer delivers less than quoted.
+        uint256 balanceBefore = token.balanceOf(address(this));
+        router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: ethBal}(
             minOut, path, address(this), block.timestamp
         );
-
-        uint256 totalOut = amounts[1];
+        uint256 totalOut = token.balanceOf(address(this)) - balanceBefore;
         uint256 burnAmount = (totalOut * burnShareBps) / 10_000;
         uint256 treasuryAmount = totalOut - burnAmount;
 

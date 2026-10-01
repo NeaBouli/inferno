@@ -1,5 +1,15 @@
 # Changelog
 
+## 2 October 2026 — Buyback Fee-on-Transfer Accounting for Future Deployments (JUL-08)
+
+- BuybackController and BuybackVault sources now swap with
+  `swapExactETHForTokensSupportingFeeOnTransferTokens`. They account for the IFR actually
+  received (balance difference) instead of the router's quoted output. The previous quoted
+  output overstated burned IFR, and the vault split could revert when IFR's transfer tax applied.
+- Covered by taxed-router tests. The deployed Mainnet buyback contracts are unchanged and
+  dormant. Activation requires a reviewed, governed redeploy. JUL-08 moves to
+  "Governance or future-version gated".
+
 ## 1 October 2026 — Open, Permissionless Benefit Verification (`ifr-benefits-verify/1`)
 
 - Published the open specification `docs/specs/ifr-benefits-verify-1.md` (MIT). It covers lock sources,

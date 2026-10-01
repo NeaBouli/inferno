@@ -63,8 +63,13 @@ const buybackSources = [
   "contracts/buyback/BuybackController.sol",
   "contracts/buyback/BuybackVault.sol",
 ].map((relative) => fs.readFileSync(path.join(root, relative), "utf8")).join("\n");
-assert.ok(buybackSources.includes("swapExactETHForTokens"), "JUL-08 status no longer matches sources");
-assert.ok(!buybackSources.includes("SupportingFeeOnTransferTokens"), "JUL-08 requires status review");
+// JUL-08 (T-189): the sources use the fee-on-transfer swap and never the plain quoted-output swap.
+assert.equal(
+  (buybackSources.match(/swapExactETHForTokensSupportingFeeOnTransferTokens\{/g) || []).length,
+  2,
+  "JUL-08 status no longer matches sources",
+);
+assert.ok(!/swapExactETHForTokens\{/.test(buybackSources), "JUL-08 requires status review: plain swap call returned");
 
 const markdown = renderMarkdown(data);
 if (writeMode) {

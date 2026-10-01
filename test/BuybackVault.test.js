@@ -89,7 +89,25 @@ describe("BuybackVault", function () {
 
     // Künstliche Slippage 6% — übersteigt die 5% Toleranz, daher revert
     await Router.setSlippageBpsNextSwap(600);
-    await expect(Vault.connect(owner).executeBuyback()).to.be.revertedWith("slippage");
+    // Fee-on-transfer swap path (JUL-08): the Uniswap V2 router enforces the minimum.
+    await expect(Vault.connect(owner).executeBuyback()).to.be.revertedWith("UniswapV2Router: INSUFFICIENT_OUTPUT_AMOUNT");
+  });
+
+  it("JUL-08: taxed swap output — splits only the IFR the vault actually received", async () => {
+    await Vault.depositETH({ value: ethers.parseEther("1") });
+    await Router.setTransferFeeBpsOnOutput(350); // 3.5% transfer tax, inside the 5% slippage bound
+
+    const burnBefore = await IFR.balanceOf(burnReserve.address);
+    const treasBefore = await IFR.balanceOf(treasury.address);
+    await Vault.connect(owner).executeBuyback();
+    const burned = (await IFR.balanceOf(burnReserve.address)) - burnBefore;
+    const treasuryGot = (await IFR.balanceOf(treasury.address)) - treasBefore;
+
+    const quoted = RATE_IFR_PER_ETH; // 1 ETH at RATE IFR per ETH
+    const received = quoted - (quoted * 350n) / 10_000n;
+    expect(burned + treasuryGot).to.equal(received); // the old code would try to send `quoted` and revert
+    expect(burned).to.equal(received / 2n);
+    expect(await IFR.balanceOf(Vault.target)).to.equal(0n);
   });
 
   it("guardian can pause/unpause to block actions", async () => {

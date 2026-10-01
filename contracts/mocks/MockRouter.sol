@@ -5,6 +5,10 @@ interface IMintableERC20 {
     function mint(address to, uint256 amount) external;
 }
 
+interface IBalanceOf {
+    function balanceOf(address account) external view returns (uint256);
+}
+
 /// @title MockRouter
 /// @notice Deterministic UniswapV2-like router used for unit tests.
 contract MockRouter {
@@ -75,6 +79,40 @@ contract MockRouter {
         amounts = new uint256[](2);
         amounts[0] = msg.value;
         amounts[1] = out;
+    }
+
+    // ── Fee-on-transfer swap (UniswapV2Router02 semantics) ─────
+
+    /// @notice Transfer tax applied to the swap output, in bps (simulates a taxed token).
+    uint256 public transferFeeBpsOnOutput;
+
+    function setTransferFeeBpsOnOutput(uint256 bps) external {
+        require(bps <= 10_000, "bps>100%");
+        transferFeeBpsOnOutput = bps;
+    }
+
+    /// @notice Like Uniswap V2: no amounts returned; the minimum is checked against the
+    ///         recipient's actual balance increase after the (taxed) token transfer.
+    function swapExactETHForTokensSupportingFeeOnTransferTokens(
+        uint256 amountOutMin,
+        address[] calldata path,
+        address to,
+        uint256 /*deadline*/
+    ) external payable {
+        require(path.length == 2, "path");
+        require(path[0] == WETH_ADDR && path[path.length - 1] == IFR_ADDR, "unsupported path");
+        require(msg.value > 0, "no ETH");
+
+        uint256 quoted = (msg.value * rateIfrPerEth) / 1e18;
+        if (slippageBpsNextSwap > 0) {
+            quoted = (quoted * (10_000 - slippageBpsNextSwap)) / 10_000;
+            slippageBpsNextSwap = 0;
+        }
+        uint256 delivered = quoted - (quoted * transferFeeBpsOnOutput) / 10_000;
+
+        uint256 balanceBefore = IBalanceOf(IFR_ADDR).balanceOf(to);
+        IMintableERC20(IFR_ADDR).mint(to, delivered);
+        require(IBalanceOf(IFR_ADDR).balanceOf(to) - balanceBefore >= amountOutMin, "UniswapV2Router: INSUFFICIENT_OUTPUT_AMOUNT");
     }
 
     // ── addLiquidityETH (for BuybackController tests) ──────────
