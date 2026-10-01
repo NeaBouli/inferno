@@ -42,6 +42,12 @@ on:
       - 'scripts/test-surface-routing.cjs'
       - 'scripts/test-web3-headers.cjs'
       - 'scripts/check-web3-wallet-runtime.cjs'
+      - 'scripts/deploy-web3-site.sh'
+      - 'scripts/web3-release.cjs'
+      - 'scripts/deploy-benefits-network.sh'
+      - 'scripts/test-deploy-release-guards.sh'
+      - 'scripts/deploy-compose-service.sh'
+      - 'scripts/test-deploy-compose-service.sh'
       - 'scripts/test-ifr-state-unavailable.cjs'
       - 'scripts/test-security-reporting-config.cjs'
       - 'scripts/check-browser-ethers6.cjs'
@@ -91,6 +97,12 @@ on:
       - 'scripts/test-surface-routing.cjs'
       - 'scripts/test-web3-headers.cjs'
       - 'scripts/check-web3-wallet-runtime.cjs'
+      - 'scripts/deploy-web3-site.sh'
+      - 'scripts/web3-release.cjs'
+      - 'scripts/deploy-benefits-network.sh'
+      - 'scripts/test-deploy-release-guards.sh'
+      - 'scripts/deploy-compose-service.sh'
+      - 'scripts/test-deploy-compose-service.sh'
       - 'scripts/test-ifr-state-unavailable.cjs'
       - 'scripts/test-security-reporting-config.cjs'
       - 'scripts/check-browser-ethers6.cjs'
@@ -267,6 +279,9 @@ jobs:
 
       - name: Check Web3 wallet runtime (artifact integrity, no remote imports, unavailable state)
         run: npm run test:web3-wallet-runtime
+
+      - name: Check release guards (Web3 site, compose services, Benefits exact-SHA deploys)
+        run: npm run test:release-guards
 
       - name: Check browser Ethers 6 baseline
         run: npm run test:browser-ethers6
