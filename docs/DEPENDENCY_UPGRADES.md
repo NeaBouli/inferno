@@ -15,6 +15,7 @@
 | #74 | hardhat | 3.12.0 | 3.15.0 | Integriert via #77 am 04.09.2026; Main-CI gruen | - |
 | #75 | mocha | 11.8.0 | 12.0.0 | Ohne Merge geschlossen 04.09.2026; hardhat-mocha Peer inkompatibel | Auf Upstream-Support warten |
 | #76 | @nomicfoundation/hardhat-verify | 3.0.22 | 3.1.0 | Integriert via #77 am 04.09.2026; Main-CI gruen | - |
+| #151 | @nomicfoundation/hardhat-verify | 3.1.0 | 3.1.2 | Security-Fix 01.10.2026: entfernt die Ethers-5/`elliptic`-Kette (GHSA-848j-6mx2-7j84); Root-Audit 0 Funde | - |
 
 ## Migrationsreihenfolge
 
