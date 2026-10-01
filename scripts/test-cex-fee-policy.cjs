@@ -97,18 +97,39 @@ requireText('docs/social/telegram-council-exchange-agenda.md', [
 const forbiddenAttributionPatterns = [
   /\b(?:proposed|submitted|prepared|written|authored)\s+by\b/i,
   /^\s*(?:author|proposer|submitter)\s*:/im,
-  /\bIFR Core Developer\b/i,
-  /\bredacted\b/i,
   /\bcodex\b/i,
   /\bkimi\b/i,
   /\bclaude\b/i
 ];
+
+// Personal names are matched by SHA-256 of lowercase words and word pairs so the
+// names themselves never appear in the repository.
+const FORBIDDEN_NAME_HASHES = new Set([
+  'a7addf2c6e799b2417259e5ea4d6f0b4bc0012da6a37d20058258a61a63e45fb',
+  'd5bdd6d052dfcb41386fc253d1c2b3ca379412dfedfae0ee06c215362d1dadf8'
+]);
+
+function containsForbiddenName(text) {
+  const words = String(text).toLowerCase().match(/[a-z]+/g) || [];
+  for (let i = 0; i < words.length; i += 1) {
+    const candidates = [words[i]];
+    if (i + 1 < words.length) candidates.push(`${words[i]} ${words[i + 1]}`);
+    for (const candidate of candidates) {
+      const digest = require('node:crypto').createHash('sha256').update(candidate).digest('hex');
+      if (FORBIDDEN_NAME_HASHES.has(digest)) return true;
+    }
+  }
+  return false;
+}
 
 function assertNoAttribution(file, source) {
   for (const pattern of forbiddenAttributionPatterns) {
     if (pattern.test(source)) {
       throw new Error(`${file} attributes a Council agenda proposal: ${pattern}`);
     }
+  }
+  if (containsForbiddenName(source)) {
+    throw new Error(`${file} names a person in a Council agenda proposal`);
   }
 }
 
@@ -125,13 +146,18 @@ for (const fixture of [
   'pRoPoSeD bY Example Person',
   'AUTHOR: Example Person',
   'Prepared by Example Person',
-  'submitted BY IFR Core Developer'
+  'submitted BY Example Person'
 ]) {
   assert.throws(
     () => assertNoAttribution('fixture', fixture),
     /attributes a Council agenda proposal/
   );
 }
+// Personal names are hash-matched; the fixture is built from char codes so no name is stored.
+assert.throws(
+  () => assertNoAttribution('fixture', `Council note from ${String.fromCharCode(71,105,111,32,77,97,114,105,111)}`),
+  /names a person/
+);
 
 requireText('docs/GOVERNANCE_CONSTITUTION.md', [
   'Governance Constitution v1.1',

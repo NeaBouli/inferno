@@ -393,8 +393,6 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 ### Builder Applications
 - [x] NEXUS GR — GitHub Issue #13 (19.03.2026) ✅
-- [x] ✅ ORIGO — GitHub Issue #15 (07.04.2026)
-      Vendetta Labs — Conway Game of Life Universe
       45% revenue → IFR buyback flywheel
 
 ### Core Developer (external)

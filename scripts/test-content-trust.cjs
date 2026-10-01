@@ -57,7 +57,7 @@ const required = [
   ["docs/wiki/security.html", "Full Internal Token Security Review"],
   ["docs/wiki/security.html", "professional third-party audit remains pending"],
   ["docs/wiki/open-audit.html", "OKComputer Community Submission"],
-  ["docs/community-audits/README.md", "preserved unchanged as submitted"],
+  ["docs/community-audits/README.md", "preserved as submitted except one owner-requested redaction"],
   ["docs/wiki/bootstrap.html", "LP tokens created by <code>finalise()</code> therefore remained in BootstrapVaultV3"],
   ["docs/wiki/fair-launch.html", "12-month cliff + 36-month linear release"],
   ["docs/wiki/faq.html", "37.5M IFR during the first 9 months"],
@@ -85,7 +85,7 @@ const communityAuditHash = crypto
   .update(fs.readFileSync(path.join(root, communityAudit)))
   .digest("hex");
 const expectedCommunityAuditHash =
-  "ec7f99b0b74c51e04091727a0b69f49f67c36409a52c9ea7b55ba545b6b3e375";
+  "57ec9eeb3fa2de0b9ac4f62680a62ff8d2ea79dc19b89a0726e9b41b70fb3f12";
 if (communityAuditHash !== expectedCommunityAuditHash) {
   failures.push(`${communityAudit}: original community submission hash changed`);
 }

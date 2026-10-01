@@ -13,7 +13,7 @@ now have integrated corrections and dedicated verification evidence. The
 authoritative status is maintained in the
 [finding-by-finding remediation register](CWA_REMEDIATION_REGISTER.md).
 
-- Disposition: **38 fixed and verified / 12 governance or owner gated / 2
+- Disposition: **39 fixed and verified / 11 governance or owner gated / 2
   accepted or monitored / 19 open actionable / 11 informational**.
 - Corrected severity aggregate: **0 Critical / 3 High / 29 Medium / 34 Low /
   16 Informational**.
@@ -29,20 +29,23 @@ No finding text, severity label or technical conclusion was changed.
 
 ## OKComputer Community Audit — 27 July 2026
 
-- Original report:
+- Published report (redacted):
   [IFR_Protocol_Audit_2026-07-27.md](IFR_Protocol_Audit_2026-07-27.md)
 - Current finding status:
   [JULY_2026_REMEDIATION_REGISTER.md](JULY_2026_REMEDIATION_REGISTER.md)
-- Original SHA-256:
+- Published (redacted) SHA-256:
+  `57ec9eeb3fa2de0b9ac4f62680a62ff8d2ea79dc19b89a0726e9b41b70fb3f12`
+- Pre-redaction original SHA-256:
   `ec7f99b0b74c51e04091727a0b69f49f67c36409a52c9ea7b55ba545b6b3e375`
-- Publication status: preserved unchanged as submitted
+- Publication status: preserved as submitted except one owner-requested redaction of the
+  operator's company name (2026-09-30), disclosed in the report text; no other change
 - Review type: community-submitted project and security review
 - Certification status: not an independent professional third-party audit
 
 ### Current status — 19 September 2026
 
 The maintained register normalizes the report into 23 traceable findings. The
-current evidence-backed disposition is **9 fixed and verified / 5 partially
+current evidence-backed disposition is **10 fixed and verified / 4 partially
 remediated / 1 corrected outdated snapshot / 3 governance or future-version
 gated / 2 accepted or monitored / 3 open actionable**. Severity colors in the
 unchanged report describe the dated audit assessment, not current remediation
