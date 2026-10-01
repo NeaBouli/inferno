@@ -295,7 +295,28 @@ describe("BuybackController", function () {
     await user.sendTransaction({ to: Controller.target, value: ONE_ETH });
     // 6% slippage exceeds 5% tolerance
     await Router.setSlippageBpsNextSwap(600);
-    await expect(Controller.connect(user).execute()).to.be.revertedWith("slippage");
+    // Fee-on-transfer swap path (JUL-08): the Uniswap V2 router enforces the minimum.
+    await expect(Controller.connect(user).execute()).to.be.revertedWith("UniswapV2Router: INSUFFICIENT_OUTPUT_AMOUNT");
+  });
+
+  it("JUL-08: taxed swap output — accounting uses the IFR BurnReserve actually received", async () => {
+    await user.sendTransaction({ to: Controller.target, value: ONE_ETH });
+    await Router.setTransferFeeBpsOnOutput(350); // 3.5% transfer tax, inside the 5% slippage bound
+
+    const before = await IFR.balanceOf(burnReserve.address);
+    await Controller.connect(user).execute();
+    const received = (await IFR.balanceOf(burnReserve.address)) - before;
+
+    // No IFR in the controller → the LP half falls back to buyback; both halves are taxed.
+    const quoted = (ONE_ETH * RATE_IFR_PER_ETH) / ethers.parseEther("1");
+    expect(received).to.equal(quoted - (quoted * 350n) / 10_000n);
+    expect(await Controller.totalIFRBurned()).to.equal(received);
+  });
+
+  it("JUL-08: a transfer tax above the slippage bound reverts instead of under-delivering", async () => {
+    await user.sendTransaction({ to: Controller.target, value: ONE_ETH });
+    await Router.setTransferFeeBpsOnOutput(600);
+    await expect(Controller.connect(user).execute()).to.be.revertedWith("UniswapV2Router: INSUFFICIENT_OUTPUT_AMOUNT");
   });
 
   it("T35: multiple executions accumulate stats", async () => {
