@@ -143,6 +143,16 @@ for (const page of pages) {
   }
 }
 
+// T-188: every wiki tier table uses the published benefit tier file (docs/specs/ifr-benefits-tiers.v1.json).
+const benefitTiers = JSON.parse(fs.readFileSync(path.join(root, "docs", "specs", "ifr-benefits-tiers.v1.json"), "utf8"));
+const tierIFR = Object.fromEntries(benefitTiers.tiers.map((tier) => [tier.label, Number(tier.minIFR)]));
+for (const page of pages) {
+  const src = fs.readFileSync(path.join(wikiDir, page), "utf8");
+  for (const [, label, amount] of src.matchAll(/<td>\s*(Bronze|Silver|Gold|Platinum)\s*<\/td>\s*<td>(?:<[^>]+>)*\s*([\d,]+)\s*IFR/g)) {
+    check(Number(amount.replace(/,/g, "")) === tierIFR[label], `${page}: ${label} tier shows ${amount} IFR, tier file v${benefitTiers.version} says ${tierIFR[label]}`);
+  }
+}
+
 if (failures.length) {
   console.error(`[wiki-shell] FAIL - ${failures.length} issue(s):`);
   for (const failure of failures) console.error(`  - ${failure}`);
