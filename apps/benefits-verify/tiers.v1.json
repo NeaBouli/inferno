@@ -1,0 +1,13 @@
+{
+  "schema": "ifr-benefits-tiers/1",
+  "spec": "ifr-benefits-verify/1",
+  "version": 1,
+  "valid_from": "2026-10-01T00:00:00Z",
+  "decimals": 9,
+  "tiers": [
+    { "key": "BRONZE", "label": "Bronze", "minIFR": "1000", "minBaseUnits": "1000000000000" },
+    { "key": "SILVER", "label": "Silver", "minIFR": "2500", "minBaseUnits": "2500000000000" },
+    { "key": "GOLD", "label": "Gold", "minIFR": "5000", "minBaseUnits": "5000000000000" },
+    { "key": "PLATINUM", "label": "Platinum", "minIFR": "10000", "minBaseUnits": "10000000000000" }
+  ]
+}
