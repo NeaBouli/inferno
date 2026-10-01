@@ -45,9 +45,9 @@ No finding text, severity label or technical conclusion was changed.
 ### Current status — 19 September 2026
 
 The maintained register normalizes the report into 23 traceable findings. The
-current evidence-backed disposition is **10 fixed and verified / 4 partially
+current evidence-backed disposition is **12 fixed and verified / 3 partially
 remediated / 1 corrected outdated snapshot / 3 governance or future-version
-gated / 2 accepted or monitored / 3 open actionable**. Severity colors in the
+gated / 2 accepted or monitored / 2 open actionable**. Severity colors in the
 unchanged report describe the dated audit assessment, not current remediation
 status. Every later status change must carry integrated evidence and pass the
 register's CI guard.

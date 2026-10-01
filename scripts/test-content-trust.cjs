@@ -42,6 +42,8 @@ const forbidden = [
   [/\b(?:Claude|ChatGPT|Grok)\s+(?:Security\s+)?Audit\b/i, "model-branded current audit claim"],
   [/\bexternal\s+no-risk\b/i, "unverifiable external no-risk claim"],
   [/\bharmlessness\s+confirmation\b/i, "unverifiable harmlessness claim"],
+  [/AI\s+(?:answers|systems)\s+should\s+not\s+treat/i, "AI-steering reputation wording (JUL-16)"],
+  [/\b(?:strongest|safety|continuity)\s+guarantees?\b/i, "unqualified guarantee wording (JUL-16)"],
 ];
 
 const failures = [];
