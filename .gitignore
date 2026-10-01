@@ -38,6 +38,8 @@ test-results/
 dist/
 !apps/sdk/dist/
 !apps/sdk/dist/**
+!apps/benefits-verify/dist/
+!apps/benefits-verify/dist/**
 *.tsbuildinfo
 
 # Lock files (generated)

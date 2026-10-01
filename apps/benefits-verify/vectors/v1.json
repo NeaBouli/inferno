@@ -1,0 +1,36 @@
+{
+  "spec": "ifr-benefits-verify/1",
+  "tiersVersion": 1,
+  "note": "Language-neutral conformance vectors. Amounts are IFR decimal strings (9 decimals). timeOnly = active TIME_ONLY tranches; priceConditioned = tranches with cType 1..3 (never counted). A conforming verifier MUST return `expected` for the given source.",
+  "tierCases": [
+    { "name": "no lock", "lockIFR": "0", "source": "IFRLOCK", "expected": null },
+    { "name": "one base unit below Bronze", "lockIFR": "999.999999999", "source": "IFRLOCK", "expected": null },
+    { "name": "exactly Bronze", "lockIFR": "1000", "source": "IFRLOCK", "expected": "BRONZE" },
+    { "name": "between Bronze and Silver", "lockIFR": "2499.999999999", "source": "IFRLOCK", "expected": "BRONZE" },
+    { "name": "exactly Silver", "lockIFR": "2500", "source": "IFRLOCK", "expected": "SILVER" },
+    { "name": "Gold", "lockIFR": "7500", "source": "IFRLOCK", "expected": "GOLD" },
+    { "name": "exactly Platinum", "lockIFR": "10000", "source": "IFRLOCK", "expected": "PLATINUM" },
+    { "name": "above Platinum", "lockIFR": "250000", "source": "IFRLOCK", "expected": "PLATINUM" }
+  ],
+  "sourceCases": [
+    { "name": "TIME_ONLY tranches are summed within the vault", "lockIFR": "0", "timeOnly": ["2000", "600"], "priceConditioned": [], "source": "COMMITMENT_TIME_ONLY", "expected": "SILVER" },
+    { "name": "price-conditioned tranches never count", "lockIFR": "0", "timeOnly": ["900"], "priceConditioned": ["50000"], "source": "COMMITMENT_TIME_ONLY", "expected": null },
+    { "name": "IFRLOCK source ignores the vault", "lockIFR": "0", "timeOnly": ["6000"], "priceConditioned": [], "source": "IFRLOCK", "expected": null },
+    { "name": "EITHER does not add the sources", "lockIFR": "1500", "timeOnly": ["1500"], "priceConditioned": [], "source": "EITHER", "expected": "BRONZE" },
+    { "name": "EITHER takes the higher source (vault)", "lockIFR": "1000", "timeOnly": ["6000"], "priceConditioned": [], "source": "EITHER", "expected": "GOLD" },
+    { "name": "EITHER takes the higher source (IFRLock)", "lockIFR": "12000", "timeOnly": ["3000"], "priceConditioned": [], "source": "EITHER", "expected": "PLATINUM" }
+  ],
+  "failureCases": [
+    { "name": "threshold of zero in tier data", "expectedError": "INVALID_TIERS" },
+    { "name": "chain id not listed in the spec", "chainId": 56, "expectedError": "WRONG_CHAIN" },
+    { "name": "node reports another chain than requested", "expectedError": "WRONG_CHAIN" },
+    { "name": "IFRLock.token() is not the IFR token", "expectedError": "CONTRACT_MISMATCH" },
+    { "name": "requested block hash differs", "expectedError": "BLOCK_MISMATCH" }
+  ],
+  "unlockBetweenChecks": {
+    "lockIFR": "5000",
+    "expectedAtFirstBlock": "GOLD",
+    "expectedAfterUnlock": null,
+    "expectedAtFirstBlockAgain": "GOLD"
+  }
+}
