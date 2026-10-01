@@ -91,7 +91,11 @@ Two further checks run against real networks:
   `CommitmentVault` on a Mainnet fork at block `26100144`. It also proves that price-conditioned tranches,
   which the deployed V1 vault still accepts, never count.
 
-The workflow `benefits-verify-live.yml` runs both with the repository RPC secrets, weekly and on change.
+The workflow `benefits-verify-live.yml` runs both, weekly and on change.
+
+- **With archive RPC secrets** (`MAINNET_RPC_URL`, `SEPOLIA_RPC_URL`), the fork uses the pinned block.
+- **Without them**, it falls back to a public RPC and forks a recent block. Public nodes serve only recent
+  state.
 
 ## Develop
 

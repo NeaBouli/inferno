@@ -1,5 +1,6 @@
 // ifr-benefits-verify/1 vectors on a Mainnet fork against the deployed IFRLock and CommitmentVault.
 // Run: HARDHAT_FORK=true HARDHAT_FORK_BLOCK_NUMBER=26100144 MAINNET_RPC_URL=<archive RPC> npm run test:benefits-fork
+// (or any recent block with a public RPC).
 // Everything happens on the local fork; nothing is sent to Mainnet.
 import { expect } from "chai";
 import { createRequire } from "node:module";
@@ -8,8 +9,11 @@ import { ethers, connection } from "../helpers/hardhat.js";
 const require = createRequire(import.meta.url);
 const { verifyIfrBenefit, CONTRACTS, tierForAmount } = require("../../apps/benefits-verify/dist/index.js");
 
-const FORK_BLOCK = 26100144n;
-const FORK_BLOCK_HASH = "0x7afc9cb2e9315eac578a3e419c06131b672c6deb72b40d12821e190763ce2598";
+// Pinned vector block (needs an archive RPC); CI without an archive secret forks a recent block instead.
+const PINNED_BLOCK = 26100144n;
+const PINNED_BLOCK_HASH = "0x7afc9cb2e9315eac578a3e419c06131b672c6deb72b40d12821e190763ce2598";
+const FORK_BLOCK = BigInt(process.env.HARDHAT_FORK_BLOCK_NUMBER || PINNED_BLOCK);
+let FORK_BLOCK_HASH;
 // Fee-exempt Mainnet holder used only on the fork to fund the test wallet.
 const LIQUIDITY_RESERVE = "0xdc0309804803b3A105154f6073061E3185018f64";
 const TIME_ONLY = 0;
@@ -32,7 +36,8 @@ describe("ifr-benefits-verify/1 on a Mainnet fork (deployed contracts)", functio
 
   before(async function () {
     if (process.env.HARDHAT_FORK !== "true") this.skip();
-    expect((await ethers.provider.getBlock(Number(FORK_BLOCK))).hash).to.equal(FORK_BLOCK_HASH);
+    FORK_BLOCK_HASH = (await ethers.provider.getBlock(Number(FORK_BLOCK))).hash;
+    if (FORK_BLOCK === PINNED_BLOCK) expect(FORK_BLOCK_HASH).to.equal(PINNED_BLOCK_HASH);
     chainId = Number((await ethers.provider.getNetwork()).chainId);
     token = await ethers.getContractAt(
       ["function transfer(address,uint256) returns (bool)", "function approve(address,uint256) returns (bool)", "function balanceOf(address) view returns (uint256)"],
@@ -52,7 +57,7 @@ describe("ifr-benefits-verify/1 on a Mainnet fork (deployed contracts)", functio
     await connection.provider.request({ method: "hardhat_stopImpersonatingAccount", params: [LIQUIDITY_RESERVE] });
   });
 
-  it("the pinned Mainnet block resolves with its real hash; the fresh wallet has no tier there", async () => {
+  it("the fork block resolves with its real Mainnet hash; the fresh wallet has no tier there", async () => {
     const atFork = await verify({ block: { number: FORK_BLOCK, hash: FORK_BLOCK_HASH }, source: "EITHER" });
     expect(atFork.block.number).to.equal(FORK_BLOCK);
     expect(atFork.tier).to.equal(null);
