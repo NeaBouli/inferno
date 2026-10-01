@@ -1,7 +1,7 @@
 # IFR open benefits verification — `ifr-benefits-verify/1`
 
 | Field | Value |
-|---|---|
+| --- | --- |
 | Identifier | `ifr-benefits-verify/1` |
 | Status | Published, version 1 |
 | Published | 2026-10-01 |
@@ -38,7 +38,7 @@ A benefit is the integrator's own offer.
 ## 2. Contracts
 
 | Chain | Chain ID | IFR token | IFRLock | CommitmentVault |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | Ethereum Mainnet | `1` | `0x77e99917Eca8539c62F509ED1193ac36580A6e7B` | `0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb` | `0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3` |
 | Sepolia (test) | `11155111` | `0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4` | `0x0Cab0A9440643128540222acC6eF5028736675d3` | — |
 
@@ -70,7 +70,7 @@ Rules for the contracts:
 ## 4. Lock sources
 
 | Source | Counts |
-|---|---|
+| --- | --- |
 | `IFRLOCK` | the wallet's lock in IFRLock |
 | `COMMITMENT_TIME_ONLY` | the sum of the wallet's CommitmentVault tranches with `cType == 0` (TIME_ONLY) **and** `unlocked == false` **and** `amount > 0` |
 | `EITHER` | qualifies for a tier if **either** source alone meets the threshold |
@@ -153,7 +153,7 @@ Tier data is published as JSON, one file per version. Version 1 is
 [`ifr-benefits-tiers.v1.json`](ifr-benefits-tiers.v1.json):
 
 | Key | Label | IFR | `minBaseUnits` |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `BRONZE` | Bronze | 1,000 | `1000000000000` |
 | `SILVER` | Silver | 2,500 | `2500000000000` |
 | `GOLD` | Gold | 5,000 | `5000000000000` |
@@ -178,7 +178,7 @@ How the file is published and changed:
   chooses to, at or after `valid_from`.
 
 | Version | Valid from | SHA-256 |
-|---|---|---|
+| --- | --- | --- |
 | 1 | 2026-10-01T00:00:00Z | `aaba67e43e8a2236d2c986a2aed308b8d58e0ebfddd484df3110e490b643d00b` |
 
 ### Relation to other tier tables
@@ -203,7 +203,7 @@ If any of the following happens, the verifier MUST return **no benefit** and an 
 The reference library uses these error codes:
 
 | Code | Meaning |
-|---|---|
+| --- | --- |
 | `WRONG_CHAIN` | unsupported chain ID, or the node reports another chain |
 | `CONTRACT_MISMATCH` | missing code, wrong token link, or wrong decimals |
 | `RPC_UNAVAILABLE` | a read failed |

@@ -56,7 +56,7 @@ Your side of the job:
 ## Tiers
 
 | Key | IFR |
-|---|---|
+| --- | --- |
 | `BRONZE` | 1,000 |
 | `SILVER` | 2,500 |
 | `GOLD` | 5,000 |
