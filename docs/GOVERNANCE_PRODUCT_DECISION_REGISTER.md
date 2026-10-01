@@ -61,6 +61,13 @@ remains the only place where agenda items and vote outcomes are published.
   price conditions work; price-conditioned locks stay disabled in Web3 and are
   excluded from Benefits eligibility
   ([oracle path](COMMITMENT_PRICE_LOCK_ORACLE_PATH.md); CWA-03).
+- **Evidence (2026-10-02):** the deployed V1 bytecode does not contain the
+  repository's `price conditions disabled` guard (added for future deployments
+  in #131). On a Mainnet fork at block `26100144`, direct calls create
+  `TIME_OR_PRICE` and `PRICE_ONLY` tranches. A `PRICE_ONLY` or `TIME_AND_PRICE`
+  tranche can then never unlock while the price stays `0`. Only the Web3 UI
+  blocks these calls. This raises the priority of the rescue path below
+  (`test/fork/BenefitsVerifyFork.test.js`).
 - **Decision needed:** Option A (CommitmentVaultV2), Option B (dedicated
   PriceLockVault) or Option C (defer). Oracle model and rescue path for
   locks whose condition can never be met.

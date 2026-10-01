@@ -84,7 +84,8 @@
     "test:wiki-shell": "node scripts/test-wiki-shell-consistency.cjs",
     "test:landing-wiki-ui": "playwright test tests/browser/landing-transparency.spec.js tests/browser/wiki-shell.spec.js tests/browser/footer-contact.spec.js tests/browser/fab-clearance.spec.js",
     "test:license-privacy": "node scripts/test-license-privacy.cjs",
-    "test:social-card": "node scripts/test-social-card.cjs"
+    "test:social-card": "node scripts/test-social-card.cjs",
+    "test:benefits-fork": "hardhat test test/fork/BenefitsVerifyFork.test.js"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "4.2.0",
