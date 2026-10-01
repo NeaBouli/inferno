@@ -1,0 +1,38 @@
+{
+  "name": "ifr-benefits-verify",
+  "version": "1.0.0",
+  "description": "Reference implementation of ifr-benefits-verify/1: permissionless, block-pinned IFR lock tier checks",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./tiers.v1.json": "./tiers.v1.json"
+  },
+  "files": ["dist", "tiers.v1.json"],
+  "sideEffects": false,
+  "engines": {
+    "node": ">=20 <23"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "npm run build && node --test test/verify.test.cjs"
+  },
+  "keywords": ["ifr", "ethereum", "lock", "benefits", "eip-4361"],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NeaBouli/inferno",
+    "directory": "apps/benefits-verify"
+  },
+  "dependencies": {
+    "ethers": "^6.15.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

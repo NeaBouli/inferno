@@ -1,5 +1,17 @@
 # Changelog
 
+## 1 October 2026 — Open, Permissionless Benefit Verification (`ifr-benefits-verify/1`)
+
+- Published the open specification `docs/specs/ifr-benefits-verify-1.md` (MIT). It covers lock sources,
+  the 9-decimal tier rule, block pinning, the momentary-check rule, the EIP-4361 wallet message profile,
+  and fail-closed error codes.
+- Published tier data `docs/specs/ifr-benefits-tiers.v1.json` (Bronze 1,000 / Silver 2,500 / Gold 5,000 /
+  Platinum 10,000 IFR) with a pinned SHA-256.
+- Added the MIT reference library `apps/benefits-verify` and language-neutral conformance vectors. The
+  vectors run against a simulated node and against the real IFRLock and CommitmentVault contracts.
+- Unified the wiki integration guide on the shared tier keys, and stated the MIT licence of
+  `apps/benefits-network`.
+
 ## 1 October 2026 — Hardhat 3.18 / Mocha 12 Toolchain Batch
 
 - Upgraded development tooling: hardhat 3.18.0, hardhat-ethers 4.2.0,
