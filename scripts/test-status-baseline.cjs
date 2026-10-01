@@ -48,7 +48,7 @@ assert.equal(
 assert.equal(
   packageLock.packages?.["node_modules/serve-handler/node_modules/brace-expansion"]
     ?.version,
-  "1.1.18"
+  "1.1.21"
 );
 
 const currentBaseline = [

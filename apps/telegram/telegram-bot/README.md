@@ -108,3 +108,16 @@ Dry-Run ausgegebenen `TELEGRAM_POST_CONFIRM`-Hash sowie
 `TELEGRAM_GROUP_ID`, `TELEGRAM_COUNCIL_TOPIC_ID` und den Bot-Token. Der Text
 wird ausschließlich in den konfigurierten Council-Thread gesendet, nicht
 angepinnt und nicht parallel im öffentlichen Channel veröffentlicht.
+
+## Join requests
+
+If the community group requires admin approval for new members, the bot
+approves each `chat_join_request` for `TELEGRAM_GROUP_ID` (bot accounts are
+declined; other chats and an unset/invalid `TELEGRAM_GROUP_ID` are left to
+admins). Approved users then pass the existing verification gate: they stay
+muted until they accept the rules within 5 minutes, otherwise they are removed.
+
+Required bot admin rights in the group: **Ban users** (verification gate) and
+**Add members / invite users via link** (join requests). The bot subscribes to
+`message`, `callback_query`, `channel_post` and `chat_join_request` explicitly
+at launch.

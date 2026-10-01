@@ -126,7 +126,7 @@ test('forbidden Axios releases are absent from repository dependency files', () 
 test('Axios range policy detects the previously unsafe declaration', () => {
   assert.equal(rangeAllowsVersion('^1.6.7', '1.14.1'), true);
   assert.equal(rangeAllowsVersion('^1.18.1', '1.14.1'), false);
-  assert.equal(rangeAllowsVersion('1.18.1', '1.14.1'), false);
+  assert.equal(rangeAllowsVersion('1.20.0', '1.14.1'), false);
 });
 
 test('Telegram bot locks the approved Axios dependency set', () => {
@@ -137,9 +137,9 @@ test('Telegram bot locks the approved Axios dependency set', () => {
     fs.readFileSync(path.join(botRoot, 'package-lock.json'), 'utf8')
   );
 
-  assert.equal(manifest.dependencies.axios, '1.18.1');
-  assert.equal(lock.packages[''].dependencies.axios, '1.18.1');
-  assert.equal(lock.packages['node_modules/axios'].version, '1.18.1');
+  assert.equal(manifest.dependencies.axios, '1.20.0');
+  assert.equal(lock.packages[''].dependencies.axios, '1.20.0');
+  assert.equal(lock.packages['node_modules/axios'].version, '1.20.0');
   assert.equal(
     isAtLeast(lock.packages['node_modules/follow-redirects'].version, '1.16.0'),
     true
@@ -181,7 +181,7 @@ test('Axios GET and POST call shapes work without network access', async () => {
     { headers: { 'content-type': 'application/json' }, timeout: 10000 }
   );
 
-  assert.equal(axios.VERSION, '1.18.1');
+  assert.equal(axios.VERSION, '1.20.0');
   assert.equal(getResponse.data.ok, true);
   assert.equal(postResponse.data.ok, true);
   assert.deepEqual(
