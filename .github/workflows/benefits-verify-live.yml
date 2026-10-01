@@ -1,0 +1,76 @@
+name: IFR Benefits Verify Live Vectors
+
+# ifr-benefits-verify/1 against Ethereum Mainnet, Sepolia and a pinned Mainnet fork.
+# Read-only on the real networks; all writes happen on the local Hardhat fork.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '41 5 * * 1'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/benefits-verify/**'
+      - 'test/fork/BenefitsVerifyFork.test.js'
+      - '.github/workflows/benefits-verify-live.yml'
+  pull_request:
+    paths:
+      - 'apps/benefits-verify/**'
+      - 'test/fork/BenefitsVerifyFork.test.js'
+      - '.github/workflows/benefits-verify-live.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: benefits-verify-live-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  live:
+    name: Live Mainnet and Sepolia
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: apps/benefits-verify
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/benefits-verify/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - name: Live vectors
+        env:
+          MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
+          SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
+        run: |
+          if [ -z "$MAINNET_RPC_URL" ] && [ -z "$SEPOLIA_RPC_URL" ]; then
+            echo "::warning::No RPC secrets available (fork PR?); live vectors skipped."
+            exit 0
+          fi
+          node --test test/live.test.cjs
+
+  mainnet-fork:
+    name: Mainnet fork vectors
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Fork vectors at block 26100144
+        env:
+          MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
+        run: |
+          if [ -z "$MAINNET_RPC_URL" ]; then
+            echo "::warning::MAINNET_RPC_URL unavailable (fork PR?); fork vectors skipped."
+            exit 0
+          fi
+          HARDHAT_FORK=true HARDHAT_FORK_BLOCK_NUMBER=26100144 npm run test:benefits-fork
