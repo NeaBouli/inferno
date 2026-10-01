@@ -85,7 +85,39 @@ for (const [fg, bg, label] of [
 for (const [, styleAttr] of audit.matchAll(/style="([^"]*)"/g)) {
   check(!/color:\s*#(?:e8e8ed|fbbf24)\b/i.test(styleAttr), `open-audit.html: unreadable legacy inline text color: ${styleAttr}`);
 }
-check(contrast("#b45309", "#fef5de") >= 4.5, "open-audit.html: amber badge text below 4.5:1 on its tinted background");
+// Badge contrast is computed from the page's own inline declarations: the text colour and the
+// translucent tint composited over the white card surface (as the browser renders it).
+function rgbaOf(value) {
+  const hex = value.match(/#([0-9a-f]{6})\b/i);
+  if (hex) return { r: parseInt(hex[1].slice(0, 2), 16), g: parseInt(hex[1].slice(2, 4), 16), b: parseInt(hex[1].slice(4, 6), 16), a: 1 };
+  const fn = value.match(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*(?:,\s*([\d.]+))?\s*\)/i);
+  return fn ? { r: +fn[1], g: +fn[2], b: +fn[3], a: fn[4] === undefined ? 1 : +fn[4] } : null;
+}
+function overWhite({ r, g, b, a }) {
+  const mix = (c) => Math.round(c * a + 255 * (1 - a)).toString(16).padStart(2, "0");
+  return `#${mix(r)}${mix(g)}${mix(b)}`;
+}
+function hexOf({ r, g, b }) {
+  return `#${[r, g, b].map((c) => Math.round(c).toString(16).padStart(2, "0")).join("")}`;
+}
+const declared = (style, prop) => {
+  const m = style.match(new RegExp(`(?:^|;)\\s*${prop}\\s*:\\s*([^;]+)`, "i"));
+  return m ? rgbaOf(m[1]) : null;
+};
+const certifiedBadge = audit.match(/<span style="([^"]*)">Not Third-Party Certified<\/span>/);
+const premiumBlock = audit.match(/<div id="lp-drop-lock" style="([^"]*)">\s*<span style="([^"]*)">&#x26A1; Premium<\/span>/);
+check(certifiedBadge && premiumBlock, "open-audit.html: badge markup for the contrast check not found");
+if (certifiedBadge && premiumBlock) {
+  for (const [label, fg, tint] of [
+    ["Not Third-Party Certified badge", declared(certifiedBadge[1], "color"), declared(certifiedBadge[1], "background")],
+    ["Premium label", declared(premiumBlock[2], "color"), declared(premiumBlock[1], "background")],
+  ]) {
+    check(fg && tint, `open-audit.html: ${label} colour declarations not found`);
+    if (!fg || !tint) continue;
+    const ratio = contrast(hexOf(fg), overWhite(tint));
+    check(ratio >= 4.5, `open-audit.html: ${label} contrast ${ratio.toFixed(2)} < 4.5`);
+  }
+}
 check(/\.wiki-actions \.btn \{[^}]*min-height: 44px;/.test(skin), "redesign-skin.css: .wiki-actions .btn must keep a 44px minimum height");
 check(/\.wiki-actions \.btn:focus-visible \{[^}]*outline: 3px solid/.test(skin), "redesign-skin.css: .wiki-actions .btn needs a visible focus outline");
 
