@@ -835,6 +835,15 @@ footer,
   color: var(--ink-2) !important;
 }
 
+/* Keep the last footer line clear of the fixed Copilot launcher (#ifr-btn: 52px at 16px from the
+   bottom below 769px). Without this, page-end footer links sit under the button on phones. */
+@media (max-width: 768px) {
+  footer,
+  .wiki-footer {
+    padding-bottom: 84px !important;
+  }
+}
+
 @media (max-width: 900px) {
   nav {
     overflow: hidden !important;
