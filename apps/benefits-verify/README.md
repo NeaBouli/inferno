@@ -83,6 +83,16 @@ They run twice:
 - the repository test `test/BenefitsVerify.test.js` runs them against the real `IFRLock` and
   `CommitmentVault` contracts in Hardhat.
 
+Two further checks run against real networks:
+
+- `test/live.test.cjs` reads the deployed contracts on Mainnet and Sepolia at a pinned block, using
+  read-only calls.
+- `test/fork/BenefitsVerifyFork.test.js` locks, raises and unlocks against the **deployed** `IFRLock` and
+  `CommitmentVault` on a Mainnet fork at block `26100144`. It also proves that price-conditioned tranches,
+  which the deployed V1 vault still accepts, never count.
+
+The workflow `benefits-verify-live.yml` runs both with the repository RPC secrets, weekly and on change.
+
 ## Develop
 
 ```sh

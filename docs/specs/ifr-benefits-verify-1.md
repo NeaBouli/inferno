@@ -81,6 +81,9 @@ Rules for the sources:
   the two per-source tiers.
 - **Price-conditioned tranches never count.** These are `TIME_OR_PRICE`, `PRICE_ONLY` and
   `TIME_AND_PRICE`. Whether they are released depends on a price oracle, not on the holder.
+- **The deployed vault still accepts them.** The Mainnet CommitmentVault (V1) accepts price-conditioned
+  tranches through direct contract calls. The exclusion above is therefore required in practice, not only
+  in theory.
 - **A due TIME_ONLY tranche still counts until it is unlocked.** That is a TIME_ONLY tranche whose
   `unlockTime` has passed but which is not yet unlocked. This matches IFRLock, which can also be unlocked
   at any time.
