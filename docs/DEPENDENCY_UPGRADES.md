@@ -16,6 +16,11 @@
 | #75 | mocha | 11.8.0 | 12.0.0 | Ohne Merge geschlossen 04.09.2026; hardhat-mocha Peer inkompatibel | Auf Upstream-Support warten |
 | #76 | @nomicfoundation/hardhat-verify | 3.0.22 | 3.1.0 | Integriert via #77 am 04.09.2026; Main-CI gruen | - |
 | #151 | @nomicfoundation/hardhat-verify | 3.1.0 | 3.1.2 | Security-Fix 01.10.2026: entfernt die Ethers-5/`elliptic`-Kette (GHSA-848j-6mx2-7j84); Root-Audit 0 Funde | - |
+| #146 | hardhat | 3.17.0 | 3.18.0 | Gebuendelt in T-183 (01.10.2026) | - |
+| #147 | @nomicfoundation/hardhat-ethers | 4.0.15 | 4.2.0 | Gebuendelt in T-183 (01.10.2026); verlangt hardhat ^3.18.0 | - |
+| #149 | dotenv | 18.0.3 | 18.0.5 | Gebuendelt in T-183 (01.10.2026) | - |
+| #150 | @nomicfoundation/hardhat-mocha | 3.1.0 | 4.0.0 | Gebuendelt in T-183 (01.10.2026); verlangt mocha ^12 | - |
+| #75 | mocha | 11.8.0 | 12.0.3 | Nachgeholt in T-183 (01.10.2026) mit hardhat-mocha 4; Mochas js-yaml jetzt 5.4.2 (GHSA-r3ph-w7gj-g6xm gepatcht) | - |
 
 ## Migrationsreihenfolge
 

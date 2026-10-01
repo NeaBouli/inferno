@@ -1,5 +1,14 @@
 # Changelog
 
+## 1 October 2026 — Hardhat 3.18 / Mocha 12 Toolchain Batch
+
+- Upgraded development tooling: hardhat 3.18.0, hardhat-ethers 4.2.0,
+  hardhat-mocha 4.0.0 with mocha 12.0.3, and dotenv 18.0.5.
+- Mocha 12 had been deferred because hardhat-mocha 3 did not support it;
+  hardhat-mocha 4 now requires it. Mocha's js-yaml copy is deduplicated to the
+  patched 5.4.2.
+- Root `npm audit` still reports no vulnerabilities; all 644 contract tests pass.
+
 ## 1 October 2026 — hardhat-verify 3.1.2 Security Upgrade
 
 - Upgraded the development-only `@nomicfoundation/hardhat-verify` plugin from
