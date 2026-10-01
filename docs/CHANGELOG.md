@@ -1,5 +1,13 @@
 # Changelog
 
+## 1 October 2026 — hardhat-verify 3.1.2 Security Upgrade
+
+- Upgraded the development-only `@nomicfoundation/hardhat-verify` plugin from
+  3.1.0 to 3.1.2, which drops the Ethers-5 `@ethersproject/*` -> `elliptic`
+  chain behind the Low advisory GHSA-848j-6mx2-7j84.
+- The root `npm audit` now reports no vulnerabilities; the advisory baseline
+  check requires a clean root audit instead of allowlisting the old chain.
+
 ## 6 September 2026 — LiquidityReserve Post-Lock Status Correction
 
 - Reverified the Mainnet LiquidityReserve after its initial timelock ended:

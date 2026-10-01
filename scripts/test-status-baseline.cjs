@@ -26,7 +26,7 @@ const packageLock = JSON.parse(read("package-lock.json"));
 assert.equal(packageJson.engines?.node, ">=22.13.0");
 assert.equal(packageJson.dependencies?.ethers, "6.17.0");
 assert.equal(packageJson.devDependencies?.hardhat, "3.17.0");
-assert.equal(packageJson.devDependencies?.["@nomicfoundation/hardhat-verify"], "3.1.0");
+assert.equal(packageJson.devDependencies?.["@nomicfoundation/hardhat-verify"], "3.1.2");
 assert.equal(packageJson.overrides?.["serialize-javascript"], "7.0.5");
 assert.equal(packageJson.devDependencies?.chai, "6.2.2");
 assert.equal(packageJson.devDependencies?.mocha, "11.8.0");
@@ -37,7 +37,7 @@ assert.equal(
 assert.equal(packageLock.packages?.["node_modules/hardhat"]?.version, "3.17.0");
 assert.equal(
   packageLock.packages?.["node_modules/@nomicfoundation/hardhat-verify"]?.version,
-  "3.1.0"
+  "3.1.2"
 );
 assert.equal(packageLock.packages?.["node_modules/adm-zip"]?.version, "0.6.1");
 assert.equal(packageLock.packages?.["node_modules/js-yaml"]?.version, "4.3.2");
