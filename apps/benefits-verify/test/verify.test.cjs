@@ -40,17 +40,33 @@ const vaultIface = new Interface([
  * Fake EIP-1193 node. `blocks[n]` = { lock: {addr: amount}, tranches: {addr: [...]} }.
  * Records every isLocked minAmount so tests can assert `isLocked(x, 0)` never happens.
  */
-function fakeNode({ chainId = 1, blocks, contracts = MAINNET, decimals = 9, lockToken, vaultToken, codeless = [] }) {
+function fakeNode({ chainId = 1, blocks, contracts = MAINNET, decimals = 9, lockToken, vaultToken, codeless = [], onCall }) {
   const calls = [];
   const head = Math.max(...Object.keys(blocks).map(Number));
-  const hashOf = (n) => "0x" + n.toString(16).padStart(64, "0");
-  const tagToNumber = (tag) => (tag === "latest" ? head : Number(BigInt(tag)));
+  // `salt[n]` changes when block n is replaced by a reorg; the hash changes with it.
+  const salt = {};
+  const hashOf = (n) => "0x" + ((salt[n] ?? 0) * 1_000_000 + n).toString(16).padStart(64, "0");
+  const tagToNumber = (tag) => {
+    if (tag && typeof tag === "object") {
+      // EIP-1898: resolve by hash; a hash that is no longer canonical is unknown.
+      const n = Object.keys(blocks).map(Number).find((k) => hashOf(k) === String(tag.blockHash).toLowerCase());
+      if (n === undefined) throw new Error("header not found");
+      return n;
+    }
+    return tag === "latest" ? head : Number(BigInt(tag));
+  };
+  const reorg = (n, state) => {
+    salt[n] = (salt[n] ?? 0) + 1;
+    blocks[n] = state;
+  };
   const same = (a, b) => a && b && a.toLowerCase() === b.toLowerCase();
   return {
     calls,
     hashOf,
+    reorg,
     async request({ method, params }) {
       calls.push({ method, params });
+      if (onCall) onCall({ method, params, calls, reorg });
       if (method === "eth_chainId") return "0x" + chainId.toString(16);
       if (method === "eth_getBlockByNumber") {
         const n = tagToNumber(params[0]);
@@ -58,6 +74,7 @@ function fakeNode({ chainId = 1, blocks, contracts = MAINNET, decimals = 9, lock
         return { number: "0x" + n.toString(16), hash: hashOf(n) };
       }
       if (method === "eth_getCode") {
+        tagToNumber(params[1]);
         return codeless.some((a) => same(a, params[0])) ? "0x" : "0x6080";
       }
       if (method === "eth_call") {
@@ -411,4 +428,61 @@ test("a revert is a contract mismatch, a transport error is an outage", async ()
     },
   };
   await rejects(verifyIfrBenefit({ wallet: WALLET, chainId: 1, rpc: flaky }), "RPC_UNAVAILABLE");
+});
+
+
+// ─── Block-hash binding (review follow-up to #154) ──────────────────────
+
+test("every contract read is bound to the block hash (EIP-1898), never only to the number", async () => {
+  const node = fakeNode({ blocks: { 40: { lock: { [WALLET]: 2500n * IFR } } } });
+  const result = await verifyIfrBenefit({ wallet: WALLET, chainId: 1, rpc: node, source: "EITHER" });
+  const reads = node.calls.filter((c) => c.method === "eth_call" || c.method === "eth_getCode");
+  assert.ok(reads.length > 0);
+  for (const read of reads) {
+    const blockId = read.method === "eth_call" ? read.params[1] : read.params[1];
+    assert.deepEqual(blockId, { blockHash: result.block.hash, requireCanonical: true });
+  }
+});
+
+test("a same-height reorg during the check never yields a tier", async () => {
+  // Reorg replaces block 50 after the header was read: the old hash disappears.
+  let done = false;
+  const node = fakeNode({
+    blocks: { 50: { lock: { [WALLET]: 10_000n * IFR } } },
+    onCall: ({ method, reorg }) => {
+      if (!done && method === "eth_call") {
+        done = true;
+        reorg(50, { lock: {} });
+      }
+    },
+  });
+  await rejects(verifyIfrBenefit({ wallet: WALLET, chainId: 1, rpc: node }), "BLOCK_MISMATCH");
+});
+
+test("a reorg after the last read is caught by the final hash re-check", async () => {
+  let reads = 0;
+  const node = fakeNode({
+    blocks: { 60: { lock: { [WALLET]: 5000n * IFR } } },
+    onCall: ({ method, params, reorg }) => {
+      if (method === "eth_call") reads += 1;
+      // The re-check is the second eth_getBlockByNumber; swap the block just before it.
+      if (method === "eth_getBlockByNumber" && reads > 0) reorg(60, { lock: { [WALLET]: 5000n * IFR } });
+    },
+  });
+  await rejects(verifyIfrBenefit({ wallet: WALLET, chainId: 1, rpc: node }), "BLOCK_MISMATCH");
+});
+
+test("a provider without EIP-1898 support fails closed", async () => {
+  const node = fakeNode({ blocks: { 70: { lock: { [WALLET]: 5000n * IFR } } } });
+  const legacy = {
+    async request(args) {
+      if ((args.method === "eth_call" || args.method === "eth_getCode") && typeof args.params[1] === "object") {
+        const error = new Error("invalid argument 1: hex string without 0x prefix");
+        error.code = -32602;
+        throw error;
+      }
+      return node.request(args);
+    },
+  };
+  await rejects(verifyIfrBenefit({ wallet: WALLET, chainId: 1, rpc: legacy }), "RPC_UNAVAILABLE");
 });
