@@ -118,6 +118,12 @@ if (certifiedBadge && premiumBlock) {
     check(ratio >= 4.5, `open-audit.html: ${label} contrast ${ratio.toFixed(2)} < 4.5`);
   }
 }
+// T-181: contracts.html code highlighting and access tags render on light surfaces; the legacy
+// dark-theme text colours measured 1.8-3.4:1 there.
+const contractsPage = fs.readFileSync(path.join(wikiDir, "contracts.html"), "utf8");
+for (const [, hex] of contractsPage.matchAll(/(?<![-\w])color\s*:\s*#(c084fc|a855f7|60a5fa|3b82f6|22c55e|ff4500|f59e0b|eab308)\b/gi)) {
+  check(false, `contracts.html: legacy low-contrast text colour #${hex} on a light surface`);
+}
 check(/\.wiki-actions \.btn \{[^}]*min-height: 44px;/.test(skin), "redesign-skin.css: .wiki-actions .btn must keep a 44px minimum height");
 check(/\.wiki-actions \.btn:focus-visible \{[^}]*outline: 3px solid/.test(skin), "redesign-skin.css: .wiki-actions .btn needs a visible focus outline");
 
