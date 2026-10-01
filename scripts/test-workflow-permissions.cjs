@@ -12,6 +12,7 @@ const expectedExtraReadScopes = { "security-audit.yml": "pull-requests", "railwa
 const expectedWorkflowFiles = [
   "ai-copilot.yml",
   "benefits-network.yml",
+  "benefits-verify-ci.yml",
   "benefits-wallet-prototype.yml",
   "contracts.yml",
   "creator-gateway.yml",

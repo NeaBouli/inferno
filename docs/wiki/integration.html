@@ -865,38 +865,49 @@ await lock.lockWithType(amount, lockType);</code></pre>
            ============================================================ -->
       <h2>9. Choosing Your Minimum Lock Amount</h2>
       <p>
-        The minimum lock amount is entirely your decision. It lives in your resolver, not on-chain, so you can change it at any time without a contract interaction.
+        For customer benefits (discounts, perks, access) use the shared open tiers of
+        <a href="https://github.com/NeaBouli/inferno/blob/main/docs/specs/ifr-benefits-verify-1.md"><code>ifr-benefits-verify/1</code></a>,
+        so every integrator shows the same scheme. They are published as data in
+        <a href="https://github.com/NeaBouli/inferno/blob/main/docs/specs/ifr-benefits-tiers.v1.json"><code>ifr-benefits-tiers.v1.json</code></a>
+        and implemented by the MIT-licensed reference library
+        <a href="https://github.com/NeaBouli/inferno/tree/main/apps/benefits-verify"><code>apps/benefits-verify</code></a>.
+        No registration and no API are involved.
       </p>
 
       <table>
         <thead>
           <tr>
-            <th>Tier</th>
+            <th>Tier key</th>
             <th>Lock Amount</th>
-            <th>Use Case</th>
+            <th>Base units (9 decimals)</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td>Basic</td>
+            <td>BRONZE</td>
             <td><strong style="color: var(--text);">1,000 IFR</strong></td>
-            <td>Low barrier, broad access, community features</td>
+            <td><code>1000000000000</code></td>
           </tr>
           <tr>
-            <td>Standard</td>
+            <td>SILVER</td>
+            <td><strong style="color: var(--text);">2,500 IFR</strong></td>
+            <td><code>2500000000000</code></td>
+          </tr>
+          <tr>
+            <td>GOLD</td>
             <td><strong style="color: var(--text);">5,000 IFR</strong></td>
-            <td>Premium features, moderate commitment</td>
+            <td><code>5000000000000</code></td>
           </tr>
           <tr>
-            <td>Enterprise</td>
-            <td><strong style="color: var(--text);">25,000 IFR</strong></td>
-            <td>High-value access, strong holder commitment</td>
+            <td>PLATINUM</td>
+            <td><strong style="color: var(--text);">10,000 IFR</strong></td>
+            <td><code>10000000000000</code></td>
           </tr>
         </tbody>
       </table>
 
       <p>
-        Consider the value of your premium features when setting the threshold. A higher minimum means fewer premium users but stronger commitment. A lower minimum increases accessibility. You can also implement multiple tiers by checking against different thresholds.
+        Offer benefits per tier key (for example &ldquo;from SILVER&rdquo;), not per IFR amount: a threshold change then ships as a new tier file with a later <code>valid_from</code> and applies without editing your offers. A lock check is a fact about one block &mdash; repeat it when the benefit is redeemed. For a single product feature that is not a tier benefit, any threshold greater than zero in your resolver remains possible.
       </p>
 
       <!-- ============================================================
