@@ -16,10 +16,10 @@
   --line-strong: #D7CCBB;
   --text: #211C17;
   --ink: #211C17;
-  --text-muted: #756B60;
-  --muted: #8C8273;
+  --text-muted: #6F655A;
+  --muted: #6F655A; /* >= 4.85:1 on white, bg, bg-alt and tinted cards (WCAG AA) */
   --ink-2: #574F45;
-  --ink-muted: #8C8273;
+  --ink-muted: #6F655A;
   --accent: #B0481E;
   --accent-deep: #8E3814;
   --accent-dim: rgba(176, 72, 30, 0.13);

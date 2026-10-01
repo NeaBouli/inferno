@@ -118,6 +118,13 @@ if (certifiedBadge && premiumBlock) {
     check(ratio >= 4.5, `open-audit.html: ${label} contrast ${ratio.toFixed(2)} < 4.5`);
   }
 }
+// Muted text tokens are used for secondary copy on every light surface of the skin.
+for (const muted of ["muted", "ink-muted", "text-muted"]) {
+  for (const surface of ["surface", "bg", "bg-alt", "bg-card-hover"]) {
+    const ratio = contrast(token(muted), token(surface));
+    check(ratio >= 4.5, `redesign-skin.css: --${muted} on --${surface} contrast ${ratio.toFixed(2)} < 4.5`);
+  }
+}
 check(/\.wiki-actions \.btn \{[^}]*min-height: 44px;/.test(skin), "redesign-skin.css: .wiki-actions .btn must keep a 44px minimum height");
 check(/\.wiki-actions \.btn:focus-visible \{[^}]*outline: 3px solid/.test(skin), "redesign-skin.css: .wiki-actions .btn needs a visible focus outline");
 
