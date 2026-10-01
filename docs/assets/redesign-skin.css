@@ -16,10 +16,10 @@
   --line-strong: #D7CCBB;
   --text: #211C17;
   --ink: #211C17;
-  --text-muted: #756B60;
-  --muted: #8C8273;
+  --text-muted: #6F655A;
+  --muted: #6F655A; /* >= 4.85:1 on white, bg, bg-alt and tinted cards (WCAG AA) */
   --ink-2: #574F45;
-  --ink-muted: #8C8273;
+  --ink-muted: #6F655A;
   --accent: #B0481E;
   --accent-deep: #8E3814;
   --accent-dim: rgba(176, 72, 30, 0.13);
@@ -833,6 +833,15 @@ footer,
   background: var(--bg-alt) !important;
   border-top: 1px solid var(--line) !important;
   color: var(--ink-2) !important;
+}
+
+/* Keep the last footer line clear of the fixed Copilot launcher (#ifr-btn: 52px at 16px from the
+   bottom below 769px). Without this, page-end footer links sit under the button on phones. */
+@media (max-width: 768px) {
+  footer,
+  .wiki-footer {
+    padding-bottom: 84px !important;
+  }
 }
 
 @media (max-width: 900px) {
