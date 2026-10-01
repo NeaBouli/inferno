@@ -6,14 +6,14 @@
 This is the authoritative public status register for the seven Collateral Web3 Open
 Audits reports. Publishing a finding does not mean it has been remediated. A finding
 moves to **Fixed and verified** only after its change is integrated and the required
-verification evidence passes. 38 findings currently meet that standard.
+verification evidence passes. 39 findings currently meet that standard.
 
 ## Status Summary
 
 | Disposition | Count | Meaning |
 | --- | ---: | --- |
-| Fixed and verified | 38 | A remediation is merged and covered by current verification evidence. |
-| Governance or owner gated | 12 | The next action requires governance, a repository owner setting, key custody work or a future contract version. |
+| Fixed and verified | 39 | A remediation is merged and covered by current verification evidence. |
+| Governance or owner gated | 11 | The next action requires governance, a repository owner setting, key custody work or a future contract version. |
 | Accepted or monitored | 2 | The condition is explicitly accepted for the current dormant configuration and must be reviewed before activation or redeployment. |
 | Open actionable | 19 | Repository, documentation or operations work remains and can be handled without an on-chain governance action. |
 | Informational, no action | 11 | The item records methodology, context or an optional improvement and has no required remediation. |
@@ -75,7 +75,7 @@ do not convert an open audit finding into a verified fix.
 | **CWA-18** FeeRouter zero-address setters and dead maxUses field | Low | Accepted or monitored | Future contract engineering | Keep documented for the dormant V1 path and reassess before any FeeRouter replacement or voucher activation. | Future version must add zero-address and voucher-use regression coverage. | [Report](CWA_IFR_Protocol_Audit_2026-09-14.md) |
 | **CWA-19** Dormant buyback path hardening notes | Low | Accepted or monitored | Future contract engineering | Reassess reentrancy, ERC-20 return handling and MEV controls before funding or replacing the dormant path. | Future funded-path adversarial tests and independent review. | [Report](CWA_IFR_Protocol_Audit_2026-09-14.md) |
 | **CWA-20** Documentation drift cluster | Informational | Fixed and verified | Protocol documentation | Keep component, Safe, test-count, coverage, tier, vesting, rate, custody and fee-exemption statements aligned with canonical sources whenever those sources change. | PR #125 merged as main 4bb4b383 (component, Safe, test-count, coverage and app-inventory claims, `npm run test:docs-truth`); PR #124 merged as main e4a1a75f (vesting start, PartnerVault rewardBps/throttle, Community Safe custody, fee-exempt table and burn qualifier chain-read at block 26,065,893, `npm run test:cwa-content`); tiers covered by the CWA-77 shared-tier configuration. | [Report](CWA_IFR_Protocol_Audit_2026-09-14.md) |
-| **CWA-21** License statements are inconsistent | Informational | Governance or owner gated | Repository owner and legal review | Repository owner decision: choose the repository license and publish it as a LICENSE file (all 27 contract sources currently declare SPDX MIT; no LICENSE file exists). | License file and SPDX consistency check after owner decision. | [Report](CWA_IFR_Protocol_Audit_2026-09-14.md) |
+| **CWA-21** License statements are inconsistent | Informational | Fixed and verified | Repository owner | Keep new source files on SPDX MIT and public copyright wording aligned with LICENSE. | Owner decision 2026-09-30: MIT. Root LICENSE (MIT) added; README and the Landing/Web3 footers reference it instead of "All rights reserved"; every Solidity source declares SPDX MIT. Passed `npm run test:license-privacy`. | [Report](CWA_IFR_Protocol_Audit_2026-09-14.md) |
 | **CWA-22** Security reporting process gaps | Informational | Fixed and verified | Repository security operations | Keep security.txt, private reporting guidance and the no-bounty status current and truthful. | PR #124 merged as main e4a1a75f; RFC 9116 docs/.well-known/security.txt (advisory contact, no bounty promise) validated by `npm run test:security-reporting` (Docs Validator). | [Report](CWA_IFR_Protocol_Audit_2026-09-14.md) |
 | **CWA-23** Mainnet deployment manifest is incomplete | Informational | Fixed and verified | Deployment documentation | Keep deployments/mainnet.json in lockstep with the DEPLOYMENTS.md Mainnet table; unknown provenance stays explicitly null. | PR #124 merged as main e4a1a75f; deployments/mainnet.json lists all 14 Mainnet contracts and `npm run test:cwa-content` asserts address, source, ABI and null-provenance parity with docs/DEPLOYMENTS.md. | [Report](CWA_IFR_Protocol_Audit_2026-09-14.md) |
 | **CWA-24** Copilot trusts hourly live Wiki HTML | Informational | Fixed and verified | AI Copilot backend | Keep the bounded trusted-content policy and the reviewable last-known-good knowledge snapshot as Wiki sources change. | PR #111 head 1df488cc merged as main 5000417f with exact-main CI green; bounded live-Wiki policy tests cover allowed origins, redirect and lookalike rejection, stale-if-error, timeout and cache retention. | [Report](CWA_IFR_Protocol_Audit_2026-09-14.md) |

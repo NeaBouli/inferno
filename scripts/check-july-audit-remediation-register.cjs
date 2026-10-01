@@ -47,11 +47,17 @@ assert.deepEqual(severityTotals, data.expectedSeverityTotals);
 
 const originalPath = path.join(auditDir, data.originalAudit.path);
 const originalHash = crypto.createHash("sha256").update(fs.readFileSync(originalPath)).digest("hex");
-assert.equal(originalHash, data.originalAudit.sha256, "original July audit hash changed");
+assert.equal(originalHash, data.originalAudit.sha256, "published (redacted) July audit hash changed");
+assert.match(data.originalAudit.preRedactionSha256, /^[0-9a-f]{64}$/, "pre-redaction July audit hash missing");
+assert.equal(
+  fs.readFileSync(originalPath, "utf8").split(data.originalAudit.redactionNotice).length - 1,
+  1,
+  "published July audit must carry exactly one disclosed redaction"
+);
 
 assert.equal(fs.existsSync(path.join(root, "docs", "TODO.md")), false, "public TODO.md returned");
 assert.equal(fs.existsSync(path.join(root, "docs", "TODO.html")), false, "public TODO.html returned");
-assert.equal(fs.existsSync(path.join(root, "LICENSE")), false, "JUL-15 status must be reviewed when a root license is added");
+assert.match(fs.readFileSync(path.join(root, "LICENSE"), "utf8"), /^MIT License\n/, "JUL-15 relies on the root MIT LICENSE");
 
 const buybackSources = [
   "contracts/buyback/BuybackController.sol",
@@ -146,13 +152,15 @@ function renderMarkdown(register) {
     `**Repository baseline:** \`${register.baseline}\``,
     "",
     "This register shows the current status of every normalized finding in the community",
-    "audit submitted on 27 July 2026. The original report remains unchanged and preserves",
-    "the severity and project snapshot recorded on that date. A red or high-severity label",
+    "audit submitted on 27 July 2026. The published report keeps the submitted text apart from",
+    "one disclosed company-name redaction and preserves the severity and project snapshot",
+    "recorded on that date. A red or high-severity label",
     "in the original report is therefore historical severity, not proof that the issue is",
     "still open today. Current status is authoritative only in this evidence-backed register.",
     "",
-    `- [Original unchanged report](${register.originalAudit.path})`,
-    `- Original SHA-256: \`${register.originalAudit.sha256}\``,
+    `- [Published report](${register.originalAudit.path}) (submitted text with one disclosed owner-requested company-name redaction, 2026-09-30)`,
+    `- Published (redacted) SHA-256: \`${register.originalAudit.sha256}\``,
+    `- Pre-redaction original SHA-256: \`${register.originalAudit.preRedactionSha256}\``,
     "- [Audit index](README.md)",
     "- [Current CWA-01...CWA-82 register](CWA_REMEDIATION_REGISTER.md)",
     "",

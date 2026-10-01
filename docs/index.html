@@ -3279,34 +3279,31 @@ if (isLocked) {
       <a href="https://github.com/NeaBouli/inferno/issues" target="_blank" rel="noopener">&#x2709; Contact</a>
     </div>
     <p class="footer-brand"><span>Inferno Protocol</span> &mdash; On-chain symbol IFR &middot; Social cashtag $IFRp</p>
-    <p class="footer-copy">&copy; 2026 Inferno Protocol. All rights reserved.</p>
-    <p class="footer-copy" style="margin-top:6px;">
-      Core Dev Contact:
-      <a id="ifr-core-contact" href="#" rel="nofollow noopener"
-         data-u="kaspartisan"
-         data-h="proton"
-         data-t="me"
-         style="color:#888;text-decoration:none;border-bottom:1px dotted #555;">
-        [enable JavaScript to view]
-      </a>
+    <p class="footer-copy">&copy; 2026 Inferno Protocol &middot; Code released under the <a href="https://github.com/NeaBouli/inferno/blob/main/LICENSE" target="_blank" rel="noopener" style="color:inherit;">MIT License</a></p>
+    <p class="footer-copy" style="margin-top:6px;" data-nosnippet>
+      <a id="ifr-core-contact" href="#core-dev-contact" rel="nofollow noopener"
+         style="color:#888;text-decoration:none;border-bottom:1px dotted #555;">Core Dev Contact</a>
     </p>
   </div>
 </footer>
 
 <script>
-  // Scraper-resistant email assembly — no literal address in HTML source.
-  // Assembled client-side only when DOM is ready. Static crawlers see nothing.
+  // Core Dev contact: the address is stored only as an encoded char list and is
+  // decoded on the first click. Nothing address-like exists in the HTML or in
+  // the rendered page until a visitor asks for it, so crawlers (including
+  // JavaScript-rendering ones, which do not click) never index it.
   (function() {
     var a = document.getElementById('ifr-core-contact');
     if (!a) return;
-    var u = a.getAttribute('data-u');
-    var h = a.getAttribute('data-h');
-    var t = a.getAttribute('data-t');
-    var at = String.fromCharCode(64);
-    var dot = String.fromCharCode(46);
-    var addr = u + at + h + dot + t;
-    a.href = 'mailto' + String.fromCharCode(58) + addr;
-    a.textContent = addr;
+    var C = [63,55,116,52,53,46,53,40,42,26,52,59,41,51,46,40,59,42,41,59,49];
+    a.addEventListener('click', function(e) {
+      if (a.getAttribute('data-revealed') === '1') return;
+      e.preventDefault();
+      var addr = C.map(function(c) { return String.fromCharCode(c ^ 90); }).reverse().join('');
+      a.textContent = addr;
+      a.href = 'mailto' + String.fromCharCode(58) + addr;
+      a.setAttribute('data-revealed', '1');
+    });
   })();
 </script>
 
