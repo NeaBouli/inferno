@@ -9,6 +9,10 @@ interface IBalanceOf {
     function balanceOf(address account) external view returns (uint256);
 }
 
+interface ITransfer {
+    function transfer(address to, uint256 amount) external returns (bool);
+}
+
 /// @title MockRouter
 /// @notice Deterministic UniswapV2-like router used for unit tests.
 contract MockRouter {
@@ -86,6 +90,14 @@ contract MockRouter {
     /// @notice Transfer tax applied to the swap output, in bps (simulates a taxed token).
     uint256 public transferFeeBpsOnOutput;
 
+    /// @notice When true, swap output is transferred from this router's own IFR balance instead of
+    ///         minted, so a real taxed token (InfernoToken) applies its own transfer fee.
+    bool public payFromBalance;
+
+    function setPayFromBalance(bool enabled) external {
+        payFromBalance = enabled;
+    }
+
     function setTransferFeeBpsOnOutput(uint256 bps) external {
         require(bps <= 10_000, "bps>100%");
         transferFeeBpsOnOutput = bps;
@@ -111,7 +123,11 @@ contract MockRouter {
         uint256 delivered = quoted - (quoted * transferFeeBpsOnOutput) / 10_000;
 
         uint256 balanceBefore = IBalanceOf(IFR_ADDR).balanceOf(to);
-        IMintableERC20(IFR_ADDR).mint(to, delivered);
+        if (payFromBalance) {
+            require(ITransfer(IFR_ADDR).transfer(to, quoted), "MockRouter: transfer failed");
+        } else {
+            IMintableERC20(IFR_ADDR).mint(to, delivered);
+        }
         require(IBalanceOf(IFR_ADDR).balanceOf(to) - balanceBefore >= amountOutMin, "UniswapV2Router: INSUFFICIENT_OUTPUT_AMOUNT");
     }
 

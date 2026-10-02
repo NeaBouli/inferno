@@ -135,7 +135,7 @@
       "title": "Fee-on-transfer buyback swap accounting",
       "sourceSection": "4.2",
       "status": "governance_or_future_version_gated",
-      "currentAssessment": "Source remediated for future deployments (T-189): BuybackController and BuybackVault swap via swapExactETHForTokensSupportingFeeOnTransferTokens and account for the IFR actually received (balance difference). The deployed Mainnet buyback contracts are unchanged and stay dormant.",
+      "currentAssessment": "Source remediated for future deployments (T-189): BuybackController and BuybackVault swap via swapExactETHForTokensSupportingFeeOnTransferTokens and account for the IFR actually received (balance difference); BuybackVault events report the IFR credited to BurnReserve and Treasury, tested with the real InfernoToken with and without exemptions (on Mainnet the vault, controller, BurnReserve and Treasury are fee-exempt, verified 2026-10-02). The deployed Mainnet buyback contracts are unchanged and stay dormant.",
       "remainingAction": "Keep the deployed path dormant; activate only through an independently reviewed, governed redeploy of the remediated sources.",
       "verification": "Taxed-token router tests with received-balance assertions pass (test/BuybackController.test.js, test/BuybackVault.test.js); independent review and governed deployment evidence remain required before activation.",
       "evidence": [
