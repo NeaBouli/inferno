@@ -94,8 +94,8 @@
         <span style="color:#6b7280;font-size:0.82rem;">Trust Wallet waits for CMC, professional audit, activity criteria and explicit fee approval. Phantom waits for CoinGecko/market-data coverage. Rainbow now has a live exact-contract page with Inferno name, IFR symbol and price, but no visible IFR icon; monitor upstream metadata without opening an unsupported direct request. Zerion was resolved on 2026-07-31 with the canonical icon and tracking; resume only on regression.</span></li>
       <li><div class="cb"></div><strong>Blockaid/MetaMask warning retest</strong><br>
         <span style="color:#6b7280;font-size:0.82rem;">Blockaid review is approved. Resume only if a current device still shows a warning, with version, timestamp and screenshot evidence.</span></li>
-      <li><div class="cb"></div><strong>Residual dependency audit findings</strong><br>
-        <span style="color:#6b7280;font-size:0.82rem;">The clean local candidate has 8 transitive low findings (0 moderate/high/critical). Resume on upstream fixes or a bounded runtime-path remediation; never use <code>npm audit fix --force</code>.</span></li>
+      <li><div class="cb cb-done">&#x2713;</div><strong>Residual dependency audit findings</strong> &mdash; resolved 2026-10-01<br>
+        <span style="color:#6b7280;font-size:0.82rem;">Root audit: 0 vulnerabilities after hardhat-verify 3.1.2 (#151); the advisory gate requires a clean root audit. The historical baseline had 8 transitive low findings. Never use <code>npm audit fix --force</code>.</span></li>
       <li><div class="cb"></div><strong>CommitmentVault native batch-lock UX</strong><br>
         <span style="color:#6b7280;font-size:0.82rem;">Current self-service works but needs one approval plus multiple lock confirmations. Resume with an audited V2 <code>lockBatch</code>/<code>lockSplit</code> scope and deployment approval.</span></li>
       <li><div class="cb"></div><strong>Global LendingVault liquidation dashboard and Telegram alerts</strong><br>

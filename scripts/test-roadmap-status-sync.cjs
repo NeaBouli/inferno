@@ -64,7 +64,7 @@ for (const stale of [
 }
 for (const relative of ["internal/operations/TODO.md", "internal/operations/TODO.html"]) {
   const todo = read(relative);
-  assert.ok(todo.includes("8 transitive low findings"));
+  assert.ok(todo.includes("Residual dependency audit findings") && todo.includes("resolved 2026-10-01"), `${relative} residual audit status`);
   assert.ok(!todo.includes("10 transitive low findings"));
 }
 

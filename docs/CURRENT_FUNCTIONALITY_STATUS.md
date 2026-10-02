@@ -76,12 +76,12 @@ not deployment units in this inventory.
 The current baseline combines clean-install audits, contract tests and the
 browser/application verification retained by the release gates:
 
-- Smart contracts: `644/644` passing, including the CommitmentVault and
+- Smart contracts: `655/655` passing, including the CommitmentVault and
   LendingVault fee-exemption deficit regressions.
 - Generator Engine: `30/30` passing.
 - IFR SDK legacy suite: `36/36` passing.
-- Landing/Wiki wallet browser suite: `24/24` passing.
-- Web3 write-path browser suite: `27/27` passing.
+- Landing/Wiki wallet browser suite: `26/26` passing.
+- Web3 write-path browser suite: `45/45` passing.
 - Surface routing, wiki head integrity, wiki RAG freshness, content trust,
   status baseline and dependency-advisory checks: passing.
 - Benefits full preflight: frontend/backend dependency audits, TypeScript,
