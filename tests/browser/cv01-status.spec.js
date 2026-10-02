@@ -1,6 +1,7 @@
 // @ts-check
 // CV-01 compensation page: status colours follow the Council decision and the live conditions.
-// red = Council pending, yellow = approved but conditions not met, green = approved and payable.
+// red = Council pending, yellow = approved without verified TWAP evidence, green = approved with a
+// published, verified 7-day TWAP record. Live spot data and RPC results must never produce green.
 const { test, expect } = require("@playwright/test");
 
 const PAGE = "/wiki/commitment-vault-compensation.html";
@@ -33,48 +34,78 @@ async function mockChain(page, { timestamp, priceGwei }) {
   });
 }
 
-async function setCouncil(page, council) {
+async function setPage(page, { council, evidence }) {
   await page.route("**" + PAGE, async (route) => {
     const response = await route.fetch();
-    const html = (await response.text()).replace('"council": "pending"', `"council": "${council}"`);
+    let html = await response.text();
+    if (council) html = html.replace('"council": "pending"', `"council": "${council}"`);
+    if (evidence) html = html.replace('"twapEvidence": []', `"twapEvidence": ${JSON.stringify(evidence)}`);
     await route.fulfill({ response, body: html });
   });
 }
 
 const AFTER_UNLOCK = Date.parse("2026-12-01T00:00:00Z") / 1000;
-const BEFORE_UNLOCK = Date.parse("2026-10-02T00:00:00Z") / 1000;
+const C1 = "0x4f632748460E5277bF8435259cADce440AbAC254";
+const C3 = "0xf556cCe85128c93AC6A7e088cF334180F2D3905B";
+const goodC1 = { wallet: C1, id: 0, startBlock: 26500000, endBlock: 26550400, endTimestamp: AFTER_UNLOCK, twapGwei: 16, verifiedBy: "test" };
 
-test("Council pending: every tranche is red", async ({ page }) => {
-  await mockChain(page, { timestamp: AFTER_UNLOCK, priceGwei: 16 });
+async function load(page) {
   await page.goto(PAGE);
-  await expect(page.locator("#cv01-live")).toContainText("Live at block");
   await expect(page.locator("#cv01-rows .cv-status")).toHaveCount(11);
+}
+
+test("Council pending: every tranche is red, even with a spot spike", async ({ page }) => {
+  await mockChain(page, { timestamp: AFTER_UNLOCK, priceGwei: 100000 });
+  await load(page);
+  await expect(page.locator("#cv01-live")).toContainText("Live at block");
   await expect(page.locator("#cv01-rows .cv-red")).toHaveCount(11);
-  await expect(page.locator("#cv01-rows tr").first().locator(".cv-status")).toHaveText("Conditions met — Council pending");
+  await expect(page.locator("#cv01-rows tr").first().locator(".cv-status")).toHaveText("Council pending");
+  await expect(page.locator("#cv01-rows tr").first()).toContainText("indicative only");
 });
 
-test("Approved: met tranches are green, unmet tranches yellow", async ({ page }) => {
-  await setCouncil(page, "approved");
-  await mockChain(page, { timestamp: AFTER_UNLOCK, priceGwei: 16 });   // C1: after 2026-11-29 and >= 15 gwei
-  await page.goto(PAGE);
+test("Approved + spot spike without TWAP evidence: nothing is green", async ({ page }) => {
+  await setPage(page, { council: "approved" });
+  await mockChain(page, { timestamp: AFTER_UNLOCK, priceGwei: 100000 });  // spot far above every target
+  await load(page);
   await expect(page.locator("#cv01-live")).toContainText("Live at block");
-  await expect(page.locator("#cv01-rows .cv-green")).toHaveCount(1);   // C1 #0
-  await expect(page.locator("#cv01-rows .cv-yellow")).toHaveCount(10); // C3 needs 1,500 gwei
+  await expect(page.locator("#cv01-rows .cv-green")).toHaveCount(0);
+  await expect(page.locator("#cv01-rows .cv-yellow")).toHaveCount(11);
 });
 
-test("Approved but before the unlock date: C1 stays yellow", async ({ page }) => {
-  await setCouncil(page, "approved");
-  await mockChain(page, { timestamp: BEFORE_UNLOCK, priceGwei: 2000 });
-  await page.goto(PAGE);
-  await expect(page.locator("#cv01-live")).toContainText("Live at block");
-  await expect(page.locator("#cv01-rows tr").first().locator(".cv-status")).toHaveClass(/cv-yellow/);
-  await expect(page.locator("#cv01-rows .cv-green")).toHaveCount(10);  // C3: price-only, 2,000 >= 1,500 gwei
-});
-
-test("RPC unavailable: no green status is ever shown", async ({ page }) => {
-  await setCouncil(page, "approved");
+test("Approved + RPC unavailable: nothing is green", async ({ page }) => {
+  await setPage(page, { council: "approved" });
   await page.route(/^https:\/\/(ethereum-rpc\.publicnode\.com|eth\.llamarpc\.com)/, (route) => route.abort());
-  await page.goto(PAGE);
+  await load(page);
   await expect(page.locator("#cv01-live")).toContainText("unavailable");
   await expect(page.locator("#cv01-rows .cv-green")).toHaveCount(0);
+});
+
+test("Approved + verified TWAP record: only that tranche is green, independent of spot and RPC", async ({ page }) => {
+  await setPage(page, { council: "approved", evidence: [goodC1] });
+  await page.route(/^https:\/\/(ethereum-rpc\.publicnode\.com|eth\.llamarpc\.com)/, (route) => route.abort());
+  await load(page);
+  await expect(page.locator("#cv01-rows .cv-green")).toHaveCount(1);
+  await expect(page.locator("#cv01-rows tr").first().locator(".cv-status")).toHaveClass(/cv-green/);
+});
+
+test("Incomplete or failing TWAP records never produce green", async ({ page }) => {
+  const bad = [
+    { ...goodC1, twapGwei: 14 },                          // below the 15 gwei target
+    { ...goodC1, endTimestamp: AFTER_UNLOCK - 86400 * 30 }, // ends before the original unlock date
+    { ...goodC1, startBlock: undefined },                 // missing start block
+    { ...goodC1, endBlock: 26400000 },                    // end before start
+    { ...goodC1, verifiedBy: "" },                        // not verified
+    { wallet: C3, id: 0, startBlock: 1, endBlock: 2, twapGwei: 10, verifiedBy: "test" }, // C3 target 1,500 gwei
+  ];
+  await setPage(page, { council: "approved", evidence: bad });
+  await mockChain(page, { timestamp: AFTER_UNLOCK, priceGwei: 100000 });
+  await load(page);
+  await expect(page.locator("#cv01-rows .cv-green")).toHaveCount(0);
+});
+
+test("Evidence without Council approval stays red", async ({ page }) => {
+  await setPage(page, { evidence: [goodC1] });
+  await mockChain(page, { timestamp: AFTER_UNLOCK, priceGwei: 16 });
+  await load(page);
+  await expect(page.locator("#cv01-rows .cv-red")).toHaveCount(11);
 });
