@@ -8,8 +8,8 @@
 - New wiki page `commitment-vault-compensation.html`. It records the affected tranches with a
   status (red: Council pending; yellow: approved, awaiting a verified 7-day TWAP record; green:
   approved and TWAP verified with published blocks). Live spot data is shown as indicative only and
-  never changes a status. It also records the open vote (2 of 3 required YES signatures, deadline
-  17 October 2026; not approved), the deployed TIME_ONLY CommitmentVault V2 and queued Governance
+  never changes a status. It also records the open vote (2 of 3 required YES signatures, no
+  deadline; not approved), the deployed TIME_ONLY CommitmentVault V2 and queued Governance
   proposal #17, and the urgent
   Council proposal CV-01, which compensates from the LP Reserve Safe by each tranche's original
   time and price conditions (7-day TWAP).
