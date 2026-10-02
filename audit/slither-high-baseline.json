@@ -29,13 +29,7 @@
       "fingerprint": "db0a384fe96bfb8c60e47b7d89ab6c24b7e7e03d31b46094047dac5e6ffac134",
       "subject": "BuybackController.execute() reentrancy-eth",
       "classification": "Constrained signal / V2 hardening",
-      "rationale": "The cooldown timestamp and execution counter are updated before external calls, blocking a nested execute(). The configured router remains an external trust boundary; add an explicit reentrancy guard in any future controller version."
-    },
-    {
-      "fingerprint": "03c75183dbe9c8ba3d9335a853f068aac66f646e0664398e8d14f8f8ad896f78",
-      "subject": "BuybackController.withdrawIFR(address,uint256) unchecked-transfer",
-      "classification": "Confirmed source hardening item",
-      "rationale": "The owner-only emergency path ignores the ERC-20 boolean return. Canonical IFR returns true or reverts, but a future controller should use SafeERC20 or require the returned value."
+      "rationale": "execute() is nonReentrant (ReentrancyGuard, T-190) and the cooldown timestamp and execution counter are updated before external calls; a nested execute() from the router reverts (tested). The configured router remains an external trust boundary."
     },
     {
       "fingerprint": "bc20adfd1f10e0a20b01482a1a09ba901e09e82121fcad89ca287e54d1263efe",
