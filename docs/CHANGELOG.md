@@ -1,5 +1,17 @@
 # Changelog
 
+## 2 October 2026 — CommitmentVault V1 Incident Record and Council Proposal CV-01
+
+- 11 price-conditioned CommitmentVault V1 tranches (26,418,467.994338353 IFR) cannot unlock. The
+  deployed vault has no working price check. A Mainnet-fork simulation confirmed that no oracle or
+  time setting can release them.
+- New wiki page `commitment-vault-compensation.html`. It records the affected tranches with a live
+  status (red: Council pending; yellow: approved; green: payable). It also records the urgent
+  Council proposal CV-01, which compensates from the LP Reserve Safe by each tranche's original
+  time and price conditions (7-day TWAP).
+- The governance Council agenda and vote log list CV-01. The transparency page and the decision
+  register record the permanently locked amount as non-circulating.
+
 ## 2 October 2026 — BuybackController Source Hardening
 
 - `execute()` is now `nonReentrant`. A nested call from the router reverts with the reentrancy

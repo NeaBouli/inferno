@@ -591,6 +591,7 @@
         <li><a href="https://ifrunit.tech/wiki/roadmap.html">Roadmap</a></li>
         <li class="nav-divider"></li>
         <li><a href="https://ifrunit.tech/wiki/commitment-vault.html">CommitmentVault</a></li>
+        <li><a href="https://ifrunit.tech/wiki/commitment-vault-compensation.html">CV-01 Compensation</a></li>
         <li><a href="https://ifrunit.tech/wiki/lending-vault.html">LendingVault</a></li>
         <li><a href="https://ifrunit.tech/wiki/lending-market.html">Lending Market</a></li>
         <li><a href="https://ifrunit.tech/wiki/lp-strategy.html">LP Strategy</a></li>
@@ -1674,9 +1675,15 @@ await governance.execute(proposalId);</code></pre>
       <section class="governance-agenda" aria-labelledby="council-agenda">
       <h2 id="council-agenda">Council Agenda &amp; Vote Log</h2>
 
+      <div class="callout" style="margin-bottom:16px;">
+        <p style="margin:0;"><strong>Urgent vote open: CV-01.</strong> The status below applies to the exchange discussion items EX-01 and EX-02.</p>
+      </div>
       <div class="callout" style="background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.35);border-radius:8px;padding:20px;margin-bottom:24px;">
         <p style="margin:0;"><strong>Status: undated discussion draft.</strong> No vote is open, no IFR is allocated, and no exchange has Council membership or TreasurySafe permissions. Publishing an agenda item does not authorize spending or an on-chain action. Agenda entries contain no proposer attribution or personal name.</p>
       </div>
+
+      <h3 id="agenda-cv-01">Agenda CV-01 &mdash; CommitmentVault V1 Compensation <span class="phase-badge badge-planned">Urgent vote</span></h3>
+      <p>Price-conditioned CommitmentVault V1 tranches holding <strong>26,418,467.994338353 IFR</strong> can never unlock, because the deployed vault has no working price check. The proposal compensates each affected tranche from the <strong>LP Reserve Safe</strong>, following the tranche's original unlock date and price target: a 7-day TWAP from the IFR/WETH pair, with the transfer fee grossed up. No payout happens before Council approval and an executed Safe transaction. Details, the live status of every tranche and the full proposal text: <a href="commitment-vault-compensation.html">CommitmentVault V1 Compensation (CV-01)</a>.</p>
 
       <h3>Agenda EX-01 &mdash; Exchange Incentives</h3>
       <p>The Council will consider whether verified centralized exchanges should receive any IFR support. This question is separate from the already approved <a href="fee-design.html#cex-fee-policy">CEX fee-exemption policy</a>.</p>
@@ -1702,6 +1709,7 @@ await governance.execute(proposalId);</code></pre>
       <table>
         <thead><tr><th>Agenda ID</th><th>Subject</th><th>Date</th><th>State</th><th>Result / execution</th></tr></thead>
         <tbody>
+          <tr><td>CV-01</td><td>CommitmentVault V1 compensation from the LP Reserve Safe</td><td>Requested 2026-10-02</td><td>Urgent vote open</td><td>None</td></tr>
           <tr><td>EX-01</td><td>Exchange IFR incentives and funding limits</td><td>Not scheduled</td><td>Discussion draft</td><td>None</td></tr>
           <tr><td>EX-02</td><td>Exchange advisory, voting or Safe role</td><td>Not scheduled</td><td>Discussion draft</td><td>None</td></tr>
         </tbody>

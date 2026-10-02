@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-    <link rel="canonical" href="https://ifrunit.tech/wiki/ecosystem.html">
-  <link rel="alternate" hreflang="en" href="https://ifrunit.tech/wiki/ecosystem.html">
-  <link rel="alternate" hreflang="x-default" href="https://ifrunit.tech/wiki/ecosystem.html">
+  <link rel="canonical" href="https://ifrunit.tech/wiki/commitment-vault-compensation.html">
+  <link rel="alternate" hreflang="en" href="https://ifrunit.tech/wiki/commitment-vault-compensation.html">
+  <link rel="alternate" hreflang="x-default" href="https://ifrunit.tech/wiki/commitment-vault-compensation.html">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ecosystem &mdash; Inferno (IFR) Documentation</title>
-  <meta name="keywords" content="ecosystem, self-reinforcing, buy pressure, utility">
-  <meta name="description" content="The self-reinforcing IFR ecosystem. How CommitmentVault, LendingVault, and builder integrations create sustained buy pressure.">
+  <title>CommitmentVault V1 Compensation (CV-01) &mdash; Inferno (IFR) Documentation</title>
+  <meta name="keywords" content="Inferno, IFR, multisig, Gnosis Safe, community governance, signer expansion, DAO governance, Ethereum">
+  <meta name="description" content="Incident record and urgent Council proposal CV-01: 26.4M IFR in price-conditioned CommitmentVault V1 tranches can never unlock; compensation from the LP Reserve Safe follows each tranche's original time and price conditions.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -85,6 +85,8 @@
       padding: 16px 0;
       flex: 1;
     }
+
+    .sidebar-nav li {}
 
     .sidebar-nav a {
       display: block;
@@ -216,32 +218,6 @@
       margin-bottom: 32px;
     }
 
-    /* ---------- Code blocks ---------- */
-    pre {
-      background: #1a1a1d;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px 20px;
-      overflow-x: auto;
-      font-size: 13px;
-      line-height: 1.7;
-      margin: 16px 0;
-      color: var(--text);
-    }
-
-    code {
-      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-      font-size: 13px;
-      color: var(--text);
-    }
-
-    p code, li code, td code {
-      background: rgba(255, 255, 255, 0.06);
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 13px;
-    }
-
     /* ---------- Tables ---------- */
     table {
       width: 100%;
@@ -259,7 +235,7 @@
     th {
       color: var(--muted);
       font-weight: 600;
-      font-size: 13px;
+      font-size: 12px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
@@ -297,417 +273,61 @@
 
     .callout-green {
       background: rgba(34, 197, 94, 0.06);
-      border-left: 3px solid var(--green);
-      border-radius: 0 8px 8px 0;
-      padding: 16px 20px;
-      margin: 20px 0;
+      border-left-color: var(--green);
     }
 
-    .callout-green p {
-      color: var(--text);
-      margin: 0;
-      font-size: 14px;
-    }
-
-    .callout-blue {
-      background: rgba(59, 130, 246, 0.06);
-      border-left: 3px solid #3b82f6;
-      border-radius: 0 8px 8px 0;
-      padding: 16px 20px;
-      margin: 20px 0;
-    }
-
-    .callout-blue p {
-      color: var(--text);
-      margin: 0;
-      font-size: 14px;
-    }
-
-    /* ---------- Flow diagram ---------- */
-    .flow-diagram {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin: 24px 0;
-      padding: 8px 0;
-      max-width: 100%;
-    }
-
-    .flow-step {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px 14px;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text);
-      white-space: nowrap;
-      text-align: center;
-    }
-
-    .flow-step.active {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
-    .flow-step.green {
-      border-color: var(--green);
-      color: var(--green);
-    }
-
-    .flow-arrow {
-      color: var(--muted);
-      font-size: 18px;
-      padding: 0 8px;
-      flex-shrink: 0;
-    }
-
-    /* ---------- Architecture diagram ---------- */
-    .arch-stack {
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-      margin: 24px 0;
-      max-width: 560px;
-    }
-
-    .arch-layer {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px 24px;
-    }
-
-    .arch-layer-label {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--accent);
-      margin-bottom: 6px;
-    }
-
-    .arch-layer-title {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 4px;
-    }
-
-    .arch-layer-desc {
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.5;
-    }
-
-    .arch-connector {
-      display: flex;
-      justify-content: center;
-      padding: 4px 0;
-      color: var(--muted);
-      font-size: 20px;
-    }
-
-    /* ---------- Step list ---------- */
-    .step-list {
-      list-style: none;
-      padding-left: 0;
-      counter-reset: step-counter;
-      margin: 16px 0;
-    }
-
-    .step-list li {
-      counter-increment: step-counter;
-      position: relative;
-      padding-left: 40px;
-      margin-bottom: 16px;
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    .step-list li::before {
-      content: counter(step-counter);
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      background: rgba(255, 69, 0, 0.12);
-      color: var(--accent);
-      font-size: 13px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      line-height: 1;
-    }
-
-    /* ---------- Contract badge ---------- */
-    .contract-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 16px;
-      margin: 8px 0 16px;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      font-size: 13px;
-      color: var(--text);
-      word-break: break-all;
-    }
-
-    .contract-badge .label {
-      color: var(--muted);
-      font-family: 'Inter', sans-serif;
-      font-weight: 600;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      white-space: nowrap;
-    }
-
-    /* ---------- Stakeholder cards ---------- */
-    .stakeholder-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin: 24px 0;
-    }
-
-    .stakeholder-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-    }
-
-    .stakeholder-card-top {
-      padding: 12px 20px;
-      font-size: 13px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: #fff;
-    }
-
-    .stakeholder-card-top.orange { background: rgba(249, 115, 22, 0.2); color: #9a3412; }
-    .stakeholder-card-top.blue { background: rgba(59, 130, 246, 0.2); color: #1e40af; }
-    .stakeholder-card-top.green { background: rgba(34, 197, 94, 0.2); color: #166534; }
-    .stakeholder-card-top.purple { background: rgba(168, 85, 247, 0.2); color: #6b21a8; }
-
-    .stakeholder-card-body {
-      padding: 16px 20px;
-    }
-
-    .stakeholder-card-body li {
-      color: var(--muted);
-      font-size: 13px;
-      margin-bottom: 6px;
-    }
-
-    /* ---------- Cycle diagram ---------- */
-    .cycle-diagram {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0;
-      margin: 24px 0;
-      max-width: 700px;
-    }
-
-    .cycle-node {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 14px 18px;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text);
-      text-align: center;
-      min-width: 160px;
-      line-height: 1.4;
-    }
-
-    .cycle-node.highlight {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
-    .cycle-node small {
-      display: block;
-      font-size: 11px;
-      font-weight: 400;
-      color: var(--muted);
-      margin-top: 4px;
-    }
-
-    .cycle-arrow {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--muted);
-      font-size: 20px;
-      padding: 0 6px;
-      flex-shrink: 0;
-    }
-
-    .cycle-arrow-down {
-      display: flex;
-      justify-content: center;
-      width: 100%;
-      color: var(--muted);
-      font-size: 20px;
-      padding: 4px 0;
-    }
-
-    /* ---------- Prinzip cards ---------- */
-    .prinzip-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px 24px;
-      margin: 16px 0;
-    }
-
-    .prinzip-card h3 {
-      margin: 0 0 10px 0;
-      font-size: 15px;
-      font-weight: 700;
-      color: var(--accent);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .prinzip-card ul {
-      padding-left: 20px;
-      margin: 0;
-    }
-
-    .prinzip-card li {
-      color: var(--muted);
-      font-size: 13px;
-      margin-bottom: 6px;
-    }
-
-    /* ---------- Timeline ---------- */
-    .timeline {
-      position: relative;
-      margin: 24px 0;
-      padding-left: 28px;
-    }
-
-    .timeline::before {
-      content: '';
-      position: absolute;
-      left: 8px;
-      top: 0;
-      bottom: 0;
-      width: 2px;
-      background: var(--border);
-    }
-
-    .timeline-item {
-      position: relative;
-      margin-bottom: 24px;
-    }
-
-    .timeline-item::before {
-      content: '';
-      position: absolute;
-      left: -24px;
-      top: 4px;
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      background: var(--accent);
-      border: 2px solid var(--bg);
-    }
-
-    .timeline-item.future::before {
-      background: var(--border);
-    }
-
-    .timeline-date {
-      font-size: 12px;
-      font-weight: 700;
-      color: var(--accent);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 4px;
-    }
-
-    .timeline-item.future .timeline-date {
-      color: var(--muted);
-    }
-
-    .timeline-title {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--text);
-      margin-bottom: 2px;
-    }
-
-    .timeline-desc {
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    /* ---------- Phase pricing ---------- */
-    .phase-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin: 20px 0;
-    }
-
+    /* ---------- Phase cards ---------- */
     .phase-card {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 20px;
+      padding: 24px 28px;
+      margin: 20px 0;
     }
 
-    .phase-card.current {
-      border-color: var(--green);
+    .phase-card h3 {
+      margin: 0 0 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
     }
 
-    .phase-card.future-phase {
-      border-color: #3b82f6;
-    }
-
-    .phase-card-title {
-      font-size: 14px;
+    .phase-badge {
+      font-size: 11px;
       font-weight: 700;
-      margin-bottom: 12px;
-    }
-
-    .phase-card.current .phase-card-title {
-      color: var(--green);
-    }
-
-    .phase-card.future-phase .phase-card-title {
-      color: #1d4ed8;
-    }
-
-    .phase-card p {
-      font-size: 13px;
-      color: var(--muted);
-      margin-bottom: 8px;
-      max-width: none;
-    }
-
-    /* ---------- Nav section header ---------- */
-    .sidebar-nav .nav-section {
-      font-size: 10px;
-      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
       text-transform: uppercase;
-      letter-spacing: 1.5px;
-      color: var(--muted);
-      padding: 8px 24px 4px;
-      opacity: 0.6;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-done { background: rgba(34,197,94,0.15); color: var(--green); }
+    .badge-progress { background: rgba(255,69,0,0.15); color: var(--accent); }
+    .badge-planned { background: rgba(138,138,150,0.15); color: var(--muted); }
+
+    /* ---------- Code ---------- */
+    pre {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.7;
+      margin: 16px 0;
+    }
+
+    code {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 13px;
+    }
+
+    p code, li code, td code {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
     }
 
     /* ---------- Footer ---------- */
@@ -751,29 +371,12 @@
         padding: 72px 20px 40px;
       }
 
-      .flow-diagram {
-        flex-wrap: wrap;
-        gap: 8px;
+      table {
+        font-size: 13px;
       }
 
-      .flow-arrow {
-        padding: 0 4px;
-      }
-
-      .stakeholder-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .phase-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .arch-stack {
-        max-width: 100%;
-      }
-
-      .cycle-diagram {
-        max-width: 100%;
+      th, td {
+        padding: 10px 12px;
       }
     }
 
@@ -790,21 +393,22 @@
   <meta property="og:locale" content="en_US">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Inferno Protocol">
-  <meta property="og:title" content="IFR Ecosystem &mdash; Inferno Protocol (IFR)">
-  <meta property="og:description" content="The self-reinforcing IFR ecosystem. How CommitmentVault, LendingVault, and builder integrations create sustained buy pressure.">
-  <meta property="og:url" content="https://ifrunit.tech/wiki/ecosystem.html">
+  <meta property="og:title" content="CommitmentVault V1 Compensation (CV-01) — Inferno Protocol (IFR)">
+  <meta property="og:description" content="Incident record and urgent Council proposal CV-01: 26.4M IFR in price-conditioned CommitmentVault V1 tranches can never unlock; compensation from the LP Reserve Safe follows each tranche's original time and price conditions.">
+  <meta property="og:url" content="https://ifrunit.tech/wiki/commitment-vault-compensation.html">
   <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="IFR Ecosystem &mdash; Inferno Protocol (IFR)">
-  <meta name="twitter:description" content="The self-reinforcing IFR ecosystem. CommitmentVault, LendingVault, and builder integrations create sustained buy pressure.">
+  <meta name="twitter:title" content="CommitmentVault V1 Compensation (CV-01) — Inferno Protocol (IFR)">
+  <meta name="twitter:description" content="Incident record and urgent Council proposal CV-01: 26.4M IFR in price-conditioned CommitmentVault V1 tranches can never unlock; compensation from the LP Reserve Safe follows each tranche's original time and price conditions.">
   <meta name="twitter:site" content="@IFRtoken">
-  <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">  <script type="application/ld+json">
+  <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
+  <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "TechArticle",
-    "headline": "IFR Ecosystem",
-    "description": "The self-reinforcing IFR ecosystem. How CommitmentVault, LendingVault, and builder integrations create sustained buy pressure.",
-    "url": "https://ifrunit.tech/wiki/ecosystem.html",
+    "headline": "CommitmentVault V1 Compensation (CV-01)",
+    "description": "Incident record and urgent Council proposal CV-01: 26.4M IFR in price-conditioned CommitmentVault V1 tranches can never unlock; compensation from the LP Reserve Safe follows each tranche's original time and price conditions.",
+    "url": "https://ifrunit.tech/wiki/commitment-vault-compensation.html",
     "isPartOf": {"@id": "https://ifrunit.tech/#website"},
     "publisher": {"@id": "https://ifrunit.tech/#organization"},
     "about": {"@id": "https://ifrunit.tech/#app"}
@@ -818,28 +422,32 @@
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
   "itemListElement": [
-    {
-      "@type": "ListItem",
-      "position": 1,
-      "name": "Inferno",
-      "item": "https://ifrunit.tech/"
-    },
-    {
-      "@type": "ListItem",
-      "position": 2,
-      "name": "Wiki",
-      "item": "https://ifrunit.tech/wiki/"
-    },
-    {
-      "@type": "ListItem",
-      "position": 3,
-      "name": "Ecosystem",
-      "item": "https://ifrunit.tech/wiki/ecosystem.html"
-    }
+    {"@type": "ListItem", "position": 1, "name": "Inferno", "item": "https://ifrunit.tech/"},
+    {"@type": "ListItem", "position": 2, "name": "Wiki", "item": "https://ifrunit.tech/wiki/"},
+    {"@type": "ListItem", "position": 3, "name": "CommitmentVault V1 Compensation (CV-01)", "item": "https://ifrunit.tech/wiki/commitment-vault-compensation.html"}
   ]
 }
   </script>
   <link rel="stylesheet" href="../assets/redesign-skin.css">
+  <style>
+    .cv-legend { display:flex; flex-wrap:wrap; gap:6px 14px; align-items:center; margin:12px 0 16px; font-size:0.9rem; }
+    .cv-status { display:inline-block; padding:2px 10px; border-radius:999px; font-weight:700; font-size:0.8rem; border:1px solid transparent; }
+    .cv-red { background:#fde8e8; color:#991b1b; border-color:#f3b4b4; }
+    .cv-yellow { background:#fdf3d7; color:#7a4f00; border-color:#ecd28a; }
+    .cv-green { background:#dcfce7; color:#14532d; border-color:#9fdcb4; }
+    .cv-grey { background:#eceae6; color:#4a4036; border-color:#d6d0c7; }
+    .cv-live { font-size:0.85rem; }
+    .table-scroll { overflow-x:auto; }
+    @media (max-width: 640px) {
+      #cv01-table thead { display:none; }
+      #cv01-table, #cv01-table tbody, #cv01-table tr, #cv01-table td { display:block; width:100%; }
+      #cv01-table tbody tr { border:1px solid var(--line, #e4d8c7); border-radius:10px; padding:10px 12px; margin-bottom:12px; }
+      #cv01-table td { border:0; padding:3px 0; }
+      #cv01-table td::before { content: attr(data-label) ": "; font-weight:700; }
+      #cv01-table tfoot tr { display:flex; justify-content:space-between; }
+      #cv01-table tfoot th[colspan="3"]:last-child { display:none; }
+    }
+  </style>
 </head>
 <body>
 
@@ -879,12 +487,12 @@
         <li><a href="https://ifrunit.tech/wiki/roadmap.html">Roadmap</a></li>
         <li class="nav-divider"></li>
         <li><a href="https://ifrunit.tech/wiki/commitment-vault.html">CommitmentVault</a></li>
-        <li><a href="https://ifrunit.tech/wiki/commitment-vault-compensation.html">CV-01 Compensation</a></li>
+        <li><a href="https://ifrunit.tech/wiki/commitment-vault-compensation.html" class="active" aria-current="page">CV-01 Compensation</a></li>
         <li><a href="https://ifrunit.tech/wiki/lending-vault.html">LendingVault</a></li>
         <li><a href="https://ifrunit.tech/wiki/lending-market.html">Lending Market</a></li>
         <li><a href="https://ifrunit.tech/wiki/lp-strategy.html">LP Strategy</a></li>
         <li><a href="liquidity.html">Provide IFR / ETH Liquidity</a></li>
-        <li><a href="https://ifrunit.tech/wiki/ecosystem.html" class="active" aria-current="page">Ecosystem</a></li>
+        <li><a href="https://ifrunit.tech/wiki/ecosystem.html">Ecosystem</a></li>
         <li class="nav-divider"></li>
         <li><a href="https://ifrunit.tech/wiki/governance.html">Governance</a></li>
         <li><a href="https://ifrunit.tech/wiki/dao-governance.html">DAO Governance</a></li>
@@ -954,233 +562,175 @@
       </div>
 
 
-      <!-- Phase 3 Live Banner -->
-      <div class="callout-blue" style="background:rgba(34,197,94,0.08);border-color:rgba(34,197,94,0.25);">
-        <p><strong>Phase 3 &mdash; &#x2705; Live on Mainnet.</strong> CommitmentVault and LendingVault are deployed on Ethereum Mainnet with feeExempt active since 06.04.2026.</p>
-      </div>
-
-      <h1>IFR <span class="accent">Ecosystem</span></h1>
-      <div class="callout" id="application-status">
-        <p><strong>Live application status:</strong> <a href="https://web3.ifrunit.tech/">Web3</a> provides wallet selection and direct protocol actions. <a href="https://shop.ifrunit.tech/">IFR Benefits</a> provides the customer/seller PWA and QR benefit flow. See the <a href="https://ifrunit.tech/CURRENT_FUNCTIONALITY_STATUS.md">verified functionality matrix</a> for operational boundaries and real-device acceptance status.</p>
-      </div>
-      <p class="subtitle">Current Activity and a Conditional Future Loop</p>
-
-      <!-- ======================================== -->
-      <!-- 1. Der Kreislauf -->
-      <!-- ======================================== -->
-      <h2>1. Current and Conditional Flow</h2>
-      <p>
-        Current Mainnet activity includes contributor commitments, lender offers and user access locks. Borrowing is disabled while <code>LendingVault.ifrPriceWei = 0</code>. The lower part of this diagram is a possible future path only: it requires a separately audited borrowing design and does not guarantee market demand or price growth.
+      <h1><span class="accent">CommitmentVault V1 Compensation (CV-01)</span></h1>
+      <p class="subtitle">
+        Incident record and urgent Council proposal for the IFR that price-conditioned CommitmentVault V1 tranches can never release.
       </p>
 
-      <!-- Cycle diagram using styled divs -->
-      <div class="cycle-diagram" style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;">
-        <div class="cycle-node highlight">
-          Contributor
-          <small>100M IFR locked</small>
-        </div>
-        <div class="cycle-arrow">&rarr;</div>
-        <div class="cycle-node">
-          CommitmentVault
-          <small>Tranche-Lock</small>
-        </div>
-        <div class="cycle-arrow">+</div>
-        <div class="cycle-node">
-          LendingVault
-          <small>50M lendable</small>
-        </div>
-      </div>
-      <div class="cycle-arrow-down">&darr;</div>
-      <div class="cycle-diagram" style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;">
-        <div class="cycle-node" style="border-color:#3b82f6;color:#1d4ed8;">
-          Builders may borrow
-          <small>future audited activation</small>
-        </div>
-        <div class="cycle-arrow">&rarr;</div>
-        <div class="cycle-node" style="border-color:#22c55e;color:#166534;">
-          Users may acquire IFR
-          <small>for an access threshold</small>
-        </div>
-        <div class="cycle-arrow">&rarr;</div>
-        <div class="cycle-node highlight">
-          Potential market demand
-        </div>
-      </div>
-      <div class="cycle-arrow-down">&darr;</div>
-      <div class="cycle-diagram" style="display:flex;flex-wrap:wrap;align-items:center;gap:6px;">
-        <div class="cycle-node" style="border-color:#22c55e;color:#166534;">
-          Market conditions vary
-        </div>
-        <div class="cycle-arrow">&rarr;</div>
-        <div class="cycle-node">
-          Time conditions unlock
-        </div>
-        <div class="cycle-arrow">&rarr;</div>
-        <div class="cycle-node">
-          Contributor holds/reinvests
-        </div>
-        <div class="cycle-arrow">&rarr;</div>
-        <div class="cycle-node">
-          Pool deepens
-        </div>
-        <div class="cycle-arrow">&rarr;</div>
-        <div class="cycle-node" style="border-color:#a855f7;color:#7e22ce;">
-          More Builders
-        </div>
-      </div>
-      <div class="cycle-arrow-down" style="font-size:24px;font-weight:700;color:var(--accent);">&#x21BB; LOOP</div>
-
-      <!-- ======================================== -->
-      <!-- 2. Die 3 Prinzipien -->
-      <!-- ======================================== -->
-      <h2>2. The 3 Principles</h2>
-
-      <div class="prinzip-card">
-        <h3>Principle 1: Tokens Prove Commitment</h3>
-        <ul>
-          <li>Locked tokens = on-chain truth, no trust required</li>
-          <li>Smart contract enforces it, community can verify</li>
-        </ul>
-      </div>
-
-      <div class="prinzip-card">
-        <h3>Principle 2: Locked Tokens Work</h3>
-        <ul>
-          <li>Tokens that are locked and forgotten = wasted</li>
-          <li>CommitmentVault + LendingVault make them productive</li>
-        </ul>
-      </div>
-
-      <div class="prinzip-card">
-        <h3>Principle 3: Utility Can Create Demand</h3>
-        <ul>
-          <li>A user who needs more IFR for an access threshold may choose to acquire it on a market</li>
-          <li>A borrower may choose to acquire IFR externally for repayment if borrowing is activated in a future audited design</li>
-          <li>V1 liquidation distributes ETH collateral to the liquidator and lender; it performs no automatic Uniswap purchase</li>
-          <li>Protocol interest goes to the configured fee receiver; an LP route is not guaranteed by LendingVault V1</li>
-        </ul>
-      </div>
-
-      <!-- ======================================== -->
-      <!-- 3. Alle Stakeholder -->
-      <!-- ======================================== -->
-      <h2>3. All Stakeholders</h2>
-
-      <div class="stakeholder-grid">
-        <div class="stakeholder-card">
-          <div class="stakeholder-card-top orange">Contributor</div>
-          <div class="stakeholder-card-body">
-            <ul>
-              <li>100M IFR locked</li>
-              <li>IFR interest via Lending if borrowing is activated</li>
-              <li>Tranches unlock with growth</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="stakeholder-card">
-          <div class="stakeholder-card-top blue">Builder</div>
-          <div class="stakeholder-card-body">
-            <ul>
-              <li>Borrow IFR for discount programs</li>
-              <li>PartnerVault Rewards</li>
-              <li>Customer retention through Lock</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="stakeholder-card">
-          <div class="stakeholder-card-top green">User</div>
-          <div class="stakeholder-card-body">
-            <ul>
-              <li>Buy once + lock = access while the required IFR remains locked</li>
-              <li>No recurring subscription; integration availability still applies</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="stakeholder-card">
-          <div class="stakeholder-card-top purple">Team</div>
-          <div class="stakeholder-card-body">
-            <ul>
-              <li>LP Reserve Safe (3-of-5)</li>
-              <li>Governance (48h Timelock)</li>
-              <li>Progressive decentralization</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      <div class="callout-green callout">
-        <p><strong>IFR Benefits Network is live:</strong> <a href="https://shop.ifrunit.tech/" target="_blank" rel="noopener">shop.ifrunit.tech</a> connects both sides of this loop. Customers discover offers, filter by a seller-published city, region or Online service area, lock IFR and preferably present a private short-lived checkout pass. Sellers publish profiles, products and benefit rules, scan and bind the customer pass to the exact offer, verify the selected IFRLock or active TIME_ONLY CommitmentVault threshold plus any optional minimum IFR kept free in the customer wallet, and redeem an approved proof once. An either-source rule requires the full amount in one source; partial balances are not combined and price-conditioned commitments are excluded. The compatible seller-issued QR flow remains available. The service-area label uses no customer GPS or street address. PartnerVault seller rewards remain disabled until governance registration and an authorized reward caller are in place.</p>
-      </div>
-
-      <!-- ======================================== -->
-      <!-- 4. Preisgestaltung -->
-      <!-- ======================================== -->
-      <h2>4. Pricing Model</h2>
-
-      <div class="phase-grid">
-        <div class="phase-card current">
-          <div class="phase-card-title">Phase 1&ndash;2 (now): Lock Model</div>
-          <p>User buys IFR and locks the product-required amount. Access remains active while that amount stays locked and the integration remains available.</p>
-          <p>Canonical Bootstrap P0: <strong>300,000,000 wei per IFR</strong>. Fiat cost varies with ETH/USD and live market conditions.</p>
-        </div>
-
-        <div class="phase-card future-phase">
-          <div class="phase-card-title">Phase 3+ (when price is right): Payment Model</div>
-          <p>Threshold: P0 &times; 2,500 (<strong>$0.0005</strong>)</p>
-          <p>User pays X IFR per month directly to Builder.</p>
-          <p><code>X = Price_in_USD / IFR_TWAP_Price</code></p>
-        </div>
-      </div>
-
-      <h3>USD-Equivalent Lock</h3>
-      <p>
-        Builder says: &ldquo;Lock IFR worth $10.&rdquo;
-      </p>
       <div class="callout">
-        <p>
-          <strong>Smart Contract:</strong> current price &times; locked amount &ge; $10 &rarr; access granted.
-        </p>
+        <p><strong>Status: urgent Council vote requested (2 October 2026).</strong> This page records a proposal. It does not authorize anything: no IFR is paid out before the Council approves, and every payout also needs its own executed Safe transaction. Results are recorded in the <a href="governance.html#council-agenda">Council Agenda &amp; Vote Log</a>.</p>
       </div>
 
-      <!-- ======================================== -->
-      <!-- 5. Zeitplan -->
-      <!-- ======================================== -->
-      <h2>5. Timeline</h2>
+      <h2>What Happened</h2>
+      <p>The deployed CommitmentVault V1 (<a href="https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3" target="_blank" rel="noopener noreferrer"><code>0x0719&hellip;73d3</code></a>) accepts four lock types:</p>
+      <ul>
+        <li><code>TIME_ONLY</code></li>
+        <li><code>PRICE_ONLY</code></li>
+        <li><code>TIME_OR_PRICE</code></li>
+        <li><code>TIME_AND_PRICE</code></li>
+      </ul>
+      <p>Its price check is a placeholder that always reads a price of zero:</p>
+      <ul>
+        <li>The deployed bytecode contains no oracle call.</li>
+        <li>Setting <code>priceOracle</code> through Governance cannot change that.</li>
+      </ul>
+      <p>As a result:</p>
+      <ul>
+        <li><strong><code>PRICE_ONLY</code> and <code>TIME_AND_PRICE</code> tranches can never be unlocked.</strong></li>
+        <li><code>TIME_OR_PRICE</code> tranches unlock normally after their time condition.</li>
+        <li><code>TIME_ONLY</code> tranches unlock normally after their time condition.</li>
+      </ul>
+      <p>The repository source has rejected price-conditioned locks for future deployments since September 2026. The deployed V1 predates that guard.</p>
+      <p>A Mainnet-fork simulation confirmed the result on 2 October 2026:</p>
+      <ul>
+        <li>Governance set an oracle reporting the highest possible price, and time was advanced by ten years.</li>
+        <li>All <code>PRICE_ONLY</code> and <code>TIME_AND_PRICE</code> tranches still reported <code>conditionMet = false</code>.</li>
+      </ul>
+      <p>V1 has no rescue function and is not upgradeable. The IFR token cannot move another address's balance. <strong>Nobody can recover these tokens.</strong></p>
 
-      <div class="timeline">
-        <div class="timeline-item">
-          <div class="timeline-date">March 2026</div>
-          <div class="timeline-title">Bootstrap Opened</div>
-          <div class="timeline-desc">Fair Launch &mdash; community distribution began</div>
-        </div>
-
-        <div class="timeline-item">
-          <div class="timeline-date">05.06.2026 &#x2705;</div>
-          <div class="timeline-title">Bootstrap FINALIZED &mdash; LP Live</div>
-          <div class="timeline-desc">finalise() executed 23:51 UTC &mdash; Block 25254575 &mdash; 0.030 ETH raised &mdash; LP Token: <code style="font-size:11px;">0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</code><br>Proposal #15 executed 08.06.2026; Proposal #16 executed 09.06.2026.</div>
-        </div>
-
-        <div class="timeline-item future">
-          <div class="timeline-date">September 2026</div>
-          <div class="timeline-title">LiquidityReserve Initial Lock Ended</div>
-          <div class="timeline-desc">All 200M IFR remains held. Up to 50M IFR is available under the current 90-day cap; Governance has not proposed or executed a withdrawal.</div>
-        </div>
-
-        <div class="timeline-item future">
-          <div class="timeline-date">March 2027</div>
-          <div class="timeline-title">Vesting Cliff (Team IFR)</div>
-          <div class="timeline-desc">Team tokens begin linear vesting</div>
-        </div>
-
-        <div class="timeline-item future">
-          <div class="timeline-date">2027+</div>
-          <div class="timeline-title">BuybackController, Payment-Modell, DAO</div>
-          <div class="timeline-desc">Full decentralization &mdash; community governance takes over</div>
-        </div>
+      <div class="phase-card">
+        <h3>Impact <span class="phase-badge badge-planned">Permanent</span></h3>
+        <p style="margin:0;"><strong>26,418,467.994338353 IFR</strong> are permanently locked in CommitmentVault V1. This is about 2.65&nbsp;% of the current total supply. The vault holds 47,952,476.871794375 IFR in total; the remaining 21,534,008.877456022 IFR are in time-based tranches that unlock normally.</p>
       </div>
+
+      <h2>Affected Tranches and Compensation Status</h2>
+      <p>Each row is one locked tranche. You can verify every row with <code>getTranches(wallet)</code> on the vault.</p>
+      <p>The compensation for a tranche follows <strong>the conditions the tranche was locked with</strong>:</p>
+      <ul>
+        <li>its original unlock date, where there is one;</li>
+        <li>its original price target, <code>P0 &times; multiplier</code> with P0&nbsp;=&nbsp;0.3&nbsp;gwei per IFR.</li>
+      </ul>
+      <p>The <em>Conditions now</em> column is calculated live from the current block and the IFR/WETH Uniswap V2 pool. It is indicative. The binding check uses the price rule below.</p>
+
+      <div class="cv-legend" aria-label="Status colours">
+        <span class="cv-status cv-red">Red</span> Council decision pending
+        <span class="cv-status cv-yellow">Yellow</span> Approved by the Council; waiting for the original conditions
+        <span class="cv-status cv-green">Green</span> Approved and conditions met: payable
+      </div>
+
+      <div class="table-scroll">
+      <table id="cv01-table">
+        <thead>
+          <tr><th>Wallet</th><th>Tranche</th><th>Lock type</th><th>Amount (IFR)</th><th>Original conditions</th><th>Conditions now</th><th>Status</th></tr>
+        </thead>
+        <tbody id="cv01-rows"></tbody>
+        <tfoot>
+          <tr><th colspan="3">Total permanently locked</th><th>26,418,467.994338353</th><th colspan="3"></th></tr>
+        </tfoot>
+      </table>
+      </div>
+      <p id="cv01-live" class="cv-live">Loading live conditions&hellip;</p>
+      <noscript><p>Live conditions need JavaScript. The amounts and original conditions above are static and complete.</p></noscript>
+
+      <h2>Proposal CV-01 (urgent vote)</h2>
+      <table>
+        <tbody>
+          <tr><th>Scope</th><td>The 11 tranches above, 26,418,467.994338353 IFR in total. Time-based tranches are not affected.</td></tr>
+          <tr><th>Payout pool</th><td><strong>LP Reserve Safe</strong> <a href="https://app.safe.global/home?safe=eth:0x5D93E7919a71d725054e31017eCA86B026F86C04" target="_blank" rel="noopener noreferrer"><code>0x5D93&hellip;6C04</code></a> (3-of-5, holds 400,600,000 IFR).</td></tr>
+          <tr><th>Amount</th><td>Each tranche is compensated with exactly its locked amount, credited to the wallet that locked it. The LP Reserve Safe is not fee-exempt, so the transfer is grossed up for the transfer fee. That way the wallet receives the full tranche amount; the worst case is about 27.38&nbsp;M IFR gross.</td></tr>
+          <tr><th>Time condition</th><td>Block timestamp at or after the tranche's original unlock date. This applies only to <code>TIME_AND_PRICE</code>.</td></tr>
+          <tr><th>Price condition</th><td>The 7-day time-weighted average price of IFR/WETH from the Uniswap V2 pair <a href="https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" rel="noopener noreferrer"><code>0xbE49&hellip;31A0</code></a> must be at or above the tranche's target. It is calculated from the pair's cumulative prices; the start and end block numbers are published with each payout. A single spot price never counts.</td></tr>
+          <tr><th>Execution</th><td>One Safe transaction per tranche, once its conditions are verified. Its status turns green here before the transaction is proposed, and the transaction hash is added to the vote log.</td></tr>
+          <tr><th>If rejected</th><td>No compensation is paid. The tranches stay recorded as permanently locked.</td></tr>
+        </tbody>
+      </table>
+
+      <h2>Supply Accounting</h2>
+      <p>The 26,418,467.994338353 IFR stay in the total supply, because they were never burned. They are recorded as <strong>permanently locked</strong> and counted as non-circulating. Any compensation paid later moves IFR from the LP Reserve Safe to the affected wallets and is recorded in the vote log.</p>
+
+      <h2>Repair</h2>
+      <ul>
+        <li><strong>V1 cannot be changed.</strong> It has no pause or upgrade path.</li>
+        <li><strong>The Web3 app and the wiki offer only time-based locks.</strong></li>
+        <li><strong>The fix is a CommitmentVault V2.</strong> It rejects price conditions until a real, manipulation-resistant oracle is wired and includes a governed rescue path for conditions that can never be met. It is deployed and wired only through independent review and a Governance proposal with the 48-hour timelock.</li>
+      </ul>
+      <p>See the <a href="https://github.com/NeaBouli/inferno/blob/main/docs/GOVERNANCE_PRODUCT_DECISION_REGISTER.md">decision register</a> (lane 2).</p>
+
+      <script type="application/json" id="cv01-data">
+{
+  "council": "pending",
+  "vault": "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3",
+  "pair": "0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0",
+  "token": "0x77e99917Eca8539c62F509ED1193ac36580A6e7B",
+  "p0WeiPerIFR": "300000000",
+  "tranches": [
+    {"wallet": "0x4f632748460E5277bF8435259cADce440AbAC254", "id": 0, "type": "TIME_AND_PRICE", "amount": "18367567.924610366", "unlock": "2026-11-29", "multiplier": 5000},
+    {"wallet": "0xf556cCe85128c93AC6A7e088cF334180F2D3905B", "id": 0, "type": "PRICE_ONLY", "amount": "805090.006972798", "unlock": null, "multiplier": 500000},
+    {"wallet": "0xf556cCe85128c93AC6A7e088cF334180F2D3905B", "id": 1, "type": "PRICE_ONLY", "amount": "805090.006972798", "unlock": null, "multiplier": 500000},
+    {"wallet": "0xf556cCe85128c93AC6A7e088cF334180F2D3905B", "id": 2, "type": "PRICE_ONLY", "amount": "805090.006972798", "unlock": null, "multiplier": 500000},
+    {"wallet": "0xf556cCe85128c93AC6A7e088cF334180F2D3905B", "id": 3, "type": "PRICE_ONLY", "amount": "805090.006972798", "unlock": null, "multiplier": 500000},
+    {"wallet": "0xf556cCe85128c93AC6A7e088cF334180F2D3905B", "id": 4, "type": "PRICE_ONLY", "amount": "805090.006972798", "unlock": null, "multiplier": 500000},
+    {"wallet": "0xf556cCe85128c93AC6A7e088cF334180F2D3905B", "id": 5, "type": "PRICE_ONLY", "amount": "805090.006972798", "unlock": null, "multiplier": 500000},
+    {"wallet": "0xf556cCe85128c93AC6A7e088cF334180F2D3905B", "id": 6, "type": "PRICE_ONLY", "amount": "805090.006972798", "unlock": null, "multiplier": 500000},
+    {"wallet": "0xf556cCe85128c93AC6A7e088cF334180F2D3905B", "id": 7, "type": "PRICE_ONLY", "amount": "805090.006972798", "unlock": null, "multiplier": 500000},
+    {"wallet": "0xf556cCe85128c93AC6A7e088cF334180F2D3905B", "id": 8, "type": "PRICE_ONLY", "amount": "805090.006972798", "unlock": null, "multiplier": 500000},
+    {"wallet": "0xf556cCe85128c93AC6A7e088cF334180F2D3905B", "id": 9, "type": "PRICE_ONLY", "amount": "805090.006972805", "unlock": null, "multiplier": 500000}
+  ]
+}
+      </script>
+      <script>
+      (function () {
+        var data = JSON.parse(document.getElementById("cv01-data").textContent);
+        var rows = document.getElementById("cv01-rows");
+        var live = document.getElementById("cv01-live");
+        var RPCS = ["https://ethereum-rpc.publicnode.com", "https://eth.llamarpc.com"];
+        function short(a) { return a.slice(0, 6) + "…" + a.slice(-4); }
+        function fmt(n) { var p = n.split("."); return Number(p[0]).toLocaleString("en-US") + (p[1] ? "." + p[1] : ""); }
+        function targetGwei(t) { return Number(data.p0WeiPerIFR) * t.multiplier / 100 / 1e9; }
+        function status(met) {
+          if (data.council === "approved") return met ? ["cv-green", "Payable"] : ["cv-yellow", "Approved — waiting"];
+          if (data.council === "rejected") return ["cv-grey", "Rejected"];
+          return ["cv-red", met ? "Conditions met — Council pending" : "Council pending"];
+        }
+        function render(nowSec, priceGwei) {
+          rows.innerHTML = "";
+          data.tranches.forEach(function (t) {
+            var target = targetGwei(t);
+            var timeOk = t.unlock === null ? true : (nowSec !== null && nowSec >= Date.parse(t.unlock + "T00:00:00Z") / 1000);
+            var priceOk = priceGwei !== null && priceGwei >= target;
+            var known = nowSec !== null && priceGwei !== null;
+            var met = known && timeOk && priceOk;
+            var s = status(met);
+            var cond = (t.unlock ? "after " + t.unlock + " and " : "") + "price ≥ " + target.toLocaleString("en-US") + " gwei/IFR (" + (t.multiplier / 100) + " × P0)";
+            var now = !known ? "unavailable" :
+              (t.unlock ? (timeOk ? "date ✓" : "date ✗") + ", " : "") + (priceOk ? "price ✓" : "price ✗");
+            var tr = document.createElement("tr");
+            tr.innerHTML = "<td data-label=\"Wallet\"><a href=\"https://etherscan.io/address/" + t.wallet + "\" target=\"_blank\" rel=\"noopener noreferrer\"><code>" + short(t.wallet) + "</code></a></td>" +
+              "<td data-label=\"Tranche\">#" + t.id + "</td><td data-label=\"Lock type\"><code>" + t.type + "</code></td><td data-label=\"Amount (IFR)\">" + fmt(t.amount) + "</td><td data-label=\"Original conditions\">" + cond + "</td><td data-label=\"Conditions now\">" + now + "</td>" +
+              "<td data-label=\"Status\"><span class=\"cv-status " + s[0] + "\">" + s[1] + "</span></td>";
+            rows.appendChild(tr);
+          });
+        }
+        render(null, null);
+        if (!window.ethers) { live.textContent = "Live conditions unavailable."; return; }
+        var pairAbi = ["function getReserves() view returns (uint112,uint112,uint32)", "function token0() view returns (address)"];
+        function readFrom(i) {
+          if (i >= RPCS.length) { live.textContent = "Live conditions unavailable (RPC). Status colours still reflect the Council decision."; return; }
+          var provider = new window.ethers.JsonRpcProvider(RPCS[i], 1, { staticNetwork: true });
+          var pair = new window.ethers.Contract(data.pair, pairAbi, provider);
+          Promise.all([provider.getBlock("latest"), pair.getReserves(), pair.token0()]).then(function (r) {
+            var ifrIs0 = r[2].toLowerCase() === data.token.toLowerCase();
+            var rIFR = Number(ifrIs0 ? r[1][0] : r[1][1]) / 1e9;
+            var rETH = Number(ifrIs0 ? r[1][1] : r[1][0]) / 1e18;
+            var priceGwei = rIFR > 0 ? (rETH / rIFR) * 1e9 : 0;
+            render(r[0].timestamp, priceGwei);
+            live.textContent = "Live at block " + r[0].number.toLocaleString("en-US") + ": spot price " + priceGwei.toFixed(2) + " gwei/IFR (indicative; the binding check uses the 7-day TWAP).";
+          }).catch(function () { readFrom(i + 1); });
+        }
+        readFrom(0);
+      })();
+      </script>
+
 
       <!-- Footer -->
       <footer class="wiki-footer">
@@ -1311,5 +861,5 @@ document.addEventListener("visibilitychange",async function(){if(document.visibi
 var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.addEventListener("mouseenter",function(){this.style.transform="scale(1.04)";this.style.boxShadow="0 4px 20px rgba(249,115,22,0.4)"});_wcBtn.addEventListener("mouseleave",function(){this.style.transform="";this.style.boxShadow="0 2px 12px rgba(249,115,22,0.25)"})}
 </script>
 </body>
-<!-- cache-bust: 1775428206 -->
+<!-- cache-bust: 1775428215 -->
 </html>
