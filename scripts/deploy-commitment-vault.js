@@ -32,9 +32,10 @@ async function main() {
 
   console.log("CommitmentVault deployed:", cv.target);
   console.log("");
-  console.log("NEXT STEPS:");
-  console.log("1. Governance Proposal: setFeeExempt(", cv.target, ", true) — BEFORE users lock!");
-  console.log("2. Governance Proposal: setP0(value) — AFTER Bootstrap finalise()");
+  console.log("NEXT STEPS (docs/COMMITMENT_VAULT_V2_REPAIR.md):");
+  console.log("1. node scripts/commitment-vault-v2-proposal.cjs", cv.target, "<Governance.proposalCount()> ./cv01-safe");
+  console.log("2. Safe: import step 1 (propose setFeeExempt), wait the Governance delay, import step 2 (execute)");
+  console.log("3. Do NOT call setP0 or setPriceOracle: price conditions are disabled in this vault");
   console.log("");
 
   // Etherscan verification

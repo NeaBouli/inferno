@@ -85,7 +85,9 @@
     "test:landing-wiki-ui": "playwright test tests/browser/landing-transparency.spec.js tests/browser/wiki-shell.spec.js tests/browser/footer-contact.spec.js tests/browser/fab-clearance.spec.js",
     "test:license-privacy": "node scripts/test-license-privacy.cjs",
     "test:social-card": "node scripts/test-social-card.cjs",
-    "test:benefits-fork": "hardhat test test/fork/BenefitsVerifyFork.test.js"
+    "test:benefits-fork": "hardhat test test/fork/BenefitsVerifyFork.test.js",
+    "test:commitment-v2-proposal": "node scripts/test-commitment-vault-v2-proposal.cjs",
+    "test:commitment-v2-fork": "hardhat test test/fork/CommitmentVaultV2Fork.test.js"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "4.2.0",

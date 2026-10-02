@@ -12,11 +12,15 @@ on:
     paths:
       - 'apps/benefits-verify/**'
       - 'test/fork/BenefitsVerifyFork.test.js'
+      - 'test/fork/CommitmentVaultV2Fork.test.js'
+      - 'scripts/commitment-vault-v2-proposal.cjs'
       - '.github/workflows/benefits-verify-live.yml'
   pull_request:
     paths:
       - 'apps/benefits-verify/**'
       - 'test/fork/BenefitsVerifyFork.test.js'
+      - 'test/fork/CommitmentVaultV2Fork.test.js'
+      - 'scripts/commitment-vault-v2-proposal.cjs'
       - '.github/workflows/benefits-verify-live.yml'
 
 permissions:
@@ -81,3 +85,4 @@ jobs:
             echo "::notice::No archive RPC secret; forking Mainnet at recent block $block via public RPC."
           fi
           HARDHAT_FORK=true HARDHAT_FORK_BLOCK_NUMBER=$block npm run test:benefits-fork
+          HARDHAT_FORK=true HARDHAT_FORK_BLOCK_NUMBER=$block npm run test:commitment-v2-fork
