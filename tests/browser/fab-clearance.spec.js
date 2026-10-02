@@ -12,8 +12,20 @@ for (const path of PAGES) {
       await page.setViewportSize({ width, height });
       await page.route(/^https?:\/\/(?!localhost)/, (route) => route.abort());
       await page.goto(path);
-      await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
-      await page.waitForTimeout(300);
+      await page.evaluate(() => document.fonts.ready);
+      // Late content (live data, fonts, reveal effects) can grow the page after the first scroll.
+      // Scroll to the end until the document height is stable, then measure at the true page end.
+      for (let attempt = 0, stable = 0; attempt < 20 && stable < 2; attempt += 1) {
+        const before = await page.evaluate(() => document.documentElement.scrollHeight);
+        await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+        await page.waitForTimeout(150);
+        const after = await page.evaluate(() => document.documentElement.scrollHeight);
+        stable = after === before ? stable + 1 : 0;
+      }
+      expect(
+        await page.evaluate(() => Math.ceil(window.scrollY + window.innerHeight) >= document.documentElement.scrollHeight - 1),
+        "the test must measure at the very end of the page"
+      ).toBe(true);
       const covered = await page.evaluate(() => {
         const footer = document.querySelector("footer, .wiki-footer, .footer");
         const launcher = document.querySelector("#ifr-btn, .copilot-launcher");
