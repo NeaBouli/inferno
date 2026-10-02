@@ -143,6 +143,21 @@ for (const page of pages) {
   }
 }
 
+// T-188: every wiki tier table uses the published benefit tier file (docs/specs/ifr-benefits-tiers.v1.json).
+const benefitTiers = JSON.parse(fs.readFileSync(path.join(root, "docs", "specs", "ifr-benefits-tiers.v1.json"), "utf8"));
+const tierIFR = Object.fromEntries(benefitTiers.tiers.map((tier) => [tier.label, Number(tier.minIFR)]));
+for (const page of pages) {
+  const src = fs.readFileSync(path.join(wikiDir, page), "utf8");
+  for (const [, label, amount] of src.matchAll(/<td>\s*(Bronze|Silver|Gold|Platinum)\s*<\/td>\s*<td>(?:<[^>]+>)*\s*([\d,]+)\s*IFR/g)) {
+    check(Number(amount.replace(/,/g, "")) === tierIFR[label], `${page}: ${label} tier shows ${amount} IFR, tier file v${benefitTiers.version} says ${tierIFR[label]}`);
+  }
+}
+
+// T-188: Wiki caching guidance follows ifr-benefits-verify/1 §5 (<= 60 s, same block, re-check at redemption).
+const integrationPage = fs.readFileSync(path.join(wikiDir, "integration.html"), "utf8");
+check(!/5[ -]?min(ute)?s?\b|5min/i.test(integrationPage), "integration.html: caching guidance must not exceed 60 seconds (spec §5)");
+check((integrationPage.match(/60 seconds|60&nbsp;s/g) || []).length >= 2, "integration.html: caching guidance must state the 60-second same-block limit");
+
 if (failures.length) {
   console.error(`[wiki-shell] FAIL - ${failures.length} issue(s):`);
   for (const failure of failures) console.error(`  - ${failure}`);
