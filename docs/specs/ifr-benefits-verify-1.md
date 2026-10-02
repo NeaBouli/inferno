@@ -192,9 +192,10 @@ How the file is published and changed:
 
 ### Relation to other tier tables
 
-- **Older access-tier helpers.** The SDK `ifr-sdk` (`apps/sdk`) and the AI Copilot `/api/ifr/check` still
-  expose a separate, older access-tier helper: Basic/Premium/Pro at 500/2,000/10,000 IFR. It is not a
-  benefit tier scheme. A later release aligns it with this file (tracked as audit finding CWA-77).
+- **Access tiers are a separate scheme.** The SDK `ifr-sdk` (`apps/sdk`) and the AI Copilot
+  (`/api/ifr/check`) use one canonical **access-tier** scheme: Basic/Premium/Pro at 500/2,000/10,000 IFR
+  (CWA-77). It gates Copilot and API product features. It is not a benefit tier scheme. Integrators
+  offering shop or partner benefits use the tier file of this specification.
 - **Product-specific thresholds.** An integrator MAY still gate a single product feature on any threshold
   greater than zero. Such a threshold is not a tier.
 
