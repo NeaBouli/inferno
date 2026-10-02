@@ -65,9 +65,9 @@ repository package.
 
 **Status:** MONITORING
 
-Root dependency audit reports 8 low transitive development-tool findings and
-no moderate, high or critical findings. The remaining Elliptic advisory in the
-Hardhat verification dependency path has no available upstream fix. Runtime
+Root dependency audit reports 0 vulnerabilities since
+`@nomicfoundation/hardhat-verify` 3.1.2 removed the Elliptic chain (#151,
+2026-10-01); the advisory gate now requires a clean root audit. Runtime
 frontends and the Benefits backend report zero audit findings. Do not apply a
 forced incompatible update; monitor upstream and retain negative regression
 tests.

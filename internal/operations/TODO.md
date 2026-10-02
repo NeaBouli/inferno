@@ -246,11 +246,10 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [ ] Blockaid/MetaMask warning retest
       Blockaid review is approved. Resume only if a current device still shows
       a warning; capture wallet/browser version, timestamp and screenshot.
-- [ ] Residual dependency audit findings
-      Clean local root audit: 8 transitive low findings
-      (0 moderate, 0 high, 0 critical).
-      Resume trigger: upstream fixes or a bounded runtime-path remediation.
-      Never run `npm audit fix --force`.
+- [x] Residual dependency audit findings — resolved 2026-10-01
+      Root audit: 0 vulnerabilities after hardhat-verify 3.1.2 (#151); the
+      advisory gate requires a clean root audit. The historical baseline had
+      8 transitive low findings. Never run `npm audit fix --force`.
 - [ ] CommitmentVault native batch-lock UX
       Current self-service works but requires one approval plus multiple
       `lock()` confirmations.
