@@ -41,6 +41,8 @@ contract BuybackVault {
     bool public paused;
 
     event Deposited(address indexed sender, uint256 amount);
+    /// @notice `burnAmount` and `treasuryAmount` are the IFR amounts actually credited to the recipients
+    ///         (balance differences); with a taxed transfer they are lower than the amounts debited here.
     event BuybackExecuted(uint256 ethSpent, uint256 burnAmount, uint256 treasuryAmount);
     event Paused(address indexed account);
     event Unpaused(address indexed account);
@@ -133,10 +135,16 @@ contract BuybackVault {
         uint256 burnAmount = (totalOut * burnShareBps) / 10_000;
         uint256 treasuryAmount = totalOut - burnAmount;
 
+        // Report what each recipient was actually credited: a taxed IFR transfer credits less than it debits.
+        uint256 burnBefore = token.balanceOf(burnReserve);
         require(token.transfer(burnReserve, burnAmount), "burn transfer failed");
-        require(token.transfer(treasury, treasuryAmount), "treasury transfer failed");
+        uint256 burnCredited = token.balanceOf(burnReserve) - burnBefore;
 
-        emit BuybackExecuted(ethBal, burnAmount, treasuryAmount);
+        uint256 treasuryBefore = token.balanceOf(treasury);
+        require(token.transfer(treasury, treasuryAmount), "treasury transfer failed");
+        uint256 treasuryCredited = token.balanceOf(treasury) - treasuryBefore;
+
+        emit BuybackExecuted(ethBal, burnCredited, treasuryCredited);
     }
 
     /// @notice Update vault parameters (owner only)
