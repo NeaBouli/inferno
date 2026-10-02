@@ -30,8 +30,8 @@ IFR includes a read-only AI Copilot assistant for general protocol and surface-s
 ## Audit and Test Status
 
 - The seven Collateral Web3 Open Audits reports are published for transparency; they are not a professional certification.
-- The preserved 27 July community audit (one owner-requested company-name redaction) has a separate maintained register: 12 fixed and verified, 3 partially remediated, 1 outdated snapshot corrected, 3 governance or future-version gated, 2 accepted or monitored, and 2 open actionable. Historical severity colors are not current status.
-- Current remediation disposition: 39 fixed and verified, 11 governance or owner gated, 2 accepted or monitored, 19 open actionable, 11 informational.
+- The preserved 27 July community audit (one owner-requested company-name redaction) has a separate maintained register: 12 fixed and verified, 3 partially remediated, 1 outdated snapshot corrected, 4 governance or future-version gated, 2 accepted or monitored, and 1 open actionable. Historical severity colors are not current status.
+- Current remediation disposition: 53 fixed and verified, 11 governance or owner gated, 2 accepted or monitored, 5 open actionable, 11 informational.
 - Current canonical evidence: contracts 655/655, Generator Engine 30/30, IFR SDK 36/36, Landing/Wiki browser 26/26, Web3 browser 45/45.
 - Benefits physical device/wallet acceptance remains 1/10; automated browser tests are not a substitute for the pending physical cases.
 
