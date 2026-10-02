@@ -20,9 +20,9 @@
     "fixed_and_verified": 12,
     "partially_remediated": 3,
     "corrected_outdated_snapshot": 1,
-    "governance_or_future_version_gated": 3,
+    "governance_or_future_version_gated": 4,
     "documented_accepted_or_monitored": 2,
-    "open_actionable": 2
+    "open_actionable": 1
   },
   "expectedSeverityTotals": {
     "Critical": 1,
@@ -134,13 +134,14 @@
       "severity": "Medium",
       "title": "Fee-on-transfer buyback swap accounting",
       "sourceSection": "4.2",
-      "status": "open_actionable",
-      "currentAssessment": "The dormant buyback contracts still call swapExactETHForTokens and do not use a fee-on-transfer supporting output path.",
-      "remainingAction": "Keep the path dormant and address token-receipt accounting in a future contract version before activation.",
-      "verification": "Taxed-token router tests, received-balance assertions, independent review and governed deployment evidence.",
+      "status": "governance_or_future_version_gated",
+      "currentAssessment": "Source remediated for future deployments (T-189): BuybackController and BuybackVault swap via swapExactETHForTokensSupportingFeeOnTransferTokens and account for the IFR actually received (balance difference); BuybackVault events report the IFR credited to BurnReserve and Treasury, tested with the real InfernoToken with and without exemptions (on Mainnet the vault, controller, BurnReserve and Treasury are fee-exempt, verified 2026-10-02). The deployed Mainnet buyback contracts are unchanged and stay dormant.",
+      "remainingAction": "Keep the deployed path dormant; activate only through an independently reviewed, governed redeploy of the remediated sources.",
+      "verification": "Taxed-token router tests with received-balance assertions pass (test/BuybackController.test.js, test/BuybackVault.test.js); independent review and governed deployment evidence remain required before activation.",
       "evidence": [
-        {"path": "contracts/buyback/BuybackController.sol", "marker": "swapExactETHForTokens"},
-        {"path": "contracts/buyback/BuybackVault.sol", "marker": "swapExactETHForTokens"}
+        {"path": "contracts/buyback/BuybackController.sol", "marker": "swapExactETHForTokensSupportingFeeOnTransferTokens"},
+        {"path": "contracts/buyback/BuybackVault.sol", "marker": "swapExactETHForTokensSupportingFeeOnTransferTokens"},
+        {"path": "test/BuybackVault.test.js", "marker": "JUL-08: taxed swap output"}
       ]
     },
     {

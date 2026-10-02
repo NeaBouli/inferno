@@ -89,7 +89,25 @@ describe("BuybackVault", function () {
 
     // Künstliche Slippage 6% — übersteigt die 5% Toleranz, daher revert
     await Router.setSlippageBpsNextSwap(600);
-    await expect(Vault.connect(owner).executeBuyback()).to.be.revertedWith("slippage");
+    // Fee-on-transfer swap path (JUL-08): the Uniswap V2 router enforces the minimum.
+    await expect(Vault.connect(owner).executeBuyback()).to.be.revertedWith("UniswapV2Router: INSUFFICIENT_OUTPUT_AMOUNT");
+  });
+
+  it("JUL-08: taxed swap output — splits only the IFR the vault actually received", async () => {
+    await Vault.depositETH({ value: ethers.parseEther("1") });
+    await Router.setTransferFeeBpsOnOutput(350); // 3.5% transfer tax, inside the 5% slippage bound
+
+    const burnBefore = await IFR.balanceOf(burnReserve.address);
+    const treasBefore = await IFR.balanceOf(treasury.address);
+    await Vault.connect(owner).executeBuyback();
+    const burned = (await IFR.balanceOf(burnReserve.address)) - burnBefore;
+    const treasuryGot = (await IFR.balanceOf(treasury.address)) - treasBefore;
+
+    const quoted = RATE_IFR_PER_ETH; // 1 ETH at RATE IFR per ETH
+    const received = quoted - (quoted * 350n) / 10_000n;
+    expect(burned + treasuryGot).to.equal(received); // the old code would try to send `quoted` and revert
+    expect(burned).to.equal(received / 2n);
+    expect(await IFR.balanceOf(Vault.target)).to.equal(0n);
   });
 
   it("guardian can pause/unpause to block actions", async () => {
@@ -251,6 +269,58 @@ describe("BuybackVault", function () {
       await expect(
         Vault.transferOwnership(ethers.ZeroAddress)
       ).to.be.revertedWith("newOwner=0");
+    });
+  });
+
+  describe("JUL-08 with the real InfernoToken (second-hop transfer tax)", () => {
+    const IFR_RATE = 1000n * 10n ** 9n; // 1 ETH -> 1,000 IFR (9 decimals)
+    let token, realRouter, vault;
+
+    async function setup({ exempt }) {
+      const poolFeeReceiver = ethers.Wallet.createRandom().address;
+      token = await (await ethers.getContractFactory("InfernoToken")).deploy(poolFeeReceiver);
+      realRouter = await (await ethers.getContractFactory("MockRouter")).deploy(WETH.target, token.target, IFR_RATE);
+      await realRouter.setPayFromBalance(true);
+      await token.setFeeExempt(owner.address, true);
+      await token.transfer(realRouter.target, 1_000_000n * 10n ** 9n);
+      vault = await (await ethers.getContractFactory("BuybackVault")).deploy(
+        token.target, burnReserve.address, treasury.address, realRouter.target, guardian.address, 0
+      );
+      if (exempt) {
+        // Mainnet configuration: BuybackVault, its burnReserve and treasury are fee-exempt.
+        for (const account of [vault.target, burnReserve.address, treasury.address]) await token.setFeeExempt(account, true);
+      }
+      await vault.depositETH({ value: ethers.parseEther("1") });
+    }
+
+    async function executeAndMeasure() {
+      const burnBefore = await token.balanceOf(burnReserve.address);
+      const treasBefore = await token.balanceOf(treasury.address);
+      const receipt = await (await vault.connect(owner).executeBuyback()).wait();
+      const event = receipt.logs.map((log) => vault.interface.parseLog(log)).find((e) => e && e.name === "BuybackExecuted");
+      return {
+        event,
+        burned: (await token.balanceOf(burnReserve.address)) - burnBefore,
+        treasuryGot: (await token.balanceOf(treasury.address)) - treasBefore,
+      };
+    }
+
+    it("non-exempt endpoints: events report the IFR actually credited, not the gross debit", async () => {
+      await setup({ exempt: false });
+      const { event, burned, treasuryGot } = await executeAndMeasure();
+      expect(event.args.burnAmount).to.equal(burned);
+      expect(event.args.treasuryAmount).to.equal(treasuryGot);
+      expect(burned + treasuryGot < IFR_RATE).to.equal(true); // taxed twice: swap hop and forward hop
+      expect(await token.balanceOf(vault.target)).to.equal(0n); // gross amounts left the vault
+    });
+
+    it("Mainnet exemptions: the full swap output is credited and reported", async () => {
+      await setup({ exempt: true });
+      const { event, burned, treasuryGot } = await executeAndMeasure();
+      expect(burned + treasuryGot).to.equal(IFR_RATE);
+      expect(event.args.burnAmount).to.equal(burned);
+      expect(event.args.treasuryAmount).to.equal(treasuryGot);
+      expect(burned).to.equal(IFR_RATE / 2n);
     });
   });
 });
