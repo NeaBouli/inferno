@@ -272,7 +272,7 @@ All ownable contracts transferred to Governance (48h Timelock). Parameter change
 | LP custody | **Done** — LP tokens remain in withdrawal-less BootstrapVaultV3; Mainnet Team.Finance path disabled |
 | Proposal #15: setFeeExempt(LP Token) | **Executed** (08.06.2026) |
 | CommitmentVault V2 deployed (CV-01 repair) | **Done** (02.10.2026) — [`0x8efae0C8...`](https://etherscan.io/address/0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F#code) — TX [`0x9857a570...`](https://etherscan.io/tx/0x9857a5707b650b8828f41b893f91a10ff26d7990742e782bb0b7e86df23ea0f7); Sourcify exact match, Etherscan source verification pending |
-| Proposal #17: setFeeExempt(CommitmentVault V2) | **Pending** — Safe batch files from `scripts/commitment-vault-v2-proposal.cjs <V2> 17`; executable 48h after proposing |
+| Proposal #17: setFeeExempt(CommitmentVault V2) | **Queued** (02.10.2026 21:53 UTC) — TreasurySafe 3-of-5, TX [`0x6e113b6c...`](https://etherscan.io/tx/0x6e113b6cc66a369604d46c3b4a5560f1418302de6ecc371f1217d72aeabd39bd); ETA 04.10.2026 21:53 UTC, then `execute(17)` |
 | Transfer InfernoToken Ownership to Governance | **Done** (2026-03-05) |
 | Transfer LiquidityReserve Ownership to Governance | **Done** (2026-03-05) |
 | Transfer BurnReserve Ownership to Governance | **Done** (2026-03-05) |
