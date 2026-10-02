@@ -60,6 +60,7 @@ contract BuybackController {
     uint256 public totalLiquidityAdded;
     uint256 public executionCount;
 
+    /// @notice `ifrBought` and `ifrToBurn` are the IFR actually credited to burnReserve (balance difference).
     event BuybackExecuted(uint256 ethSpent, uint256 ifrBought, uint256 ifrToBurn);
     event LiquidityAdded(uint256 ethUsed, uint256 ifrUsed, uint256 liquidity);
     event LiquidityFallback(uint256 ethRedirected);
