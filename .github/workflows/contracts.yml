@@ -48,6 +48,9 @@ jobs:
       - name: Verify Mocha serializer override
         run: npm run test:mocha-serializer
 
+      - name: Verify guardian migration Safe batch builder (CWA-09)
+        run: node scripts/test-guardian-migration-proposal.cjs
+
       - name: Verify LendingVault price tooling
         run: npm run test:lending-price
 
