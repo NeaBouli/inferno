@@ -13,6 +13,7 @@ const expectedWorkflowFiles = [
   "ai-copilot.yml",
   "benefits-network.yml",
   "benefits-verify-ci.yml",
+  "benefits-verify-live.yml",
   "benefits-wallet-prototype.yml",
   "contracts.yml",
   "creator-gateway.yml",

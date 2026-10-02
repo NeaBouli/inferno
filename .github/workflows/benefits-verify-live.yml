@@ -1,0 +1,83 @@
+name: IFR Benefits Verify Live Vectors
+
+# ifr-benefits-verify/1 against Ethereum Mainnet, Sepolia and a pinned Mainnet fork.
+# Read-only on the real networks; all writes happen on the local Hardhat fork.
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '41 5 * * 1'
+  push:
+    branches: [main]
+    paths:
+      - 'apps/benefits-verify/**'
+      - 'test/fork/BenefitsVerifyFork.test.js'
+      - '.github/workflows/benefits-verify-live.yml'
+  pull_request:
+    paths:
+      - 'apps/benefits-verify/**'
+      - 'test/fork/BenefitsVerifyFork.test.js'
+      - '.github/workflows/benefits-verify-live.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: benefits-verify-live-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  live:
+    name: Live Mainnet and Sepolia
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: apps/benefits-verify
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/benefits-verify/package-lock.json
+      - run: npm ci
+      - run: npm run build
+      - name: Live vectors
+        env:
+          MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
+          SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}
+        # Same public fallback as the Vault Invariant Monitor when no RPC secret is configured.
+        run: |
+          export MAINNET_RPC_URL="${MAINNET_RPC_URL:-https://ethereum-rpc.publicnode.com}"
+          export SEPOLIA_RPC_URL="${SEPOLIA_RPC_URL:-https://ethereum-sepolia-rpc.publicnode.com}"
+          node --test test/live.test.cjs
+
+  mainnet-fork:
+    name: Mainnet fork vectors
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - name: Fork vectors
+        env:
+          MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
+        # With an archive RPC secret: the pinned vector block 26100144. Without it: a recent block on the
+        # public RPC (public nodes serve only recent state), which still exercises the deployed bytecode.
+        run: |
+          if [ -n "$MAINNET_RPC_URL" ]; then
+            block=26100144
+          else
+            export MAINNET_RPC_URL="https://ethereum-rpc.publicnode.com"
+            head=$(curl -fsS -m 20 -H 'content-type: application/json' \
+              --data '{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}' "$MAINNET_RPC_URL" \
+              | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(String(BigInt(JSON.parse(s).result))))')
+            block=$((head - 5))
+            echo "::notice::No archive RPC secret; forking Mainnet at recent block $block via public RPC."
+          fi
+          HARDHAT_FORK=true HARDHAT_FORK_BLOCK_NUMBER=$block npm run test:benefits-fork
