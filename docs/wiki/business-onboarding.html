@@ -800,6 +800,7 @@ npm run dev
 
       <div class="callout">
         <p><strong>How it works:</strong> The system calls <code>IFRLock.isLocked(wallet, minAmount)</code> on-chain to verify the customer's lock status. If the seller configured a wallet-held minimum, the same checkout also reads the customer's free IFR balance. Both conditions are frozen in the signed offer and verified together. No tokens are transferred during verification &mdash; these are read-only checks.</p>
+        <p><strong>Without the hosted app:</strong> you can also check locks yourself. You need no registration, no API key and nobody's permission. The open specification <a href="https://github.com/NeaBouli/inferno/blob/main/docs/specs/ifr-benefits-verify-1.md"><code>ifr-benefits-verify/1</code></a> and its MIT-licensed reference library <a href="https://github.com/NeaBouli/inferno/tree/main/apps/benefits-verify"><code>apps/benefits-verify</code></a> read the tier above straight from the public contracts at a pinned block. Repeat the check when the benefit is redeemed.</p>
       </div>
 
       <!-- ========== Step 4: Cashier Staff Training ========== -->
