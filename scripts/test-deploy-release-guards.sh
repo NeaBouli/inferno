@@ -14,6 +14,20 @@ REMOTE="$TMP/remote"                     # stands in for the host filesystem roo
 SITE="$REMOTE/opt/inferno/web3-site"
 REAL_RSYNC="$(command -v rsync)"
 mkdir -p "$FAKES" "$SITE/html/.nginx" "$REMOTE/opt/inferno/backups" "$REMOTE/opt/inferno/benefits-network"
+# Production env contract of the Benefits backend (placeholder values, never real secrets).
+BENEFITS_ENV="$REMOTE/opt/inferno/.env.benefits"
+write_benefits_env() {
+  cat > "$BENEFITS_ENV" <<'ENV'
+SELLER_AUTH_DOMAIN=shop.example.test
+CHAIN_ID=1
+RPC_URL=https://rpc.example.test
+IFR_TOKEN_ADDRESS=0x0000000000000000000000000000000000000001
+IFRLOCK_ADDRESS=0x0000000000000000000000000000000000000002
+COMMITMENT_VAULT_ADDRESS=0x0000000000000000000000000000000000000003
+ADMIN_SECRET=test-only-admin-secret-0123456789abcdef
+ENV
+}
+write_benefits_env
 : > "$LOG"
 
 # Clone the current commit and overlay the scripts under test, so the guards run
@@ -297,6 +311,24 @@ assert_log "--exclude *.db-wal"
 assert_log "--dry-run --out-format=%n --exclude node_modules"
 assert_log "up -d --build --no-deps benefits-frontend"
 refute_log "prune"
+# --- benefits: missing production settings stop the deploy before any upload or build ---
+for drop in SELLER_AUTH_DOMAIN CHAIN_ID ADMIN_SECRET; do
+  write_benefits_env
+  grep -v "^$drop=" "$BENEFITS_ENV" > "$BENEFITS_ENV.tmp" && mv "$BENEFITS_ENV.tmp" "$BENEFITS_ENV"
+  : > "$LOG"
+  EXPECTED_SHA="$SHA" MIN_FREE_GB=0 REMOTE_VOLUME=/opt/inferno run 78 "$REPO/scripts/deploy-benefits-network.sh" frontend
+  grep -Fq "lacks production settings: $drop" <<< "$OUT" || { echo "FAIL: $drop not named" >&2; echo "$OUT" >&2; exit 1; }
+  ! grep -Fq "test-only-admin-secret" <<< "$OUT" || { echo "FAIL: secret value printed" >&2; exit 1; }
+  refute_log "rsync -az"
+  refute_log "up -d --build"
+done
+write_benefits_env
+sed -i.bak 's/^ADMIN_SECRET=.*/ADMIN_SECRET=too-short/' "$BENEFITS_ENV" && rm -f "$BENEFITS_ENV.bak"
+EXPECTED_SHA="$SHA" MIN_FREE_GB=0 REMOTE_VOLUME=/opt/inferno run 78 "$REPO/scripts/deploy-benefits-network.sh" frontend
+grep -Fq "ADMIN_SECRET(<32)" <<< "$OUT"
+! grep -Fq "too-short" <<< "$OUT"
+write_benefits_env
+
 # capacity stays usable without a release commit
 REMOTE_VOLUME=/opt/inferno run 0 "$REPO/scripts/deploy-benefits-network.sh" capacity
 
