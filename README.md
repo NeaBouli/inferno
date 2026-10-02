@@ -162,7 +162,7 @@ scope and limitations.
 - Historical coverage snapshot: 90.79% branches / 99.45% statements (solidity-coverage, 544 tests, 05.03.2026) for the contract subset recorded in `docs/COVERAGE_REPORT.md`; not a current full-repository coverage claim. Current Hardhat 3 native coverage reports lines and statements only, so no current branch-coverage figure is published
 - GitHub Actions CI contains scoped workflows for contracts/tooling, Benefits Network, SDK, Creator Gateway, Points Backend, AI Copilot, dashboards, Telegram bot, wallet prototype, documentation and security checks. Deployment availability is verified separately and must not be inferred from a passing source-validation workflow.
 - Slither CI analyzes all 21 production Solidity sources and fails on every
-  Critical signal and every new, changed or stale High signal. The current baseline contains six reviewed
+  Critical signal and every new, changed or stale High signal. The current baseline contains five reviewed
   signals with an explicit classification and rationale. Under the pinned
   toolchain there are no unreviewed High signals and no reported Critical
   signals. See [`audit/slither-high-baseline.json`](audit/slither-high-baseline.json).

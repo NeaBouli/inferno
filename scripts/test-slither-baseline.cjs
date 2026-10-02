@@ -61,8 +61,8 @@ assert.equal(contracts.some((contract) => contract.includes("/mocks/")), false);
 assert.equal(baseline.schemaVersion, 1);
 assert.equal(baseline.tool.slither, "0.11.5");
 assert.equal(baseline.tool.solc, "0.8.28");
-assert.equal(baseline.findings.length, 6, "every reviewed source High signal must be explicit");
-assert.equal(new Set(baseline.findings.map((entry) => entry.fingerprint)).size, 6);
+assert.equal(baseline.findings.length, 5, "every reviewed source High signal must be explicit");
+assert.equal(new Set(baseline.findings.map((entry) => entry.fingerprint)).size, 5);
 for (const entry of baseline.findings) {
   assert.match(entry.fingerprint, /^[a-f0-9]{64}$/);
   assert.ok(entry.subject);
