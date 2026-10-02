@@ -20,13 +20,13 @@
       "rationale": "ETH is intentionally sent through the governance-configured Uniswap router and LP tokens go to the governance-configured lpReceiver. Neither destination is selected by execute() callers."
     },
     {
-      "fingerprint": "4460cb71c3700d6e84482269bf94683b376f7cae267c313961fd5bfab31e40b9",
+      "fingerprint": "aa57e8a03ee46666f1f3b582ab0e0aa64da1282a5d1dea9a63421129b1ff3873",
       "subject": "BuybackController._buybackAndBurn(uint256) arbitrary-send-eth",
       "classification": "By-design destination",
       "rationale": "ETH is intentionally sent through the governance-configured Uniswap router and purchased IFR is delivered to the immutable burnReserve. Neither destination is selected by execute() callers."
     },
     {
-      "fingerprint": "5d3b722154d346bab0fb4bdc3758047333822e81698a5c56b808cce4d3c3957d",
+      "fingerprint": "db0a384fe96bfb8c60e47b7d89ab6c24b7e7e03d31b46094047dac5e6ffac134",
       "subject": "BuybackController.execute() reentrancy-eth",
       "classification": "Constrained signal / V2 hardening",
       "rationale": "The cooldown timestamp and execution counter are updated before external calls, blocking a nested execute(). The configured router remains an external trust boundary; add an explicit reentrancy guard in any future controller version."

@@ -11,12 +11,14 @@ interface IRouter {
     function WETH() external view returns (address);
     function getAmountsOut(uint256 amountIn, address[] calldata path)
         external view returns (uint256[] memory);
-    function swapExactETHForTokens(
+    /// @dev IFR charges a transfer fee, so the fee-on-transfer variant is required (JUL-08):
+    ///      it checks `amountOutMin` against the recipient's actual balance increase.
+    function swapExactETHForTokensSupportingFeeOnTransferTokens(
         uint256 amountOutMin,
         address[] calldata path,
         address to,
         uint256 deadline
-    ) external payable returns (uint256[] memory);
+    ) external payable;
     function addLiquidityETH(
         address token,
         uint256 amountTokenDesired,
@@ -58,6 +60,7 @@ contract BuybackController {
     uint256 public totalLiquidityAdded;
     uint256 public executionCount;
 
+    /// @notice `ifrBought` and `ifrToBurn` are the IFR actually credited to burnReserve (balance difference).
     event BuybackExecuted(uint256 ethSpent, uint256 ifrBought, uint256 ifrToBurn);
     event LiquidityAdded(uint256 ethUsed, uint256 ifrUsed, uint256 liquidity);
     event LiquidityFallback(uint256 ethRedirected);
@@ -156,12 +159,15 @@ contract BuybackController {
         uint256[] memory expected = router.getAmountsOut(ethAmount, path);
         uint256 minOut = (expected[1] * (10_000 - slippageBps)) / 10_000;
 
-        uint256[] memory amounts = router.swapExactETHForTokens{value: ethAmount}(
+        // Account for what BurnReserve actually received; a taxed transfer delivers less than quoted.
+        uint256 balanceBefore = token.balanceOf(burnReserve);
+        router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: ethAmount}(
             minOut, path, burnReserve, block.timestamp
         );
+        uint256 received = token.balanceOf(burnReserve) - balanceBefore;
 
-        totalIFRBurned += amounts[1];
-        emit BuybackExecuted(ethAmount, amounts[1], amounts[1]);
+        totalIFRBurned += received;
+        emit BuybackExecuted(ethAmount, received, received);
     }
 
     function _addLiquidity(uint256 ethAmount) internal {

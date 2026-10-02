@@ -10,12 +10,14 @@ interface IRouter {
     function WETH() external view returns (address);
     function getAmountsOut(uint256 amountIn, address[] calldata path)
         external view returns (uint256[] memory);
-    function swapExactETHForTokens(
+    /// @dev IFR charges a transfer fee, so the fee-on-transfer variant is required (JUL-08):
+    ///      it checks `amountOutMin` against the recipient's actual balance increase.
+    function swapExactETHForTokensSupportingFeeOnTransferTokens(
         uint256 amountOutMin,
         address[] calldata path,
         address to,
         uint256 deadline
-    ) external payable returns (uint256[] memory);
+    ) external payable;
 }
 
 /// @title BuybackVault
@@ -39,6 +41,8 @@ contract BuybackVault {
     bool public paused;
 
     event Deposited(address indexed sender, uint256 amount);
+    /// @notice `burnAmount` and `treasuryAmount` are the IFR amounts actually credited to the recipients
+    ///         (balance differences); with a taxed transfer they are lower than the amounts debited here.
     event BuybackExecuted(uint256 ethSpent, uint256 burnAmount, uint256 treasuryAmount);
     event Paused(address indexed account);
     event Unpaused(address indexed account);
@@ -122,18 +126,25 @@ contract BuybackVault {
         uint256[] memory expectedAmounts = router.getAmountsOut(ethBal, path);
         uint256 minOut = (expectedAmounts[1] * (10_000 - slippageBps)) / 10_000;
 
-        uint256[] memory amounts = router.swapExactETHForTokens{value: ethBal}(
+        // Split only what this vault actually received; a taxed transfer delivers less than quoted.
+        uint256 balanceBefore = token.balanceOf(address(this));
+        router.swapExactETHForTokensSupportingFeeOnTransferTokens{value: ethBal}(
             minOut, path, address(this), block.timestamp
         );
-
-        uint256 totalOut = amounts[1];
+        uint256 totalOut = token.balanceOf(address(this)) - balanceBefore;
         uint256 burnAmount = (totalOut * burnShareBps) / 10_000;
         uint256 treasuryAmount = totalOut - burnAmount;
 
+        // Report what each recipient was actually credited: a taxed IFR transfer credits less than it debits.
+        uint256 burnBefore = token.balanceOf(burnReserve);
         require(token.transfer(burnReserve, burnAmount), "burn transfer failed");
-        require(token.transfer(treasury, treasuryAmount), "treasury transfer failed");
+        uint256 burnCredited = token.balanceOf(burnReserve) - burnBefore;
 
-        emit BuybackExecuted(ethBal, burnAmount, treasuryAmount);
+        uint256 treasuryBefore = token.balanceOf(treasury);
+        require(token.transfer(treasury, treasuryAmount), "treasury transfer failed");
+        uint256 treasuryCredited = token.balanceOf(treasury) - treasuryBefore;
+
+        emit BuybackExecuted(ethBal, burnCredited, treasuryCredited);
     }
 
     /// @notice Update vault parameters (owner only)
