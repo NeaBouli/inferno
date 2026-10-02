@@ -13,8 +13,8 @@ now have integrated corrections and dedicated verification evidence. The
 authoritative status is maintained in the
 [finding-by-finding remediation register](CWA_REMEDIATION_REGISTER.md).
 
-- Disposition: **39 fixed and verified / 11 governance or owner gated / 2
-  accepted or monitored / 19 open actionable / 11 informational**.
+- Disposition: **53 fixed and verified / 11 governance or owner gated / 2
+  accepted or monitored / 5 open actionable / 11 informational**.
 - Corrected severity aggregate: **0 Critical / 3 High / 29 Medium / 34 Low /
   16 Informational**.
 - [Download the consolidated 55-page CWA report
@@ -46,8 +46,8 @@ No finding text, severity label or technical conclusion was changed.
 
 The maintained register normalizes the report into 23 traceable findings. The
 current evidence-backed disposition is **12 fixed and verified / 3 partially
-remediated / 1 corrected outdated snapshot / 3 governance or future-version
-gated / 2 accepted or monitored / 2 open actionable**. Severity colors in the
+remediated / 1 corrected outdated snapshot / 4 governance or future-version
+gated / 2 accepted or monitored / 1 open actionable**. Severity colors in the
 unchanged report describe the dated audit assessment, not current remediation
 status. Every later status change must carry integrated evidence and pass the
 register's CI guard.

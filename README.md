@@ -184,8 +184,8 @@ scope and limitations.
 All smart contracts are open source and community review is explicitly encouraged.
 
 - **Internal Audit:** [docs/SECURITY_AUDIT_SKYWALKER.md](docs/SECURITY_AUDIT_SKYWALKER.md) — 0 FAIL, 20 active WARN, 1 fixed, 81 PASS
-- **OKComputer Community Audit (27.07.2026):** [current finding-by-finding status](docs/community-audits/JULY_2026_REMEDIATION_REGISTER.md) · [preserved original and provenance](docs/community-audits/README.md) — 12 fixed and verified, 3 partially remediated, 1 outdated snapshot corrected, 3 governance/future-version gated, 2 accepted or monitored and 2 open actionable; not a professional third-party certification
-- **Collateral Web3 Open Audits (14.09.2026):** [seven reports and provenance](docs/community-audits/README.md) · [CWA-01…CWA-82 remediation register](docs/community-audits/CWA_REMEDIATION_REGISTER.md) · [consolidated PDF](docs/community-audits/IFR_Protocol_CWA_Consolidated_Audit_Report_2026-09-14.pdf) — 39 fixed and verified; 19 findings remain directly actionable
+- **OKComputer Community Audit (27.07.2026):** [current finding-by-finding status](docs/community-audits/JULY_2026_REMEDIATION_REGISTER.md) · [preserved original and provenance](docs/community-audits/README.md) — 12 fixed and verified, 3 partially remediated, 1 outdated snapshot corrected, 4 governance/future-version gated, 2 accepted or monitored and 1 open actionable; not a professional third-party certification
+- **Collateral Web3 Open Audits (14.09.2026):** [seven reports and provenance](docs/community-audits/README.md) · [CWA-01…CWA-82 remediation register](docs/community-audits/CWA_REMEDIATION_REGISTER.md) · [consolidated PDF](docs/community-audits/IFR_Protocol_CWA_Consolidated_Audit_Report_2026-09-14.pdf) — 53 fixed and verified; 5 findings remain directly actionable
 - **Submit a Finding:** [GitHub Private Vulnerability Reporting](https://github.com/NeaBouli/inferno/security/advisories/new)
 - **Security Policy:** [SECURITY.md](SECURITY.md)
 
