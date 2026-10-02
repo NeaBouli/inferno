@@ -313,6 +313,22 @@ describe("BuybackController", function () {
     expect(await Controller.totalIFRBurned()).to.equal(received);
   });
 
+  it("hardening: a nested execute() from the router is stopped by the reentrancy guard", async () => {
+    await user.sendTransaction({ to: Controller.target, value: ONE_ETH });
+    await Router.setReenterTarget(Controller.target);
+    await Controller.connect(user).execute();
+    const guardSelector = ethers.id("ReentrancyGuardReentrantCall()").slice(0, 10);
+    expect(await Router.lastReentryRevertSelector()).to.equal(guardSelector);
+    expect(await Controller.executionCount()).to.equal(1n);
+  });
+
+  it("hardening: withdrawIFR reverts when the token transfer returns false", async () => {
+    const FalseToken = await (await ethers.getContractFactory("MockFalseReturnToken")).deploy();
+    const F = await ethers.getContractFactory("BuybackController");
+    const controller = await F.deploy(FalseToken.target, burnReserve.address, Router.target, lpReceiver.address, guardian.address, owner.address);
+    await expect(controller.connect(owner).withdrawIFR(user.address, 1n)).to.be.revertedWith("transfer failed");
+  });
+
   it("JUL-08: a transfer tax above the slippage bound reverts instead of under-delivering", async () => {
     await user.sendTransaction({ to: Controller.target, value: ONE_ETH });
     await Router.setTransferFeeBpsOnOutput(600);

@@ -189,7 +189,7 @@ Sepolia deployment served as the full testnet validation phase. All contracts we
 
 | Check | Status |
 |-------|--------|
-| Slither v0.11.5 | **LOCAL CANDIDATE PASS** -- 21 production sources, 0 unreviewed High, 6 reviewed High signals baselined, 0 Critical signals reported by the pinned toolchain |
+| Slither v0.11.5 | **LOCAL CANDIDATE PASS** -- 21 production sources, 0 unreviewed High, 5 reviewed High signals baselined, 0 Critical signals reported by the pinned toolchain |
 | Mythril v0.24.8 | **LOCAL CANDIDATE PASS** -- bounded symbolic execution of 17 concrete production contracts, 0 signals at any severity; scheduled/manual CI and exact-head Linux validation pending |
 | Historical solidity-coverage snapshot | **99% Stmts, 91% Branch** for the recorded March 2026 contract subset; not current full-repository coverage |
 | 367 Contract Tests | **PASS** -- 0 Failures |

@@ -86,6 +86,14 @@ contract MockRouter {
     /// @notice Transfer tax applied to the swap output, in bps (simulates a taxed token).
     uint256 public transferFeeBpsOnOutput;
 
+    /// @notice Optional contract to call back into during the next fee-on-transfer swap (reentrancy tests).
+    address public reenterTarget;
+    bytes4 public lastReentryRevertSelector;
+
+    function setReenterTarget(address target) external {
+        reenterTarget = target;
+    }
+
     function setTransferFeeBpsOnOutput(uint256 bps) external {
         require(bps <= 10_000, "bps>100%");
         transferFeeBpsOnOutput = bps;
@@ -109,6 +117,14 @@ contract MockRouter {
             slippageBpsNextSwap = 0;
         }
         uint256 delivered = quoted - (quoted * transferFeeBpsOnOutput) / 10_000;
+
+        if (reenterTarget != address(0)) {
+            address target = reenterTarget;
+            reenterTarget = address(0);
+            (bool ok, bytes memory reason) = target.call(abi.encodeWithSignature("execute()"));
+            require(!ok, "MockRouter: reentry succeeded");
+            lastReentryRevertSelector = reason.length >= 4 ? bytes4(reason) : bytes4(0);
+        }
 
         uint256 balanceBefore = IBalanceOf(IFR_ADDR).balanceOf(to);
         IMintableERC20(IFR_ADDR).mint(to, delivered);

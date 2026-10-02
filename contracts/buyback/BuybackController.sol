@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+
 interface IERC20 {
     function transfer(address to, uint256 amount) external returns (bool);
     function balanceOf(address account) external view returns (uint256);
@@ -35,7 +37,7 @@ interface IRouter {
 ///         50% → add Uniswap V2 liquidity (deepen pool).
 ///         Permissionless execution after cooldown. Governance-only config.
 /// @dev Phase 3+ feature — activated after Bootstrap finalise() + LP launch.
-contract BuybackController {
+contract BuybackController is ReentrancyGuard {
     address public owner;
     address public immutable guardian;
 
@@ -127,7 +129,7 @@ contract BuybackController {
     // ── Permissionless Execution ────────────────────────────────
 
     /// @notice Execute buyback + LP cycle. Anyone can call after cooldown.
-    function execute() external {
+    function execute() external nonReentrant {
         require(!paused, "Pausable: paused");
         require(block.timestamp >= lastExecution + cooldown, "cooldown");
         require(address(this).balance >= minTriggerAmount, "insufficient ETH");
@@ -248,7 +250,7 @@ contract BuybackController {
     /// @notice Emergency withdraw IFR (Governance only)
     function withdrawIFR(address to, uint256 amount) external onlyOwner {
         require(to != address(0), "to=0");
-        token.transfer(to, amount);
+        require(token.transfer(to, amount), "transfer failed");
     }
 
     function transferOwnership(address newOwner) external onlyOwner {
