@@ -850,14 +850,14 @@ await lock.lockWithType(amount, lockType);</code></pre>
       <ul class="checklist">
         <li><span class="do">DO</span> Query only <code>isLocked()</code> (boolean) &mdash; minimum data exposure</li>
         <li><span class="do">DO</span> Use your own RPC endpoint (not a public one)</li>
-        <li><span class="do">DO</span> Cache results with a short TTL (e.g., 5 minutes)</li>
+        <li><span class="do">DO</span> Cache a result for at most 60 seconds and only for the same block; check again when the benefit is redeemed</li>
         <li><span class="dont">DON'T</span> Store wallet addresses linked to user identities</li>
         <li><span class="dont">DON'T</span> Log lock amounts or transaction details</li>
         <li><span class="dont">DON'T</span> Track lock/unlock patterns across users</li>
       </ul>
 
       <p>
-        The resolver should be <strong style="color: var(--text);">stateless</strong> &mdash; query on demand, don't persist. If you need caching, use an in-memory store with a short TTL and no personal identifiers.
+        The resolver should be <strong style="color: var(--text);">stateless</strong> &mdash; query on demand, don't persist. If you need caching, use an in-memory store keyed by block, kept for at most 60 seconds, with no personal identifiers (<code>ifr-benefits-verify/1</code> &sect;5).
       </p>
 
       <!-- ============================================================
@@ -1147,7 +1147,7 @@ async function checkLicense(wallet) {
           <tr>
             <td>Caching</td>
             <td>Short TTL, no persistent store</td>
-            <td>In-memory cache, 5min TTL max</td>
+            <td>In-memory cache, same block only, 60&nbsp;s max; re-check at redemption</td>
           </tr>
           <tr>
             <td>Audit Trail</td>
