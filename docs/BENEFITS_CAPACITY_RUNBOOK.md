@@ -59,6 +59,17 @@ npm run smoke:benefits
 
 The helper does not prune Docker volumes.
 
+Before any upload or build, deploy modes also check the production settings in
+`/opt/inferno/.env.benefits`. The backend refuses to start without these settings:
+
+- `SELLER_AUTH_DOMAIN`, `CHAIN_ID`, `RPC_URL`;
+- `IFR_TOKEN_ADDRESS`, `IFRLOCK_ADDRESS`, `COMMITMENT_VAULT_ADDRESS`;
+- an `ADMIN_SECRET` of at least 32 characters.
+
+If any are missing, the helper exits with code 78 and lists their names only; values are never
+printed. Background: the 2026-10-02 release added the #124 requirement for `SELLER_AUTH_DOMAIN`
+while the host file dated from August, which broke the shop API until the setting was added.
+
 Reason for the stricter deploy floor: frontend-only deploys have started with
 about `3.4-3.5 GB` free and then dropped below `0.5 GB` during Docker build
 before safe pruning recovered space. Treat deploys below `4 GB` free as blocked

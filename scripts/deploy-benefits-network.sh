@@ -200,7 +200,26 @@ require_exact_release() {
   fi
 }
 
+# The backend refuses to start in production without these values (config.ts,
+# sellerAuthConfigPolicy.ts, adminSecretPolicy.ts). Check names and the admin-secret
+# length on the host before anything is built; never print a value.
+REQUIRED_ENV_KEYS="SELLER_AUTH_DOMAIN CHAIN_ID RPC_URL IFR_TOKEN_ADDRESS IFRLOCK_ADDRESS COMMITMENT_VAULT_ADDRESS ADMIN_SECRET"
+require_production_env() {
+  local missing
+  missing="$(remote "f='$REMOTE_COMPOSE_ENV_FILE'
+    test -r \"\$f\" || { echo UNREADABLE; exit 0; }
+    for k in $REQUIRED_ENV_KEYS; do grep -q \"^\$k=.\" \"\$f\" || printf '%s ' \"\$k\"; done
+    s=\$(grep '^ADMIN_SECRET=' \"\$f\" | head -1 | cut -d= -f2-)
+    [ \"\${#s}\" -ge 32 ] || printf 'ADMIN_SECRET(<32) '")"
+  if [[ -n "$missing" ]]; then
+    echo "Refusing deploy: $REMOTE_COMPOSE_ENV_FILE lacks production settings: $missing" >&2
+    echo "Add them on the host (values never in chat or logs), then re-run." >&2
+    exit 78
+  fi
+}
+
 require_exact_release
+require_production_env
 ensure_space "pre-deploy" 1
 assert_single_backend
 sync_app
