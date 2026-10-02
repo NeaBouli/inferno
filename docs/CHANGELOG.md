@@ -1,5 +1,14 @@
 # Changelog
 
+## 2 October 2026 — BuybackController Source Hardening
+
+- `execute()` is now `nonReentrant`. A nested call from the router reverts with the reentrancy
+  guard (tested).
+- `withdrawIFR` requires a successful token transfer.
+- The two corresponding reviewed Slither items are resolved: the unchecked-transfer entry is
+  removed, and the baseline now has 5 reviewed High signals.
+- Source only. The deployed Mainnet controller is unchanged and dormant.
+
 ## 2 October 2026 — Buyback Fee-on-Transfer Accounting for Future Deployments (JUL-08)
 
 - BuybackController and BuybackVault sources now swap with

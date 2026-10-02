@@ -59,7 +59,7 @@ and are credited in the Hall of Fame (see SECURITY.md).
 
 | Audit Type | Status | Result |
 |------------|--------|--------|
-| Slither Static Analysis | Active CI gate | 21 production sources; 0 unreviewed High, 6 reviewed High signals baselined, 0 Critical signals reported by the pinned toolchain |
+| Slither Static Analysis | Active CI gate | 21 production sources; 0 unreviewed High, 5 reviewed High signals baselined, 0 Critical signals reported by the pinned toolchain |
 | Mythril Symbolic Analysis | Active CI gate | 17 concrete production contracts; bounded to two transactions and 30 seconds per contract; 0 signals at any severity in the verified local run |
 | Internal repository audits | Completed | Published findings and remediation records |
 | Professional third-party audit | Pending | Independent engagement remains open |
