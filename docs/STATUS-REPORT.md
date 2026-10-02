@@ -1,6 +1,6 @@
 # IFR Project Status Report
 
-**Current engineering baseline:** 6 September 2026
+**Current engineering baseline:** 2 October 2026
 **Branch:** `main`
 **Model:** Community Fair Launch (CFLM) -- no presale
 **Ticker:** $IFR
@@ -17,31 +17,33 @@ The canonical surface, application and Mainnet capability matrix is
 particular, source presence does not mean that an app is publicly deployed or
 that a governance-gated contract path is active.
 
-- Root: Node.js `>=22.13.0`, Ethers `6.17.0`, Hardhat `3.17.0`,
-  Chai `6.2.2`, Mocha `11.8.0`, OpenZeppelin Contracts `5.6.x`.
+- Root: Node.js `>=22.13.0`, Ethers `6.17.0`, Hardhat `3.18.0`,
+  Chai `6.2.2`, Mocha `12.0.3`, OpenZeppelin Contracts `5.6.x`.
 - Root is ESM with explicit CommonJS boundaries for legacy scripts and
   standalone test packages. Waffle, Ganache and `solidity-coverage` are no
   longer active root dependencies; native Hardhat 3 coverage is used.
-- Current repository verification: contracts `644/644`, Generator Engine
+- Current repository verification: contracts `655/655`, Generator Engine
   `30/30`, IFR SDK `36/36`.
 - Current local static-analysis candidates: recursive Slither over 21
   production sources and bounded Mythril symbolic execution over 17 concrete
   production contracts. Mythril reported zero signals at any severity in the
   verified local run; exact-head Linux CI is still required.
-- Landing/Wiki wallet browser tests `24/24` and Web3 write-path browser tests
-  `27/27` passed. The complete Benefits preflight passed.
+- Landing/Wiki wallet browser tests `26/26` and Web3 write-path browser tests
+  `45/45` passed. The complete Benefits preflight passed.
 - Benefits physical device/wallet acceptance remains `1/10` passed and `9`
   pending; this is not represented as complete production acceptance.
 - Mainnet borrowing remains disabled with `LendingVault.ifrPriceWei = 0`.
-  CommitmentVault price-conditioned locks remain disabled with a zero oracle;
-  TIME_ONLY commitments remain operational.
+  CommitmentVault price conditions cannot be met with a zero oracle. The Web3
+  UI offers only TIME_ONLY commitments, which remain operational, but the
+  deployed V1 still accepts price-conditioned tranches by direct call (CWA-03,
+  decision register lane 2).
 - LiquidityReserve's initial lock ended on 01.09.2026. At block `25918433`,
   all 200M IFR remained held, 0 IFR had been withdrawn and the current contract
   cap allowed 50M IFR per 90 days. No reserve proposal was pending and no LP
   addition occurred automatically.
-- Root `npm audit`: 8 low transitive development-tool findings, with 0
-  moderate, high or critical findings. The monitored Elliptic advisory has no
-  available upstream fix in the retained Hardhat verification path.
+- Root `npm audit`: 0 vulnerabilities. `@nomicfoundation/hardhat-verify`
+  3.1.2 removed the Elliptic chain (#151), and the advisory gate now requires a
+  clean root audit.
 - Benefits frontend: Next.js `15.5.21`, Wagmi `3.7.x`, Node 22. Benefits
   backend and every active application manifest that depends on Ethers use
   Ethers 6.

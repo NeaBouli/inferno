@@ -24,11 +24,11 @@
     "Informational": 16
   },
   "canonicalTests": {
-    "contracts": "644/644",
+    "contracts": "655/655",
     "generator": "30/30",
     "sdk": "36/36",
-    "landingWikiBrowser": "24/24",
-    "web3Browser": "27/27",
+    "landingWikiBrowser": "26/26",
+    "web3Browser": "45/45",
     "benefitsPhysicalDevices": "1/10"
   },
   "artifacts": {

@@ -94,17 +94,17 @@ for (const relative of currentSurfaces) {
 
 // Tests: the register's canonical contract count is the current reproduced count.
 const register = JSON.parse(read("docs/community-audits/cwa-remediation-register.json"));
-assert.equal(register.canonicalTests.contracts, "644/644");
+assert.equal(register.canonicalTests.contracts, "655/655");
 const status = read("docs/CURRENT_FUNCTIONALITY_STATUS.md");
-assert.ok(status.includes("`644/644` passing"));
+assert.ok(status.includes("`655/655` passing"));
 // Browser suites: reproduced with `npx playwright test --list` (wallet-connect 24, web3-write 27).
-assert.equal(register.canonicalTests.landingWikiBrowser, "24/24");
-assert.equal(register.canonicalTests.web3Browser, "27/27");
-assert.ok(status.includes("Landing/Wiki wallet browser suite: `24/24` passing"));
-assert.ok(status.includes("Web3 write-path browser suite: `27/27` passing"));
-assert.ok(readme.includes("Landing/Wiki browser **24/24**, Web3 browser **27/27**"));
+assert.equal(register.canonicalTests.landingWikiBrowser, "26/26");
+assert.equal(register.canonicalTests.web3Browser, "45/45");
+assert.ok(status.includes("Landing/Wiki wallet browser suite: `26/26` passing"));
+assert.ok(status.includes("Web3 write-path browser suite: `45/45` passing"));
+assert.ok(readme.includes("Landing/Wiki browser **26/26**, Web3 browser **45/45**"));
 for (const relative of ["docs/llms.txt", "apps/ai-copilot/src/context/ifr-knowledge.ts"]) {
-  assert.ok(read(relative).includes("Landing/Wiki browser 24/24, Web3 browser 27/27"), `${relative} browser counts`);
+  assert.ok(read(relative).includes("Landing/Wiki browser 26/26, Web3 browser 45/45"), `${relative} browser counts`);
 }
 for (const relative of ["README.md", "docs/CURRENT_FUNCTIONALITY_STATUS.md", "docs/index.html"]) {
   assert.ok(!/\b642 (contract )?tests\b/i.test(read(relative)), `${relative} cites the stale 642 count`);
@@ -140,4 +140,4 @@ for (const evidence of [
   assert.ok(fs.existsSync(path.join(root, evidence)), `inventory evidence missing: ${evidence}`);
 }
 
-console.log("[docs-truth] PASS - 14 contracts + 3 Safes = 17; 644 tests; historical coverage labelled; 7 deployment units");
+console.log("[docs-truth] PASS - 14 contracts + 3 Safes = 17; 655 tests; historical coverage labelled; 7 deployment units");

@@ -52,12 +52,12 @@ assert.equal(
 );
 
 const currentBaseline = [
-  "**Current engineering baseline:** 6 September 2026",
+  "**Current engineering baseline:** 2 October 2026",
   "Current repository verification",
-  "Hardhat `3.17.0`",
-  "contracts `644/644`",
-  "`27/27` passed",
-  "8 low transitive development-tool findings",
+  "Hardhat `3.18.0`",
+  "contracts `655/655`",
+  "`45/45` passed",
+  "Root `npm audit`: 0 vulnerabilities",
   "Benefits physical device/wallet acceptance remains `1/10`",
   "LendingVault.ifrPriceWei = 0",
   "## Historical Snapshot — 5 March 2026",
@@ -100,7 +100,7 @@ const todo = requireText("internal/operations/TODO.md", [
   "Read-only external listing monitor — completed 2026-09-04",
   "CL0309260050",
   "Ethers 6 / Hardhat 3 / Chai 6 / Node 22 migration",
-  "8 transitive low findings",
+  "Residual dependency audit findings — resolved 2026-10-01",
   "Deterministic local Hardhat test network",
   "Technical: WalletConnect v2 + ethers.js v6",
   "*Last updated: 2026-09-09*",

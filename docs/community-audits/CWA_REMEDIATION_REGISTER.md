@@ -44,11 +44,11 @@ do not convert an open audit finding into a verified fix.
 
 | Suite | Current evidence |
 | --- | ---: |
-| Smart contracts | 644/644 |
+| Smart contracts | 655/655 |
 | Generator Engine | 30/30 |
 | IFR SDK | 36/36 |
-| Landing/Wiki browser | 24/24 |
-| Web3 browser | 27/27 |
+| Landing/Wiki browser | 26/26 |
+| Web3 browser | 45/45 |
 | Benefits physical device/wallet matrix | 1/10 |
 
 ## Finding-by-Finding Status
