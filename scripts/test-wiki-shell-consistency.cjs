@@ -153,6 +153,11 @@ for (const page of pages) {
   }
 }
 
+// T-188: Wiki caching guidance follows ifr-benefits-verify/1 §5 (<= 60 s, same block, re-check at redemption).
+const integrationPage = fs.readFileSync(path.join(wikiDir, "integration.html"), "utf8");
+check(!/5[ -]?min(ute)?s?\b|5min/i.test(integrationPage), "integration.html: caching guidance must not exceed 60 seconds (spec §5)");
+check((integrationPage.match(/60 seconds|60&nbsp;s/g) || []).length >= 2, "integration.html: caching guidance must state the 60-second same-block limit");
+
 if (failures.length) {
   console.error(`[wiki-shell] FAIL - ${failures.length} issue(s):`);
   for (const failure of failures) console.error(`  - ${failure}`);
