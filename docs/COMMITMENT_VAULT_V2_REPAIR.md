@@ -1,7 +1,15 @@
 # CommitmentVault V2 Repair (CV-01)
 
-**Status:** prepared, not deployed. Every Mainnet step below is performed by the deployer or the Safe signers,
-never by automation.
+**Status:** V2 deployed, not yet wired (2026-10-03). Every Mainnet step below is performed by the deployer or the
+Safe signers, never by automation.
+
+- **V2:** `0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F`, deployed 2026-10-02 21:22:23 UTC in block 26107296, TX
+  `0x9857a5707b650b8828f41b893f91a10ff26d7990742e782bb0b7e86df23ea0f7`. Owner Governance, no P0, no oracle;
+  a `PRICE_ONLY` lock reverts with `price conditions disabled`. Runtime bytecode equals the compiled artifact
+  except the immutable IFR address. Sourcify exact match; Etherscan source verification pending.
+- **Proposal #17** `setFeeExempt(V2, true)`: queued by the Treasury Safe, TX
+  `0x6e113b6cc66a369604d46c3b4a5560f1418302de6ecc371f1217d72aeabd39bd`, ETA 2026-10-04 21:53:11 UTC.
+  **Not executed:** `InfernoToken.feeExempt(V2)` stays `false` until step 4 is executed.
 
 ## Why
 
@@ -37,7 +45,7 @@ The weekly `benefits-verify-live.yml` fork job runs the rehearsal again.
 
 ## Mainnet Steps
 
-### 1. Deploy (deployer)
+### 1. Deploy (deployer) — done 2026-10-02
 
 ```sh
 npx hardhat run scripts/deploy-commitment-vault.js --network mainnet
@@ -47,7 +55,7 @@ npx hardhat run scripts/deploy-commitment-vault.js --network mainnet
 - Record the address and the deployment transaction in `deployments/mainnet.json` and `docs/DEPLOYMENTS.md`.
 - Do not call `setP0` or `setPriceOracle`. V2 has no price path.
 
-### 2. Generate the Safe batch files (anyone)
+### 2. Generate the Safe batch files (anyone) — done (proposal id 17)
 
 ```sh
 node scripts/commitment-vault-v2-proposal.cjs <V2 address> <Governance.proposalCount()> ./cv01-safe
@@ -60,13 +68,13 @@ This writes `cv01-v2-step1-propose.json` and `cv01-v2-step2-execute.json` for th
 
 The script refuses the V1 address.
 
-### 3. Propose (Safe, 3-of-5)
+### 3. Propose (Safe, 3-of-5) — done 2026-10-02 21:53 UTC
 
 - Import step 1 into the Safe Transaction Builder of the Governance owner Safe.
 - Check the decoded call: target `Governance`, inner target `InfernoToken`, `setFeeExempt(<V2>, true)`.
 - Sign and execute.
 
-### 4. Execute after the delay (Safe)
+### 4. Execute after the delay (Safe) — open, from 2026-10-04 21:53:11 UTC
 
 - Wait until the proposal `eta` has passed (48 hours).
 - Import step 2, check the proposal id, then sign and execute.
