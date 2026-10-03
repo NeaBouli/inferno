@@ -24,7 +24,9 @@ lockfile, then use `npm ci`.
 ## Contract Addresses
 
 `MAINNET_ADDRESSES` lists deployed contracts. `commitmentVault` is CommitmentVault V1: its
-price-conditioned tranches can never unlock, so applications must not create new locks there.
+price-conditioned tranches can never unlock, so applications must not create new locks there;
+existing time tranches stay unlockable through V1. `commitmentVaultV2` is CommitmentVault V2
+(TIME_ONLY); it accepts new time locks once Governance proposal #17 (its fee exemption) has executed.
 `lendingVault` is the retired LendingVault V1 with borrowing permanently disabled.
 
 The tarball exports CommonJS with tested ESM named-import interoperability and supports Node.js

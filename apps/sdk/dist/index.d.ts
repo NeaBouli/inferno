@@ -13,8 +13,10 @@ export * from "./benefits";
 export declare const MAINNET_ADDRESSES: {
     readonly ifrToken: "0x77e99917Eca8539c62F509ED1193ac36580A6e7B";
     readonly ifrLock: "0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb";
-    /** CommitmentVault V1: price-conditioned tranches can never unlock (CV-01); do not create new locks here. */
+    /** CommitmentVault V1: price tranches never unlock (CV-01); existing time tranches unlockable. Do not create new locks here. */
     readonly commitmentVault: "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3";
+    /** CommitmentVault V2: TIME_ONLY; new locks after Governance proposal #17 (fee exemption) executes. */
+    readonly commitmentVaultV2: "0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F";
     /** LendingVault V1: retired, borrowing permanently disabled. */
     readonly lendingVault: "0x974305Ab0EC905172e697271C3d7d385194EB9DF";
     readonly builderRegistry: "0xdfe6636DA47F8949330697e1dC5391267CEf0EE3";

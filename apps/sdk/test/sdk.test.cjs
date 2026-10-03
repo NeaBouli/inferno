@@ -609,3 +609,11 @@ main().catch((error) => {
   console.error("[ifr-sdk-test] FAIL", error);
   process.exitCode = 1;
 });
+
+// CommitmentVault V2 address (T-223)
+{
+  const sdk = require("../dist/index.js");
+  if (sdk.MAINNET_ADDRESSES.commitmentVaultV2 !== "0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F") throw new Error("commitmentVaultV2 address");
+  if (sdk.MAINNET_ADDRESSES.commitmentVault !== "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3") throw new Error("commitmentVault V1 address");
+  console.log("  ok MAINNET_ADDRESSES includes CommitmentVault V1 and V2");
+}
