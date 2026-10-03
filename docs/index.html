@@ -1319,7 +1319,7 @@
         {"@type":"PropertyValue","name":"On-chain Symbol","value":"IFR"},
         {"@type":"PropertyValue","name":"Social Cashtag","value":"$IFRp"},
         {"@type":"PropertyValue","name":"CommitmentVault","value":"Live self-service locks on Ethereum Mainnet"},
-        {"@type":"PropertyValue","name":"LendingVault","value":"Live self-service lender offers; borrower transactions require ifrPriceWei collateral price"},
+        {"@type":"PropertyValue","name":"LendingVault","value":"Retired (V1): borrowing permanently disabled, no V2 planned yet; lenders can withdraw unlent offers"},
         {"@type":"PropertyValue","name":"IFRLock Access","value":"Lock 1,000 IFR in IFRLock for refundable first-party IFRLock access. The AI Copilot chat stays documentation-only and receives no wallet, balance, lock or tier context."},
         {"@type":"PropertyValue","name":"Community Signer Distribution","value":"Planned security-filtered multisig expansion: eligibility review, public nomination, community vote, security review, term limits, and emergency replacement rules"}
       ]
@@ -1450,6 +1450,7 @@
         <div class="ledger-row"><span class="k">Social cashtag</span><span class="v acc">$IFRp</span></div>
         <div class="ledger-row"><span class="k">Fixed supply</span><span class="v">1,000,000,000</span></div>
         <div class="ledger-row"><span class="k">Burned per transfer</span><span class="v acc">2.50%</span></div>
+        <div class="ledger-row"><span class="k">Permanently lost (not burned)</span><span class="v"><a href="#onchain-transparency" data-lost-ifr-ledger style="color:inherit;">27.1M IFR</a></span></div>
         <div class="ledger-row"><span class="k">On-chain components</span><span class="v">17</span></div>
         <div class="ledger-row"><span class="k">Owner</span><span class="v">Governance · 48h timelock</span></div>
       </div>
@@ -2811,10 +2812,20 @@ if (isLocked) {
         <div data-transparency-detail style="color:#666;font-size:13px;margin-top:4px;">CommitmentVault totalLocked()</div>
         <p class="transparency-status" data-transparency-status>Reading Ethereum Mainnet&hellip;</p>
       </div>
+      <div class="lost-ifr-card" data-lost-ifr data-state="verified" style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:28px 24px;text-align:center;">
+        <div data-lost-ifr-value style="font-size:32px;font-weight:700;color:#ff6a00;">27,143,460.66 IFR</div>
+        <div style="color:#aaa;margin-top:8px;">Permanently Lost IFR</div>
+        <div style="color:#666;font-size:13px;margin-top:4px;">Irrecoverable, not burned &mdash; still counted in totalSupply.
+          <span data-lost-ifr-cv01>26,418,467.99</span> in CommitmentVault V1 price tranches
+          (<a href="wiki/commitment-vault.html" style="color:#aaa;">CV-01</a>) +
+          <span data-lost-ifr-feerouter>724,992.67</span> pool fees in FeeRouterV1
+          (<a href="wiki/transparency.html#lost-ifr" style="color:#aaa;">CWA-02</a>)</div>
+        <p class="transparency-status" data-lost-ifr-status>Last verified 2026-10-03 (Mainnet block 26108134)</p>
+      </div>
       <div style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:28px 24px;text-align:center;">
         <div style="font-size:32px;font-weight:700;color:#ff6a00;"><span data-live-key="lending-available-stat">loading&hellip;</span></div>
-        <div style="color:#aaa;margin-top:8px;">LendingVault Available</div>
-        <div style="color:#666;font-size:13px;margin-top:4px;"><span data-live-key="lending-market-rate">loading&hellip;</span> market rate</div>
+        <div style="color:#aaa;margin-top:8px;">LendingVault (retired V1)</div>
+        <div style="color:#666;font-size:13px;margin-top:4px;">Withdrawable lender offers; borrowing permanently disabled, no V2 planned yet</div>
       </div>
       <div style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:28px 24px;text-align:center;">
         <div style="font-size:32px;font-weight:700;color:#ff6a00;">Governance</div>
@@ -3585,6 +3596,7 @@ if (isLocked) {
     document.querySelectorAll('.live-updated-at').forEach(function(el) {
       el.textContent = 'Connection failed';
     });
+    renderLostIFR(null);
     loadIFRPrice();
   }
 
@@ -3661,6 +3673,28 @@ if (isLocked) {
         detailEl.textContent = state === 'live' && entry.detail ? entry.detail : detailEl.getAttribute('data-default');
       }
     });
+  }
+
+  // Permanently lost IFR (not burned; still in totalSupply). CV-01 is fixed; FeeRouterV1 is read live
+  // because it grows until Governance moves the pool-fee receiver. A failed read keeps the last
+  // verified figure with its date; this metric never renders 0 or "Unavailable".
+  var LOST_IFR = { cv01: 26418467.994338353, feeRouter: 724992.668043224, block: 26108134, date: '2026-10-03' };
+  function fmtExact(n) { return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+  function renderLostIFR(feeRouterLive) {
+    var live = typeof feeRouterLive === 'number' && isFinite(feeRouterLive) && feeRouterLive >= LOST_IFR.feeRouter;
+    var feeRouter = live ? feeRouterLive : LOST_IFR.feeRouter;
+    var total = LOST_IFR.cv01 + feeRouter;
+    document.querySelectorAll('[data-lost-ifr]').forEach(function(card) {
+      card.setAttribute('data-state', live ? 'live' : 'verified');
+      var v = card.querySelector('[data-lost-ifr-value]'); if (v) v.textContent = fmtExact(total) + ' IFR';
+      var f = card.querySelector('[data-lost-ifr-feerouter]'); if (f) f.textContent = fmtExact(feeRouter);
+      var st = card.querySelector('[data-lost-ifr-status]');
+      if (st) st.textContent = live
+        ? 'Live \u2014 FeeRouterV1 balance read ' + clockTime(Date.now()) + '; CV-01 amount fixed'
+        : 'Last verified ' + LOST_IFR.date + ' (Mainnet block ' + LOST_IFR.block + '); live read unavailable';
+    });
+    document.querySelectorAll('[data-lost-ifr-ledger]').forEach(function(el) { el.textContent = fmt(total) + ' IFR'; });
+    setLive('lost-ifr-stat', fmt(total));
   }
 
   function pct(n, total) {
@@ -3777,9 +3811,10 @@ if (isLocked) {
     var protocolLocked = (data.vesting || 0) + (data.liqRes || 0) + (data.bootstrap || 0) + (data.partner || 0) + (data.lpReserve || 0) + (data.community || 0);
     var items = [
       { key: 'burned-stat',     label: 'Total Burned',    value: fmt(data.burned),    sub: 'Since genesis \u2014 decreasing forever', color: '#b3300b' },
+      { key: 'lost-ifr-stat',   label: 'Permanently Lost', value: fmt(LOST_IFR.cv01 + LOST_IFR.feeRouter), sub: 'Not burned \u2014 CV-01 + FeeRouterV1', color: '#92400e' },
       { key: 'protocol-locked', label: 'Protocol Locked', value: fmt(protocolLocked), sub: 'All non-circulating IFR secured', color: '#92400e' },
       { key: 'commitment-locked-stat', label: 'CommitmentVault Locked', value: fmt(data.commitmentLocked || 0), sub: 'Live user locks on Mainnet', color: '#92400e' },
-      { key: 'lending-available-stat', label: 'LendingVault Available', value: fmt(data.lendingAvailable || 0), sub: 'Live lender offers on Mainnet', color: '#166534' },
+      { key: 'lending-available-stat', label: 'LendingVault Available', value: fmt(data.lendingAvailable || 0), sub: 'Retired V1: withdrawable offers, no borrowing', color: '#166534' },
       { key: '',                label: 'Current Supply',  value: fmt(data.supply),    sub: 'of 1B genesis',        color: '#fff'    },
       { key: '',                label: 'LP Reserve Safe', value: fmt(data.lpReserve), sub: 'LP allocation (3-of-5)',color: '#b3300b' },
       { key: 'ifr-price',       label: 'IFR Price',       value: 'TBD',              sub: 'Live Uniswap V2 spot',color: '#92400e' }
@@ -3869,6 +3904,7 @@ if (isLocked) {
       renderMetrics(data);
       updateLiveDisplay(data);
       setTransparencyMetric('burned', fmt(burnedValue) + ' IFR');
+      renderLostIFR(data.feeRouter);
       loadCommitmentVaultLive();
 
       document.querySelectorAll('.live-updated-at').forEach(function(el) {

@@ -955,7 +955,7 @@
         </table>
       </div>
       <div class="callout" style="margin-top:12px;">
-        <p><strong>Note:</strong> BuybackVault and BurnReserve are <em>not</em> genesis allocations. They accumulate from the 1% protocol pool fee on every non-exempt IFR transfer. Bootstrap and LP launch are complete; balances are shown live above.</p>
+        <p><strong>Note:</strong> BuybackVault and BurnReserve are <em>not</em> genesis allocations. They do <em>not</em> receive the 1% IFR pool fee: since Proposal #6 that fee lands in FeeRouterV1, which has no IFR withdrawal path (<a href="#lost-ifr">CWA-02</a>). BurnReserve receives IFR from BuybackController buybacks. Bootstrap and LP launch are complete; balances are shown live above.</p>
       </div>
 
       <h3>All Token Movements &mdash; Chronological Log</h3>
@@ -1179,14 +1179,14 @@
             <tr>
               <td><strong>BuybackVault</strong></td>
               <td class="address"><a href="https://etherscan.io/address/0x670D293e3D65f96171c10DdC8d88B96b0570F812" target="_blank">0x670D...F812</a></td>
-              <td>Protocol buyback reserve. Accumulates from 1% pool fee on IFR transfers. Not pre-funded at genesis. Activated 60 days after deployment.</td>
+              <td>Protocol buyback reserve. Not pre-funded at genesis and does not receive the IFR pool fee (it strands in FeeRouterV1, <a href="#lost-ifr">CWA-02</a>). Activated 60 days after deployment.</td>
               <td id="cur-buyback">0 IFR</td>
               <td>Smart contract &mdash; Governance controlled</td>
             </tr>
             <tr>
               <td><strong>BurnReserve</strong></td>
               <td class="address"><a href="https://etherscan.io/address/0xaA1496133B6c274190A2113410B501C5802b6fCF" target="_blank">0xaA14...fCF</a></td>
-              <td>Permanent burn reserve. Accumulates from pool fee share. Burns IFR permanently on trigger. Not pre-funded at genesis.</td>
+              <td>Permanent burn reserve. Receives IFR bought back by BuybackController with ETH swap fees; it does not receive the IFR pool fee. Burns IFR permanently on trigger. Not pre-funded at genesis.</td>
               <td id="cur-burnres">0 IFR</td>
               <td>Smart contract &mdash; permissionless burn</td>
             </tr>
@@ -1364,7 +1364,7 @@
           <strong style="color:#e2e8f0;">Decision:</strong> These fees will not be manually re-routed to FeeRouterV1. A manual transfer would incur an additional 3.5% fee impact (~735 IFR total: 2.5% burned and 1% routed to the pool-fee receiver), creating more harm than benefit for a negligible amount (0.002% of total supply). This is documented here for full transparency.
         </p>
         <p style="margin:8px 0 0 0; font-size:12px; color:#475569;">
-          From Proposal #6 onwards, all pool fees route correctly to FeeRouterV1 &rarr; BuybackVault + BurnReserve.
+          From Proposal #6 onwards, the 1% IFR pool fee routes to FeeRouterV1 and stays there: FeeRouterV1 forwards only ETH swap fees and has no IFR withdrawal path (CWA-02). These IFR are <a href="#lost-ifr">permanently lost</a>. Decided 03.10.2026: future pool fees go to BuybackController (pending Governance execution).
         </p>
       </div>
 
@@ -1430,6 +1430,38 @@
           </tbody>
         </table>
       </div>
+
+      <!-- ===== Permanently Lost IFR (T-202) ===== -->
+      <h2 id="lost-ifr">Permanently Lost IFR</h2>
+      <p>Some IFR can never move again. They are <strong>not burned</strong>: they remain in <code>totalSupply()</code> and in the table above, but no wallet, contract or Governance call can ever release them. Verified on Ethereum Mainnet at block 26,108,134 (03.10.2026).</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Where</th><th>IFR</th><th>Why it is lost</th><th>Grows?</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>CommitmentVault V1 <a href="https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3" target="_blank">0x0719&hellip;73d3</a></td>
+              <td>26,418,467.994338353</td>
+              <td>11 price-conditioned tranches (C1 #0, C3 #0&ndash;#9). V1 cannot read a price, so these conditions can never be met; V1 has no rescue path. See <a href="commitment-vault.html">CommitmentVault</a> and the open CV-01 compensation proposal.</td>
+              <td>No, fixed</td>
+            </tr>
+            <tr>
+              <td>FeeRouterV1 <a href="https://etherscan.io/address/0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a" target="_blank">0x4807&hellip;C60a</a></td>
+              <td>724,992.668043224</td>
+              <td>Receives the 1% IFR pool fee since Proposal #6 but has no IFR withdrawal or forwarding function (CWA-02).</td>
+              <td>Yes, until Governance moves the pool-fee receiver to BuybackController (decided 03.10.2026, pending execution); fixed afterwards</td>
+            </tr>
+            <tr style="border-top:2px solid var(--border)">
+              <td><strong>Total permanently lost</strong></td>
+              <td><strong>27,143,460.662381577</strong></td>
+              <td>2.723% of current <code>totalSupply()</code> (996,687,518.33 IFR)</td>
+              <td>The Landing reads the FeeRouterV1 part live</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Supply that can still move: <code>totalSupply()</code> minus the total above = <strong>969,544,057.67 IFR</strong> at block 26,108,134. This is an informational figure, not an on-chain value.</p>
 
       <div class="callout callout-yellow">
         <p><strong>Transparency note:</strong> Community Safe received 57.9M IFR (not 60M) &mdash; 1.5M IFR permanently burned (2.5% burn fee) + 0.6M IFR sent to Pool Fee Receiver (1% pool fee) = 2.1M total deducted. The Community EOA was not registered as feeExempt. The Treasury transfer was feeExempt (150M = 150M, zero burn).</p>
