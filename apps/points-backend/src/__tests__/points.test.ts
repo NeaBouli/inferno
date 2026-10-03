@@ -439,6 +439,28 @@ async function run() {
     console.log("  ⊘ signer tests skipped (no VOUCHER_SIGNER_PRIVATE_KEY)");
   }
 
+  // ---- Trusted client IP: spoofed X-Forwarded-For entries cannot rotate the limit key (T-216) ----
+  console.log("\nTrusted client IP");
+  {
+    const realClient = "203.0.113.77";
+    let lastStatus = 0;
+    let okCount = 0;
+    for (let i = 0; i < 31; i++) {
+      const res = await fetch(`${baseUrl}/auth/siwe/nonce`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Forwarded-For": `10.${i}.0.1, ${realClient}` },
+      });
+      lastStatus = res.status;
+      if (res.status === 200) okCount++;
+    }
+    assert(okCount === 30 && lastStatus === 429, "nonce limit holds when the spoofed left-most entry rotates");
+    const other = await fetch(`${baseUrl}/auth/siwe/nonce`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Forwarded-For": `1.2.3.4, 198.51.100.77` },
+    });
+    assert(other.status === 200, "a different proxy-appended client keeps its own nonce budget");
+  }
+
   // ---- Summary ----
   console.log(`\n${"─".repeat(40)}`);
   console.log(`Results: ${passed} passed, ${failed} failed, ${passed + failed} total`);

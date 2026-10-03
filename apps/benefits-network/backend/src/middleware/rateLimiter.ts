@@ -54,6 +54,15 @@ export const sellerRateLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+export const redeemRateLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 120,
+  store: createPublicRateLimitStore('redeem-ip'),
+  message: { error: 'Too many redeem attempts. Try again later.' },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
 export const challengeRateLimiter = rateLimit({
   windowMs: 60 * 60 * 1000,
   max: 200,
