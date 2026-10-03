@@ -7,11 +7,13 @@ on:
     paths:
       - 'apps/ai-copilot/**'
       - '.github/workflows/ai-copilot.yml'
+      - 'scripts/check-dev-advisory-exceptions.cjs'
   pull_request:
     branches: [main, master]
     paths:
       - 'apps/ai-copilot/**'
       - '.github/workflows/ai-copilot.yml'
+      - 'scripts/check-dev-advisory-exceptions.cjs'
 
 permissions:
   contents: read
@@ -34,7 +36,8 @@ jobs:
       - run: npm ci
       - run: npm run test:dependencies
       - run: npm run test:health-shape
-      - run: npm audit --audit-level=low
+      - name: npm audit (production clean; reviewed dev-only exceptions)
+        run: node ../../scripts/check-dev-advisory-exceptions.cjs
       - run: npx tsc --noEmit
       - run: npm run check:server-imports
       - run: npm run test:surface-ui

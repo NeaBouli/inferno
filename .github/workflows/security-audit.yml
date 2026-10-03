@@ -66,6 +66,10 @@ jobs:
         if: steps.check-npm.outputs.has_npm == 'true'
         run: npm run test:dependency-advisories
 
+      - name: Self-test dev-only advisory exception gate
+        if: steps.check-npm.outputs.has_npm == 'true'
+        run: node scripts/test-dev-advisory-exceptions.cjs
+
       - name: Check for Cargo.toml
         id: check-cargo
         run: |
