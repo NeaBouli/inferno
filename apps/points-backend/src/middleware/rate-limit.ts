@@ -17,8 +17,14 @@ function cleanupBuckets(): void {
 // Cleanup every 5 minutes
 setInterval(cleanupBuckets, 5 * 60 * 1000).unref();
 
-function getClientIp(req: Request): string {
-  return (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() || req.ip || "unknown";
+// Production traffic reaches points-backend through Traefik on a private Docker network.
+// Trust only loopback/link-local/private proxy hops so `req.ip` is the proxy-appended client hop;
+// a client-supplied X-Forwarded-For entry can never become the rate-limit key.
+export const TRUSTED_PROXY_HOPS = ["loopback", "linklocal", "uniquelocal"];
+
+/** Client address for rate limiting; requires `app.set("trust proxy", TRUSTED_PROXY_HOPS)`. */
+export function getClientIp(req: Request): string {
+  return req.ip || req.socket?.remoteAddress || "unknown";
 }
 
 function checkLimit(key: string, maxCount: number, windowMs: number): boolean {
@@ -50,6 +56,16 @@ export function siweVerifyLimit(req: Request, res: Response, next: NextFunction)
   const ip = getClientIp(req);
   if (!checkLimit(`siwe:${ip}`, 5, 3600_000)) {
     res.status(429).json({ error: "SIWE verify rate limit exceeded. Try again in 1 hour." });
+    return;
+  }
+  next();
+}
+
+/** Max 30 SIWE nonces per client IP per 10 minutes */
+export function siweNonceLimit(req: Request, res: Response, next: NextFunction): void {
+  const ip = getClientIp(req);
+  if (!checkLimit(`nonce:${ip}`, 30, 10 * 60_000)) {
+    res.status(429).json({ error: "Too many nonce requests. Try again later." });
     return;
   }
   next();

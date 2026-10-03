@@ -20,6 +20,7 @@
     "test:chat-budget": "node scripts/test-chat-budget.mjs",
     "test:correctness": "tsx scripts/test-copilot-correctness.ts",
     "test:lending-loans": "tsx scripts/test-lending-loans.ts",
+    "test:request-guard": "tsx scripts/test-request-guard.ts",
     "build": "vite build",
     "preview": "vite preview",
     "start": "tsx server/index.ts"

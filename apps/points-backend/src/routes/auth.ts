@@ -2,7 +2,7 @@ import { Router, Request, Response } from "express";
 import { SiweMessage, generateNonce } from "siwe";
 import { prisma } from "../db.js";
 import { createToken } from "../middleware/auth.js";
-import { siweVerifyLimit } from "../middleware/rate-limit.js";
+import { siweNonceLimit, siweVerifyLimit } from "../middleware/rate-limit.js";
 import { isAllowedSiweContext, pointsSecurityConfig } from "../config/security.js";
 
 const router = Router();
@@ -18,8 +18,21 @@ setInterval(() => {
   }
 }, 60_000).unref();
 
+/** Upper bound on outstanding (unexpired, unused) nonces across all clients. */
+export const MAX_OUTSTANDING_NONCES = 10_000;
+
 /** POST /auth/siwe/nonce — generate a nonce for SIWE */
-router.post("/siwe/nonce", (_req: Request, res: Response) => {
+router.post("/siwe/nonce", siweNonceLimit, (_req: Request, res: Response) => {
+  if (nonceStore.size >= MAX_OUTSTANDING_NONCES) {
+    const now = Date.now();
+    for (const [n, expiresAt] of nonceStore) {
+      if (expiresAt <= now) nonceStore.delete(n);
+    }
+    if (nonceStore.size >= MAX_OUTSTANDING_NONCES) {
+      res.status(503).json({ error: "Sign-in is busy. Try again shortly." });
+      return;
+    }
+  }
   const nonce = generateNonce();
   nonceStore.set(nonce, Date.now() + 5 * 60 * 1000); // 5 min expiry
   res.json({ nonce });
