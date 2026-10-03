@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CommitmentVault V1 Compensation (CV-01) &mdash; Inferno (IFR) Documentation</title>
   <meta name="keywords" content="Inferno, IFR, multisig, Gnosis Safe, community governance, signer expansion, DAO governance, Ethereum">
-  <meta name="description" content="Incident record and urgent Council proposal CV-01: 26.4M IFR in price-conditioned CommitmentVault V1 tranches can never unlock; compensation from the LP Reserve Safe follows each tranche's original time and price conditions.">
+  <meta name="description" content="Incident record and urgent Council proposal CV-01: 26.4M IFR in price-conditioned CommitmentVault V1 tranches can never unlock; the proposed compensation from the LP Reserve Safe would follow each tranche's original time and price conditions. Vote pending, not approved.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -394,12 +394,12 @@
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Inferno Protocol">
   <meta property="og:title" content="CommitmentVault V1 Compensation (CV-01) — Inferno Protocol (IFR)">
-  <meta property="og:description" content="Incident record and urgent Council proposal CV-01: 26.4M IFR in price-conditioned CommitmentVault V1 tranches can never unlock; compensation from the LP Reserve Safe follows each tranche's original time and price conditions.">
+  <meta property="og:description" content="Incident record and urgent Council proposal CV-01: 26.4M IFR in price-conditioned CommitmentVault V1 tranches can never unlock; the proposed compensation from the LP Reserve Safe would follow each tranche's original time and price conditions. Vote pending, not approved.">
   <meta property="og:url" content="https://ifrunit.tech/wiki/commitment-vault-compensation.html">
   <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="CommitmentVault V1 Compensation (CV-01) — Inferno Protocol (IFR)">
-  <meta name="twitter:description" content="Incident record and urgent Council proposal CV-01: 26.4M IFR in price-conditioned CommitmentVault V1 tranches can never unlock; compensation from the LP Reserve Safe follows each tranche's original time and price conditions.">
+  <meta name="twitter:description" content="Incident record and urgent Council proposal CV-01: 26.4M IFR in price-conditioned CommitmentVault V1 tranches can never unlock; the proposed compensation from the LP Reserve Safe would follow each tranche's original time and price conditions. Vote pending, not approved.">
   <meta name="twitter:site" content="@IFRtoken">
   <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
   <script type="application/ld+json">
@@ -407,7 +407,7 @@
     "@context": "https://schema.org",
     "@type": "TechArticle",
     "headline": "CommitmentVault V1 Compensation (CV-01)",
-    "description": "Incident record and urgent Council proposal CV-01: 26.4M IFR in price-conditioned CommitmentVault V1 tranches can never unlock; compensation from the LP Reserve Safe follows each tranche's original time and price conditions.",
+    "description": "Incident record and urgent Council proposal CV-01: 26.4M IFR in price-conditioned CommitmentVault V1 tranches can never unlock; the proposed compensation from the LP Reserve Safe would follow each tranche's original time and price conditions. Vote pending, not approved.",
     "url": "https://ifrunit.tech/wiki/commitment-vault-compensation.html",
     "isPartOf": {"@id": "https://ifrunit.tech/#website"},
     "publisher": {"@id": "https://ifrunit.tech/#organization"},
@@ -613,12 +613,12 @@
 
       <div class="phase-card">
         <h3>Impact <span class="phase-badge badge-planned">Permanent</span></h3>
-        <p style="margin:0;"><strong>26,418,467.994338353 IFR</strong> are permanently locked in CommitmentVault V1. This is about 2.65&nbsp;% of the current total supply. On 2 October 2026 the vault held 47,952,476.871794375 IFR; C2 then withdrew its ten unlocked time tranches (20,156,940.952845656 IFR). The vault now holds 27,795,535.918948719 IFR, of which 1,377,067.924610366 IFR are in time-based tranches that unlock normally.</p>
+        <p style="margin:0;"><strong>26,418,467.994338353 IFR</strong> are permanently locked in CommitmentVault V1. This is about 2.65&nbsp;% of the current total supply. On 2 October 2026 the vault held 47,952,476.871794375 IFR; C2 then withdrew its ten unlocked time tranches (20,156,940.952845656 IFR). At block 26,113,577 (3 October 2026, 18:22:23 UTC) the vault held 27,795,535.918948719 IFR, of which 1,377,067.924610366 IFR are in time-based tranches that unlock normally.</p>
       </div>
 
       <h2>Affected Tranches and Compensation Status</h2>
       <p>Each row is one locked tranche. You can verify every row with <code>getTranches(wallet)</code> on the vault.</p>
-      <p>The compensation for a tranche follows <strong>the conditions the tranche was locked with</strong>:</p>
+      <p>Under CV-01, the compensation for a tranche would follow <strong>the conditions the tranche was locked with</strong>:</p>
       <ul>
         <li>its original unlock date, where there is one;</li>
         <li>its original price target, <code>P0 &times; multiplier</code> with P0&nbsp;=&nbsp;0.3&nbsp;gwei per IFR.</li>
@@ -685,7 +685,8 @@
       <h2>Repair</h2>
       <ul>
         <li><strong>V1 cannot be changed.</strong> It has no pause or upgrade path.</li>
-        <li><strong>The Web3 app and the wiki offer only time-based locks.</strong></li>
+        <li><strong>The wiki lock form offers only time-based locks.</strong></li>
+        <li><strong>The production Web3 app at web3.ifrunit.tech still offers price-conditioned V1 locks.</strong> The code fix that restricts it to time-based locks is merged but not yet deployed or verified. <strong>Do not create new CommitmentVault locks in the Web3 app until that release is verified.</strong></li>
         <li><strong>CommitmentVault V2 is deployed:</strong> <a href="https://etherscan.io/address/0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F" target="_blank" rel="noopener noreferrer"><code>0x8efa&hellip;7c8F</code></a>, deployed on 2 October 2026 (<a href="https://etherscan.io/tx/0x9857a5707b650b8828f41b893f91a10ff26d7990742e782bb0b7e86df23ea0f7" target="_blank" rel="noopener noreferrer">transaction</a>), owned by Governance.
           <ul>
             <li>It accepts <code>TIME_ONLY</code> locks only and rejects every price-conditioned lock, so an impossible condition cannot be created again.</li>
