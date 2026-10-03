@@ -33,13 +33,8 @@ const HOLDER = "0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b";
 const listMatch = source.match(/var RPC_URLS = \[([\s\S]*?)\];/);
 assert.ok(listMatch, "RPC_URLS list missing");
 const urls = Array.from(listMatch[1].matchAll(/"([^"]+)"/g), (m) => m[1]);
-assert.ok(urls.length >= 2 && urls.length <= 3, "expected 2-3 public RPC endpoints, got " + urls.length);
-assert.strictEqual(urls[0], PRIMARY, "primary RPC must be the CORS-capable publicnode endpoint");
-urls.forEach((u) => {
-  assert.ok(u.startsWith("https://"), "RPC endpoint must be https: " + u);
-  assert.ok(CORS_CAPABLE.includes(u), "RPC endpoint not on the CORS-verified list: " + u);
-});
-assert.strictEqual(new Set(urls).size, urls.length, "duplicate RPC endpoints");
+// The runtime fixtures below address exactly these three endpoints (A, B, C).
+assert.deepStrictEqual(urls, CORS_CAPABLE, "RPC_URLS must be exactly the three CORS-verified endpoints, publicnode first");
 assert.ok(!source.includes("llamarpc"), "wallet-core still references eth.llamarpc.com");
 assert.ok(!landing.includes("eth.llamarpc.com"), "landing still prefetches eth.llamarpc.com");
 assert.ok(
@@ -47,7 +42,7 @@ assert.ok(
   "landing dns-prefetch must point at the primary RPC"
 );
 assert.ok(
-  /assets\/wallet-core\.js\?v=20261003-rpc-fallback-v6/.test(landing),
+  /assets\/wallet-core\.js\?v=20261003-rpc-fallback-v6-retry"/.test(landing),
   "landing must cache-bust wallet-core.js for the RPC fallback"
 );
 // CWA-47: wallet-core must not inject third-party <script> tags.
@@ -231,8 +226,22 @@ async function expectUnavailable(env, label) {
   const allDown = loadWalletCore({ [A]: "down", [B]: "down", [C]: "down" });
   await expectUnavailable(allDown, "all down");
 
+  // 7. All down, then recovered: the failed provider is dropped, the next
+  //    getProvider() builds a fresh one, reads succeed and the notice clears.
+  const recoverRpc = { [A]: "down", [B]: "down", [C]: "down" };
+  const recover = loadWalletCore(recoverRpc);
+  const failed = recover.api.getProvider();
+  await expectUnavailable(recover, "recover (all down)");
+  recoverRpc[A] = "0x1"; recoverRpc[B] = "0x1"; recoverRpc[C] = "0x1";
+  const fresh = recover.api.getProvider();
+  assert.notStrictEqual(fresh, failed, "a provider whose initial sync failed must not stay cached");
+  expectMainnet(await readAll(recover), "recovered");
+  await flush();
+  assert.strictEqual(recover.api.getProvider(), fresh, "the recovered provider must stay cached");
+  assert.strictEqual(recover.sandbox.document.getElementById("ifr-rpc-error"), null, "stale unavailable notice must clear after recovery");
+
   console.log("wallet-core RPC fallback (ethers 6.17.0): " + urls.length +
-    " CORS-capable endpoints, primary " + urls[0] + "; wrong-chain/mixed/garbage/all-wrong/all-down — OK");
+    " CORS-capable endpoints, primary " + urls[0] + "; wrong-chain/mixed/garbage/all-wrong/all-down/recovery — OK");
   process.exit(0);
 })().catch((err) => {
   console.error(err);

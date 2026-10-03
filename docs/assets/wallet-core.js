@@ -464,21 +464,26 @@ window.IFRWallet = (function() {
         weight: 1
       };
     });
-    _readProvider = new ethers.FallbackProvider(configs, network, { quorum: 1 });
+    var fallback = new ethers.FallbackProvider(configs, network, { quorum: 1 });
+    _readProvider = fallback;
     // The first read runs FallbackProvider's initial sync: every endpoint that
     // fails it (down, or wrong chain via _pinChainId) is excluded for the
-    // lifetime of this provider. If none is left, the read rejects.
-    _readProvider.getBlockNumber().catch(function(err) {
+    // lifetime of this provider. If none is left, the read rejects and this
+    // provider is dropped (only if still cached) so a later call retries.
+    fallback.getBlockNumber().then(function() {
+      _hideRpcErrorNotice();
+    }, function(err) {
+      if (_readProvider === fallback) _readProvider = null;
       console.warn("[IFR Wallet] No usable public RPC endpoint:", err && err.message);
       _showRpcErrorNotice();
       _emit("rpcError", err);
     });
-    return _readProvider;
+    return fallback;
   }
 
   // staticNetwork makes ethers v6 skip eth_chainId entirely, so the chain is
   // verified here, once per endpoint, before any other request is sent. A
-  // wrong or unparsable chainId stays rejected for good (fail closed); a
+  // wrong or unparsable chainId stays rejected for this provider (fail closed); a
   // transport failure is not cached and is re-checked on the next request.
   function _pinChainId(provider) {
     var send = provider.send.bind(provider);
@@ -521,6 +526,11 @@ window.IFRWallet = (function() {
     bar.appendChild(text);
     bar.appendChild(close);
     (document.body || document.documentElement).appendChild(bar);
+  }
+
+  function _hideRpcErrorNotice() {
+    var bar = typeof document !== "undefined" && document.getElementById("ifr-rpc-error");
+    if (bar) bar.remove();
   }
 
   // ── Events ────────────────────────────────────────
