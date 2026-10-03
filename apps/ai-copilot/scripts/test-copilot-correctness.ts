@@ -34,21 +34,24 @@ assert.equal(COPILOT_MESSAGE_LIMIT, 20);
 assert.deepEqual(
   ACCESS_TIERS.map(({ id, name, minIFR }) => ({ id, name, minIFR })),
   [
-    { id: 1, name: "Basic", minIFR: 500 },
-    { id: 2, name: "Premium", minIFR: 2_000 },
-    { id: 3, name: "Pro", minIFR: 10_000 },
+    { id: 1, name: "Bronze", minIFR: 1_000 },
+    { id: 2, name: "Silver", minIFR: 2_500 },
+    { id: 3, name: "Gold", minIFR: 5_000 },
+    { id: 4, name: "Platinum", minIFR: 10_000 },
   ],
 );
-assert.equal(getAccessTier(499n * IFR_BASE_UNITS_PER_TOKEN).name, "None");
-assert.equal(getAccessTier(500n * IFR_BASE_UNITS_PER_TOKEN).name, "Basic");
-assert.equal(getAccessTier(1_999n * IFR_BASE_UNITS_PER_TOKEN).name, "Basic");
-assert.equal(getAccessTier(2_000n * IFR_BASE_UNITS_PER_TOKEN).name, "Premium");
-assert.equal(getAccessTier(9_999n * IFR_BASE_UNITS_PER_TOKEN).name, "Premium");
-assert.equal(getAccessTier(10_000n * IFR_BASE_UNITS_PER_TOKEN).name, "Pro");
+assert.equal(getAccessTier(999n * IFR_BASE_UNITS_PER_TOKEN + 999_999_999n).name, "None");
+assert.equal(getAccessTier(1_000n * IFR_BASE_UNITS_PER_TOKEN).name, "Bronze");
+assert.equal(getAccessTier(2_500n * IFR_BASE_UNITS_PER_TOKEN - 1n).name, "Bronze");
+assert.equal(getAccessTier(2_500n * IFR_BASE_UNITS_PER_TOKEN).name, "Silver");
+assert.equal(getAccessTier(5_000n * IFR_BASE_UNITS_PER_TOKEN).name, "Gold");
+assert.equal(getAccessTier(10_000n * IFR_BASE_UNITS_PER_TOKEN - 1n).name, "Gold");
+assert.equal(getAccessTier(10_000n * IFR_BASE_UNITS_PER_TOKEN).name, "Platinum");
 assert.throws(() => getAccessTier(-1n), /cannot be negative/);
 
+// Retired 2026-10-03: the separate Basic/Premium/Pro 500/2,000/10,000 access scheme.
 for (const [relativePath, contents] of sourceEntries) {
-  assert.doesNotMatch(contents, /Bronze|Silver|Gold|Platinum/, `${relativePath} contains a legacy tier name`);
+  assert.doesNotMatch(contents, /\b(Basic|Premium|Pro) >=|500\/2,000\/10,000|Basic\/Premium\/Pro/, `${relativePath} contains the retired access-tier scheme`);
 }
 assert.match(SYSTEM_PROMPTS.user, new RegExp(ACCESS_TIER_SUMMARY.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
 assert.match(SYSTEM_PROMPTS.explorer, /does not receive verified wallet balances, lock state or tier context/);
