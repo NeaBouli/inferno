@@ -1,5 +1,15 @@
 # Changelog
 
+## 3 October 2026 — PriceLockVault Built, Price Locks Disabled (Lane 2)
+
+- New `PriceLockVault` (source only, not deployed). Price conditions use a 7-day TWAP of the IFR/WETH pair;
+  spot prices are never used.
+- Every lock has a mandatory rescue time of at most 4 years; tokens always return to the locker and nobody can
+  withdraw user funds.
+- Price locks stay disabled until Governance activates them, and activation reverts unless the on-chain
+  readiness scope (pool WETH depth and/or TWAP) holds. `readiness()` exposes progress.
+- 22 unit tests and a Mainnet-fork test. An independent review is required before any deployment.
+
 ## 2 October 2026 — BuybackController Source Hardening
 
 - `execute()` is now `nonReentrant`. A nested call from the router reverts with the reentrancy

@@ -68,9 +68,13 @@ remains the only place where agenda items and vote outcomes are published.
   tranche can then never unlock while the price stays `0`. Only the Web3 UI
   blocks these calls. This raises the priority of the rescue path below
   (`test/fork/BenefitsVerifyFork.test.js`).
-- **Decision needed:** Option A (CommitmentVaultV2), Option B (dedicated
-  PriceLockVault) or Option C (defer). Oracle model and rescue path for
-  locks whose condition can never be met.
+- **Decision (2026-10-03):** Option B. A dedicated `PriceLockVault` is built
+  and deployed later; price locks stay disabled until an on-chain readiness
+  scope (pool WETH depth and/or TWAP) holds, and activation is a Governance
+  proposal that reverts if the scope is not met. Price conditions use a
+  7-day TWAP; every lock has a mandatory rescue time of at most 4 years
+  ([specification](PRICE_LOCK_VAULT_SPEC.md)). CommitmentVault V2 stays
+  `TIME_ONLY`.
 - **Prerequisites:** proof contract with tests for zero reserves, stale
   observations, token order, decimal scaling and post-trigger price drops.
 - **Dependencies:** Lane 1 oracle policy; pool liquidity depth.
@@ -81,7 +85,8 @@ remains the only place where agenda items and vote outcomes are published.
 - **Testnet/staging gate:** Sepolia deployment with every condition type.
 - **Production gate:** separate recorded decision plus Safe proposal and
   48-hour timelock.
-- **Next evidence:** Option A/B/C decision record; proof contract test report.
+- **Next evidence:** independent review of `PriceLockVault`; Sepolia
+  rehearsal log; readiness reaching the activation scope.
 
 ## Lane 3 — FeeRouter sink/accrual and Governance/guardian redeployment
 
