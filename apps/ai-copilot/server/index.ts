@@ -27,6 +27,7 @@ import {
   buildLiveWikiSection,
 } from "./live-wiki.js";
 import { LENDING_LOAN_ABI, serializeLendingLoan } from "./lending-loans.js";
+import { ethCall, getRpcProvider, rpcHealth } from "./rpc.js";
 import { balanceEntry, explorerBalanceEntry, finalizeBalances, lostSupply, parseAddressParam, requireBaseUnits, unavailableEntry, type BalanceEntry } from "./balance-integrity.js";
 import {
   classifyDynamicIntent,
@@ -556,6 +557,13 @@ app.get("/api/health", (_req, res) => {
   res.json({ status: "ok" });
 });
 
+// T-219: RPC failover status (labels and booleans only; configured URLs may contain keys and are never shown).
+app.get("/api/health/rpc", async (_req, res) => {
+  res.set("Cache-Control", "no-store");
+  const health = await rpcHealth();
+  res.status(health.healthy > 0 ? 200 : 503).json(health);
+});
+
 // ── Etherscan Proxy — CORS-safe on-chain data for Landing + Transparency ──
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || "";
 const IFR_TOKEN = "0x77e99917Eca8539c62F509ED1193ac36580A6e7B";
@@ -620,7 +628,7 @@ function setCache(key: string, data: unknown): void {
 async function fetchBalancesData() {
   const entries = Object.entries(PROTOCOL_ADDRESSES) as [string, string][];
   const ethersLib = (await import("ethers")).ethers;
-  const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
+  const provider = getRpcProvider();
   const token = new ethersLib.Contract(
     IFR_TOKEN,
     ["function balanceOf(address wallet) view returns (uint256)"],
@@ -668,7 +676,7 @@ async function fetchBalancesData() {
 async function fetchBalancesDataEtherscanFallback() {
   const entries = Object.entries(PROTOCOL_ADDRESSES) as [string, string][];
   const ethersLib = (await import("ethers")).ethers;
-  const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
+  const provider = getRpcProvider();
   const ifrLock = new ethersLib.Contract(
     PROTOCOL_ADDRESSES.IFRLock,
     ["function totalLocked() view returns (uint256)", "event Unlocked(address indexed user, uint256 amount)"],
@@ -710,26 +718,50 @@ async function fetchBalancesDataEtherscanFallback() {
   return response;
 }
 
+/** Supply inputs read on-chain through the shared failover provider (T-219); the explorer API is only a
+ *  fallback, because an exhausted explorer quota previously made the live supply disappear. */
+async function readSupplyInputs(): Promise<{ totalSupplyRaw: string; burnReserveBalanceRaw: string; feeRouter: BalanceEntry }> {
+  const ethersLib = (await import("ethers")).ethers;
+  const token = new ethersLib.Contract(
+    IFR_TOKEN,
+    ["function totalSupply() view returns (uint256)", "function balanceOf(address wallet) view returns (uint256)"],
+    getRpcProvider()
+  );
+  try {
+    const [supply, burn, feeRouter] = await Promise.all([
+      token.totalSupply() as Promise<bigint>,
+      token.balanceOf(BURN_ADDRESS) as Promise<bigint>,
+      (token.balanceOf(PROTOCOL_ADDRESSES.FeeRouterV1) as Promise<bigint>).then(balanceEntry, () => unavailableEntry()),
+    ]);
+    return { totalSupplyRaw: supply.toString(), burnReserveBalanceRaw: burn.toString(), feeRouter };
+  } catch {
+    const supplyData = await esApiFetch(
+      `&module=stats&action=tokensupply&contractaddress=${IFR_TOKEN}`
+    ) as { result?: string };
+    const burnReserveData = await esApiFetch(
+      `&module=account&action=tokenbalance&contractaddress=${IFR_TOKEN}&address=${BURN_ADDRESS}&tag=latest`
+    ) as { result?: string };
+    const feeRouterData = await esApiFetch(
+      `&module=account&action=tokenbalance&contractaddress=${IFR_TOKEN}&address=${PROTOCOL_ADDRESSES.FeeRouterV1}&tag=latest`
+    ).catch(() => null) as { status?: string; result?: unknown } | null;
+    // A failed read must surface as an error (502), never as a zero supply.
+    return {
+      totalSupplyRaw: requireBaseUnits(supplyData.result, "totalSupply"),
+      burnReserveBalanceRaw: requireBaseUnits(burnReserveData.result, "burn address balance"),
+      feeRouter: explorerBalanceEntry(feeRouterData),
+    };
+  }
+}
+
 async function fetchSupplyData() {
-  const supplyData = await esApiFetch(
-    `&module=stats&action=tokensupply&contractaddress=${IFR_TOKEN}`
-  ) as { result?: string };
-  const burnReserveData = await esApiFetch(
-    `&module=account&action=tokenbalance&contractaddress=${IFR_TOKEN}&address=${BURN_ADDRESS}&tag=latest`
-  ) as { result?: string };
-  // A failed explorer read must surface as an error (502), never as a zero supply.
-  const totalSupplyRaw = requireBaseUnits(supplyData.result, "totalSupply");
-  const burnReserveBalanceRaw = requireBaseUnits(burnReserveData.result, "burn address balance");
+  const { totalSupplyRaw, burnReserveBalanceRaw, feeRouter } = await readSupplyInputs();
   const totalSupply = parseInt(totalSupplyRaw, 10) / 10 ** IFR_DECIMALS;
   const burnAddressBalance = parseInt(burnReserveBalanceRaw, 10) / 10 ** IFR_DECIMALS;
   const burned = TOTAL_MINTED - totalSupply;
   // Legacy semantics, unchanged: circulating = totalSupply - dead-address balance. It still includes
   // permanently lost IFR; use liveSupply for totalSupply minus permanently lost.
   const circulating = totalSupply - burnAddressBalance;
-  const feeRouterData = await esApiFetch(
-    `&module=account&action=tokenbalance&contractaddress=${IFR_TOKEN}&address=${PROTOCOL_ADDRESSES.FeeRouterV1}&tag=latest`
-  ).catch(() => null) as { status?: string; result?: unknown } | null;
-  const lost = lostSupply(totalSupplyRaw, explorerBalanceEntry(feeRouterData));
+  const lost = lostSupply(totalSupplyRaw, feeRouter);
   const response = {
     totalMinted: TOTAL_MINTED, totalSupply, totalSupplyRaw, burnAddressBalance, burned, circulating,
     ...lost,
@@ -1036,7 +1068,7 @@ app.get("/api/ifr/price", async (_req, res) => {
   if (cached) { res.json(cached); return; }
   try {
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
+    const provider = getRpcProvider();
     const pairAbi = [
       "function token0() view returns (address)",
       "function token1() view returns (address)",
@@ -1168,18 +1200,7 @@ app.get("/api/bootstrap/votes", (_req, res) => {
 // Contract: 0xdfe6636DA47F8949330697e1dC5391267CEf0EE3 (Mainnet)
 // Uses direct JSON-RPC eth_call (Etherscan V1 proxy deprecated)
 const BUILDER_REGISTRY_ADDR = process.env.BUILDER_REGISTRY_ADDR || null;
-const ETH_RPC_URL = process.env.MAINNET_RPC_URL || "https://ethereum-rpc.publicnode.com";
-
-async function ethCall(to: string, data: string): Promise<string> {
-  const resp = await fetch(ETH_RPC_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_call", params: [{ to, data }, "latest"] }),
-  });
-  const json = await resp.json() as { result?: string; error?: { message: string } };
-  if (json.error) throw new Error(json.error.message);
-  return json.result || "0x";
-}
+// eth_call goes through the shared failover provider (server/rpc.ts, T-219).
 
 if (BUILDER_REGISTRY_ADDR) {
   app.get("/api/builders/check/:address", async (req, res) => {
@@ -1240,7 +1261,7 @@ app.get("/api/lending/stats", async (_req, res) => {
     ];
 
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
+    const provider = getRpcProvider();
     const lv = new ethersLib.Contract(LENDING_VAULT_ADDR, lvAbi, provider);
 
     const [lent, available, rate, loans, offers, price] = await Promise.all([
@@ -1286,7 +1307,7 @@ app.get("/api/lending/offers", async (_req, res) => {
     ];
 
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
+    const provider = getRpcProvider();
     const lv = new ethersLib.Contract(LENDING_VAULT_ADDR, lvAbi, provider);
 
     const count = Number(await lv.getOfferCount());
@@ -1353,7 +1374,7 @@ app.get("/api/commitment/tranches/:address", async (req, res) => {
     }
 
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
+    const provider = getRpcProvider();
     const cv = new ethersLib.Contract(COMMITMENT_VAULT_ADDR, CV_ABI, provider);
 
     const [tranches, p0SetVal] = await Promise.all([cv.getTranches(addr), cv.p0Set()]);
@@ -1404,7 +1425,7 @@ app.get("/api/commitment/status/:address", async (req, res) => {
     }
 
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
+    const provider = getRpcProvider();
     const cv = new ethersLib.Contract(COMMITMENT_VAULT_ADDR, CV_ABI, provider);
 
     const [locked, hasLock] = await Promise.all([cv.lockedBalance(addr), cv.hasActiveLock(addr)]);
@@ -1434,7 +1455,7 @@ app.get("/api/commitment/p0", async (_req, res) => {
     }
 
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
+    const provider = getRpcProvider();
     const cv = new ethersLib.Contract(COMMITMENT_VAULT_ADDR, CV_ABI, provider);
 
     const p0SetVal = await cv.p0Set();
@@ -1460,7 +1481,7 @@ app.get("/api/commitment/leaderboard", async (_req, res) => {
     }
 
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
+    const provider = getRpcProvider();
     const cv = new ethersLib.Contract(COMMITMENT_VAULT_ADDR, CV_ABI, provider);
 
     const totalLocked = await cv.totalLocked();
@@ -1498,7 +1519,7 @@ app.get("/api/lending/loans/:address", async (req, res) => {
     }
 
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
+    const provider = getRpcProvider();
     const lv = new ethersLib.Contract(LENDING_VAULT_ADDR, LENDING_LOAN_ABI, provider);
 
     const count = Number(await lv.getLoanCount());
@@ -1534,7 +1555,7 @@ app.get("/api/lending/health/:loanId", async (req, res) => {
     }
 
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
+    const provider = getRpcProvider();
     const lv = new ethersLib.Contract(LENDING_VAULT_ADDR, LENDING_LOAN_ABI, provider);
 
     const loan = serializeLendingLoan(loanId, await lv.getLoan(loanId));
@@ -1588,7 +1609,7 @@ app.get("/api/lending/lender/:address", async (req, res) => {
     ];
 
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
+    const provider = getRpcProvider();
     const lv = new ethersLib.Contract(LENDING_VAULT_ADDR, lvAbi, provider);
 
     const has = await lv.hasOffer(addr);
@@ -1626,7 +1647,7 @@ async function checkLoanHealth() {
   if (!LENDING_VAULT_ADDR || LENDING_VAULT_ADDR.startsWith("0x000")) return;
   try {
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
+    const provider = getRpcProvider();
     const lv = new ethersLib.Contract(LENDING_VAULT_ADDR, LENDING_LOAN_ABI, provider);
 
     const count = Number(await lv.getLoanCount());
@@ -1801,7 +1822,7 @@ app.get("/api/ifr/check", async (req, res) => {
     }
 
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
+    const provider = getRpcProvider();
 
     const tokenAbi = ["function balanceOf(address) view returns (uint256)"];
     const lockAbi = ["function lockedBalance(address) view returns (uint256)"];
