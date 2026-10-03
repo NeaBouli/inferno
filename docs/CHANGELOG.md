@@ -1,5 +1,15 @@
 # Changelog
 
+## 3 October 2026 — Public Council Vote Record (Lane 6)
+
+- New wiki page [Council Votes](https://ifrunit.tech/wiki/council-votes.html) lists every ballot, its exact
+  texts, each signed vote and the tally. The data lives in `docs/data/council-votes.json`.
+- `scripts/verify-council-votes.cjs` recovers every signature (EIP-191) and checks signer eligibility, the
+  signed ballot text and the tallies in CI; the page is rendered from the data and checked for drift.
+- Open ballots run through the Etherscan verified-signature procedure. Secret ballots are in planning as a
+  separate milestone.
+- Open ballots: CV-01 (2 of 3 YES), EX-01 (1 of 3 YES), EX-02 (no option vote yet). No deadline.
+
 ## 2 October 2026 — BuybackController Source Hardening
 
 - `execute()` is now `nonReentrant`. A nested call from the router reverts with the reentrancy

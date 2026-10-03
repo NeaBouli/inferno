@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-    <link rel="canonical" href="https://ifrunit.tech/wiki/one-pager.html">
-  <link rel="alternate" hreflang="en" href="https://ifrunit.tech/wiki/one-pager.html">
-  <link rel="alternate" hreflang="x-default" href="https://ifrunit.tech/wiki/one-pager.html">
+  <link rel="canonical" href="https://ifrunit.tech/wiki/council-votes.html">
+  <link rel="alternate" hreflang="en" href="https://ifrunit.tech/wiki/council-votes.html">
+  <link rel="alternate" hreflang="x-default" href="https://ifrunit.tech/wiki/council-votes.html">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>One Pager &mdash; Inferno (IFR) Documentation</title>
-  <meta name="keywords" content="one pager, summary, investor, overview">
-  <meta name="description" content="Executive summary: deflationary ERC-20 with lock-to-access utility. 1B supply, CFLM, 17 on-chain components.">
+  <title>Council Votes &mdash; Inferno (IFR) Documentation</title>
+  <meta name="keywords" content="Inferno, IFR, Council, vote, ballot, Safe signers, governance, verified signatures">
+  <meta name="description" content="Public record of Inferno (IFR) Council ballots: ballot texts, signed votes verified with ecrecover, tallies and status.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -218,32 +218,6 @@
       margin-bottom: 32px;
     }
 
-    /* ---------- Code blocks ---------- */
-    pre {
-      background: #1a1a1d;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px 20px;
-      overflow-x: auto;
-      font-size: 13px;
-      line-height: 1.7;
-      margin: 16px 0;
-      color: var(--text);
-    }
-
-    code {
-      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-      font-size: 13px;
-      color: var(--text);
-    }
-
-    p code, li code, td code {
-      background: rgba(255, 255, 255, 0.06);
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 13px;
-    }
-
     /* ---------- Tables ---------- */
     table {
       width: 100%;
@@ -261,9 +235,9 @@
     th {
       color: var(--muted);
       font-weight: 600;
-      font-size: 13px;
+      font-size: 12px;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
     }
 
     td { color: var(--text); }
@@ -302,12 +276,63 @@
       border-left-color: var(--green);
     }
 
-    /* ---------- Address ---------- */
-    .address {
+    /* ---------- Phase cards ---------- */
+    .phase-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 28px;
+      margin: 20px 0;
+    }
+
+    .phase-card h3 {
+      margin: 0 0 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .phase-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-done { background: rgba(34,197,94,0.15); color: var(--green); }
+    .badge-progress { background: rgba(255,69,0,0.15); color: var(--accent); }
+    .badge-planned { background: rgba(138,138,150,0.15); color: var(--muted); }
+    .badge-red { background: rgba(220,38,38,0.14); color: #b91c1c; }
+    .badge-yellow { background: rgba(234,179,8,0.18); color: #92400e; }
+    .badge-green { background: rgba(34,197,94,0.15); color: var(--green); }
+    .vote-text { white-space: pre-wrap; font-size: 0.8rem; }
+    .sig { font-family: monospace; font-size: 0.72rem; word-break: break-all; }
+
+    /* ---------- Code ---------- */
+    pre {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.7;
+      margin: 16px 0;
+    }
+
+    code {
       font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-      font-size: 12px;
-      color: var(--muted);
-      word-break: break-all;
+      font-size: 13px;
+    }
+
+    p code, li code, td code {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
     }
 
     /* ---------- Footer ---------- */
@@ -368,104 +393,27 @@
     /* ============================================================
     End Shared Styles
        ============================================================ */
-
-    /* ---------- Stats Grid ---------- */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 16px;
-      margin: 24px 0;
-    }
-
-    .stat-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-    }
-
-    .stat-value {
-      font-size: 24px;
-      font-weight: 800;
-      color: var(--accent);
-      margin-bottom: 4px;
-    }
-
-    .stat-label {
-      font-size: 13px;
-      color: var(--muted);
-    }
-
-    /* ---------- Checklist ---------- */
-    .checklist {
-      list-style: none;
-      padding-left: 0;
-    }
-
-    .checklist li {
-      padding: 8px 0;
-      font-size: 14px;
-      color: var(--muted);
-      border-bottom: 1px solid var(--border);
-    }
-
-    .checklist li:last-child {
-      border-bottom: none;
-    }
-
-    .badge-done {
-      display: inline-block;
-      background: rgba(34, 197, 94, 0.15);
-      color: var(--green);
-      font-size: 12px;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 4px;
-      margin-right: 8px;
-    }
-
-    .badge-pending {
-      display: inline-block;
-      background: rgba(255, 69, 0, 0.12);
-      color: var(--accent-deep, #8E3814);
-      font-size: 12px;
-      font-weight: 600;
-      padding: 2px 8px;
-      border-radius: 4px;
-      margin-right: 8px;
-    }
-
-    @media (max-width: 768px) {
-      .stats-grid {
-        grid-template-columns: 1fr 1fr;
-      }
-    }
-
-    @media (max-width: 480px) {
-      .stats-grid {
-        grid-template-columns: 1fr;
-      }
-    }
   </style>
   <link rel="icon" type="image/png" href="../assets/ifr_icon_64.png">
   <meta property="og:locale" content="en_US">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Inferno Protocol">
-  <meta property="og:title" content="One Page Overview — Inferno Protocol (IFR)">
-  <meta property="og:description" content="Executive summary: deflationary ERC-20 with lock-to-access utility. 1B supply, CFLM, 17 on-chain components on Ethereum Mainnet.">
-  <meta property="og:url" content="https://ifrunit.tech/wiki/one-pager.html">
+  <meta property="og:title" content="Council Votes — Inferno Protocol (IFR)">
+  <meta property="og:description" content="Every Council ballot with its exact texts, signed votes and tally.">
+  <meta property="og:url" content="https://ifrunit.tech/wiki/council-votes.html">
   <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="One Page Overview — Inferno Protocol (IFR)">
-  <meta name="twitter:description" content="Executive summary: deflationary ERC-20, lock-to-access, CFLM, Ethereum Mainnet.">
+  <meta name="twitter:title" content="Council Votes — Inferno Protocol (IFR)">
+  <meta name="twitter:description" content="Every Council ballot with its exact texts, signed votes and tally.">
   <meta name="twitter:site" content="@IFRtoken">
-  <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">  <script type="application/ld+json">
+  <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
+  <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "WebPage",
-    "headline": "One Page Overview",
-    "description": "Investor one-pager: Inferno is a deflationary ERC-20 utility token with lock-to-access mechanism. 1B fixed supply, Community Fair Launch, 17 on-chain components.",
-    "url": "https://ifrunit.tech/wiki/one-pager.html",
+    "@type": "TechArticle",
+    "headline": "Council Votes",
+    "description": "Public record of Inferno Council ballots with verified signed votes and tallies.",
+    "url": "https://ifrunit.tech/wiki/council-votes.html",
     "isPartOf": {"@id": "https://ifrunit.tech/#website"},
     "publisher": {"@id": "https://ifrunit.tech/#organization"},
     "about": {"@id": "https://ifrunit.tech/#app"}
@@ -479,24 +427,9 @@
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
   "itemListElement": [
-    {
-      "@type": "ListItem",
-      "position": 1,
-      "name": "Inferno",
-      "item": "https://ifrunit.tech/"
-    },
-    {
-      "@type": "ListItem",
-      "position": 2,
-      "name": "Wiki",
-      "item": "https://ifrunit.tech/wiki/"
-    },
-    {
-      "@type": "ListItem",
-      "position": 3,
-      "name": "One Pager",
-      "item": "https://ifrunit.tech/wiki/one-pager.html"
-    }
+    {"@type": "ListItem", "position": 1, "name": "Inferno", "item": "https://ifrunit.tech/"},
+    {"@type": "ListItem", "position": 2, "name": "Wiki", "item": "https://ifrunit.tech/wiki/"},
+    {"@type": "ListItem", "position": 3, "name": "Council Votes", "item": "https://ifrunit.tech/wiki/council-votes.html"}
   ]
 }
   </script>
@@ -522,7 +455,7 @@
       <div class="sidebar-subtitle">Documentation</div>
       <ul class="sidebar-nav">
         <li><a href="https://ifrunit.tech/wiki/index.html">Home</a></li>
-        <li><a href="https://ifrunit.tech/wiki/one-pager.html" class="active" aria-current="page">One Pager</a></li>
+        <li><a href="https://ifrunit.tech/wiki/one-pager.html">One Pager</a></li>
         <li><a href="https://ifrunit.tech/wiki/fair-launch.html">Fair Launch</a></li>
         <li class="nav-divider"></li>
         <li><a href="https://ifrunit.tech/wiki/tokenomics.html">Tokenomics</a></li>
@@ -550,7 +483,7 @@
         <li><a href="https://ifrunit.tech/wiki/dao-governance.html">DAO Governance</a></li>
         <li><a href="https://ifrunit.tech/wiki/multisig.html">Multisig Policy</a></li>
         <li><a href="https://ifrunit.tech/wiki/community-signer-expansion.html">Community Signer Expansion</a></li>
-        <li><a href="https://ifrunit.tech/wiki/council-votes.html">Council Votes</a></li>
+        <li><a href="https://ifrunit.tech/wiki/council-votes.html" class="active" aria-current="page">Council Votes</a></li>
         <li><a href="https://ifrunit.tech/wiki/transparency.html">Transparency</a></li>
         <li class="nav-divider"></li>
         <li><a href="https://ifrunit.tech/wiki/faq.html">FAQ</a></li>
@@ -577,7 +510,7 @@
           <div id="lp-header-connected" style="display:none;">
             <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:5px 8px;cursor:pointer;display:flex;align-items:center;gap:6px;max-width:100px;white-space:nowrap;overflow:hidden;" onclick="lpToggleDropdown()">
               <span id="lp-header-addr" style="color:#166534;font-family:monospace;font-size:0.72rem;font-weight:600;"></span>
-              
+
             </div>
           </div>
           <div id="lp-header-dropdown" style="display:none;position:fixed;background:#111827;border:1px solid #374151;border-radius:12px;padding:16px;width:280px;max-width:calc(100vw - 24px);z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.6);">
@@ -615,150 +548,137 @@
       </div>
 
 
-      <div style="background:#ff6b00;color:#000;padding:8px 16px;border-radius:6px;display:inline-block;font-weight:700;margin-bottom:16px;">Official Project Overview / Whitepaper</div>
-
-      <h1>Inferno <span class="accent">IFR</span> &mdash; One Page Overview</h1>
+      <h1><span class="accent">Council Votes</span></h1>
       <p class="subtitle">
-        Everything you need to know about Inferno in one page.
+        Public record of every Council ballot: the exact ballot texts, each signed vote, and the current tally.
       </p>
 
-      <!-- ========== What is Inferno? ========== -->
-      <h2>What is Inferno?</h2>
+      <div class="callout">
+        <p><strong>Procedure:</strong> open ballots only. Each eligible Safe signer signs the published ballot text with the signer wallet on <a href="https://etherscan.io/verifiedSignatures" rel="noopener">Etherscan Verified Signatures</a>. Every signature is checked with <code>ecrecover</code> (EIP-191) and recorded on this page. A ballot never executes anything by itself: any on-chain action still needs its own Safe transaction and, where applicable, the 48-hour Governance timelock.</p>
+      </div>
 
-      <p>
-        Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Standard transfers between non-exempt addresses permanently burn a portion of the tokens, continuously reducing the total supply. Users lock IFR on-chain to activate premium access without a recurring subscription; access remains active while each product&rsquo;s required IFR stays locked and that integration remains available. There is no presale, no VC funding, and no mint function &mdash; launched via a Community Fair Launch Model (CFLM).
-      </p>
-
-      <!-- ========== Key Numbers ========== -->
-      <h2>Key Numbers</h2>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Metric</th>
-            <th>Value</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Total Supply</td>
-            <td>1,000,000,000 IFR (decreasing)</td>
-          </tr>
-          <tr>
-            <td>Burn Rate</td>
-            <td>2.5% permanent burn + 1% pool fee (3.5% total transfer fee)</td>
-          </tr>
-          <tr>
-            <td>Team Vesting</td>
-            <td>150M IFR &mdash; 12-month cliff, then 36-month linear release (48 months total)</td>
-          </tr>
-          <tr>
-            <td>LP Liquidity</td>
-            <td>400M IFR (40% of supply) &mdash; LP Reserve Safe (3-of-5)</td>
-          </tr>
-          <tr>
-            <td>Protocol Fee Cap</td>
-            <td>5% maximum (on-chain enforced, immutable)</td>
-          </tr>
-          <tr>
-            <td>Tests</td>
-            <td>Historical internal snapshot: 544 checks and 99% Solidity line coverage. Current exact-suite evidence is listed in the functionality status.</td>
-          </tr>
-          <tr>
-            <td>On-Chain Components</td>
-            <td>17 (14 deployed contracts + 3 Gnosis Safes)</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <!-- ========== Tokenomics ========== -->
-      <h2>Tokenomics</h2>
-
+      <h2>Rules</h2>
       <ul>
-        <li><strong>Burn-on-transfer:</strong> 2.5% of each standard transfer between non-exempt addresses is permanently burned (2% sender + 0.5% recipient), making IFR continuously deflationary.</li>
-        <li><strong>Buyback mechanism:</strong> BuybackVault can use deposited ETH to buy IFR and split output between BurnReserve and Treasury. It is currently separate from the IFR transfer-pool fee held by FeeRouterV1.</li>
-        <li><strong>Lock = Tier:</strong> Lock IFR in the IFRLock contract to unlock Bronze / Silver / Gold / Platinum access across all partner products.</li>
-        <li><strong>Builder rewards:</strong> PartnerVault distributes IFR to builders when users lock through their integrations &mdash; 4% of supply reserved.</li>
+        <li><strong>Eligibility:</strong> the Safe signers of the Treasury, Community and LP Reserve Safes (identical 3-of-5 owner set), fixed when a ballot opens. A Council registry may replace this snapshot later.</li>
+        <li><strong>Display:</strong> signers appear only with consented initials. Wallet addresses are public on-chain; no real names are published.</li>
+        <li><strong>Deadline:</strong> none, unless a deadline is approved by a separate Council vote.</li>
+        <li><strong>Abstentions</strong> are recorded but not counted as votes. Only their signature hash and Etherscan link are listed.</li>
+        <li><strong>Status colours:</strong> <span class="phase-badge badge-red">Open</span> before the threshold is reached, <span class="phase-badge badge-yellow">Approved</span> once it is reached, <span class="phase-badge badge-green">Executed</span> after the resulting transaction is executed and linked.</li>
+        <li><strong>Secret ballots</strong> are in planning as a separate milestone: anonymous credentials or zero-knowledge membership proofs with a threshold tally. They need a threat model, scheme selection, an independent cryptography and privacy review, and a staging run before any real ballot. Until then all ballots are open.</li>
+        <li><strong>Portal:</strong> a page that automates this procedure (connect wallet, sign the predefined text, automatic verification, publication) is planned.</li>
       </ul>
 
-      <!-- ========== Products ========== -->
-      <h2>Products</h2>
-
+      <h2>How to Vote</h2>
       <ol>
-        <li><strong>Benefits Network</strong> &mdash; merchants verify IFR lock status to offer real-world discounts. Next.js 15 frontend + Express backend with PWA support.</li>
-        <li><strong>Creator Gateway</strong> &mdash; content creators integrate IFR locks to gate premium content. Lock-triggered rewards flow to creators from the PartnerVault.</li>
-        <li><strong>AI Copilot</strong> &mdash; an AI assistant trained on Inferno protocol documentation. Answers questions about tokenomics, contracts, and integration.</li>
-        <li><strong>Points System</strong> &mdash; gamified engagement layer with SIWE authentication. Users earn points for on-chain activity and protocol participation.</li>
-        <li><strong>Governance Dashboard</strong> &mdash; visualize and interact with governance proposals, timelock status, and parameter changes in real time.</li>
+        <li>Open <a href="https://etherscan.io/verifiedSignatures" rel="noopener">etherscan.io/verifiedSignatures</a> and choose <em>Sign Message</em>.</li>
+        <li>Connect your Safe signer wallet.</li>
+        <li>Paste the ballot text of your choice from this page, unchanged.</li>
+        <li>Sign (free, no gas), choose <em>Publish</em>, and send the link to the Council.</li>
       </ol>
 
-      <!-- ========== Technology ========== -->
-      <h2>Technology</h2>
+      <!-- council-votes:start -->
+      <div class="phase-card" id="cv-01">
+        <h3>CV-01 — CommitmentVault V1 compensation (urgent) <span class="phase-badge badge-red">Open</span></h3>
+        <p>Compensate the 11 permanently locked CommitmentVault V1 tranches (26,418,467.994338353 IFR) from the LP Reserve Safe, per tranche, only after each tranche’s original time condition and price target (7-day TWAP) are met.</p>
+        <p>Proposal: <a href="https://ifrunit.tech/wiki/commitment-vault-compensation.html">/wiki/commitment-vault-compensation.html</a></p>
+        <p><strong>Rule:</strong> Approved with 3 YES votes of eligible Safe signers. Opened 2026-10-03. Deadline: None, unless a deadline is approved by a separate Council vote.</p>
+        <p><strong>Tally:</strong> YES: 2 · NO: 0 · abstentions: 1 · eligible: 5</p>
+        <p style="color:var(--muted);font-size:0.85rem;">The proposal text references repository commit f08ce370 (pre-history-rewrite SHA; the same content is commit 4c3eb668 after the 2026-10-03 history rewrite).</p>
+        <div class="table-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <table style="min-width:600px;">
+          <thead><tr><th>Signer</th><th>Wallet</th><th>Vote</th><th>Proof</th></tr></thead>
+          <tbody>
+            <tr><td>G.M.</td><td><a href="https://etherscan.io/address/0x6b36687b0cd4386fb14cf565B67D7862110Fed67" rel="noopener"><code>0x6b36…ed67</code></a></td><td>ABSTAIN</td><td><a href="https://etherscan.io/verifySig/339702" rel="noopener">etherscan.io/verifySig/339702</a><div class="sig">hash 0xeb7a389778ff7661778b5c726947f30e342d14c66784518f9ea3cbdba04bada9</div></td></tr>
+            <tr><td>M.G.</td><td><a href="https://etherscan.io/address/0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4" rel="noopener"><code>0x17F8…72d4</code></a></td><td>YES</td><td><a href="https://etherscan.io/verifySig/339696" rel="noopener">etherscan.io/verifySig/339696</a><div class="sig">hash 0xcd65f6fb52dc56020f51268e6217a4561035a2b38c3ecd2ca5d0ddbfa8b572bf</div></td></tr>
+            <tr><td>A.M.</td><td><a href="https://etherscan.io/address/0x0C4893DcF730E0Ddc7D18CF9723932784Fb4ED74" rel="noopener"><code>0x0C48…ED74</code></a></td><td>not yet voted</td><td>—</td></tr>
+            <tr><td>Y.K.</td><td><a href="https://etherscan.io/address/0xA0860f872a9cAB34817D9a764e71ab43B942b275" rel="noopener"><code>0xA086…b275</code></a></td><td>YES</td><td><a href="https://etherscan.io/verifySig/339697" rel="noopener">etherscan.io/verifySig/339697</a><div class="sig">hash 0xcd65f6fb52dc56020f51268e6217a4561035a2b38c3ecd2ca5d0ddbfa8b572bf</div></td></tr>
+            <tr><td>A.P.</td><td><a href="https://etherscan.io/address/0x32cF8b4F29A8F211804857EcF8BF0847f0BC0fE9" rel="noopener"><code>0x32cF…0fE9</code></a></td><td>not yet voted</td><td>—</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <details>
+          <summary>Ballot texts (sign exactly one, unchanged)</summary>
+          <p><strong>YES</strong></p>
+          <pre class="vote-text">IFR Council urgent vote CV-01
+Vote: YES
+I approve proposal CV-01: the 11 permanently locked CommitmentVault V1 tranches (26,418,467.994338353 IFR in total) are compensated from the LP Reserve Safe 0x5D93E7919a71d725054e31017eCA86B026F86C04. Each tranche is compensated with exactly its locked amount, paid to the wallet that locked it, only after that tranche's original time condition (if any) and its original price target (7-day TWAP of the IFR/WETH Uniswap V2 pair 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0) are met, with one Safe transaction per tranche.
+Proposal: https://ifrunit.tech/wiki/commitment-vault-compensation.html (repository commit f08ce370)</pre>
+          <p><strong>NO</strong></p>
+          <pre class="vote-text">IFR Council urgent vote CV-01
+Vote: NO
+I reject proposal CV-01: the 11 permanently locked CommitmentVault V1 tranches (26,418,467.994338353 IFR in total) are compensated from the LP Reserve Safe 0x5D93E7919a71d725054e31017eCA86B026F86C04. Each tranche is compensated with exactly its locked amount, paid to the wallet that locked it, only after that tranche's original time condition (if any) and its original price target (7-day TWAP of the IFR/WETH Uniswap V2 pair 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0) are met, with one Safe transaction per tranche.
+Proposal: https://ifrunit.tech/wiki/commitment-vault-compensation.html (repository commit f08ce370)</pre>
+        </details>
+      </div>
+      <div class="phase-card" id="ex-01">
+        <h3>EX-01 — No IFR incentives for exchanges <span class="phase-badge badge-red">Open</span></h3>
+        <p>Centralized exchanges receive no IFR incentives (no integration payments, no liquidity grants, no loans) from any project pool.</p>
+        <p><strong>Rule:</strong> Approved with 3 YES votes of eligible Safe signers. Opened 2026-10-03. Deadline: None, unless a deadline is approved by a separate Council vote.</p>
+        <p><strong>Tally:</strong> YES: 1 · NO: 0 · abstentions: 0 · eligible: 5</p>
+        <div class="table-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <table style="min-width:600px;">
+          <thead><tr><th>Signer</th><th>Wallet</th><th>Vote</th><th>Proof</th></tr></thead>
+          <tbody>
+            <tr><td>G.M.</td><td><a href="https://etherscan.io/address/0x6b36687b0cd4386fb14cf565B67D7862110Fed67" rel="noopener"><code>0x6b36…ed67</code></a></td><td>YES</td><td><a href="https://etherscan.io/verifySig/339715" rel="noopener">etherscan.io/verifySig/339715</a><div class="sig">hash 0x36882b11a781df3f53401e4da19c04b8b51309f592c015d99b2cc3945955240c</div></td></tr>
+            <tr><td>M.G.</td><td><a href="https://etherscan.io/address/0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4" rel="noopener"><code>0x17F8…72d4</code></a></td><td>not yet voted</td><td>—</td></tr>
+            <tr><td>A.M.</td><td><a href="https://etherscan.io/address/0x0C4893DcF730E0Ddc7D18CF9723932784Fb4ED74" rel="noopener"><code>0x0C48…ED74</code></a></td><td>not yet voted</td><td>—</td></tr>
+            <tr><td>Y.K.</td><td><a href="https://etherscan.io/address/0xA0860f872a9cAB34817D9a764e71ab43B942b275" rel="noopener"><code>0xA086…b275</code></a></td><td>not yet voted</td><td>—</td></tr>
+            <tr><td>A.P.</td><td><a href="https://etherscan.io/address/0x32cF8b4F29A8F211804857EcF8BF0847f0BC0fE9" rel="noopener"><code>0x32cF…0fE9</code></a></td><td>not yet voted</td><td>—</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <details>
+          <summary>Ballot texts (sign exactly one, unchanged)</summary>
+          <p><strong>YES</strong></p>
+          <pre class="vote-text">IFR Council vote EX-01
+Vote: YES
+I approve proposal EX-01: centralized exchanges receive no IFR incentives (no integration payments, no liquidity grants, no loans) from any project pool. Listings must be self-sustaining. A future incentive requires a new Council proposal.
+Context: transfer-fee exemption for verified exchange addresses remains as approved on 2026-08-26; each exemption follows the published address verification procedure and its own Safe proposal with the 48-hour timelock.</pre>
+          <p><strong>NO</strong></p>
+          <pre class="vote-text">IFR Council vote EX-01
+Vote: NO
+I reject proposal EX-01: centralized exchanges receive no IFR incentives (no integration payments, no liquidity grants, no loans) from any project pool. Listings must be self-sustaining. A future incentive requires a new Council proposal.
+Context: transfer-fee exemption for verified exchange addresses remains as approved on 2026-08-26; each exemption follows the published address verification procedure and its own Safe proposal with the 48-hour timelock.</pre>
+        </details>
+      </div>
+      <div class="phase-card" id="ex-02">
+        <h3>EX-02 — Governance role of exchanges <span class="phase-badge badge-red">Open</span></h3>
+        <p>Option A: no governance role for exchanges. Option B: at most two disclosed non-voting advisers without Safe permissions.</p>
+        <p><strong>Rule:</strong> The option with 3 votes of eligible Safe signers is adopted. Opened 2026-10-03. Deadline: None, unless a deadline is approved by a separate Council vote.</p>
+        <p><strong>Tally:</strong> OPTION A: 0 · OPTION B: 0 · abstentions: 1 · eligible: 5</p>
+        <div class="table-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <table style="min-width:600px;">
+          <thead><tr><th>Signer</th><th>Wallet</th><th>Vote</th><th>Proof</th></tr></thead>
+          <tbody>
+            <tr><td>G.M.</td><td><a href="https://etherscan.io/address/0x6b36687b0cd4386fb14cf565B67D7862110Fed67" rel="noopener"><code>0x6b36…ed67</code></a></td><td>ABSTAIN</td><td><a href="https://etherscan.io/verifySig/339713" rel="noopener">etherscan.io/verifySig/339713</a><div class="sig">hash 0x59c0d113c9d265bf8c8c04a53e5249b2c3179f30b692bbcd184a455a76e096cc</div></td></tr>
+            <tr><td>M.G.</td><td><a href="https://etherscan.io/address/0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4" rel="noopener"><code>0x17F8…72d4</code></a></td><td>not yet voted</td><td>—</td></tr>
+            <tr><td>A.M.</td><td><a href="https://etherscan.io/address/0x0C4893DcF730E0Ddc7D18CF9723932784Fb4ED74" rel="noopener"><code>0x0C48…ED74</code></a></td><td>not yet voted</td><td>—</td></tr>
+            <tr><td>Y.K.</td><td><a href="https://etherscan.io/address/0xA0860f872a9cAB34817D9a764e71ab43B942b275" rel="noopener"><code>0xA086…b275</code></a></td><td>not yet voted</td><td>—</td></tr>
+            <tr><td>A.P.</td><td><a href="https://etherscan.io/address/0x32cF8b4F29A8F211804857EcF8BF0847f0BC0fE9" rel="noopener"><code>0x32cF…0fE9</code></a></td><td>not yet voted</td><td>—</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <details>
+          <summary>Ballot texts (sign exactly one, unchanged)</summary>
+          <p><strong>OPTION A</strong></p>
+          <pre class="vote-text">IFR Council vote EX-02
+Vote: OPTION A
+On proposal EX-02 (governance role of centralized exchanges) I vote for Option A: exchanges receive no governance role, no Council membership, no adviser seat and no Safe permissions.
+Option B would have allowed at most two disclosed non-voting advisers without Safe permissions.</pre>
+          <p><strong>OPTION B</strong></p>
+          <pre class="vote-text">IFR Council vote EX-02
+Vote: OPTION B
+On proposal EX-02 (governance role of centralized exchanges) I vote for Option B: at most two disclosed non-voting exchange advisers, without Council voting rights and without any Safe permissions.
+Option A would give exchanges no governance role at all.</pre>
+        </details>
+      </div>
+      <!-- council-votes:end -->
 
-      <ul>
-        <li><strong>Ethereum Mainnet</strong> &mdash; deployed and verified on March 5, 2026.</li>
-        <li><strong>Solidity 0.8.20 + OpenZeppelin v5</strong> &mdash; battle-tested base contracts with modern security patterns.</li>
-        <li><strong>Full internal audits + automated test evidence</strong> &mdash; public source records; independent professional third-party audit pending.</li>
-        <li><strong>48h Timelock + Guardian</strong> &mdash; governance proposals are delayed and publicly visible; owner-only guardian rotation through <code>setGuardian</code> is the documented untimelocked exception.</li>
-      </ul>
-
-      <!-- ========== Post-Launch Roadmap ========== -->
-      <h2>Post-Launch Roadmap</h2>
-
-      <ul class="checklist">
-        <li><span class="badge-done">DONE</span> Mainnet deployment &mdash; 17 on-chain components deployed and verified</li>
-        <li><span class="badge-done">DONE</span> Contract verification on Etherscan</li>
-        <li><span class="badge-done">DONE</span> Gnosis Safe multisig created</li>
-        <li><span class="badge-done">DONE</span> Wiki documentation &mdash; 36 HTML pages</li>
-        <li><span class="badge-done">DONE</span> Uniswap V2 LP creation via BootstrapVaultV3.finalise() (100M IFR + 0.030 ETH)</li>
-        <li><span class="badge-done">DONE</span> LP custody verified: retained in withdrawal-less BootstrapVaultV3; Team.Finance disabled</li>
-        <li><span class="badge-done">DONE</span> Transfer InfernoToken ownership to Governance / TreasurySafe control</li>
-        <li><span class="badge-done">DONE</span> Transfer Governance owner to Treasury Safe 3-of-5 &#x2705; (20.03.2026 &mdash; <a href="https://etherscan.io/tx/0xcd9f99d2e5df5c28b81f885c7ebf7e2d42a873bd1c81bef9d94aa5c2d19c46c3" target="_blank">TX</a>)</li>
-        <li><span class="badge-done">DONE</span> Gnosis Safe 3-of-5 on all Safes (Treasury, Community, LP Reserve) &#x2705;</li>
-        <li><span class="badge-pending">NEXT</span> Professional security audit</li>
-        <li><span class="badge-pending">NEXT</span> Partner onboarding &mdash; first integrations</li>
-        <li><span class="badge-pending">NEXT</span> DAO governance migration (Phase 4)</li>
-      </ul>
-
-      <!-- ========== Team ========== -->
-      <h2>Team</h2>
-
-      <p>
-        Pseudonymous team &mdash; transparency through open-source code and on-chain governance. Treasury is controlled by 3-of-5 Gnosis Safe multisig. Governance proposals use the 48-hour timelock; guardian rotation via owner-only <code>setGuardian</code> is the documented untimelocked exception.
-      </p>
-
-      <ul>
-        <li><strong>GitHub:</strong> <a href="https://github.com/NeaBouli/inferno" target="_blank">github.com/NeaBouli/inferno</a></li>
-        <li><strong>Security:</strong> <a href="https://ifrunit.tech/wiki/security.html">Full audit report</a></li>
-        <li><strong>Transparency:</strong> <a href="https://ifrunit.tech/wiki/transparency.html">On-chain verification</a></li>
-      </ul>
-
-      <!-- ========== Contact ========== -->
-      <h2>Contact</h2>
-
-      <ul>
-        <li><strong>Contact:</strong> <a href="https://github.com/NeaBouli/inferno/issues" target="_blank">GitHub Issues</a> or <a href="https://t.me/IFR_token" target="_blank">Telegram</a></li>
-        <li><strong>Telegram:</strong> <a href="https://t.me/IFRtoken" target="_blank">t.me/IFRtoken</a></li>
-        <li><strong>X / Twitter:</strong> <a href="https://x.com/IFRtoken" target="_blank">x.com/IFRtoken</a></li>
-      </ul>
-
-      <!-- ========== Links ========== -->
-      <h2>Links</h2>
-
-      <ul>
-        <li><a href="https://ifrunit.tech/" target="_blank">Website</a></li>
-        <li><a href="https://github.com/NeaBouli/inferno" target="_blank">GitHub</a></li>
-        <li><a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code" target="_blank">Etherscan (InfernoToken)</a></li>
-        <li><a href="https://ifrunit.tech/wiki/bootstrap.html">Bootstrap Event</a></li>
-        <li><a href="https://ifrunit.tech/wiki/security.html">Security Audit</a></li>
-        <li><a href="https://ifrunit.tech/wiki/transparency.html">Transparency</a></li>
-        <li><a href="https://ifrunit.tech/wiki/wallet-guide.html">Wallet &amp; Contract Guide</a></li>
-        <li><a href="https://ifrunit.tech/wiki/" target="_blank">Wiki</a></li>
-      </ul>
+      <p>Machine-readable record: <a href="https://ifrunit.tech/data/council-votes.json">council-votes.json</a>. Anyone can re-verify every signature with <code>ethers.recoverAddress(messageHash, signature)</code>.</p>
 
       <!-- Footer -->
       <footer class="wiki-footer">
-        Inferno (IFR) &mdash; One Pager &mdash; Documentation v1.0
+        Inferno (IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.0
       </footer>
 
     </main>

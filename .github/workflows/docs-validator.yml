@@ -25,6 +25,8 @@ on:
       - 'scripts/check-cwa-remediation-register.cjs'
       - 'scripts/test-cwa-content-coherence.cjs'
       - 'scripts/test-docs-truth.cjs'
+      - 'scripts/verify-council-votes.cjs'
+      - 'scripts/build-council-votes-page.cjs'
       - 'deployments/mainnet.json'
       - 'scripts/check-sitemap-anchors.cjs'
       - 'scripts/check-july-audit-remediation-register.cjs'
@@ -81,6 +83,8 @@ on:
       - 'scripts/check-cwa-remediation-register.cjs'
       - 'scripts/test-cwa-content-coherence.cjs'
       - 'scripts/test-docs-truth.cjs'
+      - 'scripts/verify-council-votes.cjs'
+      - 'scripts/build-council-votes-page.cjs'
       - 'deployments/mainnet.json'
       - 'scripts/check-sitemap-anchors.cjs'
       - 'scripts/check-july-audit-remediation-register.cjs'
@@ -228,6 +232,9 @@ jobs:
 
       - name: Check CEX fee-exemption policy consistency
         run: npm run test:cex-fee-policy
+
+      - name: Verify Council vote signatures and the public vote page
+        run: npm run test:council-votes
 
       - name: Check wiki sidebar nav consistency
         run: npm run test:wiki-nav

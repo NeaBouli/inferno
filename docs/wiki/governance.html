@@ -601,6 +601,7 @@
         <li><a href="https://ifrunit.tech/wiki/dao-governance.html">DAO Governance</a></li>
         <li><a href="https://ifrunit.tech/wiki/multisig.html">Multisig Policy</a></li>
         <li><a href="https://ifrunit.tech/wiki/community-signer-expansion.html">Community Signer Expansion</a></li>
+        <li><a href="https://ifrunit.tech/wiki/council-votes.html">Council Votes</a></li>
         <li><a href="https://ifrunit.tech/wiki/transparency.html">Transparency</a></li>
         <li class="nav-divider"></li>
         <li><a href="https://ifrunit.tech/wiki/faq.html">FAQ</a></li>
@@ -1675,7 +1676,7 @@ await governance.execute(proposalId);</code></pre>
       <h2 id="council-agenda">Council Agenda &amp; Vote Log</h2>
 
       <div class="callout" style="background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.35);border-radius:8px;padding:20px;margin-bottom:24px;">
-        <p style="margin:0;"><strong>Status: undated discussion draft.</strong> No vote is open, no IFR is allocated, and no exchange has Council membership or TreasurySafe permissions. Publishing an agenda item does not authorize spending or an on-chain action. Agenda entries contain no proposer attribution or personal name.</p>
+        <p style="margin:0;"><strong>Status: open ballots since 3 October 2026.</strong> EX-01 and EX-02 are open Council ballots without a deadline; every signed vote and the tally are recorded on <a href="council-votes.html">Council Votes</a>. No IFR is allocated, and no exchange has Council membership or TreasurySafe permissions. Publishing an agenda item does not authorize spending or an on-chain action. Agenda entries contain no proposer attribution or personal name.</p>
       </div>
 
       <h3>Agenda EX-01 &mdash; Exchange Incentives</h3>
@@ -1702,8 +1703,8 @@ await governance.execute(proposalId);</code></pre>
       <table>
         <thead><tr><th>Agenda ID</th><th>Subject</th><th>Date</th><th>State</th><th>Result / execution</th></tr></thead>
         <tbody>
-          <tr><td>EX-01</td><td>Exchange IFR incentives and funding limits</td><td>Not scheduled</td><td>Discussion draft</td><td>None</td></tr>
-          <tr><td>EX-02</td><td>Exchange advisory, voting or Safe role</td><td>Not scheduled</td><td>Discussion draft</td><td>None</td></tr>
+          <tr><td>EX-01</td><td>Exchange IFR incentives and funding limits (ballot: no incentives)</td><td>Opened 2026-10-03</td><td>Open ballot</td><td><a href="council-votes.html#ex-01">Council Votes</a></td></tr>
+          <tr><td>EX-02</td><td>Exchange advisory, voting or Safe role (Option A or B)</td><td>Opened 2026-10-03</td><td>Open ballot</td><td><a href="council-votes.html#ex-02">Council Votes</a></td></tr>
         </tbody>
       </table>
 
@@ -1716,6 +1717,7 @@ await governance.execute(proposalId);</code></pre>
       <summary>Voting modes, privacy boundaries and release requirements</summary>
       <p><strong>Privacy requirements, not a certification:</strong> the following describes a planned system. Network-level anonymity is not guaranteed. For general background on connection metadata and privacy, see <a href="https://ethereum.org/roadmap/privacy/" target="_blank" rel="noopener noreferrer">Ethereum's privacy roadmap</a>.</p>
       <p>The safe design connects an individual signer wallet, issues a domain-bound expiring EIP-4361 challenge, and checks eligibility against a recorded, block-numbered Council/Safe-owner snapshot. EOA signatures and Safe smart-account signatures require separate verification paths; Safe signatures use EIP-1271. Eligibility fails closed if the snapshot or verification path is unavailable. Every nonce is single-use and every ballot is bound to one immutable agenda version.</p>
+      <p><strong>Current mode (since 3 October 2026):</strong> all ballots are open and run through the Etherscan verified-signature procedure on <a href="council-votes.html">Council Votes</a>. Secret ballots are in planning as a separate milestone (anonymous credential or zero-knowledge membership, threshold tally) behind a threat model, scheme selection, independent cryptography and privacy review, and staging.</p>
       <p><strong>Open and secret ballots are separate modes.</strong> The mode is published when an agenda opens and cannot be changed while voting is active. An open ballot may publish a wallet and initials only where that mapping is already public and the member has consented; otherwise it publishes initials only. Whether a consented public pseudonym may replace initials is an open decision. A secret ballot publishes no wallet, initials, individual vote, signature or voter-linked ballot hash. It publishes only the final turnout count, aggregate result and a verification proof after voting closes.</p>
       <p>Secret voting requires unlinkable eligibility issuance and ballot casting. The planned design therefore separates the service that verifies Council eligibility from the service that accepts an anonymous one-time credential, uses one-time nullifiers to prevent duplicate voting, encrypts ballots for threshold tallying, and exposes only non-identifying commitments and the aggregate proof. The existing Telegram wallet mapper and ordinary SIWE session flow are not suitable for secret ballots.</p>
       <p><strong>Privacy boundary:</strong> the planned portal must retain no source IP, user-agent, request body, wallet-provider telemetry or analytics in application, proxy, error or audit logs. This is a release requirement, not a verified property of a deployed service. No cookies are required for the planned secret-voting mode. Network, hosting, RPC and wallet providers may still process connection metadata; the project cannot honestly promise that an IP address is never seen anywhere on the network path. A production design must document each processor and offer a privacy-preserving access path.</p>

@@ -164,6 +164,15 @@ remains the only place where agenda items and vote outcomes are published.
 
 ## Lane 6 — Council open/secret voting portal
 
+- **Decision (2026-10-03):** eligibility is the Safe signer set with a fixed
+  snapshot per ballot (a Council registry may follow); open ballots show
+  consented initials only; open ballots now run through the Etherscan
+  verified-signature procedure and are recorded publicly on
+  [Council Votes](https://ifrunit.tech/wiki/council-votes.html), verified by
+  `scripts/verify-council-votes.cjs`. Secret ballots are in planning as a
+  separate milestone (anonymous credential or ZK membership, threshold tally)
+  behind a threat model, scheme selection, independent cryptography/privacy
+  review and staging. A portal that automates the open procedure is planned.
 - **Current truth:** planned, not live. No Council login or web ballot creates
   a binding vote. The published requirements cover wallet challenge, EOA and
   EIP-1271 verification, a block-numbered eligibility snapshot, replay
