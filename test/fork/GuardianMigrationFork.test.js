@@ -1,6 +1,7 @@
 // CWA-09 guardian migration rehearsal on a Mainnet fork: the Treasury Safe and the deployer execute the
 // exact transactions from scripts/guardian-migration-proposal.cjs against the deployed contracts.
-// Run: HARDHAT_FORK=true HARDHAT_FORK_BLOCK_NUMBER=<recent block> MAINNET_RPC_URL=<rpc> npx hardhat test test/fork/GuardianMigrationFork.test.js
+// The live migration started in block 26108025, so the rehearsal is pinned to the block before it.
+// Run: HARDHAT_FORK=true HARDHAT_FORK_BLOCK_NUMBER=26108024 MAINNET_RPC_URL=<archive rpc> npx hardhat test test/fork/GuardianMigrationFork.test.js
 import { expect } from "chai";
 import { createRequire } from "node:module";
 import { ethers, connection } from "../helpers/hardhat.js";
@@ -13,12 +14,15 @@ async function impersonate(address) {
   await connection.provider.request({ method: "hardhat_setBalance", params: [address, "0xde0b6b3a7640000"] });
   return ethers.getSigner(address);
 }
+const PRE_MIGRATION_BLOCK = 26108024; // last Mainnet block before the live guardian migration
 const guardianOf = async (address) => (await ethers.getContractAt(["function guardian() view returns (address)"], address)).guardian();
 
 describe("Guardian migration to the Treasury Safe on a Mainnet fork", function () {
   this.timeout(300_000);
-  before(function () {
+  before(async function () {
     if (process.env.HARDHAT_FORK !== "true") this.skip();
+    const block = await ethers.provider.getBlockNumber();
+    expect(block, `fork must start at or before PRE_MIGRATION_BLOCK ${PRE_MIGRATION_BLOCK}`).to.be.at.most(PRE_MIGRATION_BLOCK);
   });
 
   it("moves every changeable guardian to the Treasury Safe; buyback guardians stay immutable", async () => {

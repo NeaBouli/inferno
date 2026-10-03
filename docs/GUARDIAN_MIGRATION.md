@@ -1,6 +1,7 @@
 # Guardian Migration to the Treasury Safe (CWA-09)
 
-**Status:** prepared. Every Mainnet step is performed by the deployer or the Safe signers, never by automation.
+**Status:** in progress (2026-10-03). Every Mainnet step is performed by the deployer or the Safe signers, never by
+automation. Steps 1-3 are done; step 4 waits for the Governance delay.
 
 ## Decision
 
@@ -24,14 +25,27 @@ unpause buyback execution; it cannot move funds. Changing it would need a redepl
 
 ## Steps
 
-1. `node scripts/guardian-migration-proposal.cjs <Governance.proposalCount()> ./cwa09-guardian`
-2. **Deployer:** sends the three transactions in `guardian-deployer-txs.json` (IFRLock, PartnerVault, Vesting).
-3. **Treasury Safe:** imports `guardian-step1-safe.json`: Governance guardian now, plus two proposals.
-4. **Treasury Safe, after 48 hours:** imports `guardian-step2-execute.json`.
-5. Verify `guardian()` on all six contracts returns the Treasury Safe.
+1. **Done.** `node scripts/guardian-migration-proposal.cjs 19 ./cwa09-guardian` (first proposal id 19).
+2. **Done (deployer).** The three transactions in `guardian-deployer-txs.json`, each verified on-chain afterwards
+   (`guardian()` = Treasury Safe):
+   - IFRLock: block 26108025,
+     [`0x8e3beb0f…822b93`](https://etherscan.io/tx/0x8e3beb0f87acb6bc83d38572c28697ceb65bc632b7cadf95e19992b1f1822b93)
+   - PartnerVault: block 26108027,
+     [`0x38172595…185fcb`](https://etherscan.io/tx/0x38172595e9eb1ebc87ee9b910cae5a4db4545fd0efb00d1a164f97568a185fcb)
+   - Vesting: block 26108029,
+     [`0x5c0f8996…203fe0`](https://etherscan.io/tx/0x5c0f89964819e8712eadd1b954a571a36db1137fcaac9254e88e2527ec203fe0)
+3. **Done (Treasury Safe, nonce 20).** `guardian-step1-safe.json` executed in block 26108062,
+   [`0xfdd90c5e…e3d394c`](https://etherscan.io/tx/0xfdd90c5ef44efd617af0338fa2e95867cfa45367ac644975774e1b3fae3d394c):
+   Governance `guardian()` = Treasury Safe; proposals #19 (LiquidityReserve) and #20 (BurnReserve) queued with ETA
+   2026-10-04 23:56:11 UTC.
+4. **Pending.** After the ETA the Treasury Safe imports `guardian-step2-execute.json` (execute #19 and #20).
+   Until then the LiquidityReserve and BurnReserve guardian is still the deployer EOA.
+5. **Pending.** Verify `guardian()` on all six contracts returns the Treasury Safe.
 
 ## Tests
 
 - `node scripts/test-guardian-migration-proposal.cjs` (CI, contracts workflow)
-- `HARDHAT_FORK=true HARDHAT_FORK_BLOCK_NUMBER=<recent> MAINNET_RPC_URL=<rpc> npx hardhat test test/fork/GuardianMigrationFork.test.js`:
+- `HARDHAT_FORK=true HARDHAT_FORK_BLOCK_NUMBER=26108024 MAINNET_RPC_URL=<archive rpc> npx hardhat test test/fork/GuardianMigrationFork.test.js`:
   full migration against the deployed contracts; afterwards the Safe can pause and unpause IFRLock and the deployer cannot.
+  The rehearsal is pinned to block 26108024, the last block before the live migration. Later blocks already contain
+  the moved roles, and the test refuses them. Forking a past block needs an archive-capable RPC.
