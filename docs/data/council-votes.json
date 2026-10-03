@@ -111,10 +111,10 @@
       "signer": "G.M.",
       "address": "0x6b36687b0cd4386fb14cf565B67D7862110Fed67",
       "choice": "ABSTAIN",
-      "etherscan": "https://etherscan.io/verifySig/339702",
       "messageHash": "0xeb7a389778ff7661778b5c726947f30e342d14c66784518f9ea3cbdba04bada9",
       "signature": "0x3948d29463548f1c2bf880a50847e467575f9a5b5a6cfe27a5971481200cd9e47b174980e57cd15afba6355783ca84e365f3b62e13d26c2f1baf9681b4f38eae1b",
-      "abstention": true
+      "abstention": true,
+      "linkWithheld": true
     },
     {
       "ballot": "EX-02",

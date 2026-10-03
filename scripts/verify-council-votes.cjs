@@ -35,7 +35,8 @@ function verify(data) {
     const key = `${vote.ballot}/${vote.signer}`;
     assert.ok(!seen.has(key), `${key}: more than one vote`);
     seen.add(key);
-    assert.match(vote.etherscan, /^https:\/\/etherscan\.io\/verifySig\/\d+$/, `${key}: Etherscan link`);
+    if (vote.linkWithheld) assert.equal(vote.etherscan, undefined, `${key}: withheld link must be absent`);
+    else assert.match(vote.etherscan, /^https:\/\/etherscan\.io\/verifySig\/\d+$/, `${key}: Etherscan link`);
     assert.equal(getAddress(recoverAddress(vote.messageHash, vote.signature)), signers.get(vote.signer), `${key}: signature does not recover to the signer`);
     if (vote.abstention) {
       assert.equal(vote.choice, "ABSTAIN", `${key}: abstention must be ABSTAIN`);

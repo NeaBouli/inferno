@@ -21,7 +21,8 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 1440, height: 1000
       for (const vote of data.votes.filter((v) => v.ballot === ballot.id)) {
         const row = rows.filter({ hasText: vote.signer });
         await expect(row).toContainText(vote.choice);
-        await expect(row.locator(`a[href="${vote.etherscan}"]`)).toHaveCount(1);
+        if (vote.linkWithheld) await expect(row.locator("a[href*=\"verifySig\"]")).toHaveCount(0);
+        else await expect(row.locator(`a[href="${vote.etherscan}"]`)).toHaveCount(1);
       }
     }
     await expect(page.locator("#cv-01 h3")).toContainText("Open");

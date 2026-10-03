@@ -35,6 +35,10 @@ function render() {
     if (ballot.proposal) out.push(`        <p>Proposal: <a href="${esc(ballot.proposal)}">${esc(ballot.proposal.replace("https://ifrunit.tech", ""))}</a></p>`);
     out.push(`        <p><strong>Rule:</strong> ${esc(ballot.rule)} Opened ${esc(ballot.openedAt)}. Deadline: ${esc(data.deadline)}</p>`);
     out.push(`        <p><strong>Tally:</strong> ${counts} · abstentions: ${t.abstain} · eligible: ${ballot.eligible.length}</p>`);
+    const voted = votes.filter((v) => !v.abstention).map((v) => `${esc(v.signer)} (${esc(v.choice)})`);
+    const abstained = votes.filter((v) => v.abstention).map((v) => esc(v.signer));
+    const missing = ballot.eligible.filter((i) => !votes.some((v) => v.signer === i)).map(esc);
+    out.push(`        <p class="vote-summary"><strong>Voted:</strong> ${voted.join(", ") || "nobody yet"} · <strong>Abstained:</strong> ${abstained.join(", ") || "none"} · <strong>Still missing:</strong> ${missing.join(", ") || "none"}</p>`);
     if (ballot.note) out.push(`        <p style="color:var(--muted);font-size:0.85rem;">${esc(ballot.note)}</p>`);
     out.push('        <div class="table-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">');
     out.push('        <table style="min-width:600px;">');
@@ -47,7 +51,9 @@ function render() {
         out.push(`            <tr><td>${esc(initials)}</td><td>${wallet}</td><td>not yet voted</td><td>—</td></tr>`);
         continue;
       }
-      const proof = `<a href="${esc(vote.etherscan)}" rel="noopener">${esc(vote.etherscan.replace("https://", ""))}</a><div class="sig">hash ${esc(vote.messageHash)}</div>`;
+      const proof = vote.linkWithheld
+        ? `recorded<div class="sig">hash ${esc(vote.messageHash)}</div>`
+        : `<a href="${esc(vote.etherscan)}" rel="noopener">${esc(vote.etherscan.replace("https://", ""))}</a><div class="sig">hash ${esc(vote.messageHash)}</div>`;
       out.push(`            <tr><td>${esc(initials)}</td><td>${wallet}</td><td>${esc(vote.choice)}</td><td>${proof}</td></tr>`);
     }
     out.push("          </tbody>");
