@@ -16,7 +16,7 @@ async function answerProxy(page, feeRouter) {
   }));
   await page.route(`${PROXY}/api/ifr/balances`, (route) => route.fulfill({
     contentType: "application/json",
-    body: JSON.stringify({ balances: feeRouter === undefined ? {} : { FeeRouterV1: { formatted: feeRouter } } }),
+    body: JSON.stringify({ balances: feeRouter === undefined ? {} : { FeeRouterV1: { raw: feeRouter, formatted: Number(feeRouter) / 1e9 } } }),
   }));
 }
 const lostCard = (page) => page.locator("[data-lost-ifr]");
@@ -49,7 +49,7 @@ test("static markup shows the verified lost figure, labelled as not burned", asy
 
 test("a live FeeRouterV1 read updates the total; CV-01 stays fixed", async ({ page }) => {
   await blockNetwork(page);
-  await answerProxy(page, 800000);
+  await answerProxy(page, "800000000000000");
   await openTransparency(page);
   const card = lostCard(page);
   await expect(card).toHaveAttribute("data-state", "live", { timeout: 20000 });
@@ -69,7 +69,7 @@ test("proxy failure keeps the last verified figure with its date, never 0", asyn
   await expect(page.locator('[data-live-key="lost-ifr-stat"]')).toHaveText("27.1M");
 });
 
-for (const [label, value] of [["missing", undefined], ["zero", 0], ["below the verified baseline", 1000]]) {
+for (const [label, value] of [["missing", undefined], ["zero", "0"], ["below the verified baseline", "1000000000000"], ["malformed", "7.2e14"], ["non-string", 724992668043300]]) {
   test(`a ${label} FeeRouterV1 balance never lowers the figure`, async ({ page }) => {
     await blockNetwork(page);
     await answerProxy(page, value);
@@ -79,10 +79,23 @@ for (const [label, value] of [["missing", undefined], ["zero", 0], ["below the v
   });
 }
 
+// Exact 9-decimal base-unit accounting: CV-01 26418467994338353 + FeeRouterV1 724992730661647 = 27143460725000000
+// base units, i.e. exactly ...460.725 IFR, which must round half up to .73. Float addition of the two
+// decimal amounts lands just below .725 and displays .72.
+test("base-unit sum is exact at a 0.01 display boundary", async ({ page }) => {
+  await blockNetwork(page);
+  await answerProxy(page, "724992730661647");
+  await openTransparency(page);
+  const card = lostCard(page);
+  await expect(card).toHaveAttribute("data-state", "live", { timeout: 20000 });
+  await expect(card.locator("[data-lost-ifr-value]")).toHaveText("27,143,460.73 IFR");
+  await expect(card.locator("[data-lost-ifr-feerouter]")).toHaveText("724,992.73");
+});
+
 test("mobile: the lost card fits without horizontal scroll", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await blockNetwork(page);
-  await answerProxy(page, 800000);
+  await answerProxy(page, "800000000000000");
   await openTransparency(page);
   const card = lostCard(page);
   await card.scrollIntoViewIfNeeded();

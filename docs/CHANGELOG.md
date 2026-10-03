@@ -11,7 +11,7 @@
 - Corrected the remaining claims that BuybackVault and BurnReserve receive the 1% IFR pool fee.
 - Lane 3 decision (owner, 3 October 2026): future pool fees go to BuybackController. This is pending Governance
   execution; IFR already in FeeRouterV1 stays lost.
-- Lane 1 decision (owner, 3 October 2026): LendingVault V1 is retired. Borrowing stays permanently disabled and
+- Lane 1 decision (owner, 3 October 2026): LendingVault V1 is retired. Borrowing stays disabled by Governance decision (no activation planned or authorized) and
   no V2 is planned yet. Lending pages, the Web3 lending panel and the Landing say so; lenders can still withdraw
   unlent offers, and those IFR are not lost.
 

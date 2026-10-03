@@ -54,7 +54,7 @@ remains the only place where agenda items and vote outcomes are published.
   48-hour timelock for deployment wiring and any price activation.
 - **Next evidence:** approved V2 specification and passing lifecycle test suite.
 - **Decision record (3 October 2026, owner):** option A. LendingVault V1 is retired:
-  borrowing stays permanently disabled (`ifrPriceWei` is never set) and no V2 is planned for
+  borrowing stays disabled (`ifrPriceWei` stays unset; Governance could technically set it, but no activation is planned or authorized) and no V2 is planned for
   now. A V2 follows only after a reviewed price source shared with Lane 2. Before the withdrawals
   V1 held 52,155,440.952845656 IFR, all lender offers (C2 20,156,940.952845656, C1 16,999,000,
   C3 14,999,500), 0 loans; `withdrawOffer` returned the full amount for each on a Mainnet fork.
