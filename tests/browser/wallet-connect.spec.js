@@ -579,6 +579,8 @@ test.describe("S13: Bootstrap RPC failure renders unavailable, writes fail close
     // Deterministic offline environment: both public RPC paths are dead.
     await page.route("**/eth.llamarpc.com/**", (route) => route.abort());
     await page.route("**/ethereum-rpc.publicnode.com/**", (route) => route.abort());
+    await page.route("**/eth.drpc.org/**", (route) => route.abort());
+    await page.route("**/1rpc.io/**", (route) => route.abort());
     await page.addInitScript(mockBootstrapRpcFailure(MOCK_ADDR));
     await gotoWalletPage(page, "/wiki/bootstrap.html");
 
