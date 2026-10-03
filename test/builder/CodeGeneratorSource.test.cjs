@@ -25,12 +25,14 @@ const validConfig = {
 
 const generated = generateCode(validConfig);
 
-assert.match(generated.sdkSnippet, /const access = await ifr\.checkAccess/);
+assert.match(generated.sdkSnippet, /const result = await ifr\.checkAccess/);
 assert.match(generated.sdkSnippet, /const \{ tier \} = await ifr\.getTier/);
-assert.match(generated.sdkSnippet, /if \(access\.hasAccess\) enableAccess/);
+assert.match(generated.sdkSnippet, /if \(result\.hasAccess\) enableAccess/);
 assert.match(generated.sdkSnippet, /https:\/\/copilot-api\.ifrunit\.tech\/api\/ifr\/check/);
 assert.doesNotMatch(generated.sdkSnippet, /npm install ifr-sdk/);
-assert.match(generated.deployGuide, /npm registry publication is pending/);
+assert.match(generated.deployGuide, /npm publication pending/);
+assert.match(generated.deployGuide, /no Sepolia IFR token is deployed/);
+assert.doesNotMatch(generated.deployGuide, /npx hardhat run scripts\/deploy\.js/);
 assert.doesNotMatch(generated.deployGuide, /npm install ifr-sdk/);
 
 assert.equal(validateConfig(validConfig).valid, true);
