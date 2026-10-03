@@ -7,6 +7,9 @@ const {
   evaluateAccessRaw,
   getTierFromRaw,
   parseIFRAmount,
+  DEFAULT_TIERS,
+  getBenefitTierFromRaw,
+  validateTiers,
 } = require("../dist");
 
 const SELLER_DOMAIN = "shop.ifrunit.tech";
@@ -456,6 +459,49 @@ async function testRedeemMalformedResultRejected() {
   assert.equal(requests, 2);
 }
 
+async function testBenefitTiers() {
+  // Default preset = Benefits network preset, locked IFR only.
+  assert.deepEqual(DEFAULT_TIERS.map((t) => [t.key, t.minLocked]), [
+    ["bronze", "1000"], ["silver", "2500"], ["gold", "5000"], ["platinum", "10000"],
+  ]);
+  assert.ok(Object.isFrozen(DEFAULT_TIERS) && Object.isFrozen(DEFAULT_TIERS[0]));
+  const at = (v) => getBenefitTierFromRaw(parseIFRAmount(v));
+  assert.deepEqual([at("0").level, at("0").key, at("0").name], [0, null, "None"]);
+  assert.equal(at("999.999999999").level, 0);
+  assert.deepEqual([at("1000").level, at("1000").name], [1, "Bronze"]);
+  assert.equal(at("2499.999999999").key, "bronze");
+  assert.equal(at("2500").key, "silver");
+  assert.equal(at("5000").key, "gold");
+  assert.equal(at("10000").key, "platinum");
+  assert.equal(at("1000000000").key, "platinum");
+  assert.equal(at("2500").lockedRaw, "2500000000000");
+  assert.throws(() => getBenefitTierFromRaw(-1n), /non-negative/);
+  // Partners / integrators may use their own thresholds.
+  const custom = [
+    { key: "fan", name: "Fan", minLocked: "1" },
+    { key: "vip", name: "VIP", minLocked: "500.5" },
+  ];
+  assert.equal(getBenefitTierFromRaw(parseIFRAmount("0.999999999"), custom).level, 0);
+  assert.equal(getBenefitTierFromRaw(parseIFRAmount("1"), custom).key, "fan");
+  assert.equal(getBenefitTierFromRaw(parseIFRAmount("500.499999999"), custom).key, "fan");
+  assert.equal(getBenefitTierFromRaw(parseIFRAmount("500.5"), custom).key, "vip");
+  // Invalid tier lists are refused.
+  assert.throws(() => validateTiers([]), /non-empty/);
+  assert.throws(() => validateTiers([{ key: "a", name: "A", minLocked: "10" }, { key: "b", name: "B", minLocked: "10" }]), /strictly ascending/);
+  assert.throws(() => validateTiers([{ key: "a", name: "A", minLocked: "10" }, { key: "a", name: "B", minLocked: "20" }]), /duplicate/);
+  assert.throws(() => validateTiers([{ key: "a", name: "A", minLocked: "1e3" }]), /at most 9 decimal/);
+  assert.throws(() => validateTiers([{ key: "", name: "A", minLocked: "1" }]), /key and name/);
+  // IFRClient.getBenefitTier reads IFRLock only and fails closed on read errors.
+  const client = new IFRClient({ rpcUrl: "http://127.0.0.1:9" });
+  client.lockContract = { lockedBalance: async () => parseIFRAmount("5000") };
+  client.token = { balanceOf: async () => { throw new Error("balance must not be read"); } };
+  const r = await client.getBenefitTier("0x000000000000000000000000000000000000dEaD");
+  assert.equal(r.key, "gold");
+  client.lockContract = { lockedBalance: async () => { throw new Error("rpc down"); } };
+  await assert.rejects(client.getBenefitTier("0x000000000000000000000000000000000000dEaD"), /rpc down/);
+  await assert.rejects(client.getBenefitTier("not-an-address"), /Invalid wallet/);
+}
+
 async function main() {
   assert.equal(IFR_API, "https://copilot-api.ifrunit.tech");
   assert.throws(() => new IFRClient({ network: "sepolia" }), /Mainnet only/);
@@ -532,6 +578,7 @@ async function main() {
   await testRedeemChallengeMismatchFailsBeforeSigning();
   await testRedeemInvalidSignatureRejectedBeforePost();
   await testRedeemMalformedResultRejected();
+  await testBenefitTiers();
   console.log("[ifr-sdk-test] PASS");
 }
 

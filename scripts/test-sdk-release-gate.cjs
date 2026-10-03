@@ -4,7 +4,7 @@ const assert = require("node:assert/strict");
 const { runGate, REQUIRED_CHECKS } = require("./sdk-release-gate.cjs");
 
 const SHA = "a".repeat(40);
-const base = { repo: "NeaBouli/inferno", tag: "sdk-v0.2.0", sha: SHA, packageVersion: "0.2.0", token: "t" };
+const base = { repo: "NeaBouli/inferno", tag: "sdk-v0.3.0", sha: SHA, packageVersion: "0.3.0", token: "t" };
 const greenRuns = { check_runs: REQUIRED_CHECKS.map((name) => ({ name, status: "completed", conclusion: "success" })) };
 const goodEnv = {
   protection_rules: [{ type: "required_reviewers", reviewers: [{ type: "User", reviewer: { login: "owner" } }] }],

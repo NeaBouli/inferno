@@ -5,7 +5,7 @@ tag-triggered workflow
 
 Package: `ifr-sdk`
 
-Current repository version: `0.2.0`
+Current repository version: `0.3.0`
 
 Supported runtime: Node.js 20 and 22
 
@@ -103,7 +103,7 @@ setting. The approval click itself is always the owner's.
 npm Trusted Publishing is configured per package; if npmjs.com does not allow configuring it before
 `ifr-sdk` exists, the first version needs a one-time bootstrap:
 
-1. The owner publishes `0.2.0` once, locally, from the exact reviewed `main` commit, signed in as
+1. The owner publishes `0.3.0` once, locally, from the exact reviewed `main` commit, signed in as
    `ifr-protocol` with 2FA and the project alias e-mail (`npm publish --access public` in `apps/sdk`
    after `npm ci && npm test && npm run test:package`). No token is created for this.
 2. Immediately configure Trusted Publishing for `ifr-sdk` (see Blocking Release Gates) and, in the

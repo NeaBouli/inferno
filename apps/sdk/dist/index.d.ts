@@ -56,15 +56,45 @@ export interface TierResult {
     lockedRaw: string;
     totalRaw: string;
 }
+export interface BenefitTier {
+    /** Stable key, e.g. "bronze". */
+    key: string;
+    /** Display name, e.g. "Bronze". */
+    name: string;
+    /** Minimum IFR locked in IFRLock, decimal string with at most 9 decimals. */
+    minLocked: string;
+}
+export declare const DEFAULT_TIERS: readonly BenefitTier[];
+export interface BenefitTierResult {
+    /** 0 = below the first tier, 1..n = index of the highest tier reached (1-based). */
+    level: number;
+    /** Tier key, or null below the first tier. */
+    key: string | null;
+    /** Tier name, or "None" below the first tier. */
+    name: string;
+    lockedRaw: string;
+}
+/** Validates a tier list: non-empty, unique keys, strictly ascending exact 9-decimal thresholds. */
+export declare function validateTiers(tiers: readonly BenefitTier[]): bigint[];
+/** Highest tier reached by an exact locked amount (9-decimal base units); no rounding. */
+export declare function getBenefitTierFromRaw(lockedRaw: BigNumberish, tiers?: readonly BenefitTier[]): BenefitTierResult;
+/**
+ * @deprecated Legacy hold+lock access tiers (wallet balance + locked, 500 / 2,000 / 10,000).
+ * Not the project's benefit preset. Use `DEFAULT_TIERS` with `getBenefitTierFromRaw`. Removed in 1.0.
+ */
 export declare const TIER_THRESHOLDS: {
     readonly TIER1: 500;
     readonly TIER2: 2000;
     readonly TIER3: 10000;
 };
+/** @deprecated Legacy access tier names; use `DEFAULT_TIERS`. Removed in 1.0. */
 export declare const TIER_NAMES: readonly ["None", "Basic", "Premium", "Pro"];
+/** @deprecated Legacy hold+lock access tier; use `getBenefitTierFromRaw`. Removed in 1.0. */
 export declare function getTierFromAmount(amount: number): number;
+/** @deprecated Legacy access tier name; use `getBenefitTierFromRaw(...).name`. Removed in 1.0. */
 export declare function getTierName(tier: number): string;
 export declare function parseIFRAmount(value: string | number): bigint;
+/** @deprecated Legacy hold+lock access tier; use `getBenefitTierFromRaw`. Removed in 1.0. */
 export declare function getTierFromRaw(amount: BigNumberish): number;
 export declare function evaluateAccessRaw(balanceRaw: BigNumberish, lockedRaw: BigNumberish, requiredRaw: BigNumberish): {
     hasAccess: boolean;
@@ -84,7 +114,15 @@ export declare class IFRClient {
     constructor(config?: IFRClientConfig);
     /** Check if wallet has sufficient IFR (balance + locked) */
     checkAccess(params: AccessCheckParams): Promise<AccessResult>;
-    /** Get user tier (0=none, 1=basic, 2=premium, 3=pro) */
+    /**
+     * Benefit tier from IFR locked in IFRLock only (default preset Bronze/Silver/Gold/Platinum, or your
+     * own `tiers`). Fails closed: a failed IFRLock read throws instead of reporting 0.
+     */
+    getBenefitTier(wallet: string, tiers?: readonly BenefitTier[]): Promise<BenefitTierResult>;
+    /**
+     * @deprecated Legacy hold+lock access tier (0=none, 1=basic, 2=premium, 3=pro; balance + locked,
+     * 500 / 2,000 / 10,000). Use `getBenefitTier`. Removed in 1.0.
+     */
     getTier(wallet: string): Promise<TierResult>;
     /** Get IFR wallet balance */
     getBalance(wallet: string): Promise<number>;

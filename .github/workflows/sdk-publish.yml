@@ -56,6 +56,8 @@ jobs:
       - run: npm ci
       - run: npm audit --audit-level=moderate
       - run: npm test
+      - name: Committed dist matches the reviewed source
+        run: git diff --exit-code -- dist
       - run: npm run test:package
       - run: npm pack --dry-run --ignore-scripts
       - name: Publish via Trusted Publishing (OIDC, provenance)

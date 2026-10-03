@@ -37,6 +37,33 @@ The canonical REST API is:
 https://copilot-api.ifrunit.tech/api/ifr/check
 ```
 
+## Benefit Tiers
+
+`DEFAULT_TIERS` is the project's default preset and matches the Benefits network: IFR **locked in
+IFRLock** only, Bronze 1,000 / Silver 2,500 / Gold 5,000 / Platinum 10,000.
+
+```js
+const { IFRClient, DEFAULT_TIERS, getBenefitTierFromRaw } = require("ifr-sdk");
+const client = new IFRClient();
+const tier = await client.getBenefitTier(wallet);            // default preset
+const own = await client.getBenefitTier(wallet, [            // your own model
+  { key: "fan", name: "Fan", minLocked: "100" },
+  { key: "vip", name: "VIP", minLocked: "2000" },
+]);
+```
+
+- The tiers are a **default preset and label set, not a rule**. In the Benefits network every partner
+  sets its own thresholds, minimum held IFR, lock source (IFRLock, CommitmentVault time locks or
+  either), discount and daily/monthly limits per benefit.
+- Any project may verify IFR permissionlessly with its own rule, for example a hold-based check with
+  its own discount, following the open verification profile `ifr-benefits-verify/1`.
+- Discounts are independent of partner rewards. PartnerVault rewards follow Lane 4 model B and are
+  available only to approved pilot partners; they are currently disabled.
+- `getBenefitTier` reads IFRLock only and fails closed: a failed read throws instead of reporting 0.
+- `TIER_THRESHOLDS`, `TIER_NAMES`, `getTier`, `getTierFromRaw` and the `tier` fields of `checkAccess` are
+  the deprecated legacy hold+lock access tiers (balance + locked, 500 / 2,000 / 10,000). They remain
+  for compatibility and are removed in 1.0.
+
 ## Benefits Checkout
 
 `IFRBenefitsClient.createCheckout()` requests a one-time `sessions:create` challenge bound to
