@@ -14,9 +14,10 @@ on-chain lock status, without requiring crypto knowledge from cashier staff.
 - [ ] Legal business with business registration
 - [ ] Willingness to set IFR lock requirements for customers (min. 1,000 IFR)
 - [ ] Technical basis: smartphone or tablet for QR scanner
-- [ ] Acceptance of the IFR Builder Terms of Service
+- [ ] Agreement to follow this onboarding guide and its exclusion criteria (there is no separate terms document)
 
 ### Exclusion Criteria
+
 - Gambling, tobacco, weapons
 - Businesses without a physical/digital location
 - Already blocked/reported entities

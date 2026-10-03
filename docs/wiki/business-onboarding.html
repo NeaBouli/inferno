@@ -702,7 +702,7 @@
         <li>Legal business registration (sole proprietor, LLC, GmbH, etc.)</li>
         <li>Willingness to define IFR lock requirements; 1,000 IFR is the current first-party starting baseline, not a protocol-wide hardcoded minimum</li>
         <li>Smartphone or tablet for QR scanner</li>
-        <li>Acceptance of IFR Builder Terms</li>
+        <li>Agreement to follow this onboarding guide and the exclusion criteria below (there is no separate terms document)</li>
       </ul>
 
       <h3>Exclusion Criteria</h3>
@@ -714,7 +714,7 @@
       </ul>
 
       <div class="callout">
-        <p><strong>Note:</strong> Eligibility is assessed during initial contact. Businesses that do not meet the minimum requirements or fall under exclusion criteria will not be onboarded.</p>
+        <p><strong>Note:</strong> These requirements apply to the hosted seller path. Registration there is self-service: the owner wallet signs, and there is no separate approval step. Businesses that fall under the exclusion criteria must not register. The open self-check below needs no registration at all, and neither path makes a business eligible for PartnerVault rewards.</p>
       </div>
 
       <!-- ========== Step 2: Technical Setup ========== -->
@@ -740,7 +740,8 @@ cd inferno/apps/benefits-network</code></pre>
         <li>Install dependencies and configure environment:
           <pre><code>cd backend && npm ci
 cp .env.example .env
-# Edit .env with your Business ID and API keys</code></pre>
+# Edit .env: CHAIN_ID, RPC_URL, SELLER_AUTH_DOMAIN, contract addresses,
+# ADMIN_SECRET and DATABASE_URL (no Business ID or API key is needed here)</code></pre>
         </li>
         <li>Start the backend server:
           <pre><code>npm run dev
@@ -753,12 +754,12 @@ npm run dev
         </li>
         <li>Verify the lock check endpoint works:
           <pre><code>curl http://localhost:3001/api/health
-# Expected: { "status": "ok" }</code></pre>
+# Expected: { "status": "ok", "chainId": &lt;configured CHAIN_ID&gt; }</code></pre>
         </li>
       </ol>
 
       <div class="callout-green callout">
-        <p><strong>Recommendation:</strong> Option A is suitable for 95% of businesses. Choose Option B only if you have a development team and need custom integrations.</p>
+        <p><strong>Recommendation:</strong> Option A is the recommended path for most businesses. Choose Option B only if you have a development team and need custom integrations.</p>
       </div>
 
       <!-- ========== Step 3: Tier Configuration ========== -->
@@ -859,8 +860,10 @@ npm run dev
       <!-- ========== Step 5: Go-Live Checklist ========== -->
       <h2>Step 5: Go-Live Checklist</h2>
 
+      <p>This checklist covers the hosted seller path. The open, read-only self-check needs none of these steps.</p>
+
       <ul class="checklist">
-        <li>Business registration completed and approved</li>
+        <li>Business registered in the hosted seller app (self-service, signed with the owner wallet; there is no approval step)</li>
         <li>Discount tiers configured (at least one tier active)</li>
         <li>Scanner URL bookmarked on POS device(s)</li>
         <li>Test scan performed with a known locked wallet</li>
