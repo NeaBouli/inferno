@@ -25,6 +25,8 @@ on:
       - 'scripts/check-cwa-remediation-register.cjs'
       - 'scripts/test-cwa-content-coherence.cjs'
       - 'scripts/test-docs-truth.cjs'
+      - 'scripts/test-ifr-benefits-widget.cjs'
+      - 'apps/benefits-network/frontend/src/components/WalletStatus.tsx'
       - 'deployments/mainnet.json'
       - 'scripts/check-sitemap-anchors.cjs'
       - 'scripts/check-july-audit-remediation-register.cjs'
@@ -81,6 +83,8 @@ on:
       - 'scripts/check-cwa-remediation-register.cjs'
       - 'scripts/test-cwa-content-coherence.cjs'
       - 'scripts/test-docs-truth.cjs'
+      - 'scripts/test-ifr-benefits-widget.cjs'
+      - 'apps/benefits-network/frontend/src/components/WalletStatus.tsx'
       - 'deployments/mainnet.json'
       - 'scripts/check-sitemap-anchors.cjs'
       - 'scripts/check-july-audit-remediation-register.cjs'
@@ -317,6 +321,9 @@ jobs:
 
       - name: Run Web3 write-flow suite
         run: npm run test:web3-write
+
+      - name: Verify serverless IFR Benefits widget rules and published SRI
+        run: node scripts/test-ifr-benefits-widget.cjs
 
       - name: Run Landing live transparency and Wiki shell suite
         run: npm run test:landing-wiki-ui
