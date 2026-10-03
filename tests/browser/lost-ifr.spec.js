@@ -42,7 +42,7 @@ test("static markup shows the verified lost figure, labelled as not burned", asy
   await expect(card).toContainText("Permanently Lost IFR");
   await expect(card).toContainText("not burned");
   await expect(card).toContainText("still counted in totalSupply");
-  await expect(card.locator('a[href="wiki/commitment-vault.html"]')).toHaveCount(1);
+  await expect(card.locator('a[href="wiki/commitment-vault-compensation.html"]')).toHaveCount(1);
   await expect(card.locator('a[href="wiki/transparency.html#lost-ifr"]')).toHaveCount(1);
   await expectVerifiedBaseline(page);
 });
@@ -126,17 +126,34 @@ test("mobile: the lost card fits without horizontal scroll", async ({ page }) =>
 
 // Owner decision 2026-10-03: permanently lost IFR is a black "dead" segment of the live distribution,
 // removed from the CommitmentVault segment (no double count), and Live Supply = supply − dead.
-async function answerProxyFull(page) {
+// Every balance label the production API returns (values from a 2026-10-03 live read).
+const FULL_BALANCES = {
+  Deployer: { raw: "248001307527159", formatted: 248001.307527159 },
+  LPReserveSafe: { raw: "400600000000000000", formatted: 400600000 },
+  GnosisSafe: { raw: "0", formatted: 0 },
+  CommunitySafe: { raw: "7900000000000000", formatted: 7900000 },
+  Vesting: { raw: "150000000000000000", formatted: 150000000 },
+  LiquidityReserve: { raw: "200000000000000000", formatted: 200000000 },
+  PartnerVault: { raw: "40000000000000000", formatted: 40000000 },
+  BootstrapVaultV3: { raw: "1", formatted: 1e-9 },
+  BuybackVault: { raw: "0", formatted: 0 },
+  BurnReserve: { raw: "0", formatted: 0 },
+  FeeRouterV1: { raw: "724992668043224", formatted: 724992.668043224 },
+  IFRLock: { raw: "2000000000000", formatted: 2000 },
+  CommitmentVault: { raw: "27795535918948719", formatted: 27795535.918948717 },
+  LendingVault: { raw: "0", formatted: 0 },
+};
+async function answerProxyWith(page, supplyBody, balances, extra) {
   await page.route(`${PROXY}/api/ifr/supply`, (route) => route.fulfill({
-    contentType: "application/json", body: JSON.stringify({ totalSupply: 996687518.33, burned: 3312481.67 }),
+    contentType: "application/json", body: JSON.stringify(supplyBody),
   }));
   await page.route(`${PROXY}/api/ifr/balances`, (route) => route.fulfill({
     contentType: "application/json",
-    body: JSON.stringify({ balances: {
-      FeeRouterV1: { raw: "724992668043224", formatted: 724992.668043224 },
-      CommitmentVault: { raw: "27795535918948719", formatted: 27795535.918948717 },
-    } }),
+    body: JSON.stringify(Object.assign({ balances, ifrLock: { unlockedFormatted: 0 } }, extra || {})),
   }));
+}
+async function answerProxyFull(page) {
+  await answerProxyWith(page, { totalSupply: 996687518.33, burned: 3312481.67 }, FULL_BALANCES);
 }
 
 test("distribution shows a black dead segment, splits CommitmentVault without double count, and live supply", async ({ page }) => {
@@ -206,4 +223,50 @@ test("mobile: the distribution donut with the dead segment stays visible", async
   await expect(page.locator("#dist-donut")).toBeVisible();
   const box = await page.locator("#dist-donut").boundingBox();
   expect(box.width).toBeGreaterThan(200);
+});
+
+// T-217 follow-up: a failed or unavailable read must render N/A, never 0, and the chart must not show
+// wrong proportions when some inputs are missing.
+test("unavailable balances render N/A, not 0, and the chart shows a partially unavailable state", async ({ page }) => {
+  await blockNetwork(page);
+  const partial = Object.assign({}, FULL_BALANCES, {
+    Vesting: { raw: null, formatted: null, error: "unavailable" },
+    LendingVault: { raw: null, formatted: null, error: "unavailable" },
+  });
+  delete partial.PartnerVault; // missing entry
+  await answerProxyWith(page, { totalSupply: 996687518.33, burned: 3312481.67 }, partial, { incomplete: true, unavailable: ["Vesting", "LendingVault"] });
+  await page.goto("/");
+  await page.locator("#live-distribution").scrollIntoViewIfNeeded();
+  const rest = page.locator('[data-dist-cat="rest"]');
+  await expect(rest).toHaveAttribute("data-dist-state", "unavailable", { timeout: 20000 });
+  await expect(rest).toContainText("N/A");
+  await expect(rest.locator("[data-dist-swatch]")).toHaveCSS("background-color", "rgb(82, 82, 91)");
+  for (const key of ["vesting", "partner", "lendingAvailable"]) {
+    const row = page.locator(`[data-dist-cat="${key}"]`);
+    await expect(row).toContainText("N/A");
+    await expect(row).toHaveAttribute("data-dist-value", "");
+  }
+  await expect(page.locator('[data-live-key="protocol-locked"]').first()).toHaveText("N/A");
+  await expect(page.locator('[data-live-key="lending-available-stat"]').first()).toHaveText("N/A");
+  await expect(page.locator('[data-live-key="card-vesting"]').first()).not.toHaveText(/^0/);
+  await expect(page.locator(".live-status").first()).toContainText("Partially live");
+  // Dead segment and live supply still use the exact values that are available.
+  expect(Number(await page.locator('[data-dist-cat="dead"]').getAttribute("data-dist-value"))).toBeCloseTo(27143460.66, 2);
+  await expect(page.locator("#donut-live-supply")).toHaveText("Live 969.5M");
+});
+
+test("supply endpoint fields permanentlyLostRaw/liveSupplyRaw are used when the balances read lacks FeeRouterV1", async ({ page }) => {
+  await blockNetwork(page);
+  const noFee = Object.assign({}, FULL_BALANCES);
+  delete noFee.FeeRouterV1;
+  await answerProxyWith(page, {
+    totalSupply: 996687518.33, burned: 3312481.67,
+    permanentlyLostRaw: "27218467994338353", liveSupplyRaw: "969469050335661647",
+  }, noFee);
+  await page.goto("/");
+  await page.locator("#live-distribution").scrollIntoViewIfNeeded();
+  await expect(page.locator('[data-dist-cat="dead"]')).toBeVisible({ timeout: 20000 });
+  expect(Number(await page.locator('[data-dist-cat="dead"]').getAttribute("data-dist-value"))).toBeCloseTo(27218467.99, 2);
+  await expect(page.locator("#donut-live-supply")).toHaveText("Live 969.5M");
+  await expect(page.locator('[data-lost-ifr-value]')).toHaveText("27,218,467.99 IFR");
 });
