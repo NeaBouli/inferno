@@ -148,14 +148,14 @@ remains the only place where agenda items and vote outcomes are published.
 ## Lane 5 — Exchange fee exemption, incentives and governance role
 
 - **Current truth:** the CEX transfer-fee exemption policy was approved on
-  26.08.2026 (vote 4-1); no exchange address is active yet. Exchange IFR
-  incentives (EX-01) and any exchange governance role (EX-02) are undated
-  discussion drafts. No exchange has Council membership or TreasurySafe
-  permissions.
-- **Decision needed:** per-exchange address verification procedure; whether
-  any incentive exists (none, integration pilot or liquidity pilot) and its
-  source and ceiling; whether exchanges get no role (Option A) or at most two
-  disclosed non-voting advisers without Safe permissions (Option B).
+  26.08.2026 (vote 4-1); no exchange address is active yet. EX-01 was
+  approved on 2026-10-04 with 3 YES (G.M., M.G., Y.K.): exchanges receive no
+  IFR incentives from any project pool (policy decision, no on-chain action).
+  EX-02 (governance role) is an open ballot without a deadline. No exchange has
+  Council membership or TreasurySafe permissions.
+- **Decision needed:** EX-02 outcome: whether exchanges get no role (Option A)
+  or at most two disclosed non-voting advisers without Safe permissions
+  (Option B). Votes: [Council Votes](wiki/council-votes.html).
 - **Prerequisites:** verified exchange addresses; conflict review;
   returnable/escrow terms for any liquidity mandate.
 - **Dependencies:** Lane 4 (PartnerVault as a possible integration source);

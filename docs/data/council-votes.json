@@ -65,7 +65,8 @@
         "A.M.",
         "Y.K.",
         "A.P."
-      ]
+      ],
+      "note": "Approved on 2026-10-04 with 3 YES (G.M., M.G., Y.K.). Policy decision; no on-chain action. A future exchange incentive requires a new Council proposal."
     },
     {
       "id": "EX-02",
@@ -134,6 +135,44 @@
       "etherscan": "https://etherscan.io/verifySig/339715",
       "messageHash": "0x36882b11a781df3f53401e4da19c04b8b51309f592c015d99b2cc3945955240c",
       "signature": "0x4b1e511791da3e63f01a3b85052eaceda1b3218c781f4d41bcebfdda19567d35096bf6a122c5859d0fb0c8428424869b186f362cadfb8f1b9175600b782c1b121b"
+    },
+    {
+      "ballot": "EX-01",
+      "signer": "M.G.",
+      "address": "0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4",
+      "choice": "YES",
+      "etherscan": "https://etherscan.io/verifySig/339733",
+      "messageHash": "0x36882b11a781df3f53401e4da19c04b8b51309f592c015d99b2cc3945955240c",
+      "signature": "0x0eaf4ebae813bd9840613820f0a9d8c00ed91d467b92278c37295cf0667ceedf1bbf0adaa4e4a2e1470aa489c95b0d6b93e2baa38ef49bed32d95ccfe20828ae1b"
+    },
+    {
+      "ballot": "EX-01",
+      "signer": "Y.K.",
+      "address": "0xA0860f872a9cAB34817D9a764e71ab43B942b275",
+      "choice": "YES",
+      "etherscan": "https://etherscan.io/verifySig/339736",
+      "messageHash": "0x36882b11a781df3f53401e4da19c04b8b51309f592c015d99b2cc3945955240c",
+      "signature": "0x20fae48b6cc9b6e97ba463806144b8bc58c8dea5940432d43067de319a453a2576b00b38a6a9546071b78e1a4f60414112d3851fbc03eb0695101ae507086fa31b"
+    },
+    {
+      "ballot": "EX-02",
+      "signer": "M.G.",
+      "address": "0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4",
+      "choice": "ABSTAIN",
+      "etherscan": "https://etherscan.io/verifySig/339732",
+      "messageHash": "0x59c0d113c9d265bf8c8c04a53e5249b2c3179f30b692bbcd184a455a76e096cc",
+      "signature": "0x80e1b9d300de8e5101b64f1f241f91ad38a5afdf749d11e6dfb6baae0c3fac3f558e5ad01c63242944b1dc8866016dfb12a4c0e5b8798014e5212ee50a9e6f781c",
+      "abstention": true
+    },
+    {
+      "ballot": "EX-02",
+      "signer": "Y.K.",
+      "address": "0xA0860f872a9cAB34817D9a764e71ab43B942b275",
+      "choice": "ABSTAIN",
+      "etherscan": "https://etherscan.io/verifySig/339734",
+      "messageHash": "0x59c0d113c9d265bf8c8c04a53e5249b2c3179f30b692bbcd184a455a76e096cc",
+      "signature": "0xd18568ef77f2ce72ed9c6fb951203578a942ad5470cd4b079589c6b0673ea752615f5f76beb1bd552f8d1452702b4205944d6973bb87b37f9c9df175986d32c41c",
+      "abstention": true
     }
   ]
 }
