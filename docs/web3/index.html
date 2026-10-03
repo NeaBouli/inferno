@@ -2025,10 +2025,8 @@
           <label for="lock-condition">Condition</label>
           <select id="lock-condition" data-lock-condition>
             <option value="0" selected>Time only</option>
-            <option value="1">Price only</option>
-            <option value="2">Time OR price</option>
-            <option value="3">Time AND price</option>
           </select>
+          <p class="protocol-note" data-price-locks-disabled>Price-based locks are disabled. CommitmentVault V1 cannot evaluate prices (see CV-01). Time locks only; new time locks move to CommitmentVault V2 after its fee exemption is executed.</p>
         </div>
         <div class="protocol-field" data-lock-time-field>
           <label for="lock-unlock-date">Unlock date</label>
@@ -2791,9 +2789,11 @@
 
       function getCommitmentPlan() {
         const totalAmount = parseIFRInput(lockAmount.value);
-        const cType = Number(lockCondition ? lockCondition.value : 0);
-        const needsTime = cType === 0 || cType === 2 || cType === 3;
-        const needsPrice = cType === 1 || cType === 2 || cType === 3;
+        const cType = Number(lockCondition ? lockCondition.value : NaN);
+        // CV-01: V1 can never evaluate a price. Only TIME_ONLY (0) may be submitted, also when vault state is not loaded.
+        if (cType !== 0) throw new Error("Price-based locks are disabled. CommitmentVault V1 cannot evaluate prices (see CV-01). Time locks only; new time locks move to CommitmentVault V2 after its fee exemption is executed.");
+        const needsTime = true;
+        const needsPrice = false;
         let unlockTime = 0;
         let p0Multiplier = 0;
 
@@ -3035,9 +3035,7 @@
         lockAllowance.textContent = formatIFR(allowance);
         commitmentBalance.textContent = formatIFR(locked);
         commitmentNote.textContent = totalTranches ? `${totalTranches} tranches` : "No tranches";
-        lockNote.textContent = priceOracleIsMissing
-          ? "Time-only locks are available. Price-condition locks are disabled until the CommitmentVault price oracle is configured on-chain."
-          : `Price-condition locks are available. Oracle: ${shortAddress(priceOracle)}.`;
+        lockNote.textContent = "Time-only locks are available. Price-based locks are disabled: CommitmentVault V1 cannot evaluate prices (CV-01).";
         renderTranches(tranches);
         lockStatus.textContent = tranches.length ? "Vault state loaded." : "No CommitmentVault tranches yet.";
       }
@@ -3091,7 +3089,8 @@
           lockStatus.textContent = plan.amounts.length === 1
             ? "Confirm the CommitmentVault lock transaction in your wallet."
             : `Confirm CommitmentVault tranche ${i + 1} of ${plan.amounts.length}.`;
-          const lockTx = await commitment.lock(plan.amounts[i], plan.cType, plan.unlockTime, plan.p0Multiplier);
+          if (plan.cType !== 0 || plan.p0Multiplier !== 0) throw new Error("Price-based locks are disabled. CommitmentVault V1 cannot evaluate prices (see CV-01). Time locks only; new time locks move to CommitmentVault V2 after its fee exemption is executed.");
+          const lockTx = await commitment.lock(plan.amounts[i], 0, plan.unlockTime, 0);
           lockStatus.textContent = `Waiting for tranche ${i + 1} confirmation...`;
           await lockTx.wait();
         }
