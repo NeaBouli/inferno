@@ -123,3 +123,87 @@ test("mobile: the lost card fits without horizontal scroll", async ({ page }) =>
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
   expect(overflow).toBeLessThanOrEqual(0);
 });
+
+// Owner decision 2026-10-03: permanently lost IFR is a black "dead" segment of the live distribution,
+// removed from the CommitmentVault segment (no double count), and Live Supply = supply − dead.
+async function answerProxyFull(page) {
+  await page.route(`${PROXY}/api/ifr/supply`, (route) => route.fulfill({
+    contentType: "application/json", body: JSON.stringify({ totalSupply: 996687518.33, burned: 3312481.67 }),
+  }));
+  await page.route(`${PROXY}/api/ifr/balances`, (route) => route.fulfill({
+    contentType: "application/json",
+    body: JSON.stringify({ balances: {
+      FeeRouterV1: { raw: "724992668043224", formatted: 724992.668043224 },
+      CommitmentVault: { raw: "27795535918948719", formatted: 27795535.918948717 },
+    } }),
+  }));
+}
+
+test("distribution shows a black dead segment, splits CommitmentVault without double count, and live supply", async ({ page }) => {
+  await blockNetwork(page);
+  await answerProxyFull(page);
+  await page.goto("/");
+  await page.locator("#live-distribution").scrollIntoViewIfNeeded();
+  const dead = page.locator('[data-dist-cat="dead"]');
+  await expect(dead).toBeVisible({ timeout: 20000 });
+  await expect(dead).toContainText("Permanently Lost (dead, not burned)");
+  await expect(dead.locator("[data-dist-swatch]")).toHaveCSS("background-color", "rgb(0, 0, 0)");
+  const deadValue = Number(await dead.getAttribute("data-dist-value"));
+  const commit = Number(await page.locator('[data-dist-cat="commitmentLocked"]').getAttribute("data-dist-value"));
+  expect(deadValue).toBeCloseTo(27143460.66, 2); // 26,418,467.99 CV-01 + 724,992.67 FeeRouterV1
+  expect(commit).toBeCloseTo(1377067.92, 2);    // 27,795,535.92 vault balance − CV-01: time tranches only
+  expect(commit + 26418467.99).toBeCloseTo(27795535.92, 1); // dead CV-01 part + live part = vault balance
+  await expect(page.locator('[data-live-key="live-supply-stat"]').first()).toHaveText("969.5M");
+  await expect(page.locator("#donut-live-supply")).toHaveText("Live 969.5M");
+});
+
+test("live supply never renders 0 when the supply read fails", async ({ page }) => {
+  await blockNetwork(page);
+  await page.goto("/");
+  await page.locator("#live-distribution").scrollIntoViewIfNeeded();
+  await expect(page.locator(".live-updated-at").first()).toHaveText("Connection failed", { timeout: 20000 });
+  await expect(page.locator("#donut-live-supply")).not.toHaveText(/^Live 0/);
+  await expect(page.locator('[data-live-key="lost-ifr-stat"]')).toHaveText("27.1M");
+});
+
+test("a slice smaller than the segment gap does not paint the whole ring", async ({ page }) => {
+  await blockNetwork(page);
+  await answerProxyFull(page); // CommitmentVault time tranches are only ~0.14% of genesis
+  await page.goto("/");
+  await page.locator("#live-distribution").scrollIntoViewIfNeeded();
+  await expect(page.locator('[data-dist-cat="dead"]')).toBeVisible({ timeout: 20000 });
+  const amberShare = await page.evaluate(() => {
+    const c = document.getElementById("dist-donut"); const x = c.getContext("2d");
+    const r = c.width / 2 - 10, cx = c.width / 2, cy = c.height / 2; let amber = 0, n = 0;
+    for (let a = 0; a < 360; a += 2) {
+      const t = (a * Math.PI) / 180, px = x.getImageData(cx + Math.cos(t) * r * 0.8, cy + Math.sin(t) * r * 0.8, 1, 1).data;
+      n++; if (px[0] === 251 && px[1] === 191 && px[2] === 36) amber++;
+    }
+    return amber / n;
+  });
+  expect(amberShare).toBeLessThan(0.05);
+});
+
+test("segments sum to genesis; circulating remainder is neutral and distinct from the black dead segment", async ({ page }) => {
+  await blockNetwork(page);
+  await answerProxyFull(page);
+  await page.goto("/");
+  await page.locator("#live-distribution").scrollIntoViewIfNeeded();
+  await expect(page.locator('[data-dist-cat="rest"]')).toBeVisible({ timeout: 20000 });
+  const values = await page.$$eval("[data-dist-cat]", (els) => els.map((e) => Number(e.getAttribute("data-dist-value"))));
+  expect(values.reduce((a, b) => a + b, 0)).toBeCloseTo(1000000000, 0); // burned + holdings + dead + rest = genesis
+  await expect(page.locator('[data-dist-cat="rest"] [data-dist-swatch]')).toHaveCSS("background-color", "rgb(214, 207, 196)");
+  await expect(page.locator('[data-dist-cat="rest"]')).toContainText("Wallets & DEX pool (circulating)");
+});
+
+test("mobile: the distribution donut with the dead segment stays visible", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await blockNetwork(page);
+  await answerProxyFull(page);
+  await page.goto("/");
+  await page.locator("#live-distribution").scrollIntoViewIfNeeded();
+  await expect(page.locator('[data-dist-cat="dead"]')).toBeVisible({ timeout: 20000 });
+  await expect(page.locator("#dist-donut")).toBeVisible();
+  const box = await page.locator("#dist-donut").boundingBox();
+  expect(box.width).toBeGreaterThan(200);
+});

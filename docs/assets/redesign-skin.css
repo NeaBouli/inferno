@@ -861,6 +861,10 @@ footer,
   .lost-ifr-card [data-lost-ifr-value] {
     font-size: 26px !important;
   }
+  /* Distribution legend rows (incl. the dead and circulating rows) stay out of the launcher band. */
+  #dist-legend {
+    padding-right: 56px !important;
+  }
 }
 
 @media (max-width: 900px) {

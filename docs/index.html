@@ -1191,7 +1191,7 @@
       .ifr-stars-container,
       .hero .coin-container,
       .hero .coin,
-      canvas {
+      canvas:not(#dist-donut) {
         display: none !important;
       }
 
@@ -1245,7 +1245,7 @@
 
     /* Accessibility: reduce motion */
     @media (prefers-reduced-motion: reduce) {
-      canvas { display: none !important; }
+      canvas:not(#dist-donut) { display: none !important; } /* the distribution donut is static data, not motion */
       *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
     }
   </style>
@@ -2004,6 +2004,7 @@ render();
             <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
               <div id="donut-supply" style="font-size:20px;font-weight:700;color:#fff;">---</div>
               <div style="font-size:11px;color:var(--text-muted);">Current Supply</div>
+              <div id="donut-live-supply" style="font-size:12px;font-weight:700;color:#047857;margin-top:4px;"></div>
             </div>
           </div>
           <div id="dist-legend" style="flex:1 1 auto;display:flex;flex-direction:column;gap:0.4rem;min-width:220px;">
@@ -2480,7 +2481,7 @@ render();
         <line x1="705" y1="370" x2="705" y2="408" stroke="#3b82f6" stroke-width="1" stroke-dasharray="4,3"/>
         <rect x="640" y="408" width="140" height="42" rx="10" fill="#0d1117" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="5,3"/>
         <text x="710" y="426" text-anchor="middle" fill="#3b82f6" font-size="10" font-weight="bold">CommitmentVault</text>
-        <text x="710" y="442" text-anchor="middle" fill="#6b7280" font-size="8" data-live-key="commitment-flow">47.9M locked &middot; 4 types</text>
+        <text x="710" y="442" text-anchor="middle" fill="#6b7280" font-size="8" data-live-key="commitment-flow">1.38M time-locked</text>
         <!-- Animated: User → CommitmentVault -->
         <circle r="2.5" fill="#3b82f6" opacity="0.7"><animateMotion dur="3s" repeatCount="indefinite" path="M705,370 L705,408"/></circle>
 
@@ -3567,7 +3568,8 @@ if (isLocked) {
   var CATS = [
     { key: 'burned',    label: '\uD83D\uDD25 Burned',             color: '#FF2D2D' },
     { key: 'ifrLock',   label: '\uD83D\uDD12 User Locks (IFRLock)', color: '#FF8C00' },
-    { key: 'commitmentLocked', label: '\uD83D\uDD12 CommitmentVault Locks', color: '#FBBF24' },
+    { key: 'commitmentLocked', label: '\uD83D\uDD12 CommitmentVault Locks (time tranches)', color: '#FBBF24' },
+    { key: 'dead',      label: '\u26AB Permanently Lost (dead, not burned)', color: '#000000', outline: '#d1d5db' },
     { key: 'lendingAvailable', label: '\uD83D\uDCB8 LendingVault Offers', color: '#22C55E' },
     { key: 'vesting',   label: '\u23F3 Team Vesting',             color: '#FFD700' },
     { key: 'liqRes',    label: '\uD83D\uDCA7 Liquidity Reserve',  color: '#00BFFF' },
@@ -3688,6 +3690,23 @@ if (isLocked) {
   }
   function baseUnitsToNumber(raw) { return Number(raw / 10000000n) / 100; } // compact display only
   function lostTotalRaw(feeRouterRaw) { return parseBaseUnits(LOST_IFR.cv01Raw) + feeRouterRaw; }
+  // Splits live balances into dead (CV-01 + FeeRouterV1) and live parts in 9-decimal base units.
+  // FeeRouterV1 falls back to the verified baseline when the live read is missing, malformed or lower.
+  function splitDead(feeRouterLiveRaw, commitmentRawStr, totalSupplyNum) {
+    var cv01 = parseBaseUnits(LOST_IFR.cv01Raw);
+    var baseline = parseBaseUnits(LOST_IFR.feeRouterRaw);
+    var liveFee = parseBaseUnits(feeRouterLiveRaw);
+    var fee = (liveFee !== null && liveFee >= baseline) ? liveFee : baseline;
+    var deadRaw = cv01 + fee;
+    var commitRaw = parseBaseUnits(commitmentRawStr);
+    var commitmentLive = (commitRaw !== null && commitRaw >= cv01) ? baseUnitsToNumber(commitRaw - cv01) : null;
+    var liveSupply = null;
+    if (typeof totalSupplyNum === 'number' && isFinite(totalSupplyNum) && totalSupplyNum > 0) {
+      var supplyRaw = BigInt(Math.round(totalSupplyNum * 100)) * 10000000n; // API gives a decimal number; cent precision
+      if (supplyRaw > deadRaw) liveSupply = baseUnitsToNumber(supplyRaw - deadRaw);
+    }
+    return { dead: baseUnitsToNumber(deadRaw), cv01: baseUnitsToNumber(cv01), commitmentLive: commitmentLive, liveSupply: liveSupply, deadRaw: deadRaw };
+  }
   function renderLostIFR(feeRouterLiveRaw) {
     var baseline = parseBaseUnits(LOST_IFR.feeRouterRaw);
     var liveRaw = parseBaseUnits(feeRouterLiveRaw);
@@ -3731,6 +3750,7 @@ if (isLocked) {
     setLive('ifrlock-pct',  pct(d.ifrLock, d.supply));
     setLive('commitment-locked', fmt(d.commitmentLocked || 0) + ' IFR');
     setLive('commitment-locked-stat', fmt(d.commitmentLocked || 0));
+    if (d.liveSupply != null) setLive('live-supply-stat', fmt(d.liveSupply));
     setLive('lending-available-stat', fmt(d.lendingAvailable || 0));
     setLive('lending-market-rate', d.lendingRate ? d.lendingRate + '/mo' : 'loading...');
     setLive('vesting',      fmt(d.vesting) + ' IFR (' + pct(d.vesting, d.supply) + ')');
@@ -3762,7 +3782,7 @@ if (isLocked) {
     setLive('card-buyback',    fmt(d.buyback) + ' IFR');
     setLive('card-burnres',    fmt(d.burnRes) + ' IFR');
     setLive('feerouter-flow',  fmt(d.feeRouter) + ' IFR fees held');
-    setLive('commitment-flow', fmt(d.commitmentLocked || 0) + ' locked · 4 types');
+    setLive('commitment-flow', fmt(d.commitmentLocked || 0) + ' time-locked · price locks disabled');
     setLive('lending-flow',    fmt(d.lendingAvailable || 0) + ' available');
   }
 
@@ -3777,7 +3797,7 @@ if (isLocked) {
     ctx.arc(cx, cy, outerR, 0, Math.PI * 2);
     ctx.arc(cx, cy, innerR, Math.PI * 2, 0, true);
     ctx.closePath();
-    ctx.fillStyle = '#1a1a1a';
+    ctx.fillStyle = REST_COLOR; // circulating wallets and DEX pool: neutral, never confusable with the black dead segment
     ctx.fill();
     var angle = -Math.PI / 2;
     CATS.forEach(function(cat) {
@@ -3785,18 +3805,21 @@ if (isLocked) {
       if (cat.key === 'supply') return;
       var slice = (val / GENESIS_SUPPLY) * Math.PI * 2;
       if (slice < 0.003) return;
-      var gap = 0.015;
+      // A gap wider than the slice would make arc() sweep the whole ring; tiny slices get no gap.
+      var gap = slice > 0.045 ? 0.015 : 0;
       ctx.beginPath();
       ctx.arc(cx, cy, outerR, angle + gap/2, angle + slice - gap/2);
       ctx.arc(cx, cy, innerR, angle + slice - gap/2, angle + gap/2, true);
       ctx.closePath();
       ctx.fillStyle = cat.color;
       ctx.fill();
+      if (cat.outline) { ctx.lineWidth = 3; ctx.strokeStyle = cat.outline; ctx.stroke(); }
       angle += slice;
     });
   }
 
   var NOT_YET_ACTIVE = { bootstrap: 1, buyback: 1, burnRes: 1, ifrLock: 1 };
+  var REST_COLOR = '#d6cfc4';
 
   function renderLegend(data) {
     var el = document.getElementById('dist-legend');
@@ -3809,10 +3832,16 @@ if (isLocked) {
       } else {
         detail = ' <strong style="color:#fff;">' + pct(val, GENESIS_SUPPLY) + '</strong> \u2014 ' + fmt(val);
       }
-      return '<div style="display:flex;align-items:center;gap:12px;">' +
-        '<div style="width:14px;height:14px;border-radius:3px;background:' + cat.color + ';flex-shrink:0;"></div>' +
+      return '<div data-dist-cat="' + cat.key + '" data-dist-value="' + val + '" style="display:flex;align-items:center;gap:12px;">' +
+        '<div data-dist-swatch style="width:14px;height:14px;border-radius:3px;background-color:' + cat.color + ';' + (cat.outline ? 'border:1px solid ' + cat.outline + ';box-sizing:border-box;' : '') + 'flex-shrink:0;"></div>' +
         '<span style="font-size:14px;color:#6F655A;">' + cat.label + detail + '</span></div>';
-    }).join('');
+    }).join('') + (function() {
+      var shown = CATS.reduce(function(acc, c) { return c.key === 'supply' ? acc : acc + (data[c.key] || 0); }, 0);
+      var rest = Math.max(0, GENESIS_SUPPLY - shown);
+      return '<div data-dist-cat="rest" data-dist-value="' + rest + '" style="display:flex;align-items:center;gap:12px;">' +
+        '<div data-dist-swatch style="width:14px;height:14px;border-radius:3px;background-color:' + REST_COLOR + ';border:1px solid #a8a29e;box-sizing:border-box;flex-shrink:0;"></div>' +
+        '<span style="font-size:14px;color:#6F655A;">\uD83D\uDCB1 Wallets &amp; DEX pool (circulating) <strong style="color:#fff;">' + pct(rest, GENESIS_SUPPLY) + '</strong> \u2014 ' + fmt(rest) + '</span></div>';
+    })();
   }
 
   function renderMetrics(data) {
@@ -3823,7 +3852,8 @@ if (isLocked) {
       { key: 'burned-stat',     label: 'Total Burned',    value: fmt(data.burned),    sub: 'Since genesis \u2014 decreasing forever', color: '#b3300b' },
       { key: 'lost-ifr-stat',   label: 'Permanently Lost', value: fmt(baseUnitsToNumber(lostTotalRaw(parseBaseUnits(LOST_IFR.feeRouterRaw)))), sub: 'Not burned \u2014 CV-01 + FeeRouterV1', color: '#92400e' },
       { key: 'protocol-locked', label: 'Protocol Locked', value: fmt(protocolLocked), sub: 'All non-circulating IFR secured', color: '#92400e' },
-      { key: 'commitment-locked-stat', label: 'CommitmentVault Locked', value: fmt(data.commitmentLocked || 0), sub: 'Live user locks on Mainnet', color: '#92400e' },
+      { key: 'commitment-locked-stat', label: 'CommitmentVault Locked', value: fmt(data.commitmentLocked || 0), sub: 'Time tranches only; CV-01 counted as permanently lost', color: '#92400e' },
+      { key: 'live-supply-stat', label: 'Live Supply', value: data.liveSupply != null ? fmt(data.liveSupply) : 'N/A', sub: 'Current supply excluding permanently lost IFR', color: '#065f46' },
       { key: 'lending-available-stat', label: 'LendingVault V1 Lender Offers', value: fmt(data.lendingAvailable || 0), sub: 'Retired: withdrawable by lenders; no borrowing activation planned or authorized', color: '#166534' },
       { key: '',                label: 'Current Supply',  value: fmt(data.supply),    sub: 'of 1B genesis',        color: '#fff'    },
       { key: '',                label: 'LP Reserve Safe', value: fmt(data.lpReserve), sub: 'LP allocation (3-of-5)',color: '#b3300b' },
@@ -3905,12 +3935,20 @@ if (isLocked) {
         lendingLent: 0,
         lendingRate: ''
       };
+      // Permanently lost IFR is shown as its own (black) segment and removed from the CommitmentVault
+      // segment, so nothing is counted twice. Base-unit BigInt math; dated fallback, never 0.
+      var split = splitDead(data.feeRouterRaw, bal.CommitmentVault && bal.CommitmentVault.raw, supply.totalSupply);
+      data.dead = split.dead;
+      data.commitmentLocked = split.commitmentLive != null ? split.commitmentLive : Math.max(0, (data.commitmentLocked || 0) - split.cv01);
+      data.liveSupply = split.liveSupply;
       liveDistributionData = data;
 
       var canvas = document.getElementById('dist-donut');
       if (canvas) drawDonut(canvas, data);
       var supplyEl = document.getElementById('donut-supply');
       if (supplyEl) supplyEl.textContent = fmt(data.supply);
+      var liveEl = document.getElementById('donut-live-supply');
+      if (liveEl) liveEl.textContent = data.liveSupply != null ? 'Live ' + fmt(data.liveSupply) : '';
       renderLegend(data);
       renderMetrics(data);
       updateLiveDisplay(data);
@@ -4016,8 +4054,11 @@ if (isLocked) {
         var total = Number(ethers.formatUnits(values[0], 9));
         var c2 = Number(ethers.formatUnits(values[1], 9));
         var tranches = values[2].toString();
-        if (liveDistributionData) {
-          liveDistributionData.commitmentLocked = total;
+        // totalLocked() still contains the CV-01 tranches; the distribution counts them as dead.
+        var cv01 = parseBaseUnits(LOST_IFR.cv01Raw);
+        var liveCommit = values[0] >= cv01 ? baseUnitsToNumber(values[0] - cv01) : null;
+        if (liveDistributionData && liveCommit !== null) {
+          liveDistributionData.commitmentLocked = liveCommit;
           renderLegend(liveDistributionData);
           renderMetrics(liveDistributionData);
           updateLiveDisplay(liveDistributionData);
@@ -4025,7 +4066,7 @@ if (isLocked) {
           if (canvas) drawDonut(canvas, liveDistributionData);
         }
         setLive('commitment-locked', fmt(total) + ' IFR');
-        setLive('commitment-locked-stat', fmt(total));
+        if (liveCommit !== null) setLive('commitment-locked-stat', fmt(liveCommit));
         setLive('card-commitment-locked', fmt(total) + ' IFR');
         setLive('c2-commitment-lock', fmt(c2) + ' IFR');
         setLive('c2-commitment-tranches', tranches + ' tranches');
