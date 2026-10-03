@@ -159,6 +159,30 @@ export function getBenefitTierFromRaw(
   return { level, key: tier ? tier.key : null, name: tier ? tier.name : "None", lockedRaw: locked.toString() };
 }
 
+// ─── Read errors ─────────────────────────────────────────────────────
+
+/**
+ * Thrown when an on-chain read fails. The SDK never turns a failed read into 0 or false,
+ * so a caller cannot mistake an RPC outage for "no IFR locked" or "not a builder".
+ */
+export class IFRReadError extends Error {
+  readonly read: string;
+  constructor(read: string, cause: unknown) {
+    super(`IFR read failed: ${read}${cause instanceof Error && cause.message ? ` (${cause.message})` : ""}`);
+    this.name = "IFRReadError";
+    this.read = read;
+    (this as { cause?: unknown }).cause = cause;
+  }
+}
+
+async function readOrThrow<T>(read: string, call: () => Promise<T>): Promise<T> {
+  try {
+    return await call();
+  } catch (error) {
+    throw new IFRReadError(read, error);
+  }
+}
+
 // ─── Legacy access tiers (deprecated) ────────────────────────────────
 
 /**
@@ -250,7 +274,7 @@ export class IFRClient {
     const [balanceRaw, lockedRaw] = await Promise.all([
       this.token.balanceOf(wallet),
       checkLocked
-        ? this.lockContract.lockedBalance(wallet).catch(() => 0n)
+        ? readOrThrow("IFRLock.lockedBalance", () => this.lockContract.lockedBalance(wallet))
         : Promise.resolve(0n),
     ]);
 
@@ -295,7 +319,7 @@ export class IFRClient {
 
     const [balanceRaw, lockedRaw] = await Promise.all([
       this.token.balanceOf(wallet),
-      this.lockContract.lockedBalance(wallet).catch(() => 0n),
+      readOrThrow("IFRLock.lockedBalance", () => this.lockContract.lockedBalance(wallet)),
     ]);
 
     const balance = Number(formatUnits(balanceRaw, IFR_DECIMALS));
@@ -324,22 +348,14 @@ export class IFRClient {
   /** Get locked IFR balance */
   async getLockedBalance(wallet: string): Promise<number> {
     if (!isAddress(wallet)) throw new Error("Invalid wallet address");
-    try {
-      const raw = await this.lockContract.lockedBalance(wallet);
-      return Number(formatUnits(raw, IFR_DECIMALS));
-    } catch {
-      return 0;
-    }
+    const raw = await readOrThrow("IFRLock.lockedBalance", () => this.lockContract.lockedBalance(wallet));
+    return Number(formatUnits(raw, IFR_DECIMALS));
   }
 
   /** Check if address is a registered builder */
   async isBuilder(address: string): Promise<boolean> {
     if (!isAddress(address)) throw new Error("Invalid address");
-    try {
-      return await this.registry.isBuilder(address);
-    } catch {
-      return false;
-    }
+    return readOrThrow("BuilderRegistry.isBuilder", () => this.registry.isBuilder(address));
   }
 
   /** Get total IFR supply */

@@ -79,6 +79,14 @@ export declare function validateTiers(tiers: readonly BenefitTier[]): bigint[];
 /** Highest tier reached by an exact locked amount (9-decimal base units); no rounding. */
 export declare function getBenefitTierFromRaw(lockedRaw: BigNumberish, tiers?: readonly BenefitTier[]): BenefitTierResult;
 /**
+ * Thrown when an on-chain read fails. The SDK never turns a failed read into 0 or false,
+ * so a caller cannot mistake an RPC outage for "no IFR locked" or "not a builder".
+ */
+export declare class IFRReadError extends Error {
+    readonly read: string;
+    constructor(read: string, cause: unknown);
+}
+/**
  * @deprecated Legacy hold+lock access tiers (wallet balance + locked, 500 / 2,000 / 10,000).
  * Not the project's benefit preset. Use `DEFAULT_TIERS` with `getBenefitTierFromRaw`. Removed in 1.0.
  */

@@ -24,7 +24,7 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
     for (var p in m) if (p !== "default" && !Object.prototype.hasOwnProperty.call(exports, p)) __createBinding(exports, m, p);
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.IFRClient = exports.TIER_NAMES = exports.TIER_THRESHOLDS = exports.DEFAULT_TIERS = exports.IFR_DECIMALS = exports.RAILWAY_API = exports.IFR_API = exports.MAINNET_ADDRESSES = void 0;
+exports.IFRClient = exports.TIER_NAMES = exports.TIER_THRESHOLDS = exports.IFRReadError = exports.DEFAULT_TIERS = exports.IFR_DECIMALS = exports.RAILWAY_API = exports.IFR_API = exports.MAINNET_ADDRESSES = void 0;
 exports.validateTiers = validateTiers;
 exports.getBenefitTierFromRaw = getBenefitTierFromRaw;
 exports.getTierFromAmount = getTierFromAmount;
@@ -102,6 +102,28 @@ function getBenefitTierFromRaw(lockedRaw, tiers = exports.DEFAULT_TIERS) {
     const tier = level ? tiers[level - 1] : null;
     return { level, key: tier ? tier.key : null, name: tier ? tier.name : "None", lockedRaw: locked.toString() };
 }
+// ─── Read errors ─────────────────────────────────────────────────────
+/**
+ * Thrown when an on-chain read fails. The SDK never turns a failed read into 0 or false,
+ * so a caller cannot mistake an RPC outage for "no IFR locked" or "not a builder".
+ */
+class IFRReadError extends Error {
+    constructor(read, cause) {
+        super(`IFR read failed: ${read}${cause instanceof Error && cause.message ? ` (${cause.message})` : ""}`);
+        this.name = "IFRReadError";
+        this.read = read;
+        this.cause = cause;
+    }
+}
+exports.IFRReadError = IFRReadError;
+async function readOrThrow(read, call) {
+    try {
+        return await call();
+    }
+    catch (error) {
+        throw new IFRReadError(read, error);
+    }
+}
 // ─── Legacy access tiers (deprecated) ────────────────────────────────
 /**
  * @deprecated Legacy hold+lock access tiers (wallet balance + locked, 500 / 2,000 / 10,000).
@@ -178,7 +200,7 @@ class IFRClient {
         const [balanceRaw, lockedRaw] = await Promise.all([
             this.token.balanceOf(wallet),
             checkLocked
-                ? this.lockContract.lockedBalance(wallet).catch(() => 0n)
+                ? readOrThrow("IFRLock.lockedBalance", () => this.lockContract.lockedBalance(wallet))
                 : Promise.resolve(0n),
         ]);
         const evaluated = evaluateAccessRaw(balanceRaw, lockedRaw, requiredRaw);
@@ -220,7 +242,7 @@ class IFRClient {
             throw new Error("Invalid wallet address");
         const [balanceRaw, lockedRaw] = await Promise.all([
             this.token.balanceOf(wallet),
-            this.lockContract.lockedBalance(wallet).catch(() => 0n),
+            readOrThrow("IFRLock.lockedBalance", () => this.lockContract.lockedBalance(wallet)),
         ]);
         const balance = Number((0, ethers_1.formatUnits)(balanceRaw, exports.IFR_DECIMALS));
         const locked = Number((0, ethers_1.formatUnits)(lockedRaw, exports.IFR_DECIMALS));
@@ -247,24 +269,14 @@ class IFRClient {
     async getLockedBalance(wallet) {
         if (!(0, ethers_1.isAddress)(wallet))
             throw new Error("Invalid wallet address");
-        try {
-            const raw = await this.lockContract.lockedBalance(wallet);
-            return Number((0, ethers_1.formatUnits)(raw, exports.IFR_DECIMALS));
-        }
-        catch {
-            return 0;
-        }
+        const raw = await readOrThrow("IFRLock.lockedBalance", () => this.lockContract.lockedBalance(wallet));
+        return Number((0, ethers_1.formatUnits)(raw, exports.IFR_DECIMALS));
     }
     /** Check if address is a registered builder */
     async isBuilder(address) {
         if (!(0, ethers_1.isAddress)(address))
             throw new Error("Invalid address");
-        try {
-            return await this.registry.isBuilder(address);
-        }
-        catch {
-            return false;
-        }
+        return readOrThrow("BuilderRegistry.isBuilder", () => this.registry.isBuilder(address));
     }
     /** Get total IFR supply */
     async getTotalSupply() {

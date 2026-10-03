@@ -64,6 +64,13 @@ const own = await client.getBenefitTier(wallet, [            // your own model
   the deprecated legacy hold+lock access tiers (balance + locked, 500 / 2,000 / 10,000). They remain
   for compatibility and are removed in 1.0.
 
+## Read Errors
+
+The SDK never turns a failed on-chain read into `0` or `false`. If a read fails, `checkAccess`, `getTier`,
+`getBenefitTier`, `getLockedBalance` and `isBuilder` reject with `IFRReadError` (its `read` field names the
+failed call, `cause` holds the original error). Treat it as "could not verify", not as "nothing locked" or
+"not a builder".
+
 ## Benefits Checkout
 
 `IFRBenefitsClient.createCheckout()` requests a one-time `sessions:create` challenge bound to

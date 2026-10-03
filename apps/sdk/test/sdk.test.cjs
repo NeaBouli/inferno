@@ -10,6 +10,7 @@ const {
   DEFAULT_TIERS,
   getBenefitTierFromRaw,
   validateTiers,
+  IFRReadError,
 } = require("../dist");
 
 const SELLER_DOMAIN = "shop.ifrunit.tech";
@@ -500,6 +501,28 @@ async function testBenefitTiers() {
   client.lockContract = { lockedBalance: async () => { throw new Error("rpc down"); } };
   await assert.rejects(client.getBenefitTier("0x000000000000000000000000000000000000dEaD"), /rpc down/);
   await assert.rejects(client.getBenefitTier("not-an-address"), /Invalid wallet/);
+
+  // No silent zeros/false on read failures (T-212b-data-integrity).
+  const dead = "0x000000000000000000000000000000000000dEaD";
+  const down = async () => { throw new Error("rpc down"); };
+  client.token = { balanceOf: async () => parseIFRAmount("10") };
+  client.lockContract = { lockedBalance: down };
+  for (const call of [
+    () => client.getLockedBalance(dead),
+    () => client.getTier(dead),
+    () => client.checkAccess({ wallet: dead, required: "1" }),
+  ]) {
+    await assert.rejects(call(), (error) => error instanceof IFRReadError && error.read === "IFRLock.lockedBalance" && /rpc down/.test(error.message));
+  }
+  // checkLocked:false does not read IFRLock at all.
+  const noLock = await client.checkAccess({ wallet: dead, required: "1", checkLocked: false });
+  assert.equal(noLock.hasAccess, true);
+  client.registry = { isBuilder: down };
+  await assert.rejects(client.isBuilder(dead), (error) => error instanceof IFRReadError && error.read === "BuilderRegistry.isBuilder");
+  client.registry = { isBuilder: async () => true };
+  assert.equal(await client.isBuilder(dead), true);
+  client.lockContract = { lockedBalance: async () => parseIFRAmount("2.5") };
+  assert.equal(await client.getLockedBalance(dead), 2.5);
 }
 
 async function main() {
