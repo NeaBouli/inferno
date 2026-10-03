@@ -33,19 +33,28 @@ app.use((_req, res, next) => {
 });
 
 // Public read-only discovery (business profiles, benefit rules, products) is readable from any
-// origin so partner websites can show their own benefit rules without running a server. GET/HEAD only,
-// no credentials; registered before the allowlist so it also answers preflights. Every write, seller
-// and session route keeps the origin allowlist below.
+// origin so partner websites can show their own benefit rules without running a server. Wildcard CORS
+// applies only to the exact discovery paths and only to GET/HEAD, plus the preflight for those methods;
+// every other method or path (writes, seller, session, future routes) keeps the origin allowlist.
+const PUBLIC_DISCOVERY_PATH = /^\/api\/businesses(?:\/catalog-index|\/[^/]+(?:\/rules|\/products)?)?\/?$/;
+const PUBLIC_DISCOVERY_METHODS = new Set(['GET', 'HEAD']);
 const publicDiscoveryCors = cors({ origin: '*', methods: ['GET', 'HEAD'], credentials: false });
-app.use('/api/businesses', publicDiscoveryCors);
 const allowlistCors = cors({
   origin: (
     process.env.ALLOWED_ORIGINS ||
     'http://localhost:3000,http://localhost:3001,https://shop.ifrunit.tech,https://web3.ifrunit.tech,https://ifrunit.tech'
   ).split(','),
 });
-const isPublicDiscovery = (path: string) => path === '/api/businesses' || path.startsWith('/api/businesses/');
-app.use((req, res, next) => (isPublicDiscovery(req.path) ? next() : allowlistCors(req, res, next)));
+export function isPublicDiscoveryRequest(method: string, path: string, preflightMethod?: string): boolean {
+  if (!PUBLIC_DISCOVERY_PATH.test(path)) return false;
+  if (PUBLIC_DISCOVERY_METHODS.has(method)) return true;
+  return method === 'OPTIONS' && PUBLIC_DISCOVERY_METHODS.has(String(preflightMethod || '').toUpperCase());
+}
+app.use((req, res, next) =>
+  isPublicDiscoveryRequest(req.method, req.path, req.header('access-control-request-method'))
+    ? publicDiscoveryCors(req, res, next)
+    : allowlistCors(req, res, next),
+);
 app.use('/api/admin', adminRateLimiter);
 app.use(express.json({ limit: '10kb' }));
 

@@ -20,7 +20,7 @@ jest.mock('../src/config', () => ({
 }));
 
 import { prisma } from '../src/services/sessionService';
-import { server } from '../src/index';
+import { server, isPublicDiscoveryRequest } from '../src/index';
 
 function baseUrl() {
   const address = server.address();
@@ -59,5 +59,52 @@ describe('public discovery CORS (serverless partner widget)', () => {
       const response = await fetch(`${baseUrl()}${path}`, { headers: { Origin: 'https://partner.example' } });
       expect(response.headers.get('access-control-allow-origin')).toBeNull();
     }
+  });
+
+  it('gives no wildcard to actual write methods on discovery paths from a foreign origin', async () => {
+    for (const path of ['/api/businesses', '/api/businesses/x', '/api/businesses/x/rules', '/api/businesses/x/products']) {
+      for (const method of ['POST', 'PUT', 'PATCH', 'DELETE']) {
+        const response = await fetch(`${baseUrl()}${path}`, {
+          method,
+          headers: { Origin: 'https://partner.example', 'Content-Type': 'application/json' },
+          body: '{}',
+        });
+        expect(response.headers.get('access-control-allow-origin')).toBeNull();
+      }
+    }
+  });
+
+  it('keeps normal allowlist handling for write methods from an allowed origin', async () => {
+    const response = await fetch(`${baseUrl()}/api/businesses/x`, {
+      method: 'POST',
+      headers: { Origin: 'https://shop.ifrunit.tech', 'Content-Type': 'application/json' },
+      body: '{}',
+    });
+    expect(response.headers.get('access-control-allow-origin')).toBe('https://shop.ifrunit.tech');
+  });
+
+  it('refuses a wildcard preflight for write methods and for non-discovery sub-paths', async () => {
+    const write = await fetch(`${baseUrl()}/api/businesses/x/rules`, {
+      method: 'OPTIONS',
+      headers: { Origin: 'https://partner.example', 'Access-Control-Request-Method': 'POST' },
+    });
+    expect(write.headers.get('access-control-allow-origin')).toBeNull();
+    const deeper = await fetch(`${baseUrl()}/api/businesses/x/rules/extra`, { headers: { Origin: 'https://partner.example' } });
+    expect(deeper.headers.get('access-control-allow-origin')).toBeNull();
+  });
+
+  it('classifies only exact discovery paths with GET/HEAD (or their preflight) as public', () => {
+    expect(isPublicDiscoveryRequest('GET', '/api/businesses')).toBe(true);
+    expect(isPublicDiscoveryRequest('HEAD', '/api/businesses/catalog-index')).toBe(true);
+    expect(isPublicDiscoveryRequest('GET', '/api/businesses/abc/rules')).toBe(true);
+    expect(isPublicDiscoveryRequest('GET', '/api/businesses/abc/products')).toBe(true);
+    expect(isPublicDiscoveryRequest('OPTIONS', '/api/businesses/abc', 'get')).toBe(true);
+    expect(isPublicDiscoveryRequest('OPTIONS', '/api/businesses/abc', 'POST')).toBe(false);
+    expect(isPublicDiscoveryRequest('OPTIONS', '/api/businesses/abc')).toBe(false);
+    expect(isPublicDiscoveryRequest('POST', '/api/businesses')).toBe(false);
+    expect(isPublicDiscoveryRequest('DELETE', '/api/businesses/abc')).toBe(false);
+    expect(isPublicDiscoveryRequest('GET', '/api/businesses/abc/admin')).toBe(false);
+    expect(isPublicDiscoveryRequest('GET', '/api/businesses/abc/rules/x')).toBe(false);
+    expect(isPublicDiscoveryRequest('GET', '/api/seller/auth-message')).toBe(false);
   });
 });
