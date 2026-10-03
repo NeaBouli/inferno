@@ -45,6 +45,9 @@ jobs:
       - name: Verify Hardhat 3 script runtime
         run: npm run test:hardhat-runtime
 
+      - name: Verify pool fee receiver Safe batch builder (Lane 3, CWA-02)
+        run: node scripts/test-pool-fee-receiver-proposal.cjs
+
       - name: Verify Mocha serializer override
         run: npm run test:mocha-serializer
 
