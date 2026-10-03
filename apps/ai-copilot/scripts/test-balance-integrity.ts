@@ -3,7 +3,9 @@ import assert from "node:assert/strict";
 import {
   balanceEntry,
   explorerBalanceEntry,
+  CV01_LOST_RAW,
   finalizeBalances,
+  lostSupply,
   parseAddressParam,
   requireBaseUnits,
   unavailableEntry,
@@ -77,5 +79,22 @@ for (const bad of [
 ]) {
   assert.equal(parseAddressParam(bad), null, `${String(bad)} must be rejected`);
 }
+
+// Permanently lost / live supply: exact base units, unavailable (never 0) when FeeRouterV1 cannot be read.
+assert.equal(CV01_LOST_RAW, 26418467994338353n);
+const lost = lostSupply("996687518329891940", balanceEntry(724992668043224n));
+assert.equal(lost.permanentlyLostError, null);
+assert.equal(lost.permanentlyLostRaw, "27143460662381577");
+assert.equal(lost.liveSupplyRaw, (996687518329891940n - 27143460662381577n).toString());
+assert.equal(lost.liveSupplyRaw, "969544057667510363");
+assert.equal(lost.permanentlyLostBreakdown.feeRouterV1Raw, "724992668043224");
+assert.equal(lost.permanentlyLost, 27143460.662381577);
+const lostDown = lostSupply("996687518329891940", unavailableEntry());
+assert.equal(lostDown.permanentlyLostError, "unavailable");
+assert.equal(lostDown.permanentlyLostRaw, null);
+assert.equal(lostDown.liveSupplyRaw, null);
+assert.equal(lostDown.liveSupply, null);
+assert.notEqual(lostDown.permanentlyLost, 0);
+assert.equal(lostSupply("996687518329891940", explorerBalanceEntry({ status: "0", result: "rate limit" })).liveSupply, null);
 
 console.log("[balance-integrity] PASS - failed reads stay null, incomplete responses flagged, addresses validated");

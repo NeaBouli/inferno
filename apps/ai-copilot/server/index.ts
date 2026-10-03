@@ -27,7 +27,7 @@ import {
   buildLiveWikiSection,
 } from "./live-wiki.js";
 import { LENDING_LOAN_ABI, serializeLendingLoan } from "./lending-loans.js";
-import { balanceEntry, explorerBalanceEntry, finalizeBalances, parseAddressParam, requireBaseUnits, unavailableEntry, type BalanceEntry } from "./balance-integrity.js";
+import { balanceEntry, explorerBalanceEntry, finalizeBalances, lostSupply, parseAddressParam, requireBaseUnits, unavailableEntry, type BalanceEntry } from "./balance-integrity.js";
 import {
   classifyDynamicIntent,
   buildDynamicDataFallback,
@@ -723,12 +723,21 @@ async function fetchSupplyData() {
   const totalSupply = parseInt(totalSupplyRaw, 10) / 10 ** IFR_DECIMALS;
   const burnAddressBalance = parseInt(burnReserveBalanceRaw, 10) / 10 ** IFR_DECIMALS;
   const burned = TOTAL_MINTED - totalSupply;
+  // Legacy semantics, unchanged: circulating = totalSupply - dead-address balance. It still includes
+  // permanently lost IFR; use liveSupply for totalSupply minus permanently lost.
   const circulating = totalSupply - burnAddressBalance;
+  const feeRouterData = await esApiFetch(
+    `&module=account&action=tokenbalance&contractaddress=${IFR_TOKEN}&address=${PROTOCOL_ADDRESSES.FeeRouterV1}&tag=latest`
+  ).catch(() => null) as { status?: string; result?: unknown } | null;
+  const lost = lostSupply(totalSupplyRaw, explorerBalanceEntry(feeRouterData));
   const response = {
-    totalMinted: TOTAL_MINTED, totalSupply, burnAddressBalance, burned, circulating,
+    totalMinted: TOTAL_MINTED, totalSupply, totalSupplyRaw, burnAddressBalance, burned, circulating,
+    ...lost,
+    incomplete: lost.permanentlyLostError !== null,
     timestamp: new Date().toISOString(), fetchedAt: Date.now(), source: "live" as const,
   };
-  setCache("supply", response);
+  // Never cache a response whose lost/live figures are unavailable as if they were live values.
+  if (!response.incomplete) setCache("supply", response);
   return response;
 }
 

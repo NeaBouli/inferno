@@ -64,3 +64,44 @@ export function parseAddressParam(input: unknown): string | null {
   if (!isAddress(input)) return null;
   return getAddress(input);
 }
+
+/**
+ * Permanently lost IFR (not burned; still counted in totalSupply): the CV-01 CommitmentVault V1
+ * price tranches that can never unlock, plus the FeeRouterV1 balance, which has no withdrawal path.
+ */
+export const CV01_LOST_RAW = 26418467994338353n; // 26,418,467.994338353 IFR (9 decimals)
+
+export type LostSupply =
+  | {
+      permanentlyLostRaw: string; permanentlyLost: number;
+      liveSupplyRaw: string; liveSupply: number;
+      permanentlyLostBreakdown: { cv01Raw: string; feeRouterV1Raw: string };
+      permanentlyLostError: null;
+    }
+  | {
+      permanentlyLostRaw: null; permanentlyLost: null;
+      liveSupplyRaw: null; liveSupply: null;
+      permanentlyLostBreakdown: { cv01Raw: string; feeRouterV1Raw: null };
+      permanentlyLostError: "unavailable";
+    };
+
+/** Exact base-unit arithmetic; a failed FeeRouterV1 read makes the lost/live figures unavailable, never 0. */
+export function lostSupply(totalSupplyRaw: string, feeRouter: BalanceEntry): LostSupply {
+  if (feeRouter.raw === null) {
+    return {
+      permanentlyLostRaw: null, permanentlyLost: null, liveSupplyRaw: null, liveSupply: null,
+      permanentlyLostBreakdown: { cv01Raw: CV01_LOST_RAW.toString(), feeRouterV1Raw: null },
+      permanentlyLostError: "unavailable",
+    };
+  }
+  const lost = CV01_LOST_RAW + BigInt(feeRouter.raw);
+  const live = BigInt(totalSupplyRaw) - lost;
+  return {
+    permanentlyLostRaw: lost.toString(),
+    permanentlyLost: parseFloat(formatUnits(lost, IFR_DECIMALS)),
+    liveSupplyRaw: live.toString(),
+    liveSupply: parseFloat(formatUnits(live, IFR_DECIMALS)),
+    permanentlyLostBreakdown: { cv01Raw: CV01_LOST_RAW.toString(), feeRouterV1Raw: feeRouter.raw },
+    permanentlyLostError: null,
+  };
+}
