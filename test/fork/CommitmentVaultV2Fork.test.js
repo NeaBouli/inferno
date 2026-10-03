@@ -1,14 +1,15 @@
 // CommitmentVault V2 repair rehearsal on a Mainnet fork (CWA-03 / CV-01).
-// Deploys the repository CommitmentVault (price conditions rejected) with the deployed Governance
-// as owner, runs the real Safe -> Governance -> InfernoToken.setFeeExempt flow with the on-chain
-// delay, and exercises the user path. Everything happens on the local fork; nothing reaches Mainnet.
+// Uses the deployed V2 at its pinned address; on a fork block before its deployment, the repository
+// CommitmentVault (price conditions rejected, Governance as owner) is placed at that address instead.
+// Runs the real Safe -> Governance -> InfernoToken.setFeeExempt flow with the on-chain delay and
+// exercises the user path. Everything happens on the local fork; nothing reaches Mainnet.
 // Run: HARDHAT_FORK=true HARDHAT_FORK_BLOCK_NUMBER=<recent block> MAINNET_RPC_URL=<rpc> npm run test:commitment-v2-fork
 import { expect } from "chai";
 import { createRequire } from "node:module";
 import { ethers, connection } from "../helpers/hardhat.js";
 
 const require = createRequire(import.meta.url);
-const { build } = require("../../scripts/commitment-vault-v2-proposal.cjs");
+const { build, V2 } = require("../../scripts/commitment-vault-v2-proposal.cjs");
 
 const IFR_TOKEN = "0x77e99917Eca8539c62F509ED1193ac36580A6e7B";
 const GOVERNANCE = "0xc43d48E7FDA576C5022d0670B652A622E8caD041";
@@ -43,8 +44,17 @@ describe("CommitmentVault V2 repair on a Mainnet fork", function () {
     [user] = await ethers.getSigners();
 
     const Vault = await ethers.getContractFactory("CommitmentVault");
-    v2 = await Vault.deploy(IFR_TOKEN, GOVERNANCE);
-    await v2.waitForDeployment();
+    if ((await ethers.provider.getCode(V2)) === "0x") {
+      // The generator accepts only the pinned V2, so the fresh vault's code and storage are moved there.
+      const fresh = await Vault.deploy(IFR_TOKEN, GOVERNANCE);
+      await fresh.waitForDeployment();
+      await connection.provider.request({ method: "hardhat_setCode", params: [V2, await ethers.provider.getCode(fresh.target)] });
+      for (let slot = 0; slot < 8; slot++) {
+        const value = await ethers.provider.getStorage(fresh.target, slot);
+        await connection.provider.request({ method: "hardhat_setStorageAt", params: [V2, ethers.toQuantity(slot), value] });
+      }
+    }
+    v2 = Vault.attach(V2);
 
     const reserve = await impersonate(LIQUIDITY_RESERVE);
     await token.connect(reserve).transfer(user.address, parse("50000"));
@@ -82,6 +92,7 @@ describe("CommitmentVault V2 repair on a Mainnet fork", function () {
 
   it("with the exemption, a TIME_ONLY lock keeps nominal accounting and unlocks after its time", async () => {
     const amount = parse("12000");
+    const lockedBefore = await v2.totalLocked();
     const latest = await ethers.provider.getBlock("latest");
     await token.connect(user).approve(v2.target, amount);
     await v2.connect(user).lock(amount, TIME_ONLY, latest.timestamp + 30 * 86400, 0);
@@ -93,6 +104,6 @@ describe("CommitmentVault V2 repair on a Mainnet fork", function () {
     const before = await token.balanceOf(user.address);
     await v2.connect(user).unlock(user.address, 0);
     expect((await token.balanceOf(user.address)) - before).to.equal(amount);
-    expect(await v2.totalLocked()).to.equal(0n);
+    expect(await v2.totalLocked()).to.equal(lockedBefore);
   });
 });

@@ -6,6 +6,7 @@
 //   node scripts/commitment-vault-v2-proposal.cjs <V2 address> [proposalId] [outDir]
 //
 // proposalId is printed by step 1 (Governance.proposalCount() before proposing).
+// Only the deployed V2 is accepted; any other address (including V1) is refused before a file is written.
 const fs = require("node:fs");
 const path = require("node:path");
 const { Interface, getAddress, isAddress } = require("ethers");
@@ -14,6 +15,7 @@ const CHAIN_ID = "1";
 const IFR_TOKEN = "0x77e99917Eca8539c62F509ED1193ac36580A6e7B";
 const GOVERNANCE = "0xc43d48E7FDA576C5022d0670B652A622E8caD041";
 const V1 = "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3";
+const V2 = "0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F"; // deployed 2026-10-02, block 26107296
 
 const token = new Interface(["function setFeeExempt(address account, bool exempt)"]);
 const governance = new Interface([
@@ -35,6 +37,7 @@ function build(v2Input, proposalId) {
   if (!isAddress(v2Input)) throw new Error("V2 address required");
   const v2 = getAddress(v2Input);
   if (v2 === getAddress(V1)) throw new Error("refusing: that is the V1 vault");
+  if (v2 !== V2) throw new Error(`refusing: ${v2} is not the deployed V2 ${V2}`);
   const inner = token.encodeFunctionData("setFeeExempt", [v2, true]);
   const files = {
     "cv01-v2-step1-propose.json": batch(
@@ -54,7 +57,7 @@ function build(v2Input, proposalId) {
   return { v2, inner, files };
 }
 
-module.exports = { build, IFR_TOKEN, GOVERNANCE };
+module.exports = { build, IFR_TOKEN, GOVERNANCE, V2 };
 
 if (require.main === module) {
   const [v2Arg, idArg, outArg] = process.argv.slice(2);

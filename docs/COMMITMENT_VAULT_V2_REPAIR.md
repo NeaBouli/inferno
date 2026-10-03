@@ -34,7 +34,8 @@ npm run test:commitment-v2-proposal
 
 The fork test checks the following against the **deployed** Governance and IFR token:
 
-- V2 is deployed with Governance as owner, without P0 or an oracle.
+- V2 at its pinned address is owned by Governance, without P0 or an oracle. From block 26107296 the fork uses the
+  deployed V2; on an earlier block the repository vault is placed at that address.
 - All three price-conditioned lock types are rejected.
 - The Safe executes the **exact bytes** of the generated batch files: propose, then a refused early execute, then
   execute after the on-chain Governance delay. After that, `InfernoToken.feeExempt(V2)` is `true`.
@@ -58,7 +59,7 @@ npx hardhat run scripts/deploy-commitment-vault.js --network mainnet
 ### 2. Generate the Safe batch files (anyone) — done (proposal id 17)
 
 ```sh
-node scripts/commitment-vault-v2-proposal.cjs <V2 address> <Governance.proposalCount()> ./cv01-safe
+node scripts/commitment-vault-v2-proposal.cjs 0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F 17 ./cv01-safe
 ```
 
 This writes `cv01-v2-step1-propose.json` and `cv01-v2-step2-execute.json` for the Safe Transaction Builder:
@@ -66,7 +67,9 @@ This writes `cv01-v2-step1-propose.json` and `cv01-v2-step2-execute.json` for th
 - **Step 1** calls `Governance.propose(InfernoToken, setFeeExempt(V2, true))`.
 - **Step 2** calls `Governance.execute(<id>)`.
 
-The script refuses the V1 address.
+The script accepts only the deployed V2 `0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F` and refuses every other
+address, including V1, before writing a file. For proposal #17 the inner call equals the on-chain
+`Governance.getProposal(17).data`; `npm run test:commitment-v2-proposal` pins those bytes.
 
 ### 3. Propose (Safe, 3-of-5) — done 2026-10-02 21:53 UTC
 
