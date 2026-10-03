@@ -60,7 +60,7 @@ Users lock IFR tokens in IFRLock -> receive builder-product access while the req
 ## Builder Ecosystem
 
 - **40M IFR** dedicated builder pool
-- Lock-triggered Creator Rewards (algo-based)
+- Partner rewards for verified checkout redemptions (planned, not active)
 - Milestone-based release + vesting
 - Builder tokens = DAO voting rights (Phase 4)
 - Open to all products -- permissionless integration

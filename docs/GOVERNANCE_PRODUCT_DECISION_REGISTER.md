@@ -116,11 +116,17 @@ remains the only place where agenda items and vote outcomes are published.
   deployed formula pays a percentage of the lock amount. No deployed
   mechanism refills PartnerVault ([spec](PARTNER_REWARDS_SPEC.md);
   [memo](PARTNERVAULT_REWARD_MEMO_2026-09-15.md), discussion draft only).
-- **Decision needed:** keep the lock-percentage formula or adopt a
-  checkout-based budget model as proposed in the memo; reward caps and pause
-  rule; vesting length by reward size; which backend or allowlist contract
-  may act as authorized caller; refill policy (none, or a funded source that
-  is actually implemented); pilot-partner count and selection criteria.
+- **Decision (2026-10-03, owner): model B.** Rewards are valued in EUR and paid
+  in IFR only for verified checkout redemptions at a registered pilot partner,
+  within a hard per-partner budget (PartnerVault allocation) and a global pilot
+  budget; no lock-percentage reward, no refill. Settlement per period through a
+  Governance `recordMilestone` proposal; no authorized caller. Rewards stay
+  disabled until the first pilot partner, which is activated by its own Safe
+  proposal ([policy](PARTNER_REWARDS_MODEL_B.md)).
+- **Decision needed (remaining):** EUR amount per redemption and budget per
+  pilot partner; global pilot budget; vesting length by budget size;
+  pilot-partner count and selection criteria. Formula, caller model and refill
+  policy are decided (model B, no caller, no refill).
 - **Prerequisites:** written reward policy; authorized-caller key custody
   separated from Safe signer keys; Benefits reward outbox tested against the
   chosen formula.

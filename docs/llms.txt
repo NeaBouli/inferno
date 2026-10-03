@@ -57,7 +57,7 @@ IFR includes a read-only AI Copilot assistant for general protocol and surface-s
 - BootstrapVaultV3: finalized on June 5, 2026 — community price discovery completed
 - LiquidityReserve: 200,000,000 IFR (20%) still held after the initial lock ended on September 1, 2026; 50,000,000 IFR per 90-day period is currently withdrawable by Governance, with 0 IFR withdrawn and no automatic LP deployment; the 50M cap is a Governance parameter changeable via setMaxWithdrawPerPeriod behind the 48-hour timelock, and only the 90-day period is immutable
 - Vesting (Team): 150,000,000 IFR (15%) — 12-month cliff, then 36-month linear release (48 months total)
-- PartnerVault: 40,000,000 IFR (4%) — Governance-locked builder rewards
+- PartnerVault: 40,000,000 IFR (4%) — Governance-locked partner reward pool, no refill; rewards not active. Decided model: IFR only for verified checkout redemptions at registered pilot partners, EUR-valued, fixed per-partner budget, settled by Governance proposal; locks alone earn nothing
 - Community Safe: 7,900,000 IFR (0.79%) — Operations reserve
 - Burned: ~2,326,120.908096145 IFR at block 25812380 — permanent deflation
 

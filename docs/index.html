@@ -1990,7 +1990,7 @@ render();
             <div><strong>LP Reserve Safe:</strong> multisig governed, no automatic unlock.</div>
             <div><strong>Liquidity Reserve:</strong> initial lock ended 01.09.2026; 200M IFR remains held and unused under a 50M-per-90-day cap.</div>
             <div><strong>Team Vesting:</strong> cliff until ~03.2027, then 36-month linear release.</div>
-            <div><strong>Builder Vault:</strong> released only via partner milestones and rewards.</div>
+            <div><strong>Builder Vault:</strong> no rewards paid yet; pilot partners are paid only for verified checkout redemptions within fixed budgets.</div>
           </div>
         </div>
       </div>
@@ -2152,15 +2152,15 @@ render();
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <span style="font-size:13px;font-weight:600;">&#x1F3D7;&#xFE0F; Builder Vault</span>
-            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(69,123,157,0.15);color:#1d4ed8;">Active</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(69,123,157,0.15);color:#1d4ed8;">Rewards inactive</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <a href="https://etherscan.io/address/0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#6F655A;text-decoration:none;">0xc6eb7714...4F7D</a>
             <button class="copy-btn" data-addr="0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D" style="font-size:10px;background:none;border:1px solid #333;color:#6F655A;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
           </div>
           <div style="font-size:13px;font-weight:600;color:#1d4ed8;" data-live-key="card-partner">loading&hellip;</div>
-          <div style="font-size:10px;color:#666;margin-top:2px;">Governance-locked. Flows only through real usage: when users lock IFR for a Builder product, a % is released as reward. Cannot be withdrawn directly.</div>
-          <div style="font-size:9px;color:#555;margin-top:4px;">&#x1F512; 40M IFR cannot be spent &mdash; only earned through user adoption</div>
+          <div style="font-size:10px;color:#666;margin-top:2px;">Governance-locked. Not active yet: pilot partners will be paid only for verified checkout redemptions, valued in EUR and paid in IFR within a fixed per-partner budget. Cannot be withdrawn directly.</div>
+          <div style="font-size:9px;color:#555;margin-top:4px;">&#x1F512; 40M IFR, no refill &mdash; paid out only for verified partner checkouts</div>
         </div>
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
@@ -2428,7 +2428,7 @@ render();
         <!-- Builder -->
         <rect x="20" y="420" width="110" height="42" rx="10" fill="#0d1117" stroke="#a78bfa" stroke-width="1" stroke-dasharray="4,3"/>
         <text x="75" y="438" text-anchor="middle" fill="#a78bfa" font-size="11">Builder</text>
-        <text x="75" y="454" text-anchor="middle" fill="#9ca3af" font-size="9">Creator Rewards</text>
+        <text x="75" y="454" text-anchor="middle" fill="#9ca3af" font-size="9">Partner rewards</text>
 
         <!-- Vesting Contract -->
         <rect x="650" y="80" width="130" height="42" rx="10" fill="#0d1117" stroke="#fbbf24" stroke-width="1.5"/>
@@ -2533,7 +2533,7 @@ render();
         <span class="eco-tag">Use Case</span>
         <div style="width: 60px; height: 60px; border-radius: 12px; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; background: rgba(255,107,0,0.12); font-size: 28px;">&#x1F3AC;</div>
         <h3>Creator &amp; Channel Access</h3>
-        <p>Content creators, YouTube channels and online communities can gate premium content behind IFR Lock &mdash; alongside or instead of traditional subscriptions. Fans lock IFR, creators earn rewards.</p>
+        <p>Content creators, YouTube channels and online communities can gate premium content behind IFR Lock &mdash; alongside or instead of traditional subscriptions. Fans lock IFR to unlock access; creator rewards are not active.</p>
       </a>
       <a href="https://shop.ifrunit.tech/" class="eco-card reveal" style="text-decoration: none; color: inherit;" aria-label="Open the live IFR Benefits customer and seller app">
         <span class="eco-tag">Use Case</span>
@@ -2557,7 +2557,7 @@ render();
       <div class="partner-step">
         <div class="partner-step-num">1</div>
         <h3>Register</h3>
-        <p>Register as a builder through Governance. Receive a PartnerVault allocation with lock-triggered Creator Rewards and integration support.</p>
+        <p>Register as a builder through Governance. Pilot partners can later receive a capped PartnerVault budget for verified checkout redemptions, plus integration support.</p>
       </div>
       <div class="partner-step">
         <div class="partner-step-num">2</div>
@@ -2621,7 +2621,7 @@ if (isLocked) {
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:28px;max-width:280px;flex:1;min-width:240px;">
         <div style="font-size:28px;margin-bottom:12px;">&#x1f3ea;</div>
         <h3 style="margin-bottom:8px;">Builder Mode</h3>
-        <p style="color:var(--text-muted);font-size:14px;">Benefits Network setup, QR-flow, Docker deployment, Creator Rewards explained.</p>
+        <p style="color:var(--text-muted);font-size:14px;">Benefits Network setup, QR-flow, Docker deployment, partner reward policy explained.</p>
       </div>
       <div style="background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:28px;max-width:280px;flex:1;min-width:240px;">
         <div style="font-size:28px;margin-bottom:12px;">&#x2699;</div>
@@ -2662,7 +2662,7 @@ if (isLocked) {
         <h3 style="margin-bottom:8px;color:var(--text-muted);">Creator Slot</h3>
         <p style="color:var(--text-muted);font-size:13px;">
           YouTube &times; IFR Lock hybrid access.<br>
-          Earn Creator Rewards for every locked fan.
+          Fans lock IFR for access; creator rewards are not active.
         </p>
         <a href="wiki/integration.html" style="color:var(--accent);font-size:13px;">
           &rarr; Become a Creator
@@ -2944,7 +2944,7 @@ if (isLocked) {
         <div class="roadmap-dot">3</div>
         <div class="roadmap-body">
           <h4>Phase 3 &mdash; Growth</h4>
-          <p>Builder Ecosystem Expansion. Guarded Buyback Automation. Creator Rewards &amp; FeeRouter. Developer SDK &amp; Documentation.</p>
+          <p>Builder Ecosystem Expansion. Guarded Buyback Automation. Partner Rewards (pilot, verified checkouts) &amp; FeeRouter. Developer SDK &amp; Documentation.</p>
         </div>
       </div>
       <div class="roadmap-item">

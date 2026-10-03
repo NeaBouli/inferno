@@ -70,7 +70,7 @@ Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every standard
 | Team Vesting | 15% | 150M IFR | 12-month cliff, 36-month linear vesting. 0 tokens available before March 2027. |
 | Treasury | 15% | 150M IFR | Original intent: genesis allocation to the Treasury Safe (3-of-5, `0x5ad6193...`). Current custody: the Treasury Safe holds 0 IFR — the full 150M funded BootstrapVaultV3 (144.75M IFR initial funding plus a 5.25M IFR top-up). No automatic refill path is deployed. |
 | Community & Grants | 6% | 60M IFR | Original intent: genesis allocation to the Community Safe (3-of-5); 57.9M arrived after the 2.5% burn and 1% pool fee on the non-exempt migration transfer. Current custody: 50M funded BootstrapVaultV3 (Plan B, 11.03.2026); the Community Safe holds the remaining 7.9M operational reserve. |
-| Builder Ecosystem | 4% | 40M IFR | PartnerVault contract. Lock-triggered Creator Rewards, milestone vesting. |
+| Builder Ecosystem | 4% | 40M IFR | PartnerVault contract. Partner rewards not active; planned only for verified checkout redemptions (model B). |
 
 Custody figures verified on-chain at block 26,065,893; the block-pinned breakdown lives on the [transparency page](https://ifrunit.tech/wiki/transparency.html).
 
@@ -118,14 +118,13 @@ The 14 protocol contracts above (LP token and deprecated BootstrapVault V1 exclu
 
 ## Builder Ecosystem
 
-Lock-triggered Creator Rewards: when users lock IFR for a builder's product, the builder earns a percentage from the 40M Builder Ecosystem Pool.
-- Hard bounds (contract): 5-25%
-- Policy target: 10-20%
-- Annual emission: default 4M IFR (bounds: 1-10M IFR)
-- Vesting: 6-12 months
-- Authorized caller whitelist for automated reward recording
-- Anti-double-count: each wallet can only be rewarded once per builder
-- Algorithmic emission throttle: reward rate scales down as more IFR is locked (1% → 50% lock ratio)
+Partner rewards are not active. Decided model (2026-10-03): pilot partners receive IFR from the 40M Builder Ecosystem Pool only for verified checkout redemptions, valued in EUR, within a fixed per-partner budget; a lock alone earns nothing ([policy](docs/PARTNER_REWARDS_MODEL_B.md)).
+
+- Settlement: per period by Governance proposal (`recordMilestone`), capped by the partner allocation
+- Vesting: 180-365 days per partner (contract bounds)
+- No refill of the 40M pool; no authorized caller
+- Unused contract path: `recordLockReward` (lock amount × `rewardBps`, 1500 bps configured, bounds 500-2500,
+  annual cap 4M IFR); the algorithmic throttle is inactive because `ifrLock` is unset
 
 Token holdings grant future DAO voting rights.
 
@@ -295,7 +294,8 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [YouTube Integration Guide](docs/YOUTUBE_INTEGRATION.md) — Hybrid Model B, Creator Gateway, Entitlement Config
 - [Security Policy](docs/SECURITY_POLICY.md) — Responsible Disclosure, bug bounty status (no program), Scope
 - [Tokenomics Model](docs/TOKENOMICS_MODEL.md) — Deflation curve, emission model, lock economics
-- [Builder Rewards Spec](docs/PARTNER_REWARDS_SPEC.md) — Reward formula, vesting, anti-gaming, builder types
+- [Partner Rewards Model B](docs/PARTNER_REWARDS_MODEL_B.md) — Current reward policy (verified checkout redemptions, budgets, settlement)
+- [Builder Rewards Spec](docs/PARTNER_REWARDS_SPEC.md) — PartnerVault contract mechanics (lock formula not used as policy)
 - [Benefits Network Test Guide](docs/BENEFITS_NETWORK_TEST.md) — E2E test, API endpoints, lock tiers
 - [Coverage Report](docs/COVERAGE_REPORT.md) — historical solidity-coverage snapshot, 05.03.2026 (99.45% Stmts, 90.79% Branch)
 - [Patch Guidelines](docs/PATCH-GUIDELINES.md) — Patch process, severity, versioning

@@ -107,7 +107,7 @@ Total supply: 1,000,000,000 IFR (1 billion, one-time, no minting)
 | Team (Vested) | 15% | 150M | 48-month vesting, 12-month cliff |
 | Treasury | 15% | 150M | Protocol development |
 | Community & Grants | 6% | 60M | Ecosystem building |
-| Builder Ecosystem | 4% | 40M | PartnerVault (lock-triggered rewards) |
+| Builder Ecosystem | 4% | 40M | PartnerVault (partner rewards, not active; verified checkouts only) |
 
 ### Community Fair Launch Model (CFLM)
 

@@ -1,5 +1,16 @@
 # Changelog
 
+## 3 October 2026 — Partner Rewards Model B (Lane 4)
+
+- Decision recorded: partner rewards are valued in EUR and paid in IFR only for verified checkout
+  redemptions at registered pilot partners, within a fixed per-partner budget, settled per Governance
+  `recordMilestone` proposal. No lock-percentage reward, no authorized caller, no refill.
+- Rewards remain inactive (0 partners, 0 rewarded). Policy: `docs/PARTNER_REWARDS_MODEL_B.md`.
+- Landing, Web3 page, wiki (integration, tokenomics, lock mechanism, FAQ, one-pager, press kit, protocol
+  plan, wallet guide, transparency, fair launch, contracts, business onboarding), Benefits seller copy,
+  Copilot knowledge, README and docs no longer promise lock-triggered creator rewards, a "revenue share"
+  of lock fees or a "10–20%" reward rate.
+
 ## 2 October 2026 — BuybackController Source Hardening
 
 - `execute()` is now `nonReentrant`. A nested call from the router reverts with the reentrancy

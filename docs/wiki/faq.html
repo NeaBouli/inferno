@@ -564,7 +564,7 @@
     {
       "@type": "Question",
       "name": "What is the BuilderRegistry?",
-      "acceptedAnswer": {"@type":"Answer","text":"BuilderRegistry.sol is an on-chain registry of verified IFR builders and integration partners, controlled exclusively by Governance (Timelock). Registered builders gain access to the Dev & Builder Telegram topic and are eligible for Creator Rewards via PartnerVault. The contract is deployed and verified on Ethereum Mainnet and Sepolia."}
+      "acceptedAnswer": {"@type":"Answer","text":"BuilderRegistry.sol is an on-chain registry of verified IFR builders and integration partners, controlled exclusively by Governance (Timelock). Registered builders gain access to the Dev & Builder Telegram topic and can become PartnerVault pilot partners (rewards not active yet). The contract is deployed and verified on Ethereum Mainnet and Sepolia."}
     },
     {
       "@type": "Question",
@@ -1037,7 +1037,7 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>What are Creator Rewards?</span><span class="icon">+</span></button>
-          <div class="faq-a">When a user locks IFR for a builder's product, the builder earns a percentage from the Builder Ecosystem Pool (40M IFR). The reward rate has hard bounds of 5&ndash;25% (governance target 10&ndash;20%). Rewards vest over 6&ndash;12 months. The system is designed so builder rewards are always less than user locks, creating net deflation.</div>
+          <div class="faq-a">Partner rewards are not active yet. Under the decided model, a registered pilot partner receives IFR from the Builder Ecosystem Pool (40M IFR, no refill) only for verified checkout redemptions, valued in EUR, within a fixed per-partner budget, vesting over 6&ndash;12 months. Locking IFR alone earns no reward, neither for the locker nor for a builder.</div>
         </div>
 
         <div class="faq-item">
@@ -1067,7 +1067,7 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>What is the BuilderRegistry?</span><span class="icon">+</span></button>
-          <div class="faq-a"><code>BuilderRegistry.sol</code> is an on-chain registry of verified IFR builders and integration partners. It is controlled exclusively by Governance (Timelock) and supports 4 categories: Creator, Integration, Tooling, and DAO.<br><br>Registered builders gain:<br>&bull; Access to the Dev &amp; Builder Telegram topic<br>&bull; Eligibility for Creator Rewards via the PartnerVault contract<br>&bull; On-chain verification status<br><br>To apply: <a href="https://ifrunit.tech/wiki/integration.html">ifrunit.tech/wiki/integration.html</a><br>Current status: deployed and verified on Ethereum Mainnet and Sepolia. Builder onboarding is governed through the Timelock process.</div>
+          <div class="faq-a"><code>BuilderRegistry.sol</code> is an on-chain registry of verified IFR builders and integration partners. It is controlled exclusively by Governance (Timelock) and supports 4 categories: Creator, Integration, Tooling, and DAO.<br><br>Registered builders gain:<br>&bull; Access to the Dev &amp; Builder Telegram topic<br>&bull; Eligibility to become a PartnerVault pilot partner (rewards not active yet)<br>&bull; On-chain verification status<br><br>To apply: <a href="https://ifrunit.tech/wiki/integration.html">ifrunit.tech/wiki/integration.html</a><br>Current status: deployed and verified on Ethereum Mainnet and Sepolia. Builder onboarding is governed through the Timelock process.</div>
         </div>
       </div>
 
@@ -1143,7 +1143,7 @@ const hasLock = await ifrLock.isLocked(walletAddress, ethers.parseUnits("1000", 
 
         <div class="faq-item">
           <button class="faq-q"><span>How do I onboard my business as a builder?</span><span class="icon">+</span></button>
-          <div class="faq-a">1. Read the <a href="https://ifrunit.tech/wiki/business-onboarding.html">Business Onboarding</a> guide<br>2. Set your lock threshold tiers (e.g., 1000 IFR = 10% discount)<br>3. Register through the builder onboarding process<br>4. After approval, a governance proposal adds you to the PartnerVault<br>5. You start earning Creator Rewards when users lock IFR for your product<br><br>Builders register through the onboarding process. Allocations are KPI- and lock-based, governed by Governance proposals. There are no fixed tier thresholds — all allocations are milestone-based and vested.</div>
+          <div class="faq-a">1. Read the <a href="https://ifrunit.tech/wiki/business-onboarding.html">Business Onboarding</a> guide<br>2. Set your lock threshold tiers (e.g., 1000 IFR = 10% discount)<br>3. Register through the builder onboarding process<br>4. After approval, a governance proposal adds you to the PartnerVault<br>5. As a pilot partner you can later receive IFR for verified checkout redemptions within your budget (not active yet)<br><br>Builders register through the onboarding process. Allocations are KPI- and lock-based, governed by Governance proposals. There are no fixed tier thresholds — all allocations are milestone-based and vested.</div>
         </div>
       </div>
 
@@ -1163,7 +1163,7 @@ const hasLock = await ifrLock.isLocked(walletAddress, ethers.parseUnits("1000", 
 
         <div class="faq-item">
           <button class="faq-q"><span>Are the 40M Builder Vault tokens locked?</span><span class="icon">+</span></button>
-          <div class="faq-a">Yes &mdash; but differently from other locked tokens. The 40M IFR in the Builder Vault (PartnerVault contract) <strong>cannot be withdrawn directly by anyone</strong>, including the team.<br><br>They can only flow out through real user adoption: when a user locks IFR for a Builder product, a percentage is automatically released as a reward for that Builder, then vests linearly over 6&ndash;12 months.<br><br>If no users ever lock IFR, all 40M remain locked in the contract permanently. This makes the Builder Vault a pure adoption incentive &mdash; not a team treasury. All parameters (reward rate, emission cap, vesting period) are controlled by Governance with a 48-hour timelock.</div>
+          <div class="faq-a">Yes &mdash; but differently from other locked tokens. The 40M IFR in the Builder Vault (PartnerVault contract) <strong>cannot be withdrawn directly by anyone</strong>, including the team.<br><br>They can only flow out as partner rewards, which are not active yet: pilot partners will be paid only for verified checkout redemptions within a fixed budget, settled by Governance proposal and vested over 6&ndash;12 months.<br><br>Unused IFR stays in the contract; there is no refill. This makes the Builder Vault a pure adoption incentive &mdash; not a team treasury. All parameters (reward rate, emission cap, vesting period) are controlled by Governance with a 48-hour timelock.</div>
         </div>
 
         <div class="faq-item">

@@ -1,5 +1,10 @@
 # Builder Rewards Specification — IFR PartnerVault
 
+> **Policy update (2026-10-03):** this spec describes the deployed contract mechanics. As project policy,
+> the lock-percentage formula below is **not used**; partner rewards are inactive and follow
+> [Model B](PARTNER_REWARDS_MODEL_B.md) (verified checkout redemptions, EUR-valued, fixed budgets,
+> Governance-settled milestones).
+
 ## Overview
 Builders (creators, businesses, developers) receive IFR rewards
 when users lock IFR tokens and reference the builder.

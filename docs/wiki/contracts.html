@@ -1997,6 +1997,7 @@ console.<span class="function">log</span>(<span class="string">"Since:"</span>, 
                 <strong>lock-triggered creator rewards</strong> (when a user locks IFR for a builder's product, the builder accrues
                 a reward of <code>lockAmount &times; rewardBps / 10000</code> from the pool).
                 Rewards vest linearly over 6&ndash;12 months with optional cliff.
+                Project policy (2026-10-03): the lock-triggered path is not used and no reward is active; pilot partners will be paid only for verified checkout redemptions through capped <code>recordMilestone</code> settlements.
             </p>
 
             <h3>Constructor</h3>
@@ -2233,7 +2234,7 @@ console.<span class="function">log</span>(<span class="string">"Reserve1:"</span
             <p>
                 On-chain registry for verified IFR builders and integration partners.
                 Registration and removal controlled exclusively by <strong>Governance (Timelock)</strong>.
-                Used by the Telegram Bot for topic access control and by PartnerVault for creator reward eligibility.
+                Used by the Telegram Bot for topic access control and for PartnerVault pilot-partner eligibility (rewards not active).
             </p>
 
             <h3>Key Functions</h3>
@@ -2309,7 +2310,7 @@ console.<span class="function">log</span>(<span class="string">"Reserve1:"</span
             <p>
                 The Telegram Bot reads <code>isBuilder(wallet)</code> to determine
                 <strong>Builder tier</strong> access (Dev &amp; Builder topic).
-                PartnerVault can query the registry for creator reward eligibility.
+                PartnerVault pilot partners are drawn from this registry (rewards not active).
             </p>
         </div>
 

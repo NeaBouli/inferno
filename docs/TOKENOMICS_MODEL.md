@@ -42,7 +42,7 @@ Assumption: 100,000 transfers/year at average of 1,000 IFR
 | Team | 15% | 150,000,000 | Vesting 12-48 months |
 | Treasury | 15% | 150,000,000 | Governance-controlled |
 | Community & Grants | 6% | 60,000,000 | Ecosystem growth |
-| Builder Ecosystem | 4% | 40,000,000 | PartnerVault (Creator Rewards) |
+| Builder Ecosystem | 4% | 40,000,000 | PartnerVault (partner rewards, not active) |
 
 ## PartnerVault Emission Model
 
@@ -58,13 +58,12 @@ At a constant annualEmissionCap of 4M IFR:
 - With rewardBps reduction to 10%: longer
 - With Algo-Throttle: automatic extension
 
-### Creator Reward Example:
-- User A locks: 10,000 IFR
-- Creator B rewardBps: 1500 (15%)
-- Creator B Reward: 1,500 IFR (from BuilderPool)
-- Net Effect: 10,000 locked - 1,500 reward = 8,500 net deflationary
-
-**Important: Reward < Lock -> always net deflationary**
+### Partner Reward Model (decided 2026-10-03, not active):
+- Trigger: verified checkout redemption at a registered pilot partner; a lock alone earns nothing
+- Valuation: EUR per redemption, paid in IFR at the published 7-day TWAP at settlement
+- Budget: fixed per partner (PartnerVault allocation); pool never refilled
+- Settlement: Governance proposal per period (`recordMilestone`)
+- The contract's lock formula (`lockAmount x rewardBps`) is not used. See [PARTNER_REWARDS_MODEL_B.md](PARTNER_REWARDS_MODEL_B.md).
 
 ## Lock Economics
 
