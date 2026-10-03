@@ -150,7 +150,7 @@ CommitmentVault V2 (CV-01 repair, deployed, not yet wired):
 [`0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F`](https://etherscan.io/address/0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F#code)
 — deployed 2026-10-02 21:22 UTC, block 26107296, TX
 [`0x9857a570...3ea0f7`](https://etherscan.io/tx/0x9857a5707b650b8828f41b893f91a10ff26d7990742e782bb0b7e86df23ea0f7),
-owner Governance, source commit `f29efddc`, Sourcify exact match. It accepts only `TIME_ONLY` locks. It joins the
+owner Governance, source commit `f29efddc`, Etherscan verified and Sourcify exact match. It accepts only `TIME_ONLY` locks. It joins the
 contract table after Governance proposal #17 (`setFeeExempt(V2, true)`) is executed and the interfaces switch
 (`docs/COMMITMENT_VAULT_V2_REPAIR.md` steps 4-5).
 
@@ -271,7 +271,7 @@ All ownable contracts transferred to Governance (48h Timelock). Parameter change
 | Create Uniswap V2 IFR/WETH LP | **Done** via BootstrapVaultV3 `finalise()` (05.06.2026), using 100M IFR + 0.030 ETH |
 | LP custody | **Done** — LP tokens remain in withdrawal-less BootstrapVaultV3; Mainnet Team.Finance path disabled |
 | Proposal #15: setFeeExempt(LP Token) | **Executed** (08.06.2026) |
-| CommitmentVault V2 deployed (CV-01 repair) | **Done** (02.10.2026) — [`0x8efae0C8...`](https://etherscan.io/address/0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F#code) — TX [`0x9857a570...`](https://etherscan.io/tx/0x9857a5707b650b8828f41b893f91a10ff26d7990742e782bb0b7e86df23ea0f7); Sourcify exact match, Etherscan source verification pending |
+| CommitmentVault V2 deployed (CV-01 repair) | **Done** (02.10.2026) — [`0x8efae0C8...`](https://etherscan.io/address/0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F#code) — TX [`0x9857a570...`](https://etherscan.io/tx/0x9857a5707b650b8828f41b893f91a10ff26d7990742e782bb0b7e86df23ea0f7); Etherscan verified (full solc input) and Sourcify exact match |
 | Proposal #17: setFeeExempt(CommitmentVault V2) | **Queued** (02.10.2026 21:53 UTC) — TreasurySafe 3-of-5, TX [`0x6e113b6c...`](https://etherscan.io/tx/0x6e113b6cc66a369604d46c3b4a5560f1418302de6ecc371f1217d72aeabd39bd); ETA 04.10.2026 21:53 UTC, then `execute(17)` |
 | Transfer InfernoToken Ownership to Governance | **Done** (2026-03-05) |
 | Transfer LiquidityReserve Ownership to Governance | **Done** (2026-03-05) |

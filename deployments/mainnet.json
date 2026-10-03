@@ -21,7 +21,7 @@
           "0xc43d48E7FDA576C5022d0670B652A622E8caD041"
         ],
         "abi": "abi/CommitmentVault.json",
-        "provenance": "deployment transaction receipt; runtime bytecode equals the compiled artifact except the immutable IFR token address; Sourcify exact match"
+        "provenance": "deployment transaction receipt; runtime bytecode equals the compiled artifact except the immutable IFR token address; Etherscan verified (2026-10-03, full solc input); Sourcify exact match"
       }
     }
   },
