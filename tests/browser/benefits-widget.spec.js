@@ -39,11 +39,12 @@ async function open(page, business = "demo-shop") {
 
 const state = (page) => page.locator(".ifrbw").getAttribute("data-ifrbw-state");
 
-test("qualifies for the highest met store-wide rule and marks CommitmentVault rules for checkout", async ({ page }) => {
+test("shows the highest store-wide rule whose thresholds are met, confirmed at checkout", async ({ page }) => {
   await setup(page, { locked: 2600, rules: RULES });
   await open(page);
-  await expect(page.locator(".ifrbw")).toHaveAttribute("data-ifrbw-state", "qualified");
-  await expect(page.locator(".ifrbw")).toContainText("You qualify for 10% (Bronze).");
+  await expect(page.locator(".ifrbw")).toHaveAttribute("data-ifrbw-state", "thresholds-met");
+  await expect(page.locator(".ifrbw")).toContainText("meet the thresholds for up to 10% (Bronze). Checkout confirms the benefit");
+  await expect(page.locator(".ifrbw")).not.toContainText("You qualify");
   await expect(page.locator(".ifrbw li", { hasText: "Gold" })).toContainText("not met");
   await expect(page.locator(".ifrbw li", { hasText: "Vault" })).toContainText("checked at checkout");
   await expect(page.locator(".ifrbw")).toContainText("Display only");
@@ -52,14 +53,14 @@ test("qualifies for the highest met store-wide rule and marks CommitmentVault ru
 test("insufficient lock shows no benefit", async ({ page }) => {
   await setup(page, { locked: 999, rules: RULES });
   await open(page);
-  await expect(page.locator(".ifrbw")).toHaveAttribute("data-ifrbw-state", "not-qualified");
+  await expect(page.locator(".ifrbw")).toHaveAttribute("data-ifrbw-state", "thresholds-not-met");
   await expect(page.locator(".ifrbw")).not.toContainText("You qualify");
 });
 
 test("RPC failure fails closed", async ({ page }) => {
   await setup(page, { rpcFail: true, rules: RULES });
   await open(page);
-  expect(await state(page)).not.toBe("qualified");
+  expect(await state(page)).not.toBe("thresholds-met");
   await expect(page.locator(".ifrbw")).toHaveAttribute("data-ifrbw-state", "rpc-failed");
   await expect(page.locator(".ifrbw")).toContainText("Could not verify");
   await expect(page.locator(".ifrbw")).not.toContainText("%");
@@ -85,10 +86,19 @@ test("without a business it shows the shop tier ladder only", async ({ page }) =
   await expect(page.locator(".ifrbw")).toContainText("Tier: Silver");
 });
 
+test("a rule with a redemption limit is never presented as granted (checkout decides exhaustion)", async ({ page }) => {
+  await setup(page, { locked: 100000, rules: [{ ...RULES[0], dailyRedemptionLimit: 1, monthlyRedemptionLimit: 3 }] });
+  await open(page);
+  await expect(page.locator(".ifrbw")).toHaveAttribute("data-ifrbw-state", "thresholds-met");
+  await expect(page.locator(".ifrbw li", { hasText: "Bronze" })).toContainText("redemption limit applies, checkout confirms");
+  await expect(page.locator(".ifrbw")).toContainText("redemption limits and final checks apply");
+  await expect(page.locator(".ifrbw")).not.toContainText(/You qualify|you get \d+%/i);
+});
+
 test("remote rule labels are rendered as text, never HTML", async ({ page }) => {
   await setup(page, { locked: 2000, rules: [{ ...RULES[0], label: "<img src=x onerror=window.pwned=1>" }] });
   await open(page);
-  await expect(page.locator(".ifrbw")).toHaveAttribute("data-ifrbw-state", "qualified");
+  await expect(page.locator(".ifrbw")).toHaveAttribute("data-ifrbw-state", "thresholds-met");
   expect(await page.evaluate(() => window.pwned)).toBeUndefined();
   expect(await page.locator(".ifrbw img").count()).toBe(0);
 });

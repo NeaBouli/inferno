@@ -699,13 +699,15 @@
       source of truth for every surface below. See <a href="business-onboarding.html">Business Onboarding</a>.</p>
 
       <h2>2. Show Benefits on Your Website: Display Widget</h2>
-      <p>The widget reads the visitor's IFRLock balance directly from Ethereum Mainnet through a public RPC and shows which of
-      <em>your</em> IFR Benefits rules the visitor meets. It loads your active rules from IFR Benefits; without a business
+      <p>The widget reads the visitor's IFRLock balance directly from Ethereum Mainnet through a public RPC and shows for which of
+      <em>your</em> IFR Benefits rules the visitor's visible lock and hold thresholds are met. Meeting a threshold is not a
+      granted benefit: checkout confirms it and also applies redemption limits and final checks. It loads your active rules
+      from IFR Benefits; without a business
       it shows the IFRLock tier ladder (Bronze 1,000 &middot; Silver 2,500 &middot; Gold 5,000 &middot; Platinum 10,000 IFR locked),
       the same presets the shop uses. It never invents a discount.</p>
       <pre><code>&lt;div data-ifr-benefits data-business="your-shop-slug"&gt;&lt;/div&gt;
 &lt;script src="https://ifrunit.tech/widget/ifr-benefits-widget.js"
-        integrity="sha384-oBQbWHhVJS0yZVC0agZSIl0sZs5Cs3YaxhfRBdaPLIqXNAH+CegLa84/fIkSt/nL"
+        integrity="sha384-TcQue2NkvC0mRfTTUBHgOwWUxmhF6ZBuLN7ez5XaCBMlRh7QbN72g8Pf9iBcYyyY"
         crossorigin="anonymous" defer&gt;&lt;/script&gt;</code></pre>
       <ul>
         <li><strong>Display only.</strong> A browser check is not access control and grants nothing. The discount is granted at
@@ -715,7 +717,7 @@
         CommitmentVault time locks are shown as &ldquo;checked at checkout&rdquo; unless IFRLock already meets them.</li>
         <li><strong>No data collected.</strong> No cookies, no tracking, no IFR server; remote text is never rendered as HTML.</li>
         <li>Options: <code>data-rpc</code> (your own RPC URL), <code>data-api</code> (defaults to <code>https://shop.ifrunit.tech</code>).</li>
-        <li>Integrity hash: <code>sha384-oBQbWHhVJS0yZVC0agZSIl0sZs5Cs3YaxhfRBdaPLIqXNAH+CegLa84/fIkSt/nL</code></li>
+        <li>Integrity hash: <code>sha384-TcQue2NkvC0mRfTTUBHgOwWUxmhF6ZBuLN7ez5XaCBMlRh7QbN72g8Pf9iBcYyyY</code></li>
       </ul>
 
       <h2>3. Communities and Discord: Guild.xyz or Collab.Land</h2>

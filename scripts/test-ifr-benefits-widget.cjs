@@ -51,6 +51,16 @@ const best = ev([rule({ id: "a", discountPercent: 5 }), rule({ id: "b", discount
   rule({ id: "c", discountPercent: 50, productId: "p1" }), rule({ id: "d", discountPercent: 30, requiredLockIFR: 9999999 })], ifr(3000)).best;
 assert.equal(best.id, "b");
 assert.equal(ev([], ifr(5)).best, null);
+// A redemption limit (possibly exhausted) is visible only as `limited`; the browser never treats a threshold
+// match as a granted benefit, and checkout-ineligible data never becomes "met".
+const limited = ev([rule({ dailyRedemptionLimit: 1 })], ifr(1000)).results[0];
+assert.equal(limited.status, "met");
+assert.equal(limited.limited, true);
+assert.equal(ev([rule()], ifr(1000)).results[0].limited, false);
+assert.equal(ev([rule({ active: false })], ifr(10 ** 9)).results[0].status, "checkout");
+const widgetSrc = fs.readFileSync(path.join(__dirname, "..", "docs", "widget", "ifr-benefits-widget.js"), "utf8");
+assert.ok(!/You qualify/.test(widgetSrc), "widget copy must not promise a benefit");
+assert.ok(/Checkout confirms the benefit/.test(widgetSrc), "widget copy must defer the benefit to checkout");
 assert.equal(W.evaluateRules(null, { locked: 0n, held: 0n }).results.length, 0);
 
 // Tier ladder.

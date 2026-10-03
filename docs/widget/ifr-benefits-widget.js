@@ -42,9 +42,10 @@
 
   /**
    * Evaluate partner rules exactly as far as a browser can verify them.
-   * Status per rule: "met" (IFRLock path verified), "not_met", or "checkout" (only the shop can decide,
-   * e.g. CommitmentVault time locks or malformed data). A rule is never reported as met unless the
-   * shop would accept it through the IFRLock path with the same thresholds.
+   * Status per rule: "met" (the visible IFRLock/held thresholds are met), "not_met", or "checkout" (only
+   * the shop can decide, e.g. CommitmentVault time locks or malformed data). "met" is a threshold check,
+   * never a granted benefit: checkout also applies redemption limits and final eligibility, which a
+   * browser cannot see. `limited` marks rules with a daily or monthly redemption limit.
    * @param {Array} rules rules from GET /api/businesses/:id/rules
    * @param {{locked: bigint, held: bigint}} balances raw units (9 decimals)
    */
@@ -78,6 +79,7 @@
         requiredLockIFR: rule.requiredLockIFR,
         minIFRHeld: rule.minIFRHeld == null ? 0 : rule.minIFRHeld,
         lockSource: source,
+        limited: (Number(rule.dailyRedemptionLimit) > 0) || (Number(rule.monthlyRedemptionLimit) > 0),
         status: status,
       });
     }
@@ -230,18 +232,22 @@
           show("no-rules", lines);
           return;
         }
-        lines.push(el("p", ev.best ? "You qualify for " + ev.best.discountPercent + "% (" + ev.best.label + ")." : "You do not qualify for a store-wide benefit yet.", ev.best ? "ok" : "no"));
+        lines.push(el("p", ev.best
+          ? "Your visible IFR balances meet the thresholds for up to " + ev.best.discountPercent + "% (" + ev.best.label + "). Checkout confirms the benefit; redemption limits and final checks apply there."
+          : "Your visible IFR balances do not meet a store-wide benefit threshold yet.", ev.best ? "ok" : "no"));
         var ul = el("ul");
         for (var i = 0; i < ev.results.length; i++) {
           var r = ev.results[i];
           var what = (r.productName ? r.productName + ": " : "") + (r.label ? r.label + " — " : "") +
             (r.discountPercent == null ? "?" : r.discountPercent) + "% from " + Number(r.requiredLockIFR).toLocaleString("en-US") + " IFR locked" +
             (r.minIFRHeld ? " and " + Number(r.minIFRHeld).toLocaleString("en-US") + " IFR held" : "");
-          var tag = r.status === "met" ? " ✓ met" : r.status === "not_met" ? " — not met" : " — checked at checkout";
+          var tag = r.status === "met"
+            ? (r.limited ? " ✓ thresholds met — redemption limit applies, checkout confirms" : " ✓ thresholds met — checkout confirms")
+            : r.status === "not_met" ? " — not met" : " — checked at checkout";
           ul.appendChild(el("li", what + tag, r.status === "met" ? "ok" : r.status === "not_met" ? "no" : "chk"));
         }
         lines.push(ul);
-        show(ev.best ? "qualified" : "not-qualified", lines);
+        show(ev.best ? "thresholds-met" : "thresholds-not-met", lines);
       }).catch(function () {
         show("wallet-declined", [el("p", "Wallet connection was declined or failed. No benefit is shown.", "err")]);
       }).then(function () { btn.disabled = false; });
