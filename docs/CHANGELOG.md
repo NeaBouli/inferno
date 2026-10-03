@@ -9,6 +9,7 @@
 - Open ballots run through the Etherscan verified-signature procedure. Secret ballots are in planning as a
   separate milestone.
 - Status: CV-01 open (2 of 3 YES), EX-01 approved on 4 October 2026 (3 YES), EX-02 open (no option vote yet). No deadline.
+
 ## 2 October 2026 — CommitmentVault V1 Incident Record and Council Proposal CV-01
 
 - 11 price-conditioned CommitmentVault V1 tranches (26,418,467.994338353 IFR) cannot unlock. The
