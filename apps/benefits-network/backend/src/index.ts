@@ -32,12 +32,20 @@ app.use((_req, res, next) => {
   next();
 });
 
-app.use(cors({
+// Public read-only discovery (business profiles, benefit rules, products) is readable from any
+// origin so partner websites can show their own benefit rules without running a server. GET/HEAD only,
+// no credentials; registered before the allowlist so it also answers preflights. Every write, seller
+// and session route keeps the origin allowlist below.
+const publicDiscoveryCors = cors({ origin: '*', methods: ['GET', 'HEAD'], credentials: false });
+app.use('/api/businesses', publicDiscoveryCors);
+const allowlistCors = cors({
   origin: (
     process.env.ALLOWED_ORIGINS ||
     'http://localhost:3000,http://localhost:3001,https://shop.ifrunit.tech,https://web3.ifrunit.tech,https://ifrunit.tech'
   ).split(','),
-}));
+});
+const isPublicDiscovery = (path: string) => path === '/api/businesses' || path.startsWith('/api/businesses/');
+app.use((req, res, next) => (isPublicDiscovery(req.path) ? next() : allowlistCors(req, res, next)));
 app.use('/api/admin', adminRateLimiter);
 app.use(express.json({ limit: '10kb' }));
 

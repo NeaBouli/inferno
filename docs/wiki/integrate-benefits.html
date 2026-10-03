@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-    <link rel="canonical" href="https://ifrunit.tech/wiki/lp-strategy.html">
-  <link rel="alternate" hreflang="en" href="https://ifrunit.tech/wiki/lp-strategy.html">
-  <link rel="alternate" hreflang="x-default" href="https://ifrunit.tech/wiki/lp-strategy.html">
+    <link rel="canonical" href="https://ifrunit.tech/wiki/integrate-benefits.html">
+  <link rel="alternate" hreflang="en" href="https://ifrunit.tech/wiki/integrate-benefits.html">
+  <link rel="alternate" hreflang="x-default" href="https://ifrunit.tech/wiki/integrate-benefits.html">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>LP Strategy &mdash; Inferno (IFR) Documentation</title>
+  <title>Integrate IFR Benefits Without a Server &mdash; Inferno (IFR) Documentation</title>
   <meta name="keywords" content="Inferno, IFR, ERC-20, Ethereum, deflationary token, DeFi, blockchain, smart contract, governance, bootstrap">
-  <meta name="description" content="Phased liquidity deployment strategy. Why waiting creates 100M times more value. AMM mathematics explained.">
+  <meta name="description" content="Connect IFR benefits without running a server: IFR Benefits checkout, a display-only website widget and Guild.xyz/Collab.Land token gating on IFRLock.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -86,6 +86,8 @@
       flex: 1;
     }
 
+    .sidebar-nav li {}
+
     .sidebar-nav a {
       display: block;
       padding: 10px 24px;
@@ -123,17 +125,6 @@
     .sidebar-nav .nav-back a:hover {
       opacity: 1;
       color: var(--text);
-    }
-
-    .sidebar-nav .nav-section-label {
-      display: block;
-      padding: 8px 24px 4px;
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--muted);
-      opacity: 0.6;
     }
 
     /* ---------- Hamburger (mobile) ---------- */
@@ -272,7 +263,7 @@
       font-weight: 600;
       font-size: 13px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 1px;
     }
 
     td { color: var(--text); }
@@ -308,269 +299,16 @@
 
     .callout-green {
       background: rgba(34, 197, 94, 0.06);
-      border-left: 3px solid var(--green);
-      border-radius: 0 8px 8px 0;
-      padding: 16px 20px;
-      margin: 20px 0;
+      border-left-color: var(--green);
     }
 
-    .callout-green p {
-      color: var(--text);
-      margin: 0;
-      font-size: 14px;
-    }
-
-    .callout-blue {
-      background: rgba(59, 130, 246, 0.06);
-      border-left: 3px solid #3b82f6;
-      border-radius: 0 8px 8px 0;
-      padding: 16px 20px;
-      margin: 20px 0;
-    }
-
-    .callout-blue p {
-      color: var(--text);
-      margin: 0;
-      font-size: 14px;
-    }
-
-    /* ---------- Flow diagram ---------- */
-    .flow-diagram {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin: 24px 0;
-      padding: 8px 0;
-      max-width: 100%;
-    }
-
-    .flow-step {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px 14px;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text);
-      white-space: nowrap;
-      text-align: center;
-    }
-
-    .flow-step.active {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
-    .flow-step.green {
-      border-color: var(--green);
-      color: var(--green);
-    }
-
-    .flow-arrow {
+    /* ---------- Address ---------- */
+    .address {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 12px;
       color: var(--muted);
-      font-size: 18px;
-      padding: 0 8px;
-      flex-shrink: 0;
-    }
-
-    /* ---------- Architecture diagram ---------- */
-    .arch-stack {
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-      margin: 24px 0;
-      max-width: 560px;
-    }
-
-    .arch-layer {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px 24px;
-    }
-
-    .arch-layer-label {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--accent);
-      margin-bottom: 6px;
-    }
-
-    .arch-layer-title {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 4px;
-    }
-
-    .arch-layer-desc {
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.5;
-    }
-
-    .arch-connector {
-      display: flex;
-      justify-content: center;
-      padding: 4px 0;
-      color: var(--muted);
-      font-size: 20px;
-    }
-
-    /* ---------- Step list ---------- */
-    .step-list {
-      list-style: none;
-      padding-left: 0;
-      counter-reset: step-counter;
-      margin: 16px 0;
-    }
-
-    .step-list li {
-      counter-increment: step-counter;
-      position: relative;
-      padding-left: 40px;
-      margin-bottom: 16px;
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    .step-list li::before {
-      content: counter(step-counter);
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      background: rgba(255, 69, 0, 0.12);
-      color: var(--accent);
-      font-size: 13px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      line-height: 1;
-    }
-
-    /* ---------- Contract badge ---------- */
-    .contract-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 16px;
-      margin: 8px 0 16px;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      font-size: 13px;
-      color: var(--text);
       word-break: break-all;
     }
-
-    .contract-badge .label {
-      color: var(--muted);
-      font-family: 'Inter', sans-serif;
-      font-weight: 600;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      white-space: nowrap;
-    }
-
-    /* ---------- Fee comparison ---------- */
-    .fee-compare {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      margin: 20px 0;
-    }
-
-    .fee-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-    }
-
-    .fee-card.bad {
-      border-color: #ef4444;
-    }
-
-    .fee-card.good {
-      border-color: var(--green);
-    }
-
-    .fee-card-title {
-      font-size: 14px;
-      font-weight: 700;
-      margin-bottom: 12px;
-    }
-
-    .fee-card.bad .fee-card-title {
-      color: #ef4444;
-    }
-
-    .fee-card.good .fee-card-title {
-      color: var(--green);
-    }
-
-    .fee-card p {
-      font-size: 13px;
-      color: var(--muted);
-      margin-bottom: 8px;
-      max-width: none;
-    }
-
-    .fee-card code {
-      font-size: 12px;
-    }
-
-    /* ---------- Status badge ---------- */
-    .status-badge {
-      display: inline-block;
-      padding: 6px 16px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: 600;
-      margin-bottom: 24px;
-    }
-
-    .status-badge.coming-soon {
-      background: rgba(59, 130, 246, 0.15);
-      color: #3b82f6;
-      border: 1px solid rgba(59, 130, 246, 0.3);
-    }
-
-    /* ---------- Phase card ---------- */
-    .phase-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px;
-      margin: 16px 0;
-    }
-
-    .phase-card h3 {
-      margin-top: 0;
-      margin-bottom: 12px;
-    }
-
-    .phase-card .phase-label {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 4px;
-    }
-
-    .phase-card .phase-label.blue { color: #1d4ed8; }
-    .phase-card .phase-label.green { color: var(--green); }
-    .phase-card .phase-label.orange { color: #b3300b; }
-    .phase-card .phase-label.muted { color: var(--muted); }
 
     /* ---------- Footer ---------- */
     .wiki-footer {
@@ -613,21 +351,12 @@
         padding: 72px 20px 40px;
       }
 
-      .flow-diagram {
-        flex-wrap: wrap;
-        gap: 8px;
+      table {
+        font-size: 13px;
       }
 
-      .flow-arrow {
-        padding: 0 4px;
-      }
-
-      .fee-compare {
-        grid-template-columns: 1fr;
-      }
-
-      .arch-stack {
-        max-width: 100%;
+      th, td {
+        padding: 10px 12px;
       }
     }
 
@@ -639,26 +368,168 @@
     /* ============================================================
     End Shared Styles
        ============================================================ */
+
+    /* ---------- Checklist ---------- */
+    .checklist {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .checklist li {
+      position: relative;
+      padding-left: 28px;
+      margin-bottom: 8px;
+    }
+
+    .checklist li::before {
+      content: "\2610";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-size: 16px;
+    }
+
+    .checklist-done li::before {
+      content: "\2611";
+      color: var(--green);
+    }
+
+    /* ---------- Step number badge ---------- */
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+
+    /* ---------- QR flow diagram ---------- */
+    .qr-flow {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin: 20px 0;
+    }
+
+    .qr-flow-step {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      text-align: center;
+      flex: 1;
+      min-width: 160px;
+    }
+
+    .qr-flow-step .step-num {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .qr-flow-step .step-text {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .qr-flow-arrow {
+      font-size: 20px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 600px) {
+      .qr-flow {
+        flex-direction: column;
+      }
+
+      .qr-flow-arrow {
+        transform: rotate(90deg);
+      }
+    }
+
+    /* ---------- FAQ accordion ---------- */
+    .faq-item {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+
+    .faq-question {
+      width: 100%;
+      background: var(--card);
+      border: none;
+      padding: 16px 20px;
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: inherit;
+    }
+
+    .faq-question:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .faq-question::after {
+      content: "+";
+      font-size: 18px;
+      color: var(--accent);
+      font-weight: 700;
+      transition: transform 0.2s;
+    }
+
+    .faq-item.open .faq-question::after {
+      content: "\2212";
+    }
+
+    .faq-answer {
+      display: none;
+      padding: 0 20px 16px;
+      background: var(--card);
+    }
+
+    .faq-item.open .faq-answer {
+      display: block;
+    }
+
+    .faq-answer p {
+      margin-top: 0;
+      font-size: 14px;
+    }
   </style>
   <link rel="icon" type="image/png" href="../assets/ifr_icon_64.png">
   <meta property="og:locale" content="en_US">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Inferno Protocol">
-  <meta property="og:title" content="LP Strategy &mdash; Inferno Protocol (IFR)">
-  <meta property="og:description" content="Phased liquidity deployment strategy. Why waiting creates 100M times more value. AMM mathematics explained.">
-  <meta property="og:url" content="https://ifrunit.tech/wiki/lp-strategy.html">
+  <meta property="og:title" content="Integrate IFR Benefits Without a Server — Inferno Protocol (IFR)">
+  <meta property="og:description" content="Partners connect to IFR benefits without a server: shop checkout, display widget, token-gating guide.">
+  <meta property="og:url" content="https://ifrunit.tech/wiki/integrate-benefits.html">
   <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="LP Strategy &mdash; Inferno Protocol (IFR)">
-  <meta name="twitter:description" content="Phased liquidity deployment strategy. Why waiting creates 100M times more value. AMM mathematics explained.">
+  <meta name="twitter:title" content="Integrate IFR Benefits Without a Server — Inferno Protocol (IFR)">
+  <meta name="twitter:description" content="IFR benefits without a server: checkout, widget, token gating.">
   <meta name="twitter:site" content="@IFRtoken">
   <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">  <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "TechArticle",
-    "headline": "Phased LP Strategy",
-    "description": "Phased liquidity deployment strategy. Why waiting creates 100M times more value. AMM mathematics explained.",
-    "url": "https://ifrunit.tech/wiki/lp-strategy.html",
+    "@type": "WebPage",
+    "headline": "Integrate IFR Benefits Without a Server",
+    "description": "Serverless integration of IFR benefits: IFR Benefits checkout, a display-only website widget reading IFRLock from chain, and Guild.xyz/Collab.Land token gating.",
+    "url": "https://ifrunit.tech/wiki/integrate-benefits.html",
     "isPartOf": {"@id": "https://ifrunit.tech/#website"},
     "publisher": {"@id": "https://ifrunit.tech/#organization"},
     "about": {"@id": "https://ifrunit.tech/#app"}
@@ -687,8 +558,8 @@
     {
       "@type": "ListItem",
       "position": 3,
-      "name": "LP Strategy",
-      "item": "https://ifrunit.tech/wiki/lp-strategy.html"
+      "name": "Integrate IFR Benefits",
+      "item": "https://ifrunit.tech/wiki/integrate-benefits.html"
     }
   ]
 }
@@ -735,7 +606,7 @@
         <li><a href="https://ifrunit.tech/wiki/commitment-vault.html">CommitmentVault</a></li>
         <li><a href="https://ifrunit.tech/wiki/lending-vault.html">LendingVault</a></li>
         <li><a href="https://ifrunit.tech/wiki/lending-market.html">Lending Market</a></li>
-        <li><a href="https://ifrunit.tech/wiki/lp-strategy.html" class="active" aria-current="page">LP Strategy</a></li>
+        <li><a href="https://ifrunit.tech/wiki/lp-strategy.html">LP Strategy</a></li>
         <li><a href="liquidity.html">Provide IFR / ETH Liquidity</a></li>
         <li><a href="https://ifrunit.tech/wiki/ecosystem.html">Ecosystem</a></li>
         <li class="nav-divider"></li>
@@ -748,7 +619,7 @@
         <li><a href="https://ifrunit.tech/wiki/faq.html">FAQ</a></li>
         <li><a href="https://ifrunit.tech/wiki/integration.html">Integration Guide</a></li>
         <li><a href="https://ifrunit.tech/wiki/business-onboarding.html">Business Onboarding</a></li>
-        <li><a href="https://ifrunit.tech/wiki/integrate-benefits.html">Integrate Benefits (No Server)</a></li>
+        <li><a href="https://ifrunit.tech/wiki/integrate-benefits.html" class="active" aria-current="page">Integrate Benefits (No Server)</a></li>
         <li><a href="https://ifrunit.tech/wiki/agent.html">AI Copilot</a></li>
         <li><a href="https://ifrunit.tech/wiki/verify.html">Verify Wallet</a></li>
         <li class="nav-divider"></li>
@@ -770,7 +641,7 @@
           <div id="lp-header-connected" style="display:none;">
             <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:5px 8px;cursor:pointer;display:flex;align-items:center;gap:6px;max-width:100px;white-space:nowrap;overflow:hidden;" onclick="lpToggleDropdown()">
               <span id="lp-header-addr" style="color:#166534;font-family:monospace;font-size:0.72rem;font-weight:600;"></span>
-
+              
             </div>
           </div>
           <div id="lp-header-dropdown" style="display:none;position:fixed;background:#111827;border:1px solid #374151;border-radius:12px;padding:16px;width:280px;max-width:calc(100vw - 24px);z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.6);">
@@ -791,7 +662,7 @@
                 <div id="lp-drop-ifr" style="color:#b3300b;font-weight:700;font-size:0.85rem;"></div>
               </div>
             </div>
-            <div id="lp-drop-lock" style="display:none;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:5px 8px;margin-bottom:10px;text-align:center;">
+            <div id="lp-drop-lock" style="display:none;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:8px 10px;margin-bottom:10px;text-align:center;">
               <span style="color:#92400e;font-size:0.78rem;font-weight:600;">&#x26A1; Premium</span>
             </div>
             <div id="lp-drop-nolock" style="background:rgba(107,114,128,0.1);border:1px solid #374151;border-radius:8px;padding:8px 10px;margin-bottom:10px;text-align:center;">
@@ -808,173 +679,79 @@
       </div>
 
 
-      <!-- Phase 3 Live Banner -->
-      <div class="status-badge status-ok" style="background:rgba(34,197,94,0.15);color:#166534;border-color:rgba(34,197,94,0.3);">Phase 3 &mdash; &#x2705; Live on Mainnet</div>
-
-      <h1>Phased <span class="accent">LP Strategy</span></h1>
+      <h1>Integrate IFR Benefits &mdash; <span class="accent">Without a Server</span></h1>
       <p class="subtitle">
-        400M IFR will create maximum value
+        Partners and communities connect to IFR benefits without running any server. Everything below works with
+        the existing IFR Benefits shop, the public blockchain and services you may already use.
       </p>
 
-      <!-- ======================================== -->
-      <!-- 1. Warum NICHT sofort alle 400M in den Pool? -->
-      <!-- ======================================== -->
-      <h2>1. Why NOT add all 400M to the pool immediately?</h2>
-      <p>
-        The Uniswap V2 AMM formula is simple: <code>x * y = k</code>. Every trade changes the ratio of the two reserves, and the price is derived from <code>y / x</code>.
-      </p>
-      <p>
-        The canonical Bootstrap price is P<sub>0</sub> = <code>300,000,000 wei per IFR</code>, derived from 0.030 ETH / 100,000,000 IFR. A USD conversion depends on the ETH/USD rate at the time and is not a protocol constant.
-      </p>
-      <p>
-        Key point: Adding assets in the pool's current ratio does <strong>not</strong> change the
-        instantaneous spot price. Any reserve deployment therefore requires the matching WETH
-        amount and a governance-approved objective; an IFR amount alone is not a liquidity-depth
-        measurement.
-      </p>
-
-      <div class="callout">
-        <p>
-          <strong>Core problem:</strong> The actual Bootstrap LP started with 100M IFR + 0.030 ETH. Adding the full reserve at the same ratio would deepen the pool without improving price discovery. Reserve additions should therefore be governance-paced, not automatic.
-        </p>
+      <div class="callout-green callout">
+        <p><strong>Project decision (2026-10-03, Lane 7):</strong> nothing existing is rebuilt. Discounts and benefits keep
+        running through <a href="https://shop.ifrunit.tech/" target="_blank" rel="noopener">IFR Benefits</a>. Partners do not
+        need their own server: they can add the display widget below to their website and use existing token-gating services
+        for communities. The Creator Gateway stays an optional self-hosting tool.</p>
       </div>
 
-<pre><code>// AMM Constant Product Formula
-x * y = k
+      <h2>1. Discounts at Checkout: IFR Benefits (no server)</h2>
+      <p>Register your business in <a href="https://shop.ifrunit.tech/" target="_blank" rel="noopener">IFR Benefits</a> and create
+      benefit rules: a discount percentage, the IFR a customer must have locked and, optionally, IFR they must hold. At checkout
+      the shop verifies every rule on-chain at one Ethereum block and records the redemption. Your rules are the single
+      source of truth for every surface below. See <a href="business-onboarding.html">Business Onboarding</a>.</p>
 
-// Actual Bootstrap P0: 0.030 ETH / 100,000,000 IFR
-// P0 set by Proposal #16: 300,000,000 wei per IFR
-
-// Pool before:  100M IFR + 0.030 ETH
-// Same-ratio additions deepen liquidity but do not change price
-// Governance should add reserves only when it improves market structure</code></pre>
-
-      <!-- ======================================== -->
-      <!-- 2. Die 4 Phasen -->
-      <!-- ======================================== -->
-      <h2>2. The 4 Phases</h2>
-
-      <!-- Phase 0 -->
-      <div class="phase-card">
-        <div class="phase-label blue">PHASE 0 &mdash; After Bootstrap</div>
-        <h3>Initial Pool: 100M IFR + 0.030 ETH</h3>
-        <ul>
-          <li>Team adds <strong>NO LP</strong></li>
-          <li>Protection via <a href="https://ifrunit.tech/wiki/commitment-vault.html">CommitmentVault</a> + <a href="https://ifrunit.tech/wiki/lending-vault.html">LendingVault</a></li>
-          <li>Organic growth through community trades</li>
-        </ul>
-      </div>
-
-      <!-- Milestone 1 -->
-      <div class="phase-card">
-        <div class="phase-label green">MILESTONE 1 &mdash; illustrative deeper pool</div>
-        <h3>Example target: 150M IFR + 1.5 ETH</h3>
-        <ul>
-          <li>To buy 99% of the IFR reserve under the fee-free constant-product model requires 148.5 ETH input before the 0.30% V2 fee.</li>
-          <li>The actual initial 100M IFR / 0.030 ETH pool requires 2.97 ETH on the same curve-only basis.</li>
-          <li>These are reserve-depletion examples, not execution quotes; fees, routes, gas and market movement remain separate.</li>
-        </ul>
-      </div>
-
-      <!-- Milestone 2 -->
-      <div class="phase-card">
-        <div class="phase-label orange">MILESTONE 2 &mdash; Pool = 5 ETH (~$10,000)</div>
-        <h3>Governance Proposal: +100M IFR + proportional ETH</h3>
-        <ul>
-          <li>Pool significantly deeper</li>
-          <li>Manipulation becomes economically unprofitable</li>
-          <li>Professional market-making depth</li>
-        </ul>
-      </div>
-
-      <!-- Milestone 3 -->
-      <div class="phase-card">
-        <div class="phase-label muted">MILESTONE 3 &mdash; Initial lock ended September 2026</div>
-        <h3>LiquidityReserve remains held (200M IFR)</h3>
-        <ul>
-          <li>Current contract capacity is 50M IFR per 90-day period</li>
-          <li>0 IFR had been withdrawn and no LiquidityReserve proposal was pending at block 25918433</li>
-          <li>Availability is not automatic LP deployment; Governance and a separate LP action are required</li>
-        </ul>
-      </div>
-
-      <!-- Visual Flow -->
-      <div class="flow-diagram">
-        <div class="flow-step">Bootstrap</div>
-        <div class="flow-arrow">&rarr;</div>
-        <div class="flow-step active">Phase 0</div>
-        <div class="flow-arrow">&rarr;</div>
-        <div class="flow-step">1 ETH</div>
-        <div class="flow-arrow">&rarr;</div>
-        <div class="flow-step">5 ETH</div>
-        <div class="flow-arrow">&rarr;</div>
-        <div class="flow-step green">Full LP</div>
-      </div>
-
-      <!-- ======================================== -->
-      <!-- 3. Effizienz-Beweis -->
-      <!-- ======================================== -->
-      <h2>3. Constant-product depth comparison</h2>
-      <p>
-        For a Uniswap V2 pool with IFR reserve <code>x</code> and WETH reserve <code>y</code>, buying a fraction <code>f</code> of the IFR reserve requires <code>&Delta;y = y &times; f / (1 - f)</code> before fees. At <code>f = 99%</code>, the required input is <code>99 &times; y</code>. The result depends on the WETH reserve, not on an assumed USD price.
-      </p>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Scenario</th>
-            <th>Reserves</th>
-            <th>ETH input to buy 99% (curve only)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Executed initial pool</td>
-            <td>100M IFR / 0.030 ETH</td>
-            <td>2.97 ETH</td>
-          </tr>
-          <tr>
-            <td>Illustrative deeper pool</td>
-            <td>150M IFR / 1.5 ETH</td>
-            <td>148.5 ETH</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div class="callout-green">
-        <p>
-          <strong>Depth must be measured from both reserves and a stated trade size.</strong> Adding proportional IFR and ETH increases executable depth without changing the instantaneous reserve ratio. Governance must evaluate capital, expected trade sizes and price impact before any reserve deployment.
-        </p>
-      </div>
-
-      <!-- ======================================== -->
-      <!-- 4. LP Reserve Safe -->
-      <!-- ======================================== -->
-      <h2>4. LP Reserve Safe</h2>
-      <p>
-        All 400.6M IFR of the Liquidity Reserve are held in a Gnosis Safe with 3-of-5 multisig:
-      </p>
-
+      <h2>2. Show Benefits on Your Website: Display Widget</h2>
+      <p>The widget reads the visitor's IFRLock balance directly from Ethereum Mainnet through a public RPC and shows which of
+      <em>your</em> IFR Benefits rules the visitor meets. It loads your active rules from IFR Benefits; without a business
+      it shows the IFRLock tier ladder (Bronze 1,000 &middot; Silver 2,500 &middot; Gold 5,000 &middot; Platinum 10,000 IFR locked),
+      the same presets the shop uses. It never invents a discount.</p>
+      <pre><code>&lt;div data-ifr-benefits data-business="your-shop-slug"&gt;&lt;/div&gt;
+&lt;script src="https://ifrunit.tech/widget/ifr-benefits-widget.js"
+        integrity="sha384-oBQbWHhVJS0yZVC0agZSIl0sZs5Cs3YaxhfRBdaPLIqXNAH+CegLa84/fIkSt/nL"
+        crossorigin="anonymous" defer&gt;&lt;/script&gt;</code></pre>
       <ul>
-        <li><strong>3 signatures</strong> required for every LP addition</li>
-        <li><strong>Public announcement</strong> before every LP addition</li>
-        <li>No single team member can move LP alone</li>
+        <li><strong>Display only.</strong> A browser check is not access control and grants nothing. The discount is granted at
+        checkout through IFR Benefits, which re-verifies on-chain.</li>
+        <li><strong>Fail closed.</strong> If the RPC or your rules cannot be read, the widget says so and shows no benefit.</li>
+        <li><strong>Only what a browser can prove.</strong> Rules met through IFRLock are shown as met. Rules that also accept
+        CommitmentVault time locks are shown as &ldquo;checked at checkout&rdquo; unless IFRLock already meets them.</li>
+        <li><strong>No data collected.</strong> No cookies, no tracking, no IFR server; remote text is never rendered as HTML.</li>
+        <li>Options: <code>data-rpc</code> (your own RPC URL), <code>data-api</code> (defaults to <code>https://shop.ifrunit.tech</code>).</li>
+        <li>Integrity hash: <code>sha384-oBQbWHhVJS0yZVC0agZSIl0sZs5Cs3YaxhfRBdaPLIqXNAH+CegLa84/fIkSt/nL</code></li>
       </ul>
 
-      <div class="contract-badge">
-        <span class="label">Gnosis Safe</span>
-        <a href="https://etherscan.io/address/0x5D93E7919a71d725054e31017eCA86B026F86C04" target="_blank" rel="noopener">0x5D93E7919a71d725054e31017eCA86B026F86C04</a>
-      </div>
+      <h2>3. Communities and Discord: Guild.xyz or Collab.Land</h2>
+      <p>Use an existing token-gating service with a custom contract-read requirement on Ethereum Mainnet. No IFR server is involved.</p>
+      <table class="data-table">
+        <thead><tr><th>Field</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Chain</td><td>Ethereum Mainnet (chain ID 1)</td></tr>
+          <tr><td>Contract</td><td><code>0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb</code> (IFRLock)</td></tr>
+          <tr><td>Function</td><td><code>lockedBalance(address user) view returns (uint256)</code>, selector <code>0x9ae697bf</code></td></tr>
+          <tr><td>Argument</td><td>the member's wallet address</td></tr>
+          <tr><td>Condition</td><td>result &ge; X &times; 10<sup>9</sup> (IFR has 9 decimals; 1,000 IFR = <code>1000000000000</code>)</td></tr>
+        </tbody>
+      </table>
+      <p><strong>Guild.xyz:</strong> add a requirement &ldquo;Contract query&rdquo; (custom contract call) with the values above and the
+      condition &ldquo;greater or equal&rdquo;. <strong>Collab.Land:</strong> create a token gating rule with a custom contract call
+      (or an ERC-20-style balance check pointed at the IFRLock function above). Name the role after the tier, for example
+      &ldquo;IFR Silver (2,500 locked)&rdquo;. The alternative <code>isLocked(address user, uint256 minAmount)</code> returns
+      <code>true</code> when at least <code>minAmount</code> is locked.</p>
 
-      <div class="callout">
-        <p>
-          <strong>Transparency:</strong> Every LP addition is publicly announced, approved via governance proposal, and documented on the <a href="https://ifrunit.tech/wiki/transparency.html">Transparency</a> page.
-        </p>
-      </div>
+      <h2>4. Optional: Self-Hosted Creator Gateway</h2>
+      <p>The <a href="https://github.com/NeaBouli/inferno/tree/main/apps/creator-gateway" target="_blank" rel="noopener">Creator Gateway</a>
+      remains available for creators who want to run their own instance (for example to combine an IFR lock with a
+      YouTube membership). It is optional; the project does not operate a central gateway and does not store
+      personal data.</p>
+
+      <h2>What This Does Not Do</h2>
+      <ul>
+        <li>No IFR rewards for partners: partner rewards are disabled until a pilot partner is approved (Lane 4).</li>
+        <li>No custody: users keep their own wallets; there is no embedded wallet.</li>
+        <li>No secret-content protection from the browser widget alone; use IFR Benefits checkout or a token-gating service.</li>
+      </ul>
 
       <!-- Footer -->
       <footer class="wiki-footer">
-        Inferno (IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.0
+        Inferno (IFR) &mdash; Integrate IFR Benefits &mdash; Documentation v1.0
       </footer>
 
     </main>
@@ -996,6 +773,23 @@ x * y = k
 
       hamburger.addEventListener('click', toggleSidebar);
       overlay.addEventListener('click', toggleSidebar);
+    })();
+  </script>
+
+  <!-- FAQ accordion script -->
+  <script>
+    (function () {
+      var items = document.querySelectorAll('.faq-item');
+      items.forEach(function (item) {
+        var btn = item.querySelector('.faq-question');
+        btn.addEventListener('click', function () {
+          var isOpen = item.classList.contains('open');
+          // Close all
+          items.forEach(function (i) { i.classList.remove('open'); });
+          // Toggle clicked
+          if (!isOpen) item.classList.add('open');
+        });
+      });
     })();
   </script>
 
@@ -1101,5 +895,5 @@ document.addEventListener("visibilitychange",async function(){if(document.visibi
 var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.addEventListener("mouseenter",function(){this.style.transform="scale(1.04)";this.style.boxShadow="0 4px 20px rgba(249,115,22,0.4)"});_wcBtn.addEventListener("mouseleave",function(){this.style.transform="";this.style.boxShadow="0 2px 12px rgba(249,115,22,0.25)"})}
 </script>
 </body>
-<!-- cache-bust: 1775428213 -->
+<!-- cache-bust: 1775428202 -->
 </html>
