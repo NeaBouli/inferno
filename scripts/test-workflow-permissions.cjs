@@ -9,6 +9,8 @@ const workflowsDirectory = path.join(root, ".github", "workflows");
 const expectedWriteWorkflows = new Set(["post-deploy.yml", "update-stats.yml"]);
 // Railway release gate reads workflow runs for the exact SHA (scripts/railway-release-preflight.cjs).
 const expectedExtraReadScopes = { "security-audit.yml": "pull-requests", "railway-copilot-release.yml": "actions" };
+// npm provenance needs an OIDC token; only the tag-triggered SDK publish workflow may request it.
+const expectedIdTokenWorkflows = new Set(["sdk-publish.yml"]);
 const expectedWorkflowFiles = [
   "ai-copilot.yml",
   "benefits-network.yml",
@@ -25,6 +27,7 @@ const expectedWorkflowFiles = [
   "post-deploy.yml",
   "railway-copilot-release.yml",
   "sdk-ci.yml",
+  "sdk-publish.yml",
   "security-audit.yml",
   "telegram-bot.yml",
   "update-stats.yml",
@@ -78,6 +81,11 @@ for (const fileName of workflowFiles) {
   const permissions = topLevelPermissions(source, fileName);
   assert.equal(permissions.contents, expectedWriteWorkflows.has(fileName) ? "write" : "read", `${fileName} contents permission`);
   const allowedKeys = expectedExtraReadScopes[fileName] ? ["contents", expectedExtraReadScopes[fileName]] : ["contents"];
+  if (expectedIdTokenWorkflows.has(fileName)) {
+    allowedKeys.push("id-token");
+    assert.equal(permissions["id-token"], "write", `${fileName} id-token permission`);
+    assert.match(source, /^on:\n  push:\n    tags:\n      - 'sdk-v\*'\n\n/m, `${fileName} must run only for sdk-v* tags`);
+  }
   assert.deepEqual(Object.keys(permissions).sort(), allowedKeys.sort(), `${fileName} must not receive unrelated token scopes`);
   if (expectedExtraReadScopes[fileName]) assert.equal(permissions[expectedExtraReadScopes[fileName]], "read");
 }
