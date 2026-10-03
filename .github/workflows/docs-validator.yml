@@ -233,9 +233,6 @@ jobs:
       - name: Check CEX fee-exemption policy consistency
         run: npm run test:cex-fee-policy
 
-      - name: Verify Council vote signatures and the public vote page
-        run: npm run test:council-votes
-
       - name: Check wiki sidebar nav consistency
         run: npm run test:wiki-nav
 
@@ -309,6 +306,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Verify Council vote signatures and the public vote page
+        run: npm run test:council-votes
 
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
