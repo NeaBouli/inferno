@@ -39,12 +39,17 @@ app.use((_req, res, next) => {
 const PUBLIC_DISCOVERY_PATH = /^\/api\/businesses(?:\/catalog-index|\/[^/]+(?:\/rules|\/products)?)?\/?$/;
 const PUBLIC_DISCOVERY_METHODS = new Set(['GET', 'HEAD']);
 const publicDiscoveryCors = cors({ origin: '*', methods: ['GET', 'HEAD'], credentials: false });
-const allowlistCors = cors({
-  origin: (
-    process.env.ALLOWED_ORIGINS ||
-    'http://localhost:3000,http://localhost:3001,https://shop.ifrunit.tech,https://web3.ifrunit.tech,https://ifrunit.tech'
-  ).split(','),
-});
+// Allowlist for every non-discovery request. ALLOWED_ORIGINS wins when set; without it, production keeps
+// only the public HTTPS origins (fail closed: no localhost) and local origins exist only outside production
+// (T-212b-10).
+const PRODUCTION_ORIGINS = ['https://shop.ifrunit.tech', 'https://web3.ifrunit.tech', 'https://ifrunit.tech'];
+const DEVELOPMENT_ORIGINS = ['http://localhost:3000', 'http://localhost:3001'];
+export function resolveAllowedOrigins(env: NodeJS.ProcessEnv = process.env): string[] {
+  const configured = (env.ALLOWED_ORIGINS || '').split(',').map((o) => o.trim()).filter(Boolean);
+  if (configured.length > 0) return configured;
+  return env.NODE_ENV === 'production' ? [...PRODUCTION_ORIGINS] : [...DEVELOPMENT_ORIGINS, ...PRODUCTION_ORIGINS];
+}
+const allowlistCors = cors({ origin: resolveAllowedOrigins() });
 export function isPublicDiscoveryRequest(method: string, path: string, preflightMethod?: string): boolean {
   if (!PUBLIC_DISCOVERY_PATH.test(path)) return false;
   if (PUBLIC_DISCOVERY_METHODS.has(method)) return true;

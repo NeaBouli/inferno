@@ -20,7 +20,7 @@ jest.mock('../src/config', () => ({
 }));
 
 import { prisma } from '../src/services/sessionService';
-import { server, isPublicDiscoveryRequest } from '../src/index';
+import { server, isPublicDiscoveryRequest, resolveAllowedOrigins } from '../src/index';
 
 function baseUrl() {
   const address = server.address();
@@ -106,5 +106,18 @@ describe('public discovery CORS (serverless partner widget)', () => {
     expect(isPublicDiscoveryRequest('GET', '/api/businesses/abc/admin')).toBe(false);
     expect(isPublicDiscoveryRequest('GET', '/api/businesses/abc/rules/x')).toBe(false);
     expect(isPublicDiscoveryRequest('GET', '/api/seller/auth-message')).toBe(false);
+  });
+});
+
+describe('allowlist defaults (T-212b-10)', () => {
+  it('never falls back to localhost in production', () => {
+    const prod = resolveAllowedOrigins({ NODE_ENV: 'production' } as NodeJS.ProcessEnv);
+    expect(prod.length).toBeGreaterThan(0);
+    expect(prod.every((o) => o.startsWith('https://'))).toBe(true);
+    expect(prod.some((o) => o.includes('localhost'))).toBe(false);
+  });
+  it('keeps local origins outside production and honours ALLOWED_ORIGINS', () => {
+    expect(resolveAllowedOrigins({ NODE_ENV: 'development' } as NodeJS.ProcessEnv)).toContain('http://localhost:3000');
+    expect(resolveAllowedOrigins({ NODE_ENV: 'production', ALLOWED_ORIGINS: ' https://a.example , ' } as NodeJS.ProcessEnv)).toEqual(['https://a.example']);
   });
 });
