@@ -263,3 +263,33 @@ test("a late response from an older refresh never overwrites a newer live value"
   await expect(burned).toHaveText("3.3M IFR");
   await expect(card(page, "burned")).toHaveAttribute("data-state", "live");
 });
+
+// T-212b-data-integrity: a failed balance read arrives as null (never "0") and renders as unavailable.
+test("transparency page shows unavailable, not zero, for balances the API could not read", async ({ page }) => {
+  await page.route(/^https?:\/\/(?!localhost)/, (route) => route.abort());
+  await page.route(`${PROXY}/api/ifr/supply`, (route) => route.fulfill({
+    contentType: "application/json",
+    body: JSON.stringify({ totalSupply: 996687518.32989194, burned: 3312481.67010806, source: "live" }),
+  }));
+  await page.route(`${PROXY}/api/ifr/balances`, (route) => route.fulfill({
+    contentType: "application/json",
+    body: JSON.stringify({
+      balances: {
+        Deployer: { raw: null, formatted: null, error: "unavailable" },
+        GnosisSafe: { raw: "12000000000000000", formatted: 12000000 },
+        IFRLock: { raw: null, formatted: null, error: "unavailable" },
+      },
+      ifrLock: { lockedRaw: null, lockedFormatted: null, unlockedRaw: null, unlockedFormatted: null },
+      incomplete: true,
+      unavailable: ["Deployer", "IFRLock"],
+      source: "live",
+    }),
+  }));
+  await page.goto("/wiki/transparency.html");
+  await expect(page.locator("#live-deployer")).toHaveText("unavailable");
+  await expect(page.locator("#live-tsafe")).toContainText("12.0M");
+  await expect(page.locator("#locks-ifrlock-locked")).toHaveText("unavailable");
+  await expect(page.locator("#locks-ifrlock-unlocked")).toHaveText("unavailable");
+  await expect(page.locator("#data-source")).toContainText("Partially live");
+  await expect(page.locator("#live-deployer")).not.toHaveText(/^0\b/);
+});
