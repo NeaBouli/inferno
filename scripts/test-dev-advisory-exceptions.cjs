@@ -7,7 +7,7 @@ const { spawnSync } = require("node:child_process");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
-const { evaluate } = require("./check-dev-advisory-exceptions.cjs");
+const { evaluate, AUDIT_ARGS, auditEnv, assertDevCovered } = require("./check-dev-advisory-exceptions.cjs");
 
 const ID = "GHSA-vfj7-8cjw-p6xm";
 const TODAY = "2026-10-03";
@@ -111,3 +111,19 @@ if (process.env.DEV_ADVISORY_LIVE === "1") {
   assert.match(prod.stderr, /production dependencies have advisories/);
 }
 console.log("[dev-advisory-exceptions self-test] PASS");
+
+// NODE_ENV=production / npm omit config must not shrink the full audit (review T-203).
+assert.deepEqual(AUDIT_ARGS.full, ["--include=dev"], "full audit must force dev dependencies in");
+assert.deepEqual(AUDIT_ARGS.prod, ["--omit=dev"], "production audit must omit dev dependencies");
+{
+  const env = auditEnv({ PATH: "/bin", NODE_ENV: "production", npm_config_omit: "dev", npm_config_production: "true", NPM_CONFIG_INCLUDE: "prod", HOME: "/tmp" });
+  assert.deepEqual(Object.keys(env).sort(), ["HOME", "PATH"], "audit env must drop NODE_ENV and npm omit/include/production config");
+}
+{
+  const lockWithDev = { packages: { "": {}, "node_modules/braces": { dev: true } } };
+  assert.throws(() => assertDevCovered({ metadata: { dependencies: { prod: 3, dev: 0, total: 3 } } }, lockWithDev), /did not cover dev/);
+  assert.throws(() => assertDevCovered({ metadata: {} }, lockWithDev), /did not cover dev/);
+  assertDevCovered({ metadata: { dependencies: { prod: 3, dev: 5, total: 8 } } }, lockWithDev);
+  assertDevCovered({ metadata: { dependencies: { prod: 3, dev: 0, total: 3 } } }, { packages: { "": {}, "node_modules/a": {} } });
+}
+console.log("[dev-advisory-exceptions-test] PASS - full audit forces dev, env cannot omit dev, dev coverage asserted");

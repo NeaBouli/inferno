@@ -100,8 +100,30 @@ function evaluate({ prod, full, lock, today, exceptions = EXCEPTIONS }) {
   return [...used];
 }
 
+// Arguments are explicit so that NODE_ENV=production or npm omit/production config can never
+// silently drop dev dependencies from the full audit (or add them to the production audit).
+const AUDIT_ARGS = { prod: ["--omit=dev"], full: ["--include=dev"] };
+
+/** Environment for npm audit without variables that change which dependency types are audited. */
+function auditEnv(env = process.env) {
+  const clean = { ...env };
+  for (const key of Object.keys(clean)) {
+    if (/^(NODE_ENV|npm_config_(omit|include|production|only|dev))$/i.test(key)) delete clean[key];
+  }
+  return clean;
+}
+
+/** The full audit must actually cover dev dependencies whenever the lockfile has any. */
+function assertDevCovered(full, lock) {
+  const lockHasDev = Object.entries(lock.packages || {}).some(([key, entry]) => key !== "" && entry && entry.dev === true);
+  const devCount = full && full.metadata && full.metadata.dependencies && full.metadata.dependencies.dev;
+  if (lockHasDev && !(Number.isInteger(devCount) && devCount > 0)) {
+    throw new Error("full audit did not cover dev dependencies (metadata.dependencies.dev is 0 or missing)");
+  }
+}
+
 function runAudit(appDir, extra) {
-  const result = spawnSync("npm", ["audit", "--json", ...extra], { cwd: appDir, encoding: "utf8", maxBuffer: 20 * 1024 * 1024 });
+  const result = spawnSync("npm", ["audit", "--json", ...extra], { cwd: appDir, encoding: "utf8", env: auditEnv(), maxBuffer: 20 * 1024 * 1024 });
   if (result.error) throw new Error(`npm audit could not start: ${result.error.message}`);
   if (result.status !== 0 && result.status !== 1) throw new Error(`npm audit exited with ${result.status}: ${result.stderr}`);
   try {
@@ -111,16 +133,18 @@ function runAudit(appDir, extra) {
   }
 }
 
-module.exports = { evaluate, validateReport, EXCEPTIONS };
+module.exports = { evaluate, validateReport, EXCEPTIONS, AUDIT_ARGS, auditEnv, assertDevCovered };
 
 if (require.main === module) {
   const appDir = process.cwd();
   const where = path.relative(path.resolve(__dirname, ".."), appDir) || ".";
   try {
     const lock = JSON.parse(fs.readFileSync(path.join(appDir, "package-lock.json"), "utf8"));
+    const full = runAudit(appDir, AUDIT_ARGS.full);
+    assertDevCovered(full, lock);
     const used = evaluate({
-      prod: runAudit(appDir, ["--omit=dev"]),
-      full: runAudit(appDir, []),
+      prod: runAudit(appDir, AUDIT_ARGS.prod),
+      full,
       lock,
       today: new Date().toISOString().slice(0, 10),
     });
