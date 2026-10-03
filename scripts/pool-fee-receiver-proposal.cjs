@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 // Lane 3 decision B (CWA-02): route future IFR pool fees from FeeRouterV1 (no withdrawal path) to
-// BuybackController, which pairs IFR with ETH for liquidity and exposes a governed withdrawIFR.
+// BuybackController, where the IFR stays recoverable through the governed withdrawIFR. The controller is
+// dormant (0 executions, no ETH); when it runs with much IFR against little ETH, the LP add fails and the
+// ETH falls back to buyback-and-burn, so the accrued IFR is not automatically paired into liquidity.
 // Step 1 queues InfernoToken.setPoolFeeReceiver(BuybackController) in Governance (48h); step 2 executes it.
 // IFR already stranded in FeeRouterV1 stays there: FeeRouterV1 has no sweep.
 //

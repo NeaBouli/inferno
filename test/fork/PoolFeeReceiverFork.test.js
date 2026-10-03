@@ -1,6 +1,7 @@
 // Lane 3 decision B rehearsal on a Mainnet fork (CWA-02): the Treasury Safe executes the exact Safe batch
 // bytes; afterwards the 1% IFR pool fee reaches BuybackController instead of FeeRouterV1, a large IFR
-// balance cannot block BuybackController.execute(), and Governance can recover IFR via withdrawIFR.
+// balance cannot block BuybackController.execute() (the controller is dormant; with much IFR against little
+// ETH the LP add fails and the ETH falls back to buyback-and-burn), and Governance can recover IFR via withdrawIFR.
 // Run: HARDHAT_FORK=true HARDHAT_FORK_BLOCK_NUMBER=<recent block> MAINNET_RPC_URL=<rpc> npx hardhat test test/fork/PoolFeeReceiverFork.test.js
 import { expect } from "chai";
 import { createRequire } from "node:module";
