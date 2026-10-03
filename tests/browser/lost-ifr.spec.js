@@ -92,6 +92,22 @@ test("base-unit sum is exact at a 0.01 display boundary", async ({ page }) => {
   await expect(card.locator("[data-lost-ifr-feerouter]")).toHaveText("724,992.73");
 });
 
+for (const [width, height] of [[1440, 1000], [1180, 820], [820, 1180], [390, 844]]) {
+  test(`the lost total stays inside its card at ${width}x${height}`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    await blockNetwork(page);
+    await page.goto("/");
+    await page.evaluate(() => document.fonts.ready);
+    const fit = await page.evaluate(() => {
+      const card = document.querySelector("[data-lost-ifr]").getBoundingClientRect();
+      const range = document.createRange();
+      range.selectNodeContents(document.querySelector("[data-lost-ifr-value]"));
+      return [...range.getClientRects()].every((r) => r.left >= card.left && r.right <= card.right);
+    });
+    expect(fit).toBe(true);
+  });
+}
+
 test("mobile: the lost card fits without horizontal scroll", async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 812 });
   await blockNetwork(page);

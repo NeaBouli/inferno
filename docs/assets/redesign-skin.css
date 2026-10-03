@@ -844,6 +844,25 @@ footer,
   }
 }
 
+/* The fixed launcher sits in the right 16-68px of the viewport below 769px, so any centred text line that
+   scrolls past it is covered. The lost-IFR card keeps its text out of that band on both sides (symmetric,
+   so the content stays centred). From 769px the card is a narrow grid column: a smaller total keeps the
+   unbreakable number inside the card and, at 769-1279px, out of the 64px desktop launcher band. */
+@media (min-width: 769px) {
+  .lost-ifr-card [data-lost-ifr-value] {
+    font-size: 24px !important;
+  }
+}
+@media (max-width: 768px) {
+  .lost-ifr-card {
+    padding-left: 52px !important;
+    padding-right: 52px !important;
+  }
+  .lost-ifr-card [data-lost-ifr-value] {
+    font-size: 26px !important;
+  }
+}
+
 @media (max-width: 900px) {
   nav {
     overflow: hidden !important;
