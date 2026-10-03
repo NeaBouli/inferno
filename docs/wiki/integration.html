@@ -983,8 +983,7 @@ cast call 0x0Cab0A9440643128540222acC6eF5028736675d3 \
       </div>
 
       <ul>
-        <li><strong style="color: var(--text);">Creator Rewards:</strong> Earn IFR when users lock tokens for your product &mdash; managed by the PartnerVault contract</li>
-        <li><strong style="color: var(--text);">Revenue Share:</strong> Earn a percentage of lock-related protocol fees</li>
+        <li><strong style="color: var(--text);">Partner Rewards (planned, not active):</strong> IFR for verified checkout redemptions within a fixed per-partner budget, activated per pilot partner by Governance</li>
         <li><strong style="color: var(--text);">Co-Marketing:</strong> Joint announcements, featured on the Inferno website</li>
         <li><strong style="color: var(--text);">Technical Support:</strong> Direct integration support from the Inferno team</li>
         <li><strong style="color: var(--text);">Early Access:</strong> Priority access to new features and protocol upgrades</li>
@@ -1005,9 +1004,9 @@ cast call 0x0Cab0A9440643128540222acC6eF5028736675d3 \
         </a>
       </div>
 
-      <h3>Lock-triggered Creator Rewards</h3>
+      <h3>Partner Rewards (planned, not active)</h3>
       <p>
-        Builder rewards are driven by real user engagement through the <strong>PartnerVault</strong> smart contract. When a user locks IFR for a creator's product, the creator earns a percentage of the locked amount from the Builder Ecosystem Pool.
+        Partner rewards are not active: no partner is registered and no reward has been paid. Under the decided model, a pilot partner receives IFR from the <strong>PartnerVault</strong> only for verified checkout redemptions, valued in EUR, within a fixed budget. A lock alone never earns a reward. Details: <a href="https://github.com/NeaBouli/inferno/blob/main/docs/PARTNER_REWARDS_MODEL_B.md" target="_blank" rel="noopener">reward policy</a>.
       </p>
       <table>
         <thead>
@@ -1019,19 +1018,19 @@ cast call 0x0Cab0A9440643128540222acC6eF5028736675d3 \
         </thead>
         <tbody>
           <tr>
-            <td><strong>RewardBps</strong></td>
-            <td>10&ndash;20% (Policy Target, max 25%, governance-controlled)</td>
-            <td>Percentage of each lock amount credited to the creator</td>
+            <td><strong>Trigger</strong></td>
+            <td>Verified checkout redemption</td>
+            <td>Only a real, seller-confirmed purchase at a registered pilot partner counts</td>
           </tr>
           <tr>
-            <td><strong>Annual Emission Cap</strong></td>
-            <td>4M IFR / year</td>
-            <td>Hard cap on total yearly rewards to prevent pool exhaustion</td>
+            <td><strong>Valuation</strong></td>
+            <td>EUR per redemption, paid in IFR</td>
+            <td>Converted at the published 7-day TWAP of the IFR/WETH pool at settlement; no fixed rate</td>
           </tr>
           <tr>
-            <td><strong>Per-Builder Cap</strong></td>
-            <td>Configurable per builder</td>
-            <td>Maximum allocation per builder (governance-controlled)</td>
+            <td><strong>Per-Partner Budget</strong></td>
+            <td>Hard cap per partner</td>
+            <td>The partner's PartnerVault allocation; the 40M pool is never refilled</td>
           </tr>
           <tr>
             <td><strong>Vesting</strong></td>
@@ -1044,8 +1043,8 @@ cast call 0x0Cab0A9440643128540222acC6eF5028736675d3 \
       <h4>How It Works</h4>
       <ol>
         <li><strong>Builder Registration:</strong> Governance creates a builder entry in PartnerVault with a beneficiary address, max allocation, and vesting schedule.</li>
-        <li><strong>User Locks IFR:</strong> When a user locks IFR for the builder's product via IFRLock, the lock event is recorded.</li>
-        <li><strong>Reward Accrual:</strong> An authorized caller invokes <code>recordLockReward(bytes32 partnerId, uint256 lockAmount, address wallet)</code>. The wallet argument enforces one reward per wallet and partner; the reward is <code>lockAmount &times; effectiveRewardBps / 10000</code>.</li>
+        <li><strong>Verified Redemptions:</strong> The Benefits backend records each seller-confirmed checkout redemption once (idempotent event id).</li>
+        <li><strong>Settlement:</strong> Per period, Governance records the exact IFR amount with <code>recordMilestone(partnerId, milestoneId, unlockAmount)</code>, capped by the partner allocation. The contract also has <code>recordLockReward(bytes32 partnerId, uint256 lockAmount, address wallet)</code> (lock amount &times; <code>rewardBps</code>, one reward per wallet and partner); the project does not use it.</li>
         <li><strong>Vested Claiming:</strong> Builders call <code>claim(partnerId)</code> to withdraw vested rewards. Linear vesting ensures long-term alignment.</li>
       </ol>
 

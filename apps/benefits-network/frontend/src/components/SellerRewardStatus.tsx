@@ -184,6 +184,11 @@ export function SellerRewardStatus({ businessId, ownerAddress }: { businessId: s
             An owner-signed disable stops reward accrual immediately. Sellers that never apply simply run benefits
             with rewards off.
           </p>
+          <p className="mt-2 text-sm leading-6 text-stone-300">
+            Reward model: once a pilot partner is activated by Governance, rewards are paid in IFR only for verified
+            checkout redemptions, valued in EUR, within a fixed partner budget. A customer lock alone earns nothing. No
+            pilot partner is active yet.
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button

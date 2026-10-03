@@ -76,9 +76,10 @@ docker-compose up -d
 - No personal data is transmitted to IFR servers
 
 ## Monetization for Creators
-- Creator receives PartnerVault rewards (15% of lock amount)
-- Example: 100 users x 5,000 IFR Lock = 500,000 IFR locked
-- Creator reward: 500,000 x 15% = 75,000 IFR (vested over 6-12 months)
+
+- Fans lock IFR for access; locks do not create creator rewards
+- PartnerVault rewards are not active; under the decided model a creator would only qualify as a pilot partner,
+  paid for verified checkout redemptions within a fixed budget ([model B](PARTNER_REWARDS_MODEL_B.md))
 - Additionally: YouTube Membership revenue (unchanged)
 
 ## Roadmap

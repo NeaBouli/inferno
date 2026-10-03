@@ -46,7 +46,7 @@ The repository already contains a useful base:
 - `docs/BUSINESS_ONBOARDING.md`
 - `docs/PARTNER_INTEGRATION_SPEC.md`
 - `PartnerVault`
-  - partner rewards and lock-triggered reward accounting
+  - partner rewards for verified checkout redemptions (model B, not active)
 - `BuilderRegistry`
   - verified builder registry
 - `IFRLock`
@@ -245,18 +245,17 @@ Coffee shop
 
 The seller reward mechanism must be governance-safe.
 
-Existing relevant contract:
+Decided route (Lane 4 decision B, 2026-10-03; [policy](../PARTNER_REWARDS_MODEL_B.md)):
 
-- `PartnerVault.recordLockReward(partnerId, lockAmount, wallet)`
+1. Seller applies and is approved as a pilot partner.
+2. Governance registers the seller in BuilderRegistry and creates a capped PartnerVault partner
+   (`createPartner` + `activatePartner`).
+3. Each seller-confirmed checkout redemption creates one reward event (idempotent); locks alone never do.
+4. Per period, the EUR-valued events are converted at the published 7-day TWAP and settled by a
+   Governance proposal (`recordMilestone`), capped by the partner allocation.
+5. Rewards vest through PartnerVault; the seller claims vested IFR.
 
-Recommended route:
-
-1. Seller applies and is approved as a partner.
-2. Governance registers seller/builder in BuilderRegistry and PartnerVault.
-3. Backend becomes an authorized caller only after governance approval.
-4. When a qualifying customer lock is verified for that seller, backend records reward once per `(wallet, partnerId)`.
-5. Rewards vest through PartnerVault.
-6. Seller claims vested IFR.
+`PartnerVault.recordLockReward` and an authorized caller are not used.
 
 Do not automate PartnerVault rewards for unverified sellers.
 
@@ -735,5 +734,5 @@ The scoped external-wallet MVP on `shop.ifrunit.tech` is implemented. The next r
 1. Publish and verify the first real wallet-owned seller profile, permanent slug, product and active benefit rule.
 2. Complete the physical iPhone/iPad/Android wallet matrix and record one real customer-presented `APPROVED` to seller-signed `REDEEMED` checkout.
 3. Provision a production WalletConnect Project ID before enabling the full Rainbow, Trust, OKX and compatible-wallet modal.
-4. Keep seller rewards read-only until governance has registered the seller/builders, authorized a dedicated reward caller and verified the PartnerVault linkage.
+4. Keep seller rewards read-only until governance has registered the first pilot partner and created its capped PartnerVault budget; settlements follow model B (Governance `recordMilestone`), with no authorized caller.
 5. Keep the embedded-wallet prototype isolated from production until recovery, privacy/legal, real-device and independent security evidence is complete.
