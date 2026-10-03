@@ -12,7 +12,7 @@ describe("PriceLockVault", function () {
   const SHALLOW_WETH = eth("0.3");
   const priceOf = (ifr, weth) => (weth * 10n ** 9n) / ifr;
 
-  let governance, alice, bob, ifr, weth, pair, vault;
+  let governance, alice, bob, ifr, weth, pair, vault, factory;
 
   async function advance(seconds) {
     await ethers.provider.send("evm_increaseTime", [seconds]);
@@ -23,8 +23,9 @@ describe("PriceLockVault", function () {
   async function deploy({ ifrToken, ifrFirst = true, minWethReserve = eth("50"), minPrice = 0n, window = WEEK } = {}) {
     const Pair = await ethers.getContractFactory("MockTwapPair");
     const p = ifrFirst ? await Pair.deploy(ifrToken.target, weth.target) : await Pair.deploy(weth.target, ifrToken.target);
+    await factory.setPair(ifrToken.target, weth.target, p.target);
     const Vault = await ethers.getContractFactory("PriceLockVault");
-    const v = await Vault.deploy(ifrToken.target, p.target, governance.address, window, minWethReserve, minPrice);
+    const v = await Vault.deploy(ifrToken.target, weth.target, factory.target, governance.address, window, minWethReserve, minPrice);
     return { p, v };
   }
 
@@ -48,6 +49,7 @@ describe("PriceLockVault", function () {
     ifr = await MockIFR.deploy();
     const MockToken = await ethers.getContractFactory("MockToken");
     weth = await MockToken.deploy("Wrapped Ether", "WETH");
+    factory = await (await ethers.getContractFactory("MockPairFactory")).deploy();
     ({ p: pair, v: vault } = await deploy({ ifrToken: ifr }));
     await ifr.transfer(alice.address, parse("1000000"));
     await ifr.transfer(bob.address, parse("1000000"));
@@ -59,22 +61,42 @@ describe("PriceLockVault", function () {
     it("sets owner, token order and thresholds", async () => {
       expect(await vault.owner()).to.equal(governance.address);
       expect(await vault.ifrIsToken0()).to.equal(true);
+      expect(await vault.pair()).to.equal(pair.target);
+      expect(await vault.weth()).to.equal(weth.target);
+      expect(await vault.factory()).to.equal(factory.target);
       expect(await vault.active()).to.equal(false);
       expect(await vault.minWethReserve()).to.equal(eth("50"));
       expect(await vault.twapWindow()).to.equal(WEEK);
     });
 
-    it("rejects a pair without IFR, out-of-range windows and missing thresholds", async () => {
+    it("rejects out-of-range windows and missing thresholds", async () => {
+      const Vault = await ethers.getContractFactory("PriceLockVault");
+      const args = (w, r) => [ifr.target, weth.target, factory.target, governance.address, w, r, 0];
+      await expect(Vault.deploy(...args(DAY - 1, eth("50")))).to.be.revertedWith("window out of range");
+      await expect(Vault.deploy(...args(31 * DAY, eth("50")))).to.be.revertedWith("window out of range");
+      await expect(Vault.deploy(...args(WEEK, 0))).to.be.revertedWith("no threshold");
+      await expect(Vault.deploy(...args(WEEK, eth("100001")))).to.be.revertedWith("reserve threshold too high");
+    });
+
+    it("binds the pair to the factory's IFR/WETH pair: no pair, IFR/non-WETH and spoofed pairs are rejected", async () => {
       const Vault = await ethers.getContractFactory("PriceLockVault");
       const MockToken = await ethers.getContractFactory("MockToken");
-      const other = await MockToken.deploy("Other", "OTH");
       const Pair = await ethers.getContractFactory("MockTwapPair");
-      const foreign = await Pair.deploy(other.target, weth.target);
-      await expect(Vault.deploy(ifr.target, foreign.target, governance.address, WEEK, eth("50"), 0)).to.be.revertedWith("pair lacks IFR");
-      await expect(Vault.deploy(ifr.target, pair.target, governance.address, DAY - 1, eth("50"), 0)).to.be.revertedWith("window out of range");
-      await expect(Vault.deploy(ifr.target, pair.target, governance.address, 31 * DAY, eth("50"), 0)).to.be.revertedWith("window out of range");
-      await expect(Vault.deploy(ifr.target, pair.target, governance.address, WEEK, 0, 0)).to.be.revertedWith("no threshold");
-      await expect(Vault.deploy(ifr.target, pair.target, governance.address, WEEK, eth("100001"), 0)).to.be.revertedWith("reserve threshold too high");
+      const Factory = await ethers.getContractFactory("MockPairFactory");
+      const other = await MockToken.deploy("Other", "OTH");
+      const f = await Factory.deploy();
+      const deployWith = (w, fac) => Vault.deploy(ifr.target, w, fac, governance.address, WEEK, eth("50"), 0);
+      // The factory has no IFR/WETH pair: a configured or spoofed pair can never be supplied directly.
+      await expect(deployWith(weth.target, f.target)).to.be.revertedWith("no IFR/WETH pair");
+      // IFR paired with a non-WETH token cannot stand in for WETH depth.
+      const ifrOther = await Pair.deploy(ifr.target, other.target);
+      await f.setPair(ifr.target, other.target, ifrOther.target);
+      await expect(deployWith(weth.target, f.target)).to.be.revertedWith("no IFR/WETH pair");
+      // A factory entry that points IFR/WETH at a spoof pair with different tokens is rejected.
+      await f.setPair(ifr.target, weth.target, ifrOther.target);
+      await expect(deployWith(weth.target, f.target)).to.be.revertedWith("pair is not IFR/WETH");
+      await expect(Vault.deploy(ifr.target, ifr.target, factory.target, governance.address, WEEK, eth("50"), 0)).to.be.revertedWith("IFR equals WETH");
+      await expect(Vault.deploy(ifr.target, weth.target, ethers.ZeroAddress, governance.address, WEEK, eth("50"), 0)).to.be.revertedWith("zero address");
     });
   });
 
@@ -112,6 +134,19 @@ describe("PriceLockVault", function () {
       await advance(WEEK);
       await setPool(pair, true, IFR_RESERVE, DEEP_WETH); // e.g. flash-added liquidity
       await expect(vault.connect(governance).activate()).to.be.revertedWith("readiness scope not met");
+    });
+
+    it("after activation, a depth collapse blocks new locks while existing locks stay unlockable", async () => {
+      await makeActive(pair, vault);
+      const price = priceOf(IFR_RESERVE, DEEP_WETH);
+      const t = await now();
+      await vault.connect(alice).lock(parse("1000"), 1n, 0, t + 365 * DAY);
+      await setPool(pair, true, IFR_RESERVE, SHALLOW_WETH); // liquidity withdrawn below the 50 WETH scope
+      expect(await vault.active()).to.equal(true);
+      expect((await vault.readiness()).ready).to.equal(false);
+      await expect(vault.connect(bob).lock(parse("1000"), price, 0, t + 365 * DAY)).to.be.revertedWith("readiness scope not met");
+      await vault.connect(alice).unlock(0); // target 1 wei: met by the TWAP over the window
+      expect((await vault.getLock(alice.address, 0)).unlocked).to.equal(true);
     });
 
     it("price threshold: fails below and succeeds at or above the TWAP", async () => {
@@ -252,6 +287,22 @@ describe("PriceLockVault", function () {
       await expect(vault.connect(alice).unlock(0)).to.be.revertedWith("no valid TWAP");
       await advance(30 * DAY);
       await expect(vault.connect(alice).unlock(0)).to.emit(vault, "Unlocked").withArgs(alice.address, 0, parse("5000"), true);
+    });
+
+    it("rescue works even when the pair reverts on every read; the price path fails closed", async () => {
+      const price = priceOf(IFR_RESERVE, DEEP_WETH);
+      const t = await now();
+      await vault.connect(alice).lock(parse("2000"), price * 1000n, 0, t + 30 * DAY);
+      await vault.connect(alice).lock(parse("3000"), price / 2n, 0, t + 365 * DAY);
+      await pair.setBroken(true);
+      await expect(vault.connect(alice).unlock(1)).to.be.revertedWith("pair broken");
+      await expect(vault.canUnlock(alice.address, 0)).to.be.revertedWith("pair broken"); // price path needs the pair
+      await advance(30 * DAY);
+      expect(await vault.canUnlock(alice.address, 0)).to.equal(true);
+      const before = await ifr.balanceOf(alice.address);
+      await expect(vault.connect(alice).unlock(0)).to.emit(vault, "Unlocked").withArgs(alice.address, 0, parse("2000"), true);
+      expect((await ifr.balanceOf(alice.address)) - before).to.equal(parse("2000"));
+      expect(await vault.totalLocked()).to.equal(parse("3000"));
     });
 
     it("only the locker can unlock its own lock; tokens never go elsewhere", async () => {

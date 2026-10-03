@@ -19,6 +19,11 @@ It applies the lessons from CV-01:
 
 - **Module:** `contracts/vault/PriceLockVault.sol` (new). It reads the IFR/WETH Uniswap V2 pair
   `0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0` and does not write to it.
+- **Pair identity.** The pair is never passed in. The constructor takes the canonical WETH and the Uniswap V2
+  factory, reads `factory.getPair(IFR, WETH)` and requires the pair's two tokens to be exactly IFR and WETH.
+  On Mainnet the deploy script pins WETH9 `0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2`, the factory
+  `0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f` and the expected pair, and refuses any override. Other
+  networks must name their canonical WETH and factory explicitly.
 - **Hops:** user to vault (lock, unlock); keeper or user to vault (`poke`, which records a price observation);
   Governance to vault (activate, deactivate, thresholds, TWAP window).
 
@@ -40,7 +45,9 @@ It applies the lessons from CV-01:
 
 ## Readiness Scope
 
-Price locks are rejected (`"price locks not active"`) until `activate()` succeeds.
+Price locks are rejected (`"price locks not active"`) until `activate()` succeeds. After activation, **every new
+lock checks the same scope again** and reverts (`"readiness scope not met"`) when it does not hold, for example
+after liquidity was withdrawn. Existing locks keep both unlock paths.
 
 `activate()` is owner-only (Governance with its 48-hour timelock) and checks on-chain at call time:
 
@@ -63,9 +70,24 @@ Chain state at block 26,110,650 (2026-10-03):
 
 | Parameter | Recommendation | Reason |
 | --- | --- | --- |
-| `minWethReserve` | 50 ETH | about 165 times today's depth. Doubling a 7-day TWAP then needs roughly 20 ETH of capital held against arbitrage for a week |
-| `minActivationPrice` | 0 (not required) | depth, not price, is what makes the TWAP hard to manipulate |
+| `minWethReserve` | 50 ETH | about 165 times today's depth; deeper pools make a sustained TWAP move more expensive |
+| `minActivationPrice` | 0 (not required) | depth, not price, is the main defence of a TWAP |
 | `twapWindow` | 7 days | matches the CV-01 compensation rule |
+
+No quantified manipulation cost is claimed: it depends on arbitrage activity and liquidity behaviour that this
+specification does not model.
+
+### Known Limit: Depth Is Sampled at Two Points
+
+The depth condition reads the pool WETH reserve at two moments only: when the TWAP observation was recorded and
+now. It does not prove that the reserve stayed at or above `minWethReserve` for the whole TWAP window. Liquidity
+could be withdrawn between the two samples and returned before the second one, and a price could be pushed
+during that thin interval. Re-checking readiness on every lock and recording observations frequently
+(`poke()` at least every `twapWindow / 16`) narrow this, but do not remove it.
+
+Activation with this limit is the approved scope (built, disabled until the readiness scope holds, activated by
+Governance). A stronger prerequisite — for example the minimum reserve over every stored observation in the
+window, or an independent second price source — would change that scope and needs a separate owner decision.
 
 ## Locks
 
@@ -77,8 +99,10 @@ Chain state at block 26,110,650 (2026-10-03):
 - **Accounting.** The amount is the credited balance difference, so a fee-on-transfer deposit is recorded
   at what the vault actually received.
 - **Unlock.** The locker may unlock:
-  - after `maxUnlockTime` (rescue), regardless of price or activation state; or
-  - when `earliestTime` has passed and the valid TWAP is at or above `targetPriceWei`.
+  - after `maxUnlockTime` (rescue), regardless of price or activation state. This path makes no pair or oracle
+    call, so a paused, broken or reverting pair cannot block it; or
+  - when `earliestTime` has passed and the valid TWAP is at or above `targetPriceWei`. This path fails closed
+    if the pair cannot be read.
 
 ## Fee Exemption
 
@@ -87,7 +111,8 @@ fee-exempt, a lock is credited with the received amount and an unlock pays the t
 
 ## Deployment Path (not started)
 
-1. Independent security review of the contract and this specification.
+1. Independent security review of the contract and this specification (repeat on the slices changed after the
+   first review: per-lock readiness, oracle-free rescue, factory-bound pair).
 2. Sepolia rehearsal: deploy, poke over a full window, activate, lock, unlock by price and by rescue.
 3. Mainnet deployment with Governance as owner (`scripts/deploy-price-lock-vault.js` refuses Mainnet unless
    `ALLOW_MAINNET_PRICE_LOCK_DEPLOY=yes`).

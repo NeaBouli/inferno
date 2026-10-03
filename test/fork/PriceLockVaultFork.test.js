@@ -6,6 +6,8 @@ import { ethers, connection } from "../helpers/hardhat.js";
 const IFR = "0x77e99917Eca8539c62F509ED1193ac36580A6e7B";
 const PAIR = "0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0";
 const GOVERNANCE = "0xc43d48E7FDA576C5022d0670B652A622E8caD041";
+const WETH = "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2";
+const FACTORY = "0x5C69bEe701ef814a2B6a3EDD4B1652CB9cc5aA6f";
 const WEEK = 7 * 86400;
 
 describe("PriceLockVault on a Mainnet fork", function () {
@@ -18,7 +20,8 @@ describe("PriceLockVault on a Mainnet fork", function () {
     const pair = await ethers.getContractAt(
       ["function getReserves() view returns (uint112,uint112,uint32)", "function token0() view returns (address)"], PAIR);
     const Vault = await ethers.getContractFactory("PriceLockVault");
-    const vault = await Vault.deploy(IFR, PAIR, GOVERNANCE, WEEK, ethers.parseEther("50"), 0);
+    const vault = await Vault.deploy(IFR, WETH, FACTORY, GOVERNANCE, WEEK, ethers.parseEther("50"), 0);
+    expect(await vault.pair()).to.equal(PAIR); // taken from the canonical Uniswap V2 factory
     expect(await vault.ifrIsToken0()).to.equal((await pair.token0()) === IFR);
 
     const [r0, r1] = await pair.getReserves();

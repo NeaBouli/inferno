@@ -15,10 +15,16 @@ interface IUniswapV2PairTwap {
     function price1CumulativeLast() external view returns (uint256);
 }
 
+/// @notice Minimal Uniswap V2 factory surface used to prove pair provenance.
+interface IUniswapV2FactoryPair {
+    function getPair(address tokenA, address tokenB) external view returns (address pair);
+}
+
 /// @title PriceLockVault
 /// @notice Locks IFR until a TWAP price target is reached, with a mandatory rescue time per lock.
-///         Price locks are disabled until Governance activates them, and activation itself reverts unless the
-///         on-chain readiness scope (pool depth and/or TWAP) holds at execution time.
+///         Price locks are disabled until Governance activates them. Activation and every new lock revert unless
+///         the on-chain readiness scope (pool depth and/or TWAP) holds at that moment. The rescue path
+///         (maxUnlockTime) never calls the pair, so it works even if the pair reverts.
 ///         Tokens always return to the wallet that locked them; nobody can withdraw user funds.
 ///         See docs/PRICE_LOCK_VAULT_SPEC.md.
 contract PriceLockVault is Ownable, ReentrancyGuard {
@@ -50,6 +56,8 @@ contract PriceLockVault is Ownable, ReentrancyGuard {
     uint256 private constant IFR_UNIT = 1e9;
 
     IERC20 public immutable ifrToken;
+    address public immutable weth;
+    address public immutable factory;
     IUniswapV2PairTwap public immutable pair;
     bool public immutable ifrIsToken0;
 
@@ -72,24 +80,31 @@ contract PriceLockVault is Ownable, ReentrancyGuard {
     event TwapWindowUpdated(uint256 twapWindow);
 
     /// @param _ifrToken IFR token (9 decimals)
-    /// @param _pair IFR/WETH Uniswap V2 pair
+    /// @param _weth Canonical WETH of the network; the pair's other token must be exactly this
+    /// @param _factory Uniswap V2 factory; the pair is taken from factory.getPair(IFR, WETH), never supplied directly
     /// @param _governance Owner (Governance timelock)
     /// @param _twapWindow TWAP window in seconds (1 to 30 days)
     /// @param _minWethReserve Readiness: minimum WETH reserve in wei (0 = not required)
     /// @param _minActivationPrice Readiness: minimum TWAP in wei per IFR (0 = not required)
     constructor(
         address _ifrToken,
-        address _pair,
+        address _weth,
+        address _factory,
         address _governance,
         uint256 _twapWindow,
         uint256 _minWethReserve,
         uint256 _minActivationPrice
     ) Ownable(_governance) {
-        require(_ifrToken != address(0) && _pair != address(0), "zero address");
+        require(_ifrToken != address(0) && _weth != address(0) && _factory != address(0), "zero address");
+        require(_ifrToken != _weth, "IFR equals WETH");
+        address _pair = IUniswapV2FactoryPair(_factory).getPair(_ifrToken, _weth);
+        require(_pair != address(0), "no IFR/WETH pair");
         address t0 = IUniswapV2PairTwap(_pair).token0();
         address t1 = IUniswapV2PairTwap(_pair).token1();
-        require(t0 == _ifrToken || t1 == _ifrToken, "pair lacks IFR");
+        require((t0 == _ifrToken && t1 == _weth) || (t0 == _weth && t1 == _ifrToken), "pair is not IFR/WETH");
         ifrToken = IERC20(_ifrToken);
+        weth = _weth;
+        factory = _factory;
         pair = IUniswapV2PairTwap(_pair);
         ifrIsToken0 = t0 == _ifrToken;
         _setTwapWindow(_twapWindow);
@@ -155,7 +170,7 @@ contract PriceLockVault is Ownable, ReentrancyGuard {
     /// @return twapValid Whether a valid TWAP exists
     /// @return twapPriceWei TWAP in wei per IFR
     /// @return requiredPriceWei minActivationPrice (0 = not required)
-    /// @return ready Whether activate() would pass the scope check now
+    /// @return ready Whether activate() and new locks would pass the scope check now
     function readiness()
         public
         view
@@ -214,6 +229,7 @@ contract PriceLockVault is Ownable, ReentrancyGuard {
     // ── Locks ──────────────────────────────────────────────────
 
     /// @notice Lock IFR until the TWAP reaches targetPriceWei (and earliestTime, if set), or until maxUnlockTime.
+    ///         Requires the vault to be active AND the readiness scope to hold now (re-checked on every lock).
     /// @param amount IFR to transfer in (the credited balance difference is recorded)
     /// @param targetPriceWei TWAP target in wei per IFR
     /// @param earliestTime Optional earliest unlock time (0 = none)
@@ -234,6 +250,8 @@ contract PriceLockVault is Ownable, ReentrancyGuard {
         require(earliestTime == 0 || earliestTime <= maxUnlockTime, "earliestTime after maxUnlockTime");
         require(_locks[msg.sender].length < MAX_LOCKS_PER_WALLET, "too many locks");
         poke();
+        (, , , , , , bool ready) = readiness();
+        require(ready, "readiness scope not met");
 
         uint256 before = ifrToken.balanceOf(address(this));
         ifrToken.safeTransferFrom(msg.sender, address(this), amount);
@@ -247,15 +265,16 @@ contract PriceLockVault is Ownable, ReentrancyGuard {
     }
 
     /// @notice Unlock one of msg.sender's locks; tokens go to msg.sender, the original locker.
+    ///         From maxUnlockTime on (rescue) no pair or oracle call is made, so a broken pair cannot block it.
     /// @param lockId Index of the lock
     function unlock(uint256 lockId) external nonReentrant {
         require(lockId < _locks[msg.sender].length, "invalid lockId");
-        poke();
         Lock storage l = _locks[msg.sender][lockId];
         require(!l.unlocked, "already unlocked");
         bool rescue = block.timestamp >= l.maxUnlockTime;
         if (!rescue) {
             require(block.timestamp >= l.earliestTime, "earliest time not reached");
+            poke();
             (bool valid, uint256 price, ) = twap();
             require(valid, "no valid TWAP");
             require(price >= l.targetPriceWei, "price target not met");
