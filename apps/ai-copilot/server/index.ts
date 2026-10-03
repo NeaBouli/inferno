@@ -13,6 +13,7 @@ import {
 } from "../src/context/copilot-policy.js";
 import { loadWikiDocs, buildSystemPrompt, WikiDoc } from "./wiki-rag.js";
 import { buildSurfaceContext, normalizeCopilotSurface } from "./surface-context.js";
+import { resolveAllowedOrigins } from "./cors-origins.js";
 import { toJsonSafeUint32 } from "./json-values.js";
 import {
   DailyBudget,
@@ -37,9 +38,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-app.use(cors({
-  origin: (process.env.ALLOWED_ORIGINS || 'https://ifrunit.tech,https://www.ifrunit.tech,https://neabouli.github.io,http://localhost:5175,http://localhost:3003').split(','),
-}));
+app.use(cors({ origin: resolveAllowedOrigins() }));
 app.use(express.json({ limit: '50kb' }));
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
