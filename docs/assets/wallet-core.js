@@ -2,6 +2,11 @@
  * IFR Wallet Core v4.2 — WalletConnect v2 via self-hosted artifact
  * Usage: await IFRWallet.connect(); IFRWallet.getAddress();
  *
+ * v4.2.3 — Read-only getProvider() uses an ethers v6 FallbackProvider over
+ *   CORS-capable public endpoints (publicnode primary). Each endpoint must
+ *   answer eth_chainId 0x1 before it may serve data; a visible notice and the
+ *   "rpcError" event fire when no endpoint is usable.
+ *
  * v4.2.2 — WalletConnect provider loads from the pinned same-origin artifact
  *   /assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js instead of
  *   a third-party CDN (CWA-47). No third-party code executes at runtime.
@@ -31,7 +36,15 @@ window.IFRWallet = (function() {
 
   var CHAIN_ID = 1;
   var CHAIN_ID_HEX = "0x1";
-  var RPC_URL = "https://eth.llamarpc.com";
+  // Public Mainnet endpoints that answer browser CORS preflights (verified
+  // 2026-10-03). Order = FallbackProvider priority; the first is the primary.
+  var RPC_URLS = [
+    "https://ethereum-rpc.publicnode.com",
+    "https://eth.drpc.org",
+    "https://1rpc.io/eth"
+  ];
+  var RPC_URL = RPC_URLS[0];
+  var RPC_TIMEOUT_MS = 8000;
   var SESSION_KEY = "ifr_wallet_connected";
   var WC_PROJECT_ID = "32f56abaa4b1d7f59fb1571c0c0a551f";
   var IFR_TOKEN_ADDRESS = "0x77e99917Eca8539c62F509ED1193ac36580A6e7B";
@@ -52,6 +65,7 @@ window.IFRWallet = (function() {
   var _listenersAttached = false;
   var _wcProvider = null;       // WalletConnect provider instance
   var _wcLoading = null;        // promise guard
+  var _readProvider = null;     // ethers FallbackProvider for read-only calls
 
   // ── Mobile / Tablet Detection ─────────────────────
   function _isMobile() {
@@ -430,7 +444,83 @@ window.IFRWallet = (function() {
     return a ? ("\u2B24 " + a.slice(0, 6)) : "";
   }
   function getProvider() {
-    return _provider || new ethers.JsonRpcProvider(RPC_URL);
+    return _provider || _getReadProvider();
+  }
+
+  // ── Read-only RPC (FallbackProvider) ──────────────
+  function _getReadProvider() {
+    if (_readProvider) return _readProvider;
+    var network = ethers.Network.from(CHAIN_ID);
+    var configs = RPC_URLS.map(function(url, i) {
+      var request = new ethers.FetchRequest(url);
+      request.timeout = RPC_TIMEOUT_MS;
+      return {
+        provider: _pinChainId(new ethers.JsonRpcProvider(request, network, {
+          staticNetwork: network,
+          batchMaxCount: 1
+        })),
+        priority: i + 1,
+        stallTimeout: 2000,
+        weight: 1
+      };
+    });
+    _readProvider = new ethers.FallbackProvider(configs, network, { quorum: 1 });
+    // The first read runs FallbackProvider's initial sync: every endpoint that
+    // fails it (down, or wrong chain via _pinChainId) is excluded for the
+    // lifetime of this provider. If none is left, the read rejects.
+    _readProvider.getBlockNumber().catch(function(err) {
+      console.warn("[IFR Wallet] No usable public RPC endpoint:", err && err.message);
+      _showRpcErrorNotice();
+      _emit("rpcError", err);
+    });
+    return _readProvider;
+  }
+
+  // staticNetwork makes ethers v6 skip eth_chainId entirely, so the chain is
+  // verified here, once per endpoint, before any other request is sent. A
+  // wrong or unparsable chainId stays rejected for good (fail closed); a
+  // transport failure is not cached and is re-checked on the next request.
+  function _pinChainId(provider) {
+    var send = provider.send.bind(provider);
+    var check = null;
+    provider.send = function(method, params) {
+      if (!check) {
+        check = send("eth_chainId", []).then(function(id) {
+          var ok = false;
+          try { ok = ethers.getBigInt(id) === BigInt(CHAIN_ID); } catch (e) { ok = false; }
+          if (!ok) {
+            var err = new Error("RPC endpoint reports chainId " + String(id) + ", expected " + CHAIN_ID_HEX);
+            err.code = "NETWORK_ERROR";
+            err.wrongChain = true;
+            throw err;
+          }
+        }, function(err) {
+          check = null;
+          throw err;
+        });
+      }
+      return check.then(function() { return send(method, params); });
+    };
+    return provider;
+  }
+
+  function _showRpcErrorNotice() {
+    if (typeof document === "undefined" || document.getElementById("ifr-rpc-error")) return;
+    var bar = document.createElement("div");
+    bar.id = "ifr-rpc-error";
+    bar.setAttribute("role", "alert");
+    bar.style.cssText = "position:fixed;left:0;right:0;bottom:96px;margin:0 auto;width:max-content;z-index:99998;max-width:min(560px,calc(100vw - 32px));box-sizing:border-box;display:flex;align-items:center;gap:12px;background:#0f172a;border:1px solid rgba(248,113,113,0.6);border-radius:12px;padding:10px 10px 10px 16px;color:#fecaca;font:500 0.9rem/1.45 system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;box-shadow:0 12px 32px rgba(0,0,0,0.5);";
+    var text = document.createElement("span");
+    text.textContent = "Ethereum network data is unavailable right now (no public RPC endpoint answered for Mainnet). On-chain values may be missing \u2014 please retry later.";
+    var close = document.createElement("button");
+    close.type = "button";
+    close.setAttribute("aria-label", "Dismiss network notice");
+    close.textContent = "\u00D7";
+    close.style.cssText = "flex:0 0 auto;min-width:44px;min-height:44px;background:transparent;border:1px solid rgba(248,113,113,0.45);border-radius:8px;color:#fecaca;font-size:1.25rem;cursor:pointer;";
+    close.addEventListener("click", function() { bar.remove(); });
+    bar.appendChild(text);
+    bar.appendChild(close);
+    (document.body || document.documentElement).appendChild(bar);
   }
 
   // ── Events ────────────────────────────────────────
