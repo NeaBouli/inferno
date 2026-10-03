@@ -5,8 +5,11 @@ sessions. The package currently supports Ethereum Mainnet only.
 
 ## Availability
 
-The SDK is not yet published to the npm registry. Repository consumers build and pack the
-versioned artifact first:
+The SDK is not yet published to the npm registry. Publication is prepared: a release tag
+`sdk-v<version>` on a reviewed `main` commit runs `.github/workflows/sdk-publish.yml`, which checks the
+release gate, waits for owner approval, tests the package and publishes it with npm provenance from the
+project npm account through npm Trusted Publishing. Until then, build and pack the versioned artifact
+from the repository:
 
 ```bash
 cd apps/sdk
@@ -16,7 +19,13 @@ npm pack --ignore-scripts
 ```
 
 Add the resulting `.tgz` path to the consuming application's `package.json` and committed
-lockfile, then use `npm ci`. Do not treat the repository package as a registry release.
+lockfile, then use `npm ci`.
+
+## Contract Addresses
+
+`MAINNET_ADDRESSES` lists deployed contracts. `commitmentVault` is CommitmentVault V1: its
+price-conditioned tranches can never unlock, so applications must not create new locks there.
+`lendingVault` is the retired LendingVault V1 with borrowing permanently disabled.
 
 The tarball exports CommonJS with tested ESM named-import interoperability and supports Node.js
 20 and 22. CI verifies the exact package contents, installs the locked tarball with `npm ci`, and
@@ -53,5 +62,4 @@ npm audit --audit-level=moderate
 npm pack --dry-run
 ```
 
-Publication remains blocked until the release checklist in
-`docs/runbooks/IFR_SDK_NPM_RELEASE.md` is complete.
+Publication follows the release checklist in `docs/runbooks/IFR_SDK_NPM_RELEASE.md`.
