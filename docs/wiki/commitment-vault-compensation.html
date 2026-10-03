@@ -438,15 +438,37 @@
     .cv-grey { background:#eceae6; color:#4a4036; border-color:#d6d0c7; }
     .cv-live { font-size:0.85rem; }
     .table-scroll { overflow-x:auto; }
-    @media (max-width: 640px) {
+    /* Tranche tables switch to cards whenever their column is narrower than the 7-column table
+       (about 860px), so the Status column never hides behind a horizontal scroll. */
+    .cv-cards { container-type:inline-size; container-name:cvcards; }
+    @container cvcards (max-width: 860px) {
       #cv01-table thead, #cv01-static thead { display:none; }
       #cv01-table, #cv01-table tbody, #cv01-table tr, #cv01-table td,
-      #cv01-static, #cv01-static tbody, #cv01-static tr, #cv01-static td { display:block; width:100%; }
-      #cv01-table tbody tr, #cv01-static tbody tr { border:1px solid var(--line, #e4d8c7); border-radius:10px; padding:10px 12px; margin-bottom:12px; }
-      #cv01-table td, #cv01-static td { border:0; padding:3px 0; }
+      #cv01-static, #cv01-static tbody, #cv01-static tr, #cv01-static td { display:block; }
+      #cv01-table, #cv01-static { width:100%; background:transparent !important; border:0 !important; border-radius:0 !important; box-shadow:none !important; overflow:visible; }
+      /* The shade sits on the whole card, not on the cells, so alternate cards are filled edge to edge. */
+      #cv01-table tbody tr, #cv01-static tbody tr { background:var(--surface, #fff); border:1px solid var(--line, #e4d8c7); border-radius:10px; padding:10px 12px; margin-bottom:12px; }
+      #cv01-table tbody tr:nth-child(even), #cv01-static tbody tr:nth-child(even) { background:color-mix(in srgb, var(--bg-alt, #f4ede3) 40%, var(--surface, #fff)); }
+      #cv01-table td, #cv01-static td { background:transparent !important; border:0; padding:3px 0; }
       #cv01-table td::before, #cv01-static td::before { content: attr(data-label) ": "; font-weight:700; }
-      #cv01-table tfoot tr, #cv01-static tfoot tr { display:flex; justify-content:space-between; }
+      #cv01-table tfoot, #cv01-static tfoot { display:block; }
+      #cv01-table tfoot tr, #cv01-static tfoot tr { display:flex; justify-content:space-between; background:var(--bg-alt, #f4ede3); border:1px solid var(--line, #e4d8c7); border-radius:10px; overflow:hidden; }
+      #cv01-table tfoot th, #cv01-static tfoot th { border:0; }
       #cv01-table tfoot th[colspan="3"]:last-child, #cv01-static tfoot th:last-child { display:none; }
+    }
+    /* Keep card text out of the column under the fixed Copilot launcher (#ifr-btn: 64px at 24px from
+       the right edge, 52px at 12px below 481px), so no scroll position puts tranche text under it. */
+    @media (max-width: 1240px) {
+      @container cvcards (max-width: 860px) {
+        #cv01-table tbody tr, #cv01-static tbody tr { padding-right:76px; }
+        #cv01-table tfoot tr, #cv01-static tfoot tr { padding-right:64px; }
+      }
+    }
+    @media (max-width: 480px) {
+      @container cvcards (max-width: 860px) {
+        #cv01-table tbody tr, #cv01-static tbody tr { padding-right:52px; }
+        #cv01-table tfoot tr, #cv01-static tfoot tr { padding-right:40px; }
+      }
     }
   </style>
 </head>
@@ -632,7 +654,7 @@
         <span class="cv-status cv-green">Green</span> Approved, and the 7-day TWAP and date conditions verified with published blocks: payable
       </div>
 
-      <div class="table-scroll">
+      <div class="table-scroll cv-cards" id="cv01-live-table" hidden>
       <table id="cv01-table">
         <thead>
           <tr><th>Wallet</th><th>Tranche</th><th>Lock type</th><th>Amount (IFR)</th><th>Original conditions</th><th>Conditions now</th><th>Status</th></tr>
@@ -643,10 +665,10 @@
         </tfoot>
       </table>
       </div>
-      <p id="cv01-live" class="cv-live">Loading live conditions&hellip;</p>
+      <p id="cv01-live" class="cv-live" hidden>Loading live conditions&hellip;</p>
       <noscript>
         <p>Live conditions and the status column need JavaScript. Without it, the static list below shows every affected tranche with its amount and original conditions. The Council decision is recorded in the vote log below; no tranche is payable before Council approval and a verified 7-day TWAP record.</p>
-        <div class="table-scroll">
+        <div class="table-scroll cv-cards">
         <table id="cv01-static">
           <thead><tr><th>Wallet</th><th>Tranche</th><th>Lock type</th><th>Amount (IFR)</th><th>Original conditions</th></tr></thead>
           <tbody>
@@ -749,6 +771,10 @@
         var data = JSON.parse(document.getElementById("cv01-data").textContent);
         var rows = document.getElementById("cv01-rows");
         var live = document.getElementById("cv01-live");
+        // The live table and the live line are JavaScript-only; without JavaScript they stay hidden and
+        // the <noscript> fallback shows the static list instead.
+        document.getElementById("cv01-live-table").hidden = false;
+        live.hidden = false;
         var RPCS = ["https://ethereum-rpc.publicnode.com", "https://eth.llamarpc.com"];
         function short(a) { return a.slice(0, 6) + "…" + a.slice(-4); }
         function fmt(n) { var p = n.split("."); return Number(p[0]).toLocaleString("en-US") + (p[1] ? "." + p[1] : ""); }
