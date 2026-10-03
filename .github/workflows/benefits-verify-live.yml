@@ -1,6 +1,6 @@
 name: IFR Benefits Verify Live Vectors
 
-# ifr-benefits-verify/1 against Ethereum Mainnet, Sepolia and a pinned Mainnet fork.
+# ifr-benefits-verify/1 and /2 against Ethereum Mainnet, Sepolia and Mainnet forks.
 # Read-only on the real networks; all writes happen on the local Hardhat fork.
 
 on:
@@ -12,11 +12,13 @@ on:
     paths:
       - 'apps/benefits-verify/**'
       - 'test/fork/BenefitsVerifyFork.test.js'
+      - 'test/fork/BenefitsVerifyV2Fork.test.js'
       - '.github/workflows/benefits-verify-live.yml'
   pull_request:
     paths:
       - 'apps/benefits-verify/**'
       - 'test/fork/BenefitsVerifyFork.test.js'
+      - 'test/fork/BenefitsVerifyV2Fork.test.js'
       - '.github/workflows/benefits-verify-live.yml'
 
 permissions:
@@ -81,3 +83,16 @@ jobs:
             echo "::notice::No archive RPC secret; forking Mainnet at recent block $block via public RPC."
           fi
           HARDHAT_FORK=true HARDHAT_FORK_BLOCK_NUMBER=$block npm run test:benefits-fork
+
+      - name: ifr-benefits-verify/2 on a recent Mainnet fork (CommitmentVault V1 + V2)
+        env:
+          MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
+        # CommitmentVault V2 was deployed at block 26107296, after the pinned /1 vector block, so this
+        # step always forks a recent block.
+        run: |
+          rpc="${MAINNET_RPC_URL:-https://ethereum-rpc.publicnode.com}"
+          head=$(curl -fsS -m 20 -H 'content-type: application/json' \
+            --data '{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}' "$rpc" \
+            | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(String(BigInt(JSON.parse(s).result))))')
+          MAINNET_RPC_URL="$rpc" HARDHAT_FORK=true HARDHAT_FORK_BLOCK_NUMBER=$((head - 5)) \
+            npx hardhat test test/fork/BenefitsVerifyV2Fork.test.js
