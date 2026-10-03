@@ -29,7 +29,7 @@ Transferred Governance ownership from Deployer EOA to Treasury Safe (3-of-5 Mult
 ## Prerequisites
 
 - [ ] Proposal #7 executed (Deployer + Safes are feeExempt)
-- [ ] All 5 signers reachable: A.K. / M.G. / A.M. / Y.K. / A.P.
+- [ ] All 5 signers reachable: G.M. / M.G. / A.M. / Y.K. / A.P.
 - [ ] Treasury Safe tested — can sign and execute transactions
 - [ ] Team aligned — this is irreversible
 

@@ -2058,7 +2058,7 @@ console.<span class="function">log</span>(<span class="string">"Since:"</span>, 
                 <li>Milestone replay protection via <code>milestoneDone</code> mapping</li>
                 <li><strong>AuthorizedCaller whitelist:</strong> <code>recordLockReward</code> callable by admin OR whitelisted backend wallet</li>
                 <li><strong>Anti-double-count:</strong> each <code>(wallet, partnerId)</code> pair can only be rewarded once</li>
-                <li><strong>Algorithmic emission throttle (inactive on Mainnet):</strong> when <code>setIFRLock</code> is configured, reward rate scales from <code>rewardBps</code> down to <code>MIN_REWARD_BPS</code> (500) as global lock ratio rises from 1% to 50%; Mainnet <code>ifrLock</code> is unset (address(0)), so the flat <code>rewardBps</code> of 1500 applies</li>
+                <li><strong>Algorithmic emission throttle (inactive on Mainnet):</strong> when <code>setIFRLock</code> is configured, reward rate scales from <code>rewardBps</code> down to <code>MIN_REWARD_BPS</code> (500) as global lock ratio rises from 1% to 50%; Mainnet <code>ifrLock</code> is unset (address(0)), so the flat <code>rewardBps</code> of 1500 is the configured contract parameter. Rewards are currently disabled (Lane 4 model B: pilot partners only, verified checkout redemptions, Governance-activated).</li>
                 <li>SafeERC20 for all token transfers</li>
             </ul>
         </div>

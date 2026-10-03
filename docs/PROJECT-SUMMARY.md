@@ -43,7 +43,7 @@ All 17 on-chain components were documented as deployed and verified in this snap
 |------|---------|
 | Treasury Multisig | [`0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`](https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b) |
 
-Threshold: 3-of-5 (5 active signers: A.K., M.G., A.M., Y.K., A.P.).
+Threshold: 3-of-5 (5 active signers: G.M., M.G., A.M., Y.K., A.P.).
 
 ## Test Coverage
 
