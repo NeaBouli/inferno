@@ -22,9 +22,13 @@ A dedicated key that owns nothing else keeps that small blast radius and separat
 3. **Propose (Treasury Safe, 3-of-5).** Import `cwa06-voucher-step1-propose.json`; check target Governance, inner
    target FeeRouterV1, `setVoucherSigner(<new address>)`.
 4. **Execute after 48 hours (Treasury Safe).** Import `cwa06-voucher-step2-execute.json`.
-5. **Activate (host operator).** `bash scripts/ops/rotate-voucher-signer.sh activate` refuses unless the on-chain
-   signer equals the prepared key, switches `.env.points-backend`, recreates the container, checks health and the
-   active signer address, then removes the old key copies from the host.
+5. **Activate (host operator).** `bash scripts/ops/rotate-voucher-signer.sh activate` refuses unless a Mainnet RPC
+   (chainId 1, well-formed response) reports the prepared key as the on-chain signer. It then switches
+   `.env.points-backend`, recreates the container, and requires a healthy `/health` and the expected active signer
+   address. Only then does it shred the env backup made by this run and the staging key file. Other copies, such as
+   older env or release backups and host snapshots, are not checked and must be reviewed separately.
+   If health or the signer check fails, nothing is shredded: restore with
+   `mv "$(cat .voucher-signer-last-backup)" .env.points-backend` in the host root, recreate the container, and retry.
 6. **Replace the Safe owner key.** The former signer swaps `0x17F8…72d4` for a fresh wallet in all three Safes,
    because that key was stored on the host.
 

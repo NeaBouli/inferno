@@ -21,11 +21,31 @@ SAFE_OWNERS="0x6b36687b0cd4386fb14cf565b67d7862110fed67 0x17f8dd6deccb3ff5d95691
 die() { echo "ERROR: $*" >&2; exit 1; }
 lower() { tr '[:upper:]' '[:lower:]'; }
 
+rpc_call() { # $1 = JSON-RPC method, $2 = params JSON; prints the raw response or fails
+  curl -fsS -m 20 -H 'content-type: application/json' \
+    --data "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"$1\",\"params\":$2}" "$RPC"
+}
+
+# Prints the 0x-prefixed lowercase hex "result" of a JSON-RPC response on stdin; fails on error or malformed JSON.
+rpc_result() {
+  python3 -c 'import json,re,sys
+try:
+    r=json.load(sys.stdin)
+except Exception:
+    sys.exit("malformed RPC response")
+if not isinstance(r,dict) or "error" in r or not isinstance(r.get("result"),str) or not re.fullmatch(r"0x[0-9a-fA-F]*",r["result"]):
+    sys.exit("RPC error or missing result")
+print(r["result"].lower())'
+}
+
+# Prints FeeRouterV1.voucherSigner() from Ethereum Mainnet; fails closed on any RPC problem.
 onchain_signer() {
-  local out
-  out=$(curl -fsS -m 20 -H 'content-type: application/json' \
-    --data "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"eth_call\",\"params\":[{\"to\":\"$FEE_ROUTER\",\"data\":\"0x88f4c137\"},\"latest\"]}" "$RPC")
-  echo "0x${out:(-42):40}" | lower
+  local chain word
+  chain=$(rpc_call eth_chainId '[]' | rpc_result) || die "eth_chainId failed"
+  [ "$chain" = "0x1" ] || die "RPC is not Ethereum Mainnet (chainId $chain)"
+  word=$(rpc_call eth_call "[{\"to\":\"$FEE_ROUTER\",\"data\":\"0x88f4c137\"},\"latest\"]" | rpc_result) || die "voucherSigner() call failed"
+  [[ "$word" =~ ^0x0{24}[0-9a-f]{40}$ ]] || die "voucherSigner() returned an unexpected value"
+  echo "0x${word:26:40}"
 }
 
 # Prints the address for the key in $1 (a file under $ROOT, read on the host); never prints the key.
@@ -67,14 +87,20 @@ case "${1:-}" in
       chmod 600 \"\$tmp\"; chown --reference=\"\$f\" \"\$tmp\" 2>/dev/null || true; mv \"\$tmp\" \"\$f\"
       echo \"\$f.bak-\$ts\" > .voucher-signer-last-backup
       docker compose up -d --no-deps --force-recreate points-backend >/dev/null"
-    for _ in $(seq 1 30); do
-      curl -fsS -m 5 "${HEALTH_URL:-https://points-api.ifrunit.tech/health}" >/dev/null 2>&1 && break; sleep 4
+    healthy=0
+    for _ in $(seq 1 "${HEALTH_ATTEMPTS:-30}"); do
+      if curl -fsS -m 5 "${HEALTH_URL:-https://points-api.ifrunit.tech/health}" >/dev/null 2>&1; then healthy=1; break; fi
+      sleep "${HEALTH_INTERVAL:-4}"
     done
+    rollback="the env backup named in $ROOT/.voucher-signer-last-backup and $ROOT/$NEXT are kept for rollback"
+    [ "$healthy" = 1 ] || die "points-backend did not become healthy; $rollback"
     active=$(remote_active_address)
-    [ "$active" = "$addr" ] || die "backend signer is $active, expected $addr; backup path is in $ROOT/.voucher-signer-last-backup"
+    [ "$active" = "$addr" ] || die "backend signer is $active, expected $addr; $rollback"
     # The backup still holds the old Safe-owner key: remove it and the staging file once the switch is verified.
     ssh "$HOST" "set -euo pipefail; cd '$ROOT'; b=\$(cat .voucher-signer-last-backup); shred -u \"\$b\" '$NEXT' .voucher-signer-last-backup"
-    echo "ACTIVE: backend and FeeRouterV1 both use $addr; old key copies removed from $HOST."
+    echo "ACTIVE: backend and FeeRouterV1 both use $addr."
+    echo "Shredded on $HOST: the env backup made by this run and the staging key file. Other copies (older env backups,"
+    echo "release backups, host snapshots) were not checked by this script."
     echo "Remaining step: the former signer replaces his Safe owner key in all three Safes."
     ;;
   *) die "usage: $0 prepare|status|activate" ;;
