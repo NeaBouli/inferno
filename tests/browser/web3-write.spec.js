@@ -1035,6 +1035,56 @@ test("CommitmentVault time-only and LendingVault offer writes preserve IFR base 
   await context.close();
 });
 
+test("CommitmentVault V1 offers only TIME_ONLY and refuses forged price conditions before any wallet write (CV-01)", async ({ browser }) => {
+  const { context, page, writes, pageErrors } = await preparePage(browser);
+  await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+  await connect(page);
+  await page.locator("[data-open-lock]").first().click();
+
+  const condition = page.locator("[data-lock-condition]");
+  await expect(condition.locator("option")).toHaveCount(1);
+  await expect(condition.locator("option")).toHaveAttribute("value", "0");
+  await expect(page.locator("[data-price-locks-disabled]")).toContainText("Price-based locks are disabled");
+
+  for (const forged of ["1", "2", "3"]) {
+    await condition.evaluate((select, value) => {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = `forged ${value}`;
+      select.appendChild(option);
+      select.value = value;
+      select.dispatchEvent(new Event("change", { bubbles: true }));
+    }, forged);
+    await page.locator("[data-lock-amount]").fill("250");
+    await page.locator("[data-lock-submit]").click();
+    await expect(page.locator("[data-lock-status]")).toContainText("Price-based locks are disabled", { timeout: 10_000 });
+  }
+  expect(writes).toEqual([]);
+  expect(pageErrors).toEqual([]);
+  await context.close();
+});
+
+test("wiki CommitmentVault widget exposes only TIME_ONLY and pins cType 0 at the lock call (CV-01)", async ({ browser }) => {
+  const context = await browser.newContext({ serviceWorkers: "block" });
+  const page = await context.newPage();
+  await page.goto("/wiki/commitment-vault.html", { waitUntil: "domcontentloaded" });
+  const condition = page.locator("#cv-condition-type");
+  await expect(condition.locator("option")).toHaveCount(1);
+  await expect(condition.locator("option")).toHaveAttribute("value", "0");
+  await expect(page.locator("#cv-price-disabled-banner")).toBeVisible();
+  await expect(page.locator("#cv-price-disabled-banner")).toContainText("Price-based locks are disabled");
+  await expect(page.locator("#cv-price-disabled-notice")).toContainText("Price-based locks are disabled");
+  await expect(page.locator("body")).not.toContainText("lock widget below is functional");
+  const source = readFileSync("docs/wiki/commitment-vault.html", "utf8");
+  expect(source).toContain('if (cType !== 0) throw new Error("Price-based locks are disabled');
+  expect(source).toContain("cv.lock(plan.amounts[i], 0, plan.unlockTime, 0)");
+  expect(source).not.toMatch(/<option value="[123]">[A-D]\) (Price|Time OR|Time AND)/);
+  const web3 = readFileSync("docs/web3/index.html", "utf8");
+  expect(web3).toContain("commitment.lock(plan.amounts[i], 0, plan.unlockTime, 0)");
+  expect(web3).not.toContain("Price-condition locks are available");
+  await context.close();
+});
+
 test("LendingVault borrowing remains transaction-disabled while price is zero", async ({ browser }) => {
   const { context, page, writes, pageErrors } = await preparePage(browser, { offerAvailable: true });
   await page.goto("/web3/?action=borrow", { waitUntil: "domcontentloaded" });
