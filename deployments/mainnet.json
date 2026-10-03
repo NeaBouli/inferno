@@ -4,7 +4,26 @@
     "addressSource": "docs/DEPLOYMENTS.md (Ethereum Mainnet contract table, Etherscan-verified entries)",
     "components": "Current Mainnet protocol contracts (14). Legacy BootstrapVault V1 is deprecated and listed only in docs/DEPLOYMENTS.md.",
     "unknownPolicy": "deployer, tx and timestamp are null when no deployment record exists in this repository; they are unknown, not omitted by accident. Fill them only from a verified deployment transaction.",
-    "abiDirectory": "abi/ (only BuilderRegistry, BuybackController, CommitmentVault, LendingVault have committed ABIs)"
+    "abiDirectory": "abi/ (only BuilderRegistry, BuybackController, CommitmentVault, LendingVault have committed ABIs)",
+    "pendingWiring": {
+      "note": "Deployed but not yet counted as a protocol contract: it joins the contract list after Governance executes setFeeExempt(V2, true) and the interfaces switch (docs/COMMITMENT_VAULT_V2_REPAIR.md steps 4-5).",
+      "CommitmentVaultV2": {
+        "address": "0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F",
+        "deployer": "0x6b36687b0cd4386fb14cf565B67D7862110Fed67",
+        "tx": "0x9857a5707b650b8828f41b893f91a10ff26d7990742e782bb0b7e86df23ea0f7",
+        "timestamp": "2026-10-02T21:22:23.000Z",
+        "block": 26107296,
+        "network": "mainnet",
+        "source": "contracts/vault/CommitmentVault.sol",
+        "sourceCommit": "f29efddc",
+        "constructor": [
+          "0x77e99917Eca8539c62F509ED1193ac36580A6e7B",
+          "0xc43d48E7FDA576C5022d0670B652A622E8caD041"
+        ],
+        "abi": "abi/CommitmentVault.json",
+        "provenance": "deployment transaction receipt; runtime bytecode equals the compiled artifact except the immutable IFR token address; Etherscan verified (2026-10-03, full solc input); Sourcify exact match"
+      }
+    }
   },
   "InfernoToken": {
     "address": "0x77e99917Eca8539c62F509ED1193ac36580A6e7B",
