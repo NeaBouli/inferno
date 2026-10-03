@@ -1044,7 +1044,7 @@ cast call 0x0Cab0A9440643128540222acC6eF5028736675d3 \
       <ol>
         <li><strong>Builder Registration:</strong> Governance creates a builder entry in PartnerVault with a beneficiary address, max allocation, and vesting schedule.</li>
         <li><strong>Verified Redemptions:</strong> The Benefits backend records each seller-confirmed checkout redemption once (idempotent event id).</li>
-        <li><strong>Settlement:</strong> Per period, Governance records the exact IFR amount with <code>recordMilestone(partnerId, milestoneId, unlockAmount)</code>, capped by the partner allocation. The contract also has <code>recordLockReward</code> (lock amount &times; <code>rewardBps</code>); the project does not use it.</li>
+        <li><strong>Settlement:</strong> Per period, Governance records the exact IFR amount with <code>recordMilestone(partnerId, milestoneId, unlockAmount)</code>, capped by the partner allocation. The contract also has <code>recordLockReward(bytes32 partnerId, uint256 lockAmount, address wallet)</code> (lock amount &times; <code>rewardBps</code>, one reward per wallet and partner); the project does not use it.</li>
         <li><strong>Vested Claiming:</strong> Builders call <code>claim(partnerId)</code> to withdraw vested rewards. Linear vesting ensures long-term alignment.</li>
       </ol>
 

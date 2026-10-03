@@ -123,7 +123,7 @@ remains the only place where agenda items and vote outcomes are published.
   Governance `recordMilestone` proposal; no authorized caller. Rewards stay
   disabled until the first pilot partner, which is activated by its own Safe
   proposal ([policy](PARTNER_REWARDS_MODEL_B.md)).
-- **Decision needed (remaining):** EUR amount per redemption and budget per
+- **Decision needed:** (remaining) EUR amount per redemption and budget per
   pilot partner; global pilot budget; vesting length by budget size;
   pilot-partner count and selection criteria. Formula, caller model and refill
   policy are decided (model B, no caller, no refill).
