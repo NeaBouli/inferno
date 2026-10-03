@@ -36,6 +36,7 @@ jobs:
       - run: npm ci
       - run: npm run test:dependencies
       - run: npm run test:health-shape
+      - run: npm run test:cors-origins
       - name: npm audit (production clean; reviewed dev-only exceptions)
         run: node ../../scripts/check-dev-advisory-exceptions.cjs
       - run: npx tsc --noEmit

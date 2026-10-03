@@ -22,7 +22,8 @@
     "test:lending-loans": "tsx scripts/test-lending-loans.ts",
     "build": "vite build",
     "preview": "vite preview",
-    "start": "tsx server/index.ts"
+    "start": "tsx server/index.ts",
+    "test:cors-origins": "tsx scripts/test-cors-origins.ts"
   },
   "dependencies": {
     "@types/cors": "^2.8.19",
