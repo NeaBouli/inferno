@@ -192,10 +192,13 @@ How the file is published and changed:
 
 ### Relation to other tier tables
 
-- **Access tiers are a separate scheme.** The SDK `ifr-sdk` (`apps/sdk`) and the AI Copilot
-  (`/api/ifr/check`) use one canonical **access-tier** scheme: Basic/Premium/Pro at 500/2,000/10,000 IFR
-  (CWA-77). It gates Copilot and API product features. It is not a benefit tier scheme. Integrators
-  offering shop or partner benefits use the tier file of this specification.
+- **One default preset for project surfaces (since 2026-10-03).** The SDK `ifr-sdk` (`apps/sdk`,
+  `DEFAULT_TIERS`) and the AI Copilot (`/api/ifr/check`, `tierBasis: "locked"`) use the same default
+  preset as the Benefits network: IFR locked in IFRLock only, Bronze 1,000 / Silver 2,500 / Gold 5,000 /
+  Platinum 10,000. The former separate access-tier scheme (Basic/Premium/Pro, CWA-77) is retired. The
+  preset is a default and label set, not a rule: partners set their own thresholds, held-IFR minimums,
+  lock sources and discounts per benefit, and any integrator may apply its own rule under this profile.
+  Discounts are independent of PartnerVault rewards.
 - **Product-specific thresholds.** An integrator MAY still gate a single product feature on any threshold
   greater than zero. Such a threshold is not a tier.
 
