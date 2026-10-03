@@ -3718,11 +3718,18 @@ if (isLocked) {
     }
     return { dead: baseUnitsToNumber(deadRaw), cv01: baseUnitsToNumber(cv01), commitmentLive: commitmentLive, liveSupply: liveSupply, deadRaw: deadRaw };
   }
-  function renderLostIFR(feeRouterLiveRaw) {
+  // Single source for the effective FeeRouterV1 amount: the live read when present and not lower than the
+  // verified baseline, otherwise the baseline. Card, ledger, metric and donut all derive from this.
+  function effectiveFeeRouter(feeRouterLiveRaw) {
     var baseline = parseBaseUnits(LOST_IFR.feeRouterRaw);
     var liveRaw = parseBaseUnits(feeRouterLiveRaw);
     var live = liveRaw !== null && liveRaw >= baseline;
-    var feeRouter = live ? liveRaw : baseline;
+    return { raw: live ? liveRaw : baseline, live: live };
+  }
+  function renderLostIFR(feeRouterLiveRaw) {
+    var eff = effectiveFeeRouter(feeRouterLiveRaw);
+    var live = eff.live;
+    var feeRouter = eff.raw;
     var total = lostTotalRaw(feeRouter);
     document.querySelectorAll('[data-lost-ifr]').forEach(function(card) {
       card.setAttribute('data-state', live ? 'live' : 'verified');
@@ -3873,7 +3880,7 @@ if (isLocked) {
     var protocolLocked = sumKnown(data, PROTOCOL_LOCKED_KEYS);
     var items = [
       { key: 'burned-stat',     label: 'Total Burned',    value: fmtNA(data.burned),    sub: 'Since genesis \u2014 decreasing forever', color: '#b3300b' },
-      { key: 'lost-ifr-stat',   label: 'Permanently Lost', value: fmt(baseUnitsToNumber(lostTotalRaw(parseBaseUnits(LOST_IFR.feeRouterRaw)))), sub: 'Not burned \u2014 CV-01 + FeeRouterV1', color: '#92400e' },
+      { key: 'lost-ifr-stat',   label: 'Permanently Lost', value: fmt(baseUnitsToNumber(lostTotalRaw(effectiveFeeRouter(data && data.feeRouterRaw).raw))), sub: 'Not burned \u2014 CV-01 + FeeRouterV1', color: '#92400e' },
       { key: 'protocol-locked', label: 'Protocol Locked', value: fmtNA(protocolLocked), sub: 'All non-circulating IFR secured', color: '#92400e' },
       { key: 'commitment-locked-stat', label: 'CommitmentVault Locked', value: fmtNA(data.commitmentLocked), sub: 'Time tranches only; CV-01 counted as permanently lost', color: '#92400e' },
       { key: 'live-supply-stat', label: 'Live Supply', value: data.liveSupply != null ? fmt(data.liveSupply) : 'N/A', sub: 'Current supply excluding permanently lost IFR', color: '#065f46' },

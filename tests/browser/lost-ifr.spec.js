@@ -270,3 +270,48 @@ test("supply endpoint fields permanentlyLostRaw/liveSupplyRaw are used when the 
   await expect(page.locator("#donut-live-supply")).toHaveText("Live 969.5M");
   await expect(page.locator('[data-lost-ifr-value]')).toHaveText("27,218,467.99 IFR");
 });
+
+// Codex review (#170): a CommitmentVault read that completes after the live distribution refresh re-renders
+// the metrics; it must not reset the live "Permanently Lost" value to the verified baseline. Card, ledger,
+// metric and donut must keep agreeing on the live FeeRouterV1 amount in both arrival orders.
+const RPC = "https://ethereum-rpc.publicnode.com";
+const CV_V1 = "0x0719d9eb28df7f5e63f91fac4bbb2d579c4f73d3";
+const word = (n) => "0x" + BigInt(n).toString(16).padStart(64, "0");
+async function answerCommitmentVaultRpc(page, delayMs) {
+  await page.route(RPC, async (route) => {
+    let body;
+    try { body = JSON.parse(route.request().postData() || "null"); } catch { body = null; }
+    const answer = (req) => {
+      const call = req && req.method === "eth_call" && req.params && req.params[0];
+      const to = call && String(call.to || "").toLowerCase();
+      const data = call && String(call.data || call.input || "");
+      if (to === CV_V1 && data.startsWith("0x56891412")) return { jsonrpc: "2.0", id: req.id, result: word("27795535918948719") }; // totalLocked()
+      if (to === CV_V1 && data.startsWith("0x9ae697bf")) return { jsonrpc: "2.0", id: req.id, result: word("20156940952845656") }; // lockedBalance(C2)
+      if (to === CV_V1 && data.startsWith("0x49cfece1")) return { jsonrpc: "2.0", id: req.id, result: word(10) };                 // getTrancheCount(C2)
+      if (req && req.method === "eth_chainId") return { jsonrpc: "2.0", id: req.id, result: "0x1" };
+      return { jsonrpc: "2.0", id: req && req.id, error: { code: -32000, message: "not mocked" } };
+    };
+    if (delayMs) await new Promise((r) => setTimeout(r, delayMs));
+    const result = Array.isArray(body) ? body.map(answer) : answer(body);
+    await route.fulfill({ contentType: "application/json", body: JSON.stringify(result) });
+  });
+}
+for (const [label, delayMs] of [["completes after the live refresh", 2500], ["completes immediately", 0]]) {
+  test(`a CommitmentVault read that ${label} keeps the live lost-IFR value everywhere`, async ({ page }) => {
+    test.setTimeout(120000);
+    await page.route(/^https?:\/\/(?!localhost|ethereum-rpc\.publicnode\.com)/, (route) => route.abort());
+    const balances = Object.assign({}, FULL_BALANCES, { FeeRouterV1: { raw: "800000000000000", formatted: 800000 } });
+    await answerProxyWith(page, { totalSupply: 996687518.33, burned: 3312481.67 }, balances);
+    await answerCommitmentVaultRpc(page, delayMs);
+    await page.goto("/");
+    await page.locator("#onchain-transparency").scrollIntoViewIfNeeded();
+    await expect(lostCard(page)).toHaveAttribute("data-state", "live", { timeout: 60000 });
+    // The CommitmentVault read has completed once its transparency card is live.
+    await expect(page.locator('[data-transparency-metric="commitment"]')).toHaveAttribute("data-state", "live", { timeout: 60000 });
+    await expect(lostCard(page).locator("[data-lost-ifr-value]")).toHaveText("27,218,467.99 IFR");
+    await expect(page.locator("[data-lost-ifr-ledger]")).toHaveText("27.2M IFR");
+    await expect(page.locator('[data-live-key="lost-ifr-stat"]')).toHaveText("27.2M");
+    await page.locator("#live-distribution").scrollIntoViewIfNeeded();
+    expect(Number(await page.locator('[data-dist-cat="dead"]').getAttribute("data-dist-value"))).toBeCloseTo(27218467.99, 2);
+  });
+}
