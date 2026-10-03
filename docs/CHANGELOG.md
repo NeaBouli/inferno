@@ -8,7 +8,22 @@
   signed ballot text and the tallies in CI; the page is rendered from the data and checked for drift.
 - Open ballots run through the Etherscan verified-signature procedure. Secret ballots are in planning as a
   separate milestone.
-- Open ballots: CV-01 (2 of 3 YES), EX-01 (1 of 3 YES), EX-02 (no option vote yet). No deadline.
+- Status: CV-01 open (2 of 3 YES), EX-01 approved on 4 October 2026 (3 YES), EX-02 open (no option vote yet). No deadline.
+## 2 October 2026 — CommitmentVault V1 Incident Record and Council Proposal CV-01
+
+- 11 price-conditioned CommitmentVault V1 tranches (26,418,467.994338353 IFR) cannot unlock. The
+  deployed vault has no working price check. A Mainnet-fork simulation confirmed that no oracle or
+  time setting can release them.
+- New wiki page `commitment-vault-compensation.html`. It records the affected tranches with a
+  status (red: Council pending; yellow: approved, awaiting a verified 7-day TWAP record; green:
+  approved and TWAP verified with published blocks). Live spot data is shown as indicative only and
+  never changes a status. It also records the open vote (2 of 3 required YES signatures, no
+  deadline; not approved), the deployed TIME_ONLY CommitmentVault V2 and queued Governance
+  proposal #17, and the urgent
+  Council proposal CV-01, which compensates from the LP Reserve Safe by each tranche's original
+  time and price conditions (7-day TWAP).
+- The governance Council agenda and vote log list CV-01. The transparency page and the decision
+  register record the permanently locked amount as non-circulating.
 
 ## 2 October 2026 — BuybackController Source Hardening
 
