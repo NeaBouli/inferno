@@ -1,6 +1,7 @@
 # IFR SDK npm Release Runbook
 
-Status: **NOT PUBLISHED**
+Status: **NOT PUBLISHED**; publication approved by the project (2026-10-03, Lane 7), prepared via a
+tag-triggered workflow
 
 Package: `ifr-sdk`
 
@@ -25,18 +26,19 @@ usable as a versioned tarball, but it is not a public registry release.
 
 Do not run `npm publish` until every item is complete:
 
-- [ ] Confirm the npm owner or organization and enable mandatory two-factor authentication.
-- [ ] Decide whether the package stays `ifr-sdk` and verify registry ownership immediately
-      before release.
-- [ ] Add the approved repository `LICENSE` file and confirm the copyright holder. The current
-      `package.json` says `MIT`, but no project license file exists; do not infer ownership.
+- [ ] Create the project npm organization (project e-mail, never a personal account) and enable
+      mandatory two-factor authentication.
+- [x] Package name stays `ifr-sdk` (unclaimed on the registry on 2026-10-03); verify again
+      immediately before release.
+- [x] License: MIT, `Inferno Protocol contributors` (repository `LICENSE`, shipped as
+      `apps/sdk/LICENSE`).
 - [ ] Select and document the release version and changelog.
 - [ ] Confirm the generated tarball contains only the approved README, package metadata,
       JavaScript and type declarations.
 - [ ] Run clean Node.js 20 and 22 CI against the exact release commit.
 - [ ] Review the public README, security contact and supported Mainnet/API claims.
-- [ ] Configure a least-privilege npm release method with 2FA or trusted publishing. Never
-      commit a registry token.
+- [ ] Add the npm automation token as repository secret `NPM_TOKEN` and create the protected
+      environment `npm-release` (required reviewer: owner). Never commit a registry token.
 - [ ] Obtain explicit action-time approval after presenting the exact package metadata,
       tarball manifest and release command for review.
 
@@ -56,6 +58,7 @@ npm pack --dry-run --ignore-scripts
 Expected tarball files:
 
 ```text
+LICENSE
 README.md
 dist/benefits.d.ts
 dist/benefits.js
@@ -64,18 +67,18 @@ dist/index.js
 package.json
 ```
 
-An approved `LICENSE` becomes the only permitted seventh file once the license gate is complete.
 The package-consumer test rejects all other unexpected source, test, environment or dependency
 files.
 
 ## External Publication Boundary
 
-The final registry publication is an external write and is intentionally not automated by the
-current CI workflow. Before publication:
+The final registry publication is an external write. `.github/workflows/sdk-publish.yml` runs only
+for an owner-pushed tag `sdk-v<version>` matching `apps/sdk/package.json`, waits for approval in the
+protected `npm-release` environment and publishes with npm provenance. Before pushing the tag:
 
 1. Present the exact release commit, version, package manifest and `npm pack --dry-run` output.
 2. Obtain explicit approval for that release.
-3. Publish from the approved protected environment.
+3. Push the tag `sdk-v<version>` and approve the `npm-release` environment run.
 4. Verify the registry metadata and install the immutable published version in a fresh consumer.
 5. Record the package URL, integrity hash, CI run and verification result in `BRIDGE.md`.
 
