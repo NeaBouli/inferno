@@ -68,10 +68,10 @@ remains the only place where agenda items and vote outcomes are published.
   tranche can then never unlock while the price stays `0`. Only the Web3 UI
   blocks these calls. This raises the priority of the rescue path below
   (`test/fork/BenefitsVerifyFork.test.js`).
-- **Decision (2026-10-03):** Option B. A dedicated `PriceLockVault` is built
-  and deployed later; price locks stay disabled until an on-chain readiness
-  scope (pool WETH depth and/or TWAP) holds, and activation is a Governance
-  proposal that reverts if the scope is not met. Price conditions use a
+- **Decision needed:** none; decided 2026-10-03: Option B. A dedicated
+  `PriceLockVault` is built and deployed later; price locks stay disabled
+  until an on-chain readiness scope (pool WETH depth and/or TWAP) holds, and
+  activation is a Governance proposal that reverts if the scope is not met. Price conditions use a
   7-day TWAP; every lock has a mandatory rescue time of at most 4 years
   ([specification](PRICE_LOCK_VAULT_SPEC.md)). CommitmentVault V2 stays
   `TIME_ONLY`.
