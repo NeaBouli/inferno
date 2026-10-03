@@ -1,8 +1,14 @@
 name: IFR SDK Publish
 
-# Publishes ifr-sdk to npm only when an owner pushes a tag sdk-v<version> that matches apps/sdk/package.json.
-# Requires the repository secret NPM_TOKEN (npm automation token of the project npm organization) and the
-# protected environment "npm-release" (owner approval before the job runs). Never commit a registry token.
+# Publishes ifr-sdk to npm for a tag sdk-v<version> (matching apps/sdk/package.json) — fail closed:
+# 1. gate: the tagged commit must be on protected main with every required main check green on that exact
+#    commit, and the environment "npm-release" must exist with a required reviewer and a tag-only
+#    (sdk-v*) deployment policy (scripts/sdk-release-gate.cjs). A missing or unprotected environment, a
+#    tag on an unreviewed commit or a red check stops the run before anything is built or published.
+# 2. publish: runs in "npm-release" (owner approval), re-runs the package checks and publishes with npm
+#    Trusted Publishing (OIDC, provenance). No registry token is used or stored; without a trusted
+#    publisher configured on npmjs.com for this workflow, npm rejects the publish.
+# Roles: Codex pushes the release tag; the owner approves the npm-release run (docs/runbooks/IFR_SDK_NPM_RELEASE.md).
 on:
   push:
     tags:
@@ -11,9 +17,24 @@ on:
 permissions:
   contents: read
   id-token: write
+  checks: read
+  actions: read
 
 jobs:
+  gate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
+        with:
+          node-version: '22'
+      - name: Release gate (reviewed main commit, green checks, protected environment)
+        run: node scripts/sdk-release-gate.cjs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
   publish:
+    needs: gate
     runs-on: ubuntu-latest
     environment: npm-release
     defaults:
@@ -24,9 +45,10 @@ jobs:
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: '22'
-          registry-url: 'https://registry.npmjs.org'
           cache: 'npm'
           cache-dependency-path: apps/sdk/package-lock.json
+      - name: npm CLI with Trusted Publishing support
+        run: npm install -g npm@11.6.2 && npm --version
       - name: Tag must match package version
         run: |
           version=$(node -p "require('./package.json').version")
@@ -36,7 +58,5 @@ jobs:
       - run: npm test
       - run: npm run test:package
       - run: npm pack --dry-run --ignore-scripts
-      - name: Publish with provenance
+      - name: Publish via Trusted Publishing (OIDC, provenance)
         run: npm publish --provenance --access public --ignore-scripts
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

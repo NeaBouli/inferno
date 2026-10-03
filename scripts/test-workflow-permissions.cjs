@@ -8,7 +8,12 @@ const root = path.resolve(__dirname, "..");
 const workflowsDirectory = path.join(root, ".github", "workflows");
 const expectedWriteWorkflows = new Set(["post-deploy.yml", "update-stats.yml"]);
 // Railway release gate reads workflow runs for the exact SHA (scripts/railway-release-preflight.cjs).
-const expectedExtraReadScopes = { "security-audit.yml": "pull-requests", "railway-copilot-release.yml": "actions" };
+// sdk-publish.yml reads check runs and the npm-release environment for its fail-closed release gate.
+const expectedExtraReadScopes = {
+  "security-audit.yml": ["pull-requests"],
+  "railway-copilot-release.yml": ["actions"],
+  "sdk-publish.yml": ["checks", "actions"],
+};
 // npm provenance needs an OIDC token; only the tag-triggered SDK publish workflow may request it.
 const expectedIdTokenWorkflows = new Set(["sdk-publish.yml"]);
 const expectedWorkflowFiles = [
@@ -80,14 +85,20 @@ for (const fileName of workflowFiles) {
   assertNoPrivateKeySecret(source, fileName);
   const permissions = topLevelPermissions(source, fileName);
   assert.equal(permissions.contents, expectedWriteWorkflows.has(fileName) ? "write" : "read", `${fileName} contents permission`);
-  const allowedKeys = expectedExtraReadScopes[fileName] ? ["contents", expectedExtraReadScopes[fileName]] : ["contents"];
+  const allowedKeys = ["contents", ...(expectedExtraReadScopes[fileName] || [])];
   if (expectedIdTokenWorkflows.has(fileName)) {
     allowedKeys.push("id-token");
     assert.equal(permissions["id-token"], "write", `${fileName} id-token permission`);
     assert.match(source, /^on:\n  push:\n    tags:\n      - 'sdk-v\*'\n\n/m, `${fileName} must run only for sdk-v* tags`);
   }
   assert.deepEqual(Object.keys(permissions).sort(), allowedKeys.sort(), `${fileName} must not receive unrelated token scopes`);
-  if (expectedExtraReadScopes[fileName]) assert.equal(permissions[expectedExtraReadScopes[fileName]], "read");
+  for (const scope of expectedExtraReadScopes[fileName] || []) assert.equal(permissions[scope], "read", `${fileName} ${scope} permission`);
+  if (fileName === "sdk-publish.yml") {
+    // Fail-closed publication boundary: gate before the environment, no registry token anywhere.
+    assert.match(source, /node scripts\/sdk-release-gate\.cjs/, "sdk-publish.yml must run the release gate");
+    assert.match(source, /needs: gate\n\s+runs-on: ubuntu-latest\n\s+environment: npm-release/, "publish must need the gate and run in npm-release");
+    assert.doesNotMatch(source, /NPM_TOKEN|NODE_AUTH_TOKEN/, "sdk-publish.yml must use Trusted Publishing, not a registry token");
+  }
 }
 
 assert.throws(
