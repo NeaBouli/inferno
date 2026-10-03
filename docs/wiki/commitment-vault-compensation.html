@@ -596,6 +596,19 @@
         <li>Governance set an oracle reporting the highest possible price, and time was advanced by ten years.</li>
         <li>All <code>PRICE_ONLY</code> and <code>TIME_AND_PRICE</code> tranches still reported <code>conditionMet = false</code>.</li>
       </ul>
+      <h3 id="cv01-timeline">Timeline</h3>
+      <p>Verified dates only, from on-chain events and the public repository. The purpose of individual locks is not recorded and is not inferred here.</p>
+      <ul>
+        <li><strong>4 April 2026:</strong> CommitmentVault V1 is deployed with the placeholder price check.</li>
+        <li><strong>June 2026:</strong> P0 is set on-chain to 300,000,000 wei per IFR (Governance proposal #16).</li>
+        <li><strong>28 June 2026, 21:32–21:37 UTC:</strong> wallet C2 creates ten <code>TIME_ONLY</code> tranches (blocks 25,418,863–25,418,886).</li>
+        <li><strong>29 June 2026, 06:59 UTC:</strong> the website publishes a self-service lock form that offers all four lock types, including price targets.</li>
+        <li><strong>29 June 2026, 07:33 UTC:</strong> wallet C1 creates tranche #0, <code>TIME_AND_PRICE</code> (block 25,421,853).</li>
+        <li><strong>29 June 2026, 22:38–22:42 UTC:</strong> wallet C3 creates tranches #0–#9, <code>PRICE_ONLY</code> (blocks 25,426,358–25,426,377). At 22:56 UTC, C1 creates tranche #1, <code>TIME_OR_PRICE</code> (block 25,426,451).</li>
+        <li><strong>14 September 2026:</strong> the community audit (finding CWA-03) reports that the deployed price check always reads zero, so price-conditioned tranches cannot unlock. It checked C2's tranches, which are all time-based, and did not identify the price-conditioned tranches of C1 and C3.</li>
+        <li><strong>28 September 2026:</strong> the repository source starts rejecting price-conditioned locks for future deployments.</li>
+        <li><strong>2 October 2026:</strong> an on-chain review of every tranche identifies and quantifies the eleven affected tranches, and a Mainnet-fork simulation confirms that they can never unlock. CV-01 is opened the same day.</li>
+      </ul>
       <p>V1 has no rescue function and is not upgradeable. The IFR token cannot move another address's balance. <strong>Nobody can recover these tokens.</strong></p>
 
       <div class="phase-card">
@@ -610,7 +623,7 @@
         <li>its original unlock date, where there is one;</li>
         <li>its original price target, <code>P0 &times; multiplier</code> with P0&nbsp;=&nbsp;0.3&nbsp;gwei per IFR.</li>
       </ul>
-      <p>The <em>Conditions now</em> column is calculated live from the current block and the IFR/WETH Uniswap V2 spot price. It is <strong>indicative only</strong> and never changes a status. A tranche turns green only when the Council has approved and its binding 7-day TWAP check has been verified and published here with start and end blocks.</p>
+      <p>The <em>Conditions now</em> column is calculated live from the current block and the IFR/WETH Uniswap V2 spot price. It is <strong>indicative only</strong> and never changes a status. A tranche turns green only when the Council has approved and a TWAP record for it has been published here: start and end blocks with their hashes, start and end times at least 7 days apart, the TWAP from the pair's cumulative prices, the reviewer, and a reproducible calculation (script, repository commit and evidence file). The record is reviewed by people; this page only checks that it is complete and consistent and does not recompute the TWAP itself.</p>
 
       <div class="cv-legend" aria-label="Status colours">
         <span class="cv-status cv-red">Red</span> Council decision pending
@@ -716,17 +729,29 @@
         function short(a) { return a.slice(0, 6) + "…" + a.slice(-4); }
         function fmt(n) { var p = n.split("."); return Number(p[0]).toLocaleString("en-US") + (p[1] ? "." + p[1] : ""); }
         function targetGwei(t) { return Number(data.p0WeiPerIFR) * t.multiplier / 100 / 1e9; }
-        // Green is fail-closed: it needs Council approval AND a published, verified 7-day TWAP record for the
-        // tranche (start/end blocks, TWAP >= target, end time after the original unlock date). Live spot data
-        // and RPC results never change a status.
+        // Green is fail-closed: it needs Council approval AND a published, human-reviewed 7-day TWAP record for
+        // the tranche. A record must name immutable start/end blocks (number + hash), start/end timestamps that
+        // span at least the 7-day binding window, the TWAP from the pair's cumulative prices at or above the target,
+        // an end time after the original unlock date, the reviewer, and a reproducible calculation (script path,
+        // repository commit and evidence artifact). This browser check only enforces that the record is complete
+        // and consistent; it does not recompute the TWAP. Live spot data and RPC results never change a status.
+        var TWAP_WINDOW_SEC = 7 * 24 * 60 * 60;
+        function isHash(h) { return typeof h === "string" && /^0x[0-9a-fA-F]{64}$/.test(h); }
+        function isUint(n) { return Number.isInteger(n) && n > 0; }
         function verified(t) {
           var list = Array.isArray(data.twapEvidence) ? data.twapEvidence : [];
           return list.some(function (e) {
-            if (!e || e.wallet.toLowerCase() !== t.wallet.toLowerCase() || e.id !== t.id) return false;
-            if (!(Number.isInteger(e.startBlock) && Number.isInteger(e.endBlock) && e.endBlock > e.startBlock)) return false;
-            if (!(typeof e.twapGwei === "number" && e.twapGwei >= targetGwei(t))) return false;
-            if (t.unlock !== null && !(typeof e.endTimestamp === "number" && e.endTimestamp >= Date.parse(t.unlock + "T00:00:00Z") / 1000)) return false;
-            return typeof e.verifiedBy === "string" && e.verifiedBy.length > 0;
+            if (!e || typeof e.wallet !== "string" || e.wallet.toLowerCase() !== t.wallet.toLowerCase() || e.id !== t.id) return false;
+            if (!(isUint(e.startBlock) && isUint(e.endBlock) && e.endBlock > e.startBlock)) return false;
+            if (!(isHash(e.startBlockHash) && isHash(e.endBlockHash))) return false;
+            if (!(isUint(e.startTimestamp) && isUint(e.endTimestamp) && e.endTimestamp - e.startTimestamp >= TWAP_WINDOW_SEC)) return false;
+            if (!(typeof e.twapGwei === "number" && isFinite(e.twapGwei) && e.twapGwei >= targetGwei(t))) return false;
+            if (t.unlock !== null && !(e.endTimestamp >= Date.parse(t.unlock + "T00:00:00Z") / 1000)) return false;
+            var c = e.calculation;
+            if (!(c && typeof c.script === "string" && /^scripts\/[A-Za-z0-9._\/-]+$/.test(c.script) &&
+                  typeof c.commit === "string" && /^[0-9a-f]{40}$/.test(c.commit) &&
+                  typeof c.artifact === "string" && /^https:\/\//.test(c.artifact))) return false;
+            return typeof e.verifiedBy === "string" && e.verifiedBy.trim().length > 0;
           });
         }
         function status(t) {

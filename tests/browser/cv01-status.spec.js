@@ -47,7 +47,14 @@ async function setPage(page, { council, evidence }) {
 const AFTER_UNLOCK = Date.parse("2026-12-01T00:00:00Z") / 1000;
 const C1 = "0x4f632748460E5277bF8435259cADce440AbAC254";
 const C3 = "0xf556cCe85128c93AC6A7e088cF334180F2D3905B";
-const goodC1 = { wallet: C1, id: 0, startBlock: 26500000, endBlock: 26550400, endTimestamp: AFTER_UNLOCK, twapGwei: 16, verifiedBy: "test" };
+const WEEK = 7 * 24 * 60 * 60;
+const H1 = "0x" + "a1".repeat(32);
+const H2 = "0x" + "b2".repeat(32);
+const CALC = { script: "scripts/cv01-twap.cjs", commit: "0123456789abcdef0123456789abcdef01234567", artifact: "https://example.org/cv01-twap-c1-0.json" };
+const goodC1 = {
+  wallet: C1, id: 0, startBlock: 26500000, endBlock: 26550400, startBlockHash: H1, endBlockHash: H2,
+  startTimestamp: AFTER_UNLOCK - WEEK, endTimestamp: AFTER_UNLOCK, twapGwei: 16, verifiedBy: "test", calculation: CALC,
+};
 
 async function load(page) {
   await page.goto(PAGE);
@@ -101,6 +108,23 @@ test("Incomplete or failing TWAP records never produce green", async ({ page }) 
   await mockChain(page, { timestamp: AFTER_UNLOCK, priceGwei: 100000 });
   await load(page);
   await expect(page.locator("#cv01-rows .cv-green")).toHaveCount(0);
+});
+
+test("One-block, short-window or unreproducible high-price records stay yellow", async ({ page }) => {
+  const bad = [
+    { ...goodC1, twapGwei: 100000, startBlock: 26550399, endBlock: 26550400, startTimestamp: AFTER_UNLOCK - 12 }, // one block
+    { ...goodC1, twapGwei: 100000, startTimestamp: AFTER_UNLOCK - WEEK + 3600 },  // window shorter than 7 days
+    { ...goodC1, twapGwei: 100000, calculation: undefined },                       // no calculation reference
+    { ...goodC1, twapGwei: 100000, calculation: { ...CALC, artifact: "" } },        // no evidence artifact
+    { ...goodC1, twapGwei: 100000, calculation: { ...CALC, commit: "main" } },      // not an immutable commit
+    { ...goodC1, twapGwei: 100000, endBlockHash: undefined },                      // no immutable block identifier
+    { ...goodC1, twapGwei: 100000, startTimestamp: undefined },                    // no published start time
+  ];
+  await setPage(page, { council: "approved", evidence: bad });
+  await mockChain(page, { timestamp: AFTER_UNLOCK, priceGwei: 100000 });
+  await load(page);
+  await expect(page.locator("#cv01-rows .cv-green")).toHaveCount(0);
+  await expect(page.locator("#cv01-rows .cv-yellow")).toHaveCount(11);
 });
 
 test("Evidence without Council approval stays red", async ({ page }) => {
