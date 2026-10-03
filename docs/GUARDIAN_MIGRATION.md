@@ -12,7 +12,7 @@ Accepted trade-off: an emergency pause needs three Safe signatures and is slower
 ## Change Paths (verified on a Mainnet fork)
 
 | Contract | Function | Caller |
-|---|---|---|
+| --- | --- | --- |
 | Governance | `setGuardian` | Treasury Safe, immediate |
 | LiquidityReserve, BurnReserve | `setGuardian` | Governance proposal, 48h delay |
 | IFRLock, PartnerVault | `setGuardian` | current guardian (deployer) |

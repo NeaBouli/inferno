@@ -3,7 +3,7 @@
   "tool": "markdownlint-cli@0.49.1",
   "disabledRules": ["MD013","MD033","MD041","MD024","MD036","MD040"],
   "filesScanned": 209,
-  "baselineIssues": 3777,
+  "baselineIssues": 3771,
   "fingerprints": [
     [".github/ISSUE_TEMPLATE/bug_report.md","MD022","Expected: 1; Actual: 0; Below","## Bug Description","6e754bfe0c2fac07",1],
     [".github/ISSUE_TEMPLATE/bug_report.md","MD022","Expected: 1; Actual: 0; Below","## Environment","cadb5ca79597df18",1],
@@ -1173,8 +1173,6 @@
     ["docs/GOVERNANCE_SIGNER_EXPANSION_PLAN.md","MD060","Table pipe is missing space to the left for style \"compact\"","","d4c603b0cdf32d67",3],
     ["docs/GOVERNANCE_SIGNER_EXPANSION_PLAN.md","MD060","Table pipe is missing space to the right for style \"compact\"","","323df4c47f967dde",3],
     ["docs/GOVERNANCE_SIGNER_EXPANSION_PLAN.md","MD060","Table pipe is missing space to the right for style \"compact\"","","d4c603b0cdf32d67",3],
-    ["docs/GUARDIAN_MIGRATION.md","MD060","Table pipe is missing space to the left for style \"compact\"","","d65e86c86667d54f",3],
-    ["docs/GUARDIAN_MIGRATION.md","MD060","Table pipe is missing space to the right for style \"compact\"","","d65e86c86667d54f",3],
     ["docs/GUILD_SETUP.md","MD032","","- Type: Contract Call (read fu...","a83fc464c29fcbf5",1],
     ["docs/GUILD_SETUP.md","MD032","","- Type: ERC-20 Balance","487690b5f46f2063",1],
     ["docs/GUILD_SETUP.md","MD034","","https://github.com/NeaBouli/in...","c0f561304529440e",1],
