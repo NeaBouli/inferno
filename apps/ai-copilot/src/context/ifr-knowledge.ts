@@ -144,10 +144,10 @@ export function getIFRKnowledge() {
     governance: {
       timelockDelay: "48 hours",
       owner: "TreasurySafe 3-of-5 (since 20.03.2026)",
-      guardian: "Deployer EOA — can cancel proposals",
+      guardian: "TreasurySafe 3-of-5 since 2026-10-03 (Governance cancel; IFRLock, Vesting, PartnerVault pause). LiquidityReserve/BurnReserve move after proposals #19/#20; BuybackVault/BuybackController guardian is immutable (deployer, pause only). Trade-off: emergency actions need 3-of-5 signatures; Vesting pause has no maximum duration.",
       noInstantChanges: "Governance proposals use the 48-hour timelock. Guardian rotation through setGuardian is the documented untimelocked exception.",
       daoPhase: "Full DAO transition remains planned; current governance is TreasurySafe 3-of-5 plus the 48-hour timelock",
-      multisig: "3-of-5 on all Safes (Treasury, Community, LP Reserve) — 5 signers: A.K./M.G./A.M./Y.K./A.P.",
+      multisig: "3-of-5 on all Safes (Treasury, Community, LP Reserve) — 5 signers: G.M./M.G./A.M./Y.K./A.P.",
       communitySignerExpansion: "Planned after community voting is live. This is the multisig signer distribution process. Preferred path: keep 3-of-5 now, expand to 4-of-7 using a mixed model (3 core/protocol, 2 contributor/builder, 2 community-elected), then consider 5-of-9 only after one stable term. Selection is not pure whale voting and not pure random selection; it requires eligibility, public nomination, community vote, security review, rotation, and emergency replacement rules. Full plan: https://ifrunit.tech/wiki/community-signer-expansion.html",
       proposals: "#0, #4-#9 and #11-#16 executed; #1-#3 and #10 cancelled.",
       nextPlanned: "No claim that seller rewards are active: PartnerVault registration and an authorized reward caller require separate governance execution.",

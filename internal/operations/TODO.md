@@ -387,7 +387,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 ### Bot & Infrastructure
 - [x] `voteAnnouncement.js` — Bot announces Governance Proposals + verify.html link + 24h reminder ✅
-- [x] `SIGNER_WALLETS` gesetzt in Railway (alle 5 Signers: A.K./M.G./A.M./Y.K./A.P.) ✅ 16.03.2026
+- [x] `SIGNER_WALLETS` gesetzt in Railway (alle 5 Signers: G.M./M.G./A.M./Y.K./A.P.) ✅ 16.03.2026
 - [x] `VERIFY_PORT=3001` gesetzt in Railway ✅ 16.03.2026
 
 ### Builder Applications
