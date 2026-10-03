@@ -119,7 +119,17 @@ async function installWallet(context, options = {}) {
     );
   }
 
-  await context.addInitScript(({ account, initialChainId, shouldRejectSwitch, results }) => {
+  // Optional: feeExempt(V2) changes after N eth_sendTransaction calls ({ afterSends, to: false | "error" }).
+  const feeExemptFlip = options.feeExemptFlip
+    ? {
+        key: `${TOKEN.toLowerCase()}:${selectors.feeExempt}`,
+        afterSends: options.feeExemptFlip.afterSends,
+        value: options.feeExemptFlip.to === "error" ? "__THROW__" : uintResult(options.feeExemptFlip.to ? 1n : 0n),
+      }
+    : null;
+
+  await context.addInitScript(({ account, initialChainId, shouldRejectSwitch, results, flip }) => {
+    let sendCount = 0;
     const listeners = new Map();
     const transactions = new Map();
     let activeChainId = initialChainId;
@@ -171,6 +181,8 @@ async function installWallet(context, options = {}) {
             return scoped || results[data] || `0x${"0".repeat(64)}`;
           }
           if (method === "eth_sendTransaction") {
+            sendCount += 1;
+            if (flip && sendCount >= flip.afterSends) results[flip.key] = flip.value;
             const response = await fetch("/__web3_test_transaction", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -241,6 +253,7 @@ async function installWallet(context, options = {}) {
     initialChainId: chainId,
     shouldRejectSwitch: rejectSwitch,
     results: callResults,
+    flip: feeExemptFlip,
   });
 }
 
@@ -1605,3 +1618,84 @@ test("WalletConnect init failure stays recoverable on the next attempt", async (
     await context.close();
   }
 });
+
+// Codex review of #188: feeExempt(V2) is re-read fail-closed before EVERY approve/lock, and a change
+// after approval or between tranches aborts the remaining sequence (frontend cannot make it atomic).
+for (const [label, flip, split, expected] of [
+  ["turns false after the approval", { afterSends: 1, to: false }, false, ["approve"]],
+  ["becomes unreadable after the approval", { afterSends: 1, to: "error" }, false, ["approve"]],
+  ["turns false between two tranches", { afterSends: 2, to: false }, true, ["approve", "commitment-lock-v2"]],
+]) {
+  test(`web3 V2 lock sequence stops when feeExempt(V2) ${label} (T-220)`, async ({ browser }) => {
+    const { context, page, writes, pageErrors } = await preparePage(browser, { feeExemptV2: true, feeExemptFlip: flip });
+    await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+    await connect(page);
+    await page.locator("[data-open-lock]").first().click();
+    await expect(page.locator("[data-lock-submit]")).toBeEnabled({ timeout: 15_000 });
+    await page.locator("[data-lock-amount]").fill("100");
+    if (split) await page.locator("[data-lock-split]").check();
+    await page.locator("[data-lock-submit]").click();
+    await expect(page.locator("[data-lock-status]")).toContainText("CommitmentVault V2 opens for new time locks", { timeout: 15_000 });
+    await page.waitForTimeout(1000);
+    expect(writes.map((w) => w.action)).toEqual(expected);
+    await expect(page.locator("[data-lock-submit]")).toBeDisabled();
+    await expect(page.locator("[data-lock-note]")).toContainText("CommitmentVault V2 opens for new time locks");
+    expect(pageErrors).toEqual([]);
+    await context.close();
+  });
+}
+
+test("web3 V2 split lock proceeds through all tranches while feeExempt(V2) stays true (T-220)", async ({ browser }) => {
+  const { context, page, writes, pageErrors } = await preparePage(browser, { feeExemptV2: true });
+  await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+  await connect(page);
+  await page.locator("[data-open-lock]").first().click();
+  await expect(page.locator("[data-lock-submit]")).toBeEnabled({ timeout: 15_000 });
+  await page.locator("[data-lock-amount]").fill("100");
+  await page.locator("[data-lock-split]").check();
+  await page.locator("[data-lock-submit]").click();
+  await expect.poll(() => writes.length, { timeout: 30_000 }).toBe(11);
+  expect(writes[0].action).toBe("approve");
+  expect(writes.slice(1).every((w) => w.action === "commitment-lock-v2" && w.cType === 0n)).toBe(true);
+  expect(pageErrors).toEqual([]);
+  await context.close();
+});
+
+test("web3 lock button closes when a panel refresh fails after V2 was open (T-220)", async ({ browser }) => {
+  const { context, page, pageErrors } = await preparePage(browser, { feeExemptV2: true });
+  await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+  await connect(page);
+  await page.locator("[data-open-lock]").first().click();
+  await expect(page.locator("[data-lock-submit]")).toBeEnabled({ timeout: 15_000 });
+  await page.evaluate(() => { window.ethereum.request = async () => { throw new Error("rpc down (test)"); }; });
+  await page.locator("[data-lock-refresh]").click();
+  await expect(page.locator("[data-lock-submit]")).toBeDisabled({ timeout: 15_000 });
+  expect(pageErrors).toEqual([]);
+  await context.close();
+});
+
+for (const [label, flip, split, expected] of [
+  ["turns false after the approval", { afterSends: 1, to: false }, false, ["approve"]],
+  ["turns false between two tranches", { afterSends: 2, to: false }, true, ["approve", "commitment-lock-v2"]],
+  ["becomes unreadable between two tranches", { afterSends: 2, to: "error" }, true, ["approve", "commitment-lock-v2"]],
+]) {
+  test(`wiki V2 lock sequence stops when feeExempt(V2) ${label} (T-220)`, async ({ browser }) => {
+    const { context, page, writes, pageErrors } = await preparePage(browser, { feeExemptV2: true, feeExemptFlip: flip });
+    await page.goto("/wiki/commitment-vault.html", { waitUntil: "domcontentloaded" });
+    await page.locator("#cv-connect-btn").click();
+    const injected = page.locator('[data-wallet-option-type="injected"]').first();
+    if (await injected.isVisible().catch(() => false)) await injected.click();
+    await expect(page.locator("#cv-v2-gate")).toContainText("New time locks go to CommitmentVault V2", { timeout: 15_000 });
+    await page.locator("#cv-amount").fill("100");
+    await page.locator("#cv-amount").dispatchEvent("input");
+    if (split) await page.locator("#cv-split-tranches").check();
+    await expect(page.locator("#cv-lock-btn")).toBeEnabled();
+    await page.locator("#cv-lock-btn").click();
+    await expect(page.locator("#cv-v2-gate")).toContainText("CommitmentVault V2 opens for new time locks", { timeout: 15_000 });
+    await page.waitForTimeout(1000);
+    expect(writes.map((w) => w.action)).toEqual(expected);
+    await expect(page.locator("#cv-lock-btn")).toBeDisabled();
+    expect(pageErrors).toEqual([]);
+    await context.close();
+  });
+}

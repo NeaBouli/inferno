@@ -3034,6 +3034,23 @@
         return Boolean(currentLockState && currentLockState.v2Open === true);
       }
 
+      // Closes the cached UI gate (button off) until a later successful read reopens it.
+      function closeV2Gate() {
+        if (currentLockState) currentLockState.v2Open = false;
+        lockSubmit.disabled = true;
+        lockNote.textContent = `${COMMITMENT_V2_CLOSED_NOTICE} Existing V1 tranches stay listed below and unlock through V1.`;
+      }
+
+      // Click-time gate: re-reads feeExempt(V2) immediately before an approval or each lock()
+      // and throws (fail closed) when it is false or unreadable, aborting the remaining sequence.
+      // Frontend checks cannot make the exemption atomic with the transaction (see runbook).
+      async function assertV2Open() {
+        if (!(await readV2FeeExempt(IFRWallet.getProvider()))) {
+          closeV2Gate();
+          throw new Error(COMMITMENT_V2_CLOSED_NOTICE);
+        }
+      }
+
       async function readVaultTranches(vault, vaultKey, address) {
         const count = Number(await vault.getTrancheCount(address));
         const reads = [];
@@ -3117,15 +3134,13 @@
 
         lockSubmit.disabled = true;
         // Re-check the on-chain gate right before any approval or lock (fail closed).
-        if (!(await readV2FeeExempt(IFRWallet.getProvider()))) {
-          if (currentLockState) currentLockState.v2Open = false;
-          throw new Error(COMMITMENT_V2_CLOSED_NOTICE);
-        }
+        await assertV2Open();
         lockStatus.textContent = "Checking token allowance...";
         const allowance = await token.allowance(address, COMMITMENT_VAULT_V2_ADDRESS);
 
         if (allowance < plan.totalAmount) {
           lockStatus.textContent = "Approve IFR in your wallet, then keep this page open.";
+          await assertV2Open();
           const approveTx = await token.approve(COMMITMENT_VAULT_V2_ADDRESS, plan.totalAmount);
           lockStatus.textContent = "Waiting for approval confirmation...";
           await approveTx.wait();
@@ -3136,6 +3151,7 @@
             ? "Confirm the CommitmentVault V2 lock transaction in your wallet."
             : `Confirm CommitmentVault V2 tranche ${i + 1} of ${plan.amounts.length}.`;
           if (plan.cType !== 0 || plan.p0Multiplier !== 0) throw new Error("Price-based locks are disabled. CommitmentVault V1 cannot evaluate prices (see CV-01). Time locks only; new time locks move to CommitmentVault V2 after its fee exemption is executed.");
+          await assertV2Open();
           const lockTx = await commitmentV2.lock(plan.amounts[i], 0, plan.unlockTime, 0);
           lockStatus.textContent = `Waiting for tranche ${i + 1} confirmation...`;
           await lockTx.wait();
@@ -3772,6 +3788,7 @@
         try {
           await loadLockPanel();
         } catch (error) {
+          closeV2Gate();
           lockStatus.textContent = error && error.message ? error.message : "Lock panel could not load.";
         }
       });
@@ -3784,6 +3801,7 @@
         try {
           await loadLockPanel();
         } catch (error) {
+          closeV2Gate();
           lockStatus.textContent = error && error.message ? error.message : "Refresh failed.";
         }
       });
