@@ -88,6 +88,7 @@ test("Approved + RPC unavailable: nothing is green", async ({ page }) => {
 });
 
 test("Approved + verified TWAP record: only that tranche is green, independent of spot and RPC", async ({ page }) => {
+  await page.clock.setFixedTime((AFTER_UNLOCK + 3600) * 1000);  // the TWAP window has ended
   await setPage(page, { council: "approved", evidence: [goodC1] });
   await page.route(/^https:\/\/(ethereum-rpc\.publicnode\.com|eth\.llamarpc\.com)/, (route) => route.abort());
   await load(page);
@@ -127,6 +128,48 @@ test("One-block, short-window or unreproducible high-price records stay yellow",
   await expect(page.locator("#cv01-rows .cv-yellow")).toHaveCount(11);
 });
 
+test("Approved + TWAP record ending in the future stays yellow until the window has ended", async ({ page }) => {
+  await page.clock.setFixedTime((AFTER_UNLOCK - 3600) * 1000);  // one hour before the record's endTimestamp
+  await setPage(page, { council: "approved", evidence: [goodC1] });
+  await mockChain(page, { timestamp: AFTER_UNLOCK, priceGwei: 100000 });
+  await load(page);
+  await expect(page.locator("#cv01-rows .cv-green")).toHaveCount(0);
+  await expect(page.locator("#cv01-rows .cv-yellow")).toHaveCount(11);
+});
+
+test("Approved + completed TWAP record turns green once the controlled clock passes its end", async ({ page }) => {
+  await page.clock.setFixedTime(AFTER_UNLOCK * 1000);  // exactly at endTimestamp
+  await setPage(page, { council: "approved", evidence: [goodC1] });
+  await mockChain(page, { timestamp: AFTER_UNLOCK, priceGwei: 1 });  // spot below target must not matter
+  await load(page);
+  await expect(page.locator("#cv01-rows .cv-green")).toHaveCount(1);
+  await expect(page.locator("#cv01-rows tr").first().locator(".cv-status")).toHaveText("Payable (TWAP verified)");
+});
+
+test("Without JavaScript the static fallback lists every tranche from the page data", async ({ browser, baseURL }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, baseURL });
+  const page = await context.newPage();
+  await page.goto(PAGE);
+  const html = await page.content();
+  const data = JSON.parse(html.match(/<script type="application\/json" id="cv01-data">([\s\S]*?)<\/script>/)[1]);
+  const rows = page.locator("#cv01-static tbody tr");
+  await expect(rows).toHaveCount(data.tranches.length);
+  for (let i = 0; i < data.tranches.length; i++) {
+    const t = data.tranches[i];
+    const cells = rows.nth(i).locator("td");
+    await expect(cells.nth(0).locator("a")).toHaveAttribute("href", "https://etherscan.io/address/" + t.wallet);
+    await expect(cells.nth(1)).toHaveText("#" + t.id);
+    await expect(cells.nth(2)).toHaveText(t.type);
+    const [whole, frac] = t.amount.split(".");
+    await expect(cells.nth(3)).toHaveText(Number(whole).toLocaleString("en-US") + "." + frac);
+    const target = Number(data.p0WeiPerIFR) * t.multiplier / 100 / 1e9;
+    await expect(cells.nth(4)).toHaveText((t.unlock ? "after " + t.unlock + " and " : "") + "price ≥ " + target.toLocaleString("en-US") + " gwei/IFR (" + (t.multiplier / 100) + " × P0)");
+  }
+  await expect(page.locator("#cv01-static tfoot")).toContainText("26,418,467.994338353");
+  await expect(page.locator("main")).not.toContainText("static and complete");
+  await context.close();
+});
+
 test("Evidence without Council approval stays red", async ({ page }) => {
   await setPage(page, { evidence: [goodC1] });
   await mockChain(page, { timestamp: AFTER_UNLOCK, priceGwei: 16 });
@@ -151,4 +194,21 @@ test("Page copy stays fail-closed: no Web3 safety claim, dated vault balance, co
     expect(text).toContain("not approved");
     expect(text).not.toContain("compensation from the LP Reserve Safe follows");
   }
+});
+
+test("Governance CV-01 roster names five members, G.M.'s abstention and four eligible signers", async ({ page }) => {
+  await page.goto("/wiki/governance.html");
+  const callout = page.locator("h3#agenda-cv-01 + p");
+  await expect(callout).toContainText("The Council has five members: M.G., A.M., Y.K., A.P. and G.M.");
+  await expect(callout).toContainText("G.M. abstains from this vote, so the other four are eligible to sign, and 3 YES signatures from them are required.");
+  await expect(callout).toContainText("Two YES signatures (M.G., Y.K.) have been received so far.");
+  const row = page.locator("tr", { has: page.locator("td", { hasText: /^CV-01$/ }) });
+  await expect(row).toContainText("5 Council members; G.M. abstains; 4 eligible signers (M.G., A.M., Y.K., A.P.), 3 YES required; 2 YES so far (M.G., Y.K.); not approved");
+});
+
+test("llms.txt does not suggest that configuring priceOracle could release V1 price tranches", async ({ request }) => {
+  const text = await (await request.get("/llms.txt")).text();
+  expect(text).not.toContain("fail closed while Mainnet priceOracle is the zero address");
+  expect(text).toContain("can never unlock: the deployed V1 price check always reads zero, regardless of priceOracle configuration");
+  expect(text).not.toContain("compensation from the LP Reserve Safe follows");
 });

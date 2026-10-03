@@ -439,13 +439,14 @@
     .cv-live { font-size:0.85rem; }
     .table-scroll { overflow-x:auto; }
     @media (max-width: 640px) {
-      #cv01-table thead { display:none; }
-      #cv01-table, #cv01-table tbody, #cv01-table tr, #cv01-table td { display:block; width:100%; }
-      #cv01-table tbody tr { border:1px solid var(--line, #e4d8c7); border-radius:10px; padding:10px 12px; margin-bottom:12px; }
-      #cv01-table td { border:0; padding:3px 0; }
-      #cv01-table td::before { content: attr(data-label) ": "; font-weight:700; }
-      #cv01-table tfoot tr { display:flex; justify-content:space-between; }
-      #cv01-table tfoot th[colspan="3"]:last-child { display:none; }
+      #cv01-table thead, #cv01-static thead { display:none; }
+      #cv01-table, #cv01-table tbody, #cv01-table tr, #cv01-table td,
+      #cv01-static, #cv01-static tbody, #cv01-static tr, #cv01-static td { display:block; width:100%; }
+      #cv01-table tbody tr, #cv01-static tbody tr { border:1px solid var(--line, #e4d8c7); border-radius:10px; padding:10px 12px; margin-bottom:12px; }
+      #cv01-table td, #cv01-static td { border:0; padding:3px 0; }
+      #cv01-table td::before, #cv01-static td::before { content: attr(data-label) ": "; font-weight:700; }
+      #cv01-table tfoot tr, #cv01-static tfoot tr { display:flex; justify-content:space-between; }
+      #cv01-table tfoot th[colspan="3"]:last-child, #cv01-static tfoot th:last-child { display:none; }
     }
   </style>
 </head>
@@ -643,7 +644,28 @@
       </table>
       </div>
       <p id="cv01-live" class="cv-live">Loading live conditions&hellip;</p>
-      <noscript><p>Live conditions need JavaScript. The amounts and original conditions above are static and complete.</p></noscript>
+      <noscript>
+        <p>Live conditions and the status column need JavaScript. Without it, the static list below shows every affected tranche with its amount and original conditions. The Council decision is recorded in the vote log below; no tranche is payable before Council approval and a verified 7-day TWAP record.</p>
+        <div class="table-scroll">
+        <table id="cv01-static">
+          <thead><tr><th>Wallet</th><th>Tranche</th><th>Lock type</th><th>Amount (IFR)</th><th>Original conditions</th></tr></thead>
+          <tbody>
+          <tr><td data-label="Wallet"><a href="https://etherscan.io/address/0x4f632748460E5277bF8435259cADce440AbAC254" target="_blank" rel="noopener noreferrer"><code>0x4f63&hellip;C254</code></a></td><td data-label="Tranche">#0</td><td data-label="Lock type"><code>TIME_AND_PRICE</code></td><td data-label="Amount (IFR)">18,367,567.924610366</td><td data-label="Original conditions">after 2026-11-29 and price &ge; 15 gwei/IFR (50 &times; P0)</td></tr>
+          <tr><td data-label="Wallet"><a href="https://etherscan.io/address/0xf556cCe85128c93AC6A7e088cF334180F2D3905B" target="_blank" rel="noopener noreferrer"><code>0xf556&hellip;905B</code></a></td><td data-label="Tranche">#0</td><td data-label="Lock type"><code>PRICE_ONLY</code></td><td data-label="Amount (IFR)">805,090.006972798</td><td data-label="Original conditions">price &ge; 1,500 gwei/IFR (5000 &times; P0)</td></tr>
+          <tr><td data-label="Wallet"><a href="https://etherscan.io/address/0xf556cCe85128c93AC6A7e088cF334180F2D3905B" target="_blank" rel="noopener noreferrer"><code>0xf556&hellip;905B</code></a></td><td data-label="Tranche">#1</td><td data-label="Lock type"><code>PRICE_ONLY</code></td><td data-label="Amount (IFR)">805,090.006972798</td><td data-label="Original conditions">price &ge; 1,500 gwei/IFR (5000 &times; P0)</td></tr>
+          <tr><td data-label="Wallet"><a href="https://etherscan.io/address/0xf556cCe85128c93AC6A7e088cF334180F2D3905B" target="_blank" rel="noopener noreferrer"><code>0xf556&hellip;905B</code></a></td><td data-label="Tranche">#2</td><td data-label="Lock type"><code>PRICE_ONLY</code></td><td data-label="Amount (IFR)">805,090.006972798</td><td data-label="Original conditions">price &ge; 1,500 gwei/IFR (5000 &times; P0)</td></tr>
+          <tr><td data-label="Wallet"><a href="https://etherscan.io/address/0xf556cCe85128c93AC6A7e088cF334180F2D3905B" target="_blank" rel="noopener noreferrer"><code>0xf556&hellip;905B</code></a></td><td data-label="Tranche">#3</td><td data-label="Lock type"><code>PRICE_ONLY</code></td><td data-label="Amount (IFR)">805,090.006972798</td><td data-label="Original conditions">price &ge; 1,500 gwei/IFR (5000 &times; P0)</td></tr>
+          <tr><td data-label="Wallet"><a href="https://etherscan.io/address/0xf556cCe85128c93AC6A7e088cF334180F2D3905B" target="_blank" rel="noopener noreferrer"><code>0xf556&hellip;905B</code></a></td><td data-label="Tranche">#4</td><td data-label="Lock type"><code>PRICE_ONLY</code></td><td data-label="Amount (IFR)">805,090.006972798</td><td data-label="Original conditions">price &ge; 1,500 gwei/IFR (5000 &times; P0)</td></tr>
+          <tr><td data-label="Wallet"><a href="https://etherscan.io/address/0xf556cCe85128c93AC6A7e088cF334180F2D3905B" target="_blank" rel="noopener noreferrer"><code>0xf556&hellip;905B</code></a></td><td data-label="Tranche">#5</td><td data-label="Lock type"><code>PRICE_ONLY</code></td><td data-label="Amount (IFR)">805,090.006972798</td><td data-label="Original conditions">price &ge; 1,500 gwei/IFR (5000 &times; P0)</td></tr>
+          <tr><td data-label="Wallet"><a href="https://etherscan.io/address/0xf556cCe85128c93AC6A7e088cF334180F2D3905B" target="_blank" rel="noopener noreferrer"><code>0xf556&hellip;905B</code></a></td><td data-label="Tranche">#6</td><td data-label="Lock type"><code>PRICE_ONLY</code></td><td data-label="Amount (IFR)">805,090.006972798</td><td data-label="Original conditions">price &ge; 1,500 gwei/IFR (5000 &times; P0)</td></tr>
+          <tr><td data-label="Wallet"><a href="https://etherscan.io/address/0xf556cCe85128c93AC6A7e088cF334180F2D3905B" target="_blank" rel="noopener noreferrer"><code>0xf556&hellip;905B</code></a></td><td data-label="Tranche">#7</td><td data-label="Lock type"><code>PRICE_ONLY</code></td><td data-label="Amount (IFR)">805,090.006972798</td><td data-label="Original conditions">price &ge; 1,500 gwei/IFR (5000 &times; P0)</td></tr>
+          <tr><td data-label="Wallet"><a href="https://etherscan.io/address/0xf556cCe85128c93AC6A7e088cF334180F2D3905B" target="_blank" rel="noopener noreferrer"><code>0xf556&hellip;905B</code></a></td><td data-label="Tranche">#8</td><td data-label="Lock type"><code>PRICE_ONLY</code></td><td data-label="Amount (IFR)">805,090.006972798</td><td data-label="Original conditions">price &ge; 1,500 gwei/IFR (5000 &times; P0)</td></tr>
+          <tr><td data-label="Wallet"><a href="https://etherscan.io/address/0xf556cCe85128c93AC6A7e088cF334180F2D3905B" target="_blank" rel="noopener noreferrer"><code>0xf556&hellip;905B</code></a></td><td data-label="Tranche">#9</td><td data-label="Lock type"><code>PRICE_ONLY</code></td><td data-label="Amount (IFR)">805,090.006972805</td><td data-label="Original conditions">price &ge; 1,500 gwei/IFR (5000 &times; P0)</td></tr>
+          </tbody>
+          <tfoot><tr><th colspan="3">Total permanently locked</th><th>26,418,467.994338353</th><th></th></tr></tfoot>
+        </table>
+        </div>
+      </noscript>
 
       <h2>Proposal CV-01 (urgent vote)</h2>
       <table>
@@ -661,7 +683,8 @@
       <h2 id="cv01-vote">Vote</h2>
       <p>The Council vote is held by the Safe signers. Each signer signs the published vote text with their Safe owner wallet on Etherscan; anyone can verify each signature. The signed text refers to this proposal at repository commit <code>f08ce370</code>.</p>
       <ul>
-        <li><strong>Eligible:</strong> M.G., A.M., Y.K. and A.P. G.M. abstains.</li>
+        <li><strong>Council:</strong> five members, M.G., A.M., Y.K., A.P. and G.M. G.M. abstains from this vote.</li>
+        <li><strong>Eligible:</strong> the other four, M.G., A.M., Y.K. and A.P.</li>
         <li><strong>Required:</strong> 3 YES votes. Until then the proposal is not approved.</li>
         <li><strong>Deadline:</strong> none. A deadline can only be set by a separate Council vote.</li>
         <li><strong>Status:</strong> vote open, 2 of 3 required YES votes received. <strong>Not approved.</strong></li>
@@ -733,7 +756,7 @@
         // Green is fail-closed: it needs Council approval AND a published, human-reviewed 7-day TWAP record for
         // the tranche. A record must name immutable start/end blocks (number + hash), start/end timestamps that
         // span at least the 7-day binding window, the TWAP from the pair's cumulative prices at or above the target,
-        // an end time after the original unlock date, the reviewer, and a reproducible calculation (script path,
+        // an end time after the original unlock date and not in the future, the reviewer, and a reproducible calculation (script path,
         // repository commit and evidence artifact). This browser check only enforces that the record is complete
         // and consistent; it does not recompute the TWAP. Live spot data and RPC results never change a status.
         var TWAP_WINDOW_SEC = 7 * 24 * 60 * 60;
@@ -746,6 +769,7 @@
             if (!(isUint(e.startBlock) && isUint(e.endBlock) && e.endBlock > e.startBlock)) return false;
             if (!(isHash(e.startBlockHash) && isHash(e.endBlockHash))) return false;
             if (!(isUint(e.startTimestamp) && isUint(e.endTimestamp) && e.endTimestamp - e.startTimestamp >= TWAP_WINDOW_SEC)) return false;
+            if (e.endTimestamp > Math.floor(Date.now() / 1000)) return false;  // a TWAP window still running is not evidence
             if (!(typeof e.twapGwei === "number" && isFinite(e.twapGwei) && e.twapGwei >= targetGwei(t))) return false;
             if (t.unlock !== null && !(e.endTimestamp >= Date.parse(t.unlock + "T00:00:00Z") / 1000)) return false;
             var c = e.calculation;
