@@ -1,0 +1,13 @@
+{
+  "name": "ifr-builder-compile-harness",
+  "private": true,
+  "description": "Pinned Solidity compiler and OpenZeppelin for compiling Builder-generated contracts in tests (T-211).",
+  "license": "MIT",
+  "dependencies": {
+    "@openzeppelin/contracts": "5.6.1",
+    "solc": "0.8.20"
+  },
+  "overrides": {
+    "tmp": "0.2.7"
+  }
+}

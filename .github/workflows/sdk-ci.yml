@@ -7,12 +7,20 @@ on:
       - 'apps/sdk/**'
       - 'apps/builder/engine/**'
       - 'test/builder/CodeGeneratorSource.test.cjs'
+      - 'test/builder/CodeGeneratorCompile.test.cjs'
+      - 'test/builder/compile-harness/**'
+      - 'contracts/library/**'
+      - 'docs/builder.html'
       - '.github/workflows/sdk-ci.yml'
   pull_request:
     paths:
       - 'apps/sdk/**'
       - 'apps/builder/engine/**'
       - 'test/builder/CodeGeneratorSource.test.cjs'
+      - 'test/builder/CodeGeneratorCompile.test.cjs'
+      - 'test/builder/compile-harness/**'
+      - 'contracts/library/**'
+      - 'docs/builder.html'
       - '.github/workflows/sdk-ci.yml'
 
 permissions:
@@ -45,3 +53,8 @@ jobs:
           npx tsc --target ES2020 --module commonjs --esModuleInterop --skipLibCheck \
             --outDir /tmp/ifr-builder-engine ../builder/engine/*.ts
           node ../../test/builder/CodeGeneratorSource.test.cjs /tmp/ifr-builder-engine
+      - name: Compile every Builder option combination and check builder.html parity
+        run: |
+          npm ci --ignore-scripts --prefix ../../test/builder/compile-harness
+          npm audit --audit-level=low --prefix ../../test/builder/compile-harness
+          node ../../test/builder/CodeGeneratorCompile.test.cjs /tmp/ifr-builder-engine
