@@ -14,9 +14,24 @@ const path = require("path");
 const vm = require("vm");
 
 const root = path.resolve(__dirname, "..");
-const corePath = process.env.WALLET_CORE_PATH || path.join(root, "docs", "assets", "wallet-core.js");
+// WALLET_CORE_TARGET=web3 runs the same checks against the Web3 site's core
+// (docs/web3-wallet-core.js, loaded by docs/web3/index.html).
+const TARGET = process.env.WALLET_CORE_TARGET === "web3" ? "web3" : "landing";
+const TARGETS = {
+  landing: {
+    core: path.join(root, "docs", "assets", "wallet-core.js"),
+    page: path.join(root, "docs", "index.html"),
+    cacheBust: /assets\/wallet-core\.js\?v=20261003-rpc-fallback-v6-retry"/
+  },
+  web3: {
+    core: path.join(root, "docs", "web3-wallet-core.js"),
+    page: path.join(root, "docs", "web3", "index.html"),
+    cacheBust: /\/web3-wallet-core\.js\?v=20261004-rpc-fallback-v6"/
+  }
+};
+const corePath = process.env.WALLET_CORE_PATH || TARGETS[TARGET].core;
 const source = fs.readFileSync(corePath, "utf8");
-const landing = fs.readFileSync(path.join(root, "docs", "index.html"), "utf8");
+const landing = fs.readFileSync(TARGETS[TARGET].page, "utf8");
 const ethersSource = fs.readFileSync(path.join(root, "docs", "assets", "vendor", "ethers-6.17.0.umd.min.js"), "utf8");
 
 // Endpoints verified to answer a browser CORS preflight for https://ifrunit.tech.
@@ -42,8 +57,8 @@ assert.ok(
   "landing dns-prefetch must point at the primary RPC"
 );
 assert.ok(
-  /assets\/wallet-core\.js\?v=20261003-rpc-fallback-v6-retry"/.test(landing),
-  "landing must cache-bust wallet-core.js for the RPC fallback"
+  TARGETS[TARGET].cacheBust.test(landing),
+  TARGET + " page must cache-bust its wallet core for the RPC fallback"
 );
 // CWA-47: wallet-core must not inject third-party <script> tags.
 assert.ok(!/createElement\(\s*["']script["']\s*\)/.test(source), "wallet-core must not inject script tags");
@@ -240,7 +255,7 @@ async function expectUnavailable(env, label) {
   assert.strictEqual(recover.api.getProvider(), fresh, "the recovered provider must stay cached");
   assert.strictEqual(recover.sandbox.document.getElementById("ifr-rpc-error"), null, "stale unavailable notice must clear after recovery");
 
-  console.log("wallet-core RPC fallback (ethers 6.17.0): " + urls.length +
+  console.log("[" + TARGET + "] wallet-core RPC fallback (ethers 6.17.0): " + urls.length +
     " CORS-capable endpoints, primary " + urls[0] + "; wrong-chain/mixed/garbage/all-wrong/all-down/recovery — OK");
   process.exit(0);
 })().catch((err) => {
