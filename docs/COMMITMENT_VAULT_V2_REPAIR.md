@@ -6,7 +6,7 @@ Safe signers, never by automation.
 - **V2:** `0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F`, deployed 2026-10-02 21:22:23 UTC in block 26107296, TX
   `0x9857a5707b650b8828f41b893f91a10ff26d7990742e782bb0b7e86df23ea0f7`. Owner Governance, no P0, no oracle;
   a `PRICE_ONLY` lock reverts with `price conditions disabled`. Runtime bytecode equals the compiled artifact
-  except the immutable IFR address. Sourcify exact match; Etherscan source verification pending.
+  except the immutable IFR address. Etherscan source verified and Sourcify exact match.
 - **Proposal #17** `setFeeExempt(V2, true)`: queued by the Treasury Safe, TX
   `0x6e113b6cc66a369604d46c3b4a5560f1418302de6ecc371f1217d72aeabd39bd`, ETA 2026-10-04 21:53:11 UTC.
   **Not executed:** `InfernoToken.feeExempt(V2)` stays `false` until step 4 is executed.
