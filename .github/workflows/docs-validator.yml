@@ -226,6 +226,9 @@ jobs:
       - name: Check public content trust
         run: npm run test:content-trust
 
+      - name: Check builder page generator output
+        run: npm run test:builder-page
+
       - name: Check CEX fee-exemption policy consistency
         run: npm run test:cex-fee-policy
 
