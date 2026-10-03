@@ -101,14 +101,20 @@ function evaluate({ prod, full, lock, today, exceptions = EXCEPTIONS }) {
 }
 
 // Arguments are explicit so that NODE_ENV=production or npm omit/production config can never
-// silently drop dev dependencies from the full audit (or add them to the production audit).
-const AUDIT_ARGS = { prod: ["--omit=dev"], full: ["--include=dev"] };
+// silently drop dev dependencies from the full audit, and project/user/global .npmrc settings
+// (include=dev, production=false, dev=true, also=dev) can never add them to the production audit:
+// npm drops an omitted type whenever any of those keys includes it, so each is overridden on the
+// command line, which outranks every config file (verified against npm 10 effective config).
+const AUDIT_ARGS = {
+  prod: ["--omit=dev", "--include=prod", "--production", "--dev=false", "--also=null"],
+  full: ["--include=dev"],
+};
 
 /** Environment for npm audit without variables that change which dependency types are audited. */
 function auditEnv(env = process.env) {
   const clean = { ...env };
   for (const key of Object.keys(clean)) {
-    if (/^(NODE_ENV|npm_config_(omit|include|production|only|dev))$/i.test(key)) delete clean[key];
+    if (/^(NODE_ENV|npm_config_(omit|include|production|only|dev|also))$/i.test(key)) delete clean[key];
   }
   return clean;
 }
