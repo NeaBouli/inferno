@@ -26,6 +26,7 @@ for (const watchedPath of [
   "scripts/test-docs-truth.cjs",
   "deployments/mainnet.json",
   "scripts/check-sitemap-anchors.cjs",
+  "scripts/test-sitemap-anchors.cjs",
   "scripts/check-july-audit-remediation-register.cjs",
   "scripts/test-docs-workflow.cjs",
   "scripts/check-markdownlint-baseline.cjs",

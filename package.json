@@ -32,7 +32,7 @@
     "test:benefits-node-runtime": "node scripts/test-benefits-node-runtime.cjs",
     "test:wiki-heads": "node scripts/test-wiki-head-integrity.cjs",
     "test:wiki-jsonld": "node scripts/test-wiki-jsonld.cjs",
-    "test:sitemap-anchors": "node scripts/check-sitemap-anchors.cjs",
+    "test:sitemap-anchors": "node scripts/check-sitemap-anchors.cjs && node scripts/test-sitemap-anchors.cjs",
     "build:sitemap": "node scripts/check-sitemap-anchors.cjs --write",
     "test:wiki-rag": "node scripts/build-wiki-rag.js --check",
     "test:content-trust": "node scripts/test-content-trust.cjs",
