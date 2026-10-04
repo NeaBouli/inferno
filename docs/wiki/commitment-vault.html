@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CommitmentVault &mdash; Inferno (IFR) Documentation</title>
   <meta name="keywords" content="CommitmentVault, token lock, conditions, P0 multiplier">
-  <meta name="description" content="Lock IFR tokens with custom unlock conditions. 4 condition types: time, price, time+price, time OR price. Anti-dump mechanism for contributors.">
+  <meta name="description" content="Lock IFR with a time-based unlock. In V1, PRICE_ONLY and TIME_AND_PRICE locks can never unlock (CV-01); TIME_OR_PRICE still unlocks by time. Price conditions are disabled; new time locks move to V2 after Governance proposal #17.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -610,19 +610,19 @@
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Inferno Protocol">
   <meta property="og:title" content="CommitmentVault — Inferno Protocol (IFR)">
-  <meta property="og:description" content="Lock IFR tokens with custom unlock conditions. 4 condition types: time, price, time+price, time OR price. Anti-dump mechanism for contributors.">
+  <meta property="og:description" content="Lock IFR with a time-based unlock. In V1, PRICE_ONLY and TIME_AND_PRICE locks can never unlock (CV-01); TIME_OR_PRICE still unlocks by time. Price conditions are disabled; new time locks move to V2 after Governance proposal #17.">
   <meta property="og:url" content="https://ifrunit.tech/wiki/commitment-vault.html">
   <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="CommitmentVault — Inferno Protocol (IFR)">
-  <meta name="twitter:description" content="Lock IFR tokens with custom unlock conditions. 4 condition types: time, price, time+price, time OR price.">
+  <meta name="twitter:description" content="Lock IFR with a time-based unlock. In V1, PRICE_ONLY and TIME_AND_PRICE locks can never unlock (CV-01); TIME_OR_PRICE still unlocks by time. Price conditions are disabled; new time locks move to V2 after Governance proposal #17.">
   <meta name="twitter:site" content="@IFRtoken">
   <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">  <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "TechArticle",
     "headline": "CommitmentVault",
-    "description": "Lock IFR tokens with custom unlock conditions. 4 condition types: time, price, time+price, time OR price. Anti-dump mechanism for contributors.",
+    "description": "Lock IFR with a time-based unlock. In V1, PRICE_ONLY and TIME_AND_PRICE locks can never unlock (CV-01); TIME_OR_PRICE still unlocks by time. Price conditions are disabled; new time locks move to V2 after Governance proposal #17.",
     "url": "https://ifrunit.tech/wiki/commitment-vault.html",
     "isPartOf": {"@id": "https://ifrunit.tech/#website"},
     "publisher": {"@id": "https://ifrunit.tech/#organization"},
@@ -830,30 +830,34 @@
       <!-- ======================================== -->
       <!-- 2. Die 4 Bedingungstypen -->
       <!-- ======================================== -->
-      <h2 id="bedingungstypen">2. The 4 Condition Types</h2>
+      <h2 id="bedingungstypen">2. Condition Types</h2>
+
+      <div class="callout">
+        <p><strong>Only time locks are offered.</strong> CommitmentVault V1 defined four condition types, but its deployed contract cannot evaluate a price: price-conditioned tranches (B and D) can never unlock, and C unlocks only through its time condition. The lock widget therefore offers only <strong>A) Time Only</strong>; price types are disabled. New time locks move to CommitmentVault V2 once Governance proposal #17 (its fee exemption) is executed. The affected Mainnet tranches and the compensation proposal are documented in <a href="commitment-vault-compensation.html">CV-01</a>.</p>
+      </div>
 
       <h3>A) TIME ONLY</h3>
       <p><strong style="color:var(--text);">Formula:</strong> <code>unlock_time = T</code></p>
       <p><strong style="color:var(--text);">Example:</strong> &ldquo;Unlock on 01/01/2027&rdquo;</p>
       <p><strong style="color:var(--text);">Ideal for:</strong> Team, Partner, Diamond Hands</p>
 
-      <h3>B) PRICE ONLY</h3>
+      <h3>B) PRICE ONLY &mdash; V1 design, disabled (never unlocks on V1)</h3>
       <p><strong style="color:var(--text);">Formula:</strong> <code>unlock_price = P0 &times; Multiplier</code></p>
       <p><strong style="color:var(--text);">Example:</strong> &ldquo;Unlock when IFR &ge; P0 &times; 10&rdquo;</p>
-      <p><strong style="color:var(--text);">Ideal for:</strong> Contributor (aligned with growth)</p>
+      <p><strong style="color:var(--text);">Status:</strong> not offered; existing V1 tranches of this type can never unlock (CV-01).</p>
 
-      <h3>C) TIME OR PRICE</h3>
+      <h3>C) TIME OR PRICE &mdash; V1 design, disabled (unlocks only by time on V1)</h3>
       <p><strong style="color:var(--text);">Formula:</strong> <code>unlock_time = T OR unlock_price = P0 &times; M</code></p>
       <p><strong style="color:var(--text);">Example:</strong> &ldquo;06/01/2027 OR when P0 &times; 50&rdquo;</p>
-      <p><strong style="color:var(--text);">Ideal for:</strong> Maximum flexibility</p>
+      <p><strong style="color:var(--text);">Status:</strong> not offered; existing V1 tranches of this type unlock after their time condition.</p>
 
-      <h3>D) TIME AND PRICE</h3>
+      <h3>D) TIME AND PRICE &mdash; V1 design, disabled (never unlocks on V1)</h3>
       <p><strong style="color:var(--text);">Formula:</strong> <code>unlock_time = T AND unlock_price = P0 &times; M</code></p>
       <p><strong style="color:var(--text);">Example:</strong> &ldquo;After 01/01/2027 AND P0 &times; 100&rdquo;</p>
-      <p><strong style="color:var(--text);">Ideal for:</strong> Strongest form of commitment</p>
+      <p><strong style="color:var(--text);">Status:</strong> not offered; existing V1 tranches of this type can never unlock (CV-01).</p>
 
       <div class="callout" style="background:rgba(34,197,94,0.06);border-left-color:var(--green);">
-        <p><strong>Conditions are checked at execution.</strong> <code>unlock()</code> re-evaluates the configured condition. <code>markConditionMet()</code> records when the condition was observed and starts the 30-day public-unlock timer, but it does not bypass the condition check if a price condition later falls below its target.</p>
+        <p>V1 design note: <strong>Conditions are checked at execution.</strong> <code>unlock()</code> re-evaluates the configured condition. <code>markConditionMet()</code> records when the condition was observed and starts the 30-day public-unlock timer, but it does not bypass the condition check if a price condition later falls below its target.</p>
       </div>
 
       <!-- ======================================== -->
@@ -867,7 +871,7 @@
       <p>The affected tranches and the compensation proposal are recorded in <a href="commitment-vault-compensation.html">CV-01</a>.</p>
 
       <h2 id="contributor-konfiguration">3. Contributor Configuration</h2>
-      <p>The 100M Contributor tokens are split into 10 equal tranches. Each tranche has a price condition (Type B: PRICE ONLY).</p>
+      <p>Original design (not live): the 100M Contributor tokens were planned as 10 equal tranches, each with a price condition (Type B: PRICE ONLY). Price conditions cannot unlock on V1, so this design is not used; see the Mainnet record below.</p>
 
       <table>
         <thead>
@@ -927,8 +931,8 @@
       <p>When a condition is met and the owner does not call <code>unlock()</code> within 30 days, <strong style="color:var(--text);">anyone</strong> can call the function for that wallet.</p>
 
       <ul>
-        <li>Tokens <strong style="color:var(--text);">ALWAYS</strong> go to the original wallet &mdash; it is impossible to steal tokens</li>
-        <li>Prevents permanently locked tokens in case of lost private keys</li>
+        <li>Tokens <strong style="color:var(--text);">ALWAYS</strong> go to the original wallet &mdash; <code>unlock()</code> cannot send them to the caller or any other address. This does not protect a compromised wallet: whoever controls that wallet controls the tokens once they arrive, and can call <code>unlock()</code> as the owner once the condition is met.</li>
+        <li>It only helps once a condition is met: it cannot release V1 PRICE_ONLY or TIME_AND_PRICE tranches, whose condition is never met (CV-01), and it cannot recover lost private keys, because tokens always return to the same wallet</li>
         <li>The 30-day grace period gives the owner enough time to act</li>
       </ul>
 
@@ -949,7 +953,7 @@
       <ul>
         <li><strong style="color:var(--text);">Tokens out of circulation = less sell pressure</strong> &mdash; Locked tokens cannot be sold, reducing the available supply.</li>
         <li><strong style="color:var(--text);">Trust provable on-chain</strong> &mdash; Not just promises, but mathematically verifiable. Anyone can read the contract.</li>
-        <li><strong style="color:var(--text);">Price tranches = aligned with project success</strong> &mdash; Contributors only benefit when the entire ecosystem grows. No dump on day 1.</li>
+        <li><strong style="color:var(--text);">Price tranches (original design, not available)</strong> &mdash; The original idea tied releases to project success. Deployed V1 cannot evaluate a price, so this benefit does not exist; price conditions are disabled and only time locks are offered.</li>
       </ul>
 
       <!-- ======================================== -->
@@ -958,13 +962,13 @@
       <h2 id="faq">Frequently Asked Questions</h2>
 
       <h3>Can someone steal my locked tokens?</h3>
-      <p><strong style="color:var(--text);">No.</strong> <code>unlock()</code> ALWAYS sends to the original wallet. The smart contract has no function that could send tokens to a different address.</p>
+      <p><strong style="color:var(--text);">Not through the vault.</strong> <code>unlock()</code> ALWAYS sends to the original wallet, and the smart contract has no function that could send locked tokens to a different address. If that wallet itself is compromised, the attacker can unlock the tokens once the condition is met and move them out of the wallet; the vault cannot prevent that.</p>
 
       <h3>What if I lose access?</h3>
-      <p>Auto-Unlock after 30 days. Anyone can call <code>unlock()</code>, and tokens still go to your wallet. As long as your wallet address exists, the tokens are safe.</p>
+      <p>If you lose access to your wallet, nobody can recover the tokens: <code>unlock()</code> always pays the original wallet. Auto-Unlock only lets anyone trigger the release 30 days after a met condition (for example a passed unlock date); the tokens still arrive in that same wallet.</p>
 
       <h3 id="cv01-notice">Is CommitmentVault live?</h3>
-      <p><strong style="color:var(--green);">Yes.</strong> CommitmentVault V1 is deployed on Ethereum Mainnet and feeExempt is active. Its price check never returns a price, so price-conditioned tranches cannot unlock (<a href="#cv01-notice">CV-01</a>). The self-service widget below therefore creates time-only locks, and new time locks go to CommitmentVault V2 (<code>0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F</code>, time only) once its fee exemption is executed through Governance proposal #17. Until then new locks stay disabled; existing V1 tranches remain visible and unlock through V1. Price-based locks are disabled.</p>
+      <p><strong style="color:var(--green);">Yes.</strong> CommitmentVault V1 is deployed on Ethereum Mainnet and feeExempt is active. Its price check never returns a price, so PRICE_ONLY and TIME_AND_PRICE tranches can never unlock, while TIME_OR_PRICE tranches still unlock by their time condition (<a href="#cv01-notice">CV-01</a>). The self-service widget below therefore creates time-only locks, and new time locks go to CommitmentVault V2 (<code>0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F</code>, time only) once its fee exemption is executed through Governance proposal #17. Until then new locks stay disabled; existing V1 tranches remain visible and unlock through V1. Price-based locks are disabled.</p>
 
       <!-- ============================================================
            Why CommitmentVault Is Critical After Bootstrap

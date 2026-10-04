@@ -81,9 +81,7 @@ function expectedWrite(transaction) {
   throw new Error(`Unexpected Web3 write: ${transaction.to} ${transaction.data}`);
 }
 
-async function installWallet(context, options = {}) {
-  const chainId = options.chainId || "0x1";
-  const rejectSwitch = options.rejectSwitch === true;
+function buildCallResults(options = {}) {
   const locked = options.locked || 0n;
   const availableOffer = options.offerAvailable === true;
   const callResults = {
@@ -118,15 +116,82 @@ async function installWallet(context, options = {}) {
       [[[9_500n * UNIT, 0, now, 0n, false, now]]],
     );
   }
+  return callResults;
+}
 
-  // Optional: feeExempt(V2) changes after N eth_sendTransaction calls ({ afterSends, to: false | "error" }).
-  const feeExemptFlip = options.feeExemptFlip
+const READ_RPC_PATTERNS = [
+  "https://ethereum-rpc.publicnode.com/**",
+  "https://ethereum-rpc.publicnode.com",
+  "https://eth.drpc.org/**",
+  "https://eth.drpc.org",
+  "https://1rpc.io/eth",
+  "https://1rpc.io/eth/**",
+];
+
+// Answers the Web3 wallet core's chain-pinned public read RPCs from a fixture (never the real network).
+async function routeReadRpc(target, results, options = {}) {
+  const chainId = options.readChainId || "0x1";
+  const log = options.readLog || null;
+  const handler = async (route) => {
+    let payload;
+    try {
+      payload = route.request().postDataJSON();
+    } catch {
+      return route.abort();
+    }
+    const respond = (item) => {
+      if (log) log.push(item.method);
+      let result = null;
+      if (item.method === "eth_chainId") result = chainId;
+      else if (item.method === "net_version") result = String(Number.parseInt(chainId, 16));
+      else if (item.method === "eth_blockNumber") result = "0x10";
+      else if (item.method === "eth_getCode") result = "0x01";
+      else if (item.method === "eth_getBalance") result = "0xde0b6b3a7640000";
+      else if (item.method === "eth_call") {
+        const call = item.params && item.params[0] ? item.params[0] : {};
+        const data = String(call.data || "0x").slice(0, 10).toLowerCase();
+        const key = `${String(call.to || "").toLowerCase()}:${data}`;
+        const flip = options.feeExemptFlip;
+        const flipped = flip && key === flip.key && options.sendCount && options.sendCount() >= flip.afterSends;
+        const scoped = flipped ? flip.value : results[key];
+        if (scoped === "__THROW__") {
+          return { jsonrpc: "2.0", id: item.id, error: { code: 3, message: "execution reverted (test)", data: "0x" } };
+        }
+        result = scoped || results[data] || `0x${"0".repeat(64)}`;
+      }
+      return { jsonrpc: "2.0", id: item.id, result };
+    };
+    const body = Array.isArray(payload) ? payload.map(respond) : respond(payload);
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
+  };
+  for (const pattern of READ_RPC_PATTERNS) await target.route(pattern, handler);
+}
+
+// Every context gets fixture read RPCs by default, so no test reaches a real public endpoint.
+async function newRoutedContext(browser, contextOptions) {
+  const context = await browser.newContext(contextOptions);
+  await routeReadRpc(context, buildCallResults());
+  return context;
+}
+
+// Optional: feeExempt(V2) changes after N eth_sendTransaction calls ({ afterSends, to: false | "error" }).
+function buildFeeExemptFlip(options) {
+  return options.feeExemptFlip
     ? {
         key: `${TOKEN.toLowerCase()}:${selectors.feeExempt}`,
         afterSends: options.feeExemptFlip.afterSends,
         value: options.feeExemptFlip.to === "error" ? "__THROW__" : uintResult(options.feeExemptFlip.to ? 1n : 0n),
       }
     : null;
+}
+
+async function installWallet(context, options = {}) {
+  const chainId = options.chainId || "0x1";
+  const rejectSwitch = options.rejectSwitch === true;
+  const callResults = buildCallResults(options);
+  const walletResults = { ...callResults, ...(options.walletResultsOverride || {}) };
+
+  const feeExemptFlip = buildFeeExemptFlip(options);
 
   await context.addInitScript(({ account, initialChainId, shouldRejectSwitch, results, flip }) => {
     let sendCount = 0;
@@ -252,15 +317,21 @@ async function installWallet(context, options = {}) {
     account: ACCOUNT,
     initialChainId: chainId,
     shouldRejectSwitch: rejectSwitch,
-    results: callResults,
+    results: walletResults,
     flip: feeExemptFlip,
   });
+  return callResults;
 }
 
 async function preparePage(browser, options = {}) {
-  const context = await browser.newContext({ serviceWorkers: "block", ...(options.contextOptions || {}) });
-  await installWallet(context, options);
+  const context = await newRoutedContext(browser, { serviceWorkers: "block", ...(options.contextOptions || {}) });
+  const readResults = await installWallet(context, options);
   const writes = [];
+  await routeReadRpc(context, { ...readResults, ...(options.readResultsOverride || {}) }, {
+    ...options,
+    feeExemptFlip: buildFeeExemptFlip(options),
+    sendCount: () => writes.length,
+  });
   const pageErrors = [];
   const page = await context.newPage();
   page.on("pageerror", (error) => pageErrors.push(error.message));
@@ -416,7 +487,7 @@ test("failed account refresh clears the previous wallet data", async ({ browser 
 });
 
 test("wallet chooser keeps WalletConnect available with zero or multiple injected wallets", async ({ browser }) => {
-  const emptyContext = await browser.newContext({ serviceWorkers: "block" });
+  const emptyContext = await newRoutedContext(browser, { serviceWorkers: "block" });
   try {
     const emptyPage = await emptyContext.newPage();
     await emptyPage.goto("/web3/", { waitUntil: "domcontentloaded" });
@@ -450,8 +521,8 @@ test("wallet chooser keeps WalletConnect available with zero or multiple injecte
 });
 
 test("new Web3 HTML fails visibly when an old cached wallet core lacks the chooser API", async ({ browser }) => {
-  const context = await browser.newContext({ serviceWorkers: "block" });
-  await context.route("**/web3-wallet-core.js?v=20260928-wc-cancel", (route) => route.fulfill({
+  const context = await newRoutedContext(browser, { serviceWorkers: "block" });
+  await context.route("**/web3-wallet-core.js?v=20261004-rpc-fallback-v6", (route) => route.fulfill({
     contentType: "application/javascript",
     body: `window.IFRWallet = {
       autoReconnect: async () => false,
@@ -747,7 +818,7 @@ const WC_PENDING_MOCK_MODULE = `
 `;
 
 test("closing a pending tablet WalletConnect dialog cancels it and a retry still connects", async ({ browser }) => {
-  const context = await browser.newContext({
+  const context = await newRoutedContext(browser, {
     serviceWorkers: "block",
     viewport: { width: 711, height: 970 },
     userAgent: "Mozilla/5.0 (Linux; Android 9; SM-T835) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36",
@@ -839,7 +910,7 @@ const WC_DEFERRED_INIT_MOCK_MODULE = WC_PENDING_MOCK_MODULE
 test("cancelling while WalletConnect init is pending drops the late provider and a retry pairs fresh", async ({ browser }) => {
   expect(WC_DEFERRED_INIT_MOCK_MODULE).toContain("state.inits.push(resolve)");
   expect(WC_DEFERRED_INIT_MOCK_MODULE).toContain("provider.disconnected = true");
-  const context = await browser.newContext({
+  const context = await newRoutedContext(browser, {
     serviceWorkers: "block",
     viewport: { width: 711, height: 970 },
     userAgent: "Mozilla/5.0 (Linux; Android 9; SM-T835) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36",
@@ -912,7 +983,7 @@ test("cancelling while WalletConnect init is pending drops the late provider and
 });
 
 test("WalletConnect initialization can be retried after a transient loader failure", async ({ browser }) => {
-  const context = await browser.newContext({ serviceWorkers: "block" });
+  const context = await newRoutedContext(browser, { serviceWorkers: "block" });
   const warnings = [];
   try {
     await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js", async (route) => {
@@ -958,7 +1029,7 @@ test("Web3 connect flow uses the guarded wallet-state loader", () => {
 });
 
 test("persisted WalletConnect wrong-network recovery fails closed without an unhandled rejection", async ({ browser }) => {
-  const context = await browser.newContext({ serviceWorkers: "block" });
+  const context = await newRoutedContext(browser, { serviceWorkers: "block" });
   const pageErrors = [];
   try {
     await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js", async (route) => {
@@ -1111,7 +1182,7 @@ test("CommitmentVault V1 offers only TIME_ONLY and refuses forged price conditio
 });
 
 test("wiki CommitmentVault widget exposes only TIME_ONLY and pins cType 0 at the lock call (CV-01)", async ({ browser }) => {
-  const context = await browser.newContext({ serviceWorkers: "block" });
+  const context = await newRoutedContext(browser, { serviceWorkers: "block" });
   const page = await context.newPage();
   await page.goto("/wiki/commitment-vault.html", { waitUntil: "domcontentloaded" });
   const condition = page.locator("#cv-condition-type");
@@ -1234,7 +1305,7 @@ test("LendingVault borrowing remains transaction-disabled while price is zero", 
 });
 
 test("Web3 runtime uses the self-hosted Ethers asset", async ({ browser }) => {
-  const context = await browser.newContext({ serviceWorkers: "block" });
+  const context = await newRoutedContext(browser, { serviceWorkers: "block" });
   try {
     const page = await context.newPage();
     const externalEthersRequests = [];
@@ -1266,7 +1337,7 @@ test("self-hosted WalletConnect artifact matches the recorded 2.25.0 build", () 
 });
 
 test("self-hosted WalletConnect artifact executes in the browser and exposes EthereumProvider", async ({ browser }) => {
-  const context = await browser.newContext({ serviceWorkers: "block" });
+  const context = await newRoutedContext(browser, { serviceWorkers: "block" });
   const pageErrors = [];
   try {
     const page = await context.newPage();
@@ -1288,7 +1359,7 @@ test("self-hosted WalletConnect artifact executes in the browser and exposes Eth
 });
 
 test("WalletConnect connect loads the provider only from the pinned same-origin artifact", async ({ browser }) => {
-  const context = await browser.newContext({ serviceWorkers: "block" });
+  const context = await newRoutedContext(browser, { serviceWorkers: "block" });
   const pageErrors = [];
   try {
     const artifactRequests = [];
@@ -1363,7 +1434,7 @@ test("Add IFR to wallet submits the canonical token metadata", async ({ browser 
 });
 
 test("Android 9 stays in browser mode instead of launching an incompatible WebAPK", async ({ browser }) => {
-  const context = await browser.newContext({
+  const context = await newRoutedContext(browser, {
     viewport: { width: 360, height: 640 },
     userAgent: "Mozilla/5.0 (Linux; Android 9; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36",
   });
@@ -1387,9 +1458,9 @@ test("Android 9 stays in browser mode instead of launching an incompatible WebAP
 test("Web3 service worker bounds offline navigation before using the cache", () => {
   const source = readFileSync("docs/web3-sw.js", "utf8");
   const html = readFileSync("docs/web3/index.html", "utf8");
-  expect(source).toContain('const CACHE_NAME = "ifr-web3-v19"');
-  expect(source).toContain('"/web3-wallet-core.js?v=20260928-wc-cancel"');
-  expect(html).toContain('<script src="/web3-wallet-core.js?v=20260928-wc-cancel"></script>');
+  expect(source).toContain('const CACHE_NAME = "ifr-web3-v22"');
+  expect(source).toContain('"/web3-wallet-core.js?v=20261004-rpc-fallback-v6"');
+  expect(html).toContain('<script src="/web3-wallet-core.js?v=20261004-rpc-fallback-v6"></script>');
   expect(html).toContain('updateViaCache: "none"');
   expect(source).toContain("const NAVIGATION_TIMEOUT_MS = 5000");
   expect(source).toContain("fetchNavigation(request)");
@@ -1399,7 +1470,7 @@ test("Web3 service worker bounds offline navigation before using the cache", () 
 });
 
 test("Web3 app shell reloads from the service-worker cache while offline", async ({ browser }) => {
-  const context = await browser.newContext({ serviceWorkers: "allow" });
+  const context = await newRoutedContext(browser, { serviceWorkers: "allow" });
   const page = await context.newPage();
   await page.goto("/web3/", { waitUntil: "networkidle" });
   await page.evaluate(() => navigator.serviceWorker.ready);
@@ -1469,7 +1540,7 @@ function measureHeaderGeometry() {
 for (const standalone of [false, true]) {
   for (const device of HEADER_CASES) {
     test(`Web3 header shows no overlap or overflow at ${device.name} (${standalone ? "standalone" : "browser tab"})`, async ({ browser }) => {
-      const context = await browser.newContext({
+      const context = await newRoutedContext(browser, {
         viewport: { width: device.width, height: device.height },
         userAgent: device.ua,
         hasTouch: true,
@@ -1560,7 +1631,7 @@ async function routeWalletConnectModule(context, shouldFail, body) {
 }
 
 test("WalletConnect fetch failure shows an honest error and recovers after reload", async ({ browser }) => {
-  const context = await browser.newContext({ serviceWorkers: "block" });
+  const context = await newRoutedContext(browser, { serviceWorkers: "block" });
   const pageErrors = [];
   let failImport = true;
   try {
@@ -1590,7 +1661,7 @@ test("WalletConnect fetch failure shows an honest error and recovers after reloa
 });
 
 test("WalletConnect init failure stays recoverable on the next attempt", async ({ browser }) => {
-  const context = await browser.newContext({ serviceWorkers: "block" });
+  const context = await newRoutedContext(browser, { serviceWorkers: "block" });
   const pageErrors = [];
   try {
     await routeWalletConnectModule(context, () => false, WC_FLAKY_INIT_MODULE);
@@ -1697,5 +1768,119 @@ for (const [label, flip, split, expected] of [
     await expect(page.locator("#cv-lock-btn")).toBeDisabled();
     expect(pageErrors).toEqual([]);
     await context.close();
+  });
+}
+
+test("connected-wallet summaries read through the chain-pinned read provider, never the wallet provider", async ({ browser }) => {
+  const readLog = [];
+  const { context, page, pageErrors } = await preparePage(browser, {
+    locked: 5_000n * UNIT,
+    // A compromised or wrong-network wallet provider answers with fake data; it must never be displayed.
+    walletResultsOverride: { [selectors.accessLocked]: uintResult(999_999n * UNIT) },
+    readLog,
+  });
+  try {
+    await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+    await connect(page);
+    await expect(page.locator("[data-access-lock-balance]")).toHaveText("5,000 IFR", { timeout: 15_000 });
+    await expect(page.locator("[data-access-lock-note]")).toHaveText("Premium ready");
+    const walletCalls = await page.evaluate(() => window.__web3RequestCounts.eth_call || 0);
+    expect(walletCalls).toBe(0);
+    expect(readLog).toContain("eth_chainId");
+    expect(readLog).toContain("eth_call");
+    expect(pageErrors).toEqual([]);
+  } finally {
+    await context.close();
+  }
+});
+
+test("read RPCs on the wrong chain show no data and never fall back to the wallet provider", async ({ browser }) => {
+  const readLog = [];
+  const { context, page, pageErrors } = await preparePage(browser, {
+    readChainId: "0x5",
+    walletResultsOverride: { [selectors.accessLocked]: uintResult(999_999n * UNIT) },
+    readLog,
+  });
+  try {
+    await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+    await connect(page);
+    await expect(page.locator("#ifr-rpc-error")).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator("[data-access-lock-balance]")).not.toContainText("999,999");
+    const walletCalls = await page.evaluate(() => window.__web3RequestCounts.eth_call || 0);
+    expect(walletCalls).toBe(0);
+    // Only chain checks reached the wrong-chain endpoints; no data call was sent to them.
+    expect(readLog.filter((method) => method !== "eth_chainId")).toEqual([]);
+    expect(pageErrors).toEqual([]);
+  } finally {
+    await context.close();
+  }
+});
+
+for (const [width, height] of [[1440, 1000], [1180, 820], [820, 1180], [390, 844]]) {
+  test(`RPC outage notice fits without overlap at ${width}x${height} and clears on recovery`, async ({ browser }) => {
+    const context = await browser.newContext({ serviceWorkers: "block", viewport: { width, height } });
+    let healthy = false;
+    const results = buildCallResults();
+    try {
+      const handler = async (route) => {
+        if (!healthy) return route.abort("failed");
+        let payload;
+        try { payload = route.request().postDataJSON(); } catch { return route.abort(); }
+        const respond = (item) => ({
+          jsonrpc: "2.0",
+          id: item.id,
+          result: item.method === "eth_chainId" ? "0x1"
+            : item.method === "eth_blockNumber" ? "0x10"
+            : item.method === "eth_call" ? (results[String((item.params && item.params[0] && item.params[0].data) || "0x").slice(0, 10).toLowerCase()] || `0x${"0".repeat(64)}`)
+            : null,
+        });
+        const body = Array.isArray(payload) ? payload.map(respond) : respond(payload);
+        await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
+      };
+      for (const pattern of READ_RPC_PATTERNS) await context.route(pattern, handler);
+      const page = await context.newPage();
+      const pageErrors = [];
+      page.on("pageerror", (error) => pageErrors.push(error.message));
+      await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+      await page.evaluate(() => window.IFRWallet.getReadProvider());
+      const notice = page.locator("#ifr-rpc-error");
+      await expect(notice).toBeVisible({ timeout: 20_000 });
+
+      const layout = await page.evaluate(() => {
+        const box = (el) => { const r = el.getBoundingClientRect(); return { left: r.left, right: r.right, top: r.top, bottom: r.bottom, width: r.width, height: r.height }; };
+        const overlaps = (a, b) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+        const bar = document.getElementById("ifr-rpc-error");
+        const n = box(bar);
+        const visible = (el) => { const s = getComputedStyle(el); const r = el.getBoundingClientRect(); return s.visibility !== "hidden" && s.display !== "none" && r.width > 0 && r.height > 0; };
+        const controls = [...document.querySelectorAll("[data-wallet-connect], [data-wallet-state], button, a")]
+          .filter((el) => el !== bar && !bar.contains(el) && visible(el) && getComputedStyle(el).position === "fixed");
+        const fixedOverlaps = controls.filter((el) => overlaps(n, box(el))).map((el) => el.outerHTML.slice(0, 80));
+        const close = bar.querySelector("button");
+        return {
+          inViewport: n.left >= 0 && n.right <= window.innerWidth && n.top >= 0 && n.bottom <= window.innerHeight,
+          pageOverflow: document.documentElement.scrollWidth > window.innerWidth,
+          closeTarget: close ? box(close) : null,
+          fixedOverlaps,
+        };
+      });
+      expect(layout.inViewport).toBe(true);
+      expect(layout.pageOverflow).toBe(false);
+      expect(layout.fixedOverlaps).toEqual([]);
+      expect(layout.closeTarget.width).toBeGreaterThanOrEqual(44);
+      expect(layout.closeTarget.height).toBeGreaterThanOrEqual(44);
+      if (process.env.WEB3_RPC_NOTICE_SHOTS) {
+        await page.screenshot({ path: `${process.env.WEB3_RPC_NOTICE_SHOTS}/t221-rpc-outage-${width}x${height}.png` });
+      }
+
+      healthy = true;
+      await page.evaluate(() => window.IFRWallet.getReadProvider().getBlockNumber());
+      await expect(notice).toHaveCount(0, { timeout: 20_000 });
+      if (process.env.WEB3_RPC_NOTICE_SHOTS) {
+        await page.screenshot({ path: `${process.env.WEB3_RPC_NOTICE_SHOTS}/t221-rpc-recovered-${width}x${height}.png` });
+      }
+      expect(pageErrors).toEqual([]);
+    } finally {
+      await context.close();
+    }
   });
 }

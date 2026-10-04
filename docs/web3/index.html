@@ -31,10 +31,10 @@
   <link rel="manifest" href="/web3-manifest.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="dns-prefetch" href="https://eth.llamarpc.com">
+  <link rel="dns-prefetch" href="https://ethereum-rpc.publicnode.com">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
   <script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
-  <script src="/web3-wallet-core.js?v=20260928-wc-cancel"></script>
+  <script src="/web3-wallet-core.js?v=20261004-rpc-fallback-v6"></script>
   <script src="/assets/ifr-state.js"></script>
   <script type="application/ld+json">
   {
@@ -2073,6 +2073,7 @@
         <div>
           <h2 id="lending-title">Create offer</h2>
           <p>LendingVault offer actions run directly here. Deposit IFR as available lending liquidity or withdraw unlent IFR from an active offer.</p>
+          <p data-lending-status>Retired (V1) since 3 October 2026: borrowing stays disabled by Governance decision (no activation is planned or authorized) and no V2 is planned yet. Lenders can still withdraw their unlent offers with <code>withdrawOffer</code>; these IFR are not lost.</p>
         </div>
         <button class="protocol-close" type="button" aria-label="Close lending panel" data-lending-close>&times;</button>
       </header>
@@ -2765,6 +2766,17 @@
         return address;
       }
 
+      // Data reads always use the chain-pinned public read provider (verified eth_chainId 0x1),
+      // never the connected wallet's provider; the wallet signer is used only to send transactions.
+      function readProvider() {
+        return window.IFRWallet && typeof IFRWallet.getReadProvider === "function" ? IFRWallet.getReadProvider() : null;
+      }
+      function readContracts() {
+        const provider = readProvider();
+        if (!provider) throw new Error("Mainnet read RPC unavailable. Values cannot be verified right now.");
+        return getContracts(provider);
+      }
+
       function getContracts(signerOrProvider) {
         return {
           token: new ethers.Contract(IFR_TOKEN_ADDRESS, TOKEN_ABI, signerOrProvider),
@@ -2837,8 +2849,8 @@
       }
 
       async function loadAccessLockSummary(address) {
-        if (!address || !window.ethers || !window.IFRWallet || !IFRWallet.getProvider()) return;
-        const { ifrLock } = getContracts(IFRWallet.getProvider());
+        if (!address || !window.ethers || !window.IFRWallet || !readProvider()) return;
+        const { ifrLock } = getContracts(readProvider());
         const locked = await ifrLock.lockedBalance(address);
         if (!isCurrentWalletAddress(address)) return;
         accessLockBalance.textContent = formatIFR(locked);
@@ -2846,8 +2858,8 @@
       }
 
       async function loadCommitmentSummary(address) {
-        if (!address || !window.ethers || !window.IFRWallet || !IFRWallet.getProvider()) return;
-        const { commitmentV1, commitmentV2 } = getContracts(IFRWallet.getProvider());
+        if (!address || !window.ethers || !window.IFRWallet || !readProvider()) return;
+        const { commitmentV1, commitmentV2 } = getContracts(readProvider());
         const [lockedV1, countV1, lockedV2, countV2] = await Promise.all([
           commitmentV1.lockedBalance(address),
           commitmentV1.getTrancheCount(address),
@@ -2861,8 +2873,8 @@
       }
 
       async function loadLendingSummary(address) {
-        if (!address || !window.ethers || !window.IFRWallet || !IFRWallet.getProvider()) return;
-        const { lending } = getContracts(IFRWallet.getProvider());
+        if (!address || !window.ethers || !window.IFRWallet || !readProvider()) return;
+        const { lending } = getContracts(readProvider());
         lendingSummary.textContent = "Loading";
         lendingSummaryNote.textContent = "Lending";
 
@@ -2910,8 +2922,7 @@
 
       async function loadAccessLockPanel() {
         const address = await ensureWalletReady("Loading access lock");
-        const provider = IFRWallet.getProvider();
-        const { token, ifrLock } = getContracts(provider);
+        const { token, ifrLock } = readContracts();
         accessLockStatus.textContent = "Reading IFRLock...";
 
         const [balance, allowance, locked] = await Promise.all([
@@ -2944,8 +2955,7 @@
 
       async function lockPremiumAccessIFR() {
         const address = await ensureWalletReady("Preparing Premium access");
-        const provider = IFRWallet.getProvider();
-        const { token, ifrLock } = getContracts(provider);
+        const { token, ifrLock } = readContracts();
         const premiumMinimum = ethers.parseUnits("1000", IFR_DECIMALS);
 
         accessLockPremium.disabled = true;
@@ -2978,14 +2988,15 @@
         const address = await ensureWalletReady("Preparing access lock");
         const signer = IFRWallet.getSigner();
         const { token, ifrLock } = getContracts(signer);
+        const reader = readContracts();
         const amount = parseIFRInput(accessLockAmount.value);
         const lockType = accessLockType.value;
 
         accessLockSubmit.disabled = true;
         accessLockStatus.textContent = "Checking wallet balance and token allowance...";
         const [balance, allowance] = await Promise.all([
-          token.balanceOf(address),
-          token.allowance(address, IFR_LOCK_ADDRESS)
+          reader.token.balanceOf(address),
+          reader.token.allowance(address, IFR_LOCK_ADDRESS)
         ]);
         if (balance < amount) {
           throw new Error(`This wallet has ${formatIFR(balance)} free, but the lock amount is ${formatIFR(amount)}. Your existing IFRLock balance stays locked and can be unlocked separately.`);
@@ -3045,7 +3056,7 @@
       // and throws (fail closed) when it is false or unreadable, aborting the remaining sequence.
       // Frontend checks cannot make the exemption atomic with the transaction (see runbook).
       async function assertV2Open() {
-        if (!(await readV2FeeExempt(IFRWallet.getProvider()))) {
+        if (!(await readV2FeeExempt(readProvider()))) {
           closeV2Gate();
           throw new Error(COMMITMENT_V2_CLOSED_NOTICE);
         }
@@ -3065,8 +3076,8 @@
 
       async function loadLockPanel() {
         const address = await ensureWalletReady("Loading lock");
-        const provider = IFRWallet.getProvider();
-        const { token, commitmentV1, commitmentV2 } = getContracts(provider);
+        const provider = readProvider();
+        const { token, commitmentV1, commitmentV2 } = readContracts();
         lockStatus.textContent = "Reading CommitmentVault...";
 
         const [balance, allowance, lockedV1, lockedV2, v2Open, tranchesV1, tranchesV2] = await Promise.all([
@@ -3130,13 +3141,14 @@
         const address = await ensureWalletReady("Preparing lock");
         const signer = IFRWallet.getSigner();
         const { token, commitmentV2 } = getContracts(signer);
+        const reader = readContracts();
         const plan = getCommitmentPlan();
 
         lockSubmit.disabled = true;
         // Re-check the on-chain gate right before any approval or lock (fail closed).
         await assertV2Open();
         lockStatus.textContent = "Checking token allowance...";
-        const allowance = await token.allowance(address, COMMITMENT_VAULT_V2_ADDRESS);
+        const allowance = await reader.token.allowance(address, COMMITMENT_VAULT_V2_ADDRESS);
 
         if (allowance < plan.totalAmount) {
           lockStatus.textContent = "Approve IFR in your wallet, then keep this page open.";
@@ -3177,8 +3189,7 @@
 
       async function loadLendingPanel() {
         const address = await ensureWalletReady("Loading lending");
-        const provider = IFRWallet.getProvider();
-        const { token, lending } = getContracts(provider);
+        const { token, lending } = readContracts();
         lendingStatus.textContent = "Reading LendingVault...";
 
         const [balance, hasOffer] = await Promise.all([
@@ -3207,11 +3218,12 @@
         const address = await ensureWalletReady("Preparing offer");
         const signer = IFRWallet.getSigner();
         const { token, lending } = getContracts(signer);
+        const reader = readContracts();
         const amount = parseIFRInput(lendingAmount.value);
 
         lendingDeposit.disabled = true;
         lendingStatus.textContent = "Checking token allowance...";
-        const allowance = await token.allowance(address, LENDING_VAULT_ADDRESS);
+        const allowance = await reader.token.allowance(address, LENDING_VAULT_ADDRESS);
 
         if (allowance < amount) {
           lendingStatus.textContent = "Approve IFR in your wallet, then keep this page open.";
@@ -3312,8 +3324,7 @@
         }
 
         try {
-          const provider = IFRWallet.getProvider();
-          const { lending } = getContracts(provider);
+          const { lending } = readContracts();
           const collateral = await lending.getRequiredCollateral(amount);
           borrowCollateral.textContent = formatETH(collateral);
           borrowSubmit.disabled = false;
@@ -3386,8 +3397,7 @@
 
       async function loadBorrowPanel() {
         const address = await ensureWalletReady("Loading borrow");
-        const provider = IFRWallet.getProvider();
-        const { lending } = getContracts(provider);
+        const { lending } = readContracts();
         borrowStatus.textContent = "Reading LendingVault offers and loans...";
 
         const [ifrPriceWei, offerCountValue, loanCountValue, rate] = await Promise.all([
@@ -3453,9 +3463,10 @@
 
         const signer = IFRWallet.getSigner();
         const { lending } = getContracts(signer);
+        const reader = readContracts();
         borrowSubmit.disabled = true;
         borrowStatus.textContent = "Calculating required ETH collateral...";
-        const collateral = await lending.getRequiredCollateral(amount);
+        const collateral = await reader.lending.getRequiredCollateral(amount);
         borrowCollateral.textContent = formatETH(collateral);
         borrowStatus.textContent = `Confirm borrow transaction with ${formatETH(collateral)} ETH collateral.`;
         const tx = await lending.borrow(offer.id, amount, durationDays, { value: collateral });
@@ -3472,11 +3483,12 @@
         if (!loan) throw new Error("Select an active loan first.");
         const signer = IFRWallet.getSigner();
         const { token, lending } = getContracts(signer);
+        const reader = readContracts();
         borrowRepay.disabled = true;
         borrowStatus.textContent = "Calculating IFR repayment amount...";
-        const interest = await lending.calculateInterest(loan.id);
+        const interest = await reader.lending.calculateInterest(loan.id);
         const repayAmount = loan.loan.ifrAmount + interest;
-        const allowance = await token.allowance(address, LENDING_VAULT_ADDRESS);
+        const allowance = await reader.token.allowance(address, LENDING_VAULT_ADDRESS);
         if (allowance < repayAmount) {
           borrowStatus.textContent = `Approve ${formatIFR(repayAmount)} for LendingVault repayment.`;
           const approveTx = await token.approve(LENDING_VAULT_ADDRESS, repayAmount);
@@ -3516,9 +3528,10 @@
           walletState.textContent = "Connected";
           walletConnector.textContent = (window.IFRWallet && IFRWallet.getConnectionLabel && IFRWallet.getConnectionLabel()) || "Browser wallet";
           walletNetwork.textContent = "Ethereum Mainnet";
-          ifrBalance.textContent = state.ifrBalanceFormatted ? `${state.ifrBalanceFormatted} IFR` : "0 IFR";
-          accessLockBalance.textContent = state.lockedFormatted ? `${state.lockedFormatted} IFR` : "0 IFR";
-          accessLockNote.textContent = state.isLocked1000 ? "Premium ready" : "Lock needed";
+          // A failed chain-pinned read shows "Unavailable", never a wallet-provider or stale value.
+          ifrBalance.textContent = state.readError ? "Unavailable" : (state.ifrBalanceFormatted ? `${state.ifrBalanceFormatted} IFR` : "0 IFR");
+          accessLockBalance.textContent = state.readError ? "Unavailable" : (state.lockedFormatted ? `${state.lockedFormatted} IFR` : "0 IFR");
+          accessLockNote.textContent = state.readError ? "Mainnet read RPC unavailable" : (state.isLocked1000 ? "Premium ready" : "Lock needed");
           commitmentBalance.textContent = "Loading";
           commitmentNote.textContent = "Tranches";
           lendingSummary.textContent = "Loading";
