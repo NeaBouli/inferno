@@ -804,8 +804,8 @@ full-migration rehearsal stays pinned to exactly block 26108024.
 (`contracts/governance/Governance.sol::execute`), so the Safe batch generator
 must refuse to write execute bytes unless the queued proposal still matches
 the approved operation exactly. Steps 1-3 of the guardian migration already
-ran live (`docs/GUARDIAN_MIGRATION.md`); only execute (#19 LiquidityReserve,
-#20 BurnReserve `setGuardian(Treasury Safe)`, ETA 2026-10-04 23:56:11 UTC) is
+ran live (`docs/GUARDIAN_MIGRATION.md`); only execute (#19
+LiquidityReserve, #20 BurnReserve `setGuardian(Treasury Safe)`, ETA 2026-10-04 23:56:11 UTC) is
 open. Read-only evidence: block 26119897.
 
 ### 12.2 Spur (Hop-Liste)
