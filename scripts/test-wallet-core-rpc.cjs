@@ -208,6 +208,16 @@ async function expectUnavailable(env, label) {
     assert.ok(first && first.method === "eth_chainId", "eth_chainId must be the first request to " + u);
   });
 
+  // Web3 core: getReadProvider() is the same chain-pinned provider, also while a wallet could be connected.
+  if (TARGET === "web3") {
+    assert.ok(/getReadProvider: getReadProvider/.test(source), "web3 wallet core must export getReadProvider");
+    assert.strictEqual(ok.api.getReadProvider(), ok.api.getProvider(), "getReadProvider must return the pinned read provider");
+    const wrongRead = loadWalletCore({ [A]: "0x5", [B]: "0x5", [C]: "0x5" });
+    const rp = wrongRead.api.getReadProvider();
+    await assert.rejects(rp.getBlockNumber(), "getReadProvider must not serve data from a wrong-chain endpoint");
+    urls.forEach((u) => assert.deepStrictEqual(dataCallsTo(wrongRead.calls, u), [], "getReadProvider: no data request may reach " + u));
+  }
+
   // 2. Wrong-chain primary: backups answer, primary only ever sees eth_chainId.
   const wrongPrimary = loadWalletCore({ [A]: "0x5", [B]: "0x1", [C]: "0x1" });
   expectMainnet(await readAll(wrongPrimary), "wrong-chain primary");

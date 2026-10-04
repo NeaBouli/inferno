@@ -686,6 +686,11 @@ window.IFRWallet = (function() {
     return _provider || _getReadProvider();
   }
 
+  // Chain-pinned read-only provider, independent of any connected wallet (parity with assets/wallet-core.js).
+  function getReadProvider() {
+    return _getReadProvider();
+  }
+
   // ── Read-only RPC (FallbackProvider) ──────────────
   function _getReadProvider() {
     if (_readProvider) return _readProvider;
@@ -823,7 +828,7 @@ window.IFRWallet = (function() {
     listWallets: listWallets, connectInjected: connectInjected,
     connectWalletConnect: connectWalletConnect, cancelWalletConnect: cancelWalletConnect,
     isConnected: isConnected, getAddress: getAddress, getShortAddress: getShortAddress,
-    getSigner: getSigner, getProvider: getProvider, getConnectionLabel: getConnectionLabel,
+    getSigner: getSigner, getProvider: getProvider, getReadProvider: getReadProvider, getConnectionLabel: getConnectionLabel,
     ensureMainnet: ensureMainnet,
     addToken: addIFRToken,
     on: on, off: off, getDeepLink: getDeepLink, isMobile: isMobile,
