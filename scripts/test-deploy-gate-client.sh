@@ -224,14 +224,15 @@ git -C "$REPO" archive --format=tar "$SHA:apps/benefits-network" > "$TMP/benefit
 
 run 0 env EXPECTED_SHA="$SHA" bash "$BENEFITS" frontend
 BENEFITS_TSHA="$(sha256 "$GATE_DIR/benefits-deploy.tar")"
-assert_log "$(gate_line "benefits-deploy frontend $SHA $BENEFITS_TSHA allow-prune") stdin=$BENEFITS_TSHA"
+assert_log "$(gate_line "benefits-deploy frontend $SHA $BENEFITS_TSHA") stdin=$BENEFITS_TSHA"
+refute_log "allow-prune"
 same_tree "$TMP/benefits.tar" "$GATE_DIR/benefits-deploy.tar" || { echo "FAIL: benefits upload is not git archive $SHA:apps/benefits-network" >&2; exit 1; }
 if grep -q -e node_modules/leak -e '^\.env$' <<< "$(tar -tf "$GATE_DIR/benefits-deploy.tar")"; then echo "FAIL: ignored local files in the benefits upload" >&2; exit 1; fi
 refute_log "direct ssh"
 
-run 0 env EXPECTED_SHA="$SHA" ALLOW_PRUNE=0 bash "$BENEFITS" all
+run 0 env EXPECTED_SHA="$SHA" ALLOW_PRUNE=1 bash "$BENEFITS" all
 BENEFITS_TSHA="$(sha256 "$GATE_DIR/benefits-deploy.tar")"
-assert_log "args=benefits-deploy all $SHA $BENEFITS_TSHA stdin=$BENEFITS_TSHA"
+assert_log "args=benefits-deploy all $SHA $BENEFITS_TSHA allow-prune stdin=$BENEFITS_TSHA"
 
 run 64 bash "$BENEFITS" backend
 refute_log "gate "

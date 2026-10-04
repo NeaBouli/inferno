@@ -81,7 +81,7 @@ ever passed.
 | `deploy-compose-service.sh <svc> status` / `health` / `logs [n]` / `backups` | `status` / `health <svc>` / `logs <svc> [n]` / `backups <svc>` |
 | `deploy-web3-site.sh plan` / `deploy` | `web3-plan` / `web3-deploy <sha> <tar-sha256> [delete]` with the staged docroot on stdin (`.nginx/web3-security-headers.conf` at its root; `DELETE=1` adds `delete`) |
 | `deploy-web3-site.sh rollback <stamp>` / `status` / `health` / `backups` | `web3-rollback <stamp>` / `status` / `health web3-site` / `backups web3-site` |
-| `deploy-benefits-network.sh frontend` / `backend` / `all` | `benefits-deploy <mode> <sha> <tar-sha256> [allow-prune]` with `git archive <sha>:apps/benefits-network` on stdin (`ALLOW_PRUNE=0` drops `allow-prune`) |
+| `deploy-benefits-network.sh frontend` / `backend` / `all` | `benefits-deploy <mode> <sha> <tar-sha256> [allow-prune]` with `git archive <sha>:apps/benefits-network` on stdin (`allow-prune` only with explicit `ALLOW_PRUNE=1`; default no prune) |
 | `deploy-benefits-network.sh status` / `capacity` | `benefits-status` |
 | `deploy-benefits-network.sh env-vault-v2 <address>` | `env-set .env.benefits COMMITMENT_VAULT_V2_ADDRESS <address>` (the only env key the host accepts) |
 

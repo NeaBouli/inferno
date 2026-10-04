@@ -79,7 +79,8 @@ case "${DEPLOY_MODE:-}" in
         git -C "$LOCAL_ROOT" archive --format=tar "$EXPECTED_SHA:apps/benefits-network" > "$STAGE/upload.tar"
         TAR_SHA="$(gate_prepare "$STAGE/upload.tar")"
         PRUNE=()
-        if [[ "${ALLOW_PRUNE:-1}" == "1" ]]; then PRUNE=(allow-prune); fi
+        # Gate mode never prunes unless explicitly requested (host-wide prune is not allowed by default).
+        if [[ "${ALLOW_PRUNE:-0}" == "1" ]]; then PRUNE=(allow-prune); fi
         gate benefits-deploy "$MODE" "$EXPECTED_SHA" "$TAR_SHA" ${PRUNE[@]+"${PRUNE[@]}"} < "$STAGE/upload.tar"
         ;;
       env-vault-v2)
