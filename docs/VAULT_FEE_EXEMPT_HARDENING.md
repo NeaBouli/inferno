@@ -61,6 +61,19 @@ Any V2 requires a separate design review, migration plan, tests, audit, and
 governance-approved deployment. The deployed V1 contracts are non-upgradeable;
 there is no urgent migration while the verified invariant remains healthy.
 
+## CommitmentVault V2 Frontend Gate (T-220)
+
+CommitmentVault V2 (`0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F`) accounts locks at nominal amounts
+and does not check `InfernoToken.feeExempt(V2)` itself. The Web3 lock panel and the wiki widget
+therefore read `feeExempt(V2)` fail closed: on panel load, again immediately before the approval and
+again immediately before every `lock()` transaction. A `false` or unreadable result aborts the
+remaining sequence and closes the lock button; a failed panel refresh also closes it.
+
+Residual risk: a frontend read cannot be atomic with the following transaction. If Governance
+revoked the exemption between the read and the mined `lock()`, that one transfer would be taxed and
+V2 accounting would diverge. The vault-invariant monitor reports such a divergence; a contract-level
+runtime check remains the requirement above.
+
 ## Traceability
 
 - Existing audit finding: `M-03` in [Security Audit Report](SECURITY_AUDIT_REPORT.md)
