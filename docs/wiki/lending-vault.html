@@ -641,7 +641,7 @@
   }
   </script>
 <script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
-<script src="../assets/wallet-core.js"></script>
+<script src="../assets/wallet-core.js?v=20261004-read-provider"></script>
 <script src="../assets/ifr-state.js"></script>
 <script type="application/ld+json">
   {
@@ -1421,6 +1421,11 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
 
   var lvAddress = null;
   var lvProvider = null;
+  // Data READS always use the chain-pinned wallet-core read provider, never the wallet's BrowserProvider:
+  // a connected wallet can switch chains after adoption. The wallet provider is used only for signing.
+  function lvReadProvider() {
+    return (window.IFRWallet && typeof IFRWallet.getReadProvider === "function") ? IFRWallet.getReadProvider() : null;
+  }
   var lvSigner = null;
   var lvBalance = 0n;
   var lvAllowance = 0n;
@@ -1712,12 +1717,14 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
   // ── Load Balances ────────────────────────────────────
   async function loadLVState() {
     try {
-      var token = new ethers.Contract(IFR_TOKEN, IFR_ABI, lvProvider);
-      var vault = new ethers.Contract(LV_ADDR, LV_ABI, lvProvider);
+      var readProvider = lvReadProvider();
+      if (!readProvider) throw new Error("chain-pinned read provider unavailable");
+      var token = new ethers.Contract(IFR_TOKEN, IFR_ABI, readProvider);
+      var vault = new ethers.Contract(LV_ADDR, LV_ABI, readProvider);
       var values = await Promise.all([
         token.balanceOf(lvAddress),
         token.allowance(lvAddress, LV_ADDR),
-        lvProvider.getBalance(lvAddress),
+        readProvider.getBalance(lvAddress),
         vault.hasOffer(lvAddress),
         vault.totalAvailable(),
         vault.totalLent(),
@@ -1777,7 +1784,8 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
   // ── Market Data ──────────────────────────────────────
   async function loadMarketData() {
     try {
-      var provider = lvProvider || new ethers.JsonRpcProvider("https://ethereum-rpc.publicnode.com");
+      var provider = lvReadProvider();
+      if (!provider) throw new Error("chain-pinned read provider unavailable");
       var vault = new ethers.Contract(LV_ADDR, LV_ABI, provider);
       var values = await Promise.all([
         vault.totalAvailable(),
@@ -1941,7 +1949,8 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     var interest = (amount * rateBps * BigInt(months)) / 10000n;
     var totalRepay = amount + interest;
     try {
-      var provider = lvProvider || new ethers.JsonRpcProvider("https://ethereum-rpc.publicnode.com");
+      var provider = lvReadProvider();
+      if (!provider) throw new Error("chain-pinned read provider unavailable");
       var vault = new ethers.Contract(LV_ADDR, LV_ABI, provider);
       var collateral = await vault.getRequiredCollateral(amount);
       previewEl.innerHTML =

@@ -641,7 +641,7 @@
   }
   </script>
 <script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
-<script src="../assets/wallet-core.js"></script>
+<script src="../assets/wallet-core.js?v=20261004-read-provider"></script>
 <script src="../assets/ifr-state.js"></script>
 <script type="application/ld+json">
   {
@@ -1031,7 +1031,6 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
   var RAILWAY = "https://copilot-api.ifrunit.tech";
   var LV_ADDR = "0x974305Ab0EC905172e697271C3d7d385194EB9DF";
   var IFR_DECIMALS = 9;
-  var RPC_URL = "https://ethereum-rpc.publicnode.com";
   var LV_ABI = [
     "function totalAvailable() view returns (uint256)",
     "function totalLent() view returns (uint256)",
@@ -1088,7 +1087,8 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
 
   async function loadOnchainMarket() {
     if (typeof ethers === "undefined") throw new Error("ethers.js unavailable");
-    var provider = new ethers.JsonRpcProvider(RPC_URL);
+    var provider = (window.IFRWallet && typeof IFRWallet.getReadProvider === "function") ? IFRWallet.getReadProvider() : null;
+    if (!provider) throw new Error("chain-pinned read provider unavailable");
     var vault = new ethers.Contract(LV_ADDR, LV_ABI, provider);
     var values = await Promise.all([
       vault.totalAvailable(),

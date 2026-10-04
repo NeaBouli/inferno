@@ -504,7 +504,7 @@
   }
   </script>
 <script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
-<script src="../assets/wallet-core.js"></script>
+<script src="../assets/wallet-core.js?v=20261004-read-provider"></script>
 <script src="../assets/ifr-state.js"></script>
 <script type="application/ld+json">
   {
@@ -1925,7 +1925,6 @@
 
     function loadVaultLiveData() {
       if (typeof ethers === 'undefined') return;
-      var rpc = 'https://ethereum-rpc.publicnode.com';
       var commitmentAddr = '0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3';
       var lendingAddr = '0x974305Ab0EC905172e697271C3d7d385194EB9DF';
       var commitmentAbi = ['function totalLocked() view returns (uint256)'];
@@ -1934,7 +1933,8 @@
         'function totalLent() view returns (uint256)'
       ];
       try {
-        var provider = new ethers.JsonRpcProvider(rpc);
+        var provider = (window.IFRWallet && typeof IFRWallet.getReadProvider === "function") ? IFRWallet.getReadProvider() : null;
+        if (!provider) throw new Error('chain-pinned read provider unavailable');
         var commitment = new ethers.Contract(commitmentAddr, commitmentAbi, provider);
         var lending = new ethers.Contract(lendingAddr, lendingAbi, provider);
         Promise.all([commitment.totalLocked(), lending.totalAvailable(), lending.totalLent()]).then(function(values) {
