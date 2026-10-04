@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="canonical" href="https://ifrunit.tech/wiki/commitment-vault-compensation.html">
+  <link rel="alternate" hreflang="en" href="https://ifrunit.tech/wiki/commitment-vault-compensation.html">
+  <link rel="alternate" hreflang="x-default" href="https://ifrunit.tech/wiki/commitment-vault-compensation.html">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CommitmentVault V1 Compensation (CV-01) &mdash; Inferno (IFR) Documentation</title>
+  <meta name="keywords" content="Inferno, IFR, multisig, Gnosis Safe, community governance, signer expansion, DAO governance, Ethereum">
+  <meta name="description" content="Incident record and urgent Council proposal CV-01: 26.4M IFR in price-conditioned CommitmentVault V1 tranches can never unlock; the proposed compensation from the LP Reserve Safe would follow each tranche's original time and price conditions. Vote pending, not approved.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* ============================================================
+       Inferno Wiki — Shared Styles (copy into every wiki page)
+       ============================================================ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0a0a;
+      --card:     #111113;
+      --border:   #222225;
+      --text:     #e8e8ed;
+      --muted:    #8a8a96;
+      --accent:   #ff4500;
+      --green:    #22c55e;
+      --sidebar-w: 240px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ---------- Layout (CSS Grid) ---------- */
+    .layout {
+      display: grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+      min-height: 100vh;
+    }
+
+    /* ---------- Sidebar ---------- */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--card);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 0;
+      overflow-y: auto;
+      z-index: 100;
+      transition: transform 0.3s ease;
+    }
+
+    .sidebar-logo {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 3px;
+      color: var(--accent);
+      padding: 0 24px 4px;
+      text-decoration: none;
+      display: block;
+    }
+
+    .sidebar-subtitle {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 0 24px 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-nav {
+      list-style: none;
+      padding: 16px 0;
+      flex: 1;
+    }
+
+    .sidebar-nav li {}
+
+    .sidebar-nav a {
+      display: block;
+      padding: 10px 24px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 500;
+      transition: color 0.2s, background 0.2s, border-left 0.2s;
+      border-left: 3px solid transparent;
+    }
+
+    .sidebar-nav a:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .sidebar-nav a.active {
+      color: var(--accent);
+      border-left-color: var(--accent);
+      background: rgba(255, 69, 0, 0.06);
+    }
+
+    .sidebar-nav .nav-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 12px 24px;
+    }
+
+    .sidebar-nav .nav-back a {
+      font-size: 13px;
+      color: var(--muted);
+      opacity: 0.7;
+    }
+
+    .sidebar-nav .nav-back a:hover {
+      opacity: 1;
+      color: var(--text);
+    }
+
+    /* ---------- Hamburger (mobile) ---------- */
+    .hamburger {
+      display: none;
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 200;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .hamburger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: var(--text);
+      border-radius: 2px;
+      transition: transform 0.3s, opacity 0.3s;
+    }
+
+    .hamburger.open span:nth-child(1) { transform: rotate(45deg) translate(5px, 5px); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(5px, -5px); }
+
+    .sidebar-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      z-index: 90;
+    }
+
+    /* ---------- Main content ---------- */
+    .main {
+      grid-column: 2;
+      padding: 48px 56px;
+      max-width: 960px;
+    }
+
+    .main h1 {
+      font-size: 32px;
+      font-weight: 800;
+      margin-bottom: 8px;
+      color: var(--text);
+    }
+
+    .main h1 .accent {
+      color: var(--accent);
+    }
+
+    .main h2 {
+      font-size: 22px;
+      font-weight: 700;
+      margin: 40px 0 16px;
+      color: var(--text);
+    }
+
+    .main h3 {
+      font-size: 18px;
+      font-weight: 600;
+      margin: 32px 0 12px;
+      color: var(--text);
+    }
+
+    .main p {
+      color: var(--muted);
+      margin-bottom: 16px;
+      font-size: 15px;
+      max-width: 680px;
+    }
+
+    .main a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .main a:hover {
+      text-decoration: underline;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: var(--muted);
+      margin-bottom: 32px;
+    }
+
+    /* ---------- Tables ---------- */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 600;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    td { color: var(--text); }
+
+    tr:hover td { background: rgba(255, 255, 255, 0.02); }
+
+    /* ---------- Lists ---------- */
+    .main ul, .main ol {
+      padding-left: 24px;
+      margin-bottom: 16px;
+    }
+
+    .main li {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 6px;
+    }
+
+    /* ---------- Callout ---------- */
+    .callout {
+      background: rgba(255, 69, 0, 0.06);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      padding: 16px 20px;
+      margin: 20px 0;
+    }
+
+    .callout p {
+      color: var(--text);
+      margin: 0;
+      font-size: 14px;
+    }
+
+    .callout-green {
+      background: rgba(34, 197, 94, 0.06);
+      border-left-color: var(--green);
+    }
+
+    /* ---------- Phase cards ---------- */
+    .phase-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 28px;
+      margin: 20px 0;
+    }
+
+    .phase-card h3 {
+      margin: 0 0 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .phase-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-done { background: rgba(34,197,94,0.15); color: var(--green); }
+    .badge-progress { background: rgba(255,69,0,0.15); color: var(--accent); }
+    .badge-planned { background: rgba(138,138,150,0.15); color: var(--muted); }
+
+    /* ---------- Code ---------- */
+    pre {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.7;
+      margin: 16px 0;
+    }
+
+    code {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 13px;
+    }
+
+    p code, li code, td code {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
+    }
+
+    /* ---------- Footer ---------- */
+    .wiki-footer {
+      margin-top: 64px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 768px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        transform: translateX(-100%);
+        height: 100vh;
+        height: 100dvh;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 80px;
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+
+      .sidebar-overlay.open {
+        display: block;
+      }
+
+      .hamburger {
+        display: flex;
+      }
+
+      .main {
+        grid-column: 1;
+        padding: 72px 20px 40px;
+      }
+
+      table {
+        font-size: 13px;
+      }
+
+      th, td {
+        padding: 10px 12px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .main h1 {
+        font-size: 26px;
+      }
+    }
+    /* ============================================================
+    End Shared Styles
+       ============================================================ */
+  </style>
+  <link rel="icon" type="image/png" href="../assets/ifr_icon_64.png">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Inferno Protocol">
+  <meta property="og:title" content="CommitmentVault V1 Compensation (CV-01) — Inferno Protocol (IFR)">
+  <meta property="og:description" content="Incident record and urgent Council proposal CV-01: 26.4M IFR in price-conditioned CommitmentVault V1 tranches can never unlock; the proposed compensation from the LP Reserve Safe would follow each tranche's original time and price conditions. Vote pending, not approved.">
+  <meta property="og:url" content="https://ifrunit.tech/wiki/commitment-vault-compensation.html">
+  <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="CommitmentVault V1 Compensation (CV-01) — Inferno Protocol (IFR)">
+  <meta name="twitter:description" content="Incident record and urgent Council proposal CV-01: 26.4M IFR in price-conditioned CommitmentVault V1 tranches can never unlock; the proposed compensation from the LP Reserve Safe would follow each tranche's original time and price conditions. Vote pending, not approved.">
+  <meta name="twitter:site" content="@IFRtoken">
+  <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "CommitmentVault V1 Compensation (CV-01)",
+    "description": "Incident record and urgent Council proposal CV-01: 26.4M IFR in price-conditioned CommitmentVault V1 tranches can never unlock; the proposed compensation from the LP Reserve Safe would follow each tranche's original time and price conditions. Vote pending, not approved.",
+    "url": "https://ifrunit.tech/wiki/commitment-vault-compensation.html",
+    "isPartOf": {"@id": "https://ifrunit.tech/#website"},
+    "publisher": {"@id": "https://ifrunit.tech/#organization"},
+    "about": {"@id": "https://ifrunit.tech/#app"}
+  }
+  </script>
+<script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
+<script src="../assets/wallet-core.js"></script>
+<script src="../assets/ifr-state.js"></script>
+<script type="application/ld+json">
+  {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Inferno", "item": "https://ifrunit.tech/"},
+    {"@type": "ListItem", "position": 2, "name": "Wiki", "item": "https://ifrunit.tech/wiki/"},
+    {"@type": "ListItem", "position": 3, "name": "CommitmentVault V1 Compensation (CV-01)", "item": "https://ifrunit.tech/wiki/commitment-vault-compensation.html"}
+  ]
+}
+  </script>
+  <link rel="stylesheet" href="../assets/redesign-skin.css">
+  <style>
+    .cv-legend { display:flex; flex-wrap:wrap; gap:6px 14px; align-items:center; margin:12px 0 16px; font-size:0.9rem; }
+    .cv-status { display:inline-block; padding:2px 10px; border-radius:999px; font-weight:700; font-size:0.8rem; border:1px solid transparent; }
+    .cv-red { background:#fde8e8; color:#991b1b; border-color:#f3b4b4; }
+    .cv-yellow { background:#fdf3d7; color:#7a4f00; border-color:#ecd28a; }
+    .cv-green { background:#dcfce7; color:#14532d; border-color:#9fdcb4; }
+    .cv-grey { background:#eceae6; color:#4a4036; border-color:#d6d0c7; }
+    .cv-live { font-size:0.85rem; }
+    .table-scroll { overflow-x:auto; }
+    /* Tranche tables switch to cards whenever their column is narrower than the 7-column table
+       (about 860px), so the Status column never hides behind a horizontal scroll. */
+    .cv-cards { container-type:inline-size; container-name:cvcards; }
+    @container cvcards (max-width: 860px) {
+      #cv01-table thead, #cv01-static thead { display:none; }
+      #cv01-table, #cv01-table tbody, #cv01-table tr, #cv01-table td,
+      #cv01-static, #cv01-static tbody, #cv01-static tr, #cv01-static td { display:block; }
+      #cv01-table, #cv01-static { width:100%; background:transparent !important; border:0 !important; border-radius:0 !important; box-shadow:none !important; overflow:visible; }
+      /* The shade sits on the whole card, not on the cells, so alternate cards are filled edge to edge. */
+      #cv01-table tbody tr, #cv01-static tbody tr { background:var(--surface, #fff); border:1px solid var(--line, #e4d8c7); border-radius:10px; padding:10px 12px; margin-bottom:12px; }
+      #cv01-table tbody tr:nth-child(even), #cv01-static tbody tr:nth-child(even) { background:color-mix(in srgb, var(--bg-alt, #f4ede3) 40%, var(--surface, #fff)); }
+      #cv01-table td, #cv01-static td { background:transparent !important; border:0; padding:3px 0; }
+      #cv01-table td::before, #cv01-static td::before { content: attr(data-label) ": "; font-weight:700; }
+      #cv01-table tfoot, #cv01-static tfoot { display:block; }
+      #cv01-table tfoot tr, #cv01-static tfoot tr { display:flex; justify-content:space-between; background:var(--bg-alt, #f4ede3); border:1px solid var(--line, #e4d8c7); border-radius:10px; overflow:hidden; }
+      #cv01-table tfoot th, #cv01-static tfoot th { border:0; }
+      #cv01-table tfoot th[colspan="3"]:last-child, #cv01-static tfoot th:last-child { display:none; }
+    }
+    /* Keep card text out of the column under the fixed Copilot launcher (#ifr-btn: 64px at 24px from
+       the right edge, 52px at 12px below 481px), so no scroll position puts tranche text under it. */
+    @media (max-width: 1240px) {
+      @container cvcards (max-width: 860px) {
+        #cv01-table tbody tr, #cv01-static tbody tr { padding-right:76px; }
+        #cv01-table tfoot tr, #cv01-static tfoot tr { padding-right:64px; }
+      }
+    }
+    @media (max-width: 480px) {
+      @container cvcards (max-width: 860px) {
+        #cv01-table tbody tr, #cv01-static tbody tr { padding-right:52px; }
+        #cv01-table tfoot tr, #cv01-static tfoot tr { padding-right:40px; }
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hamburger button (mobile only) -->
+  <button class="hamburger" id="hamburger" aria-label="Toggle navigation">
+    <span></span>
+    <span></span>
+    <span></span>
+  </button>
+
+  <!-- Overlay (mobile only) -->
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <a href="https://ifrunit.tech/wiki/index.html" class="sidebar-logo">IFR PROTOCOL</a>
+      <div class="sidebar-subtitle">Documentation</div>
+      <ul class="sidebar-nav">
+        <li><a href="https://ifrunit.tech/wiki/index.html">Home</a></li>
+        <li><a href="https://ifrunit.tech/wiki/one-pager.html">One Pager</a></li>
+        <li><a href="https://ifrunit.tech/wiki/fair-launch.html">Fair Launch</a></li>
+        <li class="nav-divider"></li>
+        <li><a href="https://ifrunit.tech/wiki/tokenomics.html">Tokenomics</a></li>
+        <li><a href="https://ifrunit.tech/wiki/fee-design.html">Fee Design</a></li>
+        <li><a href="https://ifrunit.tech/wiki/lock-mechanism.html">Lock Mechanism</a></li>
+        <li><a href="https://ifrunit.tech/wiki/vesting.html">Vesting Schedule</a></li>
+        <li><a href="https://ifrunit.tech/wiki/protocol-plan.html">Protocol Plan</a></li>
+        <li><a href="https://ifrunit.tech/wiki/contracts.html">Smart Contracts</a></li>
+        <li class="nav-divider"></li>
+        <li><a href="https://ifrunit.tech/wiki/wallet-guide.html">Wallet &amp; Contract Guide</a></li>
+        <li><a href="https://ifrunit.tech/wiki/deployment.html">Deployment</a></li>
+        <li><a href="https://ifrunit.tech/wiki/testnet.html">Testnet</a></li>
+        <li><a href="https://ifrunit.tech/wiki/mainnet-checklist.html">Mainnet Checklist</a></li>
+        <li><a href="https://ifrunit.tech/wiki/bootstrap.html">Bootstrap Event</a></li>
+        <li><a href="https://ifrunit.tech/wiki/roadmap.html">Roadmap</a></li>
+        <li class="nav-divider"></li>
+        <li><a href="https://ifrunit.tech/wiki/commitment-vault.html">CommitmentVault</a></li>
+        <li><a href="https://ifrunit.tech/wiki/commitment-vault-compensation.html" class="active" aria-current="page">CV-01 Compensation</a></li>
+        <li><a href="https://ifrunit.tech/wiki/lending-vault.html">LendingVault</a></li>
+        <li><a href="https://ifrunit.tech/wiki/lending-market.html">Lending Market</a></li>
+        <li><a href="https://ifrunit.tech/wiki/lp-strategy.html">LP Strategy</a></li>
+        <li><a href="liquidity.html">Provide IFR / ETH Liquidity</a></li>
+        <li><a href="https://ifrunit.tech/wiki/ecosystem.html">Ecosystem</a></li>
+        <li class="nav-divider"></li>
+        <li><a href="https://ifrunit.tech/wiki/governance.html">Governance</a></li>
+        <li><a href="https://ifrunit.tech/wiki/dao-governance.html">DAO Governance</a></li>
+        <li><a href="https://ifrunit.tech/wiki/multisig.html">Multisig Policy</a></li>
+        <li><a href="https://ifrunit.tech/wiki/community-signer-expansion.html">Community Signer Expansion</a></li>
+        <li><a href="https://ifrunit.tech/wiki/transparency.html">Transparency</a></li>
+        <li class="nav-divider"></li>
+        <li><a href="https://ifrunit.tech/wiki/faq.html">FAQ</a></li>
+        <li><a href="https://ifrunit.tech/wiki/integration.html">Integration Guide</a></li>
+        <li><a href="https://ifrunit.tech/wiki/business-onboarding.html">Business Onboarding</a></li>
+        <li><a href="https://ifrunit.tech/wiki/agent.html">AI Copilot</a></li>
+        <li><a href="https://ifrunit.tech/wiki/verify.html">Verify Wallet</a></li>
+        <li class="nav-divider"></li>
+        <li><a href="https://ifrunit.tech/wiki/security.html">Security</a></li>
+        <li><a href="https://ifrunit.tech/wiki/open-audit.html">Open Audit Log</a></li>
+        <li><a href="https://ifrunit.tech/wiki/contributing.html">Contributing</a></li>
+        <li><a href="https://ifrunit.tech/wiki/press-kit.html">Press Kit</a></li>
+        <li><a href="https://ifrunit.tech/index.html">&larr; Back to Website</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main content -->
+    <main class="main">
+      <!-- Wallet Top Bar -->
+      <div id="wiki-wallet-bar" style="position:sticky;top:0;z-index:100;background:rgba(10,10,10,0.95);backdrop-filter:blur(12px);border-bottom:1px solid #1f2937;padding:10px 20px;display:flex;justify-content:space-between;align-items:center;margin:-32px -40px 24px -40px;">
+        <a href="https://ifrunit.tech/index.html" style="color:#b3300b;font-weight:700;text-decoration:none;font-size:0.9rem;">&larr; Inferno</a>
+        <div id="wiki-wallet-wrap" style="position:relative;">
+          <button id="lp-header-connect-btn" onclick="lpConnect()" style="display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:9px 18px;min-height:38px;border:1px solid transparent;background:#B0481E;color:#fff;font-family:var(--sans, -apple-system, system-ui, sans-serif);font-size:0.84rem;font-weight:600;letter-spacing:0;border-radius:4px;cursor:pointer;white-space:nowrap;transition:all .2s;position:relative;flex-shrink:0;margin-left:16px;">Connect Wallet</button>
+          <div id="lp-header-connected" style="display:none;">
+            <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:5px 8px;cursor:pointer;display:flex;align-items:center;gap:6px;max-width:100px;white-space:nowrap;overflow:hidden;" onclick="lpToggleDropdown()">
+              <span id="lp-header-addr" style="color:#166534;font-family:monospace;font-size:0.72rem;font-weight:600;"></span>
+
+            </div>
+          </div>
+          <div id="lp-header-dropdown" style="display:none;position:fixed;background:#111827;border:1px solid #374151;border-radius:12px;padding:16px;width:280px;max-width:calc(100vw - 24px);z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.6);">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+              <span style="color:#6b7280;font-size:0.75rem;">Wallet</span>
+              <button onclick="lpCloseDropdown()" style="background:none;border:none;color:#6b7280;cursor:pointer;font-size:1.1rem;line-height:1;padding:2px 6px;border-radius:4px;" title="Close">&#x2715;</button>
+            </div>
+            <div style="margin-bottom:12px;">
+              <div id="lp-drop-addr" style="color:#166534;font-family:monospace;font-size:0.78rem;font-weight:600;word-break:break-all;"></div>
+            </div>
+            <div style="display:flex;gap:8px;margin-bottom:12px;">
+              <div style="flex:1;background:#1f2937;border-radius:8px;padding:8px;text-align:center;">
+                <div style="color:#9ca3af;font-size:0.7rem;">ETH</div>
+                <div id="lp-drop-eth" style="color:#e5e7eb;font-weight:700;font-size:0.85rem;"></div>
+              </div>
+              <div style="flex:1;background:#1f2937;border-radius:8px;padding:8px;text-align:center;">
+                <div style="color:#9ca3af;font-size:0.7rem;">IFR</div>
+                <div id="lp-drop-ifr" style="color:#b3300b;font-weight:700;font-size:0.85rem;"></div>
+              </div>
+            </div>
+            <div id="lp-drop-lock" style="display:none;background:rgba(251,191,36,0.1);border:1px solid rgba(251,191,36,0.3);border-radius:8px;padding:8px 10px;margin-bottom:10px;text-align:center;">
+              <span style="color:#92400e;font-size:0.78rem;font-weight:600;">&#x26A1; Premium</span>
+            </div>
+            <div id="lp-drop-nolock" style="background:rgba(107,114,128,0.1);border:1px solid #374151;border-radius:8px;padding:8px 10px;margin-bottom:10px;text-align:center;">
+              <span style="color:#9ca3af;font-size:0.78rem;">Lock &#x2265;1,000 IFR &#x2192; </span>
+              <a href="https://ifrunit.tech/wiki/lock-mechanism.html" style="color:#b3300b;font-size:0.78rem;">Premium &#x2197;</a>
+            </div>
+            <div style="display:flex;gap:8px;">
+              <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="flex:1;text-align:center;padding:8px;background:#B0481E;color:white;border-radius:8px;font-size:0.78rem;font-weight:600;text-decoration:none;">&#x1F525; Buy IFR</a>
+              <button onclick="lpAddIFRToken()" style="flex:1;background:#e9ded0;color:#2f241d;border:none;border-radius:8px;padding:8px;cursor:pointer;font-size:0.78rem;font-weight:700;">Add IFR</button>
+              <button onclick="lpDisconnect()" style="flex:1;background:#374151;color:#9ca3af;border:none;border-radius:8px;padding:8px;cursor:pointer;font-size:0.78rem;">Disconnect</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+
+      <h1><span class="accent">CommitmentVault V1 Compensation (CV-01)</span></h1>
+      <p class="subtitle">
+        Incident record and urgent Council proposal for the IFR that price-conditioned CommitmentVault V1 tranches can never release.
+      </p>
+
+      <div class="callout">
+        <p><strong>Status: urgent Council vote open, no deadline. Not approved.</strong> This page records a proposal. It does not authorize anything: no IFR is paid out before the Council approves, and every payout also needs its own executed Safe transaction. Signatures received so far are listed under <a href="#cv01-vote">Vote</a>; results are recorded in the <a href="governance.html#council-agenda">Council Agenda &amp; Vote Log</a>.</p>
+      </div>
+
+      <h2>What Happened</h2>
+      <p>The deployed CommitmentVault V1 (<a href="https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3" target="_blank" rel="noopener noreferrer"><code>0x0719&hellip;73d3</code></a>) accepts four lock types:</p>
+      <ul>
+        <li><code>TIME_ONLY</code></li>
+        <li><code>PRICE_ONLY</code></li>
+        <li><code>TIME_OR_PRICE</code></li>
+        <li><code>TIME_AND_PRICE</code></li>
+      </ul>
+      <p>Its price check is a placeholder that always reads a price of zero:</p>
+      <ul>
+        <li>The deployed bytecode contains no oracle call.</li>
+        <li>Setting <code>priceOracle</code> through Governance cannot change that.</li>
+      </ul>
+      <p>As a result:</p>
+      <ul>
+        <li><strong><code>PRICE_ONLY</code> and <code>TIME_AND_PRICE</code> tranches can never be unlocked.</strong></li>
+        <li><code>TIME_OR_PRICE</code> tranches unlock normally after their time condition.</li>
+        <li><code>TIME_ONLY</code> tranches unlock normally after their time condition.</li>
+      </ul>
+      <p>The repository source has rejected price-conditioned locks for future deployments since September 2026. The deployed V1 predates that guard.</p>
+      <p>A Mainnet-fork simulation confirmed the result on 2 October 2026:</p>
+      <ul>
+        <li>Governance set an oracle reporting the highest possible price, and time was advanced by ten years.</li>
+        <li>All <code>PRICE_ONLY</code> and <code>TIME_AND_PRICE</code> tranches still reported <code>conditionMet = false</code>.</li>
+      </ul>
+      <h3 id="cv01-timeline">Timeline</h3>
+      <p>Verified dates only, from on-chain events and the public repository. The purpose of individual locks is not recorded and is not inferred here.</p>
+      <ul>
+        <li><strong>4 April 2026:</strong> CommitmentVault V1 is deployed with the placeholder price check.</li>
+        <li><strong>June 2026:</strong> P0 is set on-chain to 300,000,000 wei per IFR (Governance proposal #16).</li>
+        <li><strong>28 June 2026, 21:32–21:37 UTC:</strong> wallet C2 creates ten <code>TIME_ONLY</code> tranches (blocks 25,418,863–25,418,886).</li>
+        <li><strong>29 June 2026, 06:59 UTC:</strong> the website publishes a self-service lock form that offers all four lock types, including price targets.</li>
+        <li><strong>29 June 2026, 07:33 UTC:</strong> wallet C1 creates tranche #0, <code>TIME_AND_PRICE</code> (block 25,421,853).</li>
+        <li><strong>29 June 2026, 22:38–22:42 UTC:</strong> wallet C3 creates tranches #0–#9, <code>PRICE_ONLY</code> (blocks 25,426,358–25,426,377). At 22:56 UTC, C1 creates tranche #1, <code>TIME_OR_PRICE</code> (block 25,426,451).</li>
+        <li><strong>14 September 2026:</strong> the community audit (finding CWA-03) reports that the deployed price check always reads zero, so price-conditioned tranches cannot unlock. It checked C2's tranches, which are all time-based, and did not identify the price-conditioned tranches of C1 and C3.</li>
+        <li><strong>28 September 2026:</strong> the repository source starts rejecting price-conditioned locks for future deployments.</li>
+        <li><strong>2 October 2026:</strong> an on-chain review of every tranche identifies and quantifies the eleven affected tranches, and a Mainnet-fork simulation confirms that they can never unlock. CV-01 is opened the same day.</li>
+      </ul>
+      <p>V1 has no rescue function and is not upgradeable. The IFR token cannot move another address's balance. <strong>Nobody can recover these tokens.</strong></p>
+
+      <div class="phase-card">
+        <h3>Impact <span class="phase-badge badge-planned">Permanent</span></h3>
+        <p style="margin:0;"><strong>26,418,467.994338353 IFR</strong> are permanently locked in CommitmentVault V1. This is about 2.65&nbsp;% of the current total supply. On 2 October 2026 the vault held 47,952,476.871794375 IFR; C2 then withdrew its ten unlocked time tranches (20,156,940.952845656 IFR). At block 26,113,577 (3 October 2026, 18:22:23 UTC) the vault held 27,795,535.918948719 IFR, of which 1,377,067.924610366 IFR are in time-based tranches that unlock normally.</p>
+      </div>
+
+      <h2>Affected Tranches and Compensation Status</h2>
+      <p>Each row is one locked tranche. You can verify every row with <code>getTranches(wallet)</code> on the vault.</p>
+      <p>Under CV-01, the compensation for a tranche would follow <strong>the conditions the tranche was locked with</strong>:</p>
+      <ul>
+        <li>its original unlock date, where there is one;</li>
+        <li>its original price target, <code>P0 &times; multiplier</code> with P0&nbsp;=&nbsp;0.3&nbsp;gwei per IFR.</li>
+      </ul>
+      <p>The <em>Conditions now</em> column is calculated live from the current block and the IFR/WETH Uniswap V2 spot price. It is <strong>indicative only</strong> and never changes a status. A tranche turns green only when the Council has approved and a TWAP record for it has been published here: start and end blocks with their hashes, start and end times at least 7 days apart, the TWAP from the pair's cumulative prices, the reviewer, and a reproducible calculation (script, repository commit and evidence file). The record is reviewed by people; this page only checks that it is complete and consistent and does not recompute the TWAP itself.</p>
+
+      <div class="cv-legend" aria-label="Status colours">
+        <span class="cv-status cv-red">Red</span> Council decision pending
+        <span class="cv-status cv-yellow">Yellow</span> Approved by the Council; waiting for the original conditions
+        <span class="cv-status cv-green">Green</span> Approved, and the 7-day TWAP and date conditions verified with published blocks: payable
+      </div>
+
+      <div class="table-scroll cv-cards" id="cv01-live-table" hidden>
+      <table id="cv01-table">
+        <thead>
+          <tr><th>Wallet</th><th>Tranche</th><th>Lock type</th><th>Amount (IFR)</th><th>Original conditions</th><th>Conditions now</th><th>Status</th></tr>
+        </thead>
+        <tbody id="cv01-rows"></tbody>
+        <tfoot>
+          <tr><th colspan="3">Total permanently locked</th><th>26,418,467.994338353</th><th colspan="3"></th></tr>
+        </tfoot>
+      </table>
+      </div>
+      <p id="cv01-live" class="cv-live" hidden>Loading live conditions&hellip;</p>
+      <noscript>
+        <p>Live conditions and the status column need JavaScript. Without it, the static list below shows every affected tranche with its amount and original conditions. The Council decision is recorded in the vote log below; no tranche is payable before Council approval and a verified 7-day TWAP record.</p>
+        <div class="table-scroll cv-cards">
+        <table id="cv01-static">
+          <thead><tr><th>Wallet</th><th>Tranche</th><th>Lock type</th><th>Amount (IFR)</th><th>Original conditions</th></tr></thead>
+          <tbody>
+          <tr><td data-label="Wallet"><a href="https://etherscan.io/address/0x4f632748460E5277bF8435259cADce440AbAC254" target="_blank" rel="noopener noreferrer"><code>0x4f63&hellip;C254</code></a></td><td data-label="Tranche">#0</td><td data-label="Lock type"><code>TIME_AND_PRICE</code></td><td data-label="Amount (IFR)">18,367,567.924610366</td><td data-label="Original conditions">after 2026-11-29 and price &ge; 15 gwei/IFR (50 &times; P0)</td></tr>
+          <tr><td data-label="Wallet"><a href="https://etherscan.io/address/0xf556cCe85128c93AC6A7e088cF334180F2D3905B" target="_blank" rel="noopener noreferrer"><code>0xf556&hellip;905B</code></a></td><td data-label="Tranche">#0</td><td data-label="Lock type"><code>PRICE_ONLY</code></td><td data-label="Amount (IFR)">805,090.006972798</td><td data-label="Original conditions">price &ge; 1,500 gwei/IFR (5000 &times; P0)</td></tr>
+          <tr><td data-label="Wallet"><a href="https://etherscan.io/address/0xf556cCe85128c93AC6A7e088cF334180F2D3905B" target="_blank" rel="noopener noreferrer"><code>0xf556&hellip;905B</code></a></td><td data-label="Tranche">#1</td><td data-label="Lock type"><code>PRICE_ONLY</code></td><td data-label="Amount (IFR)">805,090.006972798</td><td data-label="Original conditions">price &ge; 1,500 gwei/IFR (5000 &times; P0)</td></tr>
+          <tr><td data-label="Wallet"><a href="https://etherscan.io/address/0xf556cCe85128c93AC6A7e088cF334180F2D3905B" target="_blank" rel="noopener noreferrer"><code>0xf556&hellip;905B</code></a></td><td data-label="Tranche">#2</td><td data-label="Lock type"><code>PRICE_ONLY</code></td><td data-label="Amount (IFR)">805,090.006972798</td><td data-label="Original conditions">price &ge; 1,500 gwei/IFR (5000 &times; P0)</td></tr>
+          <tr><td data-label="Wallet"><a href="https://etherscan.io/address/0xf556cCe85128c93AC6A7e088cF334180F2D3905B" target="_blank" rel="noopener noreferrer"><code>0xf556&hellip;905B</code></a></td><td data-label="Tranche">#3</td><td data-label="Lock type"><code>PRICE_ONLY</code></td><td data-label="Amount (IFR)">805,090.006972798</td><td data-label="Original conditions">price &ge; 1,500 gwei/IFR (5000 &times; P0)</td></tr>
+          <tr><td data-label="Wallet"><a href="https://etherscan.io/address/0xf556cCe85128c93AC6A7e088cF334180F2D3905B" target="_blank" rel="noopener noreferrer"><code>0xf556&hellip;905B</code></a></td><td data-label="Tranche">#4</td><td data-label="Lock type"><code>PRICE_ONLY</code></td><td data-label="Amount (IFR)">805,090.006972798</td><td data-label="Original conditions">price &ge; 1,500 gwei/IFR (5000 &times; P0)</td></tr>
+          <tr><td data-label="Wallet"><a href="https://etherscan.io/address/0xf556cCe85128c93AC6A7e088cF334180F2D3905B" target="_blank" rel="noopener noreferrer"><code>0xf556&hellip;905B</code></a></td><td data-label="Tranche">#5</td><td data-label="Lock type"><code>PRICE_ONLY</code></td><td data-label="Amount (IFR)">805,090.006972798</td><td data-label="Original conditions">price &ge; 1,500 gwei/IFR (5000 &times; P0)</td></tr>
+          <tr><td data-label="Wallet"><a href="https://etherscan.io/address/0xf556cCe85128c93AC6A7e088cF334180F2D3905B" target="_blank" rel="noopener noreferrer"><code>0xf556&hellip;905B</code></a></td><td data-label="Tranche">#6</td><td data-label="Lock type"><code>PRICE_ONLY</code></td><td data-label="Amount (IFR)">805,090.006972798</td><td data-label="Original conditions">price &ge; 1,500 gwei/IFR (5000 &times; P0)</td></tr>
+          <tr><td data-label="Wallet"><a href="https://etherscan.io/address/0xf556cCe85128c93AC6A7e088cF334180F2D3905B" target="_blank" rel="noopener noreferrer"><code>0xf556&hellip;905B</code></a></td><td data-label="Tranche">#7</td><td data-label="Lock type"><code>PRICE_ONLY</code></td><td data-label="Amount (IFR)">805,090.006972798</td><td data-label="Original conditions">price &ge; 1,500 gwei/IFR (5000 &times; P0)</td></tr>
+          <tr><td data-label="Wallet"><a href="https://etherscan.io/address/0xf556cCe85128c93AC6A7e088cF334180F2D3905B" target="_blank" rel="noopener noreferrer"><code>0xf556&hellip;905B</code></a></td><td data-label="Tranche">#8</td><td data-label="Lock type"><code>PRICE_ONLY</code></td><td data-label="Amount (IFR)">805,090.006972798</td><td data-label="Original conditions">price &ge; 1,500 gwei/IFR (5000 &times; P0)</td></tr>
+          <tr><td data-label="Wallet"><a href="https://etherscan.io/address/0xf556cCe85128c93AC6A7e088cF334180F2D3905B" target="_blank" rel="noopener noreferrer"><code>0xf556&hellip;905B</code></a></td><td data-label="Tranche">#9</td><td data-label="Lock type"><code>PRICE_ONLY</code></td><td data-label="Amount (IFR)">805,090.006972805</td><td data-label="Original conditions">price &ge; 1,500 gwei/IFR (5000 &times; P0)</td></tr>
+          </tbody>
+          <tfoot><tr><th colspan="3">Total permanently locked</th><th>26,418,467.994338353</th><th></th></tr></tfoot>
+        </table>
+        </div>
+      </noscript>
+
+      <h2>Proposal CV-01 (urgent vote)</h2>
+      <table>
+        <tbody>
+          <tr><th>Scope</th><td>The 11 tranches above, 26,418,467.994338353 IFR in total. Time-based tranches are not affected.</td></tr>
+          <tr><th>Payout pool</th><td><strong>LP Reserve Safe</strong> <a href="https://app.safe.global/home?safe=eth:0x5D93E7919a71d725054e31017eCA86B026F86C04" target="_blank" rel="noopener noreferrer"><code>0x5D93&hellip;6C04</code></a> (3-of-5, holds 400,600,000 IFR).</td></tr>
+          <tr><th>Amount</th><td>Each tranche is compensated with exactly its locked amount, credited to the wallet that locked it. The LP Reserve Safe is not fee-exempt, so the transfer is grossed up for the transfer fee. That way the wallet receives the full tranche amount; the worst case is about 27.38&nbsp;M IFR gross.</td></tr>
+          <tr><th>Time condition</th><td>Block timestamp at or after the tranche's original unlock date. This applies only to <code>TIME_AND_PRICE</code>.</td></tr>
+          <tr><th>Price condition</th><td>The 7-day time-weighted average price of IFR/WETH from the Uniswap V2 pair <a href="https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" rel="noopener noreferrer"><code>0xbE49&hellip;31A0</code></a> must be at or above the tranche's target. It is calculated from the pair's cumulative prices; the start and end block numbers are published with each payout. A single spot price never counts.</td></tr>
+          <tr><th>Execution</th><td>One Safe transaction per tranche, once its conditions are verified. Its status turns green here before the transaction is proposed, and the transaction hash is added to the vote log.</td></tr>
+          <tr><th>If rejected</th><td>No compensation is paid. The tranches stay recorded as permanently locked.</td></tr>
+        </tbody>
+      </table>
+
+      <h2 id="cv01-vote">Vote</h2>
+      <p>The Council vote is held by the Safe signers. Each signer signs the published vote text with their Safe owner wallet on Etherscan; anyone can verify each signature. The signed text refers to this proposal at repository commit <code>f08ce370</code>.</p>
+      <ul>
+        <li><strong>Council:</strong> five members, M.G., A.M., Y.K., A.P. and G.M. G.M. abstains from this vote.</li>
+        <li><strong>Eligible:</strong> the other four, M.G., A.M., Y.K. and A.P.</li>
+        <li><strong>Required:</strong> 3 YES votes. Until then the proposal is not approved.</li>
+        <li><strong>Deadline:</strong> none. A deadline can only be set by a separate Council vote.</li>
+        <li><strong>Status:</strong> vote open, 2 of 3 required YES votes received. <strong>Not approved.</strong></li>
+      </ul>
+      <div class="table-scroll">
+      <table>
+        <thead><tr><th>Signer</th><th>Wallet</th><th>Vote</th><th>Signature</th></tr></thead>
+        <tbody>
+          <tr><td>M.G.</td><td><code>0x17F8&hellip;72d4</code></td><td>YES</td><td><a href="https://etherscan.io/verifySig/339696" target="_blank" rel="noopener noreferrer">verifySig/339696</a></td></tr>
+          <tr><td>Y.K.</td><td><code>0xA086&hellip;b275</code></td><td>YES</td><td><a href="https://etherscan.io/verifySig/339697" target="_blank" rel="noopener noreferrer">verifySig/339697</a></td></tr>
+          <tr><td>G.M.</td><td><code>0x6b36&hellip;Fed67</code></td><td>Abstain</td><td>Recorded</td></tr>
+          <tr><td>A.M.</td><td><code>0x0c48&hellip;ED74</code></td><td>Not yet signed</td><td>&mdash;</td></tr>
+          <tr><td>A.P.</td><td><code>0x32cF&hellip;0fE9</code></td><td>Not yet signed</td><td>&mdash;</td></tr>
+        </tbody>
+      </table>
+      </div>
+
+      <h2>Supply Accounting</h2>
+      <p>The 26,418,467.994338353 IFR stay in the total supply, because they were never burned. They are recorded as <strong>permanently locked</strong> and counted as non-circulating. Any compensation paid later moves IFR from the LP Reserve Safe to the affected wallets and is recorded in the vote log.</p>
+
+      <h2>Repair</h2>
+      <ul>
+        <li><strong>V1 cannot be changed.</strong> It has no pause or upgrade path.</li>
+        <li><strong>The wiki lock form offers only time-based locks.</strong></li>
+        <li><strong>The production Web3 app at web3.ifrunit.tech still offers price-conditioned V1 locks.</strong> The code fix that restricts it to time-based locks is merged but not yet deployed or verified. <strong>Do not create new CommitmentVault locks in the Web3 app until that release is verified.</strong></li>
+        <li><strong>CommitmentVault V2 is deployed:</strong> <a href="https://etherscan.io/address/0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F" target="_blank" rel="noopener noreferrer"><code>0x8efa&hellip;7c8F</code></a>, deployed on 2 October 2026 (<a href="https://etherscan.io/tx/0x9857a5707b650b8828f41b893f91a10ff26d7990742e782bb0b7e86df23ea0f7" target="_blank" rel="noopener noreferrer">transaction</a>), owned by Governance.
+          <ul>
+            <li>It accepts <code>TIME_ONLY</code> locks only and rejects every price-conditioned lock, so an impossible condition cannot be created again.</li>
+            <li>It has no price oracle and no rescue path.</li>
+          </ul>
+        </li>
+        <li><strong>V2 is not wired yet.</strong> Governance proposal #17, <code>setFeeExempt(V2, true)</code>, is queued and can be executed from 4 October 2026, 21:53:11 UTC. Until it is executed, V2 is not fee-exempt and the interfaces keep using V1.</li>
+        <li><strong>Price-conditioned locks need a separate proposal.</strong> A reviewed, manipulation-resistant oracle and a rescue path for conditions that can never be met are future work. Neither is part of the deployed V2.</li>
+      </ul>
+      <p>See the <a href="https://github.com/NeaBouli/inferno/blob/main/docs/GOVERNANCE_PRODUCT_DECISION_REGISTER.md">decision register</a> (lane 2).</p>
+
+      <script type="application/json" id="cv01-data">
+{
+  "council": "pending",
+  "twapEvidence": [],
+  "vault": "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3",
+  "pair": "0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0",
+  "token": "0x77e99917Eca8539c62F509ED1193ac36580A6e7B",
+  "p0WeiPerIFR": "300000000",
+  "tranches": [
+    {"wallet": "0x4f632748460E5277bF8435259cADce440AbAC254", "id": 0, "type": "TIME_AND_PRICE", "amount": "18367567.924610366", "unlock": "2026-11-29", "multiplier": 5000},
+    {"wallet": "0xf556cCe85128c93AC6A7e088cF334180F2D3905B", "id": 0, "type": "PRICE_ONLY", "amount": "805090.006972798", "unlock": null, "multiplier": 500000},
+    {"wallet": "0xf556cCe85128c93AC6A7e088cF334180F2D3905B", "id": 1, "type": "PRICE_ONLY", "amount": "805090.006972798", "unlock": null, "multiplier": 500000},
+    {"wallet": "0xf556cCe85128c93AC6A7e088cF334180F2D3905B", "id": 2, "type": "PRICE_ONLY", "amount": "805090.006972798", "unlock": null, "multiplier": 500000},
+    {"wallet": "0xf556cCe85128c93AC6A7e088cF334180F2D3905B", "id": 3, "type": "PRICE_ONLY", "amount": "805090.006972798", "unlock": null, "multiplier": 500000},
+    {"wallet": "0xf556cCe85128c93AC6A7e088cF334180F2D3905B", "id": 4, "type": "PRICE_ONLY", "amount": "805090.006972798", "unlock": null, "multiplier": 500000},
+    {"wallet": "0xf556cCe85128c93AC6A7e088cF334180F2D3905B", "id": 5, "type": "PRICE_ONLY", "amount": "805090.006972798", "unlock": null, "multiplier": 500000},
+    {"wallet": "0xf556cCe85128c93AC6A7e088cF334180F2D3905B", "id": 6, "type": "PRICE_ONLY", "amount": "805090.006972798", "unlock": null, "multiplier": 500000},
+    {"wallet": "0xf556cCe85128c93AC6A7e088cF334180F2D3905B", "id": 7, "type": "PRICE_ONLY", "amount": "805090.006972798", "unlock": null, "multiplier": 500000},
+    {"wallet": "0xf556cCe85128c93AC6A7e088cF334180F2D3905B", "id": 8, "type": "PRICE_ONLY", "amount": "805090.006972798", "unlock": null, "multiplier": 500000},
+    {"wallet": "0xf556cCe85128c93AC6A7e088cF334180F2D3905B", "id": 9, "type": "PRICE_ONLY", "amount": "805090.006972805", "unlock": null, "multiplier": 500000}
+  ]
+}
+      </script>
+      <script>
+      (function () {
+        var data = JSON.parse(document.getElementById("cv01-data").textContent);
+        var rows = document.getElementById("cv01-rows");
+        var live = document.getElementById("cv01-live");
+        // The live table and the live line are JavaScript-only; without JavaScript they stay hidden and
+        // the <noscript> fallback shows the static list instead.
+        document.getElementById("cv01-live-table").hidden = false;
+        live.hidden = false;
+        var RPCS = ["https://ethereum-rpc.publicnode.com", "https://eth.llamarpc.com"];
+        function short(a) { return a.slice(0, 6) + "…" + a.slice(-4); }
+        function fmt(n) { var p = n.split("."); return Number(p[0]).toLocaleString("en-US") + (p[1] ? "." + p[1] : ""); }
+        function targetGwei(t) { return Number(data.p0WeiPerIFR) * t.multiplier / 100 / 1e9; }
+        // Green is fail-closed: it needs Council approval AND a published, human-reviewed 7-day TWAP record for
+        // the tranche. A record must name immutable start/end blocks (number + hash), start/end timestamps that
+        // span at least the 7-day binding window, the TWAP from the pair's cumulative prices at or above the target,
+        // an end time after the original unlock date and not in the future, the reviewer, and a reproducible calculation (script path,
+        // repository commit and evidence artifact). This browser check only enforces that the record is complete
+        // and consistent; it does not recompute the TWAP. Live spot data and RPC results never change a status.
+        var TWAP_WINDOW_SEC = 7 * 24 * 60 * 60;
+        function isHash(h) { return typeof h === "string" && /^0x[0-9a-fA-F]{64}$/.test(h); }
+        function isUint(n) { return Number.isInteger(n) && n > 0; }
+        function verified(t) {
+          var list = Array.isArray(data.twapEvidence) ? data.twapEvidence : [];
+          return list.some(function (e) {
+            if (!e || typeof e.wallet !== "string" || e.wallet.toLowerCase() !== t.wallet.toLowerCase() || e.id !== t.id) return false;
+            if (!(isUint(e.startBlock) && isUint(e.endBlock) && e.endBlock > e.startBlock)) return false;
+            if (!(isHash(e.startBlockHash) && isHash(e.endBlockHash))) return false;
+            if (!(isUint(e.startTimestamp) && isUint(e.endTimestamp) && e.endTimestamp - e.startTimestamp >= TWAP_WINDOW_SEC)) return false;
+            if (e.endTimestamp > Math.floor(Date.now() / 1000)) return false;  // a TWAP window still running is not evidence
+            if (!(typeof e.twapGwei === "number" && isFinite(e.twapGwei) && e.twapGwei >= targetGwei(t))) return false;
+            if (t.unlock !== null && !(e.endTimestamp >= Date.parse(t.unlock + "T00:00:00Z") / 1000)) return false;
+            var c = e.calculation;
+            if (!(c && typeof c.script === "string" && /^scripts\/[A-Za-z0-9._\/-]+$/.test(c.script) &&
+                  typeof c.commit === "string" && /^[0-9a-f]{40}$/.test(c.commit) &&
+                  typeof c.artifact === "string" && /^https:\/\//.test(c.artifact))) return false;
+            return typeof e.verifiedBy === "string" && e.verifiedBy.trim().length > 0;
+          });
+        }
+        function status(t) {
+          if (data.council === "approved") return verified(t) ? ["cv-green", "Payable (TWAP verified)"] : ["cv-yellow", "Approved — awaiting verified TWAP"];
+          if (data.council === "rejected") return ["cv-grey", "Rejected"];
+          return ["cv-red", "Council pending"];
+        }
+        function render(nowSec, priceGwei) {
+          rows.innerHTML = "";
+          data.tranches.forEach(function (t) {
+            var target = targetGwei(t);
+            var timeOk = t.unlock === null ? true : (nowSec !== null && nowSec >= Date.parse(t.unlock + "T00:00:00Z") / 1000);
+            var priceOk = priceGwei !== null && priceGwei >= target;
+            var known = nowSec !== null && priceGwei !== null;
+            var s = status(t);
+            var cond = (t.unlock ? "after " + t.unlock + " and " : "") + "price ≥ " + target.toLocaleString("en-US") + " gwei/IFR (" + (t.multiplier / 100) + " × P0)";
+            var now = !known ? "unavailable" :
+              (t.unlock ? (timeOk ? "date ✓" : "date ✗") + ", " : "") + (priceOk ? "spot ≥ target" : "spot below target") + " (indicative only)";
+            var tr = document.createElement("tr");
+            tr.innerHTML = "<td data-label=\"Wallet\"><a href=\"https://etherscan.io/address/" + t.wallet + "\" target=\"_blank\" rel=\"noopener noreferrer\"><code>" + short(t.wallet) + "</code></a></td>" +
+              "<td data-label=\"Tranche\">#" + t.id + "</td><td data-label=\"Lock type\"><code>" + t.type + "</code></td><td data-label=\"Amount (IFR)\">" + fmt(t.amount) + "</td><td data-label=\"Original conditions\">" + cond + "</td><td data-label=\"Conditions now\">" + now + "</td>" +
+              "<td data-label=\"Status\"><span class=\"cv-status " + s[0] + "\">" + s[1] + "</span></td>";
+            rows.appendChild(tr);
+          });
+        }
+        render(null, null);
+        if (!window.ethers) { live.textContent = "Live conditions unavailable."; return; }
+        var pairAbi = ["function getReserves() view returns (uint112,uint112,uint32)", "function token0() view returns (address)"];
+        function readFrom(i) {
+          if (i >= RPCS.length) { live.textContent = "Live conditions unavailable (RPC). Status colours still reflect the Council decision."; return; }
+          var provider = new window.ethers.JsonRpcProvider(RPCS[i], 1, { staticNetwork: true });
+          var pair = new window.ethers.Contract(data.pair, pairAbi, provider);
+          Promise.all([provider.getBlock("latest"), pair.getReserves(), pair.token0()]).then(function (r) {
+            var ifrIs0 = r[2].toLowerCase() === data.token.toLowerCase();
+            var rIFR = Number(ifrIs0 ? r[1][0] : r[1][1]) / 1e9;
+            var rETH = Number(ifrIs0 ? r[1][1] : r[1][0]) / 1e18;
+            var priceGwei = rIFR > 0 ? (rETH / rIFR) * 1e9 : 0;
+            render(r[0].timestamp, priceGwei);
+            live.textContent = "Live at block " + r[0].number.toLocaleString("en-US") + ": spot price " + priceGwei.toFixed(2) + " gwei/IFR (indicative; the binding check uses the 7-day TWAP).";
+          }).catch(function () { readFrom(i + 1); });
+        }
+        readFrom(0);
+      })();
+      </script>
+
+
+      <!-- Footer -->
+      <footer class="wiki-footer">
+        Inferno (IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.0
+      </footer>
+
+    </main>
+  </div>
+
+  <!-- Mobile sidebar toggle script -->
+  <script>
+    (function () {
+      var hamburger = document.getElementById('hamburger');
+      var sidebar = document.getElementById('sidebar');
+      var overlay = document.getElementById('sidebarOverlay');
+
+      function toggleSidebar() {
+        var isOpen = sidebar.classList.toggle('open');
+        hamburger.classList.toggle('open', isOpen);
+        overlay.classList.toggle('open', isOpen);
+        document.body.style.overflow = isOpen ? 'hidden' : '';
+      }
+
+      hamburger.addEventListener('click', toggleSidebar);
+      overlay.addEventListener('click', toggleSidebar);
+    })();
+  </script>
+
+<!-- IFR Copilot Widget -->
+<style>
+#ifr-btn { position:fixed; bottom:24px; right:24px; width:64px; height:64px; border-radius:50%; overflow:hidden; padding:0; cursor:pointer; border:2px solid #f97316; box-shadow:0 4px 20px rgba(249,115,22,0.4); z-index:99999; background:none; transition:transform 0.2s ease,box-shadow 0.2s ease; } #ifr-btn:hover { transform:scale(1.08); box-shadow:0 6px 28px rgba(249,115,22,0.6); } #ifr-btn img { width:100%; height:100%; object-fit:cover; object-position:center center; border-radius:50%; display:block; }
+#ifr-panel { display:none; position:fixed; bottom:100px; right:12px; z-index:99998; width:min(400px, calc(100vw - 24px)); height:min(580px, calc(100vh - 120px)); border-radius:16px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,0.5); background:#1a1a1a; }
+@media(max-width:480px){ #ifr-panel { bottom:0; right:0; left:0; width:100vw; height:calc(100vh - 70px); border-radius:16px 16px 0 0; } #ifr-btn { bottom:12px; right:12px; width:52px; height:52px; } }
+#ifr-panel iframe { width:100%; height:100%; border:none; }
+</style>
+<button id="ifr-btn" onclick="var p=document.getElementById('ifr-panel');p.style.display=p.style.display==='block'?'none':'block';"><img src="../assets/CoPilot.jpg" alt="IFR Copilot"></button>
+<div id="ifr-panel"><iframe src="https://copilot-api.ifrunit.tech" allow="clipboard-write"></iframe></div>
+
+<script>
+async function lpConnect(){
+  if(typeof ethers==="undefined"){alert("Web3 library not loaded. Please refresh.");return}
+  if(typeof IFRWallet==="undefined"){alert("Wallet module not loaded. Please refresh.");return}
+  var btn=document.getElementById("lp-header-connect-btn");
+  if(btn){btn.textContent="Connecting...";btn.disabled=true}
+  try{
+    await IFRWallet.connect();
+    var state=await IFRState.load(IFRWallet.getAddress());
+    lpUpdateUI(state);
+  }catch(e){
+    if(btn){btn.textContent="Connect Wallet";btn.disabled=false;btn.style.background="#B0481E";btn.style.borderColor="transparent";btn.style.color="#fff";btn.onclick=lpConnect}
+    if(e.message==="NO_METAMASK"){
+      var isMobile=/Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+      if(isMobile){window.location.href="https://metamask.app.link/dapp/ifrunit.tech"}
+      else if(btn){btn.textContent="\u26A0\uFE0F Install MetaMask";btn.style.background="#374151";btn.onclick=function(){window.open("https://metamask.io/download","_blank")};btn.disabled=false}
+    }else if(e.code===4001||e.code==="ACTION_REJECTED"){
+      if(btn){btn.textContent="Connect Wallet";btn.disabled=false}
+    }
+  }
+}
+async function lpAddIFRToken(){
+  if(typeof IFRWallet==="undefined"||typeof IFRWallet.addIFRToken!=="function"){alert("Wallet module not loaded. Please refresh.");return false}
+  try{
+    var added=await IFRWallet.addIFRToken();
+    if(added)alert("IFR was added to MetaMask.");
+  }catch(e){
+    console.error("Add IFR token error:",e.message,e.code);
+    if(e.message==="NO_WALLET_PROVIDER"){alert("Install MetaMask or connect a wallet first.")}
+    else if(e.code!==4001&&e.code!=="ACTION_REJECTED"){alert("MetaMask could not add IFR automatically. Please import the token address manually.")}
+  }
+  return false;
+}
+function lpDisconnect(){
+  IFRWallet.disconnect();
+  var connectBtn=document.getElementById("lp-header-connect-btn");
+  var connectedDiv=document.getElementById("lp-header-connected");
+  var dropdown=document.getElementById("lp-header-dropdown");
+  if(connectBtn){connectBtn.style.display="";connectBtn.textContent="Connect Wallet";connectBtn.disabled=false;connectBtn.style.background="#B0481E";connectBtn.style.borderColor="transparent";connectBtn.style.color="#fff";connectBtn.onclick=lpConnect}
+  if(connectedDiv)connectedDiv.style.display="none";
+  if(dropdown)dropdown.style.display="none";
+}
+function lpToggleDropdown(){
+  var dd=document.getElementById("lp-header-dropdown");
+  if(!dd)return;
+  if(dd.style.display!=="none"&&dd.style.display!==""){dd.style.display="none";return}
+  var isMobile=window.innerWidth<768;
+  dd.style.position="fixed";dd.style.zIndex="9999";
+  if(isMobile){
+    var wrap=document.getElementById("wiki-wallet-wrap");
+    if(wrap){var rect=wrap.getBoundingClientRect();dd.style.top=(rect.bottom+6)+"px"}
+    else{dd.style.top="60px"}
+    dd.style.left="8px";dd.style.right="8px";dd.style.width="auto";dd.style.maxWidth="calc(100vw - 16px)";
+  }else{
+    dd.style.top="12px";dd.style.right="12px";dd.style.left="auto";dd.style.width="290px";
+  }
+  dd.style.display="";
+}
+function lpCloseDropdown(){var dd=document.getElementById("lp-header-dropdown");if(dd)dd.style.display="none";}
+function lpUpdateUI(state){
+  var connected=IFRWallet.isConnected();
+  var connectBtn=document.getElementById("lp-header-connect-btn");
+  var connectedDiv=document.getElementById("lp-header-connected");
+  if(connectBtn){
+    connectBtn.style.display=connected?"none":"";
+    if(!connected){connectBtn.textContent="Connect Wallet";connectBtn.disabled=false;connectBtn.style.background="#B0481E";connectBtn.style.borderColor="transparent";connectBtn.style.color="#fff";connectBtn.onclick=lpConnect}
+  }
+  if(connectedDiv)connectedDiv.style.display=connected?"":"none";
+  if(connected&&state){
+    var addr=IFRWallet.getAddress();
+    var shortAddr="\u2B24 "+addr.slice(0,6);
+    var el=document.getElementById("lp-header-addr");if(el)el.textContent=shortAddr;
+    var dropAddr=document.getElementById("lp-drop-addr");if(dropAddr)dropAddr.textContent=addr.slice(0,10)+"..."+addr.slice(-6);
+    var dropEth=document.getElementById("lp-drop-eth");if(dropEth)dropEth.textContent=parseFloat(state.ethBalance||"0").toFixed(4)+" ETH";
+    var dropIfr=document.getElementById("lp-drop-ifr");
+    if(dropIfr){var ifrAmt=state.ifrBalance&&typeof ethers!=="undefined"?parseFloat(ethers.formatUnits(state.ifrBalance,9)).toLocaleString("en-US",{maximumFractionDigits:0}):"0";dropIfr.textContent=ifrAmt+" IFR"}
+    var lockDiv=document.getElementById("lp-drop-lock");var noLockDiv=document.getElementById("lp-drop-nolock");
+    if(lockDiv)lockDiv.style.display=state.isLocked1000?"":"none";
+    if(noLockDiv)noLockDiv.style.display=state.isLocked1000?"none":"";
+  }
+}
+window.addEventListener("resize",function(){var dd=document.getElementById("lp-header-dropdown");if(dd)dd.style.display="none"});
+document.addEventListener("click",function(e){var dd=document.getElementById("lp-header-dropdown");var wrap=document.getElementById("wiki-wallet-wrap");if(dd&&wrap&&!wrap.contains(e.target))dd.style.display="none"});
+IFRWallet.on("disconnected",function(){lpUpdateUI(null)});
+IFRWallet.on("connected",async function(addr){var state=await IFRState.load(addr);lpUpdateUI(state)});
+IFRWallet.on("accountChanged",async function(addr){var state=await IFRState.load(addr);lpUpdateUI(state)});
+IFRState.on("stateLoaded",lpUpdateUI);
+document.addEventListener("visibilitychange",async function(){if(document.visibilityState==="visible"&&!IFRWallet.isConnected()){var ok=await IFRWallet.autoReconnect();if(ok)lpUpdateUI(await IFRState.load(IFRWallet.getAddress()))}});
+(async function(){var ok=await IFRWallet.autoReconnect();if(ok)lpUpdateUI(await IFRState.load(IFRWallet.getAddress()))})();
+var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.addEventListener("mouseenter",function(){this.style.transform="scale(1.04)";this.style.boxShadow="0 4px 20px rgba(249,115,22,0.4)"});_wcBtn.addEventListener("mouseleave",function(){this.style.transform="";this.style.boxShadow="0 2px 12px rgba(249,115,22,0.25)"})}
+</script>
+</body>
+<!-- cache-bust: 1775428215 -->
+</html>
