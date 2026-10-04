@@ -732,6 +732,7 @@ test.describe("S15: Web3 tablet pending WalletConnect session", () => {
     );
     try {
       const assertNoPageErrors = monitorPageErrors(page);
+      await stubPublicReadRpc(page);
       await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js", async (route) => {
         await route.fulfill({
           status: 200,
@@ -804,6 +805,7 @@ test.describe("S16: Web3 tablet session reload", () => {
     );
     try {
       const assertNoPageErrors = monitorPageErrors(page);
+      await stubPublicReadRpc(page);
       await context.addInitScript(mockMetaMask(MOCK_ADDR));
       await gotoWalletPage(page, "/web3/");
 
