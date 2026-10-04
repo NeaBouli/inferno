@@ -69,7 +69,7 @@ for (const name of FORWARD_GUIDES) {
 }
 
 const serviceWorker = readFileSync(join(DOCS, "web3-sw.js"), "utf8");
-if (!serviceWorker.includes('const CACHE_NAME = "ifr-web3-v19"')) {
+if (!serviceWorker.includes('const CACHE_NAME = "ifr-web3-v20"')) {
   errors.push("Web3 service-worker cache was not bumped to v19.");
 }
 if (!serviceWorker.includes(V6_SRC) || /ethers-5/.test(serviceWorker)) {

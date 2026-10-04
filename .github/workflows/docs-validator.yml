@@ -282,6 +282,9 @@ jobs:
       - name: Check wallet-core read RPC fallback and chainId guard (T-212a)
         run: npm run test:wallet-core-rpc
 
+      - name: Verify Web3 wallet core RPC fallback
+        run: npm run test:web3-wallet-core-rpc
+
       - name: Check Web3 serving-layer security headers contract
         run: npm run test:web3-headers
 

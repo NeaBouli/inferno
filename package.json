@@ -72,6 +72,7 @@
     "preflight:benefits": "bash scripts/preflight-benefits-release.sh",
     "test:surface-routing": "node scripts/test-surface-routing.cjs",
     "test:wallet-core-rpc": "node scripts/test-wallet-core-rpc.cjs",
+    "test:web3-wallet-core-rpc": "WALLET_CORE_TARGET=web3 node scripts/test-wallet-core-rpc.cjs",
     "test:release-guards": "bash scripts/test-deploy-release-guards.sh && bash scripts/test-deploy-compose-service.sh",
     "test:web3-headers": "node scripts/test-web3-headers.cjs",
     "test:web3-wallet-runtime": "node scripts/check-web3-wallet-runtime.cjs && node scripts/test-ifr-state-unavailable.cjs",

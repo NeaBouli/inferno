@@ -405,7 +405,7 @@ test("wallet chooser keeps WalletConnect available with zero or multiple injecte
 
 test("new Web3 HTML fails visibly when an old cached wallet core lacks the chooser API", async ({ browser }) => {
   const context = await browser.newContext({ serviceWorkers: "block" });
-  await context.route("**/web3-wallet-core.js?v=20260928-wc-cancel", (route) => route.fulfill({
+  await context.route("**/web3-wallet-core.js?v=20261004-rpc-fallback-v6", (route) => route.fulfill({
     contentType: "application/javascript",
     body: `window.IFRWallet = {
       autoReconnect: async () => false,
@@ -1253,9 +1253,9 @@ test("Android 9 stays in browser mode instead of launching an incompatible WebAP
 test("Web3 service worker bounds offline navigation before using the cache", () => {
   const source = readFileSync("docs/web3-sw.js", "utf8");
   const html = readFileSync("docs/web3/index.html", "utf8");
-  expect(source).toContain('const CACHE_NAME = "ifr-web3-v19"');
-  expect(source).toContain('"/web3-wallet-core.js?v=20260928-wc-cancel"');
-  expect(html).toContain('<script src="/web3-wallet-core.js?v=20260928-wc-cancel"></script>');
+  expect(source).toContain('const CACHE_NAME = "ifr-web3-v20"');
+  expect(source).toContain('"/web3-wallet-core.js?v=20261004-rpc-fallback-v6"');
+  expect(html).toContain('<script src="/web3-wallet-core.js?v=20261004-rpc-fallback-v6"></script>');
   expect(html).toContain('updateViaCache: "none"');
   expect(source).toContain("const NAVIGATION_TIMEOUT_MS = 5000");
   expect(source).toContain("fetchNavigation(request)");
