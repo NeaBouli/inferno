@@ -415,7 +415,7 @@
   }
   </script>
 <script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
-<script src="../assets/wallet-core.js"></script>
+<script src="../assets/wallet-core.js?v=20261004-read-provider"></script>
 <script src="../assets/ifr-state.js"></script>
 <script type="application/ld+json">
   {
@@ -775,7 +775,6 @@
         // the <noscript> fallback shows the static list instead.
         document.getElementById("cv01-live-table").hidden = false;
         live.hidden = false;
-        var RPCS = ["https://ethereum-rpc.publicnode.com", "https://eth.llamarpc.com"];
         function short(a) { return a.slice(0, 6) + "…" + a.slice(-4); }
         function fmt(n) { var p = n.split("."); return Number(p[0]).toLocaleString("en-US") + (p[1] ? "." + p[1] : ""); }
         function targetGwei(t) { return Number(data.p0WeiPerIFR) * t.multiplier / 100 / 1e9; }
@@ -831,9 +830,11 @@
         render(null, null);
         if (!window.ethers) { live.textContent = "Live conditions unavailable."; return; }
         var pairAbi = ["function getReserves() view returns (uint112,uint112,uint32)", "function token0() view returns (address)"];
-        function readFrom(i) {
-          if (i >= RPCS.length) { live.textContent = "Live conditions unavailable (RPC). Status colours still reflect the Council decision."; return; }
-          var provider = new window.ethers.JsonRpcProvider(RPCS[i], 1, { staticNetwork: true });
+        function readFrom() {
+          var unavailable = "Live conditions unavailable (RPC). Status colours still reflect the Council decision.";
+          // wallet-core's chain-pinned FallbackProvider: an endpoint must answer eth_chainId 0x1 before it serves data (T-224).
+          var provider = (window.IFRWallet && typeof IFRWallet.getReadProvider === "function") ? IFRWallet.getReadProvider() : null;
+          if (!provider) { live.textContent = unavailable; return; }
           var pair = new window.ethers.Contract(data.pair, pairAbi, provider);
           Promise.all([provider.getBlock("latest"), pair.getReserves(), pair.token0()]).then(function (r) {
             var ifrIs0 = r[2].toLowerCase() === data.token.toLowerCase();
@@ -842,9 +843,9 @@
             var priceGwei = rIFR > 0 ? (rETH / rIFR) * 1e9 : 0;
             render(r[0].timestamp, priceGwei);
             live.textContent = "Live at block " + r[0].number.toLocaleString("en-US") + ": spot price " + priceGwei.toFixed(2) + " gwei/IFR (indicative; the binding check uses the 7-day TWAP).";
-          }).catch(function () { readFrom(i + 1); });
+          }).catch(function () { live.textContent = unavailable; });
         }
-        readFrom(0);
+        readFrom();
       })();
       </script>
 
