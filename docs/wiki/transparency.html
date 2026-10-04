@@ -570,6 +570,7 @@
         <li><a href="https://ifrunit.tech/wiki/roadmap.html">Roadmap</a></li>
         <li class="nav-divider"></li>
         <li><a href="https://ifrunit.tech/wiki/commitment-vault.html">CommitmentVault</a></li>
+        <li><a href="https://ifrunit.tech/wiki/commitment-vault-compensation.html">CV-01 Compensation</a></li>
         <li><a href="https://ifrunit.tech/wiki/lending-vault.html">LendingVault</a></li>
         <li><a href="https://ifrunit.tech/wiki/lending-market.html">Lending Market</a></li>
         <li><a href="https://ifrunit.tech/wiki/lp-strategy.html">LP Strategy</a></li>
@@ -1208,7 +1209,7 @@
             <tr>
               <td><strong>CommitmentVault</strong></td>
               <td class="address"><a href="https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3" target="_blank">0x0719...73d3</a></td>
-              <td>Post-bootstrap commitment locks. P0 set by Proposal #16. Self-service MetaMask lock widget is live; C2 50% lock verified on 29.06.2026.</td>
+              <td>Post-bootstrap commitment locks. P0 set by Proposal #16. Self-service MetaMask lock widget is live; C2 50% lock verified on 29.06.2026. Price-conditioned V1 tranches (26,418,467.994338353 IFR) cannot unlock; see <a href="commitment-vault-compensation.html">CV-01</a>.</td>
               <td id="cur-commitment">loading&hellip;</td>
               <td>Smart contract &mdash; non-custodial tranche locks</td>
             </tr>
@@ -1404,7 +1405,7 @@
             <tr><td>Community Safe</td><td>7,900,000</td><td>0.7900%</td><td>Current operations reserve</td></tr>
             <tr><td>PartnerVault</td><td>40,000,000</td><td>4.0000%</td><td>Builder reward custody</td></tr>
             <tr><td>Uniswap V2 IFR/WETH pair</td><td>11,899,172.061166225</td><td>1.189917206%</td><td>IFR reserve held by the live liquidity pair</td></tr>
-            <tr><td>CommitmentVault</td><td>47,952,476.871794375</td><td>4.795247687%</td><td>User tranches held under configured unlock conditions</td></tr>
+            <tr><td>CommitmentVault</td><td>47,952,476.871794375</td><td>4.795247687%</td><td>User tranches held under configured unlock conditions. Of these, 26,418,467.994338353 IFR are permanently locked and non-circulating (<a href="commitment-vault-compensation.html">CV-01</a>).</td></tr>
             <tr><td>LendingVault</td><td>52,155,440.952845656</td><td>5.215544095%</td><td>Deposited IFR; mainnet borrowing remains disabled</td></tr>
             <tr><td>FeeRouterV1</td><td>371,543.991017522</td><td>0.037154399%</td><td>Accumulated IFR pool fees; no automatic IFR forwarding path</td></tr>
             <tr><td>IFRLock</td><td>2,000</td><td>0.0002%</td><td>Aggregate refundable access locks held in custody</td></tr>

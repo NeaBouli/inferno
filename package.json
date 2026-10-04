@@ -71,6 +71,7 @@
     "qa:benefits-record": "node scripts/record-benefits-device-evidence.js",
     "preflight:benefits": "bash scripts/preflight-benefits-release.sh",
     "test:surface-routing": "node scripts/test-surface-routing.cjs",
+    "test:wallet-core-rpc": "node scripts/test-wallet-core-rpc.cjs",
     "test:release-guards": "bash scripts/test-deploy-release-guards.sh && bash scripts/test-deploy-compose-service.sh",
     "test:web3-headers": "node scripts/test-web3-headers.cjs",
     "test:web3-wallet-runtime": "node scripts/check-web3-wallet-runtime.cjs && node scripts/test-ifr-state-unavailable.cjs",
@@ -82,10 +83,13 @@
     "post:x:daily:status": "X_DRY_RUN=true node scripts/x-daily-bot.js status",
     "test:wiki-nav": "node scripts/check-wiki-nav-consistency.cjs",
     "test:wiki-shell": "node scripts/test-wiki-shell-consistency.cjs",
-    "test:landing-wiki-ui": "playwright test tests/browser/benefits-widget.spec.js tests/browser/landing-transparency.spec.js tests/browser/wiki-shell.spec.js tests/browser/footer-contact.spec.js tests/browser/fab-clearance.spec.js",
+    "test:landing-wiki-ui": "playwright test tests/browser/benefits-widget.spec.js tests/browser/landing-transparency.spec.js tests/browser/wiki-shell.spec.js tests/browser/footer-contact.spec.js tests/browser/fab-clearance.spec.js tests/browser/cv01-status.spec.js tests/browser/cv01-layout.spec.js",
     "test:license-privacy": "node scripts/test-license-privacy.cjs",
     "test:social-card": "node scripts/test-social-card.cjs",
-    "test:benefits-fork": "hardhat test test/fork/BenefitsVerifyFork.test.js"
+    "test:benefits-fork": "hardhat test test/fork/BenefitsVerifyFork.test.js",
+    "test:commitment-v2-proposal": "node scripts/test-commitment-vault-v2-proposal.cjs",
+    "test:commitment-v2-fork": "hardhat test test/fork/CommitmentVaultV2Fork.test.js",
+    "test:commitment-v2-synthetic-fork": "hardhat test test/fork/CommitmentVaultV2SyntheticRehearsal.test.js"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "4.2.0",
