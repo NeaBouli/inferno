@@ -27,9 +27,12 @@ const guardianContracts = [
 
 async function main() {
   // Use MAINNET_RPC_URL or fallback to public endpoint
-  const rpcUrl = process.env.MAINNET_RPC_URL || "https://eth.llamarpc.com";
+  const rpcUrl = process.env.MAINNET_RPC_URL || "https://ethereum-rpc.publicnode.com";
   const provider = new ethers.JsonRpcProvider(rpcUrl);
   const network = await provider.getNetwork();
+  if (network.chainId !== 1n) {
+    throw new Error(`RPC endpoint is on chainId ${network.chainId}, expected Ethereum Mainnet (1); refusing to read ownership`);
+  }
 
   console.log("=".repeat(60));
   console.log("INFERNO — Ownership Status Check");
