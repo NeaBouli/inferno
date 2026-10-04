@@ -1459,7 +1459,8 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       ]);
       cvBalance = values[0];
       cvAllowance = values[1];
-      cvTrancheCount = values[3] + values[5];
+      // MAX_TRANCHES is enforced per vault; new locks go to V2 only, so V1 tranches do not count.
+      cvTrancheCount = values[5];
       cvV2Open = values[6] === true;
       el("cv-balance").textContent = formatIFR(cvBalance, 3) + " IFR";
       el("cv-bal-hint").textContent = formatIFR(cvBalance, 3) + " IFR";

@@ -116,6 +116,8 @@ function buildCallResults(options = {}) {
       [[[9_500n * UNIT, 0, now, 0n, false, now]]],
     );
   }
+  if (options.v1TrancheCount !== undefined) callResults[`${COMMITMENT.toLowerCase()}:${selectors.commitmentCount}`] = uintResult(options.v1TrancheCount);
+  if (options.v2TrancheCount !== undefined) callResults[`${COMMITMENT_V2.toLowerCase()}:${selectors.commitmentCount}`] = uintResult(options.v2TrancheCount);
   return callResults;
 }
 
@@ -1400,6 +1402,35 @@ test("wiki lock widget shows the V1 warning above the V2-only path and keeps pri
   expect(pageErrors).toEqual([]);
   await context.close();
 });
+
+// MAX_TRANCHES (50) is per vault: a full V1 must not block a V2 lock, a full V2 must (T-240, CodeRabbit #188).
+for (const [label, counts, allowed] of [
+  ["a full V1 does not block a new V2 lock", { v1TrancheCount: 50n, v2TrancheCount: 0n }, true],
+  ["a full V2 blocks a new V2 lock", { v1TrancheCount: 0n, v2TrancheCount: 50n }, false],
+]) {
+  test(`wiki tranche limit is checked against V2 only: ${label} (T-240)`, async ({ browser }) => {
+    const { context, page, writes, pageErrors } = await preparePage(browser, { feeExemptV2: true, v1Tranche: true, ...counts });
+    await page.goto("/wiki/commitment-vault.html", { waitUntil: "domcontentloaded" });
+    await page.locator("#cv-connect-btn").click();
+    const injected = page.locator('[data-wallet-option-type="injected"]').first();
+    if (await injected.isVisible().catch(() => false)) await injected.click();
+    await expect(page.locator("#cv-tranches-list")).toContainText("V1 · Tranche #0", { timeout: 15_000 });
+    await page.locator("#cv-amount").fill("100");
+    await page.locator("#cv-amount").dispatchEvent("input");
+    await expect(page.locator("#cv-lock-btn")).toBeEnabled();
+    await page.locator("#cv-lock-btn").click();
+    if (allowed) {
+      await expect.poll(() => writes.length, { timeout: 15_000 }).toBe(2);
+      expect(writes[1]).toMatchObject({ action: "commitment-lock-v2", amount: 100n * UNIT, cType: 0n });
+      expect(String(writes[1].to).toLowerCase()).toBe(COMMITMENT_V2.toLowerCase());
+    } else {
+      await expect(page.locator("#cv-lock-status")).toContainText("50 tranche limit", { timeout: 15_000 });
+      expect(writes).toEqual([]);
+    }
+    expect(pageErrors).toEqual([]);
+    await context.close();
+  });
+}
 
 test("LendingVault borrowing remains transaction-disabled while price is zero", async ({ browser }) => {
   const { context, page, writes, pageErrors } = await preparePage(browser, { offerAvailable: true });
