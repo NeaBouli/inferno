@@ -151,7 +151,10 @@ remains the only place where agenda items and vote outcomes are published.
   26.08.2026 (vote 4-1); no exchange address is active yet. EX-01 was
   approved on 2026-10-04 with 3 YES (G.M., M.G., Y.K.): exchanges receive no
   IFR incentives from any project pool (policy decision, no on-chain action).
-  EX-02 (governance role) is an open ballot without a deadline. No exchange has
+  EX-02 (governance role) is open: three eligible signers abstained; with two
+  signers outstanding no option can reach 3 votes unless votes change. Until a
+  decision, the status quo applies: exchanges have no governance role. The owner
+  is checking whether the outstanding signers want to vote. No exchange has
   Council membership or TreasurySafe permissions.
 - **Decision needed:** EX-02 outcome: whether exchanges get no role (Option A)
   or at most two disclosed non-voting advisers without Safe permissions
