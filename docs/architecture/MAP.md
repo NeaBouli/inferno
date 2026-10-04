@@ -814,7 +814,9 @@ open. Read-only evidence: block 26119897.
    — Daten: RPC URL (`MAINNET_RPC_URL` oder public fallback) → verified
    `guardian-step2-execute.json` oder refusal ohne Datei.
 2. `buildVerifiedExecute` → `verifyQueuedProposals(call)` →
-   `rpcCaller(url)` (einmaliger `eth_chainId`-Check auf 1) → eth_call
+   `rpcCaller(url)` (einmaliger `eth_chainId`-Check auf 1;
+   jeder Request mit `AbortSignal.timeout`, nur HTTP 2xx + JSON-RPC-Envelope
+   `jsonrpc`/`id`/hex `result`, generische Fehler) → eth_call
    `Governance.getProposal(19|20)` — Daten: `(target, data, eta, executed,
    cancelled)` gegen die gepinnten Konstanten `QUEUED`/`QUEUED_ETA`/
    `GUARDIAN_INNER`; jede Abweichung, unreachable RPC oder wrong chain wirft.
@@ -824,8 +826,8 @@ open. Read-only evidence: block 26119897.
    impersonated Treasury Safe sendet die generierten Bytes → Daten:
    `guardian()` aller sechs mutablen Contracts = Safe; immutables bleiben
    Deployer; Negativ: Read mit `blockTag` 26108024 (pre-queue) → refusal.
-5. Fixture-Hop: CLI `--fixture <firstId>` → `build(firstId)` (kein Chain-Read,
-   "do not sign") ← `scripts/test-guardian-migration-proposal.cjs` und
+5. Fixture-Hop (nur Library, kein CLI): `build(firstId)` (kein Chain-Read,
+   schreibt nie Dateien) ← `scripts/test-guardian-migration-proposal.cjs` und
    `test/fork/GuardianMigrationFork.test.js` (Fork exakt 26108024).
 
 ### 12.3 Module
@@ -841,15 +843,14 @@ open. Read-only evidence: block 26119897.
 
 - Der Generator liest nur; Signieren/Executen bleibt beim Safe (kein Key hier).
 - `verifyQueuedProposals` ist die einzige Quelle der execute-Bytes im
-  `--execute`-Modus; `--fixture` ist explizit offline und für Tests.
+  `--execute`-Modus; die CLI kennt nur `--execute` (T-242a: `--fixture` entfernt).
 - CI (contracts workflow) läuft nur den Unit-Test; Fork-Tests brauchen einen
   Archive-RPC und laufen manuell.
 
 ### 12.5 Widerspruch und Lücken
 
-- `build(firstId)` bleibt als Fixture exportiert; Missbrauch wird durch den
-  CLI-Zwang (`--fixture`-Flag + Warnung) statt durch Entfernen begrenzt, weil
-  die synthetische Rehearsal die Bytes braucht.
+- `build(firstId)` bleibt als Fixture exportiert, weil die synthetische
+  Rehearsal die Bytes braucht; die CLI schreibt es nie (T-242a).
 - Die CV-01-Generator (`scripts/commitment-vault-v2-proposal.cjs`) hat ein
   eigenes, optionales `--verify-onchain`; Angleichung ist nicht Teil dieser
   Spur.

@@ -4,15 +4,13 @@
 // (LiquidityReserve.setGuardian) and #20 (BurnReserve.setGuardian) are queued with ETA
 // 2026-10-04 23:56:11 UTC; only step 2 (execute) is still pending.
 //
-//   node scripts/guardian-migration-proposal.cjs --execute [outDir]                    production step 2
-//   node scripts/guardian-migration-proposal.cjs --fixture <firstProposalId> [outDir]  offline test fixture
+//   node scripts/guardian-migration-proposal.cjs --execute [outDir]   production step 2 (the only CLI mode)
 //
-// --execute is the only mode that writes guardian-step2-execute.json, and only after a read-only
+// The CLI writes guardian-step2-execute.json only after a read-only
 // on-chain check (MAINNET_RPC_URL or a public RPC) proves that proposals #19/#20 still exist with
 // exactly the pinned target, calldata and ETA and are neither executed nor cancelled. Any drift, an
-// unreachable RPC or a non-Mainnet chain refuses the write. --fixture writes all three files from a
-// caller-supplied first id without any chain read; it exists for tests and the pinned fork rehearsal
-// and its output must never be signed. BuybackVault/BuybackController guardians are immutable and
+// unreachable RPC or a non-Mainnet chain refuses the write. The unverified build(firstId) fixture is a
+// library export only (unit test and the pinned fork rehearsal); the CLI never writes it. BuybackVault/BuybackController guardians are immutable and
 // cannot be migrated.
 const fs = require("node:fs");
 const path = require("node:path");
@@ -60,7 +58,7 @@ function executeBatch() {
   );
 }
 
-// Offline fixture for tests and the fork rehearsal pinned to block 26108024. Not for signing.
+// Offline fixture for tests and the fork rehearsal pinned to block 26108024. Library-only, never written by the CLI.
 function build(firstId) {
   if (!/^\d+$/.test(String(firstId))) throw new Error("first proposalId must be a non-negative integer");
   const id0 = BigInt(firstId), id1 = id0 + 1n;
@@ -117,12 +115,33 @@ async function buildVerifiedExecute(call) {
   return { "guardian-step2-execute.json": executeBatch() };
 }
 
-/** Minimal JSON-RPC eth_call with a chainId 1 check. */
-function rpcCaller(url) {
+const RPC_TIMEOUT_MS = 10_000;
+
+/**
+ * Minimal JSON-RPC eth_call with a chainId 1 check. Every request is bounded by `timeoutMs`; a non-2xx
+ * status, an unparsable body or any envelope other than {jsonrpc "2.0", matching id, hex result} refuses
+ * with a generic error that never echoes the endpoint or its response.
+ */
+function rpcCaller(url, { timeoutMs = RPC_TIMEOUT_MS } = {}) {
+  let nextId = 0;
   const post = async (method, params) => {
-    const res = await fetch(url, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }) });
-    const body = await res.json();
-    if (body.error || typeof body.result !== "string") throw new Error(`RPC ${method} failed: ${JSON.stringify(body.error || body.result)}`);
+    const id = ++nextId;
+    let body;
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ jsonrpc: "2.0", id, method, params }),
+        signal: AbortSignal.timeout(timeoutMs),
+      });
+      if (!res.ok) throw new Error("http status");
+      body = await res.json();
+    } catch {
+      throw new Error(`refusing: RPC ${method} failed`);
+    }
+    const valid = body !== null && typeof body === "object" && !Array.isArray(body) && body.jsonrpc === "2.0" &&
+      body.id === id && !("error" in body) && typeof body.result === "string" && /^0x[0-9a-fA-F]*$/.test(body.result);
+    if (!valid) throw new Error(`refusing: RPC ${method} returned an invalid response`);
     return body.result;
   };
   let checked = false;
@@ -135,23 +154,18 @@ function rpcCaller(url) {
   };
 }
 
-module.exports = { build, buildVerifiedExecute, verifyQueuedProposals, rpcCaller, C, IMMUTABLE, TREASURY_SAFE, DEPLOYER, QUEUED, QUEUED_ETA, GUARDIAN_INNER };
+module.exports = { build, buildVerifiedExecute, verifyQueuedProposals, rpcCaller, RPC_TIMEOUT_MS, C, IMMUTABLE, TREASURY_SAFE, DEPLOYER, QUEUED, QUEUED_ETA, GUARDIAN_INNER };
 
 if (require.main === module) {
   const args = process.argv.slice(2);
   (async () => {
-    let files, outDir;
-    if (args[0] === "--execute") {
-      outDir = args[1] || ".";
-      files = await buildVerifiedExecute(rpcCaller(process.env.MAINNET_RPC_URL || "https://ethereum-rpc.publicnode.com"));
-      console.log(`verified on-chain: proposals #19/#20 = LiquidityReserve/BurnReserve.setGuardian(Treasury Safe), queued, ETA ${new Date(Number(QUEUED_ETA) * 1000).toISOString()}`);
-    } else if (args[0] === "--fixture" && /^\d+$/.test(String(args[1]))) {
-      outDir = args[2] || ".";
-      files = build(args[1]);
-      console.log("fixture mode: unverified offline output for tests/rehearsal only; do not sign");
-    } else {
-      throw new Error("usage: --execute [outDir] (verified against the queued Mainnet proposals) | --fixture <firstProposalId> [outDir] (offline test fixture)");
+    // Only verified output is ever written; build() stays a library export for tests and fork rehearsals.
+    if (args[0] !== "--execute" || args.length > 2 || (args[1] !== undefined && args[1].startsWith("-"))) {
+      throw new Error("usage: --execute [outDir] (verified against the queued Mainnet proposals)");
     }
+    const outDir = args[1] || ".";
+    const files = await buildVerifiedExecute(rpcCaller(process.env.MAINNET_RPC_URL || "https://ethereum-rpc.publicnode.com"));
+    console.log(`verified on-chain: proposals #19/#20 = LiquidityReserve/BurnReserve.setGuardian(Treasury Safe), queued, ETA ${new Date(Number(QUEUED_ETA) * 1000).toISOString()}`);
     fs.mkdirSync(outDir, { recursive: true });
     for (const [name, content] of Object.entries(files)) {
       fs.writeFileSync(path.join(outDir, name), JSON.stringify(content, null, 2) + "\n");

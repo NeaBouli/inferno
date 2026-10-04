@@ -27,7 +27,8 @@ unpause buyback execution; it cannot move funds. Changing it would need a redepl
 ## Steps
 
 1. **Done.** `node scripts/guardian-migration-proposal.cjs 19 ./cwa09-guardian` (first proposal id 19).
-   The positional form is retired (T-242): offline regeneration now uses `--fixture 19` and is not for signing.
+   The positional form and the later `--fixture` mode are retired (T-242/T-242a): the CLI only writes verified
+   `--execute` output; the offline `build()` fixture is a library export for tests and the fork rehearsal.
 2. **Done (deployer).** The three transactions in `guardian-deployer-txs.json`, each verified on-chain afterwards
    (`guardian()` = Treasury Safe):
    - IFRLock: block 26108025,
@@ -61,7 +62,8 @@ unpause buyback execution; it cannot move funds. Changing it would need a redepl
 
 - `node scripts/test-guardian-migration-proposal.cjs` (CI, contracts workflow): fixture bytes, pinned
   queued-proposal verification (wrong id/target/calldata/ETA, executed, cancelled, wrong-chain and unreadable
-  RPC) and the CLI mode boundary.
+  RPC), the RPC transport boundary (non-2xx, malformed JSON-RPC envelope, timeout) and the CLI mode boundary
+  (`--execute` only, no file on any refusal).
 - `HARDHAT_FORK=true HARDHAT_FORK_BLOCK_NUMBER=26108024 MAINNET_RPC_URL=<archive rpc> npx hardhat test test/fork/GuardianMigrationFork.test.js`:
   full migration against the deployed contracts; afterwards the Safe can pause and unpause IFRLock and the deployer cannot.
   The rehearsal is pinned to exactly block 26108024, the last block before the live migration. Later blocks already
