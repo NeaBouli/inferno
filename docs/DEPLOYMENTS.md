@@ -150,7 +150,7 @@ CommitmentVault V2 (CV-01 repair, deployed, not yet wired):
 [`0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F`](https://etherscan.io/address/0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F#code)
 — deployed 2026-10-02 21:22 UTC, block 26107296, TX
 [`0x9857a570...3ea0f7`](https://etherscan.io/tx/0x9857a5707b650b8828f41b893f91a10ff26d7990742e782bb0b7e86df23ea0f7),
-owner Governance, source commit `f29efddc`, Etherscan verified and Sourcify exact match. It accepts only `TIME_ONLY` locks. It joins the
+owner Governance, source commit `cdb85fe791d2d21a870684c92b9c15e9c897fd60`, Etherscan verified and Sourcify exact match. It accepts only `TIME_ONLY` locks. It joins the
 contract table after Governance proposal #17 (`setFeeExempt(V2, true)`) is executed and the interfaces switch
 (`docs/COMMITMENT_VAULT_V2_REPAIR.md` steps 4-5).
 
