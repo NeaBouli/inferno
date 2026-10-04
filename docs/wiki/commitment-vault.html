@@ -931,7 +931,7 @@
       <p>When a condition is met and the owner does not call <code>unlock()</code> within 30 days, <strong style="color:var(--text);">anyone</strong> can call the function for that wallet.</p>
 
       <ul>
-        <li>Tokens <strong style="color:var(--text);">ALWAYS</strong> go to the original wallet &mdash; it is impossible to steal tokens</li>
+        <li>Tokens <strong style="color:var(--text);">ALWAYS</strong> go to the original wallet &mdash; <code>unlock()</code> cannot send them to the caller or any other address. This does not protect a compromised wallet: whoever controls that wallet controls the tokens once they arrive, and can call <code>unlock()</code> as the owner once the condition is met.</li>
         <li>It only helps once a condition is met: it cannot release V1 PRICE_ONLY or TIME_AND_PRICE tranches, whose condition is never met (CV-01), and it cannot recover lost private keys, because tokens always return to the same wallet</li>
         <li>The 30-day grace period gives the owner enough time to act</li>
       </ul>
@@ -962,7 +962,7 @@
       <h2 id="faq">Frequently Asked Questions</h2>
 
       <h3>Can someone steal my locked tokens?</h3>
-      <p><strong style="color:var(--text);">No.</strong> <code>unlock()</code> ALWAYS sends to the original wallet. The smart contract has no function that could send tokens to a different address.</p>
+      <p><strong style="color:var(--text);">Not through the vault.</strong> <code>unlock()</code> ALWAYS sends to the original wallet, and the smart contract has no function that could send locked tokens to a different address. If that wallet itself is compromised, the attacker can unlock the tokens once the condition is met and move them out of the wallet; the vault cannot prevent that.</p>
 
       <h3>What if I lose access?</h3>
       <p>If you lose access to your wallet, nobody can recover the tokens: <code>unlock()</code> always pays the original wallet. Auto-Unlock only lets anyone trigger the release 30 days after a met condition (for example a passed unlock date); the tokens still arrive in that same wallet.</p>
