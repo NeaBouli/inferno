@@ -1308,7 +1308,7 @@ test("Android 9 stays in browser mode instead of launching an incompatible WebAP
 test("Web3 service worker bounds offline navigation before using the cache", () => {
   const source = readFileSync("docs/web3-sw.js", "utf8");
   const html = readFileSync("docs/web3/index.html", "utf8");
-  expect(source).toContain('const CACHE_NAME = "ifr-web3-v21"');
+  expect(source).toContain('const CACHE_NAME = "ifr-web3-v22"');
   expect(source).toContain('"/web3-wallet-core.js?v=20261004-rpc-fallback-v6"');
   expect(html).toContain('<script src="/web3-wallet-core.js?v=20261004-rpc-fallback-v6"></script>');
   expect(html).toContain('updateViaCache: "none"');
