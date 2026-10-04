@@ -148,14 +148,17 @@ remains the only place where agenda items and vote outcomes are published.
 ## Lane 5 — Exchange fee exemption, incentives and governance role
 
 - **Current truth:** the CEX transfer-fee exemption policy was approved on
-  26.08.2026 (vote 4-1); no exchange address is active yet. Exchange IFR
-  incentives (EX-01) and any exchange governance role (EX-02) are undated
-  discussion drafts. No exchange has Council membership or TreasurySafe
-  permissions.
-- **Decision needed:** per-exchange address verification procedure; whether
-  any incentive exists (none, integration pilot or liquidity pilot) and its
-  source and ceiling; whether exchanges get no role (Option A) or at most two
-  disclosed non-voting advisers without Safe permissions (Option B).
+  26.08.2026 (vote 4-1); no exchange address is active yet. EX-01 was
+  approved on 2026-10-04 with 3 YES (G.M., M.G., Y.K.): exchanges receive no
+  IFR incentives from any project pool (policy decision, no on-chain action).
+  EX-02 (governance role) is open: three eligible signers abstained; with two
+  signers outstanding no option can reach 3 votes unless votes change. Until a
+  decision, the status quo applies: exchanges have no governance role. The owner
+  is checking whether the outstanding signers want to vote. No exchange has
+  Council membership or TreasurySafe permissions.
+- **Decision needed:** EX-02 outcome: whether exchanges get no role (Option A)
+  or at most two disclosed non-voting advisers without Safe permissions
+  (Option B). Votes: [Council Votes](wiki/council-votes.html).
 - **Prerequisites:** verified exchange addresses; conflict review;
   returnable/escrow terms for any liquidity mandate.
 - **Dependencies:** Lane 4 (PartnerVault as a possible integration source);
@@ -172,6 +175,15 @@ remains the only place where agenda items and vote outcomes are published.
 
 ## Lane 6 — Council open/secret voting portal
 
+- **Decision (2026-10-03):** eligibility is the Safe signer set with a fixed
+  snapshot per ballot (a Council registry may follow); open ballots show
+  consented initials only; open ballots now run through the Etherscan
+  verified-signature procedure and are recorded publicly on
+  [Council Votes](https://ifrunit.tech/wiki/council-votes.html), verified by
+  `scripts/verify-council-votes.cjs`. Secret ballots are in planning as a
+  separate milestone (anonymous credential or ZK membership, threshold tally)
+  behind a threat model, scheme selection, independent cryptography/privacy
+  review and staging. A portal that automates the open procedure is planned.
 - **Current truth:** planned, not live. No Council login or web ballot creates
   a binding vote. The published requirements cover wallet challenge, EOA and
   EIP-1271 verification, a block-numbered eligibility snapshot, replay

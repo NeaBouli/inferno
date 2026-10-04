@@ -91,6 +91,7 @@ IFR includes a read-only AI Copilot assistant for general protocol and surface-s
 - Provide IFR / ETH Liquidity: https://ifrunit.tech/wiki/liquidity.html (read-only live ratio calculator and external Uniswap V2 execution guide; not an in-site transaction module)
 - Ecosystem Overview: https://ifrunit.tech/wiki/ecosystem.html
 - Community Signer Expansion Plan: https://ifrunit.tech/wiki/community-signer-expansion.html
+- Council Votes (public ballot record, verifiable signatures): https://ifrunit.tech/wiki/council-votes.html
 
 ## Governance Signer Expansion
 

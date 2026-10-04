@@ -53,9 +53,10 @@ requireText('docs/wiki/fee-design.html', [
 
 requireText('docs/wiki/governance.html', [
   'id="council-agenda"',
-  'Status: undated discussion draft',
+  'Status: open ballots since 3 October 2026',
+  'council-votes.html',
   'Agenda entries contain no proposer attribution or personal name',
-  'No vote is open, no IFR is allocated',
+  'No IFR is allocated',
   'proposed agenda ceilings, not allocations',
   'no voting seat and no TreasurySafe signer or execution access',
   'EIP-1271',

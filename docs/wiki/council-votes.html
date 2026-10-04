@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-    <link rel="canonical" href="https://ifrunit.tech/wiki/lending-market.html">
-  <link rel="alternate" hreflang="en" href="https://ifrunit.tech/wiki/lending-market.html">
-  <link rel="alternate" hreflang="x-default" href="https://ifrunit.tech/wiki/lending-market.html">
+  <link rel="canonical" href="https://ifrunit.tech/wiki/council-votes.html">
+  <link rel="alternate" hreflang="en" href="https://ifrunit.tech/wiki/council-votes.html">
+  <link rel="alternate" hreflang="x-default" href="https://ifrunit.tech/wiki/council-votes.html">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Lending Market &mdash; Inferno (IFR) Documentation</title>
-  <meta name="keywords" content="IFR lending market, LendingVault offers, IFR borrower, IFR lender, Ethereum Mainnet, ETH collateral, DeFi market">
-  <meta name="description" content="Live IFR Lending Market on Ethereum Mainnet. Browse LendingVault offers, available IFR, utilization, loan count, rate and borrow readiness directly from the contract.">
+  <title>Council Votes &mdash; Inferno (IFR) Documentation</title>
+  <meta name="keywords" content="Inferno, IFR, Council, vote, ballot, Safe signers, governance, verified signatures">
+  <meta name="description" content="Public record of Inferno (IFR) Council ballots: ballot texts, signed votes verified with ecrecover, tallies and status.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -85,6 +85,8 @@
       padding: 16px 0;
       flex: 1;
     }
+
+    .sidebar-nav li {}
 
     .sidebar-nav a {
       display: block;
@@ -216,32 +218,6 @@
       margin-bottom: 32px;
     }
 
-    /* ---------- Code blocks ---------- */
-    pre {
-      background: #1a1a1d;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px 20px;
-      overflow-x: auto;
-      font-size: 13px;
-      line-height: 1.7;
-      margin: 16px 0;
-      color: var(--text);
-    }
-
-    code {
-      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-      font-size: 13px;
-      color: var(--text);
-    }
-
-    p code, li code, td code {
-      background: rgba(255, 255, 255, 0.06);
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 13px;
-    }
-
     /* ---------- Tables ---------- */
     table {
       width: 100%;
@@ -259,7 +235,7 @@
     th {
       color: var(--muted);
       font-weight: 600;
-      font-size: 13px;
+      font-size: 12px;
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
@@ -297,255 +273,66 @@
 
     .callout-green {
       background: rgba(34, 197, 94, 0.06);
-      border-left: 3px solid var(--green);
-      border-radius: 0 8px 8px 0;
-      padding: 16px 20px;
-      margin: 20px 0;
+      border-left-color: var(--green);
     }
 
-    .callout-green p {
-      color: var(--text);
-      margin: 0;
-      font-size: 14px;
-    }
-
-    .callout-blue {
-      background: rgba(59, 130, 246, 0.08);
-      border-left: 3px solid #3b82f6;
-      border-radius: 0 8px 8px 0;
-      padding: 16px 20px;
-      margin: 20px 0;
-    }
-
-    .callout-blue p {
-      color: var(--text);
-      margin: 0;
-      font-size: 14px;
-    }
-
-    /* ---------- Flow diagram ---------- */
-    .flow-diagram {
-      display: flex;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 6px;
-      margin: 24px 0;
-      padding: 8px 0;
-      max-width: 100%;
-    }
-
-    .flow-step {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px 14px;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text);
-      white-space: nowrap;
-      text-align: center;
-    }
-
-    .flow-step.active {
-      border-color: var(--accent);
-      color: var(--accent);
-    }
-
-    .flow-step.green {
-      border-color: var(--green);
-      color: var(--green);
-    }
-
-    .flow-arrow {
-      color: var(--muted);
-      font-size: 18px;
-      padding: 0 8px;
-      flex-shrink: 0;
-    }
-
-    /* ---------- Architecture diagram ---------- */
-    .arch-stack {
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-      margin: 24px 0;
-      max-width: 560px;
-    }
-
-    .arch-layer {
+    /* ---------- Phase cards ---------- */
+    .phase-card {
       background: var(--card);
       border: 1px solid var(--border);
       border-radius: 12px;
-      padding: 20px 24px;
-    }
-
-    .arch-layer-label {
-      font-size: 11px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      color: var(--accent);
-      margin-bottom: 6px;
-    }
-
-    .arch-layer-title {
-      font-size: 16px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 4px;
-    }
-
-    .arch-layer-desc {
-      font-size: 13px;
-      color: var(--muted);
-      line-height: 1.5;
-    }
-
-    .arch-connector {
-      display: flex;
-      justify-content: center;
-      padding: 4px 0;
-      color: var(--muted);
-      font-size: 20px;
-    }
-
-    /* ---------- Step list ---------- */
-    .step-list {
-      list-style: none;
-      padding-left: 0;
-      counter-reset: step-counter;
-      margin: 16px 0;
-    }
-
-    .step-list li {
-      counter-increment: step-counter;
-      position: relative;
-      padding-left: 40px;
-      margin-bottom: 16px;
-      color: var(--muted);
-      font-size: 14px;
-    }
-
-    .step-list li::before {
-      content: counter(step-counter);
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      background: rgba(255, 69, 0, 0.12);
-      color: var(--accent);
-      font-size: 13px;
-      font-weight: 700;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      line-height: 1;
-    }
-
-    /* ---------- Contract badge ---------- */
-    .contract-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 16px;
-      margin: 8px 0 16px;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      font-size: 13px;
-      color: var(--text);
-      word-break: break-all;
-    }
-
-    .contract-badge .label {
-      color: var(--muted);
-      font-family: 'Inter', sans-serif;
-      font-weight: 600;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      white-space: nowrap;
-    }
-
-    /* ---------- Fee comparison ---------- */
-    .fee-compare {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
+      padding: 24px 28px;
       margin: 20px 0;
     }
 
-    .fee-card {
-      background: var(--card);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 20px;
-    }
-
-    .fee-card.bad {
-      border-color: #ef4444;
-    }
-
-    .fee-card.good {
-      border-color: var(--green);
-    }
-
-    .fee-card-title {
-      font-size: 14px;
-      font-weight: 700;
-      margin-bottom: 12px;
-    }
-
-    .fee-card.bad .fee-card-title {
-      color: #ef4444;
-    }
-
-    .fee-card.good .fee-card-title {
-      color: var(--green);
-    }
-
-    .fee-card p {
-      font-size: 13px;
-      color: var(--muted);
-      margin-bottom: 8px;
-      max-width: none;
-    }
-
-    .fee-card code {
-      font-size: 12px;
-    }
-
-    /* ---------- Status Banner ---------- */
-    .coming-soon-banner {
-      background: rgba(59, 130, 246, 0.08);
-      border: 1px solid rgba(59, 130, 246, 0.3);
-      border-radius: 12px;
-      padding: 16px 20px;
-      margin-bottom: 32px;
+    .phase-card h3 {
+      margin: 0 0 8px;
       display: flex;
       align-items: center;
       gap: 12px;
+      flex-wrap: wrap;
     }
 
-    .coming-soon-banner .badge {
-      background: #3b82f6;
-      color: #fff;
+    .phase-badge {
       font-size: 11px;
       font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
       text-transform: uppercase;
-      letter-spacing: 1px;
-      padding: 4px 10px;
-      border-radius: 6px;
-      white-space: nowrap;
+      letter-spacing: 0.5px;
     }
 
-    .coming-soon-banner .text {
-      color: var(--text);
-      font-size: 14px;
-      font-weight: 500;
+    .badge-done { background: rgba(34,197,94,0.15); color: var(--green); }
+    .badge-progress { background: rgba(255,69,0,0.15); color: var(--accent); }
+    .badge-planned { background: rgba(138,138,150,0.15); color: var(--muted); }
+    .badge-red { background: rgba(220,38,38,0.14); color: #b91c1c; }
+    .badge-yellow { background: rgba(234,179,8,0.18); color: #92400e; }
+    .badge-green { background: rgba(34,197,94,0.15); color: var(--green); }
+    .vote-text { white-space: pre-wrap; font-size: 0.8rem; }
+    .sig { font-family: monospace; font-size: 0.72rem; word-break: break-all; }
+
+    /* ---------- Code ---------- */
+    pre {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.7;
+      margin: 16px 0;
+    }
+
+    code {
+      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 13px;
+    }
+
+    p code, li code, td code {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
     }
 
     /* ---------- Footer ---------- */
@@ -589,21 +376,12 @@
         padding: 72px 20px 40px;
       }
 
-      .flow-diagram {
-        flex-wrap: wrap;
-        gap: 8px;
+      table {
+        font-size: 13px;
       }
 
-      .flow-arrow {
-        padding: 0 4px;
-      }
-
-      .fee-compare {
-        grid-template-columns: 1fr;
-      }
-
-      .arch-stack {
-        max-width: 100%;
+      th, td {
+        padding: 10px 12px;
       }
     }
 
@@ -620,21 +398,22 @@
   <meta property="og:locale" content="en_US">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Inferno Protocol">
-  <meta property="og:title" content="Lending Market — Inferno Protocol (IFR)">
-  <meta property="og:description" content="Live IFR Lending Market on Ethereum Mainnet with direct LendingVault reads for offers, liquidity, loans, rate and borrow readiness.">
-  <meta property="og:url" content="https://ifrunit.tech/wiki/lending-market.html">
+  <meta property="og:title" content="Council Votes — Inferno Protocol (IFR)">
+  <meta property="og:description" content="Every Council ballot with its exact texts, signed votes and tally.">
+  <meta property="og:url" content="https://ifrunit.tech/wiki/council-votes.html">
   <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Lending Market — Inferno Protocol (IFR)">
-  <meta name="twitter:description" content="Live IFR Lending Market on Ethereum Mainnet with direct LendingVault reads.">
+  <meta name="twitter:title" content="Council Votes — Inferno Protocol (IFR)">
+  <meta name="twitter:description" content="Every Council ballot with its exact texts, signed votes and tally.">
   <meta name="twitter:site" content="@IFRtoken">
-  <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">  <script type="application/ld+json">
+  <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
+  <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "TechArticle",
-    "headline": "Lending Market — IFR Lending against ETH Collateral",
-    "description": "Live IFR Lending Market on Ethereum Mainnet. Browse LendingVault offers, available IFR, utilization, loan count, rate and borrow readiness directly from the contract.",
-    "url": "https://ifrunit.tech/wiki/lending-market.html",
+    "headline": "Council Votes",
+    "description": "Public record of Inferno Council ballots with verified signed votes and tallies.",
+    "url": "https://ifrunit.tech/wiki/council-votes.html",
     "isPartOf": {"@id": "https://ifrunit.tech/#website"},
     "publisher": {"@id": "https://ifrunit.tech/#organization"},
     "about": {"@id": "https://ifrunit.tech/#app"}
@@ -648,24 +427,9 @@
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
   "itemListElement": [
-    {
-      "@type": "ListItem",
-      "position": 1,
-      "name": "Inferno",
-      "item": "https://ifrunit.tech/"
-    },
-    {
-      "@type": "ListItem",
-      "position": 2,
-      "name": "Wiki",
-      "item": "https://ifrunit.tech/wiki/"
-    },
-    {
-      "@type": "ListItem",
-      "position": 3,
-      "name": "Lending Market",
-      "item": "https://ifrunit.tech/wiki/lending-market.html"
-    }
+    {"@type": "ListItem", "position": 1, "name": "Inferno", "item": "https://ifrunit.tech/"},
+    {"@type": "ListItem", "position": 2, "name": "Wiki", "item": "https://ifrunit.tech/wiki/"},
+    {"@type": "ListItem", "position": 3, "name": "Council Votes", "item": "https://ifrunit.tech/wiki/council-votes.html"}
   ]
 }
   </script>
@@ -711,7 +475,7 @@
         <li><a href="https://ifrunit.tech/wiki/commitment-vault.html">CommitmentVault</a></li>
         <li><a href="https://ifrunit.tech/wiki/commitment-vault-compensation.html">CV-01 Compensation</a></li>
         <li><a href="https://ifrunit.tech/wiki/lending-vault.html">LendingVault</a></li>
-        <li><a href="https://ifrunit.tech/wiki/lending-market.html" class="active" aria-current="page">Lending Market</a></li>
+        <li><a href="https://ifrunit.tech/wiki/lending-market.html">Lending Market</a></li>
         <li><a href="https://ifrunit.tech/wiki/lp-strategy.html">LP Strategy</a></li>
         <li><a href="liquidity.html">Provide IFR / ETH Liquidity</a></li>
         <li><a href="https://ifrunit.tech/wiki/ecosystem.html">Ecosystem</a></li>
@@ -720,7 +484,7 @@
         <li><a href="https://ifrunit.tech/wiki/dao-governance.html">DAO Governance</a></li>
         <li><a href="https://ifrunit.tech/wiki/multisig.html">Multisig Policy</a></li>
         <li><a href="https://ifrunit.tech/wiki/community-signer-expansion.html">Community Signer Expansion</a></li>
-        <li><a href="https://ifrunit.tech/wiki/council-votes.html">Council Votes</a></li>
+        <li><a href="https://ifrunit.tech/wiki/council-votes.html" class="active" aria-current="page">Council Votes</a></li>
         <li><a href="https://ifrunit.tech/wiki/transparency.html">Transparency</a></li>
         <li class="nav-divider"></li>
         <li><a href="https://ifrunit.tech/wiki/faq.html">FAQ</a></li>
@@ -747,6 +511,7 @@
           <div id="lp-header-connected" style="display:none;">
             <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:5px 8px;cursor:pointer;display:flex;align-items:center;gap:6px;max-width:100px;white-space:nowrap;overflow:hidden;" onclick="lpToggleDropdown()">
               <span id="lp-header-addr" style="color:#166534;font-family:monospace;font-size:0.72rem;font-weight:600;"></span>
+
             </div>
           </div>
           <div id="lp-header-dropdown" style="display:none;position:fixed;background:#111827;border:1px solid #374151;border-radius:12px;padding:16px;width:280px;max-width:calc(100vw - 24px);z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.6);">
@@ -783,122 +548,143 @@
         </div>
       </div>
 
-      <!-- Phase 3 Live Banner -->
-      <div class="coming-soon-banner">
-        <span class="badge">Phase 3</span>
-        <span class="text">Deployed on Ethereum Mainnet &mdash; LendingVault: <code style="font-size:0.8rem;">0x974305Ab0EC905172e697271C3d7d385194EB9DF</code> &mdash; feeExempt active</span>
+
+      <h1><span class="accent">Council Votes</span></h1>
+      <p class="subtitle">
+        Public record of every Council ballot: the exact ballot texts, each signed vote, and the current tally.
+      </p>
+
+      <div class="callout">
+        <p><strong>Procedure:</strong> open ballots only. Each eligible Safe signer signs the published ballot text with the signer wallet on <a href="https://etherscan.io/verifiedSignatures" rel="noopener">Etherscan Verified Signatures</a>. Every signature is checked with <code>ecrecover</code> (EIP-191) and recorded on this page. A ballot never executes anything by itself: any on-chain action still needs its own Safe transaction and, where applicable, the 48-hour Governance timelock.</p>
       </div>
 
-      <h1>Lending <span class="accent">Market</span></h1>
-      <p class="subtitle">P2P IFR Lending &mdash; Browse Offers, Borrow, Earn Interest</p>
+      <h2>Rules</h2>
+      <ul>
+        <li><strong>Eligibility:</strong> the Safe signers of the Treasury, Community and LP Reserve Safes (identical 3-of-5 owner set), fixed when a ballot opens. A Council registry may replace this snapshot later.</li>
+        <li><strong>Display:</strong> signers appear only with consented initials. Wallet addresses are public on-chain; no real names are published.</li>
+        <li><strong>Deadline:</strong> none, unless a deadline is approved by a separate Council vote.</li>
+        <li><strong>Abstentions</strong> are recorded but not counted as votes. Only their signature hash and Etherscan link are listed.</li>
+        <li><strong>Status colours:</strong> <span class="phase-badge badge-red">Open</span> before the threshold is reached, <span class="phase-badge badge-yellow">Approved</span> once it is reached, <span class="phase-badge badge-green">Executed</span> after the resulting transaction is executed and linked.</li>
+        <li><strong>Secret ballots</strong> are in planning as a separate milestone: anonymous credentials or zero-knowledge membership proofs with a threshold tally. They need a threat model, scheme selection, an independent cryptography and privacy review, and a staging run before any real ballot. Until then all ballots are open.</li>
+        <li><strong>Portal:</strong> a page that automates this procedure (connect wallet, sign the predefined text, automatic verification, publication) is planned.</li>
+      </ul>
 
-      <!-- ======================================== -->
-      <!-- Marketplace Content -->
-      <!-- ======================================== -->
+      <h2>How to Vote</h2>
+      <ol>
+        <li>Open <a href="https://etherscan.io/verifiedSignatures" rel="noopener">etherscan.io/verifiedSignatures</a> and choose <em>Sign Message</em>.</li>
+        <li>Connect your Safe signer wallet.</li>
+        <li>Paste the ballot text of your choice from this page, unchanged.</li>
+        <li>Sign (free, no gas), choose <em>Publish</em>, and send the link to the Council.</li>
+      </ol>
 
-      <style>
-        .market-stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin:20px 0}
-        .market-stat{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:16px;text-align:center}
-        .market-stat .m-label{font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px}
-        .market-stat .m-value{font-size:1.4rem;font-weight:700;color:var(--accent)}
-        .offers-table{width:100%;border-collapse:collapse;font-size:0.88rem;margin:16px 0}
-        .offers-table th{text-align:left;padding:10px 12px;color:var(--muted);font-size:0.75rem;text-transform:uppercase;border-bottom:2px solid var(--border)}
-        .offers-table td{padding:10px 12px;border-bottom:1px solid var(--border)}
-        .offers-table tr:hover{background:rgba(255,255,255,0.02)}
-        .market-widget{background:rgba(255,69,0,0.04);border:1px solid rgba(255,69,0,0.18);border-radius:12px;padding:24px;margin:20px 0}
-        .market-btn{display:inline-block;padding:6px 16px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:0.82rem;font-weight:600;cursor:pointer;text-decoration:none;transition:opacity 0.2s}
-        .market-btn:hover{opacity:0.9}
-        .market-hidden{display:none!important}
-        .how-step{display:flex;gap:16px;align-items:flex-start;margin:16px 0}
-        .how-num{flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.88rem}
-      </style>
-
-      <!-- Live Status -->
-      <div class="market-widget" style="background:rgba(34,197,94,0.06);border-color:rgba(34,197,94,0.25);text-align:center;">
-        <div style="font-size:0.78rem;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Live on Ethereum Mainnet</div>
-        <p style="color:var(--muted);font-size:0.88rem;margin:0;">LendingVault is live on Mainnet. New lenders use the guided 1-5 flow on the LendingVault page; offers appear after <code>createOffer</code> confirms.<br>Data reads directly from LendingVault on Ethereum Mainnet.</p>
+      <!-- council-votes:start -->
+      <div class="phase-card" id="cv-01">
+        <h3>CV-01 — CommitmentVault V1 compensation (urgent) <span class="phase-badge badge-red">Open</span></h3>
+        <p>Compensate the 11 permanently locked CommitmentVault V1 tranches (26,418,467.994338353 IFR) from the LP Reserve Safe, per tranche, only after each tranche’s original time condition and price target (7-day TWAP) are met.</p>
+        <p>Proposal: <a href="https://ifrunit.tech/wiki/commitment-vault-compensation.html">/wiki/commitment-vault-compensation.html</a></p>
+        <p><strong>Rule:</strong> Approved with 3 YES votes of eligible Safe signers. Opened 2026-10-03. Deadline: None, unless a deadline is approved by a separate Council vote.</p>
+        <p><strong>Tally:</strong> YES: 2 · NO: 0 · abstentions: 1 · eligible: 5</p>
+        <p class="vote-summary"><strong>Voted:</strong> M.G. (YES), Y.K. (YES) · <strong>Abstained:</strong> G.M. · <strong>Still missing:</strong> A.M., A.P.</p>
+        <p style="color:var(--muted);font-size:0.85rem;">The proposal text references repository commit f08ce370 (pre-history-rewrite SHA; the same content is commit 4c3eb668 after the 2026-10-03 history rewrite).</p>
+        <div class="table-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <table style="min-width:600px;">
+          <thead><tr><th>Signer</th><th>Wallet</th><th>Vote</th><th>Proof</th></tr></thead>
+          <tbody>
+            <tr><td>G.M.</td><td><a href="https://etherscan.io/address/0x6b36687b0cd4386fb14cf565B67D7862110Fed67" rel="noopener"><code>0x6b36…ed67</code></a></td><td>ABSTAIN</td><td>recorded<div class="sig">hash 0xeb7a389778ff7661778b5c726947f30e342d14c66784518f9ea3cbdba04bada9</div></td></tr>
+            <tr><td>M.G.</td><td><a href="https://etherscan.io/address/0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4" rel="noopener"><code>0x17F8…72d4</code></a></td><td>YES</td><td><a href="https://etherscan.io/verifySig/339696" rel="noopener">etherscan.io/verifySig/339696</a><div class="sig">hash 0xcd65f6fb52dc56020f51268e6217a4561035a2b38c3ecd2ca5d0ddbfa8b572bf</div></td></tr>
+            <tr><td>A.M.</td><td><a href="https://etherscan.io/address/0x0C4893DcF730E0Ddc7D18CF9723932784Fb4ED74" rel="noopener"><code>0x0C48…ED74</code></a></td><td>not yet voted</td><td>—</td></tr>
+            <tr><td>Y.K.</td><td><a href="https://etherscan.io/address/0xA0860f872a9cAB34817D9a764e71ab43B942b275" rel="noopener"><code>0xA086…b275</code></a></td><td>YES</td><td><a href="https://etherscan.io/verifySig/339697" rel="noopener">etherscan.io/verifySig/339697</a><div class="sig">hash 0xcd65f6fb52dc56020f51268e6217a4561035a2b38c3ecd2ca5d0ddbfa8b572bf</div></td></tr>
+            <tr><td>A.P.</td><td><a href="https://etherscan.io/address/0x32cF8b4F29A8F211804857EcF8BF0847f0BC0fE9" rel="noopener"><code>0x32cF…0fE9</code></a></td><td>not yet voted</td><td>—</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <details>
+          <summary>Ballot texts (sign exactly one, unchanged)</summary>
+          <p><strong>YES</strong></p>
+          <pre class="vote-text">IFR Council urgent vote CV-01
+Vote: YES
+I approve proposal CV-01: the 11 permanently locked CommitmentVault V1 tranches (26,418,467.994338353 IFR in total) are compensated from the LP Reserve Safe 0x5D93E7919a71d725054e31017eCA86B026F86C04. Each tranche is compensated with exactly its locked amount, paid to the wallet that locked it, only after that tranche's original time condition (if any) and its original price target (7-day TWAP of the IFR/WETH Uniswap V2 pair 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0) are met, with one Safe transaction per tranche.
+Proposal: https://ifrunit.tech/wiki/commitment-vault-compensation.html (repository commit f08ce370)</pre>
+          <p><strong>NO</strong></p>
+          <pre class="vote-text">IFR Council urgent vote CV-01
+Vote: NO
+I reject proposal CV-01: the 11 permanently locked CommitmentVault V1 tranches (26,418,467.994338353 IFR in total) are compensated from the LP Reserve Safe 0x5D93E7919a71d725054e31017eCA86B026F86C04. Each tranche is compensated with exactly its locked amount, paid to the wallet that locked it, only after that tranche's original time condition (if any) and its original price target (7-day TWAP of the IFR/WETH Uniswap V2 pair 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0) are met, with one Safe transaction per tranche.
+Proposal: https://ifrunit.tech/wiki/commitment-vault-compensation.html (repository commit f08ce370)</pre>
+        </details>
       </div>
-
-      <!-- Live Stats -->
-      <h2 id="stats">Market Stats</h2>
-      <div class="market-stats-grid">
-        <div class="market-stat"><div class="m-label">Total Available</div><div class="m-value" id="m-available">&mdash;</div></div>
-        <div class="market-stat"><div class="m-label">Total Lent</div><div class="m-value" id="m-lent">&mdash;</div></div>
-        <div class="market-stat"><div class="m-label">Current Rate</div><div class="m-value" id="m-rate">&mdash;</div></div>
-        <div class="market-stat"><div class="m-label">Active Loans</div><div class="m-value" id="m-loans">&mdash;</div></div>
+      <div class="phase-card" id="ex-01">
+        <h3>EX-01 — No IFR incentives for exchanges <span class="phase-badge badge-yellow">Approved</span></h3>
+        <p>Centralized exchanges receive no IFR incentives (no integration payments, no liquidity grants, no loans) from any project pool.</p>
+        <p><strong>Rule:</strong> Approved with 3 YES votes of eligible Safe signers. Opened 2026-10-03. Deadline: None, unless a deadline is approved by a separate Council vote.</p>
+        <p><strong>Tally:</strong> YES: 3 · NO: 0 · abstentions: 0 · eligible: 5</p>
+        <p class="vote-summary"><strong>Voted:</strong> G.M. (YES), M.G. (YES), Y.K. (YES) · <strong>Abstained:</strong> none · <strong>Still missing:</strong> A.M., A.P.</p>
+        <p style="color:var(--muted);font-size:0.85rem;">Approved on 2026-10-04 with 3 YES (G.M., M.G., Y.K.). Policy decision; no on-chain action. A future exchange incentive requires a new Council proposal.</p>
+        <div class="table-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <table style="min-width:600px;">
+          <thead><tr><th>Signer</th><th>Wallet</th><th>Vote</th><th>Proof</th></tr></thead>
+          <tbody>
+            <tr><td>G.M.</td><td><a href="https://etherscan.io/address/0x6b36687b0cd4386fb14cf565B67D7862110Fed67" rel="noopener"><code>0x6b36…ed67</code></a></td><td>YES</td><td><a href="https://etherscan.io/verifySig/339715" rel="noopener">etherscan.io/verifySig/339715</a><div class="sig">hash 0x36882b11a781df3f53401e4da19c04b8b51309f592c015d99b2cc3945955240c</div></td></tr>
+            <tr><td>M.G.</td><td><a href="https://etherscan.io/address/0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4" rel="noopener"><code>0x17F8…72d4</code></a></td><td>YES</td><td><a href="https://etherscan.io/verifySig/339733" rel="noopener">etherscan.io/verifySig/339733</a><div class="sig">hash 0x36882b11a781df3f53401e4da19c04b8b51309f592c015d99b2cc3945955240c</div></td></tr>
+            <tr><td>A.M.</td><td><a href="https://etherscan.io/address/0x0C4893DcF730E0Ddc7D18CF9723932784Fb4ED74" rel="noopener"><code>0x0C48…ED74</code></a></td><td>not yet voted</td><td>—</td></tr>
+            <tr><td>Y.K.</td><td><a href="https://etherscan.io/address/0xA0860f872a9cAB34817D9a764e71ab43B942b275" rel="noopener"><code>0xA086…b275</code></a></td><td>YES</td><td><a href="https://etherscan.io/verifySig/339736" rel="noopener">etherscan.io/verifySig/339736</a><div class="sig">hash 0x36882b11a781df3f53401e4da19c04b8b51309f592c015d99b2cc3945955240c</div></td></tr>
+            <tr><td>A.P.</td><td><a href="https://etherscan.io/address/0x32cF8b4F29A8F211804857EcF8BF0847f0BC0fE9" rel="noopener"><code>0x32cF…0fE9</code></a></td><td>not yet voted</td><td>—</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <details>
+          <summary>Ballot texts (sign exactly one, unchanged)</summary>
+          <p><strong>YES</strong></p>
+          <pre class="vote-text">IFR Council vote EX-01
+Vote: YES
+I approve proposal EX-01: centralized exchanges receive no IFR incentives (no integration payments, no liquidity grants, no loans) from any project pool. Listings must be self-sustaining. A future incentive requires a new Council proposal.
+Context: transfer-fee exemption for verified exchange addresses remains as approved on 2026-08-26; each exemption follows the published address verification procedure and its own Safe proposal with the 48-hour timelock.</pre>
+          <p><strong>NO</strong></p>
+          <pre class="vote-text">IFR Council vote EX-01
+Vote: NO
+I reject proposal EX-01: centralized exchanges receive no IFR incentives (no integration payments, no liquidity grants, no loans) from any project pool. Listings must be self-sustaining. A future incentive requires a new Council proposal.
+Context: transfer-fee exemption for verified exchange addresses remains as approved on 2026-08-26; each exemption follows the published address verification procedure and its own Safe proposal with the 48-hour timelock.</pre>
+        </details>
       </div>
-
-      <!-- Offers Table -->
-      <h2 id="offers">Active Lending Offers</h2>
-      <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;">Browse available IFR lending offers. Borrow transactions require at least one active offer and a non-zero <code>ifrPriceWei</code> collateral price on LendingVault.</p>
-      <table class="offers-table" id="offers-table">
-        <thead>
-          <tr>
-            <th>Lender</th>
-            <th>Available IFR</th>
-            <th>Rate / Month</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="offers-body">
-          <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:24px;">Loading offers&hellip;</td></tr>
-        </tbody>
-      </table>
-
-      <!-- How It Works -->
-      <h2 id="how-it-works">How It Works</h2>
-      <div class="how-step">
-        <div class="how-num">1</div>
-        <div><strong>Lender creates offer</strong><br><span style="color:var(--muted);font-size:0.88rem;">Open the <a href="https://ifrunit.tech/wiki/lending-vault.html#lending-widget">guided Lender Flow</a>, connect wallet, choose amount, approve if needed, then create the offer. Offers are live; interest can accrue only if borrowing is activated and a borrower later repays.</span></div>
+      <div class="phase-card" id="ex-02">
+        <h3>EX-02 — Governance role of exchanges <span class="phase-badge badge-red">Open</span></h3>
+        <p>Option A: no governance role for exchanges. Option B: at most two disclosed non-voting advisers without Safe permissions.</p>
+        <p><strong>Rule:</strong> The option with 3 votes of eligible Safe signers is adopted. Opened 2026-10-03. Deadline: None, unless a deadline is approved by a separate Council vote.</p>
+        <p><strong>Tally:</strong> OPTION A: 0 · OPTION B: 0 · abstentions: 3 · eligible: 5</p>
+        <p class="vote-summary"><strong>Voted:</strong> nobody yet · <strong>Abstained:</strong> G.M., M.G., Y.K. · <strong>Still missing:</strong> A.M., A.P.</p>
+        <p style="color:var(--muted);font-size:0.85rem;">Open. Three eligible signers abstained; with two signers outstanding no option can reach 3 votes unless votes change. Until a decision, the status quo applies: exchanges have no governance role. The owner is checking whether the outstanding signers want to vote.</p>
+        <div class="table-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <table style="min-width:600px;">
+          <thead><tr><th>Signer</th><th>Wallet</th><th>Vote</th><th>Proof</th></tr></thead>
+          <tbody>
+            <tr><td>G.M.</td><td><a href="https://etherscan.io/address/0x6b36687b0cd4386fb14cf565B67D7862110Fed67" rel="noopener"><code>0x6b36…ed67</code></a></td><td>ABSTAIN</td><td><a href="https://etherscan.io/verifySig/339713" rel="noopener">etherscan.io/verifySig/339713</a><div class="sig">hash 0x59c0d113c9d265bf8c8c04a53e5249b2c3179f30b692bbcd184a455a76e096cc</div></td></tr>
+            <tr><td>M.G.</td><td><a href="https://etherscan.io/address/0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4" rel="noopener"><code>0x17F8…72d4</code></a></td><td>ABSTAIN</td><td><a href="https://etherscan.io/verifySig/339732" rel="noopener">etherscan.io/verifySig/339732</a><div class="sig">hash 0x59c0d113c9d265bf8c8c04a53e5249b2c3179f30b692bbcd184a455a76e096cc</div></td></tr>
+            <tr><td>A.M.</td><td><a href="https://etherscan.io/address/0x0C4893DcF730E0Ddc7D18CF9723932784Fb4ED74" rel="noopener"><code>0x0C48…ED74</code></a></td><td>not yet voted</td><td>—</td></tr>
+            <tr><td>Y.K.</td><td><a href="https://etherscan.io/address/0xA0860f872a9cAB34817D9a764e71ab43B942b275" rel="noopener"><code>0xA086…b275</code></a></td><td>ABSTAIN</td><td><a href="https://etherscan.io/verifySig/339734" rel="noopener">etherscan.io/verifySig/339734</a><div class="sig">hash 0x59c0d113c9d265bf8c8c04a53e5249b2c3179f30b692bbcd184a455a76e096cc</div></td></tr>
+            <tr><td>A.P.</td><td><a href="https://etherscan.io/address/0x32cF8b4F29A8F211804857EcF8BF0847f0BC0fE9" rel="noopener"><code>0x32cF…0fE9</code></a></td><td>not yet voted</td><td>—</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <details>
+          <summary>Ballot texts (sign exactly one, unchanged)</summary>
+          <p><strong>OPTION A</strong></p>
+          <pre class="vote-text">IFR Council vote EX-02
+Vote: OPTION A
+On proposal EX-02 (governance role of centralized exchanges) I vote for Option A: exchanges receive no governance role, no Council membership, no adviser seat and no Safe permissions.
+Option B would have allowed at most two disclosed non-voting advisers without Safe permissions.</pre>
+          <p><strong>OPTION B</strong></p>
+          <pre class="vote-text">IFR Council vote EX-02
+Vote: OPTION B
+On proposal EX-02 (governance role of centralized exchanges) I vote for Option B: at most two disclosed non-voting exchange advisers, without Council voting rights and without any Safe permissions.
+Option A would give exchanges no governance role at all.</pre>
+        </details>
       </div>
-      <div class="how-step">
-        <div class="how-num">2</div>
-        <div><strong>Future borrower path &mdash; currently disabled</strong><br><span style="color:var(--muted);font-size:0.88rem;">Borrower selection and collateral posting remain unavailable while <code>ifrPriceWei = 0</code>. Activation requires a separately audited price path and controls.</span></div>
-      </div>
-      <div class="how-step">
-        <div class="how-num">3</div>
-        <div><strong>Future repayment path &mdash; currently disabled</strong><br><span style="color:var(--muted);font-size:0.88rem;">IFR receipt, repayment and collateral return apply only if borrowing is activated in a future audited design. The V1 contract's configured interest split is 50% lender and 50% protocol.</span></div>
-      </div>
+      <!-- council-votes:end -->
 
-      <!-- Interest Rate Table -->
-      <h2 id="rates">Interest Rate Curve</h2>
-      <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;">Rates increase with utilization to ensure fair pricing and available liquidity.</p>
-      <table style="width:100%;font-size:0.88rem;margin-bottom:24px;">
-        <thead><tr><th style="text-align:left;padding:8px 12px;">Utilization</th><th style="text-align:right;padding:8px 12px;">Monthly Rate</th><th style="text-align:right;padding:8px 12px;">Effective Annual</th></tr></thead>
-        <tbody>
-          <tr><td style="padding:8px 12px;">0 &ndash; 25%</td><td style="text-align:right;padding:8px 12px;color:var(--green);">2%</td><td style="text-align:right;padding:8px 12px;color:var(--green);">~27%</td></tr>
-          <tr><td style="padding:8px 12px;">26 &ndash; 50%</td><td style="text-align:right;padding:8px 12px;color:var(--green);">3%</td><td style="text-align:right;padding:8px 12px;color:var(--green);">~43%</td></tr>
-          <tr><td style="padding:8px 12px;">51 &ndash; 75%</td><td style="text-align:right;padding:8px 12px;color:#8a5a00;">5%</td><td style="text-align:right;padding:8px 12px;color:#8a5a00;">~80%</td></tr>
-          <tr><td style="padding:8px 12px;">76 &ndash; 90%</td><td style="text-align:right;padding:8px 12px;color:#b3300b;">8%</td><td style="text-align:right;padding:8px 12px;color:#b3300b;">~152%</td></tr>
-          <tr><td style="padding:8px 12px;">91 &ndash; 99%</td><td style="text-align:right;padding:8px 12px;color:var(--accent);">15%</td><td style="text-align:right;padding:8px 12px;color:var(--accent);">~435%</td></tr>
-          <tr><td style="padding:8px 12px;">100%</td><td style="text-align:right;padding:8px 12px;color:#b91c1c;">25%</td><td style="text-align:right;padding:8px 12px;color:#b91c1c;">~1355%</td></tr>
-        </tbody>
-      </table>
-
-      <!-- Collateral & Safety -->
-      <h2 id="safety">Collateral &amp; Safety</h2>
-      <table style="width:100%;font-size:0.88rem;margin-bottom:24px;">
-        <thead><tr><th style="text-align:left;padding:8px 12px;">Threshold</th><th style="text-align:right;padding:8px 12px;">Ratio</th><th style="text-align:left;padding:8px 12px;">Action</th></tr></thead>
-        <tbody>
-          <tr><td style="padding:8px 12px;">Initial Collateral</td><td style="text-align:right;padding:8px 12px;font-weight:700;">200%</td><td style="padding:8px 12px;">Required to borrow</td></tr>
-          <tr><td style="padding:8px 12px;color:#8a5a00;">Margin Call</td><td style="text-align:right;padding:8px 12px;color:#8a5a00;font-weight:700;">&lt; 150%</td><td style="padding:8px 12px;">Warning &mdash; top up collateral</td></tr>
-          <tr><td style="padding:8px 12px;color:#b91c1c;">Liquidation</td><td style="text-align:right;padding:8px 12px;color:#b91c1c;font-weight:700;">&lt; 120%</td><td style="padding:8px 12px;">Externally callable &mdash; liquidator gets 5% bonus</td></tr>
-        </tbody>
-      </table>
-
-      <!-- Contract Addresses -->
-      <h2 id="contracts">Contract Addresses</h2>
-      <table style="width:100%;font-size:0.88rem;">
-        <tbody>
-          <tr><td style="padding:8px 12px;">LendingVault (Mainnet)</td><td style="padding:8px 12px;"><a href="https://etherscan.io/address/0x974305Ab0EC905172e697271C3d7d385194EB9DF" target="_blank" style="color:var(--accent);"><code>0x974305Ab0EC905172e697271C3d7d385194EB9DF</code></a></td></tr>
-          <tr><td style="padding:8px 12px;">IFR Token</td><td style="padding:8px 12px;"><a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" style="color:var(--accent);"><code>0x77e99917Eca8539c62F509ED1193ac36580A6e7B</code></a></td></tr>
-          <tr><td style="padding:8px 12px;">Owner</td><td style="padding:8px 12px;">Governance (TreasurySafe 3-of-5)</td></tr>
-        </tbody>
-      </table>
+      <p>Machine-readable record: <a href="https://ifrunit.tech/data/council-votes.json">council-votes.json</a>. Anyone can re-verify every signature with <code>ethers.recoverAddress(messageHash, signature)</code>.</p>
 
       <!-- Footer -->
       <footer class="wiki-footer">
-        Inferno (IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.1
+        Inferno (IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.0
       </footer>
 
     </main>
@@ -1024,128 +810,6 @@ document.addEventListener("visibilitychange",async function(){if(document.visibi
 (async function(){var ok=await IFRWallet.autoReconnect();if(ok)lpUpdateUI(await IFRState.load(IFRWallet.getAddress()))})();
 var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.addEventListener("mouseenter",function(){this.style.transform="scale(1.04)";this.style.boxShadow="0 4px 20px rgba(249,115,22,0.4)"});_wcBtn.addEventListener("mouseleave",function(){this.style.transform="";this.style.boxShadow="0 2px 12px rgba(249,115,22,0.25)"})}
 </script>
-
-<!-- Lending Market JS -->
-<script>
-(function() {
-  var RAILWAY = "https://copilot-api.ifrunit.tech";
-  var LV_ADDR = "0x974305Ab0EC905172e697271C3d7d385194EB9DF";
-  var IFR_DECIMALS = 9;
-  var RPC_URL = "https://ethereum-rpc.publicnode.com";
-  var LV_ABI = [
-    "function totalAvailable() view returns (uint256)",
-    "function totalLent() view returns (uint256)",
-    "function getInterestRate() view returns (uint256)",
-    "function getOfferCount() view returns (uint256)",
-    "function getLoanCount() view returns (uint256)",
-    "function ifrPriceWei() view returns (uint256)",
-    "function getOffer(uint256 offerId) view returns (tuple(address lender,uint256 availableIFR,uint256 lentIFR,bool active))"
-  ];
-
-  function fetchJSON(url) {
-    return fetch(url).then(function(r) { return r.json(); }).catch(function() { return null; });
-  }
-
-  function fmt(n) {
-    return Number(n).toLocaleString("en-US", { maximumFractionDigits: 0 });
-  }
-
-  function shortAddr(a) {
-    return a ? a.slice(0, 6) + "..." + a.slice(-4) : "";
-  }
-
-  function renderMarket(stats, offers) {
-    var avEl = document.getElementById("m-available");
-    var ltEl = document.getElementById("m-lent");
-    var rtEl = document.getElementById("m-rate");
-    var lnEl = document.getElementById("m-loans");
-    if (avEl) avEl.textContent = fmt(stats.totalAvailable || 0) + " IFR";
-    if (ltEl) ltEl.textContent = fmt(stats.totalLent || 0) + " IFR";
-    if (rtEl) rtEl.textContent = (stats.currentRate || 0) + "%";
-    if (lnEl) lnEl.textContent = stats.activeLoans || 0;
-
-    var tbody = document.getElementById("offers-body");
-    if (!tbody) return;
-
-    if (offers && offers.length > 0) {
-      tbody.innerHTML = offers.map(function(o) {
-        var actionLabel = stats.priceSet ? "Borrow \u2192" : "View";
-        var actionTitle = stats.priceSet ? "Open LendingVault borrower flow" : "Borrowing opens after ifrPriceWei is set";
-        return "<tr>" +
-          "<td style='font-family:monospace;font-size:0.82rem;'>" + shortAddr(o.lender) + "</td>" +
-          "<td>" + fmt(o.availableAmount) + " IFR</td>" +
-          "<td>" + (o.rate || stats.currentRate || 2) + "%</td>" +
-          "<td><a href='lending-vault.html#lending-widget' class='market-btn' title='" + actionTitle + "'>" + actionLabel + "</a></td>" +
-          "</tr>";
-      }).join("");
-      if (!stats.priceSet) {
-        tbody.innerHTML += "<tr><td colspan='4' style='color:#fbbf24;padding:12px;'>Borrow transactions are pending until Governance sets <code>ifrPriceWei</code>. Offers can still be viewed.</td></tr>";
-      }
-    } else {
-      tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;color:var(--muted);padding:24px;'>No offers yet. If you already approved IFR, return to LendingVault and click <strong>Create Offer</strong> to deposit IFR into the market.</td></tr>";
-    }
-  }
-
-  async function loadOnchainMarket() {
-    if (typeof ethers === "undefined") throw new Error("ethers.js unavailable");
-    var provider = new ethers.JsonRpcProvider(RPC_URL);
-    var vault = new ethers.Contract(LV_ADDR, LV_ABI, provider);
-    var values = await Promise.all([
-      vault.totalAvailable(),
-      vault.totalLent(),
-      vault.getInterestRate(),
-      vault.getOfferCount(),
-      vault.getLoanCount(),
-      vault.ifrPriceWei()
-    ]);
-    var offerCount = Number(values[3]);
-    var rate = Number(values[2]) / 100;
-    var stats = {
-      totalAvailable: Number(ethers.formatUnits(values[0], IFR_DECIMALS)),
-      totalLent: Number(ethers.formatUnits(values[1], IFR_DECIMALS)),
-      currentRate: rate,
-      activeLoans: Number(values[4]),
-      offerCount: offerCount,
-      priceSet: values[5] !== 0n
-    };
-    var offers = [];
-    for (var i = 0; i < Math.min(offerCount, 50); i++) {
-      try {
-        var o = await vault.getOffer(i);
-        if (o.active && o.availableIFR > 0n) {
-          offers.push({
-            id: i,
-            lender: o.lender,
-            availableAmount: Number(ethers.formatUnits(o.availableIFR, IFR_DECIMALS)),
-            lentAmount: Number(ethers.formatUnits(o.lentIFR, IFR_DECIMALS)),
-            rate: rate
-          });
-        }
-      } catch(e) {}
-    }
-    return { stats: stats, offers: offers };
-  }
-
-  async function loadMarket() {
-    try {
-      var live = await loadOnchainMarket();
-      renderMarket(live.stats, live.offers);
-      return;
-    } catch(e) {
-      console.warn("Direct LendingVault read failed, falling back to API:", e);
-    }
-
-    var data = await Promise.all([
-      fetchJSON(RAILWAY + "/api/lending/stats"),
-      fetchJSON(RAILWAY + "/api/lending/offers")
-    ]);
-    renderMarket(data[0] || { totalAvailable: 0, totalLent: 0, currentRate: 2, activeLoans: 0, priceSet: false }, data[1] || []);
-  }
-
-  loadMarket();
-  setInterval(loadMarket, 60000);
-})();
-</script>
 </body>
-<!-- cache-bust: 1775428212 -->
+<!-- cache-bust: 1775428215 -->
 </html>
