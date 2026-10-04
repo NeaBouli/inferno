@@ -7,8 +7,8 @@
  *  2. Every apex sitemap URL maps to a tracked page whose canonical URL equals
  *     the sitemap URL, and every tracked wiki page is listed.
  *  3. Every listed page carries at least one parseable schema.org JSON-LD block.
- *  4. lastmod is a valid, non-future date. With full git history, lastmod must
- *     not be older than the page's last commit (`--write` refreshes it).
+ *  4. Entries carry no <lastmod> (optional in the sitemap protocol). Per-PR lastmod
+ *     edits caused merge conflicts on every merge (T-226); `--write` strips any lastmod.
  *  5. llms.txt keeps the fee-exemption qualifier on the burn statement.
  */
 
@@ -27,19 +27,10 @@ const hosts = [
   { origin: "https://web3.ifrunit.tech", sitemap: "infra/web3/sitemap.xml", robots: "infra/web3/robots.txt", docroot: "docs/web3" },
 ];
 
-const shallow = git(["rev-parse", "--is-shallow-repository"]) === "true";
-const dirty = new Set(git(["diff", "--name-only", "HEAD"]).split("\n").filter(Boolean));
-const today = new Date().toISOString().slice(0, 10);
 
 function localFile(host, loc) {
   const relative = loc.slice(host.origin.length + 1);
   return path.posix.join(host.docroot, relative === "" || relative.endsWith("/") ? `${relative}index.html` : relative);
-}
-
-function lastCommitDate(file) {
-  if (dirty.has(file)) return today;
-  // UTC like `today`; %cs uses the committer offset and reads as "future" east of UTC after midnight.
-  return git(["log", "-1", "--date=format-local:%Y-%m-%d", "--format=%cd", "--", file]);
 }
 
 function canonicalOf(source) {
@@ -49,9 +40,14 @@ function canonicalOf(source) {
 let refreshed = 0;
 for (const host of hosts) {
   let sitemap = read(host.sitemap);
-  const entries = [...sitemap.matchAll(/<url><loc>([^<]+)<\/loc><lastmod>([^<]+)<\/lastmod>/g)];
+  if (writeMode && sitemap.includes("<lastmod>")) {
+    refreshed += (sitemap.match(/<lastmod>/g) || []).length;
+    sitemap = sitemap.replace(/<lastmod>[^<]*<\/lastmod>/g, "");
+  }
+  assert.ok(!sitemap.includes("<lastmod>"), `${host.sitemap}: entries must not carry <lastmod> (run npm run build:sitemap)`);
+  const entries = [...sitemap.matchAll(/<url><loc>([^<]+)<\/loc>/g)];
   assert.ok(entries.length > 0, `${host.sitemap} has no entries`);
-  assert.equal(entries.length, (sitemap.match(/<url>/g) || []).length, `${host.sitemap}: every entry needs loc + lastmod`);
+  assert.equal(entries.length, (sitemap.match(/<url>/g) || []).length, `${host.sitemap}: every entry needs exactly one loc`);
 
   const robots = read(host.robots);
   assert.deepEqual(
@@ -61,7 +57,7 @@ for (const host of hosts) {
   );
 
   const listed = new Set();
-  for (const [, loc, lastmod] of entries) {
+  for (const [, loc] of entries) {
     assert.ok(loc === `${host.origin}/` || loc.startsWith(`${host.origin}/`), `${host.sitemap}: cross-host URL ${loc}`);
     const file = localFile(host, loc);
     listed.add(file);
@@ -74,18 +70,6 @@ for (const host of hosts) {
     for (const [, body] of blocks) {
       const block = JSON.parse(body);
       assert.equal(block["@context"], "https://schema.org", `${file}: JSON-LD context`);
-    }
-
-    assert.match(lastmod, /^\d{4}-\d{2}-\d{2}$/, `${host.sitemap}: invalid lastmod for ${loc}`);
-    assert.ok(lastmod <= today, `${host.sitemap}: future lastmod for ${loc}`);
-    if (!shallow) {
-      const committed = lastCommitDate(file);
-      if (writeMode && committed !== lastmod) {
-        sitemap = sitemap.replace(`<loc>${loc}</loc><lastmod>${lastmod}</lastmod>`, `<loc>${loc}</loc><lastmod>${committed}</lastmod>`);
-        refreshed += 1;
-      } else if (!writeMode) {
-        assert.ok(lastmod >= committed, `${host.sitemap}: lastmod ${lastmod} for ${loc} is older than its last change ${committed}; run npm run build:sitemap`);
-      }
     }
   }
 
@@ -104,7 +88,4 @@ assert.ok(
 );
 assert.ok(!/Every transfer burns 2\.5%/.test(llms), "docs/llms.txt must not drop the fee-exemption qualifier");
 
-console.log(
-  `[sitemap-anchors] ${writeMode ? `WROTE (${refreshed} lastmod refreshed)` : "PASS"}` +
-    (shallow ? " - lastmod freshness skipped in shallow clone" : "")
-);
+console.log(`[sitemap-anchors] ${writeMode ? `WROTE (${refreshed} lastmod removed)` : "PASS"}`);
