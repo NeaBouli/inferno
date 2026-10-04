@@ -32,9 +32,11 @@ async function main() {
 
   console.log("CommitmentVault deployed:", cv.target);
   console.log("");
-  console.log("NEXT STEPS:");
-  console.log("1. Governance Proposal: setFeeExempt(", cv.target, ", true) — BEFORE users lock!");
-  console.log("2. Governance Proposal: setP0(value) — AFTER Bootstrap finalise()");
+  console.log("NOTE: the CV-01 repair vault is ALREADY deployed: CommitmentVault V2 0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F");
+  console.log("(block 26107296, Governance proposal #17 queued). This new deployment is NOT part of the CV-01 repair.");
+  console.log("scripts/commitment-vault-v2-proposal.cjs is pinned to that V2 and to proposal #17 and refuses this address;");
+  console.log("wiring a different vault needs its own reviewed proposal and Safe batch (docs/COMMITMENT_VAULT_V2_REPAIR.md).");
+  console.log("Do NOT call setP0 or setPriceOracle: price conditions are disabled in this vault.");
   console.log("");
 
   // Etherscan verification
