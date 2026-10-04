@@ -2043,6 +2043,9 @@ function bwUpdateUI(state) {
   var finalized = bsStatus && !statusUnavailable ? bsStatus.finalized === true : false;
   var myContrib = parseFloat((state && state.bootstrapContributionETH) ? state.bootstrapContributionETH : "0");
   var alreadyClaimed = state ? !!state.bootstrapClaimed : false;
+  // Wallet-specific reads failed (or no chain-pinned read provider): the contribution is unknown,
+  // so show the honest unavailable state instead of hiding the section or trusting the wallet.
+  var walletDataUnknown = !!(state && state.readError);
 
   // Stats immer updaten
   bwUpdateStats(bsStatus);
@@ -2053,7 +2056,7 @@ function bwUpdateUI(state) {
   document.getElementById("bw-not-active-section").style.display = (connected && bootstrapNotStarted) ? "" : "none";
   document.getElementById("bw-contribute-section").style.display = (connected && bootstrapActive) ? "" : "none";
   // Show claim section: contributed > 0 OR already claimed (so claimed state is visible)
-  document.getElementById("bw-claim-section").style.display = (connected && bootstrapEnded && (myContrib > 0 || alreadyClaimed)) ? "" : "none";
+  document.getElementById("bw-claim-section").style.display = (connected && bootstrapEnded && (myContrib > 0 || alreadyClaimed || walletDataUnknown)) ? "" : "none";
 
   if (connected && state) {
     // Meine Contribution (auch wenn bereits geclaimed \u2014 zeige historischen Betrag aus IFR-Balance)
@@ -2065,11 +2068,16 @@ function bwUpdateUI(state) {
       document.getElementById("bw-contribution-eth").textContent = myContrib.toFixed(4);
       document.getElementById("bw-contribution-ifr").textContent = myIFR;
       document.getElementById("bw-my-contribution").style.display = "";
+    } else if (walletDataUnknown) {
+      // Contribution could not be read from the chain-pinned provider: show placeholders, never zero.
+      document.getElementById("bw-contribution-eth").textContent = "\u2014";
+      document.getElementById("bw-contribution-ifr").textContent = "\u2014";
+      document.getElementById("bw-my-contribution").style.display = "";
     }
 
     // Claim/Refund Logic
-    if (bootstrapEnded && (myContrib > 0 || alreadyClaimed)) {
-      if (statusUnavailable) {
+    if (bootstrapEnded && (myContrib > 0 || alreadyClaimed || walletDataUnknown)) {
+      if (statusUnavailable || walletDataUnknown) {
         // CWA-48: unknown chain state must never enable a write. Show the
         // honest state and keep every write control hidden (fail closed).
         document.getElementById("bw-claim-title").textContent = "\u26A0\uFE0F Status unavailable";
