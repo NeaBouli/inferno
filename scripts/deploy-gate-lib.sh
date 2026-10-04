@@ -40,9 +40,12 @@ gate_check_tar() {
   [[ -z "$bad" ]] || gate_die "upload holds members other than regular files and directories: $bad"
 }
 
-# gate_tar_has <tarfile> <path>: true if <path> (or ./<path>) is a member.
+# gate_tar_has <tarfile> <path>: true if <path> (or ./<path>) is a member. The listing
+# is captured first: grep -q in a pipe can SIGPIPE tar, which fails under pipefail.
 gate_tar_has() {
-  tar -tf "$1" | grep -qx -e "$2" -e "./$2"
+  local members
+  members="$(tar -tf "$1")"
+  grep -qx -e "$2" -e "./$2" <<< "$members"
 }
 
 # gate_prepare <tarfile>: checks the upload and prints its SHA-256; the caller passes

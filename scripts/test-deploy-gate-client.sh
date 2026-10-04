@@ -125,8 +125,8 @@ run 0 env EXPECTED_SHA="$SHA" bash "$COMPOSE" points-backend plan
 POINTS_TSHA="$(sha256 "$GATE_DIR/service-plan.tar")"
 assert_log "$(gate_line "service-plan points-backend $SHA $POINTS_TSHA") stdin=$POINTS_TSHA"
 same_tree "$TMP/points.tar" "$GATE_DIR/service-plan.tar" || { echo "FAIL: service upload is not git archive $SHA:apps/points-backend" >&2; exit 1; }
-tar -tf "$GATE_DIR/service-plan.tar" | grep -qx Dockerfile || { echo "FAIL: Dockerfile not at the tar root" >&2; exit 1; }
-if tar -tf "$GATE_DIR/service-plan.tar" | grep -q -e node_modules/leak -e RELEASE_SHA; then echo "FAIL: upload holds local or generated files" >&2; exit 1; fi
+grep -qx Dockerfile <<< "$(tar -tf "$GATE_DIR/service-plan.tar")" || { echo "FAIL: Dockerfile not at the tar root" >&2; exit 1; }
+if grep -q -e node_modules/leak -e RELEASE_SHA <<< "$(tar -tf "$GATE_DIR/service-plan.tar")"; then echo "FAIL: upload holds local or generated files" >&2; exit 1; fi
 refute_log "curl "
 
 run 0 env EXPECTED_SHA="$SHA" bash "$COMPOSE" points-backend deploy
@@ -185,9 +185,9 @@ assert_out "unknown mode status"
 run 0 env EXPECTED_SHA="$SHA" bash "$WEB3" plan
 WEB3_TSHA="$(sha256 "$GATE_DIR/web3-plan.tar")"
 assert_log "$(gate_line "web3-plan $SHA $WEB3_TSHA") stdin=$WEB3_TSHA"
-tar -tf "$GATE_DIR/web3-plan.tar" | grep -qx './.nginx/web3-security-headers.conf' \
+grep -qx './.nginx/web3-security-headers.conf' <<< "$(tar -tf "$GATE_DIR/web3-plan.tar")" \
   || { echo "FAIL: headers file not at the web3 tar root" >&2; exit 1; }
-if tar -tf "$GATE_DIR/web3-plan.tar" | grep -q '/\._'; then echo "FAIL: AppleDouble members in the web3 upload" >&2; exit 1; fi
+if grep -q '/\._' <<< "$(tar -tf "$GATE_DIR/web3-plan.tar")"; then echo "FAIL: AppleDouble members in the web3 upload" >&2; exit 1; fi
 mkdir "$TMP/stage"
 node "$REPO/scripts/web3-release.cjs" stage "$SHA" "$TMP/stage" >/dev/null
 mkdir "$TMP/unpacked"; tar -C "$TMP/unpacked" -xf "$GATE_DIR/web3-plan.tar"
@@ -226,7 +226,7 @@ run 0 env EXPECTED_SHA="$SHA" bash "$BENEFITS" frontend
 BENEFITS_TSHA="$(sha256 "$GATE_DIR/benefits-deploy.tar")"
 assert_log "$(gate_line "benefits-deploy frontend $SHA $BENEFITS_TSHA allow-prune") stdin=$BENEFITS_TSHA"
 same_tree "$TMP/benefits.tar" "$GATE_DIR/benefits-deploy.tar" || { echo "FAIL: benefits upload is not git archive $SHA:apps/benefits-network" >&2; exit 1; }
-if tar -tf "$GATE_DIR/benefits-deploy.tar" | grep -q -e node_modules/leak -e '^\.env$'; then echo "FAIL: ignored local files in the benefits upload" >&2; exit 1; fi
+if grep -q -e node_modules/leak -e '^\.env$' <<< "$(tar -tf "$GATE_DIR/benefits-deploy.tar")"; then echo "FAIL: ignored local files in the benefits upload" >&2; exit 1; fi
 refute_log "direct ssh"
 
 run 0 env EXPECTED_SHA="$SHA" ALLOW_PRUNE=0 bash "$BENEFITS" all
