@@ -641,7 +641,7 @@
   }
   </script>
 <script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
-<script src="../assets/wallet-core.js"></script>
+<script src="../assets/wallet-core.js?v=20261004-read-provider"></script>
 <script src="../assets/ifr-state.js"></script>
 <script type="application/ld+json">
   {
@@ -1776,7 +1776,8 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
   // ── Market Data ──────────────────────────────────────
   async function loadMarketData() {
     try {
-      var provider = lvProvider || new ethers.JsonRpcProvider("https://ethereum-rpc.publicnode.com");
+      var provider = lvProvider || ((window.IFRWallet && typeof IFRWallet.getReadProvider === "function") ? IFRWallet.getReadProvider() : null);
+      if (!provider) throw new Error("chain-pinned read provider unavailable");
       var vault = new ethers.Contract(LV_ADDR, LV_ABI, provider);
       var values = await Promise.all([
         vault.totalAvailable(),
@@ -1940,7 +1941,8 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     var interest = (amount * rateBps * BigInt(months)) / 10000n;
     var totalRepay = amount + interest;
     try {
-      var provider = lvProvider || new ethers.JsonRpcProvider("https://ethereum-rpc.publicnode.com");
+      var provider = lvProvider || ((window.IFRWallet && typeof IFRWallet.getReadProvider === "function") ? IFRWallet.getReadProvider() : null);
+      if (!provider) throw new Error("chain-pinned read provider unavailable");
       var vault = new ethers.Contract(LV_ADDR, LV_ABI, provider);
       var collateral = await vault.getRequiredCollateral(amount);
       previewEl.innerHTML =
