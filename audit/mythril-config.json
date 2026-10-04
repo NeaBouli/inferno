@@ -38,6 +38,7 @@
     { "source": "contracts/partner/PartnerVault.sol", "contract": "PartnerVault" },
     { "source": "contracts/token/InfernoToken.sol", "contract": "InfernoToken" },
     { "source": "contracts/vault/CommitmentVault.sol", "contract": "CommitmentVault" },
+    { "source": "contracts/vault/PriceLockVault.sol", "contract": "PriceLockVault" },
     { "source": "contracts/vault/LendingVault.sol", "contract": "LendingVault" },
     { "source": "contracts/vesting/Vesting.sol", "contract": "Vesting" }
   ]
