@@ -1110,6 +1110,15 @@
               <td>Self-service MetaMask lock flow executed by contributor. Free IFR remains available for the next LendingVault offer step.</td>
               <td class="status-ok">&#x2705; Verified on-chain</td>
             </tr>
+            <tr>
+              <td>04.10.2026</td>
+              <td colspan="3"><strong>Governance:</strong> ProposalExecuted(#17) &mdash; <code>setFeeExempt(CommitmentVault V2, true)</code><br>
+                <span style="font-size:11px;color:var(--muted);">TX: <a href="https://etherscan.io/tx/0xbb53640ca8fd59513c8c772a0ceb633d63d7d9837768c28535bd67da6c4a835c" target="_blank">0xbb53640c&hellip;835c</a> &middot; Block 26121846</span>
+              </td>
+              <td>&mdash;</td>
+              <td>CommitmentVault V2 feeExempt = TRUE &mdash; V2 can accept time-only locks without the transfer fee. Proposals #18&ndash;#21 remain queued.</td>
+              <td class="status-ok">&#x2705; Done</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -1215,7 +1224,7 @@
             <tr>
               <td><strong>CommitmentVault V2</strong></td>
               <td class="address"><a href="https://etherscan.io/address/0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F" target="_blank">0x8efa...7c8F</a></td>
-              <td>CV-01 repair, deployed 02.10.2026, owner Governance, Etherscan verified. Accepts TIME_ONLY locks only; opens for new time locks after Governance proposal #17 (fee exemption) executes. Listed separately as pending wiring; not part of the 14 + 3 = 17 component count until then.</td>
+              <td>CV-01 repair, deployed 02.10.2026, owner Governance, Etherscan verified. Accepts TIME_ONLY locks only. Fee-exempt since Governance proposal #17 (executed 04.10.2026, block 26121846). Listed separately as pending wiring; not part of the 14 + 3 = 17 component count until the interface switch is released on the Web3 site.</td>
               <td>Pending wiring</td>
               <td>Smart contract &mdash; non-custodial time locks</td>
             </tr>

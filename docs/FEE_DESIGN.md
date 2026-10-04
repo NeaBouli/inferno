@@ -27,6 +27,7 @@ Not daily. Therefore 3.5% is bearable.
 | BuybackVault | Buyback logic without loss |
 | BurnReserve | Burn mechanism |
 | PartnerVault | Fee-exempt protocol vault; seller rewards remain separately governance-gated and inactive |
+| CommitmentVault V2 | CV-01 repair vault for time-only locks; exempt since Proposal #17 (executed 04.10.2026, block 26121846) |
 | IFR/WETH Pair | Uniswap V2 pair transfers without the token fee |
 
 All exempt addresses: transparent on-chain, changeable only via Governance.
