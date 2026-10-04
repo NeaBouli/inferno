@@ -38,7 +38,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-  <link rel="dns-prefetch" href="https://eth.llamarpc.com">
+  <link rel="dns-prefetch" href="https://ethereum-rpc.publicnode.com">
   <link rel="preconnect" href="https://copilot-api.ifrunit.tech">
   <link rel="icon" type="image/png" href="assets/ifr_icon_64.png">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -1330,7 +1330,7 @@
 <script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
 <link rel="stylesheet" href="/assets/liquidity-gauge.css?v=impact2">
 <script type="module" src="/assets/liquidity-gauge.mjs?v=impact2"></script>
-<script src="assets/wallet-core.js?v=20260708-readable-mobile-modal"></script>
+<script src="assets/wallet-core.js?v=20261004-read-provider"></script>
 <script src="assets/ifr-state.js"></script>
   <link rel="stylesheet" href="assets/redesign-skin.css">
   <link rel="stylesheet" href="assets/landing-header-template.css?v=20260708-1915">
@@ -3930,7 +3930,6 @@ if (isLocked) {
       failTransparencyMetric('vesting');
       return;
     }
-    var rpc = 'https://ethereum-rpc.publicnode.com';
     var tokenAddr = '0x77e99917Eca8539c62F509ED1193ac36580A6e7B';
     var cvAddr = '0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3';
     var lvAddr = '0x974305Ab0EC905172e697271C3d7d385194EB9DF';
@@ -3957,8 +3956,10 @@ if (isLocked) {
       'function ifrPriceWei() view returns (uint256)'
     ];
     try {
-      // Chain ID is pinned so an unreachable RPC fails the read instead of retrying network detection forever.
-      var provider = new ethers.JsonRpcProvider(rpc, 1, { staticNetwork: ethers.Network.from(1) });
+      // Reads go through wallet-core's chain-pinned provider: every endpoint must answer eth_chainId 0x1
+      // before it may serve data, so a wrong-chain or hijacked RPC yields the unavailable state (T-224).
+      var provider = (window.IFRWallet && typeof IFRWallet.getReadProvider === "function") ? IFRWallet.getReadProvider() : null;
+      if (!provider) throw new Error('chain-pinned read provider unavailable');
       var token = new ethers.Contract(tokenAddr, tokenAbi, provider);
       var cv = new ethers.Contract(cvAddr, cvAbi, provider);
       var lv = new ethers.Contract(lvAddr, lvAbi, provider);
