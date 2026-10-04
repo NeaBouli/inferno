@@ -40,6 +40,7 @@ on:
       - 'scripts/test-wiki-head-integrity.cjs'
       - 'scripts/test-wiki-jsonld.cjs'
       - 'scripts/test-surface-routing.cjs'
+      - 'scripts/test-wallet-core-rpc.cjs'
       - 'scripts/test-web3-headers.cjs'
       - 'scripts/check-web3-wallet-runtime.cjs'
       - 'scripts/deploy-web3-site.sh'
@@ -95,6 +96,7 @@ on:
       - '.github/workflows/ai-copilot.yml'
       - 'scripts/test-wiki-head-integrity.cjs'
       - 'scripts/test-surface-routing.cjs'
+      - 'scripts/test-wallet-core-rpc.cjs'
       - 'scripts/test-web3-headers.cjs'
       - 'scripts/check-web3-wallet-runtime.cjs'
       - 'scripts/deploy-web3-site.sh'
@@ -276,6 +278,9 @@ jobs:
 
       - name: Check public surface routing
         run: npm run test:surface-routing
+
+      - name: Check wallet-core read RPC fallback and chainId guard (T-212a)
+        run: npm run test:wallet-core-rpc
 
       - name: Check Web3 serving-layer security headers contract
         run: npm run test:web3-headers
