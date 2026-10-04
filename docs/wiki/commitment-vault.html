@@ -968,7 +968,7 @@
       <p>If you lose access to your wallet, nobody can recover the tokens: <code>unlock()</code> always pays the original wallet. Auto-Unlock only lets anyone trigger the release 30 days after a met condition (for example a passed unlock date); the tokens still arrive in that same wallet.</p>
 
       <h3 id="cv01-notice">Is CommitmentVault live?</h3>
-      <p><strong style="color:var(--green);">Yes.</strong> CommitmentVault V1 is deployed on Ethereum Mainnet and feeExempt is active. Its price check never returns a price, so PRICE_ONLY and TIME_AND_PRICE tranches can never unlock, while TIME_OR_PRICE tranches still unlock by their time condition (<a href="#cv01-notice">CV-01</a>). The self-service widget below therefore creates time-only locks; price-based locks are disabled.</p>
+      <p><strong style="color:var(--green);">Yes.</strong> CommitmentVault V1 is deployed on Ethereum Mainnet and feeExempt is active. Its price check never returns a price, so PRICE_ONLY and TIME_AND_PRICE tranches can never unlock, while TIME_OR_PRICE tranches still unlock by their time condition (<a href="#cv01-notice">CV-01</a>). The self-service widget below therefore creates time-only locks, and new time locks go to CommitmentVault V2 (<code>0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F</code>, time only) once its fee exemption is executed through Governance proposal #17. Until then new locks stay disabled; existing V1 tranches remain visible and unlock through V1. Price-based locks are disabled.</p>
 
       <!-- ============================================================
            Why CommitmentVault Is Critical After Bootstrap
@@ -1022,12 +1022,27 @@
         .cv-badge-locked{background:rgba(234,179,8,0.15);color:#eab308}
         .cv-badge-unlocked{background:rgba(34,197,94,0.15);color:#22c55e}
         .cv-status-msg{margin-top:12px;padding:12px;border-radius:8px;font-size:0.88rem}
+        .cv-v1-warning{background:#fdecea;border:1px solid rgba(153,27,27,0.4);border-left-width:4px;border-radius:12px;padding:18px 20px;margin:20px 0;color:#5f1414;overflow-wrap:anywhere}
+        .cv-v1-warning strong{display:block;font-size:1rem;margin-bottom:6px;color:#5f1414}
+        .cv-v1-warning p,.cv-v2-path p{margin:0;font-size:0.9rem;line-height:1.6}
+        .cv-v2-path{overflow-wrap:anywhere}
+        .cv-v2-path strong{display:block;font-size:1rem;margin-bottom:6px;color:var(--text)}
       </style>
+
+      <!-- V1 warning (CV-01): existing V1 tranches stay, new locks never go to V1 -->
+      <div class="cv-v1-warning" id="cv-v1-warning" role="note" data-v1-warning>
+        <strong>Do not create new CommitmentVault V1 locks.</strong>
+        <p>V1 stays deployed on Ethereum Mainnet and still accepts direct calls (for example from Etherscan or a script). A price-conditioned lock created there can never unlock: the IFR stay trapped permanently. This widget never sends new locks to V1. Existing V1 tranches stay listed below and unlock through V1.</p>
+      </div>
+      <div class="cv-widget cv-v2-path" id="cv-v2-path" data-v2-path>
+        <strong>New time locks: CommitmentVault V2 only</strong>
+        <p>V2 (<code>0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F</code>) accepts time-only locks. The lock button stays disabled until Governance proposal #17 is executed and the token reads feeExempt(V2) as true. No price lock is available: a separate price-lock vault is only a draft, not reviewed and not deployed.</p>
+      </div>
 
       <!-- Live Status Banner -->
       <div class="cv-widget" style="background:rgba(34,197,94,0.06);border-color:rgba(34,197,94,0.25);text-align:center;">
         <div style="font-size:0.78rem;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Live on Ethereum Mainnet</div>
-        <p style="color:var(--muted);font-size:0.88rem;margin:0;">CommitmentVault deployed on Mainnet. feeExempt active since 06.04.2026.<br>Connect your wallet now to check your IFR balance and plan your lock strategy.</p>
+        <p style="color:var(--muted);font-size:0.88rem;margin:0;">CommitmentVault V1 deployed on Mainnet; its feeExempt is active since 06.04.2026 (existing tranches only).<br>Connect your wallet to check your IFR balance and your existing tranches.</p>
         <p id="cv-price-disabled-banner" data-price-locks-disabled style="color:var(--text);font-size:0.88rem;margin:10px 0 0;">Price-based locks are disabled. CommitmentVault V1 cannot evaluate prices (see <a href="#cv01-notice">CV-01</a>). Time locks only; new time locks move to CommitmentVault V2 after its fee exemption is executed.</p>
       </div>
 
@@ -1086,7 +1101,7 @@
             <option value="100000">P0 &times; 1,000</option>
             <option value="500000">P0 &times; 5,000</option>
           </select>
-          <div class="cv-hint">P0 = 0.030 ETH / 100,000,000 IFR = 300,000,000 wei per IFR &mdash; set immutably by Proposal #16 on 09.06.2026. CommitmentVault: <code style="font-size:10px;">0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3</code></div>
+          <div class="cv-hint">P0 = 0.030 ETH / 100,000,000 IFR = 300,000,000 wei per IFR &mdash; set immutably by Proposal #16 on 09.06.2026. New locks: CommitmentVault V2 <code style="font-size:10px;">0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F</code>; existing tranches: V1 <code style="font-size:10px;">0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3</code></div>
         </div>
 
         <div class="cv-form-group" style="background:rgba(255,255,255,0.035);border:1px solid var(--border);border-radius:8px;padding:12px 14px;">
@@ -1104,6 +1119,7 @@
           <div id="cv-preview-content" style="margin-top:8px;">Configure above to see preview</div>
         </div>
 
+        <div class="cv-hint" id="cv-v2-gate" data-v2-gate>CommitmentVault V2 opens for new time locks once its fee exemption is executed (Governance proposal #17).</div>
         <button class="cv-btn" id="cv-lock-btn" disabled>Approve + Lock IFR</button>
         <div id="cv-lock-status" class="cv-hidden cv-status-msg"></div>
       </div>
@@ -1147,9 +1163,33 @@
 #ifr-panel { display:none; position:fixed; bottom:100px; right:12px; z-index:99998; width:min(400px, calc(100vw - 24px)); height:min(580px, calc(100vh - 120px)); border-radius:16px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,0.5); background:#1a1a1a; }
 @media(max-width:480px){ #ifr-panel { bottom:0; right:0; left:0; width:100vw; height:calc(100vh - 70px); border-radius:16px 16px 0 0; } #ifr-btn { bottom:12px; right:12px; width:52px; height:52px; } }
 #ifr-panel iframe { width:100%; height:100%; border:none; }
+#ifr-btn.task-clear { visibility:hidden; opacity:0; }
 </style>
 <button id="ifr-btn" onclick="var p=document.getElementById('ifr-panel');p.style.display=p.style.display==='block'?'none':'block';"><img src="../assets/CoPilot.jpg" alt="IFR Copilot"></button>
 <div id="ifr-panel"><iframe src="https://copilot-api.ifrunit.tech" allow="clipboard-write"></iframe></div>
+<script>
+// Hide the fixed Copilot launcher only while it would sit on the active lock task; it returns outside the task.
+(function() {
+  var launcher = document.getElementById('ifr-btn');
+  var panel = document.getElementById('ifr-panel');
+  if (!launcher || !panel || !window.requestAnimationFrame) return;
+  var queued = false;
+  function update() {
+    queued = false;
+    var z = launcher.getBoundingClientRect();
+    var covers = Array.prototype.some.call(document.querySelectorAll('#cv-v1-warning, #cv-v2-path, #cv-connect-section, #cv-config-section, #cv-dashboard-section'), function(el) {
+      var r = el.getBoundingClientRect();
+      return r.width > 0 && r.left < z.right && r.right > z.left && r.top < z.bottom && r.bottom > z.top;
+    });
+    launcher.classList.toggle('task-clear', covers && !(panel.style.display === 'block'));
+  }
+  function queue() { if (!queued) { queued = true; requestAnimationFrame(update); } }
+  window.addEventListener('scroll', queue, { passive: true });
+  window.addEventListener('resize', queue);
+  document.addEventListener('click', queue);
+  queue();
+})();
+</script>
 
 <script>
 async function lpConnect(){
@@ -1246,7 +1286,11 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
 <!-- CommitmentVault Widget Logic -->
 <script>
 (function() {
-  var CV_ADDR = "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3";
+  // V1 keeps existing tranches (view + unlock). New time locks go only to V2, and only once
+  // InfernoToken.feeExempt(V2) reads true (Governance proposal #17). No fallback to V1 locks.
+  var CV_V1_ADDR = "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3";
+  var CV_V2_ADDR = "0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F";
+  var CV_V2_CLOSED = "CommitmentVault V2 opens for new time locks once its fee exemption is executed (Governance proposal #17).";
   var IFR_TOKEN = "0x77e99917Eca8539c62F509ED1193ac36580A6e7B";
   var IFR_DECIMALS = 9;
   var MAINNET_CHAIN_ID = 1;
@@ -1269,10 +1313,12 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
   var IFR_ABI = [
     "function balanceOf(address) view returns (uint256)",
     "function allowance(address,address) view returns (uint256)",
-    "function approve(address,uint256) external returns (bool)"
+    "function approve(address,uint256) external returns (bool)",
+    "function feeExempt(address) view returns (bool)"
   ];
 
   var cvProvider = null;
+  var cvV2Open = false;
   var cvSigner = null;
   var cvAddress = null;
   var cvBalance = 0n;
@@ -1394,24 +1440,60 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     }
   }
 
+  async function readV2FeeExempt(provider) {
+    try {
+      var token = new ethers.Contract(IFR_TOKEN, IFR_ABI, provider);
+      return (await token.feeExempt(CV_V2_ADDR)) === true;
+    } catch(e) {
+      return false;
+    }
+  }
+
+  // Click-time gate: re-reads feeExempt(V2) immediately before an approval or each lock()
+  // and throws (fail closed) when it is false or unreadable, aborting the remaining sequence.
+  // Frontend checks cannot make the exemption atomic with the transaction (see runbook).
+  async function assertV2Open() {
+    cvV2Open = await readV2FeeExempt(cvProvider);
+    if (!cvV2Open) { renderV2Gate(); throw new Error(CV_V2_CLOSED); }
+  }
+
+  function renderV2Gate() {
+    var gate = el("cv-v2-gate");
+    if (gate) {
+      gate.textContent = cvV2Open
+        ? "New time locks go to CommitmentVault V2. Existing V1 tranches stay listed below and unlock through V1."
+        : CV_V2_CLOSED + " Existing V1 tranches stay listed below and unlock through V1.";
+    }
+    if (!cvV2Open && el("cv-lock-btn")) el("cv-lock-btn").disabled = true;
+  }
+
   async function loadCVState() {
     try {
       var token = new ethers.Contract(IFR_TOKEN, IFR_ABI, cvProvider);
-      var cv = new ethers.Contract(CV_ADDR, CV_ABI, cvProvider);
+      var cvV1 = new ethers.Contract(CV_V1_ADDR, CV_ABI, cvProvider);
+      var cvV2 = new ethers.Contract(CV_V2_ADDR, CV_ABI, cvProvider);
       var values = await Promise.all([
         token.balanceOf(cvAddress),
-        token.allowance(cvAddress, CV_ADDR),
-        cv.lockedBalance(cvAddress),
-        cv.getTrancheCount(cvAddress)
+        token.allowance(cvAddress, CV_V2_ADDR),
+        cvV1.lockedBalance(cvAddress),
+        cvV1.getTrancheCount(cvAddress),
+        cvV2.lockedBalance(cvAddress),
+        cvV2.getTrancheCount(cvAddress),
+        readV2FeeExempt(cvProvider)
       ]);
       cvBalance = values[0];
       cvAllowance = values[1];
-      cvTrancheCount = values[3];
+      // MAX_TRANCHES is enforced per vault; new locks go to V2 only, so V1 tranches do not count.
+      cvTrancheCount = values[5];
+      cvV2Open = values[6] === true;
       el("cv-balance").textContent = formatIFR(cvBalance, 3) + " IFR";
       el("cv-bal-hint").textContent = formatIFR(cvBalance, 3) + " IFR";
-      el("cv-locked").textContent = formatIFR(values[2], 3) + " IFR";
+      el("cv-locked").textContent = formatIFR(values[2] + values[4], 3) + " IFR";
+      renderV2Gate();
     } catch(e) {
       console.error("CV state:", e);
+      cvV2Open = false;
+      renderV2Gate();
       el("cv-balance").textContent = "Error";
       el("cv-bal-hint").textContent = "Error";
       setStatus("error", "Could not read CommitmentVault state. Please refresh and try again.");
@@ -1485,8 +1567,9 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       if (cType !== 1 && el("cv-unlock-date").value) html += "<strong>Unlock Date:</strong> " + el("cv-unlock-date").value + "<br>";
       if (cType >= 1) html += "<strong>Price Target:</strong> P0 &times; " + (parseInt(el("cv-multiplier").value, 10) / 100) + "<br>";
       html += "<br><span style='color:var(--muted);font-size:0.82rem;'>MetaMask will ask for approval first if needed, then one lock signature per tranche.</span>";
+      if (!cvV2Open) html += "<br><span style='color:var(--muted);font-size:0.82rem;'>" + CV_V2_CLOSED + "</span>";
       preview.innerHTML = html;
-      el("cv-lock-btn").disabled = false;
+      el("cv-lock-btn").disabled = !cvV2Open;
     } catch(e) {
       preview.innerHTML = e.message;
       el("cv-lock-btn").disabled = true;
@@ -1511,35 +1594,43 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     updatePreview();
   });
 
+  async function readTranchesOf(addr, vaultKey) {
+    var cv = new ethers.Contract(addr, CV_ABI, cvProvider);
+    var tranches = await cv.getTranches(cvAddress);
+    var checks = await Promise.all(tranches.map(function(t, i) {
+      if (t.unlocked) return Promise.resolve(true);
+      return cv.isConditionMet(cvAddress, i).catch(function() { return false; });
+    }));
+    return tranches.map(function(t, i) { return { vault: vaultKey, id: i, t: t, met: checks[i] }; });
+  }
+
   async function loadTranches() {
     var list = el("cv-tranches-list");
     if (!cvProvider || !cvAddress) return;
     try {
       list.innerHTML = "Loading tranches...";
-      var cv = new ethers.Contract(CV_ADDR, CV_ABI, cvProvider);
-      var tranches = await cv.getTranches(cvAddress);
-      if (!tranches.length) {
+      var lists = await Promise.all([readTranchesOf(CV_V2_ADDR, "v2"), readTranchesOf(CV_V1_ADDR, "v1")]);
+      var items = lists[0].concat(lists[1]);
+      if (!items.length) {
         list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--muted);">No CommitmentVault tranches yet.</div>';
         return;
       }
-      var conditionChecks = await Promise.all(tranches.map(function(t, i) {
-        if (t.unlocked) return Promise.resolve(true);
-        return cv.isConditionMet(cvAddress, i).catch(function() { return false; });
-      }));
-      list.innerHTML = tranches.map(function(t, i) {
+      list.innerHTML = items.map(function(item) {
+        var t = item.t;
         var unlockDate = t.unlockTime && t.unlockTime !== 0n
           ? new Date(Number(t.unlockTime) * 1000).toISOString().slice(0, 10)
           : "Price based";
         var conditionType = Number(t.cType || 0);
         var multiplier = Number(t.p0Multiplier || 0);
-        var status = t.unlocked ? "Unlocked" : (conditionChecks[i] ? "Unlock ready" : "Locked");
+        var status = t.unlocked ? "Unlocked" : (item.met ? "Unlock ready" : "Locked");
         var badgeClass = t.unlocked ? "cv-badge-unlocked" : "cv-badge-locked";
-        var unlockBtn = (!t.unlocked && conditionChecks[i])
-          ? '<button type="button" class="cv-btn" data-unlock-tranche="' + i + '" style="padding:7px 12px;font-size:0.78rem;margin-top:10px;">Unlock</button>'
+        var vaultLabel = item.vault === "v2" ? "V2" : "V1";
+        var unlockBtn = (!t.unlocked && item.met)
+          ? '<button type="button" class="cv-btn" data-unlock-vault="' + item.vault + '" data-unlock-tranche="' + item.id + '" style="padding:7px 12px;font-size:0.78rem;margin-top:10px;">Unlock</button>'
           : "";
         return '<div class="cv-tranche-card">' +
           '<div style="display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap;">' +
-          '<div><strong>Tranche #' + i + '</strong><br><span style="color:var(--muted);">' + formatIFR(t.amount, 6) + ' IFR · ' + COND_NAMES[conditionType] + '</span></div>' +
+          '<div><strong>' + vaultLabel + ' · Tranche #' + item.id + '</strong><br><span style="color:var(--muted);">' + formatIFR(t.amount, 6) + ' IFR · ' + COND_NAMES[conditionType] + '</span></div>' +
           '<span class="cv-badge ' + badgeClass + '">' + status + '</span>' +
           '</div>' +
           '<div style="margin-top:8px;color:var(--muted);">Unlock date: ' + unlockDate + (multiplier > 0 ? ' · P0 x ' + (multiplier / 100) : '') + '</div>' +
@@ -1556,10 +1647,12 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     var button = event.target.closest("[data-unlock-tranche]");
     if (!button || !cvSigner || !cvAddress) return;
     var trancheId = Number(button.getAttribute("data-unlock-tranche"));
+    var vaultKey = button.getAttribute("data-unlock-vault");
+    if (vaultKey !== "v1" && vaultKey !== "v2") { setStatus("error", "Unknown vault for this tranche."); return; }
     try {
       button.disabled = true;
       button.textContent = "Confirm in wallet...";
-      var cv = new ethers.Contract(CV_ADDR, CV_ABI, cvSigner);
+      var cv = new ethers.Contract(vaultKey === "v2" ? CV_V2_ADDR : CV_V1_ADDR, CV_ABI, cvSigner);
       var tx = await cv.unlock(cvAddress, trancheId);
       setStatus("info", "Unlock submitted: " + explorerTx(tx.hash) + "<br>Waiting for confirmation...");
       await tx.wait();
@@ -1592,12 +1685,15 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
 
     lockBtn.disabled = true;
     try {
+      // Re-check the on-chain gate right before any approval or lock (fail closed).
+      await assertV2Open();
       var token = new ethers.Contract(IFR_TOKEN, IFR_ABI, cvSigner);
-      var cv = new ethers.Contract(CV_ADDR, CV_ABI, cvSigner);
-      var currentAllowance = await token.allowance(cvAddress, CV_ADDR);
+      var cv = new ethers.Contract(CV_V2_ADDR, CV_ABI, cvSigner);
+      var currentAllowance = await token.allowance(cvAddress, CV_V2_ADDR);
       if (currentAllowance < plan.totalAmount) {
         setStatus("info", "Step 1 of " + (plan.splitCount + 1) + ": confirm IFR approval in your wallet.");
-        var approveTx = await token.approve(CV_ADDR, plan.totalAmount);
+        await assertV2Open();
+        var approveTx = await token.approve(CV_V2_ADDR, plan.totalAmount);
         setStatus("info", "Approval submitted: " + explorerTx(approveTx.hash) + "<br>Waiting for confirmation...");
         await approveTx.wait();
       }
@@ -1605,6 +1701,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       for (var i = 0; i < plan.amounts.length; i++) {
         setStatus("info", "Lock tranche " + (i + 1) + " of " + plan.amounts.length + ": confirm in your wallet.");
         if (plan.cType !== 0 || plan.p0Multiplier !== 0) throw new Error("Price-based locks are disabled. CommitmentVault V1 cannot evaluate prices (see CV-01). Time locks only; new time locks move to CommitmentVault V2 after its fee exemption is executed.");
+        await assertV2Open();
         var lockTx = await cv.lock(plan.amounts[i], 0, plan.unlockTime, 0);
         setStatus("info", "Lock submitted: " + explorerTx(lockTx.hash) + "<br>Waiting for confirmation...");
         await lockTx.wait();
@@ -1619,7 +1716,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       if (e.code === 4001 || e.code === "ACTION_REJECTED") setStatus("warn", "Transaction was cancelled in wallet.");
       else setStatus("error", e.reason || e.message || "Lock transaction failed.");
     } finally {
-      lockBtn.disabled = false;
+      lockBtn.disabled = !cvV2Open;
     }
   });
 
