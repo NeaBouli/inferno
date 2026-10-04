@@ -813,7 +813,9 @@ the approved operation exactly. Proposal #21
    — Daten: RPC URL (`MAINNET_RPC_URL` oder public fallback) → verified
    `lane3-poolfee-step2-execute.json` oder refusal ohne Datei.
 2. `buildVerifiedExecute` → `verifyQueuedProposal(call)` → `rpcCaller(url)`
-   (einmaliger `eth_chainId`-Check auf 1) → eth_call
+   (einmaliger `eth_chainId`-Check auf 1;
+   jeder Request mit `AbortSignal.timeout`, nur HTTP 2xx + JSON-RPC-Envelope
+   `jsonrpc`/`id`/hex `result`, generische Fehler) → eth_call
    `Governance.getProposal(21)` — Daten: `(target, data, eta, executed,
    cancelled)` gegen die gepinnten Konstanten `QUEUED`/`QUEUED_ETA`/
    `POOL_FEE_INNER`; jede Abweichung, unreachable RPC oder wrong chain wirft.
@@ -824,8 +826,8 @@ the approved operation exactly. Proposal #21
    `poolFeeReceiver()` = BuybackController, 1%-Fee fließt an den Controller,
    FeeRouterV1 wächst nicht, `withdrawIFR` durch Governance; Negativ: Read
    mit `blockTag` 26108024 (pre-queue) → refusal.
-5. Fixture-Hop: CLI `--fixture <id>` → `build(id)` (kein Chain-Read,
-   "do not sign") ← `scripts/test-pool-fee-receiver-proposal.cjs`.
+5. Fixture-Hop (nur Library, kein CLI): `build(id)` (kein Chain-Read,
+   schreibt nie Dateien) ← `scripts/test-pool-fee-receiver-proposal.cjs`.
 
 ### 13.3 Module
 
@@ -840,7 +842,7 @@ the approved operation exactly. Proposal #21
 
 - Der Generator liest nur; Signieren/Executen bleibt beim Safe (kein Key hier).
 - `verifyQueuedProposal` ist die einzige Quelle der execute-Bytes im
-  `--execute`-Modus; `--fixture` ist explizit offline und für Tests.
+  `--execute`-Modus; die CLI kennt nur `--execute` (T-242a: `--fixture` entfernt).
 - CI (contracts workflow) läuft nur den Unit-Test; der Fork-Test braucht
   einen Archive-RPC und läuft manuell.
 
