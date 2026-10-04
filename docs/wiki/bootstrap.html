@@ -636,7 +636,7 @@
     .bw-tx-error   { background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; }
   </style>
   <script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
-  <script src="../assets/wallet-core.js"></script>
+  <script src="../assets/wallet-core.js?v=20261004-read-provider"></script>
   <script src="../assets/ifr-state.js"></script>
   <link rel="icon" type="image/png" href="../assets/ifr_icon_64.png">
   <meta property="og:locale" content="en_US">
@@ -1664,7 +1664,8 @@ var ConsensusModule = {
     var myContrib = cache ? parseFloat(cache.bootstrapContributionETH || '0') : 0;
     if (myContrib <= 0 && typeof ethers !== 'undefined') {
       try {
-        var rpc = new ethers.JsonRpcProvider('https://ethereum-rpc.publicnode.com');
+        var rpc = (window.IFRWallet && typeof IFRWallet.getReadProvider === "function") ? IFRWallet.getReadProvider() : null;
+        if (!rpc) throw new Error('chain-pinned read provider unavailable');
         var vault = new ethers.Contract('0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141',
           ['function contributions(address) view returns (uint256)'], rpc);
         var contrib = await vault.contributions(addr);
@@ -1822,7 +1823,8 @@ var ConsensusModule = {
     // Then fetch totalETH from on-chain and re-render with full data
     if (typeof ethers !== 'undefined') {
       try {
-        var rpc = new ethers.JsonRpcProvider('https://ethereum-rpc.publicnode.com');
+        var rpc = (window.IFRWallet && typeof IFRWallet.getReadProvider === "function") ? IFRWallet.getReadProvider() : null;
+        if (!rpc) throw new Error('chain-pinned read provider unavailable');
         var vault = new ethers.Contract('0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141',
           ['function totalETHRaised() view returns (uint256)'], rpc);
         vault.totalETHRaised().then(function(total) {
@@ -2250,11 +2252,11 @@ async function bwRefund() {
 <script>
 (function(){
   var VAULT="0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141";
-  var RPC="https://ethereum-rpc.publicnode.com";
   function upd(id,v){var e=document.getElementById(id);if(e)e.textContent=v}
   async function go(){
     try{
-      var p=new ethers.JsonRpcProvider(RPC);
+      var p=(window.IFRWallet && typeof IFRWallet.getReadProvider === "function") ? IFRWallet.getReadProvider() : null;
+      if(!p)throw new Error("chain-pinned read provider unavailable");
       var c=new ethers.Contract(VAULT,["function getBootstrapStatus() view returns (bool,bool,uint256,uint256,uint256)"],p);
       var r=await c.getBootstrapStatus();
       var eth=r[2],cnt=r[4];
