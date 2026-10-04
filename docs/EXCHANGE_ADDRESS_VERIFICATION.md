@@ -31,6 +31,11 @@ executed.
    ```
 
    The signer is recovered independently (`ecrecover`) and must equal the address.
+
+   This signature route proves control of externally owned accounts (EOAs) only. A smart-contract
+   address (for example a multisig or ERC-1271 contract wallet) cannot be verified by EOA signature
+   recovery and must never be recorded as verified this way. Control of such an address requires a
+   separate supported proof; until one is defined and completed, the address does not pass this step.
 4. **Test transfer.** Each address sends a small IFR amount to an address named by the project and
    receives a small amount back. Both transactions are recorded.
 5. **Public record.** Exchange name, addresses, signature links, test transactions and date are added to
