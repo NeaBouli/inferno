@@ -81,15 +81,21 @@ ever passed.
 | `deploy-compose-service.sh <svc> status` / `health` / `logs [n]` / `backups` | `status` / `health <svc>` / `logs <svc> [n]` / `backups <svc>` |
 | `deploy-web3-site.sh plan` / `deploy` | `web3-plan` / `web3-deploy <sha> <tar-sha256> [delete]` with the staged docroot on stdin (`.nginx/web3-security-headers.conf` at its root; `DELETE=1` adds `delete`) |
 | `deploy-web3-site.sh rollback <stamp>` / `status` / `health` / `backups` | `web3-rollback <stamp>` / `status` / `health web3-site` / `backups web3-site` |
-| `deploy-benefits-network.sh frontend` / `backend` / `all` | `benefits-deploy <mode> <sha> <tar-sha256> [allow-prune]` with `git archive <sha>:apps/benefits-network` on stdin (`allow-prune` only with explicit `ALLOW_PRUNE=1`; default no prune) |
+| `deploy-benefits-network.sh frontend` / `backend` / `all` | `benefits-deploy <mode> <sha> <tar-sha256>` with `git archive <sha>:apps/benefits-network` on stdin; gate mode never prunes (the Docker daemon is shared) and refuses a set `ALLOW_PRUNE` |
 | `deploy-benefits-network.sh status` / `capacity` | `benefits-status` |
 | `deploy-benefits-network.sh env-vault-v2 <address>` | `env-set .env.benefits COMMITMENT_VAULT_V2_ADDRESS <address>` (the only env key the host accepts) |
 
 Unchanged on this side: `EXPECTED_SHA` must be a full commit of a clean checkout at that commit,
 the web3 header and wallet-runtime tests run before a deploy, and `verify` is public HTTP only.
-The tool itself takes the backup, syncs, builds, waits for health, runs its public checks and
-rolls back on failure; it prints the backup stamp (`YYYYMMDDTHHMMSSZ`), which `rollback` takes
-(a full backup path ending in the stamp also works). `backups` lists the available stamps.
+The client refuses before sourcing `scripts/deploy-gate-lib.sh` if that helper or the calling
+script has local changes.
+
+Server-side behaviour (backup, health wait, public checks, automatic restore on failure) is
+defined by the accepted inferno-deploy v2 tool, not by this client, and may differ per service.
+Until the installed tool's failure behaviour is accepted per service, treat automatic restore as
+unverified and use `rollback <stamp>` explicitly; the tool prints the backup stamp
+(`YYYYMMDDTHHMMSSZ`), and `backups` lists the available stamps. Gate mode stays unused until the
+v2 installation and its authorization/restore behaviour are accepted.
 
 ## Host assumptions (read-only, 2026-09-30)
 

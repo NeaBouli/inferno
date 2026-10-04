@@ -173,6 +173,8 @@ release() { # every step returns non-zero on failure; caller rolls back
 case "${DEPLOY_MODE:-}" in
   ''|ssh) ;;
   gate)
+    # Never source a locally modified helper.
+    [[ -z "$(git -C "$ROOT" status --porcelain -- scripts/deploy-gate-lib.sh scripts/deploy-compose-service.sh)" ]] || die "working tree is dirty (scripts/deploy-gate-lib.sh or this script); release only from a clean checkout"
     # shellcheck source=scripts/deploy-gate-lib.sh
     . "$ROOT/scripts/deploy-gate-lib.sh"
     gate_release_tar() {

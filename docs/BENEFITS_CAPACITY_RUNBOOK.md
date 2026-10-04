@@ -76,8 +76,8 @@ before safe pruning recovered space. Treat deploys below `4 GB` free as blocked
 unless an operator explicitly accepts the risk for a one-off run.
 
 With `DEPLOY_MODE=gate` the deploy modes run through the scoped deploy gate (inferno-deploy
-v2), which applies the same floor, no prune by default (`allow-prune` only with explicit `ALLOW_PRUNE=1`) and
-single-backend asserts on the host. See [gate mode](COMPOSE_SERVICE_RELEASE.md#gate-mode).
+v2), which applies the same floor and single-backend asserts on the host. Gate mode never
+prunes (the Docker daemon is shared with other projects) and refuses a set `ALLOW_PRUNE`. See [gate mode](COMPOSE_SERVICE_RELEASE.md#gate-mode).
 
 ## Current Largest Consumers
 

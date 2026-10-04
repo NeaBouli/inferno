@@ -40,7 +40,7 @@ done
 # DEPLOY_MODE=gate: the same release through the scoped host gate (inferno-deploy v2).
 # The upload is git archive <EXPECTED_SHA>:apps/benefits-network, so ignored or edited
 # local files cannot ship; the tool on the host does the env-contract check, the
-# capacity floor (safe prune only with allow-prune), the single-backend asserts, the
+# capacity floor (refuse below it; gate mode never prunes the shared Docker daemon), the single-backend asserts, the
 # sync and the rebuild. No secret is ever sent; env-set is whitelisted on the host
 # for the public COMMITMENT_VAULT_V2_ADDRESS only.
 case "${DEPLOY_MODE:-}" in
@@ -51,6 +51,15 @@ case "${DEPLOY_MODE:-}" in
     fi
     ;;
   gate)
+    if [[ -n "${ALLOW_PRUNE:-}" && "${ALLOW_PRUNE}" != "0" ]]; then
+      echo "Refusing: gate mode never prunes (the Docker daemon is shared with other projects); unset ALLOW_PRUNE." >&2
+      exit 64
+    fi
+    # Never source a locally modified helper.
+    if [[ -n "$(git -C "$LOCAL_ROOT" status --porcelain -- scripts/deploy-gate-lib.sh scripts/deploy-benefits-network.sh)" ]]; then
+      echo "Refusing: working tree is dirty (scripts/deploy-gate-lib.sh or this script); release only from a clean checkout." >&2
+      exit 65
+    fi
     # shellcheck source=scripts/deploy-gate-lib.sh
     . "$LOCAL_ROOT/scripts/deploy-gate-lib.sh"
     case "$MODE" in
@@ -70,18 +79,16 @@ case "${DEPLOY_MODE:-}" in
           echo "Refusing deploy: HEAD is not $EXPECTED_SHA." >&2
           exit 65
         fi
-        if [[ -n "$(git -C "$LOCAL_ROOT" status --porcelain -- apps/benefits-network scripts/deploy-benefits-network.sh)" ]]; then
-          echo "Refusing deploy: apps/benefits-network has uncommitted or untracked changes." >&2
+        # Whole-checkout guard (like Compose/Web3): covers the sourced gate helper too.
+        if [[ -n "$(git -C "$LOCAL_ROOT" status --porcelain)" ]]; then
+          echo "Refusing deploy: working tree is dirty (incl. scripts/deploy-gate-lib.sh); release only from a clean checkout." >&2
           exit 65
         fi
         STAGE="$(mktemp -d)"
         trap 'rm -r "$STAGE"' EXIT
         git -C "$LOCAL_ROOT" archive --format=tar "$EXPECTED_SHA:apps/benefits-network" > "$STAGE/upload.tar"
         TAR_SHA="$(gate_prepare "$STAGE/upload.tar")"
-        PRUNE=()
-        # Gate mode never prunes unless explicitly requested (host-wide prune is not allowed by default).
-        if [[ "${ALLOW_PRUNE:-0}" == "1" ]]; then PRUNE=(allow-prune); fi
-        gate benefits-deploy "$MODE" "$EXPECTED_SHA" "$TAR_SHA" ${PRUNE[@]+"${PRUNE[@]}"} < "$STAGE/upload.tar"
+        gate benefits-deploy "$MODE" "$EXPECTED_SHA" "$TAR_SHA" < "$STAGE/upload.tar"
         ;;
       env-vault-v2)
         if [[ ! "${2:-}" =~ ^0x[0-9a-fA-F]{40}$ ]]; then

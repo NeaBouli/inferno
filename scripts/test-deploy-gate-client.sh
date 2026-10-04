@@ -230,9 +230,14 @@ same_tree "$TMP/benefits.tar" "$GATE_DIR/benefits-deploy.tar" || { echo "FAIL: b
 if grep -q -e node_modules/leak -e '^\.env$' <<< "$(tar -tf "$GATE_DIR/benefits-deploy.tar")"; then echo "FAIL: ignored local files in the benefits upload" >&2; exit 1; fi
 refute_log "direct ssh"
 
-run 0 env EXPECTED_SHA="$SHA" ALLOW_PRUNE=1 bash "$BENEFITS" all
+run 0 env EXPECTED_SHA="$SHA" bash "$BENEFITS" all
 BENEFITS_TSHA="$(sha256 "$GATE_DIR/benefits-deploy.tar")"
-assert_log "args=benefits-deploy all $SHA $BENEFITS_TSHA allow-prune stdin=$BENEFITS_TSHA"
+assert_log "args=benefits-deploy all $SHA $BENEFITS_TSHA stdin=$BENEFITS_TSHA"
+refute_log "allow-prune"
+
+# Re-enabling prune in gate mode is refused before any gate call.
+run 64 env EXPECTED_SHA="$SHA" ALLOW_PRUNE=1 bash "$BENEFITS" all
+refute_log "args="
 
 run 64 bash "$BENEFITS" backend
 refute_log "gate "
@@ -241,6 +246,17 @@ run 65 env EXPECTED_SHA="$SHA" bash "$BENEFITS" backend
 assert_out "HEAD is not $SHA"
 refute_log "gate "
 git -C "$REPO" reset -q --hard "$SHA"
+
+# A modified (dirty) gate helper refuses before any gate call.
+echo "# local edit" >> "$REPO/scripts/deploy-gate-lib.sh"
+run 65 env EXPECTED_SHA="$SHA" bash "$BENEFITS" frontend
+assert_out "working tree is dirty"
+refute_log "gate "
+run 1 bash "$COMPOSE" points-backend status; assert_out "working tree is dirty"
+refute_log "gate "
+run 1 bash "$WEB3" status; assert_out "working tree is dirty"
+refute_log "gate "
+git -C "$REPO" checkout -q -- scripts/deploy-gate-lib.sh
 
 run 0 bash "$BENEFITS" status;   assert_log "$(gate_line benefits-status) stdin=-"
 run 0 bash "$BENEFITS" capacity; assert_log "args=benefits-status stdin=-"

@@ -100,6 +100,8 @@ verify_public() {
 case "${DEPLOY_MODE:-}" in
   ''|ssh) ;;
   gate)
+    # Never source a locally modified helper.
+    [[ -z "$(git -C "$ROOT" status --porcelain -- scripts/deploy-gate-lib.sh scripts/deploy-web3-site.sh)" ]] || die "working tree is dirty (scripts/deploy-gate-lib.sh or this script); release only from a clean checkout"
     # shellcheck source=scripts/deploy-gate-lib.sh
     . "$ROOT/scripts/deploy-gate-lib.sh"
     GATE_DELETE=()
