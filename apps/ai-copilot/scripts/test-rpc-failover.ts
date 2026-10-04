@@ -7,10 +7,13 @@ import type { AddressInfo } from "node:net";
 import { createRpcProvider, ethCall, rpcEndpoints, rpcHealth, PUBLIC_MAINNET_RPCS } from "../server/rpc.js";
 
 const SUPPLY = "0x" + (996687518329891940n * 1n).toString(16).padStart(64, "0");
+const WRONG_CHAIN_SUPPLY = "0x" + (123n * 10n ** 27n).toString(16).padStart(64, "0");
 type Mode = "ok" | "http500" | "rpcError" | "hang";
 
-function mockRpc(mode: Mode): Promise<{ url: string; calls: () => number; close: () => Promise<void> }> {
+/** chainId: the eth_chainId answer; "error" answers eth_chainId with a JSON-RPC error. */
+function mockRpc(mode: Mode, chainId = "0x1"): Promise<{ url: string; calls: () => number; methods: string[]; close: () => Promise<void> }> {
   let calls = 0;
+  const methods: string[] = [];
   const server = http.createServer((req, res) => {
     let body = "";
     req.on("data", (chunk) => (body += chunk));
@@ -24,10 +27,15 @@ function mockRpc(mode: Mode): Promise<{ url: string; calls: () => number; close:
       const payload = JSON.parse(body);
       const requests = Array.isArray(payload) ? payload : [payload];
       const answers = requests.map((r: { id: number; method: string }) => {
+        methods.push(r.method);
         if (mode === "rpcError") return { jsonrpc: "2.0", id: r.id, error: { code: -32005, message: "rate limited" } };
-        if (r.method === "eth_chainId") return { jsonrpc: "2.0", id: r.id, result: "0x1" };
+        if (r.method === "eth_chainId") {
+          return chainId === "error"
+            ? { jsonrpc: "2.0", id: r.id, error: { code: -32603, message: "internal error" } }
+            : { jsonrpc: "2.0", id: r.id, result: chainId };
+        }
         if (r.method === "eth_blockNumber") return { jsonrpc: "2.0", id: r.id, result: "0x18e5d89" };
-        if (r.method === "eth_call") return { jsonrpc: "2.0", id: r.id, result: SUPPLY };
+        if (r.method === "eth_call") return { jsonrpc: "2.0", id: r.id, result: chainId === "0x1" ? SUPPLY : WRONG_CHAIN_SUPPLY };
         return { jsonrpc: "2.0", id: r.id, error: { code: -32601, message: "method not found" } };
       });
       res.writeHead(200, { "Content-Type": "application/json" }).end(JSON.stringify(Array.isArray(payload) ? answers : answers[0]));
@@ -39,6 +47,7 @@ function mockRpc(mode: Mode): Promise<{ url: string; calls: () => number; close:
       resolve({
         url: `http://127.0.0.1:${port}`,
         calls: () => calls,
+        methods,
         close: () => new Promise<void>((done) => { server.closeAllConnections(); server.close(() => done()); }),
       });
     }),
@@ -101,6 +110,65 @@ step("Total outage:");
   await Promise.all([a.close(), b.close()]);
 }
 
+step("Wrong-chain configured endpoint:");
+// T-236: a configured endpoint reporting Goerli (0x5) has priority 1 and quorum 1, but must never answer.
+{
+  const goerli = await mockRpc("ok", "0x5");
+  const good = await mockRpc("ok");
+  const provider = createRpcProvider(asEndpoints([goerli.url, good.url]), { stallTimeoutMs: 200, requestTimeoutMs: 800 });
+  for (let i = 0; i < 3; i++) {
+    assert.equal(BigInt(await ethCall(IFR, TOTAL_SUPPLY, provider)), BigInt(SUPPLY), "value comes from the Mainnet endpoint");
+  }
+  assert.ok(goerli.methods.length > 0, "wrong-chain endpoint was probed");
+  assert.deepEqual([...new Set(goerli.methods)], ["eth_chainId"], "wrong-chain endpoint only ever saw eth_chainId");
+  assert.ok(good.methods.includes("eth_call"), "Mainnet endpoint served the call");
+  provider.destroy();
+  await Promise.all([goerli.close(), good.close()]);
+}
+
+step("Unreadable chain id:");
+// An endpoint whose eth_chainId errors, is not hex, or hangs is excluded the same way (fail closed).
+{
+  const unreadable = await mockRpc("ok", "error");
+  const garbage = await mockRpc("ok", "mainnet");
+  const hang = await mockRpc("hang");
+  const good = await mockRpc("ok");
+  const provider = createRpcProvider(asEndpoints([unreadable.url, garbage.url, hang.url, good.url]), { stallTimeoutMs: 150, requestTimeoutMs: 800 });
+  assert.equal(BigInt(await ethCall(IFR, TOTAL_SUPPLY, provider)), BigInt(SUPPLY));
+  for (const bad of [unreadable, garbage]) assert.deepEqual([...new Set(bad.methods)], ["eth_chainId"], "unverified endpoint only saw eth_chainId");
+  assert.equal(hang.calls(), 1, "hanging endpoint received only the chain id probe");
+  provider.destroy();
+  await Promise.all([unreadable.close(), garbage.close(), hang.close(), good.close()]);
+}
+
+step("All endpoints wrong chain:");
+// Every endpoint on the wrong chain (or unreadable): the read rejects, so callers report unavailable,
+// and no wrong-chain eth_call value is ever produced.
+{
+  const goerli = await mockRpc("ok", "0x5");
+  const sepolia = await mockRpc("ok", "0xaa36a7");
+  const unreadable = await mockRpc("ok", "error");
+  const provider = createRpcProvider(asEndpoints([goerli.url, sepolia.url, unreadable.url]), { stallTimeoutMs: 100, requestTimeoutMs: 800 });
+  const started = Date.now();
+  await assert.rejects(() => ethCall(IFR, TOTAL_SUPPLY, provider), "all wrong-chain endpoints reject instead of returning a value");
+  await assert.rejects(() => ethCall(IFR, TOTAL_SUPPLY, provider), "and keep rejecting on later reads");
+  assert.ok(Date.now() - started < 10000, "fail-closed path stays bounded");
+  for (const bad of [goerli, sepolia, unreadable]) assert.ok(!bad.methods.includes("eth_call"), "no eth_call reached a wrong-chain endpoint");
+  provider.destroy();
+  await Promise.all([goerli.close(), sepolia.close(), unreadable.close()]);
+}
+
+step("Chain check error hides URLs:");
+{
+  const goerli = await mockRpc("ok", "0x5");
+  const provider = createRpcProvider([{ label: "configured", url: goerli.url }], { stallTimeoutMs: 100, requestTimeoutMs: 800 });
+  const error = await ethCall(IFR, TOTAL_SUPPLY, provider).then(() => null, (e: unknown) => e);
+  assert.ok(error instanceof Error, "single wrong-chain endpoint rejects");
+  assert.ok(!JSON.stringify({ message: error.message, stack: error.stack }).includes(String(new URL(goerli.url).port)), "error does not expose the endpoint URL");
+  provider.destroy();
+  await goerli.close();
+}
+
 step("Health output:");
 // Health output: labels and booleans only, no URLs.
 {
@@ -121,4 +189,4 @@ step("Health output:");
   assert.ok(supply.indexOf("token.totalSupply()") > -1 && supply.indexOf("token.totalSupply()") < supply.indexOf("esApiFetch("), "supply reads the chain first, explorer only as fallback");
 }
 clearTimeout(watchdog);
-console.log("[rpc-failover] PASS - ordered failover, stall bypass, no zero on outage, URL-free health");
+console.log("[rpc-failover] PASS - ordered failover, stall bypass, no zero on outage, wrong-chain fail closed, URL-free health");

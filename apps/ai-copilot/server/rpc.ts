@@ -4,7 +4,18 @@
 // Now all reads share one FallbackProvider over several public endpoints with a static network,
 // per-endpoint stall timeouts and quorum 1. A read that fails on every endpoint throws; callers keep the
 // T-212b rule that a failed read is reported as unavailable, never as zero.
-import { FallbackProvider, FetchRequest, JsonRpcProvider, Network, type Provider } from "ethers";
+// T-236: staticNetwork skips ethers' own chain detection, so each endpoint must prove eth_chainId=0x1
+// before it may answer anything else; a wrong or unreadable chain id fails closed.
+import {
+  FallbackProvider,
+  FetchRequest,
+  JsonRpcProvider,
+  Network,
+  type JsonRpcError,
+  type JsonRpcPayload,
+  type JsonRpcResult,
+  type Provider,
+} from "ethers";
 
 /** Public Mainnet endpoints that answered eth_chainId=0x1 and an IFR eth_call on 2026-10-03.
  *  Checked and dropped: cloudflare-eth.com (eth_call internal error), 1rpc.io and eth.merkle.io
@@ -17,6 +28,30 @@ export const PUBLIC_MAINNET_RPCS: readonly string[] = [
 ];
 
 const MAINNET = Network.from(1);
+
+/** JSON-RPC provider that sends nothing but eth_chainId until the endpoint has reported Mainnet.
+ *  FallbackProvider syncs every endpoint (eth_blockNumber) before its first call; a failed check there
+ *  marks the endpoint fatal, so a wrong-chain endpoint is never used for eth_call. Only success is cached. */
+class MainnetCheckedProvider extends JsonRpcProvider {
+  #chainVerified = false;
+
+  async _send(payload: JsonRpcPayload | JsonRpcPayload[]): Promise<(JsonRpcResult | JsonRpcError)[]> {
+    const requests = Array.isArray(payload) ? payload : [payload];
+    if (!this.#chainVerified && requests.some((request) => request.method !== "eth_chainId")) {
+      const [answer] = await super._send({ id: 0, jsonrpc: "2.0", method: "eth_chainId", params: [] });
+      const chainId = answer && "result" in answer ? answer.result : undefined;
+      // The message never includes the endpoint URL (a configured URL may carry a key).
+      if (!isMainnetChainId(chainId)) throw new Error("RPC endpoint failed the Mainnet chain id check");
+      this.#chainVerified = true;
+    }
+    return super._send(payload);
+  }
+}
+
+function isMainnetChainId(value: unknown): boolean {
+  if (typeof value !== "string" || !/^0x[0-9a-fA-F]+$/.test(value)) return false;
+  return BigInt(value) === 1n;
+}
 
 export interface RpcEndpoint {
   /** Public label for health output; a configured URL may contain a key and is never exposed. */
@@ -47,7 +82,7 @@ export interface RpcOptions {
   requestTimeoutMs?: number;
 }
 
-/** Builds a quorum-1 FallbackProvider; endpoints are tried in order and never re-detect the network. */
+/** Builds a quorum-1 FallbackProvider; endpoints are tried in order and must pass the Mainnet chain id check. */
 export function createRpcProvider(endpoints: RpcEndpoint[], options: RpcOptions = {}): FallbackProvider {
   if (endpoints.length === 0) throw new Error("no RPC endpoints configured");
   const stallTimeout = options.stallTimeoutMs ?? 2500;
@@ -56,7 +91,7 @@ export function createRpcProvider(endpoints: RpcEndpoint[], options: RpcOptions 
     const request = new FetchRequest(endpoint.url);
     request.timeout = requestTimeout;
     return {
-      provider: new JsonRpcProvider(request, MAINNET, { staticNetwork: MAINNET, batchMaxCount: 1 }),
+      provider: new MainnetCheckedProvider(request, MAINNET, { staticNetwork: MAINNET, batchMaxCount: 1 }),
       priority: index + 1,
       weight: 1,
       stallTimeout,
