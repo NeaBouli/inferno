@@ -48,6 +48,11 @@ for (const host of hosts) {
   const entries = [...sitemap.matchAll(/<url><loc>([^<]+)<\/loc>/g)];
   assert.ok(entries.length > 0, `${host.sitemap} has no entries`);
   assert.equal(entries.length, (sitemap.match(/<url>/g) || []).length, `${host.sitemap}: every entry needs exactly one loc`);
+  const urlBlocks = [...sitemap.matchAll(/<url>([\s\S]*?)<\/url>/g)];
+  assert.equal(urlBlocks.length, entries.length, `${host.sitemap}: every <url> entry must be closed`);
+  for (const [, url] of urlBlocks) {
+    assert.equal((url.match(/<loc>/g) || []).length, 1, `${host.sitemap}: every entry needs exactly one loc`);
+  }
 
   const robots = read(host.robots);
   assert.deepEqual(
