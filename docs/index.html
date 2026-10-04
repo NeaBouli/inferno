@@ -1788,8 +1788,8 @@ liquidity:{q:"What would you like to do with liquidity?",sub:"Read-only tools he
 ]},
 lock:{q:"How do you want to lock IFR?",sub:"Live wallet actions run in the Web3 app; the Wiki remains the reference guide:",s:2,t:2,o:[
 {i:"&#x1F513;",t:"Simple access lock",d:"Refundable IFRLock access: approve, lock, check IFRLock access status, or unlock all",a:"https://web3.ifrunit.tech/?action=access-lock#access",h:1},
-{i:"&#x1F512;",t:"CommitmentVault lock",d:"Create time-, price-, combined-, or indefinite-lock tranches",a:"https://web3.ifrunit.tech/?action=commitment-lock#access"},
-{i:"&#x2696;&#xFE0F;",t:"Manage existing tranches",d:"Review conditions and unlock each matured CommitmentVault tranche",a:"https://web3.ifrunit.tech/?action=commitment-lock#access"},
+{i:"&#x1F512;",t:"New CommitmentVault time lock",d:"Time-only lock in CommitmentVault V2. Opens after Governance proposal #17; no price locks",a:"https://web3.ifrunit.tech/?action=commitment-lock#access"},
+{i:"&#x2696;&#xFE0F;",t:"Manage existing tranches",d:"Review existing V1 and V2 tranches; each unlocks through its own vault",a:"https://web3.ifrunit.tech/?action=commitment-lock#access"},
 {i:"&#x1F4D6;",t:"Read how locking works",d:"CommitmentVault rules, conditions, and limits",a:"wiki/commitment-vault.html"}
 ]},
 build:{q:"What do you want to build?",sub:"We tailor the guide to your use case:",s:2,t:2,o:[
@@ -3400,6 +3400,10 @@ if (isLocked) {
   border-radius: 50%;
   display: block;
 }
+#ifr-btn.task-clear {
+  visibility: hidden;
+  opacity: 0;
+}
 #ifr-panel {
   display: none;
   position: fixed;
@@ -3499,6 +3503,29 @@ if (isLocked) {
     referrerpolicy="no-referrer">
   </iframe>
 </section>
+<script>
+// Hide the fixed Copilot launcher only while it would sit on the active lock task; it returns outside the task.
+(function() {
+  var launcher = document.getElementById('ifr-btn');
+  var panel = document.getElementById('ifr-panel');
+  if (!launcher || !panel || !window.requestAnimationFrame) return;
+  var queued = false;
+  function update() {
+    queued = false;
+    var z = launcher.getBoundingClientRect();
+    var covers = Array.prototype.some.call(document.querySelectorAll('#wz-box'), function(el) {
+      var r = el.getBoundingClientRect();
+      return r.width > 0 && r.left < z.right && r.right > z.left && r.top < z.bottom && r.bottom > z.top;
+    });
+    launcher.classList.toggle('task-clear', covers && !(!panel.hidden));
+  }
+  function queue() { if (!queued) { queued = true; requestAnimationFrame(update); } }
+  window.addEventListener('scroll', queue, { passive: true });
+  window.addEventListener('resize', queue);
+  document.addEventListener('click', queue);
+  queue();
+})();
+</script>
 <script>
 (function() {
   var launcher = document.getElementById('ifr-btn');
