@@ -15,7 +15,7 @@ const vm = require("node:vm");
 const root = path.resolve(__dirname, "..");
 const source = fs.readFileSync(path.join(root, "docs", "assets", "ifr-state.js"), "utf8");
 
-function makeSandbox({ bootstrapBehavior }) {
+function makeSandbox({ bootstrapBehavior, withReadProvider = true, onWalletRead }) {
   const walletListeners = [];
   const providerStub = {
     getBalance: async () => 0n,
@@ -49,11 +49,12 @@ function makeSandbox({ bootstrapBehavior }) {
   };
   sandbox.window = sandbox;
   sandbox.IFRWallet = {
-    getProvider: () => providerStub,
+    getProvider: () => { if (onWalletRead) onWalletRead(); return providerStub; },
     isConnected: () => false,
     getAddress: () => null,
     on: (event, cb) => walletListeners.push({ event, cb }),
   };
+  if (withReadProvider) sandbox.IFRWallet.getReadProvider = () => providerStub;
   vm.createContext(sandbox);
   vm.runInContext(source, sandbox, { filename: "ifr-state.js" });
   return sandbox.IFRState;
@@ -122,7 +123,30 @@ async function main() {
   assert.equal(state.bootstrapStatus.totalETHRaised, "0.03", "individual fallback must carry the real raised value");
 }
 
-console.log("[ifr-state-unavailable-test] PASS (unavailable semantics, aggregate path, individual fallback)");
+// ── Missing getReadProvider (old cached wallet core) → fail closed, no wallet-provider reads ──
+{
+  let walletReads = 0;
+  let contractCalls = 0;
+  const count = async () => { contractCalls += 1; return 1n; };
+  const IFRState = makeSandbox({
+    withReadProvider: false,
+    onWalletRead: () => { walletReads += 1; },
+    bootstrapBehavior: {
+      getBootstrapStatus: count, totalETHRaised: count, ifrAllocation: count,
+      startTime: count, endTime: count, finalised: count,
+    },
+  });
+  const state = await IFRState.load("0x000000000000000000000000000000000000dEaD");
+  assert.equal(walletReads, 0, "the wallet provider must never be used for reads");
+  assert.equal(contractCalls, 0, "no on-chain read may happen without the chain-pinned read provider");
+  assert.equal(state.readProviderMissing, true, "missing read provider must be flagged");
+  assert.equal(state.readError, true, "missing read provider must set readError");
+  assert.equal(state.bootstrapStatus.available, false, "bootstrap status must be unavailable");
+  assert.equal(state.ifrBalance, null, "no IFR balance without the read provider");
+  assert.equal(state.lockedAmount, null, "no locked amount without the read provider");
+}
+
+console.log("[ifr-state-unavailable-test] PASS (unavailable semantics, aggregate path, individual fallback, missing read provider)");
 }
 
 main().catch((error) => {
