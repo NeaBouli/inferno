@@ -186,3 +186,51 @@ test.describe("Mainnet endpoint (0x1) renders the live fixture state", () => {
     await expect(page.locator("#cv01-live")).toContainText("Live at block 256", { timeout: 30000 });
   });
 });
+
+// Codex review of #193: after wallet connection the LendingVault reads must still use the
+// chain-pinned read provider, including after the wallet switches chain post-connection.
+test.describe("LendingVault reads ignore the connected wallet provider", () => {
+  test("wallet connected, then switched to 0x5: no eth_call via the wallet, values stay from the pinned provider", async ({ page }) => {
+    await page.clock.install();
+    await page.addInitScript(() => {
+      const FAKE = "0x" + (999999n * 10n ** 9n * 1000n).toString(16).padStart(64, "0");
+      window.__walletChain = "0x1";
+      window.__walletReads = [];
+      const listeners = {};
+      window.ethereum = {
+        isMetaMask: true,
+        on(ev, fn) { (listeners[ev] = listeners[ev] || []).push(fn); },
+        removeListener() {},
+        async request({ method, params }) {
+          if (method === "eth_requestAccounts" || method === "eth_accounts") return ["0x00000000000000000000000000000000000000a1"];
+          if (method === "eth_chainId") return window.__walletChain;
+          if (method === "net_version") return String(parseInt(window.__walletChain, 16));
+          if (method === "eth_blockNumber") return "0x100";
+          window.__walletReads.push(method + ":" + String((params && params[0] && params[0].to) || "").toLowerCase() + ":" + String((params && params[0] && params[0].data) || "").slice(0, 10));
+          if (method === "eth_call") return FAKE;
+          if (method === "eth_getBalance") return "0x0";
+          return null;
+        },
+      };
+    });
+    await mockRpc(page, "0x1");
+    await page.goto("/wiki/lending-vault.html");
+    await expect(page.locator("#lv-total-available")).toContainText("1,234", { timeout: 30000 });
+
+    await page.locator("#lv-connect-btn").click();
+    await expect(page.locator("#lv-address")).toBeVisible({ timeout: 30000 });
+    await expect(page.locator("#lv-total-available")).toContainText("1,234");
+
+    // The wallet switches to Goerli after adoption; the 60 s market refresh must still read Mainnet via the pinned provider.
+    await page.evaluate(() => { window.__walletChain = "0x5"; });
+    await page.clock.runFor(61000);
+    await page.waitForTimeout(1500);
+    await expect(page.locator("#lv-total-available")).toContainText("1,234");
+    await expect(page.locator("#lv-total-available")).not.toContainText("999");
+
+    const walletReads = await page.evaluate(() => window.__walletReads);
+    // Shared wallet-core widgets may still read through the wallet; this regression is about LendingVault page reads.
+    expect(walletReads.filter((m) => m.startsWith(`eth_call:${LV}:`)),
+      "no LendingVault read may go through the connected wallet provider").toEqual([]);
+  });
+});
