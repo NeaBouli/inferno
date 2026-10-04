@@ -53,6 +53,12 @@ remains the only place where agenda items and vote outcomes are published.
 - **Production gate:** separate recorded decision, then Safe proposal plus
   48-hour timelock for deployment wiring and any price activation.
 - **Next evidence:** approved V2 specification and passing lifecycle test suite.
+- **Decision record (3 October 2026, owner):** option A. LendingVault V1 is retired:
+  borrowing stays disabled (`ifrPriceWei` stays unset; Governance could technically set it, but no activation is planned or authorized) and no V2 is planned for
+  now. A V2 follows only after a reviewed price source shared with Lane 2. Before the withdrawals
+  V1 held 52,155,440.952845656 IFR, all lender offers (C2 20,156,940.952845656, C1 16,999,000,
+  C3 14,999,500), 0 loans; `withdrawOffer` returned the full amount for each on a Mainnet fork.
+  The lenders are withdrawing their offers; these IFR are not lost.
 
 ## Lane 2 — CommitmentVault price-lock V2 and V1 fail-closed boundary
 
@@ -116,6 +122,11 @@ remains the only place where agenda items and vote outcomes are published.
 - **Production gate:** separate recorded decision per migration step, each via
   Safe proposal and 48-hour timelock.
 - **Next evidence:** sink-vs-receiver decision record; migration rehearsal log.
+- **Decision record (3 October 2026, owner):** option B. Future IFR pool fees go to
+  BuybackController through `InfernoToken.setPoolFeeReceiver` (Governance proposal, 48-hour
+  timelock; pending execution). The 724,992.668043224 IFR already in FeeRouterV1 (block
+  26,108,134) stay permanently lost and are disclosed as lost, not burned. Guardian model
+  decided the same day: Treasury Safe (CWA-09); voucher signer moves to a dedicated key (CWA-06).
 
 ## Lane 4 — PartnerVault/BuilderRegistry rewards and pilot-partner gate
 
