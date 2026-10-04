@@ -13,6 +13,21 @@
 - The depth check samples two points (observation and now); this limit is documented in the specification.
 - 25 unit tests and a Mainnet-fork test. An independent review is required before any deployment.
 
+## 3 October 2026 — Permanently Lost IFR Disclosed Everywhere (T-202)
+
+- The Landing, Transparency, Tokenomics, Press Kit, FEE_DESIGN, TRANSPARENCY.md and llms.txt now show the
+  permanently lost IFR: 27,143,460.66 IFR at block 26,108,134. They are not burned and stay in `totalSupply()`.
+  - 26,418,467.99 IFR in CommitmentVault V1 price-conditioned tranches (CV-01).
+  - 724,992.67 IFR of pool fees in FeeRouterV1, which has no IFR withdrawal path (CWA-02).
+- The Landing card reads the FeeRouterV1 part live. A failed or implausible read keeps the last verified figure
+  with its date and never shows 0.
+- Corrected the remaining claims that BuybackVault and BurnReserve receive the 1% IFR pool fee.
+- Lane 3 decision (owner, 3 October 2026): future pool fees go to BuybackController. This is pending Governance
+  execution; IFR already in FeeRouterV1 stays lost.
+- Lane 1 decision (owner, 3 October 2026): LendingVault V1 is retired. Borrowing stays disabled by Governance decision (no activation planned or authorized) and
+  no V2 is planned yet. Lending pages, the Web3 lending panel and the Landing say so; lenders can still withdraw
+  unlent offers, and those IFR are not lost.
+
 ## 2 October 2026 — CommitmentVault V1 Incident Record and Council Proposal CV-01
 
 - 11 price-conditioned CommitmentVault V1 tranches (26,418,467.994338353 IFR) cannot unlock. The

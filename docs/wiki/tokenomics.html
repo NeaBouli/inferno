@@ -1473,6 +1473,16 @@ if (from != address(0) && to != address(0)
         The FeeRouterV1 contract handles protocol-level fees on IFR swaps.
         These are <strong>separate</strong> from the token's built-in transfer fees (2.5% burn + 1% pool fee).
       </p>
+      <p>
+        <strong>Where the 1% IFR pool fee goes:</strong> since Proposal #6 the token's <code>poolFeeReceiver</code> is FeeRouterV1.
+        FeeRouterV1 forwards only native-ETH swap fees and has no IFR withdrawal path, so these pool fees are
+        <a href="transparency.html#lost-ifr">permanently lost</a> (CWA-02). On 3 October 2026 the owner decided to move future
+        pool fees to BuybackController, where the IFR stays recoverable by Governance via <code>withdrawIFR</code> (the deployed controller is dormant, JUL-08, so nothing is used automatically);
+        this needs a Governance proposal with the 48-hour timelock and is not executed yet. IFR already in FeeRouterV1 stays lost.
+      </p>
+      <p>
+        <strong>Permanently lost IFR:</strong> 27,143,460.66 IFR are permanently lost (not burned; still counted in totalSupply): 26,418,467.99 IFR in CommitmentVault V1 price-conditioned tranches (CV-01) and 724,992.67 IFR of pool fees in FeeRouterV1 (CWA-02), verified at block 26,108,134 on 3 October 2026. Details: <a href="transparency.html#lost-ifr">Transparency</a>.
+      </p>
 
       <h3>Fee Structure</h3>
       <table>
