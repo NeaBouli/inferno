@@ -89,6 +89,44 @@ async function waitForWalletRuntime(page) {
   );
 }
 
+// Deterministic stand-in for the public read-RPC endpoints behind
+// IFRWallet.getReadProvider(): since the wallet-core/ifr-state hardening
+// (T-212a/T-221) every displayed-value read goes through this chain-pinned
+// FallbackProvider even with a connected wallet, so without this stub the
+// connect→connected-pill path depends on live internet RPC latency (T-233
+// exact-main CI flake). Answers mirror the mock wallet and satisfy the
+// per-endpoint eth_chainId 0x1 pin; the suite stays read-only with no
+// external traffic.
+async function stubPublicReadRpc(page) {
+  const respond = (route) => {
+    let method = "";
+    let id = 1;
+    try {
+      const payload = JSON.parse(route.request().postData() || "{}");
+      method = payload.method || "";
+      id = payload.id === undefined ? 1 : payload.id;
+    } catch (e) {
+      // Unparsable payload: fall through to a null result.
+    }
+    let result = null;
+    if (method === "eth_chainId") result = "0x1";
+    else if (method === "net_version") result = "1";
+    else if (method === "eth_blockNumber") result = "0x1";
+    else if (method === "eth_getBalance") result = "0x0";
+    else if (method === "eth_call") result = ZERO32;
+    else if (method === "eth_syncing") result = false;
+    else if (method === "eth_gasPrice") result = "0x0";
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ jsonrpc: "2.0", id: id, result: result }),
+    });
+  };
+  await page.route("**/ethereum-rpc.publicnode.com/**", respond);
+  await page.route("**/eth.drpc.org/**", respond);
+  await page.route("**/1rpc.io/**", respond);
+}
+
 async function gotoWalletPage(page, path) {
   await page.goto(path, { waitUntil: "domcontentloaded" });
   await waitForWalletRuntime(page);
@@ -125,6 +163,7 @@ async function newMobilePage(
 test.describe("S1: Desktop Connect + Disconnect", () => {
   test("connect with mock wallet, then disconnect resets UI", async ({ page }) => {
     const assertNoPageErrors = monitorPageErrors(page);
+    await stubPublicReadRpc(page);
     await gotoWalletPage(page, "/");
 
     // Inject mock MetaMask
@@ -232,6 +271,7 @@ test.describe("S3: Multi-wallet detection", () => {
 test.describe("S4: Disconnect instant reset", () => {
   test("button text resets to Connect Wallet, not Connecting...", async ({ page }) => {
     const assertNoPageErrors = monitorPageErrors(page);
+    await stubPublicReadRpc(page);
     await gotoWalletPage(page, "/");
     await page.evaluate(mockMetaMask(MOCK_ADDR));
 
@@ -258,6 +298,7 @@ test.describe("S4: Disconnect instant reset", () => {
 test.describe("S5: autoReconnect", () => {
   test("reconnects after page reload without extra click", async ({ page }) => {
     const assertNoPageErrors = monitorPageErrors(page);
+    await stubPublicReadRpc(page);
     await gotoWalletPage(page, "/");
     await page.evaluate(mockMetaMask(MOCK_ADDR));
 
@@ -395,6 +436,7 @@ test.describe("S8: Narrow-viewport dropdown position", () => {
 
   test("dropdown appears below button on narrow viewport", async ({ page }) => {
     const assertNoPageErrors = monitorPageErrors(page);
+    await stubPublicReadRpc(page);
     await gotoWalletPage(page, "/");
     await page.evaluate(mockMetaMask(MOCK_ADDR));
 
@@ -503,6 +545,7 @@ test.describe("S10: Bootstrap page", () => {
 test.describe("S11: Wiki disconnect reset", () => {
   test("disconnect on wiki page resets button to Connect Wallet", async ({ page }) => {
     const assertNoPageErrors = monitorPageErrors(page);
+    await stubPublicReadRpc(page);
     await gotoWalletPage(page, "/wiki/tokenomics.html");
     await page.evaluate(mockMetaMask(MOCK_ADDR));
 
@@ -579,6 +622,8 @@ test.describe("S13: Bootstrap RPC failure renders unavailable, writes fail close
     // Deterministic offline environment: both public RPC paths are dead.
     await page.route("**/eth.llamarpc.com/**", (route) => route.abort());
     await page.route("**/ethereum-rpc.publicnode.com/**", (route) => route.abort());
+    await page.route("**/eth.drpc.org/**", (route) => route.abort());
+    await page.route("**/1rpc.io/**", (route) => route.abort());
     await page.addInitScript(mockBootstrapRpcFailure(MOCK_ADDR));
     await gotoWalletPage(page, "/wiki/bootstrap.html");
 
@@ -687,6 +732,7 @@ test.describe("S15: Web3 tablet pending WalletConnect session", () => {
     );
     try {
       const assertNoPageErrors = monitorPageErrors(page);
+      await stubPublicReadRpc(page);
       await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js", async (route) => {
         await route.fulfill({
           status: 200,
@@ -759,6 +805,7 @@ test.describe("S16: Web3 tablet session reload", () => {
     );
     try {
       const assertNoPageErrors = monitorPageErrors(page);
+      await stubPublicReadRpc(page);
       await context.addInitScript(mockMetaMask(MOCK_ADDR));
       await gotoWalletPage(page, "/web3/");
 
@@ -783,6 +830,7 @@ test.describe("S16: Web3 tablet session reload", () => {
 test.describe("S12: Rapid connect/disconnect cycle", () => {
   test("connect→disconnect→connect works without refresh", async ({ page }) => {
     const assertNoPageErrors = monitorPageErrors(page);
+    await stubPublicReadRpc(page);
     await gotoWalletPage(page, "/");
     await page.evaluate(mockMetaMask(MOCK_ADDR));
 

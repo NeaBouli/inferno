@@ -36,6 +36,7 @@ jobs:
       - run: npm ci
       - run: npm run test:dependencies
       - run: npm run test:health-shape
+      - run: npm run test:rpc-failover
       - name: npm audit (production clean; reviewed dev-only exceptions)
         run: node ../../scripts/check-dev-advisory-exceptions.cjs
       - run: npx tsc --noEmit
@@ -50,4 +51,5 @@ jobs:
       - run: npm run test:correctness
       - run: npm run test:lending-loans
       - run: npm run test:request-guard
+      - run: npm run test:balance-integrity
       - run: npm run build
