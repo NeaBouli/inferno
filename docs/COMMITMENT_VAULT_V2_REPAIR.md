@@ -28,21 +28,26 @@ V1 cannot be changed. The repair is a new vault, V2, built from the repository s
 ## Rehearsal (repeatable, no Mainnet effect)
 
 ```sh
-HARDHAT_FORK=true HARDHAT_FORK_BLOCK_NUMBER=<recent block> MAINNET_RPC_URL=<rpc> npm run test:commitment-v2-fork
+HARDHAT_FORK=true HARDHAT_FORK_BLOCK_NUMBER=<block >= 26107296> MAINNET_RPC_URL=<rpc> npm run test:commitment-v2-fork
+HARDHAT_FORK=true HARDHAT_FORK_BLOCK_NUMBER=<recent block> MAINNET_RPC_URL=<rpc> npm run test:commitment-v2-synthetic-fork
 npm run test:commitment-v2-proposal
 ```
 
-The fork test checks the following against the **deployed** Governance and IFR token:
+`test:commitment-v2-fork` tests the **deployed** V2 and fails if its bytecode is missing at the pinned address
+(the fork block must be at or after the deployment block 26107296):
 
-- V2 at its pinned address is owned by Governance, without P0 or an oracle. From block 26107296 the fork uses the
-  deployed V2; on an earlier block the repository vault is placed at that address.
-- All three price-conditioned lock types are rejected.
-- The Safe executes the **exact bytes** of the generated batch files: propose, then a refused early execute, then
-  execute after the on-chain Governance delay. After that, `InfernoToken.feeExempt(V2)` is `true`.
-- A `TIME_ONLY` lock keeps nominal accounting (vault balance equals `totalLocked`) and returns the exact amount
-  after its unlock time.
+- V2 is owned by Governance, uses the IFR token and has no P0 or oracle.
+- All three price-conditioned lock types are rejected by the deployed bytecode.
+- Queued proposal #17 targets InfernoToken with exactly `setFeeExempt(V2, true)`. Before its ETA the generated
+  step-2 bytes are refused (`too early`); after the ETA the Safe executes them and `feeExempt(V2)` is `true`.
+  If #17 is already executed, the test checks the exemption instead.
+- A `TIME_ONLY` lock raises the vault balance, `totalLocked` and the user's locked balance by exactly the locked
+  amount and returns that amount after its unlock time (per-lock deltas, robust against direct transfers).
 
-The weekly `benefits-verify-live.yml` fork job runs the rehearsal again.
+`test:commitment-v2-synthetic-fork` is a separate, clearly labelled rehearsal with **repository bytecode** at a
+fresh fork address. It proves the source and the Safe → Governance flow; it does not test the deployed V2.
+
+The weekly `benefits-verify-live.yml` job runs both at a recent post-deployment block.
 
 ## Mainnet Steps
 
@@ -65,7 +70,9 @@ node scripts/commitment-vault-v2-proposal.cjs 0x8efae0C85ad6d44C731cAEDA1cBC2759
 This writes `cv01-v2-step1-propose.json` and `cv01-v2-step2-execute.json` for the Safe Transaction Builder:
 
 - **Step 1** calls `Governance.propose(InfernoToken, setFeeExempt(V2, true))`.
-- **Step 2** calls `Governance.execute(<id>)`.
+- **Step 2** calls `Governance.execute(17)`. Step 2 is pinned to proposal #17; any other id is refused, because
+  `Governance.execute(id)` would run whatever that proposal contains. `--verify-onchain` additionally reads the
+  queued proposal and refuses unless it is exactly `setFeeExempt(V2, true)`, not executed and not cancelled.
 
 The script accepts only the deployed V2 `0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F` and refuses every other
 address, including V1, before writing a file. For proposal #17 the inner call equals the on-chain

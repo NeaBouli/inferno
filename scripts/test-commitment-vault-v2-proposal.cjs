@@ -2,7 +2,7 @@
 // Guards the CV-01 V2 Safe batch generator: exact targets, calldata and refusal of any address but the deployed V2.
 const assert = require("node:assert/strict");
 const { Interface } = require("ethers");
-const { build, IFR_TOKEN, GOVERNANCE, V2 } = require("./commitment-vault-v2-proposal.cjs");
+const { build, verifyOnChain, IFR_TOKEN, GOVERNANCE, V2, CV01_PROPOSAL_ID } = require("./commitment-vault-v2-proposal.cjs");
 
 assert.equal(V2, "0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F");
 const gov = new Interface(["function propose(address,bytes)", "function execute(uint256)"]);
@@ -42,4 +42,33 @@ assert.throws(() => build("0x8efae0c85ad6d44c731caeda1cbc275904fc7c8e"), /not th
 assert.throws(() => build("0x123"), /V2 address required/);
 assert.throws(() => build(undefined), /V2 address required/);
 assert.throws(() => build(V2, "-1"), /non-negative integer/);
-console.log("[commitment-vault-v2-proposal] PASS");
+
+// Step 2 is pinned to proposal #17: Governance.execute(id) would run an unrelated proposal for any other id.
+assert.equal(CV01_PROPOSAL_ID, 17);
+for (const wrong of ["0", "16", "18", "21", "170"]) {
+  assert.throws(() => build(V2, wrong), /pinned to Governance proposal #17/, `step 2 for proposal ${wrong} must be refused`);
+}
+assert.equal(build(V2, "017").files["cv01-v2-step2-execute.json"].transactions[0].data, "0xfe0d94c1" + "11".padStart(64, "0"));
+
+// Optional read-only validation of the queued proposal.
+(async () => {
+  const govAbi = new Interface(["function getProposal(uint256) view returns (address,bytes,uint256,bool,bool)"]);
+  const fake = (target, data, eta, executed, cancelled) => async (to, callData) => {
+    assert.equal(to, GOVERNANCE);
+    assert.equal(govAbi.decodeFunctionData("getProposal", callData)[0], 17n);
+    return govAbi.encodeFunctionResult("getProposal", [target, data, eta, executed, cancelled]);
+  };
+  const eta = 1791150791n;
+  assert.equal((await verifyOnChain(fake(IFR_TOKEN, INNER_17, eta, false, false))).eta, eta);
+  await assert.rejects(verifyOnChain(fake(IFR_TOKEN, INNER_17, 0n, false, false)), /does not exist/);
+  await assert.rejects(verifyOnChain(fake(GOVERNANCE, INNER_17, eta, false, false)), /not InfernoToken/);
+  const otherInner = tok.encodeFunctionData("setFeeExempt", ["0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3", true]);
+  await assert.rejects(verifyOnChain(fake(IFR_TOKEN, otherInner, eta, false, false)), /not setFeeExempt\(V2, true\)/);
+  await assert.rejects(verifyOnChain(fake(IFR_TOKEN, tok.encodeFunctionData("setFeeExempt", [V2, false]), eta, false, false)), /not setFeeExempt/);
+  await assert.rejects(verifyOnChain(fake(IFR_TOKEN, INNER_17, eta, true, false)), /already executed/);
+  await assert.rejects(verifyOnChain(fake(IFR_TOKEN, INNER_17, eta, false, true)), /cancelled/);
+  console.log("[commitment-vault-v2-proposal] PASS");
+})().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});
