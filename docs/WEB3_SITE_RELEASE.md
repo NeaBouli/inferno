@@ -53,6 +53,13 @@ Restores `html/` exactly (rsync `--delete` from the archive, including the heade
 backed-up `nginx.conf`, then `nginx -t` and reload. Only timestamped paths under the backup root
 are accepted.
 
+## Gate mode
+
+With `DEPLOY_MODE=gate` the same modes run through the scoped deploy gate (inferno-deploy v2):
+the staged docroot goes up as a tar with `.nginx/web3-security-headers.conf` at its root, and
+`rollback` takes the backup stamp. Mapping and details: [Compose Service Release, gate
+mode](COMPOSE_SERVICE_RELEASE.md#gate-mode).
+
 ## Tests
 
 `npm run test:release-guards` runs `scripts/test-deploy-release-guards.sh` against a temporary

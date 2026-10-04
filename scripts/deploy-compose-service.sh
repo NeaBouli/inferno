@@ -8,6 +8,10 @@
 #   scripts/deploy-compose-service.sh <service> verify                      # public HTTP only
 #   scripts/deploy-compose-service.sh <service> rollback <backup dir>       # operator only
 #
+# DEPLOY_MODE=gate routes plan/deploy/rollback through the scoped host gate
+# (ssh -F ~/.fleet-ssh/config hetzner-deploy ...) and adds status|health|logs|backups;
+# rollback then takes the backup stamp. Unset DEPLOY_MODE keeps the direct path below.
+#
 # <service>: telegram-bot | points-backend | ai-copilot
 #
 # deploy: capacity floor (never prunes) -> new backup dir with a source tar and the
@@ -162,6 +166,51 @@ release() { # every step returns non-zero on failure; caller rolls back
   wait_healthy || return 1
   verify_public || return 1
 }
+
+# DEPLOY_MODE=gate: the same release through the scoped host gate (inferno-deploy v2).
+# The tool on the host does backup, rsync, build, health wait, public checks and
+# automatic rollback; this side keeps the exact-SHA checks and the public verify.
+case "${DEPLOY_MODE:-}" in
+  ''|ssh) ;;
+  gate)
+    # shellcheck source=scripts/deploy-gate-lib.sh
+    . "$ROOT/scripts/deploy-gate-lib.sh"
+    gate_release_tar() {
+      STAGE="$(mktemp -d)"
+      trap 'rm -r "$STAGE"' EXIT
+      git -C "$ROOT" archive --format=tar "$EXPECTED_SHA:$APP_DIR" > "$STAGE/upload.tar"
+      gate_tar_has "$STAGE/upload.tar" Dockerfile || die "$APP_DIR has no Dockerfile at $EXPECTED_SHA"
+      TAR_SHA="$(gate_prepare "$STAGE/upload.tar")"
+    }
+    case "$MODE" in
+      plan)
+        require_sha
+        gate_release_tar
+        gate service-plan "$SERVICE" "$EXPECTED_SHA" "$TAR_SHA" < "$STAGE/upload.tar"
+        ;;
+      deploy)
+        require_sha
+        require_clean_exact_checkout
+        gate_release_tar
+        gate service-deploy "$SERVICE" "$EXPECTED_SHA" "$TAR_SHA" < "$STAGE/upload.tar"
+        verify_public || die "$SERVICE is released but the public checks fail; roll back with: DEPLOY_MODE=gate $0 $SERVICE rollback <stamp>"
+        ;;
+      verify) verify_public ;;
+      rollback)
+        stamp="$(gate_stamp "${3:-}")"
+        gate service-rollback "$SERVICE" "$stamp"
+        echo "run '$SERVICE verify' to check the public state"
+        ;;
+      status)  gate status ;;
+      health)  gate health "$SERVICE" ;;
+      logs)    gate logs "$SERVICE" "${3:-200}" ;;
+      backups) gate backups "$SERVICE" ;;
+      *) die "unknown mode $MODE for DEPLOY_MODE=gate (plan|deploy|verify|rollback|status|health|logs|backups)" ;;
+    esac
+    exit 0
+    ;;
+  *) die "DEPLOY_MODE must be unset (direct ssh) or gate" ;;
+esac
 
 case "$MODE" in
   plan)
