@@ -13,9 +13,9 @@ Not daily. Therefore 3.5% is bearable.
 ## Fee Breakdown
 
 | Fee | Destination | Purpose |
-|-----|-------------|---------|
+| --- | --- | --- |
 | 2.5% | Burn (permanent) | Deflation -- supply decreases |
-| 1.0% | FeeRouterV1 | Route protocol pool fees to the governed fee collector |
+| 1.0% | FeeRouterV1 | IFR pool fee; held by FeeRouterV1 with no IFR withdrawal path (CWA-02, permanently lost) |
 | Total | 3.5% | Automatic, no governance required |
 
 ## Fee-Exempt Addresses
@@ -62,4 +62,13 @@ For Uniswap V2 swaps:
 
 Since 18.04.2026 (Governance Proposal #14), the `feeCollector` on FeeRouterV1 is set to the **BuybackController** (`0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c`). This setting applies to native ETH fees charged by `FeeRouterV1.swapWithFee()`. It does not forward IFR transfer-pool fees already held by FeeRouterV1. Controller execution remains subject to its ETH trigger, cooldown, pause state and available IFR balance; there is no PartnerVault refill path.
 
-*Version 1.2 | 26 August 2026 | Mainnet Live*
+## Pool Fee Receiver (CWA-02, Decision 3 October 2026)
+
+- Since Proposal #6 (13.03.2026) `InfernoToken.poolFeeReceiver` is FeeRouterV1. FeeRouterV1 has no IFR withdrawal or forwarding function, so every IFR pool fee it receives is permanently lost. It is not burned and stays in `totalSupply()`.
+- At block 26,108,134 FeeRouterV1 held 724,992.668043224 IFR.
+- Owner decision (Lane 3, option B): future pool fees go to BuybackController `0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c` via `InfernoToken.setPoolFeeReceiver`, a Governance proposal with the 48-hour timelock. There the IFR stays recoverable by Governance through `withdrawIFR`. The deployed controller is dormant (JUL-08), so the IFR is not used automatically until Governance decides how.
+- Status: decided, pending Governance execution. IFR already in FeeRouterV1 stays lost.
+
+27,143,460.66 IFR are permanently lost (not burned; still counted in totalSupply): 26,418,467.99 IFR in CommitmentVault V1 price-conditioned tranches (CV-01) and 724,992.67 IFR of pool fees in FeeRouterV1 (CWA-02), verified at block 26,108,134 on 3 October 2026.
+
+*Version 1.3 | 3 October 2026 | Mainnet Live*

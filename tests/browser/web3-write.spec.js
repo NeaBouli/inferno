@@ -8,6 +8,7 @@ const ACCOUNT = "0x3333333333333333333333333333333333333333";
 const TOKEN = "0x77e99917Eca8539c62F509ED1193ac36580A6e7B";
 const IFR_LOCK = "0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb";
 const COMMITMENT = "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3";
+const COMMITMENT_V2 = "0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F";
 const LENDING = "0x974305Ab0EC905172e697271C3d7d385194EB9DF";
 const UNIT = 10n ** 9n;
 const coder = ethers.AbiCoder.defaultAbiCoder();
@@ -23,6 +24,11 @@ const selectors = {
   commitmentLock: selector("lock(uint256,uint8,uint256,uint256)"),
   commitmentCount: selector("getTrancheCount(address)"),
   commitmentPriceOracle: selector("priceOracle()"),
+  commitmentUnlock: selector("unlock(address,uint256)"),
+  commitmentGetTranche: selector("getTranche(address,uint256)"),
+  commitmentConditionMet: selector("isConditionMet(address,uint256)"),
+  feeExempt: selector("feeExempt(address)"),
+  commitmentGetTranches: selector("getTranches(address)"),
   lendingCreate: selector("createOffer(uint256)"),
   lendingHasOffer: selector("hasOffer(address)"),
   lendingPrice: selector("ifrPriceWei()"),
@@ -60,15 +66,22 @@ function expectedWrite(transaction) {
   if (to === COMMITMENT.toLowerCase() && data.startsWith(selectors.commitmentLock)) {
     return { action: "commitment-lock", amount: decodeWord(data, 0) };
   }
+  if (to === COMMITMENT_V2.toLowerCase() && data.startsWith(selectors.commitmentLock)) {
+    return { action: "commitment-lock-v2", amount: decodeWord(data, 0), cType: decodeWord(data, 1), p0Multiplier: decodeWord(data, 3) };
+  }
+  if (to === COMMITMENT.toLowerCase() && data.startsWith(selectors.commitmentUnlock)) {
+    return { action: "commitment-unlock-v1", amount: decodeWord(data, 1) };
+  }
+  if (to === COMMITMENT_V2.toLowerCase() && data.startsWith(selectors.commitmentUnlock)) {
+    return { action: "commitment-unlock-v2", amount: decodeWord(data, 1) };
+  }
   if (to === LENDING.toLowerCase() && data.startsWith(selectors.lendingCreate)) {
     return { action: "lending-create", amount: decodeWord(data, 0) };
   }
   throw new Error(`Unexpected Web3 write: ${transaction.to} ${transaction.data}`);
 }
 
-async function installWallet(context, options = {}) {
-  const chainId = options.chainId || "0x1";
-  const rejectSwitch = options.rejectSwitch === true;
+function buildCallResults(options = {}) {
   const locked = options.locked || 0n;
   const availableOffer = options.offerAvailable === true;
   const callResults = {
@@ -87,8 +100,103 @@ async function installWallet(context, options = {}) {
     ),
     [selectors.lendingLoanCount]: uintResult(0n),
   };
+  // InfernoToken.feeExempt(V2): false by default (V2 closed), true opens V2, "error" makes the read fail.
+  const feeExemptV2 = options.feeExemptV2 === undefined ? false : options.feeExemptV2;
+  callResults[`${TOKEN.toLowerCase()}:${selectors.feeExempt}`] = feeExemptV2 === "error" ? "__THROW__" : uintResult(feeExemptV2 ? 1n : 0n);
+  if (options.v1Tranche) {
+    const now = 1_700_000_000n;
+    callResults[`${COMMITMENT.toLowerCase()}:${selectors.commitmentCount}`] = uintResult(1n);
+    callResults[`${COMMITMENT.toLowerCase()}:${selectors.commitmentGetTranche}`] = coder.encode(
+      ["tuple(uint256 amount,uint8 cType,uint256 unlockTime,uint256 p0Multiplier,bool unlocked,uint256 conditionMetAt)"],
+      [[9_500n * UNIT, 0, now, 0n, false, now]],
+    );
+    callResults[`${COMMITMENT.toLowerCase()}:${selectors.commitmentConditionMet}`] = uintResult(1n);
+    callResults[`${COMMITMENT.toLowerCase()}:${selectors.commitmentGetTranches}`] = coder.encode(
+      ["tuple(uint256 amount,uint8 cType,uint256 unlockTime,uint256 p0Multiplier,bool unlocked,uint256 conditionMetAt)[]"],
+      [[[9_500n * UNIT, 0, now, 0n, false, now]]],
+    );
+  }
+  if (options.v1TrancheCount !== undefined) callResults[`${COMMITMENT.toLowerCase()}:${selectors.commitmentCount}`] = uintResult(options.v1TrancheCount);
+  if (options.v2TrancheCount !== undefined) callResults[`${COMMITMENT_V2.toLowerCase()}:${selectors.commitmentCount}`] = uintResult(options.v2TrancheCount);
+  return callResults;
+}
 
-  await context.addInitScript(({ account, initialChainId, shouldRejectSwitch, results }) => {
+const READ_RPC_PATTERNS = [
+  "https://ethereum-rpc.publicnode.com/**",
+  "https://ethereum-rpc.publicnode.com",
+  "https://eth.drpc.org/**",
+  "https://eth.drpc.org",
+  "https://1rpc.io/eth",
+  "https://1rpc.io/eth/**",
+];
+
+// Answers the Web3 wallet core's chain-pinned public read RPCs from a fixture (never the real network).
+async function routeReadRpc(target, results, options = {}) {
+  const chainId = options.readChainId || "0x1";
+  const log = options.readLog || null;
+  const handler = async (route) => {
+    let payload;
+    try {
+      payload = route.request().postDataJSON();
+    } catch {
+      return route.abort();
+    }
+    const respond = (item) => {
+      if (log) log.push(item.method);
+      let result = null;
+      if (item.method === "eth_chainId") result = chainId;
+      else if (item.method === "net_version") result = String(Number.parseInt(chainId, 16));
+      else if (item.method === "eth_blockNumber") result = "0x10";
+      else if (item.method === "eth_getCode") result = "0x01";
+      else if (item.method === "eth_getBalance") result = "0xde0b6b3a7640000";
+      else if (item.method === "eth_call") {
+        const call = item.params && item.params[0] ? item.params[0] : {};
+        const data = String(call.data || "0x").slice(0, 10).toLowerCase();
+        const key = `${String(call.to || "").toLowerCase()}:${data}`;
+        const flip = options.feeExemptFlip;
+        const flipped = flip && key === flip.key && options.sendCount && options.sendCount() >= flip.afterSends;
+        const scoped = flipped ? flip.value : results[key];
+        if (scoped === "__THROW__") {
+          return { jsonrpc: "2.0", id: item.id, error: { code: 3, message: "execution reverted (test)", data: "0x" } };
+        }
+        result = scoped || results[data] || `0x${"0".repeat(64)}`;
+      }
+      return { jsonrpc: "2.0", id: item.id, result };
+    };
+    const body = Array.isArray(payload) ? payload.map(respond) : respond(payload);
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
+  };
+  for (const pattern of READ_RPC_PATTERNS) await target.route(pattern, handler);
+}
+
+// Every context gets fixture read RPCs by default, so no test reaches a real public endpoint.
+async function newRoutedContext(browser, contextOptions) {
+  const context = await browser.newContext(contextOptions);
+  await routeReadRpc(context, buildCallResults());
+  return context;
+}
+
+// Optional: feeExempt(V2) changes after N eth_sendTransaction calls ({ afterSends, to: false | "error" }).
+function buildFeeExemptFlip(options) {
+  return options.feeExemptFlip
+    ? {
+        key: `${TOKEN.toLowerCase()}:${selectors.feeExempt}`,
+        afterSends: options.feeExemptFlip.afterSends,
+        value: options.feeExemptFlip.to === "error" ? "__THROW__" : uintResult(options.feeExemptFlip.to ? 1n : 0n),
+      }
+    : null;
+}
+
+async function installWallet(context, options = {}) {
+  const chainId = options.chainId || "0x1";
+  const rejectSwitch = options.rejectSwitch === true;
+  const callResults = buildCallResults(options);
+  const walletResults = { ...callResults, ...(options.walletResultsOverride || {}) };
+
+  const feeExemptFlip = buildFeeExemptFlip(options);
+
+  await context.addInitScript(({ account, initialChainId, shouldRejectSwitch, results, flip }) => {
+    let sendCount = 0;
     const listeners = new Map();
     const transactions = new Map();
     let activeChainId = initialChainId;
@@ -135,9 +243,13 @@ async function installWallet(context, options = {}) {
           if (method === "eth_call") {
             const call = params && params[0] ? params[0] : {};
             const data = String(call.data || "0x").slice(0, 10).toLowerCase();
-            return results[data] || `0x${"0".repeat(64)}`;
+            const scoped = results[`${String(call.to || "").toLowerCase()}:${data}`];
+            if (scoped === "__THROW__") throw Object.assign(new Error("execution reverted (test)"), { code: -32000 });
+            return scoped || results[data] || `0x${"0".repeat(64)}`;
           }
           if (method === "eth_sendTransaction") {
+            sendCount += 1;
+            if (flip && sendCount >= flip.afterSends) results[flip.key] = flip.value;
             const response = await fetch("/__web3_test_transaction", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -207,14 +319,21 @@ async function installWallet(context, options = {}) {
     account: ACCOUNT,
     initialChainId: chainId,
     shouldRejectSwitch: rejectSwitch,
-    results: callResults,
+    results: walletResults,
+    flip: feeExemptFlip,
   });
+  return callResults;
 }
 
 async function preparePage(browser, options = {}) {
-  const context = await browser.newContext({ serviceWorkers: "block", ...(options.contextOptions || {}) });
-  await installWallet(context, options);
+  const context = await newRoutedContext(browser, { serviceWorkers: "block", ...(options.contextOptions || {}) });
+  const readResults = await installWallet(context, options);
   const writes = [];
+  await routeReadRpc(context, { ...readResults, ...(options.readResultsOverride || {}) }, {
+    ...options,
+    feeExemptFlip: buildFeeExemptFlip(options),
+    sendCount: () => writes.length,
+  });
   const pageErrors = [];
   const page = await context.newPage();
   page.on("pageerror", (error) => pageErrors.push(error.message));
@@ -370,7 +489,7 @@ test("failed account refresh clears the previous wallet data", async ({ browser 
 });
 
 test("wallet chooser keeps WalletConnect available with zero or multiple injected wallets", async ({ browser }) => {
-  const emptyContext = await browser.newContext({ serviceWorkers: "block" });
+  const emptyContext = await newRoutedContext(browser, { serviceWorkers: "block" });
   try {
     const emptyPage = await emptyContext.newPage();
     await emptyPage.goto("/web3/", { waitUntil: "domcontentloaded" });
@@ -404,8 +523,8 @@ test("wallet chooser keeps WalletConnect available with zero or multiple injecte
 });
 
 test("new Web3 HTML fails visibly when an old cached wallet core lacks the chooser API", async ({ browser }) => {
-  const context = await browser.newContext({ serviceWorkers: "block" });
-  await context.route("**/web3-wallet-core.js?v=20260928-wc-cancel", (route) => route.fulfill({
+  const context = await newRoutedContext(browser, { serviceWorkers: "block" });
+  await context.route("**/web3-wallet-core.js?v=20261004-rpc-fallback-v6", (route) => route.fulfill({
     contentType: "application/javascript",
     body: `window.IFRWallet = {
       autoReconnect: async () => false,
@@ -701,7 +820,7 @@ const WC_PENDING_MOCK_MODULE = `
 `;
 
 test("closing a pending tablet WalletConnect dialog cancels it and a retry still connects", async ({ browser }) => {
-  const context = await browser.newContext({
+  const context = await newRoutedContext(browser, {
     serviceWorkers: "block",
     viewport: { width: 711, height: 970 },
     userAgent: "Mozilla/5.0 (Linux; Android 9; SM-T835) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36",
@@ -793,7 +912,7 @@ const WC_DEFERRED_INIT_MOCK_MODULE = WC_PENDING_MOCK_MODULE
 test("cancelling while WalletConnect init is pending drops the late provider and a retry pairs fresh", async ({ browser }) => {
   expect(WC_DEFERRED_INIT_MOCK_MODULE).toContain("state.inits.push(resolve)");
   expect(WC_DEFERRED_INIT_MOCK_MODULE).toContain("provider.disconnected = true");
-  const context = await browser.newContext({
+  const context = await newRoutedContext(browser, {
     serviceWorkers: "block",
     viewport: { width: 711, height: 970 },
     userAgent: "Mozilla/5.0 (Linux; Android 9; SM-T835) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0 Safari/537.36",
@@ -866,7 +985,7 @@ test("cancelling while WalletConnect init is pending drops the late provider and
 });
 
 test("WalletConnect initialization can be retried after a transient loader failure", async ({ browser }) => {
-  const context = await browser.newContext({ serviceWorkers: "block" });
+  const context = await newRoutedContext(browser, { serviceWorkers: "block" });
   const warnings = [];
   try {
     await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js", async (route) => {
@@ -912,7 +1031,7 @@ test("Web3 connect flow uses the guarded wallet-state loader", () => {
 });
 
 test("persisted WalletConnect wrong-network recovery fails closed without an unhandled rejection", async ({ browser }) => {
-  const context = await browser.newContext({ serviceWorkers: "block" });
+  const context = await newRoutedContext(browser, { serviceWorkers: "block" });
   const pageErrors = [];
   try {
     await context.route("**/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js", async (route) => {
@@ -1009,7 +1128,7 @@ test("existing IFRLock balance can be unlocked without another approval", async 
 });
 
 test("CommitmentVault time-only and LendingVault offer writes preserve IFR base units", async ({ browser }) => {
-  const { context, page, writes, pageErrors } = await preparePage(browser);
+  const { context, page, writes, pageErrors } = await preparePage(browser, { feeExemptV2: true });
   await page.goto("/web3/", { waitUntil: "domcontentloaded" });
   await connect(page);
 
@@ -1019,7 +1138,7 @@ test("CommitmentVault time-only and LendingVault offer writes preserve IFR base 
   await expect.poll(() => writes.length, { timeout: 15_000 }).toBe(2);
   expect(writes[0].action).toBe("approve");
   expect(writes[0].amount).toBe(250n * UNIT);
-  expect(writes[1].action).toBe("commitment-lock");
+  expect(writes[1].action).toBe("commitment-lock-v2");
   expect(writes[1].amount).toBe(250n * UNIT);
 
   await page.locator("[data-lock-close]").click();
@@ -1036,7 +1155,7 @@ test("CommitmentVault time-only and LendingVault offer writes preserve IFR base 
 });
 
 test("CommitmentVault V1 offers only TIME_ONLY and refuses forged price conditions before any wallet write (CV-01)", async ({ browser }) => {
-  const { context, page, writes, pageErrors } = await preparePage(browser);
+  const { context, page, writes, pageErrors } = await preparePage(browser, { feeExemptV2: true });
   await page.goto("/web3/", { waitUntil: "domcontentloaded" });
   await connect(page);
   await page.locator("[data-open-lock]").first().click();
@@ -1065,7 +1184,7 @@ test("CommitmentVault V1 offers only TIME_ONLY and refuses forged price conditio
 });
 
 test("wiki CommitmentVault widget exposes only TIME_ONLY and pins cType 0 at the lock call (CV-01)", async ({ browser }) => {
-  const context = await browser.newContext({ serviceWorkers: "block" });
+  const context = await newRoutedContext(browser, { serviceWorkers: "block" });
   const page = await context.newPage();
   await page.goto("/wiki/commitment-vault.html", { waitUntil: "domcontentloaded" });
   const condition = page.locator("#cv-condition-type");
@@ -1080,10 +1199,238 @@ test("wiki CommitmentVault widget exposes only TIME_ONLY and pins cType 0 at the
   expect(source).toContain("cv.lock(plan.amounts[i], 0, plan.unlockTime, 0)");
   expect(source).not.toMatch(/<option value="[123]">[A-D]\) (Price|Time OR|Time AND)/);
   const web3 = readFileSync("docs/web3/index.html", "utf8");
-  expect(web3).toContain("commitment.lock(plan.amounts[i], 0, plan.unlockTime, 0)");
+  expect(web3).toContain("commitmentV2.lock(plan.amounts[i], 0, plan.unlockTime, 0)");
+  expect(web3).not.toMatch(/commitmentV1\.lock\(/);
+  expect(source).toContain('var cv = new ethers.Contract(CV_V2_ADDR, CV_ABI, cvSigner);');
+  expect(source).toContain("token.approve(CV_V2_ADDR, plan.totalAmount)");
+  expect(source).not.toMatch(/approve\(CV_V1_ADDR/);
+  await expect(page.locator("#cv-v2-gate")).toContainText("CommitmentVault V2 opens for new time locks once its fee exemption is executed");
   expect(web3).not.toContain("Price-condition locks are available");
   await context.close();
 });
+
+for (const [label, feeExemptV2] of [["fee exemption not executed", false], ["fee exemption unreadable", "error"]]) {
+  test(`CommitmentVault V2 locking stays disabled with no V1 fallback when the ${label} (T-220)`, async ({ browser }) => {
+    const { context, page, writes, pageErrors } = await preparePage(browser, { feeExemptV2 });
+    await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+    await connect(page);
+    await page.locator("[data-open-lock]").first().click();
+    await expect(page.locator("[data-lock-status]")).toContainText("CommitmentVault V2 opens for new time locks once its fee exemption is executed", { timeout: 15_000 });
+    await expect(page.locator("[data-lock-submit]")).toBeDisabled();
+    await expect(page.locator("[data-lock-note]")).toContainText("Governance proposal #17");
+    await page.locator("[data-lock-amount]").fill("250");
+    await page.locator("[data-lock-submit]").evaluate((button) => { button.disabled = false; button.click(); });
+    await expect(page.locator("[data-lock-status]")).toContainText("CommitmentVault V2 opens for new time locks", { timeout: 10_000 });
+    expect(writes).toEqual([]);
+    expect(pageErrors).toEqual([]);
+    await context.close();
+  });
+}
+
+test("CommitmentVault V2 approve and lock target V2 with cType 0 once the fee exemption is active (T-220)", async ({ browser }) => {
+  const { context, page, writes, pageErrors } = await preparePage(browser, { feeExemptV2: true });
+  await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+  await connect(page);
+  await page.locator("[data-open-lock]").first().click();
+  await expect(page.locator("[data-lock-submit]")).toBeEnabled({ timeout: 15_000 });
+  await page.locator("[data-lock-amount]").fill("100");
+  await page.locator("[data-lock-submit]").click();
+  await expect.poll(() => writes.length, { timeout: 15_000 }).toBe(2);
+  expect(writes[0].action).toBe("approve");
+  expect(String(writes[0].data).toLowerCase()).toContain(COMMITMENT_V2.slice(2).toLowerCase());
+  expect(writes[1]).toMatchObject({ action: "commitment-lock-v2", amount: 100n * UNIT, cType: 0n, p0Multiplier: 0n });
+  expect(writes.some((w) => w.action === "commitment-lock")).toBe(false);
+  expect(pageErrors).toEqual([]);
+  await context.close();
+});
+
+test("existing CommitmentVault V1 time tranche still unlocks through V1 while V2 is closed (T-220)", async ({ browser }) => {
+  const { context, page, writes, pageErrors } = await preparePage(browser, { v1Tranche: true });
+  await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+  await connect(page);
+  await page.locator("[data-open-lock]").first().click();
+  const unlock = page.locator('[data-unlock-vault="v1"][data-unlock-tranche="0"]');
+  await expect(unlock).toBeEnabled({ timeout: 15_000 });
+  await expect(page.locator("[data-lock-tranches]")).toContainText("V1 · Tranche #0");
+  await unlock.click();
+  await expect.poll(() => writes.length, { timeout: 15_000 }).toBe(1);
+  expect(writes[0]).toMatchObject({ action: "commitment-unlock-v1", amount: 0n });
+  expect(pageErrors).toEqual([]);
+  await context.close();
+});
+
+for (const feeExemptV2 of [false, true]) {
+  test(`wiki CommitmentVault widget gates new locks on feeExempt(V2)=${feeExemptV2} and lists V1 tranches (T-220)`, async ({ browser }) => {
+    const { context, page, writes, pageErrors } = await preparePage(browser, { feeExemptV2, v1Tranche: true });
+    await page.goto("/wiki/commitment-vault.html", { waitUntil: "domcontentloaded" });
+    await page.locator("#cv-connect-btn").click();
+    const injected = page.locator('[data-wallet-option-type="injected"]').first();
+    if (await injected.isVisible().catch(() => false)) await injected.click();
+    await expect(page.locator("#cv-tranches-list")).toContainText("V1 · Tranche #0", { timeout: 15_000 });
+    await page.locator("#cv-amount").fill("100");
+    await page.locator("#cv-amount").dispatchEvent("input");
+    if (feeExemptV2) {
+      await expect(page.locator("#cv-lock-btn")).toBeEnabled();
+      await expect(page.locator("#cv-v2-gate")).toContainText("New time locks go to CommitmentVault V2");
+      await page.locator("#cv-lock-btn").click();
+      await expect.poll(() => writes.length, { timeout: 15_000 }).toBe(2);
+      expect(writes[0].action).toBe("approve");
+      expect(String(writes[0].data).toLowerCase()).toContain(COMMITMENT_V2.slice(2).toLowerCase());
+      expect(writes[1]).toMatchObject({ action: "commitment-lock-v2", amount: 100n * UNIT, cType: 0n, p0Multiplier: 0n });
+    } else {
+      await expect(page.locator("#cv-lock-btn")).toBeDisabled();
+      await expect(page.locator("#cv-v2-gate")).toContainText("CommitmentVault V2 opens for new time locks once its fee exemption is executed");
+      await page.locator("#cv-lock-btn").evaluate((button) => { button.disabled = false; button.click(); });
+      await page.waitForTimeout(1500);
+      expect(writes).toEqual([]);
+      await page.locator('[data-unlock-vault="v1"][data-unlock-tranche="0"]').click();
+      await expect.poll(() => writes.length, { timeout: 15_000 }).toBe(1);
+      expect(writes[0]).toMatchObject({ action: "commitment-unlock-v1" });
+    }
+    expect(pageErrors).toEqual([]);
+    await context.close();
+  });
+}
+
+// T-240: V1 warning above the V1 area, V2 as the only path for new TIME_ONLY locks, V1 exits preserved.
+async function expectStackedAbove(page, selectors) {
+  const boxes = [];
+  for (const selector of selectors) {
+    const box = await page.locator(selector).first().boundingBox();
+    expect(box, `${selector} must be rendered`).not.toBeNull();
+    boxes.push({ selector, ...box });
+  }
+  for (let i = 1; i < boxes.length; i++) {
+    expect(boxes[i - 1].y + boxes[i - 1].height, `${boxes[i - 1].selector} above ${boxes[i].selector}`).toBeLessThanOrEqual(boxes[i].y + 0.5);
+  }
+}
+
+test("landing wizard lock branch deep-links new time locks to the V2 entry, not a price or V1 form (T-240)", async ({ browser }) => {
+  const { context, page, pageErrors } = await preparePage(browser);
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page.evaluate(() => window.wzGo("lock"));
+  const options = page.locator("#wz-box a.wz-option");
+  const newLock = options.filter({ hasText: "New CommitmentVault time lock" });
+  const manage = options.filter({ hasText: "Manage existing tranches" });
+  await expect(newLock).toHaveCount(1);
+  await expect(newLock).toHaveAttribute("href", "https://web3.ifrunit.tech/?action=commitment-lock#access");
+  await expect(newLock).toContainText("CommitmentVault V2");
+  await expect(manage).toHaveAttribute("href", "https://web3.ifrunit.tech/?action=commitment-lock#access");
+  await expect(manage).toContainText("each unlocks through its own vault");
+  const branchText = await page.locator("#wz-box").innerText();
+  expect(branchText).not.toMatch(/price-|combined-|indefinite-lock|create .*price/i);
+  expect(branchText).toContain("no price locks");
+  expect(pageErrors).toEqual([]);
+  await context.close();
+});
+
+test("web3 lock deep link opens the V2 entry under the V1 warning; V2 lock targets V2 and V1 unlock targets V1 (T-240)", async ({ browser }) => {
+  const { context, page, writes, pageErrors } = await preparePage(browser, { feeExemptV2: true, v1Tranche: true });
+  await page.goto("/web3/?action=commitment-lock#access", { waitUntil: "domcontentloaded" });
+  await selectInjectedWallet(page);
+  const dialog = page.locator("[data-lock-dialog]");
+  await expect(dialog.locator("[data-v1-warning]")).toBeVisible({ timeout: 15_000 });
+  await expect(dialog.locator("[data-v1-warning]")).toContainText("Do not create new CommitmentVault V1 locks");
+  await expect(dialog.locator("[data-v1-warning]")).toContainText("can never unlock");
+  await expect(dialog.locator("[data-v2-path]")).toContainText("New time locks: CommitmentVault V2 only");
+  await expect(dialog.locator("[data-v2-path]")).toContainText("No price lock is available");
+  await expect(dialog.locator("[data-lock-condition] option")).toHaveCount(1);
+  await expect(dialog.locator("[data-lock-condition] option")).toHaveAttribute("value", "0");
+  const unlockV1 = page.locator('[data-unlock-vault="v1"][data-unlock-tranche="0"]');
+  await expect(unlockV1).toBeEnabled({ timeout: 15_000 });
+  await expectStackedAbove(page, ["[data-lock-dialog] [data-v1-warning]", "[data-lock-dialog] [data-v2-path]", "[data-lock-dialog] .protocol-form", "[data-lock-tranches]"]);
+  await expect(page.locator("[data-lock-submit]")).toBeEnabled({ timeout: 15_000 });
+  await page.locator("[data-lock-amount]").fill("100");
+  await page.locator("[data-lock-submit]").click();
+  await expect.poll(() => writes.length, { timeout: 15_000 }).toBe(2);
+  expect(writes[0].action).toBe("approve");
+  expect(String(writes[0].data).toLowerCase()).toContain(COMMITMENT_V2.slice(2).toLowerCase());
+  expect(writes[1]).toMatchObject({ action: "commitment-lock-v2", amount: 100n * UNIT, cType: 0n, p0Multiplier: 0n });
+  expect(String(writes[1].to).toLowerCase()).toBe(COMMITMENT_V2.toLowerCase());
+  await expect(page.locator('[data-unlock-vault="v1"][data-unlock-tranche="0"]')).toBeEnabled({ timeout: 15_000 });
+  await page.locator('[data-unlock-vault="v1"][data-unlock-tranche="0"]').click();
+  await expect.poll(() => writes.length, { timeout: 15_000 }).toBe(3);
+  expect(writes[2]).toMatchObject({ action: "commitment-unlock-v1" });
+  expect(String(writes[2].to).toLowerCase()).toBe(COMMITMENT.toLowerCase());
+  expect(writes.some((w) => w.action === "commitment-lock")).toBe(false);
+  expect(pageErrors).toEqual([]);
+  await context.close();
+});
+
+for (const [label, options] of [
+  ["feeExempt(V2) is false", { feeExemptV2: false }],
+  ["feeExempt(V2) is unreadable", { feeExemptV2: "error" }],
+  ["the read RPC reports the wrong chain", { feeExemptV2: true, readChainId: "0x5" }],
+  ["the wallet stays on the wrong chain", { feeExemptV2: true, chainId: "0x5", rejectSwitch: true }],
+]) {
+  test(`web3 V2 approval and lock stay blocked when ${label}; the V1 warning stays visible (T-240)`, async ({ browser }) => {
+    const { context, page, writes, pageErrors } = await preparePage(browser, { v1Tranche: true, ...options });
+    await page.goto("/web3/?action=commitment-lock#access", { waitUntil: "domcontentloaded" });
+    await selectInjectedWallet(page).catch(() => null);
+    await expect(page.locator("[data-lock-dialog] [data-v1-warning]")).toBeVisible({ timeout: 15_000 });
+    await page.waitForTimeout(1500);
+    await expect(page.locator("[data-lock-submit]")).toBeDisabled();
+    await page.locator("[data-lock-amount]").fill("100");
+    await page.locator("[data-lock-submit]").evaluate((button) => { button.disabled = false; button.click(); });
+    await page.waitForTimeout(1500);
+    expect(writes).toEqual([]);
+    // The forced click re-enabled the button; a read-side gate closes it again, a wallet-side refusal throws first.
+    if (!options.rejectSwitch) await expect(page.locator("[data-lock-submit]")).toBeDisabled();
+    expect(pageErrors).toEqual([]);
+    await context.close();
+  });
+}
+
+test("wiki lock widget shows the V1 warning above the V2-only path and keeps price modes absent (T-240)", async ({ browser }) => {
+  const { context, page, writes, pageErrors } = await preparePage(browser, { feeExemptV2: false, v1Tranche: true });
+  await page.goto("/wiki/commitment-vault.html#lock-widget", { waitUntil: "domcontentloaded" });
+  await expect(page.locator("#cv-v1-warning")).toBeVisible();
+  await expect(page.locator("#cv-v1-warning")).toContainText("Do not create new CommitmentVault V1 locks");
+  await expect(page.locator("#cv-v2-path")).toContainText("New time locks: CommitmentVault V2 only");
+  await expect(page.locator("#cv-condition-type option")).toHaveCount(1);
+  await expect(page.locator("#cv-condition-type option")).toHaveAttribute("value", "0");
+  await page.locator("#cv-connect-btn").click();
+  const injected = page.locator('[data-wallet-option-type="injected"]').first();
+  if (await injected.isVisible().catch(() => false)) await injected.click();
+  await expect(page.locator("#cv-tranches-list")).toContainText("V1 · Tranche #0", { timeout: 15_000 });
+  await expectStackedAbove(page, ["#cv-v1-warning", "#cv-v2-path", "#cv-connect-section", "#cv-config-section", "#cv-dashboard-section"]);
+  await expect(page.locator("#cv-lock-btn")).toBeDisabled();
+  await page.locator('[data-unlock-vault="v1"][data-unlock-tranche="0"]').click();
+  await expect.poll(() => writes.length, { timeout: 15_000 }).toBe(1);
+  expect(writes[0]).toMatchObject({ action: "commitment-unlock-v1" });
+  expect(String(writes[0].to).toLowerCase()).toBe(COMMITMENT.toLowerCase());
+  expect(pageErrors).toEqual([]);
+  await context.close();
+});
+
+// MAX_TRANCHES (50) is per vault: a full V1 must not block a V2 lock, a full V2 must (T-240, CodeRabbit #188).
+for (const [label, counts, allowed] of [
+  ["a full V1 does not block a new V2 lock", { v1TrancheCount: 50n, v2TrancheCount: 0n }, true],
+  ["a full V2 blocks a new V2 lock", { v1TrancheCount: 0n, v2TrancheCount: 50n }, false],
+]) {
+  test(`wiki tranche limit is checked against V2 only: ${label} (T-240)`, async ({ browser }) => {
+    const { context, page, writes, pageErrors } = await preparePage(browser, { feeExemptV2: true, v1Tranche: true, ...counts });
+    await page.goto("/wiki/commitment-vault.html", { waitUntil: "domcontentloaded" });
+    await page.locator("#cv-connect-btn").click();
+    const injected = page.locator('[data-wallet-option-type="injected"]').first();
+    if (await injected.isVisible().catch(() => false)) await injected.click();
+    await expect(page.locator("#cv-tranches-list")).toContainText("V1 · Tranche #0", { timeout: 15_000 });
+    await page.locator("#cv-amount").fill("100");
+    await page.locator("#cv-amount").dispatchEvent("input");
+    await expect(page.locator("#cv-lock-btn")).toBeEnabled();
+    await page.locator("#cv-lock-btn").click();
+    if (allowed) {
+      await expect.poll(() => writes.length, { timeout: 15_000 }).toBe(2);
+      expect(writes[1]).toMatchObject({ action: "commitment-lock-v2", amount: 100n * UNIT, cType: 0n });
+      expect(String(writes[1].to).toLowerCase()).toBe(COMMITMENT_V2.toLowerCase());
+    } else {
+      await expect(page.locator("#cv-lock-status")).toContainText("50 tranche limit", { timeout: 15_000 });
+      expect(writes).toEqual([]);
+    }
+    expect(pageErrors).toEqual([]);
+    await context.close();
+  });
+}
 
 test("LendingVault borrowing remains transaction-disabled while price is zero", async ({ browser }) => {
   const { context, page, writes, pageErrors } = await preparePage(browser, { offerAvailable: true });
@@ -1100,7 +1447,7 @@ test("LendingVault borrowing remains transaction-disabled while price is zero", 
 });
 
 test("Web3 runtime uses the self-hosted Ethers asset", async ({ browser }) => {
-  const context = await browser.newContext({ serviceWorkers: "block" });
+  const context = await newRoutedContext(browser, { serviceWorkers: "block" });
   try {
     const page = await context.newPage();
     const externalEthersRequests = [];
@@ -1132,7 +1479,7 @@ test("self-hosted WalletConnect artifact matches the recorded 2.25.0 build", () 
 });
 
 test("self-hosted WalletConnect artifact executes in the browser and exposes EthereumProvider", async ({ browser }) => {
-  const context = await browser.newContext({ serviceWorkers: "block" });
+  const context = await newRoutedContext(browser, { serviceWorkers: "block" });
   const pageErrors = [];
   try {
     const page = await context.newPage();
@@ -1154,7 +1501,7 @@ test("self-hosted WalletConnect artifact executes in the browser and exposes Eth
 });
 
 test("WalletConnect connect loads the provider only from the pinned same-origin artifact", async ({ browser }) => {
-  const context = await browser.newContext({ serviceWorkers: "block" });
+  const context = await newRoutedContext(browser, { serviceWorkers: "block" });
   const pageErrors = [];
   try {
     const artifactRequests = [];
@@ -1229,7 +1576,7 @@ test("Add IFR to wallet submits the canonical token metadata", async ({ browser 
 });
 
 test("Android 9 stays in browser mode instead of launching an incompatible WebAPK", async ({ browser }) => {
-  const context = await browser.newContext({
+  const context = await newRoutedContext(browser, {
     viewport: { width: 360, height: 640 },
     userAgent: "Mozilla/5.0 (Linux; Android 9; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36",
   });
@@ -1253,9 +1600,9 @@ test("Android 9 stays in browser mode instead of launching an incompatible WebAP
 test("Web3 service worker bounds offline navigation before using the cache", () => {
   const source = readFileSync("docs/web3-sw.js", "utf8");
   const html = readFileSync("docs/web3/index.html", "utf8");
-  expect(source).toContain('const CACHE_NAME = "ifr-web3-v19"');
-  expect(source).toContain('"/web3-wallet-core.js?v=20260928-wc-cancel"');
-  expect(html).toContain('<script src="/web3-wallet-core.js?v=20260928-wc-cancel"></script>');
+  expect(source).toContain('const CACHE_NAME = "ifr-web3-v22"');
+  expect(source).toContain('"/web3-wallet-core.js?v=20261004-rpc-fallback-v6"');
+  expect(html).toContain('<script src="/web3-wallet-core.js?v=20261004-rpc-fallback-v6"></script>');
   expect(html).toContain('updateViaCache: "none"');
   expect(source).toContain("const NAVIGATION_TIMEOUT_MS = 5000");
   expect(source).toContain("fetchNavigation(request)");
@@ -1265,7 +1612,7 @@ test("Web3 service worker bounds offline navigation before using the cache", () 
 });
 
 test("Web3 app shell reloads from the service-worker cache while offline", async ({ browser }) => {
-  const context = await browser.newContext({ serviceWorkers: "allow" });
+  const context = await newRoutedContext(browser, { serviceWorkers: "allow" });
   const page = await context.newPage();
   await page.goto("/web3/", { waitUntil: "networkidle" });
   await page.evaluate(() => navigator.serviceWorker.ready);
@@ -1335,7 +1682,7 @@ function measureHeaderGeometry() {
 for (const standalone of [false, true]) {
   for (const device of HEADER_CASES) {
     test(`Web3 header shows no overlap or overflow at ${device.name} (${standalone ? "standalone" : "browser tab"})`, async ({ browser }) => {
-      const context = await browser.newContext({
+      const context = await newRoutedContext(browser, {
         viewport: { width: device.width, height: device.height },
         userAgent: device.ua,
         hasTouch: true,
@@ -1426,7 +1773,7 @@ async function routeWalletConnectModule(context, shouldFail, body) {
 }
 
 test("WalletConnect fetch failure shows an honest error and recovers after reload", async ({ browser }) => {
-  const context = await browser.newContext({ serviceWorkers: "block" });
+  const context = await newRoutedContext(browser, { serviceWorkers: "block" });
   const pageErrors = [];
   let failImport = true;
   try {
@@ -1456,7 +1803,7 @@ test("WalletConnect fetch failure shows an honest error and recovers after reloa
 });
 
 test("WalletConnect init failure stays recoverable on the next attempt", async ({ browser }) => {
-  const context = await browser.newContext({ serviceWorkers: "block" });
+  const context = await newRoutedContext(browser, { serviceWorkers: "block" });
   const pageErrors = [];
   try {
     await routeWalletConnectModule(context, () => false, WC_FLAKY_INIT_MODULE);
@@ -1484,3 +1831,350 @@ test("WalletConnect init failure stays recoverable on the next attempt", async (
     await context.close();
   }
 });
+
+// Codex review of #188: feeExempt(V2) is re-read fail-closed before EVERY approve/lock, and a change
+// after approval or between tranches aborts the remaining sequence (frontend cannot make it atomic).
+for (const [label, flip, split, expected] of [
+  ["turns false after the approval", { afterSends: 1, to: false }, false, ["approve"]],
+  ["becomes unreadable after the approval", { afterSends: 1, to: "error" }, false, ["approve"]],
+  ["turns false between two tranches", { afterSends: 2, to: false }, true, ["approve", "commitment-lock-v2"]],
+]) {
+  test(`web3 V2 lock sequence stops when feeExempt(V2) ${label} (T-220)`, async ({ browser }) => {
+    const { context, page, writes, pageErrors } = await preparePage(browser, { feeExemptV2: true, feeExemptFlip: flip });
+    await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+    await connect(page);
+    await page.locator("[data-open-lock]").first().click();
+    await expect(page.locator("[data-lock-submit]")).toBeEnabled({ timeout: 15_000 });
+    await page.locator("[data-lock-amount]").fill("100");
+    if (split) await page.locator("[data-lock-split]").check();
+    await page.locator("[data-lock-submit]").click();
+    await expect(page.locator("[data-lock-status]")).toContainText("CommitmentVault V2 opens for new time locks", { timeout: 15_000 });
+    await page.waitForTimeout(1000);
+    expect(writes.map((w) => w.action)).toEqual(expected);
+    await expect(page.locator("[data-lock-submit]")).toBeDisabled();
+    await expect(page.locator("[data-lock-note]")).toContainText("CommitmentVault V2 opens for new time locks");
+    expect(pageErrors).toEqual([]);
+    await context.close();
+  });
+}
+
+test("web3 V2 split lock proceeds through all tranches while feeExempt(V2) stays true (T-220)", async ({ browser }) => {
+  const { context, page, writes, pageErrors } = await preparePage(browser, { feeExemptV2: true });
+  await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+  await connect(page);
+  await page.locator("[data-open-lock]").first().click();
+  await expect(page.locator("[data-lock-submit]")).toBeEnabled({ timeout: 15_000 });
+  await page.locator("[data-lock-amount]").fill("100");
+  await page.locator("[data-lock-split]").check();
+  await page.locator("[data-lock-submit]").click();
+  await expect.poll(() => writes.length, { timeout: 30_000 }).toBe(11);
+  expect(writes[0].action).toBe("approve");
+  expect(writes.slice(1).every((w) => w.action === "commitment-lock-v2" && w.cType === 0n)).toBe(true);
+  expect(pageErrors).toEqual([]);
+  await context.close();
+});
+
+test("web3 lock button closes when a panel refresh fails after V2 was open (T-220)", async ({ browser }) => {
+  const { context, page, pageErrors } = await preparePage(browser, { feeExemptV2: true });
+  await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+  await connect(page);
+  await page.locator("[data-open-lock]").first().click();
+  await expect(page.locator("[data-lock-submit]")).toBeEnabled({ timeout: 15_000 });
+  await page.evaluate(() => { window.ethereum.request = async () => { throw new Error("rpc down (test)"); }; });
+  await page.locator("[data-lock-refresh]").click();
+  await expect(page.locator("[data-lock-submit]")).toBeDisabled({ timeout: 15_000 });
+  expect(pageErrors).toEqual([]);
+  await context.close();
+});
+
+for (const [label, flip, split, expected] of [
+  ["turns false after the approval", { afterSends: 1, to: false }, false, ["approve"]],
+  ["turns false between two tranches", { afterSends: 2, to: false }, true, ["approve", "commitment-lock-v2"]],
+  ["becomes unreadable between two tranches", { afterSends: 2, to: "error" }, true, ["approve", "commitment-lock-v2"]],
+]) {
+  test(`wiki V2 lock sequence stops when feeExempt(V2) ${label} (T-220)`, async ({ browser }) => {
+    const { context, page, writes, pageErrors } = await preparePage(browser, { feeExemptV2: true, feeExemptFlip: flip });
+    await page.goto("/wiki/commitment-vault.html", { waitUntil: "domcontentloaded" });
+    await page.locator("#cv-connect-btn").click();
+    const injected = page.locator('[data-wallet-option-type="injected"]').first();
+    if (await injected.isVisible().catch(() => false)) await injected.click();
+    await expect(page.locator("#cv-v2-gate")).toContainText("New time locks go to CommitmentVault V2", { timeout: 15_000 });
+    await page.locator("#cv-amount").fill("100");
+    await page.locator("#cv-amount").dispatchEvent("input");
+    if (split) await page.locator("#cv-split-tranches").check();
+    await expect(page.locator("#cv-lock-btn")).toBeEnabled();
+    await page.locator("#cv-lock-btn").click();
+    await expect(page.locator("#cv-v2-gate")).toContainText("CommitmentVault V2 opens for new time locks", { timeout: 15_000 });
+    await page.waitForTimeout(1000);
+    expect(writes.map((w) => w.action)).toEqual(expected);
+    await expect(page.locator("#cv-lock-btn")).toBeDisabled();
+    expect(pageErrors).toEqual([]);
+    await context.close();
+  });
+}
+
+test("connected-wallet summaries read through the chain-pinned read provider, never the wallet provider", async ({ browser }) => {
+  const readLog = [];
+  const { context, page, pageErrors } = await preparePage(browser, {
+    locked: 5_000n * UNIT,
+    // A compromised or wrong-network wallet provider answers with fake data; it must never be displayed.
+    walletResultsOverride: { [selectors.accessLocked]: uintResult(999_999n * UNIT) },
+    readLog,
+  });
+  try {
+    await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+    await connect(page);
+    await expect(page.locator("[data-access-lock-balance]")).toHaveText("5,000 IFR", { timeout: 15_000 });
+    await expect(page.locator("[data-access-lock-note]")).toHaveText("Premium ready");
+    const walletCalls = await page.evaluate(() => window.__web3RequestCounts.eth_call || 0);
+    expect(walletCalls).toBe(0);
+    expect(readLog).toContain("eth_chainId");
+    expect(readLog).toContain("eth_call");
+    expect(pageErrors).toEqual([]);
+  } finally {
+    await context.close();
+  }
+});
+
+test("read RPCs on the wrong chain show no data and never fall back to the wallet provider", async ({ browser }) => {
+  const readLog = [];
+  const { context, page, pageErrors } = await preparePage(browser, {
+    readChainId: "0x5",
+    walletResultsOverride: { [selectors.accessLocked]: uintResult(999_999n * UNIT) },
+    readLog,
+  });
+  try {
+    await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+    await connect(page);
+    await expect(page.locator("#ifr-rpc-error")).toBeVisible({ timeout: 15_000 });
+    await expect(page.locator("[data-access-lock-balance]")).not.toContainText("999,999");
+    const walletCalls = await page.evaluate(() => window.__web3RequestCounts.eth_call || 0);
+    expect(walletCalls).toBe(0);
+    // Only chain checks reached the wrong-chain endpoints; no data call was sent to them.
+    expect(readLog.filter((method) => method !== "eth_chainId")).toEqual([]);
+    expect(pageErrors).toEqual([]);
+  } finally {
+    await context.close();
+  }
+});
+
+for (const [width, height] of [[1440, 1000], [1180, 820], [820, 1180], [390, 844]]) {
+  test(`RPC outage notice fits without overlap at ${width}x${height} and clears on recovery`, async ({ browser }) => {
+    const context = await browser.newContext({ serviceWorkers: "block", viewport: { width, height } });
+    let healthy = false;
+    const results = buildCallResults();
+    try {
+      const handler = async (route) => {
+        if (!healthy) return route.abort("failed");
+        let payload;
+        try { payload = route.request().postDataJSON(); } catch { return route.abort(); }
+        const respond = (item) => ({
+          jsonrpc: "2.0",
+          id: item.id,
+          result: item.method === "eth_chainId" ? "0x1"
+            : item.method === "eth_blockNumber" ? "0x10"
+            : item.method === "eth_call" ? (results[String((item.params && item.params[0] && item.params[0].data) || "0x").slice(0, 10).toLowerCase()] || `0x${"0".repeat(64)}`)
+            : null,
+        });
+        const body = Array.isArray(payload) ? payload.map(respond) : respond(payload);
+        await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
+      };
+      for (const pattern of READ_RPC_PATTERNS) await context.route(pattern, handler);
+      const page = await context.newPage();
+      const pageErrors = [];
+      page.on("pageerror", (error) => pageErrors.push(error.message));
+      await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+      await page.evaluate(() => window.IFRWallet.getReadProvider());
+      const notice = page.locator("#ifr-rpc-error");
+      await expect(notice).toBeVisible({ timeout: 20_000 });
+
+      const layout = await page.evaluate(() => {
+        const box = (el) => { const r = el.getBoundingClientRect(); return { left: r.left, right: r.right, top: r.top, bottom: r.bottom, width: r.width, height: r.height }; };
+        const overlaps = (a, b) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom;
+        const bar = document.getElementById("ifr-rpc-error");
+        const n = box(bar);
+        const visible = (el) => { const s = getComputedStyle(el); const r = el.getBoundingClientRect(); return s.visibility !== "hidden" && s.display !== "none" && r.width > 0 && r.height > 0; };
+        const controls = [...document.querySelectorAll("[data-wallet-connect], [data-wallet-state], button, a")]
+          .filter((el) => el !== bar && !bar.contains(el) && visible(el) && getComputedStyle(el).position === "fixed");
+        const fixedOverlaps = controls.filter((el) => overlaps(n, box(el))).map((el) => el.outerHTML.slice(0, 80));
+        const close = bar.querySelector("button");
+        return {
+          inViewport: n.left >= 0 && n.right <= window.innerWidth && n.top >= 0 && n.bottom <= window.innerHeight,
+          pageOverflow: document.documentElement.scrollWidth > window.innerWidth,
+          closeTarget: close ? box(close) : null,
+          fixedOverlaps,
+        };
+      });
+      expect(layout.inViewport).toBe(true);
+      expect(layout.pageOverflow).toBe(false);
+      expect(layout.fixedOverlaps).toEqual([]);
+      expect(layout.closeTarget.width).toBeGreaterThanOrEqual(44);
+      expect(layout.closeTarget.height).toBeGreaterThanOrEqual(44);
+      if (process.env.WEB3_RPC_NOTICE_SHOTS) {
+        await page.screenshot({ path: `${process.env.WEB3_RPC_NOTICE_SHOTS}/t221-rpc-outage-${width}x${height}.png` });
+      }
+
+      healthy = true;
+      await page.evaluate(() => window.IFRWallet.getReadProvider().getBlockNumber());
+      await expect(notice).toHaveCount(0, { timeout: 20_000 });
+      if (process.env.WEB3_RPC_NOTICE_SHOTS) {
+        await page.screenshot({ path: `${process.env.WEB3_RPC_NOTICE_SHOTS}/t221-rpc-recovered-${width}x${height}.png` });
+      }
+      expect(pageErrors).toEqual([]);
+    } finally {
+      await context.close();
+    }
+  });
+}
+
+// T-240 follow-up: the fixed Copilot launcher must never sit on visible text or controls of the active lock task.
+// Because the launcher is fixed, every part of the task passes its position while scrolling, so the check walks the
+// whole task region and measures the real launcher rect against rendered text boxes and interactive targets. A hidden
+// launcher (visibility) is allowed inside the task; it must be visible again once the task is out of the way.
+async function expectLauncherClearOfTask(page, taskSelector) {
+  const result = await page.evaluate(async (selector) => {
+    const settle = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const launcher = document.querySelector("#ifr-btn");
+    const shown = () => {
+      const s = getComputedStyle(launcher);
+      return s.display !== "none" && s.visibility !== "hidden" && Number(s.opacity) > 0;
+    };
+    const roots = () => Array.from(document.querySelectorAll(selector)).filter((el) => el.getClientRects().length > 0);
+    const boxes = roots().map((el) => el.getBoundingClientRect());
+    const top = Math.min(...boxes.map((b) => b.top)) + window.scrollY;
+    const bottom = Math.max(...boxes.map((b) => b.bottom)) + window.scrollY;
+    const hits = [];
+    for (let y = Math.max(0, Math.floor(top - window.innerHeight)); y <= bottom; y += 24) {
+      window.scrollTo({ top: y, behavior: "instant" });
+      await settle();
+      if (!shown()) continue;
+      const z = launcher.getBoundingClientRect();
+      const overlaps = (r) => r.width > 0 && r.height > 0 && r.left < z.right && r.right > z.left && r.top < z.bottom && r.bottom > z.top;
+      for (const root of roots()) {
+        for (const el of root.querySelectorAll("a, button, input, select, label, [role=button]")) {
+          if (el.getClientRects().length && overlaps(el.getBoundingClientRect())) hits.push(`${window.scrollY}: target ${el.textContent.trim().slice(0, 40)}`);
+        }
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+          if (!node.textContent.trim()) continue;
+          const range = document.createRange();
+          range.selectNodeContents(node);
+          if (Array.from(range.getClientRects()).some(overlaps)) hits.push(`${window.scrollY}: text ${node.textContent.trim().slice(0, 40)}`);
+        }
+      }
+    }
+    window.scrollTo({ top: 0, behavior: "instant" });
+    await settle();
+    return { hits, reachable: shown() };
+  }, taskSelector);
+  expect(result.hits, "Copilot launcher covers visible task text or controls").toEqual([]);
+  expect(result.reachable, "Copilot launcher stays reachable outside the task").toBe(true);
+}
+
+// T-240 visual gate: V1 warning and V2 path fit without overlap, clipping or horizontal overflow.
+async function measureLockLayout(page, containerSelector, stackSelectors, targetSelectors) {
+  return page.evaluate(({ containerSelector, stackSelectors, targetSelectors }) => {
+    const rect = (el) => { const r = el.getBoundingClientRect(); return { left: r.left, right: r.right, top: r.top, bottom: r.bottom, width: r.width, height: r.height }; };
+    const container = document.querySelector(containerSelector);
+    const c = rect(container);
+    const stack = stackSelectors.map((selector) => {
+      const el = document.querySelector(selector);
+      return { selector, ...rect(el), scrollWidth: el.scrollWidth, clientWidth: el.clientWidth };
+    });
+    const targets = targetSelectors.flatMap((selector) => Array.from(document.querySelectorAll(selector))
+      .filter((el) => el.getClientRects().length > 0)
+      .map((el) => ({ selector, ...rect(el) })));
+    return {
+      docOverflow: document.documentElement.scrollWidth - window.innerWidth,
+      container: c,
+      stack,
+      targets,
+    };
+  }, { containerSelector, stackSelectors, targetSelectors });
+}
+
+function assertLockLayout(layout) {
+  expect(layout.docOverflow, "no horizontal page overflow").toBeLessThanOrEqual(0);
+  for (const box of layout.stack) {
+    expect(box.width, `${box.selector} rendered`).toBeGreaterThan(0);
+    expect(box.scrollWidth, `${box.selector} text stays inside`).toBeLessThanOrEqual(box.clientWidth + 1);
+    expect(box.left, `${box.selector} inside container (left)`).toBeGreaterThanOrEqual(layout.container.left - 0.5);
+    expect(box.right, `${box.selector} inside container (right)`).toBeLessThanOrEqual(layout.container.right + 0.5);
+  }
+  for (let i = 1; i < layout.stack.length; i++) {
+    expect(layout.stack[i - 1].bottom, `${layout.stack[i - 1].selector} does not overlap ${layout.stack[i].selector}`).toBeLessThanOrEqual(layout.stack[i].top + 0.5);
+  }
+  for (const target of layout.targets) {
+    expect(target.height, `${target.selector} touch height`).toBeGreaterThanOrEqual(44);
+    expect(target.width, `${target.selector} touch width`).toBeGreaterThanOrEqual(44);
+  }
+}
+
+for (const [width, height] of [[1440, 1000], [1180, 820], [820, 1180], [390, 844]]) {
+  for (const state of ["gated", "ready"]) {
+    test(`T-240 lock surfaces fit at ${width}x${height} (${state})`, async ({ browser }) => {
+      const shots = process.env.T240_SHOTS;
+      const { context, page, pageErrors } = await preparePage(browser, {
+        feeExemptV2: state === "ready",
+        v1Tranche: true,
+        contextOptions: { viewport: { width, height } },
+      });
+      try {
+        await page.goto("/web3/?action=commitment-lock#access", { waitUntil: "domcontentloaded" });
+        await selectInjectedWallet(page);
+        await expect(page.locator('[data-unlock-vault="v1"][data-unlock-tranche="0"]')).toBeEnabled({ timeout: 15_000 });
+        if (state === "ready") await expect(page.locator("[data-lock-submit]")).toBeEnabled();
+        else await expect(page.locator("[data-lock-submit]")).toBeDisabled();
+        const web3 = await measureLockLayout(page, "[data-lock-dialog] .protocol-card",
+          ["[data-lock-dialog] header", "[data-lock-dialog] [data-v1-warning]", "[data-lock-dialog] [data-v2-path]", "[data-lock-dialog] .protocol-grid", "[data-lock-dialog] .protocol-form", "[data-lock-dialog] .protocol-actions", "[data-lock-tranches]"],
+          ["[data-lock-dialog] .protocol-actions .btn", "[data-lock-tranches] [data-unlock-vault]"]);
+        assertLockLayout(web3);
+        if (shots) {
+          await page.locator("[data-lock-dialog] [data-v1-warning]").scrollIntoViewIfNeeded();
+          await page.screenshot({ path: `${shots}/t240-web3-${state}-${width}x${height}.png` });
+        }
+
+        await page.goto("/wiki/commitment-vault.html#lock-widget", { waitUntil: "domcontentloaded" });
+        await page.locator("#cv-connect-btn").click();
+        const injected = page.locator('[data-wallet-option-type="injected"]').first();
+        if (await injected.isVisible().catch(() => false)) await injected.click();
+        await expect(page.locator("#cv-tranches-list")).toContainText("V1 · Tranche #0", { timeout: 15_000 });
+        await page.locator("#cv-amount").fill("100");
+        await page.locator("#cv-amount").dispatchEvent("input");
+        if (state === "ready") await expect(page.locator("#cv-lock-btn")).toBeEnabled();
+        else await expect(page.locator("#cv-lock-btn")).toBeDisabled();
+        const wiki = await measureLockLayout(page, "#cv-v1-warning",
+          ["#cv-v1-warning"], []);
+        assertLockLayout(wiki);
+        const wikiStack = await measureLockLayout(page, "main, .content, body",
+          ["#lock-widget", "#cv-v1-warning", "#cv-v2-path", "#cv-connect-section", "#cv-config-section", "#cv-dashboard-section"], []);
+        assertLockLayout({ ...wikiStack, stack: wikiStack.stack.map((box) => ({ ...box, left: Math.max(box.left, wikiStack.container.left), right: Math.min(box.right, wikiStack.container.right) })) });
+        expect(wikiStack.stack[1].left).toBeGreaterThanOrEqual(0);
+        expect(wikiStack.stack[1].right).toBeLessThanOrEqual(width);
+        await expectLauncherClearOfTask(page, "#cv-v1-warning, #cv-v2-path, #cv-connect-section, #cv-config-section, #cv-dashboard-section");
+        if (shots) {
+          await page.locator("#cv-v1-warning").scrollIntoViewIfNeeded();
+          await page.evaluate(() => window.scrollBy(0, -80));
+          await page.screenshot({ path: `${shots}/t240-wiki-${state}-${width}x${height}.png` });
+        }
+
+        if (state === "gated") {
+          await page.goto("/", { waitUntil: "domcontentloaded" });
+          await page.evaluate(() => window.wzGo("lock"));
+          await page.waitForTimeout(600);
+          const landing = await measureLockLayout(page, "#wz-box",
+            Array.from({ length: 4 }, (_, i) => `#wz-box a.wz-option:nth-of-type(${i + 1})`), ["#wz-box a.wz-option"]);
+          assertLockLayout(landing);
+          await expectLauncherClearOfTask(page, "#wz-box");
+          if (shots) {
+            await page.locator("#wz-box").scrollIntoViewIfNeeded();
+            await page.screenshot({ path: `${shots}/t240-landing-wizard-lock-${width}x${height}.png` });
+          }
+        }
+        expect(pageErrors).toEqual([]);
+      } finally {
+        await context.close();
+      }
+    });
+  }
+}

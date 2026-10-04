@@ -31,10 +31,10 @@
   <link rel="manifest" href="/web3-manifest.webmanifest">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="dns-prefetch" href="https://eth.llamarpc.com">
+  <link rel="dns-prefetch" href="https://ethereum-rpc.publicnode.com">
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&family=Newsreader:opsz,wght@6..72,500;6..72,600&display=swap" rel="stylesheet">
   <script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
-  <script src="/web3-wallet-core.js?v=20260928-wc-cancel"></script>
+  <script src="/web3-wallet-core.js?v=20261004-rpc-fallback-v6"></script>
   <script src="/assets/ifr-state.js"></script>
   <script type="application/ld+json">
   {
@@ -814,6 +814,47 @@
       font-size: 13px;
     }
 
+    .protocol-warning {
+      margin: 0 0 12px;
+      padding: 12px 14px;
+      border: 1px solid rgba(153, 27, 27, 0.4);
+      border-left-width: 4px;
+      border-radius: var(--radius);
+      background: #fdecea;
+      color: #5f1414;
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+
+    .protocol-warning strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+
+    .protocol-warning p,
+    .protocol-path p {
+      margin: 0;
+    }
+
+    .protocol-path {
+      margin: 0 0 4px;
+      padding: 12px 14px;
+      border: 1px solid rgba(180, 72, 31, 0.22);
+      border-radius: var(--radius);
+      background: rgba(244, 222, 208, 0.48);
+      color: var(--ink-soft);
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+
+    .protocol-path strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--ink);
+      font-size: 14px;
+    }
+
     .protocol-actions {
       display: flex;
       flex-wrap: wrap;
@@ -871,6 +912,11 @@
       min-height: 40px;
       padding: 0 14px;
       font-size: 13px;
+    }
+
+    /* V1/V2 tranche unlock is an exit path: keep a full 44px touch target. */
+    .tranche-row .btn {
+      min-height: 44px;
     }
 
     .health-badge {
@@ -1716,7 +1762,7 @@
             <a class="btn btn-quiet" href="https://shop.ifrunit.tech/">Use IFR Benefits</a>
             <a class="btn btn-quiet" href="https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" rel="noopener">Track pool</a>
           </div>
-          <p class="panel-foot">Access lock uses IFRLock for simple refundable product access. Commitment lock uses CommitmentVault tranches with time and price conditions.</p>
+          <p class="panel-foot">Access lock uses IFRLock for simple refundable product access. Commitment lock creates time tranches in CommitmentVault V2 once its fee exemption is executed; V1 tranches stay unlockable.</p>
         </div>
       </aside>
     </div>
@@ -1779,7 +1825,7 @@
           <article class="flow-step">
             <span class="step-number">02</span>
             <h3>Lock for access</h3>
-            <p>IFRLock is the simple refundable access lock. CommitmentVault is the advanced tranche vault for time and price commitments.</p>
+            <p>IFRLock is the simple refundable access lock. CommitmentVault holds time tranches: new locks in V2 (time only), existing tranches in V1.</p>
           </article>
           <article class="flow-step">
             <span class="step-number">03</span>
@@ -1831,9 +1877,16 @@
             </span>
             <span class="contract-arrow">-&gt;</span>
           </a>
+          <a class="contract-row" href="https://etherscan.io/address/0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F" target="_blank" rel="noopener">
+            <span>
+              <span class="contract-name">CommitmentVault V2 (time locks)</span>
+              <span class="contract-address">0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F</span>
+            </span>
+            <span class="contract-arrow">-&gt;</span>
+          </a>
           <a class="contract-row" href="https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3" target="_blank" rel="noopener">
             <span>
-              <span class="contract-name">CommitmentVault</span>
+              <span class="contract-name">CommitmentVault V1 (existing tranches)</span>
               <span class="contract-address">0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3</span>
             </span>
             <span class="contract-arrow">-&gt;</span>
@@ -1996,10 +2049,19 @@
       <header>
         <div>
           <h2 id="lock-title">CommitmentVault Lock</h2>
-          <p>Advanced tranche lock. Choose the condition type, time and price settings, approve IFR if needed, then lock into CommitmentVault from this Web3 page.</p>
+          <p>Time tranche lock. New locks go to CommitmentVault V2 (time only) once its fee exemption is executed; existing V1 tranches stay listed and unlock through V1.</p>
         </div>
         <button class="protocol-close" type="button" aria-label="Close lock panel" data-lock-close>&times;</button>
       </header>
+
+      <div class="protocol-warning" role="note" data-v1-warning>
+        <strong>Do not create new CommitmentVault V1 locks.</strong>
+        <p>V1 stays deployed on Ethereum Mainnet and still accepts direct calls (for example from Etherscan or a script). A price-conditioned lock created there can never unlock: the IFR stay trapped permanently. This app never sends new locks to V1. Existing V1 tranches stay listed below and unlock through V1.</p>
+      </div>
+      <div class="protocol-path" data-v2-path>
+        <strong>New time locks: CommitmentVault V2 only</strong>
+        <p>V2 (<code>0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F</code>) accepts time-only locks. The lock button stays disabled until Governance proposal #17 is executed and the token reads feeExempt(V2) as true. No price lock is available: a separate price-lock vault is only a draft, not reviewed and not deployed.</p>
+      </div>
 
       <div class="protocol-grid">
         <div class="protocol-stat">
@@ -2051,10 +2113,10 @@
       <div class="protocol-actions">
         <button class="btn btn-quiet" type="button" data-lock-max>Use max</button>
         <button class="btn btn-mint" type="button" data-lock-refresh>Refresh</button>
-        <button class="btn btn-primary" type="button" data-lock-submit>Approve / Lock</button>
+        <button class="btn btn-primary" type="button" data-lock-submit disabled>Approve / Lock</button>
       </div>
       <p class="protocol-status" data-lock-status>Connect a wallet to load your vault state.</p>
-      <p class="protocol-note" data-lock-note>Time-only locks are always available. Price conditions require the CommitmentVault price oracle to be configured on-chain.</p>
+      <p class="protocol-note" data-lock-note>CommitmentVault V2 opens for new time locks once its fee exemption is executed (Governance proposal #17).</p>
 
       <div class="tranche-list" data-lock-tranches></div>
     </div>
@@ -2066,6 +2128,7 @@
         <div>
           <h2 id="lending-title">Create offer</h2>
           <p>LendingVault offer actions run directly here. Deposit IFR as available lending liquidity or withdraw unlent IFR from an active offer.</p>
+          <p data-lending-status>Retired (V1) since 3 October 2026: borrowing stays disabled by Governance decision (no activation is planned or authorized) and no V2 is planned yet. Lenders can still withdraw their unlent offers with <code>withdrawOffer</code>; these IFR are not lost.</p>
         </div>
         <button class="protocol-close" type="button" aria-label="Close lending panel" data-lending-close>&times;</button>
       </header>
@@ -2215,7 +2278,7 @@
           items: [
             "Use the access terminal for wallet, IFR balance, lock state, and token import.",
             "Buy IFR on Uniswap or track the live pool without leaving the user flow.",
-            "Use IFRLock for simple access, CommitmentVault for conditional tranches, or LendingVault for lender and borrower flows."
+            "Use IFRLock for simple access, CommitmentVault for time tranches, or LendingVault for lender and borrower flows."
           ],
           actions: [
             { label: "Access lock", kind: "button", variant: "btn-primary", data: "data-open-access-lock" },
@@ -2414,13 +2477,18 @@
       const encodedWeb3Url = encodeURIComponent(web3Url);
       const IFR_TOKEN_ADDRESS = "0x77e99917Eca8539c62F509ED1193ac36580A6e7B";
       const IFR_LOCK_ADDRESS = "0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb";
-      const COMMITMENT_VAULT_ADDRESS = "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3";
+      // CommitmentVault V1 keeps existing tranches (view + unlock). New time locks go only to V2, and only
+      // once InfernoToken.feeExempt(V2) is true (Governance proposal #17); otherwise locking stays disabled.
+      const COMMITMENT_VAULT_V1_ADDRESS = "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3";
+      const COMMITMENT_VAULT_V2_ADDRESS = "0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F";
+      const COMMITMENT_V2_CLOSED_NOTICE = "CommitmentVault V2 opens for new time locks once its fee exemption is executed (Governance proposal #17).";
       const LENDING_VAULT_ADDRESS = "0x974305Ab0EC905172e697271C3d7d385194EB9DF";
       const IFR_DECIMALS = 9;
       const TOKEN_ABI = [
         "function balanceOf(address) view returns (uint256)",
         "function allowance(address,address) view returns (uint256)",
-        "function approve(address,uint256) returns (bool)"
+        "function approve(address,uint256) returns (bool)",
+        "function feeExempt(address) view returns (bool)"
       ];
       const IFR_LOCK_ABI = [
         "function lock(uint256) external",
@@ -2753,11 +2821,23 @@
         return address;
       }
 
+      // Data reads always use the chain-pinned public read provider (verified eth_chainId 0x1),
+      // never the connected wallet's provider; the wallet signer is used only to send transactions.
+      function readProvider() {
+        return window.IFRWallet && typeof IFRWallet.getReadProvider === "function" ? IFRWallet.getReadProvider() : null;
+      }
+      function readContracts() {
+        const provider = readProvider();
+        if (!provider) throw new Error("Mainnet read RPC unavailable. Values cannot be verified right now.");
+        return getContracts(provider);
+      }
+
       function getContracts(signerOrProvider) {
         return {
           token: new ethers.Contract(IFR_TOKEN_ADDRESS, TOKEN_ABI, signerOrProvider),
           ifrLock: new ethers.Contract(IFR_LOCK_ADDRESS, IFR_LOCK_ABI, signerOrProvider),
-          commitment: new ethers.Contract(COMMITMENT_VAULT_ADDRESS, COMMITMENT_ABI, signerOrProvider),
+          commitmentV1: new ethers.Contract(COMMITMENT_VAULT_V1_ADDRESS, COMMITMENT_ABI, signerOrProvider),
+          commitmentV2: new ethers.Contract(COMMITMENT_VAULT_V2_ADDRESS, COMMITMENT_ABI, signerOrProvider),
           lending: new ethers.Contract(LENDING_VAULT_ADDRESS, LENDING_ABI, signerOrProvider)
         };
       }
@@ -2824,8 +2904,8 @@
       }
 
       async function loadAccessLockSummary(address) {
-        if (!address || !window.ethers || !window.IFRWallet || !IFRWallet.getProvider()) return;
-        const { ifrLock } = getContracts(IFRWallet.getProvider());
+        if (!address || !window.ethers || !window.IFRWallet || !readProvider()) return;
+        const { ifrLock } = getContracts(readProvider());
         const locked = await ifrLock.lockedBalance(address);
         if (!isCurrentWalletAddress(address)) return;
         accessLockBalance.textContent = formatIFR(locked);
@@ -2833,20 +2913,23 @@
       }
 
       async function loadCommitmentSummary(address) {
-        if (!address || !window.ethers || !window.IFRWallet || !IFRWallet.getProvider()) return;
-        const { commitment } = getContracts(IFRWallet.getProvider());
-        const [locked, count] = await Promise.all([
-          commitment.lockedBalance(address),
-          commitment.getTrancheCount(address)
+        if (!address || !window.ethers || !window.IFRWallet || !readProvider()) return;
+        const { commitmentV1, commitmentV2 } = getContracts(readProvider());
+        const [lockedV1, countV1, lockedV2, countV2] = await Promise.all([
+          commitmentV1.lockedBalance(address),
+          commitmentV1.getTrancheCount(address),
+          commitmentV2.lockedBalance(address),
+          commitmentV2.getTrancheCount(address)
         ]);
         if (!isCurrentWalletAddress(address)) return;
-        commitmentBalance.textContent = formatIFR(locked);
-        commitmentNote.textContent = Number(count) ? `${Number(count)} tranches` : "No tranches";
+        const count = Number(countV1) + Number(countV2);
+        commitmentBalance.textContent = formatIFR(lockedV1 + lockedV2);
+        commitmentNote.textContent = count ? `${count} tranches` : "No tranches";
       }
 
       async function loadLendingSummary(address) {
-        if (!address || !window.ethers || !window.IFRWallet || !IFRWallet.getProvider()) return;
-        const { lending } = getContracts(IFRWallet.getProvider());
+        if (!address || !window.ethers || !window.IFRWallet || !readProvider()) return;
+        const { lending } = getContracts(readProvider());
         lendingSummary.textContent = "Loading";
         lendingSummaryNote.textContent = "Lending";
 
@@ -2894,8 +2977,7 @@
 
       async function loadAccessLockPanel() {
         const address = await ensureWalletReady("Loading access lock");
-        const provider = IFRWallet.getProvider();
-        const { token, ifrLock } = getContracts(provider);
+        const { token, ifrLock } = readContracts();
         accessLockStatus.textContent = "Reading IFRLock...";
 
         const [balance, allowance, locked] = await Promise.all([
@@ -2928,8 +3010,7 @@
 
       async function lockPremiumAccessIFR() {
         const address = await ensureWalletReady("Preparing Premium access");
-        const provider = IFRWallet.getProvider();
-        const { token, ifrLock } = getContracts(provider);
+        const { token, ifrLock } = readContracts();
         const premiumMinimum = ethers.parseUnits("1000", IFR_DECIMALS);
 
         accessLockPremium.disabled = true;
@@ -2962,14 +3043,15 @@
         const address = await ensureWalletReady("Preparing access lock");
         const signer = IFRWallet.getSigner();
         const { token, ifrLock } = getContracts(signer);
+        const reader = readContracts();
         const amount = parseIFRInput(accessLockAmount.value);
         const lockType = accessLockType.value;
 
         accessLockSubmit.disabled = true;
         accessLockStatus.textContent = "Checking wallet balance and token allowance...";
         const [balance, allowance] = await Promise.all([
-          token.balanceOf(address),
-          token.allowance(address, IFR_LOCK_ADDRESS)
+          reader.token.balanceOf(address),
+          reader.token.allowance(address, IFR_LOCK_ADDRESS)
         ]);
         if (balance < amount) {
           throw new Error(`This wallet has ${formatIFR(balance)} free, but the lock amount is ${formatIFR(amount)}. Your existing IFRLock balance stays locked and can be unlocked separately.`);
@@ -3003,40 +3085,82 @@
         await Promise.all([loadAccessLockPanel(), refreshWalletState()]);
       }
 
+      // Reads InfernoToken.feeExempt(V2). Returns true only on a successful read of `true`;
+      // false or any read error keeps V2 closed (fail closed, never a fallback to V1 locks).
+      async function readV2FeeExempt(provider) {
+        try {
+          const { token } = getContracts(provider);
+          return (await token.feeExempt(COMMITMENT_VAULT_V2_ADDRESS)) === true;
+        } catch (error) {
+          return false;
+        }
+      }
+
+      function isV2Open() {
+        return Boolean(currentLockState && currentLockState.v2Open === true);
+      }
+
+      // Closes the cached UI gate (button off) until a later successful read reopens it.
+      function closeV2Gate() {
+        if (currentLockState) currentLockState.v2Open = false;
+        lockSubmit.disabled = true;
+        lockNote.textContent = `${COMMITMENT_V2_CLOSED_NOTICE} Existing V1 tranches stay listed below and unlock through V1.`;
+      }
+
+      // Click-time gate: re-reads feeExempt(V2) immediately before an approval or each lock()
+      // and throws (fail closed) when it is false or unreadable, aborting the remaining sequence.
+      // Frontend checks cannot make the exemption atomic with the transaction (see runbook).
+      async function assertV2Open() {
+        if (!(await readV2FeeExempt(readProvider()))) {
+          closeV2Gate();
+          throw new Error(COMMITMENT_V2_CLOSED_NOTICE);
+        }
+      }
+
+      async function readVaultTranches(vault, vaultKey, address) {
+        const count = Number(await vault.getTrancheCount(address));
+        const reads = [];
+        for (let i = 0; i < count; i++) {
+          reads.push(Promise.all([
+            vault.getTranche(address, i),
+            vault.isConditionMet(address, i).catch(() => false)
+          ]).then(([tranche, conditionMet]) => ({ vault: vaultKey, id: i, tranche, conditionMet })));
+        }
+        return Promise.all(reads);
+      }
+
       async function loadLockPanel() {
         const address = await ensureWalletReady("Loading lock");
-        const provider = IFRWallet.getProvider();
-        const { token, commitment } = getContracts(provider);
+        const provider = readProvider();
+        const { token, commitmentV1, commitmentV2 } = readContracts();
         lockStatus.textContent = "Reading CommitmentVault...";
 
-        const [balance, allowance, locked, count, priceOracle] = await Promise.all([
+        const [balance, allowance, lockedV1, lockedV2, v2Open, tranchesV1, tranchesV2] = await Promise.all([
           token.balanceOf(address),
-          token.allowance(address, COMMITMENT_VAULT_ADDRESS),
-          commitment.lockedBalance(address),
-          commitment.getTrancheCount(address),
-          commitment.priceOracle().catch(() => ethers.ZeroAddress)
+          token.allowance(address, COMMITMENT_VAULT_V2_ADDRESS),
+          commitmentV1.lockedBalance(address),
+          commitmentV2.lockedBalance(address),
+          readV2FeeExempt(provider),
+          readVaultTranches(commitmentV1, "v1", address),
+          readVaultTranches(commitmentV2, "v2", address)
         ]);
 
-        const totalTranches = Number(count);
-        const priceOracleIsMissing = priceOracle === ethers.ZeroAddress;
-        const trancheReads = [];
-        for (let i = 0; i < totalTranches; i++) {
-          trancheReads.push(Promise.all([
-            commitment.getTranche(address, i),
-            commitment.isConditionMet(address, i).catch(() => false)
-          ]).then(([tranche, conditionMet]) => ({ id: i, tranche, conditionMet })));
-        }
-
-        const tranches = await Promise.all(trancheReads);
-        currentLockState = { address, balance, allowance, locked, tranches, priceOracle, priceOracleIsMissing };
+        const tranches = tranchesV2.concat(tranchesV1);
+        const locked = lockedV1 + lockedV2;
+        currentLockState = { address, balance, allowance, locked, tranches, v2Open };
         lockWalletBalance.textContent = formatIFR(balance);
         lockTotal.textContent = formatIFR(locked);
         lockAllowance.textContent = formatIFR(allowance);
         commitmentBalance.textContent = formatIFR(locked);
-        commitmentNote.textContent = totalTranches ? `${totalTranches} tranches` : "No tranches";
-        lockNote.textContent = "Time-only locks are available. Price-based locks are disabled: CommitmentVault V1 cannot evaluate prices (CV-01).";
+        commitmentNote.textContent = tranches.length ? `${tranches.length} tranches` : "No tranches";
+        lockSubmit.disabled = !v2Open;
+        lockNote.textContent = v2Open
+          ? "New time locks go to CommitmentVault V2. Existing V1 tranches stay listed below and unlock through V1. Price-based locks are disabled (CV-01)."
+          : `${COMMITMENT_V2_CLOSED_NOTICE} Existing V1 tranches stay listed below and unlock through V1.`;
         renderTranches(tranches);
-        lockStatus.textContent = tranches.length ? "Vault state loaded." : "No CommitmentVault tranches yet.";
+        lockStatus.textContent = v2Open
+          ? (tranches.length ? "Vault state loaded." : "No CommitmentVault tranches yet.")
+          : COMMITMENT_V2_CLOSED_NOTICE;
       }
 
       function renderTranches(tranches) {
@@ -3053,15 +3177,16 @@
           const unlockDate = unlockTimestamp ? new Date(unlockTimestamp * 1000).toLocaleString() : "No time condition";
           const multiplier = Number(item.tranche.p0Multiplier);
           const condition = conditionNames[item.tranche.cType] || `Condition ${item.tranche.cType}`;
+          const vaultLabel = item.vault === "v2" ? "V2" : "V1";
           const canUnlock = Boolean(item.conditionMet);
           return `
             <div class="tranche-row">
               <div>
-                <small>Tranche #${item.id} · ${condition} · ${canUnlock ? "Unlockable" : "Locked"}</small>
+                <small>${vaultLabel} · Tranche #${item.id} · ${condition} · ${canUnlock ? "Unlockable" : "Locked"}</small>
                 <strong>${formatIFR(item.tranche.amount)}</strong>
                 <span>Unlock time: ${unlockDate}${multiplier ? ` · P0 x${multiplier / 100}` : ""}</span>
               </div>
-              <button class="btn ${canUnlock ? "btn-primary" : "btn-quiet"}" type="button" data-unlock-tranche="${item.id}" ${canUnlock ? "" : "disabled"}>${canUnlock ? "Unlock" : "Locked"}</button>
+              <button class="btn ${canUnlock ? "btn-primary" : "btn-quiet"}" type="button" data-unlock-vault="${vaultLabel.toLowerCase()}" data-unlock-tranche="${item.id}" ${canUnlock ? "" : "disabled"}>${canUnlock ? "Unlock" : "Locked"}</button>
             </div>
           `;
         }).join("");
@@ -3070,26 +3195,31 @@
       async function lockIFR() {
         const address = await ensureWalletReady("Preparing lock");
         const signer = IFRWallet.getSigner();
-        const { token, commitment } = getContracts(signer);
+        const { token, commitmentV2 } = getContracts(signer);
+        const reader = readContracts();
         const plan = getCommitmentPlan();
 
         lockSubmit.disabled = true;
+        // Re-check the on-chain gate right before any approval or lock (fail closed).
+        await assertV2Open();
         lockStatus.textContent = "Checking token allowance...";
-        const allowance = await token.allowance(address, COMMITMENT_VAULT_ADDRESS);
+        const allowance = await reader.token.allowance(address, COMMITMENT_VAULT_V2_ADDRESS);
 
         if (allowance < plan.totalAmount) {
           lockStatus.textContent = "Approve IFR in your wallet, then keep this page open.";
-          const approveTx = await token.approve(COMMITMENT_VAULT_ADDRESS, plan.totalAmount);
+          await assertV2Open();
+          const approveTx = await token.approve(COMMITMENT_VAULT_V2_ADDRESS, plan.totalAmount);
           lockStatus.textContent = "Waiting for approval confirmation...";
           await approveTx.wait();
         }
 
         for (let i = 0; i < plan.amounts.length; i++) {
           lockStatus.textContent = plan.amounts.length === 1
-            ? "Confirm the CommitmentVault lock transaction in your wallet."
-            : `Confirm CommitmentVault tranche ${i + 1} of ${plan.amounts.length}.`;
+            ? "Confirm the CommitmentVault V2 lock transaction in your wallet."
+            : `Confirm CommitmentVault V2 tranche ${i + 1} of ${plan.amounts.length}.`;
           if (plan.cType !== 0 || plan.p0Multiplier !== 0) throw new Error("Price-based locks are disabled. CommitmentVault V1 cannot evaluate prices (see CV-01). Time locks only; new time locks move to CommitmentVault V2 after its fee exemption is executed.");
-          const lockTx = await commitment.lock(plan.amounts[i], 0, plan.unlockTime, 0);
+          await assertV2Open();
+          const lockTx = await commitmentV2.lock(plan.amounts[i], 0, plan.unlockTime, 0);
           lockStatus.textContent = `Waiting for tranche ${i + 1} confirmation...`;
           await lockTx.wait();
         }
@@ -3098,12 +3228,14 @@
         await Promise.all([loadLockPanel(), refreshWalletState()]);
       }
 
-      async function unlockTranche(trancheId) {
+      async function unlockTranche(vaultKey, trancheId) {
         const address = await ensureWalletReady("Preparing unlock");
         const signer = IFRWallet.getSigner();
-        const { commitment } = getContracts(signer);
-        lockStatus.textContent = `Confirm unlock for tranche #${trancheId}.`;
-        const tx = await commitment.unlock(address, trancheId);
+        const { commitmentV1, commitmentV2 } = getContracts(signer);
+        if (vaultKey !== "v1" && vaultKey !== "v2") throw new Error("Unknown vault for this tranche.");
+        const vault = vaultKey === "v2" ? commitmentV2 : commitmentV1;
+        lockStatus.textContent = `Confirm unlock for ${vaultKey.toUpperCase()} tranche #${trancheId}.`;
+        const tx = await vault.unlock(address, trancheId);
         lockStatus.textContent = "Waiting for unlock confirmation...";
         await tx.wait();
         lockStatus.textContent = "Unlock confirmed.";
@@ -3112,8 +3244,7 @@
 
       async function loadLendingPanel() {
         const address = await ensureWalletReady("Loading lending");
-        const provider = IFRWallet.getProvider();
-        const { token, lending } = getContracts(provider);
+        const { token, lending } = readContracts();
         lendingStatus.textContent = "Reading LendingVault...";
 
         const [balance, hasOffer] = await Promise.all([
@@ -3142,11 +3273,12 @@
         const address = await ensureWalletReady("Preparing offer");
         const signer = IFRWallet.getSigner();
         const { token, lending } = getContracts(signer);
+        const reader = readContracts();
         const amount = parseIFRInput(lendingAmount.value);
 
         lendingDeposit.disabled = true;
         lendingStatus.textContent = "Checking token allowance...";
-        const allowance = await token.allowance(address, LENDING_VAULT_ADDRESS);
+        const allowance = await reader.token.allowance(address, LENDING_VAULT_ADDRESS);
 
         if (allowance < amount) {
           lendingStatus.textContent = "Approve IFR in your wallet, then keep this page open.";
@@ -3247,8 +3379,7 @@
         }
 
         try {
-          const provider = IFRWallet.getProvider();
-          const { lending } = getContracts(provider);
+          const { lending } = readContracts();
           const collateral = await lending.getRequiredCollateral(amount);
           borrowCollateral.textContent = formatETH(collateral);
           borrowSubmit.disabled = false;
@@ -3321,8 +3452,7 @@
 
       async function loadBorrowPanel() {
         const address = await ensureWalletReady("Loading borrow");
-        const provider = IFRWallet.getProvider();
-        const { lending } = getContracts(provider);
+        const { lending } = readContracts();
         borrowStatus.textContent = "Reading LendingVault offers and loans...";
 
         const [ifrPriceWei, offerCountValue, loanCountValue, rate] = await Promise.all([
@@ -3388,9 +3518,10 @@
 
         const signer = IFRWallet.getSigner();
         const { lending } = getContracts(signer);
+        const reader = readContracts();
         borrowSubmit.disabled = true;
         borrowStatus.textContent = "Calculating required ETH collateral...";
-        const collateral = await lending.getRequiredCollateral(amount);
+        const collateral = await reader.lending.getRequiredCollateral(amount);
         borrowCollateral.textContent = formatETH(collateral);
         borrowStatus.textContent = `Confirm borrow transaction with ${formatETH(collateral)} ETH collateral.`;
         const tx = await lending.borrow(offer.id, amount, durationDays, { value: collateral });
@@ -3407,11 +3538,12 @@
         if (!loan) throw new Error("Select an active loan first.");
         const signer = IFRWallet.getSigner();
         const { token, lending } = getContracts(signer);
+        const reader = readContracts();
         borrowRepay.disabled = true;
         borrowStatus.textContent = "Calculating IFR repayment amount...";
-        const interest = await lending.calculateInterest(loan.id);
+        const interest = await reader.lending.calculateInterest(loan.id);
         const repayAmount = loan.loan.ifrAmount + interest;
-        const allowance = await token.allowance(address, LENDING_VAULT_ADDRESS);
+        const allowance = await reader.token.allowance(address, LENDING_VAULT_ADDRESS);
         if (allowance < repayAmount) {
           borrowStatus.textContent = `Approve ${formatIFR(repayAmount)} for LendingVault repayment.`;
           const approveTx = await token.approve(LENDING_VAULT_ADDRESS, repayAmount);
@@ -3451,9 +3583,10 @@
           walletState.textContent = "Connected";
           walletConnector.textContent = (window.IFRWallet && IFRWallet.getConnectionLabel && IFRWallet.getConnectionLabel()) || "Browser wallet";
           walletNetwork.textContent = "Ethereum Mainnet";
-          ifrBalance.textContent = state.ifrBalanceFormatted ? `${state.ifrBalanceFormatted} IFR` : "0 IFR";
-          accessLockBalance.textContent = state.lockedFormatted ? `${state.lockedFormatted} IFR` : "0 IFR";
-          accessLockNote.textContent = state.isLocked1000 ? "Premium ready" : "Lock needed";
+          // A failed chain-pinned read shows "Unavailable", never a wallet-provider or stale value.
+          ifrBalance.textContent = state.readError ? "Unavailable" : (state.ifrBalanceFormatted ? `${state.ifrBalanceFormatted} IFR` : "0 IFR");
+          accessLockBalance.textContent = state.readError ? "Unavailable" : (state.lockedFormatted ? `${state.lockedFormatted} IFR` : "0 IFR");
+          accessLockNote.textContent = state.readError ? "Mainnet read RPC unavailable" : (state.isLocked1000 ? "Premium ready" : "Lock needed");
           commitmentBalance.textContent = "Loading";
           commitmentNote.textContent = "Tranches";
           lendingSummary.textContent = "Loading";
@@ -3723,6 +3856,7 @@
         try {
           await loadLockPanel();
         } catch (error) {
+          closeV2Gate();
           lockStatus.textContent = error && error.message ? error.message : "Lock panel could not load.";
         }
       });
@@ -3735,6 +3869,7 @@
         try {
           await loadLockPanel();
         } catch (error) {
+          closeV2Gate();
           lockStatus.textContent = error && error.message ? error.message : "Refresh failed.";
         }
       });
@@ -3752,7 +3887,7 @@
             lockStatus.textContent = error && error.message ? error.message : "Lock failed.";
           }
         } finally {
-          lockSubmit.disabled = false;
+          lockSubmit.disabled = !isV2Open();
         }
       });
       lockTranches.addEventListener("click", async (event) => {
@@ -3760,7 +3895,7 @@
         if (!button || button.disabled) return;
         button.disabled = true;
         try {
-          await unlockTranche(Number(button.dataset.unlockTranche));
+          await unlockTranche(button.dataset.unlockVault, Number(button.dataset.unlockTranche));
         } catch (error) {
           if (error && (error.code === 4001 || error.code === "ACTION_REJECTED")) {
             lockStatus.textContent = "Unlock rejected in wallet.";
