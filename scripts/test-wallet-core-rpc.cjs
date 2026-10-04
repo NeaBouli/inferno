@@ -21,7 +21,7 @@ const TARGETS = {
   landing: {
     core: path.join(root, "docs", "assets", "wallet-core.js"),
     page: path.join(root, "docs", "index.html"),
-    cacheBust: /assets\/wallet-core\.js\?v=20261003-rpc-fallback-v6-retry"/
+    cacheBust: /assets\/wallet-core\.js\?v=20261004-read-provider"/
   },
   web3: {
     core: path.join(root, "docs", "web3-wallet-core.js"),
@@ -60,6 +60,22 @@ assert.ok(
   TARGETS[TARGET].cacheBust.test(landing),
   TARGET + " page must cache-bust its wallet core for the RPC fallback"
 );
+// T-224: page-level inline readers must use IFRWallet.getReadProvider() (chain-pinned), never their own
+// JsonRpcProvider. Only executable <script> blocks are checked; <pre> code samples are documentation.
+assert.ok(/getReadProvider: getReadProvider/.test(source), "wallet-core must export getReadProvider");
+{
+  const pages = [];
+  for (const dir of ["docs", path.join("docs", "wiki")]) {
+    for (const f of fs.readdirSync(path.join(root, dir))) if (f.endsWith(".html")) pages.push(path.join(dir, f));
+  }
+  for (const rel of pages) {
+    const html = fs.readFileSync(path.join(root, rel), "utf8");
+    for (const m of html.matchAll(/<script\b(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)) {
+      assert.ok(!/new\s+(window\.)?ethers\.JsonRpcProvider\s*\(/.test(m[1]),
+        rel + ": inline reader builds its own JsonRpcProvider; use IFRWallet.getReadProvider()");
+    }
+  }
+}
 // CWA-47: wallet-core must not inject third-party <script> tags.
 assert.ok(!/createElement\(\s*["']script["']\s*\)/.test(source), "wallet-core must not inject script tags");
 
