@@ -68,6 +68,14 @@ remains the only place where agenda items and vote outcomes are published.
   tranche can then never unlock while the price stays `0`. Only the Web3 UI
   blocks these calls. This raises the priority of the rescue path below
   (`test/fork/BenefitsVerifyFork.test.js`).
+- **Realized impact (2026-10-02):** contributor wallets C1 and C3 hold 11 price-conditioned tranches,
+  26,418,467.994338353 IFR in total, in V1.
+  - The deployed bytecode contains no oracle call.
+  - A fork simulation with a Governance-set oracle returning the maximum price, plus ten years, still
+    reports `conditionMet = false`.
+  - There is no rescue or upgrade path, so the tranches are permanently locked.
+  - Urgent Council proposal CV-01 compensates from the LP Reserve Safe by each tranche's original
+    conditions ([CV-01](wiki/commitment-vault-compensation.html)).
 - **Decision needed:** none; decided 2026-10-03: Option B. A dedicated
   `PriceLockVault` is built and deployed later; price locks stay disabled
   until an on-chain readiness scope (pool WETH depth and/or TWAP) holds, and

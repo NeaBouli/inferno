@@ -13,6 +13,22 @@
 - The depth check samples two points (observation and now); this limit is documented in the specification.
 - 25 unit tests and a Mainnet-fork test. An independent review is required before any deployment.
 
+## 2 October 2026 — CommitmentVault V1 Incident Record and Council Proposal CV-01
+
+- 11 price-conditioned CommitmentVault V1 tranches (26,418,467.994338353 IFR) cannot unlock. The
+  deployed vault has no working price check. A Mainnet-fork simulation confirmed that no oracle or
+  time setting can release them.
+- New wiki page `commitment-vault-compensation.html`. It records the affected tranches with a
+  status (red: Council pending; yellow: approved, awaiting a verified 7-day TWAP record; green:
+  approved and TWAP verified with published blocks). Live spot data is shown as indicative only and
+  never changes a status. It also records the open vote (2 of 3 required YES signatures, no
+  deadline; not approved), the deployed TIME_ONLY CommitmentVault V2 and queued Governance
+  proposal #17, and the urgent
+  Council proposal CV-01, which compensates from the LP Reserve Safe by each tranche's original
+  time and price conditions (7-day TWAP).
+- The governance Council agenda and vote log list CV-01. The transparency page and the decision
+  register record the permanently locked amount as non-circulating.
+
 ## 2 October 2026 — BuybackController Source Hardening
 
 - `execute()` is now `nonReentrant`. A nested call from the router reverts with the reentrancy
