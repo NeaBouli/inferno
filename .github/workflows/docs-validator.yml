@@ -252,6 +252,9 @@ jobs:
       - name: Check CWA content-coherence remediations
         run: npm run test:cwa-content
 
+
+      - name: Check CommitmentVault page copy consistency (CV-01)
+        run: node scripts/test-commitment-vault-copy.cjs
       - name: Check docs truth matrix (components, Safes, tests, coverage, apps)
         run: npm run test:docs-truth
 
@@ -285,6 +288,9 @@ jobs:
       - name: Check wallet-core read RPC fallback and chainId guard (T-212a)
         run: npm run test:wallet-core-rpc
 
+      - name: Verify Web3 wallet core RPC fallback
+        run: npm run test:web3-wallet-core-rpc
+
       - name: Check Web3 serving-layer security headers contract
         run: npm run test:web3-headers
 
@@ -310,6 +316,9 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Check read-only scripts refuse non-Mainnet RPC
+        run: node scripts/test-readonly-scripts-chain.cjs
 
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
