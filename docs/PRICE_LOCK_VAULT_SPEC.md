@@ -95,7 +95,7 @@ window, or an independent second price source — would change that scope and ne
   - `targetPriceWei > 0`;
   - `maxUnlockTime` between 1 day and 4 years from now;
   - optional `earliestTime` no later than `maxUnlockTime`;
-  - at most 50 locks per wallet.
+  - at most 50 active (not yet unlocked) locks per wallet; unlocked locks free their slot.
 - **Accounting.** The amount is the credited balance difference, so a fee-on-transfer deposit is recorded
   at what the vault actually received.
 - **Unlock.** The locker may unlock:

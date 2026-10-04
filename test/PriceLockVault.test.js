@@ -331,6 +331,18 @@ describe("PriceLockVault", function () {
       for (let i = 0; i < 50; i++) await vault.connect(alice).lock(parse("1"), 1n, 0, t + 30 * DAY);
       await expect(vault.connect(alice).lock(parse("1"), 1n, 0, t + 30 * DAY)).to.be.revertedWith("too many locks");
       expect(await vault.getLockCount(alice.address)).to.equal(50n);
+      expect(await vault.activeLockCount(alice.address)).to.equal(50n);
+    });
+
+    it("caps concurrent locks only: unlocking frees a slot", async () => {
+      const t = await now();
+      for (let i = 0; i < 50; i++) await vault.connect(alice).lock(parse("1"), 1n, 0, t + 30 * DAY);
+      await vault.connect(alice).unlock(7);
+      expect(await vault.activeLockCount(alice.address)).to.equal(49n);
+      await vault.connect(alice).lock(parse("1"), 1n, 0, t + 30 * DAY);
+      expect(await vault.getLockCount(alice.address)).to.equal(51n);
+      expect(await vault.activeLockCount(alice.address)).to.equal(50n);
+      await expect(vault.connect(alice).lock(parse("1"), 1n, 0, t + 30 * DAY)).to.be.revertedWith("too many locks");
     });
   });
 

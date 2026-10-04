@@ -70,6 +70,8 @@ contract PriceLockVault is Ownable, ReentrancyGuard {
 
     Observation[32] private _observations;
     mapping(address => Lock[]) private _locks;
+    /// @notice Number of a wallet's locks that are not yet unlocked; MAX_LOCKS_PER_WALLET caps this, not the lifetime count
+    mapping(address => uint256) public activeLockCount;
 
     event Locked(address indexed wallet, uint256 indexed lockId, uint256 amount, uint256 targetPriceWei, uint64 earliestTime, uint64 maxUnlockTime);
     event Unlocked(address indexed wallet, uint256 indexed lockId, uint256 amount, bool rescue);
@@ -248,7 +250,7 @@ contract PriceLockVault is Ownable, ReentrancyGuard {
             "maxUnlockTime out of range"
         );
         require(earliestTime == 0 || earliestTime <= maxUnlockTime, "earliestTime after maxUnlockTime");
-        require(_locks[msg.sender].length < MAX_LOCKS_PER_WALLET, "too many locks");
+        require(activeLockCount[msg.sender] < MAX_LOCKS_PER_WALLET, "too many locks");
         poke();
         (, , , , , , bool ready) = readiness();
         require(ready, "readiness scope not met");
@@ -260,6 +262,7 @@ contract PriceLockVault is Ownable, ReentrancyGuard {
 
         lockId = _locks[msg.sender].length;
         _locks[msg.sender].push(Lock(received, targetPriceWei, uint64(block.timestamp), earliestTime, maxUnlockTime, false));
+        activeLockCount[msg.sender] += 1;
         totalLocked += received;
         emit Locked(msg.sender, lockId, received, targetPriceWei, earliestTime, maxUnlockTime);
     }
@@ -282,6 +285,7 @@ contract PriceLockVault is Ownable, ReentrancyGuard {
         uint256 amount = l.amount;
         l.unlocked = true;
         l.amount = 0;
+        activeLockCount[msg.sender] -= 1;
         totalLocked -= amount;
         ifrToken.safeTransfer(msg.sender, amount);
         emit Unlocked(msg.sender, lockId, amount, rescue);
