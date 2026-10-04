@@ -7,7 +7,7 @@
   <url><loc>https://ifrunit.tech/wiki/tokenomics.html</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://ifrunit.tech/wiki/protocol-plan.html</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://ifrunit.tech/wiki/lock-mechanism.html</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://ifrunit.tech/wiki/governance.html</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ifrunit.tech/wiki/governance.html</loc><lastmod>2026-10-04</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://ifrunit.tech/wiki/security.html</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://ifrunit.tech/wiki/reputation.html</loc><lastmod>2026-10-01</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://ifrunit.tech/wiki/deployment.html</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
@@ -39,4 +39,7 @@
   <url><loc>https://ifrunit.tech/wiki/liquidity.html</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://ifrunit.tech/wiki/ecosystem.html</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://ifrunit.tech/wiki/open-audit.html</loc><lastmod>2026-10-03</lastmod><changefreq>monthly</changefreq><priority>0.8</priority></url>
+
+
+  <url><loc>https://ifrunit.tech/wiki/council-votes.html</loc><lastmod>2026-10-04</lastmod><changefreq>weekly</changefreq><priority>0.6</priority></url>
 </urlset>
