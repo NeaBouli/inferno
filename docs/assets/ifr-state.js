@@ -52,7 +52,9 @@ window.IFRState = (() => {
 
   // ── Haupt-Ladefunktion ───────────────────────────────
   async function load(address) {
-    const provider = IFRWallet.getProvider();
+    // Data reads use the chain-pinned public read provider when the wallet core offers one
+    // (verified eth_chainId 0x1); a connected wallet's provider is never trusted for displayed values.
+    const provider = typeof IFRWallet.getReadProvider === "function" ? IFRWallet.getReadProvider() : IFRWallet.getProvider();
     const result = {
       address: address || null,
       ethBalance: null,
@@ -162,7 +164,7 @@ window.IFRState = (() => {
         result.isLocked1000 = locked >= ethers.parseUnits("1000", 9);
       }
 
-    } catch(e) { console.warn("Wallet state load error:", e.message); }
+    } catch(e) { result.readError = true; console.warn("Wallet state load error:", e.message); }
 
     _cache = result;
     _emit("stateLoaded", result);

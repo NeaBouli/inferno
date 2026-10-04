@@ -1,4 +1,4 @@
-const CACHE_NAME = "ifr-web3-v20";
+const CACHE_NAME = "ifr-web3-v21";
 const NAVIGATION_TIMEOUT_MS = 5000;
 const PRECACHE_URLS = [
   "/",
