@@ -1,11 +1,12 @@
 #!/usr/bin/env node
-// Builds the Safe Transaction Builder files that rotate the FeeRouterV1 voucher signer (CWA-06).
-// Step 1 (propose) queues FeeRouterV1.setVoucherSigner(newSigner) in Governance with its 48h delay;
-// step 2 (execute) runs it after the delay. No key is used; the files are only imported in the Safe UI.
+// Builds the Safe Transaction Builder file that executes the queued FeeRouterV1 voucher-signer rotation (CWA-06).
+// Step 1 (propose) is done: the Treasury Safe queued Governance proposal 18 = FeeRouterV1.setVoucherSigner(QUEUED.signer).
+// The CLI writes only step 2 (execute) and only for that proposal, after reading it from an Ethereum Mainnet RPC:
+// exact target, data and ETA, not executed and not cancelled. No key is used; the file is only imported in the Safe UI.
 //
-//   node scripts/voucher-signer-rotation-proposal.cjs <new signer address> [proposalId] [outDir]
+//   MAINNET_RPC_URL=<rpc> node scripts/voucher-signer-rotation-proposal.cjs <new signer address> <proposalId> [outDir]
 //
-// proposalId is Governance.proposalCount() immediately before step 1 is executed.
+// build() is the offline fixture builder used by tests; it never writes production output.
 const fs = require("node:fs");
 const path = require("node:path");
 const { Interface, getAddress, isAddress, ZeroAddress } = require("ethers");
@@ -27,10 +28,14 @@ const FORBIDDEN = {
   [FEE_ROUTER]: "FeeRouterV1",
 };
 
+// Read-only at block 26119897 (0xd9d97ba0ebec566ff94507e99edf5136eeca87acb4fecee1fd746d70c4024bbb).
+const QUEUED = { id: 18n, signer: "0x790D99c320dafA03d83bEa152178A6523b49CA0d", eta: 1791156347n }; // ETA 2026-10-04T23:25:47Z
+
 const feeRouter = new Interface(["function setVoucherSigner(address newSigner)"]);
 const governance = new Interface([
   "function propose(address target, bytes data) returns (uint256)",
   "function execute(uint256 proposalId)",
+  "function getProposal(uint256 proposalId) view returns (address target, bytes data, uint256 eta, bool executed, bool cancelled)",
 ]);
 
 function batch(name, description, transactions) {
@@ -63,22 +68,62 @@ function build(signerInput, proposalId) {
   return { signer, inner, files };
 }
 
-module.exports = { build, FEE_ROUTER, GOVERNANCE, FORBIDDEN };
+// Throws unless a getProposal(QUEUED.id) result is exactly the queued rotation and still pending.
+function checkQueued([target, data, eta, executed, cancelled]) {
+  if (getAddress(target) !== FEE_ROUTER) throw new Error(`proposal ${QUEUED.id} targets ${target}, not FeeRouterV1`);
+  if (data.toLowerCase() !== feeRouter.encodeFunctionData("setVoucherSigner", [QUEUED.signer])) {
+    throw new Error(`proposal ${QUEUED.id} data is not setVoucherSigner(${QUEUED.signer})`);
+  }
+  if (BigInt(eta) !== QUEUED.eta) throw new Error(`proposal ${QUEUED.id} ETA is ${eta}, expected ${QUEUED.eta}`);
+  if (cancelled) throw new Error(`proposal ${QUEUED.id} is cancelled`);
+  if (executed) throw new Error(`proposal ${QUEUED.id} is already executed`);
+}
+
+// Reads getProposal(QUEUED.id) from rpcUrl; fails closed unless the endpoint reports Ethereum Mainnet.
+async function readQueued(rpcUrl) {
+  const call = async (method, params) => {
+    const response = await fetch(rpcUrl, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method, params }),
+      signal: AbortSignal.timeout(20_000),
+    });
+    const body = await response.json().catch(() => null);
+    if (!response.ok || !body || body.error || typeof body.result !== "string" || !/^0x[0-9a-fA-F]*$/.test(body.result)) {
+      throw new Error(`${method} failed`);
+    }
+    return body.result;
+  };
+  const chainId = await call("eth_chainId", []);
+  if (BigInt(chainId) !== 1n) throw new Error(`RPC is not Ethereum Mainnet (chainId ${chainId})`);
+  const raw = await call("eth_call", [{ to: GOVERNANCE, data: governance.encodeFunctionData("getProposal", [QUEUED.id]) }, "latest"]);
+  return governance.decodeFunctionResult("getProposal", raw);
+}
+
+// Production output: the step 2 file for the queued proposal, written only after the live check passed.
+async function writeExecute(signerInput, idInput, outDir, rpcUrl) {
+  if (!isAddress(signerInput) || getAddress(signerInput) !== QUEUED.signer || String(idInput) !== String(QUEUED.id)) {
+    throw new Error(`refusing: only the queued proposal ${QUEUED.id} (setVoucherSigner(${QUEUED.signer})) can be executed`);
+  }
+  checkQueued(await readQueued(rpcUrl));
+  const name = "cwa06-voucher-step2-execute.json";
+  const content = build(QUEUED.signer, QUEUED.id).files[name];
+  fs.mkdirSync(outDir, { recursive: true });
+  fs.writeFileSync(path.join(outDir, name), JSON.stringify(content, null, 2) + "\n");
+  return path.join(outDir, name);
+}
+
+module.exports = { build, checkQueued, readQueued, writeExecute, QUEUED, FEE_ROUTER, GOVERNANCE, FORBIDDEN };
 
 if (require.main === module) {
   const [signerArg, idArg, outArg] = process.argv.slice(2);
-  try {
-    const { signer, inner, files } = build(signerArg, idArg);
-    const outDir = outArg || ".";
-    fs.mkdirSync(outDir, { recursive: true });
-    for (const [name, content] of Object.entries(files)) {
-      fs.writeFileSync(path.join(outDir, name), JSON.stringify(content, null, 2) + "\n");
-      console.log(`wrote ${path.join(outDir, name)}`);
-    }
-    console.log(`new voucher signer: ${signer}`);
-    console.log(`inner call FeeRouterV1.setVoucherSigner: ${inner}`);
-  } catch (error) {
-    console.error(error.message);
-    process.exit(1);
-  }
+  writeExecute(signerArg, idArg, outArg || ".", process.env.MAINNET_RPC_URL || "https://ethereum-rpc.publicnode.com")
+    .then((file) => {
+      console.log(`verified on Mainnet: proposal ${QUEUED.id} = FeeRouterV1.setVoucherSigner(${QUEUED.signer}), ETA ${QUEUED.eta}, pending`);
+      console.log(`wrote ${file}`);
+    })
+    .catch((error) => {
+      console.error(error.message);
+      process.exit(1);
+    });
 }
