@@ -52,7 +52,10 @@ window.IFRState = (() => {
 
   // ── Haupt-Ladefunktion ───────────────────────────────
   async function load(address) {
-    const provider = IFRWallet.getProvider();
+    // Data reads use only the chain-pinned public read provider (verified eth_chainId 0x1).
+    // A connected wallet's provider is never trusted for displayed values: if the wallet core
+    // does not offer getReadProvider (e.g. an old cached copy), every value stays unavailable.
+    const provider = typeof IFRWallet.getReadProvider === "function" ? IFRWallet.getReadProvider() : null;
     const result = {
       address: address || null,
       ethBalance: null,
@@ -72,6 +75,22 @@ window.IFRState = (() => {
         governanceTools: false,          // Core Team Whitelist (Phase 3)
       }
     };
+
+    if (!provider) {
+      console.warn("Chain-pinned read provider unavailable; showing no on-chain values.");
+      result.readError = true;
+      result.readProviderMissing = true;
+      result.bootstrapStatus = {
+        available: false,
+        active: null, finalized: null,
+        totalETHRaised: null, contributorCount: null,
+        timeRemaining: null, startTime: null, endTime: null,
+        ifrAllocation: null,
+      };
+      _cache = result;
+      _emit("stateLoaded", result);
+      return result;
+    }
 
     try {
       // Bootstrap Status (immer, auch ohne Wallet)
@@ -162,7 +181,7 @@ window.IFRState = (() => {
         result.isLocked1000 = locked >= ethers.parseUnits("1000", 9);
       }
 
-    } catch(e) { console.warn("Wallet state load error:", e.message); }
+    } catch(e) { result.readError = true; console.warn("Wallet state load error:", e.message); }
 
     _cache = result;
     _emit("stateLoaded", result);
