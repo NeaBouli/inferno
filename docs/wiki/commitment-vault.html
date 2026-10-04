@@ -698,6 +698,7 @@
         <li><a href="https://ifrunit.tech/wiki/roadmap.html">Roadmap</a></li>
         <li class="nav-divider"></li>
         <li><a href="https://ifrunit.tech/wiki/commitment-vault.html" class="active" aria-current="page">CommitmentVault</a></li>
+        <li><a href="https://ifrunit.tech/wiki/commitment-vault-compensation.html">CV-01 Compensation</a></li>
         <li><a href="https://ifrunit.tech/wiki/lending-vault.html">LendingVault</a></li>
         <li><a href="https://ifrunit.tech/wiki/lending-market.html">Lending Market</a></li>
         <li><a href="https://ifrunit.tech/wiki/lp-strategy.html">LP Strategy</a></li>
@@ -858,6 +859,13 @@
       <!-- ======================================== -->
       <!-- 3. Contributor-Konfiguration -->
       <!-- ======================================== -->
+      <p><strong>Mainnet status (V1):</strong> the deployed V1 cannot evaluate price conditions; its price check always reads zero. As a result:</p>
+      <ul>
+        <li><code>TIME_ONLY</code> and <code>TIME_OR_PRICE</code> tranches unlock after their time condition.</li>
+        <li><code>PRICE_ONLY</code> and <code>TIME_AND_PRICE</code> tranches cannot unlock.</li>
+      </ul>
+      <p>The affected tranches and the compensation proposal are recorded in <a href="commitment-vault-compensation.html">CV-01</a>.</p>
+
       <h2 id="contributor-konfiguration">3. Contributor Configuration</h2>
       <p>The 100M Contributor tokens are split into 10 equal tranches. Each tranche has a price condition (Type B: PRICE ONLY).</p>
 
@@ -885,6 +893,7 @@
 
       <div class="callout-green">
         <p><strong>Canonical basis:</strong> P0 is 300,000,000 wei per IFR. A 10&times; price condition therefore evaluates against 3,000,000,000 wei per IFR; any fiat conversion is external and time-dependent.</p>
+        <p>The table above is the original design. The tranches actually locked on Mainnet differ from it; the Mainnet record, with every tranche and its status, is in <a href="commitment-vault-compensation.html">CV-01</a>.</p>
       </div>
 
       <!-- ======================================== -->
