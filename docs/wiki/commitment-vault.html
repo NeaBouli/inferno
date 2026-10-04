@@ -1163,9 +1163,33 @@
 #ifr-panel { display:none; position:fixed; bottom:100px; right:12px; z-index:99998; width:min(400px, calc(100vw - 24px)); height:min(580px, calc(100vh - 120px)); border-radius:16px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,0.5); background:#1a1a1a; }
 @media(max-width:480px){ #ifr-panel { bottom:0; right:0; left:0; width:100vw; height:calc(100vh - 70px); border-radius:16px 16px 0 0; } #ifr-btn { bottom:12px; right:12px; width:52px; height:52px; } }
 #ifr-panel iframe { width:100%; height:100%; border:none; }
+#ifr-btn.task-clear { visibility:hidden; opacity:0; }
 </style>
 <button id="ifr-btn" onclick="var p=document.getElementById('ifr-panel');p.style.display=p.style.display==='block'?'none':'block';"><img src="../assets/CoPilot.jpg" alt="IFR Copilot"></button>
 <div id="ifr-panel"><iframe src="https://copilot-api.ifrunit.tech" allow="clipboard-write"></iframe></div>
+<script>
+// Hide the fixed Copilot launcher only while it would sit on the active lock task; it returns outside the task.
+(function() {
+  var launcher = document.getElementById('ifr-btn');
+  var panel = document.getElementById('ifr-panel');
+  if (!launcher || !panel || !window.requestAnimationFrame) return;
+  var queued = false;
+  function update() {
+    queued = false;
+    var z = launcher.getBoundingClientRect();
+    var covers = Array.prototype.some.call(document.querySelectorAll('#cv-v1-warning, #cv-v2-path, #cv-connect-section, #cv-config-section, #cv-dashboard-section'), function(el) {
+      var r = el.getBoundingClientRect();
+      return r.width > 0 && r.left < z.right && r.right > z.left && r.top < z.bottom && r.bottom > z.top;
+    });
+    launcher.classList.toggle('task-clear', covers && !(panel.style.display === 'block'));
+  }
+  function queue() { if (!queued) { queued = true; requestAnimationFrame(update); } }
+  window.addEventListener('scroll', queue, { passive: true });
+  window.addEventListener('resize', queue);
+  document.addEventListener('click', queue);
+  queue();
+})();
+</script>
 
 <script>
 async function lpConnect(){

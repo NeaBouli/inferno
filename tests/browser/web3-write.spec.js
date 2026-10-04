@@ -2027,6 +2027,50 @@ for (const [width, height] of [[1440, 1000], [1180, 820], [820, 1180], [390, 844
   });
 }
 
+// T-240 follow-up: the fixed Copilot launcher must never sit on visible text or controls of the active lock task.
+// Because the launcher is fixed, every part of the task passes its position while scrolling, so the check walks the
+// whole task region and measures the real launcher rect against rendered text boxes and interactive targets. A hidden
+// launcher (visibility) is allowed inside the task; it must be visible again once the task is out of the way.
+async function expectLauncherClearOfTask(page, taskSelector) {
+  const result = await page.evaluate(async (selector) => {
+    const settle = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const launcher = document.querySelector("#ifr-btn");
+    const shown = () => {
+      const s = getComputedStyle(launcher);
+      return s.display !== "none" && s.visibility !== "hidden" && Number(s.opacity) > 0;
+    };
+    const roots = () => Array.from(document.querySelectorAll(selector)).filter((el) => el.getClientRects().length > 0);
+    const boxes = roots().map((el) => el.getBoundingClientRect());
+    const top = Math.min(...boxes.map((b) => b.top)) + window.scrollY;
+    const bottom = Math.max(...boxes.map((b) => b.bottom)) + window.scrollY;
+    const hits = [];
+    for (let y = Math.max(0, Math.floor(top - window.innerHeight)); y <= bottom; y += 24) {
+      window.scrollTo({ top: y, behavior: "instant" });
+      await settle();
+      if (!shown()) continue;
+      const z = launcher.getBoundingClientRect();
+      const overlaps = (r) => r.width > 0 && r.height > 0 && r.left < z.right && r.right > z.left && r.top < z.bottom && r.bottom > z.top;
+      for (const root of roots()) {
+        for (const el of root.querySelectorAll("a, button, input, select, label, [role=button]")) {
+          if (el.getClientRects().length && overlaps(el.getBoundingClientRect())) hits.push(`${window.scrollY}: target ${el.textContent.trim().slice(0, 40)}`);
+        }
+        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+        for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+          if (!node.textContent.trim()) continue;
+          const range = document.createRange();
+          range.selectNodeContents(node);
+          if (Array.from(range.getClientRects()).some(overlaps)) hits.push(`${window.scrollY}: text ${node.textContent.trim().slice(0, 40)}`);
+        }
+      }
+    }
+    window.scrollTo({ top: 0, behavior: "instant" });
+    await settle();
+    return { hits, reachable: shown() };
+  }, taskSelector);
+  expect(result.hits, "Copilot launcher covers visible task text or controls").toEqual([]);
+  expect(result.reachable, "Copilot launcher stays reachable outside the task").toBe(true);
+}
+
 // T-240 visual gate: V1 warning and V2 path fit without overlap, clipping or horizontal overflow.
 async function measureLockLayout(page, containerSelector, stackSelectors, targetSelectors) {
   return page.evaluate(({ containerSelector, stackSelectors, targetSelectors }) => {
@@ -2107,6 +2151,7 @@ for (const [width, height] of [[1440, 1000], [1180, 820], [820, 1180], [390, 844
         assertLockLayout({ ...wikiStack, stack: wikiStack.stack.map((box) => ({ ...box, left: Math.max(box.left, wikiStack.container.left), right: Math.min(box.right, wikiStack.container.right) })) });
         expect(wikiStack.stack[1].left).toBeGreaterThanOrEqual(0);
         expect(wikiStack.stack[1].right).toBeLessThanOrEqual(width);
+        await expectLauncherClearOfTask(page, "#cv-v1-warning, #cv-v2-path, #cv-connect-section, #cv-config-section, #cv-dashboard-section");
         if (shots) {
           await page.locator("#cv-v1-warning").scrollIntoViewIfNeeded();
           await page.evaluate(() => window.scrollBy(0, -80));
@@ -2120,6 +2165,7 @@ for (const [width, height] of [[1440, 1000], [1180, 820], [820, 1180], [390, 844
           const landing = await measureLockLayout(page, "#wz-box",
             Array.from({ length: 4 }, (_, i) => `#wz-box a.wz-option:nth-of-type(${i + 1})`), ["#wz-box a.wz-option"]);
           assertLockLayout(landing);
+          await expectLauncherClearOfTask(page, "#wz-box");
           if (shots) {
             await page.locator("#wz-box").scrollIntoViewIfNeeded();
             await page.screenshot({ path: `${shots}/t240-landing-wizard-lock-${width}x${height}.png` });
