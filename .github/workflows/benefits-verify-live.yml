@@ -12,11 +12,17 @@ on:
     paths:
       - 'apps/benefits-verify/**'
       - 'test/fork/BenefitsVerifyFork.test.js'
+      - 'test/fork/CommitmentVaultV2Fork.test.js'
+      - 'test/fork/CommitmentVaultV2SyntheticRehearsal.test.js'
+      - 'scripts/commitment-vault-v2-proposal.cjs'
       - '.github/workflows/benefits-verify-live.yml'
   pull_request:
     paths:
       - 'apps/benefits-verify/**'
       - 'test/fork/BenefitsVerifyFork.test.js'
+      - 'test/fork/CommitmentVaultV2Fork.test.js'
+      - 'test/fork/CommitmentVaultV2SyntheticRehearsal.test.js'
+      - 'scripts/commitment-vault-v2-proposal.cjs'
       - '.github/workflows/benefits-verify-live.yml'
 
 permissions:
@@ -81,3 +87,17 @@ jobs:
             echo "::notice::No archive RPC secret; forking Mainnet at recent block $block via public RPC."
           fi
           HARDHAT_FORK=true HARDHAT_FORK_BLOCK_NUMBER=$block npm run test:benefits-fork
+      - name: Deployed CommitmentVault V2 fork (post-deployment block)
+        env:
+          MAINNET_RPC_URL: ${{ secrets.MAINNET_RPC_URL }}
+        # Always a recent block: V2 was deployed at block 26107296, after the pinned vector block above.
+        # The test fails if the deployed V2 bytecode is missing; the synthetic rehearsal runs separately.
+        run: |
+          export MAINNET_RPC_URL="${MAINNET_RPC_URL:-https://ethereum-rpc.publicnode.com}"
+          head=$(curl -fsS -m 20 -H 'content-type: application/json' \
+            --data '{"jsonrpc":"2.0","id":1,"method":"eth_blockNumber","params":[]}' "$MAINNET_RPC_URL" \
+            | node -e 'let s="";process.stdin.on("data",d=>s+=d).on("end",()=>console.log(String(BigInt(JSON.parse(s).result))))')
+          block=$((head - 5))
+          if [ "$block" -lt 26107296 ]; then echo "::error::fork block $block is before the V2 deployment"; exit 1; fi
+          HARDHAT_FORK=true HARDHAT_FORK_BLOCK_NUMBER=$block npm run test:commitment-v2-fork
+          HARDHAT_FORK=true HARDHAT_FORK_BLOCK_NUMBER=$block npm run test:commitment-v2-synthetic-fork
