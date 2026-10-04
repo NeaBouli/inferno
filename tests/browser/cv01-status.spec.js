@@ -27,7 +27,7 @@ async function mockChain(page, { timestamp, priceGwei }) {
     }
     return { jsonrpc: "2.0", id, result };
   };
-  await page.route(/^https:\/\/(ethereum-rpc\.publicnode\.com|eth\.llamarpc\.com)/, async (route) => {
+  await page.route(/^https:\/\/(ethereum-rpc\.publicnode\.com|eth\.drpc\.org|1rpc\.io|eth\.llamarpc\.com)/, async (route) => {
     const body = JSON.parse(route.request().postData() || "{}");
     const out = Array.isArray(body) ? body.map(answer) : answer(body);
     await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(out) });
@@ -81,7 +81,7 @@ test("Approved + spot spike without TWAP evidence: nothing is green", async ({ p
 
 test("Approved + RPC unavailable: nothing is green", async ({ page }) => {
   await setPage(page, { council: "approved" });
-  await page.route(/^https:\/\/(ethereum-rpc\.publicnode\.com|eth\.llamarpc\.com)/, (route) => route.abort());
+  await page.route(/^https:\/\/(ethereum-rpc\.publicnode\.com|eth\.drpc\.org|1rpc\.io|eth\.llamarpc\.com)/, (route) => route.abort());
   await load(page);
   await expect(page.locator("#cv01-live")).toContainText("unavailable");
   await expect(page.locator("#cv01-rows .cv-green")).toHaveCount(0);
@@ -90,7 +90,7 @@ test("Approved + RPC unavailable: nothing is green", async ({ page }) => {
 test("Approved + verified TWAP record: only that tranche is green, independent of spot and RPC", async ({ page }) => {
   await page.clock.setFixedTime((AFTER_UNLOCK + 3600) * 1000);  // the TWAP window has ended
   await setPage(page, { council: "approved", evidence: [goodC1] });
-  await page.route(/^https:\/\/(ethereum-rpc\.publicnode\.com|eth\.llamarpc\.com)/, (route) => route.abort());
+  await page.route(/^https:\/\/(ethereum-rpc\.publicnode\.com|eth\.drpc\.org|1rpc\.io|eth\.llamarpc\.com)/, (route) => route.abort());
   await load(page);
   await expect(page.locator("#cv01-rows .cv-green")).toHaveCount(1);
   await expect(page.locator("#cv01-rows tr").first().locator(".cv-status")).toHaveClass(/cv-green/);
