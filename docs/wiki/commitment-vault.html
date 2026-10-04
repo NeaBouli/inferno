@@ -1022,12 +1022,27 @@
         .cv-badge-locked{background:rgba(234,179,8,0.15);color:#eab308}
         .cv-badge-unlocked{background:rgba(34,197,94,0.15);color:#22c55e}
         .cv-status-msg{margin-top:12px;padding:12px;border-radius:8px;font-size:0.88rem}
+        .cv-v1-warning{background:#fdecea;border:1px solid rgba(153,27,27,0.4);border-left-width:4px;border-radius:12px;padding:18px 20px;margin:20px 0;color:#5f1414;overflow-wrap:anywhere}
+        .cv-v1-warning strong{display:block;font-size:1rem;margin-bottom:6px;color:#5f1414}
+        .cv-v1-warning p,.cv-v2-path p{margin:0;font-size:0.9rem;line-height:1.6}
+        .cv-v2-path{overflow-wrap:anywhere}
+        .cv-v2-path strong{display:block;font-size:1rem;margin-bottom:6px;color:var(--text)}
       </style>
+
+      <!-- V1 warning (CV-01): existing V1 tranches stay, new locks never go to V1 -->
+      <div class="cv-v1-warning" id="cv-v1-warning" role="note" data-v1-warning>
+        <strong>Do not create new CommitmentVault V1 locks.</strong>
+        <p>V1 stays deployed on Ethereum Mainnet and still accepts direct calls (for example from Etherscan or a script). A price-conditioned lock created there can never unlock: the IFR stay trapped permanently. This widget never sends new locks to V1. Existing V1 tranches stay listed below and unlock through V1.</p>
+      </div>
+      <div class="cv-widget cv-v2-path" id="cv-v2-path" data-v2-path>
+        <strong>New time locks: CommitmentVault V2 only</strong>
+        <p>V2 (<code>0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F</code>) accepts time-only locks. The lock button stays disabled until Governance proposal #17 is executed and the token reads feeExempt(V2) as true. No price lock is available: a separate price-lock vault is only a draft, not reviewed and not deployed.</p>
+      </div>
 
       <!-- Live Status Banner -->
       <div class="cv-widget" style="background:rgba(34,197,94,0.06);border-color:rgba(34,197,94,0.25);text-align:center;">
         <div style="font-size:0.78rem;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Live on Ethereum Mainnet</div>
-        <p style="color:var(--muted);font-size:0.88rem;margin:0;">CommitmentVault deployed on Mainnet. feeExempt active since 06.04.2026.<br>Connect your wallet now to check your IFR balance and plan your lock strategy.</p>
+        <p style="color:var(--muted);font-size:0.88rem;margin:0;">CommitmentVault V1 deployed on Mainnet; its feeExempt is active since 06.04.2026 (existing tranches only).<br>Connect your wallet to check your IFR balance and your existing tranches.</p>
         <p id="cv-price-disabled-banner" data-price-locks-disabled style="color:var(--text);font-size:0.88rem;margin:10px 0 0;">Price-based locks are disabled. CommitmentVault V1 cannot evaluate prices (see <a href="#cv01-notice">CV-01</a>). Time locks only; new time locks move to CommitmentVault V2 after its fee exemption is executed.</p>
       </div>
 

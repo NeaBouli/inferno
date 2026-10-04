@@ -814,6 +814,47 @@
       font-size: 13px;
     }
 
+    .protocol-warning {
+      margin: 0 0 12px;
+      padding: 12px 14px;
+      border: 1px solid rgba(153, 27, 27, 0.4);
+      border-left-width: 4px;
+      border-radius: var(--radius);
+      background: #fdecea;
+      color: #5f1414;
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+
+    .protocol-warning strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+
+    .protocol-warning p,
+    .protocol-path p {
+      margin: 0;
+    }
+
+    .protocol-path {
+      margin: 0 0 4px;
+      padding: 12px 14px;
+      border: 1px solid rgba(180, 72, 31, 0.22);
+      border-radius: var(--radius);
+      background: rgba(244, 222, 208, 0.48);
+      color: var(--ink-soft);
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+
+    .protocol-path strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--ink);
+      font-size: 14px;
+    }
+
     .protocol-actions {
       display: flex;
       flex-wrap: wrap;
@@ -871,6 +912,11 @@
       min-height: 40px;
       padding: 0 14px;
       font-size: 13px;
+    }
+
+    /* V1/V2 tranche unlock is an exit path: keep a full 44px touch target. */
+    .tranche-row .btn {
+      min-height: 44px;
     }
 
     .health-badge {
@@ -2007,6 +2053,15 @@
         </div>
         <button class="protocol-close" type="button" aria-label="Close lock panel" data-lock-close>&times;</button>
       </header>
+
+      <div class="protocol-warning" role="note" data-v1-warning>
+        <strong>Do not create new CommitmentVault V1 locks.</strong>
+        <p>V1 stays deployed on Ethereum Mainnet and still accepts direct calls (for example from Etherscan or a script). A price-conditioned lock created there can never unlock: the IFR stay trapped permanently. This app never sends new locks to V1. Existing V1 tranches stay listed below and unlock through V1.</p>
+      </div>
+      <div class="protocol-path" data-v2-path>
+        <strong>New time locks: CommitmentVault V2 only</strong>
+        <p>V2 (<code>0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F</code>) accepts time-only locks. The lock button stays disabled until Governance proposal #17 is executed and the token reads feeExempt(V2) as true. No price lock is available: a separate price-lock vault is only a draft, not reviewed and not deployed.</p>
+      </div>
 
       <div class="protocol-grid">
         <div class="protocol-stat">

@@ -1290,6 +1290,117 @@ for (const feeExemptV2 of [false, true]) {
   });
 }
 
+// T-240: V1 warning above the V1 area, V2 as the only path for new TIME_ONLY locks, V1 exits preserved.
+async function expectStackedAbove(page, selectors) {
+  const boxes = [];
+  for (const selector of selectors) {
+    const box = await page.locator(selector).first().boundingBox();
+    expect(box, `${selector} must be rendered`).not.toBeNull();
+    boxes.push({ selector, ...box });
+  }
+  for (let i = 1; i < boxes.length; i++) {
+    expect(boxes[i - 1].y + boxes[i - 1].height, `${boxes[i - 1].selector} above ${boxes[i].selector}`).toBeLessThanOrEqual(boxes[i].y + 0.5);
+  }
+}
+
+test("landing wizard lock branch deep-links new time locks to the V2 entry, not a price or V1 form (T-240)", async ({ browser }) => {
+  const { context, page, pageErrors } = await preparePage(browser);
+  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page.evaluate(() => window.wzGo("lock"));
+  const options = page.locator("#wz-box a.wz-option");
+  const newLock = options.filter({ hasText: "New CommitmentVault time lock" });
+  const manage = options.filter({ hasText: "Manage existing tranches" });
+  await expect(newLock).toHaveCount(1);
+  await expect(newLock).toHaveAttribute("href", "https://web3.ifrunit.tech/?action=commitment-lock#access");
+  await expect(newLock).toContainText("CommitmentVault V2");
+  await expect(manage).toHaveAttribute("href", "https://web3.ifrunit.tech/?action=commitment-lock#access");
+  await expect(manage).toContainText("each unlocks through its own vault");
+  const branchText = await page.locator("#wz-box").innerText();
+  expect(branchText).not.toMatch(/price-|combined-|indefinite-lock|create .*price/i);
+  expect(branchText).toContain("no price locks");
+  expect(pageErrors).toEqual([]);
+  await context.close();
+});
+
+test("web3 lock deep link opens the V2 entry under the V1 warning; V2 lock targets V2 and V1 unlock targets V1 (T-240)", async ({ browser }) => {
+  const { context, page, writes, pageErrors } = await preparePage(browser, { feeExemptV2: true, v1Tranche: true });
+  await page.goto("/web3/?action=commitment-lock#access", { waitUntil: "domcontentloaded" });
+  await selectInjectedWallet(page);
+  const dialog = page.locator("[data-lock-dialog]");
+  await expect(dialog.locator("[data-v1-warning]")).toBeVisible({ timeout: 15_000 });
+  await expect(dialog.locator("[data-v1-warning]")).toContainText("Do not create new CommitmentVault V1 locks");
+  await expect(dialog.locator("[data-v1-warning]")).toContainText("can never unlock");
+  await expect(dialog.locator("[data-v2-path]")).toContainText("New time locks: CommitmentVault V2 only");
+  await expect(dialog.locator("[data-v2-path]")).toContainText("No price lock is available");
+  await expect(dialog.locator("[data-lock-condition] option")).toHaveCount(1);
+  await expect(dialog.locator("[data-lock-condition] option")).toHaveAttribute("value", "0");
+  const unlockV1 = page.locator('[data-unlock-vault="v1"][data-unlock-tranche="0"]');
+  await expect(unlockV1).toBeEnabled({ timeout: 15_000 });
+  await expectStackedAbove(page, ["[data-lock-dialog] [data-v1-warning]", "[data-lock-dialog] [data-v2-path]", "[data-lock-dialog] .protocol-form", "[data-lock-tranches]"]);
+  await expect(page.locator("[data-lock-submit]")).toBeEnabled({ timeout: 15_000 });
+  await page.locator("[data-lock-amount]").fill("100");
+  await page.locator("[data-lock-submit]").click();
+  await expect.poll(() => writes.length, { timeout: 15_000 }).toBe(2);
+  expect(writes[0].action).toBe("approve");
+  expect(String(writes[0].data).toLowerCase()).toContain(COMMITMENT_V2.slice(2).toLowerCase());
+  expect(writes[1]).toMatchObject({ action: "commitment-lock-v2", amount: 100n * UNIT, cType: 0n, p0Multiplier: 0n });
+  expect(String(writes[1].to).toLowerCase()).toBe(COMMITMENT_V2.toLowerCase());
+  await expect(page.locator('[data-unlock-vault="v1"][data-unlock-tranche="0"]')).toBeEnabled({ timeout: 15_000 });
+  await page.locator('[data-unlock-vault="v1"][data-unlock-tranche="0"]').click();
+  await expect.poll(() => writes.length, { timeout: 15_000 }).toBe(3);
+  expect(writes[2]).toMatchObject({ action: "commitment-unlock-v1" });
+  expect(String(writes[2].to).toLowerCase()).toBe(COMMITMENT.toLowerCase());
+  expect(writes.some((w) => w.action === "commitment-lock")).toBe(false);
+  expect(pageErrors).toEqual([]);
+  await context.close();
+});
+
+for (const [label, options] of [
+  ["feeExempt(V2) is false", { feeExemptV2: false }],
+  ["feeExempt(V2) is unreadable", { feeExemptV2: "error" }],
+  ["the read RPC reports the wrong chain", { feeExemptV2: true, readChainId: "0x5" }],
+  ["the wallet stays on the wrong chain", { feeExemptV2: true, chainId: "0x5", rejectSwitch: true }],
+]) {
+  test(`web3 V2 approval and lock stay blocked when ${label}; the V1 warning stays visible (T-240)`, async ({ browser }) => {
+    const { context, page, writes, pageErrors } = await preparePage(browser, { v1Tranche: true, ...options });
+    await page.goto("/web3/?action=commitment-lock#access", { waitUntil: "domcontentloaded" });
+    await selectInjectedWallet(page).catch(() => null);
+    await expect(page.locator("[data-lock-dialog] [data-v1-warning]")).toBeVisible({ timeout: 15_000 });
+    await page.waitForTimeout(1500);
+    await expect(page.locator("[data-lock-submit]")).toBeDisabled();
+    await page.locator("[data-lock-amount]").fill("100");
+    await page.locator("[data-lock-submit]").evaluate((button) => { button.disabled = false; button.click(); });
+    await page.waitForTimeout(1500);
+    expect(writes).toEqual([]);
+    // The forced click re-enabled the button; a read-side gate closes it again, a wallet-side refusal throws first.
+    if (!options.rejectSwitch) await expect(page.locator("[data-lock-submit]")).toBeDisabled();
+    expect(pageErrors).toEqual([]);
+    await context.close();
+  });
+}
+
+test("wiki lock widget shows the V1 warning above the V2-only path and keeps price modes absent (T-240)", async ({ browser }) => {
+  const { context, page, writes, pageErrors } = await preparePage(browser, { feeExemptV2: false, v1Tranche: true });
+  await page.goto("/wiki/commitment-vault.html#lock-widget", { waitUntil: "domcontentloaded" });
+  await expect(page.locator("#cv-v1-warning")).toBeVisible();
+  await expect(page.locator("#cv-v1-warning")).toContainText("Do not create new CommitmentVault V1 locks");
+  await expect(page.locator("#cv-v2-path")).toContainText("New time locks: CommitmentVault V2 only");
+  await expect(page.locator("#cv-condition-type option")).toHaveCount(1);
+  await expect(page.locator("#cv-condition-type option")).toHaveAttribute("value", "0");
+  await page.locator("#cv-connect-btn").click();
+  const injected = page.locator('[data-wallet-option-type="injected"]').first();
+  if (await injected.isVisible().catch(() => false)) await injected.click();
+  await expect(page.locator("#cv-tranches-list")).toContainText("V1 · Tranche #0", { timeout: 15_000 });
+  await expectStackedAbove(page, ["#cv-v1-warning", "#cv-v2-path", "#cv-connect-section", "#cv-config-section", "#cv-dashboard-section"]);
+  await expect(page.locator("#cv-lock-btn")).toBeDisabled();
+  await page.locator('[data-unlock-vault="v1"][data-unlock-tranche="0"]').click();
+  await expect.poll(() => writes.length, { timeout: 15_000 }).toBe(1);
+  expect(writes[0]).toMatchObject({ action: "commitment-unlock-v1" });
+  expect(String(writes[0].to).toLowerCase()).toBe(COMMITMENT.toLowerCase());
+  expect(pageErrors).toEqual([]);
+  await context.close();
+});
+
 test("LendingVault borrowing remains transaction-disabled while price is zero", async ({ browser }) => {
   const { context, page, writes, pageErrors } = await preparePage(browser, { offerAvailable: true });
   await page.goto("/web3/?action=borrow", { waitUntil: "domcontentloaded" });
@@ -1883,4 +1994,110 @@ for (const [width, height] of [[1440, 1000], [1180, 820], [820, 1180], [390, 844
       await context.close();
     }
   });
+}
+
+// T-240 visual gate: V1 warning and V2 path fit without overlap, clipping or horizontal overflow.
+async function measureLockLayout(page, containerSelector, stackSelectors, targetSelectors) {
+  return page.evaluate(({ containerSelector, stackSelectors, targetSelectors }) => {
+    const rect = (el) => { const r = el.getBoundingClientRect(); return { left: r.left, right: r.right, top: r.top, bottom: r.bottom, width: r.width, height: r.height }; };
+    const container = document.querySelector(containerSelector);
+    const c = rect(container);
+    const stack = stackSelectors.map((selector) => {
+      const el = document.querySelector(selector);
+      return { selector, ...rect(el), scrollWidth: el.scrollWidth, clientWidth: el.clientWidth };
+    });
+    const targets = targetSelectors.flatMap((selector) => Array.from(document.querySelectorAll(selector))
+      .filter((el) => el.getClientRects().length > 0)
+      .map((el) => ({ selector, ...rect(el) })));
+    return {
+      docOverflow: document.documentElement.scrollWidth - window.innerWidth,
+      container: c,
+      stack,
+      targets,
+    };
+  }, { containerSelector, stackSelectors, targetSelectors });
+}
+
+function assertLockLayout(layout) {
+  expect(layout.docOverflow, "no horizontal page overflow").toBeLessThanOrEqual(0);
+  for (const box of layout.stack) {
+    expect(box.width, `${box.selector} rendered`).toBeGreaterThan(0);
+    expect(box.scrollWidth, `${box.selector} text stays inside`).toBeLessThanOrEqual(box.clientWidth + 1);
+    expect(box.left, `${box.selector} inside container (left)`).toBeGreaterThanOrEqual(layout.container.left - 0.5);
+    expect(box.right, `${box.selector} inside container (right)`).toBeLessThanOrEqual(layout.container.right + 0.5);
+  }
+  for (let i = 1; i < layout.stack.length; i++) {
+    expect(layout.stack[i - 1].bottom, `${layout.stack[i - 1].selector} does not overlap ${layout.stack[i].selector}`).toBeLessThanOrEqual(layout.stack[i].top + 0.5);
+  }
+  for (const target of layout.targets) {
+    expect(target.height, `${target.selector} touch height`).toBeGreaterThanOrEqual(44);
+    expect(target.width, `${target.selector} touch width`).toBeGreaterThanOrEqual(44);
+  }
+}
+
+for (const [width, height] of [[1440, 1000], [1180, 820], [820, 1180], [390, 844]]) {
+  for (const state of ["gated", "ready"]) {
+    test(`T-240 lock surfaces fit at ${width}x${height} (${state})`, async ({ browser }) => {
+      const shots = process.env.T240_SHOTS;
+      const { context, page, pageErrors } = await preparePage(browser, {
+        feeExemptV2: state === "ready",
+        v1Tranche: true,
+        contextOptions: { viewport: { width, height } },
+      });
+      try {
+        await page.goto("/web3/?action=commitment-lock#access", { waitUntil: "domcontentloaded" });
+        await selectInjectedWallet(page);
+        await expect(page.locator('[data-unlock-vault="v1"][data-unlock-tranche="0"]')).toBeEnabled({ timeout: 15_000 });
+        if (state === "ready") await expect(page.locator("[data-lock-submit]")).toBeEnabled();
+        else await expect(page.locator("[data-lock-submit]")).toBeDisabled();
+        const web3 = await measureLockLayout(page, "[data-lock-dialog] .protocol-card",
+          ["[data-lock-dialog] header", "[data-lock-dialog] [data-v1-warning]", "[data-lock-dialog] [data-v2-path]", "[data-lock-dialog] .protocol-grid", "[data-lock-dialog] .protocol-form", "[data-lock-dialog] .protocol-actions", "[data-lock-tranches]"],
+          ["[data-lock-dialog] .protocol-actions .btn", "[data-lock-tranches] [data-unlock-vault]"]);
+        assertLockLayout(web3);
+        if (shots) {
+          await page.locator("[data-lock-dialog] [data-v1-warning]").scrollIntoViewIfNeeded();
+          await page.screenshot({ path: `${shots}/t240-web3-${state}-${width}x${height}.png` });
+        }
+
+        await page.goto("/wiki/commitment-vault.html#lock-widget", { waitUntil: "domcontentloaded" });
+        await page.locator("#cv-connect-btn").click();
+        const injected = page.locator('[data-wallet-option-type="injected"]').first();
+        if (await injected.isVisible().catch(() => false)) await injected.click();
+        await expect(page.locator("#cv-tranches-list")).toContainText("V1 · Tranche #0", { timeout: 15_000 });
+        await page.locator("#cv-amount").fill("100");
+        await page.locator("#cv-amount").dispatchEvent("input");
+        if (state === "ready") await expect(page.locator("#cv-lock-btn")).toBeEnabled();
+        else await expect(page.locator("#cv-lock-btn")).toBeDisabled();
+        const wiki = await measureLockLayout(page, "#cv-v1-warning",
+          ["#cv-v1-warning"], []);
+        assertLockLayout(wiki);
+        const wikiStack = await measureLockLayout(page, "main, .content, body",
+          ["#lock-widget", "#cv-v1-warning", "#cv-v2-path", "#cv-connect-section", "#cv-config-section", "#cv-dashboard-section"], []);
+        assertLockLayout({ ...wikiStack, stack: wikiStack.stack.map((box) => ({ ...box, left: Math.max(box.left, wikiStack.container.left), right: Math.min(box.right, wikiStack.container.right) })) });
+        expect(wikiStack.stack[1].left).toBeGreaterThanOrEqual(0);
+        expect(wikiStack.stack[1].right).toBeLessThanOrEqual(width);
+        if (shots) {
+          await page.locator("#cv-v1-warning").scrollIntoViewIfNeeded();
+          await page.evaluate(() => window.scrollBy(0, -80));
+          await page.screenshot({ path: `${shots}/t240-wiki-${state}-${width}x${height}.png` });
+        }
+
+        if (state === "gated") {
+          await page.goto("/", { waitUntil: "domcontentloaded" });
+          await page.evaluate(() => window.wzGo("lock"));
+          await page.waitForTimeout(600);
+          const landing = await measureLockLayout(page, "#wz-box",
+            Array.from({ length: 4 }, (_, i) => `#wz-box a.wz-option:nth-of-type(${i + 1})`), ["#wz-box a.wz-option"]);
+          assertLockLayout(landing);
+          if (shots) {
+            await page.locator("#wz-box").scrollIntoViewIfNeeded();
+            await page.screenshot({ path: `${shots}/t240-landing-wizard-lock-${width}x${height}.png` });
+          }
+        }
+        expect(pageErrors).toEqual([]);
+      } finally {
+        await context.close();
+      }
+    });
+  }
 }
