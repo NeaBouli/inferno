@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Read-only Mainnet safety monitor for the two IFR accounting vaults.
+ * Read-only Mainnet safety monitor for the IFR accounting vaults (CommitmentVault V1 and V2, LendingVault).
  *
  * No signer is created and no transaction-capable method is present. The
  * command exits non-zero when a required fee exemption is missing or liquid
@@ -14,6 +14,7 @@ const REQUEST_TIMEOUT_MS = 15_000;
 const ADDRESSES = Object.freeze({
   token: "0x77e99917Eca8539c62F509ED1193ac36580A6e7B",
   commitmentVault: "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3",
+  commitmentVaultV2: "0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F",
   lendingVault: "0x974305Ab0EC905172e697271C3d7d385194EB9DF",
 });
 
@@ -62,10 +63,28 @@ function evaluateVaultInvariants(snapshot) {
     problems.push("LendingVault token balance is below totalAvailable");
   }
 
+  // CommitmentVault V2 (time-only locks). Its fee exemption is queued as Governance proposal #17;
+  // while V2 holds no locks a missing exemption is reported as pending, not as a failure. Once V2
+  // holds locks, a missing exemption or a custody shortfall is a failure.
+  let commitmentV2Surplus = null;
+  let commitmentV2Pending = false;
+  if (snapshot.commitmentV2) {
+    const v2Balance = toBigInt(snapshot.commitmentV2.balance, "commitmentV2.balance");
+    const v2Locked = toBigInt(snapshot.commitmentV2.totalLocked, "commitmentV2.totalLocked");
+    if (snapshot.commitmentV2.feeExempt !== true) {
+      if (v2Locked > 0n) problems.push("CommitmentVault V2 holds locks but its fee exemption is not active");
+      else commitmentV2Pending = true;
+    }
+    if (v2Balance < v2Locked) problems.push("CommitmentVault V2 token balance is below totalLocked");
+    commitmentV2Surplus = v2Balance - v2Locked;
+  }
+
   return {
     ok: problems.length === 0,
     problems,
     commitmentSurplus: commitmentBalance - totalLocked,
+    commitmentV2Surplus,
+    commitmentV2Pending,
     lendingLiquidSurplus: lendingBalance - totalAvailable,
     lendingPrincipalAccounting: totalAvailable + totalLent,
     lendingTotalAssetCoverage: lendingBalance + totalLent,
@@ -83,6 +102,7 @@ async function readMainnetSnapshot({ rpcUrl = process.env.MAINNET_RPC_URL || DEF
   const provider = new JsonRpcProvider(request, CHAIN_ID, { staticNetwork: true });
   const token = new Contract(ADDRESSES.token, TOKEN_ABI, provider);
   const commitment = new Contract(ADDRESSES.commitmentVault, COMMITMENT_ABI, provider);
+  const commitmentV2 = new Contract(ADDRESSES.commitmentVaultV2, COMMITMENT_ABI, provider);
   const lending = new Contract(ADDRESSES.lendingVault, LENDING_ABI, provider);
 
   try {
@@ -96,6 +116,9 @@ async function readMainnetSnapshot({ rpcUrl = process.env.MAINNET_RPC_URL || DEF
       lendingBalance,
       totalAvailable,
       totalLent,
+      v2FeeExempt,
+      v2Balance,
+      v2TotalLocked,
     ] = await Promise.all([
       token.feeExempt(ADDRESSES.commitmentVault, block),
       token.balanceOf(ADDRESSES.commitmentVault, block),
@@ -104,6 +127,9 @@ async function readMainnetSnapshot({ rpcUrl = process.env.MAINNET_RPC_URL || DEF
       token.balanceOf(ADDRESSES.lendingVault, block),
       lending.totalAvailable(block),
       lending.totalLent(block),
+      token.feeExempt(ADDRESSES.commitmentVaultV2, block),
+      token.balanceOf(ADDRESSES.commitmentVaultV2, block),
+      commitmentV2.totalLocked(block),
     ]);
 
     return {
@@ -114,6 +140,12 @@ async function readMainnetSnapshot({ rpcUrl = process.env.MAINNET_RPC_URL || DEF
         feeExempt: commitmentFeeExempt,
         balance: commitmentBalance,
         totalLocked,
+      },
+      commitmentV2: {
+        address: ADDRESSES.commitmentVaultV2,
+        feeExempt: v2FeeExempt,
+        balance: v2Balance,
+        totalLocked: v2TotalLocked,
       },
       lending: {
         address: ADDRESSES.lendingVault,
@@ -145,6 +177,13 @@ function serializeReport(snapshot, evaluation) {
       totalLocked: amount(snapshot.commitment.totalLocked),
       surplus: amount(evaluation.commitmentSurplus),
     },
+    commitmentV2: snapshot.commitmentV2 ? {
+      feeExempt: snapshot.commitmentV2.feeExempt,
+      feeExemptPending: evaluation.commitmentV2Pending,
+      balance: amount(snapshot.commitmentV2.balance),
+      totalLocked: amount(snapshot.commitmentV2.totalLocked),
+      surplus: amount(evaluation.commitmentV2Surplus),
+    } : null,
     lending: {
       feeExempt: snapshot.lending.feeExempt,
       balance: amount(snapshot.lending.balance),
