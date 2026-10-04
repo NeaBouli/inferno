@@ -1841,6 +1841,11 @@
       return v.toFixed(0);
     }
 
+    // A failed live read arrives as null (never "0"); show it as unavailable instead of zero.
+    function liveFormatted(entry) {
+      return (entry && typeof entry.formatted === 'number' && isFinite(entry.formatted)) ? entry.formatted : null;
+    }
+
     function escapeHtml(value) {
       return String(value == null ? '' : value).replace(/[&<>"']/g, function(ch) {
         return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[ch];
@@ -1902,8 +1907,8 @@
         Object.keys(BALANCE_MAP).forEach(function(key) {
           var el = document.getElementById(BALANCE_MAP[key]);
           if (!el) return;
-          var val = (bal[key] && bal[key].formatted != null) ? bal[key].formatted : 0;
-          el.innerHTML = '<strong style="color:var(--live)">' + fmtVal(val) + '</strong> IFR';
+          var val = liveFormatted(bal[key]);
+          el.innerHTML = val === null ? '<span class="live-unavailable" title="Live read unavailable; not zero">unavailable</span>' : '<strong style="color:var(--live)">' + fmtVal(val) + '</strong> IFR';
         });
 
         // Burn tracker stat cards
@@ -1929,27 +1934,25 @@
         Object.keys(CUR_MAP).forEach(function(key) {
           var el = document.getElementById(CUR_MAP[key]);
           if (!el) return;
-          var val = (bal[key] && bal[key].formatted != null) ? bal[key].formatted : 0;
-          el.textContent = fmtNum(Math.round(val)) + ' IFR';
+          var val = liveFormatted(bal[key]);
+          el.textContent = val === null ? 'unavailable' : fmtNum(Math.round(val)) + ' IFR';
         });
 
-        var ifrLockedEl = document.getElementById('locks-ifrlock-locked');
-        if (ifrLockedEl) ifrLockedEl.textContent = fmtVal(lockMeta.lockedFormatted || 0) + ' IFR';
-        var ifrUnlockedEl = document.getElementById('locks-ifrlock-unlocked');
-        if (ifrUnlockedEl) ifrUnlockedEl.textContent = fmtVal(lockMeta.unlockedFormatted || 0) + ' IFR';
-        var commitmentLocksEl = document.getElementById('locks-commitment-total');
-        if (commitmentLocksEl) commitmentLocksEl.textContent = fmtVal((bal.CommitmentVault && bal.CommitmentVault.formatted) || 0) + ' IFR';
-        var lendingLocksEl = document.getElementById('locks-lending-total');
-        if (lendingLocksEl) {
-          var lendingTotal = ((bal.LendingVault && bal.LendingVault.formatted) || 0);
-          lendingLocksEl.textContent = fmtVal(lendingTotal) + ' IFR';
-        }
+        var setLive = function(el, value) {
+          if (el) el.textContent = (typeof value === 'number' && isFinite(value)) ? fmtVal(value) + ' IFR' : 'unavailable';
+        };
+        setLive(document.getElementById('locks-ifrlock-locked'), lockMeta.lockedFormatted);
+        setLive(document.getElementById('locks-ifrlock-unlocked'), lockMeta.unlockedFormatted);
+        setLive(document.getElementById('locks-commitment-total'), liveFormatted(bal.CommitmentVault));
+        setLive(document.getElementById('locks-lending-total'), liveFormatted(bal.LendingVault));
 
         // Hero timestamp + data source
         var heroEl = document.getElementById('hero-timestamp');
         if (heroEl) heroEl.innerHTML = '<span style="color:#2f6a45">\u25CF</span> Connected to Ethereum Mainnet \u2014 Updated ' + dateTime();
         var dsEl = document.getElementById('data-source');
-        if (dsEl) dsEl.innerHTML = '<span style="color:#2f6a45">\u25CF</span> Live (copilot-api.ifrunit.tech + direct Mainnet vault reads) \u2014 refreshes every 30s';
+        if (dsEl) dsEl.innerHTML = res[1].incomplete
+          ? '<span style="color:#b45309">\u25CF</span> Partially live \u2014 some balances could not be read and are shown as unavailable; refreshes every 30s'
+          : '<span style="color:#2f6a45">\u25CF</span> Live (copilot-api.ifrunit.tech + direct Mainnet vault reads) \u2014 refreshes every 30s';
         loadVaultLiveData();
       });
     }
