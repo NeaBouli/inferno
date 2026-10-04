@@ -790,3 +790,92 @@ Change only `docs/index.html` (tracker + three cards), `docs/wiki/index.html`
 `docs/assets/redesign-skin.css` (shared wiki action/focus rules) and the
 active-link `aria-current` attribute on sidebar pages. Copilot backend,
 contracts, wallet core and other Landing sections stay untouched.
+
+## 13. Queued pool fee batch binding trace
+
+Scope: task T-242 (PR #169). One path only: the Lane 3 decision B step-2
+execute batch for the already queued Governance proposal #21 must be
+generated from verified on-chain content, never from a caller-supplied id.
+
+### 13.1 Grundidee
+
+`Governance.execute(id)` runs whatever the proposal contains
+(`contracts/governance/Governance.sol::execute`), so the Safe batch generator
+must refuse to write execute bytes unless the queued proposal still matches
+the approved operation exactly. Proposal #21
+(`InfernoToken.setPoolFeeReceiver(BuybackController)`, ETA 2026-10-05
+00:18:23 UTC) is queued; only execute is open. Read-only evidence: block
+26119897.
+
+### 13.2 Spur (Hop-Liste)
+
+1. CLI `--execute` → `scripts/pool-fee-receiver-proposal.cjs::buildVerifiedExecute`
+   — Daten: RPC URL (`MAINNET_RPC_URL` oder public fallback) → verified
+   `lane3-poolfee-step2-execute.json` oder refusal ohne Datei.
+2. `buildVerifiedExecute` → `verifyQueuedProposal(call)` → `rpcCaller(url)`
+   (einmaliger `eth_chainId`-Check auf 1) → eth_call
+   `Governance.getProposal(21)` — Daten: `(target, data, eta, executed,
+   cancelled)` gegen die gepinnten Konstanten `QUEUED`/`QUEUED_ETA`/
+   `POOL_FEE_INNER`; jede Abweichung, unreachable RPC oder wrong chain wirft.
+3. Pins → `executeBatch()` → Safe Transaction Builder JSON — Daten:
+   `execute(21)` Bytes, `value: 0`, chainId 1.
+4. `test/fork/PoolFeeReceiverFork.test.js` (Fork exakt 26119897) →
+   impersonated Treasury Safe sendet die generierten Bytes → Daten:
+   `poolFeeReceiver()` = BuybackController, 1%-Fee fließt an den Controller,
+   FeeRouterV1 wächst nicht, `withdrawIFR` durch Governance; Negativ: Read
+   mit `blockTag` 26108024 (pre-queue) → refusal.
+5. Fixture-Hop: CLI `--fixture <id>` → `build(id)` (kein Chain-Read,
+   "do not sign") ← `scripts/test-pool-fee-receiver-proposal.cjs`.
+
+### 13.3 Module
+
+| Modul | Eine Aufgabe | Einstieg | Stand |
+| --- | --- | --- | --- |
+| proposal generator | Safe-Batch + pinned Verifikation | `scripts/pool-fee-receiver-proposal.cjs::buildVerifiedExecute` | gebaut |
+| governance timelock | queued execute nach ETA | `contracts/governance/Governance.sol::execute` | gebaut (deployed) |
+| fork proof | post-queue Execution #21 | `test/fork/PoolFeeReceiverFork.test.js` | gebaut |
+| runbook | Schritte + pre-sign validation | `docs/POOL_FEE_RECEIVER.md` | gebaut |
+
+### 13.4 Verdrahtung
+
+- Der Generator liest nur; Signieren/Executen bleibt beim Safe (kein Key hier).
+- `verifyQueuedProposal` ist die einzige Quelle der execute-Bytes im
+  `--execute`-Modus; `--fixture` ist explizit offline und für Tests.
+- CI (contracts workflow) läuft nur den Unit-Test; der Fork-Test braucht
+  einen Archive-RPC und läuft manuell.
+
+### 13.5 Widerspruch und Lücken
+
+- `build(id)` bleibt als Fixture exportiert (Unit-Test); der produktive
+  Pfad geht nur über `--execute` mit Verifikation.
+- In FeeRouterV1 gestrandete IFR bleiben unberührt (kein Sweep); diese Spur
+  behauptet keine automatische Liquidity/Recovery für Altbestände.
+
+### 13.6 Diagrammdateien
+
+- Keine neuen; diese Spur ändert `docs/architecture/map.puml` und
+  `main-path.puml` nicht (Shared-Dateien, PR-übergreifende Konflikte).
+
+```mermaid
+mindmap
+  root((Queued pool fee batch binding))
+    proposal generator
+      gebaut: buildVerifiedExecute
+      gebaut: verifyQueuedProposal
+      gebaut: rpcCaller
+      gebaut: build (fixture)
+    governance timelock
+      gebaut: Governance.execute
+    fork proof
+      gebaut: PoolFeeReceiverFork
+    runbook
+      gebaut: POOL_FEE_RECEIVER.md
+```
+
+### 13.7 Nächster Schritt
+
+Change only `scripts/pool-fee-receiver-proposal.cjs`,
+`scripts/test-pool-fee-receiver-proposal.cjs`,
+`test/fork/PoolFeeReceiverFork.test.js`, `docs/POOL_FEE_RECEIVER.md` und der
+Lane-3-Eintrag in `docs/GOVERNANCE_PRODUCT_DECISION_REGISTER.md`.
+Guardian-Spur (Trace 12), Contracts und Deployments bleiben unberührt.

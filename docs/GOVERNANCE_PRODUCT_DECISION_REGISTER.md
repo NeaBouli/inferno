@@ -127,6 +127,12 @@ remains the only place where agenda items and vote outcomes are published.
   timelock; pending execution). The 724,992.668043224 IFR already in FeeRouterV1 (block
   26,108,134) stay permanently lost and are disclosed as lost, not burned. Guardian model
   decided the same day: Treasury Safe (CWA-09); voucher signer moves to a dedicated key (CWA-06).
+- **Execution status (4 October 2026):** option B is queued as Governance proposal #21
+  (`InfernoToken.setPoolFeeReceiver(BuybackController)`, ETA 2026-10-05 00:18:23 UTC; read-only
+  evidence at block 26119897). The step-2 execute batch is written only after on-chain
+  exact-content verification of the queued proposal (`scripts/pool-fee-receiver-proposal.cjs
+  --execute`, T-242); fork proof at exactly block 26119897 in
+  `test/fork/PoolFeeReceiverFork.test.js`. Runbook: `docs/POOL_FEE_RECEIVER.md`.
 
 ## Lane 4 — PartnerVault/BuilderRegistry rewards and pilot-partner gate
 
