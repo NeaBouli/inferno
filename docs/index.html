@@ -1191,7 +1191,7 @@
       .ifr-stars-container,
       .hero .coin-container,
       .hero .coin,
-      canvas {
+      canvas:not(#dist-donut) {
         display: none !important;
       }
 
@@ -1245,7 +1245,7 @@
 
     /* Accessibility: reduce motion */
     @media (prefers-reduced-motion: reduce) {
-      canvas { display: none !important; }
+      canvas:not(#dist-donut) { display: none !important; } /* the distribution donut is static data, not motion */
       *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
     }
   </style>
@@ -1319,7 +1319,7 @@
         {"@type":"PropertyValue","name":"On-chain Symbol","value":"IFR"},
         {"@type":"PropertyValue","name":"Social Cashtag","value":"$IFRp"},
         {"@type":"PropertyValue","name":"CommitmentVault","value":"Live self-service locks on Ethereum Mainnet"},
-        {"@type":"PropertyValue","name":"LendingVault","value":"Live self-service lender offers; borrower transactions require ifrPriceWei collateral price"},
+        {"@type":"PropertyValue","name":"LendingVault","value":"Retired (V1): borrowing disabled by Governance decision (no activation planned or authorized), no V2 planned yet; lenders can withdraw unlent offers"},
         {"@type":"PropertyValue","name":"IFRLock Access","value":"Lock 1,000 IFR in IFRLock for refundable first-party IFRLock access. The AI Copilot chat stays documentation-only and receives no wallet, balance, lock or tier context."},
         {"@type":"PropertyValue","name":"Community Signer Distribution","value":"Planned security-filtered multisig expansion: eligibility review, public nomination, community vote, security review, term limits, and emergency replacement rules"}
       ]
@@ -1450,6 +1450,7 @@
         <div class="ledger-row"><span class="k">Social cashtag</span><span class="v acc">$IFRp</span></div>
         <div class="ledger-row"><span class="k">Fixed supply</span><span class="v">1,000,000,000</span></div>
         <div class="ledger-row"><span class="k">Burned per transfer</span><span class="v acc">2.50%</span></div>
+        <div class="ledger-row"><span class="k">Permanently lost (not burned)</span><span class="v"><a href="#onchain-transparency" data-lost-ifr-ledger style="color:inherit;">27.1M IFR</a></span></div>
         <div class="ledger-row"><span class="k">On-chain components</span><span class="v">17</span></div>
         <div class="ledger-row"><span class="k">Owner</span><span class="v">Governance · 48h timelock</span></div>
       </div>
@@ -1829,10 +1830,9 @@ benefits_integrate:{q:"How do you want to integrate IFR Benefits?",sub:"Start wi
 {i:"&#x1F91D;",t:"Business onboarding",d:"Read seller requirements, operating procedure and reward limits",a:"wiki/business-onboarding.html"},
 {i:"&#x1F9E9;",t:"Protocol integration",d:"Use verified IFRLock, contract and SDK references",a:"wiki/integration.html"}
 ]},
-lend_choice:{q:"What do you want to do in LendingVault?",sub:"Lender offers and market data are live. Borrowing opens after price collateral is activated:",s:2,t:2,o:[
-{i:"&#x1F4B8;",t:"Offer IFR as Lender",d:"Connect, approve, create or increase an offer, and withdraw available IFR",a:"https://web3.ifrunit.tech/?action=lending-offer#access",h:1},
+lend_choice:{q:"What do you want to do in LendingVault?",sub:"LendingVault V1 is retired: lenders can withdraw unlent offers. Borrowing is not activated and no activation is planned:",s:2,t:2,o:[
+{i:"&#x1F4B8;",t:"Withdraw a Lender Offer",d:"Connect and withdraw your unlent IFR from a retired V1 offer",a:"https://web3.ifrunit.tech/?action=lending-offer#access",h:1},
 {i:"&#x1F3EA;",t:"View Lending Market",d:"Browse current offers, available IFR, rates, and your active loans",a:"https://web3.ifrunit.tech/?action=borrow#access"},
-{i:"&#x1F3E6;",t:"Borrow / Manage a Loan",d:"Select an offer, borrow, repay, or top up collateral when on-chain pricing permits",a:"https://web3.ifrunit.tech/?action=borrow#access"},
 {i:"&#x1F4D6;",t:"Read the LendingVault guide",d:"Contract rules, collateral thresholds, risks, and current activation status",a:"wiki/lending-vault.html"}
 ]},
 community:{q:"How do you want to contribute?",sub:"Every contribution helps IFR grow:",s:2,t:2,o:[
@@ -2004,6 +2004,7 @@ render();
             <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
               <div id="donut-supply" style="font-size:20px;font-weight:700;color:#fff;">---</div>
               <div style="font-size:11px;color:var(--text-muted);">Current Supply</div>
+              <div id="donut-live-supply" style="font-size:12px;font-weight:700;color:#047857;margin-top:4px;"></div>
             </div>
           </div>
           <div id="dist-legend" style="flex:1 1 auto;display:flex;flex-direction:column;gap:0.4rem;min-width:220px;">
@@ -2480,7 +2481,7 @@ render();
         <line x1="705" y1="370" x2="705" y2="408" stroke="#3b82f6" stroke-width="1" stroke-dasharray="4,3"/>
         <rect x="640" y="408" width="140" height="42" rx="10" fill="#0d1117" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="5,3"/>
         <text x="710" y="426" text-anchor="middle" fill="#3b82f6" font-size="10" font-weight="bold">CommitmentVault</text>
-        <text x="710" y="442" text-anchor="middle" fill="#6b7280" font-size="8" data-live-key="commitment-flow">47.9M locked &middot; 4 types</text>
+        <text x="710" y="442" text-anchor="middle" fill="#6b7280" font-size="8" data-live-key="commitment-flow">1.38M time-locked</text>
         <!-- Animated: User → CommitmentVault -->
         <circle r="2.5" fill="#3b82f6" opacity="0.7"><animateMotion dur="3s" repeatCount="indefinite" path="M705,370 L705,408"/></circle>
 
@@ -2811,10 +2812,20 @@ if (isLocked) {
         <div data-transparency-detail style="color:#666;font-size:13px;margin-top:4px;">CommitmentVault totalLocked()</div>
         <p class="transparency-status" data-transparency-status>Reading Ethereum Mainnet&hellip;</p>
       </div>
+      <div class="lost-ifr-card" data-lost-ifr data-state="verified" style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:28px 24px;text-align:center;">
+        <div data-lost-ifr-value style="font-size:32px;font-weight:700;color:#ff6a00;">27,143,460.66 IFR</div>
+        <div style="color:#aaa;margin-top:8px;">Permanently Lost IFR</div>
+        <div style="color:#666;font-size:13px;margin-top:4px;">Irrecoverable, not burned &mdash; still counted in totalSupply.
+          <span data-lost-ifr-cv01>26,418,467.99</span> in CommitmentVault V1 price tranches
+          (<a href="wiki/commitment-vault-compensation.html" style="color:#aaa;">CV-01</a>) +
+          <span data-lost-ifr-feerouter>724,992.67</span> pool fees in FeeRouterV1
+          (<a href="wiki/transparency.html#lost-ifr" style="color:#aaa;">CWA-02</a>)</div>
+        <p class="transparency-status" data-lost-ifr-status>Last verified 2026-10-03 (Mainnet block 26108134)</p>
+      </div>
       <div style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:28px 24px;text-align:center;">
         <div style="font-size:32px;font-weight:700;color:#ff6a00;"><span data-live-key="lending-available-stat">loading&hellip;</span></div>
-        <div style="color:#aaa;margin-top:8px;">LendingVault Available</div>
-        <div style="color:#666;font-size:13px;margin-top:4px;"><span data-live-key="lending-market-rate">loading&hellip;</span> market rate</div>
+        <div style="color:#aaa;margin-top:8px;">LendingVault (retired V1)</div>
+        <div style="color:#666;font-size:13px;margin-top:4px;">Withdrawable lender offers; borrowing disabled by Governance decision (no activation planned or authorized), no V2 planned yet</div>
       </div>
       <div style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:28px 24px;text-align:center;">
         <div style="font-size:32px;font-weight:700;color:#ff6a00;">Governance</div>
@@ -3557,7 +3568,8 @@ if (isLocked) {
   var CATS = [
     { key: 'burned',    label: '\uD83D\uDD25 Burned',             color: '#FF2D2D' },
     { key: 'ifrLock',   label: '\uD83D\uDD12 User Locks (IFRLock)', color: '#FF8C00' },
-    { key: 'commitmentLocked', label: '\uD83D\uDD12 CommitmentVault Locks', color: '#FBBF24' },
+    { key: 'commitmentLocked', label: '\uD83D\uDD12 CommitmentVault Locks (time tranches)', color: '#FBBF24' },
+    { key: 'dead',      label: '\u26AB Permanently Lost (dead, not burned)', color: '#000000', outline: '#d1d5db' },
     { key: 'lendingAvailable', label: '\uD83D\uDCB8 LendingVault Offers', color: '#22C55E' },
     { key: 'vesting',   label: '\u23F3 Team Vesting',             color: '#FFD700' },
     { key: 'liqRes',    label: '\uD83D\uDCA7 Liquidity Reserve',  color: '#00BFFF' },
@@ -3585,6 +3597,7 @@ if (isLocked) {
     document.querySelectorAll('.live-updated-at').forEach(function(el) {
       el.textContent = 'Connection failed';
     });
+    renderLostIFR(null);
     loadIFRPrice();
   }
 
@@ -3593,6 +3606,17 @@ if (isLocked) {
     if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
     return n.toFixed(0);
   }
+
+  // A live value is null when its read failed or the API flagged it unavailable: show N/A, never a fake 0.
+  function isNum(n) { return typeof n === 'number' && isFinite(n); }
+  function fmtNA(n, suffix) { return isNum(n) ? fmt(n) + (suffix || '') : 'N/A'; }
+  function withPct(n, total) { return isNum(n) ? fmt(n) + ' IFR (' + pct(n, total) + ')' : 'N/A'; }
+  function sumKnown(d, keys) {
+    var s = 0;
+    for (var i = 0; i < keys.length; i++) { if (!isNum(d[keys[i]])) return null; s += d[keys[i]]; }
+    return s;
+  }
+  var PROTOCOL_LOCKED_KEYS = ['vesting', 'liqRes', 'bootstrap', 'partner', 'lpReserve', 'community'];
 
   // Compact IFR amount from bigint base units (9 decimals); truncates, never rounds through Number.
   function fmtIfrUnits(raw) {
@@ -3663,7 +3687,65 @@ if (isLocked) {
     });
   }
 
+  // Permanently lost IFR (not burned; still in totalSupply). CV-01 is fixed; FeeRouterV1 is read live
+  // because it grows until Governance moves the pool-fee receiver. A failed read keeps the last
+  // verified figure with its date; this metric never renders 0 or "Unavailable".
+  // All IFR arithmetic uses 9-decimal base units (BigInt); decimals are formatted only at the UI boundary.
+  var LOST_IFR = { cv01Raw: '26418467994338353', feeRouterRaw: '724992668043224', block: 26108134, date: '2026-10-03' };
+  function parseBaseUnits(s) { return (typeof s === 'string' && /^[0-9]{1,30}$/.test(s)) ? BigInt(s) : null; }
+  function groupThousands(digits) { return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+  function fmtBaseUnits2(raw) { // round half up to 0.01 IFR
+    var cents = (raw + 5000000n) / 10000000n;
+    var whole = cents / 100n, frac = cents % 100n;
+    return groupThousands(whole.toString()) + '.' + (frac < 10n ? '0' : '') + frac.toString();
+  }
+  function baseUnitsToNumber(raw) { return Number(raw / 10000000n) / 100; } // compact display only
+  function lostTotalRaw(feeRouterRaw) { return parseBaseUnits(LOST_IFR.cv01Raw) + feeRouterRaw; }
+  // Splits live balances into dead (CV-01 + FeeRouterV1) and live parts in 9-decimal base units.
+  // FeeRouterV1 falls back to the verified baseline when the live read is missing, malformed or lower.
+  function splitDead(feeRouterLiveRaw, commitmentRawStr, totalSupplyNum) {
+    var cv01 = parseBaseUnits(LOST_IFR.cv01Raw);
+    var baseline = parseBaseUnits(LOST_IFR.feeRouterRaw);
+    var liveFee = parseBaseUnits(feeRouterLiveRaw);
+    var fee = (liveFee !== null && liveFee >= baseline) ? liveFee : baseline;
+    var deadRaw = cv01 + fee;
+    var commitRaw = parseBaseUnits(commitmentRawStr);
+    var commitmentLive = (commitRaw !== null && commitRaw >= cv01) ? baseUnitsToNumber(commitRaw - cv01) : null;
+    var liveSupply = null;
+    if (typeof totalSupplyNum === 'number' && isFinite(totalSupplyNum) && totalSupplyNum > 0) {
+      var supplyRaw = BigInt(Math.round(totalSupplyNum * 100)) * 10000000n; // API gives a decimal number; cent precision
+      if (supplyRaw > deadRaw) liveSupply = baseUnitsToNumber(supplyRaw - deadRaw);
+    }
+    return { dead: baseUnitsToNumber(deadRaw), cv01: baseUnitsToNumber(cv01), commitmentLive: commitmentLive, liveSupply: liveSupply, deadRaw: deadRaw };
+  }
+  // Single source for the effective FeeRouterV1 amount: the live read when present and not lower than the
+  // verified baseline, otherwise the baseline. Card, ledger, metric and donut all derive from this.
+  function effectiveFeeRouter(feeRouterLiveRaw) {
+    var baseline = parseBaseUnits(LOST_IFR.feeRouterRaw);
+    var liveRaw = parseBaseUnits(feeRouterLiveRaw);
+    var live = liveRaw !== null && liveRaw >= baseline;
+    return { raw: live ? liveRaw : baseline, live: live };
+  }
+  function renderLostIFR(feeRouterLiveRaw) {
+    var eff = effectiveFeeRouter(feeRouterLiveRaw);
+    var live = eff.live;
+    var feeRouter = eff.raw;
+    var total = lostTotalRaw(feeRouter);
+    document.querySelectorAll('[data-lost-ifr]').forEach(function(card) {
+      card.setAttribute('data-state', live ? 'live' : 'verified');
+      var v = card.querySelector('[data-lost-ifr-value]'); if (v) v.textContent = fmtBaseUnits2(total) + ' IFR';
+      var f = card.querySelector('[data-lost-ifr-feerouter]'); if (f) f.textContent = fmtBaseUnits2(feeRouter);
+      var st = card.querySelector('[data-lost-ifr-status]');
+      if (st) st.textContent = live
+        ? 'Live \u2014 FeeRouterV1 balance read ' + clockTime(Date.now()) + '; CV-01 amount fixed'
+        : 'Last verified ' + LOST_IFR.date + ' (Mainnet block ' + LOST_IFR.block + '); live read unavailable';
+    });
+    document.querySelectorAll('[data-lost-ifr-ledger]').forEach(function(el) { el.textContent = fmt(baseUnitsToNumber(total)) + ' IFR'; });
+    setLive('lost-ifr-stat', fmt(baseUnitsToNumber(total)));
+  }
+
   function pct(n, total) {
+    if (!isNum(n) || !isNum(total)) return 'N/A';
     if (!total) return '0.00%';
     return ((n / total) * 100).toFixed(2) + '%';
   }
@@ -3675,51 +3757,52 @@ if (isLocked) {
   }
 
   function updateLiveDisplay(d) {
-    setLive('supply',       fmt(d.supply) + ' IFR');
+    setLive('supply',       fmtNA(d.supply, ' IFR'));
     setLive('supply-note',  'of 1B genesis');
-    setLive('burned',       fmt(d.burned) + ' IFR');
+    setLive('burned',       fmtNA(d.burned, ' IFR'));
     setLive('burned-pct',   pct(d.burned, GENESIS_SUPPLY));
-    setLive('burned-stat',  fmt(d.burned));
-    setLive('supply-stat',  fmt(d.supply));
-    setLive('supply-flow',  fmt(d.supply) + ' supply');
-    setLive('flow-snapshot-supply', fmt(d.supply) + ' supply · ' + fmt(d.burned) + ' burned');
-    setLive('ifrlock',      fmt(d.ifrLock) + ' IFR');
+    setLive('burned-stat',  fmtNA(d.burned));
+    setLive('supply-stat',  fmtNA(d.supply));
+    setLive('supply-flow',  fmtNA(d.supply, ' supply'));
+    setLive('flow-snapshot-supply', fmtNA(d.supply, ' supply · ') + fmtNA(d.burned, ' burned'));
+    setLive('ifrlock',      fmtNA(d.ifrLock, ' IFR'));
     setLive('ifrlock-pct',  pct(d.ifrLock, d.supply));
-    setLive('commitment-locked', fmt(d.commitmentLocked || 0) + ' IFR');
-    setLive('commitment-locked-stat', fmt(d.commitmentLocked || 0));
-    setLive('lending-available-stat', fmt(d.lendingAvailable || 0));
+    setLive('commitment-locked', fmtNA(d.commitmentLocked, ' IFR'));
+    setLive('commitment-locked-stat', fmtNA(d.commitmentLocked));
+    if (d.liveSupply != null) setLive('live-supply-stat', fmtNA(d.liveSupply));
+    setLive('lending-available-stat', fmtNA(d.lendingAvailable));
     setLive('lending-market-rate', d.lendingRate ? d.lendingRate + '/mo' : 'loading...');
-    setLive('vesting',      fmt(d.vesting) + ' IFR (' + pct(d.vesting, d.supply) + ')');
-    setLive('liq-res',      fmt(d.liqRes) + ' IFR (' + pct(d.liqRes, d.supply) + ')');
-    setLive('bootstrap',    fmt(d.bootstrap) + ' IFR');
-    setLive('buyback',      fmt(d.buyback) + ' IFR');
-    setLive('burn-res',     fmt(d.burnRes) + ' IFR');
-    setLive('partner',      fmt(d.partner) + ' IFR (' + pct(d.partner, d.supply) + ')');
-    setLive('treasury',     fmt(d.treasury) + ' IFR (' + pct(d.treasury, d.supply) + ')');
-    setLive('community',    fmt(d.community) + ' IFR (' + pct(d.community, d.supply) + ')');
-    setLive('deployer',     fmt(d.lpReserve) + ' IFR');
-    var protLocked = (d.vesting || 0) + (d.liqRes || 0) + (d.bootstrap || 0) + (d.partner || 0) + (d.lpReserve || 0) + (d.community || 0);
-    setLive('protocol-locked', fmt(protLocked));
-    setLive('ifrlock-stat', fmt(d.ifrLock));
+    setLive('vesting',      withPct(d.vesting, d.supply));
+    setLive('liq-res',      withPct(d.liqRes, d.supply));
+    setLive('bootstrap',    fmtNA(d.bootstrap, ' IFR'));
+    setLive('buyback',      fmtNA(d.buyback, ' IFR'));
+    setLive('burn-res',     fmtNA(d.burnRes, ' IFR'));
+    setLive('partner',      withPct(d.partner, d.supply));
+    setLive('treasury',     withPct(d.treasury, d.supply));
+    setLive('community',    withPct(d.community, d.supply));
+    setLive('deployer',     fmtNA(d.lpReserve, ' IFR'));
+    var protLocked = sumKnown(d, PROTOCOL_LOCKED_KEYS);
+    setLive('protocol-locked', fmtNA(protLocked));
+    setLive('ifrlock-stat', fmtNA(d.ifrLock));
     // Wallet cards
-    setLive('card-deployer',   fmt(d.lpReserve) + ' IFR');
-    setLive('card-treasury',   fmt(d.treasury) + ' IFR');
-    setLive('card-community',  fmt(d.community) + ' IFR');
-    setLive('card-vesting',    fmt(d.vesting) + ' IFR');
-    setLive('card-liqres',     fmt(d.liqRes) + ' IFR');
-    setLive('card-partner',    fmt(d.partner) + ' IFR');
-    setLive('card-bootstrap',  fmt(d.bootstrap) + ' IFR');
-    setLive('card-commitment-locked', fmt(d.commitmentLocked || 0) + ' IFR');
-    setLive('card-ifrlock', fmt(d.ifrLock) + ' IFR');
-    setLive('card-ifrlock-locked', fmt(d.ifrLock) + ' IFR');
-    setLive('card-ifrlock-unlocked', fmt(d.ifrLockUnlocked || 0) + ' IFR');
-    setLive('card-lending-available', fmt(d.lendingAvailable || 0) + ' IFR');
-    setLive('card-lending-lent', fmt(d.lendingLent || 0) + ' IFR');
-    setLive('card-buyback',    fmt(d.buyback) + ' IFR');
-    setLive('card-burnres',    fmt(d.burnRes) + ' IFR');
-    setLive('feerouter-flow',  fmt(d.feeRouter) + ' IFR fees held');
-    setLive('commitment-flow', fmt(d.commitmentLocked || 0) + ' locked · 4 types');
-    setLive('lending-flow',    fmt(d.lendingAvailable || 0) + ' available');
+    setLive('card-deployer',   fmtNA(d.lpReserve, ' IFR'));
+    setLive('card-treasury',   fmtNA(d.treasury, ' IFR'));
+    setLive('card-community',  fmtNA(d.community, ' IFR'));
+    setLive('card-vesting',    fmtNA(d.vesting, ' IFR'));
+    setLive('card-liqres',     fmtNA(d.liqRes, ' IFR'));
+    setLive('card-partner',    fmtNA(d.partner, ' IFR'));
+    setLive('card-bootstrap',  fmtNA(d.bootstrap, ' IFR'));
+    setLive('card-commitment-locked', fmtNA(d.commitmentLocked, ' IFR'));
+    setLive('card-ifrlock', fmtNA(d.ifrLock, ' IFR'));
+    setLive('card-ifrlock-locked', fmtNA(d.ifrLock, ' IFR'));
+    setLive('card-ifrlock-unlocked', fmtNA(d.ifrLockUnlocked, ' IFR'));
+    setLive('card-lending-available', fmtNA(d.lendingAvailable, ' IFR'));
+    setLive('card-lending-lent', fmtNA(d.lendingLent, ' IFR'));
+    setLive('card-buyback',    fmtNA(d.buyback, ' IFR'));
+    setLive('card-burnres',    fmtNA(d.burnRes, ' IFR'));
+    setLive('feerouter-flow',  fmtNA(d.feeRouter, ' IFR fees held'));
+    setLive('commitment-flow', fmtNA(d.commitmentLocked, ' time-locked · price locks disabled'));
+    setLive('lending-flow',    fmtNA(d.lendingAvailable, ' available'));
   }
 
   function drawDonut(canvas, data) {
@@ -3733,55 +3816,77 @@ if (isLocked) {
     ctx.arc(cx, cy, outerR, 0, Math.PI * 2);
     ctx.arc(cx, cy, innerR, Math.PI * 2, 0, true);
     ctx.closePath();
-    ctx.fillStyle = '#1a1a1a';
+    // Circulating remainder is neutral; with partially unavailable data the remainder is unknown and drawn as
+    // UNAVAILABLE_COLOR instead, so no segment is shown with a wrong proportion.
+    ctx.fillStyle = data.partial ? UNAVAILABLE_COLOR : REST_COLOR;
     ctx.fill();
     var angle = -Math.PI / 2;
     CATS.forEach(function(cat) {
-      var val = data[cat.key] || 0;
-      if (cat.key === 'supply') return;
+      if (cat.key === 'supply' || !isNum(data[cat.key])) return;
+      var val = data[cat.key];
       var slice = (val / GENESIS_SUPPLY) * Math.PI * 2;
       if (slice < 0.003) return;
-      var gap = 0.015;
+      // A gap wider than the slice would make arc() sweep the whole ring; tiny slices get no gap.
+      var gap = slice > 0.045 ? 0.015 : 0;
       ctx.beginPath();
       ctx.arc(cx, cy, outerR, angle + gap/2, angle + slice - gap/2);
       ctx.arc(cx, cy, innerR, angle + slice - gap/2, angle + gap/2, true);
       ctx.closePath();
       ctx.fillStyle = cat.color;
       ctx.fill();
+      if (cat.outline) { ctx.lineWidth = 3; ctx.strokeStyle = cat.outline; ctx.stroke(); }
       angle += slice;
     });
   }
 
   var NOT_YET_ACTIVE = { bootstrap: 1, buyback: 1, burnRes: 1, ifrLock: 1 };
+  var REST_COLOR = '#d6cfc4';
+  var UNAVAILABLE_COLOR = '#52525b';
 
   function renderLegend(data) {
     var el = document.getElementById('dist-legend');
     if (!el) return;
     el.innerHTML = CATS.filter(function(c) { return c.key !== 'supply'; }).map(function(cat) {
-      var val = data[cat.key] || 0;
+      var val = data[cat.key];
       var detail;
-      if (val === 0 && NOT_YET_ACTIVE[cat.key]) {
+      if (!isNum(val)) {
+        detail = ' <span style="color:#555;">N/A \u2014 live read unavailable</span>';
+        val = '';
+      } else if (val === 0 && NOT_YET_ACTIVE[cat.key]) {
         detail = ' <span style="color:#555;">0 IFR \u2014 not yet active</span>';
       } else {
         detail = ' <strong style="color:#fff;">' + pct(val, GENESIS_SUPPLY) + '</strong> \u2014 ' + fmt(val);
       }
-      return '<div style="display:flex;align-items:center;gap:12px;">' +
-        '<div style="width:14px;height:14px;border-radius:3px;background:' + cat.color + ';flex-shrink:0;"></div>' +
+      return '<div data-dist-cat="' + cat.key + '" data-dist-value="' + val + '" style="display:flex;align-items:center;gap:12px;">' +
+        '<div data-dist-swatch style="width:14px;height:14px;border-radius:3px;background-color:' + cat.color + ';' + (cat.outline ? 'border:1px solid ' + cat.outline + ';box-sizing:border-box;' : '') + 'flex-shrink:0;"></div>' +
         '<span style="font-size:14px;color:#6F655A;">' + cat.label + detail + '</span></div>';
-    }).join('');
+    }).join('') + (function() {
+      if (data.partial) {
+        return '<div data-dist-cat="rest" data-dist-value="" data-dist-state="unavailable" style="display:flex;align-items:center;gap:12px;">' +
+          '<div data-dist-swatch style="width:14px;height:14px;border-radius:3px;background-color:' + UNAVAILABLE_COLOR + ';border:1px solid #a8a29e;box-sizing:border-box;flex-shrink:0;"></div>' +
+          '<span style="font-size:14px;color:#6F655A;">\uD83D\uDCB1 Wallets &amp; DEX pool (circulating) <strong style="color:#fff;">N/A</strong> \u2014 partially unavailable live data; proportions not shown</span></div>';
+      }
+      var shown = CATS.reduce(function(acc, c) { return c.key === 'supply' ? acc : acc + data[c.key]; }, 0);
+      var rest = Math.max(0, GENESIS_SUPPLY - shown);
+      return '<div data-dist-cat="rest" data-dist-value="' + rest + '" style="display:flex;align-items:center;gap:12px;">' +
+        '<div data-dist-swatch style="width:14px;height:14px;border-radius:3px;background-color:' + REST_COLOR + ';border:1px solid #a8a29e;box-sizing:border-box;flex-shrink:0;"></div>' +
+        '<span style="font-size:14px;color:#6F655A;">\uD83D\uDCB1 Wallets &amp; DEX pool (circulating) <strong style="color:#fff;">' + pct(rest, GENESIS_SUPPLY) + '</strong> \u2014 ' + fmt(rest) + '</span></div>';
+    })();
   }
 
   function renderMetrics(data) {
     var el = document.getElementById('dist-metrics');
     if (!el) return;
-    var protocolLocked = (data.vesting || 0) + (data.liqRes || 0) + (data.bootstrap || 0) + (data.partner || 0) + (data.lpReserve || 0) + (data.community || 0);
+    var protocolLocked = sumKnown(data, PROTOCOL_LOCKED_KEYS);
     var items = [
-      { key: 'burned-stat',     label: 'Total Burned',    value: fmt(data.burned),    sub: 'Since genesis \u2014 decreasing forever', color: '#b3300b' },
-      { key: 'protocol-locked', label: 'Protocol Locked', value: fmt(protocolLocked), sub: 'All non-circulating IFR secured', color: '#92400e' },
-      { key: 'commitment-locked-stat', label: 'CommitmentVault Locked', value: fmt(data.commitmentLocked || 0), sub: 'Live user locks on Mainnet', color: '#92400e' },
-      { key: 'lending-available-stat', label: 'LendingVault Available', value: fmt(data.lendingAvailable || 0), sub: 'Live lender offers on Mainnet', color: '#166534' },
-      { key: '',                label: 'Current Supply',  value: fmt(data.supply),    sub: 'of 1B genesis',        color: '#fff'    },
-      { key: '',                label: 'LP Reserve Safe', value: fmt(data.lpReserve), sub: 'LP allocation (3-of-5)',color: '#b3300b' },
+      { key: 'burned-stat',     label: 'Total Burned',    value: fmtNA(data.burned),    sub: 'Since genesis \u2014 decreasing forever', color: '#b3300b' },
+      { key: 'lost-ifr-stat',   label: 'Permanently Lost', value: fmt(baseUnitsToNumber(lostTotalRaw(effectiveFeeRouter(data && data.feeRouterRaw).raw))), sub: 'Not burned \u2014 CV-01 + FeeRouterV1', color: '#92400e' },
+      { key: 'protocol-locked', label: 'Protocol Locked', value: fmtNA(protocolLocked), sub: 'All non-circulating IFR secured', color: '#92400e' },
+      { key: 'commitment-locked-stat', label: 'CommitmentVault Locked', value: fmtNA(data.commitmentLocked), sub: 'Time tranches only; CV-01 counted as permanently lost', color: '#92400e' },
+      { key: 'live-supply-stat', label: 'Live Supply', value: data.liveSupply != null ? fmt(data.liveSupply) : 'N/A', sub: 'Current supply excluding permanently lost IFR', color: '#065f46' },
+      { key: 'lending-available-stat', label: 'LendingVault V1 Lender Offers', value: fmtNA(data.lendingAvailable), sub: 'Retired: withdrawable by lenders; no borrowing activation planned or authorized', color: '#166534' },
+      { key: '',                label: 'Current Supply',  value: fmtNA(data.supply),    sub: 'of 1B genesis',        color: '#fff'    },
+      { key: '',                label: 'LP Reserve Safe', value: fmtNA(data.lpReserve), sub: 'LP allocation (3-of-5)',color: '#b3300b' },
       { key: 'ifr-price',       label: 'IFR Price',       value: 'TBD',              sub: 'Live Uniswap V2 spot',color: '#92400e' }
     ];
     el.innerHTML = items.map(function(m) {
@@ -3837,7 +3942,14 @@ if (isLocked) {
       if (!supply || !supply.totalSupply || !bal) { showNotAvailable(); return; }
       var burnedValue = Math.max(0, supply.burned || (GENESIS_SUPPLY - supply.totalSupply));
 
-      function v(label) { return (bal[label] && bal[label].formatted != null) ? bal[label].formatted : 0; }
+      // Missing, null or explicitly unavailable entries stay null (shown as N/A), never 0.
+      var unavailable = [];
+      function v(label) {
+        var e = bal[label];
+        if (e && !e.error && isNum(e.formatted)) return e.formatted;
+        unavailable.push(label);
+        return null;
+      }
       var data = {
         supply:    supply.totalSupply,
         burned:    burnedValue,
@@ -3852,30 +3964,56 @@ if (isLocked) {
         buyback:   v('BuybackVault'),
         burnRes:   v('BurnReserve'),
         feeRouter: v('FeeRouterV1'),
+        feeRouterRaw: (bal.FeeRouterV1 && typeof bal.FeeRouterV1.raw === 'string') ? bal.FeeRouterV1.raw : null,
         ifrLock:   v('IFRLock'),
-        ifrLockUnlocked: lockMeta.unlockedFormatted || 0,
+        ifrLockUnlocked: isNum(lockMeta.unlockedFormatted) ? lockMeta.unlockedFormatted : null,
         commitmentLocked: v('CommitmentVault'),
         lendingAvailable: v('LendingVault'),
         lendingLent: 0,
         lendingRate: ''
       };
+      // Permanently lost IFR is shown as its own (black) segment and removed from the CommitmentVault
+      // segment, so nothing is counted twice. Base-unit BigInt math; dated fallback, never 0.
+      // If the balances read lacks FeeRouterV1, the supply endpoint's exact permanentlyLostRaw (CV-01 + FeeRouterV1)
+      // is used when present; otherwise the dated verified fallback applies inside splitDead.
+      var feeRaw = data.feeRouterRaw;
+      var serverLost = parseBaseUnits(typeof supply.permanentlyLostRaw === 'string' ? supply.permanentlyLostRaw : null);
+      if (feeRaw === null && serverLost !== null && serverLost > parseBaseUnits(LOST_IFR.cv01Raw)) {
+        feeRaw = (serverLost - parseBaseUnits(LOST_IFR.cv01Raw)).toString();
+        data.feeRouter = baseUnitsToNumber(BigInt(feeRaw));
+        unavailable = unavailable.filter(function(l) { return l !== 'FeeRouterV1'; });
+      }
+      var split = splitDead(feeRaw, bal.CommitmentVault && bal.CommitmentVault.raw, supply.totalSupply);
+      data.feeRouterRaw = feeRaw;
+      data.dead = split.dead;
+      data.commitmentLocked = split.commitmentLive != null ? split.commitmentLive
+        : (isNum(data.commitmentLocked) ? Math.max(0, data.commitmentLocked - split.cv01) : null);
+      var serverLive = parseBaseUnits(typeof supply.liveSupplyRaw === 'string' ? supply.liveSupplyRaw : null);
+      data.liveSupply = serverLive !== null && serverLive > 0n ? baseUnitsToNumber(serverLive) : split.liveSupply;
+      data.unavailable = unavailable;
+      data.partial = unavailable.length > 0 || res[1].incomplete === true || supply.incomplete === true;
       liveDistributionData = data;
 
       var canvas = document.getElementById('dist-donut');
       if (canvas) drawDonut(canvas, data);
       var supplyEl = document.getElementById('donut-supply');
       if (supplyEl) supplyEl.textContent = fmt(data.supply);
+      var liveEl = document.getElementById('donut-live-supply');
+      if (liveEl) liveEl.textContent = data.liveSupply != null ? 'Live ' + fmt(data.liveSupply) : '';
       renderLegend(data);
       renderMetrics(data);
       updateLiveDisplay(data);
       setTransparencyMetric('burned', fmt(burnedValue) + ' IFR');
+      renderLostIFR(data.feeRouterRaw);
       loadCommitmentVaultLive();
 
       document.querySelectorAll('.live-updated-at').forEach(function(el) {
         el.textContent = 'Updated: ' + dateTime();
       });
       document.querySelectorAll('.live-status').forEach(function(el) {
-        el.textContent = '';
+        el.textContent = data.partial
+          ? '\u26A0 Partially live \u2014 unavailable: ' + (data.unavailable.length ? data.unavailable.join(', ') : 'some values')
+          : '';
       });
     });
   }
@@ -3970,8 +4108,11 @@ if (isLocked) {
         var total = Number(ethers.formatUnits(values[0], 9));
         var c2 = Number(ethers.formatUnits(values[1], 9));
         var tranches = values[2].toString();
-        if (liveDistributionData) {
-          liveDistributionData.commitmentLocked = total;
+        // totalLocked() still contains the CV-01 tranches; the distribution counts them as dead.
+        var cv01 = parseBaseUnits(LOST_IFR.cv01Raw);
+        var liveCommit = values[0] >= cv01 ? baseUnitsToNumber(values[0] - cv01) : null;
+        if (liveDistributionData && liveCommit !== null) {
+          liveDistributionData.commitmentLocked = liveCommit;
           renderLegend(liveDistributionData);
           renderMetrics(liveDistributionData);
           updateLiveDisplay(liveDistributionData);
@@ -3979,7 +4120,7 @@ if (isLocked) {
           if (canvas) drawDonut(canvas, liveDistributionData);
         }
         setLive('commitment-locked', fmt(total) + ' IFR');
-        setLive('commitment-locked-stat', fmt(total));
+        if (liveCommit !== null) setLive('commitment-locked-stat', fmt(liveCommit));
         setLive('card-commitment-locked', fmt(total) + ' IFR');
         setLive('c2-commitment-lock', fmt(c2) + ' IFR');
         setLive('c2-commitment-tranches', tranches + ' tranches');

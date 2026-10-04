@@ -42,3 +42,33 @@ for (const path of PAGES) {
     });
   }
 }
+
+// Mid-page content scrolls under the fixed launcher too. Because the launcher is fixed, every vertical
+// position of the lost-IFR card passes behind it while scrolling, so no rendered text of the card may enter
+// the launcher's horizontal band (measured on the actual text boxes, not element boxes).
+for (const [width, height] of VIEWPORTS) {
+  test(`lost-IFR card text stays clear of the Copilot launcher band at ${width}x${height}`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    await page.route(/^https?:\/\/(?!localhost)/, (route) => route.abort());
+    await page.goto("/");
+    await page.evaluate(() => document.fonts.ready);
+    await page.locator("[data-lost-ifr-status]").scrollIntoViewIfNeeded();
+    const covered = await page.evaluate(() => {
+      const launcher = document.querySelector("#ifr-btn");
+      const card = document.querySelector("[data-lost-ifr]");
+      if (!launcher || !card) return ["missing launcher or card"];
+      const z = launcher.getBoundingClientRect();
+      const hits = [];
+      for (const el of card.querySelectorAll("*")) {
+        if (el.children.length) continue;
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        for (const r of range.getClientRects()) {
+          if (r.width > 0 && r.left < z.right && r.right > z.left) hits.push(el.textContent.trim().slice(0, 40));
+        }
+      }
+      return hits;
+    });
+    expect(covered).toEqual([]);
+  });
+}
