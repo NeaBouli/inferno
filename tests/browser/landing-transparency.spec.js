@@ -35,6 +35,8 @@ function answerRpc(calls) {
     const body = route.request().postDataJSON();
     const one = (req) => {
       if (req.method === "eth_chainId") return { jsonrpc: "2.0", id: req.id, result: "0x1" };
+      // wallet-core's chain-pinned FallbackProvider syncs on eth_blockNumber before serving reads (T-224).
+      if (req.method === "eth_blockNumber") return { jsonrpc: "2.0", id: req.id, result: "0x100" };
       if (req.method === "eth_call") {
         const tx = req.params[0];
         const key = `${String(tx.to).toLowerCase()}:${String(tx.data).slice(0, 10)}`;
