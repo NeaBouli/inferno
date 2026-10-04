@@ -2,6 +2,10 @@
  * IFR Wallet Core v4.2 — WalletConnect v2 via self-hosted artifact
  * Usage: await IFRWallet.connect(); IFRWallet.getAddress();
  *
+ * v4.2.4 — getReadProvider() exposes the same chain-pinned read-only
+ *   FallbackProvider regardless of a connected wallet, so page-level inline
+ *   readers never build their own unverified providers (T-224).
+ *
  * v4.2.3 — Read-only getProvider() uses an ethers v6 FallbackProvider over
  *   CORS-capable public endpoints (publicnode primary). Each endpoint must
  *   answer eth_chainId 0x1 before it may serve data; a visible notice and the
@@ -27,7 +31,7 @@
  *
  * API: 100% backward-compatible (v1.3 → v4.2 drop-in).
  *      IFRWallet.connect/disconnect/autoReconnect
- *      IFRWallet.getAddress/getSigner/getProvider/isConnected
+ *      IFRWallet.getAddress/getSigner/getProvider/getReadProvider/isConnected
  *      IFRWallet.on/off/getDeepLink/isMobile/isMobileOrTablet/getShortAddress
  *
  * WalletConnect ProjectID: cloud.walletconnect.com (Reown)
@@ -446,6 +450,10 @@ window.IFRWallet = (function() {
   function getProvider() {
     return _provider || _getReadProvider();
   }
+  // Chain-pinned read-only provider, independent of any connected wallet.
+  function getReadProvider() {
+    return _getReadProvider();
+  }
 
   // ── Read-only RPC (FallbackProvider) ──────────────
   function _getReadProvider() {
@@ -577,7 +585,7 @@ window.IFRWallet = (function() {
   return {
     connect: connect, disconnect: disconnect, autoReconnect: autoReconnect,
     isConnected: isConnected, getAddress: getAddress, getShortAddress: getShortAddress,
-    getSigner: getSigner, getProvider: getProvider,
+    getSigner: getSigner, getProvider: getProvider, getReadProvider: getReadProvider,
     addToken: addIFRToken,
     on: on, off: off, getDeepLink: getDeepLink, isMobile: isMobile,
     isMobileOrTablet: _isMobileOrTablet
