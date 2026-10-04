@@ -289,6 +289,8 @@ async function answerCommitmentVaultRpc(page, delayMs) {
       if (to === CV_V1 && data.startsWith("0x9ae697bf")) return { jsonrpc: "2.0", id: req.id, result: word("20156940952845656") }; // lockedBalance(C2)
       if (to === CV_V1 && data.startsWith("0x49cfece1")) return { jsonrpc: "2.0", id: req.id, result: word(10) };                 // getTrancheCount(C2)
       if (req && req.method === "eth_chainId") return { jsonrpc: "2.0", id: req.id, result: "0x1" };
+      // The chain-pinned FallbackProvider (wallet-core getReadProvider, #193) also polls the block number.
+      if (req && req.method === "eth_blockNumber") return { jsonrpc: "2.0", id: req.id, result: "0x18e5d89" };
       return { jsonrpc: "2.0", id: req && req.id, error: { code: -32000, message: "not mocked" } };
     };
     if (delayMs) await new Promise((r) => setTimeout(r, delayMs));
