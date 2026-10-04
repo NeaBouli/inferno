@@ -27,6 +27,7 @@ import {
   buildLiveWikiSection,
 } from "./live-wiki.js";
 import { LENDING_LOAN_ABI, serializeLendingLoan } from "./lending-loans.js";
+import { balanceEntry, explorerBalanceEntry, finalizeBalances, lostSupply, parseAddressParam, requireBaseUnits, unavailableEntry, type BalanceEntry } from "./balance-integrity.js";
 import {
   classifyDynamicIntent,
   buildDynamicDataFallback,
@@ -636,42 +637,31 @@ async function fetchBalancesData() {
     const data = await esApiFetch(
       `&module=logs&action=getLogs&fromBlock=${IFRLOCK_DEPLOY_BLOCK}&toBlock=latest&address=${PROTOCOL_ADDRESSES.IFRLock}&topic0=${topic}`
     ) as { status?: string; result?: Array<{ data: string }> };
-    if (data.status !== "1" || !Array.isArray(data.result)) return total;
+    if (data.status !== "1" || !Array.isArray(data.result)) throw new Error("Unlocked events unavailable");
     for (const log of data.result) {
       if (log.data) total += ethersLib.toBigInt(log.data);
     }
     return total;
   }
-  const unlockedTotalPromise = fetchIFRLockUnlockedTotal().catch(() => 0n);
-  const results: Record<string, { raw: string; formatted: number }> = {};
+  const unlockedTotalPromise: Promise<bigint | null> = fetchIFRLockUnlockedTotal().catch(() => null);
+  const results: Record<string, BalanceEntry> = {};
   for (let i = 0; i < entries.length; i += 4) {
     const batch = entries.slice(i, i + 4);
     const values = await Promise.all(batch.map(async ([label, addr]) => {
       try {
         const raw = label === "IFRLock" ? await ifrLock.totalLocked() : await token.balanceOf(addr);
-        return [label, { raw: raw.toString(), formatted: parseFloat(ethersLib.formatUnits(raw, IFR_DECIMALS)) }] as const;
+        return [label, balanceEntry(raw)] as const;
       } catch {
-        return [label, { raw: "0", formatted: 0 }] as const;
+        return [label, unavailableEntry()] as const;
       }
     }));
     for (const [label, value] of values) results[label] = value;
     if (i + 4 < entries.length) await new Promise(r => setTimeout(r, 150));
   }
 
-  const unlockedTotal = await unlockedTotalPromise;
-  const response = {
-    balances: results,
-    ifrLock: {
-      lockedRaw: results.IFRLock?.raw || "0",
-      lockedFormatted: results.IFRLock?.formatted || 0,
-      unlockedRaw: unlockedTotal.toString(),
-      unlockedFormatted: parseFloat(ethersLib.formatUnits(unlockedTotal, IFR_DECIMALS)),
-    },
-    timestamp: new Date().toISOString(),
-    fetchedAt: Date.now(),
-    source: "live" as const,
-  };
-  setCache("balances", response);
+  const response = finalizeBalances(results, await unlockedTotalPromise);
+  // Never cache a response with unavailable values as if it were live data.
+  if (!response.incomplete) setCache("balances", response);
   return response;
 }
 
@@ -690,47 +680,33 @@ async function fetchBalancesDataEtherscanFallback() {
     const data = await esApiFetch(
       `&module=logs&action=getLogs&fromBlock=${IFRLOCK_DEPLOY_BLOCK}&toBlock=latest&address=${PROTOCOL_ADDRESSES.IFRLock}&topic0=${topic}`
     ) as { status?: string; result?: Array<{ data: string }> };
-    if (data.status !== "1" || !Array.isArray(data.result)) return total;
+    if (data.status !== "1" || !Array.isArray(data.result)) throw new Error("Unlocked events unavailable");
     for (const log of data.result) {
       if (log.data) total += ethersLib.toBigInt(log.data);
     }
     return total;
   }
-  const unlockedTotalPromise = fetchIFRLockUnlockedTotal().catch(() => 0n);
-  const results: Record<string, { raw: string; formatted: number }> = {};
+  const unlockedTotalPromise: Promise<bigint | null> = fetchIFRLockUnlockedTotal().catch(() => null);
+  const results: Record<string, BalanceEntry> = {};
   for (let i = 0; i < entries.length; i++) {
     const [label, addr] = entries[i];
     try {
       if (label === "IFRLock") {
-        const raw = await ifrLock.totalLocked();
-        results[label] = { raw: raw.toString(), formatted: parseFloat(ethersLib.formatUnits(raw, IFR_DECIMALS)) };
+        results[label] = balanceEntry(await ifrLock.totalLocked());
       } else {
         const data = await esApiFetch(
           `&module=account&action=tokenbalance&contractaddress=${IFR_TOKEN}&address=${addr}&tag=latest`
         ) as { status?: string; result?: string };
-        const raw = (data.status === "1" && data.result) ? data.result : "0";
-        results[label] = { raw, formatted: parseInt(raw, 10) / 10 ** IFR_DECIMALS };
+        results[label] = explorerBalanceEntry(data);
       }
     } catch {
-      results[label] = { raw: "0", formatted: 0 };
+      results[label] = unavailableEntry();
     }
     if (i < entries.length - 1) await new Promise(r => setTimeout(r, 250));
   }
 
-  const unlockedTotal = await unlockedTotalPromise;
-  const response = {
-    balances: results,
-    ifrLock: {
-      lockedRaw: results.IFRLock?.raw || "0",
-      lockedFormatted: results.IFRLock?.formatted || 0,
-      unlockedRaw: unlockedTotal.toString(),
-      unlockedFormatted: parseFloat(ethersLib.formatUnits(unlockedTotal, IFR_DECIMALS)),
-    },
-    timestamp: new Date().toISOString(),
-    fetchedAt: Date.now(),
-    source: "live" as const,
-  };
-  setCache("balances", response);
+  const response = finalizeBalances(results, await unlockedTotalPromise);
+  if (!response.incomplete) setCache("balances", response);
   return response;
 }
 
@@ -741,17 +717,27 @@ async function fetchSupplyData() {
   const burnReserveData = await esApiFetch(
     `&module=account&action=tokenbalance&contractaddress=${IFR_TOKEN}&address=${BURN_ADDRESS}&tag=latest`
   ) as { result?: string };
-  const totalSupplyRaw = supplyData.result || "0";
-  const burnReserveBalanceRaw = burnReserveData.result || "0";
+  // A failed explorer read must surface as an error (502), never as a zero supply.
+  const totalSupplyRaw = requireBaseUnits(supplyData.result, "totalSupply");
+  const burnReserveBalanceRaw = requireBaseUnits(burnReserveData.result, "burn address balance");
   const totalSupply = parseInt(totalSupplyRaw, 10) / 10 ** IFR_DECIMALS;
   const burnAddressBalance = parseInt(burnReserveBalanceRaw, 10) / 10 ** IFR_DECIMALS;
   const burned = TOTAL_MINTED - totalSupply;
+  // Legacy semantics, unchanged: circulating = totalSupply - dead-address balance. It still includes
+  // permanently lost IFR; use liveSupply for totalSupply minus permanently lost.
   const circulating = totalSupply - burnAddressBalance;
+  const feeRouterData = await esApiFetch(
+    `&module=account&action=tokenbalance&contractaddress=${IFR_TOKEN}&address=${PROTOCOL_ADDRESSES.FeeRouterV1}&tag=latest`
+  ).catch(() => null) as { status?: string; result?: unknown } | null;
+  const lost = lostSupply(totalSupplyRaw, explorerBalanceEntry(feeRouterData));
   const response = {
-    totalMinted: TOTAL_MINTED, totalSupply, burnAddressBalance, burned, circulating,
+    totalMinted: TOTAL_MINTED, totalSupply, totalSupplyRaw, burnAddressBalance, burned, circulating,
+    ...lost,
+    incomplete: lost.permanentlyLostError !== null,
     timestamp: new Date().toISOString(), fetchedAt: Date.now(), source: "live" as const,
   };
-  setCache("supply", response);
+  // Never cache a response whose lost/live figures are unavailable as if they were live values.
+  if (!response.incomplete) setCache("supply", response);
   return response;
 }
 
@@ -1009,7 +995,8 @@ async function fetchVaultData() {
   const data = await esApiFetch(
     `&module=account&action=tokenbalance&contractaddress=${IFR_TOKEN}&address=${addr}&tag=latest`
   ) as { status?: string; result?: string };
-  const raw = (data.status === "1" && data.result) ? data.result : "0";
+  // A failed explorer read surfaces as an error (502) instead of an empty vault.
+  const raw = requireBaseUnits(data.status === "1" ? data.result : undefined, "vault balance");
   const balance = parseInt(raw, 10) / 10 ** IFR_DECIMALS;
   const balanceFormatted = Math.floor(balance).toString();
   const percentFilled = Math.min((balance / VAULT_TARGET_AMOUNT) * 100, 100);
@@ -1197,13 +1184,15 @@ async function ethCall(to: string, data: string): Promise<string> {
 if (BUILDER_REGISTRY_ADDR) {
   app.get("/api/builders/check/:address", async (req, res) => {
     try {
-      const addr = req.params.address;
+      const addr = parseAddressParam(req.params.address);
+      if (!addr) return res.status(400).json({ error: "Invalid address" });
       // isBuilder(address) selector: 0xb6b6b475
-      const result = await ethCall(BUILDER_REGISTRY_ADDR, `0xb6b6b475000000000000000000000000${addr.replace("0x", "").toLowerCase()}`);
+      const result = await ethCall(BUILDER_REGISTRY_ADDR, `0xb6b6b475000000000000000000000000${addr.slice(2).toLowerCase()}`);
       const isBuilder = result !== "0x" && result !== "0x0000000000000000000000000000000000000000000000000000000000000000";
       res.json({ address: addr, isBuilder });
     } catch (e: unknown) {
-      res.status(400).json({ error: e instanceof Error ? e.message : "Unknown error" });
+      console.error("[BuilderRegistry] check failed:", e instanceof Error ? e.message : e);
+      res.status(502).json({ error: "Builder registry unavailable" });
     }
   });
 

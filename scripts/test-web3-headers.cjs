@@ -56,7 +56,9 @@ const expectedCsp = new Map([
   ['img-src', ["'self'", 'data:', 'blob:', 'https://explorer-api.walletconnect.com', 'https://*.walletconnect.com']],
   ['connect-src', [
     "'self'",
-    'https://eth.llamarpc.com',
+    'https://ethereum-rpc.publicnode.com',
+    'https://eth.drpc.org',
+    'https://1rpc.io',
     'https://*.walletconnect.com',
     'https://*.walletconnect.org',
     'wss://*.walletconnect.com',
@@ -135,10 +137,13 @@ requireCspTokens(csp, 'connect-src', ['wss://*.walletconnect.com', 'https://*.wa
 requireCspTokens(csp, 'frame-src', ['https://verify.walletconnect.com']);
 requireCspTokens(csp, 'img-src', ['data:', 'blob:']);
 
-// Mainnet RPC used by ethers in the dApp.
-assert.ok(walletCore.includes('https://eth.llamarpc.com'),
-  'Web3 RPC endpoint changed — re-check CSP connect-src');
-requireCspTokens(csp, 'connect-src', ['https://eth.llamarpc.com']);
+// Mainnet RPC fallback endpoints used by ethers in the dApp (same list as
+// docs/assets/wallet-core.js); every one must be allowed by connect-src.
+for (const url of ['https://ethereum-rpc.publicnode.com', 'https://eth.drpc.org', 'https://1rpc.io/eth']) {
+  assert.ok(walletCore.includes(`"${url}"`), `Web3 RPC endpoint ${url} missing — re-check CSP connect-src`);
+}
+assert.ok(!walletCore.includes('llamarpc'), 'Web3 wallet core must not use eth.llamarpc.com (HTTP 525, no fallback)');
+requireCspTokens(csp, 'connect-src', ['https://ethereum-rpc.publicnode.com', 'https://eth.drpc.org', 'https://1rpc.io']);
 
 // Embedded copilot iframe.
 assert.ok(web3App.includes('https://copilot-api.ifrunit.tech?embedded=1'),
