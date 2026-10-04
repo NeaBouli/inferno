@@ -790,3 +790,95 @@ Change only `docs/index.html` (tracker + three cards), `docs/wiki/index.html`
 `docs/assets/redesign-skin.css` (shared wiki action/focus rules) and the
 active-link `aria-current` attribute on sidebar pages. Copilot backend,
 contracts, wallet core and other Landing sections stay untouched.
+
+## 12. Queued guardian batch binding trace
+
+Scope: task T-242 (PR #168). One path only: the CWA-09 step-2 execute batch
+for the already queued Governance proposals #19/#20 must be generated from
+verified on-chain content, never from caller-supplied ids. The synthetic
+full-migration rehearsal stays pinned to exactly block 26108024.
+
+### 12.1 Grundidee
+
+`Governance.execute(id)` runs whatever the proposal contains
+(`contracts/governance/Governance.sol::execute`), so the Safe batch generator
+must refuse to write execute bytes unless the queued proposal still matches
+the approved operation exactly. Steps 1-3 of the guardian migration already
+ran live (`docs/GUARDIAN_MIGRATION.md`); only execute (#19 LiquidityReserve,
+#20 BurnReserve `setGuardian(Treasury Safe)`, ETA 2026-10-04 23:56:11 UTC) is
+open. Read-only evidence: block 26119897.
+
+### 12.2 Spur (Hop-Liste)
+
+1. CLI `--execute` → `scripts/guardian-migration-proposal.cjs::buildVerifiedExecute`
+   — Daten: RPC URL (`MAINNET_RPC_URL` oder public fallback) → verified
+   `guardian-step2-execute.json` oder refusal ohne Datei.
+2. `buildVerifiedExecute` → `verifyQueuedProposals(call)` →
+   `rpcCaller(url)` (einmaliger `eth_chainId`-Check auf 1) → eth_call
+   `Governance.getProposal(19|20)` — Daten: `(target, data, eta, executed,
+   cancelled)` gegen die gepinnten Konstanten `QUEUED`/`QUEUED_ETA`/
+   `GUARDIAN_INNER`; jede Abweichung, unreachable RPC oder wrong chain wirft.
+3. Pins → `executeBatch()` → Safe Transaction Builder JSON — Daten:
+   `execute(19)`/`execute(20)` Bytes, `value: 0`, chainId 1.
+4. `test/fork/GuardianQueuedExecutionFork.test.js` (Fork exakt 26119897) →
+   impersonated Treasury Safe sendet die generierten Bytes → Daten:
+   `guardian()` aller sechs mutablen Contracts = Safe; immutables bleiben
+   Deployer; Negativ: Read mit `blockTag` 26108024 (pre-queue) → refusal.
+5. Fixture-Hop: CLI `--fixture <firstId>` → `build(firstId)` (kein Chain-Read,
+   "do not sign") ← `scripts/test-guardian-migration-proposal.cjs` und
+   `test/fork/GuardianMigrationFork.test.js` (Fork exakt 26108024).
+
+### 12.3 Module
+
+| Modul | Eine Aufgabe | Einstieg | Stand |
+| --- | --- | --- | --- |
+| proposal generator | Safe-Batches + pinned Verifikation | `scripts/guardian-migration-proposal.cjs::buildVerifiedExecute` | gebaut |
+| governance timelock | queued execute nach ETA | `contracts/governance/Governance.sol::execute` | gebaut (deployed) |
+| fork proofs | synthetische + post-queue Rehearsal | `test/fork/GuardianQueuedExecutionFork.test.js` | gebaut |
+| runbook | Schritte + pre-sign validation | `docs/GUARDIAN_MIGRATION.md` | gebaut |
+
+### 12.4 Verdrahtung
+
+- Der Generator liest nur; Signieren/Executen bleibt beim Safe (kein Key hier).
+- `verifyQueuedProposals` ist die einzige Quelle der execute-Bytes im
+  `--execute`-Modus; `--fixture` ist explizit offline und für Tests.
+- CI (contracts workflow) läuft nur den Unit-Test; Fork-Tests brauchen einen
+  Archive-RPC und laufen manuell.
+
+### 12.5 Widerspruch und Lücken
+
+- `build(firstId)` bleibt als Fixture exportiert; Missbrauch wird durch den
+  CLI-Zwang (`--fixture`-Flag + Warnung) statt durch Entfernen begrenzt, weil
+  die synthetische Rehearsal die Bytes braucht.
+- Die CV-01-Generator (`scripts/commitment-vault-v2-proposal.cjs`) hat ein
+  eigenes, optionales `--verify-onchain`; Angleichung ist nicht Teil dieser
+  Spur.
+
+### 12.6 Diagrammdateien
+
+- Keine neuen; diese Spur ändert `docs/architecture/map.puml` und
+  `main-path.puml` nicht (Shared-Dateien, PR-übergreifende Konflikte).
+
+```mermaid
+mindmap
+  root((Queued guardian batch binding))
+    proposal generator
+      gebaut: buildVerifiedExecute
+      gebaut: verifyQueuedProposals
+      gebaut: rpcCaller
+      gebaut: build (fixture)
+    governance timelock
+      gebaut: Governance.execute
+    fork proofs
+      gebaut: GuardianQueuedExecutionFork
+      gebaut: GuardianMigrationFork
+    runbook
+      gebaut: GUARDIAN_MIGRATION.md
+```
+
+### 12.7 Nächster Schritt
+
+Change only `scripts/guardian-migration-proposal.cjs`,
+`scripts/test-guardian-migration-proposal.cjs`, `test/fork/Guardian*.test.js`
+und `docs/GUARDIAN_MIGRATION.md`. Pool-fee Spur (Trace 13), CV-01-Generator,
+Contracts und Deployments bleiben unberührt.

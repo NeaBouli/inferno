@@ -2,8 +2,8 @@
   "schemaVersion": 2,
   "tool": "markdownlint-cli@0.49.1",
   "disabledRules": ["MD013","MD033","MD041","MD024","MD036","MD040"],
-  "filesScanned": 209,
-  "baselineIssues": 3765,
+  "filesScanned": 210,
+  "baselineIssues": 3766,
   "fingerprints": [
     [".github/ISSUE_TEMPLATE/bug_report.md","MD022","Expected: 1; Actual: 0; Below","## Bug Description","6e754bfe0c2fac07",1],
     [".github/ISSUE_TEMPLATE/bug_report.md","MD022","Expected: 1; Actual: 0; Below","## Environment","cadb5ca79597df18",1],
@@ -336,6 +336,7 @@
     ["docs/APP_SECURITY_REVIEW.md","MD060","Table pipe is missing space to the right for style \"compact\"","","ea8dc764f912ce20",2],
     ["docs/APP_SECURITY_REVIEW.md","MD060","Table pipe is missing space to the right for style \"compact\"","","f09f1f2e68e3801c",3],
     ["docs/APP_SECURITY_REVIEW.md","MD060","Table pipe is missing space to the right for style \"compact\"","","f8207144eb229938",2],
+    ["docs/architecture/MAP.md","MD018","","#20 BurnReserve `setGuardian(T...","23552150dbc237a3",1],
     ["docs/AUDIT_BRIEF.md","MD022","Expected: 1; Actual: 0; Below","## Expected Deliverables","e1b06b66b5cde246",1],
     ["docs/AUDIT_BRIEF.md","MD022","Expected: 1; Actual: 0; Below","## Known Design Decisions (no finding expected)","e5bf84bf634d9087",1],
     ["docs/AUDIT_BRIEF.md","MD022","Expected: 1; Actual: 0; Below","## Previous Analysis","34941e477d3bccb2",1],

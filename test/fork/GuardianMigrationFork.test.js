@@ -1,6 +1,6 @@
 // CWA-09 guardian migration rehearsal on a Mainnet fork: the Treasury Safe and the deployer execute the
 // exact transactions from scripts/guardian-migration-proposal.cjs against the deployed contracts.
-// The live migration started in block 26108025, so the rehearsal is pinned to the block before it.
+// The live migration started in block 26108025, so the rehearsal is pinned to exactly the block before it.
 // Run: HARDHAT_FORK=true HARDHAT_FORK_BLOCK_NUMBER=26108024 MAINNET_RPC_URL=<archive rpc> npx hardhat test test/fork/GuardianMigrationFork.test.js
 import { expect } from "chai";
 import { createRequire } from "node:module";
@@ -22,7 +22,7 @@ describe("Guardian migration to the Treasury Safe on a Mainnet fork", function (
   before(async function () {
     if (process.env.HARDHAT_FORK !== "true") this.skip();
     const block = await ethers.provider.getBlockNumber();
-    expect(block, `fork must start at or before PRE_MIGRATION_BLOCK ${PRE_MIGRATION_BLOCK}`).to.be.at.most(PRE_MIGRATION_BLOCK);
+    expect(block, `fork must start at exactly PRE_MIGRATION_BLOCK ${PRE_MIGRATION_BLOCK}`).to.equal(PRE_MIGRATION_BLOCK);
   });
 
   it("moves every changeable guardian to the Treasury Safe; buyback guardians stay immutable", async () => {
