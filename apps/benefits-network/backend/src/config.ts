@@ -34,6 +34,9 @@ const envSchema = z.object({
   PARTNER_VAULT_ADDRESS: optionalAddress,
   BUILDER_REGISTRY_ADDRESS: optionalAddress,
   REWARD_CALLER_ADDRESS: optionalAddress,
+  // Lane 4 Model B settlement export; default-off, see services/modelBPolicy.ts.
+  MODEL_B_SETTLEMENT_ENABLED: z.string().optional(),
+  MODEL_B_PILOT_POLICY_JSON: z.string().optional(),
   ADMIN_SECRET: z.string(),
   DATABASE_URL: z.string().default('file:./dev.db'),
   PORT: z.coerce.number().int().positive().default(3001),
