@@ -13,9 +13,10 @@ export const LEVEL_LABELS: Record<SecurityLevel, string> = {
 /** What the score is and what the repository tests actually check (same wording as docs/builder.html). */
 export const SCORE_DISCLAIMER =
   "Configuration heuristic only — not audited, not a security audit or certification. What the repository tests check: " +
-  "every option combination compiles (solc 0.8.20); lock() credits the amount actually received (IFR is fee-on-transfer) " +
+  "every option combination compiles (solc 0.8.20). Hard Lock: lock() credits the amount actually received (IFR is fee-on-transfer) " +
   "and unlock() transfers that credited amount (IFR’s transfer fee may apply, so the wallet can receive less unless " +
-  "the contract is fee-exempt); hasAccess() reads the locked amount.";
+  "the contract is fee-exempt); hasAccess() reads the locked amount. Balance Only: the contract holds no tokens, has no " +
+  "lock() or unlock(), and hasAccess() reads the wallet’s IFR balance.";
 
 export interface ScoreBreakdown {
   category: string;
