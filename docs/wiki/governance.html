@@ -756,7 +756,7 @@
       <!-- ========== 3. Proposal Lifecycle ========== -->
       <h2>3. Proposal Lifecycle</h2>
       <p>
-        Every governance action follows the same lifecycle. Below is the visual flow:
+        Every governance proposal follows the same lifecycle. Below is the visual flow:
       </p>
 
       <div class="flow-diagram">
@@ -865,7 +865,7 @@
       <!-- ========== 5. What Parameters Can Be Changed ========== -->
       <h2>5. What Parameters Can Be Changed</h2>
       <p>
-        The following functions on InfernoToken (and Governance itself) can only be called through the governance timelock:
+        The following functions on InfernoToken (and <code>Governance.setDelay</code>) can only be called through the governance timelock. Protocol parameter changes go through Governance proposals with a 48-hour timelock. The deployed Governance contract&rsquo;s ownership itself can be transferred directly by its owner, the Treasury Safe (3-of-5), without that delay (tracked as CWA-25). TreasurySafe can also rotate the guardian through untimelocked <code>setGuardian</code>.
       </p>
 
       <table>
@@ -1489,7 +1489,7 @@ await governance.execute(proposalId);</code></pre>
       <ol>
         <li>
           <strong>Current: 3-of-5 Safe + Timelock</strong> &mdash;
-          Treasury Safe controls Governance. Proposals use the configured delay; owner-only guardian rotation is the documented untimelocked exception and the guardian can cancel pending proposals.
+          Treasury Safe controls Governance. Proposals use the configured delay; owner-only guardian rotation and transferring the deployed Governance contract&rsquo;s ownership through owner-only <code>setOwner</code> (tracked as CWA-25) are untimelocked, and the guardian can cancel pending proposals.
         </li>
         <li>
           <strong>Next: Council tooling and community signer expansion</strong> &mdash;

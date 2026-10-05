@@ -211,13 +211,36 @@ requireText("docs/wiki/testnet.html", [
 ]);
 requireText("docs/wiki/roadmap.html", ["36 Wiki HTML pages"]);
 requireText("docs/index.html", [
-  "997.571M supply",
-  "2.429M burned",
-  "371.544K IFR fees held",
-  "LP 11.899M IFR + 0.254 ETH",
-  ">11.899M IFR + 0.254 ETH</text>",
   "no Council voting contract is deployed",
 ]);
+// T-279: the token-flow diagram carries no hardcoded current values. Before the live read it shows
+// "loading", after a failed read "unavailable"; the old dated fallbacks must not return.
+{
+  const landing = read("docs/index.html");
+  const flowStart = landing.indexOf('<section id="token-flow"');
+  const flowEnd = landing.indexOf("</section>", flowStart);
+  assert.ok(flowStart > 0 && flowEnd > flowStart, "token-flow section missing");
+  const flow = landing.slice(flowStart, flowEnd);
+  for (const stale of [
+    "997.571M", "2.429M", "371.544K", "11.899M IFR", "0.254 ETH", "400.6M IFR", "200M held",
+    "0 IFR &middot; 3-of-5", "7.9M &middot;", "40M &middot;", "150M locked", "1.38M", "52.2M",
+    "IFR fees held", "Phase 3 &mdash; via Controller",
+  ]) {
+    assert.ok(!flow.includes(stale), `token-flow retains hardcoded or stale value: ${stale}`);
+  }
+  for (const key of [
+    "flow-snapshot-supply", "flow-snapshot-lp", "supply-flow", "lp-flow", "feerouter-flow",
+    "flow-lpreserve", "flow-liqres", "flow-treasury", "flow-community", "flow-partner", "flow-vesting",
+    "flow-burnres", "flow-controller", "flow-fee-total", "flow-fee-split", "flow-pool-edge",
+    "flow-feerouter-bps", "commitment-flow", "lending-flow",
+  ]) {
+    assert.ok(flow.includes(`data-live-key="${key}"`), `token-flow live key missing: ${key}`);
+  }
+  assert.ok(flow.includes(">BuybackController</text>"), "token-flow must show BuybackController");
+  assert.ok(!/>Buyback<\/text>|BuybackVault/.test(flow), "token-flow must not show the legacy BuybackVault");
+  assert.ok(landing.includes("function fmtFlow(n, suffix) { return isNum(n) ? fmt(n) + (suffix || '') : 'unavailable'; }"),
+    "token-flow labels must fail closed to 'unavailable'");
+}
 requireText("docs/social/x-tokenflow-burn-vs-burnreserve.md", [
   "~2.429M IFR burned at Ethereum block 26,013,776",
 ]);

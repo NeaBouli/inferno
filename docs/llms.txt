@@ -46,7 +46,7 @@ IFR includes a read-only AI Copilot assistant for general protocol and surface-s
 - Default Pool Fee: 1.0% per standard transfer between non-exempt addresses (to BuybackController since Governance Proposal #21, executed 5 October 2026 at block 26,124,660; until then to FeeRouterV1, which has no IFR withdrawal path)
 - Permanently lost IFR: 27,153,013.07 IFR are permanently lost (not burned; still counted in totalSupply): 26,418,467.99 IFR in CommitmentVault V1 price-conditioned tranches (CV-01) and 734,545.07 IFR of pool fees in FeeRouterV1 (CWA-02), as of block 26,124,660 on 5 October 2026. In that block Proposal #21 stopped the pool-fee inflow to FeeRouterV1; direct transfers to that address remain possible, so its part is read live.
 - Default Total Fee: 3.5% per standard transfer between non-exempt addresses (hard cap: 5.0%); fully bypassed when either endpoint is fee-exempt
-- Governance: 48-hour proposal timelock; guardian rotation is the documented untimelocked exception
+- Governance: Protocol parameter changes go through Governance proposals with a 48-hour timelock. The deployed Governance contract's ownership itself can be transferred directly by its owner, the Treasury Safe (3-of-5), without that delay (tracked as CWA-25). Guardian rotation through setGuardian is also untimelocked.
 - Multisig: All Safes 3-of-5 (5 independent signers)
 - Bootstrap Event: ENDED and finalized on June 5, 2026. Uniswap V2 IFR/WETH liquidity is live.
 - LP Reserve: 400,600,000 IFR secured in Gnosis Safe 3-of-5
