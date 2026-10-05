@@ -117,10 +117,15 @@ for (const combo of combos) {
     fail(`${where}: minLockDuration not set from lock duration`);
   }
 
+  // Fee-on-transfer: generated contracts take deposits only through the inherited HardLockModule.lock(),
+  // which credits the measured balance delta (behaviour proven by test/library/BuilderFeeOnTransfer.test.js).
+  if (/transferFrom/.test(contract)) fail(`${where}: generated contract must not add its own transferFrom deposit path`);
+
   if (sdk.includes("npm install ifr-sdk")) fail(`${where}: snippet must not claim registry availability`);
   if (!sdk.includes("npm pack --ignore-scripts")) fail(`${where}: snippet must use the documented pack flow`);
   if (!sdk.includes("copilot-api.ifrunit.tech/api/ifr/check")) fail(`${where}: REST endpoint missing`);
   if (!guide.includes("no Sepolia IFR token is deployed")) fail(`${where}: guide must state there is no Sepolia IFR deployment`);
+  if (!guide.includes("lock() credits only the amount that arrives")) fail(`${where}: guide must explain fee-on-transfer lock accounting`);
   if (!guide.includes("the repository ships no generic")) fail(`${where}: guide must not reference a nonexistent deploy script`);
   if (!guide.includes("0xc43d48E7FDA576C5022d0670B652A622E8caD041")) fail(`${where}: guide must name the Mainnet governance address`);
 }
@@ -151,6 +156,19 @@ for (const { input, expected } of nameCases) {
   }
   if (!contract.includes(`// Product: ${input}\n`)) fail(`${where}: readable product name must stay in the header comment`);
   if (!element("t-guide").textContent.includes(`contracts/${expected}.sol`)) fail(`${where}: deploy guide must use ${expected}.sol`);
+}
+
+// The library deposit path the generated contracts inherit must credit what actually arrived (IFR is fee-on-transfer).
+const hardLockSource = fs.readFileSync(path.join(libraryDir, "HardLockModule.sol"), "utf8");
+for (const needle of [
+  "uint256 balanceBefore = ifrToken.balanceOf(address(this));",
+  "ifrToken.safeTransferFrom(msg.sender, address(this), amount);",
+  "uint256 received = ifrToken.balanceOf(address(this)) - balanceBefore;",
+  'require(received > 0, "Nothing received");',
+  "amount: received,",
+  "emit Locked(msg.sender, received, duration);",
+]) {
+  if (!hardLockSource.includes(needle)) fail(`HardLockModule.lock must credit the measured balance delta (missing: ${needle})`);
 }
 
 // Score math stays as deployed: default configuration scores 90/SAFE.
