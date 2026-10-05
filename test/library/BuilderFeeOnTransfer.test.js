@@ -98,6 +98,46 @@ describe("Builder library — real InfernoToken fee path", function () {
     expect(await vault.lockedAmount(user2.address)).to.equal(amount);
     expect(await ifr.balanceOf(vault.target)).to.equal(net + amount);
   });
+
+  it("unlock returns exactly the credited amount with real IFR fees; no over-withdrawal, vault drains to zero", async () => {
+    const [, alice, bob, governance, poolFeeReceiver] = await ethers.getSigners();
+    const ifr = await (await ethers.getContractFactory("InfernoToken")).deploy(poolFeeReceiver.address);
+    await ifr.transfer(alice.address, units(50000));
+    await ifr.transfer(bob.address, units(50000));
+    const vault = await (await ethers.getContractFactory("IFRBuilderVault")).deploy(
+      ifr.target, units(500), SEVEN_DAYS, "RealIFR", "https://ifr.example", governance.address
+    );
+    const fee = (v) => (v * 350n) / 10_000n;
+    const aliceAmount = units(10000);
+    const bobAmount = units(3333);
+    await ifr.connect(alice).approve(vault.target, aliceAmount);
+    await ifr.connect(bob).approve(vault.target, bobAmount);
+    await vault.connect(alice).lock(aliceAmount, SEVEN_DAYS);
+    await vault.connect(bob).lock(bobAmount, SEVEN_DAYS);
+    const aliceCredit = await vault.lockedAmount(alice.address);
+    const bobCredit = await vault.lockedAmount(bob.address);
+    expect(aliceCredit).to.equal(aliceAmount - fee(aliceAmount));
+    expect(bobCredit).to.equal(bobAmount - fee(bobAmount));
+    // Accounting invariant: the sum of credits equals exactly what the vault holds.
+    expect(await ifr.balanceOf(vault.target)).to.equal(aliceCredit + bobCredit);
+
+    await connection.provider.request({ method: "evm_increaseTime", params: [SEVEN_DAYS] });
+    await connection.provider.request({ method: "evm_mine", params: [] });
+
+    // The outgoing transfer is taxed too (vault not exempt): the vault sends exactly the credit,
+    // the user receives the credit minus IFR's fee, and nothing beyond the credit leaves the vault.
+    const aliceBefore = await ifr.balanceOf(alice.address);
+    await expect(vault.connect(alice).unlock()).to.emit(vault, "Unlocked").withArgs(alice.address, aliceCredit);
+    expect(await ifr.balanceOf(vault.target)).to.equal(bobCredit);
+    expect((await ifr.balanceOf(alice.address)) - aliceBefore).to.equal(aliceCredit - fee(aliceCredit));
+    expect(await vault.lockedAmount(alice.address)).to.equal(0n);
+    await expect(vault.connect(alice).unlock()).to.be.revertedWith("Nothing locked");
+
+    const bobBefore = await ifr.balanceOf(bob.address);
+    await expect(vault.connect(bob).unlock()).to.emit(vault, "Unlocked").withArgs(bob.address, bobCredit);
+    expect((await ifr.balanceOf(bob.address)) - bobBefore).to.equal(bobCredit - fee(bobCredit));
+    expect(await ifr.balanceOf(vault.target)).to.equal(0n);
+  });
 });
 
 // ── Generated contracts (docs/builder.html generator) ────────────────────────

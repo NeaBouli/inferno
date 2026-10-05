@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 /// @title HardLockModule — Time-Bound Token Lock
 /// @notice Tokens must be locked for a minimum duration. Cannot unlock early.
-///         Security Score: SAFE — strongest commitment mechanism.
+///         Builder heuristic: strongest commitment option (configuration score, not an audit verdict).
 ///         IFR is a fee-on-transfer token: lock() credits the balance delta this
 ///         contract actually received, never the requested amount.
 abstract contract HardLockModule is BaseAccessModule, ReentrancyGuard {
