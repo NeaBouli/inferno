@@ -106,7 +106,7 @@ export function getIFRKnowledge() {
         developers: ["https://ifrunit.tech/wiki/contracts.html", "https://ifrunit.tech/wiki/integration.html", "https://ifrunit.tech/wiki/wallet-guide.html"],
         community: ["https://ifrunit.tech/wiki/governance.html", "https://ifrunit.tech/wiki/community-signer-expansion.html", "https://ifrunit.tech/wiki/transparency.html"]
       },
-      importantDistinction: "CommitmentVault and LendingVault Wiki pages are documentation/reference pages. Current user-facing Lock IFR and Create offer execution is intended to happen on Web3."
+      importantDistinction: "CommitmentVault and LendingVault Wiki pages are documentation/reference pages. Current user-facing Lock IFR execution is intended to happen on Web3. LendingVault V1 is retired (3 October 2026): no new offers are invited; existing lenders only withdraw their offers with withdrawOffer."
     },
     benefitsNetwork: {
       primaryUrl: "https://shop.ifrunit.tech/",

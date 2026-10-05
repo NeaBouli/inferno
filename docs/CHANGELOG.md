@@ -10,8 +10,14 @@
 - The page no longer guides lenders to create offers; the offer table always shows a read-only "View"
   action and never a borrow call to action. Withdraw guidance (`withdrawOffer`) and the read-only on-chain
   stats stay.
-- Copilot knowledge (`ifr-knowledge.ts`): the LendingVault entry now states V1 is retired instead of
-  describing a live lender offer flow; wiki RAG content regenerated.
+- Copilot knowledge (`ifr-knowledge.ts`): the LendingVault entry and the Web3 distinction now state V1 is
+  retired (withdraw only) instead of describing a live lender offer flow; wiki RAG content regenerated.
+- `docs/wiki/lending-vault.html`: metadata no longer says live; a visible RETIRED notice replaces the live
+  banner. The guided lender flow and the create/increase offer form are hidden, and the offer handler refuses
+  to send any `createOffer`/`increaseOffer` transaction. `withdrawOffer` stays and now allows the full
+  available amount (the old 1 IFR keep-alive only served later offer increases).
+- `docs/llms.txt`, `docs/GOVERNANCE_PRODUCT_DECISION_REGISTER.md` (Lane 1 current truth) and
+  `docs/COINMARKETCAP_SUBMISSION.md` describe LendingVault V1 as retired, withdraw only.
 
 ## 5 October 2026 — Governance Proposals #18–#21 Executed (Safe Round)
 

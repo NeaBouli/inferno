@@ -31,8 +31,9 @@ remains the only place where agenda items and vote outcomes are published.
 
 ## Lane 1 — LendingVault oracle/borrow activation and overdue loans
 
-- **Current truth:** deployed V1 lender offers are live; borrowing is
-  intentionally disabled with `ifrPriceWei = 0`. V1 cannot return the price to
+- **Current truth:** V1 is retired by owner decision (3 October 2026, see the
+  decision record below): borrowing stays disabled with `ifrPriceWei = 0` and
+  lenders are withdrawing their offers. V1 cannot return the price to
   zero once set and has no pause, freshness check, borrow cap or allowlist.
   The 2026-07-31 safety review decided to keep V1 borrowing disabled
   ([runbook](LENDING_PRICE_GOVERNANCE_RUNBOOK.md); CWA-01, CWA-08).
