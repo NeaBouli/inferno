@@ -1,5 +1,18 @@
 # Changelog
 
+## 5 October 2026 — Lending Market Page Shows LendingVault V1 as Retired (T-271)
+
+- `docs/wiki/lending-market.html`: title, meta, Open Graph, Twitter and JSON-LD descriptions no longer call
+  the market live. A visible RETIRED notice near the top uses the canonical wording: V1 retired by owner
+  decision (3 October 2026); borrowing stays disabled (`ifrPriceWei = 0`, no activation planned or
+  authorized) and lenders are withdrawing their offers; those IFR are not lost. No V2 is planned until a
+  reviewed price source exists.
+- The page no longer guides lenders to create offers; the offer table always shows a read-only "View"
+  action and never a borrow call to action. Withdraw guidance (`withdrawOffer`) and the read-only on-chain
+  stats stay.
+- Copilot knowledge (`ifr-knowledge.ts`): the LendingVault entry now states V1 is retired instead of
+  describing a live lender offer flow; wiki RAG content regenerated.
+
 ## 5 October 2026 — Governance Proposals #18–#21 Executed (Safe Round)
 
 - #18 `FeeRouterV1.setVoucherSigner(0x790D99c320dafA03d83bEa152178A6523b49CA0d)`: 07:17:47 UTC, block 26124623,

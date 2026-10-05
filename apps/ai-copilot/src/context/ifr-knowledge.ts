@@ -181,9 +181,9 @@ export function getIFRKnowledge() {
         apiEndpoints: "GET /api/commitment/tranches/:address, GET /api/commitment/status/:address, GET /api/commitment/p0, GET /api/commitment/leaderboard"
       },
       lendingVault: {
-        status: "DEPLOYED — Mainnet 04.04.2026, feeExempt active; guided self-service lender offer UI live",
+        status: "RETIRED (V1) — deployed on Mainnet 04.04.2026, feeExempt active; retired by owner decision on 3 October 2026",
         address: "0x974305Ab0EC905172e697271C3d7d385194EB9DF",
-        description: "Lenders follow a guided 1-5 flow: connect MetaMask, choose amount, approve IFR if needed, createOffer(amount), then verify live market status. Approval alone is not an offer; createOffer is required before borrower and market views show liquidity.",
+        description: "V1 retired by owner decision (3 October 2026): borrowing stays disabled (ifrPriceWei = 0, no activation planned or authorized) and lenders are withdrawing their offers with withdrawOffer; those IFR are not lost. No new offers are invited. No V2 is planned until a reviewed price source exists.",
         interestRate: "2% to 25% based on utilization",
         collateral: "V1 parameters: 200% initial; checkHealth emits a warning below 150%; an external caller may liquidate below 120%. V1 has no enforced 48-hour grace period.",
         currentMainnetState: "Three offers provide 52,155,440.952845656 IFR, with 0 IFR lent. Borrowing is intentionally disabled because ifrPriceWei is 0.",
