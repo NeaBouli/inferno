@@ -1091,24 +1091,24 @@ await governance.propose(
       <!-- ======================================== -->
       <!-- 10. Lock & Creator Rewards -->
       <!-- ======================================== -->
-      <h2>10. Lock &amp; Creator Rewards Mechanism</h2>
+      <h2>10. Locks and Partner Rewards</h2>
       <p>
-        When a user locks IFR for a registered builder/creator, the PartnerVault records a
-        one-time reward from the 40M Builder Ecosystem Pool:
+        A lock never earns a reward &mdash; not for the locker and not for a builder. Partner rewards from the
+        40M PartnerVault are <strong>not active</strong>: no partner is registered and no reward has been paid.
       </p>
-      <ol>
-        <li><strong>User A</strong> locks 10,000 IFR &rarr; Gold Tier</li>
-        <li><strong>Creator B</strong> is registered with <code>rewardBps = 1500</code> (15%)</li>
-        <li>PartnerVault: <code>recordLockReward(creatorB, 10000e9, userA)</code></li>
-        <li>Creator B earns: 10,000 &times; 15% = <strong>1,500 IFR</strong> from the Builder Pool</li>
-        <li>Net deflation effect: 10,000 locked &minus; 1,500 rewarded = 8,500 IFR effectively removed from circulation</li>
-        <li>Reward vesting: 1,500 IFR over 6&ndash;12 months (milestone-based)</li>
-      </ol>
+      <p>
+        Under the decided model (2026-10-03), a registered pilot partner receives IFR only for
+        <strong>verified checkout redemptions</strong>: the reward is valued in EUR, paid in IFR at the published
+        7-day TWAP at settlement, capped by a fixed per-partner budget and settled per Governance proposal
+        (<code>recordMilestone</code>), vesting over 6&ndash;12 months. The pool is never refilled.
+      </p>
 
       <div class="callout-green">
         <p>
-          <strong>Important:</strong> The reward comes from the dedicated 40M Builder Pool &mdash; not from the user's locked tokens.
-          The user's full 10,000 IFR remains locked and is fully refundable via <code>unlock()</code>.
+          <strong>Contract note:</strong> PartnerVault also contains <code>recordLockReward</code>, which would pay
+          <code>lockAmount &times; rewardBps / 10000</code> (currently 1500 bps). The project does not use this path,
+          because a lock can be opened and closed again to farm it. A user's locked IFR always stays the user's own
+          and is fully refundable via <code>unlock()</code>.
         </p>
       </div>
 
@@ -1143,7 +1143,7 @@ const locked = await ifrLock.isLocked(walletAddress, minAmount);
       <h2>12. Anti-Gaming</h2>
       <ul>
         <li><strong>No flashloan attacks:</strong> Lock is persistent (stored in contract state), not per-transaction. A flashloan cannot fake a lock status because <code>isLocked()</code> reads stored balances, not transient ones.</li>
-        <li><strong>authorizedCaller pattern:</strong> Only whitelisted addresses (set via Governance) can call <code>recordLockReward()</code>. Random contracts cannot trigger rewards.</li>
+        <li><strong>authorizedCaller pattern:</strong> Only the Governance admin or a caller whitelisted by Governance can call <code>recordLockReward()</code>; no caller is whitelisted, and project policy (model B) uses neither path.</li>
         <li><strong>Anti-double-count:</strong> <code>walletRewardClaimed[wallet][partnerId]</code> mapping ensures each wallet can only be rewarded once per builder. Re-locking after unlock does not generate a second reward.</li>
         <li><strong>Algorithmic throttle (implemented, not active on Mainnet):</strong> once Governance sets <code>ifrLock</code>, the effective reward rate decreases as more IFR is locked protocol-wide (1% &rarr; 50% lock ratio scales reward from <code>rewardBps</code> down to <code>MIN_REWARD_BPS</code>). On Mainnet <code>ifrLock</code> is unset (address(0)), so the flat <code>rewardBps</code> of 1500 applies.</li>
       </ul>

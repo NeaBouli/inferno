@@ -898,12 +898,12 @@
           </div>
           <code style="font-size:11px;color:var(--muted);word-break:break-all;">0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D</code>
           <p style="font-size:13px;color:var(--muted);margin:10px 0;">
-            40M IFR (4%) for Builder and Creator Rewards. When a user locks IFR for a builder&rsquo;s product,
-            the builder earns from this pool. Rewards vest 6&ndash;12 months. Annual cap: 4M IFR/year.
+            40M IFR (4%) for partner rewards, not active yet. Pilot partners will be paid only for verified
+            checkout redemptions, valued in EUR, within a fixed per-partner budget, vesting 6&ndash;12 months. No refill.
           </p>
           <div style="display:flex;gap:12px;font-size:12px;">
             <span style="color:#b3300b;">40M IFR</span>
-            <span style="color:var(--muted);">Cap: 4M/year</span>
+            <span style="color:var(--muted);">On-chain cap: 4M/year on lock rewards; milestones capped per partner allocation</span>
           </div>
         </div>
 
@@ -1230,16 +1230,16 @@
         <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
             <span style="background:#22c55e;color:white;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">DONE</span>
-            <strong style="font-size:13px;">feeExempt &mdash; 8 contracts</strong>
+            <strong style="font-size:13px;">feeExempt &mdash; listed protocol contracts</strong>
           </div>
-          <div style="font-size:12px;color:var(--muted);">All 8 protocol contracts are fee-exempt. Verified on-chain via 7 governance proposals.</div>
+          <div style="font-size:12px;color:var(--muted);">The vaults, reserves and fee contracts that need fee-free transfers are fee-exempt on-chain via governance proposals; CommitmentVault V2 joined via proposal #17 (executed 4 October 2026). Not every contract is exempt: Governance, BuilderRegistry and the DEX router are not. Verified list (block 26,065,893 plus #17): <a href="fee-design.html">Fee Design</a>.</div>
         </div>
         <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-            <span style="background:#22c55e;color:white;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">LIVE</span>
+            <span style="background:#22c55e;color:white;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">DONE</span>
             <strong style="font-size:13px;">Bootstrap Event</strong>
           </div>
-          <div style="font-size:12px;color:var(--muted);">Active since 07.03.2026. Vault funded with 200M IFR. Ends 05.06.2026.</div>
+          <div style="font-size:12px;color:var(--muted);">Ran 07.03.&ndash;05.06.2026 with 200M IFR. Ended 05.06.2026; finalise() executed (block 25254575), LP live on Uniswap V2. See <a href="bootstrap.html">Bootstrap</a>.</div>
         </div>
         <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
@@ -1260,21 +1260,21 @@
             <span style="background:#3b82f6;color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">PHASE 3</span>
             <strong style="font-size:13px;">CommitmentVault</strong>
           </div>
-          <div style="font-size:12px;color:var(--muted);">Voluntary token lock with 4 unlock conditions (time, price, time+price, time OR price). Contributors lock IFR in tranches tied to P0 multiples. Auto-unlock after 30 days when condition met. Prevents contributor dumping, proves commitment on-chain. Requires Bootstrap to end first (P0 calculation).</div>
+          <div style="font-size:12px;color:var(--muted);">V1 (legacy) offered four unlock conditions; its PRICE_ONLY and TIME_AND_PRICE tranches can never unlock (CV-01), while TIME_OR_PRICE tranches still unlock by their time condition. V1 receives no new locks. CommitmentVault V2 (deployed 2 October 2026, fee-exempt since proposal #17) accepts time-only locks and receives all new locks; existing V1 tranches stay listed and unlock through V1. See <a href="commitment-vault.html">CommitmentVault</a>.</div>
         </div>
         <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-            <span style="background:#3b82f6;color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">PHASE 3</span>
+            <span style="background:#6b7280;color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">RETIRED</span>
             <strong style="font-size:13px;">LendingVault</strong>
           </div>
-          <div style="font-size:12px;color:var(--muted);"><strong>Current V1:</strong> lender offers are live, but borrowing is intentionally disabled while <code>ifrPriceWei = 0</code>. V1 uses a governance-set price, emits a warning below 150%, and permits externally called liquidation below 120%; liquidation distributes ETH collateral and performs no Uniswap swap. <strong>Future design:</strong> a separately audited oracle/TWAP path with freshness, pause and cap controls is required before borrowing activation.</div>
+          <div style="font-size:12px;color:var(--muted);"><strong>V1 retired</strong> by owner decision (3 October 2026): borrowing stays disabled (<code>ifrPriceWei = 0</code>, no activation planned or authorized) and lenders are withdrawing their offers; those IFR are not lost. No V2 is planned until a reviewed price source exists. See <a href="lending-vault.html">LendingVault</a>.</div>
         </div>
         <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
             <span style="background:#3b82f6;color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">PHASE 3</span>
             <strong style="font-size:13px;">BuybackController</strong>
           </div>
-          <div style="font-size:12px;color:var(--muted);">Deployed 14.04.2026 before LP launch. The dormant controller can split native ETH between IFR buyback-to-BurnReserve and an LP attempt; it has no PartnerVault refill or overflow-routing mechanism.</div>
+          <div style="font-size:12px;color:var(--muted);">Deployed 14.04.2026 before LP launch. Since proposal #21 (executed 5 October 2026) it is the InfernoToken pool fee receiver. It can split native ETH between IFR buyback-to-BurnReserve and an LP attempt; it has no PartnerVault refill or overflow-routing mechanism.</div>
         </div>
         <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
