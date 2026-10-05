@@ -1250,6 +1250,9 @@
       canvas:not(#dist-donut) { display: none !important; } /* the distribution donut is static data, not motion */
       *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
     }
+    /* Keep each contract name clear of its address on narrow screens (T-258). */
+    .contract-row { gap: 12px; }
+    .contract-row > div:first-child { min-width: 0; }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&display=swap" rel="stylesheet">
 <script type="application/ld+json">
@@ -1708,7 +1711,7 @@
         </div>
         <!-- TODO: IFR_UPDATE — TEST_COUNT — update on each sprint -->
         <div class="stat-card">
-          <div class="stat-value">644</div>
+          <div class="stat-value">655</div>
           <div class="stat-label">Contract tests passing</div>
         </div>
       </div>
