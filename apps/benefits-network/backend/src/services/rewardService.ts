@@ -9,6 +9,8 @@ const PARTNER_VAULT_ABI = [
   'function vestedAmount(bytes32 partnerId) view returns (uint256)',
   'function walletRewardClaimed(address wallet, bytes32 partnerId) view returns (bool)',
   'function authorizedCaller(address caller) view returns (bool)',
+  'function paused() view returns (bool)',
+  'function milestoneDone(bytes32 partnerId, bytes32 milestoneId) view returns (bool)',
 ];
 
 const BUILDER_REGISTRY_ABI = [
@@ -169,4 +171,69 @@ export async function isWalletAlreadyRewarded(wallet: string, rawPartnerId: stri
   const partnerVault = new ethers.Contract(addresses.partnerVaultAddress, PARTNER_VAULT_ABI, provider);
   return (partnerVault.walletRewardClaimed(normalizeAddress(wallet), partnerId) as Promise<boolean>)
     .finally(() => provider.destroy());
+}
+
+/**
+ * Read-only PartnerVault state for a Model B settlement export (T-275): pause state, pilot partner
+ * allocation, usage of every pilot partner for the global budget and whether the milestone identity
+ * is already recorded. No transaction is built, signed or sent here.
+ */
+export async function getModelBVaultState(
+  pilotPartnerIds: string[],
+  rawPartnerId: string,
+  rawMilestoneId: string
+): Promise<{
+  chainId: number;
+  blockNumber: number;
+  blockHash: string;
+  partnerVault: string;
+  governance: string;
+  paused: boolean;
+  partner: { active: boolean; milestonesFinal: boolean; maxAllocation: bigint; unlockedTotal: bigint; rewardAccrued: bigint };
+  pilotUsage: Record<string, bigint>;
+  milestoneDone: boolean;
+}> {
+  const addresses = requireRewardConfig();
+  const partnerId = validatePartnerId(rawPartnerId);
+  const milestoneId = validatePartnerId(rawMilestoneId);
+  const pilots = pilotPartnerIds.map(validatePartnerId);
+  const provider = new ethers.JsonRpcProvider(config.RPC_URL);
+  const partnerVault = new ethers.Contract(addresses.partnerVaultAddress, PARTNER_VAULT_ABI, provider);
+  type PartnerRow = { active: boolean; milestonesFinal: boolean; maxAllocation: bigint; unlockedTotal: bigint; rewardAccrued: bigint };
+  try {
+    const block = await provider.getBlock('latest');
+    if (!block?.hash) throw new Error('Latest block is unavailable');
+    const blockTag = block.number;
+    const [network, governance, paused, partner, done, usageRows] = await Promise.all([
+      provider.getNetwork(),
+      partnerVault.admin({ blockTag }) as Promise<string>,
+      partnerVault.paused({ blockTag }) as Promise<boolean>,
+      partnerVault.partners(partnerId, { blockTag }) as Promise<PartnerRow>,
+      partnerVault.milestoneDone(partnerId, milestoneId, { blockTag }) as Promise<boolean>,
+      Promise.all(pilots.map((id) => partnerVault.partners(id, { blockTag }) as Promise<PartnerRow>)),
+    ]);
+    const pilotUsage: Record<string, bigint> = {};
+    pilots.forEach((id, index) => {
+      pilotUsage[id] = BigInt(usageRows[index].unlockedTotal) + BigInt(usageRows[index].rewardAccrued);
+    });
+    return {
+      chainId: Number(network.chainId),
+      blockNumber: block.number,
+      blockHash: block.hash,
+      partnerVault: normalizeAddress(addresses.partnerVaultAddress),
+      governance: normalizeAddress(governance),
+      paused: Boolean(paused),
+      partner: {
+        active: Boolean(partner.active),
+        milestonesFinal: Boolean(partner.milestonesFinal),
+        maxAllocation: BigInt(partner.maxAllocation),
+        unlockedTotal: BigInt(partner.unlockedTotal),
+        rewardAccrued: BigInt(partner.rewardAccrued),
+      },
+      pilotUsage,
+      milestoneDone: Boolean(done),
+    };
+  } finally {
+    provider.destroy();
+  }
 }

@@ -257,11 +257,27 @@ Decided route (Lane 4 decision B, 2026-10-03; [policy](../PARTNER_REWARDS_MODEL_
 
 `PartnerVault.recordLockReward` and an authorized caller are not used.
 
-**Release gate before the first pilot:** the Benefits backend currently marks reward events as
-blocked (`BLOCKED_CALLER`) until a reward caller is configured and authorized, and its events follow
-the lock-reward path. Model B never configures that caller, so Governance registration and a capped
-budget alone do not produce settleable events. A backend change must gate events on verified pilot
-redemptions and produce the per-period export for `recordMilestone`; it is not implemented yet.
+**Release gate before the first pilot:** the backend code path is implemented (T-275) but stays
+default-off and no pilot is active. With `MODEL_B_SETTLEMENT_ENABLED=true` and a reviewed pilot policy
+(EUR per redemption, partner budget, global pilot budget, pilot start), the admin reward queue moves
+verified post-pilot redemption events of that partner to `SETTLEMENT_PENDING` instead of
+`BLOCKED_CALLER`; older lock-path events are never reclassified. An operator-only export
+(`POST /api/admin/model-b/settlements/export`) reconciles one UTC calendar month against the
+seller-confirmed redemption total and returns event IDs with exclusion reasons, a deterministic batch
+digest and milestone ID. Only with clean reconciliation, reviewed 7-day TWAP and ETH/EUR evidence and
+passing on-chain checks does it add an unsigned `Governance.propose(PartnerVault.recordMilestone)`
+template; otherwise the export is diagnostic and has no calldata. No reviewed price evidence source
+exists yet, so every export today is diagnostic. An export or template is not a settlement or payment;
+nothing is marked settled or paid. After the security review, two cases also block the template and
+leave the export diagnostic:
+
+- a post-pilot redemption that is not a self-redemption but has no reward event (the one-per-customer
+  outbox limit, policy decision still open);
+- a month that the budget covers only partly.
+
+Remaining gates: the first pilot's recorded decision and Safe activation, and a reviewed price
+evidence source whose TWAP and ETH/EUR values are reproduced independently before execution. The
+export does not check price evidence against the chain.
 
 Do not automate PartnerVault rewards for unverified sellers.
 
@@ -669,7 +685,7 @@ or transaction state as current.
 - governance approval workflow; **seller application and admin live-verification flow deployed fail-closed; no Mainnet seller is approved yet**
 - BuilderRegistry/PartnerVault linkage; **runtime checks require aligned Governance owner/admin, active builder, active partner and matching beneficiary**
 - authorized reward caller; **read-only authorization check implemented; no signer or automated transaction path enabled**
-- reward event queue; **atomic redeem outbox plus idempotent reconciliation implemented; events remain blocked until caller authorization**
+- reward event queue; **atomic redeem outbox plus idempotent reconciliation implemented; lock-path events remain blocked until caller authorization. Model B pilot settlement mode and per-period export implemented (T-275), default-off, no pilot active; the export is not a payment**
 - PartnerVault record/claim visibility. **owner-only Seller UI reads accrued, vested and claimable state; no claim/write button**
 
 Mainnet read-only evidence on 17.07.2026 at block 25,545,631 showed BuilderRegistry count `0`,

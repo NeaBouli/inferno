@@ -1179,7 +1179,7 @@ router.post('/businesses/:id/rewards/disable', sellerRateLimiter, async (req, re
       await tx.rewardEvent.updateMany({
         where: {
           businessId: req.params.id,
-          status: { in: ['PENDING', 'READY', 'BLOCKED_CALLER', 'BLOCKED_GOVERNANCE'] },
+          status: { in: ['PENDING', 'READY', 'BLOCKED_CALLER', 'BLOCKED_GOVERNANCE', 'SETTLEMENT_PENDING'] },
         },
         data: {
           status: 'BLOCKED_GOVERNANCE',
@@ -1324,7 +1324,7 @@ router.post(
         await tx.rewardEvent.updateMany({
           where: {
             businessId: req.params.id,
-            status: { in: ['PENDING', 'READY', 'BLOCKED_CALLER', 'BLOCKED_GOVERNANCE'] },
+            status: { in: ['PENDING', 'READY', 'BLOCKED_CALLER', 'BLOCKED_GOVERNANCE', 'SETTLEMENT_PENDING'] },
           },
           data: {
             status: 'BLOCKED_GOVERNANCE',
