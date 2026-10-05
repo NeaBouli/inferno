@@ -12,6 +12,19 @@
   lock sources and discounts per benefit, and any project may verify IFR with its own rule under
   `ifr-benefits-verify/1`. Discounts are independent of PartnerVault rewards.
 
+## 3 October 2026 — PriceLockVault Built, Price Locks Disabled (Lane 2)
+
+- New `PriceLockVault` (source only, not deployed). Price conditions use a 7-day TWAP of the IFR/WETH pair;
+  spot prices are never used.
+- Every lock has a mandatory rescue time of at most 4 years; tokens always return to the locker and nobody can
+  withdraw user funds.
+- Price locks stay disabled until Governance activates them. Activation and every new lock revert unless the
+  on-chain readiness scope (pool WETH depth and/or TWAP) holds. `readiness()` exposes progress.
+- The rescue unlock makes no pair or oracle call, so a broken pair cannot block it.
+- The pair is taken from the Uniswap V2 factory for IFR and the canonical WETH, never configured directly.
+- The depth check samples two points (observation and now); this limit is documented in the specification.
+- 25 unit tests and a Mainnet-fork test. An independent review is required before any deployment.
+
 ## 3 October 2026 — Permanently Lost IFR Disclosed Everywhere (T-202)
 
 - The Landing, Transparency, Tokenomics, Press Kit, FEE_DESIGN, TRANSPARENCY.md and llms.txt now show the

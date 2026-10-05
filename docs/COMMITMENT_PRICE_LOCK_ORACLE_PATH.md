@@ -1,6 +1,8 @@
 # CommitmentVault Price-Lock Oracle Path
 
-Status: design decision needed before enabling price-based locks.
+Status: decided 2026-10-03, Option B. A dedicated PriceLockVault is built and tested but not deployed; price locks
+stay disabled until an on-chain readiness scope is met and Governance activates them
+([specification](PRICE_LOCK_VAULT_SPEC.md)).
 
 ## Current Mainnet Reality
 
