@@ -683,7 +683,6 @@
     }
 
     .protocol-card header h2 {
-      font-size: clamp(24px, 7.5vw, 30px);
       overflow-wrap: anywhere;
     }
 
@@ -1404,6 +1403,10 @@
     }
 
     @media (max-width: 680px) {
+      .protocol-card header h2 {
+        font-size: 24px; /* fixed mobile title size so the close button stays inside the card (T-263) */
+      }
+
       .shell {
         width: min(100% - 24px, 1180px);
       }
