@@ -716,7 +716,7 @@
         <li><strong>Fail closed.</strong> If the RPC or your rules cannot be read, the widget says so and shows no benefit.</li>
         <li><strong>Only what a browser can prove.</strong> Rules met through IFRLock are shown as met. Rules that also accept
         CommitmentVault time locks are shown as &ldquo;checked at checkout&rdquo; unless IFRLock already meets them.</li>
-        <li><strong>No data collected.</strong> No cookies, no tracking, no IFR server; remote text is never rendered as HTML.</li>
+        <li><strong>Data flows.</strong> No cookies and no tracking. The widget sends the connected wallet address to the configured RPC and loads your public rules from IFR Benefits (<code>data-api</code>); both providers can see connection metadata such as IP address. Remote text is never rendered as HTML.</li>
         <li>Options: <code>data-rpc</code> (your own RPC URL), <code>data-api</code> (defaults to <code>https://shop.ifrunit.tech</code>).</li>
         <li>Integrity hash: <code>sha384-TcQue2NkvC0mRfTTUBHgOwWUxmhF6ZBuLN7ez5XaCBMlRh7QbN72g8Pf9iBcYyyY</code></li>
       </ul>
@@ -735,7 +735,7 @@
       </table>
       <p><strong>Guild.xyz:</strong> add a requirement &ldquo;Contract query&rdquo; (custom contract call) with the values above and the
       condition &ldquo;greater or equal&rdquo;. <strong>Collab.Land:</strong> create a token gating rule with a custom contract call
-      (or an ERC-20-style balance check pointed at the IFRLock function above). Name the role after the tier, for example
+      using the values above. Name the role after the tier, for example
       &ldquo;IFR Silver (2,500 locked)&rdquo;. The alternative <code>isLocked(address user, uint256 minAmount)</code> returns
       <code>true</code> when at least <code>minAmount</code> is locked.</p>
 
