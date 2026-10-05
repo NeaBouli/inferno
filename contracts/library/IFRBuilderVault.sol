@@ -9,7 +9,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 /// @title IFRBuilderVault — Complete Builder Integration
 /// @notice Combines HardLock + Tier + Cooldown into a single deployable contract.
 ///         This is the RECOMMENDED integration for partners.
-///         Security Score: SAFE (85-95/100 depending on config).
+///         Builder configuration score 85-95/100 depending on config (heuristic, not audited).
 ///
 /// Usage:
 ///   1. Deploy with IFR token address + your product info

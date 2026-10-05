@@ -2,7 +2,7 @@
 
 **Status:** 🟡 PROPOSED — submitted 16.03.2026
 **Prepared:** 16.03.2026
-**Executor:** A.K. (Deployer — Governance Owner)
+**Executor:** G.M. (Deployer — Governance Owner)
 
 ## Submitted Proposals
 

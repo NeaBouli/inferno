@@ -3,7 +3,7 @@ pragma solidity ^0.8.20;
 
 /// @title CooldownModule — Anti-Gaming Cooldown
 /// @notice Prevents flash access exploitation by enforcing minimum time between actions.
-///         Default: 24h cooldown. Security Score: +20 points.
+///         Default: 24h cooldown. Builder configuration score: +20 points (heuristic).
 abstract contract CooldownModule {
     mapping(address => uint256) public lastAction;
 

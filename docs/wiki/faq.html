@@ -864,7 +864,7 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>Who are the multisig signers?</span><span class="icon">+</span></button>
-          <div class="faq-a">All three Gnosis Safes (Treasury, Community, LP Reserve) operate as <strong>3-of-5</strong> multisigs with 5 active signers (A.K., M.G., A.M., Y.K., A.P.) since 15.03.2026. Treasury Safe: <code>0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b</code>. Signer details are documented in the <a href="https://ifrunit.tech/wiki/multisig.html">Multisig Policy</a>. All multisig transactions are publicly visible on <a href="https://app.safe.global" target="_blank" rel="noopener">Safe</a>.</div>
+          <div class="faq-a">All three Gnosis Safes (Treasury, Community, LP Reserve) operate as <strong>3-of-5</strong> multisigs with 5 active signers (G.M., M.G., A.M., Y.K., A.P.) since 15.03.2026. Treasury Safe: <code>0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b</code>. Signer details are documented in the <a href="https://ifrunit.tech/wiki/multisig.html">Multisig Policy</a>. All multisig transactions are publicly visible on <a href="https://app.safe.global" target="_blank" rel="noopener">Safe</a>.</div>
         </div>
 
         <div class="faq-item">
@@ -939,7 +939,7 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>How are LP tokens locked?</span><span class="icon">+</span></button>
-          <div class="faq-a">On Mainnet, Team.Finance was not configured: <code>teamFinanceLocker</code> is the zero address and <code>lpLockId</code> is zero. The LP tokens created by <code>finalise()</code> remain in BootstrapVaultV3. That contract exposes no LP withdrawal or recovery function, so the team has no path to remove the retained LP. The vault and LP balances are publicly verifiable on Etherscan.</div>
+          <div class="faq-a">On Mainnet, Team.Finance was not configured: <code>teamFinanceLocker</code> is the zero address and <code>lpLockId</code> is zero. The LP tokens created by <code>finalise()</code> remain in BootstrapVaultV3. That contract exposes no LP withdrawal or recovery function, so the team has no path to remove the retained LP. These initial LP tokens are permanently locked. LP tokens created later by the BuybackController are sent to TreasurySafe (governed by the 3-of-5 Safe, not locked). The vault and LP balances are publicly verifiable on Etherscan.</div>
         </div>
 
         <div class="faq-item">

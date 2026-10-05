@@ -837,9 +837,9 @@
               Cannot propose or execute
             </td>
             <td>
-              Treasury Safe (3-of-5)<br>
-              <span class="address">0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b</span><br>
-              <span style="font-size:0.75rem;color:var(--muted);">Emergency cancel only &mdash; no governance power. Moved from the Deployer EOA on 3 October 2026 (block 26108062)</span>
+              TreasurySafe 3-of-5 (since 03.10.2026)<br>
+              <span class="address"><a href="https://etherscan.io/address/0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b" target="_blank">0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b</a></span><br>
+              <span style="font-size:0.75rem;color:var(--muted);">Emergency cancel only &mdash; no governance power. Moved from the deployer EOA <code>0x6b36&hellip;Fed67</code> on 3 October 2026 (block 26108062)</span>
             </td>
           </tr>
           <tr>
@@ -857,7 +857,7 @@
 
       <div class="callout callout-green">
         <p>
-          <strong>Note:</strong> The Owner role was transferred to TreasurySafe (Gnosis Safe 3-of-5) on 20.03.2026. All proposals now require 3-of-5 multisig signatures. Since 3 October 2026 the Guardian is the Treasury Safe as well (guardian migration, CWA-09); it retains only the emergency <code>cancel()</code> function &mdash; it cannot propose or execute.
+          <strong>Note:</strong> The Owner role was transferred to TreasurySafe (Gnosis Safe 3-of-5) on 20.03.2026. All proposals now require 3-of-5 multisig signatures. Since 03.10.2026 the Guardian role is also held by TreasurySafe (guardian migration, CWA-09); it retains only the emergency <code>cancel()</code> function &mdash; it cannot propose or execute. Guardian roles in IFRLock, Vesting and PartnerVault moved to TreasurySafe as well; Since 05.10.2026 (Governance proposals #19 and #20, executed at Mainnet block 26124647) the LiquidityReserve and BurnReserve guardian is TreasurySafe as well. The BuybackVault and BuybackController guardian is immutable and remains the deployer EOA (pause only). Trade-off: an emergency pause or cancel now needs 3-of-5 Safe signatures, there is no independent canceller while guardian and owner are the same Safe, and the Vesting pause has no maximum duration.
         </p>
       </div>
 
@@ -1211,8 +1211,8 @@ await governance.execute(proposalId);</code></pre>
         </tbody>
       </table>
 
-      <h3 style="margin-top:28px;" id="queued-proposals">Queued Protocol Proposals #17&ndash;#21</h3>
-      <p style="font-size:0.85rem;color:var(--muted);">Queued by the Treasury Safe (3-of-5) through the 48-hour Governance timelock. None of these is executed yet; each needs a separate Safe execution after its ETA, and the guardian can still cancel. Status was read on-chain (<code>getProposal</code>) on 03.10.2026.</p>
+      <h3 style="margin-top:28px;" id="queued-proposals">Protocol Proposals #17&ndash;#21 (executed)</h3>
+      <p style="font-size:0.85rem;color:var(--muted);">Queued by the Treasury Safe (3-of-5) through the 48-hour Governance timelock. All five were executed by the Treasury Safe after their ETA: #17 on 4 October 2026 (block 26121846), #18 on 5 October 2026 (block 26124623), #19 and #20 on 5 October 2026 (block 26124647), #21 on 5 October 2026 (block 26124660); execute transactions are linked in the proposal table above.</p>
       <table>
         <thead>
           <tr><th>#</th><th>Action</th><th>Timing</th><th>Status</th></tr>
@@ -1224,7 +1224,7 @@ await governance.execute(proposalId);</code></pre>
               <span class="address" style="font-size:11px;color:var(--muted);">Queue TX: <a href="https://etherscan.io/tx/0x6e113b6cc66a369604d46c3b4a5560f1418302de6ecc371f1217d72aeabd39bd" target="_blank" rel="noopener">0x6e113b6c&hellip;39bd</a> &middot; Block 26107450</span>
             </td>
             <td>Queued 02.10.2026 &middot; executable from 2026-10-04 21:53:11 UTC</td>
-            <td><span class="badge" style="background:#b45309;">Queued &mdash; not executed</span></td>
+            <td><span class="badge status-ok">Executed 04.10.2026</span></td>
           </tr>
           <tr>
             <td>#18</td>
@@ -1232,7 +1232,7 @@ await governance.execute(proposalId);</code></pre>
               <span class="address" style="font-size:11px;color:var(--muted);">Queue TX: <a href="https://etherscan.io/tx/0xa3a9de84f9e08eae1ced941ad7df1f372bffd3f74b3e8b40115b33182fb8914e" target="_blank" rel="noopener">0xa3a9de84&hellip;914e</a> &middot; Block 26107910</span>
             </td>
             <td>Queued 02.10.2026 &middot; executable from 2026-10-04 23:25:47 UTC</td>
-            <td><span class="badge" style="background:#b45309;">Queued &mdash; not executed</span></td>
+            <td><span class="badge status-ok">Executed 05.10.2026</span></td>
           </tr>
           <tr>
             <td>#19</td>
@@ -1240,7 +1240,7 @@ await governance.execute(proposalId);</code></pre>
               <span class="address" style="font-size:11px;color:var(--muted);">Queue TX: <a href="https://etherscan.io/tx/0xfdd90c5ef44efd617af0338fa2e95867cfa45367ac644975774e1b3fae3d394c" target="_blank" rel="noopener">0xfdd90c5e&hellip;394c</a> &middot; Block 26108062</span>
             </td>
             <td>Queued 02.10.2026 &middot; executable from 2026-10-04 23:56:11 UTC</td>
-            <td><span class="badge" style="background:#b45309;">Queued &mdash; not executed</span></td>
+            <td><span class="badge status-ok">Executed 05.10.2026</span></td>
           </tr>
           <tr>
             <td>#20</td>
@@ -1248,7 +1248,7 @@ await governance.execute(proposalId);</code></pre>
               <span class="address" style="font-size:11px;color:var(--muted);">Queue TX: <a href="https://etherscan.io/tx/0xfdd90c5ef44efd617af0338fa2e95867cfa45367ac644975774e1b3fae3d394c" target="_blank" rel="noopener">0xfdd90c5e&hellip;394c</a> &middot; Block 26108062</span>
             </td>
             <td>Queued 02.10.2026 &middot; executable from 2026-10-04 23:56:11 UTC</td>
-            <td><span class="badge" style="background:#b45309;">Queued &mdash; not executed</span></td>
+            <td><span class="badge status-ok">Executed 05.10.2026</span></td>
           </tr>
           <tr>
             <td>#21</td>
@@ -1256,7 +1256,7 @@ await governance.execute(proposalId);</code></pre>
               <span class="address" style="font-size:11px;color:var(--muted);">Queue TX: <a href="https://etherscan.io/tx/0x92b5a6fa719c3e1f1f2f21bec23d2af182d0f9d3cf08ab7d73b092387d33db9f" target="_blank" rel="noopener">0x92b5a6fa&hellip;db9f</a> &middot; Block 26108173</span>
             </td>
             <td>Queued 02.10.2026 &middot; executable from 2026-10-05 00:18:23 UTC</td>
-            <td><span class="badge" style="background:#b45309;">Queued &mdash; not executed</span></td>
+            <td><span class="badge status-ok">Executed 05.10.2026</span></td>
           </tr>
         </tbody>
       </table>

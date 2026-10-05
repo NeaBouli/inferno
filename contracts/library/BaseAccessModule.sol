@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 /// @title BaseAccessModule — Minimal IFR Access Check
 /// @notice Simplest integration: checks if wallet holds enough IFR.
 ///         No lock, no cooldown, no tier. Use for low-value features.
-///         Security Score: RISKY (soft lock — user can sell immediately after check)
+///         Builder heuristic: weak setup (soft lock — user can sell immediately after check)
 abstract contract BaseAccessModule {
     IERC20 public immutable ifrToken;
     uint256 public minRequired;

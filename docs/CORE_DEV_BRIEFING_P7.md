@@ -15,7 +15,7 @@ Every transfer from these wallets costs 3.5% in burn + fees.
 - `setFeeExempt(0x5ad6..., true)` — Treasury Safe
 - `setFeeExempt(0xaC56..., true)` — Community Safe
 
-**Executor:** A.K. (Governance Owner / Deployer)
+**Executor:** G.M. (Governance Owner / Deployer)
 **Script:** `scripts/propose_7.js`
 **Guide:** `docs/PROPOSAL_7_EXECUTION.md`
 **Calldata:** `docs/PROPOSAL_7_CALLDATA.md`
