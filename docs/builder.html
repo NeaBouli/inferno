@@ -136,7 +136,7 @@
         <div class="sc safe" id="scDisp"><div class="sn" id="scNum">90</div><div class="slbl" id="scLbl">&#x1F7E2; Strong setup</div></div>
         <ul class="sb" id="scBk"></ul>
         <div id="warns"></div>
-        <div style="font-size:11px;color:var(--dim);margin-top:10px;line-height:1.5">Configuration heuristic only &mdash; not audited, not a security audit or certification. What the repository tests check: every option combination compiles (solc 0.8.20); lock() credits the amount actually received (IFR is fee-on-transfer) and unlock() returns exactly that amount; hasAccess() reads the locked amount.</div>
+        <div style="font-size:11px;color:var(--dim);margin-top:10px;line-height:1.5">Configuration heuristic only &mdash; not audited, not a security audit or certification. What the repository tests check: every option combination compiles (solc 0.8.20); lock() credits the amount actually received (IFR is fee-on-transfer) and unlock() transfers that credited amount (IFR&rsquo;s transfer fee may apply, so the wallet can receive less unless the contract is fee-exempt); hasAccess() reads the locked amount.</div>
       </div>
       <div class="card" id="outCard">
         <div class="oh"><div class="card-title" style="margin:0">&#x1F4C4; Generated Code</div><button class="bcopy" onclick="cpAct()">Copy</button></div>

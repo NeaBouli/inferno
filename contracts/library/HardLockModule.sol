@@ -30,7 +30,7 @@ abstract contract HardLockModule is BaseAccessModule, ReentrancyGuard {
 
     /// @notice Lock IFR tokens for a minimum duration
     /// @dev Credits the measured balance delta (fee-on-transfer safe). The received
-    ///      amount, not `amount`, is stored, emitted and later returned by unlock().
+    ///      amount, not `amount`, is stored, emitted and later transferred out by unlock().
     /// @param amount Requested amount pulled via transferFrom (must be >= minRequired)
     /// @param duration Lock duration in seconds (minLockDuration..maxLockDuration)
     function lock(uint256 amount, uint256 duration) external nonReentrant {
@@ -54,7 +54,9 @@ abstract contract HardLockModule is BaseAccessModule, ReentrancyGuard {
         emit Locked(msg.sender, received, duration);
     }
 
-    /// @notice Unlock after duration expires; returns exactly the credited (received) amount
+    /// @notice Unlock after duration expires; transfers the credited (received) amount.
+    /// @dev IFR's transfer fee may apply to this outgoing transfer, so the wallet can receive
+    ///      less than the credited amount unless this contract is fee-exempt.
     function unlock() external nonReentrant {
         LockData storage l = locks[msg.sender];
         require(l.amount > 0, "Nothing locked");
