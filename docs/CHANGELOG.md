@@ -1,5 +1,25 @@
 # Changelog
 
+## 5 October 2026 — Landing Token Flow, Legend and Governance Wording Audit (T-279)
+
+- Landing token flow: the 1% pool fee now flows IFR → BuybackController (Proposal #21), FeeRouterV1 sends its
+  ETH swap fee to BuybackController, and BuybackController feeds BurnReserve and the Uniswap V2 LP. Fee split,
+  pool-fee receiver, FeeRouterV1 protocol fee and BuybackController balances are read live from Mainnet through
+  the chain-pinned read provider; every other flow value comes from the live balances read. No hardcoded current
+  value remains; a failed read shows "unavailable". Inactive or completed routes (Builder rewards, Bootstrap
+  funding, LendingVault V1) are dashed and no longer animated.
+- Distribution legend: the legacy BuybackVault is removed from the legend and the wallet cards. BurnReserve at
+  0 IFR reads "no buyback executed yet" instead of "not yet active"; Bootstrap reads "finalized 05.06.2026".
+- Dante quote: new DOCS button to the Wiki start page (44px target).
+- Wiki Fee Design: new section "Buyback and burn contracts — status and access" (roles, owner and guardian,
+  balances as of 5 October 2026, FeeRouterV1 IFR held without a direct withdrawal function).
+- Governance wording (CWA-25): landing, Wiki, README, llms.txt and Copilot knowledge no longer claim that every
+  change is timelocked. Protocol parameter changes go through Governance proposals with a 48-hour timelock; the
+  deployed Governance contract's ownership can be transferred directly by its owner, the Treasury Safe (3-of-5).
+  `test-content-trust` now rejects the blanket claims.
+- Tests: new `landing-flow-legend.spec.js` in the landing-wiki-ui suite; CWA content test replaces the pinned
+  stale flow fallbacks with a no-hardcoded-value guard.
+
 ## 5 October 2026 — Deterministic Web3 Dialog Launcher Test (T-278)
 
 - `fab-clearance.spec.js`: the Web3 withdraw-dialog case no longer races the wallet chooser. It waits for
