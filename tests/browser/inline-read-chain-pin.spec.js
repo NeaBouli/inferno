@@ -147,7 +147,8 @@ test.describe("Mainnet endpoint (0x1) renders the live fixture state", () => {
     await mockRpc(page, "0x1");
     await page.goto("/");
     await card(page, "commitment").scrollIntoViewIfNeeded();
-    await expect(card(page, "commitment").locator("[data-transparency-value]")).toHaveText("47.952M IFR", { timeout: 30000 });
+    // T-262 D2: the card shows totalLocked() minus CV-01 (47.952M - 26.418M).
+    await expect(card(page, "commitment").locator("[data-transparency-value]")).toHaveText("21.534M IFR", { timeout: 30000 });
   });
 
   test("bootstrap public stats reader", async ({ page }) => {

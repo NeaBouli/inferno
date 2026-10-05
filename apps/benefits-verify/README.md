@@ -1,6 +1,7 @@
 # ifr-benefits-verify
 
-Reference implementation of [`ifr-benefits-verify/1`](../../docs/specs/ifr-benefits-verify-1.md). It is a
+Reference implementation of [`ifr-benefits-verify/1`](../../docs/specs/ifr-benefits-verify-1.md) and
+[`ifr-benefits-verify/2`](../../docs/specs/ifr-benefits-verify-2.md). It is a
 permissionless check of a wallet's IFR lock tier at one pinned Ethereum block, read directly from the public
 IFR contracts.
 
@@ -20,9 +21,17 @@ const result = await verifyIfrBenefit({
   source: "IFRLOCK",              // or "COMMITMENT_TIME_ONLY" | "EITHER"
   // block: "latest" | 23456789n | { number: 23456789n, hash: "0x…" }
   // tiers: a newer tier file, once you decide to switch (default: tier file v1)
+  // spec: "ifr-benefits-verify/2" to also read CommitmentVault V2 (default: "ifr-benefits-verify/1")
 });
-// → { tier: "SILVER" | null, block: { number, hash }, source, tiersVersion: 1, spec, sources }
+// → { tier: "SILVER" | null, block: { number, hash }, source, tiersVersion: 1, spec, commitmentVaults, sources }
 ```
+
+- **`/1` or `/2`.** `/2` reads CommitmentVault V1 **and** V2 and sums their active TIME_ONLY tranches; `/1`
+  reads V1 only. `/1` stays the default so existing integrations keep their exact results. Move to `/2`
+  explicitly; V2 accepts new time locks since Governance proposal #17 (executed 2026-10-04). For messages, pass
+  `expected.specs: ["ifr-benefits-verify/1", "ifr-benefits-verify/2"]` during the transition and evaluate
+  with `benefitMessageSpec(parseBenefitMessage(message), specs)`; build `/2` messages with
+  `buildBenefitMessage({ …, spec: "ifr-benefits-verify/2" })`.
 
 - **A result is a fact about one block.** At redemption, call `verifyIfrBenefit` again (spec §5). Cache a
   result for at most 60 seconds, and only for the same block.
@@ -69,8 +78,9 @@ The tiers come from [`tiers.v1.json`](tiers.v1.json) (SHA-256 pinned as `TIER_FI
 
 ## Conformance vectors
 
-[`vectors/v1.json`](vectors/v1.json) holds language-neutral cases. Other implementations should reproduce
-them:
+[`vectors/v1.json`](vectors/v1.json) (`/1`) and [`vectors/v2.json`](vectors/v2.json) (`/2`: V1 only, V2 only,
+both summed, unlocked and price-conditioned tranches excluded, `EITHER` without adding IFRLock) hold
+language-neutral cases. Other implementations should reproduce them:
 
 - tier boundaries;
 - TIME_ONLY versus price-conditioned tranches;
@@ -90,6 +100,9 @@ Two further checks run against real networks:
 - `test/fork/BenefitsVerifyFork.test.js` locks, raises and unlocks against the **deployed** `IFRLock` and
   `CommitmentVault` on a Mainnet fork at block `26100144`. It also proves that price-conditioned tranches,
   which the deployed V1 vault still accepts, never count.
+- `test/fork/BenefitsVerifyV2Fork.test.js` makes a real TIME_ONLY lock in the **deployed** CommitmentVault V2
+  on a Mainnet fork (fee exemption simulated as after proposal #17) and proves `/2` counts it while `/1`
+  does not, and that V2 rejects price-conditioned locks.
 
 The workflow `benefits-verify-live.yml` runs both, weekly and on change.
 

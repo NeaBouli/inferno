@@ -24,7 +24,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "start": "tsx server/index.ts",
-    "test:rpc-failover": "tsx scripts/test-rpc-failover.ts"
+    "test:rpc-failover": "tsx scripts/test-rpc-failover.ts",
+    "test:request-guard": "tsx scripts/test-request-guard.ts"
   },
   "dependencies": {
     "@types/cors": "^2.8.19",
