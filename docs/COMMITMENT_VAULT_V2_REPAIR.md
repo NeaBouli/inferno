@@ -1,6 +1,6 @@
 # CommitmentVault V2 Repair (CV-01)
 
-**Status:** V2 deployed, not yet wired (2026-10-03). Every Mainnet step below is performed by the deployer or the
+**Status:** V2 deployed and fee-exempt since proposal #17 (executed 2026-10-04). Every Mainnet step below is performed by the deployer or the
 Safe signers, never by automation.
 
 - **V2:** `0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F`, deployed 2026-10-02 21:22:23 UTC in block 26107296, TX
@@ -9,7 +9,8 @@ Safe signers, never by automation.
   except the immutable IFR address. Etherscan source verified and Sourcify exact match.
 - **Proposal #17** `setFeeExempt(V2, true)`: queued by the Treasury Safe, TX
   `0x6e113b6cc66a369604d46c3b4a5560f1418302de6ecc371f1217d72aeabd39bd`, ETA 2026-10-04 21:53:11 UTC.
-  **Not executed:** `InfernoToken.feeExempt(V2)` stays `false` until step 4 is executed.
+  **Executed** 2026-10-04 in block 26121846, TX
+  `0xbb53640ca8fd59513c8c772a0ceb633d63d7d9837768c28535bd67da6c4a835c`; `InfernoToken.feeExempt(V2)` is `true`.
 
 ## Why
 

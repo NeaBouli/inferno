@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CommitmentVault &mdash; Inferno (IFR) Documentation</title>
   <meta name="keywords" content="CommitmentVault, token lock, conditions, P0 multiplier">
-  <meta name="description" content="Lock IFR with a time-based unlock. In V1, PRICE_ONLY and TIME_AND_PRICE locks can never unlock (CV-01); TIME_OR_PRICE still unlocks by time. Price conditions are disabled; new time locks move to V2 after Governance proposal #17.">
+  <meta name="description" content="Lock IFR with a time-based unlock. In V1, PRICE_ONLY and TIME_AND_PRICE locks can never unlock (CV-01); TIME_OR_PRICE still unlocks by time. Price conditions are disabled; new time locks go to V2, fee-exempt since Governance proposal #17.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -610,19 +610,19 @@
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Inferno Protocol">
   <meta property="og:title" content="CommitmentVault — Inferno Protocol (IFR)">
-  <meta property="og:description" content="Lock IFR with a time-based unlock. In V1, PRICE_ONLY and TIME_AND_PRICE locks can never unlock (CV-01); TIME_OR_PRICE still unlocks by time. Price conditions are disabled; new time locks move to V2 after Governance proposal #17.">
+  <meta property="og:description" content="Lock IFR with a time-based unlock. In V1, PRICE_ONLY and TIME_AND_PRICE locks can never unlock (CV-01); TIME_OR_PRICE still unlocks by time. Price conditions are disabled; new time locks go to V2, fee-exempt since Governance proposal #17.">
   <meta property="og:url" content="https://ifrunit.tech/wiki/commitment-vault.html">
   <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="CommitmentVault — Inferno Protocol (IFR)">
-  <meta name="twitter:description" content="Lock IFR with a time-based unlock. In V1, PRICE_ONLY and TIME_AND_PRICE locks can never unlock (CV-01); TIME_OR_PRICE still unlocks by time. Price conditions are disabled; new time locks move to V2 after Governance proposal #17.">
+  <meta name="twitter:description" content="Lock IFR with a time-based unlock. In V1, PRICE_ONLY and TIME_AND_PRICE locks can never unlock (CV-01); TIME_OR_PRICE still unlocks by time. Price conditions are disabled; new time locks go to V2, fee-exempt since Governance proposal #17.">
   <meta name="twitter:site" content="@IFRtoken">
   <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">  <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "TechArticle",
     "headline": "CommitmentVault",
-    "description": "Lock IFR with a time-based unlock. In V1, PRICE_ONLY and TIME_AND_PRICE locks can never unlock (CV-01); TIME_OR_PRICE still unlocks by time. Price conditions are disabled; new time locks move to V2 after Governance proposal #17.",
+    "description": "Lock IFR with a time-based unlock. In V1, PRICE_ONLY and TIME_AND_PRICE locks can never unlock (CV-01); TIME_OR_PRICE still unlocks by time. Price conditions are disabled; new time locks go to V2, fee-exempt since Governance proposal #17.",
     "url": "https://ifrunit.tech/wiki/commitment-vault.html",
     "isPartOf": {"@id": "https://ifrunit.tech/#website"},
     "publisher": {"@id": "https://ifrunit.tech/#organization"},
@@ -1036,7 +1036,7 @@
       </div>
       <div class="cv-widget cv-v2-path" id="cv-v2-path" data-v2-path>
         <strong>New time locks: CommitmentVault V2 only</strong>
-        <p>V2 (<code>0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F</code>) accepts time-only locks. It is fee-exempt since Governance proposal #17 (executed 04.10.2026, block 26121846); the lock button still enables only after the token reads feeExempt(V2) as true on-chain. No price lock is available: a separate price-lock vault is only a draft, not reviewed and not deployed.</p>
+        <p>V2 (<code>0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F</code>) accepts time-only locks. It is fee-exempt since Governance proposal #17 (executed 04.10.2026, block 26121846); the lock button still enables only after the token reads feeExempt(V2) as true on-chain. No price lock is available: a separate PriceLockVault is built and independently reviewed, but not deployed and not active; activation needs a Sepolia rehearsal and a Governance decision.</p>
       </div>
 
       <!-- Live Status Banner -->

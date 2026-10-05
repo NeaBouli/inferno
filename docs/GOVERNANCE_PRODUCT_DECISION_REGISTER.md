@@ -99,8 +99,9 @@ remains the only place where agenda items and vote outcomes are published.
 - **Testnet/staging gate:** Sepolia deployment with every condition type.
 - **Production gate:** separate recorded decision plus Safe proposal and
   48-hour timelock.
-- **Next evidence:** independent review of `PriceLockVault`; Sepolia
-  rehearsal log; readiness reaching the activation scope.
+- **Next evidence:** Sepolia rehearsal log; readiness reaching the
+  activation scope. The independent review of `PriceLockVault` is done
+  (second review T-256); the vault is not deployed and not active.
 
 ## Lane 3 — FeeRouter sink/accrual and Governance/guardian redeployment
 
