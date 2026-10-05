@@ -39,5 +39,6 @@
   <url><loc>https://ifrunit.tech/wiki/liquidity.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://ifrunit.tech/wiki/ecosystem.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url><loc>https://ifrunit.tech/wiki/open-audit.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ifrunit.tech/wiki/council-votes.html</loc><changefreq>weekly</changefreq><priority>0.6</priority></url>
   <url><loc>https://ifrunit.tech/wiki/integrate-benefits.html</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
 </urlset>
