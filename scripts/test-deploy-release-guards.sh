@@ -54,6 +54,8 @@ sed "s#script-src 'self' 'unsafe-inline';#script-src 'self' 'unsafe-inline' http
   "$ROOT/infra/web3/web3-security-headers.conf" > "$SITE/html/.nginx/web3-security-headers.conf"
 grep -q "esm.sh" "$SITE/html/.nginx/web3-security-headers.conf"
 echo "old build" > "$SITE/html/stale-only-on-host.txt"
+chmod 644 "$SITE/html/stale-only-on-host.txt"        # world-readable, as nginx needs
+ln -s stale-only-on-host.txt "$SITE/html/latest-link"  # rollback must restore symlinks as links
 cp "$SITE/nginx.conf" "$TMP/nginx.conf.orig"
 
 cat > "$FAKES/ssh" <<'EOF'
@@ -67,14 +69,37 @@ cat > "$FAKES/rsync" <<'EOF'
 #!/usr/bin/env bash
 printf 'rsync %s\n' "$*" >> "$LOG"
 [[ "$*" == *:/opt/inferno/benefits-network/* ]] && exit 0   # remote benefits tree is not modelled
-[[ "${RSYNC_FAIL:-0}" == 1 && "$*" == *-rlt* ]] && exit 23
+[[ "${RSYNC_FAIL:-0}" == 1 && "$*" == *--itemize-changes* && "$*" != *--dry-run* ]] && exit 23
+# The v1 deploy user (T-255) may write under /opt/inferno but may not set times,
+# owner, group or mode on root-owned inodes: any metadata flag on a host write fails
+# like production did on 2026-10-05 (rsync exit 23).
+dest="${@: -1}"
+if [[ "$dest" == */opt/inferno* && "$*" != *--dry-run* ]]; then
+  for a in "$@"; do
+    if [[ "$a" =~ ^-[A-Za-z]*[tagopAXUN] && "$a" != --* ]] || [[ "$a" =~ ^--(archive|times|perms|owner|group|acls|xattrs|atimes|crtimes)$ ]]; then
+      echo "rsync: [generator] failed to set times on \"$dest\": Operation not permitted (1) [fixture: v1 user, flag $a]" >&2
+      exit 23
+    fi
+  done
+fi
 args=()
 for a in "$@"; do
   a="${a#web3-test-host:}"
   [[ "$a" == /opt/inferno* ]] && a="$REMOTE$a"   # remote paths only; local ones pass through
   args+=("$a")
 done
-exec "$REAL_RSYNC" "${args[@]}"
+[[ "${RESTORE_RSYNC_FAIL:-0}" == 1 && "$*" != *--itemize-changes* ]] && exit 23   # restore sync fails
+"$REAL_RSYNC" "${args[@]}" || exit $?
+# TAMPER=content|link|perm corrupts the docroot right after a restore sync (no
+# --itemize-changes), so the rollback checks must catch it.
+if [[ -n "${TAMPER:-}" && "$*" != *--itemize-changes* ]]; then
+  d="${args[${#args[@]}-1]}"
+  case "$TAMPER" in
+    content) echo tampered >> "$d/stale-only-on-host.txt" ;;
+    link)    ln -sfn web3-sw.js "$d/latest-link" ;;
+    perm)    chmod o-r "$d/stale-only-on-host.txt" ;;
+  esac
+fi
 EOF
 cat > "$FAKES/docker" <<'EOF'
 #!/usr/bin/env bash
@@ -116,6 +141,12 @@ else
   cat "$html/$path"
 fi
 EOF
+# cat: SHORT_NGINX_CONF=1 truncates the restored nginx.conf, as a failed write would.
+cat > "$FAKES/cat" <<'EOF'
+#!/usr/bin/env bash
+if [[ "${SHORT_NGINX_CONF:-0}" == 1 && "${1:-}" == */backups/web3-site-*/nginx.conf ]]; then head -1 "$1"; exit 0; fi
+exec /bin/cat "$@"
+EOF
 chmod +x "$FAKES"/*
 
 run() { # run <expected-exit> <cmd...>
@@ -131,6 +162,18 @@ run() { # run <expected-exit> <cmd...>
   fi
 }
 assert_log() { grep -Fq -- "$1" "$LOG" || { echo "FAIL: log lacks: $1" >&2; cat "$LOG" >&2; exit 1; }; }
+# T-255: no rsync that writes a host path may carry a metadata flag (-t/-a/-g/-o/-p, ...).
+assert_content_only_rsync() {
+  local line a
+  while IFS= read -r line; do
+    [[ "$line" == *--dry-run* || "$line" != */opt/inferno* || "$line" == *benefits-network* ]] && continue
+    for a in ${line#rsync }; do
+      if [[ "$a" =~ ^-[A-Za-z]*[tagopAXUN] && "$a" != --* ]] || [[ "$a" =~ ^--(archive|times|perms|owner|group|acls|xattrs|atimes|crtimes)$ ]]; then
+        echo "FAIL: host-writing rsync carries metadata flag $a: $line" >&2; exit 1
+      fi
+    done
+  done < <(grep '^rsync ' "$LOG" || true)
+}
 refute_log() { if grep -Fq -- "$1" "$LOG"; then echo "FAIL: log has: $1" >&2; exit 1; fi; }
 # A rejected env value must stop the script before ssh, rsync, docker or curl run.
 assert_no_calls() { [[ ! -s "$LOG" ]] || { echo "FAIL: guard let calls through:" >&2; cat "$LOG" >&2; exit 1; }; }
@@ -221,6 +264,8 @@ refute_log "--delete"
 refute_log "docker compose"
 grep -Fq "ok    CSP matches infra/web3" <<< "$OUT"
 grep -Fq "verified: https://web3.ifrunit.tech serves $SHA" <<< "$OUT"
+assert_log "rsync -rl --checksum --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r --itemize-changes"
+assert_content_only_rsync
 
 # --- web3: an existing backup dir is never overwritten ---------------------------
 mkdir -p "$REMOTE/opt/inferno/backups/web3-site-29991231T235959Z"
@@ -228,7 +273,7 @@ mkdir -p "$REMOTE/opt/inferno/backups/web3-site-29991231T235959Z"
 ( PATH="$FAKES:$PATH"; date() { echo 29991231T235959Z; }; export -f date
   EXPECTED_SHA="$SHA" run 1 "$REPO/scripts/deploy-web3-site.sh" deploy
   grep -Fq "File exists" <<< "$OUT" )
-refute_log "rsync -rlt"
+refute_log "--itemize-changes"
 
 # --- web3: verify fails when the host serves something else ----------------------
 cp "$SITE/html/.nginx/web3-security-headers.conf" "$TMP/headers.ok"
@@ -248,9 +293,44 @@ run 1 "$REPO/scripts/deploy-web3-site.sh" rollback "/opt/inferno/backups/web3-si
 test ! -e "$TMP/injected" || { echo "FAIL: rollback path was executed as a command" >&2; exit 1; }
 refute_log "ssh "                                    # invalid paths never reach the host
 : > "$LOG"
-run 0 "$REPO/scripts/deploy-web3-site.sh" rollback "/opt/inferno/backups/$(basename "$first_backup")"
+first="/opt/inferno/backups/$(basename "$first_backup")"
+# T-255: content identity alone is not success; each tampered aspect fails loudly
+# and nginx is never reloaded on an unproven restore.
+for case in "content:(a) content differs from the backup" "link:(b) symlinks differ from the backup" \
+            "perm:(c) entries lost world read/traverse access"; do
+  : > "$LOG"
+  TAMPER="${case%%:*}" run 1 "$REPO/scripts/deploy-web3-site.sh" rollback "$first"
+  grep -Fq "ROLLBACK CHECK FAILED: ${case#*:}" <<< "$OUT" || { echo "FAIL: tamper ${case%%:*} not caught" >&2; echo "$OUT" >&2; exit 1; }
+  grep -Fq "rollback to $first FAILED" <<< "$OUT" || { echo "FAIL: rollback failure not reported" >&2; exit 1; }
+  refute_log "nginx -s reload"
+done
+# Content-only restore never changes modes, so a lost o+r stays lost and keeps failing.
+: > "$LOG"
+run 1 "$REPO/scripts/deploy-web3-site.sh" rollback "$first"
+grep -Fq "./stale-only-on-host.txt" <<< "$OUT" || { echo "FAIL: (c) does not name the entry" >&2; echo "$OUT" >&2; exit 1; }
+chmod o+r "$SITE/html/stale-only-on-host.txt"
+: > "$LOG"
+NGINX_T_FAIL=1 run 1 "$REPO/scripts/deploy-web3-site.sh" rollback "$first"
+grep -Fq "ROLLBACK CHECK FAILED: (d) nginx -t failed" <<< "$OUT"
+refute_log "nginx -s reload"
+: > "$LOG"
+SHORT_NGINX_CONF=1 run 1 "$REPO/scripts/deploy-web3-site.sh" rollback "$first"
+grep -Fq "ROLLBACK CHECK FAILED: (d) nginx.conf differs from the backup" <<< "$OUT"
+refute_log "nginx -t"
+# A failing restore sync is never ignored (no 'content was restored anyway').
+: > "$LOG"
+RESTORE_RSYNC_FAIL=1 run 1 "$REPO/scripts/deploy-web3-site.sh" rollback "$first"
+grep -Fq "ROLLBACK CHECK FAILED: rsync exited 23" <<< "$OUT"
+refute_log "nginx -s reload"
+: > "$LOG"
+run 0 "$REPO/scripts/deploy-web3-site.sh" rollback "$first"
+grep -Fq "restore verified: (a) content (b) symlinks (c) access (d) nginx.conf + nginx -t + reload" <<< "$OUT"
 diff -r "$TMP/site.before/html" "$SITE/html" || { echo "FAIL: rollback did not restore the docroot" >&2; exit 1; }
+[[ -L "$SITE/html/latest-link" && "$(readlink "$SITE/html/latest-link")" == stale-only-on-host.txt ]] || { echo "FAIL: symlink not restored as link" >&2; exit 1; }
+cmp -s "$SITE/nginx.conf" "$TMP/nginx.conf.orig" || { echo "FAIL: nginx.conf not restored" >&2; exit 1; }
+assert_log "rsync -rl --checksum --delete"
 assert_log "nginx -s reload"
+assert_content_only_rsync
 
 # --- benefits: env values that reach ssh and remote shell strings are allow-listed -
 : > "$LOG"
