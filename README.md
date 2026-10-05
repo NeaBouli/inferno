@@ -10,7 +10,7 @@
 
 **Contract:** [`0x77e99917Eca8539c62F509ED1193ac36580A6e7B`](https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code) | **Network:** Ethereum Mainnet | **Bootstrap:** FINALIZED ✅ June 5, 2026 | **LP Token:** [`0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0`](https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0)
 
-**[17 documented on-chain components](docs/DEPLOYMENTS.md#canonical-mainnet-component-count-17)** (14 protocol contracts + 3 Gnosis Safes) | **Full internal audits** | **Public automated test evidence** | **Independent professional third-party audit pending**
+**[18 documented on-chain components](docs/DEPLOYMENTS.md#canonical-mainnet-component-count-18)** (15 deployed protocol contracts + 3 Gnosis Safes) | **Full internal audits** | **Public automated test evidence** | **Independent professional third-party audit pending**
 
 ### Quick Links
 
@@ -74,7 +74,7 @@ Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every standard
 
 Custody figures verified on-chain at block 26,065,893; the block-pinned breakdown lives on the [transparency page](https://ifrunit.tech/wiki/transparency.html).
 
-The 1% IFR transfer-pool fee accrues to FeeRouterV1, which has no IFR withdrawal or forwarding function: these fees stay there as a de-facto sink and are not forwarded to BuybackVault or BurnReserve (at block 26,065,893 both held 0 IFR while FeeRouterV1 held 722,304.949548316 IFR). No buyback/burn flywheel is fed by the pool fee today.
+Until 5 October 2026 the 1% IFR transfer-pool fee accrued to FeeRouterV1, which has no IFR withdrawal or forwarding function: these fees stay there as a de-facto sink and are not forwarded to BuybackVault or BurnReserve (at block 26,065,893 both held 0 IFR while FeeRouterV1 held 722,304.949548316 IFR). No buyback/burn flywheel is fed by the pool fee today. Since Governance Proposal #21 (executed 5 October 2026, block 26,124,660) new pool fees go to BuybackController, where Governance can recover the IFR through `withdrawIFR`; the 734,545.074097347 IFR in FeeRouterV1 as of that block stay there.
 Team tokens: 48-month vesting, 12-month cliff. Liquidity reserve: initial lock ended 01.09.2026; staged Governance-controlled withdrawals remain unused.
 
 ## Fair Launch
@@ -98,7 +98,8 @@ with a 1-year cliff. See [Fair Launch Statement](docs/FAIR_LAUNCH.md).
 | LiquidityReserve | [`0xdc0309804803b3A105154f6073061E3185018f64`](https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64#code) |
 | BootstrapVaultV3 | [`0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141`](https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141#code) **[FINALIZED ✅ 05.06.2026]** |
 | LP Token (IFR/WETH) | [`0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0`](https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0) — retained in BootstrapVaultV3; Mainnet Team.Finance locker disabled and the vault exposes no LP withdrawal function |
-| CommitmentVault | [`0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3`](https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3#code) |
+| CommitmentVault (V1, legacy) | [`0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3`](https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3#code) — existing tranches unlock through V1 |
+| CommitmentVault V2 | [`0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F`](https://etherscan.io/address/0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F#code) — CV-01 repair, TIME_ONLY, fee-exempt since proposal #17 |
 | BuilderRegistry | [`0xdfe6636DA47F8949330697e1dC5391267CEf0EE3`](https://etherscan.io/address/0xdfe6636DA47F8949330697e1dC5391267CEf0EE3#code) |
 | LendingVault | [`0x974305Ab0EC905172e697271C3d7d385194EB9DF`](https://etherscan.io/address/0x974305Ab0EC905172e697271C3d7d385194EB9DF#code) |
 | BuybackController | [`0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c`](https://etherscan.io/address/0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c#code) |
@@ -113,8 +114,9 @@ with a 1-year cliff. See [Fair Launch Statement](docs/FAIR_LAUNCH.md).
 | LP Reserve Safe | [`0x5D93E7919a71d725054e31017eCA86B026F86C04`](https://app.safe.global/home?safe=eth:0x5D93E7919a71d725054e31017eCA86B026F86C04) |
 
 Documented threshold for all three Safes: 3-of-5 (5 active signers: A.K., M.G., A.M., Y.K., A.P.).
-The 14 protocol contracts above (LP token and deprecated BootstrapVault V1 excluded) plus these
-3 Safes form the [17 documented on-chain components](docs/DEPLOYMENTS.md#canonical-mainnet-component-count-17).
+The 15 deployed protocol contracts above (LP token and deprecated BootstrapVault V1 excluded) plus these
+3 Safes form the [18 documented on-chain components](docs/DEPLOYMENTS.md#canonical-mainnet-component-count-18).
+The count lists deployed components, not a claim that all of them are active.
 
 ## Builder Ecosystem
 
@@ -137,7 +139,7 @@ The ecosystem is open and permissionless. Any product can integrate IFR Lock.
 
 **Automated test evidence** — current exact results are recorded by CI and release preflights. The tables below preserve an older internal inventory and must not be read as a current deduplicated total.
 
-**Current canonical matrix:** contracts **655/655**, Generator Engine **30/30**,
+**Current canonical matrix:** contracts **681/681**, Generator Engine **30/30**,
 IFR SDK **36/36**, Landing/Wiki browser **26/26**, Web3 browser **45/45**.
 See [Current Functionality Status](docs/CURRENT_FUNCTIONALITY_STATUS.md) for
 scope and limitations.
@@ -185,7 +187,7 @@ All smart contracts are open source and community review is explicitly encourage
 
 - **Internal Audit:** [docs/SECURITY_AUDIT_SKYWALKER.md](docs/SECURITY_AUDIT_SKYWALKER.md) — 0 FAIL, 20 active WARN, 1 fixed, 81 PASS
 - **OKComputer Community Audit (27.07.2026):** [current finding-by-finding status](docs/community-audits/JULY_2026_REMEDIATION_REGISTER.md) · [preserved original and provenance](docs/community-audits/README.md) — 12 fixed and verified, 3 partially remediated, 1 outdated snapshot corrected, 4 governance/future-version gated, 2 accepted or monitored and 1 open actionable; not a professional third-party certification
-- **Collateral Web3 Open Audits (14.09.2026):** [seven reports and provenance](docs/community-audits/README.md) · [CWA-01…CWA-82 remediation register](docs/community-audits/CWA_REMEDIATION_REGISTER.md) · [consolidated PDF](docs/community-audits/IFR_Protocol_CWA_Consolidated_Audit_Report_2026-09-14.pdf) — 53 fixed and verified; 5 findings remain directly actionable
+- **Collateral Web3 Open Audits (14.09.2026):** [seven reports and provenance](docs/community-audits/README.md) · [CWA-01…CWA-82 remediation register](docs/community-audits/CWA_REMEDIATION_REGISTER.md) · [consolidated PDF](docs/community-audits/IFR_Protocol_CWA_Consolidated_Audit_Report_2026-09-14.pdf) — 56 fixed and verified; 5 findings remain directly actionable
 - **Submit a Finding:** [GitHub Private Vulnerability Reporting](https://github.com/NeaBouli/inferno/security/advisories/new)
 - **Security Policy:** [SECURITY.md](SECURITY.md)
 

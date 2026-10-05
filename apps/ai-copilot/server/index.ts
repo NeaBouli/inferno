@@ -299,7 +299,7 @@ function getBootstrapWelcomeText() {
 var welcomes = {
   explorer: "Welcome to IFR Copilot. &#x1f44b;\\n\\n" + surfaceHelp[surface] + "\\n\\nYou're browsing without a wallet connected to the copilot \\u2014 no problem.\\n\\n\\u2756 You can ask about:\\n\\u2022 IFR tokenomics, governance, contracts and security\\n\\u2022 " + getBootstrapWelcomeText() + "\\n\\u2022 Wallet, IFRLock, CommitmentVault and LendingVault guidance on web3.ifrunit.tech\\n\\u2022 Customer offers, #customer-pass flow, seller setup, and privacy-preserving QR checkout on shop.ifrunit.tech\\n\\n\\u2756 Connect your wallet only in the relevant Web3 or Benefits app to view live on-chain status. IFR Copilot never asks for a seed phrase or private key.\\n\\nOr just ask me anything! &#x1f525;",
   user: "Hey! &#x1f48e; Ready to help you get the most out of your IFR tokens.\\n\\nI can assist with:\\n\\u2022 Locking IFR for benefits\\n\\u2022 Understanding the canonical tiers (${ACCESS_TIER_SUMMARY})\\n\\u2022 Partner discounts \\u0026 Benefits Network\\n\\u2022 Step-by-step guides\\n\\nWallet-specific state is checked in Web3 or IFR Benefits; this chat does not receive verified wallet or lock context.",
-  dev: "Dev mode active. &#x2699;&#xfe0f;\\n\\n14 contracts + 3 Safes \\u2022 644 contract tests \\u2022 30 Generator Engine \\u2022 36 SDK\\n\\nI can help with:\\n\\u2022 Contract addresses \\u0026 ABIs\\n\\u2022 Wiki examples in ethers.js v5 and IFR SDK v0.2 in ethers v6\\n\\u2022 Governance \\u0026 Timelock\\n\\u2022 Security audit results"
+  dev: "Dev mode active. &#x2699;&#xfe0f;\\n\\n15 contracts + 3 Safes \\u2022 681 contract tests \\u2022 30 Generator Engine \\u2022 36 SDK\\n\\nI can help with:\\n\\u2022 Contract addresses \\u0026 ABIs\\n\\u2022 Wiki examples in ethers.js v5 and IFR SDK v0.2 in ethers v6\\n\\u2022 Governance \\u0026 Timelock\\n\\u2022 Security audit results"
 };
 var modeColors = { explorer: '#ff6600', user: '#9b59b6', dev: '#2ecc71' };
 
@@ -581,7 +581,7 @@ const PROTOCOL_ADDRESSES: Record<string, string> = {
   GnosisSafe: "0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b",
   CommunitySafe: "0xaC5687547B2B21d80F8fd345B51e608d476667C7",
   TeamBeneficiary: "0x04FABC52c51d1F8ced6974E7C25a34249b1E6239",
-  VoucherSigner: "0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4",
+  VoucherSigner: "0x790D99c320dafA03d83bEa152178A6523b49CA0d", // FeeRouterV1.voucherSigner since Proposal #18 (2026-10-05)
   LPReserveSafe: "0x5D93E7919a71d725054e31017eCA86B026F86C04",
   CommitmentVault: "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3",
   LendingVault: "0x974305Ab0EC905172e697271C3d7d385194EB9DF",
