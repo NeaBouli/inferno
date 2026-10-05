@@ -53,26 +53,41 @@ interface WindowLimit {
   max: number;
 }
 
-/** Sliding-window limiter over one or more windows, bounded in the number of tracked keys. */
+/**
+ * Sliding-window limiter over one or more windows, bounded in the number of tracked keys. At capacity,
+ * expired keys are reclaimed first; a live key is never discarded to admit an unseen key, so such keys
+ * are denied with `AT_CAPACITY` (fail-closed) until a key expires. Existing keys keep their windows.
+ */
 export class SlidingWindowLimiter {
+  /** `hit` result for an unseen key refused because every tracked key is still live. */
+  static readonly AT_CAPACITY = -2;
+
   private readonly hits = new Map<string, number[]>();
   private readonly longestWindow: number;
+  // Lower bound on the earliest moment any tracked key becomes reclaimable.
+  private nextExpiry = Infinity;
 
   constructor(private readonly limits: WindowLimit[], private readonly maxKeys = 50_000) {
     if (limits.length === 0) throw new Error("at least one window is required");
     this.longestWindow = Math.max(...limits.map((l) => l.windowMs));
   }
 
-  /** Records a hit and returns true, or returns false without recording when any window is full. */
+  /** Records a hit and returns true, or returns false without recording when any window is full or at capacity. */
   check(key: string, now = Date.now()): boolean {
     return this.hit(key, now) === -1;
   }
 
   /**
-   * Records a hit and returns -1, or returns the index of the first full window without recording.
+   * Records a hit and returns -1, returns the index of the first full window without recording,
+   * or returns `AT_CAPACITY` for an unseen key when no tracked key can be reclaimed.
    */
   hit(key: string, now = Date.now()): number {
-    const recent = (this.hits.get(key) || []).filter((t) => now - t < this.longestWindow);
+    const stored = this.hits.get(key);
+    if (!stored && this.hits.size >= this.maxKeys) {
+      if (now >= this.nextExpiry) this.reclaim(now);
+      if (this.hits.size >= this.maxKeys) return SlidingWindowLimiter.AT_CAPACITY;
+    }
+    const recent = (stored || []).filter((t) => now - t < this.longestWindow);
     let full = -1;
     for (const [index, { windowMs, max }] of this.limits.entries()) {
       if (recent.filter((t) => now - t < windowMs).length >= max) {
@@ -81,9 +96,8 @@ export class SlidingWindowLimiter {
       }
     }
     if (full === -1) recent.push(now);
-    this.hits.delete(key);
     this.hits.set(key, recent);
-    this.evict(now);
+    this.nextExpiry = Math.min(this.nextExpiry, this.expiry(recent, now));
     return full;
   }
 
@@ -91,17 +105,30 @@ export class SlidingWindowLimiter {
     return this.hits.size;
   }
 
-  private evict(now: number): void {
-    if (this.hits.size <= this.maxKeys) return;
-    for (const [key, times] of this.hits) {
-      if (times.every((t) => now - t >= this.longestWindow)) this.hits.delete(key);
-    }
-    // Still over the bound: drop the least recently used keys (Map keeps insertion order).
-    for (const key of this.hits.keys()) {
-      if (this.hits.size <= this.maxKeys) break;
-      this.hits.delete(key);
-    }
+  private expiry(times: number[], now: number): number {
+    return times.length > 0 ? times[times.length - 1] + this.longestWindow : now;
   }
+
+  private reclaim(now: number): void {
+    let next = Infinity;
+    for (const [key, times] of this.hits) {
+      const expiresAt = this.expiry(times, now);
+      if (expiresAt <= now) this.hits.delete(key);
+      else next = Math.min(next, expiresAt);
+    }
+    this.nextExpiry = next;
+  }
+}
+
+/**
+ * Chat reply for a `SlidingWindowLimiter.hit` result over the [minute, hour] chat windows: null only
+ * when the hit was admitted; every other result, including `AT_CAPACITY`, is a denial message.
+ */
+export function chatRateLimitMessage(full: number): string | null {
+  if (full === -1) return null;
+  if (full === 0) return "Slow down! Max 5 messages per minute.";
+  if (full === 1) return "Too many requests. Please try again in an hour.";
+  return "The assistant is busy right now. Please try again in a few minutes.";
 }
 
 /** Express middleware: per-client-IP limit with a JSON 429 response. */

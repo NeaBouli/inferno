@@ -6,45 +6,47 @@ interface RateBucket {
   resetAt: number;
 }
 
-/** Fixed-window counters, bounded in the number of tracked keys (oldest-first eviction). */
+/**
+ * Fixed-window counters, bounded in the number of tracked keys. At capacity, expired windows are
+ * reclaimed first; a live window is never discarded to admit an unseen key, so such keys are
+ * denied (fail-closed) until a window expires. Existing keys keep their windows and limits.
+ */
 export class FixedWindowBuckets {
   private readonly buckets = new Map<string, RateBucket>();
+  // Lower bound on the earliest `resetAt` in the map: no window can be reclaimed before it.
+  private nextExpiry = Infinity;
 
   constructor(private readonly maxKeys = 50_000) {}
 
-  /** Counts a hit and returns true, or returns false when the key's window is full. */
+  /** Counts a hit and returns true, or returns false when the key's window is full or the map is at capacity. */
   check(key: string, maxCount: number, windowMs: number, now = Date.now()): boolean {
     const bucket = this.buckets.get(key);
-    if (!bucket || bucket.resetAt <= now) {
-      this.buckets.delete(key);
-      this.buckets.set(key, { count: 1, resetAt: now + windowMs });
-      this.evict(now);
+    if (bucket && bucket.resetAt > now) {
+      if (bucket.count >= maxCount) return false;
+      bucket.count++;
       return true;
     }
-    if (bucket.count >= maxCount) return false;
-    bucket.count++;
+    if (!bucket && this.buckets.size >= this.maxKeys) {
+      if (now >= this.nextExpiry) this.cleanup(now);
+      if (this.buckets.size >= this.maxKeys) return false;
+    }
+    this.buckets.set(key, { count: 1, resetAt: now + windowMs });
+    this.nextExpiry = Math.min(this.nextExpiry, now + windowMs);
     return true;
   }
 
   /** Drops expired windows. */
   cleanup(now = Date.now()): void {
+    let next = Infinity;
     for (const [key, bucket] of this.buckets) {
       if (bucket.resetAt <= now) this.buckets.delete(key);
+      else next = Math.min(next, bucket.resetAt);
     }
+    this.nextExpiry = next;
   }
 
   get size(): number {
     return this.buckets.size;
-  }
-
-  private evict(now: number): void {
-    if (this.buckets.size <= this.maxKeys) return;
-    this.cleanup(now);
-    // Still over the bound: drop the oldest windows first (Map keeps insertion order).
-    for (const key of this.buckets.keys()) {
-      if (this.buckets.size <= this.maxKeys) break;
-      this.buckets.delete(key);
-    }
   }
 }
 

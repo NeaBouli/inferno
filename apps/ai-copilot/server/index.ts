@@ -33,6 +33,7 @@ import {
   Semaphore,
   SingleFlightCache,
   SlidingWindowLimiter,
+  chatRateLimitMessage,
   TRUSTED_PROXY_HOPS,
   clientIp as resolveClientIp,
   ipRateLimit,
@@ -75,10 +76,7 @@ const globalChatLimiter = new SlidingWindowLimiter([
 ]);
 
 function checkRateLimit(key: string): string | null {
-  const full = chatClientLimiter.hit(key);
-  if (full === 0) return "Slow down! Max 5 messages per minute.";
-  if (full === 1) return "Too many requests. Please try again in an hour.";
-  return null;
+  return chatRateLimitMessage(chatClientLimiter.hit(key));
 }
 
 // ── CWA-12: Aggregate daily cost budget (fail-closed, integer micro-USD) ──

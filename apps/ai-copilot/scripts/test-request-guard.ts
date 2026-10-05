@@ -7,6 +7,7 @@ import {
   SingleFlightCache,
   SlidingWindowLimiter,
   TRUSTED_PROXY_HOPS,
+  chatRateLimitMessage,
   clientIp,
   ipRateLimit,
   positiveIntEnv,
@@ -120,15 +121,33 @@ assert.throws(() => positiveIntEnv("X", 7, { X: "1e3" }), /positive integer/);
   assert.equal(limiter.hit("a", 3_000), 1, "long window full");
 }
 
-// ── Map bound evicts oldest keys first ──
+// ── Map bound is fail-closed: live keys are never evicted to admit unseen keys ──
 {
-  const bounded = new SlidingWindowLimiter([{ windowMs: 60_000, max: 1 }], 2);
-  bounded.check("old", 0);
-  bounded.check("mid", 1);
-  bounded.check("new", 2);
-  assert.equal(bounded.size, 2);
-  assert.equal(bounded.check("old", 3), true, "oldest key was evicted (fresh budget)");
-  assert.equal(bounded.check("new", 4), false, "newest key survived eviction");
+  const AT_CAPACITY = SlidingWindowLimiter.AT_CAPACITY;
+  const limiter = new SlidingWindowLimiter([{ windowMs: 1_000, max: 1 }, { windowMs: 10_000, max: 2 }], 2);
+  assert.equal(limiter.hit("exhausted", 0), -1);
+  assert.equal(limiter.hit("exhausted", 1_000), -1);
+  assert.equal(limiter.hit("normal", 1_000), -1);
+  for (let i = 0; i < 20; i++) {
+    assert.equal(limiter.hit(`churn${i}`, 1_100 + i), AT_CAPACITY, "unseen client refused at saturation");
+    assert.ok(limiter.size <= 2, "tracked keys never exceed the cap");
+  }
+  assert.equal(limiter.check("churn0", 1_200), false, "capacity refusal is a denial");
+  assert.equal(limiter.hit("exhausted", 2_000), 1, "exhausted client stays blocked after key churn");
+  assert.equal(limiter.hit("normal", 2_100), -1, "existing non-exhausted client is admitted");
+  assert.equal(limiter.hit("normal", 2_200), 0, "existing client keeps its short-window limit");
+  assert.equal(limiter.hit("exhausted", 9_999), 1, "long-window budget is not reset");
+  assert.equal(limiter.hit("unseen", 10_999), AT_CAPACITY, "no key reclaimable before expiry");
+  assert.equal(limiter.hit("unseen", 11_000), -1, "expiry admits an unseen client again");
+  assert.equal(limiter.size, 2);
+  assert.equal(limiter.hit("normal", 11_001), -1, "surviving client keeps its own window");
+  assert.equal(limiter.hit("normal", 11_002), 0, "surviving client keeps its short-window limit");
+
+  assert.equal(chatRateLimitMessage(-1), null, "admitted chat hit");
+  assert.equal(chatRateLimitMessage(0), "Slow down! Max 5 messages per minute.");
+  assert.equal(chatRateLimitMessage(1), "Too many requests. Please try again in an hour.");
+  assert.ok(chatRateLimitMessage(AT_CAPACITY), "chat capacity refusal is never a successful hit");
+
   const prefersExpired = new SlidingWindowLimiter([{ windowMs: 1_000, max: 1 }], 2);
   prefersExpired.check("active", 5_000);
   prefersExpired.check("expired", 0);

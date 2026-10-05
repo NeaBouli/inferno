@@ -479,13 +479,21 @@ async function run() {
     );
     assert(rateLimitKey("unknown") === "unknown", "non-IP values pass through");
 
+    // Bounded map is fail-closed: a live window is never discarded to admit an unseen key.
     const bounded = new FixedWindowBuckets(2);
-    bounded.check("old", 1, 60_000, 0);
-    bounded.check("mid", 1, 60_000, 1);
-    bounded.check("new", 1, 60_000, 2);
-    assert(bounded.size === 2, "bucket map is bounded");
-    assert(bounded.check("old", 1, 60_000, 3), "oldest bucket evicted first (fresh budget)");
-    assert(!bounded.check("new", 1, 60_000, 4), "newest bucket survives eviction");
+    assert(bounded.check("exhausted", 1, 3_600_000, 0), "first hit admitted");
+    assert(bounded.check("normal", 2, 60_000, 1), "second key admitted");
+    for (let i = 0; i < 20; i++) {
+      assert(!bounded.check(`churn${i}`, 5, 60_000, 10 + i), "unseen key refused at saturation");
+      assert(bounded.size <= 2, "bucket map never exceeds the cap");
+    }
+    assert(!bounded.check("exhausted", 1, 3_600_000, 100), "exhausted client stays blocked after key churn");
+    assert(bounded.check("normal", 2, 60_000, 101), "existing non-exhausted client is admitted");
+    assert(!bounded.check("normal", 2, 60_000, 102), "existing client keeps its limit");
+    assert(!bounded.check("unseen", 5, 60_000, 60_000), "no window reclaimable before expiry");
+    assert(bounded.check("unseen", 5, 60_000, 60_001), "expiry admits an unseen key again");
+    assert(bounded.size === 2, "bucket map stays at the cap");
+    assert(!bounded.check("exhausted", 1, 3_600_000, 3_599_999), "long-window budget is not reset");
     const prefersExpired = new FixedWindowBuckets(2);
     prefersExpired.check("active", 1, 60_000, 0);
     prefersExpired.check("expired", 1, 10, 1);
