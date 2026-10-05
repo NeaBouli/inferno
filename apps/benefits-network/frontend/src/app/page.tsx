@@ -145,7 +145,7 @@ const sellerCategories = [
   'Digital access',
   'Events',
   'Local services',
-  'Creator rewards',
+  'Creators and communities',
 ];
 
 const walletOnboardingSteps = [

@@ -120,15 +120,18 @@ function inspect(page) {
     if (box(card).right > viewport + 0.5) problems.push(`seller card ends at ${Math.round(box(card).right)}px past the viewport`);
     if (workspace.scrollWidth > workspace.clientWidth) problems.push(`seller workspace content is ${workspace.scrollWidth - workspace.clientWidth}px wider than the workspace`);
 
-    // The long reward paragraph must be fully readable: inside the viewport and not cut by any ancestor.
-    const rewards = document.querySelector('#seller-rewards p.text-sm');
-    if (!rewards || !/Creating a seller profile never enables rewards/.test(rewards.textContent)) {
-      problems.push('reward paragraph not rendered');
-    } else {
-      const r = box(rewards);
-      if (r.left < -0.5 || r.right > viewport + 0.5) problems.push(`reward paragraph spans ${Math.round(r.left)}-${Math.round(r.right)}px outside the viewport`);
-      const cut = clips(rewards);
-      if (cut) problems.push(`reward paragraph is clipped by ${name(cut)}`);
+    // The reward paragraphs (opt-in rules and the reward model) must be fully readable:
+    // inside the viewport and not cut by any ancestor.
+    const rewardTexts = [...document.querySelectorAll('#seller-rewards p.text-sm')];
+    const rewardText = rewardTexts.map((p) => p.textContent).join(' ');
+    if (!/Creating a seller profile never enables rewards/.test(rewardText) || !/Reward model:/.test(rewardText)) {
+      problems.push('reward paragraphs not rendered');
+    }
+    for (const paragraph of rewardTexts) {
+      const r = box(paragraph);
+      if (r.left < -0.5 || r.right > viewport + 0.5) problems.push(`reward paragraph ${name(paragraph)} spans ${Math.round(r.left)}-${Math.round(r.right)}px outside the viewport`);
+      const cut = clips(paragraph);
+      if (cut) problems.push(`reward paragraph ${name(paragraph)} is clipped by ${name(cut)}`);
     }
 
     // Controls and text in the card stay inside the workspace. Task chips may scroll inside the nav only.
@@ -193,15 +196,14 @@ async function run() {
             window.scrollTo({ top: Math.max(0, nav.getBoundingClientRect().top + window.scrollY - 330), behavior: 'instant' });
           });
           await page.screenshot({ path: path.join(shotDir, `seller-workspace-${state}-${width}.png`) });
-          await page.locator('#seller-rewards').scrollIntoViewIfNeeded();
-          await page.screenshot({ path: path.join(shotDir, `seller-rewards-${state}-${width}.png`) });
+          await page.locator('#seller-rewards').screenshot({ path: path.join(shotDir, `seller-rewards-${state}-${width}.png`) });
         }
         if (problems.length) failures.push(`${state} @ ${width}px:\n  - ${problems.join('\n  - ')}`);
         await context.close();
       }
     }
     assert.deepEqual(failures, [], `Seller workspace does not fit:\n${failures.join('\n')}`);
-    console.log(`[benefits-seller-layout] PASS - seller workspace, task bar and reward paragraph fit at ${WIDTHS.join('/')}px (${Object.keys(STATES).join(', ')})`);
+    console.log(`[benefits-seller-layout] PASS - seller workspace, task bar and reward paragraphs fit at ${WIDTHS.join('/')}px (${Object.keys(STATES).join(', ')})`);
   } catch (error) {
     if (!(error instanceof assert.AssertionError) && serverOutput.length) console.error(serverOutput.join('').slice(-4000));
     throw error;

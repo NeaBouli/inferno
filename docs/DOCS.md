@@ -196,7 +196,7 @@ inferno/
 ### 8. PartnerVault -- [x] DONE
 - **Path:** `contracts/partner/PartnerVault.sol`
 - **Tests:** 95 (PartnerVault.test.js)
-- **Description:** Builder Ecosystem Pool (40M IFR) with Milestone-Unlocking + Lock-triggered Creator Rewards
+- **Description:** Builder Ecosystem Pool (40M IFR) with Milestone-Unlocking and a lock-reward path; project policy (model B, 2026-10-03) uses only capped milestone settlements for verified checkout redemptions, rewards not active
 - **Features:** createPartner, activatePartner, recordMilestone, recordLockReward (lockAmount x effectiveBps, wallet), claim (linear vesting with cliff), finalizeMilestones, SafeERC20, ReentrancyGuard, Pausable, Guardian Auth, Governance-controlled parameters (rewardBps 5-25%, annualEmissionCap, partnerCap) with min/max bounds, Annual Cap Reset, authorizedCaller Whitelist, Anti-Double-Count (wallet->partner), Algo Emission Throttle (lockRatio-based BPS scaling via IIFRLock)
 - **Mainnet:** rewardBps=1500 (15%), annualCap=4M IFR, `ifrLock` unset (address(0), algorithmic throttle inactive; flat rewardBps applies), Address: `0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D`
 - **CRITICAL:** feeExempt MUST be set BEFORE the 40M transfer (Sepolia lesson: 1.4M IFR fee loss)

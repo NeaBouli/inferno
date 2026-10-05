@@ -2903,7 +2903,7 @@ export function SellerRuleBuilder() {
         </button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 [&_input]:min-w-0 [&_select]:min-w-0">
         <label className="grid gap-2 text-sm font-semibold text-stone-200 md:col-span-2">
           Catalog binding
           <select

@@ -107,9 +107,11 @@ function appsKnowledgeHasStaleSupply(content) {
 
 assert.ok(
   read("docs/web3/index.html").includes(
-    "Borrowing is disabled until Governance sets LendingVault ifrPriceWei."
+    "Borrowing is permanently disabled: LendingVault V1 is retired by owner decision (3 October 2026), regardless of ifrPriceWei. Existing loans can still be repaid or topped up."
   ),
-  "Web3 must fail closed when LendingVault price is zero"
+  // T-273: owner decision retired LendingVault V1; the stricter pin requires new borrowing to stay
+  // blocked regardless of ifrPriceWei (previously only while the price was zero).
+  "Web3 must block new LendingVault borrowing permanently (V1 retired), regardless of price"
 );
 assert.ok(
   read("docs/web3/index.html").includes(
