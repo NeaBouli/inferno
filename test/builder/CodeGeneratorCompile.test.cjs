@@ -68,6 +68,9 @@ for (const { name, cfg } of combos) {
   assert.doesNotMatch(code, /@ifr\//, `${name}: no unresolvable @ifr imports`);
   assert.doesNotMatch(code, /\b\d+(?:\.\d+)?e[+-]?\d+\b/, `${name}: amounts must not use exponent notation`);
   assert.doesNotMatch(code, /Security: (SAFE|MEDIUM|RISKY)/, `${name}: heuristic label must not read as a security verdict`);
+  // Fee-on-transfer: deposits go only through the inherited HardLockModule.lock() (balance-delta credit).
+  assert.doesNotMatch(code, /transferFrom/, `${name}: generated contract must not add its own transferFrom deposit path`);
+  assert.ok(generated.deployGuide.includes("lock() credits only the amount that arrives"), `${name}: guide explains fee-on-transfer lock accounting`);
   const { errors, contracts } = compile(generated.contractName, code);
   assert.deepEqual(errors, [], `${name}: must compile\n${errors.join("\n")}`);
   assert.deepEqual(contracts, [generated.contractName], `${name}: exactly the generated contract, nothing injected`);
@@ -79,6 +82,15 @@ for (const { productName, contractName } of NAME_CASES) {
   assert.ok(generated.contractCode.includes(`// Product: ${productName}\n`), `name ${productName}: readable name kept in the header`);
   assert.ok(generated.deployGuide.includes(`contracts/${contractName}.sol`), `name ${productName}: deploy guide file name`);
 }
+const hardLockSource = librarySources["contracts/library/HardLockModule.sol"].content;
+for (const needle of [
+  "uint256 balanceBefore = ifrToken.balanceOf(address(this));",
+  "ifrToken.safeTransferFrom(msg.sender, address(this), amount);",
+  "uint256 received = ifrToken.balanceOf(address(this)) - balanceBefore;",
+  'require(received > 0, "Nothing received");',
+  "amount: received,",
+  "emit Locked(msg.sender, received, duration);",
+]) assert.ok(hardLockSource.includes(needle), `HardLockModule.lock must credit the measured balance delta (missing: ${needle})`);
 const huge = generateCode(combos.find((c) => c.name === "huge-amount").cfg).contractCode;
 assert.match(huge, /1000000000000000000000\) \/\/ 1000000000000 IFR/, "exact 9-decimal base units for large amounts");
 console.log(`[builder-engine-compile] PASS - ${compiled} engine combinations compile with solc ${solc.version().split("+")[0]}`);

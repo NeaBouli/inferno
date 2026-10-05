@@ -196,6 +196,9 @@ scripts/deploy.js).
 
 ## 3. Test
 Lock ${config.minAmount} IFR → hasAccess(wallet) = true
+IFR is fee-on-transfer: lock() credits only the amount that arrives.
+Until the contract is fee-exempt (step 5), lock enough that the net
+amount after the transfer fee still reaches the minimum.
 
 ## 4. Submit BuilderRegistry
 https://github.com/NeaBouli/inferno/issues/new?labels=builder-registry
