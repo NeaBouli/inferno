@@ -1,5 +1,25 @@
 # Changelog
 
+## 5 October 2026 — Partner Rewards Model B Settlement Export, Default-Off (T-275)
+
+- Benefits backend: a default-off Model B pilot policy (`MODEL_B_SETTLEMENT_ENABLED`,
+  `MODEL_B_PILOT_POLICY_JSON`) binds EUR per redemption, partner budget, global pilot budget and pilot
+  start. A configured lock-reward caller disables it.
+- For a pilot partner the admin reward queue marks verified post-pilot redemption events
+  `SETTLEMENT_PENDING` instead of `BLOCKED_CALLER`. Pre-pilot and lock-path events are never
+  reclassified; seller opt-out or a changed reward wallet blocks them again.
+- New operator-only `POST /api/admin/model-b/settlements/export` (existing admin auth). It reconciles a
+  UTC calendar month (half-open) against the seller-confirmed total, excludes self-redemptions,
+  unconfirmed, unauthorized and replayed confirmations, and returns event IDs with reasons, a
+  deterministic batch digest and milestone ID. It writes no reward state and stores no new personal data.
+- Only with clean reconciliation, reviewed 7-day IFR/WETH TWAP and ETH/EUR evidence and passing
+  PartnerVault checks (not paused, active, milestone not recorded, partner and global budgets) does it
+  add an unsigned `Governance.propose(PartnerVault.recordMilestone)` template. Amounts use exact EUR
+  minor units and IFR base units with floor rounding. No reviewed price source exists yet, so exports
+  are diagnostic only.
+- An export or template is not a settlement or payment. No pilot is active, nothing is signed or
+  submitted, and an independent security review is pending.
+
 ## 5 October 2026 — Benefits Seller Workspace Fits Phones (T-277)
 
 - With a loaded seller profile, the seller task bar no longer widens the seller workspace past a

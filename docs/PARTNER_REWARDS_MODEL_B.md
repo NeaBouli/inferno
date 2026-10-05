@@ -83,10 +83,12 @@ a separate decision and needs an independent review before deployment.
 
 ## Known Follow-Up
 
-The Benefits backend reward queue currently marks an event `READY` only when an authorized reward caller
-is configured (`BLOCKED_CALLER` otherwise). Model B uses no caller, so before the first pilot the queue
-needs a settlement mode that exports verified redemption events per period for the `recordMilestone`
-proposal. Rewards stay disabled until then.
+The Benefits backend settlement mode is implemented (T-275) and default-off: for a configured pilot
+partner the reward queue marks verified post-pilot redemption events `SETTLEMENT_PENDING` instead of
+`BLOCKED_CALLER`, and an operator-only monthly export reconciles them and, only with reviewed price
+evidence, adds an unsigned `recordMilestone` proposal template. No pilot is active and no reviewed
+price evidence source exists yet, so rewards stay disabled. The existing outbox records at most one
+reward event per customer wallet and partner; lifting that needs a separate reviewed migration.
 
 ## Activation Checklist per Pilot Partner
 
