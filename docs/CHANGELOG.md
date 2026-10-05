@@ -33,6 +33,28 @@
 - The retired notes in the lending-vault Lender and Borrower tabs and the refusal messages use readable
   (WCAG AA) colours on the light skin.
 
+## 5 October 2026 — Web3: LendingVault V1 Retired, Withdraw Only (T-273)
+
+- LendingVault V1 retired by owner decision (3 October 2026): borrowing stays disabled (`ifrPriceWei = 0`,
+  no activation planned or authorized) and lenders are withdrawing their offers; those IFR are not lost.
+  No V2 is planned until a reviewed price source exists.
+- `docs/web3/`: the three "Create offer" entry points (hero panel, Users tab, audience action table) now
+  read "Withdraw offer"; the `?action=lending-offer` route opens the same withdraw dialog. The dialog shows
+  the retired note, hides the deposit button and refuses the create/increase path before any wallet call
+  (no approve, no `createOffer`/`increaseOffer`; both were removed from the page ABI). `withdrawOffer`
+  stays, and "Use available" fills the full available amount (full withdrawal closes the offer).
+- New borrowing is blocked permanently, regardless of `ifrPriceWei`: the borrow submit and "Use offer max"
+  controls are hidden and disabled, the handler refuses before any wallet call (no approve, no collateral,
+  no `borrow`), and the price shows "Disabled". The entry points read "Loans (borrowing closed)";
+  existing-loan repay and top-up stay. `scripts/test-functionality-status.cjs` now pins the permanent
+  wording instead of the old "until Governance sets ifrPriceWei" text (owner decision, stricter pin).
+- The lending dialog status line no longer shares its selector with the note, so status updates land in
+  the status line again.
+- `tests/browser/web3-write.spec.js`: the `lending-create` send assertion is replaced by assertions that
+  the create path sends no transaction and shows the retired notice, plus a full-amount `withdrawOffer`
+  send. New test: with a mocked `ifrPriceWei > 0` borrowing stays blocked and a forced click sends no
+  transaction.
+
 ## 5 October 2026 — Copilot Builder API: Configuration Score Wording (T-272)
 
 - `POST /api/builder/generate` (copilot server) now returns the same wording as the Builder page:
@@ -96,6 +118,17 @@
 - Open ballots run through the Etherscan verified-signature procedure. Secret ballots are in planning as a
   separate milestone.
 - Status: CV-01 open (2 of 3 YES; one abstention unverified, not counted), EX-01 approved on 4 October 2026 (3 YES), EX-02 open (no option vote yet). No deadline.
+
+## 3 October 2026 — Partner Rewards Model B (Lane 4)
+
+- Decision recorded: partner rewards are valued in EUR and paid in IFR only for verified checkout
+  redemptions at registered pilot partners, within a fixed per-partner budget, settled per Governance
+  `recordMilestone` proposal. No lock-percentage reward, no authorized caller, no refill.
+- Rewards remain inactive (0 partners, 0 rewarded). Policy: `docs/PARTNER_REWARDS_MODEL_B.md`.
+- Landing, Web3 page, wiki (integration, tokenomics, lock mechanism, FAQ, one-pager, press kit, protocol
+  plan, wallet guide, transparency, fair launch, contracts, business onboarding), Benefits seller copy,
+  Copilot knowledge, README and docs no longer promise lock-triggered creator rewards, a "revenue share"
+  of lock fees or a "10–20%" reward rate.
 
 ## 3 October 2026 — PriceLockVault Built, Price Locks Disabled (Lane 2)
 

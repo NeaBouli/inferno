@@ -130,16 +130,15 @@ export function getIFRKnowledge() {
         "review protected recent sessions and masked local CSV"
       ],
       security: "Customer-initiated flow: the pass is created from shop.ifrunit.tech/#customer-pass and its QR contains only an opaque, short-lived shop.ifrunit.tech/p/:passId URL; it exposes no wallet, lock, signature, control token, rule, or internal session ID. The seller selects one exact rule, and the customer confirms the exact seller, product, discount, and IFRLock threshold in the original tab before one-time redeem. Seller-issued flow remains compatible and uses a short-lived shop.ifrunit.tech/r/:sessionId URL. Authoritative seller, rule, nonce, expiry, signature, and lock state stay server-side. Public proof-link polling is non-cacheable and never returns the recovered customer address, exact lock amount, or detailed rejection reason. The signing customer receives their own details in the direct attest response; seller operational details remain owner-wallet protected. Camera and selected QR images are decoded locally. My benefits uses a separate single-use read-only signature and a ten-minute access token held only in browser memory; it cannot move tokens and returns only the signer's history. The app never asks for a seed phrase or private key.",
-      rewards: "The verified seller reward foundation is fail-closed. PartnerVault rewards are not active for an unregistered seller and require governance registration plus an authorized reward caller.",
+      rewards: "Seller rewards are not active. The decided model pays pilot partners only for verified checkout redemptions within a fixed budget, activated per pilot by a Governance proposal.",
       docs: "https://ifrunit.tech/wiki/business-onboarding.html"
     },
     partnerRewards: {
-      rewardBps: 1500,
-      policyTarget: "10-20%",
-      hardBounds: "5-25%",
-      annualCap: "4M IFR default",
-      annualBounds: "1-10M IFR",
-      vesting: "6-12 months"
+      status: "As of 5 October 2026: not active (no partner registered, no reward paid, no authorized caller set). This is a dated snapshot without a live chain read; check https://ifrunit.tech/wiki/transparency.html or PartnerVault on Etherscan for the current state.",
+      model: "Decided 2026-10-03 (model B): IFR only for verified checkout redemptions at registered pilot partners, valued in EUR, converted at the published 7-day TWAP at settlement, capped by a fixed per-partner budget, settled per Governance proposal (recordMilestone). A lock alone never earns a reward.",
+      pool: "40M IFR, no refill",
+      vesting: "180-365 days linear per partner",
+      unusedContractPath: "recordLockReward (lockAmount x rewardBps, rewardBps 1500, bounds 500-2500, annual cap 4M IFR) exists in the contract but is not used."
     },
     governance: {
       timelockDelay: "48 hours",
@@ -150,7 +149,7 @@ export function getIFRKnowledge() {
       multisig: "3-of-5 on all Safes (Treasury, Community, LP Reserve) — 5 signers: G.M./M.G./A.M./Y.K./A.P.",
       communitySignerExpansion: "Planned after community voting is live. This is the multisig signer distribution process. Preferred path: keep 3-of-5 now, expand to 4-of-7 using a mixed model (3 core/protocol, 2 contributor/builder, 2 community-elected), then consider 5-of-9 only after one stable term. Selection is not pure whale voting and not pure random selection; it requires eligibility, public nomination, community vote, security review, rotation, and emergency replacement rules. Full plan: https://ifrunit.tech/wiki/community-signer-expansion.html",
       proposals: "#0, #4-#9 and #11-#16 executed; #1-#3 and #10 cancelled.",
-      nextPlanned: "No claim that seller rewards are active: PartnerVault registration and an authorized reward caller require separate governance execution.",
+      nextPlanned: "No claim that seller rewards are active: each pilot partner needs BuilderRegistry registration plus a Governance proposal that creates its capped PartnerVault budget.",
       feeExempt: "Deployer, TreasurySafe, CommunitySafe, CommitmentVault, LendingVault and LP Token are active fee exemptions.",
       vaultInvariantMonitoring: "A read-only four-hour Mainnet monitor fails closed if CommitmentVault or LendingVault loses feeExempt status or liquid custody falls below accounting. CommitmentVault balance is checked against totalLocked. LendingVault balance is checked against totalAvailable; totalLent is a separate borrower-held receivable. At block 25900438 both vaults were fee-exempt and exactly covered. V2 balance-diff accounting and runtime guards remain future work."
     },

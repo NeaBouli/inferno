@@ -1009,7 +1009,7 @@
             <td>Builder Ecosystem</td>
             <td>4%</td>
             <td>40,000,000</td>
-            <td>PartnerVault contract. Lock-triggered Creator Rewards, milestone vesting.</td>
+            <td>PartnerVault contract. Partner rewards not active; planned for verified checkout redemptions only.</td>
           </tr>
         </tbody>
       </table>
@@ -1102,8 +1102,8 @@
       <p><strong>Builder Ecosystem (4% &mdash; 40M IFR)</strong></p>
       <ul>
         <li>Dedicated pool managed by the <strong>PartnerVault</strong> contract (Mainnet: <code>0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D</code>)</li>
-        <li>Primary distribution via <strong>lock-triggered Creator Rewards</strong>: when a user locks IFR for a creator's product, the creator earns a percentage (RewardBps) from the pool, vested over 6&ndash;12 months</li>
-        <li>Hard cap per builder and annual emission cap to prevent pool exhaustion</li>
+        <li>Partner rewards are not active. Planned distribution: IFR only for <strong>verified checkout redemptions</strong> at registered pilot partners, valued in EUR, vested over 6&ndash;12 months</li>
+        <li>Hard budget per partner; the pool is never refilled</li>
         <li>All allocations vest linearly &mdash; no instant dumps</li>
         <li>Builder tokens grant DAO voting rights in Phase 4+</li>
       </ul>
@@ -1339,39 +1339,21 @@ if (from != address(0) && to != address(0)
       </div>
 
       <!-- ============================================================
-           Section 6: PartnerVault & Creator Rewards
+           Section 6: PartnerVault & Partner Rewards
            ============================================================ -->
-      <h2 id="partner-vault">6. PartnerVault &amp; Creator Rewards</h2>
+      <h2 id="partner-vault">6. PartnerVault &amp; Partner Rewards</h2>
       <p>
-        The Builder Ecosystem Pool (4%, 40M IFR) is distributed through the <strong>PartnerVault</strong> contract (deployed on Ethereum Mainnet). Instead of fixed tier-based grants, builder rewards are driven by actual user engagement via lock-triggered Creator Rewards.
+        The Builder Ecosystem Pool (4%, 40M IFR) sits in the <strong>PartnerVault</strong> contract on Ethereum Mainnet.
+        Partner rewards are <strong>not active</strong>: no partner is registered and no reward has been paid
+        (verified on-chain: <code>totalAllocated</code>, <code>totalRewarded</code> and <code>totalClaimed</code> are 0).
+        The pool is never refilled.
       </p>
 
-      <h3>Lock-triggered Creator Rewards</h3>
+      <h3>Decided Model: Verified Checkout Redemptions</h3>
       <p>
-        When a user locks IFR for premium access to a creator's product, the creator earns a reward from the Builder Pool:
+        From the first pilot partner on, rewards follow one rule: IFR only for a real, seller-confirmed checkout
+        redemption at a registered pilot partner. A lock alone never earns a reward.
       </p>
-
-      <div class="example-card">
-        <h4>Reward Example (15% RewardBps)</h4>
-        <div class="example-row">
-          <span class="label">User locks</span>
-          <span class="value">1,000 IFR</span>
-        </div>
-        <div class="example-row">
-          <span class="label">Creator reward (15%)</span>
-          <span class="value green">150 IFR (vested)</span>
-        </div>
-        <div class="example-row">
-          <span class="label">Net IFR removed from circulation</span>
-          <span class="value accent">850 IFR</span>
-        </div>
-      </div>
-
-      <p>
-        This model is <strong>inherently deflationary</strong>: the reward is always smaller than the locked amount, so every lock-triggered reward results in a net reduction of circulating supply.
-      </p>
-
-      <h3>PartnerVault Design</h3>
       <table>
         <thead>
           <tr>
@@ -1380,44 +1362,24 @@ if (from != address(0) && to != address(0)
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>Pool Size</td>
-            <td>40,000,000 IFR (4% of supply)</td>
-          </tr>
-          <tr>
-            <td>Distribution Trigger</td>
-            <td>User lock events via IFRLock</td>
-          </tr>
-          <tr>
-            <td>Reward Rate (RewardBps)</td>
-            <td>Hard bounds (contract-enforced): 5&ndash;25% (MIN_REWARD_BPS=500, MAX_REWARD_BPS=2500). Policy target (governance recommendation): 10&ndash;20%. Changeable via governance proposal (48h timelock).</td>
-          </tr>
-          <tr>
-            <td>Vesting Period</td>
-            <td>6&ndash;12 months linear</td>
-          </tr>
-          <tr>
-            <td>Per-Builder Cap</td>
-            <td>Hard cap (configurable via governance)</td>
-          </tr>
-          <tr>
-            <td>Annual Emission Cap</td>
-            <td>Default: 4,000,000 IFR/year (10% of pool). Hard bounds (contract-enforced): 1,000,000&ndash;10,000,000 IFR. Resets annually; governance can adjust within bounds.</td>
-          </tr>
-          <tr>
-            <td>Claim Mechanism</td>
-            <td>Permissionless <code>claim()</code> by builder beneficiary</td>
-          </tr>
-          <tr>
-            <td>Fee Exempt</td>
-            <td>Required (internal protocol transfers)</td>
-          </tr>
+          <tr><td>Pool Size</td><td>40,000,000 IFR (4% of supply), no refill</td></tr>
+          <tr><td>Trigger</td><td>Verified checkout redemption at a registered pilot partner</td></tr>
+          <tr><td>Valuation</td><td>EUR per redemption, paid in IFR at the published 7-day TWAP at settlement; no fixed rate</td></tr>
+          <tr><td>Per-Partner Budget</td><td>Hard cap (the partner's PartnerVault allocation), set per pilot by Governance</td></tr>
+          <tr><td>Settlement</td><td>Per period by Governance proposal (<code>recordMilestone</code>, 48h timelock)</td></tr>
+          <tr><td>Vesting</td><td>180&ndash;365 days linear per partner, optional cliff (contract bounds)</td></tr>
+          <tr><td>Pause</td><td>Treasury Safe (PartnerVault guardian)</td></tr>
+          <tr><td>Claim</td><td><code>claim()</code> by the partner beneficiary after vesting</td></tr>
         </tbody>
       </table>
 
       <div class="callout callout-green">
         <p>
-          <strong>Key difference from old model:</strong> Previous documentation listed fixed tier grants (5M / 2M / 1M / 500K IFR per builder). These numbers were replaced with the lock-triggered reward model because fixed grants become disproportionate at scale &mdash; at $0.50/IFR, a 5M grant would be $2.5M, which is unsustainable for early-stage creator partnerships.
+          <strong>Contract parameters that the model does not use:</strong> PartnerVault also contains a lock-triggered
+          path, <code>recordLockReward</code>, paying <code>lockAmount &times; rewardBps / 10000</code>
+          (<code>rewardBps</code> = 1500, contract bounds 500&ndash;2500) under a 4,000,000 IFR annual cap
+          (bounds 1M&ndash;10M). The project does not use this path, because a lock can be opened and closed again to farm
+          rewards. Policy: <a href="https://github.com/NeaBouli/inferno/blob/main/docs/PARTNER_REWARDS_MODEL_B.md" target="_blank" rel="noopener">PARTNER_REWARDS_MODEL_B.md</a>.
         </p>
       </div>
 

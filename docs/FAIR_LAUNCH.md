@@ -18,7 +18,7 @@ Inferno has:
 | Team | 15% | 150M | 4 years (1 year cliff) | Standard startup vesting |
 | Treasury | 15% | 150M | Governance | Community & Grants |
 | Community | 6% | 60M | Governance | Builder onboarding |
-| PartnerVault | 4% | 40M | Milestone | Creator Rewards |
+| PartnerVault | 4% | 40M | Milestone | Partner rewards (not active; verified checkouts only) |
 
 ## Why 30% Team + Treasury?
 
