@@ -177,15 +177,17 @@ test("Evidence without Council approval stays red", async ({ page }) => {
   await expect(page.locator("#cv01-rows .cv-red")).toHaveCount(11);
 });
 
-test("Page copy stays fail-closed: no Web3 safety claim, dated vault balance, compensation only proposed", async ({ page }) => {
+test("Page copy stays accurate: live time-only Web3 state, dated vault balance, compensation only proposed", async ({ page }) => {
   await mockChain(page, { timestamp: AFTER_UNLOCK, priceGwei: 1 });
   await load(page);
   const body = page.locator("main");
   await expect(body).not.toContainText("The Web3 app and the wiki offer only time-based locks");
   await expect(body).toContainText("The wiki lock form offers only time-based locks.");
-  await expect(body).toContainText("still offers price-conditioned V1 locks");
-  await expect(body).toContainText("merged but not yet deployed or verified");
-  await expect(body).toContainText("Do not create new CommitmentVault locks in the Web3 app until that release is verified.");
+  // The time-only Web3 release is live and verified (417e3478/3771e284); the page states that state, not the pre-release warning (T-263).
+  await expect(body).not.toContainText("still offers price-conditioned V1 locks");
+  await expect(body).not.toContainText("until that release is verified");
+  await expect(body).toContainText("offers only time-based locks in CommitmentVault V2");
+  await expect(body).toContainText("existing V1 tranches stay listed and unlock through V1");
   await expect(body).not.toContainText("The vault now holds");
   await expect(body).toContainText("At block 26,113,577 (3 October 2026, 18:22:23 UTC) the vault held 27,795,535.918948719 IFR");
   for (const sel of ['meta[name="description"]', 'meta[property="og:description"]', 'meta[name="twitter:description"]']) {

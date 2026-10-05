@@ -731,14 +731,14 @@
       <ul>
         <li><strong>V1 cannot be changed.</strong> It has no pause or upgrade path.</li>
         <li><strong>The wiki lock form offers only time-based locks.</strong></li>
-        <li><strong>The production Web3 app at web3.ifrunit.tech still offers price-conditioned V1 locks.</strong> The code fix that restricts it to time-based locks is merged but not yet deployed or verified. <strong>Do not create new CommitmentVault locks in the Web3 app until that release is verified.</strong></li>
+        <li><strong>The production Web3 app at web3.ifrunit.tech offers only time-based locks in CommitmentVault V2.</strong> It no longer offers price-conditioned V1 locks; existing V1 tranches stay listed and unlock through V1. Released and live-verified on 5 October 2026.</li>
         <li><strong>CommitmentVault V2 is deployed:</strong> <a href="https://etherscan.io/address/0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F" target="_blank" rel="noopener noreferrer"><code>0x8efa&hellip;7c8F</code></a>, deployed on 2 October 2026 (<a href="https://etherscan.io/tx/0x9857a5707b650b8828f41b893f91a10ff26d7990742e782bb0b7e86df23ea0f7" target="_blank" rel="noopener noreferrer">transaction</a>), owned by Governance.
           <ul>
             <li>It accepts <code>TIME_ONLY</code> locks only and rejects every price-conditioned lock, so an impossible condition cannot be created again.</li>
             <li>It has no price oracle and no rescue path.</li>
           </ul>
         </li>
-        <li><strong>V2 is not wired yet.</strong> Governance proposal #17, <code>setFeeExempt(V2, true)</code>, is queued and can be executed from 4 October 2026, 21:53:11 UTC. Until it is executed, V2 is not fee-exempt and the interfaces keep using V1.</li>
+        <li><strong>V2 is fee-exempt.</strong> Governance proposal #17, <code>setFeeExempt(V2, true)</code>, was executed on 4 October 2026 (block 26121846). The interfaces send new time locks to V2; existing V1 tranches stay in V1.</li>
         <li><strong>Price-conditioned locks need a separate proposal.</strong> A reviewed, manipulation-resistant oracle and a rescue path for conditions that can never be met are future work. Neither is part of the deployed V2.</li>
       </ul>
       <p>See the <a href="https://github.com/NeaBouli/inferno/blob/main/docs/GOVERNANCE_PRODUCT_DECISION_REGISTER.md">decision register</a> (lane 2).</p>

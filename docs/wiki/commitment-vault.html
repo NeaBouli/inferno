@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CommitmentVault &mdash; Inferno (IFR) Documentation</title>
   <meta name="keywords" content="CommitmentVault, token lock, conditions, P0 multiplier">
-  <meta name="description" content="Lock IFR with a time-based unlock. In V1, PRICE_ONLY and TIME_AND_PRICE locks can never unlock (CV-01); TIME_OR_PRICE still unlocks by time. Price conditions are disabled; new time locks move to V2 after Governance proposal #17.">
+  <meta name="description" content="Lock IFR with a time-based unlock. In V1, PRICE_ONLY and TIME_AND_PRICE locks can never unlock (CV-01); TIME_OR_PRICE still unlocks by time. Price conditions are disabled; new time locks go to V2, fee-exempt since Governance proposal #17.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -610,19 +610,19 @@
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Inferno Protocol">
   <meta property="og:title" content="CommitmentVault — Inferno Protocol (IFR)">
-  <meta property="og:description" content="Lock IFR with a time-based unlock. In V1, PRICE_ONLY and TIME_AND_PRICE locks can never unlock (CV-01); TIME_OR_PRICE still unlocks by time. Price conditions are disabled; new time locks move to V2 after Governance proposal #17.">
+  <meta property="og:description" content="Lock IFR with a time-based unlock. In V1, PRICE_ONLY and TIME_AND_PRICE locks can never unlock (CV-01); TIME_OR_PRICE still unlocks by time. Price conditions are disabled; new time locks go to V2, fee-exempt since Governance proposal #17.">
   <meta property="og:url" content="https://ifrunit.tech/wiki/commitment-vault.html">
   <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="CommitmentVault — Inferno Protocol (IFR)">
-  <meta name="twitter:description" content="Lock IFR with a time-based unlock. In V1, PRICE_ONLY and TIME_AND_PRICE locks can never unlock (CV-01); TIME_OR_PRICE still unlocks by time. Price conditions are disabled; new time locks move to V2 after Governance proposal #17.">
+  <meta name="twitter:description" content="Lock IFR with a time-based unlock. In V1, PRICE_ONLY and TIME_AND_PRICE locks can never unlock (CV-01); TIME_OR_PRICE still unlocks by time. Price conditions are disabled; new time locks go to V2, fee-exempt since Governance proposal #17.">
   <meta name="twitter:site" content="@IFRtoken">
   <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">  <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "TechArticle",
     "headline": "CommitmentVault",
-    "description": "Lock IFR with a time-based unlock. In V1, PRICE_ONLY and TIME_AND_PRICE locks can never unlock (CV-01); TIME_OR_PRICE still unlocks by time. Price conditions are disabled; new time locks move to V2 after Governance proposal #17.",
+    "description": "Lock IFR with a time-based unlock. In V1, PRICE_ONLY and TIME_AND_PRICE locks can never unlock (CV-01); TIME_OR_PRICE still unlocks by time. Price conditions are disabled; new time locks go to V2, fee-exempt since Governance proposal #17.",
     "url": "https://ifrunit.tech/wiki/commitment-vault.html",
     "isPartOf": {"@id": "https://ifrunit.tech/#website"},
     "publisher": {"@id": "https://ifrunit.tech/#organization"},
@@ -833,7 +833,7 @@
       <h2 id="bedingungstypen">2. Condition Types</h2>
 
       <div class="callout">
-        <p><strong>Only time locks are offered.</strong> CommitmentVault V1 defined four condition types, but its deployed contract cannot evaluate a price: price-conditioned tranches (B and D) can never unlock, and C unlocks only through its time condition. The lock widget therefore offers only <strong>A) Time Only</strong>; price types are disabled. New time locks move to CommitmentVault V2 once Governance proposal #17 (its fee exemption) is executed. The affected Mainnet tranches and the compensation proposal are documented in <a href="commitment-vault-compensation.html">CV-01</a>.</p>
+        <p><strong>Only time locks are offered.</strong> CommitmentVault V1 defined four condition types, but its deployed contract cannot evaluate a price: price-conditioned tranches (B and D) can never unlock, and C unlocks only through its time condition. The lock widget therefore offers only <strong>A) Time Only</strong>; price types are disabled. New time locks go to CommitmentVault V2, fee-exempt since Governance proposal #17 (executed 4 October 2026). The affected Mainnet tranches and the compensation proposal are documented in <a href="commitment-vault-compensation.html">CV-01</a>.</p>
       </div>
 
       <h3>A) TIME ONLY</h3>
@@ -968,7 +968,7 @@
       <p>If you lose access to your wallet, nobody can recover the tokens: <code>unlock()</code> always pays the original wallet. Auto-Unlock only lets anyone trigger the release 30 days after a met condition (for example a passed unlock date); the tokens still arrive in that same wallet.</p>
 
       <h3 id="cv01-notice">Is CommitmentVault live?</h3>
-      <p><strong style="color:var(--green);">Yes.</strong> CommitmentVault V1 is deployed on Ethereum Mainnet and feeExempt is active. Its price check never returns a price, so PRICE_ONLY and TIME_AND_PRICE tranches can never unlock, while TIME_OR_PRICE tranches still unlock by their time condition (<a href="#cv01-notice">CV-01</a>). The self-service widget below therefore creates time-only locks, and new time locks go to CommitmentVault V2 (<code>0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F</code>, time only) once its fee exemption is executed through Governance proposal #17. Until then new locks stay disabled; existing V1 tranches remain visible and unlock through V1. Price-based locks are disabled.</p>
+      <p><strong style="color:var(--green);">Yes.</strong> CommitmentVault V1 is deployed on Ethereum Mainnet and feeExempt is active. Its price check never returns a price, so PRICE_ONLY and TIME_AND_PRICE tranches can never unlock, while TIME_OR_PRICE tranches still unlock by their time condition (<a href="#cv01-notice">CV-01</a>). The self-service widget below therefore creates time-only locks, and new time locks go to CommitmentVault V2 (<code>0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F</code>, time only), which is fee-exempt since Governance proposal #17 (executed 4 October 2026, block 26121846). The lock button enables only after the widget confirms feeExempt(V2) on-chain; existing V1 tranches remain visible and unlock through V1. Price-based locks are disabled.</p>
 
       <!-- ============================================================
            Why CommitmentVault Is Critical After Bootstrap
@@ -1036,14 +1036,14 @@
       </div>
       <div class="cv-widget cv-v2-path" id="cv-v2-path" data-v2-path>
         <strong>New time locks: CommitmentVault V2 only</strong>
-        <p>V2 (<code>0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F</code>) accepts time-only locks. The lock button stays disabled until Governance proposal #17 is executed and the token reads feeExempt(V2) as true. No price lock is available: a separate price-lock vault is only a draft, not reviewed and not deployed.</p>
+        <p>V2 (<code>0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F</code>) accepts time-only locks. It is fee-exempt since Governance proposal #17 (executed 4 October 2026, block 26121846); the lock button still enables only after the token reads feeExempt(V2) as true on-chain. No price lock is available: a separate PriceLockVault is built and independently reviewed, but not deployed and not active; activation needs a Sepolia rehearsal and a Governance decision.</p>
       </div>
 
       <!-- Live Status Banner -->
       <div class="cv-widget" style="background:rgba(34,197,94,0.06);border-color:rgba(34,197,94,0.25);text-align:center;">
         <div style="font-size:0.78rem;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Live on Ethereum Mainnet</div>
         <p style="color:var(--muted);font-size:0.88rem;margin:0;">CommitmentVault V1 deployed on Mainnet; its feeExempt is active since 06.04.2026 (existing tranches only).<br>Connect your wallet to check your IFR balance and your existing tranches.</p>
-        <p id="cv-price-disabled-banner" data-price-locks-disabled style="color:var(--text);font-size:0.88rem;margin:10px 0 0;">Price-based locks are disabled. CommitmentVault V1 cannot evaluate prices (see <a href="#cv01-notice">CV-01</a>). Time locks only; new time locks move to CommitmentVault V2 after its fee exemption is executed.</p>
+        <p id="cv-price-disabled-banner" data-price-locks-disabled style="color:var(--text);font-size:0.88rem;margin:10px 0 0;">Price-based locks are disabled. CommitmentVault V1 cannot evaluate prices (see <a href="#cv01-notice">CV-01</a>). Time locks only; new time locks go to CommitmentVault V2 (fee-exempt since Governance proposal #17).</p>
       </div>
 
       <!-- Step 1: Connect Wallet -->
@@ -1079,7 +1079,7 @@
           <select id="cv-condition-type">
             <option value="0" selected>A) Time Only &mdash; unlock after date</option>
           </select>
-          <div class="cv-hint" id="cv-price-disabled-notice" data-price-locks-disabled>Price-based locks are disabled. CommitmentVault V1 cannot evaluate prices (see <a href="#cv01-notice">CV-01</a>). Time locks only; new time locks move to CommitmentVault V2 after its fee exemption is executed.</div>
+          <div class="cv-hint" id="cv-price-disabled-notice" data-price-locks-disabled>Price-based locks are disabled. CommitmentVault V1 cannot evaluate prices (see <a href="#cv01-notice">CV-01</a>). Time locks only; new time locks go to CommitmentVault V2 (fee-exempt since Governance proposal #17).</div>
         </div>
 
         <div class="cv-form-group" id="cv-time-group">
@@ -1119,7 +1119,7 @@
           <div id="cv-preview-content" style="margin-top:8px;">Configure above to see preview</div>
         </div>
 
-        <div class="cv-hint" id="cv-v2-gate" data-v2-gate>CommitmentVault V2 opens for new time locks once its fee exemption is executed (Governance proposal #17).</div>
+        <div class="cv-hint" id="cv-v2-gate" data-v2-gate>CommitmentVault V2 is fee-exempt since Governance proposal #17. The lock button enables only after a connected wallet reads feeExempt(V2) as true on-chain.</div>
         <button class="cv-btn" id="cv-lock-btn" disabled>Approve + Lock IFR</button>
         <div id="cv-lock-status" class="cv-hidden cv-status-msg"></div>
       </div>
@@ -1290,7 +1290,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
   // InfernoToken.feeExempt(V2) reads true (Governance proposal #17). No fallback to V1 locks.
   var CV_V1_ADDR = "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3";
   var CV_V2_ADDR = "0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F";
-  var CV_V2_CLOSED = "CommitmentVault V2 opens for new time locks once its fee exemption is executed (Governance proposal #17).";
+  var CV_V2_CLOSED = "New CommitmentVault V2 time locks stay disabled until this app confirms feeExempt(V2) on-chain (set by Governance proposal #17). Connect a wallet or press Refresh.";
   var IFR_TOKEN = "0x77e99917Eca8539c62F509ED1193ac36580A6e7B";
   var IFR_DECIMALS = 9;
   var MAINNET_CHAIN_ID = 1;
@@ -1509,7 +1509,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
 
     var cType = parseInt(el("cv-condition-type").value, 10);
     // CV-01: V1 can never evaluate a price. Only TIME_ONLY (0) may be submitted; anything else fails closed.
-    if (cType !== 0) throw new Error("Price-based locks are disabled. CommitmentVault V1 cannot evaluate prices (see CV-01). Time locks only; new time locks move to CommitmentVault V2 after its fee exemption is executed.");
+    if (cType !== 0) throw new Error("Price-based locks are disabled. CommitmentVault V1 cannot evaluate prices (see CV-01). Time locks only; new time locks go to CommitmentVault V2 (fee-exempt since Governance proposal #17).");
     var needsTime = true;
     var needsPrice = false;
     var unlockTime = 0;
@@ -1700,7 +1700,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
 
       for (var i = 0; i < plan.amounts.length; i++) {
         setStatus("info", "Lock tranche " + (i + 1) + " of " + plan.amounts.length + ": confirm in your wallet.");
-        if (plan.cType !== 0 || plan.p0Multiplier !== 0) throw new Error("Price-based locks are disabled. CommitmentVault V1 cannot evaluate prices (see CV-01). Time locks only; new time locks move to CommitmentVault V2 after its fee exemption is executed.");
+        if (plan.cType !== 0 || plan.p0Multiplier !== 0) throw new Error("Price-based locks are disabled. CommitmentVault V1 cannot evaluate prices (see CV-01). Time locks only; new time locks go to CommitmentVault V2 (fee-exempt since Governance proposal #17).");
         await assertV2Open();
         var lockTx = await cv.lock(plan.amounts[i], 0, plan.unlockTime, 0);
         setStatus("info", "Lock submitted: " + explorerTx(lockTx.hash) + "<br>Waiting for confirmation...");

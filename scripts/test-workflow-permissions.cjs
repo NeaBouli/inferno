@@ -6,7 +6,9 @@ const path = require("node:path");
 
 const root = path.resolve(__dirname, "..");
 const workflowsDirectory = path.join(root, ".github", "workflows");
-const expectedWriteWorkflows = new Set(["post-deploy.yml", "update-stats.yml"]);
+// update-stats.yml / post-deploy.yml were removed (T-212b-11): they would have written Sepolia figures
+// into Mainnet pages and pushed to protected main. No workflow needs contents: write.
+const expectedWriteWorkflows = new Set([]);
 // Railway release gate reads workflow runs for the exact SHA (scripts/railway-release-preflight.cjs).
 // sdk-publish.yml reads check runs and the npm-release environment for its fail-closed release gate.
 const expectedExtraReadScopes = {
@@ -29,13 +31,11 @@ const expectedWorkflowFiles = [
   "governance-dashboard.yml",
   "mythril-analysis.yml",
   "points-backend.yml",
-  "post-deploy.yml",
   "railway-copilot-release.yml",
   "sdk-ci.yml",
   "sdk-publish.yml",
   "security-audit.yml",
   "telegram-bot.yml",
-  "update-stats.yml",
   "vault-invariant-monitor.yml",
 ];
 

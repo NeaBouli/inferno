@@ -5,7 +5,7 @@ import { config } from '../config';
 import { SellerAuthError, resolveSellerAuthContext, verifySellerSignature } from '../services/sellerAuth';
 import { resolveCheckoutActor } from '../services/sellerAccess';
 import { validate } from '../middleware/validator';
-import { sessionRateLimiter, sessionStatusRateLimiter } from '../middleware/rateLimiter';
+import { redeemRateLimiter, sessionRateLimiter, sessionStatusRateLimiter } from '../middleware/rateLimiter';
 import {
   AuthenticatedRateLimitError,
   assertSellerWalletActionAllowed,
@@ -181,7 +181,7 @@ router.get('/:id', sessionStatusRateLimiter, async (req, res, next) => {
   }
 });
 
-router.post('/:id/redeem', async (req, res, next) => {
+router.post('/:id/redeem', redeemRateLimiter, async (req, res, next) => {
   try {
     const actor = await requireSessionRedeemer(req, req.params.id);
     const result = await redeem(req.params.id, actor);

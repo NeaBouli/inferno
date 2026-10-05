@@ -5,11 +5,16 @@ import {
   explorerBalanceEntry,
   CV01_LOST_RAW,
   finalizeBalances,
+  IFRLOCK_UNLOCKED_LABEL,
+  IFRLOCK_UNLOCKED_TOPIC,
   lostSupply,
   parseAddressParam,
   requireBaseUnits,
+  sumUnlockedLogs,
   unavailableEntry,
 } from "../server/balance-integrity.js";
+import { Interface } from "ethers";
+import { readFileSync } from "node:fs";
 
 // A successful read keeps exact base units.
 assert.deepEqual(balanceEntry(724992668043224n), { raw: "724992668043224", formatted: 724992.668043224 });
@@ -52,6 +57,57 @@ assert.equal(lockDown.incomplete, true);
 assert.equal(lockDown.ifrLock.lockedRaw, null);
 assert.equal(lockDown.ifrLock.lockedFormatted, null);
 assert.equal(lockDown.ifrLock.unlockedRaw, null);
+assert.deepEqual(lockDown.unavailable, ["IFRLock", IFRLOCK_UNLOCKED_LABEL]);
+
+// T-262 D1: only the unlocked total failing still names its source; incomplete never comes with an empty list.
+const unlockedDown = finalizeBalances({ IFRLock: balanceEntry(10n), FeeRouterV1: balanceEntry(20n) }, null);
+assert.equal(unlockedDown.incomplete, true);
+assert.deepEqual(unlockedDown.unavailable, [IFRLOCK_UNLOCKED_LABEL]);
+assert.equal(unlockedDown.ifrLock.unlockedRaw, null);
+for (const r of [ok, partial, lockDown, unlockedDown]) {
+  assert.equal(r.incomplete, r.unavailable.length > 0, "incomplete must match a non-empty unavailable list");
+}
+
+// T-262 D1: zero IFRLock Unlocked events is a valid 0, not a failure.
+assert.equal(IFRLOCK_UNLOCKED_TOPIC, new Interface(["event Unlocked(address indexed user, uint256 amount)"]).getEvent("Unlocked")!.topicHash);
+const noRecords = { status: "0", message: "No records found", result: [] };
+assert.equal(sumUnlockedLogs(noRecords), 0n);
+const zeroUnlocks = finalizeBalances({ IFRLock: balanceEntry(10n) }, sumUnlockedLogs(noRecords));
+assert.equal(zeroUnlocks.incomplete, false);
+assert.deepEqual(zeroUnlocks.unavailable, []);
+assert.equal(zeroUnlocks.ifrLock.unlockedRaw, "0");
+assert.equal(sumUnlockedLogs({ status: "1", message: "OK", result: [] }), 0n);
+assert.equal(sumUnlockedLogs({
+  status: "1", message: "OK",
+  result: [{ data: "0x" + (1000n * 10n ** 9n).toString(16).padStart(64, "0") }, { data: "0x" + "5".padStart(64, "0") }],
+}), 1000n * 10n ** 9n + 5n);
+
+// Real failures stay fail-closed (throw -> caller maps to null -> incomplete with a named source).
+for (const bad of [
+  { status: "0", message: "NOTOK", result: "Max rate limit reached" },
+  { status: "0", message: "NOTOK", result: "Invalid API Key" },
+  { status: "0", message: "NOTOK", result: [] },
+  { status: "0", message: "No records found", result: [{ data: "0x01" }] },
+  { status: "0", message: "No records found", result: "" },
+  { status: "0", result: [] },
+  { status: "1", message: "OK", result: "unexpected" },
+  { status: "1", message: "OK", result: [{ data: "not-hex" }] },
+  { status: "1", message: "OK", result: [{ data: "0x05" }] },
+  { status: "1", message: "OK", result: [{ data: "0x" + "0".repeat(128) }] },
+  { status: "1", message: "OK", result: [{}] },
+  { message: "No records found", result: [] },
+  null,
+  undefined,
+  "No records found",
+]) {
+  assert.throws(() => sumUnlockedLogs(bad), /Unlocked event/, `getLogs reply ${JSON.stringify(bad)} must fail closed`);
+}
+
+// The server has exactly one unlocked-total fetcher and it delegates parsing to sumUnlockedLogs.
+const serverSource = readFileSync(new URL("../server/index.ts", import.meta.url), "utf8");
+assert.equal((serverSource.match(/function fetchIFRLockUnlockedTotal\(/g) ?? []).length, 1, "fetchIFRLockUnlockedTotal must be defined once");
+assert.match(serverSource, /return sumUnlockedLogs\(data\);/);
+assert.doesNotMatch(serverSource, /data\.status !== "1" \|\| !Array\.isArray\(data\.result\)\) throw new Error\("Unlocked events unavailable"\)/);
 
 // Supply figures must be base-unit strings.
 assert.equal(requireBaseUnits("996687518329891940", "totalSupply"), "996687518329891940");
