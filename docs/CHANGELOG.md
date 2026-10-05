@@ -1,5 +1,31 @@
 # Changelog
 
+## 5 October 2026 — Partner Rewards Model B Settlement Export, Default-Off (T-275)
+
+- Benefits backend: a default-off Model B pilot policy (`MODEL_B_SETTLEMENT_ENABLED`,
+  `MODEL_B_PILOT_POLICY_JSON`) binds EUR per redemption, partner budget, global pilot budget and pilot
+  start. A configured lock-reward caller disables it.
+- For a pilot partner the admin reward queue marks verified post-pilot redemption events
+  `SETTLEMENT_PENDING` instead of `BLOCKED_CALLER`. Pre-pilot and lock-path events are never
+  reclassified; seller opt-out or a changed reward wallet blocks them again.
+- New operator-only `POST /api/admin/model-b/settlements/export` (existing admin auth). It reconciles a
+  UTC calendar month (half-open) against the seller-confirmed total, excludes self-redemptions,
+  unconfirmed, unauthorized and replayed confirmations, and returns event IDs with reasons, a
+  deterministic batch digest and milestone ID. It writes no reward state and stores no new personal data.
+- Only with clean reconciliation, reviewed 7-day IFR/WETH TWAP and ETH/EUR evidence and passing
+  PartnerVault checks (not paused, active, milestone not recorded, partner and global budgets) does it
+  add an unsigned `Governance.propose(PartnerVault.recordMilestone)` template. Amounts use exact EUR
+  minor units and IFR base units with floor rounding. No reviewed price source exists yet, so exports
+  are diagnostic only.
+- The template is also blocked, and the export stays diagnostic, while a post-pilot redemption that
+  is not a self-redemption has no reward event (one-per-customer outbox limit, policy decision open),
+  or while the budget covers the month only partly. The TWAP window must end, and the ETH/EUR
+  reference must be published, no later than 72 hours after the period end; later evidence keeps the
+  export diagnostic. Price evidence is not checked against the chain;
+  a reviewed source with independently reproduced prices stays a first-pilot gate.
+- An export or template is not a settlement or payment. No pilot is active and nothing is signed or
+  submitted.
+
 ## 5 October 2026 — Landing Token Flow, Legend and Governance Wording Audit (T-279)
 
 - Landing token flow: the 1% pool fee now flows IFR → BuybackController (Proposal #21), FeeRouterV1 sends its

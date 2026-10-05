@@ -32,6 +32,7 @@ jest.mock('../src/config', () => ({ config: mockConfig }));
 
 import { checkBenefitEligibility, checkLock, initProvider } from '../src/services/ifrLockService';
 import {
+  getModelBVaultState,
   getRewardOnChainStatus,
   isWalletAlreadyRewarded,
   toIFRBaseUnits,
@@ -57,6 +58,8 @@ const partnerInterface = new ethers.Interface([
   'function vestedAmount(bytes32 partnerId) view returns (uint256)',
   'function walletRewardClaimed(address wallet, bytes32 partnerId) view returns (bool)',
   'function authorizedCaller(address caller) view returns (bool)',
+  'function paused() view returns (bool)',
+  'function milestoneDone(bytes32 partnerId, bytes32 milestoneId) view returns (bool)',
 ]);
 const registryInterface = new ethers.Interface([
   'function owner() view returns (address)',
@@ -189,6 +192,12 @@ function contractCall(to: string, data: string): string {
     if (selector === partnerInterface.getFunction('authorizedCaller')!.selector) {
       return encode(['bool'], [true]);
     }
+    if (selector === partnerInterface.getFunction('paused')!.selector) {
+      return encode(['bool'], [false]);
+    }
+    if (selector === partnerInterface.getFunction('milestoneDone')!.selector) {
+      return encode(['bool'], [true]);
+    }
     if (selector === partnerInterface.getFunction('walletRewardClaimed')!.selector) {
       if (state.failNextWalletRewardRead) {
         state.failNextWalletRewardRead = false;
@@ -217,6 +226,22 @@ function rpcResult(request: { method: string; params?: unknown[] }) {
   state.methods.push(request.method);
   if (request.method === 'eth_chainId') return `0x${state.chainId.toString(16)}`;
   if (request.method === 'eth_blockNumber') return '0x10';
+  if (request.method === 'eth_getBlockByNumber') {
+    return {
+      number: '0x10',
+      hash: `0x${'44'.repeat(32)}`,
+      parentHash: `0x${'43'.repeat(32)}`,
+      timestamp: '0x6500000',
+      nonce: '0x0000000000000000',
+      difficulty: '0x0',
+      gasLimit: '0x1c9c380',
+      gasUsed: '0x0',
+      miner: ethers.ZeroAddress,
+      extraData: '0x',
+      baseFeePerGas: '0x1',
+      transactions: [],
+    };
+  }
   if (request.method === 'eth_getCode') {
     const address = String(request.params?.[0] ?? '');
     return address.toLowerCase() === state.missingCodeAddress?.toLowerCase() ? '0x' : '0x6000';
@@ -563,5 +588,32 @@ describe('Ethers v6 service boundaries', () => {
       .rejects.toMatchObject({ code: 'CALL_EXCEPTION' });
     await expect(isWalletAlreadyRewarded(OWNER, PARTNER_ID)).resolves.toBe(true);
     expect(state.methods).not.toContain('eth_sendTransaction');
+  });
+
+  it('reads Model B vault state read-only at one pinned block (T-275)', async () => {
+    const milestoneId = `0x${'cd'.repeat(32)}`;
+    const otherPilot = `0x${'ef'.repeat(32)}`;
+    const result = await getModelBVaultState([PARTNER_ID, otherPilot], PARTNER_ID, milestoneId);
+    expect(result).toEqual({
+      chainId: 1,
+      blockNumber: 16,
+      blockHash: `0x${'44'.repeat(32)}`,
+      partnerVault: ethers.getAddress(PARTNER_VAULT),
+      governance: ethers.getAddress(OWNER),
+      paused: false,
+      partner: {
+        active: true,
+        milestonesFinal: false,
+        maxAllocation: ethers.parseUnits('1000000', 9),
+        unlockedTotal: 0n,
+        rewardAccrued: ethers.parseUnits('1250', 9),
+      },
+      pilotUsage: { [PARTNER_ID]: ethers.parseUnits('1250', 9), [otherPilot]: ethers.parseUnits('1250', 9) },
+      milestoneDone: true,
+    });
+    expect(new Set(state.callBlockTags)).toEqual(new Set(['0x10']));
+    expect(state.methods).not.toContain('eth_sendTransaction');
+    expect(state.methods).not.toContain('eth_sendRawTransaction');
+    await expect(getModelBVaultState([PARTNER_ID], 'not-a-partner', milestoneId)).rejects.toThrow('Invalid PartnerVault partner ID');
   });
 });

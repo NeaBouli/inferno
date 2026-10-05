@@ -83,10 +83,28 @@ a separate decision and needs an independent review before deployment.
 
 ## Known Follow-Up
 
-The Benefits backend reward queue currently marks an event `READY` only when an authorized reward caller
-is configured (`BLOCKED_CALLER` otherwise). Model B uses no caller, so before the first pilot the queue
-needs a settlement mode that exports verified redemption events per period for the `recordMilestone`
-proposal. Rewards stay disabled until then.
+The Benefits backend settlement mode is implemented (T-275) and default-off: for a configured pilot
+partner the reward queue marks verified post-pilot redemption events `SETTLEMENT_PENDING` instead of
+`BLOCKED_CALLER`, and an operator-only monthly export reconciles them and, only with reviewed price
+evidence, adds an unsigned `recordMilestone` proposal template. No pilot is active and no reviewed
+price evidence source exists yet, so rewards stay disabled.
+
+Open first-pilot gates, all fail closed:
+
+- The existing outbox records at most one reward event per customer wallet and partner, so a repeat
+  customer's later redemptions have no reward event. A month with such a seller-confirmed redemption
+  (not a self-redemption and not before pilot start) is a blocking reconciliation discrepancy, and the
+  export stays diagnostic. The policy decision is still open: accept one reward per customer and
+  partner, or approve a reviewed migration.
+- A month that the partner or global budget covers only partly stays diagnostic. A template would use
+  up that month's milestone ID and the events left out could never be settled. A rule for a final
+  capped period needs its own approval.
+- The export checks price evidence only against its schema and the pilot policy, not against the
+  chain. It does bind the evidence to the period: the 7-day TWAP window must end between the period
+  end and 72 hours after it, and the ETH/EUR reference must be published between 24 hours before
+  and 72 hours after the period end. A later window, which could be picked for a low IFR price, keeps
+  the export diagnostic. Before any Safe execution, a reviewed source must be named and the TWAP and ETH/EUR values
+  must be reproduced independently.
 
 ## Activation Checklist per Pilot Partner
 
