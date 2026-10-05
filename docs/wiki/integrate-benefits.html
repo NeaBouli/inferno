@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-    <link rel="canonical" href="https://ifrunit.tech/wiki/testnet.html">
-  <link rel="alternate" hreflang="en" href="https://ifrunit.tech/wiki/testnet.html">
-  <link rel="alternate" hreflang="x-default" href="https://ifrunit.tech/wiki/testnet.html">
+    <link rel="canonical" href="https://ifrunit.tech/wiki/integrate-benefits.html">
+  <link rel="alternate" hreflang="en" href="https://ifrunit.tech/wiki/integrate-benefits.html">
+  <link rel="alternate" hreflang="x-default" href="https://ifrunit.tech/wiki/integrate-benefits.html">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Testnet &mdash; Inferno (IFR) Documentation</title>
+  <title>Integrate IFR Benefits Without a Server &mdash; Inferno (IFR) Documentation</title>
   <meta name="keywords" content="Inferno, IFR, ERC-20, Ethereum, deflationary token, DeFi, blockchain, smart contract, governance, bootstrap">
-  <meta name="description" content="Documented Sepolia test deployments, governance lifecycle records, Uniswap V2 LP pair and developer test addresses.">
+  <meta name="description" content="Connect IFR benefits without running a server: IFR Benefits checkout, a display-only website widget and Guild.xyz/Collab.Land token gating on IFRLock.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -302,11 +302,6 @@
       border-left-color: var(--green);
     }
 
-    .callout-yellow {
-      background: rgba(245, 158, 11, 0.06);
-      border-left-color: #f59e0b;
-    }
-
     /* ---------- Address ---------- */
     .address {
       font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
@@ -370,34 +365,171 @@
         font-size: 26px;
       }
     }
-    @keyframes pulse-yellow {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(255,200,0,0.0); }
-      50% { box-shadow: 0 0 16px 3px rgba(255,200,0,0.15); }
-    }
-
     /* ============================================================
     End Shared Styles
        ============================================================ */
+
+    /* ---------- Checklist ---------- */
+    .checklist {
+      list-style: none;
+      padding-left: 0;
+    }
+
+    .checklist li {
+      position: relative;
+      padding-left: 28px;
+      margin-bottom: 8px;
+    }
+
+    .checklist li::before {
+      content: "\2610";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-size: 16px;
+    }
+
+    .checklist-done li::before {
+      content: "\2611";
+      color: var(--green);
+    }
+
+    /* ---------- Step number badge ---------- */
+    .step-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+      margin-right: 8px;
+      flex-shrink: 0;
+    }
+
+    /* ---------- QR flow diagram ---------- */
+    .qr-flow {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin: 20px 0;
+    }
+
+    .qr-flow-step {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 20px;
+      text-align: center;
+      flex: 1;
+      min-width: 160px;
+    }
+
+    .qr-flow-step .step-num {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .qr-flow-step .step-text {
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .qr-flow-arrow {
+      font-size: 20px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 600px) {
+      .qr-flow {
+        flex-direction: column;
+      }
+
+      .qr-flow-arrow {
+        transform: rotate(90deg);
+      }
+    }
+
+    /* ---------- FAQ accordion ---------- */
+    .faq-item {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+
+    .faq-question {
+      width: 100%;
+      background: var(--card);
+      border: none;
+      padding: 16px 20px;
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 600;
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: inherit;
+    }
+
+    .faq-question:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .faq-question::after {
+      content: "+";
+      font-size: 18px;
+      color: var(--accent);
+      font-weight: 700;
+      transition: transform 0.2s;
+    }
+
+    .faq-item.open .faq-question::after {
+      content: "\2212";
+    }
+
+    .faq-answer {
+      display: none;
+      padding: 0 20px 16px;
+      background: var(--card);
+    }
+
+    .faq-item.open .faq-answer {
+      display: block;
+    }
+
+    .faq-answer p {
+      margin-top: 0;
+      font-size: 14px;
+    }
   </style>
   <link rel="icon" type="image/png" href="../assets/ifr_icon_64.png">
   <meta property="og:locale" content="en_US">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Inferno Protocol">
-  <meta property="og:title" content="Testnet (Sepolia) — Inferno Protocol (IFR)">
-  <meta property="og:description" content="Documented Sepolia deployments, governance lifecycle records, LP pair, test addresses and faucet links.">
-  <meta property="og:url" content="https://ifrunit.tech/wiki/testnet.html">
+  <meta property="og:title" content="Integrate IFR Benefits Without a Server — Inferno Protocol (IFR)">
+  <meta property="og:description" content="Partners connect to IFR benefits without a server: shop checkout, display widget, token-gating guide.">
+  <meta property="og:url" content="https://ifrunit.tech/wiki/integrate-benefits.html">
   <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Testnet (Sepolia) — Inferno Protocol (IFR)">
-  <meta name="twitter:description" content="Documented Sepolia deployments, governance lifecycle records and LP pair.">
+  <meta name="twitter:title" content="Integrate IFR Benefits Without a Server — Inferno Protocol (IFR)">
+  <meta name="twitter:description" content="IFR benefits without a server: checkout, widget, token gating.">
   <meta name="twitter:site" content="@IFRtoken">
   <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">  <script type="application/ld+json">
   {
     "@context": "https://schema.org",
-    "@type": "TechArticle",
-    "headline": "Testnet (Sepolia)",
-    "description": "Documented Sepolia test deployments, governance lifecycle records, Uniswap V2 LP pair and test addresses for developer integration.",
-    "url": "https://ifrunit.tech/wiki/testnet.html",
+    "@type": "WebPage",
+    "headline": "Integrate IFR Benefits Without a Server",
+    "description": "Serverless integration of IFR benefits: IFR Benefits checkout, a display-only website widget reading IFRLock from chain, and Guild.xyz/Collab.Land token gating.",
+    "url": "https://ifrunit.tech/wiki/integrate-benefits.html",
     "isPartOf": {"@id": "https://ifrunit.tech/#website"},
     "publisher": {"@id": "https://ifrunit.tech/#organization"},
     "about": {"@id": "https://ifrunit.tech/#app"}
@@ -426,8 +558,8 @@
     {
       "@type": "ListItem",
       "position": 3,
-      "name": "Testnet",
-      "item": "https://ifrunit.tech/wiki/testnet.html"
+      "name": "Integrate IFR Benefits",
+      "item": "https://ifrunit.tech/wiki/integrate-benefits.html"
     }
   ]
 }
@@ -466,7 +598,7 @@
         <li class="nav-divider"></li>
         <li><a href="https://ifrunit.tech/wiki/wallet-guide.html">Wallet &amp; Contract Guide</a></li>
         <li><a href="https://ifrunit.tech/wiki/deployment.html">Deployment</a></li>
-        <li><a href="https://ifrunit.tech/wiki/testnet.html" class="active" aria-current="page">Testnet</a></li>
+        <li><a href="https://ifrunit.tech/wiki/testnet.html">Testnet</a></li>
         <li><a href="https://ifrunit.tech/wiki/mainnet-checklist.html">Mainnet Checklist</a></li>
         <li><a href="https://ifrunit.tech/wiki/bootstrap.html">Bootstrap Event</a></li>
         <li><a href="https://ifrunit.tech/wiki/roadmap.html">Roadmap</a></li>
@@ -489,7 +621,7 @@
         <li><a href="https://ifrunit.tech/wiki/faq.html">FAQ</a></li>
         <li><a href="https://ifrunit.tech/wiki/integration.html">Integration Guide</a></li>
         <li><a href="https://ifrunit.tech/wiki/business-onboarding.html">Business Onboarding</a></li>
-        <li><a href="https://ifrunit.tech/wiki/integrate-benefits.html">Integrate Benefits (No Server)</a></li>
+        <li><a href="https://ifrunit.tech/wiki/integrate-benefits.html" class="active" aria-current="page">Integrate Benefits (No Server)</a></li>
         <li><a href="https://ifrunit.tech/wiki/agent.html">AI Copilot</a></li>
         <li><a href="https://ifrunit.tech/wiki/verify.html">Verify Wallet</a></li>
         <li class="nav-divider"></li>
@@ -549,266 +681,81 @@
       </div>
 
 
-      <h1><span class="accent">Testnet</span> (Sepolia)</h1>
+      <h1>Integrate IFR Benefits &mdash; <span class="accent">Without a Server</span></h1>
       <p class="subtitle">
-        All Sepolia testnet contract addresses, faucet links, and developer instructions for testing the Inferno protocol.
+        Partners and communities connect to IFR benefits without running any server. Everything below works with
+        the existing IFR Benefits shop, the public blockchain and services you may already use.
       </p>
-
-      <div class="callout">
-        <p><strong>Note:</strong> Mainnet contracts are deployed and verified. This page preserves Sepolia testnet addresses for developers and community auditors who want to test without real funds.</p>
-      </div>
-
-      <!-- ========== Sepolia Contracts ========== -->
-      <h2>Sepolia Contract Addresses</h2>
-      <p>All contracts are deployed and verified on Sepolia Etherscan. These are the original testnet deployments used during development.</p>
-
-      <table>
-        <thead>
-          <tr><th>Contract</th><th>Sepolia Address</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>InfernoToken</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4#code" target="_blank" rel="noopener">0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4</a></td>
-          </tr>
-          <tr>
-            <td>Governance</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0x6050b22E4EAF3f414d1155fBaF30B868E0107017#code" target="_blank" rel="noopener">0x6050b22E4EAF3f414d1155fBaF30B868E0107017</a></td>
-          </tr>
-          <tr>
-            <td>IFRLock</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0x0Cab0A9440643128540222acC6eF5028736675d3#code" target="_blank" rel="noopener">0x0Cab0A9440643128540222acC6eF5028736675d3</a></td>
-          </tr>
-          <tr>
-            <td>LiquidityReserve (v2)</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0xF7E90D0d17f8232365186AA085D26eaEfAf011aF#code" target="_blank" rel="noopener">0xF7E90D0d17f8232365186AA085D26eaEfAf011aF</a></td>
-          </tr>
-          <tr>
-            <td>Vesting</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B#code" target="_blank" rel="noopener">0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B</a></td>
-          </tr>
-          <tr>
-            <td>BuybackVault (v2)</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0xC8ABb9039BEd24f4dBf5Cff09699877D81f0D63C#code" target="_blank" rel="noopener">0xC8ABb9039BEd24f4dBf5Cff09699877D81f0D63C</a></td>
-          </tr>
-          <tr>
-            <td>BurnReserve (v2)</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0x6D4582FCac792FD3880e252fC0a585A0c1823e80#code" target="_blank" rel="noopener">0x6D4582FCac792FD3880e252fC0a585A0c1823e80</a></td>
-          </tr>
-          <tr>
-            <td>PartnerVault (v2)</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39#code" target="_blank" rel="noopener">0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39</a></td>
-          </tr>
-          <tr>
-            <td>FeeRouterV1</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4#code" target="_blank" rel="noopener">0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4</a></td>
-          </tr>
-          <tr>
-            <td>LP Pair (IFR/WETH)</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0x2252e8bBDE0E50CD372748aC233A99C08627d9c7" target="_blank" rel="noopener">0x2252e8bBDE0E50CD372748aC233A99C08627d9c7</a></td>
-          </tr>
-          <tr>
-            <td>BootstrapVaultV3</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0x16086d4f7F191047d8A4fFf2090126E12e865A7E#code" target="_blank" rel="noopener">0x16086d4f7F191047d8A4fFf2090126E12e865A7E</a></td>
-          </tr>
-        </tbody>
-      </table>
-
-      <h3>Infrastructure</h3>
-      <table>
-        <thead>
-          <tr><th>Component</th><th>Sepolia Address</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Deployer</td>
-            <td class="address">0x5Ecc668eab04C5bee81b5c7242e1077c946dE406</td>
-          </tr>
-          <tr>
-            <td>Uniswap V2 Router</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008" target="_blank" rel="noopener">0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008</a></td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div style="
-        border: 1.5px solid rgba(255,200,0,0.6);
-        background: rgba(255,200,0,0.07);
-        border-radius: 6px;
-        padding: 24px 28px;
-        margin: 32px 0;
-        animation: pulse-yellow 3s ease-in-out infinite;
-      ">
-        <div style="color:#8a5a00; font-family:'Orbitron',monospace; font-weight:700; font-size:14px; letter-spacing:2px; margin-bottom:12px;">
-          &#x2B21; COMMUNITY AUDIT &mdash; OPEN
-        </div>
-        <p style="color:#ccc; margin:0 0 12px 0;">
-          All Inferno contracts are open source and deployed on Sepolia testnet.
-          Community security researchers are invited to review, test, and report findings.
-        </p>
-        <ul style="color:#ccc; margin:0 0 16px 0; padding-left:20px;">
-          <li>Test freely on Sepolia &mdash; no real funds required</li>
-          <li>The 11 deployment entries listed above link to their documented Sepolia addresses</li>
-          <li>Responsible disclosure via GitHub Private Vulnerability Reporting</li>
-          <li>Hall of Fame recognition for valid findings</li>
-        </ul>
-        <p style="color:#9ca3af;font-size:0.85rem;margin-top:8px;">
-          &darr; <a href="#faucet-section" style="color:#b3300b;">Get Sepolia Test ETH below</a> &mdash; auto-fills your wallet address.
-        </p>
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-top:16px;">
-          <span style="color:#888; font-size:13px;">Found a vulnerability? Report responsibly and get credited in the Hall of Fame.</span>
-          <a href="https://github.com/NeaBouli/inferno/security/advisories/new"
-             style="color:#8a5a00; font-weight:700; text-decoration:none; border: 1px solid rgba(255,200,0,0.5); padding:8px 20px; border-radius:4px; white-space:nowrap;">
-            &rarr; Report Privately
-          </a>
-        </div>
-      </div>
-
-      <!-- ========== Getting Started ========== -->
-      <h2>Getting Started with Testnet</h2>
-
-      <div id="faucet-section" style="margin:32px 0;">
-        <h3 style="color:#e5e7eb;">1. Get Sepolia Test ETH</h3>
-
-        <div style="margin-bottom:20px;">
-          <label style="color:#9ca3af;font-size:0.85rem;display:block;margin-bottom:6px;">
-            Your Wallet Address
-          </label>
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-            <input id="faucet-address" type="text"
-              placeholder="Connect wallet above — or paste address manually"
-              style="flex:1;min-width:260px;background:#1f2937;border:1px solid #374151;
-                     color:#e5e7eb;padding:10px 14px;border-radius:8px;
-                     font-family:monospace;font-size:0.85rem;box-sizing:border-box;" />
-            <button onclick="faucetCopyAddress()"
-              id="faucet-copy-btn"
-              style="background:#374151;color:#9ca3af;border:none;padding:10px 16px;
-                     border-radius:8px;cursor:pointer;font-size:0.85rem;white-space:nowrap;">
-              &#x1F4CB; Copy
-            </button>
-          </div>
-          <div id="faucet-wallet-status" style="margin-top:6px;font-size:0.8rem;color:#6b7280;">
-            Connect your wallet to auto-fill your address
-          </div>
-        </div>
-
-        <style>#faucet-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:600px){#faucet-grid{grid-template-columns:1fr!important}}</style>
-        <div id="faucet-grid">
-          <div style="background:#1f2937;border:1px solid #374151;border-radius:12px;padding:16px;">
-            <div style="font-weight:600;color:#e5e7eb;margin-bottom:4px;">Google Cloud Faucet</div>
-            <div style="color:#9ca3af;font-size:0.8rem;margin-bottom:12px;">0.05 ETH/day &middot; No minimum mainnet balance</div>
-            <button onclick="faucetOpen('https://cloud.google.com/application/web3/faucet/ethereum/sepolia')"
-              style="width:100%;background:linear-gradient(135deg,#f97316,#ea580c);color:white;border:none;padding:9px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">
-              Get Test ETH &rarr;
-            </button>
-          </div>
-          <div style="background:#1f2937;border:1px solid #374151;border-radius:12px;padding:16px;">
-            <div style="font-weight:600;color:#e5e7eb;margin-bottom:4px;">Chainlink Faucet</div>
-            <div style="color:#9ca3af;font-size:0.8rem;margin-bottom:12px;">0.1 ETH/day &middot; No login needed</div>
-            <button onclick="faucetOpen('https://faucets.chain.link/sepolia')"
-              style="width:100%;background:linear-gradient(135deg,#f97316,#ea580c);color:white;border:none;padding:9px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">
-              Get Test ETH &rarr;
-            </button>
-          </div>
-          <div style="background:#1f2937;border:1px solid #374151;border-radius:12px;padding:16px;">
-            <div style="font-weight:600;color:#e5e7eb;margin-bottom:4px;">Alchemy Faucet</div>
-            <div style="color:#9ca3af;font-size:0.8rem;margin-bottom:12px;">0.5 ETH/day &middot; Login required</div>
-            <button onclick="faucetOpen('https://sepoliafaucet.com')"
-              style="width:100%;background:linear-gradient(135deg,#f97316,#ea580c);color:white;border:none;padding:9px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">
-              Get Test ETH &rarr;
-            </button>
-          </div>
-          <div style="background:#1f2937;border:1px solid #374151;border-radius:12px;padding:16px;">
-            <div style="font-weight:600;color:#e5e7eb;margin-bottom:4px;">Infura Faucet</div>
-            <div style="color:#9ca3af;font-size:0.8rem;margin-bottom:12px;">0.5 ETH/day &middot; Login required</div>
-            <button onclick="faucetOpen('https://www.infura.io/faucet/sepolia')"
-              style="width:100%;background:linear-gradient(135deg,#f97316,#ea580c);color:white;border:none;padding:9px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">
-              Get Test ETH &rarr;
-            </button>
-          </div>
-        </div>
-
-        <p style="color:#6b7280;font-size:0.8rem;margin-top:16px;font-style:italic;">
-          &#x1F4A1; Copy your address above, then click a faucet. Paste your address on the faucet page.
-          Funds arrive within ~30 seconds on Sepolia.
-        </p>
-      </div>
-
-      <h3>2. Add Sepolia IFR to MetaMask</h3>
-      <p>Add the token manually in MetaMask:</p>
-      <ul>
-        <li><strong>Network:</strong> Sepolia (Chain ID: 11155111)</li>
-        <li><strong>Token Address:</strong> <code>0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4</code></li>
-        <li><strong>Symbol:</strong> IFR</li>
-        <li><strong>Decimals:</strong> 9</li>
-      </ul>
-
-      <h3>3. Interact with Contracts</h3>
-      <p>All contracts are verified on Sepolia Etherscan &mdash; you can read and write directly from the "Read Contract" and "Write Contract" tabs.</p>
-
-<pre><code># Clone the repo
-git clone https://github.com/NeaBouli/inferno
-cd inferno
-npm install
-
-# Copy .env and add your Sepolia RPC URL
-cp .env.example .env
-
-# Run all tests locally (no network needed)
-npx hardhat test
-
-# Run live smoke test on Sepolia
-npx hardhat run scripts/sepolia-smoke-test.js --network sepolia</code></pre>
-
-      <h3>4. Run the Dashboard Locally</h3>
-<pre><code>cd apps/dashboard
-npm install
-npm run dev
-# Opens at http://localhost:5173
-# Connect MetaMask to Sepolia</code></pre>
-
-      <!-- ========== Governance Proposals ========== -->
-      <h2>Governance Proposals (Sepolia)</h2>
-      <p>The historical table records proposal IDs 0&ndash;9: six executed and four cancelled. It documents lifecycle testing; it does not claim that all ten executed.</p>
-
-      <table>
-        <thead>
-          <tr><th>#</th><th>Action</th><th>Status</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>0</td><td>setFeeExempt (test)</td><td>Executed</td></tr>
-          <tr><td>1</td><td>setFeeExempt(IFRLock, true)</td><td>Executed</td></tr>
-          <tr><td>2</td><td>Cancelled (v1 deprecated)</td><td>Cancelled</td></tr>
-          <tr><td>3</td><td>setFeeExempt(PartnerVault v2, true) + top-up</td><td>Executed</td></tr>
-          <tr><td>4&ndash;6</td><td>transferOwnership (cancelled, v1 immutable)</td><td>Cancelled</td></tr>
-          <tr><td>7&ndash;9</td><td>setFeeExempt(LR v2, BV v2, BR v2)</td><td>Executed</td></tr>
-        </tbody>
-      </table>
-
-      <!-- ========== Community Audit ========== -->
-      <h2>Community Audit</h2>
-      <p>
-        All smart contracts are open source. Security findings are welcome via
-        <a href="https://github.com/NeaBouli/inferno/security/advisories/new" target="_blank" rel="noopener">GitHub Private Vulnerability Reporting</a>.
-        The testnet deployment allows anyone to verify contract behavior without risking real funds.
-      </p>
-
-      <div style="display:flex;gap:12px;flex-wrap:wrap;margin:16px 0;">
-        <a href="https://github.com/NeaBouli/inferno/issues/new?template=bug_report.md&title=[Security+Finding]" target="_blank" rel="noopener"
-          style="display:inline-flex;align-items:center;gap:8px;background:#1f2937;border:1px solid #374151;border-radius:8px;padding:8px 14px;text-decoration:none;color:#e5e7eb;font-size:0.85rem;font-weight:600;transition:border-color 0.2s;"
-          onmouseover="this.style.borderColor='#f97316'" onmouseout="this.style.borderColor='#374151'">
-          <svg height="16" width="16" viewBox="0 0 16 16" fill="#e5e7eb"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-          Submit a Finding on GitHub
-        </a>
-      </div>
 
       <div class="callout-green callout">
-        <p><strong>Mainnet contracts</strong> are listed on the <a href="https://ifrunit.tech/wiki/deployment.html">Deployment</a> page. For production addresses, see the main <a href="../index.html#contracts">landing page</a>.</p>
+        <p><strong>Project decision (2026-10-03, Lane 7):</strong> nothing existing is rebuilt. Discounts and benefits keep
+        running through <a href="https://shop.ifrunit.tech/" target="_blank" rel="noopener">IFR Benefits</a>. Partners do not
+        need their own server: they can add the display widget below to their website and use existing token-gating services
+        for communities. The Creator Gateway stays an optional self-hosting tool.</p>
       </div>
+
+      <h2>1. Discounts at Checkout: IFR Benefits (no server)</h2>
+      <p>Register your business in <a href="https://shop.ifrunit.tech/" target="_blank" rel="noopener">IFR Benefits</a> and create
+      benefit rules: a discount percentage, the IFR a customer must have locked and, optionally, IFR they must hold. At checkout
+      the shop verifies every rule on-chain at one Ethereum block and records the redemption. Your rules are the single
+      source of truth for every surface below. See <a href="business-onboarding.html">Business Onboarding</a>.</p>
+
+      <h2>2. Show Benefits on Your Website: Display Widget</h2>
+      <p>The widget reads the visitor's IFRLock balance directly from Ethereum Mainnet through a public RPC and shows for which of
+      <em>your</em> IFR Benefits rules the visitor's visible lock and hold thresholds are met. Meeting a threshold is not a
+      granted benefit: checkout confirms it and also applies redemption limits and final checks. It loads your active rules
+      from IFR Benefits; without a business
+      it shows the IFRLock tier ladder (Bronze 1,000 &middot; Silver 2,500 &middot; Gold 5,000 &middot; Platinum 10,000 IFR locked),
+      the same presets the shop uses. It never invents a discount.</p>
+      <pre><code>&lt;div data-ifr-benefits data-business="your-shop-slug"&gt;&lt;/div&gt;
+&lt;script src="https://ifrunit.tech/widget/ifr-benefits-widget.js"
+        integrity="sha384-TcQue2NkvC0mRfTTUBHgOwWUxmhF6ZBuLN7ez5XaCBMlRh7QbN72g8Pf9iBcYyyY"
+        crossorigin="anonymous" defer&gt;&lt;/script&gt;</code></pre>
+      <ul>
+        <li><strong>Display only.</strong> A browser check is not access control and grants nothing. The discount is granted at
+        checkout through IFR Benefits, which re-verifies on-chain.</li>
+        <li><strong>Fail closed.</strong> If the RPC or your rules cannot be read, the widget says so and shows no benefit.</li>
+        <li><strong>Only what a browser can prove.</strong> Rules met through IFRLock are shown as met. Rules that also accept
+        CommitmentVault time locks are shown as &ldquo;checked at checkout&rdquo; unless IFRLock already meets them.</li>
+        <li><strong>Data flows.</strong> No cookies and no tracking. The widget sends the connected wallet address to the configured RPC and loads your public rules from IFR Benefits (<code>data-api</code>); both providers can see connection metadata such as IP address. Remote text is never rendered as HTML.</li>
+        <li>Options: <code>data-rpc</code> (your own RPC URL), <code>data-api</code> (defaults to <code>https://shop.ifrunit.tech</code>).</li>
+        <li>Integrity hash: <code>sha384-TcQue2NkvC0mRfTTUBHgOwWUxmhF6ZBuLN7ez5XaCBMlRh7QbN72g8Pf9iBcYyyY</code></li>
+      </ul>
+
+      <h2>3. Communities and Discord: Guild.xyz or Collab.Land</h2>
+      <p>Use an existing token-gating service with a custom contract-read requirement on Ethereum Mainnet. No IFR server is involved.</p>
+      <table class="data-table">
+        <thead><tr><th>Field</th><th>Value</th></tr></thead>
+        <tbody>
+          <tr><td>Chain</td><td>Ethereum Mainnet (chain ID 1)</td></tr>
+          <tr><td>Contract</td><td><code>0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb</code> (IFRLock)</td></tr>
+          <tr><td>Function</td><td><code>lockedBalance(address user) view returns (uint256)</code>, selector <code>0x9ae697bf</code></td></tr>
+          <tr><td>Argument</td><td>the member's wallet address</td></tr>
+          <tr><td>Condition</td><td>result &ge; X &times; 10<sup>9</sup> (IFR has 9 decimals; 1,000 IFR = <code>1000000000000</code>)</td></tr>
+        </tbody>
+      </table>
+      <p><strong>Guild.xyz:</strong> add a requirement &ldquo;Contract query&rdquo; (custom contract call) with the values above and the
+      condition &ldquo;greater or equal&rdquo;. <strong>Collab.Land:</strong> create a token gating rule with a custom contract call
+      using the values above. Name the role after the tier, for example
+      &ldquo;IFR Silver (2,500 locked)&rdquo;. The alternative <code>isLocked(address user, uint256 minAmount)</code> returns
+      <code>true</code> when at least <code>minAmount</code> is locked.</p>
+
+      <h2>4. Optional: Self-Hosted Creator Gateway</h2>
+      <p>The <a href="https://github.com/NeaBouli/inferno/tree/main/apps/creator-gateway" target="_blank" rel="noopener">Creator Gateway</a>
+      remains available for creators who want to run their own instance (for example to combine an IFR lock with a
+      YouTube membership). It is optional; the project does not operate a central gateway and does not store
+      personal data.</p>
+
+      <h2>What This Does Not Do</h2>
+      <ul>
+        <li>No IFR rewards for partners: partner rewards are disabled until a pilot partner is approved (Lane 4).</li>
+        <li>No custody: users keep their own wallets; there is no embedded wallet.</li>
+        <li>No secret-content protection from the browser widget alone; use IFR Benefits checkout or a token-gating service.</li>
+      </ul>
 
       <!-- Footer -->
       <footer class="wiki-footer">
-        Inferno (IFR) &mdash; Community Fair Launch Model &mdash; Documentation v1.0
+        Inferno (IFR) &mdash; Integrate IFR Benefits &mdash; Documentation v1.0
       </footer>
 
     </main>
@@ -833,70 +780,21 @@ npm run dev
     })();
   </script>
 
+  <!-- FAQ accordion script -->
   <script>
-    function faucetUpdateAddress(address) {
-      var input = document.getElementById("faucet-address");
-      var status = document.getElementById("faucet-wallet-status");
-      if (!input) return;
-      if (address) {
-        input.value = address;
-        input.style.borderColor = "rgba(34,197,94,0.5)";
-        input.style.color = "#22c55e";
-        if (status) {
-          status.textContent = "\u2705 Address auto-filled from connected wallet";
-          status.style.color = "#22c55e";
-        }
-      } else {
-        input.value = "";
-        input.style.borderColor = "#374151";
-        input.style.color = "#e5e7eb";
-        if (status) {
-          status.textContent = "Connect your wallet to auto-fill your address";
-          status.style.color = "#6b7280";
-        }
-      }
-    }
-
-    function faucetCopyAddress() {
-      var input = document.getElementById("faucet-address");
-      var btn = document.getElementById("faucet-copy-btn");
-      if (!input || !input.value) return;
-      navigator.clipboard.writeText(input.value).then(function() {
-        if (btn) {
-          btn.textContent = "\u2705 Copied!";
-          btn.style.color = "#22c55e";
-          setTimeout(function() {
-            btn.textContent = "\uD83D\uDCCB Copy";
-            btn.style.color = "#9ca3af";
-          }, 2000);
-        }
-      }).catch(function() {
-        input.select();
-        document.execCommand("copy");
+    (function () {
+      var items = document.querySelectorAll('.faq-item');
+      items.forEach(function (item) {
+        var btn = item.querySelector('.faq-question');
+        btn.addEventListener('click', function () {
+          var isOpen = item.classList.contains('open');
+          // Close all
+          items.forEach(function (i) { i.classList.remove('open'); });
+          // Toggle clicked
+          if (!isOpen) item.classList.add('open');
+        });
       });
-    }
-
-    function faucetOpen(url) {
-      var input = document.getElementById("faucet-address");
-      if (input && input.value) {
-        navigator.clipboard.writeText(input.value).catch(function() {});
-      }
-      window.open(url, "_blank");
-    }
-
-    // Auto-fill on page load if wallet already connected
-    setTimeout(function() {
-      if (typeof IFRWallet !== "undefined" && IFRWallet.isConnected()) {
-        faucetUpdateAddress(IFRWallet.getAddress());
-      }
-    }, 1500);
-
-    // Listen for wallet events
-    if (typeof IFRWallet !== "undefined") {
-      IFRWallet.on("connected", function(addr) { faucetUpdateAddress(addr); });
-      IFRWallet.on("disconnected", function() { faucetUpdateAddress(null); });
-      IFRWallet.on("accountChanged", function(addr) { faucetUpdateAddress(addr); });
-    }
+    })();
   </script>
 
 <!-- IFR Copilot Widget -->
@@ -1001,5 +899,5 @@ document.addEventListener("visibilitychange",async function(){if(document.visibi
 var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.addEventListener("mouseenter",function(){this.style.transform="scale(1.04)";this.style.boxShadow="0 4px 20px rgba(249,115,22,0.4)"});_wcBtn.addEventListener("mouseleave",function(){this.style.transform="";this.style.boxShadow="0 2px 12px rgba(249,115,22,0.25)"})}
 </script>
 </body>
-<!-- cache-bust: 1775428218 -->
+<!-- cache-bust: 1775428202 -->
 </html>

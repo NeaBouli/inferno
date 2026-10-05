@@ -28,6 +28,8 @@ on:
       - 'scripts/verify-council-votes.cjs'
       - 'scripts/test-council-votes.cjs'
       - 'scripts/build-council-votes-page.cjs'
+      - 'scripts/test-ifr-benefits-widget.cjs'
+      - 'apps/benefits-network/frontend/src/components/WalletStatus.tsx'
       - 'deployments/mainnet.json'
       - 'scripts/check-sitemap-anchors.cjs'
       - 'scripts/test-sitemap-anchors.cjs'
@@ -89,6 +91,8 @@ on:
       - 'scripts/verify-council-votes.cjs'
       - 'scripts/test-council-votes.cjs'
       - 'scripts/build-council-votes-page.cjs'
+      - 'scripts/test-ifr-benefits-widget.cjs'
+      - 'apps/benefits-network/frontend/src/components/WalletStatus.tsx'
       - 'deployments/mainnet.json'
       - 'scripts/check-sitemap-anchors.cjs'
       - 'scripts/test-sitemap-anchors.cjs'
@@ -341,6 +345,9 @@ jobs:
 
       - name: Run Web3 write-flow suite
         run: npm run test:web3-write
+
+      - name: Verify serverless IFR Benefits widget rules and published SRI
+        run: node scripts/test-ifr-benefits-widget.cjs
 
       - name: Run Landing live transparency and Wiki shell suite
         run: npm run test:landing-wiki-ui
