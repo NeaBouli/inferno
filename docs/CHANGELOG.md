@@ -1,5 +1,13 @@
 # Changelog
 
+## 5 October 2026 — Deterministic Web3 Dialog Launcher Test (T-278)
+
+- `fab-clearance.spec.js`: the Web3 withdraw-dialog case no longer races the wallet chooser. It waits for
+  the chooser to open after the async wallet lookup, closes it, and polls the launcher's computed
+  visibility (hidden while the dialog is open, visible after close) instead of a one-shot visibility check.
+  The intersection assertion is unchanged. The old test failed 2/90 locally under `--workers=4`, the new
+  one passed 90/90 under `--workers=4` and 90/90 under `--workers=8` with extra CPU load.
+
 ## 5 October 2026 — Web3 Wallet Labels Clear of the Copilot Launcher (T-268b)
 
 - Web3 landing: the informative wallet labels next to the hero (MetaMask … WalletConnect) keep out of the
