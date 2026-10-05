@@ -393,6 +393,11 @@
     /* ============================================================
     End Shared Styles
        ============================================================ */
+    /* Keep ballot text, proof links and tables out of the fixed Copilot launcher band on phones/tablets
+       (launcher: 52px at 12px from the right below 481px, 64px at 24px up to 768px). */
+    @media (max-width: 768px) {
+      .phase-card[id] { padding-right: 72px !important; }
+    }
   </style>
   <link rel="icon" type="image/png" href="../assets/ifr_icon_64.png">
   <meta property="og:locale" content="en_US">

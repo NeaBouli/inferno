@@ -46,3 +46,22 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 1440, height: 1000
     expect(overflow).toBeLessThanOrEqual(1);
   });
 }
+
+// The fixed Copilot launcher must not cover ballot text, proof links or tables on phones/tablets:
+// each ballot card's content box ends left of the launcher's horizontal band.
+for (const viewport of [{ width: 390, height: 844 }, { width: 600, height: 900 }, { width: 768, height: 1024 }]) {
+  test(`ballot content stays clear of the Copilot launcher at ${viewport.width}px`, async ({ page }) => {
+    await page.route(/^https?:\/\/(?!localhost)/, (route) => route.abort());
+    await page.setViewportSize(viewport);
+    await page.goto("/wiki/council-votes.html");
+    const launcherLeft = await page.locator("#ifr-btn").evaluate((el) => el.getBoundingClientRect().left);
+    for (const ballot of data.ballots) {
+      const contentRight = await page.locator(`#${ballot.id.toLowerCase()}`).evaluate((el) => {
+        const r = el.getBoundingClientRect();
+        const cs = getComputedStyle(el);
+        return r.right - parseFloat(cs.paddingRight) - parseFloat(cs.borderRightWidth);
+      });
+      expect(contentRight, `${ballot.id} content must end left of the launcher`).toBeLessThanOrEqual(launcherLeft);
+    }
+  });
+}
