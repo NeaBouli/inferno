@@ -579,13 +579,13 @@
           </tr>
           <tr>
             <td>1.0%</td>
-            <td>FeeRouterV1</td>
-            <td>Protocol pool fee; currently accumulates in FeeRouterV1, which has no IFR withdrawal path (~724,992.67 IFR permanently lost). Future pool fees go to BuybackController once Governance proposal #21 executes (ETA 05.10.2026 00:18 UTC).</td>
+            <td>BuybackController</td>
+            <td>Protocol pool fee, routed to BuybackController following Governance proposal #21 (executed 5 October 2026, Mainnet block 26124660, <a href="https://etherscan.io/tx/0x8de48b47dfa8f17b631fb744bc4deef9bbb68271f8b700b422cdd3abb739ca26" target="_blank" rel="noopener">TX 0x8de48b47&hellip;9ca26</a>). FeeRouterV1 retains its earlier IFR balance (734,545.074097347 IFR as of block 26124660 (2026-10-05)) with no withdrawal path; this routing change does not recover those tokens. Direct transfers can still change FeeRouterV1's balance; read it on Etherscan for the current value.</td>
           </tr>
           <tr>
             <td><strong>3.5%</strong></td>
             <td><strong>Total</strong></td>
-            <td><strong>2.5% burned + 1% protocol pool fee via FeeRouterV1</strong></td>
+            <td><strong>2.5% burned + 1% protocol pool fee to BuybackController</strong></td>
           </tr>
         </tbody>
       </table>

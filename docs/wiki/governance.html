@@ -857,7 +857,7 @@
 
       <div class="callout callout-green">
         <p>
-          <strong>Note:</strong> The Owner role was transferred to TreasurySafe (Gnosis Safe 3-of-5) on 20.03.2026. All proposals now require 3-of-5 multisig signatures. Since 03.10.2026 the Guardian role (emergency <code>cancel()</code>) is also held by TreasurySafe. Guardian roles in IFRLock, Vesting and PartnerVault moved to TreasurySafe as well; LiquidityReserve and BurnReserve follow with Governance proposals #19 and #20 (executable from 04.10.2026 23:56 UTC). The BuybackVault and BuybackController guardian is immutable and remains the deployer EOA (pause only). Trade-off: an emergency pause or cancel now needs 3-of-5 Safe signatures, there is no independent canceller while guardian and owner are the same Safe, and the Vesting pause has no maximum duration.
+          <strong>Note:</strong> The Owner role was transferred to TreasurySafe (Gnosis Safe 3-of-5) on 20.03.2026. All proposals now require 3-of-5 multisig signatures. Since 03.10.2026 the Guardian role (emergency <code>cancel()</code>) is also held by TreasurySafe. Guardian roles in IFRLock, Vesting and PartnerVault moved to TreasurySafe as well; Since 05.10.2026 (Governance proposals #19 and #20, executed at Mainnet block 26124647) the LiquidityReserve and BurnReserve guardian is TreasurySafe as well. The BuybackVault and BuybackController guardian is immutable and remains the deployer EOA (pause only). Trade-off: an emergency pause or cancel now needs 3-of-5 Safe signatures, there is no independent canceller while guardian and owner are the same Safe, and the Vesting pause has no maximum duration.
         </p>
       </div>
 

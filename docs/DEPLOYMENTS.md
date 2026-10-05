@@ -247,7 +247,7 @@ All ownable contracts transferred to Governance (48h Timelock). Parameter change
 | IFRLock | `guardian()` | TreasurySafe 3-of-5 (since 03.10.2026; emergency pause) |
 | Vesting | `guardian()` | TreasurySafe 3-of-5 (since 03.10.2026; emergency pause, no maximum duration) |
 | PartnerVault | `guardian()` | TreasurySafe 3-of-5 (since 03.10.2026; emergency pause) |
-| LiquidityReserve, BurnReserve | `guardian()` | Deployer until Governance proposals #19/#20 execute (ETA 04.10.2026 23:56 UTC), then TreasurySafe |
+| LiquidityReserve, BurnReserve | `guardian()` | TreasurySafe 3-of-5 (since 05.10.2026; Governance proposals #19/#20 executed at block 26124647) |
 | BuybackVault, BuybackController | `guardian()` | Deployer EOA, immutable (pause/unpause only) |
 | Governance | `owner()` | TreasurySafe 3-of-5 (transferred 20.03.2026, TX `0xcd9f99d2...19c46c3`) |
 

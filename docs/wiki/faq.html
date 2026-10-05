@@ -939,7 +939,7 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>How are LP tokens locked?</span><span class="icon">+</span></button>
-          <div class="faq-a">On Mainnet, Team.Finance was not configured: <code>teamFinanceLocker</code> is the zero address and <code>lpLockId</code> is zero. The LP tokens created by <code>finalise()</code> remain in BootstrapVaultV3. That contract exposes no LP withdrawal or recovery function, so the team has no path to remove the retained LP. These initial LP tokens are 72.91% of the IFR/WETH LP supply and are permanently locked. LP tokens created later by the BuybackController would be sent to TreasurySafe (governed by the 3-of-5 Safe, not locked); the controller has not executed yet. The vault and LP balances are publicly verifiable on Etherscan.</div>
+          <div class="faq-a">On Mainnet, Team.Finance was not configured: <code>teamFinanceLocker</code> is the zero address and <code>lpLockId</code> is zero. The LP tokens created by <code>finalise()</code> remain in BootstrapVaultV3. That contract exposes no LP withdrawal or recovery function, so the team has no path to remove the retained LP. These initial LP tokens are permanently locked. LP tokens created later by the BuybackController are sent to TreasurySafe (governed by the 3-of-5 Safe, not locked). The vault and LP balances are publicly verifiable on Etherscan.</div>
         </div>
 
         <div class="faq-item">
