@@ -852,7 +852,7 @@ export default function Home() {
           </p>
         </div>
 
-        <div id="seller-workspace" className="grid scroll-mt-36 gap-5">
+        <div id="seller-workspace" className="grid min-w-0 scroll-mt-36 grid-cols-[minmax(0,1fr)] gap-5">
           {role === 'customer' ? (
             <>
               <WalletStatus />

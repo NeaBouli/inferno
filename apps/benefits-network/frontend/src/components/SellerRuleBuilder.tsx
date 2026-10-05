@@ -1677,8 +1677,8 @@ export function SellerRuleBuilder() {
         </p>
       </div>
 
-      <nav aria-label="Seller tasks" className="mb-5 overflow-x-auto rounded-2xl border border-orange-200/15 bg-black/20 p-2">
-        <div className="flex min-w-max gap-2">
+      <nav aria-label="Seller tasks" className="relative mb-5 overflow-x-auto rounded-2xl border border-orange-200/15 bg-black/20 p-2">
+        <div className="flex min-w-max gap-2 sm:min-w-0 sm:flex-wrap">
           {sellerTasks.map((task) => (
             <a
               key={task.href}
