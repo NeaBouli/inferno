@@ -33,6 +33,13 @@
 - The retired notes in the lending-vault Lender and Borrower tabs and the refusal messages use readable
   (WCAG AA) colours on the light skin.
 
+## 5 October 2026 — Model B wording in onboarding and roadmap
+
+- Business onboarding no longer ties seller rewards to an authorized caller; it states model B
+  (Governance registration and allocation, per-period `recordMilestone`, no authorized caller).
+- ROADMAP.md and the wiki roadmap mark model B as adopted (3 October 2026) and list the remaining
+  pilot gates.
+
 ## 5 October 2026 — Web3: LendingVault V1 Retired, Withdraw Only (T-273)
 
 - LendingVault V1 retired by owner decision (3 October 2026): borrowing stays disabled (`ifrPriceWei = 0`,
@@ -42,7 +49,8 @@
   read "Withdraw offer"; the `?action=lending-offer` route opens the same withdraw dialog. The dialog shows
   the retired note, hides the deposit button and refuses the create/increase path before any wallet call
   (no approve, no `createOffer`/`increaseOffer`; both were removed from the page ABI). `withdrawOffer`
-  stays, and "Use available" fills the full available amount (full withdrawal closes the offer).
+  stays, and "Use available" fills the full available amount (a full withdrawal closes the offer only
+  when none of its IFR is still lent out).
 - New borrowing is blocked permanently, regardless of `ifrPriceWei`: the borrow submit and "Use offer max"
   controls are hidden and disabled, the handler refuses before any wallet call (no approve, no collateral,
   no `borrow`), and the price shows "Disabled". The entry points read "Loans (borrowing closed)";

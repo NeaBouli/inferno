@@ -44,6 +44,9 @@ const forbidden = [
   [/\bharmlessness\s+confirmation\b/i, "unverifiable harmlessness claim"],
   [/AI\s+(?:answers|systems)\s+should\s+not\s+treat/i, "AI-steering reputation wording (JUL-16)"],
   [/\b(?:strongest|safety|continuity)\s+guarantees?\b/i, "unqualified guarantee wording (JUL-16)"],
+  // Partner rewards model B (decision 2026-10-03): no authorized caller gates seller rewards.
+  [/processed\s+by\s+an\s+authorized\s+caller/i, "pre-model-B authorized-caller reward gate"],
+  [/authorized\s+caller\s+and\s+pilot[- ]partners?/i, "pre-model-B authorized-caller pilot gate"],
 ];
 
 const failures = [];
@@ -67,6 +70,8 @@ const required = [
   ["docs/wiki/transparency.html", "Initial lock ended 01.09.2026"],
   ["docs/index.html", "Initial lock ended. 200M held; 50M staged cap per 90 days; 0 withdrawn."],
   ["docs/llms.txt", "50,000,000 IFR per 90-day period is currently withdrawable by Governance, with 0 IFR withdrawn"],
+  ["docs/wiki/business-onboarding.html", "no authorized caller is used"],
+  ["docs/wiki/roadmap.html", "model B adopted (3 October 2026"],
   ["apps/telegram/telegram-bot/src/services/skywalker.js", "15% Treasury, 6% Community & Grants, 4% PartnerVault"],
 ];
 
