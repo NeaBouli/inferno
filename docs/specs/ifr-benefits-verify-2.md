@@ -51,7 +51,7 @@ All rules of `/1` §4 apply, with these clarifications:
   the higher of the two per-source tiers.
 - **Price-conditioned tranches never count**, in any vault. V1 accepts them on direct calls and V2 rejects
   them (`price conditions disabled`), so the exclusion matters only for V1, but it is applied everywhere.
-- **Amounts are the recorded tranche amounts.** V2 is fee-exempt once Governance proposal #17 is executed,
+- **Amounts are the recorded tranche amounts.** V2 is fee-exempt since Governance proposal #17 (executed 2026-10-04),
   so the recorded amount equals the amount the vault received.
 
 ## 6. Message resource (amends `/1` §6)
@@ -65,7 +65,7 @@ integrator accepts.
 
 - **Both versions stay valid.** A `/1` result reads V1 only and is never higher than the `/2` result for
   the same wallet and block.
-- **Integrators SHOULD move to `/2`** once V2 accepts new time locks (after Governance proposal #17).
+- **Integrators SHOULD move to `/2`**: V2 accepts new time locks since Governance proposal #17 (executed 2026-10-04).
   During the move an integrator MAY accept `/1` and `/2` messages and evaluate each with the version it
   names (reference library: `expected.specs` and `benefitMessageSpec`).
 - **No silent switch.** The reference library keeps `/1` as its default. A verifier changes to `/2`

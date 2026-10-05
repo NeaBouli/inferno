@@ -146,13 +146,14 @@
 | 13 | **BuilderRegistry** | [`0xdfe6636DA47F8949330697e1dC5391267CEf0EE3`](https://etherscan.io/address/0xdfe6636DA47F8949330697e1dC5391267CEf0EE3#code) | Verified |
 | 14 | **BuybackController** | [`0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c`](https://etherscan.io/address/0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c#code) | Verified / governance-wired |
 
-CommitmentVault V2 (CV-01 repair, deployed, not yet wired):
+CommitmentVault V2 (CV-01 repair, deployed, fee-exempt since proposal #17):
 [`0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F`](https://etherscan.io/address/0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F#code)
 — deployed 2026-10-02 21:22 UTC, block 26107296, TX
 [`0x9857a570...3ea0f7`](https://etherscan.io/tx/0x9857a5707b650b8828f41b893f91a10ff26d7990742e782bb0b7e86df23ea0f7),
-owner Governance, source commit `cdb85fe791d2d21a870684c92b9c15e9c897fd60`, Etherscan verified and Sourcify exact match. It accepts only `TIME_ONLY` locks. It joins the
-contract table after Governance proposal #17 (`setFeeExempt(V2, true)`) is executed and the interfaces switch
-(`docs/COMMITMENT_VAULT_V2_REPAIR.md` steps 4-5).
+owner Governance, source commit `cdb85fe791d2d21a870684c92b9c15e9c897fd60`, Etherscan verified and Sourcify exact match. It accepts only `TIME_ONLY` locks. Governance proposal #17
+(`setFeeExempt(V2, true)`) was executed on 2026-10-04 in block 26121846, TX
+[`0xbb53640c...4a835c`](https://etherscan.io/tx/0xbb53640ca8fd59513c8c772a0ceb633d63d7d9837768c28535bd67da6c4a835c); the interfaces send new time locks to V2. It is listed
+separately and not counted in the contract table.
 
 Legacy deployment: ~~BootstrapVault V1~~
 [`0xA820540936d18e1377C39dd9445E5b36F3F1261a`](https://etherscan.io/address/0xA820540936d18e1377C39dd9445E5b36F3F1261a#code)
@@ -272,7 +273,7 @@ All ownable contracts transferred to Governance (48h Timelock). Parameter change
 | LP custody | **Done** — LP tokens remain in withdrawal-less BootstrapVaultV3; Mainnet Team.Finance path disabled |
 | Proposal #15: setFeeExempt(LP Token) | **Executed** (08.06.2026) |
 | CommitmentVault V2 deployed (CV-01 repair) | **Done** (02.10.2026) — [`0x8efae0C8...`](https://etherscan.io/address/0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F#code) — TX [`0x9857a570...`](https://etherscan.io/tx/0x9857a5707b650b8828f41b893f91a10ff26d7990742e782bb0b7e86df23ea0f7); Etherscan verified (full solc input) and Sourcify exact match |
-| Proposal #17: setFeeExempt(CommitmentVault V2) | **Queued** (02.10.2026 21:53 UTC) — TreasurySafe 3-of-5, TX [`0x6e113b6c...`](https://etherscan.io/tx/0x6e113b6cc66a369604d46c3b4a5560f1418302de6ecc371f1217d72aeabd39bd); ETA 04.10.2026 21:53 UTC, then `execute(17)` |
+| Proposal #17: setFeeExempt(CommitmentVault V2) | **Executed** (04.10.2026, block 26121846) — queued 02.10.2026 by TreasurySafe 3-of-5, TX [`0x6e113b6c...`](https://etherscan.io/tx/0x6e113b6cc66a369604d46c3b4a5560f1418302de6ecc371f1217d72aeabd39bd); executed TX [`0xbb53640c...`](https://etherscan.io/tx/0xbb53640ca8fd59513c8c772a0ceb633d63d7d9837768c28535bd67da6c4a835c) |
 | Transfer InfernoToken Ownership to Governance | **Done** (2026-03-05) |
 | Transfer LiquidityReserve Ownership to Governance | **Done** (2026-03-05) |
 | Transfer BurnReserve Ownership to Governance | **Done** (2026-03-05) |

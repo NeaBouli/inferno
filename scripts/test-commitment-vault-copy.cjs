@@ -29,7 +29,8 @@ for (const tag of ['name="description"', 'property="og:description"', 'name="twi
   assert.ok(m, `${tag} missing`);
   assert.match(m[1], /PRICE_ONLY and TIME_AND_PRICE/, `${tag} must name the stuck types`);
   assert.match(m[1], /TIME_OR_PRICE still unlocks by time/, `${tag} must say TIME_OR_PRICE unlocks by time`);
-  assert.match(m[1], /V2 after Governance proposal #17/, `${tag} must keep the V2 / #17 wording`);
+  assert.match(m[1], /V2, fee-exempt since Governance proposal #17/, `${tag} must state V2 is fee-exempt since #17`);
+  assert.doesNotMatch(m[1], /after Governance proposal #17/, `${tag} must not describe #17 as pending`);
 }
 const ld = html.match(/"description":\s*"([^"]+)"/);
 assert.ok(ld && /TIME_OR_PRICE still unlocks by time/.test(ld[1]), "JSON-LD description must say TIME_OR_PRICE unlocks by time");
