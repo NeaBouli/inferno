@@ -1577,6 +1577,13 @@
       object-fit: cover;
     }
 
+    /* An open dialog owns the screen: the fixed launcher would sit on its fields, so it steps back while
+       any dialog is open and returns when the dialog closes. */
+    body:has(.install-dialog.is-open, .wallet-connect-dialog.is-open, .protocol-dialog.is-open) .copilot-launcher {
+      visibility: hidden;
+      opacity: 0;
+    }
+
     .copilot-panel {
       position: fixed;
       right: 20px;

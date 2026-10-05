@@ -1,5 +1,16 @@
 # Changelog
 
+## 5 October 2026 — Copilot Launcher Clear of Onboarding Callouts and Web3 Dialogs (T-268)
+
+- Business onboarding: callout boxes keep their text out of the fixed Copilot launcher band on phones and
+  tablets (72px right padding up to 768px, 48px below 481px), as on the council-vote cards. The launcher
+  stays visible.
+- Web3: while an install, wallet or protocol dialog is open, the launcher steps back (hidden) so it cannot
+  sit on dialog fields such as the withdraw amount row; it returns when the dialog closes.
+- New regressions in `fab-clearance.spec.js` measure callout text boxes against the launcher band
+  (375/390/600/768) and the open withdraw dialog's text and controls against the launcher (375x812,
+  375x900, 390x844), then reopen chat after closing the dialog. Without the fix 6 of the 7 new tests fail.
+
 ## 5 October 2026 — Model B wording in onboarding and roadmap
 
 - Business onboarding no longer ties seller rewards to an authorized caller; it states model B
