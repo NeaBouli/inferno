@@ -9,7 +9,15 @@
 const { chromium } = require('playwright');
 
 const BASE_URL = process.env.BENEFITS_BASE_URL || 'http://127.0.0.1:3000';
-const SETTLE_MS = Number(process.env.BENEFITS_TELEMETRY_SETTLE_MS || 6000);
+// AppKit flushes its analytics queue on a 10 s interval, so every page is
+// observed for at least 15 s after the network went idle. The env var can only
+// lengthen this window, never shorten it.
+const MIN_OBSERVE_MS = 15_000;
+const OBSERVE_MS = Math.max(MIN_OBSERVE_MS, Number(process.env.BENEFITS_TELEMETRY_SETTLE_MS || 0));
+// Set to 1 when the bundle was built with NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
+// so the WalletConnect/AppKit path is really present (otherwise the gate would
+// be vacuous for WalletConnect telemetry).
+const EXPECT_WALLETCONNECT = process.env.BENEFITS_EXPECT_WALLETCONNECT === '1';
 const ROUTES = ['/', '/?mode=seller', '/guide', '/b/telemetry-check', '/r/telemetry-check'];
 const VIEWPORTS = [
   { name: 'mobile 375x812', viewport: { width: 375, height: 812 }, isMobile: true, hasTouch: true },
@@ -39,6 +47,7 @@ function isTelemetry(url) {
 (async () => {
   const failures = [];
   const thirdParty = new Set();
+  const connectorIds = new Set();
   const browser = await chromium.launch({ headless: true });
   try {
     for (const vp of VIEWPORTS) {
@@ -67,7 +76,17 @@ function isTelemetry(url) {
         const page = await context.newPage();
         try {
           await page.goto(`${BASE_URL}${route}`, { waitUntil: 'load', timeout: 60_000 });
-          await page.waitForTimeout(SETTLE_MS);
+          await page.waitForLoadState('networkidle', { timeout: 30_000 }).catch(() => {});
+          if (route === '/') {
+            const control = page.locator('[data-wallet-connect-control][data-wallet-connectors-ready="true"]').first();
+            await control.waitFor({ state: 'attached', timeout: 30_000 });
+            const ids = (await control.getAttribute('data-wallet-connector-ids')) || '';
+            connectorIds.add(ids);
+            if (EXPECT_WALLETCONNECT && !ids.split(',').includes('walletConnect')) {
+              failures.push(`[${vp.name}] ${route} -> WalletConnect connector missing (ids="${ids}"); build with NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`);
+            }
+          }
+          await page.waitForTimeout(OBSERVE_MS);
         } finally {
           await page.close();
           await context.close();
@@ -79,9 +98,10 @@ function isTelemetry(url) {
     await browser.close();
   }
 
+  console.log(`[benefits-wallet-telemetry] observe=${OBSERVE_MS}ms after network idle; expect-walletconnect=${EXPECT_WALLETCONNECT}; connector ids on /: ${[...connectorIds].join(' | ') || 'n/a'}`);
   console.log(`[benefits-wallet-telemetry] third-party hosts seen before wallet choice: ${[...thirdParty].sort().join(', ') || 'none'}`);
   if (failures.length > 0) {
-    console.error(`[benefits-wallet-telemetry] FAIL: ${failures.length} wallet telemetry request(s) before any wallet was chosen:\n${failures.join('\n')}`);
+    console.error(`[benefits-wallet-telemetry] FAIL: ${failures.length} finding(s) before any wallet was chosen:\n${failures.join('\n')}`);
     process.exitCode = 1;
     return;
   }
