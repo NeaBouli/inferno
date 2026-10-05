@@ -28,6 +28,9 @@ const envSchema = z.object({
   IFR_TOKEN_ADDRESS: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
   IFRLOCK_ADDRESS: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
   COMMITMENT_VAULT_ADDRESS: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+  // ifr-benefits-verify/2: optional CommitmentVault V2; when set, its active TIME_ONLY tranches are
+  // added to V1's for the commitment source (never added to IFRLock).
+  COMMITMENT_VAULT_V2_ADDRESS: optionalAddress,
   PARTNER_VAULT_ADDRESS: optionalAddress,
   BUILDER_REGISTRY_ADDRESS: optionalAddress,
   REWARD_CALLER_ADDRESS: optionalAddress,

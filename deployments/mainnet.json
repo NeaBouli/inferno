@@ -6,7 +6,7 @@
     "unknownPolicy": "deployer, tx and timestamp are null when no deployment record exists in this repository; they are unknown, not omitted by accident. Fill them only from a verified deployment transaction.",
     "abiDirectory": "abi/ (only BuilderRegistry, BuybackController, CommitmentVault, LendingVault have committed ABIs)",
     "pendingWiring": {
-      "note": "Deployed and fee-exempt (Governance proposal #17 executed 2026-10-04T22:01:23Z, block 26121846, tx 0xbb53640ca8fd59513c8c772a0ceb633d63d7d9837768c28535bd67da6c4a835c), but not yet counted as a protocol contract: it joins the contract list once the interface switch is released on the Web3 site (docs/COMMITMENT_VAULT_V2_REPAIR.md step 5).",
+      "note": "Deployed and fee-exempt (Governance proposal #17 executed 2026-10-04T22:01:23Z, block 26121846, tx 0xbb53640ca8fd59513c8c772a0ceb633d63d7d9837768c28535bd67da6c4a835c), and the Web3 time-only V2 interface switch is released and live-verified (2026-10-05). Not yet counted as a protocol contract; moving it into the contract list (component count 15 + 3 = 18) is a separate, explicitly reviewed step.",
       "CommitmentVaultV2": {
         "address": "0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F",
         "deployer": "0x6b36687b0cd4386fb14cf565B67D7862110Fed67",

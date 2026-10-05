@@ -82,9 +82,13 @@ remains the only place where agenda items and vote outcomes are published.
   - There is no rescue or upgrade path, so the tranches are permanently locked.
   - Urgent Council proposal CV-01 compensates from the LP Reserve Safe by each tranche's original
     conditions ([CV-01](wiki/commitment-vault-compensation.html)).
-- **Decision needed:** Option A (CommitmentVaultV2), Option B (dedicated
-  PriceLockVault) or Option C (defer). Oracle model and rescue path for
-  locks whose condition can never be met.
+- **Decision needed:** none; decided 2026-10-03: Option B. A dedicated
+  `PriceLockVault` is built and deployed later; price locks stay disabled
+  until an on-chain readiness scope (pool WETH depth and/or TWAP) holds, and
+  activation is a Governance proposal that reverts if the scope is not met. Price conditions use a
+  7-day TWAP; every lock has a mandatory rescue time of at most 4 years
+  ([specification](PRICE_LOCK_VAULT_SPEC.md)). CommitmentVault V2 stays
+  `TIME_ONLY`.
 - **Prerequisites:** proof contract with tests for zero reserves, stale
   observations, token order, decimal scaling and post-trigger price drops.
 - **Dependencies:** Lane 1 oracle policy; pool liquidity depth.
@@ -95,7 +99,9 @@ remains the only place where agenda items and vote outcomes are published.
 - **Testnet/staging gate:** Sepolia deployment with every condition type.
 - **Production gate:** separate recorded decision plus Safe proposal and
   48-hour timelock.
-- **Next evidence:** Option A/B/C decision record; proof contract test report.
+- **Next evidence:** Sepolia rehearsal log; readiness reaching the
+  activation scope. The independent review of `PriceLockVault` is done
+  (second review T-256); the vault is not deployed and not active.
 
 ## Lane 3 — FeeRouter sink/accrual and Governance/guardian redeployment
 

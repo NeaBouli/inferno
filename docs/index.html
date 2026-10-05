@@ -508,7 +508,7 @@
 
     .tokenomics-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       gap: 48px;
       margin-top: 48px;
     }
@@ -536,6 +536,7 @@
     .fee-value.burn { color: var(--accent); }
     .fee-value.total { color: var(--accent); font-size: 18px; }
 
+    .tokenomics-grid > * { min-width: 0; }
     .allocation { margin-top: 0; }
     .allocation h3 { font-size: 18px; font-weight: 700; margin-bottom: 20px; }
 
@@ -875,6 +876,7 @@
       transition: max-height 0.3s ease;
     }
     .lp-faq-a-inner {
+      overflow-wrap: anywhere; /* long addresses must wrap instead of widening the grid track (T-262 D3) */
       padding: 0 18px 16px;
       color: #999;
       font-size: 14px;
@@ -992,7 +994,7 @@
       #wizard { scroll-margin-top: 141px; }
       .what-grid { grid-template-columns: 1fr; gap: 40px; }
       .how-cards { grid-template-columns: 1fr; }
-      .tokenomics-grid { grid-template-columns: 1fr; }
+      .tokenomics-grid { grid-template-columns: minmax(0, 1fr); }
       .eco-grid { grid-template-columns: 1fr; }
       .trust-grid { grid-template-columns: 1fr; }
       .partner-steps { grid-template-columns: 1fr; }
@@ -1986,7 +1988,7 @@ render();
         </div>
         <div style="margin-top:18px;padding:18px 20px;background:#fffaf2;border:1px solid #e4d8c7;border-radius:var(--radius);box-shadow:0 14px 34px rgba(85,65,42,0.08);text-align:left;">
           <div style="font-size:12px;color:#6f675d;text-transform:uppercase;letter-spacing:0.05em;font-weight:700;margin-bottom:10px;">Protocol Locked Unlock Paths</div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 14px;font-size:12px;line-height:1.45;color:#3b3128;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:8px 14px;font-size:12px;line-height:1.45;color:#3b3128;">
             <div><strong>LP Reserve Safe:</strong> multisig governed, no automatic unlock.</div>
             <div><strong>Liquidity Reserve:</strong> initial lock ended 01.09.2026; 200M IFR remains held and unused under a 50M-per-90-day cap.</div>
             <div><strong>Team Vesting:</strong> cliff until ~03.2027, then 36-month linear release.</div>
@@ -2076,7 +2078,7 @@ render();
     <div class="reveal" style="margin-top:40px;">
       <h3 style="text-align:center;font-size:18px;font-weight:700;margin-bottom:6px;">Genesis &amp; Project Wallets</h3>
       <p style="text-align:center;font-size:12px;color:var(--text-muted);margin-bottom:24px;">All protocol wallets &mdash; live balances via copilot-api.ifrunit.tech &mdash; <span class="live-updated-at" style="color:#065f46;">loading&hellip;</span></p>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:12px;">
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
@@ -2256,7 +2258,7 @@ render();
       <!-- Infrastructure Contracts (no IFR balances — core protocol logic) -->
       <h3 style="text-align:center;font-size:16px;font-weight:700;margin:32px 0 6px 0;">Infrastructure Contracts</h3>
       <p style="text-align:center;font-size:12px;color:var(--text-muted);margin-bottom:16px;">Core protocol logic &mdash; no IFR balances, verified on Etherscan</p>
-      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:12px;">
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
@@ -2809,7 +2811,7 @@ if (isLocked) {
       <div class="transparency-card" data-transparency-metric="commitment" data-state="loading" aria-busy="true" style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:28px 24px;text-align:center;">
         <div class="transparency-value" data-transparency-value style="font-size:32px;font-weight:700;color:#ff6a00;">Loading&hellip;</div>
         <div style="color:#aaa;margin-top:8px;">CommitmentVault Locked</div>
-        <div data-transparency-detail style="color:#666;font-size:13px;margin-top:4px;">CommitmentVault totalLocked()</div>
+        <div data-transparency-detail style="color:#666;font-size:13px;margin-top:4px;">Live time tranches (totalLocked() minus CV-01)</div>
         <p class="transparency-status" data-transparency-status>Reading Ethereum Mainnet&hellip;</p>
       </div>
       <div class="lost-ifr-card" data-lost-ifr data-state="verified" style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:28px 24px;text-align:center;">
@@ -2858,9 +2860,9 @@ if (isLocked) {
     </p>
 
     <!-- 2-column accordion grid -->
-    <div id="lp-faq-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
-      <div id="faq-col-left" style="display:flex;flex-direction:column;gap:10px;"></div>
-      <div id="faq-col-right" style="display:flex;flex-direction:column;gap:10px;"></div>
+    <div id="lp-faq-grid" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+      <div id="faq-col-left" style="display:flex;flex-direction:column;gap:10px;min-width:0;"></div>
+      <div id="faq-col-right" style="display:flex;flex-direction:column;gap:10px;min-width:0;"></div>
     </div>
 
     <!-- CTA -->
@@ -2924,7 +2926,7 @@ if (isLocked) {
 <!-- Mobile: single column -->
 <style>
 @media(max-width:700px){
-  #lp-faq-grid { grid-template-columns:1fr !important; }
+  #lp-faq-grid { grid-template-columns:minmax(0,1fr) !important; }
 }
 </style>
 
@@ -3260,7 +3262,7 @@ if (isLocked) {
       </div>
       <div style="margin-top:12px;font-size:13px;color:var(--text-muted);border-top:1px solid var(--border);padding-top:10px;line-height:1.8;">
         <strong style="color:var(--text);">14 deployed contracts + 3 Gnosis Safes = 17 on-chain components</strong><br>
-        <span style="display:inline-block;background:rgba(34,197,94,0.15);color:#166534;font-size:11px;padding:1px 6px;border-radius:4px;margin-right:4px;">live</span> Uniswap V2 LP Pair &mdash; <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="color:#166534;">0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</a><br>
+        <span style="display:inline-block;background:rgba(34,197,94,0.15);color:#166534;font-size:11px;padding:1px 6px;border-radius:4px;margin-right:4px;">live</span> Uniswap V2 LP Pair &mdash; <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="color:#166534;word-break:break-all;">0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</a><br>
         <span style="display:inline-block;background:rgba(107,114,128,0.2);color:#4b5563;font-size:11px;padding:1px 6px;border-radius:4px;margin-right:4px;">Phase 4</span> RatVoting.sol &mdash; Council Governance<br>
         <span style="display:inline-block;background:rgba(107,114,128,0.2);color:#4b5563;font-size:11px;padding:1px 6px;border-radius:4px;margin-right:4px;">Phase 4</span> ForumVoting.sol &mdash; Community Governance<br>
         <span style="display:inline-block;background:rgba(107,114,128,0.2);color:#4b5563;font-size:11px;padding:1px 6px;border-radius:4px;margin-right:4px;">Phase 4</span> IFRSpamProtection.sol &mdash; Proposal Spam Protection
@@ -4017,6 +4019,12 @@ if (isLocked) {
         : (isNum(data.commitmentLocked) ? Math.max(0, data.commitmentLocked - split.cv01) : null);
       var serverLive = parseBaseUnits(typeof supply.liveSupplyRaw === 'string' ? supply.liveSupplyRaw : null);
       data.liveSupply = serverLive !== null && serverLive > 0n ? baseUnitsToNumber(serverLive) : split.liveSupply;
+      // Name the sources the API itself flagged (e.g. IFRLock.unlocked) instead of a generic "some values".
+      if (Array.isArray(res[1].unavailable)) {
+        res[1].unavailable.forEach(function(l) {
+          if (typeof l === 'string' && /^[A-Za-z0-9.]{1,40}$/.test(l) && unavailable.indexOf(l) === -1 && !(l === 'FeeRouterV1' && feeRaw !== null)) unavailable.push(l);
+        });
+      }
       data.unavailable = unavailable;
       data.partial = unavailable.length > 0 || res[1].incomplete === true || supply.incomplete === true;
       liveDistributionData = data;
@@ -4131,13 +4139,19 @@ if (isLocked) {
       var vesting = new ethers.Contract(vestingAddr, vestingAbi, provider);
       mainnetReadInFlight = true;
       var cvRead = withTimeout(Promise.all([cv.totalLocked(), cv.lockedBalance(c2Addr), cv.getTrancheCount(c2Addr)]), MAINNET_READ_TIMEOUT_MS).then(function(values) {
-        setTransparencyMetric('commitment', fmtIfrUnits(values[0]), 'Sum of active tranches \u00B7 CommitmentVault totalLocked()');
         var total = Number(ethers.formatUnits(values[0], 9));
         var c2 = Number(ethers.formatUnits(values[1], 9));
         var tranches = values[2].toString();
-        // totalLocked() still contains the CV-01 tranches; the distribution counts them as dead.
+        // totalLocked() still contains the CV-01 tranches; the distribution and the Permanently Lost card count
+        // them as dead, so the transparency card shows only the live time tranches (same split as splitDead).
         var cv01 = parseBaseUnits(LOST_IFR.cv01Raw);
         var liveCommit = values[0] >= cv01 ? baseUnitsToNumber(values[0] - cv01) : null;
+        if (values[0] >= cv01) {
+          setTransparencyMetric('commitment', fmtIfrUnits(values[0] - cv01),
+            'Live time tranches \u00B7 totalLocked() minus CV-01 (counted as Permanently Lost)');
+        } else {
+          failTransparencyMetric('commitment'); // inconsistent read: never show a clamped or fake value
+        }
         if (liveDistributionData && liveCommit !== null) {
           liveDistributionData.commitmentLocked = liveCommit;
           renderLegend(liveDistributionData);
