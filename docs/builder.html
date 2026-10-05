@@ -165,6 +165,9 @@
   <p>IFR Protocol &mdash; <a href="https://ifrunit.tech">ifrunit.tech</a> &middot; <a href="https://github.com/NeaBouli/inferno">GitHub</a> &middot; <a href="https://t.me/IFR_token">Telegram</a></p>
 </footer>
 <script>
+// Valid Solidity contract name from free text: digit-leading or reserved results get an "IFR" prefix (same rule as apps/builder/engine).
+var RSV=('abstract address after alias anonymous apply as assembly auto bool break byte bytes calldata case catch constant constructor continue contract copyof default define delete do else emit enum error event external fallback false final for function if immutable implements import in indexed inline int interface internal is let library macro mapping match memory modifier mutable new null of override partial payable pragma private promise public pure receive reference relocatable return returns revert sealed sizeof static storage string struct super supports switch this true try type typedef typeof uint unchecked using var view virtual while BaseAccessModule HardLockModule TierModule CooldownModule Ownable IERC20 ReentrancyGuard').split(' ');
+function sid(t){var n=(String(t).replace(/[^a-zA-Z0-9]/g,'')||'MyProduct')+'Access';return /^[0-9]/.test(n)||RSV.indexOf(n)>=0?'IFR'+n:n}
 var C={productName:'',productUrl:'',minAmount:1000,hardLock:true,lockDuration:30,tierSystem:true,cooldown:true,apiCheck:false};
 function setAmt(v){C.minAmount=+v;document.getElementById('amtDisp').textContent=(+v).toLocaleString()+' IFR';upd()}
 function setLock(b){C.hardLock=b;document.getElementById('bHL').classList.toggle('active',b);document.getElementById('bSL').classList.toggle('active',!b);document.getElementById('durGrp').style.display=b?'block':'none';upd()}
@@ -197,7 +200,7 @@ function upd(){
 }
 function gen(){
   C.productName=document.getElementById('pName').value||'MyProduct';C.productUrl=document.getElementById('pUrl').value||'https://yourproduct.com';
-  var nm=C.productName.replace(/[^a-zA-Z0-9]/g,'')+'Access';var hl=C.hardLock;var ts=C.tierSystem;var cd=C.cooldown;
+  var nm=sid(C.productName);var hl=C.hardLock;var ts=C.tierSystem;var cd=C.cooldown;
   var imp=[];var inh=[];
   if(hl){imp.push('import "./library/HardLockModule.sol";');inh.push('HardLockModule')}else{imp.push('import "./library/BaseAccessModule.sol";');inh.push('BaseAccessModule')}
   if(ts){imp.push('import "./library/TierModule.sol";');inh.push('TierModule')}

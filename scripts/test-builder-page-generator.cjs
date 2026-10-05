@@ -125,6 +125,34 @@ for (const combo of combos) {
   if (!guide.includes("0xc43d48E7FDA576C5022d0670B652A622E8caD041")) fail(`${where}: guide must name the Mainnet governance address`);
 }
 
+// Contract identifiers from free-text product names: digit-leading, digit-only, symbol-only and
+// reserved inputs must still yield a valid Solidity identifier; the readable name stays in the comment.
+// (Compilation of these names is proven by test/builder/CodeGeneratorCompile.test.cjs via builder.html parity.)
+const SOLIDITY_RESERVED = new Set(["contract", "function", "address", "mapping", "returns", "BaseAccessModule", "Ownable"]);
+const nameCases = [
+  { input: "3D Print Shop", expected: "IFR3DPrintShopAccess" },
+  { input: "42", expected: "IFR42Access" },
+  { input: "007 Agency", expected: "IFR007AgencyAccess" },
+  { input: "!!! ###", expected: "MyProductAccess" },
+  { input: "contract", expected: "contractAccess" },
+  { input: "Demo", expected: "DemoAccess" },
+];
+for (const { input, expected } of nameCases) {
+  Object.assign(page.C, { productName: input, productUrl: "https://demo.example", minAmount: 1000, hardLock: true, lockDuration: 30, tierSystem: true, cooldown: true, apiCheck: false });
+  element("pName").value = input;
+  element("pUrl").value = "https://demo.example";
+  page.gen();
+  const contract = element("t-contract").textContent;
+  const declared = (contract.match(/^contract (\S+) is /m) || [])[1];
+  const where = `product name ${JSON.stringify(input)}`;
+  if (declared !== expected) fail(`${where}: contract name ${declared} != ${expected}`);
+  if (!declared || !/^[A-Za-z_$][A-Za-z0-9_$]*$/.test(declared) || SOLIDITY_RESERVED.has(declared)) {
+    fail(`${where}: ${declared} is not a valid Solidity identifier`);
+  }
+  if (!contract.includes(`// Product: ${input}\n`)) fail(`${where}: readable product name must stay in the header comment`);
+  if (!element("t-guide").textContent.includes(`contracts/${expected}.sol`)) fail(`${where}: deploy guide must use ${expected}.sol`);
+}
+
 // Score math stays as deployed: default configuration scores 90/SAFE.
 Object.assign(page.C, { minAmount: 1000, hardLock: true, lockDuration: 30, tierSystem: true, cooldown: true, apiCheck: false });
 const defaultScore = page.score();
