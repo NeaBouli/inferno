@@ -13,7 +13,12 @@ import {
 } from '../src/services/authenticatedRateLimiter';
 import { RateLimitStoreUnavailableError } from '../src/services/rateLimitInfrastructure';
 import { getRateLimitTopologyIssues } from '../src/services/rateLimitTopology';
-import { createAdminRateLimiter, customerPassControlRateLimitKey } from '../src/middleware/rateLimiter';
+import {
+  clientIpRateLimitKey,
+  createAdminRateLimiter,
+  customerPassControlRateLimitKey,
+  rateLimitIpKey,
+} from '../src/middleware/rateLimiter';
 
 describe('Authenticated seller wallet limiter', () => {
   it('isolates customer-pass read budgets without storing bearer tokens', () => {
@@ -174,6 +179,48 @@ describe('Admin pre-auth limiter', () => {
       expect(limited.headers.get('ratelimit-limit')).toBe('2');
       expect(limited.headers.get('ratelimit-remaining')).toBe('0');
       expect(await limited.json()).toEqual({ error: 'Too many admin requests. Try again later.' });
+    } finally {
+      await new Promise<void>((resolve, reject) => {
+        probeServer.close((error) => error ? reject(error) : resolve());
+      });
+    }
+  });
+});
+
+describe('IPv6 /64 rate-limit keys (T-259)', () => {
+  it('keys IPv4 by address, IPv4-mapped as IPv4 and IPv6 by its /64', () => {
+    expect(rateLimitIpKey('203.0.113.7')).toBe('203.0.113.7');
+    expect(rateLimitIpKey('::ffff:203.0.113.7')).toBe('203.0.113.7');
+    expect(rateLimitIpKey('::FFFF:cb00:7107')).toBe('203.0.113.7');
+    expect(rateLimitIpKey('2001:db8:abcd:ef01::1')).toBe('2001:db8:abcd:ef01::/64');
+    expect(rateLimitIpKey('2001:0DB8:abcd:ef01:ffff:1:2:3')).toBe('2001:db8:abcd:ef01::/64');
+    expect(rateLimitIpKey('2001:db8:abcd:ef02::1')).not.toBe(rateLimitIpKey('2001:db8:abcd:ef01::1'));
+    expect(rateLimitIpKey('unknown')).toBe('unknown');
+    expect(clientIpRateLimitKey({})).toBe('unknown');
+  });
+
+  it('caps rotation inside one /64 behind the trusted proxy chain', async () => {
+    const app = express();
+    app.set('trust proxy', ['loopback', 'linklocal', 'uniquelocal']);
+    app.use(createAdminRateLimiter({ windowMs: 60_000, max: 3 }));
+    app.get('/probe', (_req, res) => res.json({ ok: true }));
+    const probeServer = await new Promise<Server>((resolve) => {
+      const listening = app.listen(0, '127.0.0.1', () => resolve(listening));
+    });
+
+    try {
+      const address = probeServer.address();
+      if (!address || typeof address === 'string') throw new Error('Probe server did not bind');
+      const url = `http://127.0.0.1:${address.port}/probe`;
+      const hit = async (client: string) =>
+        (await fetch(url, { headers: { 'X-Forwarded-For': client } })).status;
+      const rotated: number[] = [];
+      for (let i = 1; i <= 10; i++) rotated.push(await hit(`2001:db8:abcd:ef01::${i.toString(16)}`));
+      expect(rotated.slice(0, 3)).toEqual([200, 200, 200]);
+      expect(rotated.slice(3).every((status) => status === 429)).toBe(true);
+      expect(await hit('2001:db8:abcd:ef02::1')).toBe(200);
+      for (let i = 0; i < 3; i++) await hit('198.51.100.20');
+      expect(await hit('::ffff:198.51.100.20')).toBe(429);
     } finally {
       await new Promise<void>((resolve, reject) => {
         probeServer.close((error) => error ? reject(error) : resolve());

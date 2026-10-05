@@ -486,3 +486,127 @@ test("a provider without EIP-1898 support fails closed", async () => {
   };
   await rejects(verifyIfrBenefit({ wallet: WALLET, chainId: 1, rpc: legacy }), "RPC_UNAVAILABLE");
 });
+
+// ─── ifr-benefits-verify/2: CommitmentVault V1 + V2 (vectors/v2.json) ──
+
+const V1_VAULT = MAINNET.commitmentVaults[0];
+const V2_VAULT = MAINNET.commitmentVaults[1];
+const toUnits = (ifr) => {
+  const [whole, frac = ""] = String(ifr).split(".");
+  return BigInt(whole) * IFR + BigInt((frac + "000000000").slice(0, 9));
+};
+
+/** Fake node with two vaults: `blocks[n] = { lock, v1: {wallet: [...]}, v2: {wallet: [...]} }`. */
+function fakeNodeV2({ blocks, v2Token, codelessV2 = false, failV2 = false }) {
+  const base = fakeNode({ blocks, contracts: { ...MAINNET, commitmentVault: V1_VAULT } });
+  const same = (a, b) => a && b && a.toLowerCase() === b.toLowerCase();
+  return {
+    calls: base.calls,
+    hashOf: base.hashOf,
+    async request(args) {
+      const { method, params } = args;
+      if (method === "eth_getCode" && same(params[0], V2_VAULT) && codelessV2) {
+        base.calls.push(args);
+        return "0x";
+      }
+      if (method === "eth_call" && same(params[0].to, V2_VAULT)) {
+        base.calls.push(args);
+        if (failV2) throw new Error("upstream timeout");
+        const tx = vaultIface.parseTransaction({ data: params[0].data });
+        if (tx.name === "ifrToken") return vaultIface.encodeFunctionResult("ifrToken", [v2Token ?? MAINNET.token]);
+        const state = Object.values(blocks)[Object.keys(blocks).map(Number).findIndex((k) => base.hashOf(k) === String(params[1].blockHash).toLowerCase())];
+        if (!state) throw new Error("header not found");
+        const list = Object.entries(state.v2 || {}).find(([a]) => same(a, tx.args[0]))?.[1] ?? [];
+        return vaultIface.encodeFunctionResult("getTranches", [list.map((t) => [t.amount, t.cType, 0n, 0n, t.unlocked ?? false, 0n])]);
+      }
+      return base.request(args);
+    },
+  };
+}
+
+function stateFromVector(c) {
+  const tranches = (list) => (list || []).map((t) => ({ amount: toUnits(t.amount), cType: t.cType, unlocked: t.unlocked === true }));
+  return { lock: { [WALLET]: toUnits(c.lockIFR) }, tranches: { [WALLET]: tranches(c.v1) }, v2: { [WALLET]: tranches(c.v2) } };
+}
+
+const vectorsV2 = require("../vectors/v2.json");
+
+test("v2 vectors: V1+V2 summed as one source, /1 reads V1 only", async () => {
+  assert.equal(vectorsV2.spec, lib.SPEC_ID_V2);
+  for (const c of vectorsV2.sourceCases) {
+    const node = fakeNodeV2({ blocks: { 50: stateFromVector(c) } });
+    const v2 = await verifyIfrBenefit({ wallet: WALLET, chainId: 1, rpc: node, source: c.source, spec: lib.SPEC_ID_V2 });
+    assert.equal(v2.tier, c.expected, `/2 ${c.name}`);
+    assert.equal(v2.spec, lib.SPEC_ID_V2);
+    const v1 = await verifyIfrBenefit({ wallet: WALLET, chainId: 1, rpc: fakeNodeV2({ blocks: { 50: stateFromVector(c) } }), source: c.source });
+    assert.equal(v1.tier, c.expectedV1, `/1 ${c.name}`);
+    assert.equal(v1.spec, lib.SPEC_ID);
+  }
+});
+
+test("v2: both vaults are read at the same pinned block hash and identity-checked", async () => {
+  const c = vectorsV2.sourceCases[2];
+  const node = fakeNodeV2({ blocks: { 60: stateFromVector(c), 61: { lock: {} } } });
+  const result = await verifyIfrBenefit({ wallet: WALLET, chainId: 1, rpc: node, source: "COMMITMENT_TIME_ONLY", spec: lib.SPEC_ID_V2, block: 60n });
+  assert.deepEqual(result.commitmentVaults, [V1_VAULT, V2_VAULT]);
+  const vaultReads = node.calls.filter((call) => call.method === "eth_call" && [V1_VAULT, V2_VAULT].some((v) => v.toLowerCase() === call.params[0].to.toLowerCase()));
+  assert.equal(vaultReads.length, 4, "ifrToken + getTranches per vault");
+  assert.ok(vaultReads.every((call) => call.params[1].blockHash === node.hashOf(60) && call.params[1].requireCanonical === true));
+  assert.ok(node.calls.some((call) => call.method === "eth_getCode" && call.params[0].toLowerCase() === V2_VAULT.toLowerCase()));
+});
+
+test("v2 failure cases fail closed (codeless V2, wrong token link, V2 read error)", async () => {
+  const state = stateFromVector(vectorsV2.sourceCases[1]);
+  await rejects(verifyIfrBenefit({ wallet: WALLET, chainId: 1, rpc: fakeNodeV2({ blocks: { 5: state }, codelessV2: true }), source: "COMMITMENT_TIME_ONLY", spec: lib.SPEC_ID_V2 }), "CONTRACT_MISMATCH");
+  await rejects(verifyIfrBenefit({ wallet: WALLET, chainId: 1, rpc: fakeNodeV2({ blocks: { 5: state }, v2Token: OTHER }), source: "EITHER", spec: lib.SPEC_ID_V2 }), "CONTRACT_MISMATCH");
+  await rejects(verifyIfrBenefit({ wallet: WALLET, chainId: 1, rpc: fakeNodeV2({ blocks: { 5: state }, failV2: true }), source: "COMMITMENT_TIME_ONLY", spec: lib.SPEC_ID_V2 }), "RPC_UNAVAILABLE");
+  // /1 never touches V2, so a broken V2 does not affect /1 results.
+  const v1 = await verifyIfrBenefit({ wallet: WALLET, chainId: 1, rpc: fakeNodeV2({ blocks: { 5: state }, failV2: true }), source: "COMMITMENT_TIME_ONLY" });
+  assert.equal(v1.tier, null);
+});
+
+test("v2: unknown spec, duplicate vaults and tier files of another spec are rejected", async () => {
+  const node = fakeNodeV2({ blocks: { 1: { lock: {} } } });
+  await rejects(verifyIfrBenefit({ wallet: WALLET, chainId: 1, rpc: node, spec: "ifr-benefits-verify/9" }), "INVALID_INPUT");
+  await rejects(
+    verifyIfrBenefit({ wallet: WALLET, chainId: 1, rpc: node, source: "COMMITMENT_TIME_ONLY", spec: lib.SPEC_ID_V2, contracts: { ...MAINNET, commitmentVaults: [V1_VAULT, V1_VAULT.toLowerCase()] } }),
+    "INVALID_INPUT"
+  );
+  // /2 reuses the /1 tier file; /1 rejects a tier file marked /2.
+  const file2 = { ...structuredClone(TIER_FILE_V1), spec: lib.SPEC_ID_V2 };
+  assert.equal(parseTiers(file2, lib.SPEC_ID_V2).version, 1);
+  assert.equal(parseTiers(TIER_FILE_V1, lib.SPEC_ID_V2).version, 1);
+  assert.throws(() => parseTiers(file2), (e) => e.code === "INVALID_TIERS");
+});
+
+test("v2 message: spec resource, transition acceptance and evaluation version", async () => {
+  const signer = Wallet.createRandom();
+  const now = new Date("2026-11-03T08:15:00Z");
+  const base = {
+    domain: "shop.example",
+    address: signer.address,
+    uri: "https://shop.example/benefit",
+    chainId: 1,
+    nonce: "9f3c6a1e5b7d4c20a8e1f0b2",
+    issuedAt: "2026-11-03T08:14:05Z",
+    expirationTime: "2026-11-03T08:19:05Z",
+    purpose: "BENEFIT",
+  };
+  const m2 = buildBenefitMessage({ ...base, spec: lib.SPEC_ID_V2 });
+  assert.ok(m2.includes(`- ${lib.SPEC_RESOURCE_V2}`) && !m2.includes(`- ${lib.SPEC_RESOURCE}\n`));
+  const s2 = await signer.signMessage(m2);
+  const expected = { domain: "shop.example", chainId: 1, purpose: "BENEFIT", nonce: base.nonce, now };
+  // Default acceptance is /1 only: a /2 message is not accepted silently.
+  assert.throws(() => verifyBenefitMessage({ message: m2, signature: s2, expected }), (e) => e.code === "INVALID_MESSAGE");
+  assert.equal(verifyBenefitMessage({ message: m2, signature: s2, expected: { ...expected, specs: [lib.SPEC_ID, lib.SPEC_ID_V2] } }), signer.address);
+  assert.equal(lib.benefitMessageSpec(parseBenefitMessage(m2), [lib.SPEC_ID, lib.SPEC_ID_V2]), lib.SPEC_ID_V2);
+  // A /1 message stays valid under /1 and is evaluated as /1 during the transition.
+  const m1 = buildBenefitMessage(base);
+  const s1 = await signer.signMessage(m1);
+  assert.equal(verifyBenefitMessage({ message: m1, signature: s1, expected }), signer.address);
+  assert.equal(lib.benefitMessageSpec(parseBenefitMessage(m1), [lib.SPEC_ID, lib.SPEC_ID_V2]), lib.SPEC_ID);
+  // An integrator that accepts only /2 rejects /1 messages.
+  assert.throws(() => verifyBenefitMessage({ message: m1, signature: s1, expected: { ...expected, specs: [lib.SPEC_ID_V2] } }), (e) => e.code === "INVALID_MESSAGE");
+  // The spec resource cannot be smuggled in through extra resources.
+  assert.throws(() => buildBenefitMessage({ ...base, resources: [lib.SPEC_RESOURCE_V2] }), (e) => e.code === "INVALID_MESSAGE");
+});
