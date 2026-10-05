@@ -239,6 +239,12 @@ remains the only place where agenda items and vote outcomes are published.
 - **Prerequisites:** embedded-wallet acceptance matrix complete; approved
   `LICENSE` file; Creator Gateway deployment runbook.
 - **Dependencies:** Lane 4 reward caller for creator rewards.
+- **Decision (point 3, 2026-10-03):** use-case connection needs no partner or
+  user server and no new project-run service. Discounts run through the existing
+  IFR Benefits shop; partner websites may add the display-only serverless widget
+  and communities use Guild.xyz or Collab.Land with an IFRLock contract-read
+  condition ([guide](wiki/integrate-benefits.html)). The Creator Gateway stays
+  optional self-hosting only.
 - **Impact:** npm publication is irreversible for a published version; an
   embedded-wallet feature flag is reversible, but user wallets created under it
   must stay exportable.
