@@ -1041,6 +1041,8 @@
         .lv-stat .stat-value{font-size:1.3rem;font-weight:700;color:var(--accent)}
         .lv-info-box{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:14px;margin:14px 0;font-size:0.88rem;line-height:1.7}
         .lv-status-msg{margin-top:12px;padding:12px;border-radius:8px;font-size:0.88rem}
+        .lv-retired-note{background:#FEF2F2;border:1px solid rgba(185,28,28,0.35);border-left:4px solid #b91c1c;border-radius:8px;padding:12px 14px;margin:0 0 14px;color:#211C17;font-size:0.92rem;line-height:1.5}
+        .lv-retired-note strong{color:#991b1b}
         .lv-withdraw-panel{margin-top:16px;border-top:1px solid var(--border);padding-top:16px}
         .lv-withdraw-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
         .lv-withdraw-actions .lv-form-group{flex:1 1 220px;margin:0}
@@ -1137,7 +1139,7 @@
       <div id="lv-lender-tab" class="lv-tab-content lv-visible">
         <div class="lv-widget">
           <h3>Your Lending Offer</h3>
-          <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;" id="lv-create-retired-note">LendingVault V1 is retired: creating or increasing offers is disabled on this page. Existing lenders withdraw unlent IFR below; those IFR are not lost.</p>
+          <p class="lv-retired-note" role="note" id="lv-create-retired-note"><strong>Retired.</strong> LendingVault V1 is retired: creating or increasing offers is disabled on this page. Existing lenders withdraw unlent IFR below; those IFR are not lost.</p>
 
           <div class="lv-form-group lv-hidden" aria-hidden="true">
             <label>IFR Amount to Offer</label>
@@ -1163,7 +1165,7 @@
           <div class="lv-withdraw-panel">
             <h4 style="margin:0 0 8px;color:var(--text);font-size:1rem;">Withdraw Available IFR</h4>
             <p style="color:var(--muted);font-size:0.82rem;line-height:1.5;margin:0 0 12px;">
-              You can withdraw the unlent part of your offer, up to the full available amount. Withdrawing everything marks the offer inactive, which is expected now that V1 is retired.
+              You can withdraw the unlent part of your offer, up to the full available amount. Withdrawing everything closes the offer only when none of its IFR is still lent out.
             </p>
             <div class="lv-withdraw-actions">
               <div class="lv-form-group">
@@ -1189,7 +1191,7 @@
       <div id="lv-borrower-tab" class="lv-tab-content">
         <div class="lv-widget">
           <h3>Borrow IFR &mdash; disabled</h3>
-          <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;" id="lv-borrow-retired-note">LendingVault V1 is retired: borrowing stays disabled regardless of the on-chain price (<code>ifrPriceWei = 0</code>, no activation planned or authorized). No V2 is planned until a reviewed price source exists.</p>
+          <p class="lv-retired-note" role="note" id="lv-borrow-retired-note"><strong>Retired.</strong> LendingVault V1 is retired: borrowing stays disabled regardless of the on-chain price (<code>ifrPriceWei = 0</code>, no activation planned or authorized). No V2 is planned until a reviewed price source exists.</p>
 
           <!-- V1 retired: the borrow form is hidden and the borrow handler refuses before any wallet call. -->
           <div class="lv-hidden" aria-hidden="true">
@@ -1247,7 +1249,7 @@
         </div>
 
         <div class="lv-widget">
-          <h3>Available Lending Offers</h3>
+          <h3>Remaining Lending Offers (read-only)</h3>
           <div id="lv-offers-list" style="color:var(--muted);font-size:0.88rem;">LendingVault V1 is retired; no new offers are invited. Remaining offers are shown read-only while lenders withdraw.</div>
         </div>
 
@@ -1492,7 +1494,8 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     }
   }
   // LendingVault V1 is retired (3 October 2026): offers are never increased again, so the full
-  // available amount can be withdrawn; the contract then marks a fully withdrawn offer inactive.
+  // available amount can be withdrawn. LendingVault.withdrawOffer closes the offer only when none of its IFR
+  // is still lent out (availableIFR == 0 && lentIFR == 0, LendingVault.sol:157).
   var LV_V1_RETIRED = true;
   function safeWithdrawMax() {
     if (!lvOffer || !lvOffer.active || !lvOffer.availableIFR) return 0n;
@@ -1570,8 +1573,8 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     var styles = {
       info: ["#d97706", "#f59e0b", "#1f1300"],
       warn: ["#d97706", "#f59e0b", "#1f1300"],
-      error: ["rgba(239,68,68,0.1)", "rgba(239,68,68,0.3)", "#fca5a5"],
-      success: ["rgba(34,197,94,0.1)", "rgba(34,197,94,0.3)", "#86efac"]
+      error: ["#FEF2F2", "rgba(185,28,28,0.35)", "#991b1b"],
+      success: ["#F0FDF4", "rgba(22,101,52,0.35)", "#166534"]
     };
     var st = styles[type] || styles.info;
     s.style.background = st[0];
@@ -1586,8 +1589,8 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     var styles = {
       info: ["#d97706", "#f59e0b", "#1f1300"],
       warn: ["#d97706", "#f59e0b", "#1f1300"],
-      error: ["rgba(239,68,68,0.1)", "rgba(239,68,68,0.3)", "#fca5a5"],
-      success: ["rgba(34,197,94,0.1)", "rgba(34,197,94,0.3)", "#86efac"]
+      error: ["#FEF2F2", "rgba(185,28,28,0.35)", "#991b1b"],
+      success: ["#F0FDF4", "rgba(22,101,52,0.35)", "#166534"]
     };
     var st = styles[type] || styles.info;
     s.style.background = st[0];
@@ -1618,7 +1621,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     if (withdrawNoteEl) {
       if (!lvAddress) withdrawNoteEl.textContent = "Connect wallet to see withdraw limits.";
       else if (!hasWithdrawable) withdrawNoteEl.textContent = "No available IFR can be withdrawn from this offer right now.";
-      else if (lvOffer.lentIFR === 0n) withdrawNoteEl.textContent = "Max withdraws the full available amount; the offer then becomes inactive (V1 is retired).";
+      else if (lvOffer.lentIFR === 0n) withdrawNoteEl.textContent = "Max withdraws the full available amount; this closes the offer only when none of its IFR is still lent out.";
       else withdrawNoteEl.textContent = "All currently available IFR can be withdrawn; lent IFR remains active until repayment or liquidation.";
     }
     if (withdrawMaxBtn) withdrawMaxBtn.disabled = !hasWithdrawable || !lvAddress || maxWithdraw === 0n;
@@ -2046,9 +2049,9 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
   if (borrowBtn) borrowBtn.addEventListener("click", async function() {
     var s = document.getElementById("lv-borrow-status");
     s.classList.remove("lv-hidden");
-    s.style.background = "rgba(251,191,36,0.1)";
-    s.style.border = "1px solid rgba(251,191,36,0.3)";
-    s.style.color = "#fff7cc";
+    s.style.background = "#FEF2F2";
+    s.style.border = "1px solid rgba(185,28,28,0.35)";
+    s.style.color = "#991b1b";
     try {
       if (LV_V1_RETIRED) throw new Error("LendingVault V1 is retired: borrowing stays disabled.");
       if (!lvSigner || !lvAddress) throw new Error("Connect your wallet first.");

@@ -24,7 +24,14 @@
   borrower and repayment steps no longer describe a future borrow path.
 - New Playwright spec `tests/browser/lending-retired.spec.js` (in `test:landing-wiki-ui`): with a mocked
   non-zero price, forced borrow and create-offer clicks send no transaction; withdraw max sends
-  `withdrawOffer` with exactly the full available amount (12,345,678.123456789 IFR fixture).
+  `withdrawOffer` with exactly the full available amount (12,345,678.123456789 IFR fixture). Further mocked
+  regressions: exact full withdrawal of 1 IFR, 0.999999999 IFR and 0.000000001 IFR; refusal above the
+  available amount and without an active offer; explicit create and increase refusal; the borrow lock holds
+  after the handler and after a 60-second market refresh.
+- Copilot system prompt: the Web3 lending topic now says existing lenders only withdraw (no new offers, no
+  borrowing) instead of inviting create/borrow "when on-chain pricing permits".
+- The retired notes in the lending-vault Lender and Borrower tabs and the refusal messages use readable
+  (WCAG AA) colours on the light skin.
 
 ## 5 October 2026 — Copilot Builder API: Configuration Score Wording (T-272)
 
