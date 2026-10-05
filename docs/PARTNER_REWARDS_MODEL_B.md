@@ -100,7 +100,10 @@ Open first-pilot gates, all fail closed:
   up that month's milestone ID and the events left out could never be settled. A rule for a final
   capped period needs its own approval.
 - The export checks price evidence only against its schema and the pilot policy, not against the
-  chain. Before any Safe execution, a reviewed source must be named and the TWAP and ETH/EUR values
+  chain. It does bind the evidence to the period: the 7-day TWAP window must end between the period
+  end and 72 hours after it, and the ETH/EUR reference must be published between 24 hours before
+  and 72 hours after the period end. A later window, which could be picked for a low IFR price, keeps
+  the export diagnostic. Before any Safe execution, a reviewed source must be named and the TWAP and ETH/EUR values
   must be reproduced independently.
 
 ## Activation Checklist per Pilot Partner

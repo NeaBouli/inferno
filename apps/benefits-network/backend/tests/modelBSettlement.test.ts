@@ -687,6 +687,41 @@ describe('Model B verified-redemption settlement (T-275)', () => {
       .toBe('INVALID');
   });
 
+  it('binds the TWAP window end and ETH/EUR reference time to the settlement period (max 72h lag)', async () => {
+    await redemption({ redeemedAt: '2026-08-02T00:00:00.000Z' });
+    const LAG = 72 * 3600;
+    const at = (endTs: number, publishedTs = endTs) => {
+      const base = evidence();
+      const startCumulative = BigInt(base.start.price0Cumulative);
+      return {
+        ...base,
+        start: { ...base.start, timestamp: endTs - 604_800 },
+        end: { ...base.end, timestamp: endTs, price0Cumulative: (startCumulative + 1000n * Q112 * 604_800n).toString() },
+        ethEur: { ...base.ethEur, publishedAt: new Date(publishedTs * 1000).toISOString() },
+      };
+    };
+    const cases: Array<[string, unknown, 'VALID' | 'INVALID', string | null]> = [
+      ['window ends exactly at the period end', at(periodEndSeconds), 'VALID', null],
+      ['window ends exactly at the 72h tolerance', at(periodEndSeconds + LAG), 'VALID', null],
+      ['window ends one second past the tolerance', at(periodEndSeconds + LAG + 1), 'INVALID', 'Settlement block is more than 72 hours after the end of the settlement period'],
+      ['window ends a month after the period', at(periodEndSeconds + 30 * 86_400), 'INVALID', 'Settlement block is more than 72 hours after the end of the settlement period'],
+      ['window lies inside the period', at(periodEndSeconds - 1), 'INVALID', 'Settlement block precedes the end of the settlement period'],
+      ['window lies before the period', at(periodEndSeconds - 40 * 86_400), 'INVALID', 'Settlement block precedes the end of the settlement period'],
+      ['ETH/EUR published after the tolerance', at(periodEndSeconds + LAG, periodEndSeconds + LAG + 1), 'INVALID', 'ETH/EUR reference is not bound to the settlement period'],
+      ['ETH/EUR published 24h before the period end', at(periodEndSeconds, periodEndSeconds - 86_400), 'VALID', null],
+    ];
+    for (const [label, priceEvidence, status, reason] of cases) {
+      const exported = await exportDirect({ priceEvidence });
+      expect({ label, status: exported.priceEvidence.status, reason: exported.priceEvidence.reason })
+        .toEqual({ label, status, reason });
+      expect({ label, mode: exported.mode }).toEqual({ label, mode: status === 'VALID' ? 'proposal-template' : 'diagnostic' });
+      if (status === 'INVALID') {
+        expect(exported.template).toBeNull();
+        expect(exported.blockers).toContain('PRICE_EVIDENCE_INVALID');
+      }
+    }
+  });
+
   it('converts exact integer EUR minor units to IFR base units with floor rounding', () => {
     const price = { windowSeconds: 604_800, cumulativeDelta: 1000n * Q112 * 604_800n, rate: 300_000n, decimals: 2 };
     expect(convertEurMinorToIfrBase(0n, price)).toBe(0n);

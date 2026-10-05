@@ -19,7 +19,9 @@
   are diagnostic only.
 - The template is also blocked, and the export stays diagnostic, while a post-pilot redemption that
   is not a self-redemption has no reward event (one-per-customer outbox limit, policy decision open),
-  or while the budget covers the month only partly. Price evidence is not checked against the chain;
+  or while the budget covers the month only partly. The TWAP window must end, and the ETH/EUR
+  reference must be published, no later than 72 hours after the period end; later evidence keeps the
+  export diagnostic. Price evidence is not checked against the chain;
   a reviewed source with independently reproduced prices stays a first-pilot gate.
 - An export or template is not a settlement or payment. No pilot is active and nothing is signed or
   submitted.

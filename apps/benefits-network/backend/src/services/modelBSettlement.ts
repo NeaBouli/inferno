@@ -18,6 +18,11 @@ export const TWAP_WINDOW_SECONDS = 7 * 24 * 60 * 60;
 // Block timestamps never land exactly on the 7-day mark; allow at most one hour of overshoot.
 export const TWAP_WINDOW_TOLERANCE_SECONDS = 60 * 60;
 export const ETH_EUR_MAX_SKEW_SECONDS = 24 * 60 * 60;
+// The 7-day TWAP window must end (settlement block) no later than 72 hours after the period end, and
+// the ETH/EUR reference must be published inside [period end - 24h, period end + 72h]. Without this
+// bound the operator could pick any later week (e.g. the lowest IFR price) and every candidate window
+// would still reproduce. The pilot policy has no field for it, so it is a reviewed constant.
+export const SETTLEMENT_MAX_LAG_SECONDS = 72 * 60 * 60;
 const Q112 = 2n ** 112n;
 const UINT256_MOD = 2n ** 256n;
 
@@ -164,6 +169,10 @@ export function validatePriceEvidence(
   if (evidence.end.timestamp * 1000 < context.period.end.getTime()) {
     return { status: 'INVALID', reason: 'Settlement block precedes the end of the settlement period' };
   }
+  const latestSettlementMs = context.period.end.getTime() + SETTLEMENT_MAX_LAG_SECONDS * 1000;
+  if (evidence.end.timestamp * 1000 > latestSettlementMs) {
+    return { status: 'INVALID', reason: 'Settlement block is more than 72 hours after the end of the settlement period' };
+  }
   const cumulativeDelta = (BigInt(evidence.end.price0Cumulative) - BigInt(evidence.start.price0Cumulative) + UINT256_MOD) % UINT256_MOD;
   if (cumulativeDelta === 0n) {
     return { status: 'INVALID', reason: 'Price evidence cumulative price did not advance' };
@@ -173,6 +182,9 @@ export function validatePriceEvidence(
   const publishedAt = Date.parse(evidence.ethEur.publishedAt);
   if (Number.isNaN(publishedAt) || Math.abs(publishedAt / 1000 - evidence.end.timestamp) > ETH_EUR_MAX_SKEW_SECONDS) {
     return { status: 'INVALID', reason: 'ETH/EUR reference is not bound to the settlement block time' };
+  }
+  if (publishedAt < context.period.end.getTime() - ETH_EUR_MAX_SKEW_SECONDS * 1000 || publishedAt > latestSettlementMs) {
+    return { status: 'INVALID', reason: 'ETH/EUR reference is not bound to the settlement period' };
   }
   return {
     status: 'VALID',
