@@ -85,7 +85,7 @@
     "post:x:daily:status": "X_DRY_RUN=true node scripts/x-daily-bot.js status",
     "test:wiki-nav": "node scripts/check-wiki-nav-consistency.cjs",
     "test:wiki-shell": "node scripts/test-wiki-shell-consistency.cjs",
-    "test:landing-wiki-ui": "playwright test tests/browser/landing-transparency.spec.js tests/browser/wiki-shell.spec.js tests/browser/footer-contact.spec.js tests/browser/fab-clearance.spec.js tests/browser/cv01-status.spec.js tests/browser/cv01-layout.spec.js tests/browser/lost-ifr.spec.js tests/browser/inline-read-chain-pin.spec.js tests/browser/benefits-widget.spec.js tests/browser/council-votes.spec.js",
+    "test:landing-wiki-ui": "playwright test tests/browser/landing-transparency.spec.js tests/browser/wiki-shell.spec.js tests/browser/footer-contact.spec.js tests/browser/fab-clearance.spec.js tests/browser/cv01-status.spec.js tests/browser/cv01-layout.spec.js tests/browser/lost-ifr.spec.js tests/browser/inline-read-chain-pin.spec.js tests/browser/benefits-widget.spec.js tests/browser/council-votes.spec.js tests/browser/lending-retired.spec.js",
     "test:license-privacy": "node scripts/test-license-privacy.cjs",
     "test:social-card": "node scripts/test-social-card.cjs",
     "test:benefits-fork": "hardhat test test/fork/BenefitsVerifyFork.test.js",

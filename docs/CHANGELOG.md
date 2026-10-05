@@ -18,6 +18,13 @@
   available amount (the old 1 IFR keep-alive only served later offer increases).
 - `docs/llms.txt`, `docs/GOVERNANCE_PRODUCT_DECISION_REGISTER.md` (Lane 1 current truth) and
   `docs/COINMARKETCAP_SUBMISSION.md` describe LendingVault V1 as retired, withdraw only.
+- Borrowing on the wiki stays disabled regardless of the read `ifrPriceWei`: the "Request Loan" form on
+  `lending-vault.html` is hidden behind a retired note, the button is never re-enabled, the loan preview no
+  longer computes collateral, and the borrow handler refuses before any wallet call. The Lending Market
+  borrower and repayment steps no longer describe a future borrow path.
+- New Playwright spec `tests/browser/lending-retired.spec.js` (in `test:landing-wiki-ui`): with a mocked
+  non-zero price, forced borrow and create-offer clicks send no transaction; withdraw max sends
+  `withdrawOffer` with exactly the full available amount (12,345,678.123456789 IFR fixture).
 
 ## 5 October 2026 — Governance Proposals #18–#21 Executed (Safe Round)
 

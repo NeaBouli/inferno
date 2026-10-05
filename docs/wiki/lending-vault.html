@@ -965,7 +965,7 @@
       <!-- ======================================== -->
       <h2>6. As a Builder &mdash; Step by Step</h2>
       <p>
-        How to use the LendingVault as a builder:
+        V1 design reference only: LendingVault V1 is retired and borrowing stays disabled (<code>ifrPriceWei = 0</code>, no activation planned or authorized), so these steps cannot be performed.
       </p>
 
       <ol class="step-list">
@@ -1188,9 +1188,11 @@
       <!-- BORROWER TAB -->
       <div id="lv-borrower-tab" class="lv-tab-content">
         <div class="lv-widget">
-          <h3>Borrow IFR</h3>
-          <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;">Post ETH collateral to borrow IFR. Use it for product access, builder discounts, or lock in IFRLock.</p>
+          <h3>Borrow IFR &mdash; disabled</h3>
+          <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;" id="lv-borrow-retired-note">LendingVault V1 is retired: borrowing stays disabled regardless of the on-chain price (<code>ifrPriceWei = 0</code>, no activation planned or authorized). No V2 is planned until a reviewed price source exists.</p>
 
+          <!-- V1 retired: the borrow form is hidden and the borrow handler refuses before any wallet call. -->
+          <div class="lv-hidden" aria-hidden="true">
           <div class="lv-form-group">
             <label>Offer to Accept</label>
             <select id="lv-borrow-offer">
@@ -1219,12 +1221,13 @@
             <div id="lv-loan-preview-content" style="margin-top:8px;">Enter an amount to see collateral required and total cost.</div>
           </div>
 
-          <button class="lv-btn" id="lv-borrow-btn" disabled>Request Loan</button>
+          <button class="lv-btn" id="lv-borrow-btn" disabled>Borrowing disabled &mdash; V1 retired</button>
+          </div>
           <div id="lv-borrow-status" class="lv-hidden lv-status-msg"></div>
         </div>
 
         <div class="lv-widget">
-          <h3>Available Offers for Borrowers</h3>
+          <h3>Remaining Offers (read-only)</h3>
           <div id="lv-borrower-offers" style="color:var(--muted);font-size:0.88rem;">Borrowing stays disabled: LendingVault V1 is retired.</div>
         </div>
 
@@ -1816,7 +1819,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
         var emptyBorrowBtn = el("lv-borrow-btn");
         if (emptyBorrowBtn) {
           emptyBorrowBtn.disabled = true;
-          emptyBorrowBtn.textContent = lvIfrPriceWei === 0n ? "Borrow Disabled — Price Not Set" : "No Offers Available";
+          emptyBorrowBtn.textContent = "Borrowing disabled — V1 retired";
         }
         return;
       }
@@ -1845,9 +1848,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       }
       if (offersEl) offersEl.innerHTML = rows.length ? rows.join("") : "No active offers yet.";
       if (borrowerOffersEl) {
-        var priceNote = lvIfrPriceWei === 0n
-          ? "<div style='margin-top:12px;color:#fff7cc;'>Borrow transactions are disabled until Governance sets <code>ifrPriceWei</code> for collateral calculation.</div>"
-          : "";
+        var priceNote = "<div style='margin-top:12px;color:var(--muted);'>LendingVault V1 is retired: borrowing stays disabled regardless of <code>ifrPriceWei</code>. Lenders withdraw these offers.</div>";
         borrowerOffersEl.innerHTML = borrowerRows.length ? borrowerRows.join("") + priceNote : "No active offers yet.";
       }
       var borrowOfferSelect = el("lv-borrow-offer");
@@ -1860,8 +1861,8 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       }
       var borrowBtn = el("lv-borrow-btn");
       if (borrowBtn) {
-        borrowBtn.disabled = lvIfrPriceWei === 0n || rows.length === 0;
-        borrowBtn.textContent = lvIfrPriceWei === 0n ? "Borrow Disabled — Price Not Set" : "Request Loan";
+        borrowBtn.disabled = true;
+        borrowBtn.textContent = "Borrowing disabled — V1 retired";
       }
       updateLoanPreview();
     } catch(e) {
@@ -1937,8 +1938,8 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       previewEl.innerHTML = "Amount exceeds this offer's available IFR.";
       return;
     }
-    if (lvIfrPriceWei === 0n) {
-      previewEl.innerHTML = "Borrow transactions are disabled until Governance sets <code>ifrPriceWei</code> for collateral calculation.";
+    if (LV_V1_RETIRED || lvIfrPriceWei === 0n) {
+      previewEl.innerHTML = "LendingVault V1 is retired: borrowing stays disabled.";
       return;
     }
     var months = Math.ceil(days / 30);
@@ -2049,6 +2050,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     s.style.border = "1px solid rgba(251,191,36,0.3)";
     s.style.color = "#fff7cc";
     try {
+      if (LV_V1_RETIRED) throw new Error("LendingVault V1 is retired: borrowing stays disabled.");
       if (!lvSigner || !lvAddress) throw new Error("Connect your wallet first.");
       if (lvIfrPriceWei === 0n) {
         throw new Error("Borrowing is not active yet. LendingVault requires ifrPriceWei for ETH collateral calculation.");
@@ -2084,7 +2086,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
         s.innerHTML = e.message || "Borrow transaction failed.";
       }
     } finally {
-      borrowBtn.disabled = lvIfrPriceWei === 0n || !lvBorrowOffers.length;
+      borrowBtn.disabled = LV_V1_RETIRED || lvIfrPriceWei === 0n || !lvBorrowOffers.length;
     }
   });
 })();
