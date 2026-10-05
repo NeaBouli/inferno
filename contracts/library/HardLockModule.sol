@@ -2,12 +2,17 @@
 pragma solidity ^0.8.20;
 
 import "./BaseAccessModule.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
 /// @title HardLockModule — Time-Bound Token Lock
 /// @notice Tokens must be locked for a minimum duration. Cannot unlock early.
 ///         Security Score: SAFE — strongest commitment mechanism.
+///         IFR is a fee-on-transfer token: lock() credits the balance delta this
+///         contract actually received, never the requested amount.
 abstract contract HardLockModule is BaseAccessModule, ReentrancyGuard {
+    using SafeERC20 for IERC20;
+
     struct LockData {
         uint256 amount;
         uint256 lockedAt;
@@ -24,24 +29,32 @@ abstract contract HardLockModule is BaseAccessModule, ReentrancyGuard {
     event MinLockDurationUpdated(uint256 newDuration);
 
     /// @notice Lock IFR tokens for a minimum duration
+    /// @dev Credits the measured balance delta (fee-on-transfer safe). The received
+    ///      amount, not `amount`, is stored, emitted and later returned by unlock().
+    /// @param amount Requested amount pulled via transferFrom (must be >= minRequired)
+    /// @param duration Lock duration in seconds (minLockDuration..maxLockDuration)
     function lock(uint256 amount, uint256 duration) external nonReentrant {
         require(amount >= minRequired, "Below minimum");
         require(duration >= minLockDuration, "Duration too short");
         require(duration <= maxLockDuration, "Duration too long");
         require(locks[msg.sender].amount == 0, "Already locked");
 
-        require(ifrToken.transferFrom(msg.sender, address(this), amount), "Transfer failed");
+        uint256 balanceBefore = ifrToken.balanceOf(address(this));
+        ifrToken.safeTransferFrom(msg.sender, address(this), amount);
+        uint256 received = ifrToken.balanceOf(address(this)) - balanceBefore;
+        require(received > 0, "Nothing received");
+        require(received >= minRequired, "Below minimum after fee");
 
         locks[msg.sender] = LockData({
-            amount: amount,
+            amount: received,
             lockedAt: block.timestamp,
             duration: duration
         });
 
-        emit Locked(msg.sender, amount, duration);
+        emit Locked(msg.sender, received, duration);
     }
 
-    /// @notice Unlock after duration expires
+    /// @notice Unlock after duration expires; returns exactly the credited (received) amount
     function unlock() external nonReentrant {
         LockData storage l = locks[msg.sender];
         require(l.amount > 0, "Nothing locked");
@@ -50,7 +63,7 @@ abstract contract HardLockModule is BaseAccessModule, ReentrancyGuard {
         uint256 amount = l.amount;
         delete locks[msg.sender];
 
-        require(ifrToken.transfer(msg.sender, amount), "Transfer failed");
+        ifrToken.safeTransfer(msg.sender, amount);
         emit Unlocked(msg.sender, amount);
     }
 
