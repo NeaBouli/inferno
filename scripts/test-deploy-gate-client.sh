@@ -117,7 +117,7 @@ COMPOSE="$REPO/scripts/deploy-compose-service.sh"
 WEB3="$REPO/scripts/deploy-web3-site.sh"
 BENEFITS="$REPO/scripts/deploy-benefits-network.sh"
 STAMP=20261005T101010Z
-VAULT=0x00000000000000000000000000000000000000aa
+VAULT=0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F
 
 # --- compose service ------------------------------------------------------------
 git -C "$REPO" archive --format=tar "$SHA:apps/points-backend" > "$TMP/points.tar"
@@ -270,6 +270,10 @@ run 0 bash "$BENEFITS" capacity; assert_log "args=benefits-status stdin=-"
 run 0 bash "$BENEFITS" env-vault-v2 "$VAULT"
 assert_log "$(gate_line "env-set .env.benefits COMMITMENT_VAULT_V2_ADDRESS $VAULT") stdin=-"
 run 64 bash "$BENEFITS" env-vault-v2 "0x1234"
+refute_log "gate "
+# The V1 address (or any non-V2 address) is refused before any gate call.
+run 64 bash "$BENEFITS" env-vault-v2 "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3"
+refute_log "gate "
 refute_log "gate "
 # Without DEPLOY_MODE these modes use the direct path (#206), never the gate.
 DEPLOY_MODE='' run_any bash "$BENEFITS" env-vault-v2 "$VAULT"

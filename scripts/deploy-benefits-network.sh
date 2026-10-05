@@ -79,6 +79,17 @@ done
 # capacity floor (refuse below it; gate mode never prunes the shared Docker daemon), the single-backend asserts, the
 # sync and the rebuild. No secret is ever sent; env-set is whitelisted on the host
 # for the public COMMITMENT_VAULT_V2_ADDRESS only.
+# COMMITMENT_VAULT_V2_ADDRESS may only ever be the deployed CommitmentVault V2. The V1 address (or any other)
+# would make the backend refuse to start, so it is rejected locally before any remote call.
+COMMITMENT_VAULT_V2_MAINNET="0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F"
+require_vault_v2_address() {
+  local a="${1:-}"
+  if [[ ! "$a" =~ ^0x[0-9a-fA-F]{40}$ ]] || [[ "$(printf '%s' "$a" | tr 'A-F' 'a-f')" != "$(printf '%s' "$COMMITMENT_VAULT_V2_MAINNET" | tr 'A-F' 'a-f')" ]]; then
+    echo "Refusing: COMMITMENT_VAULT_V2_ADDRESS must be the CommitmentVault V2 address $COMMITMENT_VAULT_V2_MAINNET (V1 or any other address would stop the backend)." >&2
+    exit 64
+  fi
+}
+
 case "${DEPLOY_MODE:-}" in
   ''|ssh)
     # The direct path below implements every mode (incl. rollback/env-vault-v2/env-restore).
@@ -125,10 +136,7 @@ case "${DEPLOY_MODE:-}" in
         gate benefits-deploy "$MODE" "$EXPECTED_SHA" "$TAR_SHA" < "$STAGE/upload.tar"
         ;;
       env-vault-v2)
-        if [[ ! "${2:-}" =~ ^0x[0-9a-fA-F]{40}$ ]]; then
-          echo "Usage: DEPLOY_MODE=gate $0 env-vault-v2 <0x-address of CommitmentVaultV2>" >&2
-          exit 64
-        fi
+        require_vault_v2_address "${2:-}"
         gate env-set .env.benefits COMMITMENT_VAULT_V2_ADDRESS "$2"
         ;;
       rollback)
@@ -409,6 +417,7 @@ main() {
 f="$1" backup="$2" addr="$3" key=COMMITMENT_VAULT_V2_ADDRESS
 refuse() { echo "ENV EDIT REFUSED: $*" >&2; exit 78; }
 [[ "$addr" =~ ^0x[0-9a-fA-F]{40}$ ]] || refuse "address must be 0x + 40 hex characters"
+[ "$(printf '%s' "$addr" | tr 'A-F' 'a-f')" = "0x8efae0c85ad6d44c731caeda1cbc275904fc7c8f" ] || refuse "address must be the CommitmentVault V2 address"
 { test -f "$f" && test -r "$f" && test -w "$f"; } || refuse "$f is not a file this user can read and write"
 n="$(grep -c "^$key=" "$f" || true)"
 [ "$n" -le 1 ] || refuse "$f holds $n $key lines; fix by hand"
@@ -452,7 +461,7 @@ main "$@"
 REMOTE
 
 if [[ "$MODE" == "env-vault-v2" ]]; then
-  [[ "$ARG" =~ ^0x[0-9a-fA-F]{40}$ ]] || { echo "usage: $0 env-vault-v2 <0x + 40 hex address>" >&2; exit 64; }
+  require_vault_v2_address "$ARG"
   [[ "$ARG" =~ ^0x0{40}$ ]] && { echo "Refusing the zero address for $V2_KEY." >&2; exit 64; }
   env_backup="$REMOTE_ROOT/backups/benefits-env-$(date -u +%Y%m%dT%H%M%SZ)"
   set +e

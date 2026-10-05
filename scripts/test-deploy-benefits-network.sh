@@ -497,7 +497,8 @@ refute_log "rsync "
 # --- env-vault-v2: refuses bad input before any remote call ------------------------------
 : > "$LOG"
 for bad in "" 0x123 "0x00000000000000000000000000000000000000g1" "0x0000000000000000000000000000000000000000" \
-           "0x00000000000000000000000000000000000000a5;touch $TMP/injected" "COMMITMENT_VAULT_ADDRESS=0x00000000000000000000000000000000000000a5"; do
+           "0x00000000000000000000000000000000000000a5;touch $TMP/injected" "COMMITMENT_VAULT_ADDRESS=0x00000000000000000000000000000000000000a5" \
+           "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3" "0x00000000000000000000000000000000000000a5"; do
   run 64 "$C" env-vault-v2 "$bad"
 done
 test ! -e "$TMP/injected" || fail "env-vault-v2 argument was executed"
