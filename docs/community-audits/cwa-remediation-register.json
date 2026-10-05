@@ -24,7 +24,7 @@
     "Informational": 16
   },
   "canonicalTests": {
-    "contracts": "681/681",
+    "contracts": "690/690",
     "generator": "30/30",
     "sdk": "36/36",
     "landingWikiBrowser": "26/26",
