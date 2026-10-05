@@ -1839,16 +1839,18 @@ app.get("/api/ifr/check", async (req, res) => {
     const token = new ethersLib.Contract("0x77e99917Eca8539c62F509ED1193ac36580A6e7B", tokenAbi, provider);
     const lock = new ethersLib.Contract("0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb", lockAbi, provider);
 
+    // A failed IFRLock read must not report tier 0: the whole check fails closed (502).
     const [balRaw, lockedRaw] = await Promise.all([
       token.balanceOf(wallet),
-      lock.lockedBalance(wallet).catch(() => 0n),
+      lock.lockedBalance(wallet),
     ]);
 
     const balanceBaseUnits = BigInt(balRaw);
     const lockedBaseUnits = BigInt(lockedRaw);
     const totalBaseUnits = balanceBaseUnits + lockedBaseUnits;
     const requiredBaseUnits = BigInt(required) * (10n ** BigInt(IFR_DECIMALS));
-    const tier = getAccessTier(totalBaseUnits);
+    // Default tier preset counts IFR locked in IFRLock only (Benefits preset, owner decision 2026-10-03).
+    const tier = getAccessTier(lockedBaseUnits);
 
     res.json({
       hasAccess: totalBaseUnits >= requiredBaseUnits,
@@ -1858,6 +1860,7 @@ app.get("/api/ifr/check", async (req, res) => {
       required,
       tier: tier.id,
       tierName: tier.name,
+      tierBasis: "locked",
     });
   } catch (err) {
     console.error("IFR check error:", err);

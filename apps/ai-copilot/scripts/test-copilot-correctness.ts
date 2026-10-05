@@ -34,21 +34,24 @@ assert.equal(COPILOT_MESSAGE_LIMIT, 20);
 assert.deepEqual(
   ACCESS_TIERS.map(({ id, name, minIFR }) => ({ id, name, minIFR })),
   [
-    { id: 1, name: "Basic", minIFR: 500 },
-    { id: 2, name: "Premium", minIFR: 2_000 },
-    { id: 3, name: "Pro", minIFR: 10_000 },
+    { id: 1, name: "Bronze", minIFR: 1_000 },
+    { id: 2, name: "Silver", minIFR: 2_500 },
+    { id: 3, name: "Gold", minIFR: 5_000 },
+    { id: 4, name: "Platinum", minIFR: 10_000 },
   ],
 );
-assert.equal(getAccessTier(499n * IFR_BASE_UNITS_PER_TOKEN).name, "None");
-assert.equal(getAccessTier(500n * IFR_BASE_UNITS_PER_TOKEN).name, "Basic");
-assert.equal(getAccessTier(1_999n * IFR_BASE_UNITS_PER_TOKEN).name, "Basic");
-assert.equal(getAccessTier(2_000n * IFR_BASE_UNITS_PER_TOKEN).name, "Premium");
-assert.equal(getAccessTier(9_999n * IFR_BASE_UNITS_PER_TOKEN).name, "Premium");
-assert.equal(getAccessTier(10_000n * IFR_BASE_UNITS_PER_TOKEN).name, "Pro");
+assert.equal(getAccessTier(999n * IFR_BASE_UNITS_PER_TOKEN + 999_999_999n).name, "None");
+assert.equal(getAccessTier(1_000n * IFR_BASE_UNITS_PER_TOKEN).name, "Bronze");
+assert.equal(getAccessTier(2_500n * IFR_BASE_UNITS_PER_TOKEN - 1n).name, "Bronze");
+assert.equal(getAccessTier(2_500n * IFR_BASE_UNITS_PER_TOKEN).name, "Silver");
+assert.equal(getAccessTier(5_000n * IFR_BASE_UNITS_PER_TOKEN).name, "Gold");
+assert.equal(getAccessTier(10_000n * IFR_BASE_UNITS_PER_TOKEN - 1n).name, "Gold");
+assert.equal(getAccessTier(10_000n * IFR_BASE_UNITS_PER_TOKEN).name, "Platinum");
 assert.throws(() => getAccessTier(-1n), /cannot be negative/);
 
+// Retired 2026-10-03: the separate Basic/Premium/Pro 500/2,000/10,000 access scheme.
 for (const [relativePath, contents] of sourceEntries) {
-  assert.doesNotMatch(contents, /Bronze|Silver|Gold|Platinum/, `${relativePath} contains a legacy tier name`);
+  assert.doesNotMatch(contents, /\b(Basic|Premium|Pro) >=|500\/2,000\/10,000|Basic\/Premium\/Pro/, `${relativePath} contains the retired access-tier scheme`);
 }
 assert.match(SYSTEM_PROMPTS.user, new RegExp(ACCESS_TIER_SUMMARY.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")));
 assert.match(SYSTEM_PROMPTS.explorer, /does not receive verified wallet balances, lock state or tier context/);
@@ -75,6 +78,24 @@ assert.match(knowledge.tokenomics.currentSupply, /live \/api\/supply endpoint/);
 assert.match(knowledge.governance.proposals, /#11-#16 executed/);
 assert.ok(!("sepolia" in knowledge.builderRegistry), "Unverified BuilderRegistry Sepolia address must be absent");
 assert.match(knowledge.builderRegistry.tests, /30\/30/);
+
+// The embedded SDK version must follow the SDK manifest, and every surface states the same version.
+const sdkManifest = JSON.parse(await readFile(new URL("../../sdk/package.json", import.meta.url), "utf8")) as {
+  version: string;
+};
+assert.equal(knowledge.phase5.sdk.version, sdkManifest.version, "ifr-knowledge sdk.version must match apps/sdk/package.json");
+assert.ok(
+  SYSTEM_PROMPTS.dev.includes(`local repository package v${sdkManifest.version}`),
+  "Dev prompt must state the SDK manifest version",
+);
+
+// The Builder score is a configuration heuristic, never an audit or a SAFE verdict.
+const builderFeatures = knowledge.phase5.integrationBuilder.features.join("\n");
+assert.match(builderFeatures, /configuration heuristic only, not audited/i);
+assert.match(SYSTEM_PROMPTS.dev, /Configuration heuristic only — not audited/);
+for (const text of [builderFeatures, SYSTEM_PROMPTS.dev]) {
+  assert.doesNotMatch(text, /Security Score|SAFE\/MEDIUM\/RISKY|SAFE >= 80/);
+}
 assert.match(source["server/index.ts"], /messages\.length > COPILOT_MESSAGE_LIMIT/);
 assert.match(source["server/index.ts"], /histories\[currentMode\]\.length >= \$\{COPILOT_MESSAGE_LIMIT\}/);
 assert.doesNotMatch(source["server/index.ts"], /function checkHealth\(uint256 loanId\) view/);

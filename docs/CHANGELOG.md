@@ -28,6 +28,18 @@
 - Benefits backend: optional `COMMITMENT_VAULT_V2_ADDRESS`; when set, the commitment source adds V2's
   active TIME_ONLY tranches to V1's at the same block, with the same identity checks.
 
+## 3 October 2026 — One Default Tier Preset for Project Surfaces
+
+- The AI Copilot (`/api/ifr/check`, knowledge and prompts) and `ifr-sdk` use one default tier preset,
+  identical to the Benefits network: IFR locked in IFRLock only, Bronze 1,000 / Silver 2,500 /
+  Gold 5,000 / Platinum 10,000. The separate Basic/Premium/Pro 500/2,000/10,000 access scheme is
+  retired. `/api/ifr/check` now derives `tier` from locked IFR (`tierBasis: "locked"`) and fails
+  closed when the IFRLock read fails; `hasAccess` still compares balance + locked with the caller's
+  own `required` amount.
+- The preset is a default, not a rule: Benefits partners set their own thresholds, held-IFR minimums,
+  lock sources and discounts per benefit, and any project may verify IFR with its own rule under
+  `ifr-benefits-verify/1`. Discounts are independent of PartnerVault rewards.
+
 ## 3 October 2026 — Public Council Vote Record (Lane 6)
 
 - New wiki page [Council Votes](https://ifrunit.tech/wiki/council-votes.html) lists every ballot, its exact
