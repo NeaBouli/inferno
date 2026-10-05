@@ -196,7 +196,7 @@ async function main() {
   const registrationScript = extractRegistrationScript();
 
   assert(listeners.has('fetch'), 'service worker must register a fetch handler');
-  assert(source.includes("const CACHE_NAME = 'ifr-benefits-v23'"), 'service worker cache version must be v23');
+  assert(source.includes("const CACHE_NAME = 'ifr-benefits-v24'"), 'service worker cache version must be v24');
   assert(source.includes('const NAVIGATION_TIMEOUT_MS = 5000'), 'navigation requests must have a bounded network timeout');
   assert(source.includes("'/offline.html'"), 'service worker must precache the branded deep-link fallback');
   assert(source.includes("'/icons/ifr-token-64-v11.png'"), 'service worker must precache the canonical PNG favicon');
@@ -206,7 +206,7 @@ async function main() {
   assert(source.includes("'/icons/ifr-token-512-v11.png'"), 'service worker must precache the canonical 512 icon');
   assert(source.includes("'/icons/favicon-v11.ico'"), 'service worker must precache the versioned browser favicon');
   assert(!source.includes("favicon-v4.ico"), 'service worker must not precache the competing ICO favicon');
-  assert(layoutSource.includes("'/sw.js?v=23'"), 'layout must register the current service-worker release');
+  assert(layoutSource.includes("'/sw.js?v=24'"), 'layout must register the current service-worker release');
   assert(source.includes("'/copilot-avatar.jpg'"), 'service worker must precache the Copilot launcher asset');
   assert(layoutSource.includes("updateViaCache:'none'"), 'registration must bypass stale service-worker HTTP caches');
   assert(layoutSource.includes("'controllerchange'"), 'controlled clients must reload after a service-worker update');
@@ -229,9 +229,9 @@ async function main() {
 
   const firstInstall = createRegistrationHarness(registrationScript);
   firstInstall.fireLoad();
-  firstInstall.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=23' });
+  firstInstall.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=24' });
   assert.strictEqual(firstInstall.registrations.length, 1, 'first install must register the service worker once');
-  assert.strictEqual(firstInstall.registrations[0].scriptUrl, '/sw.js?v=23', 'registration must use the current release');
+  assert.strictEqual(firstInstall.registrations[0].scriptUrl, '/sw.js?v=24', 'registration must use the current release');
   assert.strictEqual(
     firstInstall.registrations[0].options.updateViaCache,
     'none',
@@ -245,23 +245,23 @@ async function main() {
     controller: { scriptURL: 'https://shop.ifrunit.tech/sw.js?v=22' },
     storage: sharedStorage,
   });
-  controlledPage.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=23' });
-  controlledPage.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=23' });
+  controlledPage.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=24' });
+  controlledPage.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=24' });
   controlledPage.fireControllerChange(null);
   assert.strictEqual(controlledPage.reloads, 1, 'one service-worker release may trigger at most one reload per session');
 
   const reloadedPage = createRegistrationHarness(registrationScript, {
-    controller: { scriptURL: 'https://shop.ifrunit.tech/sw.js?v=23' },
+    controller: { scriptURL: 'https://shop.ifrunit.tech/sw.js?v=24' },
     storage: sharedStorage,
   });
-  reloadedPage.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=23' });
+  reloadedPage.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=24' });
   assert.strictEqual(reloadedPage.reloads, 0, 'the same service-worker release must not reload again after page re-execution');
 
   const nextReleasePage = createRegistrationHarness(registrationScript, {
-    controller: { scriptURL: 'https://shop.ifrunit.tech/sw.js?v=23' },
+    controller: { scriptURL: 'https://shop.ifrunit.tech/sw.js?v=24' },
     storage: sharedStorage,
   });
-  nextReleasePage.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=24' });
+  nextReleasePage.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=25' });
   assert.strictEqual(nextReleasePage.reloads, 1, 'a different service-worker URL must receive its own single reload allowance');
 
   const storageFailure = createRegistrationHarness(registrationScript, {
@@ -269,8 +269,8 @@ async function main() {
     storage: createSessionStorage({ fail: true }),
   });
   storageFailure.fireLoad();
-  storageFailure.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=23' });
-  storageFailure.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=23' });
+  storageFailure.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=24' });
+  storageFailure.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=24' });
   assert.strictEqual(storageFailure.registrations.length, 1, 'storage failure must not prevent service-worker registration');
   assert.strictEqual(storageFailure.reloads, 0, 'storage failure must fail safe without automatic reloads');
 
@@ -287,7 +287,7 @@ async function main() {
   await activate();
   assert.deepStrictEqual(
     deletedCaches,
-    ['ifr-benefits-v21', 'ifr-benefits-v22'],
+    ['ifr-benefits-v21', 'ifr-benefits-v22', 'ifr-benefits-v23'],
     'activation must delete only stale IFR Benefits caches and preserve unrelated origin caches'
   );
 
