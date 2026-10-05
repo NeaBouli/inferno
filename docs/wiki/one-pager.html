@@ -701,7 +701,7 @@
         <li><strong>Ethereum Mainnet</strong> &mdash; deployed and verified on March 5, 2026.</li>
         <li><strong>Solidity 0.8.20 + OpenZeppelin v5</strong> &mdash; battle-tested base contracts with modern security patterns.</li>
         <li><strong>Full internal audits + automated test evidence</strong> &mdash; public source records; independent professional third-party audit pending.</li>
-        <li><strong>48h Timelock + Guardian</strong> &mdash; governance proposals are delayed and publicly visible; owner-only guardian rotation through <code>setGuardian</code> is the documented untimelocked exception.</li>
+        <li><strong>48h Timelock + Guardian</strong> &mdash; governance proposals are delayed and publicly visible; the untimelocked exceptions are owner-only guardian rotation through <code>setGuardian</code> and transferring the deployed Governance contract&rsquo;s ownership through owner-only <code>setOwner</code> (tracked as CWA-25).</li>
       </ul>
 
       <!-- ========== Post-Launch Roadmap ========== -->
@@ -726,7 +726,7 @@
       <h2>Team</h2>
 
       <p>
-        Pseudonymous team &mdash; transparency through open-source code and on-chain governance. Treasury is controlled by 3-of-5 Gnosis Safe multisig. Governance proposals use the 48-hour timelock; guardian rotation via owner-only <code>setGuardian</code> is the documented untimelocked exception.
+        Pseudonymous team &mdash; transparency through open-source code and on-chain governance. Treasury is controlled by 3-of-5 Gnosis Safe multisig. Governance proposals use the 48-hour timelock; the untimelocked exceptions are guardian rotation via owner-only <code>setGuardian</code> and transferring the deployed Governance contract&rsquo;s ownership through owner-only <code>setOwner</code> (tracked as CWA-25).
       </p>
 
       <ul>

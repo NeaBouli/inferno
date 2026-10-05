@@ -49,7 +49,34 @@ const forbidden = [
   [/authorized\s+caller\s+and\s+pilot[- ]partners?/i, "pre-model-B authorized-caller pilot gate"],
 ];
 
+// CWA-25: the deployed Governance contract's setOwner is owner-callable (not onlySelf), so the Treasury
+// Safe can transfer Governance ownership without the 48-hour delay. No public surface may claim that every
+// change is timelocked or that guardian rotation is the only untimelocked path.
+const blanketTimelockClaims = [
+  [/no\s+admin\s+can\s+make\s+instant\s+changes/i, "blanket no-instant-change claim (CWA-25)"],
+  [/no\s+parameter\s+can\s+be\s+changed\s+instantly/i, "blanket no-instant-change claim (CWA-25)"],
+  [/all\s+(?:changes|modifications|actions)\s+require\s+(?:the\s+|a\s+)?48[- ]?h/i, "blanket all-changes-timelocked claim (CWA-25)"],
+  [/48[- ]?h(?:our)?\s+(?:delay|timelock)\s+on\s+all\s+changes/i, "blanket all-changes-timelocked claim (CWA-25)"],
+  [/no\s+instant\s+admin\s+(?:access|actions)/i, "blanket no-instant-admin claim (CWA-25)"],
+  [/no\s+single\s+person\s+can\s+make\s+instant\s+changes/i, "blanket no-instant-change claim (CWA-25)"],
+  [/documented\s+untimelocked\s+exception|documented\s+exception\s+is\s+(?:owner-only\s+)?guardian\s+rotation/i,
+    "guardian rotation presented as the only untimelocked path (CWA-25)"],
+];
+const governanceClaimFiles = [
+  ...publicFiles,
+  "docs/TRANSPARENCY.md",
+  "docs/ai.txt",
+  "apps/ai-copilot/src/context/ifr-knowledge.ts",
+  "apps/ai-copilot/src/context/system-prompts.ts",
+];
+
 const failures = [];
+for (const relative of governanceClaimFiles) {
+  const content = fs.readFileSync(path.join(root, relative), "utf8");
+  for (const [pattern, label] of blanketTimelockClaims) {
+    if (pattern.test(content)) failures.push(`${relative}: ${label}`);
+  }
+}
 for (const relative of publicFiles) {
   const file = path.join(root, relative);
   const content = fs.readFileSync(file, "utf8");
@@ -72,6 +99,9 @@ const required = [
   ["docs/llms.txt", "50,000,000 IFR per 90-day period is currently withdrawable by Governance, with 0 IFR withdrawn"],
   ["docs/wiki/business-onboarding.html", "no authorized caller is used"],
   ["docs/wiki/roadmap.html", "model B adopted (3 October 2026"],
+  ["docs/llms.txt", "ownership itself can be transferred directly by its owner, the Treasury Safe (3-of-5), without that delay (tracked as CWA-25)"],
+  ["docs/index.html", "ownership itself can be transferred directly by its owner, the Treasury Safe (3-of-5), without that delay (tracked as CWA-25)"],
+  ["docs/wiki/security.html", "ownership itself can be transferred directly by its owner, the Treasury Safe (3-of-5), without that delay (tracked as CWA-25)"],
   ["apps/telegram/telegram-bot/src/services/skywalker.js", "15% Treasury, 6% Community & Grants, 4% PartnerVault"],
 ];
 

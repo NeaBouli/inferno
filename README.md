@@ -38,7 +38,7 @@ Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every standard
 
 **Community Fair Launch Model** — No presale, no VC, no insider allocations.
 
-> Inferno Protocol is fully open source and community-owned. No single entity controls the protocol. All contracts are verified on Ethereum Mainnet, governed by a 48-hour timelock, and protected by Gnosis Safe multisig. The protocol lives on-chain — permanently.
+> Inferno Protocol is fully open source and community-owned. No single entity controls the protocol. All contracts are verified on Ethereum Mainnet and protected by Gnosis Safe multisig. Protocol parameter changes go through Governance proposals with a 48-hour timelock. The deployed Governance contract's ownership itself can be transferred directly by its owner, the Treasury Safe (3-of-5), without that delay (tracked as CWA-25). The protocol lives on-chain — permanently.
 
 ## Token Economics
 
@@ -57,7 +57,7 @@ Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every standard
 
 - **Deflationary**: 2.5% burned per standard transfer between non-exempt addresses (2% sender + 0.5% recipient), plus a 1% pool fee; transfers where either side is fee-exempt pay no fee. Hard cap: 5% max.
 - **Utility Lock**: Lock IFR → access while the required amount remains locked and the integration remains available → unlock anytime.
-- **Timelock Governance**: 48-hour delay on all changes. Guardian cancel. No instant admin access.
+- **Timelock Governance**: 48-hour delay on protocol parameter changes via Governance proposals. Guardian cancel. The deployed Governance contract's ownership itself can be transferred directly by its owner, the Treasury Safe (3-of-5), without that delay (tracked as CWA-25).
 - **No Mint Function**: Supply can only decrease, never increase.
 - **Fair Launch**: No presale, no VC. Transparent allocation from day one.
 
