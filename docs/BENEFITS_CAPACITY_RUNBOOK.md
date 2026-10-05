@@ -65,11 +65,13 @@ refusal; nothing on the host changes before step 7:
 4. Capacity: at least `4096M` free on the volume (exit 75). The floor is fixed; the old
    `MIN_FREE_GB`, `ABORT_FREE_GB` and `DEPLOY_ABORT_FREE_GB` knobs are ignored.
 5. Exactly one backend replica (exit 78).
-6. `inferno-<service>:latest` exists for every service of the mode (nothing to roll back to
-   otherwise; exit 78).
+6. The container `inferno-<service>` runs for every service of the mode (nothing to roll
+   back to otherwise; exit 78).
 7. Backup in `/opt/inferno/backups/benefits-network-<UTC>/` (a new directory, never reused):
    `source.tgz` (the live tree without excludes), `env.benefits` (byte copy, mode `600`),
-   `image-id-<service>`, `services`, and the tags `inferno-<service>:rollback-<UTC>`.
+   `image-id-<service>`, `services`, and the tags `inferno-<service>:rollback-<UTC>`. The tag
+   is set on the image ID the running container uses (`docker inspect -f '{{.Image}}'`), never
+   on whatever `:latest` points to, since a build without `up` or a retag can move `:latest`.
 8. Content-only sync (`rsync -rl --checksum --delete`, no `-a/-t/-p/-o/-g`, as in #199) and
    `RELEASE_SHA`.
 9. `docker compose --env-file .env.benefits up -d --build --no-deps` for only the Benefits
@@ -81,9 +83,11 @@ refusal; nothing on the host changes before step 7:
 Any failure in steps 8-10 restores automatically: source (content-only), `.env.benefits`
 (`cat` into the root-owned file, so inode, owner and mode stay), the rollback image tags and
 the containers (`up -d --no-build --no-deps`), then verifies (a) content, (b) symlinks,
-(c) world read/traverse access, (e) env byte-identity, (d) container health and (f) public
-`200`. A verified restore exits `1` ("rolled back to ..."); an unverifiable one exits `70` with
-the manual command:
+(c) world read/traverse access, (e) env byte-identity, (g) each container runs the backed-up
+image ID, (d) container health and (f) public `200`. Every check fails on its own exit status
+(listings go to files, no process substitution or unchecked pipeline), so a check command
+that errors fails the restore like a mismatch. A verified restore exits `1` ("rolled back to
+..."); an unverifiable one exits `70` with the manual command:
 
 ```bash
 scripts/deploy-benefits-network.sh rollback /opt/inferno/backups/benefits-network-<UTC>

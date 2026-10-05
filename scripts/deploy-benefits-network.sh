@@ -12,11 +12,13 @@
 # Deploy (T-265): exact clean release commit -> production env names -> no schema
 # migration (the release's Prisma migrations must equal the host's) -> fixed 4 GB
 # capacity floor (this script NEVER prunes the shared Docker daemon in any mode) ->
-# single backend -> backup before the first write (source tar, rollback-<UTC> image
-# tags, .env.benefits copy with mode 600) -> content-only rsync -> compose build/up of
-# only the Benefits services -> health -> public checks. Any failure after the backup
-# restores source, env, image tags and containers, then verifies the restore (content,
-# symlinks, access, env, health, public 200). Runbook: docs/BENEFITS_CAPACITY_RUNBOOK.md
+# single backend -> backup before the first write (source tar, the image ID each running
+# container uses tagged rollback-<UTC>, never what :latest points to; .env.benefits copy
+# with mode 600) -> content-only rsync -> compose build/up of only the Benefits services
+# -> health -> public checks. Any failure after the backup restores source, env, image
+# tags and containers, then verifies the restore (content, symlinks, access, env, running
+# image ID, health, public 200); every check fails on its own exit status, so a failing
+# or erroring check exits 70. Runbook: docs/BENEFITS_CAPACITY_RUNBOOK.md
 #
 # Transfers are content-only (T-255/#199): no -t/-a/-g/-o/-p. The v1 deploy user may
 # write under /opt/inferno but may not set times, owner, group or mode on root-owned
@@ -103,7 +105,7 @@ wait_healthy() { # wait_healthy <container>; healthy only (both services define 
   local container="$1"
   remote "
     for i in \$(seq 1 '$HEALTH_ATTEMPTS'); do
-      status=\$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}no-healthcheck{{end}}' '$container' 2>/dev/null || true)
+      status=\$(docker inspect -f '{{if .State.Health}}{{.State.Health.Status}}{{else}}no-healthcheck{{end}}' '$container' 2>/dev/null) || status=inspect-failed
       [ \"\$status\" = healthy ] && exit 0
       [ \"\$status\" = unhealthy ] && break
       sleep '$HEALTH_INTERVAL'
@@ -219,11 +221,12 @@ while IFS= read -r s; do
 done < "$backup/services"
 [ ${#services[@]} -gt 0 ] || fail "$backup/services is empty"
 for s in "${services[@]}"; do
+  test -s "$backup/image-id-$s" || fail "$backup/image-id-$s missing"
   docker image inspect "inferno-$s:rollback-$stamp" >/dev/null || fail "image inferno-$s:rollback-$stamp missing"
 done
 t="$(mktemp -d)"
 trap 'rm -r "$t"' EXIT
-tar -C "$t" -xpzf "$backup/source.tgz"
+tar -C "$t" -xpzf "$backup/source.tgz" || fail "tar exited $?"
 ref="$t/benefits-network" live="$src"
 test -d "$ref" || fail "backup holds no benefits-network tree"
 # Content only, like deploy: the v1 user cannot set times/owner/group/mode on root-owned inodes.
@@ -231,28 +234,59 @@ rsync -rl --checksum --delete "${rx[@]}" "$ref/" "$live/" || fail "rsync exited 
 # cat keeps inode, owner and mode of the root-owned env file; values are never printed.
 cmp -s "$backup/env.benefits" "$envfile" || cat "$backup/env.benefits" > "$envfile" || fail "env restore write failed"
 for s in "${services[@]}"; do
-  docker image tag "inferno-$s:rollback-$stamp" "inferno-$s:latest"
+  docker image tag "inferno-$s:rollback-$stamp" "inferno-$s:latest" || fail "docker image tag of $s exited $?"
 done
-(cd "$root" && docker compose --env-file "$envfile" up -d --no-build --no-deps "${services[@]}")
-lst() { local d="$1"; shift; (cd "$d" && find . ${prune[@]+"${prune[@]}"} "$@" -print) | LC_ALL=C sort; }
-links() { lst "$1" -type l | while IFS= read -r p; do printf '%s -> %s\n' "$p" "$(readlink "$1/$p")"; done; }
+(cd "$root" && docker compose --env-file "$envfile" up -d --no-build --no-deps "${services[@]}") || fail "compose up exited $?"
+# Every check writes its evidence to a file first and fails on its own exit status:
+# no check reads through a process substitution or an unchecked pipeline, so a check
+# command that errors fails the restore instead of comparing two empty lists.
+snap() { # snap <name> <dir> <find predicates...> -> sorted listing in $t/<name>
+  local name="$1" d="$2"
+  shift 2
+  (cd "$d" && find . ${prune[@]+"${prune[@]}"} "$@" -print) > "$t/$name.raw" || fail "listing $name: find exited $?"
+  LC_ALL=C sort "$t/$name.raw" > "$t/$name" || fail "listing $name: sort exited $?"
+}
+linkmap() { # linkmap <dir> <listing> <out>: "path -> target" per symlink
+  local p target
+  : > "$3"
+  while IFS= read -r p; do
+    target="$(readlink "$1/$p")" || fail "(b) readlink $p exited $?"
+    printf '%s -> %s\n' "$p" "$target" >> "$3" || fail "(b) write failed"
+  done < "$2"
+}
+# (g) image: every restored container runs exactly the image ID that ran at backup time
+for s in "${services[@]}"; do
+  state="$(docker inspect -f '{{.State.Running}} {{.Image}}' "inferno-$s")" || fail "(g) docker inspect inferno-$s exited $?"
+  want="$(cat "$backup/image-id-$s")" || fail "(g) cannot read $backup/image-id-$s"
+  [ "$state" = "true $want" ] || fail "(g) inferno-$s is '$state', expected 'true $want'"
+done
 # (b) symlinks: same paths and targets (checked first, so a link change is named as such)
-diff <(links "$ref") <(links "$live") >&2 || fail "(b) symlinks differ from the backup"
+snap ref.l "$ref" -type l
+snap live.l "$live" -type l
+linkmap "$ref" "$t/ref.l" "$t/ref.links"
+linkmap "$live" "$t/live.l" "$t/live.links"
+diff "$t/ref.links" "$t/live.links" >&2 || fail "(b) symlinks differ from the backup"
 # (a) content: same dirs and files (excludes pruned) and every file byte-identical
-diff <(lst "$ref" -type d) <(lst "$live" -type d) >&2 || fail "(a) directories differ from the backup"
-diff <(lst "$ref" -type f) <(lst "$live" -type f) >&2 || fail "(a) files differ from the backup"
+snap ref.d "$ref" -type d
+snap live.d "$live" -type d
+snap ref.f "$ref" -type f
+snap live.f "$live" -type f
+[ -s "$t/ref.f" ] || fail "(a) the backup tree lists no files"
+diff "$t/ref.d" "$t/live.d" >&2 || fail "(a) directories differ from the backup"
+diff "$t/ref.f" "$t/live.f" >&2 || fail "(a) files differ from the backup"
 changed=0
 while IFS= read -r p; do
-  cmp -s "$ref/$p" "$live/$p" || { echo "differs: $p" >&2; changed=1; }
-done < <(lst "$ref" -type f)
+  cmp -s "$ref/$p" "$live/$p" || { echo "differs: $p" >&2; changed=1; }   # a cmp error (2) counts as differs
+done < "$t/ref.f"
 [ "$changed" = 0 ] || fail "(a) content differs from the backup"
 # (c) access: nothing the backup let others read (files o+r, dirs o+rx) lost it
-missing="$(LC_ALL=C comm -23 <(lst "$ref" \( -type f -perm -o=r -o -type d -perm -o=rx \)) \
-                             <(lst "$live" \( -type f -perm -o=r -o -type d -perm -o=rx \)))"
-[ -z "$missing" ] || { printf '%s\n' "$missing" | head -20 >&2; fail "(c) entries lost world read/traverse access"; }
+snap ref.o "$ref" \( -type f -perm -o=r -o -type d -perm -o=rx \)
+snap live.o "$live" \( -type f -perm -o=r -o -type d -perm -o=rx \)
+LC_ALL=C comm -23 "$t/ref.o" "$t/live.o" > "$t/lost.o" || fail "(c) comm exited $?"
+[ ! -s "$t/lost.o" ] || { head -20 "$t/lost.o" >&2; fail "(c) entries lost world read/traverse access"; }
 # (e) env: byte-identical to the backup
 cmp -s "$backup/env.benefits" "$envfile" || fail "(e) $envfile differs from the backup"
-echo "restore verified: (a) content (b) symlinks (c) access (e) env; (d) health and (f) public checks follow"
+echo "restore verified: (a) content (b) symlinks (c) access (e) env (g) image; (d) health and (f) public checks follow"
 }
 main "$@"
 REMOTE
@@ -268,7 +302,7 @@ restore() {
     wait_healthy "inferno-$s" || { echo "ROLLBACK CHECK FAILED: (d) inferno-$s not healthy after restore" >&2; return 1; }
   done
   verify_public || { echo "ROLLBACK CHECK FAILED: (f) public checks fail after restore" >&2; return 1; }
-  echo "rollback verified: (a)-(f) source, symlinks, access, env, health, public 200"
+  echo "rollback verified: (a)-(g) source, symlinks, access, env, health, public 200, image"
 }
 
 if [[ "$MODE" == "rollback" ]]; then
@@ -455,13 +489,16 @@ require_capacity() {
   echo "${free}M free on $REMOTE_VOLUME"
 }
 
-require_images() {
-  local s
+# The backup must hold what actually runs, not what :latest points to (a build without
+# `up`, or a manual retag, moves :latest away from the running container).
+require_running_images() {
+  local s state
   for s in $SERVICES; do
-    remote "docker image inspect -f '{{.Id}}' 'inferno-$s:latest' >/dev/null" || {
-      echo "Refusing deploy: image inferno-$s:latest not found; nothing to roll back to." >&2
+    state="$(remote "docker inspect -f '{{.State.Running}} {{.Image}}' 'inferno-$s'")" || state="not found"
+    if [[ ! "$state" =~ ^true\ sha256:[A-Za-z0-9._-]+$ ]]; then
+      echo "Refusing deploy: container inferno-$s is not running ($state); nothing to roll back to." >&2
       exit 78
-    }
+    fi
   done
 }
 
@@ -484,7 +521,7 @@ require_production_env
 require_no_schema_migration
 require_capacity
 assert_single_backend
-require_images
+require_running_images
 
 RSYNC_LOG="$(mktemp)"
 trap 'rm -f "$RSYNC_LOG"' EXIT
@@ -498,8 +535,13 @@ remote "set -e; umask 077; mkdir -p '$REMOTE_ROOT/backups'; mkdir '$backup'
   cmp -s '$REMOTE_COMPOSE_ENV_FILE' '$backup/env.benefits'
   printf '%s\n' $SERVICES > '$backup/services'
   for s in $SERVICES; do
-    docker image inspect -f '{{.Id}}' \"inferno-\$s:latest\" > \"$backup/image-id-\$s\"
-    docker image tag \"inferno-\$s:latest\" \"inferno-\$s:rollback-$stamp\"
+    # the image the running container uses, never whatever :latest points to now
+    state=\$(docker inspect -f '{{.State.Running}} {{.Image}}' \"inferno-\$s\")
+    case \"\$state\" in 'true sha256:'*) ;; *) echo \"inferno-\$s is not running: \$state\" >&2; exit 1 ;; esac
+    id=\${state#true }
+    printf '%s\n' \"\$id\" > \"$backup/image-id-\$s\"
+    docker image tag \"\$id\" \"inferno-\$s:rollback-$stamp\"
+    [ \"\$(docker image inspect -f '{{.Id}}' \"inferno-\$s:rollback-$stamp\")\" = \"\$id\" ] || { echo \"rollback tag of \$s is not \$id\" >&2; exit 1; }
   done" || { echo "Backup to $backup failed; nothing was released." >&2; exit 1; }
 echo "backup: $backup  (rollback: scripts/deploy-benefits-network.sh rollback $backup)"
 

@@ -18,6 +18,8 @@ APPDIR="$HOST/benefits-network"
 ENVF="$HOST/.env.benefits"
 DOCKER_STATE="$TMP/docker"
 REAL_RSYNC="$(command -v rsync)"
+REAL_FIND="$(command -v find)"
+REAL_READLINK="$(command -v readlink)"
 SCRIPT=scripts/deploy-benefits-network.sh
 mkdir -p "$FAKES" "$HOST/backups" "$DOCKER_STATE/images"
 : > "$LOG"
@@ -127,10 +129,19 @@ cat > "$FAKES/docker" <<'EOF'
 #!/usr/bin/env bash
 printf 'docker %s\n' "$*" >> "$LOG"
 img="$DOCKER_STATE/images"
+resolve() { # a tag, or an image ID that a tag or a container still holds
+  if [[ -f "$img/$1" ]]; then cat "$img/$1"; return; fi
+  if [[ "$1" == sha256:* ]] && cat "$img"/* "$DOCKER_STATE"/running-* 2>/dev/null | grep -qx -- "$1"; then echo "$1"; return; fi
+  echo "No such image: $1" >&2; return 1
+}
 case "$*" in
   *prune*) exit 0 ;;
-  "image inspect -f {{.Id}} "*|"image inspect "*) cat "$img/${@: -1}" 2>/dev/null || { echo "No such image: ${@: -1}" >&2; exit 1; } ;;
-  "image tag "*) cp "$img/$3" "$img/$4" ;;
+  "image inspect -f {{.Id}} "*|"image inspect "*) resolve "${@: -1}" ;;
+  "image tag "*) id="$(resolve "$3")" || exit 1; echo "$id" > "$img/$4" ;;
+  "inspect -f {{.State.Running}} {{.Image}} "*)
+    c="${@: -1}"
+    [[ -f "$DOCKER_STATE/running-$c" ]] || { echo "Error: No such object: $c" >&2; exit 1; }
+    echo "true $(cat "$DOCKER_STATE/running-$c")" ;;
   "compose --env-file "*" up -d --build --no-deps "*)
     svc="${@: -1}"
     [[ "${BUILD_FAIL:-}" == 1 || "${BUILD_FAIL:-}" == "$svc" ]] && exit 17
@@ -139,6 +150,7 @@ case "$*" in
     cp "$img/inferno-$svc:latest" "$DOCKER_STATE/running-inferno-$svc" ;;
   "compose --env-file "*" up -d --no-build --no-deps "*)
     shift 7
+    [[ "${RESTORE_UP_NOOP:-0}" == 1 ]] && exit 0     # compose "succeeds" but recreates nothing
     for svc in "$@"; do cp "$img/inferno-$svc:latest" "$DOCKER_STATE/running-inferno-$svc"; done ;;
   "compose --env-file "*" ps -aq benefits-backend")
     for _ in $(seq 1 "${BACKEND_COUNT:-1}"); do echo abc123; done ;;
@@ -146,6 +158,7 @@ case "$*" in
   "system df") echo "TYPE TOTAL" ;;
   inspect*)
     c="${@: -1}"
+    [[ "${INSPECT_FAIL:-0}" == 1 ]] && { echo "Cannot connect to the Docker daemon" >&2; exit 1; }
     [[ -f "$DOCKER_STATE/running-$c" ]] || exit 1
     if grep -qx 'sha256:bad' "$DOCKER_STATE/running-$c"; then echo unhealthy; else echo healthy; fi ;;
   *) echo "unexpected docker call: $*" >&2; exit 99 ;;
@@ -187,12 +200,24 @@ cat > "$FAKES/cat" <<'EOF'
 if [[ "${ENV_WRITE_TAMPER:-0}" == 1 && "${1:-}" == */env.new ]]; then /bin/cat "$1"; echo "INJECTED=1"; exit 0; fi
 exec /bin/cat "$@"
 EOF
+# find/readlink: FIND_FAIL=1 / READLINK_FAIL=1 make the restore's listing and link
+# checks error out without output, so a swallowed error would compare empty lists.
+cat > "$FAKES/find" <<'EOF'
+#!/usr/bin/env bash
+[[ "${FIND_FAIL:-0}" == 1 && "${@: -1}" == -print ]] && { echo "find: fixture I/O error" >&2; exit 1; }
+exec "$REAL_FIND" "$@"
+EOF
+cat > "$FAKES/readlink" <<'EOF'
+#!/usr/bin/env bash
+[[ "${READLINK_FAIL:-0}" == 1 ]] && { echo "readlink: fixture I/O error" >&2; exit 1; }
+exec "$REAL_READLINK" "$@"
+EOF
 chmod +x "$FAKES"/*
 
 run() { # run <expected-exit> <cmd...>
   local expected="$1"; shift
   set +e
-  OUT="$(PATH="$FAKES:$PATH" LOG="$LOG" REMOTE="$REMOTE" REAL_RSYNC="$REAL_RSYNC" DOCKER_STATE="$DOCKER_STATE" \
+  OUT="$(PATH="$FAKES:$PATH" LOG="$LOG" REMOTE="$REMOTE" REAL_RSYNC="$REAL_RSYNC" REAL_FIND="$REAL_FIND" REAL_READLINK="$REAL_READLINK" DOCKER_STATE="$DOCKER_STATE" \
     SSH_HOST=benefits-test-host HEALTH_INTERVAL="${HEALTH_INTERVAL:-0}" HEALTH_ATTEMPTS="${HEALTH_ATTEMPTS:-3}" "$@" 2>&1)"
   local status=$?
   set -e
@@ -226,7 +251,7 @@ running() { cat "$DOCKER_STATE/running-inferno-$1"; }
 last_backup() { ls -d "$HOST"/backups/benefits-network-* | tail -1; }
 assert_rolled_back() { # assert_rolled_back <services...>
   local s
-  assert_out "restore verified: (a) content (b) symlinks (c) access (e) env"
+  assert_out "restore verified: (a) content (b) symlinks (c) access (e) env (g) image"
   assert_out "rollback verified"
   assert_out "rolled back to"
   for s in "$@"; do
@@ -292,13 +317,14 @@ refute_log "mkdir"
 cp "$TMP/migration.keep" "$m/migration.sql"
 same_host benefits-network
 
-# --- a missing image stops before any write (nothing to roll back to) ----------------
-mv "$DOCKER_STATE/images/inferno-benefits-backend:latest" "$TMP/backend.image"
+# --- a service without a running container stops before any write ---------------------
+mv "$DOCKER_STATE/running-inferno-benefits-backend" "$TMP/backend.running"
 : > "$LOG"
 D 78 "$C" backend
+assert_out "container inferno-benefits-backend is not running"
 assert_out "nothing to roll back to"
 refute_log "mkdir"
-mv "$TMP/backend.image" "$DOCKER_STATE/images/inferno-benefits-backend:latest"
+mv "$TMP/backend.running" "$DOCKER_STATE/running-inferno-benefits-backend"
 
 # --- failed sync: restore source/env/images/containers, verified ----------------------
 : > "$LOG"
@@ -311,7 +337,7 @@ refute_out "test-only-admin-secret"
 # --- backup is complete before the first write -----------------------------------------
 backup="$(last_backup)"; stamp="${backup##*-}"
 [[ "$(line_of "tar -C")" -lt "$(line_of "--itemize-changes")" ]] || fail "source written before the backup"
-[[ "$(line_of "docker image tag inferno-benefits-frontend:latest inferno-benefits-frontend:rollback-$stamp")" -lt "$(line_of "--itemize-changes")" ]] \
+[[ "$(line_of "docker image tag sha256:old-benefits-frontend inferno-benefits-frontend:rollback-$stamp")" -lt "$(line_of "--itemize-changes")" ]] \
   || fail "rollback tag not set before the first write"
 cmp -s "$backup/env.benefits" "$TMP/host.before/.env.benefits" || fail "env backup differs from the live env"
 [[ "$(ls -l "$backup/env.benefits" | cut -c1-10)" == "-rw-------" ]] || fail "env backup is not mode 600"
@@ -322,6 +348,18 @@ grep -q "benefits-network/frontend/src/old-only-on-host.js" "$TMP/backup.list" |
 if grep -Eq "/(\.env|\.env\.local|app\.db)$|/(node_modules|\.next|dist)(/|$)" "$TMP/backup.list"; then
   fail "backup contains env/db or node_modules/.next/dist"
 fi
+
+# --- the backup saves the image that RUNS, not what :latest points to ------------------
+# A build without `up` (or a manual retag) moved :latest away from the running container.
+echo sha256:drifted-frontend > "$DOCKER_STATE/images/inferno-benefits-frontend:latest"
+: > "$LOG"
+RSYNC_FAIL=1 D 1 "$C" frontend
+backup="$(last_backup)"; stamp="${backup##*-}"
+[[ "$(cat "$DOCKER_STATE/images/inferno-benefits-frontend:rollback-$stamp")" == "sha256:old-benefits-frontend" ]] \
+  || fail "rollback tag holds the drifted :latest, not the running image"
+[[ "$(cat "$backup/image-id-benefits-frontend")" == "sha256:old-benefits-frontend" ]] || fail "image-id is not the running image"
+refute_log "docker image tag inferno-benefits-frontend:latest inferno-benefits-frontend:rollback"
+assert_rolled_back benefits-frontend     # :latest and the container end on the running image
 
 # --- failed build: restore -------------------------------------------------------------
 : > "$LOG"
@@ -378,6 +416,21 @@ assert_out "ROLLBACK CHECK FAILED: (f) public checks fail after restore"
 : > "$LOG"
 run 0 "$C" rollback "/opt/inferno/backups/$(basename "$(last_backup)")"
 assert_rolled_back benefits-frontend
+
+# --- a verification command that errors (not only a mismatch) fails the restore ---------
+for case in "FIND_FAIL:ROLLBACK CHECK FAILED: listing ref.l: find exited 1" \
+            "READLINK_FAIL:ROLLBACK CHECK FAILED: (b) readlink ./frontend/src/current-link exited 1" \
+            "INSPECT_FAIL:ROLLBACK CHECK FAILED: (d) inferno-benefits-frontend not healthy after restore" \
+            "RESTORE_UP_NOOP:ROLLBACK CHECK FAILED: (g) inferno-benefits-frontend is 'true sha256:bad', expected 'true sha256:old-benefits-frontend'"; do
+  : > "$LOG"
+  D 70 env "${case%%:*}=1" BAD_BUILD=1 "$C" frontend
+  assert_out "${case#*:}"
+  assert_out "AUTOMATIC ROLLBACK FAILED; run: scripts/deploy-benefits-network.sh rollback"
+  refute_out "rollback verified"
+  : > "$LOG"
+  run 0 "$C" rollback "/opt/inferno/backups/$(basename "$(last_backup)")"
+  assert_rolled_back benefits-frontend
+done
 
 # --- rollback accepts only a timestamped Benefits backup ------------------------------
 : > "$LOG"
@@ -527,4 +580,4 @@ refute_out "test-only-admin-secret"
 if grep -Eq 'prune' "$ALL_LOG"; then grep -E 'prune' "$ALL_LOG" >&2; echo "FAIL: a prune was called" >&2; exit 1; fi
 if grep -Eq 'docker[^#]*prune|safe_prune|ALLOW_PRUNE' "$ROOT/$SCRIPT"; then echo "FAIL: $SCRIPT still contains a prune path" >&2; exit 1; fi
 
-echo "Benefits release guards hold: no-prune capacity floor, no schema migration, backup-first, verified restore on sync/build/health/public failure, env-vault-v2 single-key edit"
+echo "Benefits release guards hold: no-prune capacity floor, no schema migration, backup-first, backup of the running image ID, verified restore on sync/build/health/public failure with erroring checks failing it, env-vault-v2 single-key edit"
