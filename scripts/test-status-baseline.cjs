@@ -243,7 +243,7 @@ requireText("docs/COINMARKETCAP_SUBMISSION.md", [
 
 requireText("docs/wiki/index.html", [
   "36 wiki pages",
-  '<span class="stat-value">17</span>',
+  '<span class="stat-value">18</span>',
   '<span class="stat-value">36</span>',
 ]);
 requireText("docs/index.html", ["Complete wiki with 36 pages"]);
