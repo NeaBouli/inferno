@@ -47,7 +47,8 @@ export function sumUnlockedLogs(data: unknown): bigint {
   let total = 0n;
   for (const log of result) {
     const hex = log && typeof log === "object" ? (log as { data?: unknown }).data : undefined;
-    if (typeof hex !== "string" || !/^0x[0-9a-fA-F]{1,64}$/.test(hex)) throw new Error("Unlocked event data malformed");
+    // One non-indexed uint256: ABI-encoded data is exactly one 32-byte word.
+    if (typeof hex !== "string" || !/^0x[0-9a-fA-F]{64}$/.test(hex)) throw new Error("Unlocked event data malformed");
     total += BigInt(hex);
   }
   return total;

@@ -79,7 +79,7 @@ assert.equal(zeroUnlocks.ifrLock.unlockedRaw, "0");
 assert.equal(sumUnlockedLogs({ status: "1", message: "OK", result: [] }), 0n);
 assert.equal(sumUnlockedLogs({
   status: "1", message: "OK",
-  result: [{ data: "0x" + (1000n * 10n ** 9n).toString(16).padStart(64, "0") }, { data: "0x05" }],
+  result: [{ data: "0x" + (1000n * 10n ** 9n).toString(16).padStart(64, "0") }, { data: "0x" + "5".padStart(64, "0") }],
 }), 1000n * 10n ** 9n + 5n);
 
 // Real failures stay fail-closed (throw -> caller maps to null -> incomplete with a named source).
@@ -92,6 +92,8 @@ for (const bad of [
   { status: "0", result: [] },
   { status: "1", message: "OK", result: "unexpected" },
   { status: "1", message: "OK", result: [{ data: "not-hex" }] },
+  { status: "1", message: "OK", result: [{ data: "0x05" }] },
+  { status: "1", message: "OK", result: [{ data: "0x" + "0".repeat(128) }] },
   { status: "1", message: "OK", result: [{}] },
   { message: "No records found", result: [] },
   null,
