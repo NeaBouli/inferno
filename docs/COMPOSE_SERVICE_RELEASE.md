@@ -75,6 +75,45 @@ timestamped backup paths of the same service are accepted.
 Rollback tags are kept (each holds the previous image's layers); remove old ones by hand once a
 release is confirmed.
 
+## Gate mode
+
+Once the scoped deploy gate (inferno-deploy v2) is installed on the host, all three release
+scripts can run through it instead of raw ssh, docker and rsync. The switch is one variable:
+
+```bash
+export DEPLOY_MODE=gate    # unset = the direct ssh path described above
+```
+
+Every host action is then one `ssh -F ~/.fleet-ssh/config hetzner-deploy <subcommand> ...` call
+(override the alias with `DEPLOY_GATE_HOST`). The forced command only runs whitelisted
+subcommands of the reviewed root tool; the upload is a tar on stdin whose SHA-256 the tool checks
+before it changes anything, and only regular files and directories are accepted. No secret is
+ever passed.
+
+| Script and mode | Gate call |
+| --- | --- |
+| `deploy-compose-service.sh <svc> plan` | `service-plan <svc> <sha> <tar-sha256>` with `git archive <sha>:<app dir>` on stdin |
+| `deploy-compose-service.sh <svc> deploy` | `service-deploy <svc> <sha> <tar-sha256>`, then the local public verify |
+| `deploy-compose-service.sh <svc> rollback <stamp>` | `service-rollback <svc> <stamp>` |
+| `deploy-compose-service.sh <svc> status` / `health` / `logs [n]` / `backups` | `status` / `health <svc>` / `logs <svc> [n]` / `backups <svc>` |
+| `deploy-web3-site.sh plan` / `deploy` | `web3-plan` / `web3-deploy <sha> <tar-sha256> [delete]` with the staged docroot on stdin (`.nginx/web3-security-headers.conf` at its root; `DELETE=1` adds `delete`) |
+| `deploy-web3-site.sh rollback <stamp>` / `status` / `health` / `backups` | `web3-rollback <stamp>` / `status` / `health web3-site` / `backups web3-site` |
+| `deploy-benefits-network.sh frontend` / `backend` / `all` | `benefits-deploy <mode> <sha> <tar-sha256>` with `git archive <sha>:apps/benefits-network` on stdin; gate mode never prunes (the Docker daemon is shared) and refuses a set `ALLOW_PRUNE` |
+| `deploy-benefits-network.sh status` / `capacity` | `benefits-status` |
+| `deploy-benefits-network.sh env-vault-v2 <address>` | `env-set .env.benefits COMMITMENT_VAULT_V2_ADDRESS <address>` (the only env key the host accepts) |
+
+Unchanged on this side: `EXPECTED_SHA` must be a full commit of a clean checkout at that commit,
+the web3 header and wallet-runtime tests run before a deploy, and `verify` is public HTTP only.
+The client refuses before sourcing `scripts/deploy-gate-lib.sh` if that helper or the calling
+script has local changes.
+
+Server-side behaviour (backup, health wait, public checks, automatic restore on failure) is
+defined by the accepted inferno-deploy v2 tool, not by this client, and may differ per service.
+Until the installed tool's failure behaviour is accepted per service, treat automatic restore as
+unverified and use `rollback <stamp>` explicitly; the tool prints the backup stamp
+(`YYYYMMDDTHHMMSSZ`), and `backups` lists the available stamps. Gate mode stays unused until the
+v2 installation and its authorization/restore behaviour are accepted.
+
 ## Host assumptions (read-only, 2026-09-30)
 
 - Compose project `inferno`, run as `cd /opt/inferno && docker compose ...`; build contexts
