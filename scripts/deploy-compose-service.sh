@@ -228,8 +228,8 @@ release() { # every step returns non-zero on failure; caller rolls back
 }
 
 # DEPLOY_MODE=gate: the same release through the scoped host gate (inferno-deploy v2).
-# The tool on the host does backup, rsync, build, health wait, public checks and
-# automatic rollback; this side keeps the exact-SHA checks and the public verify.
+# The host tool does backup, sync, build and health wait within its accepted guarantees;
+# its recovery of a real failing release is unverified. This side keeps the exact-SHA checks and the public verify.
 case "${DEPLOY_MODE:-}" in
   ''|ssh) ;;
   gate)
