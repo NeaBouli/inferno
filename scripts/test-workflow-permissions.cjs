@@ -16,8 +16,10 @@ const expectedExtraReadScopes = {
   "railway-copilot-release.yml": ["actions"],
   "sdk-publish.yml": ["checks", "actions"],
 };
-// npm provenance needs an OIDC token; only the tag-triggered SDK publish workflow may request it.
-const expectedIdTokenWorkflows = new Set(["sdk-publish.yml"]);
+// npm provenance needs an OIDC token. Only the protected publish job of sdk-publish.yml (environment
+// npm-release) may request it; this exact job-level block is the single allowed job permission override.
+const sdkPublishJobPermissions = "  publish:\n    needs: gate\n    runs-on: ubuntu-latest\n    environment: npm-release\n"
+  + "    permissions:\n      contents: read\n      id-token: write\n";
 const expectedWorkflowFiles = [
   "ai-copilot.yml",
   "benefits-network.yml",
@@ -59,6 +61,23 @@ function assertNoJobLevelPermissions(source, fileName) {
   );
 }
 
+// Fail-closed publication boundary for sdk-publish.yml: manual dispatch only (no tag/push trigger whose
+// workflow code would come from an unreviewed ref), OIDC only in the protected npm-release publish job,
+// the gate before that job, no registry token anywhere.
+function assertSdkPublishBoundary(source) {
+  assert.equal(source.split(sdkPublishJobPermissions).length, 2, "sdk-publish.yml publish job must be the npm-release job with exactly contents: read, id-token: write");
+  const rest = source.replace(sdkPublishJobPermissions, "  publish:\n");
+  assertNoJobLevelPermissions(rest, "sdk-publish.yml");
+  assert.doesNotMatch(rest, /id-token/, "sdk-publish.yml: only the npm-release publish job may request an OIDC token");
+  const trigger = source.match(/^on:\n([\s\S]*?)\n(?=\S)/m);
+  assert.ok(trigger, "sdk-publish.yml must declare its trigger");
+  assert.deepEqual(trigger[1].match(/^  [a-z_]+:/gm), ["  workflow_dispatch:"], "sdk-publish.yml must be triggered by workflow_dispatch only");
+  assert.doesNotMatch(source, /^\s+(?:tags|branches|push|pull_request\w*|workflow_run|schedule):/m, "sdk-publish.yml must not run on tags, pushes or other events");
+  assert.match(source, /node scripts\/sdk-release-gate\.cjs/, "sdk-publish.yml must run the release gate");
+  assert.match(source, /SDK_RELEASE_VERSION: \$\{\{ inputs\.version \}\}/, "the version input must reach the gate through env, not shell interpolation");
+  assert.doesNotMatch(source, /NPM_TOKEN|NODE_AUTH_TOKEN/, "sdk-publish.yml must use Trusted Publishing, not a registry token");
+}
+
 // Workflows must never receive a signing key from repository secrets.
 const privateKeySecretPattern = /secrets(?:\.[A-Za-z0-9_]*PRIVATE_?KEY|\s*\[\s*['"][^'"]*PRIVATE_?KEY['"]\s*\])/i;
 
@@ -81,24 +100,17 @@ assert.deepEqual(
 
 for (const fileName of workflowFiles) {
   const source = fs.readFileSync(path.join(workflowsDirectory, fileName), "utf8");
-  assertNoJobLevelPermissions(source, fileName);
+  if (fileName === "sdk-publish.yml") assertSdkPublishBoundary(source);
+  else {
+    assertNoJobLevelPermissions(source, fileName);
+    assert.doesNotMatch(source, /id-token/, `${fileName} must not request an OIDC token`);
+  }
   assertNoPrivateKeySecret(source, fileName);
   const permissions = topLevelPermissions(source, fileName);
   assert.equal(permissions.contents, expectedWriteWorkflows.has(fileName) ? "write" : "read", `${fileName} contents permission`);
   const allowedKeys = ["contents", ...(expectedExtraReadScopes[fileName] || [])];
-  if (expectedIdTokenWorkflows.has(fileName)) {
-    allowedKeys.push("id-token");
-    assert.equal(permissions["id-token"], "write", `${fileName} id-token permission`);
-    assert.match(source, /^on:\n  push:\n    tags:\n      - 'sdk-v\*'\n\n/m, `${fileName} must run only for sdk-v* tags`);
-  }
   assert.deepEqual(Object.keys(permissions).sort(), allowedKeys.sort(), `${fileName} must not receive unrelated token scopes`);
   for (const scope of expectedExtraReadScopes[fileName] || []) assert.equal(permissions[scope], "read", `${fileName} ${scope} permission`);
-  if (fileName === "sdk-publish.yml") {
-    // Fail-closed publication boundary: gate before the environment, no registry token anywhere.
-    assert.match(source, /node scripts\/sdk-release-gate\.cjs/, "sdk-publish.yml must run the release gate");
-    assert.match(source, /needs: gate\n\s+runs-on: ubuntu-latest\n\s+environment: npm-release/, "publish must need the gate and run in npm-release");
-    assert.doesNotMatch(source, /NPM_TOKEN|NODE_AUTH_TOKEN/, "sdk-publish.yml must use Trusted Publishing, not a registry token");
-  }
 }
 
 assert.throws(
@@ -115,6 +127,19 @@ for (const fixture of [
   assert.throws(() => assertNoPrivateKeySecret(fixture, "fixture.yml"), /private-key repository secret/);
 }
 assertNoPrivateKeySecret("env:\n  SEPOLIA_RPC_URL: ${{ secrets.SEPOLIA_RPC_URL }}\n", "fixture.yml");
+
+{
+  // The reviewed workflow passes; tag triggers, workflow-wide OIDC and an unprotected publish job fail.
+  const reviewed = fs.readFileSync(path.join(workflowsDirectory, "sdk-publish.yml"), "utf8");
+  assertSdkPublishBoundary(reviewed);
+  const dispatch = /^on:\n  workflow_dispatch:\n/m;
+  assert.throws(() => assertSdkPublishBoundary(reviewed.replace(dispatch, "on:\n  push:\n    tags:\n      - 'sdk-v*'\n  workflow_dispatch:\n")), /workflow_dispatch only/);
+  assert.throws(() => assertSdkPublishBoundary(reviewed.replace(dispatch, "on:\n  workflow_dispatch:\n  push:\n    tags:\n      - 'sdk-v*'\n")), /workflow_dispatch only/);
+  assert.throws(() => assertSdkPublishBoundary(reviewed.replace("permissions:\n  contents: read\n", "permissions:\n  contents: read\n  id-token: write\n")), /only the npm-release publish job/);
+  assert.throws(() => assertSdkPublishBoundary(reviewed.replace("    environment: npm-release\n", "")), /publish job must be the npm-release job/);
+  assert.throws(() => assertSdkPublishBoundary(reviewed.replace("  gate:\n    runs-on: ubuntu-latest\n", "  gate:\n    runs-on: ubuntu-latest\n    permissions:\n      id-token: write\n")), /must not override permissions|only the npm-release/);
+  assert.throws(() => assertSdkPublishBoundary(reviewed.replace("node scripts/sdk-release-gate.cjs", "true")), /must run the release gate/);
+}
 
 const securityWorkflow = fs.readFileSync(path.join(workflowsDirectory, "security-audit.yml"), "utf8");
 assert.ok(securityWorkflow.includes("run: npm run test:workflow-permissions"));

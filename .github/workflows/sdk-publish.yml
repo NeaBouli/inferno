@@ -1,58 +1,80 @@
 name: IFR SDK Publish
 
-# Publishes ifr-sdk to npm for a tag sdk-v<version> (matching apps/sdk/package.json) — fail closed:
-# 1. gate: the tagged commit must be on protected main with every required main check green on that exact
-#    commit, and the environment "npm-release" must exist with a required reviewer and a tag-only
-#    (sdk-v*) deployment policy (scripts/sdk-release-gate.cjs). A missing or unprotected environment, a
-#    tag on an unreviewed commit or a red check stops the run before anything is built or published.
-# 2. publish: runs in "npm-release" (owner approval), re-runs the package checks and publishes with npm
-#    Trusted Publishing (OIDC, provenance). No registry token is used or stored; without a trusted
-#    publisher configured on npmjs.com for this workflow, npm rejects the publish.
-# Roles: Codex pushes the release tag; the owner approves the npm-release run (docs/runbooks/IFR_SDK_NPM_RELEASE.md).
+# Publishes ifr-sdk to npm. Manual dispatch from protected main only (input: version) - fail closed.
+# There is deliberately no tag or push trigger: a tag-triggered run would execute the workflow and gate
+# from the tagged (possibly unreviewed) commit. The boundary is enforced outside the run:
+#   - environment npm-release: required reviewer, deployment policy = branch main only;
+#   - npm Trusted Publisher for ifr-sdk bound to NeaBouli/inferno, sdk-publish.yml, environment npm-release.
+# A run from any other ref cannot enter npm-release, and a token without that environment is rejected by npm.
+# 1. gate (read-only, no OIDC): scripts/sdk-release-gate.cjs verifies dispatch on main, version, commit on
+#    protected main, required checks green on the exact commit, the environment configuration and that the
+#    version is not yet on the registry (the first version is the manual bootstrap, see runbook).
+# 2. publish (npm-release, owner approval): the only job allowed to mint an OIDC token; re-runs the package checks
+#    and publishes with provenance. No registry token is used or stored.
+# Runbook: docs/runbooks/IFR_SDK_NPM_RELEASE.md
 on:
-  push:
-    tags:
-      - 'sdk-v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'ifr-sdk version to publish (must equal apps/sdk/package.json on main)'
+        required: true
+        type: string
 
 permissions:
   contents: read
-  id-token: write
   checks: read
   actions: read
+
+concurrency:
+  group: sdk-publish
+  cancel-in-progress: false
 
 jobs:
   gate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: '22'
-      - name: Release gate (reviewed main commit, green checks, protected environment)
+      - name: Release gate (dispatch on protected main, green checks, protected environment, unpublished version)
         run: node scripts/sdk-release-gate.cjs
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          SDK_RELEASE_VERSION: ${{ inputs.version }}
 
   publish:
     needs: gate
     runs-on: ubuntu-latest
     environment: npm-release
+    permissions:
+      contents: read
+      id-token: write
     defaults:
       run:
         working-directory: apps/sdk
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: '22'
           cache: 'npm'
           cache-dependency-path: apps/sdk/package-lock.json
+      - name: Dispatch on main with the package version
+        env:
+          SDK_RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ] && [ "${GITHUB_REF}" = "refs/heads/main" ] || { echo "not a dispatch on main"; exit 1; }
+          version=$(node -p "require('./package.json').version")
+          [ "${SDK_RELEASE_VERSION}" = "${version}" ] || { echo "requested ${SDK_RELEASE_VERSION} != package ${version}"; exit 1; }
       - name: npm CLI with Trusted Publishing support
         run: npm install -g npm@11.6.2 && npm --version
-      - name: Tag must match package version
-        run: |
-          version=$(node -p "require('./package.json').version")
-          [ "${GITHUB_REF_NAME}" = "sdk-v${version}" ] || { echo "tag ${GITHUB_REF_NAME} != sdk-v${version}"; exit 1; }
       - run: npm ci
       - run: npm audit --audit-level=moderate
       - run: npm test

@@ -234,8 +234,9 @@ remains the only place where agenda items and vote outcomes are published.
   no embedded wallet is planned and the Sepolia prototype stays a prototype
   (open-source, community-driven project). (2) Publish `ifr-sdk` under MIT from
   the project npm account `ifr-protocol` (project alias e-mail, 2FA), never a
-  personal account, via the fail-closed tag workflow with npm Trusted
-  Publishing and owner approval ([runbook](runbooks/IFR_SDK_NPM_RELEASE.md)).
+  personal account: one manual bootstrap version, then only the fail-closed
+  workflow dispatched on protected `main` with npm Trusted Publishing and owner
+  approval ([runbook](runbooks/IFR_SDK_NPM_RELEASE.md)).
 - **Decision needed:** Creator Gateway hosting model. Proposed: a public demo
   instance on the sandbox host with wallet and IFRLock checks only (no
   Google/YouTube OAuth, no personal data) plus a self-hosting quickstart;

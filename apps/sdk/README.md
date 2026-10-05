@@ -5,11 +5,11 @@ sessions. The package currently supports Ethereum Mainnet only.
 
 ## Availability
 
-The SDK is not yet published to the npm registry. Publication is prepared: a release tag
-`sdk-v<version>` on a reviewed `main` commit runs `.github/workflows/sdk-publish.yml`, which checks the
-release gate, waits for owner approval, tests the package and publishes it with npm provenance from the
-project npm account through npm Trusted Publishing. Until then, build and pack the versioned artifact
-from the repository:
+The SDK is not yet published to the npm registry. Publication is prepared: the first version is a
+one-time manual bootstrap by the project npm account; every later version is published by
+`.github/workflows/sdk-publish.yml`, dispatched manually on protected `main`, which checks the release
+gate, waits for owner approval, tests the package and publishes it with npm provenance through npm
+Trusted Publishing. Until then, build and pack the versioned artifact from the repository:
 
 ```bash
 cd apps/sdk
