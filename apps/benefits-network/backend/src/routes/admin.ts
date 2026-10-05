@@ -3,7 +3,17 @@ import { z } from 'zod';
 import { prisma } from '../services/sessionService';
 import { adminAuth } from '../middleware/auth';
 import { validate } from '../middleware/validator';
-import { getRewardOnChainStatus, isWalletAlreadyRewarded } from '../services/rewardService';
+import { getModelBVaultState, getRewardOnChainStatus, isWalletAlreadyRewarded } from '../services/rewardService';
+import { findPilot, getModelBPolicy } from '../services/modelBPolicy';
+import {
+  buildSettlementExport,
+  computeMilestoneId,
+  MODEL_B_SETTLEMENT_PENDING,
+  parseSettlementPeriod,
+  type ModelBChainState,
+} from '../services/modelBSettlement';
+import { loadSettlementRecords } from '../services/modelBSettlementData';
+import { config } from '../config';
 import { LOCK_SOURCES } from '../services/lockSource';
 import {
   businessServiceAreaKey,
@@ -531,7 +541,7 @@ router.post('/businesses/:id/rewards/queue', adminAuth, async (req, res, next) =
         await tx.rewardEvent.updateMany({
           where: {
             businessId: business.id,
-            status: { in: ['PENDING', 'READY', 'BLOCKED_CALLER', 'BLOCKED_GOVERNANCE'] },
+            status: { in: ['PENDING', 'READY', 'BLOCKED_CALLER', 'BLOCKED_GOVERNANCE', 'SETTLEMENT_PENDING'] },
           },
           data: {
             status: 'BLOCKED_GOVERNANCE',
@@ -541,6 +551,49 @@ router.post('/businesses/:id/rewards/queue', adminAuth, async (req, res, next) =
         await recordAdminAudit(tx, req, 'rewards:queue', 409, { type: 'Business', id: business.id });
       });
       res.status(409).json({ error: onChain.reason || 'On-chain reward link is no longer valid', onChain });
+      return;
+    }
+
+    // Lane 4 Model B (T-275): for a configured pilot partner, verified post-pilot redemption events
+    // become SETTLEMENT_PENDING for the period export instead of depending on a lock-reward caller.
+    // Pre-pilot events are left untouched (never reclassified or backfilled).
+    const modelB = getModelBPolicy();
+    const pilot = modelB.enabled ? findPilot(modelB.policy, business.id, link.partnerId) : null;
+    if (pilot) {
+      const pilotEvents = await prisma.rewardEvent.findMany({
+        where: {
+          businessId: business.id,
+          partnerId: link.partnerId,
+          status: { in: ['PENDING', 'READY', 'BLOCKED_CALLER', 'BLOCKED_GOVERNANCE'] },
+          session: { status: 'REDEEMED', redeemedAt: { gte: new Date(pilot.startsAt) } },
+        },
+        orderBy: { createdAt: 'asc' },
+        take: 50,
+        select: { id: true },
+      });
+      let settlementPending = 0;
+      for (const event of pilotEvents) {
+        const updated = await prisma.rewardEvent.updateMany({
+          where: { id: event.id, status: { in: ['PENDING', 'READY', 'BLOCKED_CALLER', 'BLOCKED_GOVERNANCE'] } },
+          data: {
+            status: MODEL_B_SETTLEMENT_PENDING,
+            reason: 'Model B pilot redemption awaiting the period settlement export; not settled or paid',
+          },
+        });
+        settlementPending += updated.count;
+      }
+      await prisma.$transaction(async (tx) => {
+        await tx.sellerRewardLink.update({
+          where: { businessId: business.id },
+          data: {
+            lastCheckedAt: new Date(onChain.checkedAt),
+            verificationBlock: String(onChain.blockNumber),
+            reason: null,
+          },
+        });
+        await recordAdminAudit(tx, req, 'rewards:queue', 200, { type: 'Business', id: business.id });
+      });
+      res.json({ mode: 'model-b', settlementPending, scanned: pilotEvents.length, submissionReady: false });
       return;
     }
 
@@ -601,6 +654,81 @@ router.post('/businesses/:id/rewards/queue', adminAuth, async (req, res, next) =
       await recordAdminAudit(tx, req, 'rewards:queue', 200, { type: 'Business', id: business.id });
     });
     res.json({ ready, confirmed, blocked, scanned: events.length, submissionReady: onChain.submissionReady });
+  } catch (err) {
+    next(err);
+  }
+});
+
+const modelBExportSchema = z.object({
+  partnerId: z.string().regex(/^0x[a-fA-F0-9]{64}$/),
+  period: z.string().regex(/^\d{4}-\d{2}$/),
+  sellerConfirmedRedemptions: z.number().int().min(0).max(1_000_000).optional(),
+  priceEvidence: z.unknown().optional(),
+}).strict();
+
+// Lane 4 Model B (T-275): read-only per-period settlement export. Default-off; operator auth only.
+// It never writes reward state, never signs and never submits. Without clean reconciliation and
+// reviewed price evidence the export is diagnostic and carries no calldata.
+router.post('/model-b/settlements/export', adminAuth, validate(modelBExportSchema), async (req, res, next) => {
+  res.setHeader('Cache-Control', 'no-store');
+  try {
+    const modelB = getModelBPolicy();
+    if (!modelB.enabled) {
+      res.status(404).json({ error: modelB.reason });
+      return;
+    }
+    const partnerId = (req.body.partnerId as string).toLowerCase();
+    const pilot = modelB.policy.pilots.find((item) => item.partnerId === partnerId);
+    if (!pilot) {
+      res.status(404).json({ error: 'Partner is not a configured Model B pilot' });
+      return;
+    }
+    if (!config.PARTNER_VAULT_ADDRESS || !config.BUILDER_REGISTRY_ADDRESS) {
+      res.status(409).json({ error: 'Reward contracts are not configured' });
+      return;
+    }
+    let period;
+    try {
+      period = parseSettlementPeriod(req.body.period);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+      return;
+    }
+    const records = await loadSettlementRecords(prisma, pilot, period);
+    if (!records) {
+      res.status(404).json({ error: 'Pilot seller business not found' });
+      return;
+    }
+    const milestoneId = computeMilestoneId(config.CHAIN_ID, config.PARTNER_VAULT_ADDRESS, pilot.partnerId, period);
+    let chain: ModelBChainState | null = null;
+    if (records.ownership.ownerAddress) {
+      try {
+        const [seller, vault] = await Promise.all([
+          getRewardOnChainStatus(records.ownership.ownerAddress, pilot.partnerId, records.ownership.link?.rewardWallet ?? null),
+          getModelBVaultState(modelB.policy.pilots.map((item) => item.partnerId), pilot.partnerId, milestoneId),
+        ]);
+        chain = { ...vault, sellerVerified: seller.verified, sellerReason: seller.reason };
+      } catch {
+        chain = null;
+      }
+    }
+    const exported = buildSettlementExport({
+      policy: modelB.policy,
+      pilot,
+      period,
+      now: new Date(),
+      expectedChainId: config.CHAIN_ID,
+      partnerVaultAddress: config.PARTNER_VAULT_ADDRESS,
+      ifrTokenAddress: config.IFR_TOKEN_ADDRESS,
+      records,
+      sellerConfirmedRedemptions: req.body.sellerConfirmedRedemptions,
+      priceEvidence: req.body.priceEvidence,
+      chain,
+    });
+    await prisma.$transaction(async (tx) => {
+      await recordAdminAudit(tx, req, 'rewards:model-b-export', 200, { type: 'Business', id: pilot.businessId });
+    });
+    res.json(exported);
   } catch (err) {
     next(err);
   }

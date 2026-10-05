@@ -1,0 +1,35 @@
+{
+  "note": "Deterministic Model B template fixture (T-275). Unsigned test data only; never submit.",
+  "partnerId": "0xcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+  "milestoneId": "0x65d69fbf25efb9903596f0366d7080f684d8c9f7d9713b93533cc3deb70a4654",
+  "unlockAmount": "2000000000000",
+  "template": {
+    "kind": "ifr-model-b-recordMilestone-proposal-template",
+    "unsigned": true,
+    "submitted": false,
+    "chainId": "1",
+    "meta": {
+      "purpose": "Model B settlement proposal template for review by the Treasury Safe; not signed, not submitted, not a payment",
+      "partnerId": "0xcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd",
+      "milestoneId": "0x65d69fbf25efb9903596f0366d7080f684d8c9f7d9713b93533cc3deb70a4654",
+      "unlockAmount": "2000000000000",
+      "batchDigest": "<varies with test event ids>",
+      "evidenceDigest": "0x446bf00b2160aed17920d5e6dbc2f9b924793d1a2c9abe5300e4784e9f9bb206",
+      "policyVersion": "lane4-model-b-test-1",
+      "period": "2026-08",
+      "partnerVault": "0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D",
+      "governance": "0xc43d48E7FDA576C5022d0670B652A622E8caD041"
+    },
+    "inner": {
+      "to": "0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D",
+      "data": "0xc7aad1e2cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd65d69fbf25efb9903596f0366d7080f684d8c9f7d9713b93533cc3deb70a4654000000000000000000000000000000000000000000000000000001d1a94a2000"
+    },
+    "transactions": [
+      {
+        "to": "0xc43d48E7FDA576C5022d0670B652A622E8caD041",
+        "value": "0",
+        "data": "0x9d481848000000000000000000000000c6eb7714bcb035ebc2d4d9ba7b3762ef7b9d4f7d00000000000000000000000000000000000000000000000000000000000000400000000000000000000000000000000000000000000000000000000000000064c7aad1e2cdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcd65d69fbf25efb9903596f0366d7080f684d8c9f7d9713b93533cc3deb70a4654000000000000000000000000000000000000000000000000000001d1a94a200000000000000000000000000000000000000000000000000000000000"
+      }
+    ]
+  }
+}
