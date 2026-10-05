@@ -15,7 +15,7 @@ Not daily. Therefore 3.5% is bearable.
 | Fee | Destination | Purpose |
 | --- | --- | --- |
 | 2.5% | Burn (permanent) | Deflation -- supply decreases |
-| 1.0% | FeeRouterV1 | IFR pool fee; held by FeeRouterV1 with no IFR withdrawal path (CWA-02, permanently lost) |
+| 1.0% | BuybackController (since Proposal #21, 5 October 2026) | IFR pool fee; recoverable by Governance through `withdrawIFR`. Until #21 it went to FeeRouterV1, which has no IFR withdrawal path (CWA-02, permanently lost) |
 | Total | 3.5% | Automatic, no governance required |
 
 ## Fee-Exempt Addresses
@@ -27,6 +27,7 @@ Not daily. Therefore 3.5% is bearable.
 | BuybackVault | Buyback logic without loss |
 | BurnReserve | Burn mechanism |
 | PartnerVault | Fee-exempt protocol vault; seller rewards remain separately governance-gated and inactive |
+| CommitmentVault V2 | CV-01 repair vault for time-only locks; exempt since Proposal #17 (executed 04.10.2026, block 26121846) |
 | IFR/WETH Pair | Uniswap V2 pair transfers without the token fee |
 
 All exempt addresses: transparent on-chain, changeable only via Governance.
@@ -64,11 +65,11 @@ Since 18.04.2026 (Governance Proposal #14), the `feeCollector` on FeeRouterV1 is
 
 ## Pool Fee Receiver (CWA-02, Decision 3 October 2026)
 
-- Since Proposal #6 (13.03.2026) `InfernoToken.poolFeeReceiver` is FeeRouterV1. FeeRouterV1 has no IFR withdrawal or forwarding function, so every IFR pool fee it receives is permanently lost. It is not burned and stays in `totalSupply()`.
-- At block 26,108,134 FeeRouterV1 held 724,992.668043224 IFR.
+- From Proposal #6 (13.03.2026) until Proposal #21 (5 October 2026) `InfernoToken.poolFeeReceiver` was FeeRouterV1. FeeRouterV1 has no IFR withdrawal or forwarding function, so every IFR pool fee it received is permanently lost. It is not burned and stays in `totalSupply()`.
+- At block 26,108,134 FeeRouterV1 held 724,992.668043224 IFR; as of block 26,124,660 (Proposal #21 executed) it holds 734,545.074097347 IFR.
 - Owner decision (Lane 3, option B): future pool fees go to BuybackController `0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c` via `InfernoToken.setPoolFeeReceiver`, a Governance proposal with the 48-hour timelock. There the IFR stays recoverable by Governance through `withdrawIFR`. The deployed controller is dormant (JUL-08), so the IFR is not used automatically until Governance decides how.
-- Status: decided, pending Governance execution. IFR already in FeeRouterV1 stays lost.
+- Status: executed. The Treasury Safe executed Proposal #21 on 5 October 2026, 07:25:23 UTC, block 26,124,660, TX `0x8de48b47dfa8f17b631fb744bc4deef9bbb68271f8b700b422cdd3abb739ca26`; `poolFeeReceiver()` = BuybackController. IFR already in FeeRouterV1 stays lost.
 
-27,143,460.66 IFR are permanently lost (not burned; still counted in totalSupply): 26,418,467.99 IFR in CommitmentVault V1 price-conditioned tranches (CV-01) and 724,992.67 IFR of pool fees in FeeRouterV1 (CWA-02), verified at block 26,108,134 on 3 October 2026.
+27,153,013.07 IFR are permanently lost (not burned; still counted in totalSupply): 26,418,467.99 IFR in CommitmentVault V1 price-conditioned tranches (CV-01) and 734,545.07 IFR of pool fees in FeeRouterV1 (CWA-02), as of block 26,124,660 on 5 October 2026. In that block Proposal #21 stopped the pool-fee inflow to FeeRouterV1; direct transfers to that address remain possible, so its part is read live.
 
-*Version 1.3 | 3 October 2026 | Mainnet Live*
+*Version 1.4 | 5 October 2026 | Mainnet Live*

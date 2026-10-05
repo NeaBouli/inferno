@@ -24,3 +24,13 @@ Evidence is attached to existing register entries CWA-20, CWA-55 and CWA-70.
 - Safe thresholds/owners and "all verified on Etherscan" were not re-read on chain in this pass.
 - Dated historical records (audit prompts, release notes, changelogs, archived reports) keep their
   original figures by design.
+
+## Follow-up 2026-10-05 — component count 18
+
+CommitmentVault V2 (`0x8efa…7c8F`, CV-01 repair, fee-exempt since Governance proposal #17) joined
+the counted list as the 15th protocol contract: **15 protocol contracts + 3 Gnosis Safes = 18
+documented on-chain components**. The count lists deployed components; it is not a claim that all of
+them are active (CommitmentVault V1 stays listed as legacy with its V1 unlock path; LendingVault V1
+is retired). `deployments/mainnet.json`, `docs/DEPLOYMENTS.md`, README, landing, wiki, `llms.txt`
+and Copilot knowledge now state 18; `npm run test:docs-truth` enforces 15 + 3 = 18. The figures in
+the matrix above are the dated 2026-09-27 values and stay unchanged.

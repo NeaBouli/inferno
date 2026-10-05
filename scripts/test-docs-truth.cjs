@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // Guards the documentation truth matrix (docs/community-audits/DOCS_TRUTH_MATRIX_2026-09-27.md):
-// the 17-component definition, Safe-address coverage, current test counts, historical coverage
+// the 18-component definition (15 deployed contracts + 3 Safes; a deployed list, not an activity claim), Safe-address coverage, current test counts, historical coverage
 // labelling and the deployed application inventory.
 
 const assert = require("node:assert/strict");
@@ -16,7 +16,12 @@ const manifest = JSON.parse(read("deployments/mainnet.json"));
 const contracts = Object.entries(manifest)
   .filter(([name]) => name !== "_manifest")
   .map(([name, entry]) => ({ name, address: entry.address }));
-assert.equal(contracts.length, 14, "deployments/mainnet.json must list 14 protocol contracts");
+assert.equal(contracts.length, 15, "deployments/mainnet.json must list 15 protocol contracts");
+assert.ok(!("pendingWiring" in manifest._manifest), "CommitmentVaultV2 is counted; no pendingWiring block may remain");
+assert.equal(manifest.CommitmentVaultV2.address, "0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F");
+assert.equal(manifest.CommitmentVault.address, "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3", "CommitmentVault V1 stays listed as legacy");
+assert.equal(new Set(contracts.map((c) => lower(c.address))).size, contracts.length, "manifest must not double-count an address");
+assert.ok(!contracts.some((c) => /PriceLockVault/i.test(c.name)), "undeployed PriceLockVault must not be counted");
 
 const safes = {
   "Treasury Safe": "0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b",
@@ -27,7 +32,7 @@ const excluded = {
   lpPair: "0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0",
   bootstrapVaultV1: "0xA820540936d18e1377C39dd9445E5b36F3F1261a",
 };
-assert.equal(contracts.length + Object.keys(safes).length, 17);
+assert.equal(contracts.length + Object.keys(safes).length, 18);
 for (const address of Object.values(excluded)) {
   assert.ok(
     !contracts.some((c) => lower(c.address) === lower(address)),
@@ -35,7 +40,7 @@ for (const address of Object.values(excluded)) {
   );
 }
 
-// Every surface that states "14 + 3 = 17" must list all 14 contracts and all 3 Safes.
+// Every surface that states "15 + 3 = 18" must list all 15 contracts and all 3 Safes.
 for (const relative of ["README.md", "docs/DEPLOYMENTS.md", "docs/index.html"]) {
   const content = lower(read(relative));
   for (const { name, address } of contracts) {
@@ -52,21 +57,32 @@ const tableAddresses = [...readme.matchAll(/^\| [^|]+ \| \[`(0x[0-9a-fA-F]{40})`
   lower(m[1])
 );
 assert.equal(new Set(tableAddresses).size, tableAddresses.length, "README table has duplicate addresses");
-assert.ok(readme.includes("DEPLOYMENTS.md#canonical-mainnet-component-count-17"));
+assert.ok(readme.includes("DEPLOYMENTS.md#canonical-mainnet-component-count-18"));
 
 const deployments = read("docs/DEPLOYMENTS.md");
-assert.ok(deployments.includes("### Canonical Mainnet Component Count (17)"));
+assert.ok(deployments.includes("### Canonical Mainnet Component Count (18)"));
 assert.ok(deployments.includes("## Gnosis Safes (Mainnet)"));
 
-// Landing list: 14 contracts + 3 Safes rendered as copyable rows.
+// Landing list: 15 contracts + 3 Safes rendered as copyable rows.
 const landing = read("docs/index.html");
+// Visible landing counters show the canonical 18 (stat card and ledger row), never the previous 17.
+assert.ok(/<div class="stat-value">18<\/div>\s*<div class="stat-label">On-chain components<\/div>/.test(landing), "landing stat card must show 18 on-chain components");
+assert.ok(landing.includes('<span class="k">On-chain components</span><span class="v">18</span>'), "landing ledger must show 18 on-chain components");
 const start = landing.indexOf('<h2 class="section-title">Contract Addresses</h2>');
-const end = landing.indexOf("14 deployed contracts + 3 Gnosis Safes = 17 on-chain components", start);
+const end = landing.indexOf("15 deployed contracts + 3 Gnosis Safes = 18 on-chain components", start);
 assert.ok(start > 0 && end > start, "landing contract address section not found");
 const rows = landing.slice(start, end).match(/class="contract-row"/g) || [];
-assert.equal(rows.length, 17, "landing contract address list must render 14 contracts + 3 Safes");
+assert.equal(rows.length, 18, "landing contract address list must render 15 contracts + 3 Safes");
+// Rows are siblings, not nested: each row segment carries exactly one copy button and closes before the next row.
+for (const segment of landing.slice(start, end).split('class="contract-row"').slice(1)) {
+  assert.equal((segment.match(/data-addr="0x/g) || []).length, 1, "each landing contract row must hold exactly one address");
+  // The segment ends with the next element's "<div " opener, so a closed row has at least as many closes as opens.
+  const opens = (segment.match(/<div\b/g) || []).length;
+  const closes = (segment.match(/<\/div>/g) || []).length;
+  assert.ok(closes >= opens, "a landing contract row must close before the next row starts");
+}
 
-// Safes are proxies: never call all 17 components protocol contracts or immutable.
+// Safes are proxies: never call all 18 components protocol contracts or immutable.
 const currentSurfaces = [
   "README.md",
   "STATUS-REPORT.md",
@@ -80,9 +96,11 @@ const currentSurfaces = [
   "docs/CURRENT_FUNCTIONALITY_STATUS.md",
 ];
 const forbidden = [
-  /\b17 (deployed )?protocol contracts\b/i,
-  /All 17 contracts\b/i,
-  /\b16 on-chain components\b/i,
+  /\b1[78] (deployed )?protocol contracts\b/i,
+  /All 1[78] contracts\b/i,
+  /\b1[67] (documented )?on-chain components\b/i,
+  /\b14 deployed (protocol )?contracts\b/i,
+  /All 14 (protocol |deployed )?contracts\b/i,
   /\b13 deployed contracts\b/i,
 ];
 for (const relative of currentSurfaces) {
@@ -94,9 +112,9 @@ for (const relative of currentSurfaces) {
 
 // Tests: the register's canonical contract count is the current reproduced count.
 const register = JSON.parse(read("docs/community-audits/cwa-remediation-register.json"));
-assert.equal(register.canonicalTests.contracts, "655/655");
+assert.equal(register.canonicalTests.contracts, "681/681");
 const status = read("docs/CURRENT_FUNCTIONALITY_STATUS.md");
-assert.ok(status.includes("`655/655` passing"));
+assert.ok(status.includes("`681/681` passing"));
 // Browser suites: reproduced with `npx playwright test --list` (wallet-connect 24, web3-write 27).
 assert.equal(register.canonicalTests.landingWikiBrowser, "26/26");
 assert.equal(register.canonicalTests.web3Browser, "45/45");
@@ -140,4 +158,4 @@ for (const evidence of [
   assert.ok(fs.existsSync(path.join(root, evidence)), `inventory evidence missing: ${evidence}`);
 }
 
-console.log("[docs-truth] PASS - 14 contracts + 3 Safes = 17; 655 tests; historical coverage labelled; 7 deployment units");
+console.log("[docs-truth] PASS - 15 contracts + 3 Safes = 18; 681 tests; historical coverage labelled; 7 deployment units");
