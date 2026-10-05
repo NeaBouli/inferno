@@ -678,7 +678,7 @@
         <tbody>
           <tr style="border-bottom:1px solid #1f2937;">
             <td style="padding:10px;color:#6b7280;">1</td>
-            <td style="padding:10px;color:#b3300b;font-weight:700;font-family:monospace;">A.K.</td>
+            <td style="padding:10px;color:#b3300b;font-weight:700;font-family:monospace;">G.M.</td>
             <td style="padding:10px;font-family:monospace;color:#166534;font-size:0.8rem;">0x6b36687b0cd4386fb14cf565b67d7862110fed67</td>
             <td style="padding:10px;color:#9ca3af;">Treasury + Community + LP Reserve</td>
             <td style="padding:10px;"><span style="color:#166534;font-size:0.8rem;font-weight:600;">&#x2705; Active</span></td>
@@ -743,7 +743,7 @@
           </tr>
           <tr>
             <td>Rotate the Governance guardian</td>
-            <td>TreasurySafe, as Governance owner, can call untimelocked <code>setGuardian()</code>. IFRLock emergency pause remains with its separate Deployer EOA guardian.</td>
+            <td>TreasurySafe, as Governance owner, can call untimelocked <code>setGuardian()</code>. Since the guardian migration (completed 5 October 2026, CWA-09) the IFRLock, Vesting, PartnerVault, LiquidityReserve and BurnReserve guardians are the TreasurySafe as well; only the immutable BuybackVault and BuybackController guardian stays the Deployer EOA (pause only).</td>
           </tr>
           <tr>
             <td>Transfer Governance admin</td>
@@ -848,12 +848,12 @@
           <tr>
             <td>IFRLock</td>
             <td><code>guardian()</code></td>
-            <td>Deployer (pause-only)</td>
+            <td>TreasurySafe (pause-only; since 3 October 2026)</td>
           </tr>
           <tr>
             <td>Vesting</td>
             <td><code>guardian()</code></td>
-            <td>Deployer (pause/unpause; transferable through <code>transferGuardian</code>)</td>
+            <td>TreasurySafe (pause/unpause; moved through <code>transferGuardian</code> on 3 October 2026)</td>
           </tr>
           <tr>
             <td>FeeRouterV1</td>
@@ -870,7 +870,7 @@
       </p>
       <ul>
         <li><strong>Open source</strong> &mdash; all code lives on <a href="https://github.com/NeaBouli/inferno">GitHub</a>. Anyone can fork, audit, or continue development.</li>
-        <li><strong>Verified on-chain</strong> &mdash; all 14 deployed contracts are published on <a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code">Etherscan</a>. The bytecode is public and immutable.</li>
+        <li><strong>Verified on-chain</strong> &mdash; all 15 deployed contracts are published on <a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code">Etherscan</a>. The bytecode is public and immutable.</li>
         <li><strong>Governance protects</strong> &mdash; proposals use the 48-hour timelock. Owner-only guardian rotation through <code>setGuardian</code> is the documented untimelocked exception.</li>
         <li><strong>Multisig prevents failure</strong> &mdash; no single key loss can freeze the protocol. Threshold increases over time.</li>
         <li><strong>Community can continue</strong> &mdash; if the original team disappears, anyone with the contracts, ABI, and governance access can operate the protocol.</li>

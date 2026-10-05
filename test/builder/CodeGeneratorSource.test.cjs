@@ -25,12 +25,14 @@ const validConfig = {
 
 const generated = generateCode(validConfig);
 
-assert.match(generated.sdkSnippet, /const access = await ifr\.checkAccess/);
+assert.match(generated.sdkSnippet, /const result = await ifr\.checkAccess/);
 assert.match(generated.sdkSnippet, /const \{ tier \} = await ifr\.getTier/);
-assert.match(generated.sdkSnippet, /if \(access\.hasAccess\) enableAccess/);
+assert.match(generated.sdkSnippet, /if \(result\.hasAccess\) enableAccess/);
 assert.match(generated.sdkSnippet, /https:\/\/copilot-api\.ifrunit\.tech\/api\/ifr\/check/);
 assert.doesNotMatch(generated.sdkSnippet, /npm install ifr-sdk/);
-assert.match(generated.deployGuide, /npm registry publication is pending/);
+assert.match(generated.deployGuide, /npm publication pending/);
+assert.match(generated.deployGuide, /no Sepolia IFR token is deployed/);
+assert.doesNotMatch(generated.deployGuide, /npx hardhat run scripts\/deploy\.js/);
 assert.doesNotMatch(generated.deployGuide, /npm install ifr-sdk/);
 
 assert.equal(validateConfig(validConfig).valid, true);
@@ -61,6 +63,9 @@ const safeScore = calculateSecurityScore({
 });
 assert.equal(safeScore.score, 100);
 assert.equal(safeScore.level, "SAFE");
+assert.equal(safeScore.label, "Strong setup", "displayed label is a configuration description, not a verdict");
+assert.match(safeScore.disclaimer, /not audited/);
+assert.match(safeScore.disclaimer, /lock\(\) credits the amount actually received/);
 
 const riskyScore = calculateSecurityScore({
   ...validConfig,
@@ -71,6 +76,7 @@ const riskyScore = calculateSecurityScore({
   apiCheck: true,
 });
 assert.equal(riskyScore.level, "RISKY");
+assert.equal(riskyScore.label, "Weak setup");
 assert.equal(riskyScore.score, 5);
 assert.equal(riskyScore.breakdown.length, 5);
 assert.deepEqual(riskyScore.recommendations, [

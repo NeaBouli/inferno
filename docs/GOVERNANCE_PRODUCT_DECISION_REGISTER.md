@@ -105,11 +105,12 @@ remains the only place where agenda items and vote outcomes are published.
 
 ## Lane 3 — FeeRouter sink/accrual and Governance/guardian redeployment
 
-- **Current truth:** FeeRouterV1 accumulates IFR pool fees with no automatic
-  forwarding path (CWA-02). The FeeRouter voucher path is dormant (CWA-18).
-  The Mainnet Governance contract predates a later source fix (CWA-25). The
-  guardian is a single EOA with cancel power; a separate guardian multisig is
-  planned (CWA-09). The voucher signer overlaps a Safe owner key (CWA-06).
+- **Current truth:** As of 5 October 2026, FeeRouterV1 holds 734,545.074097347 IFR of pool fees
+  (as of block 26124660) with no forwarding path (CWA-02); since Proposal #21 new pool fees go
+  to BuybackController. The FeeRouter voucher path is dormant (CWA-18). The Mainnet Governance
+  contract predates a later source fix (CWA-25). All six mutable guardians are the Treasury
+  Safe (CWA-09, Proposals #19/#20). The voucher signer is a dedicated key outside the Safe
+  signer set (CWA-06, Proposal #18).
 - **Decision needed:** accept FeeRouterV1 as a documented permanent sink, or
   route future fees to a governed recoverable receiver; scope of a bundled
   Governance redeploy and migration; accepted guardian model.
@@ -130,9 +131,12 @@ remains the only place where agenda items and vote outcomes are published.
 - **Next evidence:** sink-vs-receiver decision record; migration rehearsal log.
 - **Decision record (3 October 2026, owner):** option B. Future IFR pool fees go to
   BuybackController through `InfernoToken.setPoolFeeReceiver` (Governance proposal, 48-hour
-  timelock; pending execution). The 724,992.668043224 IFR already in FeeRouterV1 (block
+  timelock; executed 5 October 2026 as Proposal #21). The 724,992.668043224 IFR already in FeeRouterV1 (block
   26,108,134) stay permanently lost and are disclosed as lost, not burned. Guardian model
   decided the same day: Treasury Safe (CWA-09); voucher signer moves to a dedicated key (CWA-06).
+- **Executed (5 October 2026):** the Treasury Safe executed #21 at 07:25:23 UTC, block 26124660
+  (transaction in `docs/DEPLOYMENTS.md`); `poolFeeReceiver()` = BuybackController. FeeRouterV1 balance as of that block: 734,545.074097347 IFR. #18
+  (block 26124623) and #19/#20 (block 26124647) executed in the same Safe round.
 - **Execution status (4 October 2026):** option B is queued as Governance proposal #21
   (`InfernoToken.setPoolFeeReceiver(BuybackController)`, ETA 2026-10-05 00:18:23 UTC; read-only
   evidence at block 26119897). The step-2 execute batch is written only after on-chain

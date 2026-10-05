@@ -1,8 +1,8 @@
 # Guardian Migration to the Treasury Safe (CWA-09)
 
-**Status:** in progress (2026-10-04). Every Mainnet step is performed by the deployer or the Safe signers, never by
-automation. Steps 1-3 are done; step 4 waits for the Governance delay. The step-2 generator is pinned to the queued
-proposals and verifies their exact on-chain content before writing any file (T-242).
+**Status:** complete (5 October 2026). All steps are done: the Treasury Safe executed proposals #19 and #20 in one
+transaction on 2026-10-05 07:22:47 UTC, block 26124647, and `guardian()` returns the Treasury Safe on all six mutable
+guardian contracts. Every Mainnet step was performed by the deployer or the Safe signers, never by automation.
 
 ## Decision
 
@@ -41,8 +41,10 @@ unpause buyback execution; it cannot move funds. Changing it would need a redepl
    [`0xfdd90c5e…e3d394c`](https://etherscan.io/tx/0xfdd90c5ef44efd617af0338fa2e95867cfa45367ac644975774e1b3fae3d394c):
    Governance `guardian()` = Treasury Safe; proposals #19 (LiquidityReserve) and #20 (BurnReserve) queued with ETA
    2026-10-04 23:56:11 UTC.
-4. **Pending.** After the ETA the Treasury Safe executes proposals #19 and #20. Final pre-sign validation
-   (fresh, immediately before signing):
+4. **Done (Treasury Safe).** Proposals #19 and #20 executed in one Safe transaction on 2026-10-05 07:22:47 UTC,
+   block 26124647,
+   [`0xa432f061…be19df27`](https://etherscan.io/tx/0xa432f061d42d3cbf306e44cf27394da5f70443d8d765cb1cfea66e17be19df27).
+   Pre-sign validation as performed:
    1. Regenerate the batch: `node scripts/guardian-migration-proposal.cjs --execute ./cwa09-guardian`
       (optionally with `MAINNET_RPC_URL=<archive rpc>`). The script re-reads proposals #19/#20 and refuses to
       write unless both still exist with exactly target LiquidityReserve/BurnReserve, calldata
@@ -55,8 +57,8 @@ unpause buyback execution; it cannot move funds. Changing it would need a redepl
       `Governance.execute` reverts with `too early` otherwise.
    4. Re-run step 4.1 if any signing session happens long after generation; a cancelled or already-executed
       proposal makes the regenerated file refuse.
-   Until then the LiquidityReserve and BurnReserve guardian is still the deployer EOA.
-5. **Pending.** Verify `guardian()` on all six contracts returns the Treasury Safe.
+5. **Done (read-only, 2026-10-05).** `guardian()` on Governance, IFRLock, PartnerVault, Vesting, LiquidityReserve
+   and BurnReserve returns the Treasury Safe `0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`.
 
 ## Tests
 

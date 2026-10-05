@@ -220,6 +220,16 @@ test("Governance overview and agenda status match the published Council vote rec
   await expect(page.locator("#cv01-vote ~ ul").first()).toContainText("Eligible: all five. G.M.'s abstention is unverified and not counted.");
 });
 
+test("CV-01 states G.M.'s abstention neutrally, without a reason or holding reference", async ({ page }) => {
+  await page.goto("/wiki/commitment-vault-compensation.html");
+  await expect(page.locator("#cv01-vote + p + ul")).toContainText("G.M.'s abstention is unverified and not counted.");
+  for (const path of ["/wiki/commitment-vault-compensation.html", "/wiki/governance.html"]) {
+    await page.goto(path);
+    const text = await page.locator("body").innerText();
+    expect(text).not.toMatch(/G\.M\.[^.]*abstain[^.]*(conflict|interest|because|due to|holding|balance)/i);
+  }
+});
+
 test("llms.txt does not suggest that configuring priceOracle could release V1 price tranches", async ({ request }) => {
   const text = await (await request.get("/llms.txt")).text();
   expect(text).not.toContain("fail closed while Mainnet priceOracle is the zero address");

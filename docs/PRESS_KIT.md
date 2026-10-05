@@ -18,8 +18,8 @@ Current application, Mainnet activation and acceptance status:
 | Decimals | 9 |
 | Initial Supply | 1,000,000,000 IFR |
 | Current Supply | 997,673,879.091903855 IFR at block 25812380 |
-| Smart Contracts | 17 documented Mainnet components: 14 deployed protocol contracts plus 3 Gnosis Safes; contract source and address evidence is linked from the deployment records |
-| Current test evidence | 644 contract + 30 Generator Engine + 36 SDK legacy tests, plus browser/application release gates |
+| Smart Contracts | 18 documented Mainnet components: 15 deployed protocol contracts plus 3 Gnosis Safes; contract source and address evidence is linked from the deployment records |
+| Current test evidence | 681 contract + 30 Generator Engine + 36 SDK legacy tests, plus browser/application release gates |
 | Network | Ethereum Mainnet (deployed 2026-03-05) |
 | Launch Model | Community Fair Launch (CFLM) |
 | Mint Function | None -- supply can only decrease |
@@ -43,7 +43,7 @@ Every non-exempt transfer: -2.5% permanently burned + 1% routed to the configure
 |-----|------|-------------|
 | Sender Burn | 2.0% | Permanently burned (supply decreases) |
 | Recipient Burn | 0.5% | Permanently burned (supply decreases) |
-| Pool Fee | 1.0% | Configured protocol receiver (currently FeeRouterV1 path) |
+| Pool Fee | 1.0% | Configured protocol receiver (BuybackController since Proposal #21, 5 October 2026; FeeRouterV1 before) |
 | **Total** | **3.5%** | Hard Cap: 5% max |
 
 ## Lock-to-Access Model

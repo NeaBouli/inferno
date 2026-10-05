@@ -580,13 +580,13 @@
           </tr>
           <tr>
             <td>1.0%</td>
-            <td>FeeRouterV1</td>
-            <td>Protocol pool fee routed to the governed fee collector</td>
+            <td>BuybackController</td>
+            <td>Protocol pool fee, routed to BuybackController (recoverable by Governance via <code>withdrawIFR</code>) following Governance proposal #21 (executed 5 October 2026, Mainnet block 26124660, <a href="https://etherscan.io/tx/0x8de48b47dfa8f17b631fb744bc4deef9bbb68271f8b700b422cdd3abb739ca26" target="_blank" rel="noopener">TX 0x8de48b47&hellip;9ca26</a>). FeeRouterV1 retains its earlier IFR balance (734,545.074097347 IFR as of block 26124660 (2026-10-05)) with no withdrawal path; this routing change does not recover those tokens. Direct transfers can still change FeeRouterV1's balance; read it on Etherscan for the current value.</td>
           </tr>
           <tr>
             <td><strong>3.5%</strong></td>
             <td><strong>Total</strong></td>
-            <td><strong>2.5% burned + 1% protocol pool fee via FeeRouterV1</strong></td>
+            <td><strong>2.5% burned + 1% protocol pool fee to BuybackController</strong></td>
           </tr>
         </tbody>
       </table>
@@ -633,12 +633,16 @@
             <td>Voluntary lock vault &mdash; feeExempt since Proposal #11 (06.04.2026)</td>
           </tr>
           <tr>
+            <td>CommitmentVault V2<br><span style="font-size:11px;color:var(--muted);"><code>0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F</code></span></td>
+            <td>CV-01 repair vault for time-only locks &mdash; feeExempt since <a href="https://etherscan.io/tx/0xbb53640ca8fd59513c8c772a0ceb633d63d7d9837768c28535bd67da6c4a835c" target="_blank" style="font-size:11px;">Proposal #17 executed</a> (04.10.2026, block 26121846)</td>
+          </tr>
+          <tr>
             <td>LendingVault</td>
             <td>P2P lending vault &mdash; feeExempt since Proposal #12 (06.04.2026)</td>
           </tr>
           <tr>
             <td>BuybackController<br><span style="font-size:11px;color:var(--muted);"><code>0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c</code></span></td>
-            <td>Receives native ETH fees from FeeRouter-routed swaps; permissionless execution is trigger-, cooldown- and balance-dependent. IFR transfer-pool fees held by FeeRouterV1 are not forwarded automatically. Fee-exempt since 16.04.2026 (<a href="https://etherscan.io/tx/0x74a7c9c97800cfe5a68315db68e648ae1631124a748fa5b101e58bea2681404f" target="_blank">Proposal #13</a>).</td>
+            <td>Receives native ETH fees from FeeRouter-routed swaps and, since Proposal #21 (05.10.2026), the 1% IFR pool fee; permissionless execution is trigger-, cooldown- and balance-dependent. IFR transfer-pool fees held by FeeRouterV1 are not forwarded automatically. Fee-exempt since 16.04.2026 (<a href="https://etherscan.io/tx/0x74a7c9c97800cfe5a68315db68e648ae1631124a748fa5b101e58bea2681404f" target="_blank">Proposal #13</a>).</td>
           </tr>
           <tr>
             <td>LP Token (IFR/WETH)<br><span style="font-size:11px;color:var(--muted);"><code>0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</code></span></td>
@@ -646,7 +650,7 @@
           </tr>
           <tr>
             <td>FeeRouterV1</td>
-            <td>Protocol fee router; holds IFR transfer-pool fees without an IFR withdrawal path</td>
+            <td>Protocol fee router; holds the IFR transfer-pool fees received until Proposal #21 (05.10.2026) without an IFR withdrawal path</td>
           </tr>
           <tr>
             <td>Vesting</td>

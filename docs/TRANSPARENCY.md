@@ -81,19 +81,20 @@ proposal, the 48-hour timelock and execution.
 | Burn Share | 50% |
 | Activation | 60 days after deploy |
 
-BuybackVault is empty and accepts ETH deposits; it is not the current receiver of
-the 1% IFR transfer-pool fee. That IFR fee is held by FeeRouterV1. The vault's
+BuybackVault is empty and accepts ETH deposits; it is not the receiver of the 1% IFR
+transfer-pool fee. That fee went to FeeRouterV1 until Proposal #21 (5 October 2026) and goes to
+BuybackController since. The vault's
 activation delay prevents premature execution if ETH is deposited.
 
 ## Permanently Lost IFR
 
-27,143,460.66 IFR are permanently lost (not burned; still counted in totalSupply): 26,418,467.99 IFR in CommitmentVault V1 price-conditioned tranches (CV-01) and 724,992.67 IFR of pool fees in FeeRouterV1 (CWA-02), verified at block 26,108,134 on 3 October 2026.
+27,153,013.07 IFR are permanently lost (not burned; still counted in totalSupply): 26,418,467.99 IFR in CommitmentVault V1 price-conditioned tranches (CV-01) and 734,545.07 IFR of pool fees in FeeRouterV1 (CWA-02), as of block 26,124,660 on 5 October 2026. In that block Proposal #21 stopped the pool-fee inflow to FeeRouterV1; direct transfers to that address remain possible, so its part is read live.
 
 | Where | IFR | Reason | Grows |
 | --- | --- | --- | --- |
 | CommitmentVault V1 `0x0719…73d3` | 26,418,467.994338353 | price conditions V1 cannot evaluate; no rescue path (CV-01) | no |
-| FeeRouterV1 `0x4807…C60a` | 724,992.668043224 | IFR pool fee, no withdrawal path (CWA-02) | until the pool-fee receiver moves to BuybackController (decided 3 October 2026, pending Governance execution) |
-| **Total** | **27,143,460.662381577** | 2.723% of totalSupply 996,687,518.33 | |
+| FeeRouterV1 `0x4807…C60a` | 734,545.074097347 | IFR pool fee, no withdrawal path (CWA-02) | pool-fee inflow stopped at block 26,124,660 (Proposal #21); direct transfers remain possible |
+| **Total** | **27,153,013.068435700** | 2.724% of totalSupply 996,663,637.31 at block 26,124,660 | |
 
 ---
 
@@ -153,7 +154,7 @@ Deflation is verified on-chain. Supply can only decrease — there is no mint fu
 |--------|-------|
 | Address | [`0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`](https://etherscan.io/address/0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b) |
 | Network | Ethereum Mainnet |
-| Threshold | 3-of-5 (5 active signers: A.K., M.G., A.M., Y.K., A.P.) |
+| Threshold | 3-of-5 (5 active signers: G.M., M.G., A.M., Y.K., A.P.) |
 | Safe URL | [app.safe.global](https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b) |
 | Status | Active |
 | Deployed | 2026-03-04 |

@@ -17,12 +17,12 @@ export function getIFRKnowledge() {
 
   return {
     audits: {
-      status: "The seven Collateral Web3 Open Audits reports cover CWA-01 through CWA-82. At the 2026-10-02 remediation checkpoint, 53 findings are fixed and verified, 11 are governance or owner gated, 2 are accepted or monitored, 5 are open actionable, and 11 are informational.",
+      status: "The seven Collateral Web3 Open Audits reports cover CWA-01 through CWA-82. At the 2026-10-05 remediation checkpoint, 56 findings are fixed and verified, 8 are governance or owner gated, 2 are accepted or monitored, 5 are open actionable, and 11 are informational.",
       register: "https://github.com/NeaBouli/inferno/blob/main/docs/community-audits/CWA_REMEDIATION_REGISTER.md",
       july2026Status: "The preserved 27 July community audit (one owner-requested company-name redaction) is paired with an evidence-backed register: 12 fixed and verified, 3 partially remediated, 1 outdated snapshot corrected, 4 governance or future-version gated, 2 accepted or monitored, and 1 open actionable. Historical red or high-severity labels are not proof that an item remains open today.",
       july2026Register: "https://github.com/NeaBouli/inferno/blob/main/docs/community-audits/JULY_2026_REMEDIATION_REGISTER.md",
       pdf: "https://github.com/NeaBouli/inferno/raw/main/docs/community-audits/IFR_Protocol_CWA_Consolidated_Audit_Report_2026-09-14.pdf",
-      tests: "Current canonical evidence: contracts 655/655, Generator Engine 30/30, IFR SDK 36/36, Landing/Wiki browser 26/26, Web3 browser 45/45. Benefits physical device/wallet acceptance remains 1/10.",
+      tests: "Current canonical evidence: contracts 681/681, Generator Engine 30/30, IFR SDK 36/36, Landing/Wiki browser 26/26, Web3 browser 45/45. Benefits physical device/wallet acceptance remains 1/10.",
       boundary: "These are community audit records, not a professional third-party certification. Never imply that an open finding is remediated without the register's required integration and verification evidence."
     },
     userProvidedLiquidity: {
@@ -144,10 +144,10 @@ export function getIFRKnowledge() {
     governance: {
       timelockDelay: "48 hours",
       owner: "TreasurySafe 3-of-5 (since 20.03.2026)",
-      guardian: "Deployer EOA — can cancel proposals",
+      guardian: "TreasurySafe 3-of-5 since 2026-10-03 (Governance cancel; IFRLock, Vesting, PartnerVault pause). LiquidityReserve/BurnReserve guardian = TreasurySafe since 2026-10-05 (proposals #19/#20 executed, block 26124647); BuybackVault/BuybackController guardian is immutable (deployer, pause only). Trade-off: emergency actions need 3-of-5 signatures; Vesting pause has no maximum duration.",
       noInstantChanges: "Governance proposals use the 48-hour timelock. Guardian rotation through setGuardian is the documented untimelocked exception.",
       daoPhase: "Full DAO transition remains planned; current governance is TreasurySafe 3-of-5 plus the 48-hour timelock",
-      multisig: "3-of-5 on all Safes (Treasury, Community, LP Reserve) — 5 signers: A.K./M.G./A.M./Y.K./A.P.",
+      multisig: "3-of-5 on all Safes (Treasury, Community, LP Reserve) — 5 signers: G.M./M.G./A.M./Y.K./A.P.",
       communitySignerExpansion: "Planned after community voting is live. This is the multisig signer distribution process. Preferred path: keep 3-of-5 now, expand to 4-of-7 using a mixed model (3 core/protocol, 2 contributor/builder, 2 community-elected), then consider 5-of-9 only after one stable term. Selection is not pure whale voting and not pure random selection; it requires eligibility, public nomination, community vote, security review, rotation, and emergency replacement rules. Full plan: https://ifrunit.tech/wiki/community-signer-expansion.html",
       proposals: "#0, #4-#9 and #11-#16 executed; #1-#3 and #10 cancelled.",
       nextPlanned: "No claim that seller rewards are active: PartnerVault registration and an authorized reward caller require separate governance execution.",

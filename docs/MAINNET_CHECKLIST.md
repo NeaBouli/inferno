@@ -69,7 +69,7 @@ These items MUST be completed before public launch:
 
 ### Multisig Setup (MUST be done before deployment)
 - [x] Gnosis Safe created: https://safe.global
-- [x] 3-of-5 threshold active (5 signers: A.K., M.G., A.M., Y.K., A.P.) — all Safes ✅
+- [x] 3-of-5 threshold active (5 signers: G.M., M.G., A.M., Y.K., A.P.) — all Safes ✅
 - [ ] All signers have hardware wallets (Ledger/Trezor)
 - [x] Multisig address recorded: `0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`
 - [ ] Guardian multisig created (separate Safe, recommended)
@@ -124,7 +124,7 @@ These items MUST be completed before public launch:
 - [x] FeeRouterV1.sol deployed
   - governance = Governance
   - feeCollector = Treasury at deployment; changed to BuybackController by executed Proposal #14 (18.04.2026)
-  - voucherSigner = `0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4`
+  - voucherSigner = `0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4` at deployment; rotated to `0x790D99c320dafA03d83bEa152178A6523b49CA0d` by executed Proposal #18 (5 October 2026, block 26124623)
   - Address: `0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a`
   - Etherscan verified
 

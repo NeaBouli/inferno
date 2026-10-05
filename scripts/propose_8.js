@@ -92,7 +92,7 @@ async function main() {
   console.log('║  Deployer loses ALL governance control.           ║');
   console.log('║                                                   ║');
   console.log('║  Ensure ALL 5 signers are reachable:             ║');
-  console.log('║  A.K. / M.G. / A.M. / Y.K. / A.P.              ║');
+  console.log('║  G.M. / M.G. / A.M. / Y.K. / A.P.              ║');
   console.log('╚══════════════════════════════════════════════════╝');
   console.log('');
   console.log('Proceeding in 15 seconds... Press Ctrl+C to abort.');
