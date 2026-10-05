@@ -230,9 +230,17 @@ remains the only place where agenda items and vote outcomes are published.
   ([runbook](runbooks/IFR_SDK_NPM_RELEASE.md)). Creator Gateway source exists
   in the repository; no production deployment record exists
   ([spec](CREATOR_GATEWAY.md)).
-- **Decision needed:** embedded-wallet provider and single recovery trust
-  model, or continued external-wallet-only; SDK license owner, package name
-  and npm owner; Creator Gateway hosting model and first creator pilot.
+- **Decision (2026-10-03, project):** (1) external self-custody wallets only;
+  no embedded wallet is planned and the Sepolia prototype stays a prototype
+  (open-source, community-driven project). (2) Publish `ifr-sdk` under MIT from
+  the project npm account `ifr-protocol` (project alias e-mail, 2FA), never a
+  personal account: one manual bootstrap version, then only the fail-closed
+  workflow dispatched on protected `main` with npm Trusted Publishing and owner
+  approval ([runbook](runbooks/IFR_SDK_NPM_RELEASE.md)).
+- **Decision needed:** Creator Gateway hosting model. Proposed: a public demo
+  instance on the sandbox host with wallet and IFRLock checks only (no
+  Google/YouTube OAuth, no personal data) plus a self-hosting quickstart;
+  first creator pilot.
 - **Private follow-on boundary:** a gated content product may follow as a
   separate private product. Public repositories only acknowledge that planned
   boundary; its implementation details stay outside this repository.
