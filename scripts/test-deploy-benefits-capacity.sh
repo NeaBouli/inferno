@@ -30,12 +30,13 @@ OUTPUT="$({
   "$ROOT/scripts/deploy-benefits-network.sh" capacity
 } 2>&1)"
 
-if grep -Eq 'docker (builder|container|image) prune' "$SSH_LOG"; then
+if grep -Eq 'prune' "$SSH_LOG"; then
   echo "capacity mode attempted a Docker prune" >&2
   exit 1
 fi
 
-grep -Fq 'below MIN_FREE_GB=4G' <<< "$OUTPUT"
+grep -Fq 'below the 4096M deploy floor' <<< "$OUTPUT"
+grep -Fq 'never prunes' <<< "$OUTPUT"
 grep -Fq -- "--env-file '/opt/inferno/.env.benefits'" "$SSH_LOG"
 grep -Fq 'ps -aq benefits-backend' "$SSH_LOG"
 grep -Fq 'ps benefits-backend benefits-frontend' "$SSH_LOG"

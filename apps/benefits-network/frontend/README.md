@@ -219,9 +219,10 @@ scripts/deploy-benefits-network.sh frontend
 
 `frontend` is the default and rebuilds only `inferno-benefits-frontend` with
 `docker compose --no-deps`, so UI-only changes do not unnecessarily rebuild the
-backend image. The helper syncs `apps/benefits-network/`, checks server disk
-space, prunes Docker builder cache when the configured free-space floor is
-breached, and prints container/disk status after deploy.
+backend image. The helper refuses below 4 GB free (it never prunes Docker
+caches), backs up source, env and images, syncs `apps/benefits-network/`
+content-only, and restores automatically with verification if the build,
+health or public check fails (T-265).
 
 The helper passes `/opt/inferno/.env.benefits` to Compose with `--env-file`, so
 the public frontend values are available while Docker builds the Next.js
@@ -243,16 +244,15 @@ For capacity-only checks, run:
 scripts/deploy-benefits-network.sh capacity
 ```
 
-The helper keeps `MIN_FREE_GB=4` as the warning floor, `ABORT_FREE_GB=2` as
-the emergency hard floor and `DEPLOY_ABORT_FREE_GB=4` as the default hard floor
-before any container rebuild. When free space drops below the warning floor, it
-prunes safe Docker caches only: builder cache, stopped containers and dangling
-images. It does not prune volumes. If free space stays below the deploy floor
-after safe pruning, the deploy exits before rebuilding containers.
+The deploy floor is a fixed 4 GB free; below it the deploy exits 75 before any
+write. The helper never prunes builder cache, containers, images or volumes, and
+it refuses releases that change Prisma migrations (no schema migration on this
+path).
 
 For the full capacity decision process and latest known large Docker consumers,
 see `docs/BENEFITS_CAPACITY_RUNBOOK.md`.
 
-Use `scripts/deploy-benefits-network.sh backend` when backend code, Prisma
-schema/migrations or backend dependencies changed. Use `all` only when both
+Use `scripts/deploy-benefits-network.sh backend` when backend code or backend
+dependencies changed; a release with new or changed Prisma migrations is refused
+and needs its own reviewed migration release. Use `all` only when both
 sides need an intentional rebuild.

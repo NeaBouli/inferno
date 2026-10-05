@@ -26,6 +26,17 @@
   non-zero price, forced borrow and create-offer clicks send no transaction; withdraw max sends
   `withdrawOffer` with exactly the full available amount (12,345,678.123456789 IFR fixture).
 
+## 5 October 2026 — Copilot Builder API: Configuration Score Wording (T-272)
+
+- `POST /api/builder/generate` (copilot server) now returns the same wording as the Builder page:
+  `scoreName: "Configuration Score"`, `label` "Strong setup" / "Partial setup" / "Weak setup" and the
+  disclaimer "Configuration heuristic only — not audited, not a security audit or certification".
+  Scoring math and the endpoint path are unchanged; the response key stays `security`.
+- API change: `security.level` is now `strong` / `partial` / `weak` instead of `SAFE` / `MEDIUM` / `RISKY`.
+  No consumer in the repository reads the old values (`docs/builder.html` scores locally).
+- Copilot knowledge, system prompt and `llms.txt` describe the builder score as a Configuration Score.
+  New test `npm run test:builder-score` in the copilot CI. Needs a copilot re-release to go live.
+
 ## 5 October 2026 — Governance Proposals #18–#21 Executed (Safe Round)
 
 - #18 `FeeRouterV1.setVoucherSigner(0x790D99c320dafA03d83bEa152178A6523b49CA0d)`: 07:17:47 UTC, block 26124623,
@@ -53,6 +64,18 @@
   `vectors/v2.json` and a Mainnet-fork test with a real V2 lock.
 - Benefits backend: optional `COMMITMENT_VAULT_V2_ADDRESS`; when set, the commitment source adds V2's
   active TIME_ONLY tranches to V1's at the same block, with the same identity checks.
+
+## 3 October 2026 — One Default Tier Preset for Project Surfaces
+
+- The AI Copilot (`/api/ifr/check`, knowledge and prompts) and `ifr-sdk` use one default tier preset,
+  identical to the Benefits network: IFR locked in IFRLock only, Bronze 1,000 / Silver 2,500 /
+  Gold 5,000 / Platinum 10,000. The separate Basic/Premium/Pro 500/2,000/10,000 access scheme is
+  retired. `/api/ifr/check` now derives `tier` from locked IFR (`tierBasis: "locked"`) and fails
+  closed when the IFRLock read fails; `hasAccess` still compares balance + locked with the caller's
+  own `required` amount.
+- The preset is a default, not a rule: Benefits partners set their own thresholds, held-IFR minimums,
+  lock sources and discounts per benefit, and any project may verify IFR with its own rule under
+  `ifr-benefits-verify/1`. Discounts are independent of PartnerVault rewards.
 
 ## 3 October 2026 — Public Council Vote Record (Lane 6)
 

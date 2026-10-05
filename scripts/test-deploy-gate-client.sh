@@ -107,6 +107,7 @@ run() { # run <expected-exit> <cmd...>
     exit 1
   fi
 }
+run_any() { : > "$LOG"; set +e; OUT="$(PATH="$FAKES:$PATH" HOME="$FAKE_HOME" LOG="$LOG" GATE_DIR="$GATE_DIR" DEPLOY_MODE="${DEPLOY_MODE-gate}" "$@" 2>&1)"; set -e; }
 assert_log() { grep -Fq -- "$1" "$LOG" || { echo "FAIL: log lacks: $1" >&2; cat "$LOG" >&2; exit 1; }; }
 refute_log() { if grep -Fq -- "$1" "$LOG"; then echo "FAIL: log has: $1" >&2; cat "$LOG" >&2; exit 1; fi; }
 assert_out() { grep -Fq -- "$1" <<< "$OUT" || { echo "FAIL: output lacks: $1" >&2; echo "$OUT" >&2; exit 1; }; }
@@ -116,7 +117,7 @@ COMPOSE="$REPO/scripts/deploy-compose-service.sh"
 WEB3="$REPO/scripts/deploy-web3-site.sh"
 BENEFITS="$REPO/scripts/deploy-benefits-network.sh"
 STAMP=20261005T101010Z
-VAULT=0x00000000000000000000000000000000000000aa
+VAULT=0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F
 
 # --- compose service ------------------------------------------------------------
 git -C "$REPO" archive --format=tar "$SHA:apps/points-backend" > "$TMP/points.tar"
@@ -270,8 +271,13 @@ run 0 bash "$BENEFITS" env-vault-v2 "$VAULT"
 assert_log "$(gate_line "env-set .env.benefits COMMITMENT_VAULT_V2_ADDRESS $VAULT") stdin=-"
 run 64 bash "$BENEFITS" env-vault-v2 "0x1234"
 refute_log "gate "
-DEPLOY_MODE='' run 64 bash "$BENEFITS" env-vault-v2 "$VAULT"
-refute_log "ssh "
+# The V1 address (or any non-V2 address) is refused before any gate call.
+run 64 bash "$BENEFITS" env-vault-v2 "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3"
+refute_log "gate "
+refute_log "gate "
+# Without DEPLOY_MODE these modes use the direct path (#206), never the gate.
+DEPLOY_MODE='' run_any bash "$BENEFITS" env-vault-v2 "$VAULT"
+refute_log "gate cfg="
 # Benefits rollback / env-restore map to the whitelisted gate commands, stamp-validated.
 run 0 bash "$BENEFITS" rollback "$STAMP"
 assert_log "$(gate_line "benefits-rollback $STAMP") stdin=-"
@@ -283,10 +289,12 @@ run 64 bash "$BENEFITS" rollback "not-a-stamp"
 refute_log "gate "
 run 64 bash "$BENEFITS" env-restore ""
 refute_log "gate "
-DEPLOY_MODE='' run 64 bash "$BENEFITS" rollback "$STAMP"
-refute_log "ssh "
-DEPLOY_MODE='' run 64 bash "$BENEFITS" env-restore "$STAMP"
-refute_log "ssh "
+# Without DEPLOY_MODE these modes use the direct path (#206), never the gate.
+DEPLOY_MODE='' run_any bash "$BENEFITS" rollback "$STAMP"
+refute_log "gate cfg="
+# Without DEPLOY_MODE these modes use the direct path (#206), never the gate.
+DEPLOY_MODE='' run_any bash "$BENEFITS" env-restore "$STAMP"
+refute_log "gate cfg="
 # Default mode is unchanged: status still uses the direct ssh path.
 DEPLOY_MODE='' run 0 env SSH_HOST=direct-test-host bash "$BENEFITS" status
 assert_log "direct ssh direct-test-host"

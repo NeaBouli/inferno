@@ -15,6 +15,7 @@ import { loadWikiDocs, buildSystemPrompt, WikiDoc } from "./wiki-rag.js";
 import { buildSurfaceContext, normalizeCopilotSurface } from "./surface-context.js";
 import { resolveAllowedOrigins } from "./cors-origins.js";
 import { toJsonSafeUint32 } from "./json-values.js";
+import { builderConfigurationScore, type BuilderGenConfig } from "./builder-score.js";
 import {
   DailyBudget,
   parseDailyBudgetMicroUsd,
@@ -1683,48 +1684,6 @@ async function checkLoanHealth() {
 
 // ── Builder Generator Engine ─────────────────────────────────────────
 
-interface BuilderGenConfig {
-  productName?: string;
-  productUrl?: string;
-  minAmount?: number;
-  hardLock?: boolean;
-  lockDuration?: number;
-  tierSystem?: boolean;
-  cooldown?: boolean;
-  apiCheck?: boolean;
-  tier1Amount?: number;
-  tier2Amount?: number;
-  tier3Amount?: number;
-  cooldownHours?: number;
-}
-
-function builderSecurityScore(c: BuilderGenConfig) {
-  let score = 0;
-  if (c.hardLock) {
-    if ((c.lockDuration || 0) >= 90) score += 30;
-    else if ((c.lockDuration || 0) >= 30) score += 25;
-    else if ((c.lockDuration || 0) >= 7) score += 20;
-    else score += 10;
-  }
-  if (c.cooldown) score += 20;
-  if (c.tierSystem) score += 15;
-  if ((c.minAmount || 0) >= 10000) score += 20;
-  else if ((c.minAmount || 0) >= 1000) score += 15;
-  else if ((c.minAmount || 0) >= 500) score += 10;
-  else if ((c.minAmount || 0) >= 100) score += 5;
-  if (!c.apiCheck) score += 15; else score += 5;
-  const level = score >= 80 ? "SAFE" : score >= 50 ? "MEDIUM" : "RISKY";
-  const emoji = level === "SAFE" ? "🟢" : level === "MEDIUM" ? "🟡" : "🔴";
-
-  const recommendations: string[] = [];
-  if (!c.hardLock) recommendations.push("Enable Hard Lock to prevent flash access");
-  if (!c.cooldown) recommendations.push("Enable Cooldown for anti-gaming protection");
-  if ((c.minAmount || 0) < 500) recommendations.push("Increase minimum to >=500 IFR");
-  if (!c.tierSystem) recommendations.push("Add Tier System for graduated access");
-
-  return { score, level, emoji, recommendations };
-}
-
 function builderGenerateCode(c: BuilderGenConfig) {
   const safeName = (c.productName || "MyProduct").replace(/[^a-zA-Z0-9]/g, "");
   const contractName = safeName + "Access";
@@ -1801,7 +1760,7 @@ app.post("/api/builder/generate", async (req, res) => {
     }
     if (errors.length > 0) return res.status(400).json({ valid: false, errors });
 
-    const security = builderSecurityScore(c);
+    const security = builderConfigurationScore(c);
     const generated = builderGenerateCode(c);
 
     res.json({ valid: true, config: c, security, generated });
@@ -1839,16 +1798,18 @@ app.get("/api/ifr/check", async (req, res) => {
     const token = new ethersLib.Contract("0x77e99917Eca8539c62F509ED1193ac36580A6e7B", tokenAbi, provider);
     const lock = new ethersLib.Contract("0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb", lockAbi, provider);
 
+    // A failed IFRLock read must not report tier 0: the whole check fails closed (502).
     const [balRaw, lockedRaw] = await Promise.all([
       token.balanceOf(wallet),
-      lock.lockedBalance(wallet).catch(() => 0n),
+      lock.lockedBalance(wallet),
     ]);
 
     const balanceBaseUnits = BigInt(balRaw);
     const lockedBaseUnits = BigInt(lockedRaw);
     const totalBaseUnits = balanceBaseUnits + lockedBaseUnits;
     const requiredBaseUnits = BigInt(required) * (10n ** BigInt(IFR_DECIMALS));
-    const tier = getAccessTier(totalBaseUnits);
+    // Default tier preset counts IFR locked in IFRLock only (Benefits preset, owner decision 2026-10-03).
+    const tier = getAccessTier(lockedBaseUnits);
 
     res.json({
       hasAccess: totalBaseUnits >= requiredBaseUnits,
@@ -1858,6 +1819,7 @@ app.get("/api/ifr/check", async (req, res) => {
       required,
       tier: tier.id,
       tierName: tier.name,
+      tierBasis: "locked",
     });
   } catch (err) {
     console.error("IFR check error:", err);
