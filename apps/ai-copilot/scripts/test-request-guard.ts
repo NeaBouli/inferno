@@ -129,6 +129,11 @@ assert.throws(() => positiveIntEnv("X", 7, { X: "1e3" }), /positive integer/);
   assert.equal(bounded.size, 2);
   assert.equal(bounded.check("old", 3), true, "oldest key was evicted (fresh budget)");
   assert.equal(bounded.check("new", 4), false, "newest key survived eviction");
+  const prefersExpired = new SlidingWindowLimiter([{ windowMs: 1_000, max: 1 }], 2);
+  prefersExpired.check("active", 5_000);
+  prefersExpired.check("expired", 0);
+  prefersExpired.check("fresh", 5_001);
+  assert.equal(prefersExpired.check("active", 5_002), false, "eviction reclaims expired keys before active budgets");
 }
 
 // ── Express: rotating IPv6 addresses inside one /64 share one bucket ──

@@ -486,6 +486,11 @@ async function run() {
     assert(bounded.size === 2, "bucket map is bounded");
     assert(bounded.check("old", 1, 60_000, 3), "oldest bucket evicted first (fresh budget)");
     assert(!bounded.check("new", 1, 60_000, 4), "newest bucket survives eviction");
+    const prefersExpired = new FixedWindowBuckets(2);
+    prefersExpired.check("active", 1, 60_000, 0);
+    prefersExpired.check("expired", 1, 10, 1);
+    prefersExpired.check("fresh", 1, 60_000, 20);
+    assert(!prefersExpired.check("active", 1, 60_000, 21), "eviction reclaims expired windows before active budgets");
 
     // SIWE nonce: one /64 rotating addresses cannot exceed its 30-nonce budget (so it cannot fill the global cap).
     const nonceFrom = async (client: string) =>
