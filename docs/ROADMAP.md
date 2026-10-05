@@ -112,8 +112,9 @@ with their audit, testnet and on-chain authorization gates, are tracked in the
 - [ ] LendingVault V2 and CommitmentVault price-lock V2 decisions: price
       source, caps, pause and overdue-loan policy remain undecided; V1
       borrowing and price-conditioned locks stay disabled
-- [ ] PartnerVault reward policy, authorized caller and pilot-partner gate:
-      the checkout-based reward memo is a discussion draft, not approved policy
+- [ ] PartnerVault pilot-partner gate: reward model B is adopted (3 October 2026;
+      Governance `recordMilestone` per period, no authorized caller); pending are the
+      backend redemption gate, the settlement export and the first pilot-partner proposal
 - [ ] Vault V2 hardening: combine balance-diff inflow accounting with runtime
       exemption guards that fail closed. This requires separate design review,
       migration planning, tests, audit and governance-approved deployment.

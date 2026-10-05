@@ -1,5 +1,12 @@
 # Changelog
 
+## 5 October 2026 — Model B wording in onboarding and roadmap
+
+- Business onboarding no longer ties seller rewards to an authorized caller; it states model B
+  (Governance registration and allocation, per-period `recordMilestone`, no authorized caller).
+- ROADMAP.md and the wiki roadmap mark model B as adopted (3 October 2026) and list the remaining
+  pilot gates.
+
 ## 5 October 2026 — Web3: LendingVault V1 Retired, Withdraw Only (T-273)
 
 - LendingVault V1 retired by owner decision (3 October 2026): borrowing stays disabled (`ifrPriceWei = 0`,
