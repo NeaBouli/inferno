@@ -9,13 +9,14 @@ production volumes, active images, databases or service data.
 
 `shop.ifrunit.tech` frontend deploys have repeatedly completed successfully, but the
 server volume has stayed around `3.5 GB` free / `96%` used. During Docker builds the
-free space can briefly fall below `0.5 GB` before cache pruning runs.
+free space can briefly fall below `0.5 GB`. Deploys therefore require `4 GB` free and never
+prune shared Docker caches (T-265).
 
 The Benefits Network containers are not the main disk consumers:
 
 - `inferno-benefits-backend` image: about `91 MB`
 - `inferno_benefits_data` volume: about `78 KB`
-- Build cache after safe prune: about `757 MB`
+- Build cache (2026-07-16 snapshot): about `757 MB`
 
 ## Safe Read-Only Checks
 
@@ -47,17 +48,52 @@ npm run smoke:benefits
 
 ## Deploy Guardrails
 
-`scripts/deploy-benefits-network.sh` uses:
+`scripts/deploy-benefits-network.sh` (T-265) is bounded, fail-closed and **never prunes** the
+shared Docker daemon: no builder, container, image, system or volume prune in any mode. The
+earlier "safe prune" path is gone.
 
-- `MIN_FREE_GB=4` as the warning floor.
-- `ABORT_FREE_GB=2` as the emergency hard floor for all checks.
-- `DEPLOY_ABORT_FREE_GB=4` as the default hard floor before any container rebuild.
-- Explicit deploy modes may run safe pruning only:
-  - Docker builder cache
-  - stopped containers
-  - dangling images
+Deploy modes (`frontend`, `backend`, `all`) run these steps in order and stop at the first
+refusal; nothing on the host changes before step 7:
 
-The helper does not prune Docker volumes.
+1. Exact release: `EXPECTED_SHA=<full sha>` equals `HEAD`, the tree is clean, and nothing
+   ignored or index-hidden would be uploaded (exit 64/65).
+2. Production env names in `/opt/inferno/.env.benefits` (see below; exit 78).
+3. **No schema migration:** the release's `backend/prisma/migrations` must equal the host's
+   file for file and byte for byte (exit 78). The backend runs `prisma migrate deploy` on
+   start and an image retag cannot undo a schema change, so a migration needs its own
+   reviewed, backed-up release.
+4. Capacity: at least `4096M` free on the volume (exit 75). The floor is fixed; the old
+   `MIN_FREE_GB`, `ABORT_FREE_GB` and `DEPLOY_ABORT_FREE_GB` knobs are ignored.
+5. Exactly one backend replica (exit 78).
+6. The container `inferno-<service>` runs for every service of the mode (nothing to roll
+   back to otherwise; exit 78).
+7. Backup in `/opt/inferno/backups/benefits-network-<UTC>/` (a new directory, never reused):
+   `source.tgz` (the live tree without excludes), `env.benefits` (byte copy, mode `600`),
+   `image-id-<service>`, `services`, and the tags `inferno-<service>:rollback-<UTC>`. The tag
+   is set on the image ID the running container uses (`docker inspect -f '{{.Image}}'`), never
+   on whatever `:latest` points to, since a build without `up` or a retag can move `:latest`.
+8. Content-only sync (`rsync -rl --checksum --delete`, no `-a/-t/-p/-o/-g`, as in #199) and
+   `RELEASE_SHA`.
+9. `docker compose --env-file .env.benefits up -d --build --no-deps` for only the Benefits
+   services of the mode (`frontend`: frontend; `backend`/`all`: backend, then frontend), each
+   followed by a bounded health wait (`healthy` only).
+10. Exactly one backend, then public checks: `https://shop.ifrunit.tech/`, `/api/health` and
+    `/api/ready` must return `200`.
+
+Any failure in steps 8-10 restores automatically: source (content-only), `.env.benefits`
+(`cat` into the root-owned file, so inode, owner and mode stay), the rollback image tags and
+the containers (`up -d --no-build --no-deps`), then verifies (a) content, (b) symlinks,
+(c) world read/traverse access, (e) env byte-identity, (g) each container runs the backed-up
+image ID, (d) container health and (f) public `200`. Every check fails on its own exit status
+(listings go to files, no process substitution or unchecked pipeline), so a check command
+that errors fails the restore like a mismatch. A verified restore exits `1` ("rolled back to
+..."); an unverifiable one exits `70` with the manual command:
+
+```bash
+scripts/deploy-benefits-network.sh rollback /opt/inferno/backups/benefits-network-<UTC>
+```
+
+`verify` runs only the public checks. `capacity` and `status` stay read-only.
 
 Before any upload or build, deploy modes also check the production settings in
 `/opt/inferno/.env.benefits`. The backend refuses to start without these settings:
@@ -70,10 +106,28 @@ If any are missing, the helper exits with code 78 and lists their names only; va
 printed. Background: the 2026-10-02 release added the #124 requirement for `SELLER_AUTH_DOMAIN`
 while the host file dated from August, which broke the shop API until the setting was added.
 
-Reason for the stricter deploy floor: frontend-only deploys have started with
-about `3.4-3.5 GB` free and then dropped below `0.5 GB` during Docker build
-before safe pruning recovered space. Treat deploys below `4 GB` free as blocked
-unless an operator explicitly accepts the risk for a one-off run.
+### CommitmentVault V2 address (`env-vault-v2`)
+
+```bash
+scripts/deploy-benefits-network.sh env-vault-v2 0x<40 hex>
+```
+
+Edits only `COMMITMENT_VAULT_V2_ADDRESS` in `/opt/inferno/.env.benefits`: the address must match
+`^0x[0-9a-fA-F]{40}$` and not be zero; more than one key line refuses (exit 78). The file is
+backed up first to `/opt/inferno/backups/benefits-env-<UTC>/env.benefits` (mode `600`); the
+candidate must equal the backup except for that one line (replaced, or appended when absent);
+the write is content-only and the written bytes, inode, mode and owner are verified, with an
+automatic verified restore on mismatch (exit 1; 70 if the restore fails). No env value is
+extracted or printed, no other key is touched and no container is recreated: apply it with a
+reviewed `backend` deploy. The backend refuses a V2 address equal to `COMMITMENT_VAULT_ADDRESS`,
+which that deploy's health check catches and rolls back. Undo:
+
+```bash
+scripts/deploy-benefits-network.sh env-restore /opt/inferno/backups/benefits-env-<UTC>
+```
+
+Tests: `npm run test:release-guards` (`scripts/test-deploy-benefits-network.sh` models the host
+and covers each failure path, the never-prune rule and the single-key env edit).
 
 With `DEPLOY_MODE=gate` the deploy modes run through the scoped deploy gate (inferno-deploy
 v2), which applies the same floor and single-backend asserts on the host. Gate mode never
@@ -111,9 +165,9 @@ The latest audit also reported one unhealthy container:
 2. Use `scripts/deploy-benefits-network.sh frontend` only when the deploy floor is met, from a
    clean checkout of the reviewed release commit with `EXPECTED_SHA=<full sha>` set; the script
    refuses other trees, including ignored or assume-unchanged files it would upload (e.g.
-   `.env.development.local`, `coverage/`). Add `MIN_FREE_GB=0` to fail closed below the floor without pruning.
+   `.env.development.local`, `coverage/`). Below the floor it refuses (exit 75) and never prunes.
 3. Before backend/all deploys, run `scripts/deploy-benefits-network.sh capacity`.
-4. If free space remains below `MIN_FREE_GB`, inspect owners of large images/volumes.
+4. If free space remains below the `4096M` deploy floor, inspect owners of large images/volumes.
 5. Confirm whether non-Benefits services can be stopped, migrated, archived or resized.
 6. Only after explicit approval, perform any destructive action such as volume removal,
    image removal for active services, database compaction or service migration.
@@ -130,7 +184,7 @@ npm run smoke:benefits
 - Do not delete `plausible_*`, `parlay_*`, `volumes_ekklesia_*`, database, analytics,
   AI model or anonymous volumes without owner confirmation.
 - Do not stop unrelated production services just to free disk for a Benefits deploy.
-- Do not lower `ABORT_FREE_GB` as a permanent workaround.
+- Do not add a prune step to the release path; capacity below the floor is a refusal.
 
 ## Open Ops Work
 

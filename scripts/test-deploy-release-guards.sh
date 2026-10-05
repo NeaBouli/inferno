@@ -377,20 +377,8 @@ grep -Fq "assume-unchanged or skip-worktree" <<< "$OUT"
 refute_log "rsync"
 git -C "$REPO" update-index --no-assume-unchanged apps/benefits-network/frontend/package.json
 git -C "$REPO" checkout -q -- apps/benefits-network/frontend/package.json
-# Intentional excludes never reach the host, so they may exist locally.
-mkdir -p "$APP/frontend/node_modules/pkg" "$APP/frontend/.next/cache" "$APP/backend/dist"
-for f in .env frontend/.env.local backend/.env.production backend/app.db backend/app.db-journal \
-         frontend/node_modules/pkg/index.js frontend/.next/cache/x backend/dist/index.js; do
-  echo "local only" > "$APP/$f"
-done
-EXPECTED_SHA="$SHA" MIN_FREE_GB=0 REMOTE_VOLUME=/opt/inferno run 0 "$REPO/scripts/deploy-benefits-network.sh" frontend
-assert_log "--exclude .env --exclude"
-assert_log "--exclude .env.local"
-assert_log "--exclude *.db"
-assert_log "--exclude *.db-wal"
-assert_log "--dry-run --out-format=%n --exclude node_modules"
-assert_log "up -d --build --no-deps benefits-frontend"
-refute_log "prune"
+# Successful deploys, intentional local excludes, no-prune capacity, schema guard and the
+# verified restore are covered against a modelled host in scripts/test-deploy-benefits-network.sh.
 # --- benefits: missing production settings stop the deploy before any upload or build ---
 for drop in SELLER_AUTH_DOMAIN CHAIN_ID ADMIN_SECRET; do
   write_benefits_env
@@ -412,4 +400,4 @@ write_benefits_env
 # capacity stays usable without a release commit
 REMOTE_VOLUME=/opt/inferno run 0 "$REPO/scripts/deploy-benefits-network.sh" capacity
 
-echo "Release guards hold: web3 plan/deploy/verify/rollback and Benefits exact-SHA deploys"
+echo "Release guards hold: web3 plan/deploy/verify/rollback and Benefits exact-SHA/env refusals"

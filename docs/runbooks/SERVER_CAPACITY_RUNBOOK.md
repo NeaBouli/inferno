@@ -63,18 +63,18 @@ not as byte-perfect billing data.
 
 ## Safe Actions
 
-These are generally safe during normal Benefits deployments:
+Operator-only cache cleanup on the shared Docker daemon (explicit approval; never part of a release):
 
 ```bash
 docker builder prune -af
 ```
 
-The Benefits deploy helper does this automatically when free space drops below
-the configured floor:
+The Benefits deploy helper never runs these (T-265): below 4 GB free it refuses
+the deploy, and any cache cleanup is a separate, explicitly approved operator step
+on the shared daemon:
 
 ```bash
-scripts/deploy-benefits-network.sh frontend
-scripts/deploy-benefits-network.sh backend
+scripts/deploy-benefits-network.sh capacity   # read-only
 ```
 
 ## Needs Explicit Review
