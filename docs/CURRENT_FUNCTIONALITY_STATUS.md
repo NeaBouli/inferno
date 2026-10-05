@@ -76,8 +76,8 @@ not deployment units in this inventory.
 The current baseline combines clean-install audits, contract tests and the
 browser/application verification retained by the release gates:
 
-- Smart contracts: `690/690` passing, including the CommitmentVault and
-  LendingVault fee-exemption deficit regressions the PriceLockVault suite (#172) and the Builder fee-on-transfer suite (#178).
+- Smart contracts: `693/693` passing, including the CommitmentVault and
+  LendingVault fee-exemption deficit regressions the PriceLockVault suite (#172) the Builder fee-on-transfer suite (#178) and the PartnerVault Model B template suite (#216).
 - Generator Engine: `30/30` passing.
 - IFR SDK legacy suite: `36/36` passing.
 - Landing/Wiki wallet browser suite: `26/26` passing.
