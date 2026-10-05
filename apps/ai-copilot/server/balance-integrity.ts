@@ -1,6 +1,6 @@
 // No silent zeros (T-212b-data-integrity): a failed on-chain read is reported as unavailable,
 // never as "0", and responses with any unavailable value are never cached as if they were live.
-import { formatUnits, getAddress, isAddress } from "ethers";
+import { formatUnits, getAddress, id, isAddress } from "ethers";
 import { IFR_DECIMALS } from "../src/context/copilot-policy.js";
 
 export type BalanceEntry =
@@ -27,14 +27,46 @@ export function isUnavailable(entry: BalanceEntry | undefined): boolean {
   return !entry || entry.raw === null;
 }
 
+/** topic0 of IFRLock `event Unlocked(address indexed user, uint256 amount)`. */
+export const IFRLOCK_UNLOCKED_TOPIC = id("Unlocked(address,uint256)");
+
+/**
+ * Sums the amounts of an explorer getLogs reply for IFRLock Unlocked events (T-262 D1).
+ * A well-formed empty reply (status "0", message "No records found", result []) means zero unlocks and is 0n.
+ * Anything else that is not status "1" with an array of hex `data` fields throws, so rate limits, other
+ * NOTOK replies and malformed logs stay unavailable instead of turning into a fake 0.
+ */
+export function sumUnlockedLogs(data: unknown): bigint {
+  if (!data || typeof data !== "object") throw new Error("Unlocked events unavailable");
+  const { status, message, result } = data as { status?: unknown; message?: unknown; result?: unknown };
+  if (status === "0" && Array.isArray(result) && result.length === 0
+      && typeof message === "string" && /^no records found$/i.test(message.trim())) {
+    return 0n;
+  }
+  if (status !== "1" || !Array.isArray(result)) throw new Error("Unlocked events unavailable");
+  let total = 0n;
+  for (const log of result) {
+    const hex = log && typeof log === "object" ? (log as { data?: unknown }).data : undefined;
+    // One non-indexed uint256: ABI-encoded data is exactly one 32-byte word.
+    if (typeof hex !== "string" || !/^0x[0-9a-fA-F]{64}$/.test(hex)) throw new Error("Unlocked event data malformed");
+    total += BigInt(hex);
+  }
+  return total;
+}
+
+/** Label used in `unavailable` when the IFRLock unlocked total could not be read. */
+export const IFRLOCK_UNLOCKED_LABEL = "IFRLock.unlocked";
+
 /**
  * Builds the /api/ifr/balances response. `incomplete` is true when any balance or the IFRLock unlocked
- * total could not be read; callers must not cache an incomplete response.
+ * total could not be read, and `unavailable` then names each failed source; callers must not cache it.
  */
 export function finalizeBalances(results: Record<string, BalanceEntry>, unlockedTotal: bigint | null) {
   const lock = results.IFRLock;
   const missing = Object.entries(results).filter(([, entry]) => isUnavailable(entry)).map(([label]) => label);
-  const incomplete = missing.length > 0 || unlockedTotal === null;
+  // Every incomplete response names its failed source; `incomplete` with an empty list is never returned.
+  if (unlockedTotal === null) missing.push(IFRLOCK_UNLOCKED_LABEL);
+  const incomplete = missing.length > 0;
   return {
     balances: results,
     ifrLock: {
