@@ -1,7 +1,7 @@
 {
   "name": "ifr-benefits-verify",
-  "version": "1.0.0",
-  "description": "Reference implementation of ifr-benefits-verify/1: permissionless, block-pinned IFR lock tier checks",
+  "version": "1.1.0",
+  "description": "Reference implementation of ifr-benefits-verify/1 and /2: permissionless, block-pinned IFR lock tier checks",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {

@@ -6,8 +6,12 @@ const IFR_TOKEN = "0x77e99917Eca8539c62F509ED1193ac36580A6e7B";
 const DECIMALS = 9;
 
 async function main() {
-  const rpcUrl = process.env.MAINNET_RPC_URL || "https://eth.llamarpc.com";
+  const rpcUrl = process.env.MAINNET_RPC_URL || "https://ethereum-rpc.publicnode.com";
   const provider = new ethers.JsonRpcProvider(rpcUrl);
+  const { chainId } = await provider.getNetwork();
+  if (chainId !== 1n) {
+    throw new Error(`RPC endpoint is on chainId ${chainId}, expected Ethereum Mainnet (1); refusing to read balances`);
+  }
 
   const erc20Abi = [
     "function balanceOf(address) view returns (uint256)",

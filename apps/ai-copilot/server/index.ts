@@ -13,6 +13,7 @@ import {
 } from "../src/context/copilot-policy.js";
 import { loadWikiDocs, buildSystemPrompt, WikiDoc } from "./wiki-rag.js";
 import { buildSurfaceContext, normalizeCopilotSurface } from "./surface-context.js";
+import { resolveAllowedOrigins } from "./cors-origins.js";
 import { toJsonSafeUint32 } from "./json-values.js";
 import {
   DailyBudget,
@@ -27,6 +28,19 @@ import {
   buildLiveWikiSection,
 } from "./live-wiki.js";
 import { LENDING_LOAN_ABI, serializeLendingLoan } from "./lending-loans.js";
+import { ethCall, getRpcProvider, rpcHealth } from "./rpc.js";
+import { balanceEntry, explorerBalanceEntry, finalizeBalances, lostSupply, parseAddressParam, requireBaseUnits, IFRLOCK_UNLOCKED_TOPIC, sumUnlockedLogs, unavailableEntry, type BalanceEntry } from "./balance-integrity.js";
+import {
+  Semaphore,
+  SingleFlightCache,
+  SlidingWindowLimiter,
+  chatRateLimitMessage,
+  TRUSTED_PROXY_HOPS,
+  clientIp as resolveClientIp,
+  ipRateLimit,
+  rateLimitKey,
+  positiveIntEnv,
+} from "./request-guard.js";
 import {
   classifyDynamicIntent,
   buildDynamicDataFallback,
@@ -37,52 +51,31 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
-app.use(cors({
-  origin: (process.env.ALLOWED_ORIGINS || 'https://ifrunit.tech,https://www.ifrunit.tech,https://neabouli.github.io,http://localhost:5175,http://localhost:3003').split(','),
-}));
+app.set("trust proxy", TRUSTED_PROXY_HOPS);
+app.use(cors({ origin: resolveAllowedOrigins() }));
 app.use(express.json({ limit: '50kb' }));
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const ANTHROPIC_MESSAGES_URL = "https://api.anthropic.com/v1/messages";
 const POINTS_BACKEND_URL = process.env.POINTS_BACKEND_URL || "http://localhost:3004";
 
-// ── Anti-Abuse: In-memory rate limiter ──────────────────────────────
-const rateBuckets = new Map<string, { minute: number[]; hour: number[] }>();
+// ── Anti-Abuse: per-client chat limiter (keys normalized to IPv4 or IPv6 /64, tracked keys bounded) ──
 const MINUTE_LIMIT = 5;
 const HOUR_LIMIT = 20;
 const MAX_MESSAGE_LENGTH = 500;
+const chatClientLimiter = new SlidingWindowLimiter([
+  { windowMs: 60_000, max: MINUTE_LIMIT },
+  { windowMs: 3_600_000, max: HOUR_LIMIT },
+]);
 
-function cleanBuckets(): void {
-  const now = Date.now();
-  for (const [ip, bucket] of rateBuckets) {
-    bucket.minute = bucket.minute.filter(t => now - t < 60_000);
-    bucket.hour = bucket.hour.filter(t => now - t < 3_600_000);
-    if (bucket.minute.length === 0 && bucket.hour.length === 0) {
-      rateBuckets.delete(ip);
-    }
-  }
-}
-// Clean stale entries every 5 minutes
-setInterval(cleanBuckets, 300_000);
+// Aggregate ceiling across all clients, so rotating client addresses cannot drain the daily budget.
+const globalChatLimiter = new SlidingWindowLimiter([
+  { windowMs: 60_000, max: positiveIntEnv("COPILOT_GLOBAL_CHAT_PER_MINUTE", 60) },
+  { windowMs: 3_600_000, max: positiveIntEnv("COPILOT_GLOBAL_CHAT_PER_HOUR", 600) },
+]);
 
-function checkRateLimit(ip: string): string | null {
-  const now = Date.now();
-  if (!rateBuckets.has(ip)) {
-    rateBuckets.set(ip, { minute: [], hour: [] });
-  }
-  const bucket = rateBuckets.get(ip)!;
-  bucket.minute = bucket.minute.filter(t => now - t < 60_000);
-  bucket.hour = bucket.hour.filter(t => now - t < 3_600_000);
-
-  if (bucket.minute.length >= MINUTE_LIMIT) {
-    return "Slow down! Max 5 messages per minute.";
-  }
-  if (bucket.hour.length >= HOUR_LIMIT) {
-    return "Too many requests. Please try again in an hour.";
-  }
-  bucket.minute.push(now);
-  bucket.hour.push(now);
-  return null;
+function checkRateLimit(key: string): string | null {
+  return chatRateLimitMessage(chatClientLimiter.hit(key));
 }
 
 // ── CWA-12: Aggregate daily cost budget (fail-closed, integer micro-USD) ──
@@ -391,11 +384,14 @@ switchMode('explorer');
 
 app.post("/api/chat", async (req, res) => {
   // Rate limit check
-  const clientIp = (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim()
-    || req.socket.remoteAddress || "unknown";
-  const rateLimitMsg = checkRateLimit(clientIp);
+  const clientIp = resolveClientIp(req);
+  const rateLimitMsg = checkRateLimit(rateLimitKey(clientIp));
   if (rateLimitMsg) {
     res.status(429).json({ reply: rateLimitMsg });
+    return;
+  }
+  if (!globalChatLimiter.check("global")) {
+    res.status(429).json({ reply: "The assistant is busy right now. Please try again in a few minutes." });
     return;
   }
 
@@ -555,6 +551,13 @@ app.get("/api/health", (_req, res) => {
   res.json({ status: "ok" });
 });
 
+// T-219: RPC failover status (labels and booleans only; configured URLs may contain keys and are never shown).
+app.get("/api/health/rpc", async (_req, res) => {
+  res.set("Cache-Control", "no-store");
+  const health = await rpcHealth();
+  res.status(health.healthy > 0 ? 200 : 503).json(health);
+});
+
 // ── Etherscan Proxy — CORS-safe on-chain data for Landing + Transparency ──
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY || "";
 const IFR_TOKEN = "0x77e99917Eca8539c62F509ED1193ac36580A6e7B";
@@ -586,7 +589,14 @@ const PROTOCOL_ADDRESSES: Record<string, string> = {
 
 const IFRLOCK_DEPLOY_BLOCK = 21965900;
 
+// Bounds concurrent Etherscan calls so request bursts cannot exhaust the API quota.
+const etherscanSlots = new Semaphore(positiveIntEnv("COPILOT_ETHERSCAN_CONCURRENCY", 3));
+
 async function esApiFetch(params: string): Promise<unknown> {
+  return etherscanSlots.run(() => esApiFetchDirect(params));
+}
+
+async function esApiFetchDirect(params: string): Promise<unknown> {
   const url = `https://api.etherscan.io/v2/api?chainid=1${params}${ETHERSCAN_API_KEY ? "&apikey=" + ETHERSCAN_API_KEY : ""}`;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 10_000);
@@ -616,10 +626,19 @@ function setCache(key: string, data: unknown): void {
 
 // ── Shared fetch functions (used by routes + background pre-warm) ──
 
+/** Sum of all IFRLock Unlocked amounts via explorer getLogs. Zero events ("No records found") is a valid 0;
+ *  rate limits, other NOTOK replies and network errors throw (fail closed, T-262 D1). */
+async function fetchIFRLockUnlockedTotal(): Promise<bigint> {
+  const data = await esApiFetch(
+    `&module=logs&action=getLogs&fromBlock=${IFRLOCK_DEPLOY_BLOCK}&toBlock=latest&address=${PROTOCOL_ADDRESSES.IFRLock}&topic0=${IFRLOCK_UNLOCKED_TOPIC}`
+  );
+  return sumUnlockedLogs(data);
+}
+
 async function fetchBalancesData() {
   const entries = Object.entries(PROTOCOL_ADDRESSES) as [string, string][];
   const ethersLib = (await import("ethers")).ethers;
-  const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
+  const provider = getRpcProvider();
   const token = new ethersLib.Contract(
     IFR_TOKEN,
     ["function balanceOf(address wallet) view returns (uint256)"],
@@ -630,128 +649,113 @@ async function fetchBalancesData() {
     ["function totalLocked() view returns (uint256)", "event Unlocked(address indexed user, uint256 amount)"],
     provider
   );
-  async function fetchIFRLockUnlockedTotal() {
-    const topic = ifrLock.interface.getEvent("Unlocked")!.topicHash;
-    let total = 0n;
-    const data = await esApiFetch(
-      `&module=logs&action=getLogs&fromBlock=${IFRLOCK_DEPLOY_BLOCK}&toBlock=latest&address=${PROTOCOL_ADDRESSES.IFRLock}&topic0=${topic}`
-    ) as { status?: string; result?: Array<{ data: string }> };
-    if (data.status !== "1" || !Array.isArray(data.result)) return total;
-    for (const log of data.result) {
-      if (log.data) total += ethersLib.toBigInt(log.data);
-    }
-    return total;
-  }
-  const unlockedTotalPromise = fetchIFRLockUnlockedTotal().catch(() => 0n);
-  const results: Record<string, { raw: string; formatted: number }> = {};
+  const unlockedTotalPromise: Promise<bigint | null> = fetchIFRLockUnlockedTotal().catch(() => null);
+  const results: Record<string, BalanceEntry> = {};
   for (let i = 0; i < entries.length; i += 4) {
     const batch = entries.slice(i, i + 4);
     const values = await Promise.all(batch.map(async ([label, addr]) => {
       try {
         const raw = label === "IFRLock" ? await ifrLock.totalLocked() : await token.balanceOf(addr);
-        return [label, { raw: raw.toString(), formatted: parseFloat(ethersLib.formatUnits(raw, IFR_DECIMALS)) }] as const;
+        return [label, balanceEntry(raw)] as const;
       } catch {
-        return [label, { raw: "0", formatted: 0 }] as const;
+        return [label, unavailableEntry()] as const;
       }
     }));
     for (const [label, value] of values) results[label] = value;
     if (i + 4 < entries.length) await new Promise(r => setTimeout(r, 150));
   }
 
-  const unlockedTotal = await unlockedTotalPromise;
-  const response = {
-    balances: results,
-    ifrLock: {
-      lockedRaw: results.IFRLock?.raw || "0",
-      lockedFormatted: results.IFRLock?.formatted || 0,
-      unlockedRaw: unlockedTotal.toString(),
-      unlockedFormatted: parseFloat(ethersLib.formatUnits(unlockedTotal, IFR_DECIMALS)),
-    },
-    timestamp: new Date().toISOString(),
-    fetchedAt: Date.now(),
-    source: "live" as const,
-  };
-  setCache("balances", response);
+  const response = finalizeBalances(results, await unlockedTotalPromise);
+  // Never cache a response with unavailable values as if it were live data.
+  if (!response.incomplete) setCache("balances", response);
   return response;
 }
 
 async function fetchBalancesDataEtherscanFallback() {
   const entries = Object.entries(PROTOCOL_ADDRESSES) as [string, string][];
   const ethersLib = (await import("ethers")).ethers;
-  const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
+  const provider = getRpcProvider();
   const ifrLock = new ethersLib.Contract(
     PROTOCOL_ADDRESSES.IFRLock,
     ["function totalLocked() view returns (uint256)", "event Unlocked(address indexed user, uint256 amount)"],
     provider
   );
-  async function fetchIFRLockUnlockedTotal() {
-    const topic = ifrLock.interface.getEvent("Unlocked")!.topicHash;
-    let total = 0n;
-    const data = await esApiFetch(
-      `&module=logs&action=getLogs&fromBlock=${IFRLOCK_DEPLOY_BLOCK}&toBlock=latest&address=${PROTOCOL_ADDRESSES.IFRLock}&topic0=${topic}`
-    ) as { status?: string; result?: Array<{ data: string }> };
-    if (data.status !== "1" || !Array.isArray(data.result)) return total;
-    for (const log of data.result) {
-      if (log.data) total += ethersLib.toBigInt(log.data);
-    }
-    return total;
-  }
-  const unlockedTotalPromise = fetchIFRLockUnlockedTotal().catch(() => 0n);
-  const results: Record<string, { raw: string; formatted: number }> = {};
+  const unlockedTotalPromise: Promise<bigint | null> = fetchIFRLockUnlockedTotal().catch(() => null);
+  const results: Record<string, BalanceEntry> = {};
   for (let i = 0; i < entries.length; i++) {
     const [label, addr] = entries[i];
     try {
       if (label === "IFRLock") {
-        const raw = await ifrLock.totalLocked();
-        results[label] = { raw: raw.toString(), formatted: parseFloat(ethersLib.formatUnits(raw, IFR_DECIMALS)) };
+        results[label] = balanceEntry(await ifrLock.totalLocked());
       } else {
         const data = await esApiFetch(
           `&module=account&action=tokenbalance&contractaddress=${IFR_TOKEN}&address=${addr}&tag=latest`
         ) as { status?: string; result?: string };
-        const raw = (data.status === "1" && data.result) ? data.result : "0";
-        results[label] = { raw, formatted: parseInt(raw, 10) / 10 ** IFR_DECIMALS };
+        results[label] = explorerBalanceEntry(data);
       }
     } catch {
-      results[label] = { raw: "0", formatted: 0 };
+      results[label] = unavailableEntry();
     }
     if (i < entries.length - 1) await new Promise(r => setTimeout(r, 250));
   }
 
-  const unlockedTotal = await unlockedTotalPromise;
-  const response = {
-    balances: results,
-    ifrLock: {
-      lockedRaw: results.IFRLock?.raw || "0",
-      lockedFormatted: results.IFRLock?.formatted || 0,
-      unlockedRaw: unlockedTotal.toString(),
-      unlockedFormatted: parseFloat(ethersLib.formatUnits(unlockedTotal, IFR_DECIMALS)),
-    },
-    timestamp: new Date().toISOString(),
-    fetchedAt: Date.now(),
-    source: "live" as const,
-  };
-  setCache("balances", response);
+  const response = finalizeBalances(results, await unlockedTotalPromise);
+  if (!response.incomplete) setCache("balances", response);
   return response;
 }
 
+/** Supply inputs read on-chain through the shared failover provider (T-219); the explorer API is only a
+ *  fallback, because an exhausted explorer quota previously made the live supply disappear. */
+async function readSupplyInputs(): Promise<{ totalSupplyRaw: string; burnReserveBalanceRaw: string; feeRouter: BalanceEntry }> {
+  const ethersLib = (await import("ethers")).ethers;
+  const token = new ethersLib.Contract(
+    IFR_TOKEN,
+    ["function totalSupply() view returns (uint256)", "function balanceOf(address wallet) view returns (uint256)"],
+    getRpcProvider()
+  );
+  try {
+    const [supply, burn, feeRouter] = await Promise.all([
+      token.totalSupply() as Promise<bigint>,
+      token.balanceOf(BURN_ADDRESS) as Promise<bigint>,
+      (token.balanceOf(PROTOCOL_ADDRESSES.FeeRouterV1) as Promise<bigint>).then(balanceEntry, () => unavailableEntry()),
+    ]);
+    return { totalSupplyRaw: supply.toString(), burnReserveBalanceRaw: burn.toString(), feeRouter };
+  } catch {
+    const supplyData = await esApiFetch(
+      `&module=stats&action=tokensupply&contractaddress=${IFR_TOKEN}`
+    ) as { result?: string };
+    const burnReserveData = await esApiFetch(
+      `&module=account&action=tokenbalance&contractaddress=${IFR_TOKEN}&address=${BURN_ADDRESS}&tag=latest`
+    ) as { result?: string };
+    const feeRouterData = await esApiFetch(
+      `&module=account&action=tokenbalance&contractaddress=${IFR_TOKEN}&address=${PROTOCOL_ADDRESSES.FeeRouterV1}&tag=latest`
+    ).catch(() => null) as { status?: string; result?: unknown } | null;
+    // A failed read must surface as an error (502), never as a zero supply.
+    return {
+      totalSupplyRaw: requireBaseUnits(supplyData.result, "totalSupply"),
+      burnReserveBalanceRaw: requireBaseUnits(burnReserveData.result, "burn address balance"),
+      feeRouter: explorerBalanceEntry(feeRouterData),
+    };
+  }
+}
+
 async function fetchSupplyData() {
-  const supplyData = await esApiFetch(
-    `&module=stats&action=tokensupply&contractaddress=${IFR_TOKEN}`
-  ) as { result?: string };
-  const burnReserveData = await esApiFetch(
-    `&module=account&action=tokenbalance&contractaddress=${IFR_TOKEN}&address=${BURN_ADDRESS}&tag=latest`
-  ) as { result?: string };
-  const totalSupplyRaw = supplyData.result || "0";
-  const burnReserveBalanceRaw = burnReserveData.result || "0";
+  const { totalSupplyRaw, burnReserveBalanceRaw, feeRouter } = await readSupplyInputs();
   const totalSupply = parseInt(totalSupplyRaw, 10) / 10 ** IFR_DECIMALS;
   const burnAddressBalance = parseInt(burnReserveBalanceRaw, 10) / 10 ** IFR_DECIMALS;
   const burned = TOTAL_MINTED - totalSupply;
+  // Legacy semantics, unchanged: circulating = totalSupply - dead-address balance. It still includes
+  // permanently lost IFR; use liveSupply for totalSupply minus permanently lost.
   const circulating = totalSupply - burnAddressBalance;
+  const lost = lostSupply(totalSupplyRaw, feeRouter);
   const response = {
-    totalMinted: TOTAL_MINTED, totalSupply, burnAddressBalance, burned, circulating,
+    totalMinted: TOTAL_MINTED, totalSupply, totalSupplyRaw, burnAddressBalance, burned, circulating,
+    ...lost,
+    incomplete: lost.permanentlyLostError !== null,
     timestamp: new Date().toISOString(), fetchedAt: Date.now(), source: "live" as const,
   };
-  setCache("supply", response);
+  // Never cache a response whose lost/live figures are unavailable as if they were live values.
+  if (!response.incomplete) setCache("supply", response);
   return response;
 }
 
@@ -784,16 +788,33 @@ app.get("/api/ifr/supply", async (_req, res) => {
 
 // GET /api/ifr/txfeed — recent ETH + IFR transfers for key wallets
 // Also aliased as /api/ifr/transactions for transparency.html frontend
+// Public feeds fan out to several Etherscan calls: cache by parameters, share in-flight loads,
+// serve a bounded stale copy on upstream failure and rate-limit per client.
+const feedLimiter = ipRateLimit(
+  new SlidingWindowLimiter([{ windowMs: 60_000, max: positiveIntEnv("COPILOT_FEED_PER_MINUTE", 30) }]),
+  "Too many requests. Try again later.",
+);
+const txFeedCache = new SingleFlightCache<unknown>(60_000, 10 * 60_000, 200);
+const lockEventsCache = new SingleFlightCache<LockEventRow[]>(60_000, 10 * 60_000, 500);
+const LOCK_EVENT_TYPES = new Set(["", "ifrlock", "commitmentvault", "lendingvault"]);
+
 async function handleTxFeed(req: express.Request, res: express.Response) {
-  res.set("Cache-Control", "no-store");
+  res.set("Cache-Control", "public, max-age=30");
   const page = Math.max(1, Math.min(parseInt(String(req.query.page || "1"), 10) || 1, 100));
   const limit = Math.max(1, Math.min(parseInt(String(req.query.limit || "5"), 10) || 5, 20));
-  const cacheKey = `txfeed:${page}:${limit}`;
-  const cached = getCached(cacheKey);
-  if (cached) { res.json(cached); return; }
-
-  const feedWallets = ["FeeRouterV1", "GnosisSafe", "CommunitySafe", "Deployer"];
   try {
+    const { data } = await txFeedCache.get(`txfeed:${page}:${limit}`, () => loadTxFeed(page, limit));
+    res.json(data);
+  } catch (err) {
+    console.error("Etherscan txfeed error:", err);
+    res.json({ transactions: [] });
+  }
+}
+
+async function loadTxFeed(page: number, limit: number): Promise<unknown> {
+  const feedWallets = ["FeeRouterV1", "GnosisSafe", "CommunitySafe", "Deployer"];
+  let upstreamOk = 0;
+  {
     const transactions: { wallet: string; dir: string; amount: string; type: string; hash: string; timestamp: number }[] = [];
     const seen = new Set<string>();
     const perWalletOffset = Math.min(50, Math.max(page * limit, 10));
@@ -808,6 +829,7 @@ async function handleTxFeed(req: express.Request, res: express.Response) {
         const ethData = await esApiFetch(
           `&module=account&action=txlist&address=${addr}&page=1&offset=${perWalletOffset}&sort=desc`
         ) as { status?: string; result?: Array<{ from: string; to: string; value: string; hash: string; timeStamp: string; isError: string }> };
+        if (Array.isArray(ethData.result)) upstreamOk++;
         if (ethData.status === "1" && Array.isArray(ethData.result)) {
           for (const tx of ethData.result) {
             if (tx.isError === "1") continue;
@@ -832,6 +854,7 @@ async function handleTxFeed(req: express.Request, res: express.Response) {
         const tokData = await esApiFetch(
           `&module=account&action=tokentx&contractaddress=${IFR_TOKEN}&address=${addr}&page=1&offset=${perWalletOffset}&sort=desc`
         ) as { status?: string; result?: Array<{ from: string; to: string; value: string; hash: string; timeStamp: string; contractAddress: string }> };
+        if (Array.isArray(tokData.result)) upstreamOk++;
         if (tokData.status === "1" && Array.isArray(tokData.result)) {
           for (const tx of tokData.result) {
             if (tx.contractAddress.toLowerCase() !== IFR_TOKEN.toLowerCase()) continue;
@@ -853,24 +876,21 @@ async function handleTxFeed(req: express.Request, res: express.Response) {
       if (i < feedWallets.length - 1) await new Promise(r => setTimeout(r, 350));
     }
 
+    // Every upstream call failed: throw so the cache serves the last good copy instead of caching emptiness.
+    if (upstreamOk === 0) throw new Error("all Etherscan feed calls failed");
     transactions.sort((a, b) => b.timestamp - a.timestamp);
     const start = (page - 1) * limit;
-    const response = {
+    return {
       transactions: transactions.slice(start, start + limit),
       page,
       limit,
       hasMore: transactions.length > start + limit,
       timestamp: new Date().toISOString(),
     };
-    setCache(cacheKey, response);
-    res.json(response);
-  } catch (err) {
-    console.error("Etherscan txfeed error:", err);
-    res.json({ transactions: [] });
   }
 }
-app.get("/api/ifr/txfeed", handleTxFeed);
-app.get("/api/ifr/transactions", handleTxFeed);
+app.get("/api/ifr/txfeed", feedLimiter, handleTxFeed);
+app.get("/api/ifr/transactions", feedLimiter, handleTxFeed);
 
 type LockEventRow = {
   contract: string;
@@ -978,14 +998,21 @@ async function fetchLockEventsPage(page: number, limit: number, type: string, q:
 }
 
 // GET /api/locks/events — paged lock/lending event feed for Transparency page
-app.get("/api/locks/events", async (req, res) => {
+app.get("/api/locks/events", feedLimiter, async (req, res) => {
   res.set("Cache-Control", "public, max-age=30");
   try {
     const page = Math.max(1, Math.min(parseInt(String(req.query.page || "1"), 10) || 1, 100));
     const limit = Math.max(1, Math.min(parseInt(String(req.query.limit || "5"), 10) || 5, 20));
-    const type = String(req.query.type || "");
-    const q = String(req.query.q || "").trim();
-    const events = await fetchLockEventsPage(page, limit, type, q);
+    const type = String(req.query.type || "").toLowerCase();
+    const q = String(req.query.q || "").trim().toLowerCase().slice(0, 66);
+    if (!LOCK_EVENT_TYPES.has(type)) {
+      res.status(400).json({ error: "Unknown lock event type" });
+      return;
+    }
+    const { data: events } = await lockEventsCache.get(
+      `locks:${page}:${limit}:${type}:${q}`,
+      () => fetchLockEventsPage(page, limit, type, q),
+    );
     res.json({
       events: events.slice(0, limit),
       page,
@@ -1009,7 +1036,8 @@ async function fetchVaultData() {
   const data = await esApiFetch(
     `&module=account&action=tokenbalance&contractaddress=${IFR_TOKEN}&address=${addr}&tag=latest`
   ) as { status?: string; result?: string };
-  const raw = (data.status === "1" && data.result) ? data.result : "0";
+  // A failed explorer read surfaces as an error (502) instead of an empty vault.
+  const raw = requireBaseUnits(data.status === "1" ? data.result : undefined, "vault balance");
   const balance = parseInt(raw, 10) / 10 ** IFR_DECIMALS;
   const balanceFormatted = Math.floor(balance).toString();
   const percentFilled = Math.min((balance / VAULT_TARGET_AMOUNT) * 100, 100);
@@ -1049,7 +1077,7 @@ app.get("/api/ifr/price", async (_req, res) => {
   if (cached) { res.json(cached); return; }
   try {
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
+    const provider = getRpcProvider();
     const pairAbi = [
       "function token0() view returns (address)",
       "function token1() view returns (address)",
@@ -1181,29 +1209,20 @@ app.get("/api/bootstrap/votes", (_req, res) => {
 // Contract: 0xdfe6636DA47F8949330697e1dC5391267CEf0EE3 (Mainnet)
 // Uses direct JSON-RPC eth_call (Etherscan V1 proxy deprecated)
 const BUILDER_REGISTRY_ADDR = process.env.BUILDER_REGISTRY_ADDR || null;
-const ETH_RPC_URL = process.env.MAINNET_RPC_URL || "https://ethereum-rpc.publicnode.com";
-
-async function ethCall(to: string, data: string): Promise<string> {
-  const resp = await fetch(ETH_RPC_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_call", params: [{ to, data }, "latest"] }),
-  });
-  const json = await resp.json() as { result?: string; error?: { message: string } };
-  if (json.error) throw new Error(json.error.message);
-  return json.result || "0x";
-}
+// eth_call goes through the shared failover provider (server/rpc.ts, T-219).
 
 if (BUILDER_REGISTRY_ADDR) {
   app.get("/api/builders/check/:address", async (req, res) => {
     try {
-      const addr = req.params.address;
+      const addr = parseAddressParam(req.params.address);
+      if (!addr) return res.status(400).json({ error: "Invalid address" });
       // isBuilder(address) selector: 0xb6b6b475
-      const result = await ethCall(BUILDER_REGISTRY_ADDR, `0xb6b6b475000000000000000000000000${addr.replace("0x", "").toLowerCase()}`);
+      const result = await ethCall(BUILDER_REGISTRY_ADDR, `0xb6b6b475000000000000000000000000${addr.slice(2).toLowerCase()}`);
       const isBuilder = result !== "0x" && result !== "0x0000000000000000000000000000000000000000000000000000000000000000";
       res.json({ address: addr, isBuilder });
     } catch (e: unknown) {
-      res.status(400).json({ error: e instanceof Error ? e.message : "Unknown error" });
+      console.error("[BuilderRegistry] check failed:", e instanceof Error ? e.message : e);
+      res.status(502).json({ error: "Builder registry unavailable" });
     }
   });
 
@@ -1251,7 +1270,7 @@ app.get("/api/lending/stats", async (_req, res) => {
     ];
 
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
+    const provider = getRpcProvider();
     const lv = new ethersLib.Contract(LENDING_VAULT_ADDR, lvAbi, provider);
 
     const [lent, available, rate, loans, offers, price] = await Promise.all([
@@ -1297,7 +1316,7 @@ app.get("/api/lending/offers", async (_req, res) => {
     ];
 
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
+    const provider = getRpcProvider();
     const lv = new ethersLib.Contract(LENDING_VAULT_ADDR, lvAbi, provider);
 
     const count = Number(await lv.getOfferCount());
@@ -1364,7 +1383,7 @@ app.get("/api/commitment/tranches/:address", async (req, res) => {
     }
 
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
+    const provider = getRpcProvider();
     const cv = new ethersLib.Contract(COMMITMENT_VAULT_ADDR, CV_ABI, provider);
 
     const [tranches, p0SetVal] = await Promise.all([cv.getTranches(addr), cv.p0Set()]);
@@ -1415,7 +1434,7 @@ app.get("/api/commitment/status/:address", async (req, res) => {
     }
 
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
+    const provider = getRpcProvider();
     const cv = new ethersLib.Contract(COMMITMENT_VAULT_ADDR, CV_ABI, provider);
 
     const [locked, hasLock] = await Promise.all([cv.lockedBalance(addr), cv.hasActiveLock(addr)]);
@@ -1445,7 +1464,7 @@ app.get("/api/commitment/p0", async (_req, res) => {
     }
 
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
+    const provider = getRpcProvider();
     const cv = new ethersLib.Contract(COMMITMENT_VAULT_ADDR, CV_ABI, provider);
 
     const p0SetVal = await cv.p0Set();
@@ -1471,7 +1490,7 @@ app.get("/api/commitment/leaderboard", async (_req, res) => {
     }
 
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
+    const provider = getRpcProvider();
     const cv = new ethersLib.Contract(COMMITMENT_VAULT_ADDR, CV_ABI, provider);
 
     const totalLocked = await cv.totalLocked();
@@ -1509,7 +1528,7 @@ app.get("/api/lending/loans/:address", async (req, res) => {
     }
 
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
+    const provider = getRpcProvider();
     const lv = new ethersLib.Contract(LENDING_VAULT_ADDR, LENDING_LOAN_ABI, provider);
 
     const count = Number(await lv.getLoanCount());
@@ -1545,7 +1564,7 @@ app.get("/api/lending/health/:loanId", async (req, res) => {
     }
 
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
+    const provider = getRpcProvider();
     const lv = new ethersLib.Contract(LENDING_VAULT_ADDR, LENDING_LOAN_ABI, provider);
 
     const loan = serializeLendingLoan(loanId, await lv.getLoan(loanId));
@@ -1599,7 +1618,7 @@ app.get("/api/lending/lender/:address", async (req, res) => {
     ];
 
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
+    const provider = getRpcProvider();
     const lv = new ethersLib.Contract(LENDING_VAULT_ADDR, lvAbi, provider);
 
     const has = await lv.hasOffer(addr);
@@ -1637,7 +1656,7 @@ async function checkLoanHealth() {
   if (!LENDING_VAULT_ADDR || LENDING_VAULT_ADDR.startsWith("0x000")) return;
   try {
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
+    const provider = getRpcProvider();
     const lv = new ethersLib.Contract(LENDING_VAULT_ADDR, LENDING_LOAN_ABI, provider);
 
     const count = Number(await lv.getLoanCount());
@@ -1812,7 +1831,7 @@ app.get("/api/ifr/check", async (req, res) => {
     }
 
     const ethersLib = (await import("ethers")).ethers;
-    const provider = new ethersLib.JsonRpcProvider(ETH_RPC_URL);
+    const provider = getRpcProvider();
 
     const tokenAbi = ["function balanceOf(address) view returns (uint256)"];
     const lockAbi = ["function lockedBalance(address) view returns (uint256)"];

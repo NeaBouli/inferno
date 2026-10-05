@@ -20,9 +20,13 @@
     "test:chat-budget": "node scripts/test-chat-budget.mjs",
     "test:correctness": "tsx scripts/test-copilot-correctness.ts",
     "test:lending-loans": "tsx scripts/test-lending-loans.ts",
+    "test:balance-integrity": "tsx scripts/test-balance-integrity.ts",
     "build": "vite build",
     "preview": "vite preview",
-    "start": "tsx server/index.ts"
+    "start": "tsx server/index.ts",
+    "test:rpc-failover": "tsx scripts/test-rpc-failover.ts",
+    "test:cors-origins": "tsx scripts/test-cors-origins.ts",
+    "test:request-guard": "tsx scripts/test-request-guard.ts"
   },
   "dependencies": {
     "@types/cors": "^2.8.19",
