@@ -97,6 +97,21 @@ export function rateLimitKey(ip: string): string {
   return `${g.slice(0, 4).map((x) => x.toString(16)).join(":")}::/64`;
 }
 
+/**
+ * Coarser IPv6 aggregation key for the SIWE nonce tier: the /48, the common site/customer
+ * allocation, so an attacker holding a whole /48 (65,536 /64s) shares one budget. IPv4 (including
+ * IPv4-mapped IPv6) and non-IP values return null: IPv4 stays keyed per address, because a /24 is
+ * routinely shared by unrelated users (CGNAT/mobile/cloud pools) and single IPv4 addresses are
+ * already scarce for an attacker.
+ */
+export function ipv6Prefix48Key(ip: string): string | null {
+  const addr = ip.split("%")[0].toLowerCase();
+  if (isIP(addr) !== 6) return null;
+  const g = ipv6Groups(addr);
+  if (g.slice(0, 5).every((x) => x === 0) && g[5] === 0xffff) return null;
+  return `${g.slice(0, 3).map((x) => x.toString(16)).join(":")}::/48`;
+}
+
 function checkLimit(key: string, maxCount: number, windowMs: number): boolean {
   return buckets.check(key, maxCount, windowMs);
 }
@@ -121,10 +136,38 @@ export function siweVerifyLimit(req: Request, res: Response, next: NextFunction)
   next();
 }
 
-/** Max 30 SIWE nonces per client IP per 10 minutes */
+export const NONCE_WINDOW_MS = 10 * 60_000;
+export const NONCE_PER_CLIENT = 30;
+/**
+ * Per-/48 nonce budget. Nonces live 5 minutes (< one window), so with fixed windows a /48 can hold
+ * at most two windows' worth (boundary burst) = 500 outstanding nonces, i.e. at most 5% of the
+ * global MAX_OUTSTANDING_NONCES (10,000) in routes/auth.ts.
+ */
+export const NONCE_PER_IPV6_48 = 250;
+
+// Dedicated bounded map for the /48 tier, same fail-closed admission as the shared buckets.
+const nonce48Buckets = new FixedWindowBuckets(20_000);
+setInterval(() => nonce48Buckets.cleanup(), 5 * 60 * 1000).unref();
+
+/**
+ * SIWE nonce admission: max 30 per client key (IPv4 address or IPv6 /64) and, for IPv6, max 250
+ * per /48 per 10 minutes. The /64 tier is checked first so an exhausted /64 cannot drain the
+ * shared /48 budget of its neighbours.
+ */
+export function admitNonce(
+  clientIp: string,
+  now = Date.now(),
+  clientBuckets: FixedWindowBuckets = buckets,
+  prefixBuckets: FixedWindowBuckets = nonce48Buckets,
+): boolean {
+  if (!clientBuckets.check(`nonce:${rateLimitKey(clientIp)}`, NONCE_PER_CLIENT, NONCE_WINDOW_MS, now)) return false;
+  const prefix = ipv6Prefix48Key(clientIp);
+  return prefix === null || prefixBuckets.check(`nonce48:${prefix}`, NONCE_PER_IPV6_48, NONCE_WINDOW_MS, now);
+}
+
+/** Max 30 SIWE nonces per client key and 250 per IPv6 /48 per 10 minutes */
 export function siweNonceLimit(req: Request, res: Response, next: NextFunction): void {
-  const ip = rateLimitKey(getClientIp(req));
-  if (!checkLimit(`nonce:${ip}`, 30, 10 * 60_000)) {
+  if (!admitNonce(getClientIp(req))) {
     res.status(429).json({ error: "Too many nonce requests. Try again later." });
     return;
   }

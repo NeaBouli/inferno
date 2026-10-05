@@ -3,7 +3,15 @@ import type { Server } from "node:http";
 import app from "../app.js";
 import { prisma } from "../db.js";
 import { createToken } from "../middleware/auth.js";
-import { FixedWindowBuckets, rateLimitKey } from "../middleware/rate-limit.js";
+import {
+  FixedWindowBuckets,
+  NONCE_PER_IPV6_48,
+  NONCE_WINDOW_MS,
+  admitNonce,
+  ipv6Prefix48Key,
+  rateLimitKey,
+} from "../middleware/rate-limit.js";
+import { MAX_OUTSTANDING_NONCES } from "../routes/auth.js";
 import { POINTS_CONFIG } from "../config/points.js";
 import { getSignerAddress } from "../services/voucher-signer.js";
 import { ethers } from "ethers";
@@ -515,6 +523,88 @@ async function run() {
     assert((await nonceFrom("2001:db8:abcd:ef02::1")) === 200, "a different /64 keeps its own nonce budget");
     for (let i = 0; i < 30; i++) await nonceFrom("192.0.2.50");
     assert((await nonceFrom("::ffff:192.0.2.50")) === 429, "IPv4-mapped client shares the IPv4 nonce bucket");
+  }
+
+  // ---- SIWE nonce per-/48 tier: one /48 cannot fill the global nonce cap (T-260) ----
+  console.log("\nSIWE nonce /48 tier");
+  {
+    assert(
+      ipv6Prefix48Key("2001:db8:1:a::1") === ipv6Prefix48Key("2001:0DB8:0001:ffff:1:2:3:4"),
+      "different /64s inside one /48 share a /48 key",
+    );
+    assert(ipv6Prefix48Key("2001:db8:1:a::1") === "2001:db8:1::/48", "/48 key is the first three groups");
+    assert(ipv6Prefix48Key("2001:db8:1::1") !== ipv6Prefix48Key("2001:db8:2::1"), "different /48s get different keys");
+    assert(ipv6Prefix48Key("203.0.113.7") === null, "IPv4 has no /48 key");
+    assert(ipv6Prefix48Key("::ffff:203.0.113.7") === null, "IPv4-mapped has no /48 key");
+    assert(ipv6Prefix48Key("unknown") === null, "non-IP has no /48 key");
+    assert(2 * NONCE_PER_IPV6_48 <= MAX_OUTSTANDING_NONCES * 0.05, "boundary burst of one /48 stays <= 5% of the global cap");
+    assert(NONCE_WINDOW_MS >= 5 * 60_000, "window covers the 5-minute nonce lifetime");
+
+    const t0 = 1_000_000;
+    {
+      const client = new FixedWindowBuckets(100_000);
+      const prefix = new FixedWindowBuckets(100);
+      let ok = 0;
+      for (let i = 0; i < NONCE_PER_IPV6_48 + 50; i++) {
+        if (admitNonce(`2001:db8:1:${i.toString(16)}::1`, t0 + i, client, prefix)) ok++;
+      }
+      assert(ok === NONCE_PER_IPV6_48, "/48 tier caps many distinct /64s inside one /48");
+      assert(admitNonce("2001:db8:2::1", t0 + 400, client, prefix), "a different /48 keeps its own budget");
+      assert(!admitNonce("2001:db8:1:ffff::1", t0 + 401, client, prefix), "a fresh /64 in the exhausted /48 is refused");
+      assert(admitNonce("2001:db8:1:ffff::1", t0 + NONCE_WINDOW_MS + 1, client, prefix), "/48 budget renews after the window");
+    }
+    {
+      const client = new FixedWindowBuckets(100_000);
+      const prefix = new FixedWindowBuckets(100);
+      for (let i = 0; i < 100; i++) admitNonce("2001:db8:3:1::1", t0 + i, client, prefix);
+      let ok = 0;
+      for (let i = 0; i < NONCE_PER_IPV6_48; i++) {
+        if (admitNonce(`2001:db8:3:${(i + 2).toString(16)}::1`, t0 + 200 + i, client, prefix)) ok++;
+      }
+      assert(ok === NONCE_PER_IPV6_48 - 30, "an exhausted /64 consumes only its own 30 from the /48 budget");
+    }
+    {
+      const client = new FixedWindowBuckets(100_000);
+      const prefix = new FixedWindowBuckets(100);
+      let ok = 0;
+      for (let i = 0; i < 300; i++) {
+        if (admitNonce(`10.0.${i >> 8}.${i & 0xff}`, t0 + i, client, prefix)) ok++;
+      }
+      assert(ok === 300 && prefix.size === 0, "IPv4 stays per address (no /24 aggregation, no /48 buckets)");
+      for (let i = 0; i < 30; i++) admitNonce("192.0.2.9", t0 + 400 + i, client, prefix);
+      assert(!admitNonce("192.0.2.9", t0 + 500, client, prefix), "IPv4 per-address nonce limit unchanged");
+      assert(!admitNonce("::ffff:192.0.2.9", t0 + 501, client, prefix), "IPv4-mapped shares the IPv4 limit");
+    }
+    {
+      // Bounded /48 map: fail-closed, never evicts a live window.
+      const client = new FixedWindowBuckets(100_000);
+      const prefix = new FixedWindowBuckets(2);
+      for (let i = 0; i < NONCE_PER_IPV6_48; i++) admitNonce(`2001:db8:a:${i.toString(16)}::1`, t0 + i, client, prefix);
+      assert(admitNonce("2001:db8:b::1", t0 + 300, client, prefix), "second /48 admitted");
+      for (let i = 0; i < 20; i++) {
+        assert(!admitNonce(`2001:db8:${(0x100 + i).toString(16)}::1`, t0 + 400 + i, client, prefix), "unseen /48 refused when the map is full");
+        assert(prefix.size <= 2, "/48 map never exceeds its bound");
+      }
+      assert(!admitNonce("2001:db8:a:ffff::1", t0 + 500, client, prefix), "exhausted /48 stays limited after flooding");
+      assert(admitNonce("2001:db8:b:1::1", t0 + 501, client, prefix), "existing /48 keeps its budget");
+      assert(admitNonce("2001:db8:1ff::1", t0 + NONCE_WINDOW_MS + 1, client, prefix), "expired windows free space for an unseen /48");
+      assert(prefix.size <= 2, "/48 map stays within its bound after reclamation");
+    }
+
+    // Route level: rotating /64s inside one /48 hit the /48 budget; another /48 is unaffected.
+    const nonceFrom48 = async (client: string) =>
+      (await fetch(`${baseUrl}/auth/siwe/nonce`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Forwarded-For": client },
+      })).status;
+    const statuses: number[] = [];
+    for (let i = 0; i < NONCE_PER_IPV6_48 + 10; i++) statuses.push(await nonceFrom48(`2001:db8:48:${i.toString(16)}::1`));
+    assert(
+      statuses.filter((st) => st === 200).length === NONCE_PER_IPV6_48 &&
+        statuses.slice(NONCE_PER_IPV6_48).every((st) => st === 429),
+      "route: distinct /64s in one /48 share the /48 nonce budget",
+    );
+    assert((await nonceFrom48("2001:db8:49::1")) === 200, "route: a different /48 keeps its own nonce budget");
   }
 
   // ---- Summary ----
