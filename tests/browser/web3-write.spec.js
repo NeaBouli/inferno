@@ -1204,7 +1204,12 @@ test("wiki CommitmentVault widget exposes only TIME_ONLY and pins cType 0 at the
   expect(source).toContain('var cv = new ethers.Contract(CV_V2_ADDR, CV_ABI, cvSigner);');
   expect(source).toContain("token.approve(CV_V2_ADDR, plan.totalAmount)");
   expect(source).not.toMatch(/approve\(CV_V1_ADDR/);
-  await expect(page.locator("#cv-v2-gate")).toContainText("CommitmentVault V2 opens for new time locks once its fee exemption is executed");
+  // Static copy before any wallet read: V2 is fee-exempt since #17, but the button still waits for the on-chain read (T-262 D4).
+  await expect(page.locator("#cv-v2-gate")).toContainText("CommitmentVault V2 is fee-exempt since Governance proposal #17");
+  await expect(page.locator("#cv-v2-gate")).toContainText("only after a connected wallet reads feeExempt(V2) as true on-chain");
+  await expect(page.locator("#cv-lock-btn")).toBeDisabled();
+  expect(web3).toContain("<p class=\"protocol-note\" data-lock-note>CommitmentVault V2 is fee-exempt since Governance proposal #17.");
+  expect(web3).not.toContain("The lock button stays disabled until Governance proposal #17 is executed");
   expect(web3).not.toContain("Price-condition locks are available");
   await context.close();
 });
@@ -1215,12 +1220,12 @@ for (const [label, feeExemptV2] of [["fee exemption not executed", false], ["fee
     await page.goto("/web3/", { waitUntil: "domcontentloaded" });
     await connect(page);
     await page.locator("[data-open-lock]").first().click();
-    await expect(page.locator("[data-lock-status]")).toContainText("CommitmentVault V2 opens for new time locks once its fee exemption is executed", { timeout: 15_000 });
+    await expect(page.locator("[data-lock-status]")).toContainText("New CommitmentVault V2 time locks stay disabled until this app confirms feeExempt(V2) on-chain", { timeout: 15_000 });
     await expect(page.locator("[data-lock-submit]")).toBeDisabled();
     await expect(page.locator("[data-lock-note]")).toContainText("Governance proposal #17");
     await page.locator("[data-lock-amount]").fill("250");
     await page.locator("[data-lock-submit]").evaluate((button) => { button.disabled = false; button.click(); });
-    await expect(page.locator("[data-lock-status]")).toContainText("CommitmentVault V2 opens for new time locks", { timeout: 10_000 });
+    await expect(page.locator("[data-lock-status]")).toContainText("New CommitmentVault V2 time locks stay disabled", { timeout: 10_000 });
     expect(writes).toEqual([]);
     expect(pageErrors).toEqual([]);
     await context.close();
@@ -1279,7 +1284,7 @@ for (const feeExemptV2 of [false, true]) {
       expect(writes[1]).toMatchObject({ action: "commitment-lock-v2", amount: 100n * UNIT, cType: 0n, p0Multiplier: 0n });
     } else {
       await expect(page.locator("#cv-lock-btn")).toBeDisabled();
-      await expect(page.locator("#cv-v2-gate")).toContainText("CommitmentVault V2 opens for new time locks once its fee exemption is executed");
+      await expect(page.locator("#cv-v2-gate")).toContainText("New CommitmentVault V2 time locks stay disabled until this app confirms feeExempt(V2) on-chain");
       await page.locator("#cv-lock-btn").evaluate((button) => { button.disabled = false; button.click(); });
       await page.waitForTimeout(1500);
       expect(writes).toEqual([]);
@@ -1848,11 +1853,11 @@ for (const [label, flip, split, expected] of [
     await page.locator("[data-lock-amount]").fill("100");
     if (split) await page.locator("[data-lock-split]").check();
     await page.locator("[data-lock-submit]").click();
-    await expect(page.locator("[data-lock-status]")).toContainText("CommitmentVault V2 opens for new time locks", { timeout: 15_000 });
+    await expect(page.locator("[data-lock-status]")).toContainText("New CommitmentVault V2 time locks stay disabled", { timeout: 15_000 });
     await page.waitForTimeout(1000);
     expect(writes.map((w) => w.action)).toEqual(expected);
     await expect(page.locator("[data-lock-submit]")).toBeDisabled();
-    await expect(page.locator("[data-lock-note]")).toContainText("CommitmentVault V2 opens for new time locks");
+    await expect(page.locator("[data-lock-note]")).toContainText("New CommitmentVault V2 time locks stay disabled");
     expect(pageErrors).toEqual([]);
     await context.close();
   });
@@ -1904,7 +1909,7 @@ for (const [label, flip, split, expected] of [
     if (split) await page.locator("#cv-split-tranches").check();
     await expect(page.locator("#cv-lock-btn")).toBeEnabled();
     await page.locator("#cv-lock-btn").click();
-    await expect(page.locator("#cv-v2-gate")).toContainText("CommitmentVault V2 opens for new time locks", { timeout: 15_000 });
+    await expect(page.locator("#cv-v2-gate")).toContainText("New CommitmentVault V2 time locks stay disabled", { timeout: 15_000 });
     await page.waitForTimeout(1000);
     expect(writes.map((w) => w.action)).toEqual(expected);
     await expect(page.locator("#cv-lock-btn")).toBeDisabled();

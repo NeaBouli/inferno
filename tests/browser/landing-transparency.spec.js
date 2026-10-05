@@ -12,6 +12,7 @@ const VESTING = "0x2694bc84e8d5251e9e4ecd4b2ae3f866d6106271";
 const COMMITMENT_VAULT = "0x0719d9eb28df7f5e63f91fac4bbb2d579c4f73d3";
 const HISTORICAL_VALUES = ["150M IFR", "2.429M", "48.0M"];
 const CARDS = ["vesting", "burned", "commitment"];
+const CV01_LOST_RAW = 26_418_467_994_338_353n; // permanently lost CV-01 tranches, shown on the Lost IFR card
 
 // The Landing is a large page; allow slower CI hosts without loosening any assertion.
 test.describe.configure({ timeout: 60000 });
@@ -115,7 +116,9 @@ test("cards render live fixture reads with precise labels and last-updated time"
   await expect(card(page, "vesting")).toContainText("Unvested");
   await expect(card(page, "vesting")).toContainText("cliff ends 2027-03-05");
   await expect(card(page, "burned").locator("[data-transparency-value]")).toHaveText("3.3M IFR");
-  await expect(card(page, "commitment").locator("[data-transparency-value]")).toHaveText("47.952M IFR");
+  // T-262 D2: totalLocked() minus the CV-01 amount already shown as Permanently Lost (47.952M - 26.418M).
+  await expect(card(page, "commitment").locator("[data-transparency-value]")).toHaveText("21.534M IFR");
+  await expect(card(page, "commitment")).toContainText("totalLocked() minus CV-01");
   for (const key of CARDS) {
     await expect(card(page, key).locator("[data-transparency-status]")).toHaveText(/^Live — updated \d{2}:\d{2}:\d{2}$/);
     await expect(card(page, key)).toHaveAttribute("aria-busy", "false");
@@ -130,11 +133,27 @@ test("bigint formatting never rounds up through Number", async ({ page }) => {
     vested: 149_999_999_999_999_999n,
     released: 0n,
     schedule: [1772670647n, 31536000n, 126144000n],
-    totalLocked: 999_999_999_999_999_999n,
+    totalLocked: CV01_LOST_RAW + 999_999_999_999_999_999n,
   })));
   await openTransparency(page);
   await expect(card(page, "commitment").locator("[data-transparency-value]")).toHaveText("999.999M IFR");
   await expect(card(page, "vesting").locator("[data-transparency-value]")).toHaveText("0 IFR");
+});
+
+test("CommitmentVault card never double counts CV-01 and fails closed below the CV-01 amount (T-262 D2)", async ({ page }) => {
+  await blockNetwork(page);
+  await answerProxy(page);
+  await page.route(RPC_URL, answerRpc(fixtureCalls({
+    allocation: 150_000_000n * 10n ** 9n,
+    vested: 0n,
+    released: 0n,
+    schedule: [1772670647n, 31536000n, 126144000n],
+    totalLocked: CV01_LOST_RAW - 1n,
+  })));
+  await openTransparency(page);
+  await expect(card(page, "commitment")).toHaveAttribute("data-state", "unavailable");
+  expect(await card(page, "commitment").locator("[data-transparency-value]").textContent()).not.toMatch(/\d/);
+  await expect(card(page, "vesting")).toHaveAttribute("data-state", "live");
 });
 
 test("failed reads fail closed to unavailable without any number", async ({ page }) => {
