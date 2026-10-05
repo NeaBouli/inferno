@@ -3,6 +3,7 @@
 ## [Unreleased] — 2026-10-05 — Benefits wallet telemetry (T-280)
 
 ### Security / Privacy
+
 - Benefits frontend (`shop.ifrunit.tech`) no longer contacts wallet SDK
   telemetry hosts on page load. Root cause: Wagmi reconnect-on-mount (and the
   WalletConnect connector's `setup()`) called `getProvider()` on every
@@ -17,10 +18,12 @@
   `telemetryEnabled: false` stay off after a wallet is chosen too.
 
 ### Changed
+
 - `manifest.json` `theme_color` aligned with the head `theme-color`
   (`#F5F1E8`, the paper page background); previously `#B0481E`.
 
 ### Tests
+
 - `scripts/test-benefits-wallet-telemetry.js` (`npm run
   test:benefits-wallet-telemetry`, in the Benefits CI browser job): no wallet
   telemetry request before a wallet is chosen (375/1440, five routes).
