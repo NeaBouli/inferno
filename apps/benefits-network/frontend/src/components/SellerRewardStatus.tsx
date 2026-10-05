@@ -186,8 +186,8 @@ export function SellerRewardStatus({ businessId, ownerAddress }: { businessId: s
           </p>
           <p className="mt-2 text-sm leading-6 text-stone-300">
             Reward model: once a pilot partner is activated by Governance, rewards are paid in IFR only for verified
-            checkout redemptions, valued in EUR, within a fixed partner budget. A customer lock alone earns nothing. No
-            pilot partner is active yet.
+            checkout redemptions, valued in EUR, within a fixed partner budget. A customer lock alone earns nothing. The
+            status above reflects this seller's on-chain check.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">

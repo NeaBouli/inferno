@@ -46,6 +46,10 @@ Assumption: 100,000 transfers/year at average of 1,000 IFR
 
 ## PartnerVault Emission Model
 
+The parameters and the runtime simulation below apply only to the lock-reward path
+(`recordLockReward`), which is unused under model B. Milestone settlements (`recordMilestone`) do not
+count toward `annualEmissionCap`; they are bounded by each partner's allocation.
+
 ### Parameters (Mainnet):
 - rewardBps: 1500 (15%)
 - ifrLock: unset (address(0)) — algorithmic throttle inactive, flat rewardBps applies

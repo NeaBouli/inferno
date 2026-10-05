@@ -37,6 +37,10 @@ Reward = LockAmount x rewardBps / 10000
 
 ## Builder Pool Sustainability
 
+This table applies only to the lock-reward path (`recordLockReward`), which is unused under model B.
+Milestone settlements (`recordMilestone`) do not count toward `annualEmissionCap`; they are bounded by
+each partner's allocation.
+
 | Year | Emission | Pool Remaining |
 |------|----------|----------------|
 | 1 | 4,000,000 | 36,000,000 |

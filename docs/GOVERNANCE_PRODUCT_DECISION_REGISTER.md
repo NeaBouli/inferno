@@ -162,20 +162,25 @@ remains the only place where agenda items and vote outcomes are published.
   pilot partner; global pilot budget; vesting length by budget size;
   pilot-partner count and selection criteria. Formula, caller model and refill
   policy are decided (model B, no caller, no refill).
-- **Prerequisites:** written reward policy; authorized-caller key custody
-  separated from Safe signer keys; Benefits reward outbox tested against the
-  chosen formula.
+- **Prerequisites:** written reward policy; a per-period redemption export
+  from the Benefits backend with reconciliation against seller-confirmed
+  checkouts; the backend change that gates reward events on verified pilot
+  redemptions instead of an authorized caller (T-275); a per-period
+  `recordMilestone` proposal template bounded by the partner allocation.
 - **Dependencies:** Lane 5 exchange-integration pilot draws on the same
   PartnerVault budget; Lane 7 SDK/Creator Gateway integrations produce the
   reward events.
 - **Impact:** registering a builder or setting a caller is reversible by a
   later governed call; vested rewards already recorded are irreversible.
-- **Security/audit gate:** review of the caller service and anti-double-count
-  path; independent review if a new reward contract is introduced.
+- **Security/audit gate:** review of the redemption export, reconciliation and
+  double-settlement protection; independent review if a new reward contract is
+  introduced.
 - **Testnet/staging gate:** staging checkout-to-reward flow on Sepolia with the
   chosen formula and caps.
 - **Production gate:** separate recorded decision, then Safe proposals for
-  builder registration and caller activation per pilot partner.
+  builder registration and partner activation per pilot partner, and one
+  reconciled `recordMilestone` proposal per settlement period; no caller is
+  activated.
 - **Next evidence:** approved reward policy and pilot-partner criteria.
 
 ## Lane 5 — Exchange fee exemption, incentives and governance role

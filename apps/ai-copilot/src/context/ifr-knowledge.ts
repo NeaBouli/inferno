@@ -134,7 +134,7 @@ export function getIFRKnowledge() {
       docs: "https://ifrunit.tech/wiki/business-onboarding.html"
     },
     partnerRewards: {
-      status: "Not active: no partner registered, no reward paid, no authorized caller set.",
+      status: "As of 5 October 2026: not active (no partner registered, no reward paid, no authorized caller set). This is a dated snapshot without a live chain read; check https://ifrunit.tech/wiki/transparency.html or PartnerVault on Etherscan for the current state.",
       model: "Decided 2026-10-03 (model B): IFR only for verified checkout redemptions at registered pilot partners, valued in EUR, converted at the published 7-day TWAP at settlement, capped by a fixed per-partner budget, settled per Governance proposal (recordMilestone). A lock alone never earns a reward.",
       pool: "40M IFR, no refill",
       vesting: "180-365 days linear per partner",

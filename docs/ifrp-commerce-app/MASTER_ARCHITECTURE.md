@@ -257,6 +257,12 @@ Decided route (Lane 4 decision B, 2026-10-03; [policy](../PARTNER_REWARDS_MODEL_
 
 `PartnerVault.recordLockReward` and an authorized caller are not used.
 
+**Release gate before the first pilot:** the Benefits backend currently marks reward events as
+blocked (`BLOCKED_CALLER`) until a reward caller is configured and authorized, and its events follow
+the lock-reward path. Model B never configures that caller, so Governance registration and a capped
+budget alone do not produce settleable events. A backend change must gate events on verified pilot
+redemptions and produce the per-period export for `recordMilestone`; it is not implemented yet.
+
 Do not automate PartnerVault rewards for unverified sellers.
 
 ## 5. System Architecture
