@@ -1229,16 +1229,16 @@
         <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
             <span style="background:#22c55e;color:white;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">DONE</span>
-            <strong style="font-size:13px;">feeExempt &mdash; 8 contracts</strong>
+            <strong style="font-size:13px;">feeExempt &mdash; protocol contracts</strong>
           </div>
-          <div style="font-size:12px;color:var(--muted);">All 8 protocol contracts are fee-exempt. Verified on-chain via 7 governance proposals.</div>
+          <div style="font-size:12px;color:var(--muted);">All protocol contracts are fee-exempt, verified on-chain through governance proposals; CommitmentVault V2 joined via proposal #17 (executed 4 October 2026). Current list: <a href="fee-design.html">Fee Design</a>.</div>
         </div>
         <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
-            <span style="background:#22c55e;color:white;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">LIVE</span>
+            <span style="background:#22c55e;color:white;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">DONE</span>
             <strong style="font-size:13px;">Bootstrap Event</strong>
           </div>
-          <div style="font-size:12px;color:var(--muted);">Active since 07.03.2026. Vault funded with 200M IFR. Ends 05.06.2026.</div>
+          <div style="font-size:12px;color:var(--muted);">Ran 07.03.&ndash;05.06.2026 with 200M IFR. Ended 05.06.2026; finalise() executed (block 25254575), LP live on Uniswap V2. See <a href="bootstrap.html">Bootstrap</a>.</div>
         </div>
         <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
@@ -1252,14 +1252,14 @@
             <span style="background:#22c55e;color:white;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">DONE</span>
             <strong style="font-size:13px;">Multisig Threshold 3-of-5</strong>
           </div>
-          <div style="font-size:12px;color:var(--muted);">3-of-5 active with 5 signers (A.K., M.G., A.M., Y.K., A.P.). Completed 15.03.2026.</div>
+          <div style="font-size:12px;color:var(--muted);">3-of-5 active with 5 signers (G.M., M.G., A.M., Y.K., A.P.). Completed 15.03.2026.</div>
         </div>
         <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
             <span style="background:#3b82f6;color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">PHASE 3</span>
             <strong style="font-size:13px;">CommitmentVault</strong>
           </div>
-          <div style="font-size:12px;color:var(--muted);">Voluntary token lock with 4 unlock conditions (time, price, time+price, time OR price). Contributors lock IFR in tranches tied to P0 multiples. Auto-unlock after 30 days when condition met. Prevents contributor dumping, proves commitment on-chain. Requires Bootstrap to end first (P0 calculation).</div>
+          <div style="font-size:12px;color:var(--muted);">V1 (legacy) offered four unlock conditions; its price-conditioned tranches cannot unlock (CV-01) and it receives no new locks. CommitmentVault V2 (deployed 2 October 2026, fee-exempt since proposal #17) accepts time-only locks and receives all new locks; existing V1 tranches stay listed and unlock through V1. See <a href="commitment-vault.html">CommitmentVault</a>.</div>
         </div>
         <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
@@ -1273,7 +1273,7 @@
             <span style="background:#3b82f6;color:#fff;font-size:10px;padding:2px 8px;border-radius:10px;font-weight:700;">PHASE 3</span>
             <strong style="font-size:13px;">BuybackController</strong>
           </div>
-          <div style="font-size:12px;color:var(--muted);">Deployed 14.04.2026 before LP launch. The dormant controller can split native ETH between IFR buyback-to-BurnReserve and an LP attempt; it has no PartnerVault refill or overflow-routing mechanism.</div>
+          <div style="font-size:12px;color:var(--muted);">Deployed 14.04.2026 before LP launch. Since proposal #21 (executed 5 October 2026) it is the InfernoToken pool fee receiver. It can split native ETH between IFR buyback-to-BurnReserve and an LP attempt; it has no PartnerVault refill or overflow-routing mechanism.</div>
         </div>
         <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
