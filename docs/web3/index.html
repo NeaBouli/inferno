@@ -4,10 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>IFR Web3 Access Layer | Inferno Protocol</title>
-  <meta name="description" content="IFR Web3 access layer for users: connect wallets, buy IFR, add IFR to wallet, lock IFR for Premium access, manage CommitmentVault tranches, create or accept LendingVault offers, and route builders or developers to IFR Wiki docs.">
+  <meta name="description" content="IFR Web3 access layer for users: connect wallets, buy IFR, add IFR to wallet, lock IFR for Premium access, manage CommitmentVault tranches, withdraw retired LendingVault V1 offers, and route builders or developers to IFR Wiki docs.">
   <meta name="robots" content="index, follow">
   <meta property="og:title" content="IFR Web3 Access Layer | Inferno Protocol">
-  <meta property="og:description" content="User execution surface for IFR: wallet connect, buy IFR, IFRLock Premium access, CommitmentVault lock/unlock, LendingVault lender and borrower flows, pool tracking, and Wiki routing for builders and developers.">
+  <meta property="og:description" content="User execution surface for IFR: wallet connect, buy IFR, IFRLock Premium access, CommitmentVault lock/unlock, LendingVault V1 offer withdrawal (V1 retired), pool tracking, and Wiki routing for builders and developers.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://web3.ifrunit.tech/">
   <meta property="og:image" content="https://ifrunit.tech/assets/ifr_social_card_1200x630.png">
@@ -18,7 +18,7 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:site" content="@IFRtoken">
   <meta name="twitter:title" content="IFR Web3 Access Layer | Inferno Protocol">
-  <meta name="twitter:description" content="Connect a wallet and use IFR directly on Web3: buy IFR, add it to wallet, lock for Premium access, lend, borrow, and manage vault actions.">
+  <meta name="twitter:description" content="Connect a wallet and use IFR directly on Web3: buy IFR, add it to wallet, lock for Premium access, withdraw retired LendingVault offers, and manage vault actions.">
   <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_social_card_1200x630.png">
   <meta name="theme-color" content="#f6f0e6">
   <meta name="application-name" content="IFR Web3">
@@ -61,8 +61,8 @@
       "Buy IFR on Uniswap",
       "IFRLock Premium access",
       "CommitmentVault lock and unlock",
-      "LendingVault offer creation and withdrawal",
-      "LendingVault borrower offer acceptance and loan management",
+      "LendingVault V1 offer withdrawal (V1 retired, no new offers)",
+      "LendingVault read-only offer and loan view (borrowing disabled)",
       "Builder and developer Wiki routing"
     ]
   }
@@ -1787,8 +1787,8 @@
           <div class="panel-actions">
             <button class="btn btn-primary" type="button" data-open-access-lock>Access lock</button>
             <button class="btn btn-mint" type="button" data-open-lock>Commitment lock</button>
-            <button class="btn btn-mint" type="button" data-open-lending>Create offer</button>
-            <button class="btn btn-quiet" type="button" data-open-borrow>Borrow IFR</button>
+            <button class="btn btn-mint" type="button" data-open-lending>Withdraw offer</button>
+            <button class="btn btn-quiet" type="button" data-open-borrow>Loans (borrowing closed)</button>
             <button class="btn btn-quiet" type="button" data-add-token>Add IFR to wallet</button>
             <button class="btn btn-quiet" type="button" data-wallet-copy-address hidden>Copy wallet address</button>
             <button class="btn btn-quiet" type="button" data-wallet-disconnect hidden>Disconnect wallet</button>
@@ -1820,12 +1820,12 @@
         <div class="audience-detail" data-audience-panel>
           <div>
             <h3 data-audience-title>Lock once. Use across the ecosystem.</h3>
-            <p data-audience-copy>Holders can connect, check IFR balance, use the simple IFRLock access lock, manage CommitmentVault tranches, and create or withdraw LendingVault offers without hunting through the full documentation tree.</p>
+            <p data-audience-copy>Holders can connect, check IFR balance, use the simple IFRLock access lock, manage CommitmentVault tranches, and withdraw retired LendingVault V1 offers without hunting through the full documentation tree.</p>
             <div class="audience-actions" data-audience-actions>
               <button class="btn btn-primary" type="button" data-open-access-lock>Access lock</button>
               <button class="btn btn-mint" type="button" data-open-lock>Commitment lock</button>
-              <button class="btn btn-mint" type="button" data-open-lending>Create offer</button>
-              <button class="btn btn-quiet" type="button" data-open-borrow>Borrow IFR</button>
+              <button class="btn btn-mint" type="button" data-open-lending>Withdraw offer</button>
+              <button class="btn btn-quiet" type="button" data-open-borrow>Loans (borrowing closed)</button>
               <a class="btn btn-quiet" href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener">Buy IFR</a>
               <a class="btn btn-quiet" href="https://shop.ifrunit.tech/">Use IFR Benefits</a>
               <a class="btn btn-quiet" href="https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" rel="noopener">Track pool</a>
@@ -1834,7 +1834,7 @@
           <ul class="detail-list" data-audience-list>
             <li>Check wallet, IFR balance, and lock state.</li>
             <li>Buy IFR on the live Uniswap V2 pool.</li>
-            <li>Use IFRLock for simple access, CommitmentVault for tranches, or LendingVault for offers.</li>
+            <li>Use IFRLock for simple access or CommitmentVault for tranches; LendingVault V1 is retired (withdraw only).</li>
           </ul>
         </div>
       </div>
@@ -2159,9 +2159,9 @@
     <div class="protocol-card" role="dialog" aria-modal="true" aria-labelledby="lending-title">
       <header>
         <div>
-          <h2 id="lending-title">Create offer</h2>
-          <p>LendingVault offer actions run directly here. Deposit IFR as available lending liquidity or withdraw unlent IFR from an active offer.</p>
-          <p data-lending-status>Retired (V1) since 3 October 2026: borrowing stays disabled by Governance decision (no activation is planned or authorized) and no V2 is planned yet. Lenders can still withdraw their unlent offers with <code>withdrawOffer</code>; these IFR are not lost.</p>
+          <h2 id="lending-title">Withdraw offer</h2>
+          <p>Withdraw unlent IFR from your LendingVault offer directly here. New offers and offer increases are closed. Withdrawing the full available amount closes the offer.</p>
+          <p class="protocol-note" data-lending-retired>V1 retired by owner decision (3 October 2026): borrowing stays disabled (<code>ifrPriceWei = 0</code>, no activation planned or authorized) and lenders are withdrawing their offers; those IFR are not lost. No V2 is planned until a reviewed price source exists.</p>
         </div>
         <button class="protocol-close" type="button" aria-label="Close lending panel" data-lending-close>&times;</button>
       </header>
@@ -2193,10 +2193,10 @@
       </div>
 
       <div class="protocol-actions">
-        <button class="btn btn-quiet" type="button" data-lending-max>Use max</button>
+        <button class="btn btn-quiet" type="button" data-lending-max>Use available</button>
         <button class="btn btn-mint" type="button" data-lending-refresh>Refresh</button>
-        <button class="btn btn-primary" type="button" data-lending-deposit>Approve / Deposit</button>
-        <button class="btn btn-quiet" type="button" data-lending-withdraw>Withdraw</button>
+        <button class="btn btn-primary" type="button" data-lending-deposit hidden disabled>Approve / Deposit</button>
+        <button class="btn btn-primary" type="button" data-lending-withdraw>Withdraw</button>
       </div>
       <p class="protocol-status" data-lending-status>Connect a wallet to load your lending state.</p>
     </div>
@@ -2206,8 +2206,8 @@
     <div class="protocol-card" role="dialog" aria-modal="true" aria-labelledby="borrow-title">
       <header>
         <div>
-          <h2 id="borrow-title">Borrow IFR</h2>
-          <p>Accept a live LendingVault offer by selecting an offer, choosing IFR amount and duration, then posting the required ETH collateral from this Web3 page.</p>
+          <h2 id="borrow-title">Loans (borrowing closed)</h2>
+          <p>View LendingVault offers and any existing loan of this wallet. LendingVault V1 is retired: new borrows stay disabled; existing loans can still be repaid or topped up.</p>
         </div>
         <button class="protocol-close" type="button" aria-label="Close borrow panel" data-borrow-close>&times;</button>
       </header>
@@ -2261,16 +2261,16 @@
       </div>
 
       <div class="protocol-actions">
-        <button class="btn btn-quiet" type="button" data-borrow-max>Use offer max</button>
+        <button class="btn btn-quiet" type="button" data-borrow-max hidden disabled>Use offer max</button>
         <button class="btn btn-mint" type="button" data-borrow-refresh>Refresh</button>
-        <button class="btn btn-primary" type="button" data-borrow-submit>Borrow with ETH collateral</button>
+        <button class="btn btn-primary" type="button" data-borrow-submit hidden disabled>Borrow with ETH collateral</button>
         <button class="btn btn-mint" type="button" data-borrow-repay>Approve / Repay loan</button>
         <button class="btn btn-quiet" type="button" data-borrow-topup-submit>Top up collateral</button>
       </div>
       <p class="protocol-status" data-borrow-status>Connect a wallet to load borrowable offers.</p>
       <div class="offer-list" data-borrow-offers></div>
       <div class="loan-list" data-borrow-loans></div>
-      <p class="protocol-note">Borrowing requires LendingVault <code>ifrPriceWei</code> to be set on-chain. If the price is zero, offers can still be viewed but borrow transactions remain disabled by the contract.</p>
+      <p class="protocol-note">V1 retired by owner decision (3 October 2026): borrowing stays disabled (<code>ifrPriceWei = 0</code>, no activation planned or authorized) and lenders are withdrawing their offers; those IFR are not lost. No V2 is planned until a reviewed price source exists. Offers can still be viewed, but borrow transactions remain disabled by the contract.</p>
     </div>
   </div>
 
@@ -2307,17 +2307,17 @@
       const audiences = {
         users: {
           title: "Lock once. Use across the ecosystem.",
-          copy: "Users can connect, buy IFR, add the token to their wallet, use the simple IFRLock access lock, manage CommitmentVault tranches, and create, withdraw, or accept LendingVault offers directly on this Web3 page.",
+          copy: "Users can connect, buy IFR, add the token to their wallet, use the simple IFRLock access lock, manage CommitmentVault tranches, and withdraw retired LendingVault V1 offers directly on this Web3 page.",
           items: [
             "Use the access terminal for wallet, IFR balance, lock state, and token import.",
             "Buy IFR on Uniswap or track the live pool without leaving the user flow.",
-            "Use IFRLock for simple access, CommitmentVault for time tranches, or LendingVault for lender and borrower flows."
+            "Use IFRLock for simple access or CommitmentVault for time tranches; LendingVault V1 is retired and only offer withdrawal remains."
           ],
           actions: [
             { label: "Access lock", kind: "button", variant: "btn-primary", data: "data-open-access-lock" },
             { label: "Commitment lock", kind: "button", variant: "btn-mint", data: "data-open-lock" },
-            { label: "Create offer", kind: "button", variant: "btn-mint", data: "data-open-lending" },
-            { label: "Borrow IFR", kind: "button", variant: "btn-quiet", data: "data-open-borrow" },
+            { label: "Withdraw offer", kind: "button", variant: "btn-mint", data: "data-open-lending" },
+            { label: "Loans (borrowing closed)", kind: "button", variant: "btn-quiet", data: "data-open-borrow" },
             { label: "Buy IFR", kind: "link", variant: "btn-quiet", href: "https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B", external: true },
             { label: "Use IFR Benefits", kind: "link", variant: "btn-quiet", href: "https://shop.ifrunit.tech/" },
             { label: "Track pool", kind: "link", variant: "btn-quiet", href: "https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0", external: true }
@@ -2540,8 +2540,6 @@
         "function priceOracle() view returns (address)"
       ];
       const LENDING_ABI = [
-        "function createOffer(uint256) external",
-        "function increaseOffer(uint256) external",
         "function withdrawOffer(uint256) external",
         "function borrow(uint256,uint256,uint256) external payable",
         "function repay(uint256) external",
@@ -3298,36 +3296,18 @@
         lendingLent.textContent = offer ? formatIFR(offer.lentIFR) : "0 IFR";
         lendingMode.value = offer ? (offer.active ? `Offer #${offerId.toString()} active` : `Offer #${offerId.toString()} closed`) : "No offer yet";
         lendingWithdraw.disabled = !offer || !offer.active || offer.availableIFR === 0n;
-        lendingDeposit.disabled = Boolean(offer && !offer.active);
+        lendingDeposit.disabled = true;
         lendingStatus.textContent = offer ? "Lending offer loaded." : "No LendingVault offer yet.";
       }
 
+      // LendingVault V1 is retired by owner decision (3 October 2026, T-273): new offers and
+      // offer increases are refused here before any wallet call (no approve, no createOffer or
+      // increaseOffer). Lenders keep withdrawOffer below.
+      const LENDING_RETIRED_STATUS = "LendingVault V1 is retired: new offers and offer increases are closed. Withdraw your unlent IFR instead; those IFR are not lost.";
+
       async function depositLendingIFR() {
-        const address = await ensureWalletReady("Preparing offer");
-        const signer = IFRWallet.getSigner();
-        const { token, lending } = getContracts(signer);
-        const reader = readContracts();
-        const amount = parseIFRInput(lendingAmount.value);
-
         lendingDeposit.disabled = true;
-        lendingStatus.textContent = "Checking token allowance...";
-        const allowance = await reader.token.allowance(address, LENDING_VAULT_ADDRESS);
-
-        if (allowance < amount) {
-          lendingStatus.textContent = "Approve IFR in your wallet, then keep this page open.";
-          const approveTx = await token.approve(LENDING_VAULT_ADDRESS, amount);
-          lendingStatus.textContent = "Waiting for approval confirmation...";
-          await approveTx.wait();
-        }
-
-        const hasOffer = currentLendingState && currentLendingState.hasOffer;
-        lendingStatus.textContent = hasOffer ? "Confirm increase offer transaction." : "Confirm create offer transaction.";
-        const tx = hasOffer ? await lending.increaseOffer(amount) : await lending.createOffer(amount);
-        lendingStatus.textContent = "Waiting for lending confirmation...";
-        await tx.wait();
-        lendingAmount.value = "";
-        lendingStatus.textContent = "Lending offer confirmed.";
-        await Promise.all([loadLendingPanel(), refreshWalletState()]);
+        lendingStatus.textContent = LENDING_RETIRED_STATUS;
       }
 
       async function withdrawLendingIFR() {
@@ -3372,15 +3352,20 @@
         return { label: "Healthy", value: `${pct}% collateral ratio`, className: "" };
       }
 
+      // LendingVault V1 retired by owner decision (3 October 2026, T-273): opening a new loan is
+      // blocked permanently in this UI, independent of the on-chain ifrPriceWei value.
+      const BORROW_RETIRED = true;
+      const BORROW_RETIRED_STATUS = "Borrowing is permanently disabled: LendingVault V1 is retired by owner decision (3 October 2026), regardless of ifrPriceWei. Existing loans can still be repaid or topped up.";
+
       async function updateBorrowPreview() {
         if (!currentBorrowState) return;
         const offer = selectedBorrowOffer();
-        const priceMissing = currentBorrowState.ifrPriceWei === 0n;
         borrowSubmit.disabled = true;
 
-        if (priceMissing) {
-          borrowCollateral.textContent = "Price not set";
-          borrowStatus.textContent = "Borrowing is disabled until Governance sets LendingVault ifrPriceWei.";
+        // T-273: LendingVault V1 is retired; new borrows stay blocked even if ifrPriceWei > 0.
+        if (BORROW_RETIRED) {
+          borrowCollateral.textContent = "Retired";
+          borrowStatus.textContent = BORROW_RETIRED_STATUS;
           return;
         }
 
@@ -3427,7 +3412,7 @@
         if (!currentBorrowState) return;
         const { address, offers, loans, ifrPriceWei, offerCount } = currentBorrowState;
         const priceMissing = ifrPriceWei === 0n;
-        borrowPrice.textContent = priceMissing ? "Disabled" : `${formatETH(ifrPriceWei)} / IFR`;
+        borrowPrice.textContent = priceMissing || BORROW_RETIRED ? "Disabled" : `${formatETH(ifrPriceWei)} / IFR`;
         borrowOfferCount.textContent = `${offers.length} / ${offerCount}`;
 
         borrowOffer.innerHTML = offers.length
@@ -3477,8 +3462,8 @@
 
         borrowRepay.disabled = loans.length === 0;
         borrowTopupSubmit.disabled = loans.length === 0;
-        borrowStatus.textContent = priceMissing
-          ? "Offers can be viewed, but borrowing is disabled until LendingVault ifrPriceWei is set on-chain."
+        borrowStatus.textContent = BORROW_RETIRED
+          ? BORROW_RETIRED_STATUS
           : offers.length ? "Offers loaded. Select an offer and enter an amount." : "No active offers available.";
         updateBorrowPreview().catch(() => null);
       }
@@ -3533,10 +3518,12 @@
       }
 
       async function borrowLendingIFR() {
+        // T-273: refuse before any wallet call (no approve, no collateral, no borrow), regardless of price.
+        if (BORROW_RETIRED) throw new Error(BORROW_RETIRED_STATUS);
         await ensureWalletReady("Preparing borrow");
         if (!currentBorrowState) await loadBorrowPanel();
         if (currentBorrowState.ifrPriceWei === 0n) {
-          throw new Error("Borrowing is disabled until LendingVault ifrPriceWei is set on-chain.");
+          throw new Error(BORROW_RETIRED_STATUS);
         }
         const offer = selectedBorrowOffer();
         if (!offer) throw new Error("Select an active offer first.");
@@ -3963,8 +3950,9 @@
         }
       });
       lendingMax.addEventListener("click", () => {
-        if (!currentLendingState || !currentLendingState.balance) return;
-        lendingAmount.value = ethers.formatUnits(currentLendingState.balance, IFR_DECIMALS);
+        const offer = currentLendingState && currentLendingState.offer;
+        if (!offer || !offer.active) return;
+        lendingAmount.value = ethers.formatUnits(offer.availableIFR, IFR_DECIMALS);
       });
       lendingDeposit.addEventListener("click", async () => {
         try {
@@ -3976,7 +3964,7 @@
             lendingStatus.textContent = error && error.message ? error.message : "Deposit failed.";
           }
         } finally {
-          lendingDeposit.disabled = false;
+          lendingDeposit.disabled = true;
         }
       });
       lendingWithdraw.addEventListener("click", async () => {
