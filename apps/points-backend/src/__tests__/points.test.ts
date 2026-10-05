@@ -3,6 +3,7 @@ import type { Server } from "node:http";
 import app from "../app.js";
 import { prisma } from "../db.js";
 import { createToken } from "../middleware/auth.js";
+import { FixedWindowBuckets, rateLimitKey } from "../middleware/rate-limit.js";
 import { POINTS_CONFIG } from "../config/points.js";
 import { getSignerAddress } from "../services/voucher-signer.js";
 import { ethers } from "ethers";
@@ -437,6 +438,83 @@ async function run() {
     assert(addr !== ethers.ZeroAddress, "signer address is not zero");
   } else {
     console.log("  ⊘ signer tests skipped (no VOUCHER_SIGNER_PRIVATE_KEY)");
+  }
+
+  // ---- Trusted client IP: spoofed X-Forwarded-For entries cannot rotate the limit key (T-216) ----
+  console.log("\nTrusted client IP");
+  {
+    const realClient = "203.0.113.77";
+    let lastStatus = 0;
+    let okCount = 0;
+    for (let i = 0; i < 31; i++) {
+      const res = await fetch(`${baseUrl}/auth/siwe/nonce`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Forwarded-For": `10.${i}.0.1, ${realClient}` },
+      });
+      lastStatus = res.status;
+      if (res.status === 200) okCount++;
+    }
+    assert(okCount === 30 && lastStatus === 429, "nonce limit holds when the spoofed left-most entry rotates");
+    const other = await fetch(`${baseUrl}/auth/siwe/nonce`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Forwarded-For": `1.2.3.4, 198.51.100.77` },
+    });
+    assert(other.status === 200, "a different proxy-appended client keeps its own nonce budget");
+  }
+
+  // ---- Rate-limit keys: IPv4 single address, IPv4-mapped == IPv4, IPv6 /64 (T-259) ----
+  console.log("\nRate-limit keys (IPv6 /64)");
+  {
+    assert(rateLimitKey("203.0.113.7") === "203.0.113.7", "IPv4 keyed by single address");
+    assert(rateLimitKey("::ffff:203.0.113.7") === "203.0.113.7", "IPv4-mapped equals IPv4");
+    assert(rateLimitKey("::ffff:cb00:7107") === "203.0.113.7", "hex IPv4-mapped equals IPv4");
+    assert(
+      rateLimitKey("2001:db8:abcd:ef01::1") === rateLimitKey("2001:0DB8:abcd:ef01:ffff:1:2:3"),
+      "IPv6 addresses in one /64 share a key",
+    );
+    assert(rateLimitKey("2001:db8:abcd:ef01::1") === "2001:db8:abcd:ef01::/64", "IPv6 key is the /64 prefix");
+    assert(
+      rateLimitKey("2001:db8:abcd:ef01::1") !== rateLimitKey("2001:db8:abcd:ef02::1"),
+      "different /64 prefixes get different keys",
+    );
+    assert(rateLimitKey("unknown") === "unknown", "non-IP values pass through");
+
+    // Bounded map is fail-closed: a live window is never discarded to admit an unseen key.
+    const bounded = new FixedWindowBuckets(2);
+    assert(bounded.check("exhausted", 1, 3_600_000, 0), "first hit admitted");
+    assert(bounded.check("normal", 2, 60_000, 1), "second key admitted");
+    for (let i = 0; i < 20; i++) {
+      assert(!bounded.check(`churn${i}`, 5, 60_000, 10 + i), "unseen key refused at saturation");
+      assert(bounded.size <= 2, "bucket map never exceeds the cap");
+    }
+    assert(!bounded.check("exhausted", 1, 3_600_000, 100), "exhausted client stays blocked after key churn");
+    assert(bounded.check("normal", 2, 60_000, 101), "existing non-exhausted client is admitted");
+    assert(!bounded.check("normal", 2, 60_000, 102), "existing client keeps its limit");
+    assert(!bounded.check("unseen", 5, 60_000, 60_000), "no window reclaimable before expiry");
+    assert(bounded.check("unseen", 5, 60_000, 60_001), "expiry admits an unseen key again");
+    assert(bounded.size === 2, "bucket map stays at the cap");
+    assert(!bounded.check("exhausted", 1, 3_600_000, 3_599_999), "long-window budget is not reset");
+    const prefersExpired = new FixedWindowBuckets(2);
+    prefersExpired.check("active", 1, 60_000, 0);
+    prefersExpired.check("expired", 1, 10, 1);
+    prefersExpired.check("fresh", 1, 60_000, 20);
+    assert(!prefersExpired.check("active", 1, 60_000, 21), "eviction reclaims expired windows before active budgets");
+
+    // SIWE nonce: one /64 rotating addresses cannot exceed its 30-nonce budget (so it cannot fill the global cap).
+    const nonceFrom = async (client: string) =>
+      (await fetch(`${baseUrl}/auth/siwe/nonce`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Forwarded-For": client },
+      })).status;
+    const rotated: number[] = [];
+    for (let i = 1; i <= 40; i++) rotated.push(await nonceFrom(`2001:db8:abcd:ef01::${i.toString(16)}`));
+    assert(
+      rotated.filter((st) => st === 200).length === 30 && rotated.slice(30).every((st) => st === 429),
+      "IPv6 rotation inside one /64 shares one nonce bucket",
+    );
+    assert((await nonceFrom("2001:db8:abcd:ef02::1")) === 200, "a different /64 keeps its own nonce budget");
+    for (let i = 0; i < 30; i++) await nonceFrom("192.0.2.50");
+    assert((await nonceFrom("::ffff:192.0.2.50")) === 429, "IPv4-mapped client shares the IPv4 nonce bucket");
   }
 
   // ---- Summary ----

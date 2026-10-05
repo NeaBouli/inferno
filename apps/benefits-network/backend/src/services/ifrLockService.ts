@@ -20,6 +20,7 @@ const MAX_COMMITMENT_TRANCHES = 50;
 let provider: ethers.JsonRpcProvider;
 let ifrLock: ethers.Contract;
 let commitmentVault: ethers.Contract;
+let commitmentVaultV2: ethers.Contract | null;
 
 export function initProvider(): void {
   provider = new ethers.JsonRpcProvider(config.RPC_URL);
@@ -29,6 +30,19 @@ export function initProvider(): void {
     COMMITMENT_VAULT_ABI,
     provider
   );
+  commitmentVaultV2 = commitmentVaultV2Address()
+    ? new ethers.Contract(commitmentVaultV2Address() as string, COMMITMENT_VAULT_ABI, provider)
+    : null;
+}
+
+/** CommitmentVault V2 address (ifr-benefits-verify/2), or null when only V1 is configured. */
+function commitmentVaultV2Address(): string | null {
+  const value = config.COMMITMENT_VAULT_V2_ADDRESS;
+  if (!value) return null;
+  if (value.toLowerCase() === config.COMMITMENT_VAULT_ADDRESS.toLowerCase()) {
+    throw new Error('COMMITMENT_VAULT_V2_ADDRESS must differ from COMMITMENT_VAULT_ADDRESS');
+  }
+  return value;
 }
 
 function canonicalAddress(value: unknown, label: string): string {
@@ -122,6 +136,7 @@ export async function checkBenefitEligibility(
 
   const needsIFRLock = lockSource === 'ifrlock' || lockSource === 'either';
   const needsCommitment = lockSource === 'commitment_time_only' || lockSource === 'either';
+  const vaultV2 = needsCommitment ? commitmentVaultV2 : null;
   const requiredLockUnits = BigInt(requiredLockIFR) * 10n ** BigInt(IFR_DECIMALS);
   const requiredHeldUnits = BigInt(minIFRHeld) * 10n ** BigInt(IFR_DECIMALS);
 
@@ -135,6 +150,9 @@ export async function checkBenefitEligibility(
     ifrLockEligibleValue,
     ifrLockBalanceValue,
     commitmentTranchesValue,
+    commitmentV2Code,
+    commitmentV2TokenValue,
+    commitmentV2TranchesValue,
   ] = await Promise.all([
     provider.getNetwork(),
     needsIFRLock
@@ -159,6 +177,15 @@ export async function checkBenefitEligibility(
     needsCommitment
       ? commitmentVault.getTranches(wallet, { blockTag }) as Promise<unknown>
       : Promise.resolve([]),
+    vaultV2
+      ? provider.getCode(commitmentVaultV2Address() as string, blockTag)
+      : Promise.resolve('0x01'),
+    vaultV2
+      ? vaultV2.ifrToken({ blockTag }) as Promise<string>
+      : Promise.resolve(expectedToken),
+    vaultV2
+      ? vaultV2.getTranches(wallet, { blockTag }) as Promise<unknown>
+      : Promise.resolve([]),
   ]);
 
   if (Number(network.chainId) !== config.CHAIN_ID) {
@@ -167,6 +194,7 @@ export async function checkBenefitEligibility(
   if (needsIFRLock) requireContractCode(ifrLockCode, 'IFRLock');
   requireContractCode(expectedTokenCode, 'IFR token');
   if (needsCommitment) requireContractCode(commitmentCode, 'CommitmentVault');
+  if (vaultV2) requireContractCode(commitmentV2Code, 'CommitmentVault V2');
 
   if (needsIFRLock) {
     const ifrLockToken = canonicalAddress(ifrLockTokenValue, 'IFRLock token');
@@ -180,6 +208,12 @@ export async function checkBenefitEligibility(
       throw new Error('CommitmentVault token does not match the configured IFR token');
     }
   }
+  if (vaultV2) {
+    const commitmentV2Token = canonicalAddress(commitmentV2TokenValue, 'CommitmentVault V2 token');
+    if (commitmentV2Token !== expectedToken) {
+      throw new Error('CommitmentVault V2 token does not match the configured IFR token');
+    }
+  }
   if (typeof ifrLockEligibleValue !== 'boolean' || typeof ifrLockBalanceValue !== 'bigint') {
     throw new Error('IFRLock returned malformed eligibility data');
   }
@@ -188,8 +222,10 @@ export async function checkBenefitEligibility(
   const ifrLockEligible = needsIFRLock
     ? ifrLockEligibleValue && ifrLockBalanceValue >= requiredLockUnits
     : false;
+  // V1 and V2 active TIME_ONLY tranches form one source (ifr-benefits-verify/2); never added to IFRLock.
   const commitmentRaw = needsCommitment
-    ? sumActiveTimeOnlyTranches(commitmentTranchesValue)
+    ? sumActiveTimeOnlyTranches(commitmentTranchesValue) +
+      (vaultV2 ? sumActiveTimeOnlyTranches(commitmentV2TranchesValue) : 0n)
     : null;
   const commitmentEligible = commitmentRaw !== null && commitmentRaw >= requiredLockUnits;
   const lockEligible = lockSource === 'ifrlock'

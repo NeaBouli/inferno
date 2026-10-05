@@ -34,6 +34,12 @@ automatic rollback: the source dir is restored from `source.tgz`, `rollback-<UTC
 `latest`, the container is recreated with `up -d --no-build --no-deps` and must become healthy
 again. The script then exits non-zero.
 
+Transfers are content-only (`rsync -rl --checksum`, never `-t`/`-a`/`-g`/`-o`/`-p`, T-255). The
+v1 deploy user writes under `/opt/inferno` through an ACL but may not set times, owner, group or
+mode on root-owned inodes; metadata flags made rsync exit 23 on 2026-10-05. Changed files are
+rewritten as new inodes owned by the deployer with their previous mode; unchanged files are left
+alone. No right is widened, and every rsync error still fails the run and rolls back.
+
 ## Run
 
 ```bash
@@ -53,8 +59,19 @@ space, the live `RELEASE_SHA` and the itemized file changes, and warns when `dep
 scripts/deploy-compose-service.sh <service> rollback /opt/inferno/backups/<service>-<UTC>
 ```
 
-Restores the source dir from the backup, retags `rollback-<UTC>` as `latest` and recreates the
-container without building. Only timestamped backup paths of the same service are accepted.
+Restores the source dir from the backup (content-only), retags `rollback-<UTC>` as `latest` and
+recreates the container without building. The automatic and the manual rollback then prove the
+restore; the excluded env/SQLite/runtime entries are neither restored nor compared:
+
+| Check | Pass condition |
+| --- | --- |
+| (a) content | same directories and files as the extracted backup, every file byte-identical (`cmp`; `diff -rq -x` cannot anchor the root-only excludes, so nested `src/data` is compared) |
+| (b) symlinks | sorted `path -> target` lists of both trees are identical |
+| (c) access | every file the backup let others read (`o+r`) and every directory others could traverse (`o+rx`) still allows it |
+| (d) health | the recreated container reaches `healthy` |
+
+Any failed step or check stops with `ROLLBACK CHECK FAILED: <check>` and a non-zero exit. Only
+timestamped backup paths of the same service are accepted.
 Rollback tags are kept (each holds the previous image's layers); remove old ones by hand once a
 release is confirmed.
 
@@ -113,5 +130,8 @@ temporary copy of the host layout (remote commands really run there; docker, df 
 fakes with file-backed image and container state): SHA/checkout guards, env allow-list, plan
 leaves the host byte-identical, capacity refusal without prune, backup before the first write,
 excludes protect env/SQLite/data files, failed health, sync or build roll back automatically, a
-Telegram status route answering 200 fails the release, and rollback path validation. Each guard
+Telegram status route answering 200 fails the release, rollback path validation, a fake rsync
+that refuses any metadata flag on a host write (as the v1 user does) with every host-writing rsync
+asserted content-only, and a restore that fails on a tampered file, symlink, lost `o+r`, failed
+restore sync or unhealthy container. Each guard
 is mutation-checked.
