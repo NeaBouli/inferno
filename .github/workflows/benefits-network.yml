@@ -21,6 +21,7 @@ on:
       - 'scripts/test-benefits-wallet-lock-ui.js'
       - 'scripts/test-benefits-accessibility.js'
       - 'scripts/test-benefits-csp.js'
+      - 'scripts/test-benefits-wallet-telemetry.js'
       - 'scripts/test-benefits-fullstack-e2e.js'
       - 'scripts/test-benefits-bundle-budget.cjs'
       - 'scripts/test-benefits-doc-consistency.cjs'
@@ -61,6 +62,7 @@ on:
       - 'scripts/test-benefits-wallet-lock-ui.js'
       - 'scripts/test-benefits-accessibility.js'
       - 'scripts/test-benefits-csp.js'
+      - 'scripts/test-benefits-wallet-telemetry.js'
       - 'scripts/test-benefits-fullstack-e2e.js'
       - 'scripts/test-benefits-bundle-budget.cjs'
       - 'scripts/test-benefits-doc-consistency.cjs'
@@ -243,5 +245,6 @@ jobs:
           BENEFITS_BASE_URL=http://127.0.0.1:3000 npm run test:benefits-a11y
           BENEFITS_BASE_URL=http://127.0.0.1:3000 npm run test:benefits-recovery
           BENEFITS_BASE_URL=http://127.0.0.1:3000 npm run test:benefits-csp
+          BENEFITS_BASE_URL=http://127.0.0.1:3000 npm run test:benefits-wallet-telemetry
       - name: Run composed Benefits full-stack browser E2E
         run: npm run test:benefits-fullstack

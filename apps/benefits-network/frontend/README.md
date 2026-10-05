@@ -116,6 +116,7 @@ the Uniswap price-impact and user-controlled slippage warning visible.
 - React 18 + TypeScript
 - Tailwind CSS (IFR brand colors)
 - Wagmi v3 + Viem (injected, Coinbase and optional WalletConnect QR connectors)
+  - Coinbase Wallet and WalletConnect stay dormant until the visitor picks them (`src/lib/deferredWalletConnector.mjs`), and their SDK telemetry is off (`preference.telemetry: false`, `telemetryEnabled: false`). `npm run test:benefits-wallet-telemetry` (repo root) asserts no wallet telemetry request before a wallet is chosen (T-280).
 - react-qr-code (QR generation)
 - PWA (manifest.json + service worker)
 
