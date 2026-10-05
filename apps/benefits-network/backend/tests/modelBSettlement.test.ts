@@ -457,12 +457,14 @@ describe('Model B verified-redemption settlement (T-275)', () => {
     const response = await postExport({ partnerId, period, sellerConfirmedRedemptions: 2, priceEvidence: evidence() });
     expect(response.status).toBe(200);
     const exported = await response.json() as {
-      mode: string; template: unknown; blockers: string[]; reconciliation: Record<string, unknown>;
+      mode: string; template: unknown; blockers: string[];
+      reconciliation: Record<string, unknown> & { discrepancies: { code: string; count: number }[] };
     };
     expect(exported.mode).toBe('diagnostic');
     expect(exported.template).toBeNull();
     expect(exported.blockers).toContain('PERIOD_NOT_CLOSED');
     expect(exported.reconciliation).toMatchObject({ backendRedemptions: 2, rewardEventsInPeriod: 1, redemptionsWithoutRewardEvent: 1 });
+    expect(exported.reconciliation.discrepancies).toContainEqual({ code: 'REDEMPTION_WITHOUT_REWARD_EVENT', count: 1 });
 
     // A seller opt-out blocks settlement-pending events again.
     const disabled = await fetch(`${baseUrl()}/api/seller/businesses/${businessId}/rewards/disable`, {
@@ -725,7 +727,20 @@ describe('Model B verified-redemption settlement (T-275)', () => {
     expect(capped.totals).toMatchObject({ eligibleCount: 3, settleableCount: 2, ifrBaseUnits: (4_000_000_000_000n / 3n).toString() });
     expect(capped.events.excluded).toContainEqual({ id: events[2].id, reason: 'BUDGET_EXHAUSTED' });
     expect(capped.events.eligible.sort()).toEqual([events[0].id, events[1].id].sort());
-    expect(capped.mode).toBe('proposal-template');
+    // Stricter since the T-275 review (F2): a partially covered month would consume its milestoneId
+    // and strand the BUDGET_EXHAUSTED event, so it stays diagnostic. Amounts and exclusions remain
+    // visible for diagnosis; only the executable template is withheld.
+    expect(capped.blockers).toContain('BUDGET_CAPPED');
+    expect(capped.mode).toBe('diagnostic');
+    expect(capped.template).toBeNull();
+
+    // A month that exactly fits the remaining allocation still yields a template (stops exactly at budget).
+    const exactFit = await exportDirect({
+      chain: { partner: { active: true, milestonesFinal: false, maxAllocation: 3_000n * IFR, unlockedTotal: 1_000n * IFR, rewardAccrued: 0n }, pilotUsage: { [partnerId]: 1_000n * IFR, [otherPilotId]: 0n } },
+    });
+    expect(exactFit.budgets.status).toBe('WITHIN_BUDGET');
+    expect(exactFit.totals).toMatchObject({ settleableCount: 3, ifrBaseUnits: '2000000000000' });
+    expect(exactFit.mode).toBe('proposal-template');
 
     // The global pilot budget is exhausted by another pilot partner.
     const globalExhausted = await exportDirect({ chain: { pilotUsage: { [partnerId]: 0n, [otherPilotId]: 1_000_000n * IFR } } });
@@ -738,6 +753,8 @@ describe('Model B verified-redemption settlement (T-275)', () => {
     const policyCapped = await exportDirect();
     expect(policyCapped.totals.settleableCount).toBe(1);
     expect(policyCapped.totals.ifrBaseUnits).toBe('666666666666');
+    expect(policyCapped.budgets.status).toBe('CAPPED');
+    expect(policyCapped.template).toBeNull();
 
     // A settlement above the 4M annualEmissionCap is still allowed when both budgets cover it.
     mutableConfig.MODEL_B_PILOT_POLICY_JSON = JSON.stringify(policy(businessId,
@@ -746,6 +763,42 @@ describe('Model B verified-redemption settlement (T-275)', () => {
     const large = await exportDirect({ chain: { partner: { active: true, milestonesFinal: false, maxAllocation: 10_000_000n * IFR, unlockedTotal: 0n, rewardAccrued: 0n } } });
     expect(BigInt(large.totals.ifrBaseUnits as string)).toBe(6_000_000n * IFR);
     expect(large.mode).toBe('proposal-template');
+  });
+
+  it('blocks the template while a post-pilot, non-self redemption has no reward event (F1, gap G1)', async () => {
+    mutableConfig.MODEL_B_PILOT_POLICY_JSON = JSON.stringify(policy(businessId, {}, { startsAt: '2026-08-15T00:00:00Z' }));
+    const repeatCustomer = ethers.Wallet.createRandom().address;
+    const first = await redemption({ redeemedAt: '2026-08-16T00:00:00.000Z', customer: repeatCustomer });
+    // Expected missing events: owner self-test (skipped at redeem time) and a pre-pilot redemption.
+    await redemption({ redeemedAt: '2026-08-17T00:00:00.000Z', customer: owner.address, eventPartnerId: null });
+    await redemption({ redeemedAt: '2026-08-10T00:00:00.000Z', eventPartnerId: null });
+    const clean = await exportDirect();
+    expect(clean.reconciliation).toMatchObject({
+      status: 'RECONCILED',
+      redemptionsWithoutRewardEvent: 2,
+      redemptionsWithoutRewardEventReasons: { SELF_REDEMPTION: 1, PRE_PILOT: 1, MISSING_REWARD_EVENT: 0 },
+    });
+    expect(clean.mode).toBe('proposal-template');
+
+    // A repeat redemption by the same customer was dropped by the one-per-wallet outbox constraint.
+    await redemption({ redeemedAt: '2026-08-20T00:00:00.000Z', customer: repeatCustomer, eventPartnerId: null });
+    const blocked = await exportDirect();
+    expect(blocked.reconciliation).toMatchObject({
+      status: 'MISMATCH',
+      redemptionsWithoutRewardEvent: 3,
+      redemptionsWithoutRewardEventReasons: { SELF_REDEMPTION: 1, PRE_PILOT: 1, MISSING_REWARD_EVENT: 1 },
+    });
+    expect(blocked.reconciliation.discrepancies).toContainEqual({ code: 'REDEMPTION_WITHOUT_REWARD_EVENT', count: 1 });
+    expect(blocked.blockers).toContain('RECONCILIATION_DISCREPANCY');
+    expect(blocked.mode).toBe('diagnostic');
+    expect(blocked.template).toBeNull();
+    // Diagnosis keeps amounts and the eligible event; price, chain and authorization are otherwise valid.
+    expect(blocked.events.eligible).toEqual([first.event!.id]);
+    expect(blocked.totals.ifrBaseUnits).toBe('666666666666');
+    expect(blocked.priceEvidence.status).toBe('VALID');
+    expect(blocked.blockers).toEqual(['RECONCILIATION_DISCREPANCY']);
+    // The customer wallet used to explain the gap never leaves the service.
+    expect(JSON.stringify(blocked).toLowerCase()).not.toContain(repeatCustomer.toLowerCase().slice(2));
   });
 
   it('refuses a template for replayed milestones, paused vaults, lock-path use, inactive partners or missing chain state', async () => {

@@ -215,6 +215,8 @@ export interface RedemptionConfirmation {
 export interface RedemptionRecord {
   sessionId: string;
   redeemedAt: Date;
+  // Existing Session.recoveredAddress; used only to explain a missing outbox row, never exported.
+  customerWallet: string | null;
   confirmations: RedemptionConfirmation[];
 }
 
@@ -444,6 +446,7 @@ export interface SettlementExport {
     backendRedemptions: number;
     rewardEventsInPeriod: number;
     redemptionsWithoutRewardEvent: number;
+    redemptionsWithoutRewardEventReasons: { SELF_REDEMPTION: number; PRE_PILOT: number; MISSING_REWARD_EVENT: number };
     discrepancies: { code: string; count: number }[];
   };
   events: { eligible: string[]; excluded: { id: string; reason: ExclusionReason }[] };
@@ -544,6 +547,25 @@ export function buildSettlementExport(input: ExportInput): SettlementExport {
 
   const backendRedemptions = records.redemptions.length;
   const redemptionsWithEvent = records.redemptions.filter((item) => seenSessions.has(item.sessionId)).length;
+  // F1 (T-275 review): a seller-confirmed redemption without a reward event is expected only for a
+  // self-redemption (skipped by policy at redeem time) or before pilot start. Anything else (e.g. a
+  // repeat customer dropped by the one-per-wallet outbox constraint, gap G1) would be under-settled
+  // irreversibly once the month's milestoneId is consumed, so it blocks the template until the G1
+  // policy decision.
+  const withoutEventReasons = { SELF_REDEMPTION: 0, PRE_PILOT: 0, MISSING_REWARD_EVENT: 0 };
+  for (const redemption of records.redemptions) {
+    if (seenSessions.has(redemption.sessionId)) continue;
+    if (redemption.customerWallet && selfWallets.has(redemption.customerWallet.toLowerCase())) {
+      withoutEventReasons.SELF_REDEMPTION += 1;
+    } else if (redemption.redeemedAt.getTime() < pilotStart.getTime()) {
+      withoutEventReasons.PRE_PILOT += 1;
+    } else {
+      withoutEventReasons.MISSING_REWARD_EVENT += 1;
+    }
+  }
+  if (withoutEventReasons.MISSING_REWARD_EVENT > 0) {
+    addDiscrepancy('REDEMPTION_WITHOUT_REWARD_EVENT', withoutEventReasons.MISSING_REWARD_EVENT);
+  }
   let reconciliationStatus: 'RECONCILED' | 'MISMATCH' | 'INCOMPLETE' = 'RECONCILED';
   if (input.sellerConfirmedRedemptions === undefined) {
     reconciliationStatus = 'INCOMPLETE';
@@ -619,6 +641,9 @@ export function buildSettlementExport(input: ExportInput): SettlementExport {
     budgetStatus = settleableCount === eligible.length ? 'WITHIN_BUDGET' : settleableCount === 0 ? 'EXHAUSTED' : 'CAPPED';
     for (const event of eligible.slice(settleableCount)) excluded.push({ id: event.id, reason: 'BUDGET_EXHAUSTED' });
     if (eligible.length > 0 && settleableCount === 0) blockers.push('BUDGET_EXHAUSTED');
+    // F2 (T-275 review): a partially covered month would consume its milestoneId and strand the
+    // BUDGET_EXHAUSTED events forever; until a final-capped-period policy is approved it stays diagnostic.
+    else if (budgetStatus === 'CAPPED') blockers.push('BUDGET_CAPPED');
     else if (settleableCount > 0 && ifrBaseUnits === 0n) blockers.push('AMOUNT_ZERO');
   }
   if (eligible.length === 0) blockers.push('NO_ELIGIBLE_EVENTS');
@@ -686,6 +711,7 @@ export function buildSettlementExport(input: ExportInput): SettlementExport {
     backendRedemptions,
     rewardEventsInPeriod: eventsInPeriod.length,
     redemptionsWithoutRewardEvent: backendRedemptions - redemptionsWithEvent,
+    redemptionsWithoutRewardEventReasons: withoutEventReasons,
     discrepancies,
   };
 

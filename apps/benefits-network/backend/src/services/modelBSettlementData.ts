@@ -39,7 +39,7 @@ export async function loadSettlementRecords(
   const [sessions, events, orphanEvents] = await Promise.all([
     db.session.findMany({
       where: { businessId: pilot.businessId, status: 'REDEEMED', redeemedAt: range },
-      select: { id: true, redeemedAt: true },
+      select: { id: true, redeemedAt: true, recoveredAddress: true },
     }),
     db.rewardEvent.findMany({
       where: { partnerId: pilot.partnerId, session: { redeemedAt: range } },
@@ -78,6 +78,7 @@ export async function loadSettlementRecords(
     redemptions: sessions.map((session) => ({
       sessionId: session.id,
       redeemedAt: session.redeemedAt as Date,
+      customerWallet: session.recoveredAddress,
       confirmations: bySession.get(session.id) ?? [],
     })),
     events,
