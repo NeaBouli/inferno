@@ -1,8 +1,10 @@
 {
   "name": "IFR Benefits Network",
   "short_name": "IFR Benefits",
+  "id": "/",
   "description": "Customer and seller app for IFR locked-access benefits, QR verification and shop discounts",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#F5F1E8",
   "theme_color": "#B0481E",
@@ -19,6 +21,28 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "/icons/ifr-token-512-maskable-v1.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/pwa-home-narrow-v1.png",
+      "sizes": "780x1688",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "IFR Benefits home with customer and seller entry on a phone"
+    },
+    {
+      "src": "/screenshots/pwa-home-wide-v1.png",
+      "sizes": "2880x1620",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "IFR Benefits home with install card on a desktop browser"
     }
   ]
 }
