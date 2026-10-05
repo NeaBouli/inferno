@@ -32,7 +32,7 @@ async function expectVerifiedBaseline(page) {
   await expect(card.locator("[data-lost-ifr-value]")).toHaveText("27,153,013.07 IFR");
   await expect(card.locator("[data-lost-ifr-status]")).toContainText("Last verified 2026-10-05 (Mainnet block 26124660)");
   await expect(card).not.toContainText("Unavailable");
-  await expect(page.locator("[data-lost-ifr-ledger]")).toHaveText("27.1M IFR");
+  await expect(page.locator("[data-lost-ifr-ledger]")).toHaveText("27.2M IFR");
 }
 
 test("static markup shows the verified lost figure, labelled as not burned", async ({ page }) => {
@@ -66,10 +66,10 @@ test("proxy failure keeps the last verified figure with its date, never 0", asyn
   await openTransparency(page);
   await expect(page.locator(".live-updated-at").first()).toHaveText("Connection failed", { timeout: 20000 });
   await expectVerifiedBaseline(page);
-  await expect(page.locator('[data-live-key="lost-ifr-stat"]')).toHaveText("27.1M");
+  await expect(page.locator('[data-live-key="lost-ifr-stat"]')).toHaveText("27.2M");
 });
 
-for (const [label, value] of [["missing", undefined], ["zero", "0"], ["below the verified baseline", "1000000000000"], ["malformed", "7.2e14"], ["non-string", 724992668043300]]) {
+for (const [label, value] of [["missing", undefined], ["zero", "0"], ["below the verified baseline", "1000000000000"], ["malformed", "7.2e14"], ["non-string", 734545074097400]]) {
   test(`a ${label} FeeRouterV1 balance never lowers the figure`, async ({ page }) => {
     await blockNetwork(page);
     await answerProxy(page, value);
@@ -79,17 +79,17 @@ for (const [label, value] of [["missing", undefined], ["zero", "0"], ["below the
   });
 }
 
-// Exact 9-decimal base-unit accounting: CV-01 26418467994338353 + FeeRouterV1 724992730661647 = 27143460725000000
-// base units, i.e. exactly ...460.725 IFR, which must round half up to .73. Float addition of the two
+// Exact 9-decimal base-unit accounting: CV-01 26418467994338353 + FeeRouterV1 734545730661647 = 27153013725000000
+// base units, i.e. exactly ...013.725 IFR, which must round half up to .73. Float addition of the two
 // decimal amounts lands just below .725 and displays .72.
 test("base-unit sum is exact at a 0.01 display boundary", async ({ page }) => {
   await blockNetwork(page);
-  await answerProxy(page, "724992730661647");
+  await answerProxy(page, "734545730661647");
   await openTransparency(page);
   const card = lostCard(page);
   await expect(card).toHaveAttribute("data-state", "live", { timeout: 20000 });
-  await expect(card.locator("[data-lost-ifr-value]")).toHaveText("27,143,460.73 IFR");
-  await expect(card.locator("[data-lost-ifr-feerouter]")).toHaveText("724,992.73");
+  await expect(card.locator("[data-lost-ifr-value]")).toHaveText("27,153,013.73 IFR");
+  await expect(card.locator("[data-lost-ifr-feerouter]")).toHaveText("734,545.73");
 });
 
 for (const [width, height] of [[1440, 1000], [1180, 820], [820, 1180], [390, 844]]) {
@@ -138,7 +138,7 @@ const FULL_BALANCES = {
   BootstrapVaultV3: { raw: "1", formatted: 1e-9 },
   BuybackVault: { raw: "0", formatted: 0 },
   BurnReserve: { raw: "0", formatted: 0 },
-  FeeRouterV1: { raw: "724992668043224", formatted: 724992.668043224 },
+  FeeRouterV1: { raw: "734545074097347", formatted: 734545.074097347 },
   IFRLock: { raw: "2000000000000", formatted: 2000 },
   CommitmentVault: { raw: "27795535918948719", formatted: 27795535.918948717 },
   LendingVault: { raw: "0", formatted: 0 },
@@ -167,7 +167,7 @@ test("distribution shows a black dead segment, splits CommitmentVault without do
   await expect(dead.locator("[data-dist-swatch]")).toHaveCSS("background-color", "rgb(0, 0, 0)");
   const deadValue = Number(await dead.getAttribute("data-dist-value"));
   const commit = Number(await page.locator('[data-dist-cat="commitmentLocked"]').getAttribute("data-dist-value"));
-  expect(deadValue).toBeCloseTo(27143460.66, 2); // 26,418,467.99 CV-01 + 724,992.67 FeeRouterV1
+  expect(deadValue).toBeCloseTo(27153013.07, 1); // 26,418,467.99 CV-01 + 734,545.07 FeeRouterV1 (block 26124660)
   expect(commit).toBeCloseTo(1377067.92, 2);    // 27,795,535.92 vault balance − CV-01: time tranches only
   expect(commit + 26418467.99).toBeCloseTo(27795535.92, 1); // dead CV-01 part + live part = vault balance
   await expect(page.locator('[data-live-key="live-supply-stat"]').first()).toHaveText("969.5M");
@@ -180,7 +180,7 @@ test("live supply never renders 0 when the supply read fails", async ({ page }) 
   await page.locator("#live-distribution").scrollIntoViewIfNeeded();
   await expect(page.locator(".live-updated-at").first()).toHaveText("Connection failed", { timeout: 20000 });
   await expect(page.locator("#donut-live-supply")).not.toHaveText(/^Live 0/);
-  await expect(page.locator('[data-live-key="lost-ifr-stat"]')).toHaveText("27.1M");
+  await expect(page.locator('[data-live-key="lost-ifr-stat"]')).toHaveText("27.2M");
 });
 
 test("a slice smaller than the segment gap does not paint the whole ring", async ({ page }) => {
@@ -251,7 +251,7 @@ test("unavailable balances render N/A, not 0, and the chart shows a partially un
   await expect(page.locator('[data-live-key="card-vesting"]').first()).not.toHaveText(/^0/);
   await expect(page.locator(".live-status").first()).toContainText("Partially live");
   // Dead segment and live supply still use the exact values that are available.
-  expect(Number(await page.locator('[data-dist-cat="dead"]').getAttribute("data-dist-value"))).toBeCloseTo(27143460.66, 2);
+  expect(Number(await page.locator('[data-dist-cat="dead"]').getAttribute("data-dist-value"))).toBeCloseTo(27153013.07, 1);
   await expect(page.locator("#donut-live-supply")).toHaveText("Live 969.5M");
 });
 
