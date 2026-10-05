@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "updatedAt": "2026-10-02",
+  "updatedAt": "2026-10-05",
   "baseline": "a24dbe89c503fb34df1997f041be558bde0e8406",
   "statusDefinitions": {
     "fixed_and_verified": "A remediation is merged and covered by current verification evidence.",
@@ -24,7 +24,7 @@
     "Informational": 16
   },
   "canonicalTests": {
-    "contracts": "655/655",
+    "contracts": "681/681",
     "generator": "30/30",
     "sdk": "36/36",
     "landingWikiBrowser": "26/26",

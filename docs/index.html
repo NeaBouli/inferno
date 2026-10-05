@@ -1251,8 +1251,8 @@
       *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
     }
     /* Keep each contract name clear of its address on narrow screens (T-258). */
-    .contract-row { gap: 12px; }
-    .contract-row > div:first-child { min-width: 0; }
+    .contract-row { flex-wrap: wrap; gap: 8px 12px; }
+    .contract-row > div:last-child { min-width: 0; max-width: 100%; }
   </style>
   <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&display=swap" rel="stylesheet">
 <script type="application/ld+json">
@@ -1711,7 +1711,7 @@
         </div>
         <!-- TODO: IFR_UPDATE — TEST_COUNT — update on each sprint -->
         <div class="stat-card">
-          <div class="stat-value">655</div>
+          <div class="stat-value">681</div>
           <div class="stat-label">Contract tests passing</div>
         </div>
       </div>

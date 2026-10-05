@@ -22,7 +22,7 @@ that a governance-gated contract path is active.
 - Root is ESM with explicit CommonJS boundaries for legacy scripts and
   standalone test packages. Waffle, Ganache and `solidity-coverage` are no
   longer active root dependencies; native Hardhat 3 coverage is used.
-- Current repository verification: contracts `655/655`, Generator Engine
+- Current repository verification: contracts `681/681`, Generator Engine
   `30/30`, IFR SDK `36/36`.
 - Current local static-analysis candidates: recursive Slither over 21
   production sources and bounded Mythril symbolic execution over 17 concrete

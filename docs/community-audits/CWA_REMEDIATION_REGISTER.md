@@ -1,6 +1,6 @@
 # CWA-01...CWA-82 Remediation Register
 
-**Updated:** 2026-10-02
+**Updated:** 2026-10-05
 **Repository baseline:** `a24dbe89c503fb34df1997f041be558bde0e8406`
 
 This is the authoritative public status register for the seven Collateral Web3 Open
@@ -44,7 +44,7 @@ do not convert an open audit finding into a verified fix.
 
 | Suite | Current evidence |
 | --- | ---: |
-| Smart contracts | 655/655 |
+| Smart contracts | 681/681 |
 | Generator Engine | 30/30 |
 | IFR SDK | 36/36 |
 | Landing/Wiki browser | 26/26 |
