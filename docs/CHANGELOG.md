@@ -1,5 +1,13 @@
 # Changelog
 
+## 6 October 2026 — Web3 Browser Evidence Count Reconciled (T-274)
+
+- The canonical "Web3 browser" pin now reads `85/85` instead of the stale `45/45`. It counts
+  `tests/browser/web3-write.spec.js` as listed by `npx playwright test --list` (45 at 8a91d346 when the
+  pin was set, 85 on main eead5086; all 85 passed locally). "Landing/Wiki browser" stays `26/26`
+  (`wallet-connect.spec.js`, unchanged). README, llms.txt, Copilot knowledge, functionality status, the
+  CWA register and the `test-docs-truth.cjs` guard (with a corrected definition comment) moved together.
+
 ## 5 October 2026 — Partner Rewards Model B Settlement Export, Default-Off (T-275)
 
 - Benefits backend: a default-off Model B pilot policy (`MODEL_B_SETTLEMENT_ENABLED`,
