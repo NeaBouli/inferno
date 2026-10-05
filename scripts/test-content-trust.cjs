@@ -59,7 +59,13 @@ const blanketTimelockClaims = [
     "blanket all-changes-timelocked claim (CWA-25)"],
   [/(?:48[- ]?h(?:our)?\s+)?(?:delay|timelock)\s+on\s+all\s+changes/i, "blanket all-changes-timelocked claim (CWA-25)"],
   [/no\s+instant\s+admin\s+(?:access|actions)/i, "blanket no-instant-admin claim (CWA-25)"],
-  [/documented\s+untimelocked\s+exception|documented\s+exception\s+is\s+(?:owner-only\s+)?guardian\s+rotation/i,
+  // Only guardian rotation presented as THE (sole) exception is wrong; naming ownership transfer, or calling
+  // guardian rotation "an" exception, is correct and must pass.
+  [/guardian\s+rotation[^.]{0,80}?\bis\s+the\s+(?:only\s+|sole\s+)?(?:documented\s+)?(?:untimelocked\s+)?exception\b/i,
+    "guardian rotation presented as the only untimelocked path (CWA-25)"],
+  [/\bthe\s+(?:only\s+|sole\s+)?documented\s+(?:untimelocked\s+)?exception\s+is\s+(?:[a-z-]+\s+){0,3}guardian\s+rotation/i,
+    "guardian rotation presented as the only untimelocked path (CWA-25)"],
+  [/\b(?:only|sole)\s+(?:untimelocked\s+)?exception\s+is\s+(?:[a-z-]+\s+){0,3}guardian\s+rotation/i,
     "guardian rotation presented as the only untimelocked path (CWA-25)"],
 ];
 const governanceClaimFiles = [
@@ -82,6 +88,8 @@ const blanketFixtures = [
   "- Governance: 48-hour proposal timelock; guardian rotation is the documented untimelocked exception",
   "The documented exception is owner-only guardian rotation through untimelocked setGuardian.",
   "Every governance change goes through the 48h timelock.",
+  "Guardian rotation is the only untimelocked exception.",
+  "The only exception is guardian rotation through setGuardian.",
 ];
 const preciseFixtures = [
   "Parameter changes via proposals have a 48h timelock.",
@@ -91,6 +99,10 @@ const preciseFixtures = [
   "Every governance proposal is public for 48 hours before execution.",
   "Any reserve withdrawal needs a Governance proposal + 48h timelock.",
   "The untimelocked exceptions are owner-only guardian rotation through setGuardian and transferring the deployed Governance contract's ownership through owner-only setOwner (tracked as CWA-25).",
+  "Ownership transfer is a documented untimelocked exception",
+  "Governance ownership transfer through setOwner is a documented untimelocked exception (CWA-25).",
+  "Guardian rotation is a documented untimelocked exception, and so is the direct ownership transfer.",
+  "A second documented exception is the ownership transfer by the Treasury Safe, which is not timelocked.",
 ];
 const selfTestFailures = [];
 for (const text of blanketFixtures) {
