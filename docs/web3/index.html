@@ -2073,7 +2073,7 @@
       </div>
       <div class="protocol-path" data-v2-path>
         <strong>New time locks: CommitmentVault V2 only</strong>
-        <p>V2 (<code>0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F</code>) accepts time-only locks. It is fee-exempt since Governance proposal #17 (executed 04.10.2026, block 26121846); the lock button still enables only after the token reads feeExempt(V2) as true on-chain. No price lock is available: a separate PriceLockVault is built and independently reviewed, but not deployed and not active; activation needs a Sepolia rehearsal and a Governance decision.</p>
+        <p>V2 (<code>0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F</code>) accepts time-only locks. It is fee-exempt since Governance proposal #17 (executed 4 October 2026, block 26121846); the lock button still enables only after the token reads feeExempt(V2) as true on-chain. No price lock is available: a separate PriceLockVault is built and independently reviewed, but not deployed and not active; activation needs a Sepolia rehearsal, a Governance decision and its on-chain readiness scope at activation time (pool WETH reserve at least <code>minWethReserve</code>, recommended 50 ETH, and/or a valid TWAP over the TWAP window at least <code>minActivationPrice</code>; checked again on every new lock).</p>
       </div>
 
       <div class="protocol-grid">

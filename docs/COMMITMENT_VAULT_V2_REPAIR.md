@@ -85,11 +85,11 @@ address, including V1, before writing a file. For proposal #17 the inner call eq
 - Check the decoded call: target `Governance`, inner target `InfernoToken`, `setFeeExempt(<V2>, true)`.
 - Sign and execute.
 
-### 4. Execute after the delay (Safe) — open, from 2026-10-04 21:53:11 UTC
+### 4. Execute after the delay (Safe) — done, executed 4 October 2026
 
-- Wait until the proposal `eta` has passed (48 hours).
-- Import step 2, check the proposal id, then sign and execute.
-- Verify that `InfernoToken.feeExempt(<V2>)` returns `true`.
+- Executed by the Treasury Safe in block 26121846, TX
+  `0xbb53640ca8fd59513c8c772a0ceb633d63d7d9837768c28535bd67da6c4a835c`.
+- Post-execution check: `InfernoToken.feeExempt(<V2>)` returns `true` (verified).
 
 ### 5. Switch the interfaces (repository PR)
 

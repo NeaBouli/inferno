@@ -193,7 +193,7 @@ EOAs must not be treated as current treasury or community control addresses.
 
 | Setting | Value |
 |---------|-------|
-| FeeExempt | Vesting, LiquidityReserve, BuybackVault, BurnReserve, IFRLock, PartnerVault, Treasury, CommitmentVault, LendingVault, BuybackController and LP Token; the controller and LP exemptions are executed |
+| FeeExempt | Vesting, LiquidityReserve, BuybackVault, BurnReserve, IFRLock, PartnerVault, Treasury, CommitmentVault (V1), CommitmentVault V2 (proposal #17, executed 4 October 2026), LendingVault, BuybackController and LP Token; the controller and LP exemptions are executed |
 | Deployer FeeExempt | Removed |
 | LiquidityReserve Lock | 180 days |
 | Vesting Cliff | 12 months |
@@ -273,7 +273,7 @@ All ownable contracts transferred to Governance (48h Timelock). Parameter change
 | LP custody | **Done** — LP tokens remain in withdrawal-less BootstrapVaultV3; Mainnet Team.Finance path disabled |
 | Proposal #15: setFeeExempt(LP Token) | **Executed** (08.06.2026) |
 | CommitmentVault V2 deployed (CV-01 repair) | **Done** (02.10.2026) — [`0x8efae0C8...`](https://etherscan.io/address/0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F#code) — TX [`0x9857a570...`](https://etherscan.io/tx/0x9857a5707b650b8828f41b893f91a10ff26d7990742e782bb0b7e86df23ea0f7); Etherscan verified (full solc input) and Sourcify exact match |
-| Proposal #17: setFeeExempt(CommitmentVault V2) | **Executed** (04.10.2026, block 26121846) — queued 02.10.2026 by TreasurySafe 3-of-5, TX [`0x6e113b6c...`](https://etherscan.io/tx/0x6e113b6cc66a369604d46c3b4a5560f1418302de6ecc371f1217d72aeabd39bd); executed TX [`0xbb53640c...`](https://etherscan.io/tx/0xbb53640ca8fd59513c8c772a0ceb633d63d7d9837768c28535bd67da6c4a835c) |
+| Proposal #17: setFeeExempt(CommitmentVault V2) | **Executed** (4 October 2026, block 26121846) — queued 2 October 2026 by TreasurySafe 3-of-5, TX [`0x6e113b6c...`](https://etherscan.io/tx/0x6e113b6cc66a369604d46c3b4a5560f1418302de6ecc371f1217d72aeabd39bd); executed TX [`0xbb53640c...`](https://etherscan.io/tx/0xbb53640ca8fd59513c8c772a0ceb633d63d7d9837768c28535bd67da6c4a835c) |
 | Transfer InfernoToken Ownership to Governance | **Done** (2026-03-05) |
 | Transfer LiquidityReserve Ownership to Governance | **Done** (2026-03-05) |
 | Transfer BurnReserve Ownership to Governance | **Done** (2026-03-05) |

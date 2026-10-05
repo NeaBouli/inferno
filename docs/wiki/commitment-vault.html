@@ -833,7 +833,7 @@
       <h2 id="bedingungstypen">2. Condition Types</h2>
 
       <div class="callout">
-        <p><strong>Only time locks are offered.</strong> CommitmentVault V1 defined four condition types, but its deployed contract cannot evaluate a price: price-conditioned tranches (B and D) can never unlock, and C unlocks only through its time condition. The lock widget therefore offers only <strong>A) Time Only</strong>; price types are disabled. New time locks go to CommitmentVault V2, fee-exempt since Governance proposal #17 (executed 04.10.2026). The affected Mainnet tranches and the compensation proposal are documented in <a href="commitment-vault-compensation.html">CV-01</a>.</p>
+        <p><strong>Only time locks are offered.</strong> CommitmentVault V1 defined four condition types, but its deployed contract cannot evaluate a price: price-conditioned tranches (B and D) can never unlock, and C unlocks only through its time condition. The lock widget therefore offers only <strong>A) Time Only</strong>; price types are disabled. New time locks go to CommitmentVault V2, fee-exempt since Governance proposal #17 (executed 4 October 2026). The affected Mainnet tranches and the compensation proposal are documented in <a href="commitment-vault-compensation.html">CV-01</a>.</p>
       </div>
 
       <h3>A) TIME ONLY</h3>
@@ -968,7 +968,7 @@
       <p>If you lose access to your wallet, nobody can recover the tokens: <code>unlock()</code> always pays the original wallet. Auto-Unlock only lets anyone trigger the release 30 days after a met condition (for example a passed unlock date); the tokens still arrive in that same wallet.</p>
 
       <h3 id="cv01-notice">Is CommitmentVault live?</h3>
-      <p><strong style="color:var(--green);">Yes.</strong> CommitmentVault V1 is deployed on Ethereum Mainnet and feeExempt is active. Its price check never returns a price, so PRICE_ONLY and TIME_AND_PRICE tranches can never unlock, while TIME_OR_PRICE tranches still unlock by their time condition (<a href="#cv01-notice">CV-01</a>). The self-service widget below therefore creates time-only locks, and new time locks go to CommitmentVault V2 (<code>0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F</code>, time only), which is fee-exempt since Governance proposal #17 (executed 04.10.2026, block 26121846). The lock button enables only after the widget confirms feeExempt(V2) on-chain; existing V1 tranches remain visible and unlock through V1. Price-based locks are disabled.</p>
+      <p><strong style="color:var(--green);">Yes.</strong> CommitmentVault V1 is deployed on Ethereum Mainnet and feeExempt is active. Its price check never returns a price, so PRICE_ONLY and TIME_AND_PRICE tranches can never unlock, while TIME_OR_PRICE tranches still unlock by their time condition (<a href="#cv01-notice">CV-01</a>). The self-service widget below therefore creates time-only locks, and new time locks go to CommitmentVault V2 (<code>0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F</code>, time only), which is fee-exempt since Governance proposal #17 (executed 4 October 2026, block 26121846). The lock button enables only after the widget confirms feeExempt(V2) on-chain; existing V1 tranches remain visible and unlock through V1. Price-based locks are disabled.</p>
 
       <!-- ============================================================
            Why CommitmentVault Is Critical After Bootstrap
@@ -1036,7 +1036,7 @@
       </div>
       <div class="cv-widget cv-v2-path" id="cv-v2-path" data-v2-path>
         <strong>New time locks: CommitmentVault V2 only</strong>
-        <p>V2 (<code>0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F</code>) accepts time-only locks. It is fee-exempt since Governance proposal #17 (executed 04.10.2026, block 26121846); the lock button still enables only after the token reads feeExempt(V2) as true on-chain. No price lock is available: a separate PriceLockVault is built and independently reviewed, but not deployed and not active; activation needs a Sepolia rehearsal and a Governance decision.</p>
+        <p>V2 (<code>0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F</code>) accepts time-only locks. It is fee-exempt since Governance proposal #17 (executed 4 October 2026, block 26121846); the lock button still enables only after the token reads feeExempt(V2) as true on-chain. No price lock is available: a separate PriceLockVault is built and independently reviewed, but not deployed and not active; activation needs a Sepolia rehearsal and a Governance decision.</p>
       </div>
 
       <!-- Live Status Banner -->
