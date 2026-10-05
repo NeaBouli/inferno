@@ -44,7 +44,7 @@ do not convert an open audit finding into a verified fix.
 
 | Suite | Current evidence |
 | --- | ---: |
-| Smart contracts | 681/681 |
+| Smart contracts | 690/690 |
 | Generator Engine | 30/30 |
 | IFR SDK | 36/36 |
 | Landing/Wiki browser | 26/26 |
