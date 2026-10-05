@@ -168,7 +168,7 @@ with their audit, testnet and on-chain authorization gates, are tracked in the
 
 - [ ] Advanced lock types (tiered, time-based, NFT-gated)
 - [ ] Builder self-service portal
-- [ ] Seller/customer commerce app scaling: embedded wallet, App Store / Play Store wrapper, advanced catalog search/inventory, reward analytics
+- [ ] Seller/customer commerce app scaling: external self-custody wallets only (no embedded wallet planned), App Store / Play Store wrapper, advanced catalog search/inventory, reward analytics
 - [ ] Cross-protocol integrations
 - [ ] Advanced analytics dashboard
 - [ ] Community grants program

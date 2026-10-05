@@ -27,6 +27,9 @@ jobs:
       - name: Verify workflow token permissions
         run: npm run test:workflow-permissions
 
+      - name: Verify fail-closed SDK release gate
+        run: node scripts/test-sdk-release-gate.cjs
+
       - name: Verify security toolchain pins
         run: npm run test:security-toolchain-pins
 

@@ -974,3 +974,72 @@ Change only `scripts/pool-fee-receiver-proposal.cjs`,
 `test/fork/PoolFeeReceiverFork.test.js`, `docs/POOL_FEE_RECEIVER.md` und der
 Lane-3-Eintrag in `docs/GOVERNANCE_PRODUCT_DECISION_REGISTER.md`.
 Guardian-Spur (Trace 12), Contracts und Deployments bleiben unberührt.
+
+## 14. Benefits PWA install shell trace
+
+Scope: task T-266. One surface only: the install/identity shell of
+`apps/benefits-network/frontend` — web app manifest, service-worker release
+versioning, iOS standalone meta and the home install card. Wallet,
+eligibility, backend, privacy and data storage are untouched.
+
+### 14.1 Grundidee
+
+The Benefits frontend is an installable PWA served from
+`https://shop.ifrunit.tech`. Install identity must be stable (`id`, `scope`,
+`start_url` all `/`), the Android/WebAPK icon must survive maskable cropping
+(safe zone), iOS must get standalone hints via apple meta tags, and every
+release must move clients to the new asset set by bumping the service-worker
+cache name plus registration query in lockstep.
+
+### 14.2 Spur (Hop-Liste)
+
+1. browser → `public/manifest.json` — Daten: install identity (`id`, `scope`,
+   `start_url`), `purpose: "any"` icons, `purpose: "maskable"` 512 icon,
+   narrow/wide `screenshots`.
+2. `src/app/layout.tsx` metadata → `<head>` — Daten: `manifest` link, iOS
+   standalone meta (`appleWebApp`), apple-touch-icon 180, theme color.
+3. `src/app/layout.tsx` inline script → `navigator.serviceWorker.register(
+   '/sw.js?v=<n>', { updateViaCache: 'none' })` — Daten: versioned SW URL;
+   `controllerchange` triggers at most one reload per release per session.
+4. `public/sw.js` install/activate — Daten: `CACHE_NAME =
+   'ifr-benefits-v<n>'` precache of manifest/icons/offline shell; activation
+   deletes only stale `ifr-benefits-*` caches.
+5. `src/app/page.tsx::PwaInstallCard` — Daten: `beforeinstallprompt` /
+   platform detection → install CTA and per-platform steps.
+
+### 14.3 Module
+
+| Modul | Eine Aufgabe | Einstieg | Stand |
+| --- | --- | --- | --- |
+| benefits pwa manifest | install identity, icons (any + maskable), screenshots | `apps/benefits-network/frontend/public/manifest.json` | gebaut |
+| benefits ios shell meta | iOS standalone capability, status bar, app title, touch icon | `apps/benefits-network/frontend/src/app/layout.tsx` (metadata `appleWebApp`) | gebaut |
+| benefits sw release | cache-name + registration-version bump so clients pick up the new manifest | `public/sw.js::CACHE_NAME` + `layout.tsx` register URL | gebaut |
+| benefits install card | platform-aware install guidance and prompt | `src/app/page.tsx::PwaInstallCard` | gebaut (unveraendert) |
+| benefits sw contract tests | version pins and lifecycle assertions for the SW release | `scripts/test-benefits-service-worker.js`, `scripts/test-benefits-offline-shell.js`, `scripts/smoke-benefits-network.js` | gebaut |
+
+### 14.4 Verdrahtung
+
+- Cache name (`sw.js`) and registration query (`layout.tsx`) always move
+  together; the contract tests pin both to the same release number.
+- The maskable icon is generated from the canonical `ifr-token-512-v11.png`
+  scaled into the 80 % safe zone on `background_color` #F5F1E8; the `any`
+  icons stay byte-identical to the token-list assets (sha256-pinned).
+- Manifest screenshots are real captures of the home route (narrow 780x1688,
+  wide 2880x1620) stored under `public/screenshots/`.
+
+### 14.5 Widerspruch und Lücken
+
+- iOS still has no in-page install prompt; the card documents the share-sheet
+  path (unchanged behavior, now with correct standalone meta).
+- `orientation: portrait` remains a product decision, not a defect.
+
+### 14.6 Diagrammdateien
+
+- Keine neuen; `docs/architecture/map.puml` und `main-path.puml` unveraendert.
+
+### 14.7 Nächster Schritt
+
+Done in this diff: manifest identity/maskable/screenshots, iOS meta, SW
+release v24, version-pin sync in the three contract tests. Untouched by
+design: wallet flow, eligibility, backend, privacy/local-data surfaces and
+the install-card component itself.
