@@ -7,6 +7,12 @@
 // ballot A can never verify for ballot B. A vote record without a signature over a published
 // ballot-bound text is "unverified": it is shown as such and never counted. Signer addresses are the
 // ones listed in this record; this checker does not verify Safe ownership on-chain.
+//
+// "verified" / "counted" therefore means exactly one thing: the signature cryptographically recovers
+// the listed wallet over the exact published ballot text, checked locally and offline. The `etherscan`
+// verifySig link is a published reference that lets anyone re-check the same signature on Etherscan;
+// this checker only validates the link format. It makes no network calls (it runs offline and in CI),
+// so it never fetches or compares the Etherscan record, and a vote's status never depends on that link.
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -51,7 +57,8 @@ function checkVote(ballot, vote, address, key) {
   assert.ok(text !== undefined, `${key}: signed ${vote.choice} has no published ballot-bound text on ${ballot.id}`);
   assert.equal(vote.messageHash, hashMessage(text), `${key}: signed message is not the published ${ballot.id} ${vote.choice} text`);
   assert.equal(getAddress(verifyMessage(text, vote.signature)), address, `${key}: signature over the ${ballot.id} ${vote.choice} text does not recover to the signer`);
-  assert.match(vote.etherscan ?? "", /^https:\/\/etherscan\.io\/verifySig\/\d+$/, `${key}: Etherscan verifySig link`);
+  // Reference link only: format check, not proof. The proof is the local recovery above.
+  assert.match(vote.etherscan ?? "", /^https:\/\/etherscan\.io\/verifySig\/\d+$/, `${key}: Etherscan verifySig reference link (format only)`);
   return "verified";
 }
 
@@ -103,5 +110,6 @@ if (require.main === module) {
     console.log(`[council-votes] ${id}: ${counts}, abstain ${t.abstain}, unverified (not counted) ${t.unverified} -> ${t.status}`);
   }
   const verified = votes.filter((v) => v.status === "verified").length;
-  console.log(`[council-votes] PASS - ${verified} signatures verified against their exact ballot texts; ${votes.length - verified} unverified record(s) not counted`);
+  console.log(`[council-votes] PASS - ${verified} signatures verified locally (each recovers its listed wallet over its exact ballot text); ${votes.length - verified} unverified record(s) not counted`);
+  console.log("[council-votes] note - Etherscan verifySig links are published references, format-checked only; this checker makes no network calls");
 }

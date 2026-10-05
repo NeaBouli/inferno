@@ -53,7 +53,7 @@ requireText('docs/wiki/fee-design.html', [
 
 requireText('docs/wiki/governance.html', [
   'id="council-agenda"',
-  'Status: open ballots since 3 October 2026',
+  'Status: EX-01 approved on 4 October 2026; EX-02 open.',
   'council-votes.html',
   'Agenda entries contain no proposer attribution or personal name',
   'No IFR is allocated',

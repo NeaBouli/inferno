@@ -172,8 +172,10 @@ remains the only place where agenda items and vote outcomes are published.
 
 - **Current truth:** the CEX transfer-fee exemption policy was approved on
   26.08.2026 (vote 4-1); no exchange address is active yet. EX-01 was
-  approved on 2026-10-04 with 3 YES (G.M., M.G., Y.K.): exchanges receive no
-  IFR incentives from any project pool (policy decision, no on-chain action).
+  approved on 2026-10-04 with 3 YES votes: exchanges receive no IFR
+  incentives from any project pool (policy decision, no on-chain action). The
+  signer-level record is public on
+  [Council Votes](wiki/council-votes.html).
   EX-02 (governance role) is open: three eligible signers abstained; with two
   signers outstanding no option can reach 3 votes unless votes change. Until a
   decision, the status quo applies: exchanges have no governance role. The owner

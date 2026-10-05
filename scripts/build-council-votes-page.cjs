@@ -45,7 +45,7 @@ function render() {
     if (ballot.note) out.push(`        <p style="color:var(--muted);font-size:0.85rem;">${esc(ballot.note)}</p>`);
     out.push('        <div class="table-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">');
     out.push('        <table style="min-width:600px;">');
-    out.push("          <thead><tr><th>Signer</th><th>Wallet</th><th>Vote</th><th>Proof</th></tr></thead>");
+    out.push("          <thead><tr><th>Signer</th><th>Wallet</th><th>Vote</th><th>Signature (checked locally) · Etherscan reference</th></tr></thead>");
     out.push("          <tbody>");
     for (const initials of ballot.eligible) {
       const vote = votes.find((v) => v.signer === initials);
@@ -58,7 +58,7 @@ function render() {
         out.push(`            <tr class="vote-unverified"><td>${esc(initials)}</td><td>${wallet}</td><td>${esc(vote.choice)} — unverified</td><td>not recorded: no published signature over the ${esc(ballot.id)} ${esc(vote.choice)} text; not counted</td></tr>`);
         continue;
       }
-      const proof = `<a href="${esc(vote.etherscan)}" rel="noopener">${esc(vote.etherscan.replace("https://", ""))}</a><div class="sig">signed: ${esc(ballot.id)} ${esc(vote.choice)} text · hash ${esc(vote.messageHash)}</div>`;
+      const proof = `<a href="${esc(vote.etherscan)}" rel="noopener">${esc(vote.etherscan.replace("https://", ""))}</a><div class="sig">signed: ${esc(ballot.id)} ${esc(vote.choice)} text · hash ${esc(vote.messageHash)} · signature recovers the listed wallet (local check)</div>`;
       out.push(`            <tr><td>${esc(initials)}</td><td>${wallet}</td><td>${esc(vote.choice)}</td><td>${proof}</td></tr>`);
     }
     out.push("          </tbody>");
