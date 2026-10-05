@@ -56,4 +56,5 @@ assert.match(web3, /\.protocol-close \{[^}]*width: 44px;[^}]*height: 44px;/, "pr
 const bodyRule = web3.match(/\n    body \{([^}]*)\}/);
 assert.ok(bodyRule, "web3 body rule missing");
 assert.doesNotMatch(bodyRule[1], /min-width:\s*[1-9]\d*px/, "web3 body must not set a fixed pixel min-width (15px desktop scrollbar at 320px overflows, T-264)");
+assert.match(web3, /@media \(max-width: 400px\) \{[\s\S]*?\.brand-name \{[^}]*flex-direction: column;/, "web3 header must stack the brand name on narrow phones so Connect Wallet cannot cover it (T-264)");
 console.log("[commitment-vault-copy] PASS - stuck types named precisely, no Auto-Unlock safety or price-benefit claims, compensation page live state, fixed dialog title sizes");
