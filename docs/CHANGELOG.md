@@ -1,5 +1,15 @@
 # Changelog
 
+## 6 October 2026 — Canonical Contract Test Count 693 (T-275 Follow-Up)
+
+- `npx hardhat test` on main `f39de412` passes 693 tests (690 before, plus the three PartnerVault
+  Model B template tests from #216).
+- README, both status reports, the press kit, `llms.txt`, the functionality status, the testnet
+  guide, the landing and wiki stats, the wiki FAQ, the Copilot greeting and knowledge, the CWA register
+  (rebuilt with `build:cwa-register`) and the wiki RAG now show 693. The guards in `test-docs-truth`,
+  `test-functionality-status`, `test-status-baseline` and `check-cwa-remediation-register` check the
+  new value. Dated audit figures are unchanged.
+
 ## 6 October 2026 — Web3 Browser Evidence Count Reconciled (T-274)
 
 - The canonical "Web3 browser" pin now reads `85/85` instead of the stale `45/45`. It counts

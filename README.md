@@ -138,7 +138,7 @@ The ecosystem is open and permissionless. Any product can integrate IFR Lock.
 
 **Automated test evidence** — current exact results are recorded by CI and release preflights. The tables below preserve an older internal inventory and must not be read as a current deduplicated total.
 
-**Current canonical matrix:** contracts **690/690**, Generator Engine **30/30**,
+**Current canonical matrix:** contracts **693/693**, Generator Engine **30/30**,
 IFR SDK **36/36**, Landing/Wiki browser **26/26**, Web3 browser **85/85**.
 See [Current Functionality Status](docs/CURRENT_FUNCTIONALITY_STATUS.md) for
 scope and limitations.

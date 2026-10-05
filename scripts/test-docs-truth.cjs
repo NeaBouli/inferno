@@ -112,9 +112,9 @@ for (const relative of currentSurfaces) {
 
 // Tests: the register's canonical contract count is the current reproduced count.
 const register = JSON.parse(read("docs/community-audits/cwa-remediation-register.json"));
-assert.equal(register.canonicalTests.contracts, "690/690");
+assert.equal(register.canonicalTests.contracts, "693/693");
 const status = read("docs/CURRENT_FUNCTIONALITY_STATUS.md");
-assert.ok(status.includes("`690/690` passing"));
+assert.ok(status.includes("`693/693` passing"));
 // Browser suites: "Landing/Wiki browser" = tests/browser/wallet-connect.spec.js (26) and
 // "Web3 browser" = tests/browser/web3-write.spec.js (85), each reproduced with
 // `npx playwright test tests/browser/<spec> --list` on main eead5086 (T-274).
@@ -160,4 +160,4 @@ for (const evidence of [
   assert.ok(fs.existsSync(path.join(root, evidence)), `inventory evidence missing: ${evidence}`);
 }
 
-console.log("[docs-truth] PASS - 15 contracts + 3 Safes = 18; 690 tests; historical coverage labelled; 7 deployment units");
+console.log("[docs-truth] PASS - 15 contracts + 3 Safes = 18; 693 tests; historical coverage labelled; 7 deployment units");

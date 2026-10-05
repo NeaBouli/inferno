@@ -197,11 +197,11 @@ assert.ok(contentAudit.includes("10 Medium · 7 Low · 1 Informational"));
 assert.ok(contentAudit.includes("Editorial correction — 2026-09-19"));
 
 const currentCountMarkers = {
-  "README.md": ["contracts **690/690**", "Generator Engine **30/30**", "IFR SDK **36/36**"],
-  "docs/index.html": ['<div class="stat-value">690</div>'],
-  "docs/llms.txt": ["contracts 690/690", "Generator Engine 30/30", "IFR SDK 36/36"],
-  "apps/ai-copilot/server/index.ts": ["690 contract tests", "30 Generator Engine", "36 SDK"],
-  "apps/ai-copilot/src/context/ifr-knowledge.ts": ["contracts 690/690", "30/30 Generator Engine tests passing"],
+  "README.md": ["contracts **693/693**", "Generator Engine **30/30**", "IFR SDK **36/36**"],
+  "docs/index.html": ['<div class="stat-value">693</div>'],
+  "docs/llms.txt": ["contracts 693/693", "Generator Engine 30/30", "IFR SDK 36/36"],
+  "apps/ai-copilot/server/index.ts": ["693 contract tests", "30 Generator Engine", "36 SDK"],
+  "apps/ai-copilot/src/context/ifr-knowledge.ts": ["contracts 693/693", "30/30 Generator Engine tests passing"],
 };
 for (const [relative, markers] of Object.entries(currentCountMarkers)) {
   const content = fs.readFileSync(path.join(root, relative), "utf8");

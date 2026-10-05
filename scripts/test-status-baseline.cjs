@@ -55,7 +55,7 @@ const currentBaseline = [
   "**Current engineering baseline:** 2 October 2026",
   "Current repository verification",
   "Hardhat `3.18.0`",
-  "contracts `690/690`",
+  "contracts `693/693`",
   "`45/45` passed",
   "Root `npm audit`: 0 vulnerabilities",
   "Benefits physical device/wallet acceptance remains `1/10`",
