@@ -4,15 +4,17 @@
 (`FeeRouterV1.setVoucherSigner(0x790D99c320dafA03d83bEa152178A6523b49CA0d)`) on 2026-10-05 07:17:47 UTC in block
 26124623, TX [`0x40a856b9…cd89679`](https://etherscan.io/tx/0x40a856b9f994a17390c042abe851c5ff99ca86289eb86316eb119f465cd89679).
 `FeeRouterV1.voucherSigner()` now returns `0x790D…CA0d`, and the points backend activated the same signer within the
-same minute (reported active signer = on-chain signer). Steps 1-5 are done; step 6 (Safe owner key replacement) is
-outside this repository and tracked separately. Every Mainnet and production step below is performed by the host
+same minute (reported active signer = on-chain signer). Steps 1-5 are done; step 6 (Safe owner key check) needs no
+key replacement on current evidence, see step 6. Every Mainnet and production step below is performed by the host
 operator or the Safe signers, never by automation.
 
 ## Why
 
 Until proposal 18, `FeeRouterV1.voucherSigner()` was `0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4`, which is also an
-owner of all three project Safes. The points backend signs discount vouchers with `VOUCHER_SIGNER_PRIVATE_KEY`, so that Safe owner key
-sits on an internet-facing host. A host compromise would yield one of the three Safe signatures needed.
+owner of all three project Safes. The audit (CWA-06) assumed the points backend signed vouchers with that Safe owner key on an
+internet-facing host. Operator evidence before the rotation showed otherwise: the backend held a different key (`0xd9a0…`), so
+the overlap existed in the on-chain configuration, not as a Safe owner key stored on the host. Rotating to a dedicated signer
+removes the overlap either way.
 
 The voucher key can only grant protocol-fee discounts (`discountBps`, bounded uses and expiry). It cannot move funds.
 A dedicated key that owns nothing else keeps that small blast radius and separates it from Safe custody.
@@ -42,8 +44,10 @@ A dedicated key that owns nothing else keeps that small blast radius and separat
    `cp -p .env.points-backend.voucher-rotation.bak .env.points-backend` in the host root and recreate the container;
    keep the backup in place. A missing, foreign or inconsistent backup, marker or staging file, or a leftover lock
    from a killed run, stops `activate` before the env file changes; resolve it by hand.
-6. **Replace the Safe owner key (open, outside this repository).** The former signer swaps `0x17F8…72d4` for a fresh wallet in all three Safes,
-   because that key was stored on the host.
+6. **Safe owner key check (no replacement required on current evidence).** The former on-chain signer address `0x17F8…72d4`
+   is also a Safe owner address, but the host never held that key: before the rotation the backend reported a different
+   active signer (`0xd9a0…`) than the on-chain one. A Safe owner replacement is only needed if the holder of `0x17F8…72d4`
+   reports an exposure elsewhere; that confirmation is pending.
 
 Between steps 4 and 5, vouchers signed with the old key are rejected on-chain; run step 5 promptly.
 

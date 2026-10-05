@@ -2818,14 +2818,14 @@ if (isLocked) {
         <p class="transparency-status" data-transparency-status>Reading Ethereum Mainnet&hellip;</p>
       </div>
       <div class="lost-ifr-card" data-lost-ifr data-state="verified" style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:28px 24px;text-align:center;">
-        <div data-lost-ifr-value style="font-size:32px;font-weight:700;color:#ff6a00;">27,143,460.66 IFR</div>
+        <div data-lost-ifr-value style="font-size:32px;font-weight:700;color:#ff6a00;">27,153,013.07 IFR</div>
         <div style="color:#aaa;margin-top:8px;">Permanently Lost IFR</div>
         <div style="color:#666;font-size:13px;margin-top:4px;">Irrecoverable, not burned &mdash; still counted in totalSupply.
           <span data-lost-ifr-cv01>26,418,467.99</span> in CommitmentVault V1 price tranches
           (<a href="wiki/commitment-vault-compensation.html" style="color:#aaa;">CV-01</a>) +
-          <span data-lost-ifr-feerouter>724,992.67</span> pool fees in FeeRouterV1
+          <span data-lost-ifr-feerouter>734,545.07</span> pool fees in FeeRouterV1
           (<a href="wiki/transparency.html#lost-ifr" style="color:#aaa;">CWA-02</a>)</div>
-        <p class="transparency-status" data-lost-ifr-status>Last verified 2026-10-03 (Mainnet block 26108134)</p>
+        <p class="transparency-status" data-lost-ifr-status>Last verified 2026-10-05 (Mainnet block 26124660)</p>
       </div>
       <div style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:28px 24px;text-align:center;">
         <div style="font-size:32px;font-weight:700;color:#ff6a00;"><span data-live-key="lending-available-stat">loading&hellip;</span></div>
@@ -3731,7 +3731,7 @@ if (isLocked) {
   // 26124660, balance 734,545.074097347 IFR as of that block). A failed read keeps the last
   // verified figure with its date; this metric never renders 0 or "Unavailable".
   // All IFR arithmetic uses 9-decimal base units (BigInt); decimals are formatted only at the UI boundary.
-  var LOST_IFR = { cv01Raw: '26418467994338353', feeRouterRaw: '724992668043224', block: 26108134, date: '2026-10-03' };
+  var LOST_IFR = { cv01Raw: '26418467994338353', feeRouterRaw: '734545074097347', block: 26124660, date: '2026-10-05' };
   function parseBaseUnits(s) { return (typeof s === 'string' && /^[0-9]{1,30}$/.test(s)) ? BigInt(s) : null; }
   function groupThousands(digits) { return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
   function fmtBaseUnits2(raw) { // round half up to 0.01 IFR

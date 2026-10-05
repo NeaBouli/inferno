@@ -29,8 +29,8 @@ async function openTransparency(page) {
 async function expectVerifiedBaseline(page) {
   const card = lostCard(page);
   await expect(card).toHaveAttribute("data-state", "verified");
-  await expect(card.locator("[data-lost-ifr-value]")).toHaveText("27,143,460.66 IFR");
-  await expect(card.locator("[data-lost-ifr-status]")).toContainText("Last verified 2026-10-03 (Mainnet block 26108134)");
+  await expect(card.locator("[data-lost-ifr-value]")).toHaveText("27,153,013.07 IFR");
+  await expect(card.locator("[data-lost-ifr-status]")).toContainText("Last verified 2026-10-05 (Mainnet block 26124660)");
   await expect(card).not.toContainText("Unavailable");
   await expect(page.locator("[data-lost-ifr-ledger]")).toHaveText("27.1M IFR");
 }
