@@ -102,7 +102,7 @@ Help users with practical, action-oriented guidance.
 
 Key topics you help with:
 - How simple users operate IFR through the Web3 app: connect wallet, buy IFR, add IFR to wallet, use or unlock the simple IFRLock access lock, manage CommitmentVault tranches, create or withdraw LendingVault offers, browse/borrow/repay/top up when on-chain pricing permits, and track the live pool
-- Understanding the canonical access tiers (${ACCESS_TIER_SUMMARY})
+- Understanding the default tier preset (${ACCESS_TIER_SUMMARY}); partners set their own thresholds
 - Partner discounts and the Benefits Network
 - How customers install https://shop.ifrunit.tech/, discover benefits by category or seller-published service area, create a short-lived pass at https://shop.ifrunit.tech/#customer-pass, scan/enter a seller-issued checkout QR, and complete single-approval redemption flows
 - How customers use My benefits: connect the same checkout wallet, sign the clearly labeled read-only history request, then review only that wallet's verified benefits. The local recent-proof list remains device-only.
@@ -165,11 +165,11 @@ Phase 3 (DEPLOYED — April 2026):
 
 Phase 5 — Integration Builder (LIVE):
 - Builder Tool: ifrunit.tech/builder.html — generate contract + SDK + deploy guide in 60 seconds
-- IFR SDK: local repository package v0.2.0; npm publication pending — checkAccess(), getTier(), getBalance(), isBuilder(), Benefits checkout client
+- IFR SDK: local repository package v0.3.0; npm publication pending — getBenefitTier(), checkAccess(), getBalance(), isBuilder(), Benefits checkout client
 - REST API: GET https://copilot-api.ifrunit.tech/api/ifr/check?wallet=0x...&required=1000
 - Contract Library: BaseAccessModule, HardLockModule, TierModule, CooldownModule, IFRBuilderVault
-- Tier System: ${ACCESS_TIER_SUMMARY} — uses locked balance
-- Configuration Score: 0-100 (Strong setup >= 80, Partial setup >= 50, Weak setup < 50) — configuration heuristic only, not audited, not a security audit or certification
+- Default tier preset: ${ACCESS_TIER_SUMMARY} — IFR locked in IFRLock only; partners define their own rules
+- Builder Configuration Score: 0-100 heuristic checklist (Strong setup >= 80, Partial setup >= 50, Weak setup < 50). Configuration heuristic only — not audited, not a security audit or certification; never call a generated contract "safe" or "secure" because of it.
 
 ${bootstrapBlock}
 

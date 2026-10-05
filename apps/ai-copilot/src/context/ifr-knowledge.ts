@@ -13,7 +13,7 @@ function getBootstrapStatus(): string {
 }
 
 export function getIFRKnowledge() {
-  const [basicTier, premiumTier, proTier] = ACCESS_TIERS;
+  const [bronzeTier, silverTier, goldTier, platinumTier] = ACCESS_TIERS;
 
   return {
     audits: {
@@ -74,7 +74,7 @@ export function getIFRKnowledge() {
       agenda: "https://ifrunit.tech/wiki/governance.html#council-agenda"
     },
     aiCopilot: {
-      accessTiers: `The canonical access tiers are ${ACCESS_TIER_SUMMARY}. Tier calculations use integer base units with 9 IFR decimals.`,
+      accessTiers: `The project's default tier preset is ${ACCESS_TIER_SUMMARY} (IFR locked in IFRLock only; same as the Benefits network). Partners set their own thresholds and discounts. Tier calculations use integer base units with 9 IFR decimals.`,
       premiumBenefit: "The current /api/chat path provides general and surface-specific guidance. It does not inject verified wallet balance, lock status or tier into chat; wallet-specific state must be checked in the signed Web3 interfaces or direct chain reads.",
       safety: "The assistant never needs private keys or seed phrases. It cannot sign or submit wallet transactions."
     },
@@ -211,8 +211,8 @@ export function getIFRKnowledge() {
         features: [
           "Amount slider (100-10k IFR)",
           "Hard Lock / Balance toggle",
-          "Tier System (Basic/Premium/Pro)",
-          "Configuration Score (0-100, Strong/Partial/Weak setup; configuration heuristic only — not audited, not a security audit or certification)",
+          "Tier System (your own Tier 1/2/3 thresholds in the generated contract)",
+          "Configuration Score (0-100 heuristic checklist: Strong/Partial/Weak setup) — configuration heuristic only, not audited, not a security audit or certification",
           "Contract code generation",
           "SDK snippet (local repository package; npm publication pending)",
           "Deploy guide (Sepolia → BuilderRegistry → Mainnet)"
@@ -220,10 +220,10 @@ export function getIFRKnowledge() {
       },
       sdk: {
         package: "ifr-sdk",
-        version: "0.2.0",
+        version: "0.3.0",
         availability: "Local repository package; npm publication pending",
         install: "From the Inferno repository root: npm install --install-links ./apps/sdk",
-        methods: "checkAccess(), getTier(), getBalance(), getLockedBalance(), isBuilder(), getTotalSupply()",
+        methods: "getBenefitTier() (default preset or own tiers; locked IFR only), checkAccess(), getBalance(), getLockedBalance(), isBuilder(), getTotalSupply(); getTier() is deprecated legacy",
         restApi: "GET https://copilot-api.ifrunit.tech/api/ifr/check?wallet=0x...&required=1000"
       },
       contractLibrary: {
@@ -238,10 +238,11 @@ export function getIFRKnowledge() {
         tests: "45/45 passing"
       },
       tiers: {
-        tier1: `≥${basicTier.minIFR.toLocaleString("en-US")} IFR → ${basicTier.name} Access`,
-        tier2: `≥${premiumTier.minIFR.toLocaleString("en-US")} IFR → ${premiumTier.name}`,
-        tier3: `≥${proTier.minIFR.toLocaleString("en-US")} IFR → ${proTier.name} / Full Access`,
-        note: "Uses locked balance (not wallet balance) for tier calculation"
+        tier1: `≥${bronzeTier.minIFR.toLocaleString("en-US")} IFR locked → ${bronzeTier.name}`,
+        tier2: `≥${silverTier.minIFR.toLocaleString("en-US")} IFR locked → ${silverTier.name}`,
+        tier3: `≥${goldTier.minIFR.toLocaleString("en-US")} IFR locked → ${goldTier.name}`,
+        tier4: `≥${platinumTier.minIFR.toLocaleString("en-US")} IFR locked → ${platinumTier.name}`,
+        note: "Default preset only: IFR locked in IFRLock (not wallet balance). Generated builder contracts and partners set their own thresholds."
       },
       securityScoring: {
         maxScore: 100,
@@ -252,13 +253,16 @@ export function getIFRKnowledge() {
       },
       apiEndpoints: {
         builderGenerate: "POST /api/builder/generate — generate contract + SDK from JSON config",
-        ifrCheck: "GET https://copilot-api.ifrunit.tech/api/ifr/check?wallet=0x...&required=1000 — access check + tier"
+        ifrCheck: "GET https://copilot-api.ifrunit.tech/api/ifr/check?wallet=0x...&required=1000 — access check (balance + locked vs your own required amount) + default tier from locked IFR only"
       }
     },
     tiers: {
-      tier1: { minIFR: basicTier.minIFR, level: basicTier.name },
-      tier2: { minIFR: premiumTier.minIFR, level: premiumTier.name },
-      tier3: { minIFR: proTier.minIFR, level: proTier.name }
+      tier1: { minIFR: bronzeTier.minIFR, level: bronzeTier.name },
+      tier2: { minIFR: silverTier.minIFR, level: silverTier.name },
+      tier3: { minIFR: goldTier.minIFR, level: goldTier.name },
+      tier4: { minIFR: platinumTier.minIFR, level: platinumTier.name },
+      basis: "IFR locked in IFRLock only",
+      partners: "Default preset and labels, not a rule: every Benefits partner sets its own thresholds, held-IFR minimums, lock source and discount per benefit. Any project may verify IFR permissionlessly with its own rule (ifr-benefits-verify/1). Discounts are independent of PartnerVault rewards (Lane 4 model B, approved pilots only, currently disabled)."
     },
     bootstrap: {
       status: getBootstrapStatus(),
