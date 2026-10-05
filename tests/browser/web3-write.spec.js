@@ -30,6 +30,9 @@ const selectors = {
   feeExempt: selector("feeExempt(address)"),
   commitmentGetTranches: selector("getTranches(address)"),
   lendingCreate: selector("createOffer(uint256)"),
+  lendingIncrease: selector("increaseOffer(uint256)"),
+  lendingWithdraw: selector("withdrawOffer(uint256)"),
+  lendingOfferIndex: selector("lenderOfferIndex(address)"),
   lendingHasOffer: selector("hasOffer(address)"),
   lendingPrice: selector("ifrPriceWei()"),
   lendingRate: selector("getInterestRate()"),
@@ -78,19 +81,28 @@ function expectedWrite(transaction) {
   if (to === LENDING.toLowerCase() && data.startsWith(selectors.lendingCreate)) {
     return { action: "lending-create", amount: decodeWord(data, 0) };
   }
+  if (to === LENDING.toLowerCase() && data.startsWith(selectors.lendingIncrease)) {
+    return { action: "lending-increase", amount: decodeWord(data, 0) };
+  }
+  if (to === LENDING.toLowerCase() && data.startsWith(selectors.lendingWithdraw)) {
+    return { action: "lending-withdraw", amount: decodeWord(data, 0) };
+  }
   throw new Error(`Unexpected Web3 write: ${transaction.to} ${transaction.data}`);
 }
 
 function buildCallResults(options = {}) {
   const locked = options.locked || 0n;
-  const availableOffer = options.offerAvailable === true;
+  // lenderOffer: the connected wallet owns an active offer (hasOffer = true, index 0).
+  const lenderOffer = options.lenderOffer === true;
+  const availableOffer = options.offerAvailable === true || lenderOffer;
   const callResults = {
     [selectors.balanceOf]: uintResult(10_000n * UNIT),
     [selectors.allowance]: uintResult(0n),
     [selectors.accessLocked]: uintResult(locked),
     [selectors.commitmentCount]: uintResult(0n),
     [selectors.commitmentPriceOracle]: addressResult(ethers.ZeroAddress),
-    [selectors.lendingHasOffer]: uintResult(0n),
+    [selectors.lendingHasOffer]: uintResult(lenderOffer ? 1n : 0n),
+    [selectors.lendingOfferIndex]: uintResult(0n),
     [selectors.lendingPrice]: uintResult(0n),
     [selectors.lendingRate]: uintResult(200n),
     [selectors.lendingOfferCount]: uintResult(availableOffer ? 1n : 0n),
@@ -1127,8 +1139,12 @@ test("existing IFRLock balance can be unlocked without another approval", async 
   await context.close();
 });
 
-test("CommitmentVault time-only and LendingVault offer writes preserve IFR base units", async ({ browser }) => {
-  const { context, page, writes, pageErrors } = await preparePage(browser, { feeExemptV2: true });
+// T-273: LendingVault V1 was retired by owner decision (3 October 2026). The former
+// lending-create assertion is replaced on purpose: the create/increase path must now send no
+// transaction at all, while the lender withdraw path must still send withdrawOffer for the
+// full available amount.
+test("CommitmentVault time-only writes preserve IFR base units; retired LendingVault refuses new offers and keeps full withdraw (T-273)", async ({ browser }) => {
+  const { context, page, writes, pageErrors } = await preparePage(browser, { feeExemptV2: true, lenderOffer: true });
   await page.goto("/web3/", { waitUntil: "domcontentloaded" });
   await connect(page);
 
@@ -1142,14 +1158,36 @@ test("CommitmentVault time-only and LendingVault offer writes preserve IFR base 
   expect(writes[1].amount).toBe(250n * UNIT);
 
   await page.locator("[data-lock-close]").click();
+  // No visible entry point still offers to create or increase an offer.
+  await expect(page.getByRole("button", { name: /create offer|increase offer/i })).toHaveCount(0);
   await page.locator("[data-open-lending]").first().click();
+  await expect(page.locator("#lending-title")).toHaveText("Withdraw offer");
+  await expect(page.locator("[data-lending-retired]")).toContainText("V1 retired by owner decision (3 October 2026)");
+  await expect(page.locator("[data-lending-retired]")).toContainText("those IFR are not lost");
+  await expect(page.locator("[data-lending-deposit]")).toBeHidden();
+  await expect(page.locator("[data-lending-mode]")).toHaveValue("Offer #0 active");
+
+  // Even if the hidden, disabled create path is re-enabled and triggered, it refuses before any wallet call.
   await page.locator("[data-lending-amount]").fill("500");
-  await page.locator("[data-lending-deposit]").click();
-  await expect.poll(() => writes.length, { timeout: 15_000 }).toBe(4);
-  expect(writes[2].action).toBe("approve");
-  expect(writes[2].amount).toBe(500n * UNIT);
-  expect(writes[3].action).toBe("lending-create");
-  expect(writes[3].amount).toBe(500n * UNIT);
+  await expect(page.locator("[data-lending-deposit]")).toBeDisabled();
+  await page.locator("[data-lending-deposit]").evaluate((button) => {
+    button.hidden = false;
+    button.disabled = false;
+    button.click();
+  });
+  await expect(page.locator("[data-lending-status]")).toContainText("LendingVault V1 is retired");
+  await page.waitForTimeout(500);
+  expect(writes.length).toBe(2);
+  expect(writes.some((write) => /^lending-(create|increase)$/.test(write.action))).toBe(false);
+
+  // Withdraw of the full available amount still sends withdrawOffer, with no approval.
+  await page.locator("[data-lending-max]").click();
+  await expect(page.locator("[data-lending-amount]")).toHaveValue("1000.0");
+  await expect(page.locator("[data-lending-withdraw]")).toBeEnabled();
+  await page.locator("[data-lending-withdraw]").click();
+  await expect.poll(() => writes.length, { timeout: 15_000 }).toBe(3);
+  expect(writes[2].action).toBe("lending-withdraw");
+  expect(writes[2].amount).toBe(1000n * UNIT);
   expect(pageErrors).toEqual([]);
   await context.close();
 });

@@ -1,5 +1,21 @@
 # Changelog
 
+## 5 October 2026 — Web3: LendingVault V1 Retired, Withdraw Only (T-273)
+
+- LendingVault V1 retired by owner decision (3 October 2026): borrowing stays disabled (`ifrPriceWei = 0`,
+  no activation planned or authorized) and lenders are withdrawing their offers; those IFR are not lost.
+  No V2 is planned until a reviewed price source exists.
+- `docs/web3/`: the three "Create offer" entry points (hero panel, Users tab, audience action table) now
+  read "Withdraw offer"; the `?action=lending-offer` route opens the same withdraw dialog. The dialog shows
+  the retired note, hides the deposit button and refuses the create/increase path before any wallet call
+  (no approve, no `createOffer`/`increaseOffer`; both were removed from the page ABI). `withdrawOffer`
+  stays, and "Use available" fills the full available amount (full withdrawal closes the offer).
+- The lending dialog status line no longer shares its selector with the note, so status updates land in
+  the status line again. Borrow dialog copy states the retirement; existing-loan repay and top-up stay.
+- `tests/browser/web3-write.spec.js`: the `lending-create` send assertion is replaced by assertions that
+  the create path sends no transaction and shows the retired notice, plus a full-amount `withdrawOffer`
+  send. Suite size unchanged.
+
 ## 5 October 2026 — Governance Proposals #18–#21 Executed (Safe Round)
 
 - #18 `FeeRouterV1.setVoucherSigner(0x790D99c320dafA03d83bEa152178A6523b49CA0d)`: 07:17:47 UTC, block 26124623,
