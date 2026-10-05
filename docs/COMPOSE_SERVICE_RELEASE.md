@@ -101,6 +101,7 @@ ever passed.
 | `deploy-benefits-network.sh frontend` / `backend` / `all` | `benefits-deploy <mode> <sha> <tar-sha256>` with `git archive <sha>:apps/benefits-network` on stdin; gate mode never prunes (the Docker daemon is shared) and refuses a set `ALLOW_PRUNE` |
 | `deploy-benefits-network.sh status` / `capacity` | `benefits-status` |
 | `deploy-benefits-network.sh env-vault-v2 <address>` | `env-set .env.benefits COMMITMENT_VAULT_V2_ADDRESS <address>` (the only env key the host accepts) |
+| `deploy-benefits-network.sh rollback <stamp>` / `env-restore <stamp>` | `benefits-rollback <stamp>` / `benefits-env-restore <stamp>` (stamp validated locally; available once the host tool with benefits support is installed) |
 
 Unchanged on this side: `EXPECTED_SHA` must be a full commit of a clean checkout at that commit,
 the web3 header and wallet-runtime tests run before a deploy, and `verify` is public HTTP only.

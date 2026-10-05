@@ -17,9 +17,9 @@ REMOTE_VOLUME="${REMOTE_VOLUME:-/mnt/HC_Volume_106164848}"
 REMOTE_COMPOSE_ENV_FILE="${REMOTE_COMPOSE_ENV_FILE:-$REMOTE_ROOT/.env.benefits}"
 
 case "$MODE" in
-  frontend|backend|all|status|capacity|env-vault-v2) ;;
+  frontend|backend|all|status|capacity|env-vault-v2|rollback|env-restore) ;;
   *)
-    echo "Usage: $0 [frontend|backend|all|status|capacity]  (DEPLOY_MODE=gate adds: env-vault-v2 <address>)" >&2
+    echo "Usage: $0 [frontend|backend|all|status|capacity]  (DEPLOY_MODE=gate adds: env-vault-v2 <address>, rollback <stamp>, env-restore <stamp>)" >&2
     exit 64
     ;;
 esac
@@ -45,8 +45,8 @@ done
 # for the public COMMITMENT_VAULT_V2_ADDRESS only.
 case "${DEPLOY_MODE:-}" in
   ''|ssh)
-    if [[ "$MODE" == "env-vault-v2" ]]; then
-      echo "env-vault-v2 needs DEPLOY_MODE=gate." >&2
+    if [[ "$MODE" == "env-vault-v2" || "$MODE" == "rollback" || "$MODE" == "env-restore" ]]; then
+      echo "$MODE needs DEPLOY_MODE=gate." >&2
       exit 64
     fi
     ;;
@@ -97,6 +97,18 @@ case "${DEPLOY_MODE:-}" in
           exit 64
         fi
         gate env-set .env.benefits COMMITMENT_VAULT_V2_ADDRESS "$2"
+        ;;
+      rollback)
+        stamp="$(gate_stamp "${2:-}")"
+        gate benefits-rollback "$stamp"
+        ;;
+      env-restore)
+        stamp="$(gate_stamp "${2:-}")"
+        gate benefits-env-restore "$stamp"
+        ;;
+      *)
+        echo "Unknown mode $MODE for DEPLOY_MODE=gate." >&2
+        exit 64
         ;;
     esac
     exit 0
