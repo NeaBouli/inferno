@@ -50,5 +50,6 @@ jobs:
       - run: npm run test:chat-budget
       - run: npm run test:correctness
       - run: npm run test:lending-loans
+      - run: npm run test:request-guard
       - run: npm run test:balance-integrity
       - run: npm run build

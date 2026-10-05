@@ -236,6 +236,14 @@ describe('Redeem route authorization', () => {
     expect(response.status).toBe(401);
   });
 
+  it('applies a per-IP rate limit to redeem before seller authorization (T-216)', async () => {
+    const response = await postRedeem(approvedSessionId);
+
+    expect(response.status).toBe(401);
+    expect(response.headers.get('ratelimit-policy')).toMatch(/^120;w=600/);
+    expect(Number(response.headers.get('ratelimit-remaining'))).toBeLessThan(120);
+  });
+
   it('requires a current owner or operator signature before creating a QR session', async () => {
     const initialCount = await prisma.session.count({ where: { businessId } });
 

@@ -1,11 +1,12 @@
 import cors from "cors";
 import express from "express";
-import { generalRateLimit } from "./middleware/rate-limit.js";
+import { TRUSTED_PROXY_HOPS, generalRateLimit } from "./middleware/rate-limit.js";
 import authRoutes from "./routes/auth.js";
 import pointsRoutes from "./routes/points.js";
 import voucherRoutes from "./routes/voucher.js";
 
 const app = express();
+app.set("trust proxy", TRUSTED_PROXY_HOPS);
 
 app.use(cors({
   origin: (process.env.ALLOWED_ORIGINS || "http://localhost:3004").split(","),
