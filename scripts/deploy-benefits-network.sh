@@ -51,7 +51,8 @@ case "${DEPLOY_MODE:-}" in
     fi
     ;;
   gate)
-    if [[ -n "${ALLOW_PRUNE:-}" && "${ALLOW_PRUNE}" != "0" ]]; then
+    # Any set ALLOW_PRUNE (including empty or 0) is refused: gate mode has no prune switch at all.
+    if [[ -n "${ALLOW_PRUNE+set}" ]]; then
       echo "Refusing: gate mode never prunes (the Docker daemon is shared with other projects); unset ALLOW_PRUNE." >&2
       exit 64
     fi

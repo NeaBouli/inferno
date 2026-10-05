@@ -238,6 +238,11 @@ refute_log "allow-prune"
 # Re-enabling prune in gate mode is refused before any gate call.
 run 64 env EXPECTED_SHA="$SHA" ALLOW_PRUNE=1 bash "$BENEFITS" all
 refute_log "args="
+# Empty or zero values are refused too: the switch must be absent.
+run 64 env EXPECTED_SHA="$SHA" ALLOW_PRUNE= bash "$BENEFITS" all
+refute_log "args="
+run 64 env EXPECTED_SHA="$SHA" ALLOW_PRUNE=0 bash "$BENEFITS" all
+refute_log "args="
 
 run 64 bash "$BENEFITS" backend
 refute_log "gate "
