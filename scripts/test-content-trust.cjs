@@ -50,25 +50,61 @@ const forbidden = [
 ];
 
 // CWA-25: the deployed Governance contract's setOwner is owner-callable (not onlySelf), so the Treasury
-// Safe can transfer Governance ownership without the 48-hour delay. No public surface may claim that every
-// change is timelocked or that guardian rotation is the only untimelocked path.
+// Safe can transfer Governance ownership without the 48-hour delay. The guard rejects only blanket claims
+// that EVERY change (which would include that ownership transfer) is timelocked, or that guardian rotation
+// is the only untimelocked path. Precise statements about parameter changes or proposals pass.
 const blanketTimelockClaims = [
   [/no\s+admin\s+can\s+make\s+instant\s+changes/i, "blanket no-instant-change claim (CWA-25)"],
-  [/no\s+parameter\s+can\s+be\s+changed\s+instantly/i, "blanket no-instant-change claim (CWA-25)"],
-  [/all\s+(?:changes|modifications|actions)\s+require\s+(?:the\s+|a\s+)?48[- ]?h/i, "blanket all-changes-timelocked claim (CWA-25)"],
-  [/48[- ]?h(?:our)?\s+(?:delay|timelock)\s+on\s+all\s+changes/i, "blanket all-changes-timelocked claim (CWA-25)"],
+  [/(?:all|every)\s+(?:governance\s+|owner\s+|admin\s+)?(?:changes?|modifications?|actions?)\s+(?:requires?|go(?:es)?\s+through|(?:is|are)\s+(?:subject\s+to|behind|gated\s+by))\s+(?:the\s+|a\s+)?(?:48[- ]?h|timelock)/i,
+    "blanket all-changes-timelocked claim (CWA-25)"],
+  [/(?:48[- ]?h(?:our)?\s+)?(?:delay|timelock)\s+on\s+all\s+changes/i, "blanket all-changes-timelocked claim (CWA-25)"],
   [/no\s+instant\s+admin\s+(?:access|actions)/i, "blanket no-instant-admin claim (CWA-25)"],
-  [/no\s+single\s+person\s+can\s+make\s+instant\s+changes/i, "blanket no-instant-change claim (CWA-25)"],
   [/documented\s+untimelocked\s+exception|documented\s+exception\s+is\s+(?:owner-only\s+)?guardian\s+rotation/i,
     "guardian rotation presented as the only untimelocked path (CWA-25)"],
 ];
 const governanceClaimFiles = [
   ...publicFiles,
   "docs/TRANSPARENCY.md",
+  "docs/CHANGELOG.md",
   "docs/ai.txt",
   "apps/ai-copilot/src/context/ifr-knowledge.ts",
   "apps/ai-copilot/src/context/system-prompts.ts",
+  "apps/ai-copilot/src/context/wiki-content.json",
 ];
+
+// Self-test: the exact pre-CWA-25 public wording must be rejected, precise wording must pass.
+const blanketFixtures = [
+  "Inferno is designed so that no admin can make instant changes &mdash; all actions require a 48-hour public timelock delay and can be cancelled by the Guardian.",
+  "No parameter can be changed instantly — all changes require the 48h Timelock.",
+  "- **Timelock Governance**: 48-hour delay on all changes. Guardian cancel. No instant admin access.",
+  "No single person can make instant changes — all modifications require a 48-hour delay.",
+  "<li><strong>48-hour Timelock</strong> on all parameter changes &mdash; no instant admin actions.</li>",
+  "- Governance: 48-hour proposal timelock; guardian rotation is the documented untimelocked exception",
+  "The documented exception is owner-only guardian rotation through untimelocked setGuardian.",
+  "Every governance change goes through the 48h timelock.",
+];
+const preciseFixtures = [
+  "Parameter changes via proposals have a 48h timelock.",
+  "Protocol parameter changes go through Governance proposals with a 48-hour timelock. The deployed Governance contract's ownership itself can be transferred directly by its owner, the Treasury Safe (3-of-5), without that delay (tracked as CWA-25).",
+  "- 48-hour timelock on all parameter changes",
+  "No parameter can be changed instantly.",
+  "Every governance proposal is public for 48 hours before execution.",
+  "Any reserve withdrawal needs a Governance proposal + 48h timelock.",
+  "The untimelocked exceptions are owner-only guardian rotation through setGuardian and transferring the deployed Governance contract's ownership through owner-only setOwner (tracked as CWA-25).",
+];
+const selfTestFailures = [];
+for (const text of blanketFixtures) {
+  if (!blanketTimelockClaims.some(([pattern]) => pattern.test(text))) selfTestFailures.push(`guard misses blanket claim: ${text}`);
+}
+for (const text of preciseFixtures) {
+  const hit = blanketTimelockClaims.find(([pattern]) => pattern.test(text));
+  if (hit) selfTestFailures.push(`guard rejects precise statement (${hit[1]}): ${text}`);
+}
+if (selfTestFailures.length) {
+  console.error("Content trust guard self-test failed:");
+  for (const f of selfTestFailures) console.error(`- ${f}`);
+  process.exit(1);
+}
 
 const failures = [];
 for (const relative of governanceClaimFiles) {
