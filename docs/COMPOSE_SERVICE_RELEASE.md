@@ -34,6 +34,12 @@ automatic rollback: the source dir is restored from `source.tgz`, `rollback-<UTC
 `latest`, the container is recreated with `up -d --no-build --no-deps` and must become healthy
 again. The script then exits non-zero.
 
+Transfers are content-only (`rsync -rl --checksum`, never `-t`/`-a`/`-g`/`-o`/`-p`, T-255). The
+v1 deploy user writes under `/opt/inferno` through an ACL but may not set times, owner, group or
+mode on root-owned inodes; metadata flags made rsync exit 23 on 2026-10-05. Changed files are
+rewritten as new inodes owned by the deployer with their previous mode; unchanged files are left
+alone. No right is widened, and every rsync error still fails the run and rolls back.
+
 ## Run
 
 ```bash
@@ -53,10 +59,61 @@ space, the live `RELEASE_SHA` and the itemized file changes, and warns when `dep
 scripts/deploy-compose-service.sh <service> rollback /opt/inferno/backups/<service>-<UTC>
 ```
 
-Restores the source dir from the backup, retags `rollback-<UTC>` as `latest` and recreates the
-container without building. Only timestamped backup paths of the same service are accepted.
+Restores the source dir from the backup (content-only), retags `rollback-<UTC>` as `latest` and
+recreates the container without building. The automatic and the manual rollback then prove the
+restore; the excluded env/SQLite/runtime entries are neither restored nor compared:
+
+| Check | Pass condition |
+| --- | --- |
+| (a) content | same directories and files as the extracted backup, every file byte-identical (`cmp`; `diff -rq -x` cannot anchor the root-only excludes, so nested `src/data` is compared) |
+| (b) symlinks | sorted `path -> target` lists of both trees are identical |
+| (c) access | every file the backup let others read (`o+r`) and every directory others could traverse (`o+rx`) still allows it |
+| (d) health | the recreated container reaches `healthy` |
+
+Any failed step or check stops with `ROLLBACK CHECK FAILED: <check>` and a non-zero exit. Only
+timestamped backup paths of the same service are accepted.
 Rollback tags are kept (each holds the previous image's layers); remove old ones by hand once a
 release is confirmed.
+
+## Gate mode
+
+Once the scoped deploy gate (inferno-deploy v2) is installed on the host, all three release
+scripts can run through it instead of raw ssh, docker and rsync. The switch is one variable:
+
+```bash
+export DEPLOY_MODE=gate    # unset = the direct ssh path described above
+```
+
+Every host action is then one `ssh -F ~/.fleet-ssh/config hetzner-deploy <subcommand> ...` call
+(override the alias with `DEPLOY_GATE_HOST`). The forced command only runs whitelisted
+subcommands of the reviewed root tool; the upload is a tar on stdin whose SHA-256 the tool checks
+before it changes anything, and only regular files and directories are accepted. No secret is
+ever passed.
+
+| Script and mode | Gate call |
+| --- | --- |
+| `deploy-compose-service.sh <svc> plan` | `service-plan <svc> <sha> <tar-sha256>` with `git archive <sha>:<app dir>` on stdin |
+| `deploy-compose-service.sh <svc> deploy` | `service-deploy <svc> <sha> <tar-sha256>`, then the local public verify |
+| `deploy-compose-service.sh <svc> rollback <stamp>` | `service-rollback <svc> <stamp>` |
+| `deploy-compose-service.sh <svc> status` / `health` / `logs [n]` / `backups` | `status` / `health <svc>` / `logs <svc> [n]` / `backups <svc>` |
+| `deploy-web3-site.sh plan` / `deploy` | `web3-plan` / `web3-deploy <sha> <tar-sha256> [delete]` with the staged docroot on stdin (`.nginx/web3-security-headers.conf` at its root; `DELETE=1` adds `delete`) |
+| `deploy-web3-site.sh rollback <stamp>` / `status` / `health` / `backups` | `web3-rollback <stamp>` / `status` / `health web3-site` / `backups web3-site` |
+| `deploy-benefits-network.sh frontend` / `backend` / `all` | `benefits-deploy <mode> <sha> <tar-sha256>` with `git archive <sha>:apps/benefits-network` on stdin; gate mode never prunes (the Docker daemon is shared) and refuses a set `ALLOW_PRUNE` |
+| `deploy-benefits-network.sh status` / `capacity` | `benefits-status` |
+| `deploy-benefits-network.sh env-vault-v2 <address>` | `env-set .env.benefits COMMITMENT_VAULT_V2_ADDRESS <address>` (the only env key the host accepts) |
+| `deploy-benefits-network.sh rollback <stamp>` / `env-restore <stamp>` | `benefits-rollback <stamp>` / `benefits-env-restore <stamp>` (stamp validated locally; available once the host tool with benefits support is installed) |
+
+Unchanged on this side: `EXPECTED_SHA` must be a full commit of a clean checkout at that commit,
+the web3 header and wallet-runtime tests run before a deploy, and `verify` is public HTTP only.
+The client refuses before sourcing `scripts/deploy-gate-lib.sh` if that helper or the calling
+script has local changes.
+
+Server-side behaviour (backup, health wait, public checks, automatic restore on failure) is
+defined by the accepted inferno-deploy v2 tool, not by this client, and may differ per service.
+Until the installed tool's failure behaviour is accepted per service, treat automatic restore as
+unverified and use `rollback <stamp>` explicitly; the tool prints the backup stamp
+(`YYYYMMDDTHHMMSSZ`), and `backups` lists the available stamps. Gate mode stays unused until the
+v2 installation and its authorization/restore behaviour are accepted.
 
 ## Host assumptions (read-only, 2026-09-30)
 
@@ -74,5 +131,8 @@ temporary copy of the host layout (remote commands really run there; docker, df 
 fakes with file-backed image and container state): SHA/checkout guards, env allow-list, plan
 leaves the host byte-identical, capacity refusal without prune, backup before the first write,
 excludes protect env/SQLite/data files, failed health, sync or build roll back automatically, a
-Telegram status route answering 200 fails the release, and rollback path validation. Each guard
+Telegram status route answering 200 fails the release, rollback path validation, a fake rsync
+that refuses any metadata flag on a host write (as the v1 user does) with every host-writing rsync
+asserted content-only, and a restore that fails on a tampered file, symlink, lost `o+r`, failed
+restore sync or unhealthy container. Each guard
 is mutation-checked.

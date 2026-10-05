@@ -643,6 +643,7 @@
         <li><a href="https://ifrunit.tech/wiki/faq.html">FAQ</a></li>
         <li><a href="https://ifrunit.tech/wiki/integration.html">Integration Guide</a></li>
         <li><a href="https://ifrunit.tech/wiki/business-onboarding.html">Business Onboarding</a></li>
+        <li><a href="https://ifrunit.tech/wiki/integrate-benefits.html">Integrate Benefits (No Server)</a></li>
         <li><a href="https://ifrunit.tech/wiki/agent.html">AI Copilot</a></li>
         <li><a href="https://ifrunit.tech/wiki/verify.html">Verify Wallet</a></li>
         <li class="nav-divider"></li>
@@ -1120,7 +1121,7 @@
       </div>
 
       <p style="margin-top:24px;padding:12px 16px;background:rgba(255,255,255,0.03);border-left:3px solid var(--accent);border-radius:4px;font-size:13px;color:var(--muted);">
-        <strong>Note:</strong> BuybackVault and BurnReserve are <em>not</em> genesis allocations. The 1% IFR transfer-pool fee currently accrues in FeeRouterV1 and is not automatically forwarded to either contract. Bootstrap was funded via Plan B from Treasury + Community Safe &mdash; not a standalone genesis bucket.
+        <strong>Note:</strong> BuybackVault and BurnReserve are <em>not</em> genesis allocations. The 1% IFR transfer-pool fee accrued in FeeRouterV1 until Proposal #21 (05.10.2026) and goes to BuybackController since; it is not automatically forwarded to either contract. Bootstrap was funded via Plan B from Treasury + Community Safe &mdash; not a standalone genesis bucket.
       </p>
 
       <p><strong>Bootstrap Event (Plan B &mdash; COMPLETED &#x2705; 05.06.2026)</strong></p>
@@ -1474,14 +1475,14 @@ if (from != address(0) && to != address(0)
         These are <strong>separate</strong> from the token's built-in transfer fees (2.5% burn + 1% pool fee).
       </p>
       <p>
-        <strong>Where the 1% IFR pool fee goes:</strong> since Proposal #6 the token's <code>poolFeeReceiver</code> is FeeRouterV1.
-        FeeRouterV1 forwards only native-ETH swap fees and has no IFR withdrawal path, so these pool fees are
-        <a href="transparency.html#lost-ifr">permanently lost</a> (CWA-02). On 3 October 2026 the owner decided to move future
-        pool fees to BuybackController, where the IFR stays recoverable by Governance via <code>withdrawIFR</code> (the deployed controller is dormant, JUL-08, so nothing is used automatically);
-        this needs a Governance proposal with the 48-hour timelock and is not executed yet. IFR already in FeeRouterV1 stays lost.
+        <strong>Where the 1% IFR pool fee goes:</strong> from Proposal #6 until Proposal #21 the token's <code>poolFeeReceiver</code> was FeeRouterV1.
+        FeeRouterV1 forwards only native-ETH swap fees and has no IFR withdrawal path, so those pool fees are
+        <a href="transparency.html#lost-ifr">permanently lost</a> (CWA-02). Since Proposal #21 (executed 5 October 2026, block 26,124,660)
+        pool fees go to BuybackController, where the IFR stays recoverable by Governance via <code>withdrawIFR</code> (the deployed controller is dormant, JUL-08, so nothing is used automatically).
+        IFR already in FeeRouterV1 stays lost.
       </p>
       <p>
-        <strong>Permanently lost IFR:</strong> 27,143,460.66 IFR are permanently lost (not burned; still counted in totalSupply): 26,418,467.99 IFR in CommitmentVault V1 price-conditioned tranches (CV-01) and 724,992.67 IFR of pool fees in FeeRouterV1 (CWA-02), verified at block 26,108,134 on 3 October 2026. Details: <a href="transparency.html#lost-ifr">Transparency</a>.
+        <strong>Permanently lost IFR:</strong> 27,153,013.07 IFR are permanently lost (not burned; still counted in totalSupply): 26,418,467.99 IFR in CommitmentVault V1 price-conditioned tranches (CV-01) and 734,545.07 IFR of pool fees in FeeRouterV1 (CWA-02), as of block 26,124,660 on 5 October 2026. In that block Proposal #21 stopped the pool-fee inflow to FeeRouterV1; direct transfers to that address remain possible, so its part is read live. Details: <a href="transparency.html#lost-ifr">Transparency</a>.
       </p>
 
       <h3>Fee Structure</h3>

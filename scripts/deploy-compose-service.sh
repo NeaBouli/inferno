@@ -8,14 +8,27 @@
 #   scripts/deploy-compose-service.sh <service> verify                      # public HTTP only
 #   scripts/deploy-compose-service.sh <service> rollback <backup dir>       # operator only
 #
+# DEPLOY_MODE=gate routes plan/deploy/rollback through the scoped host gate
+# (ssh -F ~/.fleet-ssh/config hetzner-deploy ...) and adds status|health|logs|backups;
+# rollback then takes the backup stamp. In gate mode backup, health wait and failure
+# handling are done by the installed host tool within its accepted guarantees; its
+# recovery of a real failing service release is not yet verified, so watch the result
+# and use `rollback <stamp>` explicitly. Unset DEPLOY_MODE keeps the direct path below.
+#
 # <service>: telegram-bot | points-backend | ai-copilot
 #
-# deploy: capacity floor (never prunes) -> new backup dir with a source tar and the
+# Direct path (no DEPLOY_MODE) deploy: capacity floor (never prunes) -> new backup dir with a source tar and the
 # current image id -> rollback image tag -> rsync of the git-archived app dir
 # (env and SQLite files at any depth, root node_modules, dist and data are excluded and never
 # deleted) -> compose rebuild of that one service -> bounded health wait ->
 # public checks. Any failure after the backup rolls back automatically and exits
 # non-zero. Runbook: docs/COMPOSE_SERVICE_RELEASE.md
+#
+# Transfers are content-only (T-255): no -t/-a/-g/-o/-p. The v1 deploy user may
+# write under /opt/inferno (ACL) but may not set times, owner, group or mode on
+# root-owned inodes, so metadata flags made rsync exit 23. Changed files are
+# rewritten (new inode owned by the deployer, mode kept), unchanged ones are left
+# alone (--checksum). Every rsync error still fails the run and rolls back.
 set -euo pipefail
 
 SERVICE="${1:-}"
@@ -60,7 +73,7 @@ REMOTE_EXCLUDES=""
 TAR_EXCLUDES=""
 for x in "${EXCLUDES[@]}"; do
   EXCLUDE_ARGS+=(--exclude "$x")
-  REMOTE_EXCLUDES="$REMOTE_EXCLUDES --exclude '$x'"
+  REMOTE_EXCLUDES="$REMOTE_EXCLUDES '$x'"   # quoted args for the remote restore script
   [[ "$x" == /* ]] && x="$SERVICE$x"
   TAR_EXCLUDES="$TAR_EXCLUDES --exclude '$x'"
 done
@@ -102,9 +115,11 @@ remote_precheck() {
 }
 
 set_rsync_args() {
-  # Symbolic --chmod: numeric modes need rsync >= 3.1; macOS ships 2.6.9.
+  # Content only (see header): -r -l keep the tree and symlinks, --checksum skips
+  # unchanged files without comparing times. --chmod sets the mode of new files
+  # only (no -p). Symbolic --chmod: numeric modes need rsync >= 3.1; macOS ships 2.6.9.
   # No --delete-excluded: excluded remote files are never removed.
-  RSYNC_ARGS=(-rlt --checksum --delete --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r --itemize-changes "${EXCLUDE_ARGS[@]}")
+  RSYNC_ARGS=(-rl --checksum --delete --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r --itemize-changes "${EXCLUDE_ARGS[@]}")
 }
 
 wait_healthy() {
@@ -143,16 +158,65 @@ verify_public() {
   echo "verified: $SERVICE public checks pass"
 }
 
-# Restores the source dir and the image of backup dir $1 (stamp $2), then recreates
-# the container without building. Excluded files are left as they are.
+# Runs on the host via `bash -s -- <backup> <src> <service> <image> <stamp>
+# <remote root> <excludes...>`: restores the source dir and the image of the
+# backup, recreates the container without building, then proves the restore is
+# complete, not only content-identical. Excluded files are left as they are and
+# are not compared. Any failed step or check exits non-zero. The body is one
+# function, so bash has read all of it before any command could consume stdin.
+IFS= read -r -d '' RESTORE_SCRIPT <<'REMOTE' || true
+set -euo pipefail
+main() {
+backup="$1" src="$2" service="$3" image="$4" stamp="$5" root="$6"
+shift 6
+fail() { echo "ROLLBACK CHECK FAILED: $*" >&2; exit 1; }
+# Excludes as for deploy: rsync anchors a leading '/' to the transfer root; find
+# prunes the same entries (-path ./x for anchored ones, -name for the rest).
+rx=() prune=()
+for x in "$@"; do
+  rx+=(--exclude "$x")
+  [ ${#prune[@]} -eq 0 ] || prune+=(-o)
+  case "$x" in /*) prune+=(-path ".$x") ;; *) prune+=(-name "$x") ;; esac
+done
+[ ${#prune[@]} -eq 0 ] || prune=(\( "${prune[@]}" \) -prune -o)
+test -f "$backup/source.tgz" || fail "$backup/source.tgz missing"
+docker image inspect "$image:rollback-$stamp" >/dev/null || fail "image $image:rollback-$stamp missing"
+t="$(mktemp -d)"
+trap 'rm -r "$t"' EXIT
+tar -C "$t" -xpzf "$backup/source.tgz"
+ref="$t/$service" live="$src"
+# Content only, like deploy: the v1 user cannot set times/owner/group/mode on root-owned inodes.
+rsync -rl --checksum --delete "${rx[@]}" "$ref/" "$live/" || fail "rsync exited $?"
+docker image tag "$image:rollback-$stamp" "$image:latest"
+(cd "$root" && docker compose up -d --no-build --no-deps "$service")
+lst() { local d="$1"; shift; (cd "$d" && find . ${prune[@]+"${prune[@]}"} "$@" -print) | LC_ALL=C sort; }
+links() { lst "$1" -type l | while IFS= read -r p; do printf '%s -> %s\n' "$p" "$(readlink "$1/$p")"; done; }
+# (b) symlinks: same paths and targets (checked first, so a link change is named as such)
+diff <(links "$ref") <(links "$live") >&2 || fail "(b) symlinks differ from the backup"
+# (a) content: same dirs and files (excludes pruned) and every file byte-identical;
+# diff -rq -x cannot anchor the root-only excludes, so nested src/data is compared too
+diff <(lst "$ref" -type d) <(lst "$live" -type d) >&2 || fail "(a) directories differ from the backup"
+diff <(lst "$ref" -type f) <(lst "$live" -type f) >&2 || fail "(a) files differ from the backup"
+changed=0
+while IFS= read -r p; do
+  cmp -s "$ref/$p" "$live/$p" || { echo "differs: $p" >&2; changed=1; }
+done < <(lst "$ref" -type f)
+[ "$changed" = 0 ] || fail "(a) content differs from the backup"
+# (c) access: nothing the backup let others read (files o+r, dirs o+rx) lost it
+missing="$(LC_ALL=C comm -23 <(lst "$ref" \( -type f -perm -o=r -o -type d -perm -o=rx \)) \
+                             <(lst "$live" \( -type f -perm -o=r -o -type d -perm -o=rx \)))"
+[ -z "$missing" ] || { printf '%s\n' "$missing" | head -20 >&2; fail "(c) entries lost world read/traverse access"; }
+echo "restore verified: (a) content (b) symlinks (c) access; (d) container health follows"
+}
+main "$@"
+REMOTE
+
+# Restores backup dir $1 (stamp $2) with the checks above, then (d) waits for the
+# recreated container to become healthy.
 restore() {
   local backup="$1" stamp="$2"
-  remote "set -e; test -f '$backup/source.tgz'; docker image inspect '$IMAGE:rollback-$stamp' >/dev/null
-    t=\$(mktemp -d); tar -C \"\$t\" -xzf '$backup/source.tgz'
-    rsync -rlt --delete$REMOTE_EXCLUDES \"\$t/$SERVICE/\" '$SRC/'; rm -r \"\$t\"
-    docker image tag '$IMAGE:rollback-$stamp' '$IMAGE:latest'
-    cd '$REMOTE_ROOT' && docker compose up -d --no-build --no-deps '$SERVICE'" || return 1
-  wait_healthy
+  remote "bash -s -- '$backup' '$SRC' '$SERVICE' '$IMAGE' '$stamp' '$REMOTE_ROOT'$REMOTE_EXCLUDES" <<< "$RESTORE_SCRIPT" || return 1
+  wait_healthy || { echo "ROLLBACK CHECK FAILED: (d) $CONTAINER not healthy after restore" >&2; return 1; }
 }
 
 release() { # every step returns non-zero on failure; caller rolls back
@@ -162,6 +226,53 @@ release() { # every step returns non-zero on failure; caller rolls back
   wait_healthy || return 1
   verify_public || return 1
 }
+
+# DEPLOY_MODE=gate: the same release through the scoped host gate (inferno-deploy v2).
+# The host tool does backup, sync, build and health wait within its accepted guarantees;
+# its recovery of a real failing release is unverified. This side keeps the exact-SHA checks and the public verify.
+case "${DEPLOY_MODE:-}" in
+  ''|ssh) ;;
+  gate)
+    # Never source a locally modified helper.
+    [[ -z "$(git -C "$ROOT" status --porcelain -- scripts/deploy-gate-lib.sh scripts/deploy-compose-service.sh)" ]] || die "working tree is dirty (scripts/deploy-gate-lib.sh or this script); release only from a clean checkout"
+    # shellcheck source=scripts/deploy-gate-lib.sh
+    . "$ROOT/scripts/deploy-gate-lib.sh"
+    gate_release_tar() {
+      STAGE="$(mktemp -d)"
+      trap 'rm -r "$STAGE"' EXIT
+      git -C "$ROOT" archive --format=tar "$EXPECTED_SHA:$APP_DIR" > "$STAGE/upload.tar"
+      gate_tar_has "$STAGE/upload.tar" Dockerfile || die "$APP_DIR has no Dockerfile at $EXPECTED_SHA"
+      TAR_SHA="$(gate_prepare "$STAGE/upload.tar")"
+    }
+    case "$MODE" in
+      plan)
+        require_sha
+        gate_release_tar
+        gate service-plan "$SERVICE" "$EXPECTED_SHA" "$TAR_SHA" < "$STAGE/upload.tar"
+        ;;
+      deploy)
+        require_sha
+        require_clean_exact_checkout
+        gate_release_tar
+        gate service-deploy "$SERVICE" "$EXPECTED_SHA" "$TAR_SHA" < "$STAGE/upload.tar"
+        verify_public || die "$SERVICE is released but the public checks fail; roll back with: DEPLOY_MODE=gate $0 $SERVICE rollback <stamp>"
+        ;;
+      verify) verify_public ;;
+      rollback)
+        stamp="$(gate_stamp "${3:-}")"
+        gate service-rollback "$SERVICE" "$stamp"
+        echo "run '$SERVICE verify' to check the public state"
+        ;;
+      status)  gate status ;;
+      health)  gate health "$SERVICE" ;;
+      logs)    gate logs "$SERVICE" "${3:-200}" ;;
+      backups) gate backups "$SERVICE" ;;
+      *) die "unknown mode $MODE for DEPLOY_MODE=gate (plan|deploy|verify|rollback|status|health|logs|backups)" ;;
+    esac
+    exit 0
+    ;;
+  *) die "DEPLOY_MODE must be unset (direct ssh) or gate" ;;
+esac
 
 case "$MODE" in
   plan)

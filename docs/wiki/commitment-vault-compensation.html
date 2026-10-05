@@ -526,6 +526,7 @@
         <li><a href="https://ifrunit.tech/wiki/faq.html">FAQ</a></li>
         <li><a href="https://ifrunit.tech/wiki/integration.html">Integration Guide</a></li>
         <li><a href="https://ifrunit.tech/wiki/business-onboarding.html">Business Onboarding</a></li>
+        <li><a href="https://ifrunit.tech/wiki/integrate-benefits.html">Integrate Benefits (No Server)</a></li>
         <li><a href="https://ifrunit.tech/wiki/agent.html">AI Copilot</a></li>
         <li><a href="https://ifrunit.tech/wiki/verify.html">Verify Wallet</a></li>
         <li class="nav-divider"></li>
@@ -705,7 +706,7 @@
       <h2 id="cv01-vote">Vote</h2>
       <p>The Council vote is held by the Safe signers. Each signer signs the published vote text with their Safe owner wallet on Etherscan; anyone can verify each signature. The signed text refers to this proposal at repository commit <code>f08ce370</code>.</p>
       <ul>
-        <li><strong>Council:</strong> five members, M.G., A.M., Y.K., A.P. and G.M. G.M. abstains from this vote.</li>
+        <li><strong>Council:</strong> five members, M.G., A.M., Y.K., A.P. and G.M. G.M. abstained.</li>
         <li><strong>Eligible:</strong> the other four, M.G., A.M., Y.K. and A.P.</li>
         <li><strong>Required:</strong> 3 YES votes. Until then the proposal is not approved.</li>
         <li><strong>Deadline:</strong> none. A deadline can only be set by a separate Council vote.</li>
@@ -731,14 +732,14 @@
       <ul>
         <li><strong>V1 cannot be changed.</strong> It has no pause or upgrade path.</li>
         <li><strong>The wiki lock form offers only time-based locks.</strong></li>
-        <li><strong>The production Web3 app at web3.ifrunit.tech still offers price-conditioned V1 locks.</strong> The code fix that restricts it to time-based locks is merged but not yet deployed or verified. <strong>Do not create new CommitmentVault locks in the Web3 app until that release is verified.</strong></li>
+        <li><strong>The production Web3 app at web3.ifrunit.tech offers only time-based locks in CommitmentVault V2.</strong> It no longer offers price-conditioned V1 locks; existing V1 tranches stay listed and unlock through V1. Released and live-verified on 5 October 2026.</li>
         <li><strong>CommitmentVault V2 is deployed:</strong> <a href="https://etherscan.io/address/0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F" target="_blank" rel="noopener noreferrer"><code>0x8efa&hellip;7c8F</code></a>, deployed on 2 October 2026 (<a href="https://etherscan.io/tx/0x9857a5707b650b8828f41b893f91a10ff26d7990742e782bb0b7e86df23ea0f7" target="_blank" rel="noopener noreferrer">transaction</a>), owned by Governance.
           <ul>
             <li>It accepts <code>TIME_ONLY</code> locks only and rejects every price-conditioned lock, so an impossible condition cannot be created again.</li>
             <li>It has no price oracle and no rescue path.</li>
           </ul>
         </li>
-        <li><strong>V2 is not wired yet.</strong> Governance proposal #17, <code>setFeeExempt(V2, true)</code>, is queued and can be executed from 4 October 2026, 21:53:11 UTC. Until it is executed, V2 is not fee-exempt and the interfaces keep using V1.</li>
+        <li><strong>V2 is fee-exempt.</strong> Governance proposal #17, <code>setFeeExempt(V2, true)</code>, was executed on 4 October 2026 at 22:01:23 UTC in block 26121846 (<a href="https://etherscan.io/tx/0xbb53640ca8fd59513c8c772a0ceb633d63d7d9837768c28535bd67da6c4a835c" target="_blank" rel="noopener noreferrer">transaction</a>). The interfaces send new time locks to V2; existing V1 tranches stay in V1.</li>
         <li><strong>Price-conditioned locks need a separate proposal.</strong> A reviewed, manipulation-resistant oracle and a rescue path for conditions that can never be met are future work. Neither is part of the deployed V2.</li>
       </ul>
       <p>See the <a href="https://github.com/NeaBouli/inferno/blob/main/docs/GOVERNANCE_PRODUCT_DECISION_REGISTER.md">decision register</a> (lane 2).</p>

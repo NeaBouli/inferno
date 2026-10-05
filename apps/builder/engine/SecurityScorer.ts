@@ -1,6 +1,22 @@
 import { BuilderConfig } from "./ConfigValidator";
 
+/** Internal heuristic level key (kept for API compatibility); never shown as a security verdict. */
 export type SecurityLevel = "SAFE" | "MEDIUM" | "RISKY";
+
+/** Display label for a level: a configuration description, not an audit claim (same wording as docs/builder.html). */
+export const LEVEL_LABELS: Record<SecurityLevel, string> = {
+  SAFE: "Strong setup",
+  MEDIUM: "Partial setup",
+  RISKY: "Weak setup",
+};
+
+/** What the score is and what the repository tests actually check (same wording as docs/builder.html). */
+export const SCORE_DISCLAIMER =
+  "Configuration heuristic only — not audited, not a security audit or certification. What the repository tests check: " +
+  "every option combination compiles (solc 0.8.20). Hard Lock: lock() credits the amount actually received (IFR is fee-on-transfer) " +
+  "and unlock() transfers that credited amount (IFR’s transfer fee may apply, so the wallet can receive less unless " +
+  "the contract is fee-exempt); hasAccess() reads the locked amount. Balance Only: the contract holds no tokens, has no " +
+  "lock() or unlock(), and hasAccess() reads the wallet’s IFR balance.";
 
 export interface ScoreBreakdown {
   category: string;
@@ -12,8 +28,12 @@ export interface ScoreBreakdown {
 
 export interface SecurityScore {
   score: number;
+  /** Internal heuristic key; display `label` instead. */
   level: SecurityLevel;
+  /** Human-readable configuration label, e.g. "Strong setup" — never "SAFE". */
+  label: string;
   emoji: string;
+  disclaimer: string;
   breakdown: ScoreBreakdown[];
   recommendations: string[];
 }
@@ -100,5 +120,5 @@ export function calculateSecurityScore(config: BuilderConfig): SecurityScore {
   if (config.apiCheck) recommendations.push("Switch to on-chain verification for trustless security");
   if (config.hardLock && config.lockDuration < 30) recommendations.push("Increase lock to >=30 days for stronger commitment");
 
-  return { score: total, level, emoji, breakdown, recommendations };
+  return { score: total, level, label: LEVEL_LABELS[level], emoji, disclaimer: SCORE_DISCLAIMER, breakdown, recommendations };
 }

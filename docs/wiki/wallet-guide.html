@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Wallet &amp; Contract Guide &mdash; Inferno (IFR) Documentation</title>
   <meta name="keywords" content="Inferno, IFR, ERC-20, Ethereum, deflationary token, DeFi, blockchain, smart contract, governance, bootstrap">
-  <meta name="description" content="Complete reference for all 8 wallets and 17 on-chain components in the IFR ecosystem. Addresses, roles, access control, feeExempt status.">
+  <meta name="description" content="Complete reference for all 8 wallets and 18 on-chain components in the IFR ecosystem. Addresses, roles, access control, feeExempt status.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -435,19 +435,19 @@
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Inferno Protocol">
   <meta property="og:title" content="Wallet &amp; Contract Guide &mdash; Inferno Protocol (IFR)">
-  <meta property="og:description" content="Complete reference for all 8 wallets and 17 on-chain components in the IFR ecosystem. Addresses, roles, access control, feeExempt status.">
+  <meta property="og:description" content="Complete reference for all 8 wallets and 18 on-chain components in the IFR ecosystem. Addresses, roles, access control, feeExempt status.">
   <meta property="og:url" content="https://ifrunit.tech/wiki/wallet-guide.html">
   <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Wallet &amp; Contract Guide &mdash; Inferno Protocol (IFR)">
-  <meta name="twitter:description" content="Complete reference for all 8 wallets and 17 on-chain components in the IFR ecosystem. Addresses, roles, access control, feeExempt status.">
+  <meta name="twitter:description" content="Complete reference for all 8 wallets and 18 on-chain components in the IFR ecosystem. Addresses, roles, access control, feeExempt status.">
   <meta name="twitter:site" content="@IFRtoken">
   <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">  <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "TechArticle",
     "headline": "Wallet & Contract Transparency Guide",
-    "description": "Complete reference for all 8 project wallets, 17 on-chain components, and upcoming contracts in the Inferno (IFR) ecosystem.",
+    "description": "Complete reference for all 8 project wallets, 18 on-chain components, and upcoming contracts in the Inferno (IFR) ecosystem.",
     "url": "https://ifrunit.tech/wiki/wallet-guide.html",
     "isPartOf": {"@id": "https://ifrunit.tech/#website"},
     "publisher": {"@id": "https://ifrunit.tech/#organization"},
@@ -539,6 +539,7 @@
         <li><a href="https://ifrunit.tech/wiki/faq.html">FAQ</a></li>
         <li><a href="https://ifrunit.tech/wiki/integration.html">Integration Guide</a></li>
         <li><a href="https://ifrunit.tech/wiki/business-onboarding.html">Business Onboarding</a></li>
+        <li><a href="https://ifrunit.tech/wiki/integrate-benefits.html">Integrate Benefits (No Server)</a></li>
         <li><a href="https://ifrunit.tech/wiki/agent.html">AI Copilot</a></li>
         <li><a href="https://ifrunit.tech/wiki/verify.html">Verify Wallet</a></li>
         <li class="nav-divider"></li>
@@ -743,14 +744,14 @@
             <span class="wg-badge wg-badge-signer">Backend Signer</span>
           </div>
           <div class="wg-addr-row">
-            <span class="wg-addr"><a href="https://etherscan.io/address/0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4" target="_blank" class="wg-addr-link">0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4</a></span>
-            <button class="wg-copy-btn" data-addr="0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4">Copy</button>
-            <a href="https://etherscan.io/address/0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4" target="_blank" class="wg-es-btn">Etherscan</a>
+            <span class="wg-addr"><a href="https://etherscan.io/address/0x790D99c320dafA03d83bEa152178A6523b49CA0d" target="_blank" class="wg-addr-link">0x790D99c320dafA03d83bEa152178A6523b49CA0d</a></span>
+            <button class="wg-copy-btn" data-addr="0x790D99c320dafA03d83bEa152178A6523b49CA0d">Copy</button>
+            <a href="https://etherscan.io/address/0x790D99c320dafA03d83bEa152178A6523b49CA0d" target="_blank" class="wg-es-btn">Etherscan</a>
           </div>
           <div class="wg-field"><strong>Genesis Balance:</strong> 0 IFR</div>
           <div class="wg-field"><strong>Current Role:</strong> Signs EIP-712 vouchers for FeeRouterV1 fee discounts. Backend-only &mdash; never holds IFR.</div>
           <div class="wg-role-box">
-            <strong>Ecosystem Role:</strong> Points system backend generates vouchers signed by this wallet. Users redeem on-chain via FeeRouterV1 for fee discounts. Rotatable via Governance.
+            <strong>Ecosystem Role:</strong> Points system backend generates vouchers signed by this wallet. Users redeem on-chain via FeeRouterV1 for fee discounts. Rotatable via Governance; rotated to this dedicated key by Proposal #18 (05.10.2026, block 26124623). It is not a Safe signer.
           </div>
           <div class="wg-field"><strong>Access Control:</strong> EOA &mdash; Backend wallet (not multisig)</div>
         </div>
@@ -796,7 +797,7 @@
            SECTION 2 — SMART CONTRACTS
            ================================================================ -->
       <h2 id="contracts">&#x26D3; Smart Contracts</h2>
-      <p>All 14 deployed contracts on Ethereum Mainnet. Every contract is open source and verified on Etherscan.</p>
+      <p>Core protocol contracts and project Safes on Ethereum Mainnet; the full list of all 15 deployed protocol contracts is in the <a href="contracts.html">Contracts reference</a>. Every contract is open source and verified on Etherscan.</p>
 
       <div class="wg-grid">
 
@@ -850,7 +851,7 @@
             <button class="wg-copy-btn" data-addr="0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb">Copy</button>
             <a href="https://etherscan.io/address/0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb#code" target="_blank" class="wg-es-btn">Etherscan</a>
           </div>
-          <div class="wg-field"><strong>Owner:</strong> Guardian = Deployer (pause-only)</div>
+          <div class="wg-field"><strong>Owner:</strong> Guardian = TreasurySafe (pause-only; since 03.10.2026)</div>
           <div class="wg-field"><strong>feeExempt:</strong> <span class="wg-fee-status wg-fee-yes">&#x2705; Yes</span></div>
           <div class="wg-role-box">
             <strong>Function:</strong> Users lock IFR here to activate premium access while the product-required amount remains locked and that integration remains available. Any builder product can query <code>isLocked()</code> to verify access. No admin can touch user funds.
@@ -909,7 +910,7 @@
             <button class="wg-copy-btn" data-addr="0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271">Copy</button>
             <a href="https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271#code" target="_blank" class="wg-es-btn">Etherscan</a>
           </div>
-          <div class="wg-field"><strong>Owner:</strong> Guardian = Deployer (pause-only)</div>
+          <div class="wg-field"><strong>Owner:</strong> Guardian = TreasurySafe (pause-only; since 03.10.2026)</div>
           <div class="wg-field"><strong>feeExempt:</strong> <span class="wg-fee-status wg-fee-yes">&#x2705; Yes</span></div>
           <div class="wg-role-box">
             <strong>Function:</strong> Team allocation locked 4 years. 12-month cliff (no release before March 2027), then linear over 36 months until March 2030.
@@ -958,9 +959,9 @@
           <div class="wg-field"><strong>Owner:</strong> Governance</div>
           <div class="wg-field"><strong>feeExempt:</strong> <span class="wg-fee-status wg-fee-yes">&#x2705; Yes</span></div>
           <div class="wg-role-box">
-            <strong>Function:</strong> Receives the configured protocol pool-fee flow. FeeRouterV1 is governance-wired to the deployed BuybackController; controller execution remains subject to its on-chain threshold and cooldown rather than an automatic timer.
+            <strong>Function:</strong> Received the IFR pool-fee flow until Proposal #21 (05.10.2026); since then the pool fee goes to BuybackController and the IFR already here stays without a withdrawal path. FeeRouterV1 sends native-ETH swap fees to the deployed BuybackController; controller execution remains subject to its on-chain threshold and cooldown rather than an automatic timer.
           </div>
-          <div class="wg-field"><strong>Phase:</strong> Accumulating</div>
+          <div class="wg-field"><strong>Phase:</strong> Pool-fee inflow stopped (block 26,124,660)</div>
         </div>
 
         <!-- CONTRACT 9 — BuybackVault -->

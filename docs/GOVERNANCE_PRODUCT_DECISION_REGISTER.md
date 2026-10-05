@@ -99,16 +99,18 @@ remains the only place where agenda items and vote outcomes are published.
 - **Testnet/staging gate:** Sepolia deployment with every condition type.
 - **Production gate:** separate recorded decision plus Safe proposal and
   48-hour timelock.
-- **Next evidence:** independent review of `PriceLockVault`; Sepolia
-  rehearsal log; readiness reaching the activation scope.
+- **Next evidence:** Sepolia rehearsal log; readiness reaching the
+  activation scope. The independent review of `PriceLockVault` is done
+  (second review T-256); the vault is not deployed and not active.
 
 ## Lane 3 — FeeRouter sink/accrual and Governance/guardian redeployment
 
-- **Current truth:** FeeRouterV1 accumulates IFR pool fees with no automatic
-  forwarding path (CWA-02). The FeeRouter voucher path is dormant (CWA-18).
-  The Mainnet Governance contract predates a later source fix (CWA-25). The
-  guardian is a single EOA with cancel power; a separate guardian multisig is
-  planned (CWA-09). The voucher signer overlaps a Safe owner key (CWA-06).
+- **Current truth:** As of 5 October 2026, FeeRouterV1 holds 734,545.074097347 IFR of pool fees
+  (as of block 26124660) with no forwarding path (CWA-02); since Proposal #21 new pool fees go
+  to BuybackController. The FeeRouter voucher path is dormant (CWA-18). The Mainnet Governance
+  contract predates a later source fix (CWA-25). All six mutable guardians are the Treasury
+  Safe (CWA-09, Proposals #19/#20). The voucher signer is a dedicated key outside the Safe
+  signer set (CWA-06, Proposal #18).
 - **Decision needed:** accept FeeRouterV1 as a documented permanent sink, or
   route future fees to a governed recoverable receiver; scope of a bundled
   Governance redeploy and migration; accepted guardian model.
@@ -129,9 +131,12 @@ remains the only place where agenda items and vote outcomes are published.
 - **Next evidence:** sink-vs-receiver decision record; migration rehearsal log.
 - **Decision record (3 October 2026, owner):** option B. Future IFR pool fees go to
   BuybackController through `InfernoToken.setPoolFeeReceiver` (Governance proposal, 48-hour
-  timelock; pending execution). The 724,992.668043224 IFR already in FeeRouterV1 (block
+  timelock; executed 5 October 2026 as Proposal #21). The 724,992.668043224 IFR already in FeeRouterV1 (block
   26,108,134) stay permanently lost and are disclosed as lost, not burned. Guardian model
   decided the same day: Treasury Safe (CWA-09); voucher signer moves to a dedicated key (CWA-06).
+- **Executed (5 October 2026):** the Treasury Safe executed #21 at 07:25:23 UTC, block 26124660
+  (transaction in `docs/DEPLOYMENTS.md`); `poolFeeReceiver()` = BuybackController. FeeRouterV1 balance as of that block: 734,545.074097347 IFR. #18
+  (block 26124623) and #19/#20 (block 26124647) executed in the same Safe round.
 - **Execution status (4 October 2026):** option B is queued as Governance proposal #21
   (`InfernoToken.setPoolFeeReceiver(BuybackController)`, ETA 2026-10-05 00:18:23 UTC; read-only
   evidence at block 26119897). The step-2 execute batch is written only after on-chain
@@ -229,15 +234,29 @@ remains the only place where agenda items and vote outcomes are published.
   ([runbook](runbooks/IFR_SDK_NPM_RELEASE.md)). Creator Gateway source exists
   in the repository; no production deployment record exists
   ([spec](CREATOR_GATEWAY.md)).
-- **Decision needed:** embedded-wallet provider and single recovery trust
-  model, or continued external-wallet-only; SDK license owner, package name
-  and npm owner; Creator Gateway hosting model and first creator pilot.
+- **Decision (2026-10-03, project):** (1) external self-custody wallets only;
+  no embedded wallet is planned and the Sepolia prototype stays a prototype
+  (open-source, community-driven project). (2) Publish `ifr-sdk` under MIT from
+  the project npm account `ifr-protocol` (project alias e-mail, 2FA), never a
+  personal account: one manual bootstrap version, then only the fail-closed
+  workflow dispatched on protected `main` with npm Trusted Publishing and owner
+  approval ([runbook](runbooks/IFR_SDK_NPM_RELEASE.md)).
+- **Decision needed:** Creator Gateway hosting model. Proposed: a public demo
+  instance on the sandbox host with wallet and IFRLock checks only (no
+  Google/YouTube OAuth, no personal data) plus a self-hosting quickstart;
+  first creator pilot.
 - **Private follow-on boundary:** a gated content product may follow as a
   separate private product. Public repositories only acknowledge that planned
   boundary; its implementation details stay outside this repository.
 - **Prerequisites:** embedded-wallet acceptance matrix complete; approved
   `LICENSE` file; Creator Gateway deployment runbook.
 - **Dependencies:** Lane 4 reward caller for creator rewards.
+- **Decision (point 3, 2026-10-03):** use-case connection needs no partner or
+  user server and no new project-run service. Discounts run through the existing
+  IFR Benefits shop; partner websites may add the display-only serverless widget
+  and communities use Guild.xyz or Collab.Land with an IFRLock contract-read
+  condition ([guide](wiki/integrate-benefits.html)). The Creator Gateway stays
+  optional self-hosting only.
 - **Impact:** npm publication is irreversible for a published version; an
   embedded-wallet feature flag is reversible, but user wallets created under it
   must stay exportable.

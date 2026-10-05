@@ -1,6 +1,7 @@
 # CommitmentVault V2 Repair (CV-01)
 
-**Status:** V2 deployed, not yet wired (2026-10-03). Every Mainnet step below is performed by the deployer or the
+**Status:** V2 deployed and fee-exempt since proposal #17 (executed 4 October 2026); the Web3 time-only V2 interface is released
+and live-verified (5 October 2026). Every Mainnet step below is performed by the deployer or the
 Safe signers, never by automation.
 
 - **V2:** `0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F`, deployed 2026-10-02 21:22:23 UTC in block 26107296, TX
@@ -9,7 +10,8 @@ Safe signers, never by automation.
   except the immutable IFR address. Etherscan source verified and Sourcify exact match.
 - **Proposal #17** `setFeeExempt(V2, true)`: queued by the Treasury Safe, TX
   `0x6e113b6cc66a369604d46c3b4a5560f1418302de6ecc371f1217d72aeabd39bd`, ETA 2026-10-04 21:53:11 UTC.
-  **Not executed:** `InfernoToken.feeExempt(V2)` stays `false` until step 4 is executed.
+  **Executed** 4 October 2026, 22:01:23 UTC, in block 26121846, TX
+  `0xbb53640ca8fd59513c8c772a0ceb633d63d7d9837768c28535bd67da6c4a835c`; `InfernoToken.feeExempt(V2)` is `true`.
 
 ## Why
 
@@ -84,13 +86,14 @@ address, including V1, before writing a file. For proposal #17 the inner call eq
 - Check the decoded call: target `Governance`, inner target `InfernoToken`, `setFeeExempt(<V2>, true)`.
 - Sign and execute.
 
-### 4. Execute after the delay (Safe) — open, from 2026-10-04 21:53:11 UTC
+### 4. Execute after the delay (Safe) — done, executed 4 October 2026, 22:01:23 UTC
 
-- Wait until the proposal `eta` has passed (48 hours).
-- Import step 2, check the proposal id, then sign and execute.
-- Verify that `InfernoToken.feeExempt(<V2>)` returns `true`.
+- Executed by the Treasury Safe in block 26121846, TX
+  `0xbb53640ca8fd59513c8c772a0ceb633d63d7d9837768c28535bd67da6c4a835c`.
+- Post-execution check: `Governance.getProposal(17)` reports `executed = true`, and `InfernoToken.feeExempt(<V2>)`
+  returns `true` (verified).
 
-### 5. Switch the interfaces (repository PR)
+### 5. Switch the interfaces (repository PR) — merged (#188), Web3 site released and live-verified 5 October 2026
 
 **New locks:**
 

@@ -7,11 +7,21 @@
 #   EXPECTED_SHA=<40-char sha> scripts/deploy-web3-site.sh verify   # public HTTP only
 #   scripts/deploy-web3-site.sh rollback <remote backup dir>        # operator only
 #
+# DEPLOY_MODE=gate routes plan/deploy/rollback through the scoped host gate
+# (ssh -F ~/.fleet-ssh/config hetzner-deploy ...) and adds status|health|backups;
+# rollback then takes the backup stamp. Unset DEPLOY_MODE keeps the direct path below.
+#
 # deploy: exact-SHA docroot (git archive, never the working tree, including
 # .nginx/web3-security-headers.conf which the host nginx.conf includes) ->
 # backup of html + nginx.conf -> rsync -> nginx -t -> reload -> public verify.
 # nginx.conf itself, the container, other services, volumes, env and secrets
 # are never touched. Runbook: docs/WEB3_SITE_RELEASE.md
+#
+# Transfers are content-only (T-255): no -t/-a/-g/-o/-p. The v1 deploy user may
+# write under /opt/inferno (ACL) but may not set times, owner, group or mode on
+# root-owned inodes, so metadata flags made rsync exit 23. Changed files are
+# rewritten (new inode owned by the deployer, mode kept), unchanged ones are left
+# alone (--checksum). Every rsync error still fails the run.
 set -euo pipefail
 
 MODE="${1:-plan}"
@@ -69,8 +79,11 @@ remote_precheck() {
 
 # Sets RSYNC_ARGS (bash 3.2 compatible; macOS operators have no mapfile).
 set_rsync_args() {
-  # Symbolic --chmod: numeric modes need rsync >= 3.1; macOS ships 2.6.9.
-  RSYNC_ARGS=(-rlt --checksum --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r --itemize-changes)
+  # Content only (see header): -r -l keep the tree and symlinks, --checksum skips
+  # unchanged files without comparing times. --chmod sets the mode of new files
+  # only (no -p), so nginx can read them. Symbolic --chmod: numeric modes need
+  # rsync >= 3.1; macOS ships 2.6.9.
+  RSYNC_ARGS=(-rl --checksum --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r --itemize-changes)
   if [[ "$DELETE" == "1" ]]; then RSYNC_ARGS+=(--delete); fi
 }
 
@@ -88,6 +101,94 @@ verify_public() {
   (( failures == 0 )) || die "$failures public check(s) failed"
   echo "verified: $PUBLIC_URL serves $EXPECTED_SHA"
 }
+
+# Runs on the host via `bash -s -- <backup> <site> <container>`: restores html/
+# and nginx.conf from the backup, then proves the restore is complete, not only
+# content-identical. Any failed step or check exits non-zero. The body is one
+# function, so bash has read all of it before any command could consume stdin.
+IFS= read -r -d '' RESTORE_SCRIPT <<'REMOTE' || true
+set -euo pipefail
+main() {
+backup="$1" site="$2" container="$3"
+fail() { echo "ROLLBACK CHECK FAILED: $*" >&2; exit 1; }
+t="$(mktemp -d)"
+trap 'rm -r "$t"' EXIT
+tar -C "$t" -xpzf "$backup/html.tgz"
+ref="$t/html" live="$site/html"
+# Content only, like deploy: the v1 user cannot set times/owner/group/mode on root-owned inodes.
+rsync -rl --checksum --delete "$ref/" "$live/" || fail "rsync exited $?"
+cat "$backup/nginx.conf" > "$site/nginx.conf"
+lst() { local d="$1"; shift; (cd "$d" && find . "$@" -print) | LC_ALL=C sort; }
+links() { lst "$1" -type l | while IFS= read -r p; do printf '%s -> %s\n' "$p" "$(readlink "$1/$p")"; done; }
+# (b) symlinks: same paths and targets (checked first, so a link change is named as such)
+diff <(links "$ref") <(links "$live") >&2 || fail "(b) symlinks differ from the backup"
+# (a) content: no added, missing or changed entry; symlinks are compared, not followed
+diff -rq --no-dereference "$ref" "$live" >&2 || fail "(a) content differs from the backup"
+# (c) access: nothing the backup let others read (files o+r, dirs o+rx) lost it
+missing="$(LC_ALL=C comm -23 <(lst "$ref" \( -type f -perm -o=r -o -type d -perm -o=rx \)) \
+                             <(lst "$live" \( -type f -perm -o=r -o -type d -perm -o=rx \)))"
+[ -z "$missing" ] || { printf '%s\n' "$missing" | head -20 >&2; fail "(c) entries lost world read/traverse access"; }
+# (d) config: nginx.conf identical, tested and reloaded
+cmp "$backup/nginx.conf" "$site/nginx.conf" >&2 || fail "(d) nginx.conf differs from the backup"
+docker exec "$container" nginx -t || fail "(d) nginx -t failed"
+docker exec "$container" nginx -s reload || fail "(d) nginx reload failed"
+echo "restore verified: (a) content (b) symlinks (c) access (d) nginx.conf + nginx -t + reload"
+}
+main "$@"
+REMOTE
+
+# DEPLOY_MODE=gate: the same release through the scoped host gate (inferno-deploy v2).
+# The upload is the staged docroot with $HEADERS at its root; the tool backs up html and
+# nginx.conf, syncs, runs nginx -t and reloads. Local header/wallet tests and the public
+# verify stay on this side.
+case "${DEPLOY_MODE:-}" in
+  ''|ssh) ;;
+  gate)
+    # Never source a locally modified helper.
+    [[ -z "$(git -C "$ROOT" status --porcelain -- scripts/deploy-gate-lib.sh scripts/deploy-web3-site.sh)" ]] || die "working tree is dirty (scripts/deploy-gate-lib.sh or this script); release only from a clean checkout"
+    # shellcheck source=scripts/deploy-gate-lib.sh
+    . "$ROOT/scripts/deploy-gate-lib.sh"
+    GATE_DELETE=()
+    if [[ "$DELETE" == "1" ]]; then GATE_DELETE=(delete); fi
+    gate_release_tar() {
+      [[ -f "$STAGE/html/$HEADERS" ]] || die "staged docroot lacks $HEADERS"
+      # COPYFILE_DISABLE keeps macOS tar from adding ._* AppleDouble members.
+      COPYFILE_DISABLE=1 tar -C "$STAGE/html" -cf "$STAGE/upload.tar" .
+      TAR_SHA="$(gate_prepare "$STAGE/upload.tar")"
+    }
+    case "$MODE" in
+      plan)
+        require_sha
+        stage_release
+        gate_release_tar
+        gate web3-plan "$EXPECTED_SHA" "$TAR_SHA" ${GATE_DELETE[@]+"${GATE_DELETE[@]}"} < "$STAGE/upload.tar"
+        ;;
+      deploy)
+        require_sha
+        require_clean_exact_checkout
+        stage_release
+        gate_release_tar
+        gate web3-deploy "$EXPECTED_SHA" "$TAR_SHA" ${GATE_DELETE[@]+"${GATE_DELETE[@]}"} < "$STAGE/upload.tar"
+        verify_public
+        ;;
+      verify)
+        require_sha
+        stage_release
+        verify_public
+        ;;
+      rollback)
+        stamp="$(gate_stamp "${2:-}")"
+        gate web3-rollback "$stamp"
+        ;;
+      status)  gate status ;;
+      health)  gate health web3-site ;;
+      backups) gate backups web3-site ;;
+      *) die "unknown mode $MODE for DEPLOY_MODE=gate (plan|deploy|verify|rollback|status|health|backups)" ;;
+    esac
+    exit 0
+    ;;
+  *) die "DEPLOY_MODE must be unset (direct ssh) or gate" ;;
+esac
 
 case "$MODE" in
   plan)
@@ -130,7 +231,7 @@ case "$MODE" in
   rollback)
     backup="${2:-}"
     [[ "$backup" =~ ^$REMOTE_ROOT/backups/web3-site-[0-9]{8}T[0-9]{6}Z$ ]] || die "usage: rollback $REMOTE_ROOT/backups/web3-site-<YYYYMMDDTHHMMSSZ>"
-    remote "set -e; t=\$(mktemp -d); tar -C \"\$t\" -xzf '$backup/html.tgz'; rsync -a --delete \"\$t/html/\" '$SITE/html/'; rm -r \"\$t\"; cat '$backup/nginx.conf' > '$SITE/nginx.conf'; docker exec '$CONTAINER' nginx -t; docker exec '$CONTAINER' nginx -s reload"
+    remote "bash -s -- '$backup' '$SITE' '$CONTAINER'" <<< "$RESTORE_SCRIPT" || die "rollback to $backup FAILED or is incomplete; see the check output above"
     echo "rolled back to $backup"
     ;;
   *)

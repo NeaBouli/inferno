@@ -21,6 +21,13 @@ A new backup directory `/opt/inferno/backups/web3-site-<UTC>/` (never reused) re
 touched. If `nginx -t` fails, the previous headers file is restored from the backup and nginx is
 not reloaded.
 
+Transfers are content-only (`rsync -rl --checksum`, never `-t`/`-a`/`-g`/`-o`/`-p`, T-255). The
+v1 deploy user writes under `/opt/inferno` through an ACL but may not set times, owner, group or
+mode on root-owned inodes; metadata flags made the 2026-10-05 release exit 23. Changed files are
+rewritten as new inodes owned by the deployer with their previous mode, unchanged files are left
+alone, and `--chmod` makes new files world-readable for nginx. No right is widened, and every
+rsync error still fails the run.
+
 ## Run
 
 ```bash
@@ -49,9 +56,27 @@ WalletConnect cancel check from T-156.
 scripts/deploy-web3-site.sh rollback /opt/inferno/backups/web3-site-<UTC>
 ```
 
-Restores `html/` exactly (rsync `--delete` from the archive, including the headers file) and the
-backed-up `nginx.conf`, then `nginx -t` and reload. Only timestamped paths under the backup root
-are accepted.
+Restores `html/` (content-only rsync `--delete` from the archive, including the headers file) and
+the backed-up `nginx.conf`, then proves the restore on the host before it reports success:
+
+| Check | Pass condition |
+| --- | --- |
+| (a) content | `diff -rq --no-dereference` between the extracted backup and the live docroot is empty |
+| (b) symlinks | sorted `path -> target` lists of both trees are identical |
+| (c) access | every file the backup let others read (`o+r`) and every directory others could traverse (`o+rx`) still allows it |
+| (d) config | `nginx.conf` is byte-identical to the backup (`cmp`), then `nginx -t` and reload succeed |
+
+Any failed step or check stops with `ROLLBACK CHECK FAILED: <check>` and a non-zero exit; nginx is
+not reloaded on an unproven restore. A content-only restore cannot change modes, so a lost `o+r`
+keeps failing (c) until it is fixed by hand. Only timestamped paths under the backup root are
+accepted.
+
+## Gate mode
+
+With `DEPLOY_MODE=gate` the same modes run through the scoped deploy gate (inferno-deploy v2):
+the staged docroot goes up as a tar with `.nginx/web3-security-headers.conf` at its root, and
+`rollback` takes the backup stamp. Mapping and details: [Compose Service Release, gate
+mode](COMPOSE_SERVICE_RELEASE.md#gate-mode).
 
 ## Tests
 
@@ -60,5 +85,7 @@ copy of the host layout (remote commands really run there; only docker, df and c
 plan leaves the host byte-identical, a missing include or failed sync stops before any nginx
 action, failed `nginx -t` restores the headers, deploy ships docroot + anchors + headers without
 touching `nginx.conf`, verify fails on a tampered file or CSP, rollback restores the docroot
-exactly and rejects other paths, and `scripts/deploy-benefits-network.sh` refuses deploys without
+exactly and rejects other paths, the fake rsync refuses any metadata flag on a host write (as the
+v1 user does) and every host-writing rsync is asserted content-only, and the rollback fails on a
+tampered file, symlink, lost `o+r`, truncated `nginx.conf`, failed `nginx -t` or failed restore sync, and `scripts/deploy-benefits-network.sh` refuses deploys without
 the exact clean `EXPECTED_SHA`. Each guard is mutation-checked.

@@ -25,6 +25,8 @@ on:
       - 'scripts/check-cwa-remediation-register.cjs'
       - 'scripts/test-cwa-content-coherence.cjs'
       - 'scripts/test-docs-truth.cjs'
+      - 'scripts/test-ifr-benefits-widget.cjs'
+      - 'apps/benefits-network/frontend/src/components/WalletStatus.tsx'
       - 'deployments/mainnet.json'
       - 'scripts/check-sitemap-anchors.cjs'
       - 'scripts/test-sitemap-anchors.cjs'
@@ -50,6 +52,8 @@ on:
       - 'scripts/test-deploy-release-guards.sh'
       - 'scripts/deploy-compose-service.sh'
       - 'scripts/test-deploy-compose-service.sh'
+      - 'scripts/deploy-gate-lib.sh'
+      - 'scripts/test-deploy-gate-client.sh'
       - 'scripts/test-ifr-state-unavailable.cjs'
       - 'scripts/test-security-reporting-config.cjs'
       - 'scripts/check-browser-ethers6.cjs'
@@ -83,6 +87,8 @@ on:
       - 'scripts/check-cwa-remediation-register.cjs'
       - 'scripts/test-cwa-content-coherence.cjs'
       - 'scripts/test-docs-truth.cjs'
+      - 'scripts/test-ifr-benefits-widget.cjs'
+      - 'apps/benefits-network/frontend/src/components/WalletStatus.tsx'
       - 'deployments/mainnet.json'
       - 'scripts/check-sitemap-anchors.cjs'
       - 'scripts/test-sitemap-anchors.cjs'
@@ -107,6 +113,8 @@ on:
       - 'scripts/test-deploy-release-guards.sh'
       - 'scripts/deploy-compose-service.sh'
       - 'scripts/test-deploy-compose-service.sh'
+      - 'scripts/deploy-gate-lib.sh'
+      - 'scripts/test-deploy-gate-client.sh'
       - 'scripts/test-ifr-state-unavailable.cjs'
       - 'scripts/test-security-reporting-config.cjs'
       - 'scripts/check-browser-ethers6.cjs'
@@ -230,6 +238,9 @@ jobs:
       - name: Check public content trust
         run: npm run test:content-trust
 
+      - name: Check builder page generator output
+        run: npm run test:builder-page
+
       - name: Check CEX fee-exemption policy consistency
         run: npm run test:cex-fee-policy
 
@@ -333,6 +344,9 @@ jobs:
 
       - name: Run Web3 write-flow suite
         run: npm run test:web3-write
+
+      - name: Verify serverless IFR Benefits widget rules and published SRI
+        run: node scripts/test-ifr-benefits-widget.cjs
 
       - name: Run Landing live transparency and Wiki shell suite
         run: npm run test:landing-wiki-ui

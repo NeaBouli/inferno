@@ -28,7 +28,7 @@ const result = await verifyIfrBenefit({
 
 - **`/1` or `/2`.** `/2` reads CommitmentVault V1 **and** V2 and sums their active TIME_ONLY tranches; `/1`
   reads V1 only. `/1` stays the default so existing integrations keep their exact results. Move to `/2`
-  explicitly once V2 accepts new time locks (after Governance proposal #17). For messages, pass
+  explicitly; V2 accepts new time locks since Governance proposal #17 (executed 2026-10-04). For messages, pass
   `expected.specs: ["ifr-benefits-verify/1", "ifr-benefits-verify/2"]` during the transition and evaluate
   with `benefitMessageSpec(parseBenefitMessage(message), specs)`; build `/2` messages with
   `buildBenefitMessage({ …, spec: "ifr-benefits-verify/2" })`.

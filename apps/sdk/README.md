@@ -5,8 +5,11 @@ sessions. The package currently supports Ethereum Mainnet only.
 
 ## Availability
 
-The SDK is not yet published to the npm registry. Repository consumers build and pack the
-versioned artifact first:
+The SDK is not yet published to the npm registry. Publication is prepared: the first version is a
+one-time manual bootstrap by the project npm account; every later version is published by
+`.github/workflows/sdk-publish.yml`, dispatched manually on protected `main`, which checks the release
+gate, waits for owner approval, tests the package and publishes it with npm provenance through npm
+Trusted Publishing. Until then, build and pack the versioned artifact from the repository:
 
 ```bash
 cd apps/sdk
@@ -16,7 +19,15 @@ npm pack --ignore-scripts
 ```
 
 Add the resulting `.tgz` path to the consuming application's `package.json` and committed
-lockfile, then use `npm ci`. Do not treat the repository package as a registry release.
+lockfile, then use `npm ci`.
+
+## Contract Addresses
+
+`MAINNET_ADDRESSES` lists deployed contracts. `commitmentVault` is CommitmentVault V1: its
+price-conditioned tranches can never unlock, so applications must not create new locks there;
+existing time tranches stay unlockable through V1. `commitmentVaultV2` is CommitmentVault V2
+(TIME_ONLY); it accepts new time locks once Governance proposal #17 (its fee exemption) has executed.
+`lendingVault` is the retired LendingVault V1 with borrowing permanently disabled.
 
 The tarball exports CommonJS with tested ESM named-import interoperability and supports Node.js
 20 and 22. CI verifies the exact package contents, installs the locked tarball with `npm ci`, and
@@ -27,6 +38,40 @@ The canonical REST API is:
 ```text
 https://copilot-api.ifrunit.tech/api/ifr/check
 ```
+
+## Benefit Tiers
+
+`DEFAULT_TIERS` is the project's default preset and matches the Benefits network: IFR **locked in
+IFRLock** only, Bronze 1,000 / Silver 2,500 / Gold 5,000 / Platinum 10,000.
+
+```js
+const { IFRClient, DEFAULT_TIERS, getBenefitTierFromRaw } = require("ifr-sdk");
+const client = new IFRClient();
+const tier = await client.getBenefitTier(wallet);            // default preset
+const own = await client.getBenefitTier(wallet, [            // your own model
+  { key: "fan", name: "Fan", minLocked: "100" },
+  { key: "vip", name: "VIP", minLocked: "2000" },
+]);
+```
+
+- The tiers are a **default preset and label set, not a rule**. In the Benefits network every partner
+  sets its own thresholds, minimum held IFR, lock source (IFRLock, CommitmentVault time locks or
+  either), discount and daily/monthly limits per benefit.
+- Any project may verify IFR permissionlessly with its own rule, for example a hold-based check with
+  its own discount, following the open verification profile `ifr-benefits-verify/1`.
+- Discounts are independent of partner rewards. PartnerVault rewards follow Lane 4 model B and are
+  available only to approved pilot partners; they are currently disabled.
+- `getBenefitTier` reads IFRLock only and fails closed: a failed read throws instead of reporting 0.
+- `TIER_THRESHOLDS`, `TIER_NAMES`, `getTier`, `getTierFromRaw` and the `tier` fields of `checkAccess` are
+  the deprecated legacy hold+lock access tiers (balance + locked, 500 / 2,000 / 10,000). They remain
+  for compatibility and are removed in 1.0.
+
+## Read Errors
+
+The SDK never turns a failed on-chain read into `0` or `false`. If a read fails, `checkAccess`, `getTier`,
+`getBenefitTier`, `getLockedBalance` and `isBuilder` reject with `IFRReadError` (its `read` field names the
+failed call, `cause` holds the original error). Treat it as "could not verify", not as "nothing locked" or
+"not a builder".
 
 ## Benefits Checkout
 
@@ -53,5 +98,4 @@ npm audit --audit-level=moderate
 npm pack --dry-run
 ```
 
-Publication remains blocked until the release checklist in
-`docs/runbooks/IFR_SDK_NPM_RELEASE.md` is complete.
+Publication follows the release checklist in `docs/runbooks/IFR_SDK_NPM_RELEASE.md`.

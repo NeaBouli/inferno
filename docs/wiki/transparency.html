@@ -586,6 +586,7 @@
         <li><a href="https://ifrunit.tech/wiki/faq.html">FAQ</a></li>
         <li><a href="https://ifrunit.tech/wiki/integration.html">Integration Guide</a></li>
         <li><a href="https://ifrunit.tech/wiki/business-onboarding.html">Business Onboarding</a></li>
+        <li><a href="https://ifrunit.tech/wiki/integrate-benefits.html">Integrate Benefits (No Server)</a></li>
         <li><a href="https://ifrunit.tech/wiki/agent.html">AI Copilot</a></li>
         <li><a href="https://ifrunit.tech/wiki/verify.html">Verify Wallet</a></li>
         <li class="nav-divider"></li>
@@ -678,8 +679,8 @@
             </tr>
             <tr>
               <td><strong>Voucher Signer</strong></td>
-              <td class="address"><a href="https://etherscan.io/address/0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4" target="_blank">0x17F8...72d4</a></td>
-              <td>Benefits Network signing</td>
+              <td class="address"><a href="https://etherscan.io/address/0x790D99c320dafA03d83bEa152178A6523b49CA0d" target="_blank">0x790D...CA0d</a></td>
+              <td>Benefits Network signing (dedicated key since Proposal #18, 05.10.2026)</td>
               <td>0</td>
               <td id="live-voucher"><span class="spinner"></span></td>
             </tr>
@@ -757,7 +758,7 @@
             <tr>
               <td><strong>IFRLock</strong></td>
               <td class="address"><a href="https://etherscan.io/address/0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb" target="_blank">0x7699...54Eb</a></td>
-              <td>guardian(): Deployer</td>
+              <td>guardian(): TreasurySafe</td>
               <td>0</td>
               <td id="live-lock"><span class="spinner"></span></td>
             </tr>
@@ -792,7 +793,7 @@
             <tr>
               <td><strong>Vesting</strong></td>
               <td class="address"><a href="https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271" target="_blank">0x2694...6271</a></td>
-              <td>guardian(): Deployer</td>
+              <td>guardian(): TreasurySafe</td>
               <td>150,000,000</td>
               <td id="live-vesting"><span class="spinner"></span></td>
             </tr>
@@ -956,7 +957,7 @@
         </table>
       </div>
       <div class="callout" style="margin-top:12px;">
-        <p><strong>Note:</strong> BuybackVault and BurnReserve are <em>not</em> genesis allocations. They do <em>not</em> receive the 1% IFR pool fee: since Proposal #6 that fee lands in FeeRouterV1, which has no IFR withdrawal path (<a href="#lost-ifr">CWA-02</a>). BurnReserve receives IFR from BuybackController buybacks. Bootstrap and LP launch are complete; balances are shown live above.</p>
+        <p><strong>Note:</strong> BuybackVault and BurnReserve are <em>not</em> genesis allocations. They do <em>not</em> receive the 1% IFR pool fee: from Proposal #6 until Proposal #21 (05.10.2026) that fee landed in FeeRouterV1, which has no IFR withdrawal path (<a href="#lost-ifr">CWA-02</a>); since #21 it goes to BuybackController. BurnReserve receives IFR from BuybackController buybacks. Bootstrap and LP launch are complete; balances are shown live above.</p>
       </div>
 
       <h3>All Token Movements &mdash; Chronological Log</h3>
@@ -1110,6 +1111,42 @@
               <td>Self-service MetaMask lock flow executed by contributor. Free IFR remains available for the next LendingVault offer step.</td>
               <td class="status-ok">&#x2705; Verified on-chain</td>
             </tr>
+            <tr>
+              <td>04.10.2026</td>
+              <td colspan="3"><strong>Governance:</strong> ProposalExecuted(#17) &mdash; <code>setFeeExempt(CommitmentVault V2, true)</code><br>
+                <span style="font-size:11px;color:var(--muted);">TX: <a href="https://etherscan.io/tx/0xbb53640ca8fd59513c8c772a0ceb633d63d7d9837768c28535bd67da6c4a835c" target="_blank">0xbb53640c&hellip;835c</a> &middot; Block 26121846</span>
+              </td>
+              <td>&mdash;</td>
+              <td>CommitmentVault V2 feeExempt = TRUE &mdash; V2 can accept time-only locks without the transfer fee. Proposals #18&ndash;#21 were still queued at this point.</td>
+              <td class="status-ok">&#x2705; Done</td>
+            </tr>
+            <tr>
+              <td>05.10.2026</td>
+              <td colspan="3"><strong>Governance:</strong> ProposalExecuted(#18) &mdash; <code>setVoucherSigner(0x790D&hellip;CA0d)</code> on FeeRouterV1 (CWA-06)<br>
+                <span style="font-size:11px;color:var(--muted);">TX: <a href="https://etherscan.io/tx/0x40a856b9f994a17390c042abe851c5ff99ca86289eb86316eb119f465cd89679" target="_blank">0x40a856b9&hellip;9679</a> &middot; Block 26124623 &middot; 07:17:47 UTC</span>
+              </td>
+              <td>&mdash;</td>
+              <td>FeeRouterV1.voucherSigner = 0x790D&hellip;CA0d, a dedicated key outside the Safe signer set; the points backend uses the same signer.</td>
+              <td class="status-ok">&#x2705; Done</td>
+            </tr>
+            <tr>
+              <td>05.10.2026</td>
+              <td colspan="3"><strong>Governance:</strong> ProposalExecuted(#19, #20) &mdash; <code>setGuardian(TreasurySafe)</code> on LiquidityReserve and BurnReserve (CWA-09)<br>
+                <span style="font-size:11px;color:var(--muted);">TX: <a href="https://etherscan.io/tx/0xa432f061d42d3cbf306e44cf27394da5f70443d8d765cb1cfea66e17be19df27" target="_blank">0xa432f061&hellip;df27</a> &middot; Block 26124647 &middot; 07:22:47 UTC &middot; one Safe TX</span>
+              </td>
+              <td>&mdash;</td>
+              <td>guardian() of LiquidityReserve and BurnReserve = TreasurySafe. All six mutable guardians are now the TreasurySafe.</td>
+              <td class="status-ok">&#x2705; Done</td>
+            </tr>
+            <tr>
+              <td>05.10.2026</td>
+              <td colspan="3"><strong>Governance:</strong> ProposalExecuted(#21) &mdash; <code>setPoolFeeReceiver(BuybackController)</code> on InfernoToken (CWA-02)<br>
+                <span style="font-size:11px;color:var(--muted);">TX: <a href="https://etherscan.io/tx/0x8de48b47dfa8f17b631fb744bc4deef9bbb68271f8b700b422cdd3abb739ca26" target="_blank">0x8de48b47&hellip;ca26</a> &middot; Block 26124660 &middot; 07:25:23 UTC</span>
+              </td>
+              <td>&mdash;</td>
+              <td>New IFR pool fees go to BuybackController (recoverable through governed <code>withdrawIFR</code>). The pool-fee inflow to FeeRouterV1 stopped; its IFR balance is 734,545.074097347 IFR as of this block.</td>
+              <td class="status-ok">&#x2705; Done</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -1180,7 +1217,7 @@
             <tr>
               <td><strong>BuybackVault</strong></td>
               <td class="address"><a href="https://etherscan.io/address/0x670D293e3D65f96171c10DdC8d88B96b0570F812" target="_blank">0x670D...F812</a></td>
-              <td>Protocol buyback reserve. Not pre-funded at genesis and does not receive the IFR pool fee (it strands in FeeRouterV1, <a href="#lost-ifr">CWA-02</a>). Activated 60 days after deployment.</td>
+              <td>Protocol buyback reserve. Not pre-funded at genesis and does not receive the IFR pool fee (it went to FeeRouterV1 until 05.10.2026, <a href="#lost-ifr">CWA-02</a>, and goes to BuybackController since Proposal #21). Activated 60 days after deployment.</td>
               <td id="cur-buyback">0 IFR</td>
               <td>Smart contract &mdash; Governance controlled</td>
             </tr>
@@ -1215,8 +1252,8 @@
             <tr>
               <td><strong>CommitmentVault V2</strong></td>
               <td class="address"><a href="https://etherscan.io/address/0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F" target="_blank">0x8efa...7c8F</a></td>
-              <td>CV-01 repair, deployed 02.10.2026, owner Governance, Etherscan verified. Accepts TIME_ONLY locks only; opens for new time locks after Governance proposal #17 (fee exemption) executes. Listed separately as pending wiring; not part of the 14 + 3 = 17 component count until then.</td>
-              <td>Pending wiring</td>
+              <td>CV-01 repair, deployed 2 October 2026, owner Governance, Etherscan verified. Accepts TIME_ONLY locks only; fee-exempt since Governance proposal #17 (executed 4 October 2026, block 26121846) and receives new time locks. Counted as the 15th protocol contract (15 + 3 = 18 components); V1 stays listed as legacy and existing V1 tranches unlock through V1.</td>
+              <td>Not loaded here</td>
               <td>Smart contract &mdash; non-custodial time locks</td>
             </tr>
             <tr>
@@ -1372,7 +1409,7 @@
           <strong style="color:#e2e8f0;">Decision:</strong> These fees will not be manually re-routed to FeeRouterV1. A manual transfer would incur an additional 3.5% fee impact (~735 IFR total: 2.5% burned and 1% routed to the pool-fee receiver), creating more harm than benefit for a negligible amount (0.002% of total supply). This is documented here for full transparency.
         </p>
         <p style="margin:8px 0 0 0; font-size:12px; color:#475569;">
-          From Proposal #6 onwards, the 1% IFR pool fee routes to FeeRouterV1 and stays there: FeeRouterV1 forwards only ETH swap fees and has no IFR withdrawal path (CWA-02). These IFR are <a href="#lost-ifr">permanently lost</a>. Decided 03.10.2026: future pool fees go to BuybackController (pending Governance execution).
+          From Proposal #6 until Proposal #21, the 1% IFR pool fee routed to FeeRouterV1 and stays there: FeeRouterV1 forwards only ETH swap fees and has no IFR withdrawal path (CWA-02). These IFR are <a href="#lost-ifr">permanently lost</a>. Since Proposal #21 (executed 05.10.2026, block 26124660) future pool fees go to BuybackController, so the pool-fee inflow to FeeRouterV1 has stopped.
         </p>
       </div>
 
@@ -1441,7 +1478,7 @@
 
       <!-- ===== Permanently Lost IFR (T-202) ===== -->
       <h2 id="lost-ifr">Permanently Lost IFR</h2>
-      <p>Some IFR can never move again. They are <strong>not burned</strong>: they remain in <code>totalSupply()</code> and in the table above, but no wallet, contract or Governance call can ever release them. Verified on Ethereum Mainnet at block 26,108,134 (03.10.2026).</p>
+      <p>Some IFR can never move again. They are <strong>not burned</strong>: they remain in <code>totalSupply()</code> and in the table above, but no wallet, contract or Governance call can ever release them. Balances as of Ethereum Mainnet block 26,124,660 (05.10.2026), the block in which Proposal #21 stopped the pool-fee inflow to FeeRouterV1. Direct IFR transfers to the FeeRouterV1 address remain possible, so its part is still read live.</p>
       <div class="table-wrap">
         <table>
           <thead>
@@ -1456,20 +1493,20 @@
             </tr>
             <tr>
               <td>FeeRouterV1 <a href="https://etherscan.io/address/0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a" target="_blank">0x4807&hellip;C60a</a></td>
-              <td>724,992.668043224</td>
-              <td>Receives the 1% IFR pool fee since Proposal #6 but has no IFR withdrawal or forwarding function (CWA-02).</td>
-              <td>Yes, until Governance moves the pool-fee receiver to BuybackController (decided 03.10.2026, pending execution); fixed afterwards</td>
+              <td>734,545.074097347</td>
+              <td>Received the 1% IFR pool fee from Proposal #6 until Proposal #21 but has no IFR withdrawal or forwarding function (CWA-02).</td>
+              <td>Pool-fee inflow stopped at block 26,124,660 (Proposal #21, 05.10.2026: new pool fees go to BuybackController); direct transfers to the address remain possible</td>
             </tr>
             <tr style="border-top:2px solid var(--border)">
               <td><strong>Total permanently lost</strong></td>
-              <td><strong>27,143,460.662381577</strong></td>
-              <td>2.723% of current <code>totalSupply()</code> (996,687,518.33 IFR)</td>
-              <td>The Landing reads the FeeRouterV1 part live</td>
+              <td><strong>27,153,013.068435700</strong></td>
+              <td>2.724% of <code>totalSupply()</code> at block 26,124,660 (996,663,637.31 IFR)</td>
+              <td>As of block 26,124,660; the Landing reads the FeeRouterV1 part live</td>
             </tr>
           </tbody>
         </table>
       </div>
-      <p>Supply that can still move: <code>totalSupply()</code> minus the total above = <strong>969,544,057.67 IFR</strong> at block 26,108,134. This is an informational figure, not an on-chain value.</p>
+      <p>Supply that can still move: <code>totalSupply()</code> minus the total above = <strong>969,510,624.25 IFR</strong> at block 26,124,660. This is an informational figure, not an on-chain value.</p>
 
       <div class="callout callout-yellow">
         <p><strong>Transparency note:</strong> Community Safe received 57.9M IFR (not 60M) &mdash; 1.5M IFR permanently burned (2.5% burn fee) + 0.6M IFR sent to Pool Fee Receiver (1% pool fee) = 2.1M total deducted. The Community EOA was not registered as feeExempt. The Treasury transfer was feeExempt (150M = 150M, zero burn).</p>
@@ -1671,7 +1708,7 @@
           <tbody>
             <tr><td>Timelock Delay</td><td>48 hours (172,800 seconds)</td></tr>
             <tr><td>Governance Owner</td><td class="address"><a href="https://etherscan.io/address/0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b">0x5ad6...cE3b</a> (TreasurySafe 3-of-5 &mdash; since 20.03.2026, <a href="https://etherscan.io/tx/0xcd9f99d2e5df5c28b81f885c7ebf7e2d42a873bd1c81bef9d94aa5c2d19c46c3" target="_blank">TX</a>)</td></tr>
-            <tr><td>Guardian</td><td class="address"><a href="https://etherscan.io/address/0x6b36687b0cd4386fb14cf565B67D7862110Fed67">0x6b36...ed67</a> (Deployer &mdash; can cancel proposals only)</td></tr>
+            <tr><td>Guardian</td><td class="address"><a href="https://etherscan.io/address/0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b">0x5ad6...cE3b</a> (TreasurySafe &mdash; can cancel proposals only; moved from the Deployer on 3 October 2026)</td></tr>
           </tbody>
         </table>
       </div>

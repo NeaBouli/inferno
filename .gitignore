@@ -50,6 +50,7 @@ package-lock.json
 !apps/sdk/package-lock.json
 !apps/benefits-verify/package-lock.json
 !infra/web3/walletconnect-provider/package-lock.json
+!test/builder/compile-harness/package-lock.json
 
 # Archive (local artifacts, not for repo)
 _archive/

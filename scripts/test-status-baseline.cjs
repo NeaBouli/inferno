@@ -55,7 +55,7 @@ const currentBaseline = [
   "**Current engineering baseline:** 2 October 2026",
   "Current repository verification",
   "Hardhat `3.18.0`",
-  "contracts `655/655`",
+  "contracts `681/681`",
   "`45/45` passed",
   "Root `npm audit`: 0 vulnerabilities",
   "Benefits physical device/wallet acceptance remains `1/10`",
@@ -243,7 +243,7 @@ requireText("docs/COINMARKETCAP_SUBMISSION.md", [
 
 requireText("docs/wiki/index.html", [
   "36 wiki pages",
-  '<span class="stat-value">17</span>',
+  '<span class="stat-value">18</span>',
   '<span class="stat-value">36</span>',
 ]);
 requireText("docs/index.html", ["Complete wiki with 36 pages"]);

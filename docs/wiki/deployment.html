@@ -544,6 +544,7 @@
         <li><a href="https://ifrunit.tech/wiki/faq.html">FAQ</a></li>
         <li><a href="https://ifrunit.tech/wiki/integration.html">Integration Guide</a></li>
         <li><a href="https://ifrunit.tech/wiki/business-onboarding.html">Business Onboarding</a></li>
+        <li><a href="https://ifrunit.tech/wiki/integrate-benefits.html">Integrate Benefits (No Server)</a></li>
         <li><a href="https://ifrunit.tech/wiki/agent.html">AI Copilot</a></li>
         <li><a href="https://ifrunit.tech/wiki/verify.html">Verify Wallet</a></li>
         <li class="nav-divider"></li>
@@ -611,7 +612,7 @@
       <!-- ==================== Section 1: Mainnet Addresses ==================== -->
       <h2>1. Mainnet Addresses</h2>
 
-      <p>All 14 contracts deployed (17 on-chain components total) and verified on Ethereum Mainnet. For Sepolia testnet addresses, see the <a href="https://ifrunit.tech/wiki/testnet.html">Testnet page</a>.</p>
+      <p>All 15 protocol contracts deployed (18 on-chain components total with the 3 Gnosis Safes) and verified on Ethereum Mainnet. The list shows deployed components, not that every one is active. For Sepolia testnet addresses, see the <a href="https://ifrunit.tech/wiki/testnet.html">Testnet page</a>.</p>
       <div class="table-wrap">
         <table>
           <thead>
@@ -629,8 +630,10 @@
             <tr><td>LiquidityReserve</td><td><code><a href="https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64#code" target="_blank" rel="noopener">0xdc0309804803b3A105154f6073061E3185018f64</a></code></td></tr>
             <tr><td>BootstrapVaultV3 <span class="badge badge-done">FINALIZED</span></td><td><code><a href="https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141#code" target="_blank" rel="noopener">0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141</a></code></td></tr>
             <tr><td>BuilderRegistry</td><td><code><a href="https://etherscan.io/address/0xdfe6636DA47F8949330697e1dC5391267CEf0EE3#code" target="_blank" rel="noopener">0xdfe6636DA47F8949330697e1dC5391267CEf0EE3</a></code></td></tr>
-            <tr><td>CommitmentVault <span class="badge badge-done">Phase 3</span></td><td><code><a href="https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3#code" target="_blank" rel="noopener">0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3</a></code></td></tr>
+            <tr><td>CommitmentVault (V1, legacy) <span class="badge badge-done">Phase 3</span></td><td><code><a href="https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3#code" target="_blank" rel="noopener">0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3</a></code></td></tr>
             <tr><td>LendingVault <span class="badge badge-done">Phase 3</span></td><td><code><a href="https://etherscan.io/address/0x974305Ab0EC905172e697271C3d7d385194EB9DF#code" target="_blank" rel="noopener">0x974305Ab0EC905172e697271C3d7d385194EB9DF</a></code></td></tr>
+            <tr><td>BuybackController</td><td><code><a href="https://etherscan.io/address/0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c#code" target="_blank" rel="noopener">0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c</a></code></td></tr>
+            <tr><td>CommitmentVault V2 <span class="badge badge-done">CV-01 repair</span></td><td><code><a href="https://etherscan.io/address/0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F#code" target="_blank" rel="noopener">0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F</a></code></td></tr>
             <tr><td>LP Token (IFR/WETH) <span class="badge badge-done">&#x2705; Live</span></td><td><code><a href="https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" rel="noopener">0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</a></code> &mdash; Block 25254575 &mdash; TX: <a href="https://etherscan.io/tx/0x949848bdd09f4c867a2593afffb0137c7db2c1457d8a8f5ff4428f8ecce69c5f" target="_blank" rel="noopener" style="font-size:11px;">0x949848bd&hellip;</a></td></tr>
             <tr><td><s>BootstrapVault V1</s></td><td><code><s>0xA820...261a</s></code> &mdash; DEPRECATED, superseded by V3</td></tr>
           </tbody>
@@ -848,7 +851,7 @@
       <!-- ==================== Section 5: Etherscan Verification ==================== -->
       <h2>5. Etherscan Verification</h2>
       <p>
-        All 14 contracts are verified on Etherscan Mainnet. Use the Hardhat verify plugin with the exact constructor arguments used during deployment.
+        All 15 contracts are verified on Etherscan Mainnet. Use the Hardhat verify plugin with the exact constructor arguments used during deployment.
       </p>
 
       <pre><code>npx hardhat verify --network mainnet CONTRACT_ADDRESS CONSTRUCTOR_ARGS...</code></pre>

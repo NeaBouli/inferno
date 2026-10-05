@@ -17,9 +17,9 @@ REMOTE_VOLUME="${REMOTE_VOLUME:-/mnt/HC_Volume_106164848}"
 REMOTE_COMPOSE_ENV_FILE="${REMOTE_COMPOSE_ENV_FILE:-$REMOTE_ROOT/.env.benefits}"
 
 case "$MODE" in
-  frontend|backend|all|status|capacity) ;;
+  frontend|backend|all|status|capacity|env-vault-v2|rollback|env-restore) ;;
   *)
-    echo "Usage: $0 [frontend|backend|all|status]" >&2
+    echo "Usage: $0 [frontend|backend|all|status|capacity]  (DEPLOY_MODE=gate adds: env-vault-v2 <address>, rollback <stamp>, env-restore <stamp>)" >&2
     exit 64
     ;;
 esac
@@ -36,6 +36,88 @@ for var in REMOTE_ROOT REMOTE_VOLUME REMOTE_COMPOSE_ENV_FILE; do
     exit 64
   fi
 done
+
+# DEPLOY_MODE=gate: the same release through the scoped host gate (inferno-deploy v2).
+# The upload is git archive <EXPECTED_SHA>:apps/benefits-network, so ignored or edited
+# local files cannot ship; the tool on the host does the env-contract check, the
+# capacity floor (refuse below it; gate mode never prunes the shared Docker daemon), the single-backend asserts, the
+# sync and the rebuild. No secret is ever sent; env-set is whitelisted on the host
+# for the public COMMITMENT_VAULT_V2_ADDRESS only.
+case "${DEPLOY_MODE:-}" in
+  ''|ssh)
+    if [[ "$MODE" == "env-vault-v2" || "$MODE" == "rollback" || "$MODE" == "env-restore" ]]; then
+      echo "$MODE needs DEPLOY_MODE=gate." >&2
+      exit 64
+    fi
+    ;;
+  gate)
+    # Any set ALLOW_PRUNE (including empty or 0) is refused: gate mode has no prune switch at all.
+    if [[ -n "${ALLOW_PRUNE+set}" ]]; then
+      echo "Refusing: gate mode never prunes (the Docker daemon is shared with other projects); unset ALLOW_PRUNE." >&2
+      exit 64
+    fi
+    # Never source a locally modified helper.
+    if [[ -n "$(git -C "$LOCAL_ROOT" status --porcelain -- scripts/deploy-gate-lib.sh scripts/deploy-benefits-network.sh)" ]]; then
+      echo "Refusing: working tree is dirty (scripts/deploy-gate-lib.sh or this script); release only from a clean checkout." >&2
+      exit 65
+    fi
+    # shellcheck source=scripts/deploy-gate-lib.sh
+    . "$LOCAL_ROOT/scripts/deploy-gate-lib.sh"
+    case "$MODE" in
+      status|capacity)
+        gate benefits-status
+        ;;
+      frontend|backend|all)
+        if [[ ! "${EXPECTED_SHA:-}" =~ ^[0-9a-f]{40}$ ]]; then
+          echo "Set EXPECTED_SHA to the full 40-char release commit before $MODE deploys." >&2
+          exit 64
+        fi
+        if ! git -C "$LOCAL_ROOT" cat-file -e "${EXPECTED_SHA}^{commit}" 2>/dev/null; then
+          echo "Refusing deploy: commit $EXPECTED_SHA is not in this clone; git fetch first." >&2
+          exit 65
+        fi
+        if [[ "$(git -C "$LOCAL_ROOT" rev-parse HEAD)" != "$EXPECTED_SHA" ]]; then
+          echo "Refusing deploy: HEAD is not $EXPECTED_SHA." >&2
+          exit 65
+        fi
+        # Whole-checkout guard (like Compose/Web3): covers the sourced gate helper too.
+        if [[ -n "$(git -C "$LOCAL_ROOT" status --porcelain)" ]]; then
+          echo "Refusing deploy: working tree is dirty (incl. scripts/deploy-gate-lib.sh); release only from a clean checkout." >&2
+          exit 65
+        fi
+        STAGE="$(mktemp -d)"
+        trap 'rm -r "$STAGE"' EXIT
+        git -C "$LOCAL_ROOT" archive --format=tar "$EXPECTED_SHA:apps/benefits-network" > "$STAGE/upload.tar"
+        TAR_SHA="$(gate_prepare "$STAGE/upload.tar")"
+        gate benefits-deploy "$MODE" "$EXPECTED_SHA" "$TAR_SHA" < "$STAGE/upload.tar"
+        ;;
+      env-vault-v2)
+        if [[ ! "${2:-}" =~ ^0x[0-9a-fA-F]{40}$ ]]; then
+          echo "Usage: DEPLOY_MODE=gate $0 env-vault-v2 <0x-address of CommitmentVaultV2>" >&2
+          exit 64
+        fi
+        gate env-set .env.benefits COMMITMENT_VAULT_V2_ADDRESS "$2"
+        ;;
+      rollback)
+        stamp="$(gate_stamp "${2:-}")"
+        gate benefits-rollback "$stamp"
+        ;;
+      env-restore)
+        stamp="$(gate_stamp "${2:-}")"
+        gate benefits-env-restore "$stamp"
+        ;;
+      *)
+        echo "Unknown mode $MODE for DEPLOY_MODE=gate." >&2
+        exit 64
+        ;;
+    esac
+    exit 0
+    ;;
+  *)
+    echo "DEPLOY_MODE must be unset (direct ssh) or gate." >&2
+    exit 64
+    ;;
+esac
 
 remote() {
   ssh "$SSH_HOST" "$@"
