@@ -141,32 +141,38 @@
 | 8 | **Vesting** | [`0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271`](https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271#code) | Verified |
 | 9 | **LiquidityReserve** | [`0xdc0309804803b3A105154f6073061E3185018f64`](https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64#code) | Verified |
 | 10 | **BootstrapVaultV3** | [`0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141`](https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141#code) | Verified / finalized |
-| 11 | **CommitmentVault** | [`0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3`](https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3#code) | Verified |
+| 11 | **CommitmentVault** | [`0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3`](https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3#code) | Verified / legacy V1 (existing tranches unlock through V1) |
 | 12 | **LendingVault** | [`0x974305Ab0EC905172e697271C3d7d385194EB9DF`](https://etherscan.io/address/0x974305Ab0EC905172e697271C3d7d385194EB9DF#code) | Verified |
 | 13 | **BuilderRegistry** | [`0xdfe6636DA47F8949330697e1dC5391267CEf0EE3`](https://etherscan.io/address/0xdfe6636DA47F8949330697e1dC5391267CEf0EE3#code) | Verified |
 | 14 | **BuybackController** | [`0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c`](https://etherscan.io/address/0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c#code) | Verified / governance-wired |
+| 15 | **CommitmentVaultV2** | [`0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F`](https://etherscan.io/address/0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F#code) | Verified / Sourcify exact match |
 
-CommitmentVault V2 (CV-01 repair, deployed, fee-exempt since proposal #17):
+CommitmentVault V2 (row 15; CV-01 repair, deployed, fee-exempt since proposal #17):
 [`0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F`](https://etherscan.io/address/0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F#code)
 — deployed 2026-10-02 21:22 UTC, block 26107296, TX
 [`0x9857a570...3ea0f7`](https://etherscan.io/tx/0x9857a5707b650b8828f41b893f91a10ff26d7990742e782bb0b7e86df23ea0f7),
 owner Governance, source commit `cdb85fe791d2d21a870684c92b9c15e9c897fd60`, Etherscan verified and Sourcify exact match. It accepts only `TIME_ONLY` locks. Governance proposal #17
-(`setFeeExempt(V2, true)`) was executed on 2026-10-04 in block 26121846, TX
-[`0xbb53640c...4a835c`](https://etherscan.io/tx/0xbb53640ca8fd59513c8c772a0ceb633d63d7d9837768c28535bd67da6c4a835c); the interfaces send new time locks to V2. It is listed
-separately and not counted in the contract table.
+(`setFeeExempt(V2, true)`) was executed on 4 October 2026, 22:01:23 UTC, in block 26121846, TX
+[`0xbb53640c...4a835c`](https://etherscan.io/tx/0xbb53640ca8fd59513c8c772a0ceb633d63d7d9837768c28535bd67da6c4a835c); the interfaces send new time locks to V2, and the Web3 time-only interface is released and live-verified (5 October 2026). Since 5 October 2026 it is
+counted as the 15th protocol contract. CommitmentVault V1 (row 11) stays listed as the legacy vault:
+V1 accepts no new locks from the interfaces, and existing V1 tranches unlock through V1 only.
 
 Legacy deployment: ~~BootstrapVault V1~~
 [`0xA820540936d18e1377C39dd9445E5b36F3F1261a`](https://etherscan.io/address/0xA820540936d18e1377C39dd9445E5b36F3F1261a#code)
 is deprecated and superseded by BootstrapVaultV3.
 
-### Canonical Mainnet Component Count (17)
+### Canonical Mainnet Component Count (18)
 
-The public "17 documented on-chain components" figure is defined as the 14
-current protocol contracts in the table above (mirrored in
+The public "18 documented on-chain components" figure is defined as the 15
+deployed protocol contracts in the table above (mirrored in
 [`deployments/mainnet.json`](../deployments/mainnet.json)) plus the 3 project
 Gnosis Safes listed under [Gnosis Safes (Mainnet)](#gnosis-safes-mainnet).
 The Safes are standard Safe proxy wallets, not IFR protocol contracts, so
-"17 protocol contracts" or "17 immutable contracts" is not a correct reading.
+"18 protocol contracts" or "18 immutable contracts" is not a correct reading.
+The count lists deployed components; it is not a claim that every component
+is active (for example, CommitmentVault V1 is legacy and LendingVault V1 is
+retired). Until 5 October 2026 the figure was 17 (14 contracts + 3 Safes);
+CommitmentVault V2 joined as the 15th contract after proposal #17.
 
 Not counted: the Uniswap V2 IFR/WETH LP pair
 [`0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0`](https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0)
@@ -241,8 +247,9 @@ All ownable contracts transferred to Governance (48h Timelock). Parameter change
 | CommitmentVault | `owner()` | Governance — [`0x0719d9eb...73d3`](https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3) (deployed 04.04.2026) |
 | LendingVault | `owner()` | Governance — [`0x974305Ab...9DF`](https://etherscan.io/address/0x974305Ab0EC905172e697271C3d7d385194EB9DF) (deployed 04.04.2026) |
 | BuybackController | `owner()` | Governance — [`0x1e0547D5...F7c`](https://etherscan.io/address/0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c) (deployed 14.04.2026; feeExempt executed via Proposal #13 on 16.04.2026) |
-| IFRLock | `guardian()` | Deployer (emergency pause only) |
-| Vesting | `guardian()` | Deployer (emergency pause only) |
+| IFRLock | `guardian()` | Treasury Safe (emergency pause only; guardian migration step 1) |
+| Vesting | `guardian()` | Treasury Safe (emergency pause only; guardian migration step 1) |
+| LiquidityReserve / BurnReserve | `guardian()` | Treasury Safe (Proposals #19/#20, executed 5 October 2026, block 26124647) |
 | Governance | `owner()` | TreasurySafe 3-of-5 (transferred 20.03.2026, TX `0xcd9f99d2...19c46c3`) |
 
 ### Governance Proposals (Mainnet)
@@ -273,7 +280,10 @@ All ownable contracts transferred to Governance (48h Timelock). Parameter change
 | LP custody | **Done** — LP tokens remain in withdrawal-less BootstrapVaultV3; Mainnet Team.Finance path disabled |
 | Proposal #15: setFeeExempt(LP Token) | **Executed** (08.06.2026) |
 | CommitmentVault V2 deployed (CV-01 repair) | **Done** (02.10.2026) — [`0x8efae0C8...`](https://etherscan.io/address/0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F#code) — TX [`0x9857a570...`](https://etherscan.io/tx/0x9857a5707b650b8828f41b893f91a10ff26d7990742e782bb0b7e86df23ea0f7); Etherscan verified (full solc input) and Sourcify exact match |
-| Proposal #17: setFeeExempt(CommitmentVault V2) | **Executed** (4 October 2026, block 26121846) — queued 2 October 2026 by TreasurySafe 3-of-5, TX [`0x6e113b6c...`](https://etherscan.io/tx/0x6e113b6cc66a369604d46c3b4a5560f1418302de6ecc371f1217d72aeabd39bd); executed TX [`0xbb53640c...`](https://etherscan.io/tx/0xbb53640ca8fd59513c8c772a0ceb633d63d7d9837768c28535bd67da6c4a835c) |
+| Proposal #17: setFeeExempt(CommitmentVault V2) | **Executed** (4 October 2026, 22:01:23 UTC, block 26121846) — queued 2 October 2026 by TreasurySafe 3-of-5, TX [`0x6e113b6c...`](https://etherscan.io/tx/0x6e113b6cc66a369604d46c3b4a5560f1418302de6ecc371f1217d72aeabd39bd); executed TX [`0xbb53640c...`](https://etherscan.io/tx/0xbb53640ca8fd59513c8c772a0ceb633d63d7d9837768c28535bd67da6c4a835c) |
+| Proposal #18: FeeRouterV1 setVoucherSigner (CWA-06) | **Executed** (5 October 2026, 07:17:47 UTC, block 26124623) — TreasurySafe, TX [`0x40a856b9...`](https://etherscan.io/tx/0x40a856b9f994a17390c042abe851c5ff99ca86289eb86316eb119f465cd89679); `FeeRouterV1.voucherSigner()` = `0x790D99c320dafA03d83bEa152178A6523b49CA0d` |
+| Proposals #19/#20: LiquidityReserve / BurnReserve setGuardian(Treasury Safe) | **Executed** (5 October 2026, 07:22:47 UTC, block 26124647) — one TreasurySafe TX [`0xa432f061...`](https://etherscan.io/tx/0xa432f061d42d3cbf306e44cf27394da5f70443d8d765cb1cfea66e17be19df27); `guardian()` of both = Treasury Safe `0x5ad6193e...cE3b` |
+| Proposal #21: setPoolFeeReceiver(BuybackController) | **Executed** (5 October 2026, 07:25:23 UTC, block 26124660) — TreasurySafe, TX [`0x8de48b47...`](https://etherscan.io/tx/0x8de48b47dfa8f17b631fb744bc4deef9bbb68271f8b700b422cdd3abb739ca26); pool-fee inflow to FeeRouterV1 stopped; FeeRouterV1 IFR balance 734,545.074097347 IFR as of this block |
 | Transfer InfernoToken Ownership to Governance | **Done** (2026-03-05) |
 | Transfer LiquidityReserve Ownership to Governance | **Done** (2026-03-05) |
 | Transfer BurnReserve Ownership to Governance | **Done** (2026-03-05) |

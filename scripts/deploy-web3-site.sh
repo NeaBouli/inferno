@@ -7,6 +7,10 @@
 #   EXPECTED_SHA=<40-char sha> scripts/deploy-web3-site.sh verify   # public HTTP only
 #   scripts/deploy-web3-site.sh rollback <remote backup dir>        # operator only
 #
+# DEPLOY_MODE=gate routes plan/deploy/rollback through the scoped host gate
+# (ssh -F ~/.fleet-ssh/config hetzner-deploy ...) and adds status|health|backups;
+# rollback then takes the backup stamp. Unset DEPLOY_MODE keeps the direct path below.
+#
 # deploy: exact-SHA docroot (git archive, never the working tree, including
 # .nginx/web3-security-headers.conf which the host nginx.conf includes) ->
 # backup of html + nginx.conf -> rsync -> nginx -t -> reload -> public verify.
@@ -132,6 +136,59 @@ echo "restore verified: (a) content (b) symlinks (c) access (d) nginx.conf + ngi
 }
 main "$@"
 REMOTE
+
+# DEPLOY_MODE=gate: the same release through the scoped host gate (inferno-deploy v2).
+# The upload is the staged docroot with $HEADERS at its root; the tool backs up html and
+# nginx.conf, syncs, runs nginx -t and reloads. Local header/wallet tests and the public
+# verify stay on this side.
+case "${DEPLOY_MODE:-}" in
+  ''|ssh) ;;
+  gate)
+    # Never source a locally modified helper.
+    [[ -z "$(git -C "$ROOT" status --porcelain -- scripts/deploy-gate-lib.sh scripts/deploy-web3-site.sh)" ]] || die "working tree is dirty (scripts/deploy-gate-lib.sh or this script); release only from a clean checkout"
+    # shellcheck source=scripts/deploy-gate-lib.sh
+    . "$ROOT/scripts/deploy-gate-lib.sh"
+    GATE_DELETE=()
+    if [[ "$DELETE" == "1" ]]; then GATE_DELETE=(delete); fi
+    gate_release_tar() {
+      [[ -f "$STAGE/html/$HEADERS" ]] || die "staged docroot lacks $HEADERS"
+      # COPYFILE_DISABLE keeps macOS tar from adding ._* AppleDouble members.
+      COPYFILE_DISABLE=1 tar -C "$STAGE/html" -cf "$STAGE/upload.tar" .
+      TAR_SHA="$(gate_prepare "$STAGE/upload.tar")"
+    }
+    case "$MODE" in
+      plan)
+        require_sha
+        stage_release
+        gate_release_tar
+        gate web3-plan "$EXPECTED_SHA" "$TAR_SHA" ${GATE_DELETE[@]+"${GATE_DELETE[@]}"} < "$STAGE/upload.tar"
+        ;;
+      deploy)
+        require_sha
+        require_clean_exact_checkout
+        stage_release
+        gate_release_tar
+        gate web3-deploy "$EXPECTED_SHA" "$TAR_SHA" ${GATE_DELETE[@]+"${GATE_DELETE[@]}"} < "$STAGE/upload.tar"
+        verify_public
+        ;;
+      verify)
+        require_sha
+        stage_release
+        verify_public
+        ;;
+      rollback)
+        stamp="$(gate_stamp "${2:-}")"
+        gate web3-rollback "$stamp"
+        ;;
+      status)  gate status ;;
+      health)  gate health web3-site ;;
+      backups) gate backups web3-site ;;
+      *) die "unknown mode $MODE for DEPLOY_MODE=gate (plan|deploy|verify|rollback|status|health|backups)" ;;
+    esac
+    exit 0
+    ;;
+  *) die "DEPLOY_MODE must be unset (direct ssh) or gate" ;;
+esac
 
 case "$MODE" in
   plan)

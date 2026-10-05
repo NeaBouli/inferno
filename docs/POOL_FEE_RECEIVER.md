@@ -1,8 +1,11 @@
 # Pool Fee Receiver Migration to BuybackController (Lane 3 decision B, CWA-02)
 
-**Status:** in progress (2026-10-04). Step 1 (propose) is done; step 2 (execute) waits for the Governance
-delay. Every Mainnet step is performed by the Safe signers, never by automation. The step-2 generator is
-pinned to the queued proposal and verifies its exact on-chain content before writing any file (T-242).
+**Status:** executed (5 October 2026). The Treasury Safe executed proposal #21 on 2026-10-05 07:25:23 UTC in
+block 26124660, TX [`0x8de48b47…739ca26`](https://etherscan.io/tx/0x8de48b47dfa8f17b631fb744bc4deef9bbb68271f8b700b422cdd3abb739ca26).
+`InfernoToken.poolFeeReceiver()` is BuybackController from that block on, so the pool-fee inflow to FeeRouterV1 has
+stopped. The FeeRouterV1 IFR balance as of block 26124660 is 734,545.074097347 IFR (raw `734545074097347`). Direct
+IFR transfers to the FeeRouterV1 address remain possible, so the Landing and the Copilot keep reading it live. Every
+Mainnet step was performed by the Safe signers, never by automation.
 
 ## Decision
 
@@ -10,10 +13,11 @@ Owner decision (2026-10-03, Lane 3 option B in `docs/GOVERNANCE_PRODUCT_DECISION
 pool fees go to BuybackController through `InfernoToken.setPoolFeeReceiver`, where the IFR stays recoverable
 through the governed `withdrawIFR`. The controller is dormant (0 executions, no ETH); when it runs with much
 IFR against little ETH, the LP add fails and the ETH falls back to buyback-and-burn, so accrued IFR is not
-automatically paired into liquidity. The 724,992.668043224 IFR already stranded in FeeRouterV1 stay there:
-FeeRouterV1 has no sweep, and this migration does not recover or re-liquify those funds.
+automatically paired into liquidity. The IFR already stranded in FeeRouterV1 stay there: FeeRouterV1 has no sweep,
+and this migration does not recover or re-liquify those funds. At the decision (block 26108134) they were
+724,992.668043224 IFR; pool fees kept arriving until #21 executed; as of block 26124660 the balance is 734,545.074097347 IFR.
 
-## Queued Operation (read-only evidence at block 26119897)
+## Proposal #21 (queued evidence at block 26119897, executed at block 26124660)
 
 | Field | Value |
 | --- | --- |
@@ -21,13 +25,14 @@ FeeRouterV1 has no sweep, and this migration does not recover or re-liquify thos
 | Target | InfernoToken `0x77e99917Eca8539c62F509ED1193ac36580A6e7B` |
 | Calldata | `setPoolFeeReceiver(0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c)` (BuybackController) |
 | ETA | 2026-10-05 00:18:23 UTC |
-| State | queued, not executed, not cancelled |
+| State at block 26119897 | queued, not executed, not cancelled |
+| Execution | 2026-10-05 07:25:23 UTC, block 26124660, TX `0x8de48b47dfa8f17b631fb744bc4deef9bbb68271f8b700b422cdd3abb739ca26` |
 
 ## Steps
 
 1. **Done (Treasury Safe).** Proposal #21 queued on 2026-10-03.
-2. **Pending.** After the ETA the Treasury Safe executes #21. Final pre-sign validation (fresh, immediately
-   before signing):
+2. **Done (Treasury Safe, 2026-10-05 07:25:23 UTC, block 26124660).** The Treasury Safe executed #21 after the
+   ETA. Pre-sign validation as performed:
    1. Regenerate the batch: `node scripts/pool-fee-receiver-proposal.cjs --execute ./lane3-poolfee`
       (optionally with `MAINNET_RPC_URL=<archive rpc>`). The script re-reads proposal #21 and refuses to
       write unless it still exists with exactly the pinned target, calldata and ETA above and is neither
@@ -39,8 +44,9 @@ FeeRouterV1 has no sweep, and this migration does not recover or re-liquify thos
       `Governance.execute` reverts with `too early` otherwise.
    4. Re-run step 2.1 if a signing session happens long after generation; a cancelled or already-executed
       proposal makes the regenerated file refuse.
-3. **Pending.** Post-execution checks: `InfernoToken.poolFeeReceiver()` = BuybackController; a later
-   governed `BuybackController.withdrawIFR` moves accrued IFR; `FeeRouterV1` IFR balance no longer grows.
+3. **Done (read-only).** Post-execution checks: `InfernoToken.poolFeeReceiver()` = BuybackController;
+   pool-fee inflow to `FeeRouterV1` stopped; balance 734,545.074097347 IFR as of block 26124660. A later governed
+   `BuybackController.withdrawIFR` can move IFR accrued at the controller; none has been executed.
 
 ## Tests
 
