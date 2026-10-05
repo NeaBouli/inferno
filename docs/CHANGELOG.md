@@ -8,8 +8,13 @@
   the chain-pinned read provider; every other flow value comes from the live balances read. No hardcoded current
   value remains; a failed read shows "unavailable". Inactive or completed routes (Builder rewards, Bootstrap
   funding, LendingVault V1) are dashed and no longer animated.
-- Distribution legend: the legacy BuybackVault is removed from the legend and the wallet cards. BurnReserve at
-  0 IFR reads "no buyback executed yet" instead of "not yet active"; Bootstrap reads "finalized 05.06.2026".
+- Distribution legend: the legacy BuybackVault is removed from the legend and the wallet cards. BurnReserve shows
+  its live balance plus the live history (BuybackController `executionCount()`, BurnReserve `totalBurned()`),
+  never an inference from an empty balance; an unreadable history reads "unavailable". Amounts below 1 IFR stay
+  positive ("<1 IFR"); Bootstrap reads "finalized 05.06.2026".
+- Fee routes: `poolFeeReceiver()` and FeeRouterV1 `feeCollector()` are read live and independently; a route is
+  drawn active only when its receiver is BuybackController, otherwise dashed with the actual receiver or
+  "unavailable". The LP half is labelled conditional with the `_addLiquidity` fallback to buyback.
 - Dante quote: new DOCS button to the Wiki start page (44px target).
 - Wiki Fee Design: new section "Buyback and burn contracts — status and access" (roles, owner and guardian,
   balances as of 5 October 2026, FeeRouterV1 IFR held without a direct withdrawal function).

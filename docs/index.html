@@ -1250,7 +1250,7 @@
       min-width: 44px;
       justify-content: center;
       font-style: normal;
-      letter-spacing: 0.08em;
+      letter-spacing: 0;
     }
     @media (max-width: 480px) {
       .dante-quote .dante-docs-btn { display: flex; width: 100%; }
@@ -1349,7 +1349,7 @@
 <script src="assets/wallet-core.js?v=20261004-read-provider"></script>
 <script src="assets/ifr-state.js"></script>
   <link rel="stylesheet" href="assets/redesign-skin.css">
-  <link rel="stylesheet" href="assets/landing-header-template.css?v=20260708-1915">
+  <link rel="stylesheet" href="assets/landing-header-template.css?v=20261006-t279">
 </head>
 <body id="top">
 
@@ -2362,7 +2362,7 @@ render();
 
         <!-- Transfer fee split, read live from InfernoToken (senderBurnBps, recipientBurnBps, poolFeeBps, poolFeeReceiver) -->
         <g class="token-flow-fee" data-flow-fee>
-          <rect x="290" y="96" width="220" height="44" rx="10" fill="#0d1117" stroke="#f97316" stroke-width="1.2"/>
+          <rect x="270" y="96" width="260" height="44" rx="10" fill="#0d1117" stroke="#f97316" stroke-width="1.2"/>
           <text x="400" y="113" text-anchor="middle" fill="#f97316" font-size="10" font-weight="bold" data-flow-rpc data-live-key="flow-fee-total">Transfer fee: loading&hellip;</text>
           <text x="400" y="129" text-anchor="middle" fill="#9ca3af" font-size="8" data-flow-rpc data-live-key="flow-fee-split">burn and pool fee: loading&hellip;</text>
         </g>
@@ -2373,9 +2373,9 @@ render();
         <!-- Bootstrap → Uniswap (initial LP at finalisation) -->
         <line x1="580" y1="200" x2="580" y2="318" stroke="#1e2730" stroke-width="1" stroke-dasharray="5,3"/>
         <!-- IFR → BuybackController (1% pool fee since Proposal #21) -->
-        <line x1="400" y1="302" x2="400" y2="338" stroke="#1e2730" stroke-width="1.5"/>
+        <line x1="400" y1="302" x2="400" y2="338" stroke="#1e2730" stroke-width="1.5" stroke-dasharray="4,3" data-flow-route="pool"/>
         <!-- FeeRouterV1 → BuybackController (ETH swap protocol fee) -->
-        <line x1="400" y1="440" x2="400" y2="380" stroke="#1e2730" stroke-width="1.5"/>
+        <line x1="400" y1="440" x2="400" y2="380" stroke="#1e2730" stroke-width="1.5" stroke-dasharray="4,3" data-flow-route="eth"/>
         <!-- BuybackController → BurnReserve (bought IFR) and → Uniswap (LP) -->
         <line x1="350" y1="380" x2="250" y2="420" stroke="#1e2730" stroke-width="1.5"/>
         <line x1="460" y1="352" x2="495" y2="343" stroke="#1e2730" stroke-width="1.5"/>
@@ -2433,9 +2433,9 @@ render();
         <text x="400" y="356" text-anchor="middle" fill="#fbbf24" font-size="10" font-weight="bold">BuybackController</text>
         <text x="400" y="372" text-anchor="middle" fill="#9ca3af" font-size="8" data-flow-rpc data-live-key="flow-controller">loading&hellip;</text>
         <text x="406" y="324" fill="#9ca3af" font-size="8" data-flow-rpc data-live-key="flow-pool-edge">pool fee: loading&hellip;</text>
-        <text x="406" y="414" fill="#9ca3af" font-size="8">ETH fee</text>
-        <text x="318" y="410" fill="#9ca3af" font-size="8">50% buys IFR</text>
-        <text x="478" y="374" text-anchor="middle" fill="#9ca3af" font-size="8">50% LP</text>
+        <text x="406" y="414" fill="#9ca3af" font-size="8" data-flow-rpc data-live-key="flow-eth-edge">ETH fee: loading&hellip;</text>
+        <text x="314" y="410" fill="#9ca3af" font-size="8">&ge;50% buys IFR</text>
+        <text x="484" y="376" fill="#9ca3af" font-size="8">&le;50% LP*</text>
 
         <!-- FeeRouterV1 (swap fee router; current IFR balance held, no direct withdrawal function) -->
         <rect x="330" y="440" width="140" height="54" rx="10" fill="#0d1117" stroke="#fbbf24" stroke-width="1.5"/>
@@ -2464,12 +2464,17 @@ render();
         <text x="715" y="154" text-anchor="middle" fill="#fbbf24" font-size="9">Beneficiary 0x04FA</text>
         <text x="715" y="168" text-anchor="middle" fill="#6b7280" font-size="8">cliff ends 05.03.2027</text>
 
-        <!-- Animated Particles: only routes that are active today -->
+        <!-- Animated Particles: only routes that are active today. The two fee routes stay hidden and dashed
+             until poolFeeReceiver() / feeCollector() are read live and equal BuybackController (fail closed). -->
         <!-- IFR → BuybackController: 1% pool fee (orange) -->
-        <circle r="4" fill="#f97316" opacity="0.9"><animateMotion dur="2s" repeatCount="indefinite" path="M400,302 L400,338"/></circle>
-        <circle r="4" fill="#f97316" opacity="0.6"><animateMotion dur="2s" begin="0.7s" repeatCount="indefinite" path="M400,302 L400,338"/></circle>
+        <g data-flow-route="pool" visibility="hidden">
+          <circle r="4" fill="#f97316" opacity="0.9"><animateMotion dur="2s" repeatCount="indefinite" path="M400,302 L400,338"/></circle>
+          <circle r="4" fill="#f97316" opacity="0.6"><animateMotion dur="2s" begin="0.7s" repeatCount="indefinite" path="M400,302 L400,338"/></circle>
+        </g>
         <!-- FeeRouterV1 → BuybackController: ETH swap protocol fee (yellow) -->
-        <circle r="3" fill="#fbbf24" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M400,440 L400,380"/></circle>
+        <g data-flow-route="eth" visibility="hidden">
+          <circle r="3" fill="#fbbf24" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M400,440 L400,380"/></circle>
+        </g>
         <!-- BuybackController → BurnReserve (red) and → Uniswap LP (blue), after a permissionless execute() -->
         <circle r="3" fill="#ef4444" opacity="0.7"><animateMotion dur="3s" repeatCount="indefinite" path="M350,380 L250,420"/></circle>
         <circle r="3" fill="#60a5fa" opacity="0.7"><animateMotion dur="3s" begin="1.5s" repeatCount="indefinite" path="M460,352 L495,343"/></circle>
@@ -2504,6 +2509,10 @@ render();
         <rect x="500" y="464" width="140" height="42" rx="10" fill="#0d1117" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="5,3"/>
         <text x="570" y="482" text-anchor="middle" fill="#3b82f6" font-size="10" font-weight="bold">LendingVault V1</text>
         <text x="570" y="496" text-anchor="middle" fill="#6b7280" font-size="8" data-live-key="lending-flow">loading&hellip;</text>
+
+        <!-- LP fallback (BuybackController._addLiquidity): no IFR held, or addLiquidityETH reverts → that ETH also buys IFR for BurnReserve -->
+        <text x="560" y="522" fill="#9ca3af" font-size="8" data-flow-lp-fallback>* LP only if the controller holds IFR;</text>
+        <text x="560" y="534" fill="#9ca3af" font-size="8">otherwise or if LP fails: buys IFR &rarr; BurnReserve</text>
 
         <!-- Legend -->
         <g transform="translate(20,514)">
@@ -3848,7 +3857,7 @@ if (isLocked) {
     setLive('card-ifrlock-unlocked', fmtNA(d.ifrLockUnlocked, ' IFR'));
     setLive('card-lending-available', fmtNA(d.lendingAvailable, ' IFR'));
     setLive('card-lending-lent', fmtNA(d.lendingLent, ' IFR'));
-    setLive('card-burnres',    isNum(d.burnRes) && d.burnRes === 0 ? '0 IFR \u2014 no buyback executed yet' : fmtNA(d.burnRes, ' IFR'));
+    renderBurnResLabels(d);
     setLive('feerouter-flow',  fmtFlow(d.feeRouter, ' IFR held'));
     setLive('commitment-flow', fmtFlow(d.commitmentLocked, ' time-locked'));
     setLive('lending-flow',    isNum(d.lendingAvailable) ? 'retired \u00B7 ' + fmt(d.lendingAvailable) + ' available' : 'unavailable');
@@ -3858,7 +3867,6 @@ if (isLocked) {
     setLive('flow-community',  fmtFlow(d.community, ' IFR \u00B7 3-of-5'));
     setLive('flow-partner',    fmtFlow(d.partner, ' IFR \u00B7 rewards inactive'));
     setLive('flow-vesting',    fmtFlow(d.vesting, ' IFR locked'));
-    setLive('flow-burnres',    isNum(d.burnRes) && d.burnRes === 0 ? '0 IFR \u00B7 no buyback yet' : fmtFlow(d.burnRes, ' IFR to burn'));
   }
 
   function drawDonut(canvas, data) {
@@ -3895,13 +3903,29 @@ if (isLocked) {
     });
   }
 
-  // Below 1 IFR the percentage is meaningless; these notes state the verified reason instead (T-279).
+  // Below 1 IFR the percentage is meaningless; the amount is shown as "0 IFR" or "<1 IFR" (a positive
+  // amount stays positive). Only Bootstrap carries a note, its finalisation date (on-chain finalised() = true).
   // The legacy BuybackVault is not part of the legend (superseded by BuybackController).
-  var ZERO_STATE_NOTE = {
-    burnRes: 'no buyback executed yet',
-    bootstrap: 'finalized 05.06.2026',
-    ifrLock: 'no active user locks'
-  };
+  var ZERO_STATE_NOTE = { bootstrap: 'finalized 05.06.2026' };
+
+  // BurnReserve history is never inferred from its balance (an empty reserve can follow burned buybacks):
+  // BuybackController.executionCount() and BurnReserve.totalBurned() are read live; unknown stays "unavailable".
+  var buybackHistory = { state: 'loading', executions: null, totalBurned: null };
+  function burnResHistoryText(compact) {
+    if (buybackHistory.state === 'live') {
+      return compact
+        ? buybackHistory.executions + ' buyback' + (buybackHistory.executions === 1 ? '' : 's')
+        : 'buybacks executed: ' + buybackHistory.executions + ' \u00B7 burned via reserve: ' + fmt(buybackHistory.totalBurned) + ' IFR';
+    }
+    if (buybackHistory.state === 'unavailable') return compact ? 'history unavailable' : 'buyback history unavailable';
+    return compact ? 'history loading\u2026' : 'buyback history loading\u2026';
+  }
+  function smallIfr(val) { return val === 0 ? '0 IFR' : (val < 1 ? '&lt;1 IFR' : fmt(val) + ' IFR'); }
+  function renderBurnResLabels(d) {
+    var b = d ? d.burnRes : null;
+    setLive('card-burnres', isNum(b) ? smallIfr(b).replace('&lt;', '<') + ' held \u00B7 ' + burnResHistoryText(false) : 'N/A');
+    setLive('flow-burnres', isNum(b) ? smallIfr(b).replace('&lt;', '<') + ' \u00B7 ' + burnResHistoryText(true) : 'unavailable');
+  }
   var REST_COLOR = '#d6cfc4';
   var UNAVAILABLE_COLOR = '#52525b';
 
@@ -3914,8 +3938,11 @@ if (isLocked) {
       if (!isNum(val)) {
         detail = ' <span style="color:#555;">N/A \u2014 live read unavailable</span>';
         val = '';
-      } else if (val < 1 && ZERO_STATE_NOTE[cat.key]) {
-        detail = ' <span style="color:#555;">' + (val === 0 ? '0 IFR' : '&lt;1 IFR') + ' \u2014 ' + ZERO_STATE_NOTE[cat.key] + '</span>';
+      } else if (cat.key === 'burnRes') {
+        detail = ' <span style="color:#555;">' + (val < 1 ? smallIfr(val) : '<strong style="color:#fff;">' + pct(val, GENESIS_SUPPLY) + '</strong> \u2014 ' + fmt(val) + ' IFR') +
+          ' held \u2014 ' + burnResHistoryText(false) + '</span>';
+      } else if (val < 1) {
+        detail = ' <span style="color:#555;">' + smallIfr(val) + (ZERO_STATE_NOTE[cat.key] ? ' \u2014 ' + ZERO_STATE_NOTE[cat.key] : '') + '</span>';
       } else {
         detail = ' <strong style="color:#fff;">' + pct(val, GENESIS_SUPPLY) + '</strong> \u2014 ' + fmt(val);
       }
@@ -4132,23 +4159,59 @@ if (isLocked) {
   var FLOW_ADDR = {
     token: '0x77e99917Eca8539c62F509ED1193ac36580A6e7B',
     feeRouter: '0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a',
-    controller: '0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c'
+    controller: '0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c',
+    burnReserve: '0xaA1496133B6c274190A2113410B501C5802b6fCF'
   };
   var tokenFlowReadInFlight = false;
+  // Each value is independent: undefined = loading, null = read failed, otherwise the verified value.
+  var feeFlow = { rates: undefined, poolReceiver: undefined, protocolBps: undefined, collector: undefined };
   function bpsPct(b) { return (Number(b) / 100).toString() + '%'; }
-  function shortAddr(a) { return String(a).slice(0, 6) + '\u2026' + String(a).slice(-4); }
-  function failTokenFlowFees() {
-    setLive('flow-fee-total', 'Transfer fee: unavailable');
-    setLive('flow-fee-split', 'burn and pool fee: unavailable');
-    setLive('flow-pool-edge', 'pool fee: unavailable');
+  function shortAddr(a) { return String(a).slice(0, 6) + '…' + String(a).slice(-4); }
+  function isController(a) { return typeof a === 'string' && a.toLowerCase() === FLOW_ADDR.controller.toLowerCase(); }
+  function validAddr(a) { a = String(a); if (!/^0x[0-9a-fA-F]{40}$/.test(a)) throw new Error('invalid address'); return a; }
+  function recipientLabel(a, controllerName) {
+    if (a === undefined) return 'loading…';
+    if (a === null) return 'unavailable';
+    return isController(a) ? controllerName : shortAddr(a);
+  }
+  // A fee route is drawn as active (solid, animated) only when its receiver is read live and equals
+  // BuybackController and its rate is positive; otherwise it is dashed and not animated.
+  function setFlowRoute(name, active) {
+    document.querySelectorAll('#token-flow [data-flow-route="' + name + '"]').forEach(function(el) {
+      el.setAttribute('data-route-state', active ? 'active' : 'unconfirmed');
+      if (el.tagName.toLowerCase() === 'line') {
+        if (active) el.removeAttribute('stroke-dasharray'); else el.setAttribute('stroke-dasharray', '4,3');
+      } else {
+        el.setAttribute('visibility', active ? 'visible' : 'hidden');
+      }
+    });
+  }
+  function renderFeeFlow() {
+    var r = feeFlow.rates, pr = feeFlow.poolReceiver, bps = feeFlow.protocolBps, col = feeFlow.collector;
+    setLive('flow-fee-total', r ? 'Transfer fee ' + bpsPct(r.burn + r.pool) + ' (non-exempt)' : (r === null ? 'Transfer fee: unavailable' : 'Transfer fee: loading…'));
+    setLive('flow-fee-split', r
+      ? bpsPct(r.burn) + ' burned in-token · ' + bpsPct(r.pool) + ' pool fee → ' + recipientLabel(pr, 'BuybackController')
+      : (r === null ? 'burn and pool fee: unavailable' : 'burn and pool fee: loading…'));
+    var poolPct = r ? bpsPct(r.pool) + ' pool fee' : 'pool fee';
+    setLive('flow-pool-edge', pr === null ? 'pool fee receiver: unavailable'
+      : (pr === undefined ? 'pool fee: loading…' : (isController(pr) ? poolPct : poolPct + ' → ' + shortAddr(pr) + ', not here')));
+    setLive('flow-feerouter-bps', bps === null ? 'ETH fee: unavailable'
+      : (bps === undefined ? 'ETH fee: loading…' : 'ETH fee ' + bpsPct(bps) + ' → ' + recipientLabel(col, 'Controller')));
+    setLive('flow-eth-edge', col === null ? 'ETH fee receiver: unavailable'
+      : (col === undefined ? 'ETH fee: loading…' : (isController(col) ? 'ETH fee' : 'ETH fee → ' + shortAddr(col) + ', not here')));
+    setFlowRoute('pool', !!(r && r.pool > 0 && isController(pr)));
+    setFlowRoute('eth', !!(typeof bps === 'number' && bps > 0 && isController(col)));
   }
   function loadTokenFlowLive() {
     if (tokenFlowReadInFlight) return;
     var provider = (typeof ethers !== 'undefined' && window.IFRWallet && typeof IFRWallet.getReadProvider === 'function') ? IFRWallet.getReadProvider() : null;
     if (!provider) {
-      failTokenFlowFees();
+      feeFlow = { rates: null, poolReceiver: null, protocolBps: null, collector: null };
+      renderFeeFlow();
       setLive('flow-controller', 'unavailable');
-      setLive('flow-feerouter-bps', 'ETH swap fee: unavailable');
+      buybackHistory = { state: 'unavailable', executions: null, totalBurned: null };
+      renderBurnResLabels(liveDistributionData);
+      if (liveDistributionData) renderLegend(liveDistributionData);
       return;
     }
     tokenFlowReadInFlight = true;
@@ -4159,32 +4222,48 @@ if (isLocked) {
       'function poolFeeReceiver() view returns (address)',
       'function balanceOf(address wallet) view returns (uint256)'
     ], provider);
-    var router = new ethers.Contract(FLOW_ADDR.feeRouter, ['function protocolFeeBps() view returns (uint16)'], provider);
-    var feeRead = withTimeout(Promise.all([token.senderBurnBps(), token.recipientBurnBps(), token.poolFeeBps(), token.poolFeeReceiver()]), MAINNET_READ_TIMEOUT_MS).then(function(v) {
-      var burn = Number(v[0]) + Number(v[1]);
-      var pool = Number(v[2]);
-      if (!(burn >= 0 && pool >= 0 && burn + pool <= 500)) throw new Error('fee rates out of range');
-      var receiver = String(v[3]);
-      if (!/^0x[0-9a-fA-F]{40}$/.test(receiver)) throw new Error('invalid receiver');
-      var toController = receiver.toLowerCase() === FLOW_ADDR.controller.toLowerCase();
-      var target = toController ? 'BuybackController' : shortAddr(receiver);
-      setLive('flow-fee-total', 'Transfer fee ' + bpsPct(burn + pool) + ' (non-exempt)');
-      setLive('flow-fee-split', bpsPct(burn) + ' burned in-token \u00B7 ' + bpsPct(pool) + ' pool fee \u2192 ' + target);
-      setLive('flow-pool-edge', bpsPct(pool) + ' pool fee' + (toController ? '' : ' \u2192 ' + target));
-    }).catch(failTokenFlowFees);
-    var routerRead = withTimeout(router.protocolFeeBps(), MAINNET_READ_TIMEOUT_MS).then(function(b) {
-      var bps = Number(b);
-      if (!(bps >= 0 && bps <= 25)) throw new Error('protocol fee out of range'); // FEE_CAP_BPS = 25
-      setLive('flow-feerouter-bps', 'ETH swap fee ' + bpsPct(bps) + ' \u2192 Controller');
-    }).catch(function() { setLive('flow-feerouter-bps', 'ETH swap fee: unavailable'); });
-    var controllerRead = withTimeout(Promise.all([provider.getBalance(FLOW_ADDR.controller), token.balanceOf(FLOW_ADDR.controller)]), MAINNET_READ_TIMEOUT_MS).then(function(v) {
-      var eth = Number(ethers.formatEther(v[0]));
-      var ifr = Number(ethers.formatUnits(v[1], 9));
-      if (!isNum(eth) || !isNum(ifr)) throw new Error('invalid balance');
-      var ethText = eth === 0 ? '0' : (eth < 0.0001 ? '<0.0001' : eth.toFixed(4).replace(/0+$/, '').replace(/\.$/, ''));
-      setLive('flow-controller', ethText + ' ETH \u00B7 ' + fmt(ifr) + ' IFR pending');
-    }).catch(function() { setLive('flow-controller', 'unavailable'); });
-    Promise.all([feeRead, routerRead, controllerRead]).then(function() { tokenFlowReadInFlight = false; });
+    var router = new ethers.Contract(FLOW_ADDR.feeRouter, [
+      'function protocolFeeBps() view returns (uint16)',
+      'function feeCollector() view returns (address)'
+    ], provider);
+    var controller = new ethers.Contract(FLOW_ADDR.controller, ['function executionCount() view returns (uint256)'], provider);
+    var burnReserve = new ethers.Contract(FLOW_ADDR.burnReserve, ['function totalBurned() view returns (uint256)'], provider);
+    function settle(promise, onOk, onFail) {
+      return withTimeout(promise, MAINNET_READ_TIMEOUT_MS).then(onOk).catch(onFail).then(renderFeeFlow);
+    }
+    var reads = [
+      settle(Promise.all([token.senderBurnBps(), token.recipientBurnBps(), token.poolFeeBps()]), function(v) {
+        var burn = Number(v[0]) + Number(v[1]), pool = Number(v[2]);
+        if (!(burn >= 0 && pool >= 0 && burn + pool <= 500)) throw new Error('fee rates out of range'); // token hard cap 5%
+        feeFlow.rates = { burn: burn, pool: pool };
+      }, function() { feeFlow.rates = null; }),
+      settle(token.poolFeeReceiver(), function(a) { feeFlow.poolReceiver = validAddr(a); }, function() { feeFlow.poolReceiver = null; }),
+      settle(router.protocolFeeBps(), function(b) {
+        var bps = Number(b);
+        if (!(bps >= 0 && bps <= 25)) throw new Error('protocol fee out of range'); // FEE_CAP_BPS = 25
+        feeFlow.protocolBps = bps;
+      }, function() { feeFlow.protocolBps = null; }),
+      settle(router.feeCollector(), function(a) { feeFlow.collector = validAddr(a); }, function() { feeFlow.collector = null; }),
+      withTimeout(Promise.all([provider.getBalance(FLOW_ADDR.controller), token.balanceOf(FLOW_ADDR.controller)]), MAINNET_READ_TIMEOUT_MS).then(function(v) {
+        var eth = Number(ethers.formatEther(v[0]));
+        var ifr = Number(ethers.formatUnits(v[1], 9));
+        if (!isNum(eth) || !isNum(ifr)) throw new Error('invalid balance');
+        var ethText = eth === 0 ? '0' : (eth < 0.0001 ? '<0.0001' : eth.toFixed(4).replace(/0+$/, '').replace(/\.$/, ''));
+        setLive('flow-controller', ethText + ' ETH · ' + fmt(ifr) + ' IFR pending');
+      }).catch(function() { setLive('flow-controller', 'unavailable'); }),
+      withTimeout(Promise.all([controller.executionCount(), burnReserve.totalBurned()]), MAINNET_READ_TIMEOUT_MS).then(function(v) {
+        var n = Number(v[0]);
+        var burned = Number(ethers.formatUnits(v[1], 9));
+        if (!Number.isSafeInteger(n) || n < 0 || !isNum(burned) || burned < 0) throw new Error('invalid history');
+        buybackHistory = { state: 'live', executions: n, totalBurned: burned };
+      }).catch(function() {
+        buybackHistory = { state: 'unavailable', executions: null, totalBurned: null };
+      }).then(function() {
+        renderBurnResLabels(liveDistributionData);
+        if (liveDistributionData) renderLegend(liveDistributionData);
+      })
+    ];
+    Promise.all(reads).then(function() { tokenFlowReadInFlight = false; });
   }
 
   var mainnetReadInFlight = false;
