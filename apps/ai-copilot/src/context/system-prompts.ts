@@ -169,7 +169,7 @@ Phase 5 — Integration Builder (LIVE):
 - REST API: GET https://copilot-api.ifrunit.tech/api/ifr/check?wallet=0x...&required=1000
 - Contract Library: BaseAccessModule, HardLockModule, TierModule, CooldownModule, IFRBuilderVault
 - Default tier preset: ${ACCESS_TIER_SUMMARY} — IFR locked in IFRLock only; partners define their own rules
-- Security Score: 0-100 (SAFE >= 80, MEDIUM >= 50, RISKY < 50)
+- Builder Configuration Score: 0-100 heuristic checklist (Strong setup >= 80, Partial setup >= 50, Weak setup < 50). Configuration heuristic only — not audited, not a security audit or certification; never call a generated contract "safe" or "secure" because of it.
 
 ${bootstrapBlock}
 

@@ -212,7 +212,7 @@ export function getIFRKnowledge() {
           "Amount slider (100-10k IFR)",
           "Hard Lock / Balance toggle",
           "Tier System (your own Tier 1/2/3 thresholds in the generated contract)",
-          "Security Score (0-100, SAFE/MEDIUM/RISKY)",
+          "Configuration Score (0-100 heuristic checklist: Strong/Partial/Weak setup) — configuration heuristic only, not audited, not a security audit or certification",
           "Contract code generation",
           "SDK snippet (local repository package; npm publication pending)",
           "Deploy guide (Sepolia → BuilderRegistry → Mainnet)"
@@ -220,7 +220,7 @@ export function getIFRKnowledge() {
       },
       sdk: {
         package: "ifr-sdk",
-        version: "0.2.0",
+        version: "0.3.0",
         availability: "Local repository package; npm publication pending",
         install: "From the Inferno repository root: npm install --install-links ./apps/sdk",
         methods: "getBenefitTier() (default preset or own tiers; locked IFR only), checkAccess(), getBalance(), getLockedBalance(), isBuilder(), getTotalSupply(); getTier() is deprecated legacy",

@@ -78,6 +78,24 @@ assert.match(knowledge.tokenomics.currentSupply, /live \/api\/supply endpoint/);
 assert.match(knowledge.governance.proposals, /#11-#16 executed/);
 assert.ok(!("sepolia" in knowledge.builderRegistry), "Unverified BuilderRegistry Sepolia address must be absent");
 assert.match(knowledge.builderRegistry.tests, /30\/30/);
+
+// The embedded SDK version must follow the SDK manifest, and every surface states the same version.
+const sdkManifest = JSON.parse(await readFile(new URL("../../sdk/package.json", import.meta.url), "utf8")) as {
+  version: string;
+};
+assert.equal(knowledge.phase5.sdk.version, sdkManifest.version, "ifr-knowledge sdk.version must match apps/sdk/package.json");
+assert.ok(
+  SYSTEM_PROMPTS.dev.includes(`local repository package v${sdkManifest.version}`),
+  "Dev prompt must state the SDK manifest version",
+);
+
+// The Builder score is a configuration heuristic, never an audit or a SAFE verdict.
+const builderFeatures = knowledge.phase5.integrationBuilder.features.join("\n");
+assert.match(builderFeatures, /configuration heuristic only, not audited/i);
+assert.match(SYSTEM_PROMPTS.dev, /Configuration heuristic only — not audited/);
+for (const text of [builderFeatures, SYSTEM_PROMPTS.dev]) {
+  assert.doesNotMatch(text, /Security Score|SAFE\/MEDIUM\/RISKY|SAFE >= 80/);
+}
 assert.match(source["server/index.ts"], /messages\.length > COPILOT_MESSAGE_LIMIT/);
 assert.match(source["server/index.ts"], /histories\[currentMode\]\.length >= \$\{COPILOT_MESSAGE_LIMIT\}/);
 assert.doesNotMatch(source["server/index.ts"], /function checkHealth\(uint256 loanId\) view/);
