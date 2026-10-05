@@ -1395,6 +1395,8 @@
 
       .wallet-strip {
         grid-template-columns: repeat(3, minmax(0, 1fr));
+        /* keep the right wallet labels out of the fixed launcher band (60px at 20px, 54px at 16px below 821px) */
+        padding-right: 68px;
       }
 
       .flow {
@@ -1482,9 +1484,10 @@
         width: 100%;
       }
 
-      /* Full-width hero buttons end left of the fixed launcher band (54px at 16px from the right below
-         821px), so no scroll position puts "Connect Wallet" under the launcher. */
-      .hero-actions {
+      /* Full-width hero buttons and the wallet labels end left of the fixed launcher band (54px at 16px
+         from the right below 821px), so no scroll position puts them under the launcher. */
+      .hero-actions,
+      .wallet-strip {
         padding-right: 60px;
       }
 
