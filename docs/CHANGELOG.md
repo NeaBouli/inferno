@@ -20,6 +20,14 @@
 - An export or template is not a settlement or payment. No pilot is active, nothing is signed or
   submitted, and an independent security review is pending.
 
+## 5 October 2026 — Web3 Wallet Labels Clear of the Copilot Launcher (T-268b)
+
+- Web3 landing: the informative wallet labels next to the hero (MetaMask … WalletConnect) keep out of the
+  fixed launcher band while scrolling (68px right padding up to 980px, 60px below 681px), the same pattern
+  as the hero buttons in T-268. The launcher stays visible.
+- New regression in `fab-clearance.spec.js` measures the label boxes against the launcher band at
+  375/390/680/820/900/980; all 6 fail without the fix.
+
 ## 5 October 2026 — Copilot Launcher Clear of Onboarding Callouts and Web3 Dialogs (T-268)
 
 - Business onboarding: callout boxes keep their text out of the fixed Copilot launcher band on phones and

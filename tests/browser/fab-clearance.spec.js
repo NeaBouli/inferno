@@ -172,3 +172,30 @@ for (const [width, height] of [[375, 812], [390, 844], [680, 900], [820, 1180]])
     expect(result.shown, "the launcher stays available for chat").toBe(true);
   });
 }
+
+// T-268b: the informative wallet labels next to the hero (MetaMask … WalletConnect) pass the fixed launcher
+// while scrolling too, so their text boxes must stay out of the launcher band on phones and tablets.
+for (const [width, height] of [[375, 812], [390, 844], [680, 900], [820, 1180], [900, 1000], [980, 1000]]) {
+  test(`Web3 wallet labels stay clear of the Copilot launcher band at ${width}x${height}`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    await page.route(/^https?:\/\/(?!localhost)/, (route) => route.abort());
+    await page.goto("/web3/");
+    await page.evaluate(() => document.fonts.ready);
+    const result = await page.evaluate(() => {
+      const launcher = document.querySelector(".copilot-launcher");
+      const chips = [...document.querySelectorAll(".wallet-strip .wallet-chip")].filter((el) => el.getClientRects().length);
+      if (!launcher || !chips.length) return { hits: ["missing launcher or wallet labels"], shown: false };
+      const s = getComputedStyle(launcher);
+      const z = launcher.getBoundingClientRect();
+      const hits = chips
+        .filter((el) => {
+          const r = el.getBoundingClientRect();
+          return r.width > 0 && r.left < z.right && r.right > z.left;
+        })
+        .map((el) => el.textContent.trim());
+      return { hits, shown: s.display !== "none" && s.visibility !== "hidden" && Number(s.opacity) > 0 };
+    });
+    expect(result.hits).toEqual([]);
+    expect(result.shown, "the launcher stays available for chat").toBe(true);
+  });
+}
