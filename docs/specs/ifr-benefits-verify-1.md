@@ -9,6 +9,10 @@
 | Reference library | [`apps/benefits-verify`](../../apps/benefits-verify/README.md) (TypeScript) |
 | Tier data | [`ifr-benefits-tiers.v1.json`](ifr-benefits-tiers.v1.json), SHA-256 `aaba67e43e8a2236d2c986a2aed308b8d58e0ebfddd484df3110e490b643d00b` |
 
+> **Version 2 published (2026-10-04):** [`ifr-benefits-verify/2`](ifr-benefits-verify-2.md) also reads
+> CommitmentVault V2. Version 1 stays valid and unchanged; a `/1` result reads V1 only and never exceeds
+> the `/2` result.
+
 The key words MUST, MUST NOT, SHOULD and MAY are used as in RFC 2119.
 
 ## 1. Purpose and scope
