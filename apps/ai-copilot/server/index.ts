@@ -30,6 +30,17 @@ import { LENDING_LOAN_ABI, serializeLendingLoan } from "./lending-loans.js";
 import { ethCall, getRpcProvider, rpcHealth } from "./rpc.js";
 import { balanceEntry, explorerBalanceEntry, finalizeBalances, lostSupply, parseAddressParam, requireBaseUnits, unavailableEntry, type BalanceEntry } from "./balance-integrity.js";
 import {
+  Semaphore,
+  SingleFlightCache,
+  SlidingWindowLimiter,
+  chatRateLimitMessage,
+  TRUSTED_PROXY_HOPS,
+  clientIp as resolveClientIp,
+  ipRateLimit,
+  rateLimitKey,
+  positiveIntEnv,
+} from "./request-guard.js";
+import {
   classifyDynamicIntent,
   buildDynamicDataFallback,
   DYNAMIC_DATA_HANDOFF_CODE,
@@ -39,6 +50,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
+app.set("trust proxy", TRUSTED_PROXY_HOPS);
 app.use(cors({
   origin: (process.env.ALLOWED_ORIGINS || 'https://ifrunit.tech,https://www.ifrunit.tech,https://neabouli.github.io,http://localhost:5175,http://localhost:3003').split(','),
 }));
@@ -48,43 +60,23 @@ const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const ANTHROPIC_MESSAGES_URL = "https://api.anthropic.com/v1/messages";
 const POINTS_BACKEND_URL = process.env.POINTS_BACKEND_URL || "http://localhost:3004";
 
-// ── Anti-Abuse: In-memory rate limiter ──────────────────────────────
-const rateBuckets = new Map<string, { minute: number[]; hour: number[] }>();
+// ── Anti-Abuse: per-client chat limiter (keys normalized to IPv4 or IPv6 /64, tracked keys bounded) ──
 const MINUTE_LIMIT = 5;
 const HOUR_LIMIT = 20;
 const MAX_MESSAGE_LENGTH = 500;
+const chatClientLimiter = new SlidingWindowLimiter([
+  { windowMs: 60_000, max: MINUTE_LIMIT },
+  { windowMs: 3_600_000, max: HOUR_LIMIT },
+]);
 
-function cleanBuckets(): void {
-  const now = Date.now();
-  for (const [ip, bucket] of rateBuckets) {
-    bucket.minute = bucket.minute.filter(t => now - t < 60_000);
-    bucket.hour = bucket.hour.filter(t => now - t < 3_600_000);
-    if (bucket.minute.length === 0 && bucket.hour.length === 0) {
-      rateBuckets.delete(ip);
-    }
-  }
-}
-// Clean stale entries every 5 minutes
-setInterval(cleanBuckets, 300_000);
+// Aggregate ceiling across all clients, so rotating client addresses cannot drain the daily budget.
+const globalChatLimiter = new SlidingWindowLimiter([
+  { windowMs: 60_000, max: positiveIntEnv("COPILOT_GLOBAL_CHAT_PER_MINUTE", 60) },
+  { windowMs: 3_600_000, max: positiveIntEnv("COPILOT_GLOBAL_CHAT_PER_HOUR", 600) },
+]);
 
-function checkRateLimit(ip: string): string | null {
-  const now = Date.now();
-  if (!rateBuckets.has(ip)) {
-    rateBuckets.set(ip, { minute: [], hour: [] });
-  }
-  const bucket = rateBuckets.get(ip)!;
-  bucket.minute = bucket.minute.filter(t => now - t < 60_000);
-  bucket.hour = bucket.hour.filter(t => now - t < 3_600_000);
-
-  if (bucket.minute.length >= MINUTE_LIMIT) {
-    return "Slow down! Max 5 messages per minute.";
-  }
-  if (bucket.hour.length >= HOUR_LIMIT) {
-    return "Too many requests. Please try again in an hour.";
-  }
-  bucket.minute.push(now);
-  bucket.hour.push(now);
-  return null;
+function checkRateLimit(key: string): string | null {
+  return chatRateLimitMessage(chatClientLimiter.hit(key));
 }
 
 // ── CWA-12: Aggregate daily cost budget (fail-closed, integer micro-USD) ──
@@ -393,11 +385,14 @@ switchMode('explorer');
 
 app.post("/api/chat", async (req, res) => {
   // Rate limit check
-  const clientIp = (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim()
-    || req.socket.remoteAddress || "unknown";
-  const rateLimitMsg = checkRateLimit(clientIp);
+  const clientIp = resolveClientIp(req);
+  const rateLimitMsg = checkRateLimit(rateLimitKey(clientIp));
   if (rateLimitMsg) {
     res.status(429).json({ reply: rateLimitMsg });
+    return;
+  }
+  if (!globalChatLimiter.check("global")) {
+    res.status(429).json({ reply: "The assistant is busy right now. Please try again in a few minutes." });
     return;
   }
 
@@ -595,7 +590,14 @@ const PROTOCOL_ADDRESSES: Record<string, string> = {
 
 const IFRLOCK_DEPLOY_BLOCK = 21965900;
 
+// Bounds concurrent Etherscan calls so request bursts cannot exhaust the API quota.
+const etherscanSlots = new Semaphore(positiveIntEnv("COPILOT_ETHERSCAN_CONCURRENCY", 3));
+
 async function esApiFetch(params: string): Promise<unknown> {
+  return etherscanSlots.run(() => esApiFetchDirect(params));
+}
+
+async function esApiFetchDirect(params: string): Promise<unknown> {
   const url = `https://api.etherscan.io/v2/api?chainid=1${params}${ETHERSCAN_API_KEY ? "&apikey=" + ETHERSCAN_API_KEY : ""}`;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 10_000);
@@ -802,16 +804,33 @@ app.get("/api/ifr/supply", async (_req, res) => {
 
 // GET /api/ifr/txfeed — recent ETH + IFR transfers for key wallets
 // Also aliased as /api/ifr/transactions for transparency.html frontend
+// Public feeds fan out to several Etherscan calls: cache by parameters, share in-flight loads,
+// serve a bounded stale copy on upstream failure and rate-limit per client.
+const feedLimiter = ipRateLimit(
+  new SlidingWindowLimiter([{ windowMs: 60_000, max: positiveIntEnv("COPILOT_FEED_PER_MINUTE", 30) }]),
+  "Too many requests. Try again later.",
+);
+const txFeedCache = new SingleFlightCache<unknown>(60_000, 10 * 60_000, 200);
+const lockEventsCache = new SingleFlightCache<LockEventRow[]>(60_000, 10 * 60_000, 500);
+const LOCK_EVENT_TYPES = new Set(["", "ifrlock", "commitmentvault", "lendingvault"]);
+
 async function handleTxFeed(req: express.Request, res: express.Response) {
-  res.set("Cache-Control", "no-store");
+  res.set("Cache-Control", "public, max-age=30");
   const page = Math.max(1, Math.min(parseInt(String(req.query.page || "1"), 10) || 1, 100));
   const limit = Math.max(1, Math.min(parseInt(String(req.query.limit || "5"), 10) || 5, 20));
-  const cacheKey = `txfeed:${page}:${limit}`;
-  const cached = getCached(cacheKey);
-  if (cached) { res.json(cached); return; }
-
-  const feedWallets = ["FeeRouterV1", "GnosisSafe", "CommunitySafe", "Deployer"];
   try {
+    const { data } = await txFeedCache.get(`txfeed:${page}:${limit}`, () => loadTxFeed(page, limit));
+    res.json(data);
+  } catch (err) {
+    console.error("Etherscan txfeed error:", err);
+    res.json({ transactions: [] });
+  }
+}
+
+async function loadTxFeed(page: number, limit: number): Promise<unknown> {
+  const feedWallets = ["FeeRouterV1", "GnosisSafe", "CommunitySafe", "Deployer"];
+  let upstreamOk = 0;
+  {
     const transactions: { wallet: string; dir: string; amount: string; type: string; hash: string; timestamp: number }[] = [];
     const seen = new Set<string>();
     const perWalletOffset = Math.min(50, Math.max(page * limit, 10));
@@ -826,6 +845,7 @@ async function handleTxFeed(req: express.Request, res: express.Response) {
         const ethData = await esApiFetch(
           `&module=account&action=txlist&address=${addr}&page=1&offset=${perWalletOffset}&sort=desc`
         ) as { status?: string; result?: Array<{ from: string; to: string; value: string; hash: string; timeStamp: string; isError: string }> };
+        if (Array.isArray(ethData.result)) upstreamOk++;
         if (ethData.status === "1" && Array.isArray(ethData.result)) {
           for (const tx of ethData.result) {
             if (tx.isError === "1") continue;
@@ -850,6 +870,7 @@ async function handleTxFeed(req: express.Request, res: express.Response) {
         const tokData = await esApiFetch(
           `&module=account&action=tokentx&contractaddress=${IFR_TOKEN}&address=${addr}&page=1&offset=${perWalletOffset}&sort=desc`
         ) as { status?: string; result?: Array<{ from: string; to: string; value: string; hash: string; timeStamp: string; contractAddress: string }> };
+        if (Array.isArray(tokData.result)) upstreamOk++;
         if (tokData.status === "1" && Array.isArray(tokData.result)) {
           for (const tx of tokData.result) {
             if (tx.contractAddress.toLowerCase() !== IFR_TOKEN.toLowerCase()) continue;
@@ -871,24 +892,21 @@ async function handleTxFeed(req: express.Request, res: express.Response) {
       if (i < feedWallets.length - 1) await new Promise(r => setTimeout(r, 350));
     }
 
+    // Every upstream call failed: throw so the cache serves the last good copy instead of caching emptiness.
+    if (upstreamOk === 0) throw new Error("all Etherscan feed calls failed");
     transactions.sort((a, b) => b.timestamp - a.timestamp);
     const start = (page - 1) * limit;
-    const response = {
+    return {
       transactions: transactions.slice(start, start + limit),
       page,
       limit,
       hasMore: transactions.length > start + limit,
       timestamp: new Date().toISOString(),
     };
-    setCache(cacheKey, response);
-    res.json(response);
-  } catch (err) {
-    console.error("Etherscan txfeed error:", err);
-    res.json({ transactions: [] });
   }
 }
-app.get("/api/ifr/txfeed", handleTxFeed);
-app.get("/api/ifr/transactions", handleTxFeed);
+app.get("/api/ifr/txfeed", feedLimiter, handleTxFeed);
+app.get("/api/ifr/transactions", feedLimiter, handleTxFeed);
 
 type LockEventRow = {
   contract: string;
@@ -996,14 +1014,21 @@ async function fetchLockEventsPage(page: number, limit: number, type: string, q:
 }
 
 // GET /api/locks/events — paged lock/lending event feed for Transparency page
-app.get("/api/locks/events", async (req, res) => {
+app.get("/api/locks/events", feedLimiter, async (req, res) => {
   res.set("Cache-Control", "public, max-age=30");
   try {
     const page = Math.max(1, Math.min(parseInt(String(req.query.page || "1"), 10) || 1, 100));
     const limit = Math.max(1, Math.min(parseInt(String(req.query.limit || "5"), 10) || 5, 20));
-    const type = String(req.query.type || "");
-    const q = String(req.query.q || "").trim();
-    const events = await fetchLockEventsPage(page, limit, type, q);
+    const type = String(req.query.type || "").toLowerCase();
+    const q = String(req.query.q || "").trim().toLowerCase().slice(0, 66);
+    if (!LOCK_EVENT_TYPES.has(type)) {
+      res.status(400).json({ error: "Unknown lock event type" });
+      return;
+    }
+    const { data: events } = await lockEventsCache.get(
+      `locks:${page}:${limit}:${type}:${q}`,
+      () => fetchLockEventsPage(page, limit, type, q),
+    );
     res.json({
       events: events.slice(0, limit),
       page,
