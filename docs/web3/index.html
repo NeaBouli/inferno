@@ -105,7 +105,7 @@
 
     body {
       margin: 0;
-      min-width: 320px;
+      min-width: 0; /* no fixed floor: a 15px desktop scrollbar at a 320px window must not cause horizontal overflow (T-264) */
       font-family: var(--sans);
       background:
         linear-gradient(180deg, rgba(248, 243, 234, 0.98), rgba(239, 231, 218, 0.96)),

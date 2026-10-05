@@ -53,4 +53,7 @@ assert.ok(titleRules.length >= 2, "protocol dialog title rules missing");
 for (const rule of titleRules) assert.doesNotMatch(rule, /font-size:[^;]*(vw|clamp\()/, "protocol dialog title must not use a viewport-scaled font-size");
 assert.match(web3, /@media \(max-width: 680px\) \{\s*\.protocol-card header h2 \{\s*font-size: 24px;/, "protocol dialog title must have a fixed 24px size at <=680px");
 assert.match(web3, /\.protocol-close \{[^}]*width: 44px;[^}]*height: 44px;/, "protocol close button must keep a 44x44 tap target");
+const bodyRule = web3.match(/\n    body \{([^}]*)\}/);
+assert.ok(bodyRule, "web3 body rule missing");
+assert.doesNotMatch(bodyRule[1], /min-width:\s*[1-9]\d*px/, "web3 body must not set a fixed pixel min-width (15px desktop scrollbar at 320px overflows, T-264)");
 console.log("[commitment-vault-copy] PASS - stuck types named precisely, no Auto-Unlock safety or price-benefit claims, compensation page live state, fixed dialog title sizes");
