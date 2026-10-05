@@ -167,7 +167,7 @@ test("distribution shows a black dead segment, splits CommitmentVault without do
   await expect(dead.locator("[data-dist-swatch]")).toHaveCSS("background-color", "rgb(0, 0, 0)");
   const deadValue = Number(await dead.getAttribute("data-dist-value"));
   const commit = Number(await page.locator('[data-dist-cat="commitmentLocked"]').getAttribute("data-dist-value"));
-  expect(deadValue).toBeCloseTo(27153013.07, 1); // 26,418,467.99 CV-01 + 734,545.07 FeeRouterV1 (block 26124660)
+  expect(deadValue).toBeCloseTo(27153013.06, 2); // 26,418,467.99 CV-01 + 734,545.07 FeeRouterV1 (block 26124660)
   expect(commit).toBeCloseTo(1377067.92, 2);    // 27,795,535.92 vault balance − CV-01: time tranches only
   expect(commit + 26418467.99).toBeCloseTo(27795535.92, 1); // dead CV-01 part + live part = vault balance
   await expect(page.locator('[data-live-key="live-supply-stat"]').first()).toHaveText("969.5M");
@@ -251,7 +251,7 @@ test("unavailable balances render N/A, not 0, and the chart shows a partially un
   await expect(page.locator('[data-live-key="card-vesting"]').first()).not.toHaveText(/^0/);
   await expect(page.locator(".live-status").first()).toContainText("Partially live");
   // Dead segment and live supply still use the exact values that are available.
-  expect(Number(await page.locator('[data-dist-cat="dead"]').getAttribute("data-dist-value"))).toBeCloseTo(27153013.07, 1);
+  expect(Number(await page.locator('[data-dist-cat="dead"]').getAttribute("data-dist-value"))).toBeCloseTo(27153013.06, 2);
   await expect(page.locator("#donut-live-supply")).toHaveText("Live 969.5M");
 });
 

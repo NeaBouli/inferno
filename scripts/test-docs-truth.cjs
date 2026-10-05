@@ -65,6 +65,9 @@ assert.ok(deployments.includes("## Gnosis Safes (Mainnet)"));
 
 // Landing list: 15 contracts + 3 Safes rendered as copyable rows.
 const landing = read("docs/index.html");
+// Visible landing counters show the canonical 18 (stat card and ledger row), never the previous 17.
+assert.ok(/<div class="stat-value">18<\/div>\s*<div class="stat-label">On-chain components<\/div>/.test(landing), "landing stat card must show 18 on-chain components");
+assert.ok(landing.includes('<span class="k">On-chain components</span><span class="v">18</span>'), "landing ledger must show 18 on-chain components");
 const start = landing.indexOf('<h2 class="section-title">Contract Addresses</h2>');
 const end = landing.indexOf("15 deployed contracts + 3 Gnosis Safes = 18 on-chain components", start);
 assert.ok(start > 0 && end > start, "landing contract address section not found");
