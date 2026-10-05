@@ -1482,6 +1482,12 @@
         width: 100%;
       }
 
+      /* Full-width hero buttons end left of the fixed launcher band (54px at 16px from the right below
+         821px), so no scroll position puts "Connect Wallet" under the launcher. */
+      .hero-actions {
+        padding-right: 60px;
+      }
+
       .trust-row {
         grid-template-columns: 1fr;
       }
@@ -1575,6 +1581,13 @@
       height: 100%;
       display: block;
       object-fit: cover;
+    }
+
+    /* An open dialog owns the screen: the fixed launcher would sit on its fields, so it steps back while
+       any dialog is open and returns when the dialog closes. */
+    body:has(.install-dialog.is-open, .wallet-connect-dialog.is-open, .protocol-dialog.is-open) .copilot-launcher {
+      visibility: hidden;
+      opacity: 0;
     }
 
     .copilot-panel {

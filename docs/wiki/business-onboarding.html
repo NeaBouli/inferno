@@ -302,6 +302,15 @@
       border-left-color: var(--green);
     }
 
+    /* Keep callout text out of the fixed Copilot launcher band on phones/tablets (launcher: 52px at 12px
+       from the right below 481px, 64px at 24px up to 768px), as on the council-vote cards. */
+    @media (max-width: 768px) {
+      .callout { padding-right: 72px; }
+    }
+    @media (max-width: 480px) {
+      .callout { padding-right: 48px; }
+    }
+
     /* ---------- Address ---------- */
     .address {
       font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
