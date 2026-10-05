@@ -875,6 +875,7 @@
       transition: max-height 0.3s ease;
     }
     .lp-faq-a-inner {
+      overflow-wrap: anywhere; /* long addresses must wrap instead of widening the grid track (T-262 D3) */
       padding: 0 18px 16px;
       color: #999;
       font-size: 14px;
@@ -2809,7 +2810,7 @@ if (isLocked) {
       <div class="transparency-card" data-transparency-metric="commitment" data-state="loading" aria-busy="true" style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:28px 24px;text-align:center;">
         <div class="transparency-value" data-transparency-value style="font-size:32px;font-weight:700;color:#ff6a00;">Loading&hellip;</div>
         <div style="color:#aaa;margin-top:8px;">CommitmentVault Locked</div>
-        <div data-transparency-detail style="color:#666;font-size:13px;margin-top:4px;">CommitmentVault totalLocked()</div>
+        <div data-transparency-detail style="color:#666;font-size:13px;margin-top:4px;">Live time tranches (totalLocked() minus CV-01)</div>
         <p class="transparency-status" data-transparency-status>Reading Ethereum Mainnet&hellip;</p>
       </div>
       <div class="lost-ifr-card" data-lost-ifr data-state="verified" style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:28px 24px;text-align:center;">
@@ -2858,9 +2859,9 @@ if (isLocked) {
     </p>
 
     <!-- 2-column accordion grid -->
-    <div id="lp-faq-grid" style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
-      <div id="faq-col-left" style="display:flex;flex-direction:column;gap:10px;"></div>
-      <div id="faq-col-right" style="display:flex;flex-direction:column;gap:10px;"></div>
+    <div id="lp-faq-grid" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+      <div id="faq-col-left" style="display:flex;flex-direction:column;gap:10px;min-width:0;"></div>
+      <div id="faq-col-right" style="display:flex;flex-direction:column;gap:10px;min-width:0;"></div>
     </div>
 
     <!-- CTA -->
@@ -2924,7 +2925,7 @@ if (isLocked) {
 <!-- Mobile: single column -->
 <style>
 @media(max-width:700px){
-  #lp-faq-grid { grid-template-columns:1fr !important; }
+  #lp-faq-grid { grid-template-columns:minmax(0,1fr) !important; }
 }
 </style>
 
@@ -4017,6 +4018,12 @@ if (isLocked) {
         : (isNum(data.commitmentLocked) ? Math.max(0, data.commitmentLocked - split.cv01) : null);
       var serverLive = parseBaseUnits(typeof supply.liveSupplyRaw === 'string' ? supply.liveSupplyRaw : null);
       data.liveSupply = serverLive !== null && serverLive > 0n ? baseUnitsToNumber(serverLive) : split.liveSupply;
+      // Name the sources the API itself flagged (e.g. IFRLock.unlocked) instead of a generic "some values".
+      if (Array.isArray(res[1].unavailable)) {
+        res[1].unavailable.forEach(function(l) {
+          if (typeof l === 'string' && /^[A-Za-z0-9.]{1,40}$/.test(l) && unavailable.indexOf(l) === -1 && !(l === 'FeeRouterV1' && feeRaw !== null)) unavailable.push(l);
+        });
+      }
       data.unavailable = unavailable;
       data.partial = unavailable.length > 0 || res[1].incomplete === true || supply.incomplete === true;
       liveDistributionData = data;
@@ -4131,13 +4138,19 @@ if (isLocked) {
       var vesting = new ethers.Contract(vestingAddr, vestingAbi, provider);
       mainnetReadInFlight = true;
       var cvRead = withTimeout(Promise.all([cv.totalLocked(), cv.lockedBalance(c2Addr), cv.getTrancheCount(c2Addr)]), MAINNET_READ_TIMEOUT_MS).then(function(values) {
-        setTransparencyMetric('commitment', fmtIfrUnits(values[0]), 'Sum of active tranches \u00B7 CommitmentVault totalLocked()');
         var total = Number(ethers.formatUnits(values[0], 9));
         var c2 = Number(ethers.formatUnits(values[1], 9));
         var tranches = values[2].toString();
-        // totalLocked() still contains the CV-01 tranches; the distribution counts them as dead.
+        // totalLocked() still contains the CV-01 tranches; the distribution and the Permanently Lost card count
+        // them as dead, so the transparency card shows only the live time tranches (same split as splitDead).
         var cv01 = parseBaseUnits(LOST_IFR.cv01Raw);
         var liveCommit = values[0] >= cv01 ? baseUnitsToNumber(values[0] - cv01) : null;
+        if (values[0] >= cv01) {
+          setTransparencyMetric('commitment', fmtIfrUnits(values[0] - cv01),
+            'Live time tranches \u00B7 totalLocked() minus CV-01 (counted as Permanently Lost)');
+        } else {
+          failTransparencyMetric('commitment'); // inconsistent read: never show a clamped or fake value
+        }
         if (liveDistributionData && liveCommit !== null) {
           liveDistributionData.commitmentLocked = liveCommit;
           renderLegend(liveDistributionData);

@@ -28,7 +28,7 @@ import {
 } from "./live-wiki.js";
 import { LENDING_LOAN_ABI, serializeLendingLoan } from "./lending-loans.js";
 import { ethCall, getRpcProvider, rpcHealth } from "./rpc.js";
-import { balanceEntry, explorerBalanceEntry, finalizeBalances, lostSupply, parseAddressParam, requireBaseUnits, unavailableEntry, type BalanceEntry } from "./balance-integrity.js";
+import { balanceEntry, explorerBalanceEntry, finalizeBalances, lostSupply, parseAddressParam, requireBaseUnits, IFRLOCK_UNLOCKED_TOPIC, sumUnlockedLogs, unavailableEntry, type BalanceEntry } from "./balance-integrity.js";
 import {
   Semaphore,
   SingleFlightCache,
@@ -627,6 +627,15 @@ function setCache(key: string, data: unknown): void {
 
 // ── Shared fetch functions (used by routes + background pre-warm) ──
 
+/** Sum of all IFRLock Unlocked amounts via explorer getLogs. Zero events ("No records found") is a valid 0;
+ *  rate limits, other NOTOK replies and network errors throw (fail closed, T-262 D1). */
+async function fetchIFRLockUnlockedTotal(): Promise<bigint> {
+  const data = await esApiFetch(
+    `&module=logs&action=getLogs&fromBlock=${IFRLOCK_DEPLOY_BLOCK}&toBlock=latest&address=${PROTOCOL_ADDRESSES.IFRLock}&topic0=${IFRLOCK_UNLOCKED_TOPIC}`
+  );
+  return sumUnlockedLogs(data);
+}
+
 async function fetchBalancesData() {
   const entries = Object.entries(PROTOCOL_ADDRESSES) as [string, string][];
   const ethersLib = (await import("ethers")).ethers;
@@ -641,18 +650,6 @@ async function fetchBalancesData() {
     ["function totalLocked() view returns (uint256)", "event Unlocked(address indexed user, uint256 amount)"],
     provider
   );
-  async function fetchIFRLockUnlockedTotal() {
-    const topic = ifrLock.interface.getEvent("Unlocked")!.topicHash;
-    let total = 0n;
-    const data = await esApiFetch(
-      `&module=logs&action=getLogs&fromBlock=${IFRLOCK_DEPLOY_BLOCK}&toBlock=latest&address=${PROTOCOL_ADDRESSES.IFRLock}&topic0=${topic}`
-    ) as { status?: string; result?: Array<{ data: string }> };
-    if (data.status !== "1" || !Array.isArray(data.result)) throw new Error("Unlocked events unavailable");
-    for (const log of data.result) {
-      if (log.data) total += ethersLib.toBigInt(log.data);
-    }
-    return total;
-  }
   const unlockedTotalPromise: Promise<bigint | null> = fetchIFRLockUnlockedTotal().catch(() => null);
   const results: Record<string, BalanceEntry> = {};
   for (let i = 0; i < entries.length; i += 4) {
@@ -684,18 +681,6 @@ async function fetchBalancesDataEtherscanFallback() {
     ["function totalLocked() view returns (uint256)", "event Unlocked(address indexed user, uint256 amount)"],
     provider
   );
-  async function fetchIFRLockUnlockedTotal() {
-    const topic = ifrLock.interface.getEvent("Unlocked")!.topicHash;
-    let total = 0n;
-    const data = await esApiFetch(
-      `&module=logs&action=getLogs&fromBlock=${IFRLOCK_DEPLOY_BLOCK}&toBlock=latest&address=${PROTOCOL_ADDRESSES.IFRLock}&topic0=${topic}`
-    ) as { status?: string; result?: Array<{ data: string }> };
-    if (data.status !== "1" || !Array.isArray(data.result)) throw new Error("Unlocked events unavailable");
-    for (const log of data.result) {
-      if (log.data) total += ethersLib.toBigInt(log.data);
-    }
-    return total;
-  }
   const unlockedTotalPromise: Promise<bigint | null> = fetchIFRLockUnlockedTotal().catch(() => null);
   const results: Record<string, BalanceEntry> = {};
   for (let i = 0; i < entries.length; i++) {

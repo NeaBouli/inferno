@@ -1762,7 +1762,7 @@
             <a class="btn btn-quiet" href="https://shop.ifrunit.tech/">Use IFR Benefits</a>
             <a class="btn btn-quiet" href="https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" rel="noopener">Track pool</a>
           </div>
-          <p class="panel-foot">Access lock uses IFRLock for simple refundable product access. Commitment lock creates time tranches in CommitmentVault V2 once its fee exemption is executed; V1 tranches stay unlockable.</p>
+          <p class="panel-foot">Access lock uses IFRLock for simple refundable product access. Commitment lock creates time tranches in CommitmentVault V2 (fee-exempt since Governance proposal #17); V1 tranches stay unlockable.</p>
         </div>
       </aside>
     </div>
@@ -2049,7 +2049,7 @@
       <header>
         <div>
           <h2 id="lock-title">CommitmentVault Lock</h2>
-          <p>Time tranche lock. New locks go to CommitmentVault V2 (time only) once its fee exemption is executed; existing V1 tranches stay listed and unlock through V1.</p>
+          <p>Time tranche lock. New locks go to CommitmentVault V2 (time only, fee-exempt since Governance proposal #17); existing V1 tranches stay listed and unlock through V1.</p>
         </div>
         <button class="protocol-close" type="button" aria-label="Close lock panel" data-lock-close>&times;</button>
       </header>
@@ -2060,7 +2060,7 @@
       </div>
       <div class="protocol-path" data-v2-path>
         <strong>New time locks: CommitmentVault V2 only</strong>
-        <p>V2 (<code>0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F</code>) accepts time-only locks. The lock button stays disabled until Governance proposal #17 is executed and the token reads feeExempt(V2) as true. No price lock is available: a separate price-lock vault is only a draft, not reviewed and not deployed.</p>
+        <p>V2 (<code>0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F</code>) accepts time-only locks. It is fee-exempt since Governance proposal #17 (executed 04.10.2026, block 26121846); the lock button still enables only after the token reads feeExempt(V2) as true on-chain. No price lock is available: a separate price-lock vault is only a draft, not reviewed and not deployed.</p>
       </div>
 
       <div class="protocol-grid">
@@ -2088,7 +2088,7 @@
           <select id="lock-condition" data-lock-condition>
             <option value="0" selected>Time only</option>
           </select>
-          <p class="protocol-note" data-price-locks-disabled>Price-based locks are disabled. CommitmentVault V1 cannot evaluate prices (see CV-01). Time locks only; new time locks move to CommitmentVault V2 after its fee exemption is executed.</p>
+          <p class="protocol-note" data-price-locks-disabled>Price-based locks are disabled. CommitmentVault V1 cannot evaluate prices (see CV-01). Time locks only; new time locks go to CommitmentVault V2 (fee-exempt since Governance proposal #17).</p>
         </div>
         <div class="protocol-field" data-lock-time-field>
           <label for="lock-unlock-date">Unlock date</label>
@@ -2116,7 +2116,7 @@
         <button class="btn btn-primary" type="button" data-lock-submit disabled>Approve / Lock</button>
       </div>
       <p class="protocol-status" data-lock-status>Connect a wallet to load your vault state.</p>
-      <p class="protocol-note" data-lock-note>CommitmentVault V2 opens for new time locks once its fee exemption is executed (Governance proposal #17).</p>
+      <p class="protocol-note" data-lock-note>CommitmentVault V2 is fee-exempt since Governance proposal #17. The lock button enables only after a connected wallet reads feeExempt(V2) as true on-chain.</p>
 
       <div class="tranche-list" data-lock-tranches></div>
     </div>
@@ -2481,7 +2481,7 @@
       // once InfernoToken.feeExempt(V2) is true (Governance proposal #17); otherwise locking stays disabled.
       const COMMITMENT_VAULT_V1_ADDRESS = "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3";
       const COMMITMENT_VAULT_V2_ADDRESS = "0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F";
-      const COMMITMENT_V2_CLOSED_NOTICE = "CommitmentVault V2 opens for new time locks once its fee exemption is executed (Governance proposal #17).";
+      const COMMITMENT_V2_CLOSED_NOTICE = "New CommitmentVault V2 time locks stay disabled until this app confirms feeExempt(V2) on-chain (set by Governance proposal #17). Connect a wallet or press Refresh.";
       const LENDING_VAULT_ADDRESS = "0x974305Ab0EC905172e697271C3d7d385194EB9DF";
       const IFR_DECIMALS = 9;
       const TOKEN_ABI = [
@@ -2870,7 +2870,7 @@
         const totalAmount = parseIFRInput(lockAmount.value);
         const cType = Number(lockCondition ? lockCondition.value : NaN);
         // CV-01: V1 can never evaluate a price. Only TIME_ONLY (0) may be submitted, also when vault state is not loaded.
-        if (cType !== 0) throw new Error("Price-based locks are disabled. CommitmentVault V1 cannot evaluate prices (see CV-01). Time locks only; new time locks move to CommitmentVault V2 after its fee exemption is executed.");
+        if (cType !== 0) throw new Error("Price-based locks are disabled. CommitmentVault V1 cannot evaluate prices (see CV-01). Time locks only; new time locks go to CommitmentVault V2 (fee-exempt since Governance proposal #17).");
         const needsTime = true;
         const needsPrice = false;
         let unlockTime = 0;
@@ -3217,7 +3217,7 @@
           lockStatus.textContent = plan.amounts.length === 1
             ? "Confirm the CommitmentVault V2 lock transaction in your wallet."
             : `Confirm CommitmentVault V2 tranche ${i + 1} of ${plan.amounts.length}.`;
-          if (plan.cType !== 0 || plan.p0Multiplier !== 0) throw new Error("Price-based locks are disabled. CommitmentVault V1 cannot evaluate prices (see CV-01). Time locks only; new time locks move to CommitmentVault V2 after its fee exemption is executed.");
+          if (plan.cType !== 0 || plan.p0Multiplier !== 0) throw new Error("Price-based locks are disabled. CommitmentVault V1 cannot evaluate prices (see CV-01). Time locks only; new time locks go to CommitmentVault V2 (fee-exempt since Governance proposal #17).");
           await assertV2Open();
           const lockTx = await commitmentV2.lock(plan.amounts[i], 0, plan.unlockTime, 0);
           lockStatus.textContent = `Waiting for tranche ${i + 1} confirmation...`;
