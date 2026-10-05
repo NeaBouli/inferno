@@ -1677,8 +1677,8 @@ export function SellerRuleBuilder() {
         </p>
       </div>
 
-      <nav aria-label="Seller tasks" className="mb-5 overflow-x-auto rounded-2xl border border-orange-200/15 bg-black/20 p-2">
-        <div className="flex min-w-max gap-2">
+      <nav aria-label="Seller tasks" className="relative mb-5 overflow-x-auto rounded-2xl border border-orange-200/15 bg-black/20 p-2">
+        <div className="flex min-w-max gap-2 sm:min-w-0 sm:flex-wrap">
           {sellerTasks.map((task) => (
             <a
               key={task.href}
@@ -2903,7 +2903,7 @@ export function SellerRuleBuilder() {
         </button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2 [&_input]:min-w-0 [&_select]:min-w-0">
         <label className="grid gap-2 text-sm font-semibold text-stone-200 md:col-span-2">
           Catalog binding
           <select
