@@ -1214,12 +1214,12 @@
       <h2><span class="section-num">6.</span> Trust Model</h2>
 
       <p>
-        Inferno is designed so that no admin can make instant changes &mdash; all actions require a 48-hour public timelock delay and can be cancelled by the Guardian. Multiple safeguards are layered to protect token holders and ensure transparent governance.
+        Protocol parameter changes go through Governance proposals with a 48-hour public timelock delay and can be cancelled by the Guardian. The deployed Governance contract&rsquo;s ownership itself can be transferred directly by its owner, the Treasury Safe (3-of-5), without that delay (tracked as CWA-25); the owner can also rotate the guardian through untimelocked <code>setGuardian</code>. Multiple safeguards are layered to protect token holders and ensure transparent governance.
       </p>
 
       <div class="callout">
         <p>
-          <strong>Key principle:</strong> No admin can make instant changes. All sensitive operations are gated by a 48-hour timelock via Governance, publicly visible on-chain, and cancellable by the Guardian.
+          <strong>Key principle:</strong> Protocol parameter changes are gated by a 48-hour timelock via Governance, publicly visible on-chain, and cancellable by the Guardian. Exceptions on the deployed Governance contract: its owner, the Treasury Safe (3-of-5), can transfer ownership (CWA-25) and rotate the guardian directly, without that delay.
         </p>
       </div>
 
@@ -1469,7 +1469,7 @@
         <p style="margin-bottom:0.75rem;">The audit correctly identified that Owner control is a risk in fee-on-transfer tokens. In IFR, this risk is eliminated by architecture:</p>
         <ul style="margin-bottom:1.5rem;padding-left:1.25rem;">
           <li>The token owner is the <strong>Governance Contract</strong> &mdash; not a person</li>
-          <li>Governance proposals require a <strong>48-hour Timelock</strong>; owner-only guardian rotation through <code>setGuardian</code> is the documented untimelocked exception</li>
+          <li>Governance proposals require a <strong>48-hour Timelock</strong>; the untimelocked exceptions are owner-only guardian rotation through <code>setGuardian</code> and transferring the deployed Governance contract&rsquo;s ownership through owner-only <code>setOwner</code> (tracked as CWA-25)</li>
           <li>Governance is controlled by <strong>TreasurySafe 3-of-5</strong> (5 signers, 3 required)</li>
           <li>Every feeExempt address is <strong>on-chain verifiable</strong></li>
         </ul>

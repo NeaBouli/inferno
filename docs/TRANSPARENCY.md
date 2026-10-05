@@ -18,7 +18,7 @@ All data is verifiable on-chain via Etherscan. No hidden wallets, no insider dea
 | BuybackVault | [`0xc43d...d041`](https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041) (Governance) | OK |
 | BurnReserve | [`0xc43d...d041`](https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041) (Governance) | OK |
 
-> All contracts are under Governance (Timelock) control. No single person can make instant changes — all modifications require a 48-hour delay.
+> All contracts are under Governance (Timelock) control. Protocol parameter changes go through Governance proposals with a 48-hour timelock. The deployed Governance contract's ownership itself can be transferred directly by its owner, the Treasury Safe (3-of-5), without that delay (tracked as CWA-25).
 
 **Verify:** https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#readContract
 

@@ -728,7 +728,7 @@
 
       <ul>
         <li><strong>Open source contracts</strong> &mdash; audited + verified on Etherscan</li>
-        <li><strong>On-chain governance</strong> &mdash; proposals use a 48h timelock; owner-only guardian rotation via <code>setGuardian</code> is the documented untimelocked exception</li>
+        <li><strong>On-chain governance</strong> &mdash; proposals use a 48h timelock; the untimelocked exceptions are owner-only guardian rotation via <code>setGuardian</code> and transferring the deployed Governance contract&rsquo;s ownership through owner-only <code>setOwner</code> (tracked as CWA-25)</li>
         <li><strong>Smart contract-enforced rules</strong> &mdash; not promises</li>
         <li><strong>Gnosis Safe 3-of-5</strong> &mdash; no single point of failure</li>
       </ul>
@@ -736,7 +736,7 @@
       <h3>What you CAN verify</h3>
       <ul>
         <li>All 15 protocol contracts on <a href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code" target="_blank">Etherscan</a></li>
-        <li>Every governance action on-chain (48h public delay)</li>
+        <li>Every governance proposal on-chain (48h public delay)</li>
         <li>Treasury movements via <a href="https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b" target="_blank">Gnosis Safe</a></li>
         <li>Token distribution (genesis verified, <a href="https://ifrunit.tech/wiki/transparency.html">Transparency Report</a>)</li>
         <li>Full source code on <a href="https://github.com/NeaBouli/inferno" target="_blank">GitHub</a></li>

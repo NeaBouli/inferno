@@ -936,8 +936,8 @@
           <code style="font-size:11px;color:var(--muted);word-break:break-all;">0xc43d48E7FDA576C5022d0670B652A622E8caD041</code>
           <p style="font-size:13px;color:var(--muted);margin:10px 0;">
             Protocol proposals go through this contract with a mandatory 48-hour Timelock.
-            Documented exception: owner-only guardian rotation through <code>setGuardian</code>
-            is not timelocked. Governance owns InfernoToken.
+            Untimelocked exceptions: owner-only guardian rotation through <code>setGuardian</code>
+            and transferring the deployed Governance contract&rsquo;s ownership through owner-only <code>setOwner</code> (tracked as CWA-25). Governance owns InfernoToken.
           </p>
           <div style="display:flex;gap:12px;font-size:12px;">
             <span style="color:var(--muted);">48h Timelock</span>
@@ -1141,8 +1141,8 @@
       <h2 id="governance">6. Governance</h2>
       <p>
         Governance proposals use the mandatory 48-hour timelock, giving the community time to
-        review. The documented exception is guardian rotation: TreasurySafe 3-of-5 can call
-        <code>setGuardian</code> without the timelock. The Guardian (TreasurySafe since 03.10.2026) can cancel
+        review. The untimelocked exceptions: TreasurySafe 3-of-5 can call
+        <code>setGuardian</code> and, on the deployed Governance contract, <code>setOwner</code> (tracked as CWA-25) without the timelock. The Guardian (TreasurySafe since 03.10.2026) can cancel
         proposals during the timelock window. The Governance Owner is TreasurySafe 3-of-5
         (since 20.03.2026).
       </p>

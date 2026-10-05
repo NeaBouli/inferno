@@ -33,7 +33,7 @@ Full internal audits and public automated test evidence. Independent professiona
 That's the security foundation of $IFR.
 
 Every contract verified on Etherscan.
-Every governance action public for 48h before execution.
+Every governance proposal public for 48h before execution.
 Every token traceable from genesis.
 
 github.com/NeaBouli/inferno

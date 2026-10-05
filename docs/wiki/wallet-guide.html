@@ -835,7 +835,7 @@
           <div class="wg-field"><strong>Owner:</strong> TreasurySafe 3-of-5 (transferred 20.03.2026 &mdash; <a href="https://etherscan.io/tx/0xcd9f99d2e5df5c28b81f885c7ebf7e2d42a873bd1c81bef9d94aa5c2d19c46c3" target="_blank">TX</a>)</div>
           <div class="wg-field"><strong>feeExempt:</strong> <span class="wg-fee-status wg-fee-yes">&#x2705; Yes</span></div>
           <div class="wg-role-box">
-            <strong>Function:</strong> governance proposals use the 48-hour timelock. Owner-only guardian rotation through <code>setGuardian</code> is the documented untimelocked exception. Guardian can emergency-cancel any pending proposal.
+            <strong>Function:</strong> governance proposals use the 48-hour timelock. The untimelocked exceptions are owner-only guardian rotation through <code>setGuardian</code> and transferring the deployed Governance contract&rsquo;s ownership through owner-only <code>setOwner</code> (tracked as CWA-25). Guardian can emergency-cancel any pending proposal.
           </div>
           <div class="wg-field"><strong>Proposals:</strong> History documented through #16; #1, #2, #3 and #10 were cancelled or replaced, while #11&ndash;#16 were executed.</div>
           <div class="wg-field"><strong>Phase:</strong> Active &mdash; controls all protocol parameters</div>
