@@ -1,7 +1,8 @@
 # PriceLockVault Specification (Lane 2)
 
-**Status:** built and tested, not deployed. Price locks stay disabled until the on-chain readiness scope is met
-and Governance activates them. An independent security review is owed before any deployment.
+**Status:** built, tested and independently reviewed (second review T-256; its LOW finding, the concurrent lock cap,
+is fixed in `main`). Not deployed and not active. Price locks stay disabled until a Sepolia rehearsal is done, the
+on-chain readiness scope is met and Governance activates them.
 
 ## Purpose
 
@@ -109,10 +110,10 @@ window, or an independent second price source — would change that scope and ne
 InfernoToken taxes transfers between non-exempt addresses. Until a separate Governance proposal makes the vault
 fee-exempt, a lock is credited with the received amount and an unlock pays the transfer tax again.
 
-## Deployment Path (not started)
+## Deployment Path (step 1 done)
 
-1. Independent security review of the contract and this specification (repeat on the slices changed after the
-   first review: per-lock readiness, oracle-free rescue, factory-bound pair).
+1. Independent security review of the contract and this specification, including the slices changed after the
+   first review (per-lock readiness, oracle-free rescue, factory-bound pair). **Done:** second review T-256.
 2. Sepolia rehearsal: deploy, poke over a full window, activate, lock, unlock by price and by rescue.
 3. Mainnet deployment with Governance as owner (`scripts/deploy-price-lock-vault.js` refuses Mainnet unless
    `ALLOW_MAINNET_PRICE_LOCK_DEPLOY=yes`).

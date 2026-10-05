@@ -1175,6 +1175,56 @@ await governance.execute(proposalId);</code></pre>
         </tbody>
       </table>
 
+      <h3 style="margin-top:28px;" id="queued-proposals">Queued Protocol Proposals #17&ndash;#21</h3>
+      <p style="font-size:0.85rem;color:var(--muted);">Queued by the Treasury Safe (3-of-5) through the 48-hour Governance timelock. None of these is executed yet; each needs a separate Safe execution after its ETA, and the guardian can still cancel. Status was read on-chain (<code>getProposal</code>) on 03.10.2026.</p>
+      <table>
+        <thead>
+          <tr><th>#</th><th>Action</th><th>Timing</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>#17</td>
+            <td><code>InfernoToken.setFeeExempt(CommitmentVault V2, true)</code><br><span class="address"><code>0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F</code></span><br>
+              <span class="address" style="font-size:11px;color:var(--muted);">Queue TX: <a href="https://etherscan.io/tx/0x6e113b6cc66a369604d46c3b4a5560f1418302de6ecc371f1217d72aeabd39bd" target="_blank" rel="noopener">0x6e113b6c&hellip;39bd</a> &middot; Block 26107450</span>
+            </td>
+            <td>Queued 02.10.2026 &middot; executable from 2026-10-04 21:53:11 UTC</td>
+            <td><span class="badge" style="background:#b45309;">Queued &mdash; not executed</span></td>
+          </tr>
+          <tr>
+            <td>#18</td>
+            <td><code>FeeRouterV1.setVoucherSigner(dedicated signer)</code><br><span class="address"><code>0x790D99c320dafA03d83bEa152178A6523b49CA0d</code></span><br>
+              <span class="address" style="font-size:11px;color:var(--muted);">Queue TX: <a href="https://etherscan.io/tx/0xa3a9de84f9e08eae1ced941ad7df1f372bffd3f74b3e8b40115b33182fb8914e" target="_blank" rel="noopener">0xa3a9de84&hellip;914e</a> &middot; Block 26107910</span>
+            </td>
+            <td>Queued 02.10.2026 &middot; executable from 2026-10-04 23:25:47 UTC</td>
+            <td><span class="badge" style="background:#b45309;">Queued &mdash; not executed</span></td>
+          </tr>
+          <tr>
+            <td>#19</td>
+            <td><code>LiquidityReserve.setGuardian(Treasury Safe)</code><br><span class="address"><code>0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b</code></span><br>
+              <span class="address" style="font-size:11px;color:var(--muted);">Queue TX: <a href="https://etherscan.io/tx/0xfdd90c5ef44efd617af0338fa2e95867cfa45367ac644975774e1b3fae3d394c" target="_blank" rel="noopener">0xfdd90c5e&hellip;394c</a> &middot; Block 26108062</span>
+            </td>
+            <td>Queued 02.10.2026 &middot; executable from 2026-10-04 23:56:11 UTC</td>
+            <td><span class="badge" style="background:#b45309;">Queued &mdash; not executed</span></td>
+          </tr>
+          <tr>
+            <td>#20</td>
+            <td><code>BurnReserve.setGuardian(Treasury Safe)</code><br><span class="address"><code>0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b</code></span><br>
+              <span class="address" style="font-size:11px;color:var(--muted);">Queue TX: <a href="https://etherscan.io/tx/0xfdd90c5ef44efd617af0338fa2e95867cfa45367ac644975774e1b3fae3d394c" target="_blank" rel="noopener">0xfdd90c5e&hellip;394c</a> &middot; Block 26108062</span>
+            </td>
+            <td>Queued 02.10.2026 &middot; executable from 2026-10-04 23:56:11 UTC</td>
+            <td><span class="badge" style="background:#b45309;">Queued &mdash; not executed</span></td>
+          </tr>
+          <tr>
+            <td>#21</td>
+            <td><code>InfernoToken.setPoolFeeReceiver(BuybackController)</code><br><span class="address"><code>0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c</code></span><br>
+              <span class="address" style="font-size:11px;color:var(--muted);">Queue TX: <a href="https://etherscan.io/tx/0x92b5a6fa719c3e1f1f2f21bec23d2af182d0f9d3cf08ab7d73b092387d33db9f" target="_blank" rel="noopener">0x92b5a6fa&hellip;db9f</a> &middot; Block 26108173</span>
+            </td>
+            <td>Queued 02.10.2026 &middot; executable from 2026-10-05 00:18:23 UTC</td>
+            <td><span class="badge" style="background:#b45309;">Queued &mdash; not executed</span></td>
+          </tr>
+        </tbody>
+      </table>
+
       <!-- Bootstrap FINALIZED Notice -->
       <div style="margin-top:20px;padding:16px;background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.3);border-radius:12px;">
         <p style="margin:0;"><strong>&#x2705; Bootstrap FINALIZED (05.06.2026 23:51 UTC)</strong> &mdash; Block 25254575 &mdash;
