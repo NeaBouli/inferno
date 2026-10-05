@@ -33,6 +33,28 @@
 - The retired notes in the lending-vault Lender and Borrower tabs and the refusal messages use readable
   (WCAG AA) colours on the light skin.
 
+## 5 October 2026 — Web3 Wallet Labels Clear of the Copilot Launcher (T-268b)
+
+- Web3 landing: the informative wallet labels next to the hero (MetaMask … WalletConnect) keep out of the
+  fixed launcher band while scrolling (68px right padding up to 980px, 60px below 681px), the same pattern
+  as the hero buttons in T-268. The launcher stays visible.
+- New regression in `fab-clearance.spec.js` measures the label boxes against the launcher band at
+  375/390/680/820/900/980; all 6 fail without the fix.
+
+## 5 October 2026 — Copilot Launcher Clear of Onboarding Callouts and Web3 Dialogs (T-268)
+
+- Business onboarding: callout boxes keep their text out of the fixed Copilot launcher band on phones and
+  tablets (72px right padding up to 768px, 48px below 481px), as on the council-vote cards. The launcher
+  stays visible.
+- Web3: while an install, wallet or protocol dialog is open, the launcher steps back (hidden) so it cannot
+  sit on dialog fields such as the withdraw amount row; it returns when the dialog closes.
+- Web3 landing: the full-width hero buttons end left of the launcher band below 681px (60px right
+  padding), so "Connect Wallet" is never under the launcher while scrolling.
+- New regressions in `fab-clearance.spec.js` measure callout text boxes against the launcher band
+  (375/390/600/768) and the open withdraw dialog's text and controls against the launcher (375x812,
+  375x900, 390x844), then reopen chat after closing the dialog, and the Web3 hero buttons against the band
+  (375/390/680/820). Without the fix 9 of the 11 new tests fail.
+
 ## 5 October 2026 — Benefits Seller Workspace Fits Phones (T-277)
 
 - With a loaded seller profile, the seller task bar no longer widens the seller workspace past a
