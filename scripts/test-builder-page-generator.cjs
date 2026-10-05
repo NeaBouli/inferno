@@ -33,6 +33,9 @@ if (/id="scLbl">[^<]*\b(SAFE|MEDIUM|RISKY)\b/.test(html)) fail("score label must
 if (/Security Score/.test(html)) fail("score card must not be titled Security Score");
 if (!html.includes("not audited")) fail("score card must state the generated code is not audited");
 if (!html.includes("lock() credits the amount actually received")) fail("score card must state what the tests check");
+if (/returns exactly/.test(html) || !html.includes("the wallet can receive less unless the contract is fee-exempt")) {
+  fail("score card must not promise an exact unlock payout: IFR's fee may apply to the outgoing transfer");
+}
 for (const file of fs.readdirSync(path.join(root, "contracts/library"))) {
   if (/Security Score: (SAFE|MEDIUM|RISKY)/.test(fs.readFileSync(path.join(root, "contracts/library", file), "utf8"))) {
     fail(`contracts/library/${file}: NatSpec must not claim a security verdict`);

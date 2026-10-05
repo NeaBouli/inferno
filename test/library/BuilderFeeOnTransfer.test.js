@@ -99,7 +99,7 @@ describe("Builder library — real InfernoToken fee path", function () {
     expect(await ifr.balanceOf(vault.target)).to.equal(net + amount);
   });
 
-  it("unlock returns exactly the credited amount with real IFR fees; no over-withdrawal, vault drains to zero", async () => {
+  it("unlock transfers exactly the credited amount with real IFR fees (wallet receives it minus the fee); no over-withdrawal, vault drains to zero", async () => {
     const [, alice, bob, governance, poolFeeReceiver] = await ethers.getSigners();
     const ifr = await (await ethers.getContractFactory("InfernoToken")).deploy(poolFeeReceiver.address);
     await ifr.transfer(alice.address, units(50000));
