@@ -1,5 +1,21 @@
 # Changelog
 
+## 5 October 2026 — Governance Proposals #18–#21 Executed (Safe Round)
+
+- #18 `FeeRouterV1.setVoucherSigner(0x790D99c320dafA03d83bEa152178A6523b49CA0d)`: 07:17:47 UTC, block 26124623,
+  TX `0x40a856b9f994a17390c042abe851c5ff99ca86289eb86316eb119f465cd89679`. The points backend activated the same
+  signer in the same minute (CWA-06 fixed and verified).
+- #19/#20 `setGuardian(Treasury Safe)` on LiquidityReserve and BurnReserve: one Treasury Safe TX at 07:22:47 UTC,
+  block 26124647, TX `0xa432f061d42d3cbf306e44cf27394da5f70443d8d765cb1cfea66e17be19df27`. All six mutable
+  guardians are now the Treasury Safe (CWA-09 fixed and verified).
+- #21 `InfernoToken.setPoolFeeReceiver(BuybackController)`: 07:25:23 UTC, block 26124660,
+  TX `0x8de48b47dfa8f17b631fb744bc4deef9bbb68271f8b700b422cdd3abb739ca26`. New IFR pool fees are recoverable at
+  BuybackController (CWA-02 fixed and verified).
+- Permanently lost IFR as of block 26124660: 27,153,013.068435700 IFR (CV-01 26,418,467.994338353 + FeeRouterV1
+  734,545.074097347). #21 stopped the pool-fee inflow to FeeRouterV1; direct transfers remain possible, so the
+  Landing and the Copilot keep reading that part live.
+- CWA register: 56 fixed and verified, 8 governance or owner gated.
+
 ## 4 October 2026 — Open Benefits Verification Version 2 (CommitmentVault V2)
 
 - New specification `ifr-benefits-verify/2` (`docs/specs/ifr-benefits-verify-2.md`). It reads

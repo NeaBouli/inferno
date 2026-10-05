@@ -16,7 +16,7 @@ const DELAY_MS = 300;
 
 const EOA_WALLETS = [
   { label: "Deployer", address: "0x6b36687b0cd4386fb14cf565B67D7862110Fed67" },
-  { label: "Voucher Signer", address: "0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4" },
+  { label: "Voucher Signer", address: "0x790D99c320dafA03d83bEa152178A6523b49CA0d" }, // rotated by Proposal #18 (2026-10-05)
   { label: "Team Beneficiary", address: "0x04FABC52c51d1F8ced6974E7C25a34249b1E6239" },
   { label: "Community EOA", address: "0x61aF4E72C77b58F4b50964Ee93d420750Cd9857E" },
   { label: "Treasury EOA", address: "0xC8f4B45fA0C4727E9b27c13Af3d000C922a2ac9c" },

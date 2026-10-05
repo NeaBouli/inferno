@@ -2,28 +2,9 @@
   "_manifest": {
     "chainId": 1,
     "addressSource": "docs/DEPLOYMENTS.md (Ethereum Mainnet contract table, Etherscan-verified entries)",
-    "components": "Current Mainnet protocol contracts (14). Legacy BootstrapVault V1 is deprecated and listed only in docs/DEPLOYMENTS.md.",
+    "components": "Deployed Mainnet protocol contracts (15); with the 3 project Gnosis Safes they form the 18 documented on-chain components. This is a list of deployed components, not a claim that every component is active. CommitmentVault (V1) stays listed as the legacy vault: existing tranches unlock through V1 only, and new locks go to CommitmentVaultV2 (TIME_ONLY). Legacy BootstrapVault V1 is deprecated and listed only in docs/DEPLOYMENTS.md.",
     "unknownPolicy": "deployer, tx and timestamp are null when no deployment record exists in this repository; they are unknown, not omitted by accident. Fill them only from a verified deployment transaction.",
-    "abiDirectory": "abi/ (only BuilderRegistry, BuybackController, CommitmentVault, LendingVault have committed ABIs)",
-    "pendingWiring": {
-      "note": "Deployed but not yet counted as a protocol contract: it joins the contract list after Governance executes setFeeExempt(V2, true) and the interfaces switch (docs/COMMITMENT_VAULT_V2_REPAIR.md steps 4-5).",
-      "CommitmentVaultV2": {
-        "address": "0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F",
-        "deployer": "0x6b36687b0cd4386fb14cf565B67D7862110Fed67",
-        "tx": "0x9857a5707b650b8828f41b893f91a10ff26d7990742e782bb0b7e86df23ea0f7",
-        "timestamp": "2026-10-02T21:22:23.000Z",
-        "block": 26107296,
-        "network": "mainnet",
-        "source": "contracts/vault/CommitmentVault.sol",
-        "sourceCommit": "cdb85fe791d2d21a870684c92b9c15e9c897fd60",
-        "constructor": [
-          "0x77e99917Eca8539c62F509ED1193ac36580A6e7B",
-          "0xc43d48E7FDA576C5022d0670B652A622E8caD041"
-        ],
-        "abi": "abi/CommitmentVault.json",
-        "provenance": "deployment transaction receipt; runtime bytecode equals the compiled artifact except the immutable IFR token address; Etherscan verified (2026-10-03, full solc input); Sourcify exact match"
-      }
-    }
+    "abiDirectory": "abi/ (only BuilderRegistry, BuybackController, CommitmentVault (shared by V1 and V2), LendingVault have committed ABIs)"
   },
   "InfernoToken": {
     "address": "0x77e99917Eca8539c62F509ED1193ac36580A6e7B",
@@ -33,7 +14,8 @@
     "network": "mainnet",
     "source": "contracts/token/InfernoToken.sol",
     "abi": null,
-    "provenance": "address from docs/DEPLOYMENTS.md; deployment transaction unknown in repository"
+    "provenance": "address from docs/DEPLOYMENTS.md; deployment transaction unknown in repository",
+    "notes": "poolFeeReceiver = BuybackController since Governance proposal #21 (executed 2026-10-05T07:25:23Z, block 26124660, tx 0x8de48b47dfa8f17b631fb744bc4deef9bbb68271f8b700b422cdd3abb739ca26); FeeRouterV1 before"
   },
   "Governance": {
     "address": "0xc43d48E7FDA576C5022d0670B652A622E8caD041",
@@ -63,7 +45,8 @@
     "network": "mainnet",
     "source": "contracts/burnreserve/BurnReserve.sol",
     "abi": null,
-    "provenance": "address from docs/DEPLOYMENTS.md; deployment transaction unknown in repository"
+    "provenance": "address from docs/DEPLOYMENTS.md; deployment transaction unknown in repository",
+    "notes": "guardian = Treasury Safe since Governance proposal #20 (executed 2026-10-05T07:22:47Z, block 26124647, tx 0xa432f061d42d3cbf306e44cf27394da5f70443d8d765cb1cfea66e17be19df27)"
   },
   "BuybackVault": {
     "address": "0x670D293e3D65f96171c10DdC8d88B96b0570F812",
@@ -93,7 +76,8 @@
     "network": "mainnet",
     "source": "contracts/FeeRouterV1.sol",
     "abi": null,
-    "provenance": "address from docs/DEPLOYMENTS.md; deployment transaction unknown in repository"
+    "provenance": "address from docs/DEPLOYMENTS.md; deployment transaction unknown in repository",
+    "notes": "voucherSigner = 0x790D99c320dafA03d83bEa152178A6523b49CA0d since Governance proposal #18 (executed 2026-10-05T07:17:47Z, block 26124623, tx 0x40a856b9f994a17390c042abe851c5ff99ca86289eb86316eb119f465cd89679). No longer the InfernoToken pool-fee receiver since proposal #21 (block 26124660); IFR balance 734545074097347 base units (734,545.074097347 IFR) as of block 26124660, permanently lost (CWA-02); direct transfers remain possible"
   },
   "Vesting": {
     "address": "0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271",
@@ -113,7 +97,8 @@
     "network": "mainnet",
     "source": "contracts/liquidity/LiquidityReserve.sol",
     "abi": null,
-    "provenance": "address from docs/DEPLOYMENTS.md; deployment transaction unknown in repository"
+    "provenance": "address from docs/DEPLOYMENTS.md; deployment transaction unknown in repository",
+    "notes": "guardian = Treasury Safe since Governance proposal #19 (executed 2026-10-05T07:22:47Z, block 26124647, tx 0xa432f061d42d3cbf306e44cf27394da5f70443d8d765cb1cfea66e17be19df27)"
   },
   "BootstrapVaultV3": {
     "address": "0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141",
@@ -164,5 +149,21 @@
     "source": "contracts/buyback/BuybackController.sol",
     "abi": "abi/BuybackController.json",
     "provenance": "deployment script record (scripts/deploy-buyback-controller.js)"
+  },
+  "CommitmentVaultV2": {
+    "address": "0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F",
+    "deployer": "0x6b36687b0cd4386fb14cf565B67D7862110Fed67",
+    "tx": "0x9857a5707b650b8828f41b893f91a10ff26d7990742e782bb0b7e86df23ea0f7",
+    "timestamp": "2026-10-02T21:22:23.000Z",
+    "network": "mainnet",
+    "source": "contracts/vault/CommitmentVault.sol",
+    "abi": "abi/CommitmentVault.json",
+    "provenance": "deployment transaction receipt; runtime bytecode equals the compiled artifact except the immutable IFR token address; Etherscan verified (2026-10-03, full solc input); Sourcify exact match; fee-exempt via Governance proposal #17 (executed 2026-10-04T22:01:23Z, block 26121846, tx 0xbb53640ca8fd59513c8c772a0ceb633d63d7d9837768c28535bd67da6c4a835c); counted as the 15th protocol contract since 2026-10-05",
+    "block": 26107296,
+    "sourceCommit": "cdb85fe791d2d21a870684c92b9c15e9c897fd60",
+    "constructor": [
+      "0x77e99917Eca8539c62F509ED1193ac36580A6e7B",
+      "0xc43d48E7FDA576C5022d0670B652A622E8caD041"
+    ]
   }
 }

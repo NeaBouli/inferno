@@ -17,12 +17,12 @@ export function getIFRKnowledge() {
 
   return {
     audits: {
-      status: "The seven Collateral Web3 Open Audits reports cover CWA-01 through CWA-82. At the 2026-10-02 remediation checkpoint, 53 findings are fixed and verified, 11 are governance or owner gated, 2 are accepted or monitored, 5 are open actionable, and 11 are informational.",
+      status: "The seven Collateral Web3 Open Audits reports cover CWA-01 through CWA-82. At the 2026-10-05 remediation checkpoint, 56 findings are fixed and verified, 8 are governance or owner gated, 2 are accepted or monitored, 5 are open actionable, and 11 are informational.",
       register: "https://github.com/NeaBouli/inferno/blob/main/docs/community-audits/CWA_REMEDIATION_REGISTER.md",
       july2026Status: "The preserved 27 July community audit (one owner-requested company-name redaction) is paired with an evidence-backed register: 12 fixed and verified, 3 partially remediated, 1 outdated snapshot corrected, 4 governance or future-version gated, 2 accepted or monitored, and 1 open actionable. Historical red or high-severity labels are not proof that an item remains open today.",
       july2026Register: "https://github.com/NeaBouli/inferno/blob/main/docs/community-audits/JULY_2026_REMEDIATION_REGISTER.md",
       pdf: "https://github.com/NeaBouli/inferno/raw/main/docs/community-audits/IFR_Protocol_CWA_Consolidated_Audit_Report_2026-09-14.pdf",
-      tests: "Current canonical evidence: contracts 655/655, Generator Engine 30/30, IFR SDK 36/36, Landing/Wiki browser 26/26, Web3 browser 45/45. Benefits physical device/wallet acceptance remains 1/10.",
+      tests: "Current canonical evidence: contracts 681/681, Generator Engine 30/30, IFR SDK 36/36, Landing/Wiki browser 26/26, Web3 browser 45/45. Benefits physical device/wallet acceptance remains 1/10.",
       boundary: "These are community audit records, not a professional third-party certification. Never imply that an open finding is remediated without the register's required integration and verification evidence."
     },
     userProvidedLiquidity: {
@@ -143,7 +143,7 @@ export function getIFRKnowledge() {
     governance: {
       timelockDelay: "48 hours",
       owner: "TreasurySafe 3-of-5 (since 20.03.2026)",
-      guardian: "Deployer EOA — can cancel proposals",
+      guardian: "Treasury Safe 3-of-5 (since 03.10.2026) — can cancel proposals",
       noInstantChanges: "Governance proposals use the 48-hour timelock. Guardian rotation through setGuardian is the documented untimelocked exception.",
       daoPhase: "Full DAO transition remains planned; current governance is TreasurySafe 3-of-5 plus the 48-hour timelock",
       multisig: "3-of-5 on all Safes (Treasury, Community, LP Reserve) — 5 signers: A.K./M.G./A.M./Y.K./A.P.",

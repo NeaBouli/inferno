@@ -11,7 +11,7 @@ const status = read("docs/CURRENT_FUNCTIONALITY_STATUS.md");
 for (const marker of [
   "**Verified:** 6 September 2026",
   "**Repository baseline:** current release branch",
-  "`655/655` passing",
+  "`681/681` passing",
   "LendingVault.ifrPriceWei = 0",
   "priceOracle` is the zero address",
   "physical device/wallet acceptance matrix is 1/10",

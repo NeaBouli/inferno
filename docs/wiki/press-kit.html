@@ -616,7 +616,7 @@
           </tr>
           <tr>
             <td>On-Chain Components</td>
-            <td>17 (14 deployed contracts + 3 Gnosis Safes)</td>
+            <td>18 (15 deployed contracts + 3 Gnosis Safes)</td>
           </tr>
           <tr>
             <td>Tests</td>
@@ -709,7 +709,7 @@
           <tr>
             <td>Pool Fee</td>
             <td>1.0%</td>
-            <td>Routed as IFR to FeeRouterV1, which has no IFR withdrawal path: these fees are <a href="transparency.html#lost-ifr">permanently lost</a> (not burned). Future fees move to BuybackController once Governance executes the 3 October 2026 decision.</td>
+            <td>Routed as IFR to BuybackController since Proposal #21 (05.10.2026), recoverable by Governance. Until then it went to FeeRouterV1, which has no IFR withdrawal path: those fees are <a href="transparency.html#lost-ifr">permanently lost</a> (not burned).</td>
           </tr>
           <tr>
             <td><strong>Total</strong></td>
