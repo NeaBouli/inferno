@@ -21,7 +21,7 @@ We spent months building before launching. The result:
 - 48-hour governance timelock on all parameter changes
 - No mint function — supply only decreases
 
-Every line of code is open source. Every deployment transaction is on Etherscan. Every governance action is public for 48 hours before execution.
+Every line of code is open source. Every deployment transaction is on Etherscan. Every governance proposal is public for 48 hours before execution.
 
 ## The Bootstrap: Community Price Discovery
 

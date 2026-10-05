@@ -67,7 +67,7 @@ Users lock IFR tokens in IFRLock -> receive builder-product access while the req
 
 ## Governance
 
-- 48h Timelock on all changes
+- 48h Timelock on protocol parameter changes (Governance proposals); the deployed Governance contract's ownership itself can be transferred directly by its owner, the Treasury Safe (3-of-5), without that delay (CWA-25)
 - Guardian Emergency Cancel
 - Governance Proposals successfully executed (Sepolia testnet phase)
 - Ownership of all contracts -> Governance Timelock

@@ -81,7 +81,7 @@ browser/application verification retained by the release gates:
 - Generator Engine: `30/30` passing.
 - IFR SDK legacy suite: `36/36` passing.
 - Landing/Wiki wallet browser suite: `26/26` passing.
-- Web3 write-path browser suite: `45/45` passing.
+- Web3 write-path browser suite: `85/85` passing.
 - Surface routing, wiki head integrity, wiki RAG freshness, content trust,
   status baseline and dependency-advisory checks: passing.
 - Benefits full preflight: frontend/backend dependency audits, TypeScript,

@@ -559,7 +559,7 @@
     {
       "@type": "Question",
       "name": "Can governance change the token supply or burn rate?",
-      "acceptedAnswer": {"@type":"Answer","text":"No. The token supply is fixed at 1B IFR — there is no mint function. The burn and pool-fee split can be adjusted by governance within the InfernoToken hard cap of 5% total. No parameter can be changed instantly — all changes require the 48h Timelock."}
+      "acceptedAnswer": {"@type":"Answer","text":"No. The token supply is fixed at 1B IFR — there is no mint function. The burn and pool-fee split can be adjusted by governance within the InfernoToken hard cap of 5% total. Fee and other protocol parameter changes go through Governance proposals with a 48-hour timelock. The deployed Governance contract's ownership itself can be transferred directly by its owner, the Treasury Safe (3-of-5), without that delay (tracked as CWA-25)."}
     },
     {
       "@type": "Question",
@@ -870,7 +870,7 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>What can be changed through governance?</span><span class="icon">+</span></button>
-          <div class="faq-a">Governance can change: fee rates (sender burn, recipient burn, pool fee), fee exemptions, the pool fee receiver, guardian address, timelock delay, PartnerVault parameters (reward rate, emission cap, authorized callers), and FeeRouter parameters (protocol fee, voucher signer, fee collector). Proposals use the full timelock delay. The documented exception is owner-only guardian rotation through <code>setGuardian</code>, which is not timelocked.</div>
+          <div class="faq-a">Governance can change: fee rates (sender burn, recipient burn, pool fee), fee exemptions, the pool fee receiver, guardian address, timelock delay, PartnerVault parameters (reward rate, emission cap, authorized callers), and FeeRouter parameters (protocol fee, voucher signer, fee collector). Proposals use the full timelock delay. The untimelocked exceptions are owner-only guardian rotation through <code>setGuardian</code> and transferring the deployed Governance contract&rsquo;s ownership through owner-only <code>setOwner</code> (tracked as CWA-25).</div>
         </div>
 
         <div class="faq-item">
@@ -1065,7 +1065,7 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>Can governance change the token supply or burn rate?</span><span class="icon">+</span></button>
-          <div class="faq-a"><strong>Supply:</strong> No. The token supply is fixed at 1,000,000,000 IFR &mdash; there is no <code>mint()</code> function. This cannot be changed by governance or anyone else.<br><br><strong>Burn rate:</strong> The 2.5% burn rate can be adjusted by governance, but only within hard bounds defined in the contracts. The maximum fee cap is 5% (hardcoded). No parameter can be changed instantly &mdash; all changes require the 48h Timelock, giving the community time to review.</div>
+          <div class="faq-a"><strong>Supply:</strong> No. The token supply is fixed at 1,000,000,000 IFR &mdash; there is no <code>mint()</code> function. This cannot be changed by governance or anyone else.<br><br><strong>Burn rate:</strong> The 2.5% burn rate can be adjusted by governance, but only within hard bounds defined in the contracts. The maximum fee cap is 5% (hardcoded). Fee and other protocol parameter changes go through Governance proposals with a 48-hour timelock, giving the community time to review. The deployed Governance contract&rsquo;s ownership itself can be transferred directly by its owner, the Treasury Safe (3-of-5), without that delay (tracked as CWA-25).</div>
         </div>
 
         <div class="faq-item">
@@ -1214,7 +1214,7 @@ const hasLock = await ifrLock.isLocked(walletAddress, ethers.parseUnits("1000", 
       <div class="faq-section">
         <div class="faq-item">
           <button class="faq-q"><span>The owner can change fees &mdash; is that safe?</span><span class="icon">+</span></button>
-          <div class="faq-a">The token owner is the <strong>Governance Contract</strong> &mdash; not a single person. Token fee changes require: (1) a public governance proposal, (2) the 48-hour timelock, and (3) execution under TreasurySafe 3-of-5 control. The documented untimelocked exception is Governance guardian rotation through owner-only <code>setGuardian</code>; it does not change token fees. The token fee cap is hardcoded at max 5%.</div>
+          <div class="faq-a">The token owner is the <strong>Governance Contract</strong> &mdash; not a single person. Token fee changes require: (1) a public governance proposal, (2) the 48-hour timelock, and (3) execution under TreasurySafe 3-of-5 control. The untimelocked exceptions are Governance guardian rotation through owner-only <code>setGuardian</code> and transferring the deployed Governance contract&rsquo;s ownership through owner-only <code>setOwner</code> (tracked as CWA-25); neither changes token fees directly. The token fee cap is hardcoded at max 5%.</div>
         </div>
         <div class="faq-item">
           <button class="faq-q"><span>Can fee-exempt wallets be abused?</span><span class="icon">+</span></button>

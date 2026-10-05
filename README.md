@@ -38,7 +38,7 @@ Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every standard
 
 **Community Fair Launch Model** — No presale, no VC, no insider allocations.
 
-> Inferno Protocol is fully open source and community-owned. No single entity controls the protocol. All contracts are verified on Ethereum Mainnet, governed by a 48-hour timelock, and protected by Gnosis Safe multisig. The protocol lives on-chain — permanently.
+> Inferno Protocol is fully open source and community-owned. No single entity controls the protocol. All contracts are verified on Ethereum Mainnet and protected by Gnosis Safe multisig. Protocol parameter changes go through Governance proposals with a 48-hour timelock. The deployed Governance contract's ownership itself can be transferred directly by its owner, the Treasury Safe (3-of-5), without that delay (tracked as CWA-25). The protocol lives on-chain — permanently.
 
 ## Token Economics
 
@@ -57,7 +57,7 @@ Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every standard
 
 - **Deflationary**: 2.5% burned per standard transfer between non-exempt addresses (2% sender + 0.5% recipient), plus a 1% pool fee; transfers where either side is fee-exempt pay no fee. Hard cap: 5% max.
 - **Utility Lock**: Lock IFR → access while the required amount remains locked and the integration remains available → unlock anytime.
-- **Timelock Governance**: 48-hour delay on all changes. Guardian cancel. No instant admin access.
+- **Timelock Governance**: 48-hour delay on protocol parameter changes via Governance proposals. Guardian cancel. The deployed Governance contract's ownership itself can be transferred directly by its owner, the Treasury Safe (3-of-5), without that delay (tracked as CWA-25).
 - **No Mint Function**: Supply can only decrease, never increase.
 - **Fair Launch**: No presale, no VC. Transparent allocation from day one.
 
@@ -139,7 +139,7 @@ The ecosystem is open and permissionless. Any product can integrate IFR Lock.
 **Automated test evidence** — current exact results are recorded by CI and release preflights. The tables below preserve an older internal inventory and must not be read as a current deduplicated total.
 
 **Current canonical matrix:** contracts **690/690**, Generator Engine **30/30**,
-IFR SDK **36/36**, Landing/Wiki browser **26/26**, Web3 browser **45/45**.
+IFR SDK **36/36**, Landing/Wiki browser **26/26**, Web3 browser **85/85**.
 See [Current Functionality Status](docs/CURRENT_FUNCTIONALITY_STATUS.md) for
 scope and limitations.
 

@@ -665,6 +665,7 @@ nav #connect {
 #token-flow .token-flow-svg-wrap {
   position: relative !important;
   width: 100% !important;
+  container-type: inline-size;
 }
 
 #token-flow .svg-ifrlock-fallback {
@@ -694,12 +695,15 @@ nav #connect {
 #token-flow .token-flow-ifrlock-html strong {
   color: #2f6a45 !important;
   font-size: clamp(8px, 1.14vw, 13px) !important;
+  /* Same scale as the SVG node titles (11 of 800 viewBox units), so the label fits its node at every width. */
+  font-size: 1.375cqw !important;
   font-weight: 800 !important;
 }
 
 #token-flow .token-flow-ifrlock-html span {
   color: #6f675d !important;
   font-size: clamp(7px, .92vw, 10px) !important;
+  font-size: 1.125cqw !important; /* 9 of 800 viewBox units, like the neighbouring node subtitles */
   font-weight: 500 !important;
   white-space: nowrap !important;
 }

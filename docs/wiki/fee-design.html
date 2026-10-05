@@ -581,7 +581,7 @@
           <tr>
             <td>1.0%</td>
             <td>BuybackController</td>
-            <td>Protocol pool fee, routed to BuybackController (recoverable by Governance via <code>withdrawIFR</code>) following Governance proposal #21 (executed 5 October 2026, Mainnet block 26124660, <a href="https://etherscan.io/tx/0x8de48b47dfa8f17b631fb744bc4deef9bbb68271f8b700b422cdd3abb739ca26" target="_blank" rel="noopener">TX 0x8de48b47&hellip;9ca26</a>). FeeRouterV1 retains its earlier IFR balance (734,545.074097347 IFR as of block 26124660 (2026-10-05)) with no withdrawal path; this routing change does not recover those tokens. Direct transfers can still change FeeRouterV1's balance; read it on Etherscan for the current value.</td>
+            <td>Protocol pool fee, routed to BuybackController (recoverable by Governance via <code>withdrawIFR</code>) following Governance proposal #21 (executed 5 October 2026, Mainnet block 26124660, <a href="https://etherscan.io/tx/0x8de48b47dfa8f17b631fb744bc4deef9bbb68271f8b700b422cdd3abb739ca26" target="_blank" rel="noopener">TX 0x8de48b47&hellip;9ca26</a>). Pool fees received before then are held by FeeRouterV1 (734,545.074097347 IFR as of block 26124660 (2026-10-05)); the contract has no direct withdrawal function, and Governance is reviewing options. Direct transfers can still change FeeRouterV1's balance; read it on Etherscan for the current value. See <a href="#buyback-burn-status">Buyback and burn contracts &mdash; status and access</a>.</td>
           </tr>
           <tr>
             <td><strong>3.5%</strong></td>
@@ -650,7 +650,7 @@
           </tr>
           <tr>
             <td>FeeRouterV1</td>
-            <td>Protocol fee router; holds the IFR transfer-pool fees received until Proposal #21 (05.10.2026) without an IFR withdrawal path</td>
+            <td>Protocol fee router; holds the IFR transfer-pool fees received until Proposal #21 (05.10.2026); the contract has no direct withdrawal function, and Governance is reviewing options</td>
           </tr>
           <tr>
             <td>Vesting</td>
@@ -692,6 +692,56 @@
         Proposal #15 (setFeeExempt LP Token) EXECUTED 08.06.2026 &#x2705; &mdash; <a href="https://etherscan.io/tx/0xd5a3bc9527b6cc5288b892a9ba99a3af37b940f273856ab6ba938403cd2b4204" target="_blank" style="color:#166534;font-size:11px;">TX 0xd5a3bc95&hellip;</a> &middot; Block 25271071<br>
         Proposal #16 (setP0 CommitmentVault) EXECUTED 09.06.2026
       </div>
+
+      <!-- ========== Buyback and burn contracts (T-279) ========== -->
+      <h2 id="buyback-burn-status">Buyback and burn contracts &mdash; status and access</h2>
+
+      <p>Three contracts are named &ldquo;buyback&rdquo; or &ldquo;burn&rdquo;. Only BuybackController is part of the active fee route. Values below are <strong>as of 5 October 2026</strong> (Ethereum Mainnet block 26,128,255); open each address on Etherscan for the current state.</p>
+
+      <div class="callout">
+        <p><strong>Two different burns.</strong> The standard 2.5% burn on a transfer between non-exempt addresses happens inside the IFR token and reduces <code>totalSupply</code> immediately; it does not pass through BurnReserve. BurnReserve only holds IFR that BuybackController has bought back, until <code>burn()</code> is called.</p>
+      </div>
+
+      <div class="table-scroll" style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th>Contract</th>
+            <th>Role and status</th>
+            <th>Who controls what</th>
+            <th>Balance (as of 5 October 2026)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>BuybackController<br><a href="https://etherscan.io/address/0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c" target="_blank" rel="noopener"><code>0x1e0547D5&hellip;711F7c</code></a></td>
+            <td><strong>Active.</strong> Receives the 1% IFR pool fee (since Proposal #21) and the ETH protocol fee of swaps routed through FeeRouterV1. <code>execute()</code> can be called by anyone once the 24-hour cooldown has passed and the ETH balance is at least <code>minTriggerAmount</code> (0.01 ETH): half of the ETH buys IFR that is sent to BurnReserve; the other half is meant for Uniswap V2 liquidity paired with IFR the controller already holds (LP tokens to <code>lpReceiver</code>, the Treasury Safe as of 5 October 2026). The LP half is conditional: if the controller holds no IFR, or if adding liquidity fails, that ETH also buys IFR for BurnReserve (<code>LiquidityFallback</code> event). A wiring entry does not mean that any buyback or LP addition has happened.</td>
+            <td>Owner: Governance (parameters, <code>withdrawETH</code>, <code>withdrawIFR</code>). Guardian: Deployer (pause and unpause only).</td>
+            <td>0 ETH, 0 IFR; <code>executionCount()</code> 0</td>
+          </tr>
+          <tr>
+            <td>BurnReserve<br><a href="https://etherscan.io/address/0xaA1496133B6c274190A2113410B501C5802b6fCF" target="_blank" rel="noopener"><code>0xaA149613&hellip;6fCF</code></a></td>
+            <td><strong>Burn target of BuybackController.</strong> Holds bought-back IFR until it is burned. There is no withdrawal function, by design. Its balance alone says nothing about past buybacks; <code>totalBurned()</code> and BuybackController&rsquo;s <code>executionCount()</code> record the history.</td>
+            <td>Owner: Governance. Guardian: Treasury Safe (since Proposal #20). Either can call <code>burn()</code> or <code>burnAll()</code>.</td>
+            <td>0 IFR; <code>totalBurned</code> 0</td>
+          </tr>
+          <tr>
+            <td>BuybackVault<br><a href="https://etherscan.io/address/0x670D293e3D65f96171c10DdC8d88B96b0570F812" target="_blank" rel="noopener"><code>0x670D293e&hellip;F812</code></a></td>
+            <td><strong>Legacy and dormant</strong> (activated May 2026, superseded by BuybackController). No fee is routed to it; it only receives ETH that someone sends to it directly, for example via <code>depositETH()</code>. It has no withdrawal function. It is not shown in the landing page distribution.</td>
+            <td>Owner: Governance (<code>executeBuyback</code> is owner-only). Guardian: Deployer.</td>
+            <td>0 ETH, 0 IFR</td>
+          </tr>
+          <tr>
+            <td>FeeRouterV1<br><a href="https://etherscan.io/address/0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a" target="_blank" rel="noopener"><code>0x4807B77B&hellip;0C60a</code></a></td>
+            <td><strong>Swap fee router.</strong> Charges <code>protocolFeeBps</code> = 5 (0.05%) on the ETH value of swaps routed through it and sends that fee to BuybackController. It received the 1% IFR pool fee until Proposal #21. That IFR is held by FeeRouterV1; the contract has no direct withdrawal function, and Governance is reviewing options. Fee-exempt.</td>
+            <td>Admin: Governance.</td>
+            <td>734,545.074097347 IFR, 0 ETH</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+
+      <p><strong>&ldquo;Governance&rdquo;</strong> above means the Governance contract <code>0xc43d48E7&hellip;E8caD041</code>: every owner action on these contracts is a Governance proposal with a 48-hour timelock, executed through the Treasury Safe (3-of-5). The deployed Governance contract&rsquo;s ownership itself can be transferred directly by its owner, the Treasury Safe, without that delay (tracked as CWA-25). The Deployer guardian on BuybackController and BuybackVault can only pause; it cannot move funds.</p>
 
       <!-- ========== CEX Strategy ========== -->
       <h2 id="cex-fee-policy">CEX Fee-Exemption Policy</h2>

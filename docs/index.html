@@ -1244,6 +1244,17 @@
       font-size: 1.05rem;
       line-height: 1.7;
     }
+    .dante-quote .dante-docs-btn {
+      margin-top: 14px;
+      min-height: 44px;
+      min-width: 44px;
+      justify-content: center;
+      font-style: normal;
+      letter-spacing: 0;
+    }
+    @media (max-width: 480px) {
+      .dante-quote .dante-docs-btn { display: flex; width: 100%; }
+    }
 
     /* Accessibility: reduce motion */
     @media (prefers-reduced-motion: reduce) {
@@ -1338,7 +1349,7 @@
 <script src="assets/wallet-core.js?v=20261004-read-provider"></script>
 <script src="assets/ifr-state.js"></script>
   <link rel="stylesheet" href="assets/redesign-skin.css">
-  <link rel="stylesheet" href="assets/landing-header-template.css?v=20260708-1915">
+  <link rel="stylesheet" href="assets/landing-header-template.css?v=20261006-t279">
 </head>
 <body id="top">
 
@@ -1680,6 +1691,7 @@
           With every standard transfer between non-exempt addresses, 2.5% burns &mdash; forever.<br>
           What remains is purer, scarcer, stronger.<br>
           That is IFR.&ldquo;</p>
+          <a class="btn btn-secondary dante-docs-btn" href="wiki/index.html" data-docs-button aria-label="DOCS &ndash; open the IFR documentation wiki">DOCS <span aria-hidden="true">&rarr;</span></a>
         </blockquote>
         <p>
           Inferno is a <strong>deflationary ERC-20 token</strong> built on Ethereum. Its on-chain symbol is IFR; social posts use $IFRp. Every standard transfer between non-exempt addresses
@@ -2232,35 +2244,22 @@ render();
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:13px;font-weight:600;">&#x267B;&#xFE0F; Buyback Vault</span>
-            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(231,76,60,0.15);color:#b91c1c;">Pool Fee Contract</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <a href="https://etherscan.io/address/0x670D293e3D65f96171c10DdC8d88B96b0570F812" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#6F655A;text-decoration:none;">0x670D293e...F812</a>
-            <button class="copy-btn" data-addr="0x670D293e3D65f96171c10DdC8d88B96b0570F812" style="font-size:10px;background:none;border:1px solid #333;color:#6F655A;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
-          </div>
-          <div style="font-size:13px;font-weight:600;color:#b91c1c;" data-live-key="card-buyback">loading&hellip;</div>
-          <div style="font-size:10px;color:#666;margin-top:2px;">Accumulates from 1% protocol fee. Not pre-funded at genesis.</div>
-        </div>
-
-        <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <span style="font-size:13px;font-weight:600;">&#x1F525; Burn Reserve</span>
-            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(255,69,0,0.15);color:#b3300b;">Pool Fee Contract</span>
+            <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(255,69,0,0.15);color:#b3300b;">Buyback &amp; Burn</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
             <a href="https://etherscan.io/address/0xaA1496133B6c274190A2113410B501C5802b6fCF" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#6F655A;text-decoration:none;">0xaA149613...6fCF</a>
             <button class="copy-btn" data-addr="0xaA1496133B6c274190A2113410B501C5802b6fCF" style="font-size:10px;background:none;border:1px solid #333;color:#6F655A;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
           </div>
           <div style="font-size:13px;font-weight:600;color:#b3300b;" data-live-key="card-burnres">loading&hellip;</div>
-          <div style="font-size:10px;color:#666;margin-top:2px;">Permanent burn pool. Accumulates from protocol fee.</div>
+          <div style="font-size:10px;color:#666;margin-top:2px;">Receives the IFR that BuybackController buys back; <code>burn()</code> by Governance (owner) or the Treasury Safe (guardian). No withdrawal function. The 2.5% transfer burn happens inside the token, not here.</div>
         </div>
 
       </div>
 
       <!-- Infrastructure Contracts (no IFR balances — core protocol logic) -->
       <h3 style="text-align:center;font-size:16px;font-weight:700;margin:32px 0 6px 0;">Infrastructure Contracts</h3>
-      <p style="text-align:center;font-size:12px;color:var(--text-muted);margin-bottom:16px;">Core protocol logic &mdash; no IFR balances, verified on Etherscan</p>
+      <p style="text-align:center;font-size:12px;color:var(--text-muted);margin-bottom:16px;">Core protocol logic &mdash; verified on Etherscan</p>
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:12px;">
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
@@ -2278,7 +2277,7 @@ render();
             <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(251,191,36,0.15);color:#92400e;">Timelock</span>
           </div>
           <a href="https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#6F655A;text-decoration:none;">0xc43d48E7...E8caD041</a>
-          <div style="font-size:10px;color:#666;margin-top:4px;">48h timelock. Owner: TreasurySafe 3-of-5. Guardian: TreasurySafe 3-of-5 (cancel only, since 2026-10-03).</div>
+          <div style="font-size:10px;color:#666;margin-top:4px;">48h timelock for proposals. Owner: TreasurySafe 3-of-5 (can transfer ownership directly, CWA-25). Guardian: TreasurySafe 3-of-5 (cancel only, since 2026-10-03).</div>
         </div>
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
@@ -2296,7 +2295,7 @@ render();
             <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(251,191,36,0.15);color:#92400e;">Fee Splitter</span>
           </div>
           <a href="https://etherscan.io/address/0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#6F655A;text-decoration:none;">0x4807B77B...580C60a</a>
-          <div style="font-size:10px;color:#666;margin-top:4px;">Receives the 1% IFR pool fee. ETH protocol fees route to BuybackController.</div>
+          <div style="font-size:10px;color:#666;margin-top:4px;">Swap fee router: its ETH protocol fee goes to BuybackController. Received the 1% IFR pool fee until Proposal #21 (05.10.2026); that IFR is held by FeeRouterV1, the contract has no direct withdrawal function, and Governance is reviewing options.</div>
         </div>
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
@@ -2353,23 +2352,36 @@ render();
           <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
         </defs>
 
-        <!-- Live Mainnet Snapshot -->
+        <!-- Live Mainnet Snapshot (T-279: every value is a live read; "loading" before, "unavailable" on failure) -->
         <g class="token-flow-snapshot">
           <rect x="38" y="34" width="224" height="74" rx="12" fill="#0d1117" stroke="#b0481e" stroke-width="1.4"/>
           <text x="56" y="56" fill="#b0481e" font-size="10" font-weight="bold" letter-spacing="1.2">LIVE MAINNET</text>
-          <text x="56" y="76" fill="#475569" font-size="9" data-live-key="flow-snapshot-supply">997.571M supply &middot; 2.429M burned</text>
-          <text x="56" y="94" fill="#475569" font-size="9" data-live-key="flow-snapshot-lp">LP 11.899M IFR + 0.254 ETH</text>
+          <text x="56" y="76" fill="#475569" font-size="9" data-live-key="flow-snapshot-supply">supply &amp; burned: loading&hellip;</text>
+          <text x="56" y="94" fill="#475569" font-size="9" data-live-key="flow-snapshot-lp">LP: loading&hellip;</text>
         </g>
 
-        <!-- Connection Lines -->
-        <!-- Treasury/Community → Bootstrap (funded) -->
+        <!-- Transfer fee split, read live from InfernoToken (senderBurnBps, recipientBurnBps, poolFeeBps, poolFeeReceiver) -->
+        <g class="token-flow-fee" data-flow-fee>
+          <rect x="270" y="96" width="260" height="44" rx="10" fill="#0d1117" stroke="#f97316" stroke-width="1.2"/>
+          <text x="400" y="113" text-anchor="middle" fill="#f97316" font-size="10" font-weight="bold" data-flow-rpc data-live-key="flow-fee-total">Transfer fee: loading&hellip;</text>
+          <text x="400" y="129" text-anchor="middle" fill="#9ca3af" font-size="8" data-flow-rpc data-live-key="flow-fee-split">burn and pool fee: loading&hellip;</text>
+        </g>
+
+        <!-- Connection Lines (solid = active route, dashed = completed or inactive) -->
+        <!-- Treasury/Community → Bootstrap (funded once, Bootstrap finalised 05.06.2026) -->
         <line x1="165" y1="200" x2="510" y2="178" stroke="#1e2730" stroke-width="1" stroke-dasharray="5,3"/>
-        <line x1="580" y1="200" x2="580" y2="330" stroke="#1e2730" stroke-width="1.5"/>
-        <line x1="400" y1="310" x2="400" y2="340" stroke="#1e2730" stroke-width="1.5"/>
-        <line x1="400" y1="375" x2="575" y2="440" stroke="#1e2730" stroke-width="1" stroke-dasharray="5,3"/>
-        <line x1="400" y1="375" x2="220" y2="440" stroke="#1e2730" stroke-width="1" stroke-dasharray="5,3"/>
-        <line x1="220" y1="375" x2="80" y2="440" stroke="#1e2730" stroke-width="1.5"/>
-        <line x1="125" y1="200" x2="125" y2="265" stroke="#1e2730" stroke-width="1.5"/>
+        <!-- Bootstrap → Uniswap (initial LP at finalisation) -->
+        <line x1="580" y1="200" x2="580" y2="318" stroke="#1e2730" stroke-width="1" stroke-dasharray="5,3"/>
+        <!-- IFR → BuybackController (1% pool fee since Proposal #21) -->
+        <line x1="400" y1="302" x2="400" y2="338" stroke="#1e2730" stroke-width="1.5" stroke-dasharray="4,3" data-flow-route="pool"/>
+        <!-- FeeRouterV1 → BuybackController (ETH swap protocol fee) -->
+        <line x1="400" y1="440" x2="400" y2="380" stroke="#1e2730" stroke-width="1.5" stroke-dasharray="4,3" data-flow-route="eth"/>
+        <!-- BuybackController → BurnReserve (bought IFR) and → Uniswap (LP) -->
+        <line x1="350" y1="380" x2="250" y2="420" stroke="#1e2730" stroke-width="1.5"/>
+        <line x1="460" y1="352" x2="495" y2="343" stroke="#1e2730" stroke-width="1.5"/>
+        <!-- PartnerVault → Builder (rewards inactive) -->
+        <line x1="200" y1="380" x2="90" y2="420" stroke="#1e2730" stroke-width="1" stroke-dasharray="5,3"/>
+        <line x1="125" y1="200" x2="125" y2="253" stroke="#1e2730" stroke-width="1" stroke-dasharray="5,3"/>
 
         <!-- IFR Token Center -->
         <g filter="url(#glow)">
@@ -2378,92 +2390,94 @@ render();
             <animate attributeName="r" values="35;39;35" dur="3s" repeatCount="indefinite"/>
           </circle>
           <text x="400" y="256" text-anchor="middle" fill="#f97316" font-size="14" font-weight="bold">IFR</text>
-          <text x="400" y="272" text-anchor="middle" fill="#9ca3af" font-size="9" data-live-key="supply-flow">997.571M supply</text>
+          <text x="400" y="272" text-anchor="middle" fill="#9ca3af" font-size="9" data-live-key="supply-flow">loading&hellip;</text>
         </g>
 
         <!-- LP Reserve Safe -->
         <rect x="335" y="38" width="130" height="42" rx="10" fill="#0d1117" stroke="#3b82f6" stroke-width="1.5"/>
         <text x="400" y="56" text-anchor="middle" fill="#3b82f6" font-size="11" font-weight="bold">LP Reserve Safe</text>
-        <text x="400" y="72" text-anchor="middle" fill="#9ca3af" font-size="9">400.6M IFR &middot; 3-of-5</text>
+        <text x="400" y="72" text-anchor="middle" fill="#9ca3af" font-size="9" data-live-key="flow-lpreserve">loading&hellip;</text>
 
         <!-- Bootstrap V3 -->
-        <rect x="510" y="158" width="140" height="42" rx="10" fill="#0d1117" stroke="#f97316" stroke-width="1.5"/>
+        <rect x="510" y="158" width="140" height="42" rx="10" fill="#0d1117" stroke="#f97316" stroke-width="1.5" stroke-dasharray="5,3"/>
         <text x="580" y="176" text-anchor="middle" fill="#f97316" font-size="11" font-weight="bold">Bootstrap V3</text>
-        <text x="580" y="192" text-anchor="middle" fill="#9ca3af" font-size="9">finalised &middot; claims done</text>
+        <text x="580" y="192" text-anchor="middle" fill="#9ca3af" font-size="9">finalised 05.06.2026</text>
 
         <!-- Uniswap -->
-        <rect x="510" y="318" width="140" height="42" rx="10" fill="#0d1117" stroke="#60a5fa" stroke-width="1.5"/>
-        <text x="580" y="336" text-anchor="middle" fill="#60a5fa" font-size="11" font-weight="bold">Uniswap V2</text>
-        <text x="580" y="352" text-anchor="middle" fill="#9ca3af" font-size="9" data-live-key="lp-flow">11.899M IFR + 0.254 ETH</text>
+        <rect x="495" y="318" width="140" height="42" rx="10" fill="#0d1117" stroke="#60a5fa" stroke-width="1.5"/>
+        <text x="565" y="336" text-anchor="middle" fill="#60a5fa" font-size="11" font-weight="bold">Uniswap V2</text>
+        <text x="565" y="352" text-anchor="middle" fill="#9ca3af" font-size="9" data-live-key="lp-flow">loading&hellip;</text>
 
         <!-- LiquidityReserve -->
-        <rect x="150" y="158" width="140" height="42" rx="10" fill="#0d1117" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="5,3"/>
-        <text x="220" y="176" text-anchor="middle" fill="#a78bfa" font-size="11" font-weight="bold">LiqReserve</text>
-        <text x="220" y="192" text-anchor="middle" fill="#9ca3af" font-size="9">200M held &middot; 50M / 90d cap</text>
+        <rect x="178" y="158" width="150" height="42" rx="10" fill="#0d1117" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="5,3"/>
+        <text x="253" y="176" text-anchor="middle" fill="#a78bfa" font-size="11" font-weight="bold">LiqReserve</text>
+        <text x="253" y="192" text-anchor="middle" fill="#9ca3af" font-size="9" data-live-key="flow-liqres">loading&hellip;</text>
 
         <!-- Treasury -->
         <rect x="55" y="158" width="110" height="42" rx="10" fill="#0d1117" stroke="#22c55e" stroke-width="1.5"/>
         <text x="110" y="176" text-anchor="middle" fill="#22c55e" font-size="11" font-weight="bold">Treasury</text>
-        <text x="110" y="192" text-anchor="middle" fill="#9ca3af" font-size="9">0 IFR &middot; 3-of-5</text>
+        <text x="110" y="192" text-anchor="middle" fill="#9ca3af" font-size="9" data-live-key="flow-treasury">loading&hellip;</text>
 
         <!-- Community -->
         <rect x="55" y="253" width="110" height="42" rx="10" fill="#0d1117" stroke="#22c55e" stroke-width="1.5"/>
         <text x="110" y="271" text-anchor="middle" fill="#22c55e" font-size="11" font-weight="bold">Community</text>
-        <text x="110" y="287" text-anchor="middle" fill="#9ca3af" font-size="9">7.9M &middot; 3-of-5</text>
+        <text x="110" y="287" text-anchor="middle" fill="#9ca3af" font-size="9" data-live-key="flow-community">loading&hellip;</text>
 
         <!-- PartnerVault -->
         <rect x="150" y="338" width="140" height="42" rx="10" fill="#0d1117" stroke="#a78bfa" stroke-width="1.5"/>
         <text x="220" y="356" text-anchor="middle" fill="#a78bfa" font-size="11" font-weight="bold">PartnerVault</text>
-        <text x="220" y="372" text-anchor="middle" fill="#9ca3af" font-size="9">40M &middot; Builder Rewards</text>
+        <text x="220" y="372" text-anchor="middle" fill="#9ca3af" font-size="9" data-live-key="flow-partner">loading&hellip;</text>
 
-        <!-- FeeRouter -->
+        <!-- BuybackController (active; receives the 1% pool fee and the FeeRouterV1 ETH fee) -->
         <rect x="340" y="338" width="120" height="42" rx="10" fill="#0d1117" stroke="#fbbf24" stroke-width="1.5"/>
-        <text x="400" y="356" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="bold">FeeRouter</text>
-        <text x="400" y="372" text-anchor="middle" fill="#9ca3af" font-size="9" data-live-key="feerouter-flow">371.544K IFR fees held</text>
+        <text x="400" y="356" text-anchor="middle" fill="#fbbf24" font-size="10" font-weight="bold">BuybackController</text>
+        <text x="400" y="372" text-anchor="middle" fill="#9ca3af" font-size="8" data-flow-rpc data-live-key="flow-controller">loading&hellip;</text>
+        <text x="406" y="324" fill="#9ca3af" font-size="8" data-flow-rpc data-live-key="flow-pool-edge">pool fee: loading&hellip;</text>
+        <text x="406" y="414" fill="#9ca3af" font-size="8" data-flow-rpc data-live-key="flow-eth-edge">ETH fee: loading&hellip;</text>
+        <text x="314" y="410" fill="#9ca3af" font-size="8">&ge;50% buys IFR</text>
+        <text x="484" y="376" fill="#9ca3af" font-size="8">&le;50% LP*</text>
 
-        <!-- BuybackVault (Phase 3) -->
-        <rect x="510" y="420" width="130" height="42" rx="10" fill="#0d1117" stroke="#fbbf24" stroke-width="1" stroke-dasharray="5,3"/>
-        <text x="575" y="438" text-anchor="middle" fill="#fbbf24" font-size="11">Buyback</text>
-        <text x="575" y="454" text-anchor="middle" fill="#6b7280" font-size="8">Phase 3 &mdash; via Controller</text>
+        <!-- FeeRouterV1 (swap fee router; current IFR balance held, no direct withdrawal function) -->
+        <rect x="330" y="440" width="140" height="54" rx="10" fill="#0d1117" stroke="#fbbf24" stroke-width="1.5"/>
+        <text x="400" y="457" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="bold">FeeRouterV1</text>
+        <text x="400" y="472" text-anchor="middle" fill="#9ca3af" font-size="8" data-flow-rpc data-live-key="flow-feerouter-bps">ETH swap fee: loading&hellip;</text>
+        <text x="400" y="486" text-anchor="middle" fill="#9ca3af" font-size="8" data-live-key="feerouter-flow">loading&hellip;</text>
 
-        <!-- BurnReserve (Phase 3) -->
-        <rect x="155" y="420" width="130" height="42" rx="10" fill="#0d1117" stroke="#ef4444" stroke-width="1" stroke-dasharray="5,3"/>
-        <text x="220" y="438" text-anchor="middle" fill="#ef4444" font-size="11">BurnReserve</text>
-        <text x="220" y="454" text-anchor="middle" fill="#6b7280" font-size="8">Phase 3 &mdash; burn()</text>
+        <!-- BurnReserve (receives IFR bought by BuybackController; burn() by owner or guardian) -->
+        <rect x="155" y="420" width="130" height="42" rx="10" fill="#0d1117" stroke="#ef4444" stroke-width="1.5"/>
+        <text x="220" y="438" text-anchor="middle" fill="#ef4444" font-size="11" font-weight="bold">BurnReserve</text>
+        <text x="220" y="454" text-anchor="middle" fill="#9ca3af" font-size="8" data-live-key="flow-burnres">loading&hellip;</text>
 
         <!-- Builder -->
         <rect x="20" y="420" width="110" height="42" rx="10" fill="#0d1117" stroke="#a78bfa" stroke-width="1" stroke-dasharray="4,3"/>
         <text x="75" y="438" text-anchor="middle" fill="#a78bfa" font-size="11">Builder</text>
-        <text x="75" y="454" text-anchor="middle" fill="#9ca3af" font-size="9">Partner rewards</text>
+        <text x="75" y="454" text-anchor="middle" fill="#9ca3af" font-size="9">rewards inactive</text>
 
         <!-- Vesting Contract -->
         <rect x="650" y="80" width="130" height="42" rx="10" fill="#0d1117" stroke="#fbbf24" stroke-width="1.5"/>
         <text x="715" y="98" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="bold">Vesting Contract</text>
-        <text x="715" y="114" text-anchor="middle" fill="#9ca3af" font-size="9">150M locked &middot; 0x2694</text>
+        <text x="715" y="114" text-anchor="middle" fill="#9ca3af" font-size="9" data-live-key="flow-vesting">loading&hellip;</text>
 
         <!-- Beneficiary -->
         <line x1="715" y1="122" x2="715" y2="138" stroke="#1e2730" stroke-width="1" stroke-dasharray="4,3"/>
         <rect x="655" y="138" width="120" height="36" rx="8" fill="#0d1117" stroke="#fbbf24" stroke-width="1" stroke-dasharray="4,3"/>
         <text x="715" y="154" text-anchor="middle" fill="#fbbf24" font-size="9">Beneficiary 0x04FA</text>
-        <text x="715" y="168" text-anchor="middle" fill="#6b7280" font-size="8">receives from Mar 2027</text>
-        <!-- Vesting → Beneficiary particle (slow — cliff) -->
-        <circle r="2" fill="#fbbf24" opacity="0.5"><animateMotion dur="8s" repeatCount="indefinite" path="M715,122 L715,138"/></circle>
+        <text x="715" y="168" text-anchor="middle" fill="#6b7280" font-size="8">cliff ends 05.03.2027</text>
 
-        <!-- Animated Particles -->
-        <!-- IFR → FeeRouter (orange) -->
-        <circle r="4" fill="#f97316" opacity="0.9"><animateMotion dur="2s" repeatCount="indefinite" path="M400,310 L400,340"/></circle>
-        <circle r="4" fill="#f97316" opacity="0.6"><animateMotion dur="2s" begin="0.7s" repeatCount="indefinite" path="M400,310 L400,340"/></circle>
-        <!-- Governance-controlled downstream routing from protocol fee contracts -->
-        <circle r="2" fill="#ef4444" opacity="0.25"><animateMotion dur="4s" repeatCount="indefinite" path="M400,380 L220,440"/></circle>
-        <circle r="2" fill="#fbbf24" opacity="0.25"><animateMotion dur="4s" begin="2s" repeatCount="indefinite" path="M400,380 L575,440"/></circle>
-        <!-- Bootstrap → Uniswap (blue) -->
-        <circle r="4" fill="#60a5fa" opacity="0.9"><animateMotion dur="3s" repeatCount="indefinite" path="M580,200 L580,318"/></circle>
-        <circle r="4" fill="#60a5fa" opacity="0.5"><animateMotion dur="3s" begin="1.5s" repeatCount="indefinite" path="M580,200 L580,318"/></circle>
-        <!-- Partner → Builder (green) -->
-        <circle r="3" fill="#22c55e" opacity="0.9"><animateMotion dur="2.5s" repeatCount="indefinite" path="M220,380 L80,440"/></circle>
-        <!-- Treasury+Community → Bootstrap (green, funded) -->
-        <circle r="3" fill="#22c55e" opacity="0.5"><animateMotion dur="5s" repeatCount="indefinite" path="M125,200 L510,178"/></circle>
-
+        <!-- Animated Particles: only routes that are active today. The two fee routes stay hidden and dashed
+             until poolFeeReceiver() / feeCollector() are read live and equal BuybackController (fail closed). -->
+        <!-- IFR → BuybackController: 1% pool fee (orange) -->
+        <g data-flow-route="pool" visibility="hidden">
+          <circle r="4" fill="#f97316" opacity="0.9"><animateMotion dur="2s" repeatCount="indefinite" path="M400,302 L400,338"/></circle>
+          <circle r="4" fill="#f97316" opacity="0.6"><animateMotion dur="2s" begin="0.7s" repeatCount="indefinite" path="M400,302 L400,338"/></circle>
+        </g>
+        <!-- FeeRouterV1 → BuybackController: ETH swap protocol fee (yellow) -->
+        <g data-flow-route="eth" visibility="hidden">
+          <circle r="3" fill="#fbbf24" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M400,440 L400,380"/></circle>
+        </g>
+        <!-- BuybackController → BurnReserve (red) and → Uniswap LP (blue), after a permissionless execute() -->
+        <circle r="3" fill="#ef4444" opacity="0.7"><animateMotion dur="3s" repeatCount="indefinite" path="M350,380 L250,420"/></circle>
+        <circle r="3" fill="#60a5fa" opacity="0.7"><animateMotion dur="3s" begin="1.5s" repeatCount="indefinite" path="M460,352 L495,343"/></circle>
         <!-- IFRLock Contract -->
         <line x1="442" y1="260" x2="640" y2="252" stroke="#1e2730" stroke-width="1.5"/>
         <line x1="705" y1="274" x2="705" y2="328" stroke="#1e2730" stroke-width="1.5"/>
@@ -2482,30 +2496,33 @@ render();
         <!-- IFR → IFRLock (orange) -->
         <circle r="3" fill="#f97316" opacity="0.7"><animateMotion dur="3s" repeatCount="indefinite" path="M442,260 L640,252"/></circle>
 
-        <!-- CommitmentVault (Phase 3) -->
+        <!-- CommitmentVault (time tranches) -->
         <line x1="705" y1="370" x2="705" y2="408" stroke="#3b82f6" stroke-width="1" stroke-dasharray="4,3"/>
         <rect x="640" y="408" width="140" height="42" rx="10" fill="#0d1117" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="5,3"/>
         <text x="710" y="426" text-anchor="middle" fill="#3b82f6" font-size="10" font-weight="bold">CommitmentVault</text>
-        <text x="710" y="442" text-anchor="middle" fill="#6b7280" font-size="8" data-live-key="commitment-flow">1.38M time-locked</text>
+        <text x="710" y="442" text-anchor="middle" fill="#6b7280" font-size="8" data-live-key="commitment-flow">loading&hellip;</text>
         <!-- Animated: User → CommitmentVault -->
         <circle r="2.5" fill="#3b82f6" opacity="0.7"><animateMotion dur="3s" repeatCount="indefinite" path="M705,370 L705,408"/></circle>
 
-        <!-- LendingVault (Phase 3) -->
-        <line x1="640" y1="429" x2="530" y2="475" stroke="#3b82f6" stroke-width="1" stroke-dasharray="4,3"/>
-        <rect x="400" y="462" width="140" height="42" rx="10" fill="#0d1117" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="5,3"/>
-        <text x="470" y="480" text-anchor="middle" fill="#3b82f6" font-size="10" font-weight="bold">LendingVault</text>
-        <text x="470" y="494" text-anchor="middle" fill="#6b7280" font-size="8" data-live-key="lending-flow">52.2M available</text>
-        <!-- Animated: CommitmentVault → LendingVault -->
-        <circle r="2.5" fill="#3b82f6" opacity="0.5"><animateMotion dur="4s" begin="1s" repeatCount="indefinite" path="M640,429 L530,475"/></circle>
+        <!-- LendingVault V1 (retired: lender offers withdrawable, no borrowing) -->
+        <line x1="660" y1="450" x2="620" y2="464" stroke="#3b82f6" stroke-width="1" stroke-dasharray="4,3"/>
+        <rect x="500" y="464" width="140" height="42" rx="10" fill="#0d1117" stroke="#3b82f6" stroke-width="1.5" stroke-dasharray="5,3"/>
+        <text x="570" y="482" text-anchor="middle" fill="#3b82f6" font-size="10" font-weight="bold">LendingVault V1</text>
+        <text x="570" y="496" text-anchor="middle" fill="#6b7280" font-size="8" data-live-key="lending-flow">loading&hellip;</text>
+
+        <!-- LP fallback (BuybackController._addLiquidity): no IFR held, or addLiquidityETH reverts → that ETH also buys IFR for BurnReserve -->
+        <text x="560" y="522" fill="#9ca3af" font-size="8" data-flow-lp-fallback>* LP only if the controller holds IFR;</text>
+        <text x="560" y="534" fill="#9ca3af" font-size="8">otherwise or if LP fails: buys IFR &rarr; BurnReserve</text>
 
         <!-- Legend -->
-        <g transform="translate(20,510)">
-          <circle cx="8" cy="8" r="4" fill="#f97316"/><text x="16" y="12" fill="#9ca3af" font-size="9">Fee flow</text>
-          <circle cx="80" cy="8" r="4" fill="#ef4444"/><text x="88" y="12" fill="#9ca3af" font-size="9">Burn</text>
-          <circle cx="130" cy="8" r="4" fill="#60a5fa"/><text x="138" y="12" fill="#9ca3af" font-size="9">LP</text>
-          <circle cx="165" cy="8" r="4" fill="#22c55e"/><text x="173" y="12" fill="#9ca3af" font-size="9">Lock / Rewards</text>
-          <circle cx="260" cy="8" r="4" fill="#3b82f6"/><text x="268" y="12" fill="#9ca3af" font-size="9">Phase 3 Vaults</text>
-          <rect x="345" y="4" width="14" height="8" fill="none" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3,2" rx="2"/><text x="363" y="12" fill="#9ca3af" font-size="9">Phase 3</text>
+        <g transform="translate(20,514)">
+          <circle cx="8" cy="8" r="4" fill="#f97316"/><text x="16" y="12" fill="#9ca3af" font-size="9">1% pool fee</text>
+          <circle cx="88" cy="8" r="4" fill="#fbbf24"/><text x="96" y="12" fill="#9ca3af" font-size="9">ETH fee</text>
+          <circle cx="152" cy="8" r="4" fill="#ef4444"/><text x="160" y="12" fill="#9ca3af" font-size="9">Buyback &rarr; burn</text>
+          <circle cx="250" cy="8" r="4" fill="#60a5fa"/><text x="258" y="12" fill="#9ca3af" font-size="9">LP</text>
+          <circle cx="285" cy="8" r="4" fill="#22c55e"/><text x="293" y="12" fill="#9ca3af" font-size="9">Lock</text>
+          <circle cx="330" cy="8" r="4" fill="#3b82f6"/><text x="338" y="12" fill="#9ca3af" font-size="9">Time locks</text>
+          <rect x="405" y="4" width="14" height="8" fill="none" stroke="#9ca3af" stroke-width="1" stroke-dasharray="3,2" rx="2"/><text x="423" y="12" fill="#9ca3af" font-size="9">completed or inactive</text>
         </g>
       </svg>
       <div class="token-flow-ifrlock-html" aria-hidden="true">
@@ -2760,7 +2777,7 @@ if (isLocked) {
         <div class="trust-check">&check;</div>
         <div>
           <h4>Timelock Governance</h4>
-          <p>Governance proposals use a 48-hour public delay. Documented exception: TreasurySafe can rotate the guardian through untimelocked <code>setGuardian</code>; the guardian can emergency-cancel proposals.</p>
+          <p>Protocol parameter changes go through Governance proposals with a 48-hour timelock. The deployed Governance contract&rsquo;s ownership itself can be transferred directly by its owner, the Treasury Safe (3-of-5), without that delay (tracked as CWA-25). TreasurySafe can also rotate the guardian through untimelocked <code>setGuardian</code>; the guardian can emergency-cancel proposals.</p>
         </div>
       </div>
       <div class="trust-item reveal">
@@ -2892,7 +2909,7 @@ if (isLocked) {
     {q:"How does the Bootstrap work?",
      a:"The 90-day community event ended on 05.06.2026. finalise() paired 0.030 ETH with 100M IFR to create the Uniswap V2 LP and reserved 100M IFR for contributor claims. Fully permissionless, no team action needed."},
     {q:"Who controls the protocol?",
-     a:"Governance proposals use a 48-hour timelock. The documented exception is guardian rotation through untimelocked setGuardian by TreasurySafe 3-of-5; the guardian can cancel pending proposals. Bootstrap ENDED 05.06.2026 \u2014 IFR now live on Uniswap V2."},
+     a:"Protocol parameter changes go through Governance proposals with a 48-hour timelock. The deployed Governance contract's ownership itself can be transferred directly by its owner, the Treasury Safe (3-of-5), without that delay (tracked as CWA-25). TreasurySafe can also rotate the guardian through untimelocked setGuardian; the guardian can cancel pending proposals. Bootstrap ENDED 05.06.2026 \u2014 IFR now live on Uniswap V2."},
     {q:"What is the token distribution?",
      a:"1B IFR fixed. 6 buckets: 40% DEX Liquidity \u00b7 20% LiqRes (locked) \u00b7 15% Team Vesting (12m cliff) \u00b7 15% Treasury \u00b7 6% Community \u00b7 4% BuilderVault. <a href='wiki/tokenomics.html'>Tokenomics \u2192</a>"},
     {q:"Is the code open source and audited?",
@@ -3166,7 +3183,7 @@ if (isLocked) {
         </div>
       </div>
       <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">BuybackVault</span></div>
+        <div><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">BuybackVault (legacy, dormant)</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x670D293e3D65f96171c10DdC8d88B96b0570F812</code>
           <button class="copy-btn" data-addr="0x670D293e3D65f96171c10DdC8d88B96b0570F812" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
@@ -3613,7 +3630,6 @@ if (isLocked) {
     { key: 'vesting',   label: '\u23F3 Team Vesting',             color: '#FFD700' },
     { key: 'liqRes',    label: '\uD83D\uDCA7 Liquidity Reserve',  color: '#00BFFF' },
     { key: 'bootstrap', label: '\uD83D\uDE80 Bootstrap Vault',    color: '#7B2FBE' },
-    { key: 'buyback',   label: '\u267B\uFE0F Buyback Vault',      color: '#20B2AA' },
     { key: 'burnRes',   label: '\uD83D\uDD25 Burn Reserve',       color: '#DC143C' },
     { key: 'partner',   label: '\uD83C\uDFD7\uFE0F Builder Vault',color: '#32CD32' },
     { key: 'treasury',  label: '\uD83C\uDFDB\uFE0F Treasury Safe',color: '#4169E1' },
@@ -3626,8 +3642,10 @@ if (isLocked) {
     failTransparencyMetric('burned');
     document.querySelectorAll('[data-live-key]').forEach(function(el) {
       if (el.getAttribute('data-live-key') === 'ifr-price') return;
+      if (el.closest('#token-flow')) return; // token-flow labels fail closed in words below
       el.textContent = 'N/A';
     });
+    document.querySelectorAll('#token-flow [data-live-key]:not([data-flow-rpc])').forEach(function(el) { el.textContent = 'unavailable'; });
     var supplyEl = document.getElementById('donut-supply');
     if (supplyEl) supplyEl.textContent = 'N/A';
     document.querySelectorAll('.live-status').forEach(function(el) {
@@ -3649,6 +3667,8 @@ if (isLocked) {
   // A live value is null when its read failed or the API flagged it unavailable: show N/A, never a fake 0.
   function isNum(n) { return typeof n === 'number' && isFinite(n); }
   function fmtNA(n, suffix) { return isNum(n) ? fmt(n) + (suffix || '') : 'N/A'; }
+  // Token-flow labels: a failed live read says "unavailable" in words (T-279).
+  function fmtFlow(n, suffix) { return isNum(n) ? fmt(n) + (suffix || '') : 'unavailable'; }
   function withPct(n, total) { return isNum(n) ? fmt(n) + ' IFR (' + pct(n, total) + ')' : 'N/A'; }
   function sumKnown(d, keys) {
     var s = 0;
@@ -3803,8 +3823,8 @@ if (isLocked) {
     setLive('burned-pct',   pct(d.burned, GENESIS_SUPPLY));
     setLive('burned-stat',  fmtNA(d.burned));
     setLive('supply-stat',  fmtNA(d.supply));
-    setLive('supply-flow',  fmtNA(d.supply, ' supply'));
-    setLive('flow-snapshot-supply', fmtNA(d.supply, ' supply · ') + fmtNA(d.burned, ' burned'));
+    setLive('supply-flow',  fmtFlow(d.supply, ' supply'));
+    setLive('flow-snapshot-supply', isNum(d.supply) && isNum(d.burned) ? fmt(d.supply) + ' supply \u00B7 ' + fmt(d.burned) + ' burned' : 'supply & burned: unavailable');
     setLive('ifrlock',      fmtNA(d.ifrLock, ' IFR'));
     setLive('ifrlock-pct',  pct(d.ifrLock, d.supply));
     setLive('commitment-locked', fmtNA(d.commitmentLocked, ' IFR'));
@@ -3815,7 +3835,6 @@ if (isLocked) {
     setLive('vesting',      withPct(d.vesting, d.supply));
     setLive('liq-res',      withPct(d.liqRes, d.supply));
     setLive('bootstrap',    fmtNA(d.bootstrap, ' IFR'));
-    setLive('buyback',      fmtNA(d.buyback, ' IFR'));
     setLive('burn-res',     fmtNA(d.burnRes, ' IFR'));
     setLive('partner',      withPct(d.partner, d.supply));
     setLive('treasury',     withPct(d.treasury, d.supply));
@@ -3838,11 +3857,16 @@ if (isLocked) {
     setLive('card-ifrlock-unlocked', fmtNA(d.ifrLockUnlocked, ' IFR'));
     setLive('card-lending-available', fmtNA(d.lendingAvailable, ' IFR'));
     setLive('card-lending-lent', fmtNA(d.lendingLent, ' IFR'));
-    setLive('card-buyback',    fmtNA(d.buyback, ' IFR'));
-    setLive('card-burnres',    fmtNA(d.burnRes, ' IFR'));
-    setLive('feerouter-flow',  fmtNA(d.feeRouter, ' IFR fees held'));
-    setLive('commitment-flow', fmtNA(d.commitmentLocked, ' time-locked · price locks disabled'));
-    setLive('lending-flow',    fmtNA(d.lendingAvailable, ' available'));
+    renderBurnResLabels(d);
+    setLive('feerouter-flow',  fmtFlow(d.feeRouter, ' IFR held'));
+    setLive('commitment-flow', fmtFlow(d.commitmentLocked, ' time-locked'));
+    setLive('lending-flow',    isNum(d.lendingAvailable) ? 'retired \u00B7 ' + fmt(d.lendingAvailable) + ' available' : 'unavailable');
+    setLive('flow-lpreserve',  fmtFlow(d.lpReserve, ' IFR \u00B7 3-of-5'));
+    setLive('flow-liqres',     fmtFlow(d.liqRes, ' held \u00B7 50M / 90d cap'));
+    setLive('flow-treasury',   fmtFlow(d.treasury, ' IFR \u00B7 3-of-5'));
+    setLive('flow-community',  fmtFlow(d.community, ' IFR \u00B7 3-of-5'));
+    setLive('flow-partner',    fmtFlow(d.partner, ' IFR \u00B7 rewards inactive'));
+    setLive('flow-vesting',    fmtFlow(d.vesting, ' IFR locked'));
   }
 
   function drawDonut(canvas, data) {
@@ -3879,7 +3903,29 @@ if (isLocked) {
     });
   }
 
-  var NOT_YET_ACTIVE = { bootstrap: 1, buyback: 1, burnRes: 1, ifrLock: 1 };
+  // Below 1 IFR the percentage is meaningless; the amount is shown as "0 IFR" or "<1 IFR" (a positive
+  // amount stays positive). Only Bootstrap carries a note, its finalisation date (on-chain finalised() = true).
+  // The legacy BuybackVault is not part of the legend (superseded by BuybackController).
+  var ZERO_STATE_NOTE = { bootstrap: 'finalized 05.06.2026' };
+
+  // BurnReserve history is never inferred from its balance (an empty reserve can follow burned buybacks):
+  // BuybackController.executionCount() and BurnReserve.totalBurned() are read live; unknown stays "unavailable".
+  var buybackHistory = { state: 'loading', executions: null, totalBurned: null };
+  function burnResHistoryText(compact) {
+    if (buybackHistory.state === 'live') {
+      return compact
+        ? buybackHistory.executions + ' buyback' + (buybackHistory.executions === 1 ? '' : 's')
+        : 'buybacks executed: ' + buybackHistory.executions + ' \u00B7 burned via reserve: ' + fmt(buybackHistory.totalBurned) + ' IFR';
+    }
+    if (buybackHistory.state === 'unavailable') return compact ? 'history unavailable' : 'buyback history unavailable';
+    return compact ? 'history loading\u2026' : 'buyback history loading\u2026';
+  }
+  function smallIfr(val) { return val === 0 ? '0 IFR' : (val < 1 ? '&lt;1 IFR' : fmt(val) + ' IFR'); }
+  function renderBurnResLabels(d) {
+    var b = d ? d.burnRes : null;
+    setLive('card-burnres', isNum(b) ? smallIfr(b).replace('&lt;', '<') + ' held \u00B7 ' + burnResHistoryText(false) : 'N/A');
+    setLive('flow-burnres', isNum(b) ? smallIfr(b).replace('&lt;', '<') + ' \u00B7 ' + burnResHistoryText(true) : 'unavailable');
+  }
   var REST_COLOR = '#d6cfc4';
   var UNAVAILABLE_COLOR = '#52525b';
 
@@ -3892,8 +3938,11 @@ if (isLocked) {
       if (!isNum(val)) {
         detail = ' <span style="color:#555;">N/A \u2014 live read unavailable</span>';
         val = '';
-      } else if (val === 0 && NOT_YET_ACTIVE[cat.key]) {
-        detail = ' <span style="color:#555;">0 IFR \u2014 not yet active</span>';
+      } else if (cat.key === 'burnRes') {
+        detail = ' <span style="color:#555;">' + (val < 1 ? smallIfr(val) : '<strong style="color:#fff;">' + pct(val, GENESIS_SUPPLY) + '</strong> \u2014 ' + fmt(val) + ' IFR') +
+          ' held \u2014 ' + burnResHistoryText(false) + '</span>';
+      } else if (val < 1) {
+        detail = ' <span style="color:#555;">' + smallIfr(val) + (ZERO_STATE_NOTE[cat.key] ? ' \u2014 ' + ZERO_STATE_NOTE[cat.key] : '') + '</span>';
       } else {
         detail = ' <strong style="color:#fff;">' + pct(val, GENESIS_SUPPLY) + '</strong> \u2014 ' + fmt(val);
       }
@@ -4001,7 +4050,6 @@ if (isLocked) {
         liqRes:    v('LiquidityReserve'),
         partner:   v('PartnerVault'),
         bootstrap: v('BootstrapVaultV3'),
-        buyback:   v('BuybackVault'),
         burnRes:   v('BurnReserve'),
         feeRouter: v('FeeRouterV1'),
         feeRouterRaw: (bal.FeeRouterV1 && typeof bal.FeeRouterV1.raw === 'string') ? bal.FeeRouterV1.raw : null,
@@ -4080,10 +4128,12 @@ if (isLocked) {
         var ethReserve = data.reserves && data.reserves.eth ? data.reserves.eth.toFixed(4) : null;
         subEl.textContent = ethReserve ? 'Live Uniswap V2 spot · ' + ethReserve + ' ETH LP' : 'Live Uniswap V2 spot';
       }
-      if (data.reserves && data.reserves.eth && data.reserves.ifr) {
+      if (data.reserves && isNum(data.reserves.eth) && isNum(data.reserves.ifr) && data.reserves.eth > 0 && data.reserves.ifr > 0) {
         var lpFlow = fmt(data.reserves.ifr) + ' IFR + ' + data.reserves.eth.toFixed(3) + ' ETH';
         setLive('lp-flow', lpFlow);
         setLive('flow-snapshot-lp', 'LP ' + lpFlow);
+      } else {
+        setLpFlowUnavailable();
       }
     } else if (data.status === 'pending_uniswap') {
       priceEl.textContent = 'Soon';
@@ -4091,11 +4141,129 @@ if (isLocked) {
     }
   }
 
+  function setLpFlowUnavailable() {
+    setLive('lp-flow', 'unavailable');
+    setLive('flow-snapshot-lp', 'LP: unavailable');
+  }
+
   function loadIFRPrice() {
     fetchWithTimeout(PROXY_BASE + '/api/ifr/price', 8000).then(function(data) {
       liveIFRPriceData = data;
       applyIFRPriceData(data);
-    }).catch(function() {});
+      if (!data || !data.price) setLpFlowUnavailable();
+    }).catch(function() { setLpFlowUnavailable(); });
+  }
+
+  // T-279: fee split, pool-fee receiver, FeeRouterV1 protocol fee and BuybackController balances are read
+  // from Mainnet through the chain-pinned read provider. Any failed or inconsistent read renders "unavailable".
+  var FLOW_ADDR = {
+    token: '0x77e99917Eca8539c62F509ED1193ac36580A6e7B',
+    feeRouter: '0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a',
+    controller: '0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c',
+    burnReserve: '0xaA1496133B6c274190A2113410B501C5802b6fCF'
+  };
+  var tokenFlowReadInFlight = false;
+  // Each value is independent: undefined = loading, null = read failed, otherwise the verified value.
+  var feeFlow = { rates: undefined, poolReceiver: undefined, protocolBps: undefined, collector: undefined };
+  function bpsPct(b) { return (Number(b) / 100).toString() + '%'; }
+  function shortAddr(a) { return String(a).slice(0, 6) + '…' + String(a).slice(-4); }
+  function isController(a) { return typeof a === 'string' && a.toLowerCase() === FLOW_ADDR.controller.toLowerCase(); }
+  function validAddr(a) { a = String(a); if (!/^0x[0-9a-fA-F]{40}$/.test(a)) throw new Error('invalid address'); return a; }
+  function recipientLabel(a, controllerName) {
+    if (a === undefined) return 'loading…';
+    if (a === null) return 'unavailable';
+    return isController(a) ? controllerName : shortAddr(a);
+  }
+  // A fee route is drawn as active (solid, animated) only when its receiver is read live and equals
+  // BuybackController and its rate is positive; otherwise it is dashed and not animated.
+  function setFlowRoute(name, active) {
+    document.querySelectorAll('#token-flow [data-flow-route="' + name + '"]').forEach(function(el) {
+      el.setAttribute('data-route-state', active ? 'active' : 'unconfirmed');
+      if (el.tagName.toLowerCase() === 'line') {
+        if (active) el.removeAttribute('stroke-dasharray'); else el.setAttribute('stroke-dasharray', '4,3');
+      } else {
+        el.setAttribute('visibility', active ? 'visible' : 'hidden');
+      }
+    });
+  }
+  function renderFeeFlow() {
+    var r = feeFlow.rates, pr = feeFlow.poolReceiver, bps = feeFlow.protocolBps, col = feeFlow.collector;
+    setLive('flow-fee-total', r ? 'Transfer fee ' + bpsPct(r.burn + r.pool) + ' (non-exempt)' : (r === null ? 'Transfer fee: unavailable' : 'Transfer fee: loading…'));
+    setLive('flow-fee-split', r
+      ? bpsPct(r.burn) + ' burned in-token · ' + bpsPct(r.pool) + ' pool fee → ' + recipientLabel(pr, 'BuybackController')
+      : (r === null ? 'burn and pool fee: unavailable' : 'burn and pool fee: loading…'));
+    var poolPct = r ? bpsPct(r.pool) + ' pool fee' : 'pool fee';
+    setLive('flow-pool-edge', pr === null ? 'pool fee receiver: unavailable'
+      : (pr === undefined ? 'pool fee: loading…' : (isController(pr) ? poolPct : poolPct + ' → ' + shortAddr(pr) + ', not here')));
+    setLive('flow-feerouter-bps', bps === null ? 'ETH fee: unavailable'
+      : (bps === undefined ? 'ETH fee: loading…' : 'ETH fee ' + bpsPct(bps) + ' → ' + recipientLabel(col, 'Controller')));
+    setLive('flow-eth-edge', col === null ? 'ETH fee receiver: unavailable'
+      : (col === undefined ? 'ETH fee: loading…' : (isController(col) ? 'ETH fee' : 'ETH fee → ' + shortAddr(col) + ', not here')));
+    setFlowRoute('pool', !!(r && r.pool > 0 && isController(pr)));
+    setFlowRoute('eth', !!(typeof bps === 'number' && bps > 0 && isController(col)));
+  }
+  function loadTokenFlowLive() {
+    if (tokenFlowReadInFlight) return;
+    var provider = (typeof ethers !== 'undefined' && window.IFRWallet && typeof IFRWallet.getReadProvider === 'function') ? IFRWallet.getReadProvider() : null;
+    if (!provider) {
+      feeFlow = { rates: null, poolReceiver: null, protocolBps: null, collector: null };
+      renderFeeFlow();
+      setLive('flow-controller', 'unavailable');
+      buybackHistory = { state: 'unavailable', executions: null, totalBurned: null };
+      renderBurnResLabels(liveDistributionData);
+      if (liveDistributionData) renderLegend(liveDistributionData);
+      return;
+    }
+    tokenFlowReadInFlight = true;
+    var token = new ethers.Contract(FLOW_ADDR.token, [
+      'function senderBurnBps() view returns (uint256)',
+      'function recipientBurnBps() view returns (uint256)',
+      'function poolFeeBps() view returns (uint256)',
+      'function poolFeeReceiver() view returns (address)',
+      'function balanceOf(address wallet) view returns (uint256)'
+    ], provider);
+    var router = new ethers.Contract(FLOW_ADDR.feeRouter, [
+      'function protocolFeeBps() view returns (uint16)',
+      'function feeCollector() view returns (address)'
+    ], provider);
+    var controller = new ethers.Contract(FLOW_ADDR.controller, ['function executionCount() view returns (uint256)'], provider);
+    var burnReserve = new ethers.Contract(FLOW_ADDR.burnReserve, ['function totalBurned() view returns (uint256)'], provider);
+    function settle(promise, onOk, onFail) {
+      return withTimeout(promise, MAINNET_READ_TIMEOUT_MS).then(onOk).catch(onFail).then(renderFeeFlow);
+    }
+    var reads = [
+      settle(Promise.all([token.senderBurnBps(), token.recipientBurnBps(), token.poolFeeBps()]), function(v) {
+        var burn = Number(v[0]) + Number(v[1]), pool = Number(v[2]);
+        if (!(burn >= 0 && pool >= 0 && burn + pool <= 500)) throw new Error('fee rates out of range'); // token hard cap 5%
+        feeFlow.rates = { burn: burn, pool: pool };
+      }, function() { feeFlow.rates = null; }),
+      settle(token.poolFeeReceiver(), function(a) { feeFlow.poolReceiver = validAddr(a); }, function() { feeFlow.poolReceiver = null; }),
+      settle(router.protocolFeeBps(), function(b) {
+        var bps = Number(b);
+        if (!(bps >= 0 && bps <= 25)) throw new Error('protocol fee out of range'); // FEE_CAP_BPS = 25
+        feeFlow.protocolBps = bps;
+      }, function() { feeFlow.protocolBps = null; }),
+      settle(router.feeCollector(), function(a) { feeFlow.collector = validAddr(a); }, function() { feeFlow.collector = null; }),
+      withTimeout(Promise.all([provider.getBalance(FLOW_ADDR.controller), token.balanceOf(FLOW_ADDR.controller)]), MAINNET_READ_TIMEOUT_MS).then(function(v) {
+        var eth = Number(ethers.formatEther(v[0]));
+        var ifr = Number(ethers.formatUnits(v[1], 9));
+        if (!isNum(eth) || !isNum(ifr)) throw new Error('invalid balance');
+        var ethText = eth === 0 ? '0' : (eth < 0.0001 ? '<0.0001' : eth.toFixed(4).replace(/0+$/, '').replace(/\.$/, ''));
+        setLive('flow-controller', ethText + ' ETH · ' + fmt(ifr) + ' IFR pending');
+      }).catch(function() { setLive('flow-controller', 'unavailable'); }),
+      withTimeout(Promise.all([controller.executionCount(), burnReserve.totalBurned()]), MAINNET_READ_TIMEOUT_MS).then(function(v) {
+        var n = Number(v[0]);
+        var burned = Number(ethers.formatUnits(v[1], 9));
+        if (!Number.isSafeInteger(n) || n < 0 || !isNum(burned) || burned < 0) throw new Error('invalid history');
+        buybackHistory = { state: 'live', executions: n, totalBurned: burned };
+      }).catch(function() {
+        buybackHistory = { state: 'unavailable', executions: null, totalBurned: null };
+      }).then(function() {
+        renderBurnResLabels(liveDistributionData);
+        if (liveDistributionData) renderLegend(liveDistributionData);
+      })
+    ];
+    Promise.all(reads).then(function() { tokenFlowReadInFlight = false; });
   }
 
   var mainnetReadInFlight = false;
@@ -4249,17 +4417,19 @@ if (isLocked) {
     });
     loadIFRPrice();
     loadCommitmentVaultLive();
+    loadTokenFlowLive();
   }
 
   // Lazy-load live data — only start when section is visible
   var liveStarted = false;
   var liveSection = document.getElementById('live-distribution') || document.querySelector('.live-tracking') || document.getElementById('live-tracking') || document.querySelector('[id*="live"]');
   var transparencySection = document.getElementById('onchain-transparency');
+  var tokenFlowSection = document.getElementById('token-flow');
   renderMetrics({ supply: 0, burned: 0, lpReserve: 0 });
   renderTransparencyCards();
   setTimeout(loadIFRPrice, 1000);
   setTimeout(loadCommitmentVaultLive, 1200);
-  if (liveSection || transparencySection) {
+  if (liveSection || transparencySection || tokenFlowSection) {
     var liveObserver = new IntersectionObserver(function(entries) {
       var visible = entries.some(function(entry) { return entry.isIntersecting; });
       if (visible && !liveStarted) {
@@ -4271,6 +4441,7 @@ if (isLocked) {
     }, { threshold: 0.1 });
     if (liveSection) liveObserver.observe(liveSection);
     if (transparencySection) liveObserver.observe(transparencySection);
+    if (tokenFlowSection) liveObserver.observe(tokenFlowSection);
   } else {
     // Fallback: start after 3s if section not found
     liveStarted = true;

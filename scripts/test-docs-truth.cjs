@@ -115,14 +115,16 @@ const register = JSON.parse(read("docs/community-audits/cwa-remediation-register
 assert.equal(register.canonicalTests.contracts, "690/690");
 const status = read("docs/CURRENT_FUNCTIONALITY_STATUS.md");
 assert.ok(status.includes("`690/690` passing"));
-// Browser suites: reproduced with `npx playwright test --list` (wallet-connect 24, web3-write 27).
+// Browser suites: "Landing/Wiki browser" = tests/browser/wallet-connect.spec.js (26) and
+// "Web3 browser" = tests/browser/web3-write.spec.js (85), each reproduced with
+// `npx playwright test tests/browser/<spec> --list` on main eead5086 (T-274).
 assert.equal(register.canonicalTests.landingWikiBrowser, "26/26");
-assert.equal(register.canonicalTests.web3Browser, "45/45");
+assert.equal(register.canonicalTests.web3Browser, "85/85");
 assert.ok(status.includes("Landing/Wiki wallet browser suite: `26/26` passing"));
-assert.ok(status.includes("Web3 write-path browser suite: `45/45` passing"));
-assert.ok(readme.includes("Landing/Wiki browser **26/26**, Web3 browser **45/45**"));
+assert.ok(status.includes("Web3 write-path browser suite: `85/85` passing"));
+assert.ok(readme.includes("Landing/Wiki browser **26/26**, Web3 browser **85/85**"));
 for (const relative of ["docs/llms.txt", "apps/ai-copilot/src/context/ifr-knowledge.ts"]) {
-  assert.ok(read(relative).includes("Landing/Wiki browser 26/26, Web3 browser 45/45"), `${relative} browser counts`);
+  assert.ok(read(relative).includes("Landing/Wiki browser 26/26, Web3 browser 85/85"), `${relative} browser counts`);
 }
 for (const relative of ["README.md", "docs/CURRENT_FUNCTIONALITY_STATUS.md", "docs/index.html"]) {
   assert.ok(!/\b642 (contract )?tests\b/i.test(read(relative)), `${relative} cites the stale 642 count`);
