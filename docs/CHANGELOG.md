@@ -7,9 +7,26 @@
   stays visible.
 - Web3: while an install, wallet or protocol dialog is open, the launcher steps back (hidden) so it cannot
   sit on dialog fields such as the withdraw amount row; it returns when the dialog closes.
+- Web3 landing: the full-width hero buttons end left of the launcher band below 681px (60px right
+  padding), so "Connect Wallet" is never under the launcher while scrolling.
 - New regressions in `fab-clearance.spec.js` measure callout text boxes against the launcher band
   (375/390/600/768) and the open withdraw dialog's text and controls against the launcher (375x812,
-  375x900, 390x844), then reopen chat after closing the dialog. Without the fix 6 of the 7 new tests fail.
+  375x900, 390x844), then reopen chat after closing the dialog, and the Web3 hero buttons against the band
+  (375/390/680/820). Without the fix 9 of the 11 new tests fail.
+
+## 5 October 2026 — Benefits Seller Workspace Fits Phones (T-277)
+
+- With a loaded seller profile, the seller task bar no longer widens the seller workspace past a
+  phone screen. Before, the card rendered about 721px wide on a 375px phone and its right side,
+  including the seller rewards paragraph, was cut off.
+- The workspace grid column may now shrink (`min-w-0`, `minmax(0,1fr)`). On phones the task chips
+  scroll inside the task bar; from the `sm` breakpoint they wrap. The task bar is a positioning
+  context, so its screen-reader labels no longer widen the card.
+- Rule editor inputs and selects may shrink below their intrinsic width (`min-w-0`); with Linux fonts
+  the longest option text pushed them 8–13px past the workspace at 375 and 1180px.
+- New browser test `npm run test:benefits-seller-layout` (Benefits CI) checks 375, 390, 820, 1180
+  and 1440px for the "Not applied" and a long-content seller profile, including clipping by
+  ancestors. It fails on the previous layout. Needs a Benefits frontend release to go live.
 
 ## 5 October 2026 — Model B wording in onboarding and roadmap
 

@@ -145,3 +145,30 @@ for (const [width, height] of [[375, 812], [375, 900], [390, 844]]) {
     await expect(page.locator("[data-copilot-panel]")).toHaveAttribute("aria-hidden", "false");
   });
 }
+
+// T-268: the Web3 hero buttons are full width on phones. Every scroll position moves them past the fixed
+// launcher, so their boxes must end left of the launcher band; the launcher itself stays shown.
+for (const [width, height] of [[375, 812], [390, 844], [680, 900], [820, 1180]]) {
+  test(`Web3 hero buttons stay clear of the Copilot launcher band at ${width}x${height}`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    await page.route(/^https?:\/\/(?!localhost)/, (route) => route.abort());
+    await page.goto("/web3/");
+    await page.evaluate(() => document.fonts.ready);
+    const result = await page.evaluate(() => {
+      const launcher = document.querySelector(".copilot-launcher");
+      const buttons = [...document.querySelectorAll(".hero-actions .btn")].filter((el) => el.getClientRects().length);
+      if (!launcher || !buttons.length) return { hits: ["missing launcher or hero buttons"], shown: false };
+      const s = getComputedStyle(launcher);
+      const z = launcher.getBoundingClientRect();
+      const hits = buttons
+        .filter((el) => {
+          const r = el.getBoundingClientRect();
+          return r.width > 0 && r.left < z.right && r.right > z.left;
+        })
+        .map((el) => el.textContent.trim());
+      return { hits, shown: s.display !== "none" && s.visibility !== "hidden" && Number(s.opacity) > 0 };
+    });
+    expect(result.hits).toEqual([]);
+    expect(result.shown, "the launcher stays available for chat").toBe(true);
+  });
+}
