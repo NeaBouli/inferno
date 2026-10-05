@@ -114,9 +114,20 @@ for (const [width, height] of [[375, 812], [375, 900], [390, 844]]) {
     await page.route(/^https?:\/\/(?!localhost)/, (route) => route.abort());
     await page.goto("/web3/?action=lending-offer");
     await page.evaluate(() => document.fonts.ready);
-    const chooserClose = page.locator("[data-wallet-chooser-close]");
-    if (await chooserClose.isVisible()) await chooserClose.click();
-    await expect(page.locator("[data-lending-dialog]")).toHaveClass(/is-open/);
+    // The action opens the lending dialog and then, after an async wallet lookup, the wallet chooser on top of it.
+    // Wait for that explicit state instead of a one-shot visibility check: a chooser that opens late would
+    // otherwise intercept the close click below (T-278).
+    const lendingDialog = page.locator("[data-lending-dialog]");
+    const chooser = page.locator("[data-wallet-chooser]");
+    await expect(lendingDialog).toHaveClass(/is-open/);
+    await expect(chooser).toHaveClass(/is-open/);
+    await page.locator("[data-wallet-chooser-close]").click();
+    await expect(chooser).not.toHaveClass(/is-open/);
+    await expect(lendingDialog).toHaveClass(/is-open/);
+    const launcherVisibility = () =>
+      page.locator(".copilot-launcher").evaluate((el) => getComputedStyle(el).visibility);
+    // While the dialog is open the launcher steps back; poll the computed state, no fixed waits.
+    await expect.poll(launcherVisibility).toBe("hidden");
     const covered = await page.evaluate(() => {
       const launcher = document.querySelector(".copilot-launcher");
       const card = document.querySelector("[data-lending-dialog] .protocol-card");
@@ -140,6 +151,8 @@ for (const [width, height] of [[375, 812], [375, 900], [390, 844]]) {
     });
     expect(covered).toEqual([]);
     await page.locator("[data-lending-close]").click();
+    await expect(lendingDialog).not.toHaveClass(/is-open/);
+    await expect.poll(launcherVisibility).toBe("visible");
     await expect(page.locator(".copilot-launcher")).toBeVisible();
     await page.locator(".copilot-launcher").click();
     await expect(page.locator("[data-copilot-panel]")).toHaveAttribute("aria-hidden", "false");
