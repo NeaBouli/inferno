@@ -144,3 +144,10 @@ for (const { name, cfg } of [...combos.slice(0, 16), ...nameCombos]) {
   parity += 1;
 }
 console.log(`[builder-parity] PASS - engine and builder.html match structurally in ${parity} combinations; both compile`);
+
+// Score card wording parity: same non-verdict labels and the same "what is checked" disclaimer.
+const { LEVEL_LABELS, SCORE_DISCLAIMER } = require(path.join(path.resolve(distDirectory), "SecurityScorer.js"));
+assert.ok(html.replace(/&mdash;/g, "—").includes(SCORE_DISCLAIMER), "engine SCORE_DISCLAIMER must match the builder.html score card text");
+for (const label of Object.values(LEVEL_LABELS)) assert.ok(html.includes(label), `builder.html must use the engine label ${label}`);
+assert.doesNotMatch(Object.values(LEVEL_LABELS).join(" "), /SAFE|MEDIUM|RISKY/, "labels must not read as a security verdict");
+console.log("[builder-parity] PASS - score labels and disclaimer match builder.html");

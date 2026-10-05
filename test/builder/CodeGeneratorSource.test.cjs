@@ -63,6 +63,9 @@ const safeScore = calculateSecurityScore({
 });
 assert.equal(safeScore.score, 100);
 assert.equal(safeScore.level, "SAFE");
+assert.equal(safeScore.label, "Strong setup", "displayed label is a configuration description, not a verdict");
+assert.match(safeScore.disclaimer, /not audited/);
+assert.match(safeScore.disclaimer, /lock\(\) credits the amount actually received/);
 
 const riskyScore = calculateSecurityScore({
   ...validConfig,
@@ -73,6 +76,7 @@ const riskyScore = calculateSecurityScore({
   apiCheck: true,
 });
 assert.equal(riskyScore.level, "RISKY");
+assert.equal(riskyScore.label, "Weak setup");
 assert.equal(riskyScore.score, 5);
 assert.equal(riskyScore.breakdown.length, 5);
 assert.deepEqual(riskyScore.recommendations, [
