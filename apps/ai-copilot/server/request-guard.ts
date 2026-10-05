@@ -1,3 +1,4 @@
+import { isIP } from "node:net";
 import type { NextFunction, Request, Response } from "express";
 
 // Production traffic reaches the copilot through Traefik on a private Docker network.
@@ -8,6 +9,43 @@ export const TRUSTED_PROXY_HOPS = ["loopback", "linklocal", "uniquelocal"];
 /** Client address for rate limiting; requires `app.set("trust proxy", TRUSTED_PROXY_HOPS)`. */
 export function clientIp(req: Request): string {
   return req.ip || req.socket?.remoteAddress || "unknown";
+}
+
+/** Expands a validated IPv6 address (optionally with an embedded dotted IPv4 tail) to eight 16-bit groups. */
+function ipv6Groups(addr: string): number[] {
+  let text = addr;
+  const dotted = /(\d+)\.(\d+)\.(\d+)\.(\d+)$/.exec(text);
+  if (dotted) {
+    const [a, b, c, d] = dotted.slice(1).map(Number);
+    text = `${text.slice(0, dotted.index)}${((a << 8) | b).toString(16)}:${((c << 8) | d).toString(16)}`;
+  }
+  const [head, tail] = text.split("::");
+  const left = head ? head.split(":") : [];
+  const right = tail ? tail.split(":") : [];
+  const fill = tail === undefined ? [] : Array<string>(8 - left.length - right.length).fill("0");
+  return [...left, ...fill, ...right].map((g) => parseInt(g, 16));
+}
+
+/**
+ * Rate-limit key for a client address. IPv4 (including IPv4-mapped IPv6) is keyed by the single
+ * address; IPv6 is keyed by its /64, the smallest prefix a single subscriber is routinely given,
+ * so rotating addresses inside one /64 cannot mint fresh buckets. Non-IP values pass through.
+ */
+export function rateLimitKey(ip: string): string {
+  const addr = ip.split("%")[0].toLowerCase();
+  const family = isIP(addr);
+  if (family === 4) return addr;
+  if (family !== 6) return ip;
+  const g = ipv6Groups(addr);
+  if (g.slice(0, 5).every((x) => x === 0) && g[5] === 0xffff) {
+    return `${g[6] >> 8}.${g[6] & 0xff}.${g[7] >> 8}.${g[7] & 0xff}`;
+  }
+  return `${g.slice(0, 4).map((x) => x.toString(16)).join(":")}::/64`;
+}
+
+/** Normalized per-client rate-limit key for a request (see `rateLimitKey`). */
+export function clientRateLimitKey(req: Request): string {
+  return rateLimitKey(clientIp(req));
 }
 
 interface WindowLimit {
@@ -27,18 +65,26 @@ export class SlidingWindowLimiter {
 
   /** Records a hit and returns true, or returns false without recording when any window is full. */
   check(key: string, now = Date.now()): boolean {
+    return this.hit(key, now) === -1;
+  }
+
+  /**
+   * Records a hit and returns -1, or returns the index of the first full window without recording.
+   */
+  hit(key: string, now = Date.now()): number {
     const recent = (this.hits.get(key) || []).filter((t) => now - t < this.longestWindow);
-    for (const { windowMs, max } of this.limits) {
+    let full = -1;
+    for (const [index, { windowMs, max }] of this.limits.entries()) {
       if (recent.filter((t) => now - t < windowMs).length >= max) {
-        this.hits.set(key, recent);
-        return false;
+        full = index;
+        break;
       }
     }
-    recent.push(now);
+    if (full === -1) recent.push(now);
     this.hits.delete(key);
     this.hits.set(key, recent);
     this.evict(now);
-    return true;
+    return full;
   }
 
   get size(): number {
@@ -61,7 +107,7 @@ export class SlidingWindowLimiter {
 /** Express middleware: per-client-IP limit with a JSON 429 response. */
 export function ipRateLimit(limiter: SlidingWindowLimiter, message: string) {
   return (req: Request, res: Response, next: NextFunction): void => {
-    if (!limiter.check(clientIp(req))) {
+    if (!limiter.check(clientRateLimitKey(req))) {
       res.status(429).json({ error: message });
       return;
     }

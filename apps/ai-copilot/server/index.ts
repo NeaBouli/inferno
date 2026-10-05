@@ -36,6 +36,7 @@ import {
   TRUSTED_PROXY_HOPS,
   clientIp as resolveClientIp,
   ipRateLimit,
+  rateLimitKey,
   positiveIntEnv,
 } from "./request-guard.js";
 import {
@@ -58,24 +59,14 @@ const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const ANTHROPIC_MESSAGES_URL = "https://api.anthropic.com/v1/messages";
 const POINTS_BACKEND_URL = process.env.POINTS_BACKEND_URL || "http://localhost:3004";
 
-// ── Anti-Abuse: In-memory rate limiter ──────────────────────────────
-const rateBuckets = new Map<string, { minute: number[]; hour: number[] }>();
+// ── Anti-Abuse: per-client chat limiter (keys normalized to IPv4 or IPv6 /64, tracked keys bounded) ──
 const MINUTE_LIMIT = 5;
 const HOUR_LIMIT = 20;
 const MAX_MESSAGE_LENGTH = 500;
-
-function cleanBuckets(): void {
-  const now = Date.now();
-  for (const [ip, bucket] of rateBuckets) {
-    bucket.minute = bucket.minute.filter(t => now - t < 60_000);
-    bucket.hour = bucket.hour.filter(t => now - t < 3_600_000);
-    if (bucket.minute.length === 0 && bucket.hour.length === 0) {
-      rateBuckets.delete(ip);
-    }
-  }
-}
-// Clean stale entries every 5 minutes
-setInterval(cleanBuckets, 300_000).unref();
+const chatClientLimiter = new SlidingWindowLimiter([
+  { windowMs: 60_000, max: MINUTE_LIMIT },
+  { windowMs: 3_600_000, max: HOUR_LIMIT },
+]);
 
 // Aggregate ceiling across all clients, so rotating client addresses cannot drain the daily budget.
 const globalChatLimiter = new SlidingWindowLimiter([
@@ -83,23 +74,10 @@ const globalChatLimiter = new SlidingWindowLimiter([
   { windowMs: 3_600_000, max: positiveIntEnv("COPILOT_GLOBAL_CHAT_PER_HOUR", 600) },
 ]);
 
-function checkRateLimit(ip: string): string | null {
-  const now = Date.now();
-  if (!rateBuckets.has(ip)) {
-    rateBuckets.set(ip, { minute: [], hour: [] });
-  }
-  const bucket = rateBuckets.get(ip)!;
-  bucket.minute = bucket.minute.filter(t => now - t < 60_000);
-  bucket.hour = bucket.hour.filter(t => now - t < 3_600_000);
-
-  if (bucket.minute.length >= MINUTE_LIMIT) {
-    return "Slow down! Max 5 messages per minute.";
-  }
-  if (bucket.hour.length >= HOUR_LIMIT) {
-    return "Too many requests. Please try again in an hour.";
-  }
-  bucket.minute.push(now);
-  bucket.hour.push(now);
+function checkRateLimit(key: string): string | null {
+  const full = chatClientLimiter.hit(key);
+  if (full === 0) return "Slow down! Max 5 messages per minute.";
+  if (full === 1) return "Too many requests. Please try again in an hour.";
   return null;
 }
 
@@ -410,7 +388,7 @@ switchMode('explorer');
 app.post("/api/chat", async (req, res) => {
   // Rate limit check
   const clientIp = resolveClientIp(req);
-  const rateLimitMsg = checkRateLimit(clientIp);
+  const rateLimitMsg = checkRateLimit(rateLimitKey(clientIp));
   if (rateLimitMsg) {
     res.status(429).json({ reply: rateLimitMsg });
     return;
