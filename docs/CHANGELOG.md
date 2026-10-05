@@ -1,5 +1,17 @@
 # Changelog
 
+## 4 October 2026 — Open Benefits Verification Version 2 (CommitmentVault V2)
+
+- New specification `ifr-benefits-verify/2` (`docs/specs/ifr-benefits-verify-2.md`). It reads
+  CommitmentVault V1 and V2 and sums their active TIME_ONLY tranches as one source; the sum is never
+  added to IFRLock. Tier data is unchanged. Version 1 stays valid and unchanged; a `/1` result reads V1
+  only and never exceeds the `/2` result.
+- Reference library `ifr-benefits-verify` 1.1.0: `spec: "ifr-benefits-verify/2"` option, `/1` stays the
+  default; messages can name either version (`expected.specs`, `benefitMessageSpec`). New vectors
+  `vectors/v2.json` and a Mainnet-fork test with a real V2 lock.
+- Benefits backend: optional `COMMITMENT_VAULT_V2_ADDRESS`; when set, the commitment source adds V2's
+  active TIME_ONLY tranches to V1's at the same block, with the same identity checks.
+
 ## 3 October 2026 — Public Council Vote Record (Lane 6)
 
 - New wiki page [Council Votes](https://ifrunit.tech/wiki/council-votes.html) lists every ballot, its exact

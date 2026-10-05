@@ -1,0 +1,21 @@
+{
+  "spec": "ifr-benefits-verify/2",
+  "tiersVersion": 1,
+  "note": "Language-neutral conformance vectors for /2. Amounts are IFR decimal strings (9 decimals). v1/v2 = tranches in CommitmentVault V1 / V2, each {amount, cType, unlocked}. cType 0 = TIME_ONLY; 1..3 = price-conditioned (never counted). Active TIME_ONLY tranches of all listed vaults are summed into one source; that source is never added to IFRLock. expectedV1 = the result a /1 verifier returns for the same state (it reads only V1).",
+  "sourceCases": [
+    { "name": "V1 only", "lockIFR": "0", "v1": [{ "amount": "2600", "cType": 0 }], "v2": [], "source": "COMMITMENT_TIME_ONLY", "expected": "SILVER", "expectedV1": "SILVER" },
+    { "name": "V2 only", "lockIFR": "0", "v1": [], "v2": [{ "amount": "5000", "cType": 0 }], "source": "COMMITMENT_TIME_ONLY", "expected": "GOLD", "expectedV1": null },
+    { "name": "V1 and V2 are summed", "lockIFR": "0", "v1": [{ "amount": "600", "cType": 0 }], "v2": [{ "amount": "2000", "cType": 0 }], "source": "COMMITMENT_TIME_ONLY", "expected": "SILVER", "expectedV1": null },
+    { "name": "unlocked tranches never count", "lockIFR": "0", "v1": [{ "amount": "9000", "cType": 0, "unlocked": true }], "v2": [{ "amount": "900", "cType": 0 }, { "amount": "9000", "cType": 0, "unlocked": true }], "source": "COMMITMENT_TIME_ONLY", "expected": null, "expectedV1": null },
+    { "name": "price-conditioned V1 tranches never count", "lockIFR": "0", "v1": [{ "amount": "26418467.994338353", "cType": 1 }, { "amount": "18367567.924610366", "cType": 3 }, { "amount": "1367567.924610366", "cType": 2 }], "v2": [{ "amount": "1000", "cType": 0 }], "source": "COMMITMENT_TIME_ONLY", "expected": "BRONZE", "expectedV1": null },
+    { "name": "EITHER does not add IFRLock to the vault sum", "lockIFR": "2000", "v1": [{ "amount": "1000", "cType": 0 }], "v2": [{ "amount": "1000", "cType": 0 }], "source": "EITHER", "expected": "BRONZE", "expectedV1": "BRONZE" },
+    { "name": "EITHER takes the higher source (vault sum)", "lockIFR": "1000", "v1": [{ "amount": "3000", "cType": 0 }], "v2": [{ "amount": "2500", "cType": 0 }], "source": "EITHER", "expected": "GOLD", "expectedV1": "SILVER" },
+    { "name": "IFRLOCK ignores both vaults", "lockIFR": "0", "v1": [{ "amount": "6000", "cType": 0 }], "v2": [{ "amount": "6000", "cType": 0 }], "source": "IFRLOCK", "expected": null, "expectedV1": null }
+  ],
+  "failureCases": [
+    { "name": "CommitmentVault V2 has no code", "expectedError": "CONTRACT_MISMATCH" },
+    { "name": "CommitmentVault V2 ifrToken() is not the IFR token", "expectedError": "CONTRACT_MISMATCH" },
+    { "name": "CommitmentVault V2 read fails", "expectedError": "RPC_UNAVAILABLE" },
+    { "name": "message names only /1 but the integrator accepts only /2", "expectedError": "INVALID_MESSAGE" }
+  ]
+}
