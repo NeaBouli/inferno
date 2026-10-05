@@ -1788,7 +1788,7 @@
             <button class="btn btn-primary" type="button" data-open-access-lock>Access lock</button>
             <button class="btn btn-mint" type="button" data-open-lock>Commitment lock</button>
             <button class="btn btn-mint" type="button" data-open-lending>Withdraw offer</button>
-            <button class="btn btn-quiet" type="button" data-open-borrow>Borrow IFR</button>
+            <button class="btn btn-quiet" type="button" data-open-borrow>Loans (borrowing closed)</button>
             <button class="btn btn-quiet" type="button" data-add-token>Add IFR to wallet</button>
             <button class="btn btn-quiet" type="button" data-wallet-copy-address hidden>Copy wallet address</button>
             <button class="btn btn-quiet" type="button" data-wallet-disconnect hidden>Disconnect wallet</button>
@@ -1825,7 +1825,7 @@
               <button class="btn btn-primary" type="button" data-open-access-lock>Access lock</button>
               <button class="btn btn-mint" type="button" data-open-lock>Commitment lock</button>
               <button class="btn btn-mint" type="button" data-open-lending>Withdraw offer</button>
-              <button class="btn btn-quiet" type="button" data-open-borrow>Borrow IFR</button>
+              <button class="btn btn-quiet" type="button" data-open-borrow>Loans (borrowing closed)</button>
               <a class="btn btn-quiet" href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener">Buy IFR</a>
               <a class="btn btn-quiet" href="https://shop.ifrunit.tech/">Use IFR Benefits</a>
               <a class="btn btn-quiet" href="https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" target="_blank" rel="noopener">Track pool</a>
@@ -2206,7 +2206,7 @@
     <div class="protocol-card" role="dialog" aria-modal="true" aria-labelledby="borrow-title">
       <header>
         <div>
-          <h2 id="borrow-title">Borrow IFR</h2>
+          <h2 id="borrow-title">Loans (borrowing closed)</h2>
           <p>View LendingVault offers and any existing loan of this wallet. LendingVault V1 is retired: new borrows stay disabled; existing loans can still be repaid or topped up.</p>
         </div>
         <button class="protocol-close" type="button" aria-label="Close borrow panel" data-borrow-close>&times;</button>
@@ -2261,9 +2261,9 @@
       </div>
 
       <div class="protocol-actions">
-        <button class="btn btn-quiet" type="button" data-borrow-max>Use offer max</button>
+        <button class="btn btn-quiet" type="button" data-borrow-max hidden disabled>Use offer max</button>
         <button class="btn btn-mint" type="button" data-borrow-refresh>Refresh</button>
-        <button class="btn btn-primary" type="button" data-borrow-submit>Borrow with ETH collateral</button>
+        <button class="btn btn-primary" type="button" data-borrow-submit hidden disabled>Borrow with ETH collateral</button>
         <button class="btn btn-mint" type="button" data-borrow-repay>Approve / Repay loan</button>
         <button class="btn btn-quiet" type="button" data-borrow-topup-submit>Top up collateral</button>
       </div>
@@ -2317,7 +2317,7 @@
             { label: "Access lock", kind: "button", variant: "btn-primary", data: "data-open-access-lock" },
             { label: "Commitment lock", kind: "button", variant: "btn-mint", data: "data-open-lock" },
             { label: "Withdraw offer", kind: "button", variant: "btn-mint", data: "data-open-lending" },
-            { label: "Borrow IFR", kind: "button", variant: "btn-quiet", data: "data-open-borrow" },
+            { label: "Loans (borrowing closed)", kind: "button", variant: "btn-quiet", data: "data-open-borrow" },
             { label: "Buy IFR", kind: "link", variant: "btn-quiet", href: "https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B", external: true },
             { label: "Use IFR Benefits", kind: "link", variant: "btn-quiet", href: "https://shop.ifrunit.tech/" },
             { label: "Track pool", kind: "link", variant: "btn-quiet", href: "https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0", external: true }
@@ -3352,15 +3352,20 @@
         return { label: "Healthy", value: `${pct}% collateral ratio`, className: "" };
       }
 
+      // LendingVault V1 retired by owner decision (3 October 2026, T-273): opening a new loan is
+      // blocked permanently in this UI, independent of the on-chain ifrPriceWei value.
+      const BORROW_RETIRED = true;
+      const BORROW_RETIRED_STATUS = "Borrowing is permanently disabled: LendingVault V1 is retired by owner decision (3 October 2026), regardless of ifrPriceWei. Existing loans can still be repaid or topped up.";
+
       async function updateBorrowPreview() {
         if (!currentBorrowState) return;
         const offer = selectedBorrowOffer();
-        const priceMissing = currentBorrowState.ifrPriceWei === 0n;
         borrowSubmit.disabled = true;
 
-        if (priceMissing) {
-          borrowCollateral.textContent = "Price not set";
-          borrowStatus.textContent = "Borrowing is disabled until Governance sets LendingVault ifrPriceWei.";
+        // T-273: LendingVault V1 is retired; new borrows stay blocked even if ifrPriceWei > 0.
+        if (BORROW_RETIRED) {
+          borrowCollateral.textContent = "Retired";
+          borrowStatus.textContent = BORROW_RETIRED_STATUS;
           return;
         }
 
@@ -3407,7 +3412,7 @@
         if (!currentBorrowState) return;
         const { address, offers, loans, ifrPriceWei, offerCount } = currentBorrowState;
         const priceMissing = ifrPriceWei === 0n;
-        borrowPrice.textContent = priceMissing ? "Disabled" : `${formatETH(ifrPriceWei)} / IFR`;
+        borrowPrice.textContent = priceMissing || BORROW_RETIRED ? "Disabled" : `${formatETH(ifrPriceWei)} / IFR`;
         borrowOfferCount.textContent = `${offers.length} / ${offerCount}`;
 
         borrowOffer.innerHTML = offers.length
@@ -3457,8 +3462,8 @@
 
         borrowRepay.disabled = loans.length === 0;
         borrowTopupSubmit.disabled = loans.length === 0;
-        borrowStatus.textContent = priceMissing
-          ? "Offers can be viewed, but borrowing is disabled until LendingVault ifrPriceWei is set on-chain."
+        borrowStatus.textContent = BORROW_RETIRED
+          ? BORROW_RETIRED_STATUS
           : offers.length ? "Offers loaded. Select an offer and enter an amount." : "No active offers available.";
         updateBorrowPreview().catch(() => null);
       }
@@ -3513,10 +3518,12 @@
       }
 
       async function borrowLendingIFR() {
+        // T-273: refuse before any wallet call (no approve, no collateral, no borrow), regardless of price.
+        if (BORROW_RETIRED) throw new Error(BORROW_RETIRED_STATUS);
         await ensureWalletReady("Preparing borrow");
         if (!currentBorrowState) await loadBorrowPanel();
         if (currentBorrowState.ifrPriceWei === 0n) {
-          throw new Error("Borrowing is disabled until LendingVault ifrPriceWei is set on-chain.");
+          throw new Error(BORROW_RETIRED_STATUS);
         }
         const offer = selectedBorrowOffer();
         if (!offer) throw new Error("Select an active offer first.");

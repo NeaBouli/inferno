@@ -33,6 +33,8 @@ const selectors = {
   lendingIncrease: selector("increaseOffer(uint256)"),
   lendingWithdraw: selector("withdrawOffer(uint256)"),
   lendingOfferIndex: selector("lenderOfferIndex(address)"),
+  lendingBorrow: selector("borrow(uint256,uint256,uint256)"),
+  lendingRequiredCollateral: selector("getRequiredCollateral(uint256)"),
   lendingHasOffer: selector("hasOffer(address)"),
   lendingPrice: selector("ifrPriceWei()"),
   lendingRate: selector("getInterestRate()"),
@@ -87,6 +89,9 @@ function expectedWrite(transaction) {
   if (to === LENDING.toLowerCase() && data.startsWith(selectors.lendingWithdraw)) {
     return { action: "lending-withdraw", amount: decodeWord(data, 0) };
   }
+  if (to === LENDING.toLowerCase() && data.startsWith(selectors.lendingBorrow)) {
+    return { action: "lending-borrow", amount: decodeWord(data, 1) };
+  }
   throw new Error(`Unexpected Web3 write: ${transaction.to} ${transaction.data}`);
 }
 
@@ -103,12 +108,13 @@ function buildCallResults(options = {}) {
     [selectors.commitmentPriceOracle]: addressResult(ethers.ZeroAddress),
     [selectors.lendingHasOffer]: uintResult(lenderOffer ? 1n : 0n),
     [selectors.lendingOfferIndex]: uintResult(0n),
-    [selectors.lendingPrice]: uintResult(0n),
+    [selectors.lendingPrice]: uintResult(options.lendingPriceWei || 0n),
+    [selectors.lendingRequiredCollateral]: uintResult(10n ** 17n),
     [selectors.lendingRate]: uintResult(200n),
     [selectors.lendingOfferCount]: uintResult(availableOffer ? 1n : 0n),
     [selectors.lendingGetOffer]: coder.encode(
       ["tuple(address lender,uint256 availableIFR,uint256 lentIFR,bool active)"],
-      [[ACCOUNT, 1000n * UNIT, 0n, availableOffer]],
+      [[options.offerLender || ACCOUNT, 1000n * UNIT, 0n, availableOffer]],
     ),
     [selectors.lendingLoanCount]: uintResult(0n),
   };
@@ -1484,6 +1490,37 @@ test("LendingVault borrowing remains transaction-disabled while price is zero", 
   await expect(page.locator("[data-borrow-price]")).toHaveText("Disabled");
   await expect(page.locator("[data-borrow-submit]")).toBeDisabled();
   await expect(page.locator("[data-borrow-status]")).toContainText("disabled");
+  expect(writes).toEqual([]);
+  expect(pageErrors).toEqual([]);
+  await context.close();
+});
+
+// T-273: LendingVault V1 is retired by owner decision; opening a new loan stays blocked even when
+// the on-chain price would allow it, and a forced click on the hidden control sends nothing.
+test("retired LendingVault blocks new borrowing even when ifrPriceWei > 0 (T-273)", async ({ browser }) => {
+  const { context, page, writes, pageErrors } = await preparePage(browser, {
+    offerAvailable: true,
+    offerLender: "0x4444444444444444444444444444444444444444",
+    lendingPriceWei: 10n ** 12n,
+  });
+  await page.goto("/web3/?action=borrow", { waitUntil: "domcontentloaded" });
+  await selectInjectedWallet(page);
+  await expect(page.locator("[data-borrow-offer] option")).toHaveCount(1);
+  await expect(page.locator("[data-borrow-price]")).toHaveText("Disabled");
+  await expect(page.locator("[data-borrow-submit]")).toBeHidden();
+  await expect(page.locator("[data-borrow-submit]")).toBeDisabled();
+  await expect(page.locator("[data-borrow-status]")).toContainText("Borrowing is permanently disabled");
+  await expect(page.getByRole("button", { name: /borrow ifr|borrow with eth/i })).toHaveCount(0);
+
+  await page.locator("[data-borrow-amount]").fill("100");
+  await expect(page.locator("[data-borrow-submit]")).toBeDisabled();
+  await page.locator("[data-borrow-submit]").evaluate((button) => {
+    button.hidden = false;
+    button.disabled = false;
+    button.click();
+  });
+  await expect(page.locator("[data-borrow-status]")).toContainText("LendingVault V1 is retired");
+  await page.waitForTimeout(500);
   expect(writes).toEqual([]);
   expect(pageErrors).toEqual([]);
   await context.close();

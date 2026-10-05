@@ -10,11 +10,17 @@
   the retired note, hides the deposit button and refuses the create/increase path before any wallet call
   (no approve, no `createOffer`/`increaseOffer`; both were removed from the page ABI). `withdrawOffer`
   stays, and "Use available" fills the full available amount (full withdrawal closes the offer).
+- New borrowing is blocked permanently, regardless of `ifrPriceWei`: the borrow submit and "Use offer max"
+  controls are hidden and disabled, the handler refuses before any wallet call (no approve, no collateral,
+  no `borrow`), and the price shows "Disabled". The entry points read "Loans (borrowing closed)";
+  existing-loan repay and top-up stay. `scripts/test-functionality-status.cjs` now pins the permanent
+  wording instead of the old "until Governance sets ifrPriceWei" text (owner decision, stricter pin).
 - The lending dialog status line no longer shares its selector with the note, so status updates land in
-  the status line again. Borrow dialog copy states the retirement; existing-loan repay and top-up stay.
+  the status line again.
 - `tests/browser/web3-write.spec.js`: the `lending-create` send assertion is replaced by assertions that
   the create path sends no transaction and shows the retired notice, plus a full-amount `withdrawOffer`
-  send. Suite size unchanged.
+  send. New test: with a mocked `ifrPriceWei > 0` borrowing stays blocked and a forced click sends no
+  transaction.
 
 ## 5 October 2026 — Governance Proposals #18–#21 Executed (Safe Round)
 
