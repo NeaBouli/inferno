@@ -53,4 +53,5 @@ jobs:
       - run: npm run test:lending-loans
       - run: npm run test:request-guard
       - run: npm run test:balance-integrity
+      - run: npm run test:builder-score
       - run: npm run build

@@ -26,7 +26,8 @@
     "start": "tsx server/index.ts",
     "test:rpc-failover": "tsx scripts/test-rpc-failover.ts",
     "test:cors-origins": "tsx scripts/test-cors-origins.ts",
-    "test:request-guard": "tsx scripts/test-request-guard.ts"
+    "test:request-guard": "tsx scripts/test-request-guard.ts",
+    "test:builder-score": "tsx scripts/test-builder-score.ts"
   },
   "dependencies": {
     "@types/cors": "^2.8.19",

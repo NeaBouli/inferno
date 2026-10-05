@@ -229,8 +229,8 @@ export function getIFRKnowledge() {
       contractLibrary: {
         path: "contracts/library/",
         modules: [
-          "BaseAccessModule — minimal balance check (RISKY)",
-          "HardLockModule — time-bound lock 7-365 days (SAFE)",
+          "BaseAccessModule — minimal balance check (no lock)",
+          "HardLockModule — time-bound lock 7-365 days",
           "TierModule — Tier 1/2/3: 500/2k/10k IFR",
           "CooldownModule — anti-gaming 24h default",
           "IFRBuilderVault — all modules combined (recommended)"
@@ -247,7 +247,9 @@ export function getIFRKnowledge() {
       securityScoring: {
         maxScore: 100,
         categories: "Hard Lock (30), Cooldown (20), Tier System (15), Min Amount (20), On-Chain Check (15)",
-        levels: "≥80 SAFE, ≥50 MEDIUM, <50 RISKY"
+        name: "Configuration Score",
+        levels: "≥80 Strong setup, ≥50 Partial setup, <50 Weak setup",
+        disclaimer: "Configuration heuristic only — not audited, not a security audit or certification"
       },
       apiEndpoints: {
         builderGenerate: "POST /api/builder/generate — generate contract + SDK from JSON config",

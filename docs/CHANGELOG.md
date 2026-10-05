@@ -22,6 +22,17 @@
   send. New test: with a mocked `ifrPriceWei > 0` borrowing stays blocked and a forced click sends no
   transaction.
 
+## 5 October 2026 — Copilot Builder API: Configuration Score Wording (T-272)
+
+- `POST /api/builder/generate` (copilot server) now returns the same wording as the Builder page:
+  `scoreName: "Configuration Score"`, `label` "Strong setup" / "Partial setup" / "Weak setup" and the
+  disclaimer "Configuration heuristic only — not audited, not a security audit or certification".
+  Scoring math and the endpoint path are unchanged; the response key stays `security`.
+- API change: `security.level` is now `strong` / `partial` / `weak` instead of `SAFE` / `MEDIUM` / `RISKY`.
+  No consumer in the repository reads the old values (`docs/builder.html` scores locally).
+- Copilot knowledge, system prompt and `llms.txt` describe the builder score as a Configuration Score.
+  New test `npm run test:builder-score` in the copilot CI. Needs a copilot re-release to go live.
+
 ## 5 October 2026 — Governance Proposals #18–#21 Executed (Safe Round)
 
 - #18 `FeeRouterV1.setVoucherSigner(0x790D99c320dafA03d83bEa152178A6523b49CA0d)`: 07:17:47 UTC, block 26124623,
