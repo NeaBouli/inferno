@@ -16,6 +16,10 @@
   Wagmi's recent connector, so existing sessions still restore).
 - Coinbase Wallet SDK `preference.telemetry: false` and WalletConnect Core
   `telemetryEnabled: false` stay off after a wallet is chosen too.
+- Disconnect (in the app or in the wallet) and a failed session restore clear
+  the connector's session marker and Wagmi's `recentConnectorId`, so a
+  returning visitor who disconnected loads no wallet SDK until choosing again;
+  a visitor who is still connected restores as before.
 
 ### Changed
 
@@ -26,7 +30,9 @@
 
 - `scripts/test-benefits-wallet-telemetry.js` (`npm run
   test:benefits-wallet-telemetry`, in the Benefits CI browser job): no wallet
-  telemetry request before a wallet is chosen (375/1440, five routes).
+  telemetry request before a wallet is chosen: hard assertions on every route
+  at 375/1440, plus returning visitors (disconnected: no SDK load; still
+  connected: restore runs, no telemetry).
 - Frontend `test:wallet-selection` adds `test-wallet-telemetry-config.mjs`;
   `test:discoverability` asserts manifest/head theme-color parity.
 
