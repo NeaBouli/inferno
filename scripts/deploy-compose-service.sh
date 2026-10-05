@@ -10,11 +10,14 @@
 #
 # DEPLOY_MODE=gate routes plan/deploy/rollback through the scoped host gate
 # (ssh -F ~/.fleet-ssh/config hetzner-deploy ...) and adds status|health|logs|backups;
-# rollback then takes the backup stamp. Unset DEPLOY_MODE keeps the direct path below.
+# rollback then takes the backup stamp. In gate mode backup, health wait and failure
+# handling are done by the installed host tool within its accepted guarantees; its
+# recovery of a real failing service release is not yet verified, so watch the result
+# and use `rollback <stamp>` explicitly. Unset DEPLOY_MODE keeps the direct path below.
 #
 # <service>: telegram-bot | points-backend | ai-copilot
 #
-# deploy: capacity floor (never prunes) -> new backup dir with a source tar and the
+# Direct path (no DEPLOY_MODE) deploy: capacity floor (never prunes) -> new backup dir with a source tar and the
 # current image id -> rollback image tag -> rsync of the git-archived app dir
 # (env and SQLite files at any depth, root node_modules, dist and data are excluded and never
 # deleted) -> compose rebuild of that one service -> bounded health wait ->
