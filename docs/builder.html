@@ -132,11 +132,11 @@
     </div>
     <div>
       <div class="card" id="scoreCard">
-        <div class="card-title">&#x1F6E1;&#xFE0F; Security Score <span style="font-weight:400;font-size:11px;color:var(--dim)">(heuristic checklist)</span></div>
-        <div class="sc safe" id="scDisp"><div class="sn" id="scNum">90</div><div class="slbl" id="scLbl">&#x1F7E2; SAFE</div></div>
+        <div class="card-title">&#x1F6E1;&#xFE0F; Configuration Score <span style="font-weight:400;font-size:11px;color:var(--dim)">(heuristic checklist)</span></div>
+        <div class="sc safe" id="scDisp"><div class="sn" id="scNum">90</div><div class="slbl" id="scLbl">&#x1F7E2; Strong setup</div></div>
         <ul class="sb" id="scBk"></ul>
         <div id="warns"></div>
-        <div style="font-size:11px;color:var(--dim);margin-top:10px;line-height:1.5">Configuration heuristic only &mdash; not a security audit or certification, and not a compile or correctness check of the generated code.</div>
+        <div style="font-size:11px;color:var(--dim);margin-top:10px;line-height:1.5">Configuration heuristic only &mdash; not audited, not a security audit or certification. What the repository tests check: every option combination compiles (solc 0.8.20); lock() credits the amount actually received (IFR is fee-on-transfer) and unlock() returns exactly that amount; hasAccess() reads the locked amount.</div>
       </div>
       <div class="card" id="outCard">
         <div class="oh"><div class="card-title" style="margin:0">&#x1F4C4; Generated Code</div><button class="bcopy" onclick="cpAct()">Copy</button></div>
@@ -194,7 +194,7 @@ function upd(){
   C.productName=document.getElementById('pName').value;C.productUrl=document.getElementById('pUrl').value;
   var r=score();var d=document.getElementById('scDisp');d.className='sc '+r.level.toLowerCase();
   document.getElementById('scNum').textContent=r.score;
-  document.getElementById('scLbl').textContent=(r.level==='SAFE'?'\u{1F7E2}':r.level==='MEDIUM'?'\u{1F7E1}':'\u{1F534}')+' '+r.level;
+  document.getElementById('scLbl').textContent=(r.level==='SAFE'?'\u{1F7E2} Strong setup':r.level==='MEDIUM'?'\u{1F7E1} Partial setup':'\u{1F534} Weak setup');
   document.getElementById('scBk').innerHTML=r.breakdown.map(function(b){return '<li class="si"><span>'+b.l+'</span><span class="sp'+(b.p===0?' z':'')+'">'+( b.p>0?'+'+b.p:'0')+'</span></li>'}).join('');
   document.getElementById('warns').innerHTML=r.warnings.map(function(w){return '<div class="warn">'+w+'</div>'}).join('');
 }

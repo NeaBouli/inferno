@@ -8,7 +8,7 @@ import "./BaseAccessModule.sol";
 ///         Tier 1: Basic   (>= 500 IFR)
 ///         Tier 2: Premium (>= 2,000 IFR)
 ///         Tier 3: Pro     (>= 10,000 IFR)
-///         Security Score: MEDIUM — combine with HardLock for SAFE.
+///         Builder heuristic: partial setup — combine with HardLock for a stronger configuration.
 abstract contract TierModule is BaseAccessModule {
     uint256 public tier1Threshold = 500e9;    // 500 IFR (9 decimals)
     uint256 public tier2Threshold = 2000e9;   // 2,000 IFR

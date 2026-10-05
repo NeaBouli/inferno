@@ -28,6 +28,16 @@ if (!html.includes("(heuristic checklist)")) {
 if (!html.includes("not a security audit or certification")) {
   fail("score card disclaimer missing (heuristic must not read as certification)");
 }
+// No unfounded security verdict: the heuristic level is shown as a setup description, never as "SAFE".
+if (/id="scLbl">[^<]*\b(SAFE|MEDIUM|RISKY)\b/.test(html)) fail("score label must not display a SAFE/MEDIUM/RISKY verdict");
+if (/Security Score/.test(html)) fail("score card must not be titled Security Score");
+if (!html.includes("not audited")) fail("score card must state the generated code is not audited");
+if (!html.includes("lock() credits the amount actually received")) fail("score card must state what the tests check");
+for (const file of fs.readdirSync(path.join(root, "contracts/library"))) {
+  if (/Security Score: (SAFE|MEDIUM|RISKY)/.test(fs.readFileSync(path.join(root, "contracts/library", file), "utf8"))) {
+    fail(`contracts/library/${file}: NatSpec must not claim a security verdict`);
+  }
+}
 if (html.includes("@ifr/library")) {
   fail("page still references the unresolvable @ifr/library import prefix");
 }
@@ -62,7 +72,7 @@ const documentStub = {
 const factory = new Function(
   "document",
   "navigator",
-  `${match[1]}\n;return { gen, score, C };`
+  `${match[1]}\n;return { gen, score, upd, C };`
 );
 const page = factory(documentStub, { clipboard: { writeText: async () => {} } });
 
@@ -171,9 +181,20 @@ for (const needle of [
   if (!hardLockSource.includes(needle)) fail(`HardLockModule.lock must credit the measured balance delta (missing: ${needle})`);
 }
 
-// Score math stays as deployed: default configuration scores 90/SAFE.
+// Score math stays as deployed: default configuration scores 90 (internal level key SAFE), shown as "Strong setup".
 Object.assign(page.C, { minAmount: 1000, hardLock: true, lockDuration: 30, tierSystem: true, cooldown: true, apiCheck: false });
 const defaultScore = page.score();
+for (const [cfg, label] of [
+  [{}, "Strong setup"],
+  [{ cooldown: false }, "Partial setup"],
+  [{ hardLock: false, cooldown: false, tierSystem: false, minAmount: 100, apiCheck: true }, "Weak setup"],
+]) {
+  Object.assign(page.C, { minAmount: 1000, hardLock: true, lockDuration: 30, tierSystem: true, cooldown: true, apiCheck: false, ...cfg });
+  page.upd();
+  const shown = element("scLbl").textContent;
+  if (!shown.includes(label) || /SAFE|MEDIUM|RISKY/.test(shown)) fail(`score label ${JSON.stringify(shown)} must read ${label} without a verdict`);
+}
+Object.assign(page.C, { minAmount: 1000, hardLock: true, lockDuration: 30, tierSystem: true, cooldown: true, apiCheck: false });
 if (defaultScore.score !== 90 || defaultScore.level !== "SAFE") {
   fail(`default score changed: ${defaultScore.score}/${defaultScore.level}, expected 90/SAFE`);
 }
