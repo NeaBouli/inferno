@@ -52,8 +52,9 @@ The configured discount must not exceed the deployed FeeRouter protocol fee.
 
 ## Rate Limits
 
-- 60 requests per IP per minute (general)
+- 60 requests per IP per minute (general; IPv6 keyed per /64)
 - 5 SIWE verifies per IP per hour
+- 30 SIWE nonces per client per 10 minutes, plus 250 per IPv6 /48 (one /48 holds at most 5% of the 10,000 outstanding-nonce cap); IPv4 stays per address
 - 1 voucher per wallet per rolling 24 hours (database-enforced)
 - 100 vouchers global daily cap
 

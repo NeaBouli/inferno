@@ -1,24 +1,43 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.TIERS_V1 = exports.IfrBenefitVerifyError = exports.TIER_FILE_SHA256 = exports.TIER_FILE_V1 = exports.CONTRACTS = exports.MAX_RESULT_CACHE_MS = exports.MAX_MESSAGE_LIFETIME_MS = exports.MESSAGE_STATEMENT_MARKER = exports.PURPOSE_RESOURCE_PREFIX = exports.SPEC_RESOURCE = exports.IFR_DECIMALS = exports.SPEC_ID = void 0;
+exports.TIERS_V1 = exports.IfrBenefitVerifyError = exports.TIER_FILE_SHA256 = exports.TIER_FILE_V1 = exports.CONTRACTS = exports.MAX_RESULT_CACHE_MS = exports.MAX_MESSAGE_LIFETIME_MS = exports.MESSAGE_STATEMENT_MARKER = exports.PURPOSE_RESOURCE_PREFIX = exports.SPEC_RESOURCE_V2 = exports.SPEC_RESOURCE = exports.IFR_DECIMALS = exports.SPEC_IDS = exports.SPEC_ID_V2 = exports.SPEC_ID = void 0;
+exports.specResource = specResource;
+exports.commitmentVaultsFor = commitmentVaultsFor;
 exports.parseTiers = parseTiers;
 exports.tierForAmount = tierForAmount;
 exports.sumActiveTimeOnly = sumActiveTimeOnly;
 exports.verifyIfrBenefit = verifyIfrBenefit;
 exports.buildBenefitMessage = buildBenefitMessage;
 exports.parseBenefitMessage = parseBenefitMessage;
+exports.benefitMessageSpec = benefitMessageSpec;
 exports.verifyBenefitMessage = verifyBenefitMessage;
 /**
- * Reference implementation of `ifr-benefits-verify/1`
- * (docs/specs/ifr-benefits-verify-1.md). MIT licence.
+ * Reference implementation of `ifr-benefits-verify/1` and `ifr-benefits-verify/2`
+ * (docs/specs/ifr-benefits-verify-1.md, docs/specs/ifr-benefits-verify-2.md). MIT licence.
+ *
+ * `/2` differs from `/1` only in the CommitmentVault source: it reads every listed vault
+ * (CommitmentVault V1 and V2 on Mainnet) and sums their active TIME_ONLY tranches. `/1` stays
+ * the default so that existing integrations keep their exact semantics.
  *
  * Permissionless: reads the public IFR contracts at one pinned block. No API,
  * no hosted service, no registration.
  */
 const ethers_1 = require("ethers");
 exports.SPEC_ID = "ifr-benefits-verify/1";
+exports.SPEC_ID_V2 = "ifr-benefits-verify/2";
+exports.SPEC_IDS = Object.freeze([exports.SPEC_ID, exports.SPEC_ID_V2]);
 exports.IFR_DECIMALS = 9;
 exports.SPEC_RESOURCE = `urn:ifr-benefits:spec:${exports.SPEC_ID}`;
+exports.SPEC_RESOURCE_V2 = `urn:ifr-benefits:spec:${exports.SPEC_ID_V2}`;
+const SPEC_RESOURCE_PREFIX = "urn:ifr-benefits:spec:";
+function specResource(spec) {
+    return `${SPEC_RESOURCE_PREFIX}${spec}`;
+}
+function assertSpec(spec) {
+    if (!exports.SPEC_IDS.includes(spec))
+        fail("INVALID_INPUT", `unknown spec ${String(spec)}`);
+    return spec;
+}
 exports.PURPOSE_RESOURCE_PREFIX = "urn:ifr-benefits:purpose:";
 exports.MESSAGE_STATEMENT_MARKER = "This signature does not move funds";
 exports.MAX_MESSAGE_LIFETIME_MS = 5 * 60 * 1000;
@@ -28,13 +47,26 @@ exports.CONTRACTS = Object.freeze({
         token: "0x77e99917Eca8539c62F509ED1193ac36580A6e7B",
         ifrLock: "0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb",
         commitmentVault: "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3",
+        commitmentVaults: Object.freeze([
+            "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3", // CommitmentVault V1
+            "0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F", // CommitmentVault V2 (TIME_ONLY only)
+        ]),
     }),
     11155111: Object.freeze({
         token: "0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4",
         ifrLock: "0x0Cab0A9440643128540222acC6eF5028736675d3",
         commitmentVault: null,
+        commitmentVaults: Object.freeze([]),
     }),
 });
+/** Vaults read by a given spec version for `contracts`. */
+function commitmentVaultsFor(contracts, spec) {
+    if (spec === exports.SPEC_ID)
+        return contracts.commitmentVault ? [contracts.commitmentVault] : [];
+    if (contracts.commitmentVaults)
+        return [...contracts.commitmentVaults];
+    return contracts.commitmentVault ? [contracts.commitmentVault] : [];
+}
 /** Published tier file v1 (docs/specs/ifr-benefits-tiers.v1.json). */
 exports.TIER_FILE_V1 = {
     schema: "ifr-benefits-tiers/1",
@@ -67,13 +99,17 @@ function fail(code, message) {
 // ─── Tiers ──────────────────────────────────────────────────────────────
 const DECIMAL_STRING = /^(0|[1-9][0-9]*)$/;
 const TIER_KEY = /^[A-Z][A-Z0-9_]{0,31}$/;
-/** Validates a tier file (spec §3, §7) and returns it in evaluation form. */
-function parseTiers(file) {
+/**
+ * Validates a tier file (spec §3, §7) and returns it in evaluation form.
+ * `/2` reuses the `/1` tier files unchanged, so a `/2` verifier accepts tier files of either spec.
+ */
+function parseTiers(file, spec = exports.SPEC_ID) {
     if (!file || typeof file !== "object")
         fail("INVALID_TIERS", "tier file must be an object");
     if (file.schema !== "ifr-benefits-tiers/1")
         fail("INVALID_TIERS", "unknown schema");
-    if (file.spec !== exports.SPEC_ID)
+    const acceptedSpecs = spec === exports.SPEC_ID_V2 ? exports.SPEC_IDS : [exports.SPEC_ID];
+    if (!acceptedSpecs.includes(file.spec))
         fail("INVALID_TIERS", "tier file belongs to another spec");
     if (!Number.isInteger(file.version) || file.version < 1)
         fail("INVALID_TIERS", "version must be a positive integer");
@@ -263,6 +299,7 @@ async function resolveBlock(provider, block) {
  * Throws `IfrBenefitVerifyError` instead of returning a tier whenever a check fails.
  */
 async function verifyIfrBenefit(params) {
+    const spec = assertSpec(params.spec ?? exports.SPEC_ID);
     const source = params.source ?? "IFRLOCK";
     if (!LOCK_SOURCES.includes(source))
         fail("INVALID_INPUT", "unknown lock source");
@@ -277,9 +314,15 @@ async function verifyIfrBenefit(params) {
     const contracts = params.contracts ?? listed;
     const needsLock = source === "IFRLOCK" || source === "EITHER";
     const needsVault = source === "COMMITMENT_TIME_ONLY" || source === "EITHER";
-    if (needsVault && !contracts.commitmentVault)
+    const vaults = needsVault ? commitmentVaultsFor(contracts, spec) : [];
+    if (needsVault && vaults.length === 0)
         fail("CONTRACT_MISMATCH", "no CommitmentVault on this chain");
-    const tiers = params.tiers === undefined ? exports.TIERS_V1 : isTierFile(params.tiers) ? parseTiers(params.tiers) : params.tiers;
+    if (vaults.some((vault) => typeof vault !== "string" || !(0, ethers_1.isAddress)(vault)))
+        fail("INVALID_INPUT", "invalid CommitmentVault address");
+    if (new Set(vaults.map((vault) => vault.toLowerCase())).size !== vaults.length) {
+        fail("INVALID_INPUT", "CommitmentVault addresses must be unique");
+    }
+    const tiers = params.tiers === undefined ? exports.TIERS_V1 : isTierFile(params.tiers) ? parseTiers(params.tiers, spec) : params.tiers;
     if (!tiers.tiers.length || tiers.tiers.some((tier) => tier.minBaseUnits <= 0n)) {
         fail("INVALID_TIERS", "thresholds must be greater than zero");
     }
@@ -302,7 +345,8 @@ async function verifyIfrBenefit(params) {
         block,
         source,
         tiersVersion: tiers.version,
-        spec: exports.SPEC_ID,
+        spec,
+        commitmentVaults: vaults.map((vault) => (0, ethers_1.getAddress)(vault)),
         sources: {},
     };
     if (needsLock) {
@@ -322,17 +366,21 @@ async function verifyIfrBenefit(params) {
         result.sources.IFRLOCK = lockTier;
     }
     if (needsVault) {
-        const vault = contracts.commitmentVault;
-        await requireCode(provider, vault, tag, "CommitmentVault");
-        const [vaultToken] = await ethCall(provider, VAULT_ABI, vault, "ifrToken", [], tag);
-        if ((0, ethers_1.getAddress)(vaultToken) !== token)
-            fail("CONTRACT_MISMATCH", "CommitmentVault.ifrToken() is not the IFR token");
-        const [tranches] = await ethCall(provider, VAULT_ABI, vault, "getTranches", [wallet], tag);
-        const amount = sumActiveTimeOnly(Array.from(tranches, (t) => ({
-            amount: t.amount,
-            cType: t.cType,
-            unlocked: t.unlocked,
-        })));
+        // `/1`: the single listed vault. `/2`: every listed vault; active TIME_ONLY tranches are summed
+        // across vaults (one source), never added to IFRLock (spec §4).
+        let amount = 0n;
+        for (const vault of vaults) {
+            await requireCode(provider, vault, tag, "CommitmentVault");
+            const [vaultToken] = await ethCall(provider, VAULT_ABI, vault, "ifrToken", [], tag);
+            if ((0, ethers_1.getAddress)(vaultToken) !== token)
+                fail("CONTRACT_MISMATCH", "CommitmentVault.ifrToken() is not the IFR token");
+            const [tranches] = await ethCall(provider, VAULT_ABI, vault, "getTranches", [wallet], tag);
+            amount += sumActiveTimeOnly(Array.from(tranches, (t) => ({
+                amount: t.amount,
+                cType: t.cType,
+                unlocked: t.unlocked,
+            })));
+        }
         result.sources.COMMITMENT_TIME_ONLY = tierForAmount(amount, tiers);
     }
     // Defence in depth: the block number must still map to the same hash after all reads.
@@ -366,7 +414,11 @@ function buildBenefitMessage(fields) {
     assertSafeLine(statement, "statement");
     if (!statement.includes(exports.MESSAGE_STATEMENT_MARKER))
         fail("INVALID_MESSAGE", "statement must say the signature does not move funds");
-    const resources = [exports.SPEC_RESOURCE, `${exports.PURPOSE_RESOURCE_PREFIX}${fields.purpose}`, ...(fields.resources ?? [])];
+    const extra = fields.resources ?? [];
+    if (extra.some((resource) => typeof resource === "string" && resource.startsWith(SPEC_RESOURCE_PREFIX))) {
+        fail("INVALID_MESSAGE", "the spec resource is set by `spec`, not by extra resources");
+    }
+    const resources = [specResource(assertSpec(fields.spec ?? exports.SPEC_ID)), `${exports.PURPOSE_RESOURCE_PREFIX}${fields.purpose}`, ...extra];
     resources.forEach((resource) => assertSafeLine(resource, "resource"));
     const lines = [
         `${fields.domain} wants you to sign in with your Ethereum account:`,
@@ -436,6 +488,18 @@ function parseBenefitMessage(message) {
         resources,
     };
 }
+/**
+ * The specification version to evaluate a parsed message with: the highest version that the
+ * message names and the integrator accepts. A message that names none of them is rejected.
+ * (`/1` messages MAY carry other resources, so additional spec resources do not invalidate them.)
+ */
+function benefitMessageSpec(parsed, accepted = [exports.SPEC_ID]) {
+    const named = new Set(parsed.resources.filter((resource) => resource.startsWith(SPEC_RESOURCE_PREFIX)).map((resource) => resource.slice(SPEC_RESOURCE_PREFIX.length)));
+    const usable = exports.SPEC_IDS.filter((spec) => named.has(spec) && accepted.includes(spec));
+    if (usable.length === 0)
+        fail("INVALID_MESSAGE", "spec resource missing or not accepted");
+    return usable[usable.length - 1];
+}
 /** Verifies the wallet ownership message (spec §6) and returns the signer address. */
 function verifyBenefitMessage(params) {
     const parsed = parseBenefitMessage(params.message);
@@ -476,8 +540,10 @@ function verifyBenefitMessage(params) {
         if (Number.isNaN(notBefore) || notBefore > now)
             fail("INVALID_MESSAGE", "message not yet valid");
     }
-    if (!parsed.resources.includes(exports.SPEC_RESOURCE))
-        fail("INVALID_MESSAGE", "spec resource missing");
+    const accepted = (expected.specs ?? [exports.SPEC_ID]).map(assertSpec);
+    if (accepted.length === 0)
+        fail("INVALID_INPUT", "at least one accepted spec is required");
+    benefitMessageSpec(parsed, accepted);
     const purposes = parsed.resources.filter((resource) => resource.startsWith(exports.PURPOSE_RESOURCE_PREFIX));
     if (purposes.length !== 1 || purposes[0] !== `${exports.PURPOSE_RESOURCE_PREFIX}${expected.purpose}`) {
         fail("INVALID_MESSAGE", "purpose mismatch");

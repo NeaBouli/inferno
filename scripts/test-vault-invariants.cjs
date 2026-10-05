@@ -96,4 +96,24 @@ assert.throws(
   /must be a non-negative integer/,
 );
 
+// CommitmentVault V2: exemption pending while empty, failure once it holds locks; custody must cover locks.
+{
+  const v2 = (o) => ({ ...snapshot(), commitmentV2: { feeExempt: false, balance: 0n, totalLocked: 0n, ...o } });
+  const pending = evaluateVaultInvariants(v2({}));
+  assert.equal(pending.ok, true, "empty V2 without exemption is pending, not a failure");
+  assert.equal(pending.commitmentV2Pending, true);
+  const lockedNoExempt = evaluateVaultInvariants(v2({ balance: 100n, totalLocked: 100n }));
+  assert.equal(lockedNoExempt.ok, false);
+  assert.match(lockedNoExempt.problems.join("\n"), /V2 holds locks but its fee exemption is not active/);
+  const live = evaluateVaultInvariants(v2({ feeExempt: true, balance: 100n, totalLocked: 100n }));
+  assert.equal(live.ok, true);
+  assert.equal(live.commitmentV2Pending, false);
+  assert.equal(live.commitmentV2Surplus, 0n);
+  const short = evaluateVaultInvariants(v2({ feeExempt: true, balance: 90n, totalLocked: 100n }));
+  assert.equal(short.ok, false);
+  assert.match(short.problems.join("\n"), /V2 token balance is below totalLocked/);
+  assert.equal(evaluateVaultInvariants(snapshot()).commitmentV2Surplus, null, "snapshots without V2 stay valid");
+}
+assert.equal(require("./check-vault-invariants.js").ADDRESSES.commitmentVaultV2, "0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F");
+
 console.log("[vault-invariants-test] PASS");

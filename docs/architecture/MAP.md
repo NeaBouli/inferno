@@ -790,3 +790,256 @@ Change only `docs/index.html` (tracker + three cards), `docs/wiki/index.html`
 `docs/assets/redesign-skin.css` (shared wiki action/focus rules) and the
 active-link `aria-current` attribute on sidebar pages. Copilot backend,
 contracts, wallet core and other Landing sections stay untouched.
+
+## 12. Queued guardian batch binding trace
+
+Scope: task T-242 (PR #168). One path only: the CWA-09 step-2 execute batch
+for the already queued Governance proposals #19/#20 must be generated from
+verified on-chain content, never from caller-supplied ids. The synthetic
+full-migration rehearsal stays pinned to exactly block 26108024.
+
+### 12.1 Grundidee
+
+`Governance.execute(id)` runs whatever the proposal contains
+(`contracts/governance/Governance.sol::execute`), so the Safe batch generator
+must refuse to write execute bytes unless the queued proposal still matches
+the approved operation exactly. Steps 1-3 of the guardian migration already
+ran live (`docs/GUARDIAN_MIGRATION.md`); only execute (#19
+LiquidityReserve, #20 BurnReserve `setGuardian(Treasury Safe)`, ETA 2026-10-04 23:56:11 UTC) is
+open. Read-only evidence: block 26119897.
+
+### 12.2 Spur (Hop-Liste)
+
+1. CLI `--execute` → `scripts/guardian-migration-proposal.cjs::buildVerifiedExecute`
+   — Daten: RPC URL (`MAINNET_RPC_URL` oder public fallback) → verified
+   `guardian-step2-execute.json` oder refusal ohne Datei.
+2. `buildVerifiedExecute` → `verifyQueuedProposals(call)` →
+   `rpcCaller(url)` (einmaliger `eth_chainId`-Check auf 1;
+   jeder Request mit `AbortSignal.timeout`, nur HTTP 2xx + JSON-RPC-Envelope
+   `jsonrpc`/`id`/hex `result`, generische Fehler) → eth_call
+   `Governance.getProposal(19|20)` — Daten: `(target, data, eta, executed,
+   cancelled)` gegen die gepinnten Konstanten `QUEUED`/`QUEUED_ETA`/
+   `GUARDIAN_INNER`; jede Abweichung, unreachable RPC oder wrong chain wirft.
+3. Pins → `executeBatch()` → Safe Transaction Builder JSON — Daten:
+   `execute(19)`/`execute(20)` Bytes, `value: 0`, chainId 1.
+4. `test/fork/GuardianQueuedExecutionFork.test.js` (Fork exakt 26119897) →
+   impersonated Treasury Safe sendet die generierten Bytes → Daten:
+   `guardian()` aller sechs mutablen Contracts = Safe; immutables bleiben
+   Deployer; Negativ: Read mit `blockTag` 26108024 (pre-queue) → refusal.
+5. Fixture-Hop (nur Library, kein CLI): `build(firstId)` (kein Chain-Read,
+   schreibt nie Dateien) ← `scripts/test-guardian-migration-proposal.cjs` und
+   `test/fork/GuardianMigrationFork.test.js` (Fork exakt 26108024).
+
+### 12.3 Module
+
+| Modul | Eine Aufgabe | Einstieg | Stand |
+| --- | --- | --- | --- |
+| proposal generator | Safe-Batches + pinned Verifikation | `scripts/guardian-migration-proposal.cjs::buildVerifiedExecute` | gebaut |
+| governance timelock | queued execute nach ETA | `contracts/governance/Governance.sol::execute` | gebaut (deployed) |
+| fork proofs | synthetische + post-queue Rehearsal | `test/fork/GuardianQueuedExecutionFork.test.js` | gebaut |
+| runbook | Schritte + pre-sign validation | `docs/GUARDIAN_MIGRATION.md` | gebaut |
+
+### 12.4 Verdrahtung
+
+- Der Generator liest nur; Signieren/Executen bleibt beim Safe (kein Key hier).
+- `verifyQueuedProposals` ist die einzige Quelle der execute-Bytes im
+  `--execute`-Modus; die CLI kennt nur `--execute` (T-242a: `--fixture` entfernt).
+- CI (contracts workflow) läuft nur den Unit-Test; Fork-Tests brauchen einen
+  Archive-RPC und laufen manuell.
+
+### 12.5 Widerspruch und Lücken
+
+- `build(firstId)` bleibt als Fixture exportiert, weil die synthetische
+  Rehearsal die Bytes braucht; die CLI schreibt es nie (T-242a).
+- Die CV-01-Generator (`scripts/commitment-vault-v2-proposal.cjs`) hat ein
+  eigenes, optionales `--verify-onchain`; Angleichung ist nicht Teil dieser
+  Spur.
+
+### 12.6 Diagrammdateien
+
+- Keine neuen; diese Spur ändert `docs/architecture/map.puml` und
+  `main-path.puml` nicht (Shared-Dateien, PR-übergreifende Konflikte).
+
+```mermaid
+mindmap
+  root((Queued guardian batch binding))
+    proposal generator
+      gebaut: buildVerifiedExecute
+      gebaut: verifyQueuedProposals
+      gebaut: rpcCaller
+      gebaut: build (fixture)
+    governance timelock
+      gebaut: Governance.execute
+    fork proofs
+      gebaut: GuardianQueuedExecutionFork
+      gebaut: GuardianMigrationFork
+    runbook
+      gebaut: GUARDIAN_MIGRATION.md
+```
+
+### 12.7 Nächster Schritt
+
+Change only `scripts/guardian-migration-proposal.cjs`,
+`scripts/test-guardian-migration-proposal.cjs`, `test/fork/Guardian*.test.js`
+und `docs/GUARDIAN_MIGRATION.md`. Pool-fee Spur (Trace 13), CV-01-Generator,
+Contracts und Deployments bleiben unberührt.
+
+## 13. Queued pool fee batch binding trace
+
+Scope: task T-242 (PR #169). One path only: the Lane 3 decision B step-2
+execute batch for the already queued Governance proposal #21 must be
+generated from verified on-chain content, never from a caller-supplied id.
+
+### 13.1 Grundidee
+
+`Governance.execute(id)` runs whatever the proposal contains
+(`contracts/governance/Governance.sol::execute`), so the Safe batch generator
+must refuse to write execute bytes unless the queued proposal still matches
+the approved operation exactly. Proposal #21
+(`InfernoToken.setPoolFeeReceiver(BuybackController)`, ETA 2026-10-05
+00:18:23 UTC) is queued; only execute is open. Read-only evidence: block
+26119897.
+
+### 13.2 Spur (Hop-Liste)
+
+1. CLI `--execute` → `scripts/pool-fee-receiver-proposal.cjs::buildVerifiedExecute`
+   — Daten: RPC URL (`MAINNET_RPC_URL` oder public fallback) → verified
+   `lane3-poolfee-step2-execute.json` oder refusal ohne Datei.
+2. `buildVerifiedExecute` → `verifyQueuedProposal(call)` → `rpcCaller(url)`
+   (einmaliger `eth_chainId`-Check auf 1;
+   jeder Request mit `AbortSignal.timeout`, nur HTTP 2xx + JSON-RPC-Envelope
+   `jsonrpc`/`id`/hex `result`, generische Fehler) → eth_call
+   `Governance.getProposal(21)` — Daten: `(target, data, eta, executed,
+   cancelled)` gegen die gepinnten Konstanten `QUEUED`/`QUEUED_ETA`/
+   `POOL_FEE_INNER`; jede Abweichung, unreachable RPC oder wrong chain wirft.
+3. Pins → `executeBatch()` → Safe Transaction Builder JSON — Daten:
+   `execute(21)` Bytes, `value: 0`, chainId 1.
+4. `test/fork/PoolFeeReceiverFork.test.js` (Fork exakt 26119897) →
+   impersonated Treasury Safe sendet die generierten Bytes → Daten:
+   `poolFeeReceiver()` = BuybackController, 1%-Fee fließt an den Controller,
+   FeeRouterV1 wächst nicht, `withdrawIFR` durch Governance; Negativ: Read
+   mit `blockTag` 26108024 (pre-queue) → refusal.
+5. Fixture-Hop (nur Library, kein CLI): `build(id)` (kein Chain-Read,
+   schreibt nie Dateien) ← `scripts/test-pool-fee-receiver-proposal.cjs`.
+
+### 13.3 Module
+
+| Modul | Eine Aufgabe | Einstieg | Stand |
+| --- | --- | --- | --- |
+| proposal generator | Safe-Batch + pinned Verifikation | `scripts/pool-fee-receiver-proposal.cjs::buildVerifiedExecute` | gebaut |
+| governance timelock | queued execute nach ETA | `contracts/governance/Governance.sol::execute` | gebaut (deployed) |
+| fork proof | post-queue Execution #21 | `test/fork/PoolFeeReceiverFork.test.js` | gebaut |
+| runbook | Schritte + pre-sign validation | `docs/POOL_FEE_RECEIVER.md` | gebaut |
+
+### 13.4 Verdrahtung
+
+- Der Generator liest nur; Signieren/Executen bleibt beim Safe (kein Key hier).
+- `verifyQueuedProposal` ist die einzige Quelle der execute-Bytes im
+  `--execute`-Modus; die CLI kennt nur `--execute` (T-242a: `--fixture` entfernt).
+- CI (contracts workflow) läuft nur den Unit-Test; der Fork-Test braucht
+  einen Archive-RPC und läuft manuell.
+
+### 13.5 Widerspruch und Lücken
+
+- `build(id)` bleibt als Fixture exportiert (Unit-Test); der produktive
+  Pfad geht nur über `--execute` mit Verifikation.
+- In FeeRouterV1 gestrandete IFR bleiben unberührt (kein Sweep); diese Spur
+  behauptet keine automatische Liquidity/Recovery für Altbestände.
+
+### 13.6 Diagrammdateien
+
+- Keine neuen; diese Spur ändert `docs/architecture/map.puml` und
+  `main-path.puml` nicht (Shared-Dateien, PR-übergreifende Konflikte).
+
+```mermaid
+mindmap
+  root((Queued pool fee batch binding))
+    proposal generator
+      gebaut: buildVerifiedExecute
+      gebaut: verifyQueuedProposal
+      gebaut: rpcCaller
+      gebaut: build (fixture)
+    governance timelock
+      gebaut: Governance.execute
+    fork proof
+      gebaut: PoolFeeReceiverFork
+    runbook
+      gebaut: POOL_FEE_RECEIVER.md
+```
+
+### 13.7 Nächster Schritt
+
+Change only `scripts/pool-fee-receiver-proposal.cjs`,
+`scripts/test-pool-fee-receiver-proposal.cjs`,
+`test/fork/PoolFeeReceiverFork.test.js`, `docs/POOL_FEE_RECEIVER.md` und der
+Lane-3-Eintrag in `docs/GOVERNANCE_PRODUCT_DECISION_REGISTER.md`.
+Guardian-Spur (Trace 12), Contracts und Deployments bleiben unberührt.
+
+## 14. Benefits PWA install shell trace
+
+Scope: task T-266. One surface only: the install/identity shell of
+`apps/benefits-network/frontend` — web app manifest, service-worker release
+versioning, iOS standalone meta and the home install card. Wallet,
+eligibility, backend, privacy and data storage are untouched.
+
+### 14.1 Grundidee
+
+The Benefits frontend is an installable PWA served from
+`https://shop.ifrunit.tech`. Install identity must be stable (`id`, `scope`,
+`start_url` all `/`), the Android/WebAPK icon must survive maskable cropping
+(safe zone), iOS must get standalone hints via apple meta tags, and every
+release must move clients to the new asset set by bumping the service-worker
+cache name plus registration query in lockstep.
+
+### 14.2 Spur (Hop-Liste)
+
+1. browser → `public/manifest.json` — Daten: install identity (`id`, `scope`,
+   `start_url`), `purpose: "any"` icons, `purpose: "maskable"` 512 icon,
+   narrow/wide `screenshots`.
+2. `src/app/layout.tsx` metadata → `<head>` — Daten: `manifest` link, iOS
+   standalone meta (`appleWebApp`), apple-touch-icon 180, theme color.
+3. `src/app/layout.tsx` inline script → `navigator.serviceWorker.register(
+   '/sw.js?v=<n>', { updateViaCache: 'none' })` — Daten: versioned SW URL;
+   `controllerchange` triggers at most one reload per release per session.
+4. `public/sw.js` install/activate — Daten: `CACHE_NAME =
+   'ifr-benefits-v<n>'` precache of manifest/icons/offline shell; activation
+   deletes only stale `ifr-benefits-*` caches.
+5. `src/app/page.tsx::PwaInstallCard` — Daten: `beforeinstallprompt` /
+   platform detection → install CTA and per-platform steps.
+
+### 14.3 Module
+
+| Modul | Eine Aufgabe | Einstieg | Stand |
+| --- | --- | --- | --- |
+| benefits pwa manifest | install identity, icons (any + maskable), screenshots | `apps/benefits-network/frontend/public/manifest.json` | gebaut |
+| benefits ios shell meta | iOS standalone capability, status bar, app title, touch icon | `apps/benefits-network/frontend/src/app/layout.tsx` (metadata `appleWebApp`) | gebaut |
+| benefits sw release | cache-name + registration-version bump so clients pick up the new manifest | `public/sw.js::CACHE_NAME` + `layout.tsx` register URL | gebaut |
+| benefits install card | platform-aware install guidance and prompt | `src/app/page.tsx::PwaInstallCard` | gebaut (unveraendert) |
+| benefits sw contract tests | version pins and lifecycle assertions for the SW release | `scripts/test-benefits-service-worker.js`, `scripts/test-benefits-offline-shell.js`, `scripts/smoke-benefits-network.js` | gebaut |
+
+### 14.4 Verdrahtung
+
+- Cache name (`sw.js`) and registration query (`layout.tsx`) always move
+  together; the contract tests pin both to the same release number.
+- The maskable icon is generated from the canonical `ifr-token-512-v11.png`
+  scaled into the 80 % safe zone on `background_color` #F5F1E8; the `any`
+  icons stay byte-identical to the token-list assets (sha256-pinned).
+- Manifest screenshots are real captures of the home route (narrow 780x1688,
+  wide 2880x1620) stored under `public/screenshots/`.
+
+### 14.5 Widerspruch und Lücken
+
+- iOS still has no in-page install prompt; the card documents the share-sheet
+  path (unchanged behavior, now with correct standalone meta).
+- `orientation: portrait` remains a product decision, not a defect.
+
+### 14.6 Diagrammdateien
+
+- Keine neuen; `docs/architecture/map.puml` und `main-path.puml` unveraendert.
+
+### 14.7 Nächster Schritt
+
+Done in this diff: manifest identity/maskable/screenshots, iOS meta, SW
+release v24, version-pin sync in the three contract tests. Untouched by
+design: wallet flow, eligibility, backend, privacy/local-data surfaces and
+the install-card component itself.

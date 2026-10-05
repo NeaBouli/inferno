@@ -5,13 +5,14 @@ import { ethers } from 'ethers';
 const IFR_LOCK = '0x0000000000000000000000000000000000000011';
 const IFR_TOKEN = '0x0000000000000000000000000000000000000066';
 const COMMITMENT_VAULT = '0x0000000000000000000000000000000000000077';
+const COMMITMENT_VAULT_V2 = '0x0000000000000000000000000000000000000088';
 const PARTNER_VAULT = '0x0000000000000000000000000000000000000022';
 const BUILDER_REGISTRY = '0x0000000000000000000000000000000000000033';
 const REWARD_CALLER = '0x0000000000000000000000000000000000000044';
 const OWNER = '0x0000000000000000000000000000000000000055';
 const PARTNER_ID = `0x${'ab'.repeat(32)}`;
 
-const mockConfig = {
+const mockConfig: Record<string, unknown> = {
   CHAIN_ID: 1,
   RPC_URL: 'http://127.0.0.1:1',
   IFR_TOKEN_ADDRESS: IFR_TOKEN,
@@ -75,6 +76,9 @@ type RpcState = {
   ifrLockBalanceRaw: bigint;
   commitmentToken: string;
   commitmentTranches: Array<[bigint, number, bigint, bigint, boolean, bigint]>;
+  commitmentV2Token: string;
+  commitmentV2Tranches: Array<[bigint, number, bigint, bigint, boolean, bigint]>;
+  failNextCommitmentV2Read: boolean;
   missingCodeAddress?: string;
   observedLockThreshold?: bigint;
 };
@@ -91,6 +95,9 @@ const state: RpcState = {
   ifrLockBalanceRaw: ethers.parseUnits('2500.125', 9),
   commitmentToken: IFR_TOKEN,
   commitmentTranches: [],
+  commitmentV2Token: IFR_TOKEN,
+  commitmentV2Tranches: [],
+  failNextCommitmentV2Read: false,
 };
 
 function encode(types: readonly string[], values: readonly unknown[]) {
@@ -125,6 +132,19 @@ function contractCall(to: string, data: string): string {
     }
     if (selector === commitmentInterface.getFunction('getTranches')!.selector) {
       return commitmentInterface.encodeFunctionResult('getTranches', [state.commitmentTranches]);
+    }
+  }
+
+  if (target === COMMITMENT_VAULT_V2.toLowerCase()) {
+    if (state.failNextCommitmentV2Read) {
+      state.failNextCommitmentV2Read = false;
+      throw new Error('Simulated CommitmentVault V2 RPC read failure');
+    }
+    if (selector === commitmentInterface.getFunction('ifrToken')!.selector) {
+      return encode(['address'], [state.commitmentV2Token]);
+    }
+    if (selector === commitmentInterface.getFunction('getTranches')!.selector) {
+      return commitmentInterface.encodeFunctionResult('getTranches', [state.commitmentV2Tranches]);
     }
   }
 
@@ -258,6 +278,10 @@ describe('Ethers v6 service boundaries', () => {
     state.ifrLockBalanceRaw = ethers.parseUnits('2500.125', 9);
     state.commitmentToken = IFR_TOKEN;
     state.commitmentTranches = [];
+    state.commitmentV2Token = IFR_TOKEN;
+    state.commitmentV2Tranches = [];
+    state.failNextCommitmentV2Read = false;
+    delete mockConfig.COMMITMENT_VAULT_V2_ADDRESS;
     state.missingCodeAddress = undefined;
     state.observedLockThreshold = undefined;
   });
@@ -389,6 +413,67 @@ describe('Ethers v6 service boundaries', () => {
     initProvider();
     await expect(checkBenefitEligibility(OWNER, 1000, 0, 'commitment_time_only'))
       .rejects.toThrow('CommitmentVault bytecode is missing');
+  });
+
+  it('ifr-benefits-verify/2: adds CommitmentVault V2 TIME_ONLY tranches to V1 at the same block', async () => {
+    mockConfig.COMMITMENT_VAULT_V2_ADDRESS = COMMITMENT_VAULT_V2;
+    state.commitmentTranches = [
+      [ethers.parseUnits('600', 9), 0, 100n, 0n, false, 0n],
+      [ethers.parseUnits('9000', 9), 1, 0n, 200n, false, 0n],
+    ];
+    state.commitmentV2Tranches = [
+      [ethers.parseUnits('400', 9), 0, 200n, 0n, false, 0n],
+      [ethers.parseUnits('5000', 9), 0, 50n, 0n, true, 0n],
+    ];
+    initProvider();
+
+    await expect(checkBenefitEligibility(OWNER, 1000, 0, 'commitment_time_only'))
+      .resolves.toMatchObject({
+        eligible: true,
+        commitmentAmount: '1000.0',
+        verifiedLockSource: 'commitment_time_only',
+      });
+    expect(state.callBlockTags).toHaveLength(4);
+    expect(new Set(state.callBlockTags)).toEqual(new Set(['0x10']));
+  });
+
+  it('ifr-benefits-verify/2: V2 is never added to IFRLock for either-source rules', async () => {
+    mockConfig.COMMITMENT_VAULT_V2_ADDRESS = COMMITMENT_VAULT_V2;
+    state.ifrLockBalanceRaw = ethers.parseUnits('600', 9);
+    state.commitmentV2Tranches = [[ethers.parseUnits('600', 9), 0, 100n, 0n, false, 0n]];
+    initProvider();
+
+    await expect(checkBenefitEligibility(OWNER, 1000, 0, 'either'))
+      .resolves.toMatchObject({ eligible: false, ifrLockAmount: '600.0', commitmentAmount: '600.0', verifiedLockSource: null });
+  });
+
+  it('ifr-benefits-verify/2: fails closed on V2 missing code, token mismatch, read failure and V1=V2 config', async () => {
+    mockConfig.COMMITMENT_VAULT_V2_ADDRESS = COMMITMENT_VAULT_V2;
+    state.missingCodeAddress = COMMITMENT_VAULT_V2;
+    initProvider();
+    await expect(checkBenefitEligibility(OWNER, 1000, 0, 'commitment_time_only'))
+      .rejects.toThrow('CommitmentVault V2 bytecode is missing');
+
+    state.missingCodeAddress = undefined;
+    state.commitmentV2Token = OWNER;
+    initProvider();
+    await expect(checkBenefitEligibility(OWNER, 1000, 0, 'either'))
+      .rejects.toThrow('CommitmentVault V2 token does not match');
+
+    state.commitmentV2Token = IFR_TOKEN;
+    state.failNextCommitmentV2Read = true;
+    initProvider();
+    await expect(checkBenefitEligibility(OWNER, 1000, 0, 'commitment_time_only')).rejects.toThrow();
+
+    mockConfig.COMMITMENT_VAULT_V2_ADDRESS = COMMITMENT_VAULT;
+    expect(() => initProvider()).toThrow('must differ from COMMITMENT_VAULT_ADDRESS');
+  });
+
+  it('ifr-benefits-verify/2: an IFRLock-only rule never reads V2', async () => {
+    mockConfig.COMMITMENT_VAULT_V2_ADDRESS = COMMITMENT_VAULT_V2;
+    state.failNextCommitmentV2Read = true;
+    initProvider();
+    await expect(checkBenefitEligibility(OWNER, 1000, 0, 'ifrlock')).resolves.toMatchObject({ eligible: true });
   });
 
   it('fails closed when the eligibility RPC is on the wrong chain', async () => {

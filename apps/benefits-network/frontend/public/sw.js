@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ifr-benefits-v23';
+const CACHE_NAME = 'ifr-benefits-v24';
 const NAVIGATION_TIMEOUT_MS = 5000;
 const PRECACHE_URLS = [
   '/',

@@ -8,7 +8,7 @@ async function lockCommand(ctx) {
 
   if (!wallet) {
     return ctx.reply(
-      '🔒 Usage: /lock <wallet-address>\n\nExample:\n/lock 0x6b36687b0cd4386fb14cf565B67D7862110Fed67'
+      '🔒 Usage: /lock <wallet-address>\n\nExample:\n/lock 0x1234567890123456789012345678901234567890'
     );
   }
 

@@ -7,6 +7,11 @@ export const metadata: Metadata = {
   title: 'IFR Benefits | Customer & Seller App',
   description: 'Customer and seller app for IFR locked-access benefits, QR verification, discounts and shop integrations.',
   applicationName: 'IFR Benefits',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'IFR Benefits',
+  },
   category: 'Web3 benefits',
   keywords: ['IFR Benefits', 'Inferno Protocol', 'IFRLock', 'customer discounts', 'seller benefits', 'Web3 loyalty'],
   manifest: '/manifest.json',
@@ -67,13 +72,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <link rel="icon" href="/icons/ifr-token-64-v11.png" type="image/png" sizes="64x64" />
         <link rel="shortcut icon" href="/icons/favicon-v11.ico" type="image/x-icon" />
         <link rel="apple-touch-icon" href="/icons/ifr-token-180-v11.png" sizes="180x180" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
         <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
       </head>
       <body className="shop-body min-h-screen antialiased">
         <Providers>{children}</Providers>
         <script
           dangerouslySetInnerHTML={{
-            __html: `if('serviceWorker' in navigator){const hadController=Boolean(navigator.serviceWorker.controller);let swStore=null;try{window.sessionStorage.setItem('ifr-benefits-sw-probe','1');window.sessionStorage.removeItem('ifr-benefits-sw-probe');swStore=window.sessionStorage}catch(error){}if(hadController&&swStore){navigator.serviceWorker.addEventListener('controllerchange',()=>{const nextController=navigator.serviceWorker.controller;if(!nextController||!nextController.scriptURL)return;const reloadKey='ifr-benefits-sw-reload:'+nextController.scriptURL;try{if(swStore.getItem(reloadKey)==='1')return;swStore.setItem(reloadKey,'1')}catch(error){return}window.location.reload()})}window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js?v=23',{updateViaCache:'none'}).catch(()=>{})})}`,
+            __html: `if('serviceWorker' in navigator){const hadController=Boolean(navigator.serviceWorker.controller);let swStore=null;try{window.sessionStorage.setItem('ifr-benefits-sw-probe','1');window.sessionStorage.removeItem('ifr-benefits-sw-probe');swStore=window.sessionStorage}catch(error){}if(hadController&&swStore){navigator.serviceWorker.addEventListener('controllerchange',()=>{const nextController=navigator.serviceWorker.controller;if(!nextController||!nextController.scriptURL)return;const reloadKey='ifr-benefits-sw-reload:'+nextController.scriptURL;try{if(swStore.getItem(reloadKey)==='1')return;swStore.setItem(reloadKey,'1')}catch(error){return}window.location.reload()})}window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js?v=24',{updateViaCache:'none'}).catch(()=>{})})}`,
           }}
         />
       </body>

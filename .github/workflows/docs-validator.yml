@@ -25,8 +25,11 @@ on:
       - 'scripts/check-cwa-remediation-register.cjs'
       - 'scripts/test-cwa-content-coherence.cjs'
       - 'scripts/test-docs-truth.cjs'
+      - 'scripts/test-ifr-benefits-widget.cjs'
+      - 'apps/benefits-network/frontend/src/components/WalletStatus.tsx'
       - 'deployments/mainnet.json'
       - 'scripts/check-sitemap-anchors.cjs'
+      - 'scripts/test-sitemap-anchors.cjs'
       - 'scripts/check-july-audit-remediation-register.cjs'
       - 'scripts/test-docs-workflow.cjs'
       - 'scripts/check-markdownlint-baseline.cjs'
@@ -82,8 +85,11 @@ on:
       - 'scripts/check-cwa-remediation-register.cjs'
       - 'scripts/test-cwa-content-coherence.cjs'
       - 'scripts/test-docs-truth.cjs'
+      - 'scripts/test-ifr-benefits-widget.cjs'
+      - 'apps/benefits-network/frontend/src/components/WalletStatus.tsx'
       - 'deployments/mainnet.json'
       - 'scripts/check-sitemap-anchors.cjs'
+      - 'scripts/test-sitemap-anchors.cjs'
       - 'scripts/check-july-audit-remediation-register.cjs'
       - 'scripts/test-docs-workflow.cjs'
       - 'scripts/check-markdownlint-baseline.cjs'
@@ -249,6 +255,9 @@ jobs:
       - name: Check CWA content-coherence remediations
         run: npm run test:cwa-content
 
+
+      - name: Check CommitmentVault page copy consistency (CV-01)
+        run: node scripts/test-commitment-vault-copy.cjs
       - name: Check docs truth matrix (components, Safes, tests, coverage, apps)
         run: npm run test:docs-truth
 
@@ -282,6 +291,9 @@ jobs:
       - name: Check wallet-core read RPC fallback and chainId guard (T-212a)
         run: npm run test:wallet-core-rpc
 
+      - name: Verify Web3 wallet core RPC fallback
+        run: npm run test:web3-wallet-core-rpc
+
       - name: Check Web3 serving-layer security headers contract
         run: npm run test:web3-headers
 
@@ -308,6 +320,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Check read-only scripts refuse non-Mainnet RPC
+        run: node scripts/test-readonly-scripts-chain.cjs
+
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
@@ -322,6 +337,9 @@ jobs:
 
       - name: Run Web3 write-flow suite
         run: npm run test:web3-write
+
+      - name: Verify serverless IFR Benefits widget rules and published SRI
+        run: node scripts/test-ifr-benefits-widget.cjs
 
       - name: Run Landing live transparency and Wiki shell suite
         run: npm run test:landing-wiki-ui

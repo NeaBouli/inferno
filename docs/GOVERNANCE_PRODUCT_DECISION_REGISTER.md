@@ -53,6 +53,12 @@ remains the only place where agenda items and vote outcomes are published.
 - **Production gate:** separate recorded decision, then Safe proposal plus
   48-hour timelock for deployment wiring and any price activation.
 - **Next evidence:** approved V2 specification and passing lifecycle test suite.
+- **Decision record (3 October 2026, owner):** option A. LendingVault V1 is retired:
+  borrowing stays disabled (`ifrPriceWei` stays unset; Governance could technically set it, but no activation is planned or authorized) and no V2 is planned for
+  now. A V2 follows only after a reviewed price source shared with Lane 2. Before the withdrawals
+  V1 held 52,155,440.952845656 IFR, all lender offers (C2 20,156,940.952845656, C1 16,999,000,
+  C3 14,999,500), 0 loans; `withdrawOffer` returned the full amount for each on a Mainnet fork.
+  The lenders are withdrawing their offers; these IFR are not lost.
 
 ## Lane 2 — CommitmentVault price-lock V2 and V1 fail-closed boundary
 
@@ -76,9 +82,13 @@ remains the only place where agenda items and vote outcomes are published.
   - There is no rescue or upgrade path, so the tranches are permanently locked.
   - Urgent Council proposal CV-01 compensates from the LP Reserve Safe by each tranche's original
     conditions ([CV-01](wiki/commitment-vault-compensation.html)).
-- **Decision needed:** Option A (CommitmentVaultV2), Option B (dedicated
-  PriceLockVault) or Option C (defer). Oracle model and rescue path for
-  locks whose condition can never be met.
+- **Decision needed:** none; decided 2026-10-03: Option B. A dedicated
+  `PriceLockVault` is built and deployed later; price locks stay disabled
+  until an on-chain readiness scope (pool WETH depth and/or TWAP) holds, and
+  activation is a Governance proposal that reverts if the scope is not met. Price conditions use a
+  7-day TWAP; every lock has a mandatory rescue time of at most 4 years
+  ([specification](PRICE_LOCK_VAULT_SPEC.md)). CommitmentVault V2 stays
+  `TIME_ONLY`.
 - **Prerequisites:** proof contract with tests for zero reserves, stale
   observations, token order, decimal scaling and post-trigger price drops.
 - **Dependencies:** Lane 1 oracle policy; pool liquidity depth.
@@ -89,7 +99,9 @@ remains the only place where agenda items and vote outcomes are published.
 - **Testnet/staging gate:** Sepolia deployment with every condition type.
 - **Production gate:** separate recorded decision plus Safe proposal and
   48-hour timelock.
-- **Next evidence:** Option A/B/C decision record; proof contract test report.
+- **Next evidence:** Sepolia rehearsal log; readiness reaching the
+  activation scope. The independent review of `PriceLockVault` is done
+  (second review T-256); the vault is not deployed and not active.
 
 ## Lane 3 — FeeRouter sink/accrual and Governance/guardian redeployment
 
@@ -116,6 +128,17 @@ remains the only place where agenda items and vote outcomes are published.
 - **Production gate:** separate recorded decision per migration step, each via
   Safe proposal and 48-hour timelock.
 - **Next evidence:** sink-vs-receiver decision record; migration rehearsal log.
+- **Decision record (3 October 2026, owner):** option B. Future IFR pool fees go to
+  BuybackController through `InfernoToken.setPoolFeeReceiver` (Governance proposal, 48-hour
+  timelock; pending execution). The 724,992.668043224 IFR already in FeeRouterV1 (block
+  26,108,134) stay permanently lost and are disclosed as lost, not burned. Guardian model
+  decided the same day: Treasury Safe (CWA-09); voucher signer moves to a dedicated key (CWA-06).
+- **Execution status (4 October 2026):** option B is queued as Governance proposal #21
+  (`InfernoToken.setPoolFeeReceiver(BuybackController)`, ETA 2026-10-05 00:18:23 UTC; read-only
+  evidence at block 26119897). The step-2 execute batch is written only after on-chain
+  exact-content verification of the queued proposal (`scripts/pool-fee-receiver-proposal.cjs
+  --execute`, T-242); fork proof at exactly block 26119897 in
+  `test/fork/PoolFeeReceiverFork.test.js`. Runbook: `docs/POOL_FEE_RECEIVER.md`.
 
 ## Lane 4 — PartnerVault/BuilderRegistry rewards and pilot-partner gate
 
@@ -207,15 +230,29 @@ remains the only place where agenda items and vote outcomes are published.
   ([runbook](runbooks/IFR_SDK_NPM_RELEASE.md)). Creator Gateway source exists
   in the repository; no production deployment record exists
   ([spec](CREATOR_GATEWAY.md)).
-- **Decision needed:** embedded-wallet provider and single recovery trust
-  model, or continued external-wallet-only; SDK license owner, package name
-  and npm owner; Creator Gateway hosting model and first creator pilot.
+- **Decision (2026-10-03, project):** (1) external self-custody wallets only;
+  no embedded wallet is planned and the Sepolia prototype stays a prototype
+  (open-source, community-driven project). (2) Publish `ifr-sdk` under MIT from
+  the project npm account `ifr-protocol` (project alias e-mail, 2FA), never a
+  personal account: one manual bootstrap version, then only the fail-closed
+  workflow dispatched on protected `main` with npm Trusted Publishing and owner
+  approval ([runbook](runbooks/IFR_SDK_NPM_RELEASE.md)).
+- **Decision needed:** Creator Gateway hosting model. Proposed: a public demo
+  instance on the sandbox host with wallet and IFRLock checks only (no
+  Google/YouTube OAuth, no personal data) plus a self-hosting quickstart;
+  first creator pilot.
 - **Private follow-on boundary:** a gated content product may follow as a
   separate private product. Public repositories only acknowledge that planned
   boundary; its implementation details stay outside this repository.
 - **Prerequisites:** embedded-wallet acceptance matrix complete; approved
   `LICENSE` file; Creator Gateway deployment runbook.
 - **Dependencies:** Lane 4 reward caller for creator rewards.
+- **Decision (point 3, 2026-10-03):** use-case connection needs no partner or
+  user server and no new project-run service. Discounts run through the existing
+  IFR Benefits shop; partner websites may add the display-only serverless widget
+  and communities use Guild.xyz or Collab.Land with an IFRLock contract-read
+  condition ([guide](wiki/integrate-benefits.html)). The Creator Gateway stays
+  optional self-hosting only.
 - **Impact:** npm publication is irreversible for a published version; an
   embedded-wallet feature flag is reversible, but user wallets created under it
   must stay exportable.
