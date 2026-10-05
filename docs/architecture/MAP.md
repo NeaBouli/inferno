@@ -805,8 +805,8 @@ full-migration rehearsal stays pinned to exactly block 26108024.
 must refuse to write execute bytes unless the queued proposal still matches
 the approved operation exactly. Steps 1-3 of the guardian migration already
 ran live (`docs/GUARDIAN_MIGRATION.md`); only execute (#19
-LiquidityReserve, #20 BurnReserve `setGuardian(Treasury Safe)`, ETA 2026-10-04 23:56:11 UTC) is
-open. Read-only evidence: block 26119897.
+LiquidityReserve, #20 BurnReserve `setGuardian(Treasury Safe)`, ETA 2026-10-04 23:56:11 UTC) was
+open; it executed on 2026-10-05 in block 26124647. Read-only evidence: block 26119897.
 
 ### 12.2 Spur (Hop-Liste)
 
@@ -897,8 +897,8 @@ generated from verified on-chain content, never from a caller-supplied id.
 must refuse to write execute bytes unless the queued proposal still matches
 the approved operation exactly. Proposal #21
 (`InfernoToken.setPoolFeeReceiver(BuybackController)`, ETA 2026-10-05
-00:18:23 UTC) is queued; only execute is open. Read-only evidence: block
-26119897.
+00:18:23 UTC) was queued and executed on 2026-10-05 in block 26124660.
+Read-only evidence: block 26119897.
 
 ### 13.2 Spur (Hop-Liste)
 

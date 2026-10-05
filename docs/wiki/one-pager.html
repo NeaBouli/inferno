@@ -676,7 +676,7 @@
 
       <ul>
         <li><strong>Burn-on-transfer:</strong> 2.5% of each standard transfer between non-exempt addresses is permanently burned (2% sender + 0.5% recipient), making IFR continuously deflationary.</li>
-        <li><strong>Buyback mechanism:</strong> BuybackVault can use deposited ETH to buy IFR and split output between BurnReserve and Treasury. It is currently separate from the IFR transfer-pool fee held by FeeRouterV1.</li>
+        <li><strong>Buyback mechanism:</strong> BuybackVault can use deposited ETH to buy IFR and split output between BurnReserve and Treasury. It is separate from the IFR transfer-pool fee (held by FeeRouterV1 until Proposal #21, sent to BuybackController since 05.10.2026).</li>
         <li><strong>Lock = Tier:</strong> Lock IFR in the IFRLock contract to unlock Bronze / Silver / Gold / Platinum access across all partner products.</li>
         <li><strong>Builder rewards:</strong> PartnerVault distributes IFR to builders when users lock through their integrations &mdash; 4% of supply reserved.</li>
       </ul>

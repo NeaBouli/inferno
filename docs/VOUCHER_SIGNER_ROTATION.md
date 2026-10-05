@@ -1,13 +1,17 @@
 # Voucher Signer Rotation (CWA-06)
 
-**Status:** queued. Governance proposal 18 (`FeeRouterV1.setVoucherSigner`, ETA 2026-10-04 23:25:47 UTC) is
-pending execution. Every Mainnet and production step below is performed by the host operator or the Safe
-signers, never by automation.
+**Status:** executed and active (5 October 2026). The Treasury Safe executed Governance proposal 18
+(`FeeRouterV1.setVoucherSigner(0x790D99c320dafA03d83bEa152178A6523b49CA0d)`) on 2026-10-05 07:17:47 UTC in block
+26124623, TX [`0x40a856b9…cd89679`](https://etherscan.io/tx/0x40a856b9f994a17390c042abe851c5ff99ca86289eb86316eb119f465cd89679).
+`FeeRouterV1.voucherSigner()` now returns `0x790D…CA0d`, and the points backend activated the same signer within the
+same minute (reported active signer = on-chain signer). Steps 1-5 are done; step 6 (Safe owner key replacement) is
+outside this repository and tracked separately. Every Mainnet and production step below is performed by the host
+operator or the Safe signers, never by automation.
 
 ## Why
 
-`FeeRouterV1.voucherSigner()` is `0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4`, which is also an owner of all three
-project Safes. The points backend signs discount vouchers with `VOUCHER_SIGNER_PRIVATE_KEY`, so that Safe owner key
+Until proposal 18, `FeeRouterV1.voucherSigner()` was `0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4`, which is also an
+owner of all three project Safes. The points backend signs discount vouchers with `VOUCHER_SIGNER_PRIVATE_KEY`, so that Safe owner key
 sits on an internet-facing host. A host compromise would yield one of the three Safe signatures needed.
 
 The voucher key can only grant protocol-fee discounts (`discountBps`, bounded uses and expiry). It cannot move funds.
@@ -23,9 +27,9 @@ A dedicated key that owns nothing else keeps that small blast radius and separat
    `MAINNET_RPC_URL=<rpc> node scripts/voucher-signer-rotation-proposal.cjs <new address> 18 ./cwa06-safe`.
    It accepts only proposal 18 and its signer, and writes `cwa06-voucher-step2-execute.json` only after a chainId 1
    RPC returns proposal 18 with the exact target, data and ETA, not executed and not cancelled.
-4. **Execute after the ETA (Treasury Safe).** Import `cwa06-voucher-step2-execute.json`; check `execute(18)` on
+4. **Execute after the ETA (Treasury Safe).** Done: block 26124623, 2026-10-05 07:17:47 UTC. Import `cwa06-voucher-step2-execute.json`; check `execute(18)` on
    Governance.
-5. **Activate (host operator).** `bash scripts/ops/rotate-voucher-signer.sh activate` takes a lock on the host and
+5. **Activate (host operator).** Done on 2026-10-05, the same minute as step 4. `bash scripts/ops/rotate-voucher-signer.sh activate` takes a lock on the host and
    refuses unless a Mainnet RPC (chainId 1, well-formed responses) shows proposal 18 as executed, not cancelled,
    with the pinned ETA and `setVoucherSigner(<prepared address>)` on FeeRouterV1, and reports the prepared key as the
    on-chain signer. The first run copies the original `.env.points-backend` to
@@ -38,7 +42,7 @@ A dedicated key that owns nothing else keeps that small blast radius and separat
    `cp -p .env.points-backend.voucher-rotation.bak .env.points-backend` in the host root and recreate the container;
    keep the backup in place. A missing, foreign or inconsistent backup, marker or staging file, or a leftover lock
    from a killed run, stops `activate` before the env file changes; resolve it by hand.
-6. **Replace the Safe owner key.** The former signer swaps `0x17F8…72d4` for a fresh wallet in all three Safes,
+6. **Replace the Safe owner key (open, outside this repository).** The former signer swaps `0x17F8…72d4` for a fresh wallet in all three Safes,
    because that key was stored on the host.
 
 Between steps 4 and 5, vouchers signed with the old key are rejected on-chain; run step 5 promptly.

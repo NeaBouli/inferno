@@ -74,7 +74,7 @@ Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every standard
 
 Custody figures verified on-chain at block 26,065,893; the block-pinned breakdown lives on the [transparency page](https://ifrunit.tech/wiki/transparency.html).
 
-The 1% IFR transfer-pool fee accrues to FeeRouterV1, which has no IFR withdrawal or forwarding function: these fees stay there as a de-facto sink and are not forwarded to BuybackVault or BurnReserve (at block 26,065,893 both held 0 IFR while FeeRouterV1 held 722,304.949548316 IFR). No buyback/burn flywheel is fed by the pool fee today.
+Until 5 October 2026 the 1% IFR transfer-pool fee accrued to FeeRouterV1, which has no IFR withdrawal or forwarding function: these fees stay there as a de-facto sink and are not forwarded to BuybackVault or BurnReserve (at block 26,065,893 both held 0 IFR while FeeRouterV1 held 722,304.949548316 IFR). No buyback/burn flywheel is fed by the pool fee today. Since Governance Proposal #21 (executed 5 October 2026, block 26,124,660) new pool fees go to BuybackController, where Governance can recover the IFR through `withdrawIFR`; the 734,545.074097347 IFR in FeeRouterV1 as of that block stay there.
 Team tokens: 48-month vesting, 12-month cliff. Liquidity reserve: initial lock ended 01.09.2026; staged Governance-controlled withdrawals remain unused.
 
 ## Fair Launch
@@ -187,7 +187,7 @@ All smart contracts are open source and community review is explicitly encourage
 
 - **Internal Audit:** [docs/SECURITY_AUDIT_SKYWALKER.md](docs/SECURITY_AUDIT_SKYWALKER.md) — 0 FAIL, 20 active WARN, 1 fixed, 81 PASS
 - **OKComputer Community Audit (27.07.2026):** [current finding-by-finding status](docs/community-audits/JULY_2026_REMEDIATION_REGISTER.md) · [preserved original and provenance](docs/community-audits/README.md) — 12 fixed and verified, 3 partially remediated, 1 outdated snapshot corrected, 4 governance/future-version gated, 2 accepted or monitored and 1 open actionable; not a professional third-party certification
-- **Collateral Web3 Open Audits (14.09.2026):** [seven reports and provenance](docs/community-audits/README.md) · [CWA-01…CWA-82 remediation register](docs/community-audits/CWA_REMEDIATION_REGISTER.md) · [consolidated PDF](docs/community-audits/IFR_Protocol_CWA_Consolidated_Audit_Report_2026-09-14.pdf) — 53 fixed and verified; 5 findings remain directly actionable
+- **Collateral Web3 Open Audits (14.09.2026):** [seven reports and provenance](docs/community-audits/README.md) · [CWA-01…CWA-82 remediation register](docs/community-audits/CWA_REMEDIATION_REGISTER.md) · [consolidated PDF](docs/community-audits/IFR_Protocol_CWA_Consolidated_Audit_Report_2026-09-14.pdf) — 56 fixed and verified; 5 findings remain directly actionable
 - **Submit a Finding:** [GitHub Private Vulnerability Reporting](https://github.com/NeaBouli/inferno/security/advisories/new)
 - **Security Policy:** [SECURITY.md](SECURITY.md)
 

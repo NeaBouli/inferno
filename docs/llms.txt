@@ -32,7 +32,7 @@ IFR includes a read-only AI Copilot assistant for general protocol and surface-s
 
 - The seven Collateral Web3 Open Audits reports are published for transparency; they are not a professional certification.
 - The preserved 27 July community audit (one owner-requested company-name redaction) has a separate maintained register: 12 fixed and verified, 3 partially remediated, 1 outdated snapshot corrected, 4 governance or future-version gated, 2 accepted or monitored, and 1 open actionable. Historical severity colors are not current status.
-- Current remediation disposition: 53 fixed and verified, 11 governance or owner gated, 2 accepted or monitored, 5 open actionable, 11 informational.
+- Current remediation disposition: 56 fixed and verified, 8 governance or owner gated, 2 accepted or monitored, 5 open actionable, 11 informational.
 - Current canonical evidence: contracts 681/681, Generator Engine 30/30, IFR SDK 36/36, Landing/Wiki browser 26/26, Web3 browser 45/45.
 - Benefits physical device/wallet acceptance remains 1/10; automated browser tests are not a substitute for the pending physical cases.
 
@@ -43,8 +43,8 @@ IFR includes a read-only AI Copilot assistant for general protocol and surface-s
 - Current Supply: 997,673,879.091903855 IFR at block 25812380 (~2.326M burned)
 - Decimals: 9
 - Default Burn Rate: 2.5% per standard transfer between non-exempt addresses (permanent)
-- Default Pool Fee: 1.0% per standard transfer between non-exempt addresses (to FeeRouterV1, which has no IFR withdrawal path; decided 3 October 2026: future pool fees move to BuybackController, pending Governance execution)
-- Permanently lost IFR: 27,143,460.66 IFR are permanently lost (not burned; still counted in totalSupply): 26,418,467.99 IFR in CommitmentVault V1 price-conditioned tranches (CV-01) and 724,992.67 IFR of pool fees in FeeRouterV1 (CWA-02), verified at block 26,108,134 on 3 October 2026.
+- Default Pool Fee: 1.0% per standard transfer between non-exempt addresses (to BuybackController since Governance Proposal #21, executed 5 October 2026 at block 26,124,660; until then to FeeRouterV1, which has no IFR withdrawal path)
+- Permanently lost IFR: 27,153,013.07 IFR are permanently lost (not burned; still counted in totalSupply): 26,418,467.99 IFR in CommitmentVault V1 price-conditioned tranches (CV-01) and 734,545.07 IFR of pool fees in FeeRouterV1 (CWA-02), as of block 26,124,660 on 5 October 2026. In that block Proposal #21 stopped the pool-fee inflow to FeeRouterV1; direct transfers to that address remain possible, so its part is read live.
 - Default Total Fee: 3.5% per standard transfer between non-exempt addresses (hard cap: 5.0%); fully bypassed when either endpoint is fee-exempt
 - Governance: 48-hour proposal timelock; guardian rotation is the documented untimelocked exception
 - Multisig: All Safes 3-of-5 (5 independent signers)

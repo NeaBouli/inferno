@@ -247,8 +247,9 @@ All ownable contracts transferred to Governance (48h Timelock). Parameter change
 | CommitmentVault | `owner()` | Governance — [`0x0719d9eb...73d3`](https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3) (deployed 04.04.2026) |
 | LendingVault | `owner()` | Governance — [`0x974305Ab...9DF`](https://etherscan.io/address/0x974305Ab0EC905172e697271C3d7d385194EB9DF) (deployed 04.04.2026) |
 | BuybackController | `owner()` | Governance — [`0x1e0547D5...F7c`](https://etherscan.io/address/0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c) (deployed 14.04.2026; feeExempt executed via Proposal #13 on 16.04.2026) |
-| IFRLock | `guardian()` | Deployer (emergency pause only) |
-| Vesting | `guardian()` | Deployer (emergency pause only) |
+| IFRLock | `guardian()` | Treasury Safe (emergency pause only; guardian migration step 1) |
+| Vesting | `guardian()` | Treasury Safe (emergency pause only; guardian migration step 1) |
+| LiquidityReserve / BurnReserve | `guardian()` | Treasury Safe (Proposals #19/#20, executed 5 October 2026, block 26124647) |
 | Governance | `owner()` | TreasurySafe 3-of-5 (transferred 20.03.2026, TX `0xcd9f99d2...19c46c3`) |
 
 ### Governance Proposals (Mainnet)
@@ -280,9 +281,9 @@ All ownable contracts transferred to Governance (48h Timelock). Parameter change
 | Proposal #15: setFeeExempt(LP Token) | **Executed** (08.06.2026) |
 | CommitmentVault V2 deployed (CV-01 repair) | **Done** (02.10.2026) — [`0x8efae0C8...`](https://etherscan.io/address/0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F#code) — TX [`0x9857a570...`](https://etherscan.io/tx/0x9857a5707b650b8828f41b893f91a10ff26d7990742e782bb0b7e86df23ea0f7); Etherscan verified (full solc input) and Sourcify exact match |
 | Proposal #17: setFeeExempt(CommitmentVault V2) | **Executed** (4 October 2026, 22:01:23 UTC, block 26121846) — queued 2 October 2026 by TreasurySafe 3-of-5, TX [`0x6e113b6c...`](https://etherscan.io/tx/0x6e113b6cc66a369604d46c3b4a5560f1418302de6ecc371f1217d72aeabd39bd); executed TX [`0xbb53640c...`](https://etherscan.io/tx/0xbb53640ca8fd59513c8c772a0ceb633d63d7d9837768c28535bd67da6c4a835c) |
-| Proposal #18: FeeRouterV1 setVoucherSigner (CWA-06) | **Queued, executable** — ETA 4 October 2026 23:25:47 UTC passed; `execute(18)` by the TreasurySafe |
-| Proposals #19/#20: LiquidityReserve / BurnReserve setGuardian(Treasury Safe) | **Queued, executable** — ETA 4 October 2026 23:56:11 UTC passed; `execute(19)` and `execute(20)` by the TreasurySafe |
-| Proposal #21: setPoolFeeReceiver(BuybackController) | **Queued, executable** — ETA 5 October 2026 00:18:23 UTC passed; `execute(21)` by the TreasurySafe |
+| Proposal #18: FeeRouterV1 setVoucherSigner (CWA-06) | **Executed** (5 October 2026, 07:17:47 UTC, block 26124623) — TreasurySafe, TX [`0x40a856b9...`](https://etherscan.io/tx/0x40a856b9f994a17390c042abe851c5ff99ca86289eb86316eb119f465cd89679); `FeeRouterV1.voucherSigner()` = `0x790D99c320dafA03d83bEa152178A6523b49CA0d` |
+| Proposals #19/#20: LiquidityReserve / BurnReserve setGuardian(Treasury Safe) | **Executed** (5 October 2026, 07:22:47 UTC, block 26124647) — one TreasurySafe TX [`0xa432f061...`](https://etherscan.io/tx/0xa432f061d42d3cbf306e44cf27394da5f70443d8d765cb1cfea66e17be19df27); `guardian()` of both = Treasury Safe `0x5ad6193e...cE3b` |
+| Proposal #21: setPoolFeeReceiver(BuybackController) | **Executed** (5 October 2026, 07:25:23 UTC, block 26124660) — TreasurySafe, TX [`0x8de48b47...`](https://etherscan.io/tx/0x8de48b47dfa8f17b631fb744bc4deef9bbb68271f8b700b422cdd3abb739ca26); pool-fee inflow to FeeRouterV1 stopped; FeeRouterV1 IFR balance 734,545.074097347 IFR as of this block |
 | Transfer InfernoToken Ownership to Governance | **Done** (2026-03-05) |
 | Transfer LiquidityReserve Ownership to Governance | **Done** (2026-03-05) |
 | Transfer BurnReserve Ownership to Governance | **Done** (2026-03-05) |

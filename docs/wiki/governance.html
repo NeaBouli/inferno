@@ -836,9 +836,9 @@
               Cannot propose or execute
             </td>
             <td>
-              Deployer EOA<br>
-              <span class="address">0x6b36687b0cd4386fb14cf565B67D7862110Fed67</span><br>
-              <span style="font-size:0.75rem;color:var(--muted);">Emergency cancel only &mdash; no governance power</span>
+              Treasury Safe (3-of-5)<br>
+              <span class="address">0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b</span><br>
+              <span style="font-size:0.75rem;color:var(--muted);">Emergency cancel only &mdash; no governance power. Moved from the Deployer EOA on 3 October 2026 (block 26108062)</span>
             </td>
           </tr>
           <tr>
@@ -856,7 +856,7 @@
 
       <div class="callout callout-green">
         <p>
-          <strong>Note:</strong> The Owner role was transferred to TreasurySafe (Gnosis Safe 3-of-5) on 20.03.2026. All proposals now require 3-of-5 multisig signatures. The Guardian (Deployer EOA) retains only the emergency <code>cancel()</code> function &mdash; it cannot propose or execute.
+          <strong>Note:</strong> The Owner role was transferred to TreasurySafe (Gnosis Safe 3-of-5) on 20.03.2026. All proposals now require 3-of-5 multisig signatures. Since 3 October 2026 the Guardian is the Treasury Safe as well (guardian migration, CWA-09); it retains only the emergency <code>cancel()</code> function &mdash; it cannot propose or execute.
         </p>
       </div>
 
@@ -1177,26 +1177,29 @@ await governance.execute(proposalId);</code></pre>
           <tr>
             <td>#18</td>
             <td><code>setVoucherSigner(0x790D99c3&hellip;CA0d)</code> on FeeRouterV1<br>
-              <span class="address">Voucher signer rotation (CWA-06). Target: <code>0x4807B77B...C60a</code></span>
+              <span class="address">Voucher signer rotation (CWA-06). Target: <code>0x4807B77B...C60a</code></span><br>
+              <span class="address" style="font-size:11px;color:var(--muted);">Execute TX: <a href="https://etherscan.io/tx/0x40a856b9f994a17390c042abe851c5ff99ca86289eb86316eb119f465cd89679" target="_blank">0x40a856b9&hellip;9679</a> &middot; Block 26124623 &middot; FeeRouterV1.voucherSigner = 0x790D&hellip;CA0d &#x2705;</span>
             </td>
-            <td>ETA 04.10.2026 23:25:47 UTC</td>
-            <td><span class="badge" style="background:#6b7280;">Queued</span></td>
+            <td>ETA 04.10.2026 23:25:47 UTC &middot; Executed 05.10.2026 07:17 UTC</td>
+            <td><span class="badge status-ok">&#x2705; Executed 05.10.2026</span></td>
           </tr>
           <tr>
             <td>#19 / #20</td>
             <td><code>setGuardian(Treasury Safe)</code> on LiquidityReserve and BurnReserve<br>
-              <span class="address">Guardian migration from the Deployer to the Treasury Safe <code>0x5ad6193e...cE3b</code></span>
+              <span class="address">Guardian migration from the Deployer to the Treasury Safe <code>0x5ad6193e...cE3b</code></span><br>
+              <span class="address" style="font-size:11px;color:var(--muted);">Execute TX: <a href="https://etherscan.io/tx/0xa432f061d42d3cbf306e44cf27394da5f70443d8d765cb1cfea66e17be19df27" target="_blank">0xa432f061&hellip;df27</a> &middot; one Safe TX for both &middot; Block 26124647 &middot; guardian() of both = Treasury Safe &#x2705;</span>
             </td>
-            <td>ETA 04.10.2026 23:56:11 UTC</td>
-            <td><span class="badge" style="background:#6b7280;">Queued</span></td>
+            <td>ETA 04.10.2026 23:56:11 UTC &middot; Executed 05.10.2026 07:22 UTC</td>
+            <td><span class="badge status-ok">&#x2705; Executed 05.10.2026</span></td>
           </tr>
           <tr>
             <td>#21</td>
             <td><code>setPoolFeeReceiver(BuybackController)</code> on InfernoToken<br>
-              <span class="address">New IFR pool fees go to BuybackController <code>0x1e0547D5...F7c</code>; the balance already held by FeeRouterV1 stays lost (CWA-02)</span>
+              <span class="address">New IFR pool fees go to BuybackController <code>0x1e0547D5...F7c</code>; the balance already held by FeeRouterV1 stays lost (CWA-02)</span><br>
+              <span class="address" style="font-size:11px;color:var(--muted);">Execute TX: <a href="https://etherscan.io/tx/0x8de48b47dfa8f17b631fb744bc4deef9bbb68271f8b700b422cdd3abb739ca26" target="_blank">0x8de48b47&hellip;ca26</a> &middot; Block 26124660 &middot; FeeRouterV1 IFR balance 734,545.074097347 IFR as of this block &#x2705;</span>
             </td>
-            <td>ETA 05.10.2026 00:18:23 UTC</td>
-            <td><span class="badge" style="background:#6b7280;">Queued</span></td>
+            <td>ETA 05.10.2026 00:18:23 UTC &middot; Executed 05.10.2026 07:25 UTC</td>
+            <td><span class="badge status-ok">&#x2705; Executed 05.10.2026</span></td>
           </tr>
           <tr>
             <td>Planned</td>

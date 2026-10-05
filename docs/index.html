@@ -2044,7 +2044,7 @@ render();
             <div class="alloc-row-track"><div class="alloc-row-fill" data-width="4" style="background:#457B9D;"></div></div>
           </div>
           <p style="font-size:11px;color:var(--text-muted);margin-top:12px;line-height:1.6;">
-            <strong>Protocol contracts:</strong> FeeRouterV1 receives the 1% IFR pool fee. BuybackController handles separate ETH protocol fees and can buy/burn/add LP when funded.<br>
+            <strong>Protocol contracts:</strong> BuybackController receives the 1% IFR pool fee since Proposal #21 (05.10.2026; FeeRouterV1 before) and also handles separate ETH protocol fees and can buy/burn/add LP when funded.<br>
             <strong>Bootstrap (Plan B):</strong> ~200M IFR was funded to BootstrapVaultV3. finalise() used 100M IFR + 0.030 ETH for the Uniswap V2 LP and reserved 100M IFR for contributor claims; all 3 contributors have claimed.<br>
             <strong>Liquidity Reserve:</strong> Initial timelock ended 01.09.2026. All 200M IFR remains in the contract; up to 50M IFR is currently available under its 90-day cap, but no withdrawal or LP addition has executed. Not used for Bootstrap.
           </p>
@@ -2278,7 +2278,7 @@ render();
             <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(251,191,36,0.15);color:#92400e;">Timelock</span>
           </div>
           <a href="https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#6F655A;text-decoration:none;">0xc43d48E7...E8caD041</a>
-          <div style="font-size:10px;color:#666;margin-top:4px;">48h timelock. Owner: TreasurySafe 3-of-5. Guardian: Deployer (cancel only).</div>
+          <div style="font-size:10px;color:#666;margin-top:4px;">48h timelock. Owner: TreasurySafe 3-of-5. Guardian: TreasurySafe (cancel only).</div>
         </div>
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
@@ -3727,7 +3727,8 @@ if (isLocked) {
   }
 
   // Permanently lost IFR (not burned; still in totalSupply). CV-01 is fixed; FeeRouterV1 is read live
-  // because it grows until Governance moves the pool-fee receiver. A failed read keeps the last
+  // because direct transfers can still raise it (Proposal #21 stopped the pool-fee inflow at block
+  // 26124660, balance 734,545.074097347 IFR as of that block). A failed read keeps the last
   // verified figure with its date; this metric never renders 0 or "Unavailable".
   // All IFR arithmetic uses 9-decimal base units (BigInt); decimals are formatted only at the UI boundary.
   var LOST_IFR = { cv01Raw: '26418467994338353', feeRouterRaw: '724992668043224', block: 26108134, date: '2026-10-03' };

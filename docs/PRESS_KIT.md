@@ -43,7 +43,7 @@ Every non-exempt transfer: -2.5% permanently burned + 1% routed to the configure
 |-----|------|-------------|
 | Sender Burn | 2.0% | Permanently burned (supply decreases) |
 | Recipient Burn | 0.5% | Permanently burned (supply decreases) |
-| Pool Fee | 1.0% | Configured protocol receiver (currently FeeRouterV1 path) |
+| Pool Fee | 1.0% | Configured protocol receiver (BuybackController since Proposal #21, 5 October 2026; FeeRouterV1 before) |
 | **Total** | **3.5%** | Hard Cap: 5% max |
 
 ## Lock-to-Access Model
