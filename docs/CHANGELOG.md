@@ -17,8 +17,12 @@
   add an unsigned `Governance.propose(PartnerVault.recordMilestone)` template. Amounts use exact EUR
   minor units and IFR base units with floor rounding. No reviewed price source exists yet, so exports
   are diagnostic only.
-- An export or template is not a settlement or payment. No pilot is active, nothing is signed or
-  submitted, and an independent security review is pending.
+- The template is also blocked, and the export stays diagnostic, while a post-pilot redemption that
+  is not a self-redemption has no reward event (one-per-customer outbox limit, policy decision open),
+  or while the budget covers the month only partly. Price evidence is not checked against the chain;
+  a reviewed source with independently reproduced prices stays a first-pilot gate.
+- An export or template is not a settlement or payment. No pilot is active and nothing is signed or
+  submitted.
 
 ## 5 October 2026 — Web3 Wallet Labels Clear of the Copilot Launcher (T-268b)
 

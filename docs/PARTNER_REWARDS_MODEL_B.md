@@ -87,8 +87,21 @@ The Benefits backend settlement mode is implemented (T-275) and default-off: for
 partner the reward queue marks verified post-pilot redemption events `SETTLEMENT_PENDING` instead of
 `BLOCKED_CALLER`, and an operator-only monthly export reconciles them and, only with reviewed price
 evidence, adds an unsigned `recordMilestone` proposal template. No pilot is active and no reviewed
-price evidence source exists yet, so rewards stay disabled. The existing outbox records at most one
-reward event per customer wallet and partner; lifting that needs a separate reviewed migration.
+price evidence source exists yet, so rewards stay disabled.
+
+Open first-pilot gates, all fail closed:
+
+- The existing outbox records at most one reward event per customer wallet and partner, so a repeat
+  customer's later redemptions have no reward event. A month with such a seller-confirmed redemption
+  (not a self-redemption and not before pilot start) is a blocking reconciliation discrepancy, and the
+  export stays diagnostic. The policy decision is still open: accept one reward per customer and
+  partner, or approve a reviewed migration.
+- A month that the partner or global budget covers only partly stays diagnostic. A template would use
+  up that month's milestone ID and the events left out could never be settled. A rule for a final
+  capped period needs its own approval.
+- The export checks price evidence only against its schema and the pilot policy, not against the
+  chain. Before any Safe execution, a reviewed source must be named and the TWAP and ETH/EUR values
+  must be reproduced independently.
 
 ## Activation Checklist per Pilot Partner
 

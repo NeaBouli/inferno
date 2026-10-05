@@ -268,8 +268,16 @@ digest and milestone ID. Only with clean reconciliation, reviewed 7-day TWAP and
 passing on-chain checks does it add an unsigned `Governance.propose(PartnerVault.recordMilestone)`
 template; otherwise the export is diagnostic and has no calldata. No reviewed price evidence source
 exists yet, so every export today is diagnostic. An export or template is not a settlement or payment;
-nothing is marked settled or paid. Remaining gates: independent security review, the first pilot's
-recorded decision and Safe activation, and a reviewed price evidence source.
+nothing is marked settled or paid. After the security review, two cases also block the template and
+leave the export diagnostic:
+
+- a post-pilot redemption that is not a self-redemption but has no reward event (the one-per-customer
+  outbox limit, policy decision still open);
+- a month that the budget covers only partly.
+
+Remaining gates: the first pilot's recorded decision and Safe activation, and a reviewed price
+evidence source whose TWAP and ETH/EUR values are reproduced independently before execution. The
+export does not check price evidence against the chain.
 
 Do not automate PartnerVault rewards for unverified sellers.
 
