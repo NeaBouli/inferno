@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "procedure": "Open ballot. Each eligible Safe signer signs the published ballot text with the signer wallet on Etherscan Verified Signatures; signatures are verified with ecrecover (EIP-191) and recorded here.",
-  "eligibility": "Safe signers of the Treasury, Community and LP Reserve Safes (identical 3-of-5 owner set), snapshot when the ballot opens.",
+  "procedure": "Open ballot. Each listed signer signs one published ballot text of that ballot, unchanged, with the signer wallet on Etherscan Verified Signatures. A vote or abstention counts only if its EIP-191 signature verifies over the exact published text of its choice on its own ballot and recovers to the listed address. Records without such a signature are shown as unverified and not counted.",
+  "eligibility": "Safe signers of the Treasury, Community and LP Reserve Safes (identical 3-of-5 owner set), snapshot when the ballot opens, as listed in this record. The checker verifies signatures against the listed addresses; it does not verify Safe ownership on-chain.",
   "deadline": "None, unless a deadline is approved by a separate Council vote.",
   "display": "Consented initials only.",
   "eligibleSigners": [
@@ -79,6 +79,7 @@
         "OPTION A": "IFR Council vote EX-02\nVote: OPTION A\nOn proposal EX-02 (governance role of centralized exchanges) I vote for Option A: exchanges receive no governance role, no Council membership, no adviser seat and no Safe permissions.\nOption B would have allowed at most two disclosed non-voting advisers without Safe permissions.",
         "OPTION B": "IFR Council vote EX-02\nVote: OPTION B\nOn proposal EX-02 (governance role of centralized exchanges) I vote for Option B: at most two disclosed non-voting exchange advisers, without Council voting rights and without any Safe permissions.\nOption A would give exchanges no governance role at all."
       },
+      "abstainText": "IFR Council vote EX-02\nVote: ABSTAIN\nI abstain on proposal EX-02 (governance role of centralized exchanges). My abstention is not counted as a vote; the option with at least 3 votes from the Safe signers is adopted. The vote stays open without a deadline unless the Council approves a deadline by a separate vote.",
       "eligible": [
         "G.M.",
         "M.G.",
@@ -112,11 +113,7 @@
       "ballot": "CV-01",
       "signer": "G.M.",
       "address": "0x6b36687b0cd4386fb14cf565B67D7862110Fed67",
-      "choice": "ABSTAIN",
-      "messageHash": "0xeb7a389778ff7661778b5c726947f30e342d14c66784518f9ea3cbdba04bada9",
-      "signature": "0x3948d29463548f1c2bf880a50847e467575f9a5b5a6cfe27a5971481200cd9e47b174980e57cd15afba6355783ca84e365f3b62e13d26c2f1baf9681b4f38eae1b",
-      "abstention": true,
-      "linkWithheld": true
+      "choice": "ABSTAIN"
     },
     {
       "ballot": "EX-02",
@@ -125,8 +122,7 @@
       "choice": "ABSTAIN",
       "etherscan": "https://etherscan.io/verifySig/339713",
       "messageHash": "0x59c0d113c9d265bf8c8c04a53e5249b2c3179f30b692bbcd184a455a76e096cc",
-      "signature": "0xd84aff2771d13ed32028da9077c0ba9323941060cc3e6e9589ed9b6618cec0fb63b9468f2e8826f3c1793a4966f07a41a3bdc4af81fdb54cb30458d5e757437f1c",
-      "abstention": true
+      "signature": "0xd84aff2771d13ed32028da9077c0ba9323941060cc3e6e9589ed9b6618cec0fb63b9468f2e8826f3c1793a4966f07a41a3bdc4af81fdb54cb30458d5e757437f1c"
     },
     {
       "ballot": "EX-01",
@@ -162,8 +158,7 @@
       "choice": "ABSTAIN",
       "etherscan": "https://etherscan.io/verifySig/339732",
       "messageHash": "0x59c0d113c9d265bf8c8c04a53e5249b2c3179f30b692bbcd184a455a76e096cc",
-      "signature": "0x80e1b9d300de8e5101b64f1f241f91ad38a5afdf749d11e6dfb6baae0c3fac3f558e5ad01c63242944b1dc8866016dfb12a4c0e5b8798014e5212ee50a9e6f781c",
-      "abstention": true
+      "signature": "0x80e1b9d300de8e5101b64f1f241f91ad38a5afdf749d11e6dfb6baae0c3fac3f558e5ad01c63242944b1dc8866016dfb12a4c0e5b8798014e5212ee50a9e6f781c"
     },
     {
       "ballot": "EX-02",
@@ -172,8 +167,7 @@
       "choice": "ABSTAIN",
       "etherscan": "https://etherscan.io/verifySig/339734",
       "messageHash": "0x59c0d113c9d265bf8c8c04a53e5249b2c3179f30b692bbcd184a455a76e096cc",
-      "signature": "0xd18568ef77f2ce72ed9c6fb951203578a942ad5470cd4b079589c6b0673ea752615f5f76beb1bd552f8d1452702b4205944d6973bb87b37f9c9df175986d32c41c",
-      "abstention": true
+      "signature": "0xd18568ef77f2ce72ed9c6fb951203578a942ad5470cd4b079589c6b0673ea752615f5f76beb1bd552f8d1452702b4205944d6973bb87b37f9c9df175986d32c41c"
     }
   ]
 }

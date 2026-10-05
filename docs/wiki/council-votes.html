@@ -555,15 +555,15 @@
       </p>
 
       <div class="callout">
-        <p><strong>Procedure:</strong> open ballots only. Each eligible Safe signer signs the published ballot text with the signer wallet on <a href="https://etherscan.io/verifiedSignatures" rel="noopener">Etherscan Verified Signatures</a>. Every signature is checked with <code>ecrecover</code> (EIP-191) and recorded on this page. A ballot never executes anything by itself: any on-chain action still needs its own Safe transaction and, where applicable, the 48-hour Governance timelock.</p>
+        <p><strong>Procedure:</strong> open ballots only. Each listed signer signs one published ballot text of that ballot, unchanged, with the signer wallet on <a href="https://etherscan.io/verifiedSignatures" rel="noopener">Etherscan Verified Signatures</a>. A vote or abstention counts only if its signature (EIP-191) verifies over the exact published text of its choice on its own ballot and recovers to the listed wallet; every ballot text names its ballot id, so a signature cannot be reused for another ballot. Records without such a signature are shown as unverified and not counted. A ballot never executes anything by itself: any on-chain action still needs its own Safe transaction and, where applicable, the 48-hour Governance timelock.</p>
       </div>
 
       <h2>Rules</h2>
       <ul>
-        <li><strong>Eligibility:</strong> the Safe signers of the Treasury, Community and LP Reserve Safes (identical 3-of-5 owner set), fixed when a ballot opens. A Council registry may replace this snapshot later.</li>
+        <li><strong>Eligibility:</strong> the Safe signers of the Treasury, Community and LP Reserve Safes (identical 3-of-5 owner set), fixed when a ballot opens, with the wallets listed on this page. The automated check proves that each signature matches a wallet listed in this record; it does not prove Safe ownership on-chain. The owner set can be checked on the Safe pages linked from <a href="https://ifrunit.tech/wiki/transparency.html">Transparency</a>. A Council registry may replace this snapshot later.</li>
         <li><strong>Display:</strong> signers appear only with consented initials. Wallet addresses are public on-chain; no real names are published.</li>
         <li><strong>Deadline:</strong> none, unless a deadline is approved by a separate Council vote.</li>
-        <li><strong>Abstentions</strong> are recorded but not counted as votes. Only their signature hash and Etherscan link are listed.</li>
+        <li><strong>Abstentions</strong> are signed like votes, over the published ABSTAIN text of that ballot, and are not counted as votes. An abstention without a signature over that ballot's published ABSTAIN text is listed as unverified and not counted.</li>
         <li><strong>Status colours:</strong> <span class="phase-badge badge-red">Open</span> before the threshold is reached, <span class="phase-badge badge-yellow">Approved</span> once it is reached, <span class="phase-badge badge-green">Executed</span> after the resulting transaction is executed and linked.</li>
         <li><strong>Secret ballots</strong> are in planning as a separate milestone: anonymous credentials or zero-knowledge membership proofs with a threshold tally. They need a threat model, scheme selection, an independent cryptography and privacy review, and a staging run before any real ballot. Until then all ballots are open.</li>
         <li><strong>Portal:</strong> a page that automates this procedure (connect wallet, sign the predefined text, automatic verification, publication) is planned.</li>
@@ -583,17 +583,17 @@
         <p>Compensate the 11 permanently locked CommitmentVault V1 tranches (26,418,467.994338353 IFR) from the LP Reserve Safe, per tranche, only after each tranche’s original time condition and price target (7-day TWAP) are met.</p>
         <p>Proposal: <a href="https://ifrunit.tech/wiki/commitment-vault-compensation.html">/wiki/commitment-vault-compensation.html</a></p>
         <p><strong>Rule:</strong> Approved with 3 YES votes of eligible Safe signers. Opened 2026-10-03. Deadline: None, unless a deadline is approved by a separate Council vote.</p>
-        <p><strong>Tally:</strong> YES: 2 · NO: 0 · abstentions: 1 · eligible: 5</p>
-        <p class="vote-summary"><strong>Voted:</strong> M.G. (YES), Y.K. (YES) · <strong>Abstained:</strong> G.M. · <strong>Still missing:</strong> A.M., A.P.</p>
+        <p><strong>Tally:</strong> YES: 2 · NO: 0 · abstentions: 0 · unverified (not counted): 1 · eligible: 5</p>
+        <p class="vote-summary"><strong>Voted:</strong> M.G. (YES), Y.K. (YES) · <strong>Abstained:</strong> none · <strong>Unverified, not counted:</strong> G.M. · <strong>Still missing:</strong> A.M., A.P.</p>
         <p style="color:var(--muted);font-size:0.85rem;">The proposal text references repository commit f08ce370 (pre-history-rewrite SHA; the same content is commit 4c3eb668 after the 2026-10-03 history rewrite).</p>
         <div class="table-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
         <table style="min-width:600px;">
           <thead><tr><th>Signer</th><th>Wallet</th><th>Vote</th><th>Proof</th></tr></thead>
           <tbody>
-            <tr><td>G.M.</td><td><a href="https://etherscan.io/address/0x6b36687b0cd4386fb14cf565B67D7862110Fed67" rel="noopener"><code>0x6b36…ed67</code></a></td><td>ABSTAIN</td><td>recorded<div class="sig">hash 0xeb7a389778ff7661778b5c726947f30e342d14c66784518f9ea3cbdba04bada9</div></td></tr>
-            <tr><td>M.G.</td><td><a href="https://etherscan.io/address/0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4" rel="noopener"><code>0x17F8…72d4</code></a></td><td>YES</td><td><a href="https://etherscan.io/verifySig/339696" rel="noopener">etherscan.io/verifySig/339696</a><div class="sig">hash 0xcd65f6fb52dc56020f51268e6217a4561035a2b38c3ecd2ca5d0ddbfa8b572bf</div></td></tr>
+            <tr class="vote-unverified"><td>G.M.</td><td><a href="https://etherscan.io/address/0x6b36687b0cd4386fb14cf565B67D7862110Fed67" rel="noopener"><code>0x6b36…ed67</code></a></td><td>ABSTAIN — unverified</td><td>not recorded: no published signature over the CV-01 ABSTAIN text; not counted</td></tr>
+            <tr><td>M.G.</td><td><a href="https://etherscan.io/address/0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4" rel="noopener"><code>0x17F8…72d4</code></a></td><td>YES</td><td><a href="https://etherscan.io/verifySig/339696" rel="noopener">etherscan.io/verifySig/339696</a><div class="sig">signed: CV-01 YES text · hash 0xcd65f6fb52dc56020f51268e6217a4561035a2b38c3ecd2ca5d0ddbfa8b572bf</div></td></tr>
             <tr><td>A.M.</td><td><a href="https://etherscan.io/address/0x0C4893DcF730E0Ddc7D18CF9723932784Fb4ED74" rel="noopener"><code>0x0C48…ED74</code></a></td><td>not yet voted</td><td>—</td></tr>
-            <tr><td>Y.K.</td><td><a href="https://etherscan.io/address/0xA0860f872a9cAB34817D9a764e71ab43B942b275" rel="noopener"><code>0xA086…b275</code></a></td><td>YES</td><td><a href="https://etherscan.io/verifySig/339697" rel="noopener">etherscan.io/verifySig/339697</a><div class="sig">hash 0xcd65f6fb52dc56020f51268e6217a4561035a2b38c3ecd2ca5d0ddbfa8b572bf</div></td></tr>
+            <tr><td>Y.K.</td><td><a href="https://etherscan.io/address/0xA0860f872a9cAB34817D9a764e71ab43B942b275" rel="noopener"><code>0xA086…b275</code></a></td><td>YES</td><td><a href="https://etherscan.io/verifySig/339697" rel="noopener">etherscan.io/verifySig/339697</a><div class="sig">signed: CV-01 YES text · hash 0xcd65f6fb52dc56020f51268e6217a4561035a2b38c3ecd2ca5d0ddbfa8b572bf</div></td></tr>
             <tr><td>A.P.</td><td><a href="https://etherscan.io/address/0x32cF8b4F29A8F211804857EcF8BF0847f0BC0fE9" rel="noopener"><code>0x32cF…0fE9</code></a></td><td>not yet voted</td><td>—</td></tr>
           </tbody>
         </table>
@@ -623,10 +623,10 @@ Proposal: https://ifrunit.tech/wiki/commitment-vault-compensation.html (reposito
         <table style="min-width:600px;">
           <thead><tr><th>Signer</th><th>Wallet</th><th>Vote</th><th>Proof</th></tr></thead>
           <tbody>
-            <tr><td>G.M.</td><td><a href="https://etherscan.io/address/0x6b36687b0cd4386fb14cf565B67D7862110Fed67" rel="noopener"><code>0x6b36…ed67</code></a></td><td>YES</td><td><a href="https://etherscan.io/verifySig/339715" rel="noopener">etherscan.io/verifySig/339715</a><div class="sig">hash 0x36882b11a781df3f53401e4da19c04b8b51309f592c015d99b2cc3945955240c</div></td></tr>
-            <tr><td>M.G.</td><td><a href="https://etherscan.io/address/0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4" rel="noopener"><code>0x17F8…72d4</code></a></td><td>YES</td><td><a href="https://etherscan.io/verifySig/339733" rel="noopener">etherscan.io/verifySig/339733</a><div class="sig">hash 0x36882b11a781df3f53401e4da19c04b8b51309f592c015d99b2cc3945955240c</div></td></tr>
+            <tr><td>G.M.</td><td><a href="https://etherscan.io/address/0x6b36687b0cd4386fb14cf565B67D7862110Fed67" rel="noopener"><code>0x6b36…ed67</code></a></td><td>YES</td><td><a href="https://etherscan.io/verifySig/339715" rel="noopener">etherscan.io/verifySig/339715</a><div class="sig">signed: EX-01 YES text · hash 0x36882b11a781df3f53401e4da19c04b8b51309f592c015d99b2cc3945955240c</div></td></tr>
+            <tr><td>M.G.</td><td><a href="https://etherscan.io/address/0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4" rel="noopener"><code>0x17F8…72d4</code></a></td><td>YES</td><td><a href="https://etherscan.io/verifySig/339733" rel="noopener">etherscan.io/verifySig/339733</a><div class="sig">signed: EX-01 YES text · hash 0x36882b11a781df3f53401e4da19c04b8b51309f592c015d99b2cc3945955240c</div></td></tr>
             <tr><td>A.M.</td><td><a href="https://etherscan.io/address/0x0C4893DcF730E0Ddc7D18CF9723932784Fb4ED74" rel="noopener"><code>0x0C48…ED74</code></a></td><td>not yet voted</td><td>—</td></tr>
-            <tr><td>Y.K.</td><td><a href="https://etherscan.io/address/0xA0860f872a9cAB34817D9a764e71ab43B942b275" rel="noopener"><code>0xA086…b275</code></a></td><td>YES</td><td><a href="https://etherscan.io/verifySig/339736" rel="noopener">etherscan.io/verifySig/339736</a><div class="sig">hash 0x36882b11a781df3f53401e4da19c04b8b51309f592c015d99b2cc3945955240c</div></td></tr>
+            <tr><td>Y.K.</td><td><a href="https://etherscan.io/address/0xA0860f872a9cAB34817D9a764e71ab43B942b275" rel="noopener"><code>0xA086…b275</code></a></td><td>YES</td><td><a href="https://etherscan.io/verifySig/339736" rel="noopener">etherscan.io/verifySig/339736</a><div class="sig">signed: EX-01 YES text · hash 0x36882b11a781df3f53401e4da19c04b8b51309f592c015d99b2cc3945955240c</div></td></tr>
             <tr><td>A.P.</td><td><a href="https://etherscan.io/address/0x32cF8b4F29A8F211804857EcF8BF0847f0BC0fE9" rel="noopener"><code>0x32cF…0fE9</code></a></td><td>not yet voted</td><td>—</td></tr>
           </tbody>
         </table>
@@ -656,10 +656,10 @@ Context: transfer-fee exemption for verified exchange addresses remains as appro
         <table style="min-width:600px;">
           <thead><tr><th>Signer</th><th>Wallet</th><th>Vote</th><th>Proof</th></tr></thead>
           <tbody>
-            <tr><td>G.M.</td><td><a href="https://etherscan.io/address/0x6b36687b0cd4386fb14cf565B67D7862110Fed67" rel="noopener"><code>0x6b36…ed67</code></a></td><td>ABSTAIN</td><td><a href="https://etherscan.io/verifySig/339713" rel="noopener">etherscan.io/verifySig/339713</a><div class="sig">hash 0x59c0d113c9d265bf8c8c04a53e5249b2c3179f30b692bbcd184a455a76e096cc</div></td></tr>
-            <tr><td>M.G.</td><td><a href="https://etherscan.io/address/0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4" rel="noopener"><code>0x17F8…72d4</code></a></td><td>ABSTAIN</td><td><a href="https://etherscan.io/verifySig/339732" rel="noopener">etherscan.io/verifySig/339732</a><div class="sig">hash 0x59c0d113c9d265bf8c8c04a53e5249b2c3179f30b692bbcd184a455a76e096cc</div></td></tr>
+            <tr><td>G.M.</td><td><a href="https://etherscan.io/address/0x6b36687b0cd4386fb14cf565B67D7862110Fed67" rel="noopener"><code>0x6b36…ed67</code></a></td><td>ABSTAIN</td><td><a href="https://etherscan.io/verifySig/339713" rel="noopener">etherscan.io/verifySig/339713</a><div class="sig">signed: EX-02 ABSTAIN text · hash 0x59c0d113c9d265bf8c8c04a53e5249b2c3179f30b692bbcd184a455a76e096cc</div></td></tr>
+            <tr><td>M.G.</td><td><a href="https://etherscan.io/address/0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4" rel="noopener"><code>0x17F8…72d4</code></a></td><td>ABSTAIN</td><td><a href="https://etherscan.io/verifySig/339732" rel="noopener">etherscan.io/verifySig/339732</a><div class="sig">signed: EX-02 ABSTAIN text · hash 0x59c0d113c9d265bf8c8c04a53e5249b2c3179f30b692bbcd184a455a76e096cc</div></td></tr>
             <tr><td>A.M.</td><td><a href="https://etherscan.io/address/0x0C4893DcF730E0Ddc7D18CF9723932784Fb4ED74" rel="noopener"><code>0x0C48…ED74</code></a></td><td>not yet voted</td><td>—</td></tr>
-            <tr><td>Y.K.</td><td><a href="https://etherscan.io/address/0xA0860f872a9cAB34817D9a764e71ab43B942b275" rel="noopener"><code>0xA086…b275</code></a></td><td>ABSTAIN</td><td><a href="https://etherscan.io/verifySig/339734" rel="noopener">etherscan.io/verifySig/339734</a><div class="sig">hash 0x59c0d113c9d265bf8c8c04a53e5249b2c3179f30b692bbcd184a455a76e096cc</div></td></tr>
+            <tr><td>Y.K.</td><td><a href="https://etherscan.io/address/0xA0860f872a9cAB34817D9a764e71ab43B942b275" rel="noopener"><code>0xA086…b275</code></a></td><td>ABSTAIN</td><td><a href="https://etherscan.io/verifySig/339734" rel="noopener">etherscan.io/verifySig/339734</a><div class="sig">signed: EX-02 ABSTAIN text · hash 0x59c0d113c9d265bf8c8c04a53e5249b2c3179f30b692bbcd184a455a76e096cc</div></td></tr>
             <tr><td>A.P.</td><td><a href="https://etherscan.io/address/0x32cF8b4F29A8F211804857EcF8BF0847f0BC0fE9" rel="noopener"><code>0x32cF…0fE9</code></a></td><td>not yet voted</td><td>—</td></tr>
           </tbody>
         </table>
@@ -676,6 +676,10 @@ Option B would have allowed at most two disclosed non-voting advisers without Sa
 Vote: OPTION B
 On proposal EX-02 (governance role of centralized exchanges) I vote for Option B: at most two disclosed non-voting exchange advisers, without Council voting rights and without any Safe permissions.
 Option A would give exchanges no governance role at all.</pre>
+          <p><strong>ABSTAIN</strong></p>
+          <pre class="vote-text">IFR Council vote EX-02
+Vote: ABSTAIN
+I abstain on proposal EX-02 (governance role of centralized exchanges). My abstention is not counted as a vote; the option with at least 3 votes from the Safe signers is adopted. The vote stays open without a deadline unless the Council approves a deadline by a separate vote.</pre>
         </details>
       </div>
       <!-- council-votes:end -->

@@ -91,7 +91,7 @@
     "test:commitment-v2-proposal": "node scripts/test-commitment-vault-v2-proposal.cjs",
     "test:commitment-v2-fork": "hardhat test test/fork/CommitmentVaultV2Fork.test.js",
     "test:commitment-v2-synthetic-fork": "hardhat test test/fork/CommitmentVaultV2SyntheticRehearsal.test.js",
-    "test:council-votes": "node scripts/verify-council-votes.cjs && node scripts/build-council-votes-page.cjs --check"
+    "test:council-votes": "node scripts/verify-council-votes.cjs && node scripts/test-council-votes.cjs && node scripts/build-council-votes-page.cjs --check"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "4.2.0",

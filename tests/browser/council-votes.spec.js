@@ -21,16 +21,25 @@ for (const viewport of [{ width: 390, height: 844 }, { width: 1440, height: 1000
       for (const vote of data.votes.filter((v) => v.ballot === ballot.id)) {
         const row = rows.filter({ hasText: vote.signer });
         await expect(row).toContainText(vote.choice);
-        if (vote.linkWithheld) await expect(row.locator("a[href*=\"verifySig\"]")).toHaveCount(0);
-        else await expect(row.locator(`a[href="${vote.etherscan}"]`)).toHaveCount(1);
+        if (!vote.signature) {
+          // No signature over this ballot's published text: shown as unverified, never counted.
+          await expect(row).toContainText("unverified");
+          await expect(row).toContainText("not counted");
+          await expect(row.locator("a[href*=\"verifySig\"]")).toHaveCount(0);
+        } else {
+          await expect(row.locator(`a[href="${vote.etherscan}"]`)).toHaveCount(1);
+          await expect(row).toContainText(`signed: ${ballot.id} ${vote.choice} text`);
+        }
       }
     }
     await expect(page.locator("#cv-01 h3")).toContainText("Open");
     await expect(page.locator("#cv-01")).toContainText("YES: 2");
+    await expect(page.locator("#cv-01")).toContainText("abstentions: 0 · unverified (not counted): 1");
     await expect(page.locator("#ex-01")).toContainText("YES: 3");
     await expect(page.locator("#ex-01 h3")).toContainText("Approved");
     await expect(page.locator("#ex-02 h3")).toContainText("Open");
     await expect(page.locator("#ex-02")).toContainText("abstentions: 3");
+    await expect(page.locator("#ex-02 details")).toContainText("Vote: ABSTAIN");
     // Abstention texts are not republished; only hash and link are shown.
     await expect(page.locator("body")).not.toContainText("belong to my wallets");
     const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
