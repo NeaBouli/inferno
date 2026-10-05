@@ -10,8 +10,25 @@ export interface GeneratedCode {
   deployGuide: string;
 }
 
-function sanitizeName(name: string): string {
-  return name.replace(/[^a-zA-Z0-9]/g, "") || "MyProduct";
+/** Solidity keywords plus the names the generated file imports; a contract name must never equal one. */
+const RESERVED_IDENTIFIERS = new Set(
+  ("abstract address after alias anonymous apply as assembly auto bool break byte bytes calldata case catch constant " +
+    "constructor continue contract copyof default define delete do else emit enum error event external fallback false " +
+    "final for function if immutable implements import in indexed inline int interface internal is let library macro " +
+    "mapping match memory modifier mutable new null of override partial payable pragma private promise public pure " +
+    "receive reference relocatable return returns revert sealed sizeof static storage string struct super supports " +
+    "switch this true try type typedef typeof uint unchecked using var view virtual while " +
+    "BaseAccessModule HardLockModule TierModule CooldownModule Ownable IERC20 ReentrancyGuard").split(" ")
+);
+
+/**
+ * Derives a valid Solidity contract identifier from a free-text product name. Non-alphanumerics are dropped;
+ * a result that starts with a digit (e.g. "3D Print Shop") or is reserved gets a deterministic "IFR" prefix.
+ * The human-readable product name stays unchanged in comments and PRODUCT_NAME.
+ */
+export function contractIdentifier(productName: string): string {
+  const name = (productName.replace(/[^a-zA-Z0-9]/g, "") || "MyProduct") + "Access";
+  return /^[0-9]/.test(name) || RESERVED_IDENTIFIERS.has(name) ? "IFR" + name : name;
 }
 
 /** Printable ASCII only: user text must never break out of a Solidity string literal or comment line. */
@@ -41,8 +58,7 @@ export function hasAccessOverride(useHardLock: boolean, useTier: boolean): strin
 }
 
 export function generateCode(config: BuilderConfig): GeneratedCode {
-  const safeName = sanitizeName(config.productName);
-  const contractName = safeName + "Access";
+  const contractName = contractIdentifier(config.productName);
   const date = new Date().toISOString().split("T")[0];
 
   // Determine modules

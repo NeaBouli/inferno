@@ -49,6 +49,15 @@ combos.push({ name: "cooldown-1h", cfg: { ...full, cooldownHours: 1 } });
 combos.push({ name: "cooldown-720h", cfg: { ...full, cooldownHours: 720 } });
 combos.push({ name: "custom-tiers", cfg: { ...full, tier1Amount: 1000, tier2Amount: 2500, tier3Amount: 50000 } });
 combos.push({ name: "huge-amount", cfg: { ...full, minAmount: 1_000_000_000_000 } });
+// Product names that do not form a valid identifier on their own (digit-leading, digit-only, symbol-only, reserved).
+const NAME_CASES = [
+  { productName: "3D Print Shop", contractName: "IFR3DPrintShopAccess" },
+  { productName: "42", contractName: "IFR42Access" },
+  { productName: "!!! ###", contractName: "MyProductAccess" },
+  { productName: "contract", contractName: "contractAccess" },
+  { productName: "Ownable", contractName: "OwnableAccess" },
+];
+for (const { productName } of NAME_CASES) combos.push({ name: `name-${productName}`, cfg: { ...full, productName } });
 combos.push({ name: "hostile-text", cfg: { ...full, productName: 'X"; } contract Evil { // \\ ünï', productUrl: 'https://e.example/"\\\n} contract Evil2 {' } });
 
 let compiled = 0;
@@ -63,6 +72,12 @@ for (const { name, cfg } of combos) {
   assert.deepEqual(errors, [], `${name}: must compile\n${errors.join("\n")}`);
   assert.deepEqual(contracts, [generated.contractName], `${name}: exactly the generated contract, nothing injected`);
   compiled += 1;
+}
+for (const { productName, contractName } of NAME_CASES) {
+  const generated = generateCode({ ...full, productName });
+  assert.equal(generated.contractName, contractName, `name ${productName}: deterministic contract identifier`);
+  assert.ok(generated.contractCode.includes(`// Product: ${productName}\n`), `name ${productName}: readable name kept in the header`);
+  assert.ok(generated.deployGuide.includes(`contracts/${contractName}.sol`), `name ${productName}: deploy guide file name`);
 }
 const huge = generateCode(combos.find((c) => c.name === "huge-amount").cfg).contractCode;
 assert.match(huge, /1000000000000000000000\) \/\/ 1000000000000 IFR/, "exact 9-decimal base units for large amounts");
@@ -86,6 +101,8 @@ const page = new Function("document", "navigator", "window", "event", `${script[
   {}
 );
 
+const pick = (code, re) => (code.match(re) || [, null])[1];
+
 /** Structural fingerprint: imports, bases, override clause, hasAccess body, base constructor args, tier hook. */
 function structure(code) {
   const pick = (re) => (code.match(re) || [, null])[1];
@@ -100,7 +117,8 @@ function structure(code) {
 }
 
 let parity = 0;
-for (const { name, cfg } of combos.slice(0, 16)) {
+const nameCombos = combos.filter((c) => c.name.startsWith("name-"));
+for (const { name, cfg } of [...combos.slice(0, 16), ...nameCombos]) {
   Object.assign(page.C, cfg);
   el("pName").value = cfg.productName;
   el("pUrl").value = cfg.productUrl;
@@ -108,6 +126,7 @@ for (const { name, cfg } of combos.slice(0, 16)) {
   const pageCode = el("t-contract").textContent;
   const engine = generateCode(cfg);
   assert.deepEqual(structure(pageCode), structure(engine.contractCode), `${name}: engine and builder.html structure differ`);
+  assert.equal(pick(pageCode, /^contract (\S+) is /m), engine.contractName, `${name}: engine and builder.html contract name differ`);
   const { errors } = compile(engine.contractName, pageCode);
   assert.deepEqual(errors, [], `${name}: builder.html output must compile\n${errors.join("\n")}`);
   parity += 1;
