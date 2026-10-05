@@ -1,6 +1,6 @@
 {
   "name": "ifr-sdk",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "IFR Protocol SDK - exact access checks and signer-neutral Benefits checkout",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -12,7 +12,9 @@
       "default": "./dist/index.js"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "sideEffects": false,
   "engines": {
     "node": ">=20 <23"
@@ -23,16 +25,33 @@
     "test:package": "npm run build && node test/package-consumer.cjs",
     "prepublishOnly": "npm test && npm run test:package"
   },
-  "keywords": ["ifr", "web3", "access-control", "lock", "defi", "ethereum"],
+  "keywords": [
+    "ifr",
+    "web3",
+    "access-control",
+    "lock",
+    "defi",
+    "ethereum"
+  ],
   "license": "MIT",
+  "author": "Inferno Protocol contributors",
+  "homepage": "https://github.com/NeaBouli/inferno/tree/main/apps/sdk#readme",
+  "bugs": {
+    "url": "https://github.com/NeaBouli/inferno/issues"
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/NeaBouli/inferno"
+    "url": "git+https://github.com/NeaBouli/inferno.git",
+    "directory": "apps/sdk"
   },
   "dependencies": {
     "ethers": "^6.15.0"
   },
   "devDependencies": {
     "typescript": "^5.0.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
   }
 }

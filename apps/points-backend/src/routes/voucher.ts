@@ -100,7 +100,7 @@ router.post("/issue", requireAuth, requireLockProof, async (req: AuthRequest, re
   }
 });
 
-/** GET /voucher/validate/:nonce — check voucher status */
+/** GET /voucher/validate/:nonce — issued and not expired; redemption is only known on-chain */
 router.get("/validate/:nonce", async (req, res: Response) => {
   const { nonce } = req.params;
 
@@ -119,18 +119,19 @@ router.get("/validate/:nonce", async (req, res: Response) => {
     return;
   }
 
-  if (voucher.usedCount >= voucher.maxUses) {
-    res.json({ valid: false, reason: "Voucher already used", nonce });
-    return;
-  }
-
+  // This service never learns about redemptions: FeeRouterV1 consumes the nonce on-chain
+  // (usedNonces[user][nonce]). "valid" therefore only means issued and not expired; the
+  // on-chain mapping is authoritative for whether the voucher was already used (T-212b-06).
   res.json({
     valid: true,
     nonce,
     discountBps: voucher.discountBps,
     maxUses: voucher.maxUses,
-    usedCount: voucher.usedCount,
     expiresAt: voucher.expiresAt.toISOString(),
+    redemption: {
+      tracked: false,
+      authoritative: "FeeRouterV1.usedNonces(user, nonce)",
+    },
   });
 });
 
