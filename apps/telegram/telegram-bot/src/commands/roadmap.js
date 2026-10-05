@@ -6,7 +6,7 @@ async function roadmapCommand(ctx) {
 ━━━━━━━━━━━━━━━━━━━━━
 
 ✅ *Phase 1 — Foundation (abgeschlossen)*
-• 14 Contracts deployed & verifiziert
+• 15 Contracts deployed & verifiziert
 • Vollständige interne Audits + öffentliche Testnachweise
 • Unabhängiges professionelles Dritt-Audit ausstehend
 • Governance, Vesting, Lock, Burn

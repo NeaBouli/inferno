@@ -59,8 +59,8 @@ the current operational state and must not override the baseline above.
 
 ### On-Chain (Ethereum Mainnet)
 
-17 documented on-chain components (14 protocol contracts + 3 Gnosis Safes); the counted list is in
-[`DEPLOYMENTS.md`](DEPLOYMENTS.md#canonical-mainnet-component-count-17). The table below is the
+18 documented on-chain components (15 deployed protocol contracts + 3 Gnosis Safes); the counted list is in
+[`DEPLOYMENTS.md`](DEPLOYMENTS.md#canonical-mainnet-component-count-18). The table below is the
 10-row March 2026 launch snapshot, not the full inventory. Current ownership, including the
 documented exceptions, is recorded in the same file.
 

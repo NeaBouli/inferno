@@ -65,6 +65,7 @@ IFR includes a read-only AI Copilot assistant for general protocol and surface-s
 
 ## Smart Contracts (all verified on Etherscan)
 
+- Deployed component count: 15 protocol contracts + 3 Gnosis Safes (Treasury, Community, LP Reserve) = 18 documented on-chain components. This is a list of deployed components, not a claim that all are active: CommitmentVault V1 is legacy (existing tranches unlock through V1) and LendingVault V1 is retired. Canonical list: https://github.com/NeaBouli/inferno/blob/main/docs/DEPLOYMENTS.md#canonical-mainnet-component-count-18
 - InfernoToken: 0x77e99917Eca8539c62F509ED1193ac36580A6e7B
 - Governance: 0xc43d48E7FDA576C5022d0670B652A622E8caD041
 - IFRLock: 0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb
@@ -77,9 +78,10 @@ IFR includes a read-only AI Copilot assistant for general protocol and surface-s
 - BootstrapVaultV3: 0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141
 - BuilderRegistry: 0xdfe6636DA47F8949330697e1dC5391267CEf0EE3
 
-## Phase 3 Contracts (deployed April 2026)
+## Phase 3 Contracts (deployed April 2026; CommitmentVault V2 October 2026)
 
 - CommitmentVault: 0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3 — Live self-service wallet locking. TIME_ONLY is operational. The three price-conditioned types can never unlock: the deployed V1 price check always reads zero, regardless of priceOracle configuration, and V1 has no rescue or upgrade path (see CV-01). New locks must be TIME_ONLY. Contributor locks are verified for C1/C2/C3. A read-only four-hour monitor checks feeExempt and balance coverage. 46 tests.
+- CommitmentVault V2: 0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F — CV-01 repair, deployed 2 October 2026, owner Governance, Etherscan verified and Sourcify exact match. Accepts TIME_ONLY locks only; fee-exempt since Governance proposal #17 (executed 4 October 2026, block 26121846). New time locks go to V2; existing V1 tranches unlock through V1.
 - LendingVault: 0x974305Ab0EC905172e697271C3d7d385194EB9DF — RETIRED (V1) since 3 October 2026 (owner decision, Lane 1): borrowing stays disabled by Governance decision (no activation is planned or authorized) and no V2 is planned yet; lenders withdraw their unlent offers with withdrawOffer and those IFR are not lost. Historical flow: guided self-service lender offers. Lenders follow 1-5 steps: connect wallet, choose amount, approve IFR if needed, createOffer(amount), verify live market status. Approval alone is not an offer. Three contributor offers provide 52,155,440.952845656 IFR, with 0 IFR lent. A read-only four-hour monitor compares liquid balance with totalAvailable and reports totalLent separately as a receivable. V1 borrowing is intentionally disabled with ifrPriceWei = 0; activation requires a separately designed and audited bounded/pausable V2 price path. 56 tests.
 - BuybackController: 0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c — deployed and governance-wired to FeeRouterV1. Execution remains subject to the controller's on-chain thresholds and cooldown.
 

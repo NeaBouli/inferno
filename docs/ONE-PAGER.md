@@ -42,7 +42,7 @@ Deflationary + Utility:
 
 ## Post-Launch Roadmap
 
-- [x] Mainnet deployment (17 on-chain components, all verified)
+- [x] Mainnet deployment (18 on-chain components, all verified)
 - [x] Gnosis Safe Multisig deployed
 - [x] Governance Proposal #0 executed
 - [x] Uniswap V2 LP created through BootstrapVaultV3 finalization; LP remains in the withdrawal-less vault

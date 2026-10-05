@@ -10,7 +10,7 @@
 
 **Contract:** [`0x77e99917Eca8539c62F509ED1193ac36580A6e7B`](https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code) | **Network:** Ethereum Mainnet | **Bootstrap:** FINALIZED ✅ June 5, 2026 | **LP Token:** [`0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0`](https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0)
 
-**[17 documented on-chain components](docs/DEPLOYMENTS.md#canonical-mainnet-component-count-17)** (14 protocol contracts + 3 Gnosis Safes) | **Full internal audits** | **Public automated test evidence** | **Independent professional third-party audit pending**
+**[18 documented on-chain components](docs/DEPLOYMENTS.md#canonical-mainnet-component-count-18)** (15 deployed protocol contracts + 3 Gnosis Safes) | **Full internal audits** | **Public automated test evidence** | **Independent professional third-party audit pending**
 
 ### Quick Links
 
@@ -98,7 +98,8 @@ with a 1-year cliff. See [Fair Launch Statement](docs/FAIR_LAUNCH.md).
 | LiquidityReserve | [`0xdc0309804803b3A105154f6073061E3185018f64`](https://etherscan.io/address/0xdc0309804803b3A105154f6073061E3185018f64#code) |
 | BootstrapVaultV3 | [`0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141`](https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141#code) **[FINALIZED ✅ 05.06.2026]** |
 | LP Token (IFR/WETH) | [`0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0`](https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0) — retained in BootstrapVaultV3; Mainnet Team.Finance locker disabled and the vault exposes no LP withdrawal function |
-| CommitmentVault | [`0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3`](https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3#code) |
+| CommitmentVault (V1, legacy) | [`0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3`](https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3#code) — existing tranches unlock through V1 |
+| CommitmentVault V2 | [`0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F`](https://etherscan.io/address/0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F#code) — CV-01 repair, TIME_ONLY, fee-exempt since proposal #17 |
 | BuilderRegistry | [`0xdfe6636DA47F8949330697e1dC5391267CEf0EE3`](https://etherscan.io/address/0xdfe6636DA47F8949330697e1dC5391267CEf0EE3#code) |
 | LendingVault | [`0x974305Ab0EC905172e697271C3d7d385194EB9DF`](https://etherscan.io/address/0x974305Ab0EC905172e697271C3d7d385194EB9DF#code) |
 | BuybackController | [`0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c`](https://etherscan.io/address/0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c#code) |
@@ -113,8 +114,9 @@ with a 1-year cliff. See [Fair Launch Statement](docs/FAIR_LAUNCH.md).
 | LP Reserve Safe | [`0x5D93E7919a71d725054e31017eCA86B026F86C04`](https://app.safe.global/home?safe=eth:0x5D93E7919a71d725054e31017eCA86B026F86C04) |
 
 Documented threshold for all three Safes: 3-of-5 (5 active signers: A.K., M.G., A.M., Y.K., A.P.).
-The 14 protocol contracts above (LP token and deprecated BootstrapVault V1 excluded) plus these
-3 Safes form the [17 documented on-chain components](docs/DEPLOYMENTS.md#canonical-mainnet-component-count-17).
+The 15 deployed protocol contracts above (LP token and deprecated BootstrapVault V1 excluded) plus these
+3 Safes form the [18 documented on-chain components](docs/DEPLOYMENTS.md#canonical-mainnet-component-count-18).
+The count lists deployed components, not a claim that all of them are active.
 
 ## Builder Ecosystem
 

@@ -70,7 +70,7 @@ Key topics you explain:
 - Lock-to-Access: users lock IFR tokens to activate partner-product benefits while each product's required IFR remains locked and that integration remains available
 - Community Bootstrap Event: ENDED 05.06.2026. 100M IFR + 0.030 ETH → Uniswap V2 LP created; 100M IFR reserved for contributor claims. IFR now tradeable on Uniswap.
 - Fair Launch (CFLM): no presale, no VC, no private sale — everyone gets equal access
-- 17 documented on-chain components (14 deployed contracts + 3 Gnosis Safes), with public source, full internal audits and automated test evidence; independent professional third-party audit remains pending
+- 18 documented on-chain components (15 deployed contracts + 3 Gnosis Safes; a deployed list, not a claim that all are active), with public source, full internal audits and automated test evidence; independent professional third-party audit remains pending
 - AI Copilot chat provides general and surface-specific guidance. It does not receive verified wallet balances, lock state or tier context. Direct users to the Web3 or Benefits interfaces for wallet-specific status.
 - Web3 access layer: direct simple users to https://web3.ifrunit.tech/ for wallet connection, buying IFR, adding IFR to wallet, simple refundable IFRLock access, CommitmentVault lock/unlock, LendingVault lender/borrower actions, and pool tracking. Builders, developers, and deeper community/research users should be routed to the relevant Wiki pages.
 - IFR Benefits Network: direct customers and sellers to https://shop.ifrunit.tech/. Customers install the PWA, discover offers, filter by a seller-published city, region or Online service area, and can open the opaque short-lived customer pass at #customer-pass. Seller rules may accept IFRLock, active TIME_ONLY CommitmentVault tranches, or the full threshold in either source; partial source balances are never combined and price-conditioned commitments do not qualify. In checkout, a seller scans/selects one exact rule, the customer confirms exact seller/product/discount/source details in the original browser tab, and approval is redeemed once. Sellers still can run the compatible seller-issued checkout-QR flow (camera/local image/proof-link fallback) for one-time proof and redeem. The service-area filter never requests customer GPS. Seller-entered service-area text is stored and public, so the UI confirms it contains no private or street address. The history signature never moves tokens and its short-lived access stays only in browser memory. PartnerVault seller rewards remain governance-gated.
@@ -129,7 +129,7 @@ ${knowledgeJson}`,
 Provide precise, technical information. Reference specific contract functions and addresses.
 
 Key topics you help with:
-- 17 on-chain components (14 deployed contracts + 3 Gnosis Safes), all verified on Etherscan
+- 18 on-chain components (15 deployed contracts + 3 Gnosis Safes), all verified on Etherscan
 - Security: full internal audits, static analysis and automated test evidence are public; independent professional third-party audit remains pending
 - Governance: 48h timelock, guardian can cancel proposals, owner = TreasurySafe 3-of-5 (since 20.03.2026); full DAO transition remains future work
 - Fee mechanics: 2% sender burn + 0.5% recipient burn + 1% pool fee = 3.5% total
