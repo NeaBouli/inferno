@@ -262,6 +262,14 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 ## RECENTLY COMPLETED
 
+- [x] Governance proposals #18-#21 executed and documented — 2026-10-05 (PR #197, T-258)
+      #18 voucher signer (block 26124623), #19/#20 guardians to Treasury Safe (block 26124647),
+      #21 pool-fee receiver to BuybackController (block 26124660). CWA-02/06/09 fixed and verified.
+      Lost IFR as of block 26124660: 27,153,013.068435700 IFR (read live; direct transfers possible).
+- [ ] Owner confirmation for the former voucher signer key (CWA-06 runbook step 6)
+      Based on the reviewed backend configuration, no Safe-owner key rotation is required by this voucher-signer change.
+      Owner confirmation that the key was not otherwise exposed remains pending. Owner follow-up outside the repository;
+      any custody action needs a separate authorization.
 - [x] Read-only external listing monitor — completed 2026-09-04
       Commands: `npm run check:listing-status` and
       `npm run test:listing-monitor`. Validates both official token lists and

@@ -158,7 +158,7 @@ REMOTE
     [ "$healthy" = 1 ] || die "points-backend did not become healthy; $rollback"
     active=$(remote_active_address)
     [ "$active" = "$addr" ] || die "backend signer is $active, expected $addr; $rollback"
-    # The backup still holds the old Safe-owner key: remove exactly it, the staging file and the marker.
+    # The backup still holds the previous voucher-signer key: remove exactly it, the staging file and the marker.
     ssh "$HOST" "set -euo pipefail; cd '$ROOT'
       [ \"\$(cat '$MARKER')\" = '$BACKUP' ] && test -s '$BACKUP' && test -s '$NEXT' \
         || { echo 'refusing cleanup: marker, backup or staging file changed' >&2; exit 1; }

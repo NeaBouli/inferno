@@ -202,10 +202,20 @@ test("Governance CV-01 roster names five members, G.M.'s abstention and four eli
   await page.goto("/wiki/governance.html");
   const callout = page.locator("h3#agenda-cv-01 + p");
   await expect(callout).toContainText("The Council has five members: M.G., A.M., Y.K., A.P. and G.M.");
-  await expect(callout).toContainText("G.M. abstains from this vote, so the other four are eligible to sign, and 3 YES signatures from them are required.");
+  await expect(callout).toContainText("G.M. abstained. The other four are eligible to sign, and 3 YES signatures from them are required.");
   await expect(callout).toContainText("Two YES signatures (M.G., Y.K.) have been received so far.");
   const row = page.locator("tr", { has: page.locator("td", { hasText: /^CV-01$/ }) });
-  await expect(row).toContainText("5 Council members; G.M. abstains; 4 eligible signers (M.G., A.M., Y.K., A.P.), 3 YES required; 2 YES so far (M.G., Y.K.); not approved");
+  await expect(row).toContainText("5 Council members; G.M. abstained; 4 eligible signers (M.G., A.M., Y.K., A.P.), 3 YES required; 2 YES so far (M.G., Y.K.); not approved");
+});
+
+test("CV-01 states G.M.'s abstention neutrally, without a reason or holding reference", async ({ page }) => {
+  await page.goto("/wiki/commitment-vault-compensation.html");
+  await expect(page.locator("#cv01-vote + p + ul")).toContainText("G.M. abstained.");
+  for (const path of ["/wiki/commitment-vault-compensation.html", "/wiki/governance.html"]) {
+    await page.goto(path);
+    const text = await page.locator("body").innerText();
+    expect(text).not.toMatch(/G\.M\.[^.]*abstain[^.]*(conflict|interest|because|due to|holding|balance)/i);
+  }
 });
 
 test("llms.txt does not suggest that configuring priceOracle could release V1 price tranches", async ({ request }) => {

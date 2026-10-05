@@ -22,7 +22,7 @@ governance-gated contract path is active.
 - Root is ESM with explicit CommonJS boundaries for legacy scripts and
   standalone test packages. Waffle, Ganache and `solidity-coverage` are no
   longer active root dependencies; native Hardhat 3 coverage is used.
-- Current repository verification: contracts `655/655`, Generator Engine
+- Current repository verification: contracts `681/681`, Generator Engine
   `30/30`, IFR SDK `36/36`.
 - Landing/Wiki wallet browser tests `26/26` and Web3 write-path browser tests
   `45/45` passed. The complete Benefits preflight passed.
@@ -55,8 +55,8 @@ the current operational state and must not override the baseline above.
 
 ### On-Chain (Ethereum Mainnet)
 
-17 documented on-chain components (14 protocol contracts + 3 Gnosis Safes); the counted list is in
-[`DEPLOYMENTS.md`](docs/DEPLOYMENTS.md#canonical-mainnet-component-count-17). The table below is the
+18 documented on-chain components (15 deployed protocol contracts + 3 Gnosis Safes); the counted list is in
+[`DEPLOYMENTS.md`](docs/DEPLOYMENTS.md#canonical-mainnet-component-count-18). The table below is the
 10-row March 2026 launch snapshot, not the full inventory. Current ownership, including the
 documented exceptions, is recorded in the same file.
 
