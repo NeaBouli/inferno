@@ -24,6 +24,8 @@
 
 ### Constructor Arguments
 
+Arguments as passed at the Sepolia deployment (historical). Current Mainnet owner and guardian roles are listed in the Mainnet role table.
+
 | Contract | Arguments |
 |----------|-----------|
 | InfernoToken | `deployer` (poolFeeReceiver) |
@@ -247,9 +249,12 @@ All ownable contracts transferred to Governance (48h Timelock). Parameter change
 | CommitmentVault | `owner()` | Governance — [`0x0719d9eb...73d3`](https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3) (deployed 04.04.2026) |
 | LendingVault | `owner()` | Governance — [`0x974305Ab...9DF`](https://etherscan.io/address/0x974305Ab0EC905172e697271C3d7d385194EB9DF) (deployed 04.04.2026) |
 | BuybackController | `owner()` | Governance — [`0x1e0547D5...F7c`](https://etherscan.io/address/0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c) (deployed 14.04.2026; feeExempt executed via Proposal #13 on 16.04.2026) |
-| IFRLock | `guardian()` | Treasury Safe (emergency pause only; guardian migration step 1) |
-| Vesting | `guardian()` | Treasury Safe (emergency pause only; guardian migration step 1) |
-| LiquidityReserve / BurnReserve | `guardian()` | Treasury Safe (Proposals #19/#20, executed 5 October 2026, block 26124647) |
+| Governance | `guardian()` | TreasurySafe 3-of-5 (since 03.10.2026; emergency cancel) |
+| IFRLock | `guardian()` | TreasurySafe 3-of-5 (since 03.10.2026; emergency pause) |
+| Vesting | `guardian()` | TreasurySafe 3-of-5 (since 03.10.2026; emergency pause, no maximum duration) |
+| PartnerVault | `guardian()` | TreasurySafe 3-of-5 (since 03.10.2026; emergency pause) |
+| LiquidityReserve, BurnReserve | `guardian()` | TreasurySafe 3-of-5 (since 05.10.2026; Governance proposals #19/#20 executed at block 26124647) |
+| BuybackVault, BuybackController | `guardian()` | Deployer EOA, immutable (pause/unpause only) |
 | Governance | `owner()` | TreasurySafe 3-of-5 (transferred 20.03.2026, TX `0xcd9f99d2...19c46c3`) |
 
 ### Governance Proposals (Mainnet)
@@ -295,7 +300,7 @@ All ownable contracts transferred to Governance (48h Timelock). Parameter change
 ## Gnosis Safes (Mainnet)
 
 All three project Safes are documented as 3-of-5 with the same five signers
-(A.K., M.G., A.M., Y.K., A.P.). Verify `getThreshold()` and `getOwners()` on
+(G.M., M.G., A.M., Y.K., A.P.). Verify `getThreshold()` and `getOwners()` on
 chain before relying on this record.
 
 | Safe | Address | Role |

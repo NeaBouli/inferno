@@ -113,7 +113,7 @@ with a 1-year cliff. See [Fair Launch Statement](docs/FAIR_LAUNCH.md).
 | Community Safe | [`0xaC5687547B2B21d80F8fd345B51e608d476667C7`](https://app.safe.global/home?safe=eth:0xaC5687547B2B21d80F8fd345B51e608d476667C7) |
 | LP Reserve Safe | [`0x5D93E7919a71d725054e31017eCA86B026F86C04`](https://app.safe.global/home?safe=eth:0x5D93E7919a71d725054e31017eCA86B026F86C04) |
 
-Documented threshold for all three Safes: 3-of-5 (5 active signers: A.K., M.G., A.M., Y.K., A.P.).
+Documented threshold for all three Safes: 3-of-5 (5 active signers: G.M., M.G., A.M., Y.K., A.P.).
 The 15 deployed protocol contracts above (LP token and deprecated BootstrapVault V1 excluded) plus these
 3 Safes form the [18 documented on-chain components](docs/DEPLOYMENTS.md#canonical-mainnet-component-count-18).
 The count lists deployed components, not a claim that all of them are active.
@@ -139,7 +139,7 @@ The ecosystem is open and permissionless. Any product can integrate IFR Lock.
 
 **Automated test evidence** — current exact results are recorded by CI and release preflights. The tables below preserve an older internal inventory and must not be read as a current deduplicated total.
 
-**Current canonical matrix:** contracts **681/681**, Generator Engine **30/30**,
+**Current canonical matrix:** contracts **690/690**, Generator Engine **30/30**,
 IFR SDK **36/36**, Landing/Wiki browser **26/26**, Web3 browser **45/45**.
 See [Current Functionality Status](docs/CURRENT_FUNCTIONALITY_STATUS.md) for
 scope and limitations.

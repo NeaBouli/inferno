@@ -198,19 +198,31 @@ test("Page copy stays accurate: live time-only Web3 state, dated vault balance, 
   }
 });
 
-test("Governance CV-01 roster names five members, G.M.'s abstention and four eligible signers", async ({ page }) => {
+test("Governance CV-01 roster names five eligible signers and G.M.'s unverified, uncounted abstention", async ({ page }) => {
   await page.goto("/wiki/governance.html");
   const callout = page.locator("h3#agenda-cv-01 + p");
   await expect(callout).toContainText("The Council has five members: M.G., A.M., Y.K., A.P. and G.M.");
-  await expect(callout).toContainText("G.M. abstained. The other four are eligible to sign, and 3 YES signatures from them are required.");
+  await expect(callout).toContainText("All five are eligible signers, and 3 YES signatures are required.");
+  await expect(callout).toContainText("G.M.'s abstention is unverified and not counted.");
+  await expect(callout).not.toContainText("other four");
   await expect(callout).toContainText("Two YES signatures (M.G., Y.K.) have been received so far.");
   const row = page.locator("tr", { has: page.locator("td", { hasText: /^CV-01$/ }) });
-  await expect(row).toContainText("5 Council members; G.M. abstained; 4 eligible signers (M.G., A.M., Y.K., A.P.), 3 YES required; 2 YES so far (M.G., Y.K.); not approved");
+  await expect(row).toContainText("5 eligible signers (G.M., M.G., A.M., Y.K., A.P.), 3 YES required; 2 YES so far (M.G., Y.K.); G.M. abstention unverified, not counted; not approved");
+});
+
+test("Governance overview and agenda status match the published Council vote record", async ({ page }) => {
+  await page.goto("/wiki/governance.html");
+  const overview = page.locator("section.governance-overview");
+  await expect(overview).not.toContainText("no ballot scheduled");
+  await expect(overview).toContainText("EX-01 approved on 4 October 2026");
+  await expect(page.locator("#council-agenda ~ div.callout").nth(1)).toContainText("Status: EX-01 approved on 4 October 2026; EX-02 open.");
+  await page.goto("/wiki/commitment-vault-compensation.html");
+  await expect(page.locator("#cv01-vote ~ ul").first()).toContainText("Eligible: all five. G.M.'s abstention is unverified and not counted.");
 });
 
 test("CV-01 states G.M.'s abstention neutrally, without a reason or holding reference", async ({ page }) => {
   await page.goto("/wiki/commitment-vault-compensation.html");
-  await expect(page.locator("#cv01-vote + p + ul")).toContainText("G.M. abstained.");
+  await expect(page.locator("#cv01-vote + p + ul")).toContainText("G.M.'s abstention is unverified and not counted.");
   for (const path of ["/wiki/commitment-vault-compensation.html", "/wiki/governance.html"]) {
     await page.goto(path);
     const text = await page.locator("body").innerText();

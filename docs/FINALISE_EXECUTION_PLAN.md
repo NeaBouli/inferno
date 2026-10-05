@@ -73,7 +73,7 @@ Deployer-Wallet muss **≥ 0.05 ETH** auf Mainnet haben (Gas für finalise + fee
 - [ ] `.env` gesetzt: `DEPLOYER_PRIVATE_KEY` + `MAINNET_RPC_URL`?
 - [ ] Gas ≥ 0.05 ETH auf Deployer-Wallet?
 - [ ] Gas ETH auf ausführender Wallet vorhanden?
-- [ ] Alle 5 Signer informiert (A.K., M.G., A.M., Y.K., A.P.)?
+- [ ] Alle 5 Signer informiert (G.M., M.G., A.M., Y.K., A.P.)?
 
 ---
 
@@ -152,5 +152,5 @@ Häufigste Ursachen:
 ## Kontakte
 
 - TreasurySafe: `0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b` (3-of-5)
-- Signer: A.K., M.G., A.M., Y.K., A.P.
+- Signer: G.M., M.G., A.M., Y.K., A.P.
 - GitHub Issues: [#32](https://github.com/NeaBouli/inferno/issues/32) [#33](https://github.com/NeaBouli/inferno/issues/33) [#34](https://github.com/NeaBouli/inferno/issues/34) [#35](https://github.com/NeaBouli/inferno/issues/35)

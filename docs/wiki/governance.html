@@ -602,6 +602,7 @@
         <li><a href="https://ifrunit.tech/wiki/dao-governance.html">DAO Governance</a></li>
         <li><a href="https://ifrunit.tech/wiki/multisig.html">Multisig Policy</a></li>
         <li><a href="https://ifrunit.tech/wiki/community-signer-expansion.html">Community Signer Expansion</a></li>
+        <li><a href="https://ifrunit.tech/wiki/council-votes.html">Council Votes</a></li>
         <li><a href="https://ifrunit.tech/wiki/transparency.html">Transparency</a></li>
         <li class="nav-divider"></li>
         <li><a href="https://ifrunit.tech/wiki/faq.html">FAQ</a></li>
@@ -673,7 +674,7 @@
       </p>
 
       <section class="governance-overview" data-rag-summary aria-label="Governance status">
-        <p><strong>Live:</strong> Safe-controlled Governance and timelock execution. <strong>Discussion:</strong> EX-01 and EX-02, no ballot scheduled. <strong>Planned:</strong> Council web voting and the Phase 4 DAO.</p>
+        <p><strong>Live:</strong> Safe-controlled Governance and timelock execution. <strong>Council ballots:</strong> EX-01 approved on 4 October 2026 (no IFR incentives for exchanges); EX-02 and CV-01 open; signed votes on <a href="council-votes.html">Council Votes</a>. <strong>Planned:</strong> Council web voting and the Phase 4 DAO.</p>
         <nav class="governance-jumps" aria-label="Governance sections">
           <a href="#council-agenda">Current Council agenda</a>
           <a href="#governance-procedure">Proposal procedure</a>
@@ -837,9 +838,9 @@
               Cannot propose or execute
             </td>
             <td>
-              Treasury Safe (3-of-5)<br>
-              <span class="address">0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b</span><br>
-              <span style="font-size:0.75rem;color:var(--muted);">Emergency cancel only &mdash; no governance power. Moved from the Deployer EOA on 3 October 2026 (block 26108062)</span>
+              TreasurySafe 3-of-5 (since 03.10.2026)<br>
+              <span class="address"><a href="https://etherscan.io/address/0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b" target="_blank">0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b</a></span><br>
+              <span style="font-size:0.75rem;color:var(--muted);">Emergency cancel only &mdash; no governance power. Moved from the deployer EOA <code>0x6b36&hellip;Fed67</code> on 3 October 2026 (block 26108062)</span>
             </td>
           </tr>
           <tr>
@@ -857,7 +858,7 @@
 
       <div class="callout callout-green">
         <p>
-          <strong>Note:</strong> The Owner role was transferred to TreasurySafe (Gnosis Safe 3-of-5) on 20.03.2026. All proposals now require 3-of-5 multisig signatures. Since 3 October 2026 the Guardian is the Treasury Safe as well (guardian migration, CWA-09); it retains only the emergency <code>cancel()</code> function &mdash; it cannot propose or execute.
+          <strong>Note:</strong> The Owner role was transferred to TreasurySafe (Gnosis Safe 3-of-5) on 20.03.2026. All proposals now require 3-of-5 multisig signatures. Since 03.10.2026 the Guardian role is also held by TreasurySafe (guardian migration, CWA-09); it retains only the emergency <code>cancel()</code> function &mdash; it cannot propose or execute. Guardian roles in IFRLock, Vesting and PartnerVault moved to TreasurySafe as well; Since 05.10.2026 (Governance proposals #19 and #20, executed at Mainnet block 26124647) the LiquidityReserve and BurnReserve guardian is TreasurySafe as well. The BuybackVault and BuybackController guardian is immutable and remains the deployer EOA (pause only). Trade-off: an emergency pause or cancel now needs 3-of-5 Safe signatures, there is no independent canceller while guardian and owner are the same Safe, and the Vesting pause has no maximum duration.
         </p>
       </div>
 
@@ -1211,8 +1212,8 @@ await governance.execute(proposalId);</code></pre>
         </tbody>
       </table>
 
-      <h3 style="margin-top:28px;" id="queued-proposals">Queued Protocol Proposals #17&ndash;#21</h3>
-      <p style="font-size:0.85rem;color:var(--muted);">Queued by the Treasury Safe (3-of-5) through the 48-hour Governance timelock. None of these is executed yet; each needs a separate Safe execution after its ETA, and the guardian can still cancel. Status was read on-chain (<code>getProposal</code>) on 03.10.2026.</p>
+      <h3 style="margin-top:28px;" id="queued-proposals">Protocol Proposals #17&ndash;#21 (executed)</h3>
+      <p style="font-size:0.85rem;color:var(--muted);">Queued by the Treasury Safe (3-of-5) through the 48-hour Governance timelock. All five were executed by the Treasury Safe after their ETA: #17 on 4 October 2026 (block 26121846), #18 on 5 October 2026 (block 26124623), #19 and #20 on 5 October 2026 (block 26124647), #21 on 5 October 2026 (block 26124660); execute transactions are linked in the proposal table above.</p>
       <table>
         <thead>
           <tr><th>#</th><th>Action</th><th>Timing</th><th>Status</th></tr>
@@ -1224,7 +1225,7 @@ await governance.execute(proposalId);</code></pre>
               <span class="address" style="font-size:11px;color:var(--muted);">Queue TX: <a href="https://etherscan.io/tx/0x6e113b6cc66a369604d46c3b4a5560f1418302de6ecc371f1217d72aeabd39bd" target="_blank" rel="noopener">0x6e113b6c&hellip;39bd</a> &middot; Block 26107450</span>
             </td>
             <td>Queued 02.10.2026 &middot; executable from 2026-10-04 21:53:11 UTC</td>
-            <td><span class="badge" style="background:#b45309;">Queued &mdash; not executed</span></td>
+            <td><span class="badge status-ok">Executed 04.10.2026</span></td>
           </tr>
           <tr>
             <td>#18</td>
@@ -1232,7 +1233,7 @@ await governance.execute(proposalId);</code></pre>
               <span class="address" style="font-size:11px;color:var(--muted);">Queue TX: <a href="https://etherscan.io/tx/0xa3a9de84f9e08eae1ced941ad7df1f372bffd3f74b3e8b40115b33182fb8914e" target="_blank" rel="noopener">0xa3a9de84&hellip;914e</a> &middot; Block 26107910</span>
             </td>
             <td>Queued 02.10.2026 &middot; executable from 2026-10-04 23:25:47 UTC</td>
-            <td><span class="badge" style="background:#b45309;">Queued &mdash; not executed</span></td>
+            <td><span class="badge status-ok">Executed 05.10.2026</span></td>
           </tr>
           <tr>
             <td>#19</td>
@@ -1240,7 +1241,7 @@ await governance.execute(proposalId);</code></pre>
               <span class="address" style="font-size:11px;color:var(--muted);">Queue TX: <a href="https://etherscan.io/tx/0xfdd90c5ef44efd617af0338fa2e95867cfa45367ac644975774e1b3fae3d394c" target="_blank" rel="noopener">0xfdd90c5e&hellip;394c</a> &middot; Block 26108062</span>
             </td>
             <td>Queued 02.10.2026 &middot; executable from 2026-10-04 23:56:11 UTC</td>
-            <td><span class="badge" style="background:#b45309;">Queued &mdash; not executed</span></td>
+            <td><span class="badge status-ok">Executed 05.10.2026</span></td>
           </tr>
           <tr>
             <td>#20</td>
@@ -1248,7 +1249,7 @@ await governance.execute(proposalId);</code></pre>
               <span class="address" style="font-size:11px;color:var(--muted);">Queue TX: <a href="https://etherscan.io/tx/0xfdd90c5ef44efd617af0338fa2e95867cfa45367ac644975774e1b3fae3d394c" target="_blank" rel="noopener">0xfdd90c5e&hellip;394c</a> &middot; Block 26108062</span>
             </td>
             <td>Queued 02.10.2026 &middot; executable from 2026-10-04 23:56:11 UTC</td>
-            <td><span class="badge" style="background:#b45309;">Queued &mdash; not executed</span></td>
+            <td><span class="badge status-ok">Executed 05.10.2026</span></td>
           </tr>
           <tr>
             <td>#21</td>
@@ -1256,7 +1257,7 @@ await governance.execute(proposalId);</code></pre>
               <span class="address" style="font-size:11px;color:var(--muted);">Queue TX: <a href="https://etherscan.io/tx/0x92b5a6fa719c3e1f1f2f21bec23d2af182d0f9d3cf08ab7d73b092387d33db9f" target="_blank" rel="noopener">0x92b5a6fa&hellip;db9f</a> &middot; Block 26108173</span>
             </td>
             <td>Queued 02.10.2026 &middot; executable from 2026-10-05 00:18:23 UTC</td>
-            <td><span class="badge" style="background:#b45309;">Queued &mdash; not executed</span></td>
+            <td><span class="badge status-ok">Executed 05.10.2026</span></td>
           </tr>
         </tbody>
       </table>
@@ -1766,14 +1767,14 @@ await governance.execute(proposalId);</code></pre>
         <p style="margin:0;"><strong>Urgent vote open: CV-01.</strong> The status below applies to the exchange discussion items EX-01 and EX-02.</p>
       </div>
       <div class="callout" style="background:rgba(249,115,22,0.08);border:1px solid rgba(249,115,22,0.35);border-radius:8px;padding:20px;margin-bottom:24px;">
-        <p style="margin:0;"><strong>Status: undated discussion draft.</strong> No vote is open, no IFR is allocated, and no exchange has Council membership or TreasurySafe permissions. Publishing an agenda item does not authorize spending or an on-chain action. Agenda entries contain no proposer attribution or personal name.</p>
+        <p style="margin:0;"><strong>Status: EX-01 approved on 4 October 2026; EX-02 open.</strong> EX-01 (no IFR incentives for exchanges) was approved with 3 YES votes; it is a policy decision with no on-chain action. EX-02 is an open Council ballot without a deadline. Every signed vote and the tally are recorded on <a href="council-votes.html">Council Votes</a>. No IFR is allocated, and no exchange has Council membership or TreasurySafe permissions. Publishing an agenda item does not authorize spending or an on-chain action. Agenda entries contain no proposer attribution or personal name.</p>
       </div>
 
       <h3 id="agenda-cv-01">Agenda CV-01 &mdash; CommitmentVault V1 Compensation <span class="phase-badge badge-planned">Urgent vote</span></h3>
-      <p>Price-conditioned CommitmentVault V1 tranches holding <strong>26,418,467.994338353 IFR</strong> can never unlock, because the deployed vault has no working price check. The proposal compensates each affected tranche from the <strong>LP Reserve Safe</strong>, following the tranche's original unlock date and price target: a 7-day TWAP from the IFR/WETH pair, with the transfer fee grossed up. No payout happens before Council approval and an executed Safe transaction. Details, the live status of every tranche, the full proposal text and the signed votes: <a href="commitment-vault-compensation.html">CommitmentVault V1 Compensation (CV-01)</a>. The vote is open with no deadline; a deadline can only be set by a separate Council vote. The Council has five members: M.G., A.M., Y.K., A.P. and G.M. G.M. abstained. The other four are eligible to sign, and 3 YES signatures from them are required. Two YES signatures (M.G., Y.K.) have been received so far.</p>
+      <p>Price-conditioned CommitmentVault V1 tranches holding <strong>26,418,467.994338353 IFR</strong> can never unlock, because the deployed vault has no working price check. The proposal compensates each affected tranche from the <strong>LP Reserve Safe</strong>, following the tranche's original unlock date and price target: a 7-day TWAP from the IFR/WETH pair, with the transfer fee grossed up. No payout happens before Council approval and an executed Safe transaction. Details, the live status of every tranche, the full proposal text and the signed votes: <a href="commitment-vault-compensation.html">CommitmentVault V1 Compensation (CV-01)</a>. The vote is open with no deadline; a deadline can only be set by a separate Council vote. The Council has five members: M.G., A.M., Y.K., A.P. and G.M. All five are eligible signers, and 3 YES signatures are required. Two YES signatures (M.G., Y.K.) have been received so far. G.M.'s abstention is unverified and not counted.</p>
 
       <h3>Agenda EX-01 &mdash; Exchange Incentives</h3>
-      <p>The Council will consider whether verified centralized exchanges should receive any IFR support. This question is separate from the already approved <a href="fee-design.html#cex-fee-policy">CEX fee-exemption policy</a>.</p>
+      <p><strong>Approved on 4 October 2026:</strong> centralized exchanges receive no IFR incentives from any project pool; a future incentive requires a new Council proposal. The table below lists the options that were discussed before the ballot. This decision is separate from the already approved <a href="fee-design.html#cex-fee-policy">CEX fee-exemption policy</a>.</p>
 
       <table>
         <thead><tr><th>Discussion option</th><th>Proposed ceiling</th><th>Conditions before any later allocation</th></tr></thead>
@@ -1796,9 +1797,9 @@ await governance.execute(proposalId);</code></pre>
       <table>
         <thead><tr><th>Agenda ID</th><th>Subject</th><th>Date</th><th>State</th><th>Result / execution</th></tr></thead>
         <tbody>
-          <tr><td>CV-01</td><td>CommitmentVault V1 compensation from the LP Reserve Safe</td><td>Opened 2026-10-03, no deadline</td><td>Urgent vote open: 5 Council members; G.M. abstained; 4 eligible signers (M.G., A.M., Y.K., A.P.), 3 YES required; 2 YES so far (M.G., Y.K.); not approved</td><td>None</td></tr>
-          <tr><td>EX-01</td><td>Exchange IFR incentives and funding limits</td><td>Not scheduled</td><td>Discussion draft</td><td>None</td></tr>
-          <tr><td>EX-02</td><td>Exchange advisory, voting or Safe role</td><td>Not scheduled</td><td>Discussion draft</td><td>None</td></tr>
+          <tr><td>CV-01</td><td>CommitmentVault V1 compensation from the LP Reserve Safe</td><td>Opened 2026-10-03, no deadline</td><td>Urgent vote open: 5 eligible signers (G.M., M.G., A.M., Y.K., A.P.), 3 YES required; 2 YES so far (M.G., Y.K.); G.M. abstention unverified, not counted; not approved</td><td>None</td></tr>
+          <tr><td>EX-01</td><td>Exchange IFR incentives and funding limits (ballot: no incentives)</td><td>Opened 2026-10-03; approved 2026-10-04</td><td>Approved (3 YES: G.M., M.G., Y.K.)</td><td>Policy decision, no on-chain action. Signatures: <a href="https://etherscan.io/verifySig/339715" rel="noopener">339715</a>, <a href="https://etherscan.io/verifySig/339733" rel="noopener">339733</a>, <a href="https://etherscan.io/verifySig/339736" rel="noopener">339736</a>; <a href="council-votes.html#ex-01">Council Votes</a></td></tr>
+          <tr><td>EX-02</td><td>Exchange advisory, voting or Safe role (Option A or B)</td><td>Opened 2026-10-03, no deadline</td><td>Open ballot (3 abstentions: G.M., M.G., Y.K.; A.M., A.P. outstanding)</td><td>Open. Three eligible signers abstained; with two signers outstanding no option can reach 3 votes unless votes change. Until a decision, the status quo applies: exchanges have no governance role. The owner is checking whether the outstanding signers want to vote. <a href="council-votes.html#ex-02">Council Votes</a></td></tr>
         </tbody>
       </table>
 
@@ -1811,6 +1812,7 @@ await governance.execute(proposalId);</code></pre>
       <summary>Voting modes, privacy boundaries and release requirements</summary>
       <p><strong>Privacy requirements, not a certification:</strong> the following describes a planned system. Network-level anonymity is not guaranteed. For general background on connection metadata and privacy, see <a href="https://ethereum.org/roadmap/privacy/" target="_blank" rel="noopener noreferrer">Ethereum's privacy roadmap</a>.</p>
       <p>The safe design connects an individual signer wallet, issues a domain-bound expiring EIP-4361 challenge, and checks eligibility against a recorded, block-numbered Council/Safe-owner snapshot. EOA signatures and Safe smart-account signatures require separate verification paths; Safe signatures use EIP-1271. Eligibility fails closed if the snapshot or verification path is unavailable. Every nonce is single-use and every ballot is bound to one immutable agenda version.</p>
+      <p><strong>Current mode (since 3 October 2026):</strong> all ballots are open and run through the Etherscan verified-signature procedure on <a href="council-votes.html">Council Votes</a>. Secret ballots are in planning as a separate milestone (anonymous credential or zero-knowledge membership, threshold tally) behind a threat model, scheme selection, independent cryptography and privacy review, and staging.</p>
       <p><strong>Open and secret ballots are separate modes.</strong> The mode is published when an agenda opens and cannot be changed while voting is active. An open ballot may publish a wallet and initials only where that mapping is already public and the member has consented; otherwise it publishes initials only. Whether a consented public pseudonym may replace initials is an open decision. A secret ballot publishes no wallet, initials, individual vote, signature or voter-linked ballot hash. It publishes only the final turnout count, aggregate result and a verification proof after voting closes.</p>
       <p>Secret voting requires unlinkable eligibility issuance and ballot casting. The planned design therefore separates the service that verifies Council eligibility from the service that accepts an anonymous one-time credential, uses one-time nullifiers to prevent duplicate voting, encrypts ballots for threshold tallying, and exposes only non-identifying commitments and the aggregate proof. The existing Telegram wallet mapper and ordinary SIWE session flow are not suitable for secret ballots.</p>
       <p><strong>Privacy boundary:</strong> the planned portal must retain no source IP, user-agent, request body, wallet-provider telemetry or analytics in application, proxy, error or audit logs. This is a release requirement, not a verified property of a deployed service. No cookies are required for the planned secret-voting mode. Network, hosting, RPC and wallet providers may still process connection metadata; the project cannot honestly promise that an IP address is never seen anywhere on the network path. A production design must document each processor and offer a privacy-preserving access path.</p>

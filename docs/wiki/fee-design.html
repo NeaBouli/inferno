@@ -473,6 +473,7 @@
         <li><a href="https://ifrunit.tech/wiki/dao-governance.html">DAO Governance</a></li>
         <li><a href="https://ifrunit.tech/wiki/multisig.html">Multisig Policy</a></li>
         <li><a href="https://ifrunit.tech/wiki/community-signer-expansion.html">Community Signer Expansion</a></li>
+        <li><a href="https://ifrunit.tech/wiki/council-votes.html">Council Votes</a></li>
         <li><a href="https://ifrunit.tech/wiki/transparency.html">Transparency</a></li>
         <li class="nav-divider"></li>
         <li><a href="https://ifrunit.tech/wiki/faq.html">FAQ</a></li>
@@ -580,7 +581,7 @@
           <tr>
             <td>1.0%</td>
             <td>BuybackController</td>
-            <td>Protocol pool fee; since Proposal #21 (05.10.2026) it goes to BuybackController, recoverable by Governance via <code>withdrawIFR</code>. Until then it went to FeeRouterV1 (no IFR withdrawal path, CWA-02)</td>
+            <td>Protocol pool fee, routed to BuybackController (recoverable by Governance via <code>withdrawIFR</code>) following Governance proposal #21 (executed 5 October 2026, Mainnet block 26124660, <a href="https://etherscan.io/tx/0x8de48b47dfa8f17b631fb744bc4deef9bbb68271f8b700b422cdd3abb739ca26" target="_blank" rel="noopener">TX 0x8de48b47&hellip;9ca26</a>). FeeRouterV1 retains its earlier IFR balance (734,545.074097347 IFR as of block 26124660 (2026-10-05)) with no withdrawal path; this routing change does not recover those tokens. Direct transfers can still change FeeRouterV1's balance; read it on Etherscan for the current value.</td>
           </tr>
           <tr>
             <td><strong>3.5%</strong></td>
