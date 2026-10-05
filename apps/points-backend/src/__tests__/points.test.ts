@@ -1,6 +1,6 @@
 import "dotenv/config";
 import type { Server } from "node:http";
-import app from "../app.js";
+import app, { resolveAllowedOrigins } from "../app.js";
 import { prisma } from "../db.js";
 import { createToken } from "../middleware/auth.js";
 import {
@@ -96,6 +96,12 @@ async function signedSiweMessage(
 
 async function run() {
   console.log("\n🔥 Points Backend Tests\n");
+
+  console.log("CORS defaults (T-212b-10):");
+  assert(resolveAllowedOrigins({ NODE_ENV: "production" }).length === 0, "production without ALLOWED_ORIGINS refuses cross-origin");
+  assert(!resolveAllowedOrigins({ NODE_ENV: "production" }).some((o) => o.includes("localhost")), "no localhost in production defaults");
+  assert(resolveAllowedOrigins({ NODE_ENV: "test" }).includes("http://localhost:3004"), "non-production keeps the local origin");
+  assert(resolveAllowedOrigins({ NODE_ENV: "production", ALLOWED_ORIGINS: " https://ifrunit.tech ,," }).join() === "https://ifrunit.tech", "configured origins are trimmed");
 
   console.log("Security configuration:");
   const productionConfig = loadPointsSecurityConfig({
@@ -368,6 +374,9 @@ async function run() {
       const validation = await api("GET", `/voucher/validate/${issuedNonce}`);
       assert(validation.status === 200 && validation.data.valid === true, "issued voucher validates");
       assert(!Object.hasOwn(validation.data, "wallet"), "public validation omits wallet identity");
+      assert(!Object.hasOwn(validation.data, "usedCount"), "validation makes no off-chain usage claim");
+      const redemptionInfo = validation.data.redemption as { tracked?: boolean; authoritative?: string } | undefined;
+      assert(redemptionInfo?.tracked === false && redemptionInfo?.authoritative === "FeeRouterV1.usedNonces(user, nonce)", "validation points to the on-chain nonce mapping");
 
       // ---- Daily Wallet Limit ----
       const { status: status2 } = await api("POST", "/voucher/issue", {}, authToken);
