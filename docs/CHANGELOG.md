@@ -28,6 +28,19 @@
 - Benefits backend: optional `COMMITMENT_VAULT_V2_ADDRESS`; when set, the commitment source adds V2's
   active TIME_ONLY tranches to V1's at the same block, with the same identity checks.
 
+## 3 October 2026 — Public Council Vote Record (Lane 6)
+
+- New wiki page [Council Votes](https://ifrunit.tech/wiki/council-votes.html) lists every ballot, its exact
+  texts, each signed vote and the tally. The data lives in `docs/data/council-votes.json`.
+- `scripts/verify-council-votes.cjs` checks in CI that every counted vote and every counted abstention is an
+  EIP-191 signature over the exact published text of its choice on its own ballot (each text names its ballot
+  id, so a signature cannot be reused for another ballot) and recovers to the wallet listed in the record; it
+  does not verify Safe ownership on-chain. A record without such a signature is shown as unverified and not
+  counted. The page is rendered from the data and checked for drift.
+- Open ballots run through the Etherscan verified-signature procedure. Secret ballots are in planning as a
+  separate milestone.
+- Status: CV-01 open (2 of 3 YES; one abstention unverified, not counted), EX-01 approved on 4 October 2026 (3 YES), EX-02 open (no option vote yet). No deadline.
+
 ## 3 October 2026 — Partner Rewards Model B (Lane 4)
 
 - Decision recorded: partner rewards are valued in EUR and paid in IFR only for verified checkout

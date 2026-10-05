@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-    <link rel="canonical" href="https://ifrunit.tech/wiki/testnet.html">
-  <link rel="alternate" hreflang="en" href="https://ifrunit.tech/wiki/testnet.html">
-  <link rel="alternate" hreflang="x-default" href="https://ifrunit.tech/wiki/testnet.html">
+  <link rel="canonical" href="https://ifrunit.tech/wiki/council-votes.html">
+  <link rel="alternate" hreflang="en" href="https://ifrunit.tech/wiki/council-votes.html">
+  <link rel="alternate" hreflang="x-default" href="https://ifrunit.tech/wiki/council-votes.html">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Testnet &mdash; Inferno (IFR) Documentation</title>
-  <meta name="keywords" content="Inferno, IFR, ERC-20, Ethereum, deflationary token, DeFi, blockchain, smart contract, governance, bootstrap">
-  <meta name="description" content="Documented Sepolia test deployments, governance lifecycle records, Uniswap V2 LP pair and developer test addresses.">
+  <title>Council Votes &mdash; Inferno (IFR) Documentation</title>
+  <meta name="keywords" content="Inferno, IFR, Council, vote, ballot, Safe signers, governance, verified signatures">
+  <meta name="description" content="Public record of Inferno (IFR) Council ballots: ballot texts, signed votes verified with ecrecover, tallies and status.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -218,32 +218,6 @@
       margin-bottom: 32px;
     }
 
-    /* ---------- Code blocks ---------- */
-    pre {
-      background: #1a1a1d;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 16px 20px;
-      overflow-x: auto;
-      font-size: 13px;
-      line-height: 1.7;
-      margin: 16px 0;
-      color: var(--text);
-    }
-
-    code {
-      font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-      font-size: 13px;
-      color: var(--text);
-    }
-
-    p code, li code, td code {
-      background: rgba(255, 255, 255, 0.06);
-      padding: 2px 6px;
-      border-radius: 4px;
-      font-size: 13px;
-    }
-
     /* ---------- Tables ---------- */
     table {
       width: 100%;
@@ -261,9 +235,9 @@
     th {
       color: var(--muted);
       font-weight: 600;
-      font-size: 13px;
+      font-size: 12px;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.5px;
     }
 
     td { color: var(--text); }
@@ -302,17 +276,63 @@
       border-left-color: var(--green);
     }
 
-    .callout-yellow {
-      background: rgba(245, 158, 11, 0.06);
-      border-left-color: #f59e0b;
+    /* ---------- Phase cards ---------- */
+    .phase-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px 28px;
+      margin: 20px 0;
     }
 
-    /* ---------- Address ---------- */
-    .address {
+    .phase-card h3 {
+      margin: 0 0 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .phase-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .badge-done { background: rgba(34,197,94,0.15); color: var(--green); }
+    .badge-progress { background: rgba(255,69,0,0.15); color: var(--accent); }
+    .badge-planned { background: rgba(138,138,150,0.15); color: var(--muted); }
+    .badge-red { background: rgba(220,38,38,0.14); color: #b91c1c; }
+    .badge-yellow { background: rgba(234,179,8,0.18); color: #92400e; }
+    .badge-green { background: rgba(34,197,94,0.15); color: var(--green); }
+    .vote-text { white-space: pre-wrap; font-size: 0.8rem; }
+    .sig { font-family: monospace; font-size: 0.72rem; word-break: break-all; }
+
+    /* ---------- Code ---------- */
+    pre {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 20px;
+      overflow-x: auto;
+      font-size: 13px;
+      line-height: 1.7;
+      margin: 16px 0;
+    }
+
+    code {
       font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-      font-size: 12px;
-      color: var(--muted);
-      word-break: break-all;
+      font-size: 13px;
+    }
+
+    p code, li code, td code {
+      background: rgba(255, 255, 255, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 13px;
     }
 
     /* ---------- Footer ---------- */
@@ -370,34 +390,35 @@
         font-size: 26px;
       }
     }
-    @keyframes pulse-yellow {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(255,200,0,0.0); }
-      50% { box-shadow: 0 0 16px 3px rgba(255,200,0,0.15); }
-    }
-
     /* ============================================================
     End Shared Styles
        ============================================================ */
+    /* Keep ballot text, proof links and tables out of the fixed Copilot launcher band on phones/tablets
+       (launcher: 52px at 12px from the right below 481px, 64px at 24px up to 768px). */
+    @media (max-width: 768px) {
+      .phase-card[id] { padding-right: 72px !important; }
+    }
   </style>
   <link rel="icon" type="image/png" href="../assets/ifr_icon_64.png">
   <meta property="og:locale" content="en_US">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Inferno Protocol">
-  <meta property="og:title" content="Testnet (Sepolia) — Inferno Protocol (IFR)">
-  <meta property="og:description" content="Documented Sepolia deployments, governance lifecycle records, LP pair, test addresses and faucet links.">
-  <meta property="og:url" content="https://ifrunit.tech/wiki/testnet.html">
+  <meta property="og:title" content="Council Votes — Inferno Protocol (IFR)">
+  <meta property="og:description" content="Every Council ballot with its exact texts, signed votes and tally.">
+  <meta property="og:url" content="https://ifrunit.tech/wiki/council-votes.html">
   <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="Testnet (Sepolia) — Inferno Protocol (IFR)">
-  <meta name="twitter:description" content="Documented Sepolia deployments, governance lifecycle records and LP pair.">
+  <meta name="twitter:title" content="Council Votes — Inferno Protocol (IFR)">
+  <meta name="twitter:description" content="Every Council ballot with its exact texts, signed votes and tally.">
   <meta name="twitter:site" content="@IFRtoken">
-  <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">  <script type="application/ld+json">
+  <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
+  <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "TechArticle",
-    "headline": "Testnet (Sepolia)",
-    "description": "Documented Sepolia test deployments, governance lifecycle records, Uniswap V2 LP pair and test addresses for developer integration.",
-    "url": "https://ifrunit.tech/wiki/testnet.html",
+    "headline": "Council Votes",
+    "description": "Public record of Inferno Council ballots with verified signed votes and tallies.",
+    "url": "https://ifrunit.tech/wiki/council-votes.html",
     "isPartOf": {"@id": "https://ifrunit.tech/#website"},
     "publisher": {"@id": "https://ifrunit.tech/#organization"},
     "about": {"@id": "https://ifrunit.tech/#app"}
@@ -411,24 +432,9 @@
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
   "itemListElement": [
-    {
-      "@type": "ListItem",
-      "position": 1,
-      "name": "Inferno",
-      "item": "https://ifrunit.tech/"
-    },
-    {
-      "@type": "ListItem",
-      "position": 2,
-      "name": "Wiki",
-      "item": "https://ifrunit.tech/wiki/"
-    },
-    {
-      "@type": "ListItem",
-      "position": 3,
-      "name": "Testnet",
-      "item": "https://ifrunit.tech/wiki/testnet.html"
-    }
+    {"@type": "ListItem", "position": 1, "name": "Inferno", "item": "https://ifrunit.tech/"},
+    {"@type": "ListItem", "position": 2, "name": "Wiki", "item": "https://ifrunit.tech/wiki/"},
+    {"@type": "ListItem", "position": 3, "name": "Council Votes", "item": "https://ifrunit.tech/wiki/council-votes.html"}
   ]
 }
   </script>
@@ -466,7 +472,7 @@
         <li class="nav-divider"></li>
         <li><a href="https://ifrunit.tech/wiki/wallet-guide.html">Wallet &amp; Contract Guide</a></li>
         <li><a href="https://ifrunit.tech/wiki/deployment.html">Deployment</a></li>
-        <li><a href="https://ifrunit.tech/wiki/testnet.html" class="active" aria-current="page">Testnet</a></li>
+        <li><a href="https://ifrunit.tech/wiki/testnet.html">Testnet</a></li>
         <li><a href="https://ifrunit.tech/wiki/mainnet-checklist.html">Mainnet Checklist</a></li>
         <li><a href="https://ifrunit.tech/wiki/bootstrap.html">Bootstrap Event</a></li>
         <li><a href="https://ifrunit.tech/wiki/roadmap.html">Roadmap</a></li>
@@ -483,7 +489,7 @@
         <li><a href="https://ifrunit.tech/wiki/dao-governance.html">DAO Governance</a></li>
         <li><a href="https://ifrunit.tech/wiki/multisig.html">Multisig Policy</a></li>
         <li><a href="https://ifrunit.tech/wiki/community-signer-expansion.html">Community Signer Expansion</a></li>
-        <li><a href="https://ifrunit.tech/wiki/council-votes.html">Council Votes</a></li>
+        <li><a href="https://ifrunit.tech/wiki/council-votes.html" class="active" aria-current="page">Council Votes</a></li>
         <li><a href="https://ifrunit.tech/wiki/transparency.html">Transparency</a></li>
         <li class="nav-divider"></li>
         <li><a href="https://ifrunit.tech/wiki/faq.html">FAQ</a></li>
@@ -511,7 +517,7 @@
           <div id="lp-header-connected" style="display:none;">
             <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:5px 8px;cursor:pointer;display:flex;align-items:center;gap:6px;max-width:100px;white-space:nowrap;overflow:hidden;" onclick="lpToggleDropdown()">
               <span id="lp-header-addr" style="color:#166534;font-family:monospace;font-size:0.72rem;font-weight:600;"></span>
-              
+
             </div>
           </div>
           <div id="lp-header-dropdown" style="display:none;position:fixed;background:#111827;border:1px solid #374151;border-radius:12px;padding:16px;width:280px;max-width:calc(100vw - 24px);z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.6);">
@@ -549,262 +555,142 @@
       </div>
 
 
-      <h1><span class="accent">Testnet</span> (Sepolia)</h1>
+      <h1><span class="accent">Council Votes</span></h1>
       <p class="subtitle">
-        All Sepolia testnet contract addresses, faucet links, and developer instructions for testing the Inferno protocol.
+        Public record of every Council ballot: the exact ballot texts, each signed vote, and the current tally.
       </p>
 
       <div class="callout">
-        <p><strong>Note:</strong> Mainnet contracts are deployed and verified. This page preserves Sepolia testnet addresses for developers and community auditors who want to test without real funds.</p>
+        <p><strong>Procedure:</strong> open ballots only. Each listed signer signs one published ballot text of that ballot, unchanged, with the signer wallet on <a href="https://etherscan.io/verifiedSignatures" rel="noopener">Etherscan Verified Signatures</a>. A vote or abstention counts only if its signature (EIP-191) verifies over the exact published text of its choice on its own ballot and recovers to the listed wallet; every ballot text names its ballot id, so a signature cannot be reused for another ballot. Records without such a signature are shown as unverified and not counted. <strong>What “verified” means:</strong> a vote is verified and counted when its signature, checked locally by the published checker, recovers to the listed wallet over the exact published ballot text. The Etherscan Verified Signatures link next to each vote is a published reference that anyone can open to check the same signature independently; the automated check validates only the link format and does not fetch or compare the Etherscan record. A ballot never executes anything by itself: any on-chain action still needs its own Safe transaction and, where applicable, the 48-hour Governance timelock.</p>
       </div>
 
-      <!-- ========== Sepolia Contracts ========== -->
-      <h2>Sepolia Contract Addresses</h2>
-      <p>All contracts are deployed and verified on Sepolia Etherscan. These are the original testnet deployments used during development.</p>
-
-      <table>
-        <thead>
-          <tr><th>Contract</th><th>Sepolia Address</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>InfernoToken</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4#code" target="_blank" rel="noopener">0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4</a></td>
-          </tr>
-          <tr>
-            <td>Governance</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0x6050b22E4EAF3f414d1155fBaF30B868E0107017#code" target="_blank" rel="noopener">0x6050b22E4EAF3f414d1155fBaF30B868E0107017</a></td>
-          </tr>
-          <tr>
-            <td>IFRLock</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0x0Cab0A9440643128540222acC6eF5028736675d3#code" target="_blank" rel="noopener">0x0Cab0A9440643128540222acC6eF5028736675d3</a></td>
-          </tr>
-          <tr>
-            <td>LiquidityReserve (v2)</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0xF7E90D0d17f8232365186AA085D26eaEfAf011aF#code" target="_blank" rel="noopener">0xF7E90D0d17f8232365186AA085D26eaEfAf011aF</a></td>
-          </tr>
-          <tr>
-            <td>Vesting</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B#code" target="_blank" rel="noopener">0xa710f9FE7bf42981E60BE2Fbe7D87Fb3541a3F8B</a></td>
-          </tr>
-          <tr>
-            <td>BuybackVault (v2)</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0xC8ABb9039BEd24f4dBf5Cff09699877D81f0D63C#code" target="_blank" rel="noopener">0xC8ABb9039BEd24f4dBf5Cff09699877D81f0D63C</a></td>
-          </tr>
-          <tr>
-            <td>BurnReserve (v2)</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0x6D4582FCac792FD3880e252fC0a585A0c1823e80#code" target="_blank" rel="noopener">0x6D4582FCac792FD3880e252fC0a585A0c1823e80</a></td>
-          </tr>
-          <tr>
-            <td>PartnerVault (v2)</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39#code" target="_blank" rel="noopener">0x5F12C0bC616e9Ca347D48C33266aA8fe98490A39</a></td>
-          </tr>
-          <tr>
-            <td>FeeRouterV1</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4#code" target="_blank" rel="noopener">0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4</a></td>
-          </tr>
-          <tr>
-            <td>LP Pair (IFR/WETH)</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0x2252e8bBDE0E50CD372748aC233A99C08627d9c7" target="_blank" rel="noopener">0x2252e8bBDE0E50CD372748aC233A99C08627d9c7</a></td>
-          </tr>
-          <tr>
-            <td>BootstrapVaultV3</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0x16086d4f7F191047d8A4fFf2090126E12e865A7E#code" target="_blank" rel="noopener">0x16086d4f7F191047d8A4fFf2090126E12e865A7E</a></td>
-          </tr>
-        </tbody>
-      </table>
-
-      <h3>Infrastructure</h3>
-      <table>
-        <thead>
-          <tr><th>Component</th><th>Sepolia Address</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Deployer</td>
-            <td class="address">0x5Ecc668eab04C5bee81b5c7242e1077c946dE406</td>
-          </tr>
-          <tr>
-            <td>Uniswap V2 Router</td>
-            <td class="address"><a href="https://sepolia.etherscan.io/address/0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008" target="_blank" rel="noopener">0xC532a74256D3Db42D0Bf7a0400fEFDbad7694008</a></td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div style="
-        border: 1.5px solid rgba(255,200,0,0.6);
-        background: rgba(255,200,0,0.07);
-        border-radius: 6px;
-        padding: 24px 28px;
-        margin: 32px 0;
-        animation: pulse-yellow 3s ease-in-out infinite;
-      ">
-        <div style="color:#8a5a00; font-family:'Orbitron',monospace; font-weight:700; font-size:14px; letter-spacing:2px; margin-bottom:12px;">
-          &#x2B21; COMMUNITY AUDIT &mdash; OPEN
-        </div>
-        <p style="color:#ccc; margin:0 0 12px 0;">
-          All Inferno contracts are open source and deployed on Sepolia testnet.
-          Community security researchers are invited to review, test, and report findings.
-        </p>
-        <ul style="color:#ccc; margin:0 0 16px 0; padding-left:20px;">
-          <li>Test freely on Sepolia &mdash; no real funds required</li>
-          <li>The 11 deployment entries listed above link to their documented Sepolia addresses</li>
-          <li>Responsible disclosure via GitHub Private Vulnerability Reporting</li>
-          <li>Hall of Fame recognition for valid findings</li>
-        </ul>
-        <p style="color:#9ca3af;font-size:0.85rem;margin-top:8px;">
-          &darr; <a href="#faucet-section" style="color:#b3300b;">Get Sepolia Test ETH below</a> &mdash; auto-fills your wallet address.
-        </p>
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-top:16px;">
-          <span style="color:#888; font-size:13px;">Found a vulnerability? Report responsibly and get credited in the Hall of Fame.</span>
-          <a href="https://github.com/NeaBouli/inferno/security/advisories/new"
-             style="color:#8a5a00; font-weight:700; text-decoration:none; border: 1px solid rgba(255,200,0,0.5); padding:8px 20px; border-radius:4px; white-space:nowrap;">
-            &rarr; Report Privately
-          </a>
-        </div>
-      </div>
-
-      <!-- ========== Getting Started ========== -->
-      <h2>Getting Started with Testnet</h2>
-
-      <div id="faucet-section" style="margin:32px 0;">
-        <h3 style="color:#e5e7eb;">1. Get Sepolia Test ETH</h3>
-
-        <div style="margin-bottom:20px;">
-          <label style="color:#9ca3af;font-size:0.85rem;display:block;margin-bottom:6px;">
-            Your Wallet Address
-          </label>
-          <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-            <input id="faucet-address" type="text"
-              placeholder="Connect wallet above — or paste address manually"
-              style="flex:1;min-width:260px;background:#1f2937;border:1px solid #374151;
-                     color:#e5e7eb;padding:10px 14px;border-radius:8px;
-                     font-family:monospace;font-size:0.85rem;box-sizing:border-box;" />
-            <button onclick="faucetCopyAddress()"
-              id="faucet-copy-btn"
-              style="background:#374151;color:#9ca3af;border:none;padding:10px 16px;
-                     border-radius:8px;cursor:pointer;font-size:0.85rem;white-space:nowrap;">
-              &#x1F4CB; Copy
-            </button>
-          </div>
-          <div id="faucet-wallet-status" style="margin-top:6px;font-size:0.8rem;color:#6b7280;">
-            Connect your wallet to auto-fill your address
-          </div>
-        </div>
-
-        <style>#faucet-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:600px){#faucet-grid{grid-template-columns:1fr!important}}</style>
-        <div id="faucet-grid">
-          <div style="background:#1f2937;border:1px solid #374151;border-radius:12px;padding:16px;">
-            <div style="font-weight:600;color:#e5e7eb;margin-bottom:4px;">Google Cloud Faucet</div>
-            <div style="color:#9ca3af;font-size:0.8rem;margin-bottom:12px;">0.05 ETH/day &middot; No minimum mainnet balance</div>
-            <button onclick="faucetOpen('https://cloud.google.com/application/web3/faucet/ethereum/sepolia')"
-              style="width:100%;background:linear-gradient(135deg,#f97316,#ea580c);color:white;border:none;padding:9px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">
-              Get Test ETH &rarr;
-            </button>
-          </div>
-          <div style="background:#1f2937;border:1px solid #374151;border-radius:12px;padding:16px;">
-            <div style="font-weight:600;color:#e5e7eb;margin-bottom:4px;">Chainlink Faucet</div>
-            <div style="color:#9ca3af;font-size:0.8rem;margin-bottom:12px;">0.1 ETH/day &middot; No login needed</div>
-            <button onclick="faucetOpen('https://faucets.chain.link/sepolia')"
-              style="width:100%;background:linear-gradient(135deg,#f97316,#ea580c);color:white;border:none;padding:9px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">
-              Get Test ETH &rarr;
-            </button>
-          </div>
-          <div style="background:#1f2937;border:1px solid #374151;border-radius:12px;padding:16px;">
-            <div style="font-weight:600;color:#e5e7eb;margin-bottom:4px;">Alchemy Faucet</div>
-            <div style="color:#9ca3af;font-size:0.8rem;margin-bottom:12px;">0.5 ETH/day &middot; Login required</div>
-            <button onclick="faucetOpen('https://sepoliafaucet.com')"
-              style="width:100%;background:linear-gradient(135deg,#f97316,#ea580c);color:white;border:none;padding:9px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">
-              Get Test ETH &rarr;
-            </button>
-          </div>
-          <div style="background:#1f2937;border:1px solid #374151;border-radius:12px;padding:16px;">
-            <div style="font-weight:600;color:#e5e7eb;margin-bottom:4px;">Infura Faucet</div>
-            <div style="color:#9ca3af;font-size:0.8rem;margin-bottom:12px;">0.5 ETH/day &middot; Login required</div>
-            <button onclick="faucetOpen('https://www.infura.io/faucet/sepolia')"
-              style="width:100%;background:linear-gradient(135deg,#f97316,#ea580c);color:white;border:none;padding:9px;border-radius:8px;font-size:0.85rem;font-weight:600;cursor:pointer;">
-              Get Test ETH &rarr;
-            </button>
-          </div>
-        </div>
-
-        <p style="color:#6b7280;font-size:0.8rem;margin-top:16px;font-style:italic;">
-          &#x1F4A1; Copy your address above, then click a faucet. Paste your address on the faucet page.
-          Funds arrive within ~30 seconds on Sepolia.
-        </p>
-      </div>
-
-      <h3>2. Add Sepolia IFR to MetaMask</h3>
-      <p>Add the token manually in MetaMask:</p>
+      <h2>Rules</h2>
       <ul>
-        <li><strong>Network:</strong> Sepolia (Chain ID: 11155111)</li>
-        <li><strong>Token Address:</strong> <code>0x3Bd71947F288d1dd8B21129B1bE4FF16EDd5d1F4</code></li>
-        <li><strong>Symbol:</strong> IFR</li>
-        <li><strong>Decimals:</strong> 9</li>
+        <li><strong>Eligibility:</strong> the Safe signers of the Treasury, Community and LP Reserve Safes (identical 3-of-5 owner set), fixed when a ballot opens, with the wallets listed on this page. The automated check proves that each signature matches a wallet listed in this record; it does not prove Safe ownership on-chain. The owner set can be checked on the Safe pages linked from <a href="https://ifrunit.tech/wiki/transparency.html">Transparency</a>. A Council registry may replace this snapshot later.</li>
+        <li><strong>Display:</strong> signers appear only with consented initials. Wallet addresses are public on-chain; no real names are published.</li>
+        <li><strong>Deadline:</strong> none, unless a deadline is approved by a separate Council vote.</li>
+        <li><strong>Abstentions</strong> are signed like votes, over the published ABSTAIN text of that ballot, and are not counted as votes. An abstention without a signature over that ballot's published ABSTAIN text is listed as unverified and not counted.</li>
+        <li><strong>Status colours:</strong> <span class="phase-badge badge-red">Open</span> before the threshold is reached, <span class="phase-badge badge-yellow">Approved</span> once it is reached, <span class="phase-badge badge-green">Executed</span> after the resulting transaction is executed and linked.</li>
+        <li><strong>Secret ballots</strong> are in planning as a separate milestone: anonymous credentials or zero-knowledge membership proofs with a threshold tally. They need a threat model, scheme selection, an independent cryptography and privacy review, and a staging run before any real ballot. Until then all ballots are open.</li>
+        <li><strong>Portal:</strong> a page that automates this procedure (connect wallet, sign the predefined text, automatic verification, publication) is planned.</li>
       </ul>
 
-      <h3>3. Interact with Contracts</h3>
-      <p>All contracts are verified on Sepolia Etherscan &mdash; you can read and write directly from the "Read Contract" and "Write Contract" tabs.</p>
+      <h2>How to Vote</h2>
+      <ol>
+        <li>Open <a href="https://etherscan.io/verifiedSignatures" rel="noopener">etherscan.io/verifiedSignatures</a> and choose <em>Sign Message</em>.</li>
+        <li>Connect your Safe signer wallet.</li>
+        <li>Paste the ballot text of your choice from this page, unchanged.</li>
+        <li>Sign (free, no gas), choose <em>Publish</em>, and send the link to the Council.</li>
+      </ol>
 
-<pre><code># Clone the repo
-git clone https://github.com/NeaBouli/inferno
-cd inferno
-npm install
-
-# Copy .env and add your Sepolia RPC URL
-cp .env.example .env
-
-# Run all tests locally (no network needed)
-npx hardhat test
-
-# Run live smoke test on Sepolia
-npx hardhat run scripts/sepolia-smoke-test.js --network sepolia</code></pre>
-
-      <h3>4. Run the Dashboard Locally</h3>
-<pre><code>cd apps/dashboard
-npm install
-npm run dev
-# Opens at http://localhost:5173
-# Connect MetaMask to Sepolia</code></pre>
-
-      <!-- ========== Governance Proposals ========== -->
-      <h2>Governance Proposals (Sepolia)</h2>
-      <p>The historical table records proposal IDs 0&ndash;9: six executed and four cancelled. It documents lifecycle testing; it does not claim that all ten executed.</p>
-
-      <table>
-        <thead>
-          <tr><th>#</th><th>Action</th><th>Status</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>0</td><td>setFeeExempt (test)</td><td>Executed</td></tr>
-          <tr><td>1</td><td>setFeeExempt(IFRLock, true)</td><td>Executed</td></tr>
-          <tr><td>2</td><td>Cancelled (v1 deprecated)</td><td>Cancelled</td></tr>
-          <tr><td>3</td><td>setFeeExempt(PartnerVault v2, true) + top-up</td><td>Executed</td></tr>
-          <tr><td>4&ndash;6</td><td>transferOwnership (cancelled, v1 immutable)</td><td>Cancelled</td></tr>
-          <tr><td>7&ndash;9</td><td>setFeeExempt(LR v2, BV v2, BR v2)</td><td>Executed</td></tr>
-        </tbody>
-      </table>
-
-      <!-- ========== Community Audit ========== -->
-      <h2>Community Audit</h2>
-      <p>
-        All smart contracts are open source. Security findings are welcome via
-        <a href="https://github.com/NeaBouli/inferno/security/advisories/new" target="_blank" rel="noopener">GitHub Private Vulnerability Reporting</a>.
-        The testnet deployment allows anyone to verify contract behavior without risking real funds.
-      </p>
-
-      <div style="display:flex;gap:12px;flex-wrap:wrap;margin:16px 0;">
-        <a href="https://github.com/NeaBouli/inferno/issues/new?template=bug_report.md&title=[Security+Finding]" target="_blank" rel="noopener"
-          style="display:inline-flex;align-items:center;gap:8px;background:#1f2937;border:1px solid #374151;border-radius:8px;padding:8px 14px;text-decoration:none;color:#e5e7eb;font-size:0.85rem;font-weight:600;transition:border-color 0.2s;"
-          onmouseover="this.style.borderColor='#f97316'" onmouseout="this.style.borderColor='#374151'">
-          <svg height="16" width="16" viewBox="0 0 16 16" fill="#e5e7eb"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
-          Submit a Finding on GitHub
-        </a>
+      <!-- council-votes:start -->
+      <div class="phase-card" id="cv-01">
+        <h3>CV-01 — CommitmentVault V1 compensation (urgent) <span class="phase-badge badge-red">Open</span></h3>
+        <p>Compensate the 11 permanently locked CommitmentVault V1 tranches (26,418,467.994338353 IFR) from the LP Reserve Safe, per tranche, only after each tranche’s original time condition and price target (7-day TWAP) are met.</p>
+        <p>Proposal: <a href="https://ifrunit.tech/wiki/commitment-vault-compensation.html">/wiki/commitment-vault-compensation.html</a></p>
+        <p><strong>Rule:</strong> Approved with 3 YES votes of eligible Safe signers. Opened 2026-10-03. Deadline: None, unless a deadline is approved by a separate Council vote.</p>
+        <p><strong>Tally:</strong> YES: 2 · NO: 0 · abstentions: 0 · unverified (not counted): 1 · eligible: 5</p>
+        <p class="vote-summary"><strong>Voted:</strong> M.G. (YES), Y.K. (YES) · <strong>Abstained:</strong> none · <strong>Unverified, not counted:</strong> G.M. · <strong>Still missing:</strong> A.M., A.P.</p>
+        <p style="color:var(--muted);font-size:0.85rem;">The proposal text references repository commit f08ce370 (pre-history-rewrite SHA; the same content is commit 4c3eb668 after the 2026-10-03 history rewrite).</p>
+        <div class="table-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <table style="min-width:600px;">
+          <thead><tr><th>Signer</th><th>Wallet</th><th>Vote</th><th>Signature (checked locally) · Etherscan reference</th></tr></thead>
+          <tbody>
+            <tr class="vote-unverified"><td>G.M.</td><td><a href="https://etherscan.io/address/0x6b36687b0cd4386fb14cf565B67D7862110Fed67" rel="noopener"><code>0x6b36…ed67</code></a></td><td>ABSTAIN — unverified</td><td>not recorded: no published signature over the CV-01 ABSTAIN text; not counted</td></tr>
+            <tr><td>M.G.</td><td><a href="https://etherscan.io/address/0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4" rel="noopener"><code>0x17F8…72d4</code></a></td><td>YES</td><td><a href="https://etherscan.io/verifySig/339696" rel="noopener">etherscan.io/verifySig/339696</a><div class="sig">signed: CV-01 YES text · hash 0xcd65f6fb52dc56020f51268e6217a4561035a2b38c3ecd2ca5d0ddbfa8b572bf · signature recovers the listed wallet (local check)</div></td></tr>
+            <tr><td>A.M.</td><td><a href="https://etherscan.io/address/0x0C4893DcF730E0Ddc7D18CF9723932784Fb4ED74" rel="noopener"><code>0x0C48…ED74</code></a></td><td>not yet voted</td><td>—</td></tr>
+            <tr><td>Y.K.</td><td><a href="https://etherscan.io/address/0xA0860f872a9cAB34817D9a764e71ab43B942b275" rel="noopener"><code>0xA086…b275</code></a></td><td>YES</td><td><a href="https://etherscan.io/verifySig/339697" rel="noopener">etherscan.io/verifySig/339697</a><div class="sig">signed: CV-01 YES text · hash 0xcd65f6fb52dc56020f51268e6217a4561035a2b38c3ecd2ca5d0ddbfa8b572bf · signature recovers the listed wallet (local check)</div></td></tr>
+            <tr><td>A.P.</td><td><a href="https://etherscan.io/address/0x32cF8b4F29A8F211804857EcF8BF0847f0BC0fE9" rel="noopener"><code>0x32cF…0fE9</code></a></td><td>not yet voted</td><td>—</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <details>
+          <summary>Ballot texts (sign exactly one, unchanged)</summary>
+          <p><strong>YES</strong></p>
+          <pre class="vote-text">IFR Council urgent vote CV-01
+Vote: YES
+I approve proposal CV-01: the 11 permanently locked CommitmentVault V1 tranches (26,418,467.994338353 IFR in total) are compensated from the LP Reserve Safe 0x5D93E7919a71d725054e31017eCA86B026F86C04. Each tranche is compensated with exactly its locked amount, paid to the wallet that locked it, only after that tranche's original time condition (if any) and its original price target (7-day TWAP of the IFR/WETH Uniswap V2 pair 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0) are met, with one Safe transaction per tranche.
+Proposal: https://ifrunit.tech/wiki/commitment-vault-compensation.html (repository commit f08ce370)</pre>
+          <p><strong>NO</strong></p>
+          <pre class="vote-text">IFR Council urgent vote CV-01
+Vote: NO
+I reject proposal CV-01: the 11 permanently locked CommitmentVault V1 tranches (26,418,467.994338353 IFR in total) are compensated from the LP Reserve Safe 0x5D93E7919a71d725054e31017eCA86B026F86C04. Each tranche is compensated with exactly its locked amount, paid to the wallet that locked it, only after that tranche's original time condition (if any) and its original price target (7-day TWAP of the IFR/WETH Uniswap V2 pair 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0) are met, with one Safe transaction per tranche.
+Proposal: https://ifrunit.tech/wiki/commitment-vault-compensation.html (repository commit f08ce370)</pre>
+        </details>
       </div>
-
-      <div class="callout-green callout">
-        <p><strong>Mainnet contracts</strong> are listed on the <a href="https://ifrunit.tech/wiki/deployment.html">Deployment</a> page. For production addresses, see the main <a href="../index.html#contracts">landing page</a>.</p>
+      <div class="phase-card" id="ex-01">
+        <h3>EX-01 — No IFR incentives for exchanges <span class="phase-badge badge-yellow">Approved</span></h3>
+        <p>Centralized exchanges receive no IFR incentives (no integration payments, no liquidity grants, no loans) from any project pool.</p>
+        <p><strong>Rule:</strong> Approved with 3 YES votes of eligible Safe signers. Opened 2026-10-03. Deadline: None, unless a deadline is approved by a separate Council vote.</p>
+        <p><strong>Tally:</strong> YES: 3 · NO: 0 · abstentions: 0 · eligible: 5</p>
+        <p class="vote-summary"><strong>Voted:</strong> G.M. (YES), M.G. (YES), Y.K. (YES) · <strong>Abstained:</strong> none · <strong>Still missing:</strong> A.M., A.P.</p>
+        <p style="color:var(--muted);font-size:0.85rem;">Approved on 2026-10-04 with 3 YES (G.M., M.G., Y.K.). Policy decision; no on-chain action. A future exchange incentive requires a new Council proposal.</p>
+        <div class="table-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <table style="min-width:600px;">
+          <thead><tr><th>Signer</th><th>Wallet</th><th>Vote</th><th>Signature (checked locally) · Etherscan reference</th></tr></thead>
+          <tbody>
+            <tr><td>G.M.</td><td><a href="https://etherscan.io/address/0x6b36687b0cd4386fb14cf565B67D7862110Fed67" rel="noopener"><code>0x6b36…ed67</code></a></td><td>YES</td><td><a href="https://etherscan.io/verifySig/339715" rel="noopener">etherscan.io/verifySig/339715</a><div class="sig">signed: EX-01 YES text · hash 0x36882b11a781df3f53401e4da19c04b8b51309f592c015d99b2cc3945955240c · signature recovers the listed wallet (local check)</div></td></tr>
+            <tr><td>M.G.</td><td><a href="https://etherscan.io/address/0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4" rel="noopener"><code>0x17F8…72d4</code></a></td><td>YES</td><td><a href="https://etherscan.io/verifySig/339733" rel="noopener">etherscan.io/verifySig/339733</a><div class="sig">signed: EX-01 YES text · hash 0x36882b11a781df3f53401e4da19c04b8b51309f592c015d99b2cc3945955240c · signature recovers the listed wallet (local check)</div></td></tr>
+            <tr><td>A.M.</td><td><a href="https://etherscan.io/address/0x0C4893DcF730E0Ddc7D18CF9723932784Fb4ED74" rel="noopener"><code>0x0C48…ED74</code></a></td><td>not yet voted</td><td>—</td></tr>
+            <tr><td>Y.K.</td><td><a href="https://etherscan.io/address/0xA0860f872a9cAB34817D9a764e71ab43B942b275" rel="noopener"><code>0xA086…b275</code></a></td><td>YES</td><td><a href="https://etherscan.io/verifySig/339736" rel="noopener">etherscan.io/verifySig/339736</a><div class="sig">signed: EX-01 YES text · hash 0x36882b11a781df3f53401e4da19c04b8b51309f592c015d99b2cc3945955240c · signature recovers the listed wallet (local check)</div></td></tr>
+            <tr><td>A.P.</td><td><a href="https://etherscan.io/address/0x32cF8b4F29A8F211804857EcF8BF0847f0BC0fE9" rel="noopener"><code>0x32cF…0fE9</code></a></td><td>not yet voted</td><td>—</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <details>
+          <summary>Ballot texts (sign exactly one, unchanged)</summary>
+          <p><strong>YES</strong></p>
+          <pre class="vote-text">IFR Council vote EX-01
+Vote: YES
+I approve proposal EX-01: centralized exchanges receive no IFR incentives (no integration payments, no liquidity grants, no loans) from any project pool. Listings must be self-sustaining. A future incentive requires a new Council proposal.
+Context: transfer-fee exemption for verified exchange addresses remains as approved on 2026-08-26; each exemption follows the published address verification procedure and its own Safe proposal with the 48-hour timelock.</pre>
+          <p><strong>NO</strong></p>
+          <pre class="vote-text">IFR Council vote EX-01
+Vote: NO
+I reject proposal EX-01: centralized exchanges receive no IFR incentives (no integration payments, no liquidity grants, no loans) from any project pool. Listings must be self-sustaining. A future incentive requires a new Council proposal.
+Context: transfer-fee exemption for verified exchange addresses remains as approved on 2026-08-26; each exemption follows the published address verification procedure and its own Safe proposal with the 48-hour timelock.</pre>
+        </details>
       </div>
+      <div class="phase-card" id="ex-02">
+        <h3>EX-02 — Governance role of exchanges <span class="phase-badge badge-red">Open</span></h3>
+        <p>Option A: no governance role for exchanges. Option B: at most two disclosed non-voting advisers without Safe permissions.</p>
+        <p><strong>Rule:</strong> The option with 3 votes of eligible Safe signers is adopted. Opened 2026-10-03. Deadline: None, unless a deadline is approved by a separate Council vote.</p>
+        <p><strong>Tally:</strong> OPTION A: 0 · OPTION B: 0 · abstentions: 3 · eligible: 5</p>
+        <p class="vote-summary"><strong>Voted:</strong> nobody yet · <strong>Abstained:</strong> G.M., M.G., Y.K. · <strong>Still missing:</strong> A.M., A.P.</p>
+        <p style="color:var(--muted);font-size:0.85rem;">Open. Three eligible signers abstained; with two signers outstanding no option can reach 3 votes unless votes change. Until a decision, the status quo applies: exchanges have no governance role. The owner is checking whether the outstanding signers want to vote.</p>
+        <div class="table-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+        <table style="min-width:600px;">
+          <thead><tr><th>Signer</th><th>Wallet</th><th>Vote</th><th>Signature (checked locally) · Etherscan reference</th></tr></thead>
+          <tbody>
+            <tr><td>G.M.</td><td><a href="https://etherscan.io/address/0x6b36687b0cd4386fb14cf565B67D7862110Fed67" rel="noopener"><code>0x6b36…ed67</code></a></td><td>ABSTAIN</td><td><a href="https://etherscan.io/verifySig/339713" rel="noopener">etherscan.io/verifySig/339713</a><div class="sig">signed: EX-02 ABSTAIN text · hash 0x59c0d113c9d265bf8c8c04a53e5249b2c3179f30b692bbcd184a455a76e096cc · signature recovers the listed wallet (local check)</div></td></tr>
+            <tr><td>M.G.</td><td><a href="https://etherscan.io/address/0x17F8DD6dECCb3ff5d95691982B85A87d7d9872d4" rel="noopener"><code>0x17F8…72d4</code></a></td><td>ABSTAIN</td><td><a href="https://etherscan.io/verifySig/339732" rel="noopener">etherscan.io/verifySig/339732</a><div class="sig">signed: EX-02 ABSTAIN text · hash 0x59c0d113c9d265bf8c8c04a53e5249b2c3179f30b692bbcd184a455a76e096cc · signature recovers the listed wallet (local check)</div></td></tr>
+            <tr><td>A.M.</td><td><a href="https://etherscan.io/address/0x0C4893DcF730E0Ddc7D18CF9723932784Fb4ED74" rel="noopener"><code>0x0C48…ED74</code></a></td><td>not yet voted</td><td>—</td></tr>
+            <tr><td>Y.K.</td><td><a href="https://etherscan.io/address/0xA0860f872a9cAB34817D9a764e71ab43B942b275" rel="noopener"><code>0xA086…b275</code></a></td><td>ABSTAIN</td><td><a href="https://etherscan.io/verifySig/339734" rel="noopener">etherscan.io/verifySig/339734</a><div class="sig">signed: EX-02 ABSTAIN text · hash 0x59c0d113c9d265bf8c8c04a53e5249b2c3179f30b692bbcd184a455a76e096cc · signature recovers the listed wallet (local check)</div></td></tr>
+            <tr><td>A.P.</td><td><a href="https://etherscan.io/address/0x32cF8b4F29A8F211804857EcF8BF0847f0BC0fE9" rel="noopener"><code>0x32cF…0fE9</code></a></td><td>not yet voted</td><td>—</td></tr>
+          </tbody>
+        </table>
+        </div>
+        <details>
+          <summary>Ballot texts (sign exactly one, unchanged)</summary>
+          <p><strong>OPTION A</strong></p>
+          <pre class="vote-text">IFR Council vote EX-02
+Vote: OPTION A
+On proposal EX-02 (governance role of centralized exchanges) I vote for Option A: exchanges receive no governance role, no Council membership, no adviser seat and no Safe permissions.
+Option B would have allowed at most two disclosed non-voting advisers without Safe permissions.</pre>
+          <p><strong>OPTION B</strong></p>
+          <pre class="vote-text">IFR Council vote EX-02
+Vote: OPTION B
+On proposal EX-02 (governance role of centralized exchanges) I vote for Option B: at most two disclosed non-voting exchange advisers, without Council voting rights and without any Safe permissions.
+Option A would give exchanges no governance role at all.</pre>
+          <p><strong>ABSTAIN</strong></p>
+          <pre class="vote-text">IFR Council vote EX-02
+Vote: ABSTAIN
+I abstain on proposal EX-02 (governance role of centralized exchanges). My abstention is not counted as a vote; the option with at least 3 votes from the Safe signers is adopted. The vote stays open without a deadline unless the Council approves a deadline by a separate vote.</pre>
+        </details>
+      </div>
+      <!-- council-votes:end -->
+
+      <p>Machine-readable record: <a href="https://ifrunit.tech/data/council-votes.json">council-votes.json</a>. Anyone can re-verify every signature with <code>ethers.recoverAddress(messageHash, signature)</code>.</p>
 
       <!-- Footer -->
       <footer class="wiki-footer">
@@ -831,72 +717,6 @@ npm run dev
       hamburger.addEventListener('click', toggleSidebar);
       overlay.addEventListener('click', toggleSidebar);
     })();
-  </script>
-
-  <script>
-    function faucetUpdateAddress(address) {
-      var input = document.getElementById("faucet-address");
-      var status = document.getElementById("faucet-wallet-status");
-      if (!input) return;
-      if (address) {
-        input.value = address;
-        input.style.borderColor = "rgba(34,197,94,0.5)";
-        input.style.color = "#22c55e";
-        if (status) {
-          status.textContent = "\u2705 Address auto-filled from connected wallet";
-          status.style.color = "#22c55e";
-        }
-      } else {
-        input.value = "";
-        input.style.borderColor = "#374151";
-        input.style.color = "#e5e7eb";
-        if (status) {
-          status.textContent = "Connect your wallet to auto-fill your address";
-          status.style.color = "#6b7280";
-        }
-      }
-    }
-
-    function faucetCopyAddress() {
-      var input = document.getElementById("faucet-address");
-      var btn = document.getElementById("faucet-copy-btn");
-      if (!input || !input.value) return;
-      navigator.clipboard.writeText(input.value).then(function() {
-        if (btn) {
-          btn.textContent = "\u2705 Copied!";
-          btn.style.color = "#22c55e";
-          setTimeout(function() {
-            btn.textContent = "\uD83D\uDCCB Copy";
-            btn.style.color = "#9ca3af";
-          }, 2000);
-        }
-      }).catch(function() {
-        input.select();
-        document.execCommand("copy");
-      });
-    }
-
-    function faucetOpen(url) {
-      var input = document.getElementById("faucet-address");
-      if (input && input.value) {
-        navigator.clipboard.writeText(input.value).catch(function() {});
-      }
-      window.open(url, "_blank");
-    }
-
-    // Auto-fill on page load if wallet already connected
-    setTimeout(function() {
-      if (typeof IFRWallet !== "undefined" && IFRWallet.isConnected()) {
-        faucetUpdateAddress(IFRWallet.getAddress());
-      }
-    }, 1500);
-
-    // Listen for wallet events
-    if (typeof IFRWallet !== "undefined") {
-      IFRWallet.on("connected", function(addr) { faucetUpdateAddress(addr); });
-      IFRWallet.on("disconnected", function() { faucetUpdateAddress(null); });
-      IFRWallet.on("accountChanged", function(addr) { faucetUpdateAddress(addr); });
-    }
   </script>
 
 <!-- IFR Copilot Widget -->
@@ -1001,5 +821,5 @@ document.addEventListener("visibilitychange",async function(){if(document.visibi
 var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.addEventListener("mouseenter",function(){this.style.transform="scale(1.04)";this.style.boxShadow="0 4px 20px rgba(249,115,22,0.4)"});_wcBtn.addEventListener("mouseleave",function(){this.style.transform="";this.style.boxShadow="0 2px 12px rgba(249,115,22,0.25)"})}
 </script>
 </body>
-<!-- cache-bust: 1775428218 -->
+<!-- cache-bust: 1775428215 -->
 </html>

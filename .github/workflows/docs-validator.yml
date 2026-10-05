@@ -25,6 +25,9 @@ on:
       - 'scripts/check-cwa-remediation-register.cjs'
       - 'scripts/test-cwa-content-coherence.cjs'
       - 'scripts/test-docs-truth.cjs'
+      - 'scripts/verify-council-votes.cjs'
+      - 'scripts/test-council-votes.cjs'
+      - 'scripts/build-council-votes-page.cjs'
       - 'scripts/test-ifr-benefits-widget.cjs'
       - 'apps/benefits-network/frontend/src/components/WalletStatus.tsx'
       - 'deployments/mainnet.json'
@@ -87,6 +90,9 @@ on:
       - 'scripts/check-cwa-remediation-register.cjs'
       - 'scripts/test-cwa-content-coherence.cjs'
       - 'scripts/test-docs-truth.cjs'
+      - 'scripts/verify-council-votes.cjs'
+      - 'scripts/test-council-votes.cjs'
+      - 'scripts/build-council-votes-page.cjs'
       - 'scripts/test-ifr-benefits-widget.cjs'
       - 'apps/benefits-network/frontend/src/components/WalletStatus.tsx'
       - 'deployments/mainnet.json'
@@ -327,6 +333,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Verify Council vote signatures and the public vote page
+        run: npm run test:council-votes
       - name: Check read-only scripts refuse non-Mainnet RPC
         run: node scripts/test-readonly-scripts-chain.cjs
 
