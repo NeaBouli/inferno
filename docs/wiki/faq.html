@@ -519,7 +519,7 @@
     {
       "@type": "Question",
       "name": "Are the contracts upgradeable?",
-      "acceptedAnswer": {"@type":"Answer","text":"No. All 14 deployed protocol contracts are immutable — no proxy pattern, no UUPS. Bytecode cannot be changed after deployment. The three project Safes (Treasury, Community and LP Reserve) use the Gnosis Safe proxy (audited multisig standard). This prevents rug-pulls via contract upgrades."}
+      "acceptedAnswer": {"@type":"Answer","text":"No. All 15 deployed protocol contracts are immutable — no proxy pattern, no UUPS. Bytecode cannot be changed after deployment. The three project Safes (Treasury, Community and LP Reserve) use the Gnosis Safe proxy (audited multisig standard). This prevents rug-pulls via contract upgrades."}
     },
     {
       "@type": "Question",
@@ -824,7 +824,7 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>How can I verify the contracts on Etherscan?</span><span class="icon">+</span></button>
-          <div class="faq-a">All 17 on-chain components are verified on Etherscan with source code visible. Visit each contract address on <a href="https://etherscan.io" target="_blank" rel="noopener">etherscan.io</a>, click the &ldquo;Contract&rdquo; tab, then &ldquo;Read Contract&rdquo; to inspect state. The main token address is <code>0x77e99917Eca8539c62F509ED1193ac36580A6e7B</code>. All addresses are listed on the <a href="https://ifrunit.tech/wiki/deployment.html">Deployment</a> page.</div>
+          <div class="faq-a">All 18 on-chain components are verified on Etherscan with source code visible. Visit each contract address on <a href="https://etherscan.io" target="_blank" rel="noopener">etherscan.io</a>, click the &ldquo;Contract&rdquo; tab, then &ldquo;Read Contract&rdquo; to inspect state. The main token address is <code>0x77e99917Eca8539c62F509ED1193ac36580A6e7B</code>. All addresses are listed on the <a href="https://ifrunit.tech/wiki/deployment.html">Deployment</a> page.</div>
         </div>
 
         <div class="faq-item">
@@ -849,7 +849,7 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>Are the contracts upgradeable?</span><span class="icon">+</span></button>
-          <div class="faq-a">No. All 14 deployed protocol contracts are immutable &mdash; there is no proxy pattern, no UUPS, no transparent proxy. Once deployed, the bytecode cannot be changed. This means no rug-pull via contract upgrade is possible. The trade-off is that bugs cannot be patched in-place, but this is a deliberate security decision: immutability over convenience.<br><br>The exceptions are the three project Safes (Treasury, Community and LP Reserve), which use the Gnosis Safe proxy architecture and complete the 17 documented on-chain components. Gnosis Safe is a battle-tested, audited multisig standard &mdash; any upgrade requires explicit multisig consensus and is publicly verifiable on-chain. This is not a protocol risk but an industry-standard operational security pattern.</div>
+          <div class="faq-a">No. All 15 deployed protocol contracts are immutable &mdash; there is no proxy pattern, no UUPS, no transparent proxy. Once deployed, the bytecode cannot be changed. This means no rug-pull via contract upgrade is possible. The trade-off is that bugs cannot be patched in-place, but this is a deliberate security decision: immutability over convenience.<br><br>The exceptions are the three project Safes (Treasury, Community and LP Reserve), which use the Gnosis Safe proxy architecture and complete the 18 documented on-chain components. Gnosis Safe is a battle-tested, audited multisig standard &mdash; any upgrade requires explicit multisig consensus and is publicly verifiable on-chain. This is not a protocol risk but an industry-standard operational security pattern.</div>
         </div>
       </div>
 
@@ -979,7 +979,7 @@
 
         <div class="faq-item">
           <button class="faq-q"><span>How do I verify this project is legitimate?</span><span class="icon">+</span></button>
-          <div class="faq-a">Verification checklist:<br><br>&bull; All 17 documented on-chain components can be inspected from the <a href="https://ifrunit.tech/wiki/deployment.html">Deployment</a> page<br>&bull; Full repository open-source at <a href="https://github.com/NeaBouli/inferno" target="_blank" rel="noopener">GitHub</a><br>&bull; Current clean audit evidence includes 644 contract tests, 30 Generator Engine tests, 36 SDK legacy tests and dedicated browser/release gates; see the <a href="https://ifrunit.tech/CURRENT_FUNCTIONALITY_STATUS.md">current functionality status</a><br>&bull; Historical 544-test and coverage figures remain dated snapshots, not the current full-repository total<br>&bull; No mint function &mdash; verify in contract source<br>&bull; Governance timelock and Safe controls are publicly inspectable<br>&bull; Full internal audits are published; an independent professional third-party audit remains pending</div>
+          <div class="faq-a">Verification checklist:<br><br>&bull; All 18 documented on-chain components can be inspected from the <a href="https://ifrunit.tech/wiki/deployment.html">Deployment</a> page<br>&bull; Full repository open-source at <a href="https://github.com/NeaBouli/inferno" target="_blank" rel="noopener">GitHub</a><br>&bull; Current clean audit evidence includes 681 contract tests, 30 Generator Engine tests, 36 SDK legacy tests and dedicated browser/release gates; see the <a href="https://ifrunit.tech/CURRENT_FUNCTIONALITY_STATUS.md">current functionality status</a><br>&bull; Historical 544-test and coverage figures remain dated snapshots, not the current full-repository total<br>&bull; No mint function &mdash; verify in contract source<br>&bull; Governance timelock and Safe controls are publicly inspectable<br>&bull; Full internal audits are published; an independent professional third-party audit remains pending</div>
         </div>
 
         <div class="faq-item">

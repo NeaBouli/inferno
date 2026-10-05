@@ -129,6 +129,10 @@ scripts/deploy-benefits-network.sh env-restore /opt/inferno/backups/benefits-env
 Tests: `npm run test:release-guards` (`scripts/test-deploy-benefits-network.sh` models the host
 and covers each failure path, the never-prune rule and the single-key env edit).
 
+With `DEPLOY_MODE=gate` the deploy modes run through the scoped deploy gate (inferno-deploy
+v2), which applies the same floor and single-backend asserts on the host. Gate mode never
+prunes (the Docker daemon is shared with other projects) and refuses a set `ALLOW_PRUNE`. See [gate mode](COMPOSE_SERVICE_RELEASE.md#gate-mode).
+
 ## Current Largest Consumers
 
 Largest active images from the latest audit:

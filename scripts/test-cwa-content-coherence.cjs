@@ -433,6 +433,23 @@ assert.ok(
   "served widget gained a secret check; update CWA-53 copy"
 );
 
+// CWA-06: neutral custody/activation wording; no private backend address or unproven "never held" claim.
+const CWA06_ACTIVATION =
+  "Mainnet execution was performed by the Safe signers. Backend activation was performed by owner-authorized automation, according to the operator report.";
+const CWA06_BACKGROUND =
+  "The former on-chain voucher signer was also a Safe owner. The reviewed pre-rotation backend configuration reported a different active signer; this does not establish deployment of the Safe-owner private key.";
+const CWA06_CUSTODY =
+  "Based on the reviewed backend configuration, no Safe-owner key rotation is required by this voucher-signer change. Owner confirmation that the key was not otherwise exposed remains pending.";
+requireText("docs/VOUCHER_SIGNER_ROTATION.md", [CWA06_ACTIVATION, CWA06_BACKGROUND, CWA06_CUSTODY]);
+requireText("docs/community-audits/CWA_REMEDIATION_REGISTER.md", [CWA06_CUSTODY]);
+for (const relative of ["docs/VOUCHER_SIGNER_ROTATION.md", "docs/community-audits/cwa-remediation-register.json", "docs/community-audits/CWA_REMEDIATION_REGISTER.md"]) {
+  forbidText(relative, ["never held", "never by automation", "held a different key", "exposure elsewhere"]);
+  assert.ok(!/0x[dD]9[aA]0/.test(read(relative)), `${relative} publishes the private backend signer address`);
+}
+const cwa06 = JSON.parse(read("docs/community-audits/cwa-remediation-register.json")).findings.find((entry) => entry.id === "CWA-06");
+assert.ok(cwa06.nextAction.includes(CWA06_CUSTODY), "CWA-06 nextAction must carry the custody wording");
+assert.ok(cwa06.verification.includes(CWA06_ACTIVATION), "CWA-06 verification must carry the activation wording");
+
 const register = JSON.parse(read("docs/community-audits/cwa-remediation-register.json"));
 for (let number = 57; number <= 73; number += 1) {
   const id = `CWA-${number}`;
@@ -441,4 +458,4 @@ for (let number = 57; number <= 73; number += 1) {
   assert.equal(finding.disposition, "fixed_and_verified", `${id} status must match evidence`);
 }
 
-console.log("[cwa-content-coherence] PASS - CWA-15, CWA-20, CWA-23, CWA-51...CWA-53, CWA-57...CWA-73 plus CWA-78 source, math, copy and status evidence");
+console.log("[cwa-content-coherence] PASS - CWA-06 custody wording, CWA-15, CWA-20, CWA-23, CWA-51...CWA-53, CWA-57...CWA-73 plus CWA-78 source, math, copy and status evidence");

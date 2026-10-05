@@ -20,8 +20,8 @@ a 48-hour timelock period and quorum approval.
    after the public community signer-expansion process
 4. **Core Bounds:** No mint function, fixed 9 decimals, and a hard 5% aggregate
    fee cap; fee components are governable within that cap
-5. **Guardian Right:** The current Guardian EOA can cancel pending proposals;
-   a separate guardian multisig remains planned
+5. **Guardian Right:** The Guardian, the Treasury Safe since 3 October 2026, can cancel
+   pending proposals
 
 ## Article 2 — Governable Parameters
 
@@ -90,9 +90,9 @@ Responsible for: All governance proposals
 
 ### Guardian
 
-The current Guardian is the deployer EOA and has emergency cancellation power;
-it cannot propose or execute. Migration to a separate guardian multisig remains
-planned.
+The Guardian is the Treasury Safe (3-of-5) since 3 October 2026 (guardian migration, CWA-09) and has
+emergency cancellation power; it cannot propose or execute. The LiquidityReserve and BurnReserve guardians
+followed through Governance proposals #19/#20 on 5 October 2026.
 
 ## Article 5 — Prohibited Governance Actions
 The following actions are technically impossible by contract design:

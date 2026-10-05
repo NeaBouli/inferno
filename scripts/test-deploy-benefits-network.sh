@@ -578,6 +578,7 @@ refute_out "test-only-admin-secret"
 
 # --- never prunes: no call of the whole suite and no line of the script prunes ----------
 if grep -Eq 'prune' "$ALL_LOG"; then grep -E 'prune' "$ALL_LOG" >&2; echo "FAIL: a prune was called" >&2; exit 1; fi
-if grep -Eq 'docker[^#]*prune|safe_prune|ALLOW_PRUNE' "$ROOT/$SCRIPT"; then echo "FAIL: $SCRIPT still contains a prune path" >&2; exit 1; fi
+# The gate-mode refusal of a set ALLOW_PRUNE (from #198) is a guard, not a prune path: exclude exactly it.
+if grep -E 'docker[^#]*prune|safe_prune|ALLOW_PRUNE' "$ROOT/$SCRIPT" | grep -Ev '^[[:space:]]*#|ALLOW_PRUNE\+set|unset ALLOW_PRUNE' | grep -q .; then echo "FAIL: $SCRIPT still contains a prune path" >&2; exit 1; fi
 
 echo "Benefits release guards hold: no-prune capacity floor, no schema migration, backup-first, backup of the running image ID, verified restore on sync/build/health/public failure with erroring checks failing it, env-vault-v2 single-key edit"
