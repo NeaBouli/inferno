@@ -1,6 +1,14 @@
 const { connectHardhat } = require("./lib/hardhat-runtime");
 
 (async () => {
+// Legacy Sepolia stats writer. It would overwrite Mainnet-facing docs (docs/index.html,
+// docs/TRANSPARENCY.md, STATUS-REPORT.md) with TESTNET figures, so it refuses to run unless
+// explicitly forced for a local experiment (T-212b-11). Its CI workflows were removed.
+if (process.env.ALLOW_TESTNET_STATS_TO_DOCS !== "1") {
+  console.error("update-stats.js refuses to run: it writes Sepolia figures into Mainnet docs. Set ALLOW_TESTNET_STATS_TO_DOCS=1 only for a local experiment.");
+  process.exitCode = 1;
+  return;
+}
 const { ethers } = await connectHardhat();
 const fs = require("fs");
 const path = require("path");
@@ -125,7 +133,10 @@ async function main() {
   console.log(`Burned: ${stats.token.burnedFormatted} IFR (${stats.token.burnedPct}%)`);
 }
 
-main().catch(console.error);
+main().catch((error) => {
+  console.error(error);
+  process.exitCode = 1;
+});
 
 })().catch((error) => {
   console.error(error);

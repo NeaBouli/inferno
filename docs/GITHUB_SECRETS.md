@@ -40,8 +40,6 @@ Secrets and Variables → Actions.
 
 | Workflow | Secrets |
 |----------|---------|
-| update-stats.yml | SEPOLIA_RPC_URL, DEPLOYER_PRIVATE_KEY |
-| post-deploy.yml | SEPOLIA_RPC_URL, DEPLOYER_PRIVATE_KEY |
 | ci.yml | None (tests only) |
 | creator-gateway.yml | None (tests only) |
 | points-backend.yml | None (tests only) |

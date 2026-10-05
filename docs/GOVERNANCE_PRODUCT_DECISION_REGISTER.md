@@ -99,8 +99,9 @@ remains the only place where agenda items and vote outcomes are published.
 - **Testnet/staging gate:** Sepolia deployment with every condition type.
 - **Production gate:** separate recorded decision plus Safe proposal and
   48-hour timelock.
-- **Next evidence:** independent review of `PriceLockVault`; Sepolia
-  rehearsal log; readiness reaching the activation scope.
+- **Next evidence:** Sepolia rehearsal log; readiness reaching the
+  activation scope. The independent review of `PriceLockVault` is done
+  (second review T-256); the vault is not deployed and not active.
 
 ## Lane 3 — FeeRouter sink/accrual and Governance/guardian redeployment
 
@@ -235,15 +236,29 @@ remains the only place where agenda items and vote outcomes are published.
   ([runbook](runbooks/IFR_SDK_NPM_RELEASE.md)). Creator Gateway source exists
   in the repository; no production deployment record exists
   ([spec](CREATOR_GATEWAY.md)).
-- **Decision needed:** embedded-wallet provider and single recovery trust
-  model, or continued external-wallet-only; SDK license owner, package name
-  and npm owner; Creator Gateway hosting model and first creator pilot.
+- **Decision (2026-10-03, project):** (1) external self-custody wallets only;
+  no embedded wallet is planned and the Sepolia prototype stays a prototype
+  (open-source, community-driven project). (2) Publish `ifr-sdk` under MIT from
+  the project npm account `ifr-protocol` (project alias e-mail, 2FA), never a
+  personal account: one manual bootstrap version, then only the fail-closed
+  workflow dispatched on protected `main` with npm Trusted Publishing and owner
+  approval ([runbook](runbooks/IFR_SDK_NPM_RELEASE.md)).
+- **Decision needed:** Creator Gateway hosting model. Proposed: a public demo
+  instance on the sandbox host with wallet and IFRLock checks only (no
+  Google/YouTube OAuth, no personal data) plus a self-hosting quickstart;
+  first creator pilot.
 - **Private follow-on boundary:** a gated content product may follow as a
   separate private product. Public repositories only acknowledge that planned
   boundary; its implementation details stay outside this repository.
 - **Prerequisites:** embedded-wallet acceptance matrix complete; approved
   `LICENSE` file; Creator Gateway deployment runbook.
 - **Dependencies:** Lane 4 reward caller for creator rewards.
+- **Decision (point 3, 2026-10-03):** use-case connection needs no partner or
+  user server and no new project-run service. Discounts run through the existing
+  IFR Benefits shop; partner websites may add the display-only serverless widget
+  and communities use Guild.xyz or Collab.Land with an IFRLock contract-read
+  condition ([guide](wiki/integrate-benefits.html)). The Creator Gateway stays
+  optional self-hosting only.
 - **Impact:** npm publication is irreversible for a published version; an
   embedded-wallet feature flag is reversible, but user wallets created under it
   must stay exportable.

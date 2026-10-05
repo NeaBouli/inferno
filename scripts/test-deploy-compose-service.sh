@@ -49,6 +49,11 @@ for svc in telegram-bot points-backend ai-copilot; do
   echo "dep" > "$HOST/$svc/node_modules/pkg/index.js"
   echo "row" > "$HOST/$svc/data/state.json"
   echo "bundle" > "$HOST/$svc/dist/main.js"
+  chmod 644 "$HOST/$svc/src/old-only-on-host.js"                   # world-readable for the container build
+  ln -s old-only-on-host.js "$HOST/$svc/src/current-link"           # restore must keep symlinks as links
+  # Excluded runtime entries differ freely and are never compared by the restore checks.
+  chmod 600 "$HOST/$svc/.env"
+  ln -s ../pkg/index.js "$HOST/$svc/node_modules/pkg/bin-link"
   echo "sha256:old-$svc" > "$DOCKER_STATE/images/inferno-$svc:latest"
   echo "sha256:old-$svc" > "$DOCKER_STATE/running-inferno-$svc"
 done
@@ -65,13 +70,36 @@ cat > "$FAKES/rsync" <<'EOF'
 #!/usr/bin/env bash
 printf 'rsync %s\n' "$*" >> "$LOG"
 [[ "${RSYNC_FAIL:-0}" == 1 && "$*" == *--itemize-changes* && "$*" != *--dry-run* ]] && exit 23
+# The v1 deploy user (T-255) may write under /opt/inferno but may not set times,
+# owner, group or mode on root-owned inodes: any metadata flag on a host write fails
+# like production did on 2026-10-05 (rsync exit 23).
+dest="${@: -1}"
+if [[ "$dest" == */opt/inferno* && "$*" != *--dry-run* ]]; then
+  for a in "$@"; do
+    if [[ "$a" =~ ^-[A-Za-z]*[tagopAXUN] && "$a" != --* ]] || [[ "$a" =~ ^--(archive|times|perms|owner|group|acls|xattrs|atimes|crtimes)$ ]]; then
+      echo "rsync: [generator] failed to set times on \"$dest\": Operation not permitted (1) [fixture: v1 user, flag $a]" >&2
+      exit 23
+    fi
+  done
+fi
 args=()
 for a in "$@"; do
   a="${a#compose-test-host:}"
   [[ "$a" == /opt/inferno* ]] && a="$REMOTE$a"   # remote paths only; local ones pass through
   args+=("$a")
 done
-exec "$REAL_RSYNC" "${args[@]}"
+[[ "${RESTORE_RSYNC_FAIL:-0}" == 1 && "$*" != *--itemize-changes* ]] && exit 23   # restore sync fails
+"$REAL_RSYNC" "${args[@]}" || exit $?
+# TAMPER=content|link|perm corrupts the source dir right after a restore sync (no
+# --itemize-changes), so the restore checks must catch it.
+if [[ -n "${TAMPER:-}" && "$*" != *--itemize-changes* ]]; then
+  d="${args[${#args[@]}-1]}"
+  case "$TAMPER" in
+    content) echo tampered >> "$d/src/old-only-on-host.js" ;;
+    link)    ln -sfn ../Dockerfile "$d/src/current-link" ;;
+    perm)    chmod o-r "$d/src/old-only-on-host.js" ;;
+  esac
+fi
 EOF
 # docker: images are files named <repo:tag> holding an id; a container runs the id
 # its image had at `compose up`. A build yields sha256:bad when BAD_BUILD=1, and a
@@ -146,6 +174,18 @@ fail() { echo "FAIL: $*" >&2; echo "$OUT" >&2; exit 1; }
 assert_out() { grep -Fq -- "$1" <<< "$OUT" || fail "output lacks: $1"; }
 assert_log() { grep -Fq -- "$1" "$LOG" || { echo "FAIL: log lacks: $1" >&2; cat "$LOG" >&2; exit 1; }; }
 refute_log() { if grep -Fq -- "$1" "$LOG"; then echo "FAIL: log has: $1" >&2; cat "$LOG" >&2; exit 1; fi; }
+# T-255: no rsync that writes a host path may carry a metadata flag (-t/-a/-g/-o/-p, ...).
+assert_content_only_rsync() {
+  local line a
+  while IFS= read -r line; do
+    [[ "$line" == *--dry-run* || "$line" != */opt/inferno* ]] && continue
+    for a in ${line#rsync }; do
+      if [[ "$a" =~ ^-[A-Za-z]*[tagopAXUN] && "$a" != --* ]] || [[ "$a" =~ ^--(archive|times|perms|owner|group|acls|xattrs|atimes|crtimes)$ ]]; then
+        echo "FAIL: host-writing rsync carries metadata flag $a: $line" >&2; exit 1
+      fi
+    done
+  done < <(grep '^rsync ' "$LOG" || true)
+}
 line_of() { grep -Fn -- "$1" "$LOG" | head -1 | cut -d: -f1; }
 same_tree() { diff -r "$TMP/host.before/$1" "$HOST/$1" >/dev/null || fail "$HOST/$1 differs from the pre-release host"; }
 image() { cat "$DOCKER_STATE/images/inferno-$1:latest"; }
@@ -237,6 +277,9 @@ stamp="${backup##*-}"
 [[ "$(image points-backend)" == "sha256:old-points-backend" ]] || fail "latest tag not restored"
 [[ "$(running points-backend)" == "sha256:old-points-backend" ]] || fail "container not recreated from the rollback image"
 same_tree points-backend
+assert_out "restore verified: (a) content (b) symlinks (c) access"
+assert_log "rsync -rl --checksum --delete --exclude .env* --exclude *.db* --exclude /node_modules --exclude /dist --exclude /data"
+assert_content_only_rsync
 assert_log "docker image tag inferno-points-backend:rollback-$stamp inferno-points-backend:latest"
 assert_log "docker compose up -d --no-build --no-deps points-backend"
 refute_log "curl "                                    # public checks never ran on an unhealthy container
@@ -282,6 +325,8 @@ sleep 1
 : > "$LOG"
 EXPECTED_SHA="$SHA" run 0 "$C" points-backend deploy
 assert_out "released: points-backend $SHA"
+assert_log "rsync -rl --checksum --delete --chmod=Du=rwx,Dgo=rx,Fu=rw,Fgo=r --itemize-changes"
+assert_content_only_rsync
 assert_out "ok    200 https://points-api.ifrunit.tech/health"
 [[ "$(cat "$HOST/points-backend/RELEASE_SHA")" == "$SHA" ]] || fail "RELEASE_SHA not written"
 [[ "$(running points-backend)" == "sha256:new-$SHA" ]] || fail "container not rebuilt"
@@ -327,8 +372,38 @@ run 1 "$C" points-backend rollback "/opt/inferno/backups/telegram-bot-$stamp"
 run 1 "$C" points-backend rollback "/opt/inferno/backups/points-backend-$stamp/../x"
 test ! -e "$TMP/injected" || fail "rollback path was executed as a command"
 refute_log "ssh "
-run 0 "$C" points-backend rollback "/opt/inferno/backups/points-backend-$stamp"
+bk="/opt/inferno/backups/points-backend-$stamp"
+# T-255: content identity alone is not success; each tampered aspect fails loudly.
+for case in "content:(a) content differs from the backup" "link:(b) symlinks differ from the backup" \
+            "perm:(c) entries lost world read/traverse access"; do
+  : > "$LOG"
+  TAMPER="${case%%:*}" run 1 "$C" points-backend rollback "$bk"
+  assert_out "ROLLBACK CHECK FAILED: ${case#*:}"
+  assert_out "rollback to $bk failed"
+done
+# Content-only restore never changes modes, so a lost o+r stays lost and keeps failing.
+run 1 "$C" points-backend rollback "$bk"
+assert_out "./src/old-only-on-host.js"
+chmod o+r "$HOST/points-backend/src/old-only-on-host.js"
+# A failing restore sync is never ignored and stops before the image is retagged.
+: > "$LOG"
+RESTORE_RSYNC_FAIL=1 run 1 "$C" points-backend rollback "$bk"
+assert_out "ROLLBACK CHECK FAILED: rsync exited 23"
+refute_log "docker image tag"
+# (d) an unhealthy container after restore fails the rollback
+echo sha256:bad > "$DOCKER_STATE/images/inferno-points-backend:rollback-$stamp"
+run 1 "$C" points-backend rollback "$bk"
+assert_out "ROLLBACK CHECK FAILED: (d) inferno-points-backend not healthy after restore"
+echo sha256:old-points-backend > "$DOCKER_STATE/images/inferno-points-backend:rollback-$stamp"
+: > "$LOG"
+run 0 "$C" points-backend rollback "$bk"
+assert_out "restore verified: (a) content (b) symlinks (c) access"
 same_tree points-backend
+[[ -L "$HOST/points-backend/src/current-link" && "$(readlink "$HOST/points-backend/src/current-link")" == old-only-on-host.js ]] || fail "symlink not restored as link"
+for f in .env node_modules/pkg/bin-link; do
+  [[ -e "$HOST/points-backend/$f" || -L "$HOST/points-backend/$f" ]] || fail "excluded $f removed by restore"
+done
 [[ "$(running points-backend)" == "sha256:old-points-backend" ]] || fail "manual rollback did not restore the image"
+assert_content_only_rsync
 
 echo "Compose release guards hold: plan/deploy/verify/rollback for telegram-bot, points-backend, ai-copilot"
