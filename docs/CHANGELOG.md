@@ -9,7 +9,8 @@
   read "Withdraw offer"; the `?action=lending-offer` route opens the same withdraw dialog. The dialog shows
   the retired note, hides the deposit button and refuses the create/increase path before any wallet call
   (no approve, no `createOffer`/`increaseOffer`; both were removed from the page ABI). `withdrawOffer`
-  stays, and "Use available" fills the full available amount (full withdrawal closes the offer).
+  stays, and "Use available" fills the full available amount (a full withdrawal closes the offer only
+  when none of its IFR is still lent out).
 - New borrowing is blocked permanently, regardless of `ifrPriceWei`: the borrow submit and "Use offer max"
   controls are hidden and disabled, the handler refuses before any wallet call (no approve, no collateral,
   no `borrow`), and the price shows "Disabled". The entry points read "Loans (borrowing closed)";
