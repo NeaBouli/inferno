@@ -14,7 +14,8 @@ export const LEVEL_LABELS: Record<SecurityLevel, string> = {
 export const SCORE_DISCLAIMER =
   "Configuration heuristic only — not audited, not a security audit or certification. What the repository tests check: " +
   "every option combination compiles (solc 0.8.20); lock() credits the amount actually received (IFR is fee-on-transfer) " +
-  "and unlock() returns exactly that amount; hasAccess() reads the locked amount.";
+  "and unlock() transfers that credited amount (IFR’s transfer fee may apply, so the wallet can receive less unless " +
+  "the contract is fee-exempt); hasAccess() reads the locked amount.";
 
 export interface ScoreBreakdown {
   category: string;

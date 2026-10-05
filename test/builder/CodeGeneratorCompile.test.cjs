@@ -147,7 +147,8 @@ console.log(`[builder-parity] PASS - engine and builder.html match structurally 
 
 // Score card wording parity: same non-verdict labels and the same "what is checked" disclaimer.
 const { LEVEL_LABELS, SCORE_DISCLAIMER } = require(path.join(path.resolve(distDirectory), "SecurityScorer.js"));
-assert.ok(html.replace(/&mdash;/g, "—").includes(SCORE_DISCLAIMER), "engine SCORE_DISCLAIMER must match the builder.html score card text");
+assert.doesNotMatch(SCORE_DISCLAIMER, /returns exactly/, "unlock payout may be reduced by the IFR transfer fee");
+assert.ok(html.replace(/&mdash;/g, "—").replace(/&rsquo;/g, "’").includes(SCORE_DISCLAIMER), "engine SCORE_DISCLAIMER must match the builder.html score card text");
 for (const label of Object.values(LEVEL_LABELS)) assert.ok(html.includes(label), `builder.html must use the engine label ${label}`);
 assert.doesNotMatch(Object.values(LEVEL_LABELS).join(" "), /SAFE|MEDIUM|RISKY/, "labels must not read as a security verdict");
 console.log("[builder-parity] PASS - score labels and disclaimer match builder.html");
