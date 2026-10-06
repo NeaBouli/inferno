@@ -227,6 +227,38 @@ function assertOfflineFallbackDesign() {
     if (ref === '/' || ref === '/support') continue;
     assert(source.includes(`'${ref}'`), `offline fallback asset ${ref} must be precached by the service worker`);
   }
+  assertOfflineFallbackTypography(offline);
+}
+
+// T-284 review: text on the offline fallback uses fixed font sizes (px/rem, never scaled with the viewport) and
+// zero tracking. Every font-size and letter-spacing declaration in the page's single <style> block is checked, and
+// the root must set letter-spacing: 0 so that no element falls back to a non-zero inherited value.
+function assertOfflineFallbackTypography(offline) {
+  const styles = [...offline.matchAll(/<style\b[^>]*>([\s\S]*?)<\/style>/gi)].map(([, css]) => css);
+  assert.strictEqual(styles.length, 1, 'offline fallback must keep its CSS in a single inline <style> block');
+  assert(!/\sstyle=/i.test(offline), 'offline fallback must not use inline style attributes');
+  const css = styles[0].replace(/\/\*[\s\S]*?\*\//g, '');
+  const rules = [...css.matchAll(/([^{}]+)\{([^}]*)\}/g)].map(([, selector, body]) => ({ selector: selector.trim(), body }));
+  const declarations = rules.flatMap(({ selector, body }) => body.split(';')
+    .map((declaration) => declaration.trim())
+    .filter(Boolean)
+    .map((declaration) => {
+      const colon = declaration.indexOf(':');
+      return { selector, property: declaration.slice(0, colon).trim().toLowerCase(), value: declaration.slice(colon + 1).trim().toLowerCase() };
+    }));
+  const fontSizes = declarations.filter(({ property }) => property === 'font-size');
+  assert(fontSizes.length > 0, 'offline fallback must declare its font sizes');
+  for (const { selector, value } of fontSizes) {
+    assert(/^\d+(?:\.\d+)?(?:px|rem)$/.test(value), `offline ${selector} font-size must be a fixed px/rem value, got ${value}`);
+  }
+  for (const { selector, value } of declarations.filter(({ property }) => property === 'font')) {
+    assert(!/vw|vh|vmin|vmax|clamp\(|min\(|max\(|calc\(/.test(value), `offline ${selector} font shorthand must not scale with the viewport, got ${value}`);
+  }
+  for (const { selector, value } of declarations.filter(({ property }) => property === 'letter-spacing')) {
+    assert(/^0(?:px|em|rem)?$/.test(value), `offline ${selector} letter-spacing must be 0, got ${value}`);
+  }
+  const rootSpacing = declarations.find(({ selector, property }) => (selector === ':root' || selector === 'html') && property === 'letter-spacing');
+  assert(rootSpacing, 'offline fallback root must set letter-spacing: 0 for all text');
 }
 
 async function main() {

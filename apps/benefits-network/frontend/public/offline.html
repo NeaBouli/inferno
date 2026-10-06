@@ -7,7 +7,8 @@
     <title>Offline | IFR Benefits</title>
     <style>
       /* Static, self-contained offline fallback. Tokens mirror the light shop design in src/app/globals.css
-         (.shop-shell); no fonts, scripts or other resources are fetched. */
+         (.shop-shell); no fonts, scripts or other resources are fetched. Typography uses fixed px sizes (nothing
+         scales with the viewport) and zero letter-spacing on all text. */
       :root {
         --shop-paper: #f5f1e8;
         --shop-panel: #fffdf8;
@@ -19,6 +20,8 @@
         --shop-ember-deep: #8f3519;
         color-scheme: light;
         font-family: "IBM Plex Sans", "Avenir Next", Avenir, Helvetica, sans-serif;
+        font-size: 16px;
+        letter-spacing: 0;
         background: var(--shop-paper);
         color: var(--shop-ink);
       }
@@ -38,12 +41,11 @@
           repeating-linear-gradient(90deg, rgba(67, 54, 42, 0.018) 0, rgba(67, 54, 42, 0.018) 1px, transparent 1px, transparent 7px),
           var(--shop-paper);
         color: var(--shop-ink);
-        letter-spacing: 0;
       }
 
       main {
         width: min(100%, 560px);
-        padding: clamp(28px, 7vw, 48px);
+        padding: 40px 28px;
         border: 1px solid var(--shop-border);
         border-radius: 24px;
         background: var(--shop-panel);
@@ -65,14 +67,14 @@
         font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
         font-size: 12px;
         font-weight: 700;
-        letter-spacing: 0.12em;
+        letter-spacing: 0;
         text-transform: uppercase;
       }
 
       h1 {
         margin: 0;
         font-family: Newsreader, Georgia, "Times New Roman", serif;
-        font-size: clamp(32px, 8vw, 48px);
+        font-size: 34px;
         font-weight: 600;
         line-height: 1.05;
         color: var(--shop-ink);
@@ -81,6 +83,7 @@
       p {
         margin: 18px auto 0;
         color: var(--shop-muted);
+        font-size: 16px;
         line-height: 1.65;
       }
 
@@ -100,6 +103,7 @@
         border-radius: 14px;
         background: var(--shop-panel-soft);
         color: var(--shop-ink);
+        font-size: 16px;
         font-weight: 700;
         text-decoration: none;
       }
