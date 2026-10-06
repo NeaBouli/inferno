@@ -70,18 +70,20 @@ class FeeRouterTests(unittest.TestCase):
 
 
 class ContextTests(unittest.TestCase):
-    def test_chain_mirrors_js_number(self) -> None:
-        # Values Number() + isSafeInteger accept as chain 1.
-        for value in ("1", " 1 ", "01", "1.0", "1e0", "0x1", "0X01", "0b1", "0o1", "+1"):
+    def test_chain_conservative_ascii_subset(self) -> None:
+        for value in ("1", " 1 ", "01", "\t1\n"):
             lines, code = run([f"CHAIN_ID={value}", "NODE_ENV=production"])
-            self.assertIn("chain_mainnet=true", lines, value)
-            self.assertEqual(code, 0, value)
+            self.assertIn("chain_mainnet=true", lines, repr(value))
+            self.assertEqual(code, 0, repr(value))
         self.assertIn("chain_mainnet=false", run(["CHAIN_ID=11155111"])[0])
-        # Values the loader rejects -> ambiguous.
-        for value in ("one", "0", "-1", "1.5", "0x", "+0x1", "1_0", "0xg", "1e400", "Infinity", "9007199254740992"):
+        self.assertIn("chain_mainnet=false", run(["CHAIN_ID=9007199254740991"])[0])  # MAX_SAFE_INTEGER
+        # Outside the conservative subset (some the JS loader accepts) -> unknown, exit 2.
+        for value in ("one", "0", "-1", "+1", "1.0", "1.5", "1e0", "1e400", "1e999999999", "0x1", "0b1",
+                      "0o1", "0x", "1_0", "Infinity", "9007199254740992", "12345678901234567",
+                      "\u0661", "0x\u0661", "\uff11", "1\u0661", "\u00a01"):
             lines, code = run([f"CHAIN_ID={value}", "NODE_ENV=production"])
-            self.assertIn("chain_mainnet=unknown", lines, value)
-            self.assertEqual(code, 2, value)
+            self.assertIn("chain_mainnet=unknown", lines, repr(value))
+            self.assertEqual(code, 2, repr(value))
 
     def test_chain_missing(self) -> None:
         self.assertEqual(run(["NODE_ENV=production"])[1], 2)
@@ -121,9 +123,42 @@ class FailClosedTests(unittest.TestCase):
         self.assertIn("mode=unknown", lines)
         self.assertEqual(code, 2)
 
-    def test_bad_container_name(self) -> None:
-        for name in ("", "-x", "a b", "x;rm", "a" * 200):
-            self.assertEqual(mod.classify(name, lambda _n: inspect_json(base())), (self.UNREADABLE, 2))
+    def test_other_container_never_inspected(self) -> None:
+        calls: list[str] = []
+
+        def spy(name: str) -> str:
+            calls.append(name)
+            return inspect_json(base(f"FEE_ROUTER_ADDRESS={CANONICAL}"), name=f"/{name}")
+
+        for name in ("inferno-telegram-bot", "inferno-ai-copilot", "", "-x", "a b", "x;rm", "a" * 200):
+            self.assertEqual(mod.classify(name, spy), (self.UNREADABLE, 2))
+        self.assertEqual(calls, [])
+
+    def test_cli_takes_no_arguments(self) -> None:
+        err = io.StringIO()
+        with redirect_stderr(err), redirect_stdout(io.StringIO()):
+            self.assertEqual(mod.main(["x", "inferno-ai-copilot"]), 2)
+
+    def test_parser_failure_stays_inside_boundary(self) -> None:
+        # Env entries that are strings but make downstream parsing explode must not traceback.
+        original = mod.classify_chain
+
+        def explode(_values: object, _mode: str) -> str:
+            raise ValueError(SENTINEL_URL)
+
+        mod.classify_chain = explode  # type: ignore[assignment]
+        try:
+            out, err = io.StringIO(), io.StringIO()
+            with redirect_stdout(out), redirect_stderr(err):
+                result = run(base(f"FEE_ROUTER_ADDRESS={CANONICAL}"))
+            self.assertEqual(result, (self.UNREADABLE, 2))
+            self.assertEqual(out.getvalue() + err.getvalue(), "")
+        finally:
+            mod.classify_chain = original  # type: ignore[assignment]
+
+    def test_non_ascii_router_is_noncanonical(self) -> None:
+        lines, _ = run(base("FEE_ROUTER_ADDRESS=" + CANONICAL.replace("B", "\uff22")))
+        self.assertIn("fee_router=noncanonical", lines)
 
 
 class NoLeakTests(unittest.TestCase):
@@ -145,6 +180,7 @@ class NoLeakTests(unittest.TestCase):
         err = io.StringIO()
         with redirect_stderr(err), redirect_stdout(io.StringIO()):
             self.assertEqual(mod.main(["x", "a", "b"]), 2)
+            self.assertEqual(mod.main(["x", "a"]), 2)
         self.assertNotIn("SENTINEL", err.getvalue())
 
 

@@ -42,7 +42,7 @@ jobs:
           cache-dependency-path: apps/points-backend/package-lock.json
       - name: Test owner-only config classifier (dummy fixtures)
         working-directory: .
-        run: python3 scripts/ops/test_classify_points_config.py
+        run: PYTHONDONTWRITEBYTECODE=1 python3 scripts/ops/test_classify_points_config.py
       - run: npm ci
       - run: npm run test:dependencies
       - run: npx prisma generate
