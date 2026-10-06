@@ -441,26 +441,43 @@ async function run() {
     const garbageMessage =
       `${sentinelFreeText} key=${sentinelKey} url=https://apiuser:hunter2sentinel@rpc.example owner=${sentinelHex}`;
     // Own client IP so the per-IP SIWE verify budget of the cases above is untouched.
-    const verifyFrom = async (body: object) =>
-      (await fetch(`${baseUrl}/auth/siwe/verify`, {
+    const verifyFrom = async (body: object) => {
+      const res = await fetch(`${baseUrl}/auth/siwe/verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "X-Forwarded-For": "10.28.9.4" },
         body: JSON.stringify(body),
-      })).status;
-    const logs: unknown[][] = [];
-    const originalConsoleError = console.error;
-    console.error = (...args: unknown[]) => { logs.push(args); };
-    let badSignatureStatus = 0;
-    let badMessageStatus = 0;
-    try {
-      badSignatureStatus = await verifyFrom({ message: signed.message, signature: foreignSignature });
-      badMessageStatus = await verifyFrom({ message: garbageMessage, signature: foreignSignature });
-    } finally {
-      console.error = originalConsoleError;
+      });
+      return { status: res.status, data: await res.json() as Record<string, unknown> };
+    };
+    // Capture every console channel, not only console.error.
+    const channels = ["log", "info", "warn", "error", "debug", "trace"] as const;
+    const lines: string[] = [];
+    const originals = channels.map((channel) => [channel, console[channel]] as const);
+    for (const channel of channels) {
+      console[channel] = (...args: unknown[]) => { lines.push(format(...args)); };
     }
-    assert(badSignatureStatus === 400, "SIWE signature from another key is rejected");
-    assert(badMessageStatus === 400, "unparseable SIWE message is rejected");
-    const lines = logs.map((args) => format(...args));
+    let badSignature = { status: 0, data: {} as Record<string, unknown> };
+    let badMessage = { status: 0, data: {} as Record<string, unknown> };
+    try {
+      badSignature = await verifyFrom({ message: signed.message, signature: foreignSignature });
+      badMessage = await verifyFrom({ message: garbageMessage, signature: foreignSignature });
+    } finally {
+      for (const [channel, original] of originals) console[channel] = original;
+    }
+    assert(
+      badSignature.status === 400 && badSignature.data.error === "Failed to verify SIWE message" &&
+        badSignature.data.token === undefined,
+      "SIWE signature from another key is rejected without a token",
+    );
+    assert(
+      badMessage.status === 400 && badMessage.data.error === "Failed to verify SIWE message" &&
+        badMessage.data.token === undefined,
+      "unparseable SIWE message is rejected without a token",
+    );
+    assert(
+      (await prisma.wallet.findUnique({ where: { address: sentinelWallet.address.toLowerCase() } })) === null,
+      "rejected SIWE creates no wallet row",
+    );
     assert(
       lines.length === 2 &&
         lines[0] === "[AUTH] siwe_failed category=siwe_error:invalid_signature" &&

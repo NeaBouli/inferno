@@ -69,16 +69,21 @@ function assertNoSentinels(text: string, label: string) {
   assert(leaked.length === 0, `${label}: no sentinel in log`);
 }
 
-async function captureConsoleError(fn: () => Promise<void>): Promise<string[]> {
-  const logs: unknown[][] = [];
-  const original = console.error;
-  console.error = (...args: unknown[]) => { logs.push(args); };
+const CONSOLE_CHANNELS = ["log", "info", "warn", "error", "debug", "trace"] as const;
+
+/** Run fn with every console channel captured; returns the formatted lines of all channels. */
+async function captureConsole(fn: () => Promise<void>): Promise<string[]> {
+  const logs: string[] = [];
+  const originals = CONSOLE_CHANNELS.map((channel) => [channel, console[channel]] as const);
+  for (const channel of CONSOLE_CHANNELS) {
+    console[channel] = (...args: unknown[]) => { logs.push(format(...args)); };
+  }
   try {
     await fn();
   } finally {
-    console.error = original;
+    for (const [channel, original] of originals) console[channel] = original;
   }
-  return logs.map((args) => format(...args));
+  return logs;
 }
 
 async function run() {
@@ -125,7 +130,7 @@ async function run() {
       globalThis.fetch = c.fetchImpl;
       const res = mockRes();
       let nextCalled = false;
-      const lines = await captureConsoleError(() =>
+      const lines = await captureConsole(() =>
         requireCaptcha({ body: { captchaToken: SENTINEL_TOKEN } } as any, res as any, () => { nextCalled = true; }),
       );
       assert(res.statusCode === 503 && !nextCalled, `captcha ${c.name}: fails closed with 503`);

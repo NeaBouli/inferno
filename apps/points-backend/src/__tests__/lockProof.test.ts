@@ -93,6 +93,23 @@ function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | "timeout">
   ]);
 }
 
+const CONSOLE_CHANNELS = ["log", "info", "warn", "error", "debug", "trace"] as const;
+
+/** Run fn with every console channel captured; returns the formatted lines of all channels. */
+async function captureConsole(fn: () => Promise<void>): Promise<string[]> {
+  const logs: string[] = [];
+  const originals = CONSOLE_CHANNELS.map((channel) => [channel, console[channel]] as const);
+  for (const channel of CONSOLE_CHANNELS) {
+    console[channel] = (...args: unknown[]) => { logs.push(format(...args)); };
+  }
+  try {
+    await fn();
+  } finally {
+    for (const [channel, original] of originals) console[channel] = original;
+  }
+  return logs;
+}
+
 async function run() {
   console.log("\n🔐 lockProof Middleware Tests\n");
 
@@ -165,17 +182,12 @@ async function run() {
     const req = { wallet: SENTINEL_WALLET } as any;
     const res = mockRes();
     let nextCalled = false;
-    const logs: unknown[][] = [];
-    const originalConsoleError = console.error;
-    console.error = (...args: unknown[]) => { logs.push(args); };
-    try {
-      await requireLockProof(req, res as any, () => { nextCalled = true; });
-    } finally {
-      console.error = originalConsoleError;
-    }
+    const lines = await captureConsole(() =>
+      requireLockProof(req, res as any, () => { nextCalled = true; }),
+    );
     assert(res.statusCode === 503, "RPC error fails closed with 503");
+    assert((res.body as any)?.error === "Lock verification temporarily unavailable", "RPC error keeps public message");
     assert(!nextCalled, "next() not called on RPC error");
-    const lines = logs.map((args) => format(...args));
     assert(
       lines.length === 1 && /^\[LOCKPROOF\] read_failed category=rpc_error:[a-z_]+$/.test(lines[0]),
       "RPC error logs exactly one constant category line",
