@@ -55,7 +55,8 @@ function startGovernanceNotifier(bot) {
             `🔗 [Governance Dashboard](https://ifrunit.tech/wiki/governance.html)`;
 
           const opts = { parse_mode: 'Markdown', disable_web_page_preview: true };
-          await sendToGroup(bot.telegram, chatId, 'council', text, opts);
+          // New proposals are pending, not decisions: Vote topic (T-286).
+          await sendToGroup(bot.telegram, chatId, 'vote', text, opts);
           logger.info({ proposalId: i, target: prop.target }, 'New proposal notification sent');
         }
 

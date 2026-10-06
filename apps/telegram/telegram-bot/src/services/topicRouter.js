@@ -66,15 +66,16 @@ function safeError(err) {
 
 /**
  * Send a bot-initiated message to the community group, routed by category.
- * If the target topic rejects the post (deleted/closed), retry in General and,
- * as a last resort, without a thread id. Other errors propagate unchanged.
+ * If the target topic rejects the post (deleted/closed), retry once in
+ * General and log it. There is no further fallback into the forum's first
+ * thread (Main): if General also fails, the error propagates to the caller.
+ * Other errors propagate unchanged, so nothing is posted twice.
  */
 async function sendToGroup(telegram, chatId, category, text, extra = {}, env = process.env) {
   const targetThread = resolveTopicId(category, env);
   const attempts = [targetThread];
   const generalThread = resolveTopicId(DEFAULT_CATEGORY, env);
   if (generalThread !== targetThread) attempts.push(generalThread);
-  if (targetThread > 1 && generalThread > 1) attempts.push(null);
 
   for (let i = 0; ; i++) {
     const thread = attempts[i];

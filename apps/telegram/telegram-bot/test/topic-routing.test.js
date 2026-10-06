@@ -11,7 +11,9 @@ const { Context } = require('telegraf');
 const {
   TOPIC_ROUTES, resolveTopicId, threadOptions, isTopicError, sendToGroup,
 } = require('../src/services/topicRouter');
-const { announceNewProposal, _resetAnnounced } = require('../src/services/voteAnnouncement');
+const {
+  announceNewProposal, announceExecutable, announceExecuted, announceCancelled, _resetAnnounced,
+} = require('../src/services/voteAnnouncement');
 const { handleChannelPost } = require('../src/handlers/channelSync');
 
 // Stub burn stats before the daily handlers destructure getBurnStats.
@@ -124,10 +126,16 @@ test('deleted/closed topic falls back to General', async () => {
   assert.deepEqual(telegram.sent.map((s) => s.opts.message_thread_id), [11, 5]);
 });
 
-test('if General also rejects, the post goes out without a thread id', async () => {
+test('if General also rejects, the error propagates — no dump into Main', async () => {
   const telegram = fakeTelegram({ failThreads: [21, 5] });
-  await sendToGroup(telegram, '-100999', 'council', 'proposal', {}, {});
-  assert.deepEqual(telegram.sent.map((s) => s.opts.message_thread_id), [21, 5, undefined]);
+  await assert.rejects(sendToGroup(telegram, '-100999', 'council', 'proposal', {}, {}), /thread not found/);
+  assert.deepEqual(telegram.sent.map((s) => s.opts.message_thread_id), [21, 5]);
+});
+
+test('a rejected General topic is not retried in Main', async () => {
+  const telegram = fakeTelegram({ failThreads: [5] });
+  await assert.rejects(sendToGroup(telegram, '-100999', 'general', 'hi', {}, {}), /thread not found/);
+  assert.equal(telegram.sent.length, 1);
 });
 
 test('non-topic errors are not retried', async () => {
@@ -145,7 +153,7 @@ test('topic error detection matches Telegram topic descriptions only', () => {
 
 // ── Callers use the router ───────────────────────────────────────────────────
 
-test('governance proposal announcements go to the Council topic', withCleanTopicEnv(async () => {
+test('pending proposals go to Vote, decisions to Council', withCleanTopicEnv(async () => {
   const savedGroup = process.env.TELEGRAM_GROUP_ID;
   const savedChannel = process.env.TELEGRAM_CHANNEL_ID;
   process.env.TELEGRAM_GROUP_ID = '-100999';
@@ -153,12 +161,15 @@ test('governance proposal announcements go to the Council topic', withCleanTopic
   try {
     _resetAnnounced();
     const telegram = fakeTelegram();
-    await announceNewProposal({ telegram }, 7, {
+    const bot = { telegram };
+    await announceNewProposal(bot, 7, {
       target: '0x0000000000000000000000000000000000000001', data: '0xb3ab15fb', eta: 1,
     }, '0x0');
-    assert.equal(telegram.sent.length, 1);
-    assert.equal(telegram.sent[0].chatId, '-100999');
-    assert.equal(telegram.sent[0].opts.message_thread_id, 21);
+    await announceExecutable(bot, 7, '0x0');
+    await announceExecuted(bot, 7, '0x0');
+    await announceCancelled(bot, 8, '0x0');
+    assert.ok(telegram.sent.every((s) => s.chatId === '-100999'));
+    assert.deepEqual(telegram.sent.map((s) => s.opts.message_thread_id), [23, 23, 21, 21]);
   } finally {
     _resetAnnounced();
     if (savedGroup === undefined) delete process.env.TELEGRAM_GROUP_ID;
