@@ -506,8 +506,28 @@ async function run() {
       );
     };
 
-    setProtocolFeeReader(async () => { throw new Error("rpc down"); });
-    const unreadable = await api("POST", "/voucher/issue", {}, authToken);
+    setProtocolFeeReader(async () => {
+      throw Object.assign(
+        new Error(`missing response (requestBody={"to":"0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a"}, url="https://mainnet.example/v3/KEY")`),
+        { code: "SERVER_ERROR" },
+      );
+    });
+    const loggedErrors: unknown[][] = [];
+    const originalConsoleError = console.error;
+    console.error = (...args: unknown[]) => { loggedErrors.push(args); };
+    let unreadable: Awaited<ReturnType<typeof api>>;
+    try {
+      unreadable = await api("POST", "/voucher/issue", {}, authToken);
+    } finally {
+      console.error = originalConsoleError;
+    }
+    {
+      const logged = loggedErrors.map((args) => args.map((a) => (typeof a === "string" ? a : JSON.stringify(a))).join(" ")).join("\n");
+      assert(logged.includes("fee_check=failed") && logged.includes("SERVER_ERROR"), "fee read failure logs a sanitized code");
+      assert(!/0x[0-9a-fA-F]{40}/.test(logged), "fee read failure log contains no 0x address");
+      assert(!/[a-z]+:\/\//i.test(logged), "fee read failure log contains no URL");
+      assert(!logged.includes("requestBody") && !logged.includes("KEY"), "fee read failure log contains no request params");
+    }
     assert(unreadable.status === 503, "unreadable on-chain fee refuses voucher issuance");
     assert(typeof unreadable.data.error === "string" && !("signature" in unreadable.data), "unreadable fee returns no signature");
     await assertNothingIssued("unreadable fee");

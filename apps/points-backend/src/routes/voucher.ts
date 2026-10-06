@@ -5,7 +5,7 @@ import { AuthRequest, requireAuth } from "../middleware/auth.js";
 import { POINTS_CONFIG } from "../config/points.js";
 import { signVoucher } from "../services/voucher-signer.js";
 import { capVoucherDiscountBps } from "../services/voucher-eip712.js";
-import { getProtocolFeeBps } from "../services/fee-router-fee.js";
+import { describeFeeReadError, getProtocolFeeBps } from "../services/fee-router-fee.js";
 import { requireLockProof } from "../middleware/lockProof.js";
 
 const router = Router();
@@ -34,7 +34,8 @@ router.post("/issue", requireAuth, requireLockProof, async (req: AuthRequest, re
   try {
     discountBps = capVoucherDiscountBps(POINTS_CONFIG.voucher, await getProtocolFeeBps());
   } catch (err) {
-    console.error(`[VOUCHER] wallet=${wallet} issued=false fee_check=failed error=${err}`);
+    const { code, reason } = describeFeeReadError(err);
+    console.error(`[VOUCHER] issued=false fee_check=failed code=${code} reason=${reason}`);
     res.status(503).json({ error: "Voucher issuance unavailable: FeeRouter fee could not be verified" });
     return;
   }

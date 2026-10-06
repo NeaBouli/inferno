@@ -64,3 +64,22 @@ export function getProtocolFeeBps(): Promise<number> {
   inFlight = read;
   return read;
 }
+
+/**
+ * Log-safe description of a fee-read failure: an error code and a short reason with
+ * URLs, addresses, hex data and request params removed. Never log the raw RPC error.
+ */
+export function describeFeeReadError(err: unknown): { code: string; reason: string } {
+  const e = (typeof err === "object" && err !== null ? err : {}) as { code?: unknown; shortMessage?: unknown; message?: unknown };
+  const code = typeof e.code === "string" && /^[A-Z_]{1,40}$/.test(e.code) ? e.code : "FEE_READ_FAILED";
+  const raw = typeof e.shortMessage === "string" ? e.shortMessage : typeof e.message === "string" ? e.message : "";
+  const reason = raw
+    .split("\n")[0]
+    .split("(")[0]
+    .replace(/[a-z][a-z0-9+.-]*:\/\/\S*/gi, "[url]")
+    .replace(/0x[0-9a-fA-F]+/g, "[hex]")
+    .replace(/[^A-Za-z0-9 _.,:[\]-]/g, "")
+    .trim()
+    .slice(0, 80);
+  return { code, reason: reason || "unavailable" };
+}
