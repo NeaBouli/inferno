@@ -150,9 +150,11 @@ Why deflationary: Users always lock more IFR than builders receive.
 At 15% reward: 1,000 IFR locked -> 150 IFR reward -> net 850 IFR more bound.
 
 ### IFR Benefits Network
+
 Any business (online or offline) can use IFR lock as an access system:
+
 - Merchants: no crypto knowledge needed, just a browser
-- Customers: create a short-lived pass, review the exact seller offer, sign, and let the seller redeem an approval once
+- Customers: create a short-lived pass, review the exact seller offer and sign a proof that redeems that checkout once
 - System checks on-chain whether the customer has locked IFR
 
 Example tiers (recommended, freely configurable):

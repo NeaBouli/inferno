@@ -27,6 +27,9 @@ const files = {
   sellerRoutes: 'apps/benefits-network/backend/src/routes/seller.ts',
   walletConnectProjectId: 'apps/benefits-network/frontend/src/lib/walletConnectProjectId.mjs',
   benefitsWorkflow: '.github/workflows/benefits-network.yml',
+  backendReadme: 'apps/benefits-network/backend/README.md',
+  threatModel: 'apps/benefits-network/backend/docs/THREAT_MODEL.md',
+  privacyMigration: 'docs/BENEFITS_CUSTOMER_PRIVACY_MIGRATION.md',
 };
 
 const content = Object.fromEntries(Object.entries(files).map(([key, file]) => [
@@ -41,6 +44,14 @@ for (const [key, value] of Object.entries(content)) {
     /QR code links? to a wallet address/i,
     /last known lock status is used/i,
     /scan QR -> connect wallet -> sign -> done/i,
+    // Retired by storage-free customer sessions (owner decision B): no APPROVED step, no seller
+    // redeem call, no wallet-signed server history.
+    /APPROVED (or|->|→|to) (REJECTED|REDEEMED)/,
+    /redeems? (an |the )?approv(al|ed)/i,
+    /seller-signed (redeem|REDEEMED)/i,
+    /Ready to redeem/,
+    /ten-minute (read|access) token/i,
+    /Per-wallet redemption limits/,
   ]) {
     assert.ok(!stale.test(value), `${files[key]} contains stale Benefits claim: ${stale}`);
   }
@@ -48,7 +59,9 @@ for (const [key, value] of Object.entries(content)) {
 
 for (const [label, required] of [
   ['customer-presented', /customer-presented/i],
-  ['APPROVED', /APPROVED/],
+  ['REDEEMED', /REDEEMED/],
+  ['customer proof redeems the checkout once', /customer proof redeems the checkout once/i],
+  ['no separate seller redeem step', /no separate seller redeem step/i],
   ['REJECTED', /REJECTED/],
   ['IFRLock', /IFRLock/],
   ['authorized checkout operator', /authorized checkout[- ]operator/i],
@@ -62,9 +75,15 @@ for (const [label, required] of [
 
 assert.ok(content.architecture.includes('Implemented and live'), 'architecture must mark customer pass live');
 assert.ok(content.wikiOnboarding.includes('opaque short-lived'), 'Wiki must explain opaque customer pass privacy');
-assert.ok(content.wikiFaq.includes('APPROVED or REJECTED'), 'FAQ must use backend status terms');
+assert.ok(content.wikiFaq.includes('REDEEMED or REJECTED'), 'FAQ must use backend status terms');
+assert.ok(!content.wikiFaq.includes('APPROVED'), 'FAQ must not use the retired APPROVED checkout status');
 assert.ok(content.master.includes('minimum IFR locked in IFRLock'), 'master architecture must use the deployed eligibility source');
-assert.ok(content.copilotKnowledge.includes('approved or rejected'), 'Copilot knowledge must use backend status terms');
+assert.ok(content.copilotKnowledge.includes('redeemed or rejected'), 'Copilot knowledge must use backend status terms');
+assert.ok(
+  !content.copilotKnowledge.includes('My benefits history') &&
+    content.copilotKnowledge.includes('no server-side customer history'),
+  'Copilot knowledge must describe device-local customer history only'
+);
 assert.ok(content.testGuide.includes('| Silver | 2,500 IFR |'), 'test guide must use the current Silver example');
 assert.ok(content.testGuide.includes('| Platinum | 10,000 IFR |'), 'test guide must use the current Platinum example');
 assert.ok(!content.testGuide.includes('| Gold | 25,000 IFR |'), 'test guide contains the retired 25,000 IFR example');
@@ -189,8 +208,10 @@ assert.ok(
 assert.ok(
   content.frontendPrivacy.includes('not a finalized legal policy') &&
     content.frontendPrivacy.includes('retention, deletion and support policy is not finalized') &&
-    content.frontendPrivacy.includes('Masking is a display choice in seller views, not anonymity'),
-  'Shop privacy route must preserve the evidence-only policy and masking boundary'
+    content.frontendPrivacy.includes('No customer wallet address') &&
+    content.frontendPrivacy.includes('Merchant checkout records do exist') &&
+    content.frontendPrivacy.includes('This is not anonymity'),
+  'Shop privacy route must preserve the evidence-only policy, the storage-free customer boundary and the no-anonymity boundary'
 );
 assert.ok(
   content.frontendSupport.includes('Nothing here connects a wallet') &&
@@ -226,12 +247,53 @@ assert.ok(
   'local data control must stay prefix-scoped and preserve unrelated browser data'
 );
 assert.ok(
-  content.sellerRoutes.includes('customerWalletMasked: maskCustomerWallet(session.recoveredAddress)') &&
+  content.sellerRoutes.includes('customerProof:') &&
+    !content.sellerRoutes.includes('recoveredAddress') &&
+    !content.sellerRoutes.includes('customerWalletMasked') &&
+    !content.sellerRoutes.includes('customerWallet') &&
     content.sellerRoutes.includes('eventCount,') &&
     !content.sellerRoutes.includes('events.map(({ customerWallet, ...event })') &&
     content.sellerRoutes.includes("res.set('Cache-Control', 'private, no-store, max-age=0')"),
-  'seller history and reward responses must remain masked and private no-store'
+  'seller history and reward responses must carry no customer wallet data and stay private no-store'
 );
+for (const [key, label] of [
+  ['onboarding', 'canonical onboarding'],
+  ['architecture', 'shop architecture'],
+  ['master', 'master architecture'],
+  ['backendReadme', 'backend README'],
+  ['threatModel', 'threat model'],
+]) {
+  assert.ok(
+    /(stores?|keeps) no customer wallet/i.test(content[key]),
+    `${label} must state that the backend stores no customer wallet`
+  );
+  assert.ok(
+    /not anonymous|not anonymity/i.test(content[key]),
+    `${label} must state that merchant checkout records mean this is not anonymity`
+  );
+}
+assert.ok(
+  content.backendReadme.includes('| POST | `/api/sessions/:id/redeem` | - | Retired: always 410') &&
+    content.backendReadme.includes('| any | `/api/customer/history*` | - | Retired: 410') &&
+    content.backendReadme.includes('| POST | `/api/passes` | Public, rate limited | Empty body;'),
+  'backend README API table must document the retired redeem/history routes and wallet-free pass creation'
+);
+for (const required of [
+  'plan only',
+  'require_no_schema_migration',
+  'BLOCKED_GOVERNANCE',
+  'SETTLEMENT_PENDING',
+  'periodEnd + 72h',
+  'prisma migrate deploy',
+  'VACUUM',
+  'irreversible',
+  'verify-owner-b-migration.cjs',
+]) {
+  assert.ok(
+    content.privacyMigration.includes(required),
+    `customer privacy migration runbook is missing: ${required}`
+  );
+}
 assert.ok(
   !content.frontendSitemap.includes("new Date('2026-07-19T00:00:00Z')") &&
     !content.frontendSitemap.includes('lastModified,'),
@@ -264,8 +326,14 @@ assert.ok(
   'device checklist must cover customer pass binding'
 );
 assert.ok(
-  deviceChecklist.matrix.some((item) => item.capabilities?.includes('approved-to-redeemed')),
-  'device checklist must cover approved-to-redeemed'
+  deviceChecklist.matrix.some((item) => item.capabilities?.includes('proof-to-redeemed')),
+  'device checklist must cover proof-to-redeemed'
+);
+assert.ok(
+  !content.deviceChecklist.includes('approved-to-redeemed') &&
+    !content.deviceChecklist.includes('seller-signed-redeem') &&
+    !content.deviceChecklist.includes('APPROVED'),
+  'device checklist must not require the retired APPROVED/seller-redeem flow'
 );
 assert.ok(
   deviceChecklist.completionGate.some((item) => item.includes('/p pass') && item.includes('replay')),

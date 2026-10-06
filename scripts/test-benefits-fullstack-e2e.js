@@ -251,24 +251,32 @@ async function seedRealApi() {
     }),
   });
 
+  const ruleInput = {
+    productId: product.id,
+    label: 'Full-stack 14%',
+    category: 'Coffee',
+    productName: product.name,
+    discountPercent: 14,
+    requiredLockIFR: 1000,
+    minIFRHeld: 0,
+    lockSource: 'commitment_time_only',
+    ttlSeconds: 300,
+    active: true,
+  };
+  // Per-customer limits are not IFR-hosted (owner decision B, T-231b): a non-zero limit is refused.
+  const limitedRuleAuth = await sellerAuth(wallet, 'rules:create', business.id);
+  const limitedRuleResponse = await fetch(`${frontendOrigin}/api/seller/businesses/${business.id}/rules`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...sellerHeaders(limitedRuleAuth) },
+    body: JSON.stringify({ ...ruleInput, dailyRedemptionLimit: 1, monthlyRedemptionLimit: 10 }),
+  });
+  assert.equal(limitedRuleResponse.status, 400, 'a rule with a per-customer limit must be rejected');
+
   const ruleAuth = await sellerAuth(wallet, 'rules:create', business.id);
   const rule = await fetchJson(`/api/seller/businesses/${business.id}/rules`, {
     method: 'POST',
     headers: sellerHeaders(ruleAuth),
-    body: JSON.stringify({
-      productId: product.id,
-      label: 'Full-stack 14%',
-      category: 'Coffee',
-      productName: product.name,
-      discountPercent: 14,
-      requiredLockIFR: 1000,
-      minIFRHeld: 0,
-      lockSource: 'commitment_time_only',
-      dailyRedemptionLimit: 1,
-      monthlyRedemptionLimit: 10,
-      ttlSeconds: 300,
-      active: true,
-    }),
+    body: JSON.stringify({ ...ruleInput, dailyRedemptionLimit: 0, monthlyRedemptionLimit: 0 }),
   });
 
   return { business, product, rule };

@@ -23,8 +23,9 @@ const offer = {
   requiredLockIFR: 1000,
   minIFRHeld: 500,
   lockSource: 'commitment_time_only',
-  dailyRedemptionLimit: 1,
-  monthlyRedemptionLimit: 10,
+  // Per-customer limits are not IFR-hosted (owner decision B, T-231b): the API only serves 0.
+  dailyRedemptionLimit: 0,
+  monthlyRedemptionLimit: 0,
   business: {
     id: 'seller-ui-e2e',
     slug: 'ifr-test-cafe',

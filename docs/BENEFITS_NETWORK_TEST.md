@@ -65,12 +65,14 @@ bash apps/benefits-network/backend/scripts/e2e-test.sh
 1. Start backend + frontend (see Quick Start)
 2. Browser: `http://localhost:3000/b/{businessId}` (Merchant Console)
 3. "Create QR session" -> QR code appears
-4. Wallet app -> Scan QR -> Sign
-5. Merchant screen shows: APPROVED, pending retry guidance, or terminal REJECTED
+4. Wallet app -> Scan QR -> Sign the exact checkout proof
+5. A valid, eligible proof redeems the checkout once: merchant screen shows REDEEMED. An
+   ineligible or failed proof leaves the checkout open (pending retry guidance) until it expires
+   or attempts run out
 6. If the wallet needs more locked IFR or a configured free-wallet IFR minimum, the customer can
    correct that exact condition and retry the same QR session while it is still valid and attempts
    remain
-7. Optional: "Redeem" -> Status changes to REDEEMED
+7. There is no separate seller "Redeem" step (`POST /api/sessions/:id/redeem` returns 410)
 
 ## E2E Test Script
 
@@ -98,7 +100,9 @@ npm run test:benefits-pass-ui
 ```
 
 It asserts pass creation, seller/rule binding, exact-offer customer confirmation, seller-auth
-headers, `APPROVED`, one-time `REDEEMED`, and the disabled replay action. It complements rather
+headers, one-time `REDEEMED`, and the disabled replay action. Its API fixtures still model the
+retired `APPROVED`-then-seller-redeem flow and must be updated to the storage-free customer
+session flow, where the customer proof redeems the checkout. It complements rather
 than replaces backend route/race tests or the physical device acceptance matrix.
 
 The customer wallet transaction contract test runs the actual Shop controls against an isolated
@@ -203,7 +207,7 @@ Default target is `https://shop.ifrunit.tech`. The smoke is read-only and checks
 
 It intentionally does not create businesses, rules or sessions. For signed
 seller flows use `apps/benefits-network/backend/scripts/seller-wallet-smoke.js`.
-For the full approved-and-redeemed path, run that seller smoke with
+For the full proof-to-redeemed path, run that seller smoke with
 `CUSTOMER_PRIVATE_KEY=... MUTATE=true` using a real eligible locked customer
 wallet.
 
@@ -249,11 +253,12 @@ The recorder therefore accepts `pass` only with `--source physical-device`;
 emulator or automated evidence cannot close a physical matrix row.
 Do not record private keys, seed phrases or personal wallet data in the checklist.
 
-Customer QR pages also write a redacted local browser history entry after a
-session loads or refreshes. The home page shows this as `Recent customer proofs`
-so a customer can reopen the proof on the same device. The local entry excludes
-private keys, seed phrases, signatures and full wallet inventories; it is not a
-server-side evidence record and does not replace the device checklist.
+Customer QR pages also write a local browser history entry; after a checkout proof it
+keeps a signed receipt (proof text and signature). The home page shows this as `Recent
+customer proofs` so a customer can reopen the proof on the same device. This device-local
+history is the only customer history (the backend keeps none); it excludes private keys,
+seed phrases and full wallet inventories, is not a server-side evidence record and does not
+replace the device checklist.
 
 The landing integration generator also exposes a `pos` mode. Its generated server-side
 JavaScript creates a rule-bound session and returns a full `customerUrl` for the seller's
@@ -268,9 +273,11 @@ Seller benefit rules support an explicit Edit -> Update / Cancel flow. Updates r
 owner-wallet-protected PATCH route and preserve whether the rule was active or paused.
 
 Business owners can add, list and revoke expiring checkout operators. Operators can only
-check their checkout role and redeem approved sessions; owner-only profile, rule, history
-and team-management routes reject them. Redemption is atomic under concurrent requests,
-and the audit payload records actor wallet/role without storing the signature.
+check their checkout role and open checkouts; owner-only profile, rule, history
+and team-management routes reject them. The customer proof redeems a checkout atomically and
+once under concurrent requests; the operator's authority is re-checked in that transaction and
+the `REDEEMED` audit payload records the opening seller's wallet/role without storing any
+signature or customer wallet.
 
 Seller owners can create, edit and archive products/services, then bind rules to active
 catalog items. `tests/catalogRoutes.test.ts` covers owner authorization, cross-business
@@ -280,9 +287,9 @@ The public customer catalog is available at `/s/{businessId}`. Run
 rule, session and audit rows while adding the catalog, snapshot and reward-ledger schema.
 
 `tests/rewardRoutes.test.ts` covers the M4 reward foundation: owner-only application,
-admin-only live verification, fail-closed governance changes, atomic redeem/outbox creation,
-one reward event per wallet/partner, 9-decimal base-unit conversion, owner self-dealing
-exclusion and owner-only reward visibility. The production backend does not contain a
+admin-only live verification, fail-closed governance changes, atomic redeem/outbox creation
+(one non-payable `BLOCKED_POLICY` event per checkout; no customer wallet is stored), owner
+self-dealing exclusion and owner-only reward visibility. The production backend does not contain a
 transaction signer and cannot submit `recordLockReward`.
 
 ## Backend HTTP Smoke
@@ -301,7 +308,7 @@ the wallet-bound one-time `/api/seller/auth-message` read challenge and signed s
 wallet. `/api/ready` runs a database probe so CI catches a backend that can
 listen on HTTP but cannot serve sessions. It does not mutate production or
 require secrets. `MUTATE=true` remains manual-only for
-create/rule/session/redeem path checks.
+create/rule/session/proof path checks.
 
 ## Backend Route Tests
 
@@ -312,30 +319,33 @@ cd apps/benefits-network/backend
 npm test
 ```
 
-Current route coverage includes `POST /api/sessions/:id/redeem` authorization:
+Current route coverage (`tests/redeemRoutes.test.ts`, `tests/customerSessionPrivacy.test.ts`)
+includes:
 
-- missing seller signature -> HTTP 401
-- wrong seller wallet -> HTTP 403
-- owning seller wallet -> HTTP 200 and `REDEEMED`
-- replaying the same redeem nonce -> HTTP 401
-- redeeming an `EXPIRED` or `REJECTED` session -> HTTP 409, session unchanged
+- `POST /api/sessions/:id/redeem` -> HTTP 410 with or without seller authorization
+- opening a checkout requires a current owner/operator one-time signature; replay -> HTTP 401
+- a customer proof whose recovered signer differs from the claimed wallet -> HTTP 403, no change
+- a valid eligible proof -> `REDEEMED` exactly once; racing proofs redeem only once
+- a proof against an `EXPIRED` or `REJECTED` session -> HTTP 409, session unchanged
+- an operator revoked or expired after opening the checkout -> HTTP 409, checkout stays open
+- non-zero per-customer limits are refused
 
-This proves the backend redeem route is seller-owned and one-time at the HTTP
-boundary. A live `APPROVED -> REDEEMED` run with a real locked customer wallet
-is still a separate device acceptance item.
+A live customer-proof-to-`REDEEMED` run with a real locked customer wallet is still a separate
+device acceptance item.
 
 Mutation-route coverage also requests server-issued challenges for business,
-operator, product, rule, reward, session-create and session-redeem actions. Tests
+operator, product, rule, reward, session-create and pass-bind actions. Tests
 assert exact resource scope, single-use replay rejection, wrong-owner denial,
 concurrency behavior and that read-only authorization requests create no challenge rows.
 
 Current service coverage also verifies retryable failed attestations:
 
-- insufficient locked IFR returns `REJECTED` to the customer response, but keeps
-  the stored session `PENDING` until the three-attempt limit is exhausted
+- insufficient locked IFR returns `REJECTED` to the customer response and leaves the
+  stored session `PENDING` with no state change (attempts are not consumed)
 - invalid signatures behave the same way, so a customer can recover from a bad
   wallet prompt without forcing the seller to create a new QR immediately
-- after the third failed attempt the session becomes terminal `REJECTED`
+- an RPC failure returns HTTP 503 without detail and also leaves the checkout open
+- the checkout stays open until it is redeemed once or expires
 
 ## Example Lock Tiers
 
@@ -397,20 +407,18 @@ publishes the exact IFRLock threshold and benefit for every real offer.
 | GET | `/api/businesses/:id/rules` | - | Active public rules |
 | POST | `/api/sessions` | Owner/operator one-time signature | Start QR session, optionally with `benefitRuleId` |
 | GET | `/api/sessions/:id` | - | Session status |
-| GET | `/api/sessions/:id/challenge` | - | Signature challenge |
-| POST | `/api/attest` | - | Verify wallet + signature |
-| POST | `/api/sessions/:id/redeem` | Owner/operator signature | Atomically redeem approved session |
-| POST | `/api/passes/challenge` | - | Issue customer pass creation challenge |
-| POST | `/api/passes` | Customer signature | Create customer pass |
+| POST | `/api/sessions/:id/challenge` | - | Exact proof text for `{walletAddress}` (GET -> 410) |
+| POST | `/api/attest` | Customer signature | `{sessionId, walletAddress, signature}`; redeems the checkout once |
+| POST | `/api/sessions/:id/redeem` | - | Retired, always 410 |
+| POST | `/api/passes/challenge` | - | Retired, always 410 |
+| POST | `/api/passes` | - | Create customer pass (empty body, no wallet) |
 | GET | `/api/passes/:id` | - | Public customer pass state |
 | GET | `/api/passes/:id/control` | Pass control token | Controlled pass state for the originating tab |
 | POST | `/api/passes/:id/bind` | Owner/operator signature | Bind pass to an exact seller offer |
-| POST | `/api/passes/:id/challenge` | Pass control token | Customer exact-offer confirmation challenge |
-| POST | `/api/passes/:id/confirm` | Customer signature + control token | Confirm the exact offer (`APPROVED`/`REJECTED`) |
+| POST | `/api/passes/:id/challenge` | Pass control token | Exact proof text for `{walletAddress}` |
+| POST | `/api/passes/:id/confirm` | Customer signature + control token | `{walletAddress, signature}`; redeems the checkout once (`REDEEMED`/`REJECTED`) |
 | POST | `/api/passes/:id/cancel` | Pass control token | Cancel the pass |
-| POST | `/api/customer/history/challenge` | - | Issue customer history challenge |
-| POST | `/api/customer/history/authorize` | Customer signature | Authorize customer history access |
-| GET | `/api/customer/history` | Customer history token | Paginated customer proof history |
+| any | `/api/customer/history*` | - | Retired, 410 (`storage: device-local`) |
 
 ---
 *As of: July 2026 | Version 1.1*

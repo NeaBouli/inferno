@@ -398,6 +398,11 @@ signature for `Action: sessions:redeem`, and the recovered signer must match the
 session business owner. HTTP route tests cover missing auth (401), wrong seller
 (403), successful owner redeem (200), and double redeem blocked (409).
 
+**Current state (storage-free customer sessions):** the seller redeem endpoint is
+retired and always returns 410. A checkout is opened by an authenticated seller
+signature and redeemed exactly once by the customer's signed proof, with the
+opening seller's authority re-checked in the same database transaction.
+
 ---
 
 ### DF11 — LOW: Session status endpoint leaks wallet address
@@ -409,6 +414,10 @@ session business owner. HTTP route tests cover missing auth (401), wrong seller
 | Status | Documented |
 
 **Description:** `GET /api/sessions/:id` exposes `recoveredAddress`. Needed for QR-flow polling.
+
+**Current state:** resolved. Public session status no longer returns a customer
+address, and since storage-free customer sessions the backend stores no customer
+wallet address at all (`recoveredAddress` column removed).
 
 ---
 

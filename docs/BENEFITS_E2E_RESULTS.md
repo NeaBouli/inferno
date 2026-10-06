@@ -2,10 +2,12 @@
 
 ## Historical Test Date: 2026-02-26 (v2)
 
-This section is retained as historical Sepolia evidence. The current Mainnet PWA additionally has
-backend route/race coverage and a deterministic browser contract test for customer pass creation,
-seller binding, exact-offer confirmation, `APPROVED`, and one-time `REDEEMED`. Current commands and
-external device gates are maintained in `docs/BENEFITS_NETWORK_TEST.md`.
+This section is retained as historical Sepolia evidence; its `APPROVED` status and
+`recoveredAddress` field belong to the retired flow. The current backend stores no customer wallet,
+and the customer's checkout proof redeems a checkout once (`PENDING` -> `REDEEMED`, no `APPROVED`
+step). It has backend route/race coverage, and a deterministic browser contract test covers customer
+pass creation, seller binding and exact-offer confirmation. Current commands and external device
+gates are maintained in `docs/BENEFITS_NETWORK_TEST.md`.
 
 ## Local Test
 

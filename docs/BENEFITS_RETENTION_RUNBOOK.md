@@ -9,10 +9,7 @@ does not schedule itself.
 Eligible data:
 
 - `AdminAuditLog` rows created before the selected cutoff
-- expired `CustomerPassChallenge` rows
 - expired `SellerAuthorizationChallenge` rows
-- expired `CustomerHistoryChallenge` rows
-- expired `CustomerHistoryAccess` rows
 - expired `OPEN`, `CANCELLED`, or `EXPIRED` customer passes with no linked
   session
 
@@ -23,8 +20,12 @@ Protected data:
 - all `RewardEvent` rows
 - every customer pass linked to a session
 
-The protected records support redemption limits, customer history, replay
-defence, reward reconciliation, and auditability. This tool is not a
+The `CustomerPassChallenge`, `CustomerHistoryChallenge` and
+`CustomerHistoryAccess` tables were removed with storage-free customer sessions
+(see `docs/BENEFITS_CUSTOMER_PRIVACY_MIGRATION.md`), so the tool no longer
+reports or prunes them. The protected records hold no customer wallet; they
+support single-use replay defence, merchant checkout records, reward
+reconciliation, and auditability. This tool is not a
 data-subject deletion workflow and does not establish a legal retention period.
 
 ## Preview
@@ -76,13 +77,14 @@ deletes only remaining eligible rows.
 Never automate this command until a production retention schedule, operator,
 backup requirement, and incident rollback procedure have been approved. Do not
 run `VACUUM`, delete the SQLite file, or prune Session/AuditLog/RewardEvent data
-as part of this procedure.
+as part of this procedure. The one-time `VACUUM` of the storage-free customer
+session migration is covered by its own runbook.
 
 ## Remaining Policy Decisions
 
 - approved retention days per data class;
-- Session and session-audit retention beyond the monthly redemption-limit
-  floor;
+- Session and session-audit retention (merchant checkout records; per-customer
+  redemption limits are no longer IFR-hosted);
 - reward and financial-record retention;
 - verified deletion-request and support workflow;
 - legal/privacy review and dedicated contact channel;
