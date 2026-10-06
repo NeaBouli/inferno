@@ -746,7 +746,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
                   value={restoreInput}
                   onChange={(event) => setRestoreInput(event.target.value)}
                   placeholder="Paste session ID, customer link or checkout receipt"
-                  className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white outline-none focus:border-orange-300"
+                  className="min-w-0 rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white outline-none focus:border-orange-300"
                 />
                 <button
                   type="button"
@@ -875,7 +875,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
             {receiptStatus ? <p className="mt-3 text-xs font-semibold text-green-100">{receiptStatus}</p> : null}
           </div>
 
-          <div className="mt-6 grid gap-3 rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-stone-300">
+          <div className="shop-launcher-row-inset mt-6 grid gap-3 rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-stone-300">
             <div className="flex justify-between gap-4">
               <span>Benefit</span>
               <strong className="text-white">{previewBenefit ? `${previewBenefit.discountPercent}%` : '-'}</strong>

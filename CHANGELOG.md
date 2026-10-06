@@ -1,5 +1,30 @@
 # Changelog
 
+## [Unreleased] — 2026-10-06 — Benefits launcher keeps clear of checkout summary and approval action (release 8c21eb0e follow-up)
+
+### Fixed
+
+- `fix:` The fixed IFR Copilot launcher covered the seller console's checkout summary values
+  ("Per-wallet use", "Selected rule") at 820-900 px and the customer session's "Sign and verify"
+  action at 305-821 px. Below 1024 px the summary box reserves the launcher band on its right
+  (51 px / 41 px up to 820 px, values wrap inside it, rows stack label-over-value up to 420 px) and
+  the approval action ends 26 px / 42 px short of the right edge, so both stay >= 17 px left of the
+  launcher at every scroll position. CSS-only (`globals.css`) plus one class token per hop; launcher,
+  wallet chooser clearance, 44 px targets and typography unchanged.
+- `fix:` Seller console session-recovery input gets `min-w-0`: with Linux fallback fonts its
+  intrinsic width pushed every seller card 6 px past a 305 px viewport (hidden by the app shell).
+- `security:` Benefits frontend `sharp` override 0.35.4 -> 0.35.5 (GHSA-wq5f-xc86-pv6w, librsvg
+  CVE-2026-96889, published 2026-10-06); lockfile changes only the sharp/@img packages.
+
+### Tests
+
+- `test:` `npm run test:benefits-launcher-residuals` (CI: WalletConnect telemetry step) checks real
+  launcher/target rectangle intersection, `elementFromPoint` hit targets, clipping ancestors, 44 px
+  and page overflow at the live-evidence, worst-case and end scroll positions, with long summary
+  values and approval disabled/enabled/retry/loading fixtures at 305/320/375/820/821/900/1024/1440 px;
+  also fails on content overflowing the app shell. Red before (100 of 336 cases), 336/336 after
+  on macOS and in the Linux Playwright 1.63 image.
+
 ## [Unreleased] — 2026-10-06 — Web3 e90 residuals: launcher clearance on tablets, tokenomics live supply
 
 ### Fixed
