@@ -44,7 +44,7 @@
     "axios": "1.20.0",
     "postcss": "$postcss",
     "postcss-selector-parser": "7.1.6",
-    "sharp": "0.35.4",
+    "sharp": "0.35.5",
     "uuid": "11.1.1"
   }
 }

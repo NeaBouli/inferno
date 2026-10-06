@@ -746,7 +746,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
                   value={restoreInput}
                   onChange={(event) => setRestoreInput(event.target.value)}
                   placeholder="Paste session ID, customer link or checkout receipt"
-                  className="rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white outline-none focus:border-orange-300"
+                  className="min-w-0 rounded-xl border border-white/10 bg-black/30 px-3 py-2 text-xs text-white outline-none focus:border-orange-300"
                 />
                 <button
                   type="button"

@@ -137,6 +137,11 @@ function measure(page, target) {
 
     const pageOverflow = document.documentElement.scrollWidth - viewport;
     if (pageOverflow > 0) problems.push(`page overflows horizontally by ${pageOverflow}px`);
+    // The app shell clips horizontal overflow, so also check the content inside it (fallback fonts on
+    // Linux once made an intrinsic-width input push the seller cards 6px past a 305px viewport).
+    const shell = document.querySelector('main');
+    const shellOverflow = shell ? shell.scrollWidth - shell.clientWidth : 0;
+    if (shellOverflow > 0) problems.push(`content overflows the app shell horizontally by ${shellOverflow}px`);
     if (!launcherEl || launcherEl.classList.contains('is-hidden') || getComputedStyle(launcherEl).display === 'none') {
       return { problems: [...problems, 'Copilot launcher not rendered'] };
     }
