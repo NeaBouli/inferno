@@ -1554,6 +1554,18 @@
         font-size: 12px;
         letter-spacing: 0;
       }
+
+      /* T-285: a long wallet note ("Connected · status unavailable") used to keep its nowrap min-content and
+         widen the single hero column past 305-320px viewports. Notes now wrap at word boundaries and the value
+         keeps its natural width first, so values like "Unavailable" never break mid-word. */
+      .status-card {
+        grid-template-columns: minmax(0, max-content) minmax(min-content, 1fr);
+      }
+
+      .status-note {
+        white-space: normal;
+        text-align: right;
+      }
     }
 
     .copilot-launcher {

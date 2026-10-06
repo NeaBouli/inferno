@@ -1,5 +1,20 @@
 # Changelog
 
+## [Unreleased] — 2026-10-06 — Web3 narrow hero in degraded wallet state (T-285)
+
+### Fixed
+
+- `fix:` Web3 (`docs/web3/index.html`): at 305 and 320 px, in the state "wallet
+  connected, chain reads unavailable", the nowrap wallet note "Connected · status
+  unavailable" widened the single hero column to 333 px. Hero copy was clipped on
+  the right and the hero buttons reached into the Copilot launcher band. Below
+  401 px, status notes now wrap at word boundaries and the value column keeps its
+  natural width first, so "Unavailable" never breaks mid-word. Normal connected and
+  public views are pixel-identical; the hero is unchanged at 375 px and wider.
+- `test:` Regression test in `tests/browser/web3-write.spec.js` (305/320/375/390/1440,
+  EIP-1193 mock wallet, read RPC on the wrong chain): no horizontal overflow, no
+  clipped hero text (ancestor clipping considered), hero buttons left of the launcher.
+
 ## [Unreleased] — 2026-10-06 — Benefits dependency advisories (T-282)
 
 ### Security
