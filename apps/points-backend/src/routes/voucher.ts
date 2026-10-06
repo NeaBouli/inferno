@@ -4,6 +4,7 @@ import { prisma } from "../db.js";
 import { AuthRequest, requireAuth } from "../middleware/auth.js";
 import { POINTS_CONFIG } from "../config/points.js";
 import { signVoucher } from "../services/voucher-signer.js";
+import { categorizeVoucherIssueError, VoucherIssueFailure } from "../services/voucher-log.js";
 import { requireLockProof } from "../middleware/lockProof.js";
 
 const router = Router();
@@ -67,7 +68,9 @@ router.post("/issue", requireAuth, requireLockProof, async (req: AuthRequest, re
         );
       }
 
-      const voucherSignature = await signVoucher(voucherData);
+      const voucherSignature = await signVoucher(voucherData).catch(() => {
+        throw new VoucherIssueFailure("voucher_error:signer");
+      });
       await tx.pointEvent.create({
         data: {
           walletId: walletRecord.id,
@@ -95,7 +98,8 @@ router.post("/issue", requireAuth, requireLockProof, async (req: AuthRequest, re
       res.status(err.status).json({ error: err.publicMessage });
       return;
     }
-    console.error(`[VOUCHER] wallet=${wallet} issued=false error=${err}`);
+    // Constant category only: never log the wallet, err.message or any raw error text here.
+    console.error(`[VOUCHER] issued=false category=${categorizeVoucherIssueError(err)}`);
     res.status(500).json({ error: "Failed to issue voucher" });
   }
 });
