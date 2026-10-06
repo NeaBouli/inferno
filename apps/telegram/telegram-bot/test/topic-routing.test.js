@@ -9,7 +9,8 @@ const test = require('node:test');
 const { Context } = require('telegraf');
 
 const {
-  TOPIC_ROUTES, resolveTopicId, threadOptions, isTopicError, sendToGroup,
+  TOPIC_ROUTES, CONFIRMED_TOPIC_IDS, RESERVED_TOPICS, TOPICS_CONFIRMED_ON,
+  resolveTopicId, threadOptions, isTopicError, sendToGroup,
 } = require('../src/services/topicRouter');
 const {
   announceNewProposal, announceExecutable, announceExecuted, announceCancelled, _resetAnnounced,
@@ -65,12 +66,19 @@ function fakeTelegram({ failThreads = [], failWith } = {}) {
   };
 }
 
-// ── Routing map ──────────────────────────────────────────────────────────────
+// ── Routing map (T-286b: topic IDs confirmed by the owner on 2026-10-06) ─────
 
-const EXPECTED_DEFAULTS = {
-  announcements: 1,
+// Live topic IDs (t.me/IFR_token/<id>) confirmed by the owner on 2026-10-06.
+const CONFIRMED = {
+  general: 5, dev: 11, council: 21, vote: 23, coredev: 58, roadmap: 13, locks: 9,
+};
+
+// Effective routing. Announcements and Burns are NOT confirmed yet and go to
+// General (5) until the owner confirms their topic IDs.
+const EXPECTED_ROUTES = {
+  announcements: 5,
   general: 5,
-  burns: 7,
+  burns: 5,
   dev: 11,
   release: 11,
   council: 21,
@@ -79,17 +87,118 @@ const EXPECTED_DEFAULTS = {
   coredev: 58,
 };
 
-test('each category resolves to its documented default topic', () => {
-  for (const [category, id] of Object.entries(EXPECTED_DEFAULTS)) {
-    assert.equal(resolveTopicId(category, {}), id, category);
+function captureWarnings(fn) {
+  const logger = require('../src/services/logger');
+  const original = logger.warn;
+  const warnings = [];
+  logger.warn = (obj, msg) => warnings.push({ obj, msg });
+  try {
+    return { result: fn(), warnings };
+  } finally {
+    logger.warn = original;
   }
-  assert.deepEqual(Object.keys(TOPIC_ROUTES).sort(), Object.keys(EXPECTED_DEFAULTS).sort());
+}
+
+test('T-286b: confirmed topic IDs are fixed constants with the owner date', () => {
+  assert.equal(TOPICS_CONFIRMED_ON, '2026-10-06');
+  assert.deepEqual({ ...CONFIRMED_TOPIC_IDS }, CONFIRMED);
+  assert.ok(Object.isFrozen(CONFIRMED_TOPIC_IDS));
 });
 
-test('env overrides the default; empty or invalid values keep the default', () => {
-  assert.equal(resolveTopicId('dev', { TELEGRAM_DEV_BUILDER_TOPIC_ID: '99' }), 99);
-  assert.equal(resolveTopicId('council', { TELEGRAM_COUNCIL_TOPIC_ID: ' 42 ' }), 42);
-  for (const bad of ['', 'abc', '-3', '0', '1.5', '12abc']) {
+test('T-286b: every category maps to its expected confirmed ID', () => {
+  for (const [category, id] of Object.entries(EXPECTED_ROUTES)) {
+    assert.equal(resolveTopicId(category, {}), id, category);
+  }
+  assert.deepEqual(Object.keys(TOPIC_ROUTES).sort(), Object.keys(EXPECTED_ROUTES).sort());
+});
+
+test('T-286b: Announcements and Burns go to General (5) until confirmed', async () => {
+  for (const category of ['announcements', 'burns', 'announce', 'announcement', 'burn']) {
+    assert.equal(resolveTopicId(category, {}), 5, category);
+    const telegram = fakeTelegram();
+    await sendToGroup(telegram, '-100999', category, 'x', {}, {});
+    assert.equal(telegram.sent[0].opts.message_thread_id, 5, category);
+  }
+  // The assumed IDs (Announcements 1, Burns 7) are not accepted from env either.
+  assert.equal(resolveTopicId('announcements', { TELEGRAM_ANNOUNCEMENTS_TOPIC_ID: '1' }), 5);
+  assert.equal(resolveTopicId('burns', { TELEGRAM_BURNS_TOPIC_ID: '7' }), 5);
+});
+
+test('T-286b: Roadmap (13) and Locks & Assets (9) are reserved, not routable', () => {
+  assert.deepEqual({ ...RESERVED_TOPICS }, { roadmap: 13, locks: 9 });
+  for (const name of ['roadmap', 'locks', 'lock', 'locks_assets']) {
+    assert.equal(Object.hasOwn(TOPIC_ROUTES, name), false, name);
+    assert.equal(resolveTopicId(name, {}), 5, name);
+  }
+});
+
+test('T-286b: an env value equal to the confirmed ID is accepted silently', () => {
+  const env = {
+    TELEGRAM_GENERAL_TOPIC_ID: '5',
+    TELEGRAM_DEV_BUILDER_TOPIC_ID: ' 11 ',
+    TELEGRAM_COUNCIL_TOPIC_ID: '21',
+    TELEGRAM_VOTE_TOPIC_ID: '23',
+    TELEGRAM_COREDEV_TOPIC_ID: '58',
+    TELEGRAM_ANNOUNCEMENTS_TOPIC_ID: '5',
+    TELEGRAM_BURNS_TOPIC_ID: '5',
+  };
+  const { warnings } = captureWarnings(() => {
+    for (const [category, id] of Object.entries(EXPECTED_ROUTES)) {
+      assert.equal(resolveTopicId(category, env), id, category);
+    }
+  });
+  assert.equal(warnings.length, 0);
+});
+
+test('T-286b: a mismatching env value is ignored and a warning names only the variable', () => {
+  const cases = [
+    ['dev', 'TELEGRAM_DEV_BUILDER_TOPIC_ID', '99', 11],
+    ['council', 'TELEGRAM_COUNCIL_TOPIC_ID', '42', 21],
+    ['vote', 'TELEGRAM_VOTE_TOPIC_ID', '424242', 23],
+    ['coredev', 'TELEGRAM_COREDEV_TOPIC_ID', '77', 58],
+    ['general', 'TELEGRAM_GENERAL_TOPIC_ID', '77', 5],
+    ['memes', 'TELEGRAM_GENERAL_TOPIC_ID', '77', 5],
+    ['burns', 'TELEGRAM_BURNS_TOPIC_ID', '70', 5],
+    ['announcements', 'TELEGRAM_ANNOUNCEMENTS_TOPIC_ID', '1', 5],
+  ];
+  for (const [category, envVar, value, expected] of cases) {
+    const { result, warnings } = captureWarnings(() => resolveTopicId(category, { [envVar]: value }));
+    assert.equal(result, expected, `${category} ${envVar}=${value}`);
+    assert.equal(warnings.length, 1, `${category} ${envVar}`);
+    assert.equal(warnings[0].obj.envVar, envVar);
+    const logged = JSON.stringify(warnings[0]);
+    assert.ok(!logged.includes(value), `warning leaks value: ${logged}`);
+  }
+});
+
+test('T-286b: a cross-category override is ignored (Council=11 stays 21)', () => {
+  const cases = [
+    ['council', 'TELEGRAM_COUNCIL_TOPIC_ID', '11', 21],
+    ['council', 'TELEGRAM_COUNCIL_TOPIC_ID', '23', 21],
+    ['governance', 'TELEGRAM_COUNCIL_TOPIC_ID', '58', 21],
+    ['vote', 'TELEGRAM_VOTE_TOPIC_ID', '21', 23],
+    ['dev', 'TELEGRAM_DEV_BUILDER_TOPIC_ID', '58', 11],
+    ['coredev', 'TELEGRAM_COREDEV_TOPIC_ID', '11', 58],
+    ['general', 'TELEGRAM_GENERAL_TOPIC_ID', '13', 5],
+    ['burns', 'TELEGRAM_BURNS_TOPIC_ID', '9', 5],
+    ['announcements', 'TELEGRAM_ANNOUNCEMENTS_TOPIC_ID', '21', 5],
+  ];
+  for (const [category, envVar, value, expected] of cases) {
+    const { result, warnings } = captureWarnings(() => resolveTopicId(category, { [envVar]: value }));
+    assert.equal(result, expected, `${category} ${envVar}=${value}`);
+    assert.equal(warnings.length, 1, `${category} ${envVar}`);
+    assert.equal(warnings[0].obj.envVar, envVar);
+  }
+});
+
+test('empty or unset env values use the constant without a warning', () => {
+  const { warnings } = captureWarnings(() => {
+    assert.equal(resolveTopicId('dev', {}), 11);
+    assert.equal(resolveTopicId('dev', { TELEGRAM_DEV_BUILDER_TOPIC_ID: '' }), 11);
+    assert.equal(resolveTopicId('dev', { TELEGRAM_DEV_BUILDER_TOPIC_ID: '   ' }), 11);
+  });
+  assert.equal(warnings.length, 0);
+  for (const bad of ['abc', '-3', '0', '1.5', '12abc']) {
     assert.equal(resolveTopicId('dev', { TELEGRAM_DEV_BUILDER_TOPIC_ID: bad }), 11, `value ${bad}`);
   }
 });
@@ -97,7 +206,6 @@ test('env overrides the default; empty or invalid values keep the default', () =
 test('unknown categories fall back to General', () => {
   assert.equal(resolveTopicId('memes', {}), 5);
   assert.equal(resolveTopicId(undefined, {}), 5);
-  assert.equal(resolveTopicId('memes', { TELEGRAM_GENERAL_TOPIC_ID: '77' }), 77);
 });
 
 test('thread 1 is sent without message_thread_id', () => {
@@ -107,7 +215,7 @@ test('thread 1 is sent without message_thread_id', () => {
 });
 
 test('sendToGroup posts each category into its topic', async () => {
-  for (const [category, id] of Object.entries(EXPECTED_DEFAULTS)) {
+  for (const [category, id] of Object.entries(EXPECTED_ROUTES)) {
     const telegram = fakeTelegram();
     await sendToGroup(telegram, '-100999', category, 'hi', { parse_mode: 'Markdown' }, {});
     assert.equal(telegram.sent.length, 1);
@@ -179,7 +287,7 @@ test('pending proposals go to Vote, decisions to Council', withCleanTopicEnv(asy
   }
 }));
 
-test('channel sync reposts into the Announcements topic (thread 1, no thread id)', withCleanTopicEnv(async () => {
+test('channel sync reposts into the Announcements route (General until confirmed)', withCleanTopicEnv(async () => {
   const savedGroup = process.env.TELEGRAM_GROUP_ID;
   const savedChannel = process.env.TELEGRAM_CHANNEL_ID;
   process.env.TELEGRAM_GROUP_ID = '-100999';
@@ -189,7 +297,7 @@ test('channel sync reposts into the Announcements topic (thread 1, no thread id)
     const chat = { id: -1001234567890, type: 'channel' };
     await handleChannelPost({ telegram, channelPost: { chat, sender_chat: chat, message_id: 1, text: 'hi' } });
     assert.equal(telegram.sent.length, 1);
-    assert.equal(telegram.sent[0].opts.message_thread_id, undefined);
+    assert.equal(telegram.sent[0].opts.message_thread_id, 5);
   } finally {
     if (savedGroup === undefined) delete process.env.TELEGRAM_GROUP_ID;
     else process.env.TELEGRAM_GROUP_ID = savedGroup;
@@ -198,18 +306,18 @@ test('channel sync reposts into the Announcements topic (thread 1, no thread id)
   }
 }));
 
-test('daily burn report goes to Burns, daily welcome to General', withCleanTopicEnv(async () => {
+test('daily burn report (Burns, unconfirmed) and daily welcome go to General', withCleanTopicEnv(async () => {
   const telegram = fakeTelegram();
   await sendDailyBurnReport({ telegram }, '-100999');
   await sendDailyWelcome({ telegram }, '-100999');
-  assert.deepEqual(telegram.sent.map((s) => s.opts.message_thread_id), [7, 5]);
+  assert.deepEqual(telegram.sent.map((s) => s.opts.message_thread_id), [5, 5]);
 }));
 
-test('daily burn report honors a configured Burns topic', withCleanTopicEnv(async () => {
+test('daily burn report ignores an unconfirmed Burns topic from env', withCleanTopicEnv(async () => {
   process.env.TELEGRAM_BURNS_TOPIC_ID = '70';
   const telegram = fakeTelegram();
   await sendDailyBurnReport({ telegram }, '-100999');
-  assert.equal(telegram.sent[0].opts.message_thread_id, 70);
+  assert.equal(telegram.sent[0].opts.message_thread_id, 5);
 }));
 
 // ── Command replies keep their thread ────────────────────────────────────────
@@ -269,11 +377,11 @@ test('F1: inherited Object property names resolve to General, never Main', async
   }
 });
 
-test('F1: legacy names are mapped explicitly; only Announcements may reach thread 1', async () => {
+test('F1: legacy names are mapped explicitly; nothing reaches thread 1', async () => {
   const legacy = {
-    announce: 1, announcement: 1,
+    announce: 5, announcement: 5,
     main: 5,
-    burn: 7,
+    burn: 5,
     devs: 11, builder: 11, dev_builder: 11, 'dev-builder': 11,
     votes: 23, proposal: 23,
     core_dev: 58, 'core-dev': 58,
@@ -288,13 +396,15 @@ test('F1: legacy names are mapped explicitly; only Announcements may reach threa
   }
 });
 
-test('F2: configured ID 1 for a specialized route is rejected and goes to General', async () => {
+test('F2: configured ID 1 for a specialized route is rejected; the fixed constant is used', async () => {
   for (const [category, envKey] of Object.entries(SPECIALIZED_ROUTES)) {
-    assert.equal(resolveTopicId(category, { [envKey]: '1' }), 5, category);
+    const expected = EXPECTED_ROUTES[category];
+    assert.ok(expected > 1, category);
+    assert.equal(resolveTopicId(category, { [envKey]: '1' }), expected, category);
     const telegram = fakeTelegram();
     await sendToGroup(telegram, '-100999', category, 'x', {}, { [envKey]: '1' });
     assert.equal(telegram.sent.length, 1);
-    assert.equal(telegram.sent[0].opts.message_thread_id, 5, category);
+    assert.equal(telegram.sent[0].opts.message_thread_id, expected, category);
   }
 });
 
@@ -305,15 +415,14 @@ test('F2: General configured as 1 is rejected; fallback never goes to Main', asy
   assert.deepEqual(telegram.sent.map((s) => s.opts.message_thread_id), [21, 5]);
 });
 
-test('F2: only the explicit Announcements category is sent without a thread id', async () => {
+test('F2: no category is sent without a thread id, even with every env set to 1', async () => {
   const categories = [...Object.keys(TOPIC_ROUTES), 'constructor', 'main', 'nope'];
   for (const category of categories) {
     const env = Object.fromEntries(TOPIC_ENV_KEYS.map((k) => [k, '1']));
     const telegram = fakeTelegram();
     await sendToGroup(telegram, '-100999', category, 'x', {}, env);
     const thread = telegram.sent[0].opts.message_thread_id;
-    if (category === 'announcements') assert.equal(thread, undefined);
-    else assert.ok(Number.isInteger(thread) && thread > 1, `${category} -> ${thread}`);
+    assert.ok(Number.isInteger(thread) && thread > 1, `${category} -> ${thread}`);
   }
 });
 

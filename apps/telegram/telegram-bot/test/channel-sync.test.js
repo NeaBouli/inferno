@@ -98,14 +98,15 @@ test('trusted channel post (@username config, case-insensitive) is accepted', as
   }
 });
 
-test('caption-only posts sync; topic id is honored when configured', async () => {
+test('caption-only posts sync; an unconfirmed Announcements topic from env is ignored (T-286b)', async () => {
   const restore = setEnv({ ...BASE_ENV, TELEGRAM_ANNOUNCEMENTS_TOPIC_ID: '7' });
   try {
     const ctx = makeCtx(trustedPost({ text: undefined, caption: 'Chart release' }));
     await handleChannelPost(ctx);
     assert.equal(ctx.calls.sent.length, 1);
     assert.ok(ctx.calls.sent[0].text.includes('Chart release'));
-    assert.equal(ctx.calls.sent[0].opts.message_thread_id, 7);
+    // Announcements is not confirmed yet and routes to General (5); env cannot move it.
+    assert.equal(ctx.calls.sent[0].opts.message_thread_id, 5);
   } finally {
     restore();
   }
