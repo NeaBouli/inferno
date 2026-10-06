@@ -219,21 +219,22 @@ export function consumerBoundViolations(evidence, period) {
   const problems = [];
   const periodEnd = settlementPeriodEndSeconds(period);
   const latestSettlement = periodEnd + SETTLEMENT_MAX_LAG_SECONDS;
-  if (evidence.reviewedSourceId !== REVIEWED_SOURCE_ID) problems.push(`reviewedSourceId is ${JSON.stringify(evidence.reviewedSourceId)}, expected ${JSON.stringify(REVIEWED_SOURCE_ID)}`);
-  if (evidence.pair !== PAIR_ADDRESS.toLowerCase()) problems.push(`pair is ${JSON.stringify(evidence.pair)}, expected ${PAIR_ADDRESS.toLowerCase()}`);
-  if (evidence.token0 !== IFR_TOKEN_ADDRESS.toLowerCase()) problems.push(`token0 is ${JSON.stringify(evidence.token0)}, expected IFR ${IFR_TOKEN_ADDRESS.toLowerCase()}`);
-  if (evidence.rounding !== 'floor') problems.push(`rounding is ${JSON.stringify(evidence.rounding)}, expected "floor"`);
+  // Supplied values are never echoed: only the field name and the pinned expected value.
+  if (evidence.reviewedSourceId !== REVIEWED_SOURCE_ID) problems.push(`reviewedSourceId differs from the pinned "${REVIEWED_SOURCE_ID}"`);
+  if (evidence.pair !== PAIR_ADDRESS.toLowerCase()) problems.push(`pair differs from the pinned ${PAIR_ADDRESS.toLowerCase()}`);
+  if (evidence.token0 !== IFR_TOKEN_ADDRESS.toLowerCase()) problems.push(`token0 differs from the pinned IFR ${IFR_TOKEN_ADDRESS.toLowerCase()}`);
+  if (evidence.rounding !== 'floor') problems.push('rounding differs from the pinned "floor"');
   if (evidence.end.blockNumber <= evidence.start.blockNumber) problems.push('end block must follow the start block');
   const windowSeconds = evidence.end.timestamp - evidence.start.timestamp;
-  if (windowSeconds < TWAP_WINDOW_SECONDS || windowSeconds > TWAP_WINDOW_SECONDS + TWAP_WINDOW_TOLERANCE_SECONDS) {
-    problems.push(`TWAP window is ${windowSeconds}s, must be within [${TWAP_WINDOW_SECONDS}, ${TWAP_WINDOW_SECONDS + TWAP_WINDOW_TOLERANCE_SECONDS}]`);
+  if (!(windowSeconds >= TWAP_WINDOW_SECONDS && windowSeconds <= TWAP_WINDOW_SECONDS + TWAP_WINDOW_TOLERANCE_SECONDS)) {
+    problems.push(`TWAP window is outside [${TWAP_WINDOW_SECONDS}, ${TWAP_WINDOW_SECONDS + TWAP_WINDOW_TOLERANCE_SECONDS}] seconds`);
   }
-  if (evidence.end.timestamp < periodEnd) problems.push(`end block timestamp ${evidence.end.timestamp} precedes the end of period ${period} (${periodEnd})`);
-  if (evidence.end.timestamp > latestSettlement) problems.push(`end block timestamp ${evidence.end.timestamp} is more than 72h after the end of period ${period}`);
+  if (evidence.end.timestamp < periodEnd) problems.push(`end block timestamp precedes the end of period ${period} (${periodEnd})`);
+  if (evidence.end.timestamp > latestSettlement) problems.push(`end block timestamp is more than 72h after the end of period ${period}`);
   const delta = (BigInt(evidence.end.price0Cumulative) - BigInt(evidence.start.price0Cumulative) + UINT256_MOD) % UINT256_MOD;
   if (delta === 0n) problems.push('cumulative price did not advance');
   if (BigInt(evidence.ethEur.rate) === 0n) problems.push('ETH/EUR rate must be positive');
-  if (evidence.ethEur.decimals !== RATE_DECIMALS) problems.push(`ethEur.decimals is ${JSON.stringify(evidence.ethEur.decimals)}, expected ${RATE_DECIMALS}`);
+  if (evidence.ethEur.decimals !== RATE_DECIMALS) problems.push(`ethEur.decimals differs from the pinned ${RATE_DECIMALS}`);
   const publishedAt = Date.parse(evidence.ethEur.publishedAt) / 1000;
   if (Number.isNaN(publishedAt) || Math.abs(publishedAt - evidence.end.timestamp) > ETH_EUR_MAX_SKEW_SECONDS) {
     problems.push('ethEur.publishedAt is not within 24h of the settlement block');
@@ -433,11 +434,14 @@ const FEED_IFACE = new ethers.Interface([
 ]);
 export const ABIS = { PAIR_IFACE, FACTORY_IFACE, ERC20_IFACE, FEED_IFACE };
 
+// Receipt values: integers as decimal strings, addresses as validated lowercase hex. Any other
+// chain-returned string (e.g. description()) is recorded only as its keccak256, never raw.
 const proofValue = (value) => {
   if (typeof value === 'bigint') return value.toString();
-  if (typeof value === 'string') return value.startsWith('0x') && value.length === 42 ? value.toLowerCase() : value;
+  if (typeof value === 'string') return /^0x[0-9a-fA-F]{40}$/.test(value) ? value.toLowerCase() : { utf8Keccak256: ethers.id(value) };
   if (Array.isArray(value)) return value.map(proofValue);
-  return value;
+  if (typeof value === 'number' || typeof value === 'boolean') return value;
+  return null;
 };
 
 /** Reads pinned to one canonical block hash; every read is recorded as a credential-free proof. */
@@ -499,17 +503,17 @@ async function readPairObservation(block) {
   await block.requireCode(WETH_ADDRESS, 'WETH token');
   const where = `${block.label} block ${block.header.number}`;
   const factory = await block.call(PAIR_IFACE, PAIR_ADDRESS, 'factory');
-  if (!sameAddress(factory, UNISWAP_V2_FACTORY)) fail('IDENTITY_MISMATCH', `pair factory at ${where} is ${String(factory).toLowerCase()}, expected ${UNISWAP_V2_FACTORY.toLowerCase()}`);
+  if (!sameAddress(factory, UNISWAP_V2_FACTORY)) fail('IDENTITY_MISMATCH', `pair factory at ${where} differs from the pinned ${UNISWAP_V2_FACTORY.toLowerCase()}`);
   const registered = await block.call(FACTORY_IFACE, UNISWAP_V2_FACTORY, 'getPair', [IFR_TOKEN_ADDRESS, WETH_ADDRESS]);
-  if (!sameAddress(registered, PAIR_ADDRESS)) fail('IDENTITY_MISMATCH', `factory getPair(IFR, WETH) at ${where} is ${String(registered).toLowerCase()}, expected ${PAIR_ADDRESS.toLowerCase()}`);
+  if (!sameAddress(registered, PAIR_ADDRESS)) fail('IDENTITY_MISMATCH', `factory getPair(IFR, WETH) at ${where} differs from the pinned ${PAIR_ADDRESS.toLowerCase()}`);
   const token0 = await block.call(PAIR_IFACE, PAIR_ADDRESS, 'token0');
-  if (!sameAddress(token0, IFR_TOKEN_ADDRESS)) fail('IDENTITY_MISMATCH', `pair token0 at ${where} is ${String(token0).toLowerCase()}, not IFR`);
+  if (!sameAddress(token0, IFR_TOKEN_ADDRESS)) fail('IDENTITY_MISMATCH', `pair token0 at ${where} is not the pinned IFR token`);
   const token1 = await block.call(PAIR_IFACE, PAIR_ADDRESS, 'token1');
-  if (!sameAddress(token1, WETH_ADDRESS)) fail('IDENTITY_MISMATCH', `pair token1 at ${where} is ${String(token1).toLowerCase()}, not WETH`);
+  if (!sameAddress(token1, WETH_ADDRESS)) fail('IDENTITY_MISMATCH', `pair token1 at ${where} is not the pinned WETH token`);
   const ifrDecimals = Number(await block.call(ERC20_IFACE, IFR_TOKEN_ADDRESS, 'decimals'));
-  if (ifrDecimals !== IFR_DECIMALS) fail('IDENTITY_MISMATCH', `IFR decimals at ${where} are ${ifrDecimals}, expected ${IFR_DECIMALS}`);
+  if (ifrDecimals !== IFR_DECIMALS) fail('IDENTITY_MISMATCH', `IFR decimals at ${where} differ from the pinned ${IFR_DECIMALS}`);
   const wethDecimals = Number(await block.call(ERC20_IFACE, WETH_ADDRESS, 'decimals'));
-  if (wethDecimals !== WETH_DECIMALS) fail('IDENTITY_MISMATCH', `WETH decimals at ${where} are ${wethDecimals}, expected ${WETH_DECIMALS}`);
+  if (wethDecimals !== WETH_DECIMALS) fail('IDENTITY_MISMATCH', `WETH decimals at ${where} differ from the pinned ${WETH_DECIMALS}`);
   const [reserve0, reserve1, blockTimestampLast] = await block.call(PAIR_IFACE, PAIR_ADDRESS, 'getReserves');
   const price0CumulativeLast = await block.call(PAIR_IFACE, PAIR_ADDRESS, 'price0CumulativeLast');
   if (BigInt(blockTimestampLast) > BigInt(block.header.timestamp)) fail('PAIR_STATE_REJECTED', `pair blockTimestampLast at ${where} is after the block timestamp`);
@@ -531,9 +535,10 @@ async function readFeed(block, feed) {
   const where = `end block ${block.header.number}`;
   await block.requireCode(feed.address, `Chainlink ${feed.label} proxy`);
   const decimals = Number(await block.call(FEED_IFACE, feed.address, 'decimals'));
-  if (decimals !== feed.decimals) fail('IDENTITY_MISMATCH', `Chainlink ${feed.label} decimals at ${where} are ${decimals}, expected ${feed.decimals}`);
+  if (decimals !== feed.decimals) fail('IDENTITY_MISMATCH', `Chainlink ${feed.label} decimals at ${where} differ from the pinned ${feed.decimals}`);
   const description = await block.call(FEED_IFACE, feed.address, 'description');
-  if (description !== feed.description) fail('IDENTITY_MISMATCH', `Chainlink ${feed.label} description at ${where} is ${JSON.stringify(String(description).slice(0, 40))}, expected ${JSON.stringify(feed.description)}`);
+  // The returned string is chain-controlled: compare only, never echo it.
+  if (description !== feed.description) fail('IDENTITY_MISMATCH', `Chainlink ${feed.label} description at ${where} differs from the pinned "${feed.description}"`);
   const aggregator = await block.call(FEED_IFACE, feed.address, 'aggregator');
   if (/^0x0{40}$/i.test(aggregator)) fail('IDENTITY_MISMATCH', `Chainlink ${feed.label} proxy has no aggregator at ${where}`);
   await block.requireCode(aggregator, `Chainlink ${feed.label} aggregator`);
@@ -685,7 +690,8 @@ const ISO_TIME = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$/;
 
 function exactKeys(value, keys, label, problems) {
   const actual = Object.keys(value);
-  for (const key of actual) if (!keys.includes(key)) problems.push(`${label} has unexpected field ${JSON.stringify(key.slice(0, 40))}`);
+  const unexpected = actual.filter((key) => !keys.includes(key)).length;
+  if (unexpected > 0) problems.push(`${label} has ${unexpected} unexpected field(s)`); // key names are never echoed
   for (const key of keys) if (!actual.includes(key)) problems.push(`${label}.${key} missing`);
 }
 
@@ -729,7 +735,8 @@ function leafMismatches(actual, expected, prefix, out) {
     const e = expected[key];
     const pathName = prefix ? `${prefix}.${key}` : key;
     if (e && typeof e === 'object') leafMismatches(a, e, pathName, out);
-    else if (a !== e) out.push(`${pathName} is ${JSON.stringify(a)}, canonical chain derivation gives ${JSON.stringify(e)}`);
+    // Only the field path (from our expected object) and the chain-derived, typed expected value.
+    else if (a !== e) out.push(`${pathName} differs from the canonical chain derivation ${typeof e === 'number' ? e : `"${e}"`}`);
   }
 }
 
@@ -862,10 +869,16 @@ export async function main(argv, env = process.env) {
   );
 }
 
+/** Defense in depth: printable ASCII and newlines only, length-bounded. */
+export function safeText(text) {
+  const clean = String(text).replace(/[^\x20-\x7e\n]/g, '?');
+  return clean.length > 4000 ? `${clean.slice(0, 4000)}...(truncated)` : clean;
+}
+
 /** Renders any thrown value as a constant-category line; unknown errors never expose their text. */
 export function renderError(error) {
   if (error instanceof EvidenceError) {
-    return { text: `Error [${error.code}]: ${error.detail}\n`, exitCode: error.code === 'USAGE' ? 2 : 1, usage: error.code === 'USAGE' };
+    return { text: `Error [${error.code}]: ${safeText(error.detail)}\n`, exitCode: error.code === 'USAGE' ? 2 : 1, usage: error.code === 'USAGE' };
   }
   return { text: 'Error [INTERNAL]: unexpected failure (details suppressed to avoid leaking endpoint data)\n', exitCode: 1, usage: false };
 }

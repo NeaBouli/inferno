@@ -494,6 +494,94 @@ function startServer(handler) {
 }
 pass('finding 2: CLI stdout/stderr and receipts never contain RPC credentials (sentinels)');
 
+// ── Finding 2 follow-up: chain-sourced and file-supplied strings are never echoed ──
+// Hostile ABI description(), evidence string values and unknown key names carry ANSI escapes,
+// control characters, a fake credential sentinel and excessive length. Every output path
+// (thrown message, rendered stderr, stdout, receipt) must refuse with constant text only.
+
+const HOSTILE_MARK = 'HOSTILEDESC5e7b';
+const HOSTILE = `\u001b[31m\u001b]0;pwn\u0007${HOSTILE_MARK}\r\n\u0000Error [OK]: verified https://${SENTINELS[0]}:${SENTINELS[1]}@evil/${SENTINELS[2]}?k=${SENTINELS[3]}${'A'.repeat(6000)}`;
+const assertClean = (text, label) => {
+  assertNoSentinel(text, label);
+  assert.ok(!text.includes(HOSTILE_MARK), `${label}: hostile chain/file string echoed:\n${text.slice(0, 400)}`);
+  assert.ok(!/[\u0000-\u0008\u000b-\u001f\u007f]/.test(text), `${label}: control characters in output`);
+  assert.ok(!text.includes('AAAAAAAAAA'), `${label}: unbounded hostile payload in output`);
+};
+{
+  const hostileChain = (extra = {}) => mockChain({ feed: (label) => (label === 'EUR/USD' ? { description: HOSTILE } : null), ...extra });
+  await assert.rejects(generateEvidence(hostileChain().reader, { period: PERIOD, endBlockNumber: END_BLOCK }), (error) => {
+    assert.equal(error.code, 'IDENTITY_MISMATCH');
+    assertClean(`${error.message}\n${renderError(error).text}`, 'hostile description (generate)');
+    assert.match(error.message, /EUR\/USD description at end block 26100000 differs from the pinned "EUR \/ USD"/);
+    return true;
+  });
+  await assert.rejects(verifyEvidence(hostileChain().reader, evidence, { period: PERIOD }), (error) => {
+    assertClean(`${error.message}\n${renderError(error).text}`, 'hostile description (verify)');
+    return error.code === 'IDENTITY_MISMATCH';
+  });
+  // Hostile evidence-file strings (within schema length bounds) and hostile unknown key names.
+  const shortHostile = (n) => `\u001b[2J${HOSTILE_MARK}${SENTINELS[3]}\u0007`.slice(0, n);
+  const fileCases = [
+    ['reviewedSourceId', (e) => { e.reviewedSourceId = shortHostile(80); }],
+    ['ethEur.source', (e) => { e.ethEur.source = shortHostile(120); }],
+    ['unknown top-level key', (e) => { e[HOSTILE.slice(0, 200)] = HOSTILE; }],
+    ['unknown nested key', (e) => { e.end[`${HOSTILE_MARK}\u001b[0m`] = 1; }],
+  ];
+  for (const [label, mutate] of fileCases) {
+    const tampered = JSON.parse(JSON.stringify(evidence));
+    mutate(tampered);
+    await assert.rejects(verifyEvidence(mockChain().reader, tampered, { period: PERIOD }), (error) => {
+      assert.ok(error instanceof EvidenceError, label);
+      assertClean(`${error.message}\n${renderError(error).text}`, `hostile file ${label}`);
+      return true;
+    });
+  }
+  // Rendering is bounded and printable even for an unexpected detail.
+  assertClean(renderError(new EvidenceError('INTERNAL', `x${'\u001b'.repeat(3)}`)).text.replace(/\?/g, ''), 'safeText');
+
+  // CLI: hostile chain over JSON-RPC and hostile evidence files -> refusal with clean outputs.
+  const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'model-b-hostile-'));
+  const chain = hostileChain();
+  const clean = mockChain();
+  let useHostile = true;
+  const { server, base } = await startServer((req, res, body) => {
+    const { id, method, params } = JSON.parse(body);
+    res.writeHead(200, { 'content-type': 'application/json' });
+    res.end(JSON.stringify({ jsonrpc: '2.0', id, ...(useHostile ? chain : clean).handle(method, params) }));
+  });
+  try {
+    const url = sentinelUrl(base);
+    const out = path.join(tmp, 'e.json');
+    const receipt = path.join(tmp, 'r.json');
+    const g = await runCli(['generate', '--rpc', url, '--period', PERIOD, '--end-block', String(END_BLOCK), '--out', out, '--receipt', receipt]);
+    assert.equal(g.code, 1, g.all);
+    assert.match(g.stderr, /^Error \[IDENTITY_MISMATCH\]/);
+    assertClean(g.all, 'cli hostile description');
+    assert.ok(!fs.existsSync(out) && !fs.existsSync(receipt), 'no evidence/receipt written on refusal');
+    useHostile = false;
+    for (const [label, mutate] of fileCases) {
+      const tampered = JSON.parse(JSON.stringify(evidence));
+      mutate(tampered);
+      const file = path.join(tmp, `${label.replace(/\W/g, '_')}.json`);
+      fs.writeFileSync(file, JSON.stringify(tampered));
+      const v = await runCli(['verify', '--rpc', url, '--period', PERIOD, '--file', file, '--receipt', path.join(tmp, `${label.replace(/\W/g, '_')}.r.json`)]);
+      assert.equal(v.code, 1, `${label}: ${v.all}`);
+      assert.match(v.stderr, /^Error \[(EVIDENCE_FILE|VERIFICATION_MISMATCH)\]/, label);
+      assertClean(v.all, `cli hostile file ${label}`);
+    }
+    // A clean run's receipt never stores a raw chain string (description only after exact match).
+    const ok = await runCli(['generate', '--rpc', url, '--period', PERIOD, '--end-block', String(END_BLOCK), '--out', path.join(tmp, 'ok.json'), '--receipt', path.join(tmp, 'ok.r.json')]);
+    assert.equal(ok.code, 0, ok.all);
+    const reads = JSON.parse(fs.readFileSync(path.join(tmp, 'ok.r.json'), 'utf8')).reads;
+    const desc = reads.find((r) => r.function === 'description()');
+    assert.ok(desc.result && /^0x[0-9a-f]{64}$/.test(desc.result.utf8Keccak256), 'description recorded as keccak256 only');
+  } finally {
+    server.close();
+    fs.rmSync(tmp, { recursive: true, force: true });
+  }
+}
+pass('finding 2 follow-up: hostile description/evidence strings/key names never echoed (ANSI, control chars, length, sentinel)');
+
 // ── Finding 3: verify needs the expected period and the deterministic start ──
 
 async function expectMismatch(mutate, pattern, label, { period = PERIOD, chain = mockChain() } = {}) {
@@ -514,7 +602,7 @@ await rejectsWith(verifyEvidence(mockChain().reader, evidence), 'USAGE', /expect
   const older = JSON.parse(JSON.stringify(evidence));
   older.start = { blockNumber: START_BLOCK - 1, blockHash: hashOf(START_BLOCK - 1), timestamp: ts(START_BLOCK - 1), price0Cumulative: cumulativeAt(START_BLOCK - 1).toString() };
   assert.deepEqual(consumerBoundViolations(older, PERIOD), [], 'truthful older start passes consumer bounds');
-  await expectMismatch((e) => { e.start = older.start; }, /start\.blockNumber is 26049599, canonical chain derivation gives 26049600/, 'truthful noncanonical start');
+  await expectMismatch((e) => { e.start = older.start; }, /start\.blockNumber differs from the canonical chain derivation 26049600/, 'truthful noncanonical start');
   // A truthful start 59 minutes earlier, still inside the 1h tolerance, is rejected the same way.
   const n = START_BLOCK - 295;
   await expectMismatch((e) => { e.start = { blockNumber: n, blockHash: hashOf(n), timestamp: ts(n), price0Cumulative: cumulativeAt(n).toString() }; }, /start\.blockNumber/, 'truthful start within tolerance');
