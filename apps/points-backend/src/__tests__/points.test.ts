@@ -18,6 +18,7 @@ import { POINTS_CONFIG } from "../config/points.js";
 import { getSignerAddress } from "../services/voucher-signer.js";
 import { capVoucherDiscountBps } from "../services/voucher-eip712.js";
 import {
+  categorizeFeeReadError,
   getProtocolFeeBps,
   setProtocolFeeReader,
 } from "../services/fee-router-fee.js";
@@ -506,35 +507,83 @@ async function run() {
       );
     };
 
-    setProtocolFeeReader(async () => {
-      throw Object.assign(
-        new Error(`missing response (requestBody={"to":"0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a"}, url="https://mainnet.example/v3/KEY")`),
-        { code: "SERVER_ERROR" },
-      );
-    });
-    const loggedErrors: unknown[][] = [];
-    const originalConsoleError = console.error;
-    console.error = (...args: unknown[]) => { loggedErrors.push(args); };
-    let unreadable: Awaited<ReturnType<typeof api>>;
-    try {
-      unreadable = await api("POST", "/voucher/issue", {}, authToken);
-    } finally {
-      console.error = originalConsoleError;
-    }
-    {
+    // Fee-read failures log only a constant category, never raw error text (T-289).
+    const LOG_SENTINELS = [
+      "sk-TEST-SENTINEL-123",
+      "apikey=SENTINEL",
+      "SENTINEL",
+      "user:pa55w0rd",
+      "rpc.example",
+      "0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a",
+      "requestBody",
+      "arbitrary free text",
+    ];
+    const hostileMessage =
+      `missing response (requestBody={"to":"0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a"}, ` +
+      `url="https://user:pa55w0rd@rpc.example/v3/sk-TEST-SENTINEL-123?apikey=SENTINEL") arbitrary free text`;
+    const failureCases: Array<{ label: string; error: unknown; category: string }> = [
+      { label: "timeout", error: Object.assign(new Error(hostileMessage), { code: "TIMEOUT" }), category: "rpc_error:timeout" },
+      { label: "network", error: Object.assign(new Error(hostileMessage), { code: "ECONNREFUSED" }), category: "rpc_error:network" },
+      {
+        label: "rate limited",
+        error: Object.assign(new Error(hostileMessage), { code: "SERVER_ERROR", response: { statusCode: 429 } }),
+        category: "rpc_error:rate_limited",
+      },
+      { label: "bad response", error: Object.assign(new Error(hostileMessage), { code: "BAD_DATA" }), category: "rpc_error:bad_response" },
+      { label: "sentinel as code", error: Object.assign(new Error(hostileMessage), { code: "sk-TEST-SENTINEL-123" }), category: "rpc_error:unknown" },
+      { label: "plain error", error: new Error(hostileMessage), category: "rpc_error:unknown" },
+      { label: "thrown string", error: hostileMessage, category: "rpc_error:unknown" },
+    ];
+    let unreadable: Awaited<ReturnType<typeof api>> | undefined;
+    for (const failure of failureCases) {
+      setProtocolFeeReader(async () => { throw failure.error; });
+      const loggedErrors: unknown[][] = [];
+      const originalConsoleError = console.error;
+      console.error = (...args: unknown[]) => { loggedErrors.push(args); };
+      try {
+        unreadable = await api("POST", "/voucher/issue", {}, authToken);
+      } finally {
+        console.error = originalConsoleError;
+      }
       const logged = loggedErrors.map((args) => args.map((a) => (typeof a === "string" ? a : JSON.stringify(a))).join(" ")).join("\n");
-      assert(logged.includes("fee_check=failed") && logged.includes("SERVER_ERROR"), "fee read failure logs a sanitized code");
-      assert(!/0x[0-9a-fA-F]{40}/.test(logged), "fee read failure log contains no 0x address");
-      assert(!/[a-z]+:\/\//i.test(logged), "fee read failure log contains no URL");
-      assert(!logged.includes("requestBody") && !logged.includes("KEY"), "fee read failure log contains no request params");
+      assert(
+        logged === `[VOUCHER] issued=false fee_check=failed category=${failure.category}`,
+        `fee read failure (${failure.label}) logs exactly the constant category ${failure.category}`,
+      );
+      assert(
+        LOG_SENTINELS.every((sentinel) => !logged.includes(sentinel)),
+        `fee read failure (${failure.label}) log contains no key, credential, URL, address or message text`,
+      );
+      assert(categorizeFeeReadError(failure.error) === failure.category, `categorizeFeeReadError maps ${failure.label}`);
+      assert(unreadable.status === 503, `unreadable on-chain fee (${failure.label}) refuses voucher issuance`);
+      await assertNothingIssued(`unreadable fee (${failure.label})`);
     }
-    assert(unreadable.status === 503, "unreadable on-chain fee refuses voucher issuance");
-    assert(typeof unreadable.data.error === "string" && !("signature" in unreadable.data), "unreadable fee returns no signature");
-    await assertNothingIssued("unreadable fee");
+    assert(categorizeFeeReadError(null) === "rpc_error:unknown", "categorizeFeeReadError maps null to unknown");
+    assert(
+      categorizeFeeReadError({ code: "UNKNOWN_ERROR", error: { code: -32005, message: "apikey=SENTINEL" } }) === "rpc_error:rate_limited",
+      "categorizeFeeReadError maps JSON-RPC -32005 to rate_limited",
+    );
+    assert(
+      categorizeFeeReadError({ code: "toString" }) === "rpc_error:unknown",
+      "categorizeFeeReadError ignores prototype keys as codes",
+    );
+    assert(unreadable !== undefined && typeof unreadable.data.error === "string" && !("signature" in unreadable.data), "unreadable fee returns no signature");
 
     setProtocolFeeReader(feeReading(5, 1n));
-    const wrongChain = await api("POST", "/voucher/issue", {}, authToken);
+    const wrongChainLogs: unknown[][] = [];
+    const consoleErrorBeforeWrongChain = console.error;
+    console.error = (...args: unknown[]) => { wrongChainLogs.push(args); };
+    let wrongChain: Awaited<ReturnType<typeof api>>;
+    try {
+      wrongChain = await api("POST", "/voucher/issue", {}, authToken);
+    } finally {
+      console.error = consoleErrorBeforeWrongChain;
+    }
     assert(wrongChain.status === 503, "fee read from the wrong chain refuses voucher issuance");
+    assert(
+      wrongChainLogs.length === 1 && wrongChainLogs[0].join(" ") === "[VOUCHER] issued=false fee_check=failed category=fee_error:wrong_chain",
+      "wrong-chain fee read logs only the constant fee_error:wrong_chain category",
+    );
     await assertNothingIssued("wrong-chain fee");
 
     setProtocolFeeReader(feeReading(0));
