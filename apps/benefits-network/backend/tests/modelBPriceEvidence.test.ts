@@ -45,6 +45,9 @@ const REVIEWED_SOURCE_ID = 'uniswap-v2-twap:chainlink-eth-usd:eur-usd';
 const fixture = JSON.parse(
   fs.readFileSync(path.join(__dirname, 'fixtures', 'modelBPriceEvidence.sample.json'), 'utf8')
 ) as Record<string, unknown>;
+const receipt = JSON.parse(
+  fs.readFileSync(path.join(__dirname, 'fixtures', 'modelBPriceEvidence.sample.receipt.json'), 'utf8')
+) as { evidenceDigest: string; period: string; chainId: number; blocks: { end: { number: number; hash: string } } };
 const period = parseSettlementPeriod('2026-09');
 
 function policy(reviewedPriceSourceIds: string[] = [REVIEWED_SOURCE_ID]): ModelBPolicy {
@@ -97,6 +100,16 @@ describe('Model B price-evidence tool output (T-290 fixture)', () => {
       hash: (fixture.end as { blockHash: string }).blockHash,
       timestamp: (fixture.end as { timestamp: number }).timestamp,
     });
+  });
+
+  it('binds the read-proof receipt to the validated evidence by the backend canonical digest', () => {
+    const result = validatePriceEvidence(fixture, { policy: policy(), ifrTokenAddress: IFR_TOKEN, period });
+    expect(result.status).toBe('VALID');
+    if (result.status !== 'VALID') return;
+    expect(receipt.evidenceDigest).toBe(result.digest);
+    expect(receipt.period).toBe('2026-09');
+    expect(receipt.chainId).toBe(1);
+    expect(receipt.blocks.end).toMatchObject({ number: result.settlementBlock.number, hash: result.settlementBlock.hash });
   });
 
   it('accepts the reviewed source id through the real policy parser', () => {

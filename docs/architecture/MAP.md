@@ -97,6 +97,19 @@ Creator Gateway login trace (`apps/creator-gateway`):
    (`services/lock-checker.ts` on-chain, `services/youtube-checker.ts` with the
    server-held token) — Daten: JWT claims → granted/reasons
 
+Model B price-evidence trace (T-290, operator-run, read-only; F3 OPEN):
+
+1. operator CLI → `scripts/model-b-price-evidence.mjs::makeHttpRpc` → `makeChainReader`
+   — Daten: archive mainnet RPC (never printed) → strict headers, EIP-1898
+   `{blockHash, requireCanonical}` pinned `eth_call`/`eth_getCode`
+2. `deriveEvidence` — Daten: period + finalized end block → deterministic start + witness,
+   pinned pair/factory/token/feed identity, pair state, Chainlink rounds, final
+   number↔hash recheck → `priceEvidenceSchema` JSON + read-proof receipt (canonical digest)
+3. `verifyEvidence` — Daten: evidence + receipt + expected period → full re-derivation and
+   per-path diff (no trust in supplied fields)
+4. settlement export → `apps/benefits-network/backend/src/services/modelBSettlement.ts::validatePriceEvidence`
+   (unchanged consumer; schema/policy/bounds only)
+
 Benefits seller authorization/session trace (`apps/benefits-network/backend`):
 
 1. seller client (frontend `lib/api.ts::getSellerAuthMessage`, SDK
@@ -186,6 +199,7 @@ Points voucher trace (`apps/points-backend`):
 | gateway entitlement | OR/AND decision over IFR lock + YouTube membership | `apps/creator-gateway/src/services/entitlement.ts` | gebaut |
 | gateway lock checker | on-chain IFRLock reads, fail-closed | `apps/creator-gateway/src/services/lock-checker.ts` | gebaut |
 | gateway youtube checker | membership check with server-held token, fail-closed | `apps/creator-gateway/src/services/youtube-checker.ts` | gebaut |
+| model B price evidence | operator CLI: canonical hash-pinned chain reads → 7d TWAP + ETH/EUR evidence and receipt; independent verify | `scripts/model-b-price-evidence.mjs` | gebaut (F3 open; benchmark/source approval separate gates) |
 | benefits config | env validation; production requires explicit `SELLER_AUTH_DOMAIN` and `CHAIN_ID` | `apps/benefits-network/backend/src/config.ts` + `services/sellerAuthConfigPolicy.ts` | gebaut |
 | benefits seller auth | domain/chain/expiry/nonce-bound message build + signature verification | `apps/benefits-network/backend/src/services/sellerAuth.ts::verifySellerSignature` | gebaut |
 | benefits seller challenge store | one-time challenge issue (bounded prune) and atomic consumption for every seller action | `apps/benefits-network/backend/src/services/sellerAuthorizationChallenge.ts` | gebaut |

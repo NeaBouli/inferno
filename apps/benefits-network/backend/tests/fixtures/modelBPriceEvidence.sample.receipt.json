@@ -1,0 +1,98 @@
+{
+  "kind": "ifr-model-b-price-evidence-receipt/1",
+  "period": "2026-09",
+  "chainId": 1,
+  "evidenceDigest": "0xfcb77792c89d4417ffa6c73873794401ca5aa005249d36490aae8f57b80f1e34",
+  "pinning": "eip-1898 blockHash requireCanonical; end block finalized; number<->hash rechecked after final read",
+  "blocks": {
+    "start": {
+      "number": 26049600,
+      "hash": "0xabc9cb6af38cbc90064dc3a3a38fae10a949bc6d489b47ae07b6930519e3a92a",
+      "parentHash": "0x09baba2f82cd11f779d5ec11e8cd0892fd78620b747d896c82bdb208aedcf741",
+      "timestamp": 1790209800
+    },
+    "startNext": {
+      "number": 26049601,
+      "hash": "0x03654a1136e9473e6a4905d98aef2828b28e7901b7e18a78b097e17ec7acec0a",
+      "parentHash": "0xabc9cb6af38cbc90064dc3a3a38fae10a949bc6d489b47ae07b6930519e3a92a",
+      "timestamp": 1790209812
+    },
+    "end": {
+      "number": 26100000,
+      "hash": "0x166d300bb732a03c462054205886a3cb2576503afa38f8ae56695e86f9762e08",
+      "parentHash": "0x7e6f3b71e6bd5d3ca8202ef88e6ee13f69683fc8b105d3db745a2311329fce84",
+      "timestamp": 1790814600
+    }
+  },
+  "twap": {
+    "targetStartTimestamp": 1790209800,
+    "windowSeconds": 604800
+  },
+  "identity": {
+    "pair": "0xbe495e9c0d8cc2dcf95570cf95b63c4844df31a0",
+    "factory": "0x5c69bee701ef814a2b6a3edd4b1652cb9cc5aa6f",
+    "token0": "0x77e99917eca8539c62f509ed1193ac36580a6e7b",
+    "token1": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+    "token0Decimals": 9,
+    "token1Decimals": 18,
+    "codeHashes": {
+      "0xbe495e9c0d8cc2dcf95570cf95b63c4844df31a0": "0x656cb06de6d98160ae55afa2b20355238fbeef3ea26118fe26e994899f979fd7",
+      "0x5c69bee701ef814a2b6a3edd4b1652cb9cc5aa6f": "0xfbc1ae0eb69171c903acf6341784f6edda063167b4a1a03e5c1a7bcf38b18735",
+      "0x77e99917eca8539c62f509ed1193ac36580a6e7b": "0xb3c63c030cc9c4d96a255e239b7b95798bdd6931ea5cfe987e60de92b66279f7",
+      "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2": "0xbbdf4031cdabe9c374ac0fd90f186e06ef25856cbbc0e22b748dcae245e83c73"
+    },
+    "checkedAtBlocks": [
+      26049600,
+      26100000
+    ]
+  },
+  "pairState": {
+    "start": {
+      "reserve0": "17732250426124888",
+      "reserve1": "385399916033610356",
+      "blockTimestampLast": 1790209783,
+      "price0CumulativeLast": "35917853201951660118020960570961284143177896"
+    },
+    "end": {
+      "reserve0": "17732250426124888",
+      "reserve1": "385399916033610356",
+      "blockTimestampLast": 1790814583,
+      "price0CumulativeLast": "35986105779408455687698079044767568476515496"
+    }
+  },
+  "feeds": [
+    {
+      "label": "ETH/USD",
+      "proxy": "0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419",
+      "codeHash": "0xeb209da6c6244166aff67b70c4a1bb441384922aee2b7c00beb31e0c9c79fd77",
+      "description": "ETH / USD",
+      "decimals": 8,
+      "heartbeatSeconds": 3600,
+      "aggregator": "0x7d4e742018fb52e48b08be73d041c18b21de6fb5",
+      "roundId": "26200000",
+      "answer": "271227435732",
+      "startedAt": 1790814100,
+      "updatedAt": 1790814100,
+      "answeredInRound": "26200000"
+    },
+    {
+      "label": "EUR/USD",
+      "proxy": "0xb49f677943bc038e9857d61e7d053caa2c1734c1",
+      "codeHash": "0xdc8802f144dc6f1ec14bdc01afd5054c522a76ceb9f05193f813f7550b9b63cc",
+      "description": "EUR / USD",
+      "decimals": 8,
+      "heartbeatSeconds": 86400,
+      "aggregator": "0x966dad3b93c207a9ee3a79c336145e013c5cd3fc",
+      "roundId": "26200000",
+      "answer": "112307000",
+      "startedAt": 1790813800,
+      "updatedAt": 1790813800,
+      "answeredInRound": "26200000"
+    }
+  ],
+  "sources": {
+    "chainlinkRegistry": "https://reference-data-directory.vercel.app/feeds-mainnet.json",
+    "uniswapOracleLibrary": "https://github.com/Uniswap/v2-periphery/blob/master/contracts/libraries/UniswapV2OracleLibrary.sol",
+    "eip1898": "https://eips.ethereum.org/EIPS/eip-1898"
+  }
+}
