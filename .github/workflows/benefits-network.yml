@@ -21,6 +21,8 @@ on:
       - 'scripts/test-benefits-wallet-lock-ui.js'
       - 'scripts/test-benefits-accessibility.js'
       - 'scripts/test-benefits-csp.js'
+      - 'scripts/test-benefits-wallet-telemetry.js'
+      - 'scripts/test-benefits-wallet-telemetry-gate.js'
       - 'scripts/test-benefits-fullstack-e2e.js'
       - 'scripts/test-benefits-bundle-budget.cjs'
       - 'scripts/test-benefits-doc-consistency.cjs'
@@ -61,6 +63,8 @@ on:
       - 'scripts/test-benefits-wallet-lock-ui.js'
       - 'scripts/test-benefits-accessibility.js'
       - 'scripts/test-benefits-csp.js'
+      - 'scripts/test-benefits-wallet-telemetry.js'
+      - 'scripts/test-benefits-wallet-telemetry-gate.js'
       - 'scripts/test-benefits-fullstack-e2e.js'
       - 'scripts/test-benefits-bundle-budget.cjs'
       - 'scripts/test-benefits-doc-consistency.cjs'
@@ -245,3 +249,27 @@ jobs:
           BENEFITS_BASE_URL=http://127.0.0.1:3000 npm run test:benefits-csp
       - name: Run composed Benefits full-stack browser E2E
         run: npm run test:benefits-fullstack
+      - name: Wallet SDK telemetry gate (WalletConnect configured)
+        # T-280: build with a dummy WalletConnect project ID (as the Docker step
+        # does) so the Coinbase and WalletConnect/AppKit init paths both exist,
+        # then assert no telemetry request before a wallet is chosen.
+        env:
+          NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: 0123456789abcdef0123456789abcdef
+        run: |
+          set -euo pipefail
+          npm run test:benefits-wallet-telemetry-gate
+          npm run build --prefix apps/benefits-network/frontend
+          (cd apps/benefits-network/frontend && BENEFITS_API_INTERNAL_URL=http://127.0.0.1:9 npx next start --port 3100 >/tmp/benefits-telemetry-next.log 2>&1) &
+          server_pid="$!"
+          cleanup() {
+            pkill -TERM -P "$server_pid" >/dev/null 2>&1 || true
+            kill "$server_pid" >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+          ready=0
+          for _ in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:3100/ >/dev/null; then ready=1; break; fi
+            sleep 1
+          done
+          if [ "$ready" != 1 ]; then cat /tmp/benefits-telemetry-next.log; exit 1; fi
+          BENEFITS_EXPECT_WALLETCONNECT=1 BENEFITS_BASE_URL=http://127.0.0.1:3100 npm run test:benefits-wallet-telemetry

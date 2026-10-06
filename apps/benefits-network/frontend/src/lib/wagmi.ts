@@ -3,6 +3,7 @@ import { sepolia, mainnet } from 'wagmi/chains';
 import { coinbaseWallet } from 'wagmi/connectors/coinbaseWallet';
 import { injected } from 'wagmi/connectors/injected';
 import { walletConnect } from 'wagmi/connectors/walletConnect';
+import { deferUntilChosen } from '@/lib/deferredWalletConnector.mjs';
 import { normalizeWalletConnectProjectId } from '@/lib/walletConnectProjectId.mjs';
 
 const chainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID || 1);
@@ -25,18 +26,27 @@ export const hasWalletConnectProjectId = Boolean(walletConnectProjectId);
 const connectors = [
   injected(),
   injected({ target: 'phantom' }),
-  coinbaseWallet({ appName: 'IFR Benefits Network' }),
+  // T-280: SDK connectors stay dormant until the visitor picks them (see
+  // deferredWalletConnector.mjs), and their own telemetry switches are off.
+  // `telemetry: false` is the Coinbase Wallet SDK opt-out for client analytics
+  // to cca-lite.coinbase.com; `options: 'all'` is the connector default.
+  deferUntilChosen(coinbaseWallet({
+    appName: 'IFR Benefits Network',
+    preference: { options: 'all', telemetry: false },
+  })),
   ...(hasWalletConnectProjectId
-    ? [walletConnect({
+    ? [deferUntilChosen(walletConnect({
         projectId: walletConnectProjectId,
         showQrModal: true,
+        // T-280: WalletConnect Core event client (pulse.walletconnect.org) off.
+        telemetryEnabled: false,
         metadata: {
           name: 'IFR Benefits Network',
           description: 'Verify locked IFR and redeem partner benefits.',
           url: 'https://shop.ifrunit.tech',
           icons: ['https://shop.ifrunit.tech/icons/ifr-token-256-v11.png'],
         },
-      })]
+      }))]
     : []),
 ];
 

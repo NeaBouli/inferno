@@ -111,6 +111,13 @@ assert.ok(nextConfig.includes('poweredByHeader: false'), 'Shop must suppress the
 for (const header of ['X-Content-Type-Options', 'X-Frame-Options', 'Referrer-Policy', 'Permissions-Policy', 'Strict-Transport-Security']) {
   assert.ok(nextConfig.includes(header), `Shop security header missing from Next config: ${header}`);
 }
+// T-280: browser chrome (head meta) and installed PWA chrome (manifest) use the
+// same paper tone as the page background so neither flashes a different color.
+const manifest = JSON.parse(read('public', 'manifest.json'));
+const headThemeColor = layout.match(/themeColor:\s*'([^']+)'/)?.[1];
+assert.ok(headThemeColor, 'Shop viewport themeColor is missing');
+assert.equal(manifest.theme_color.toLowerCase(), headThemeColor.toLowerCase(), 'manifest theme_color must match the head theme-color');
+assert.equal(manifest.background_color.toLowerCase(), headThemeColor.toLowerCase(), 'theme-color must match the paper background');
 for (const file of ['llms.txt', 'ai.txt']) {
   assert.ok(fs.statSync(path.join(root, 'public', file)).size > 0, `${file} must be published`);
 }

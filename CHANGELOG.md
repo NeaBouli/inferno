@@ -1,5 +1,45 @@
 # Changelog
 
+## [Unreleased] — 2026-10-05 — Benefits wallet telemetry (T-280)
+
+### Security / Privacy
+
+- Benefits frontend (`shop.ifrunit.tech`) no longer contacts wallet SDK
+  telemetry hosts on page load. Root cause: Wagmi reconnect-on-mount (and the
+  WalletConnect connector's `setup()`) called `getProvider()` on every
+  connector, which created the Coinbase Wallet SDK (analytics POSTs to
+  `cca-lite.coinbase.com/amp` and `/metrics`) and the WalletConnect/AppKit
+  provider (mandatory `INITIALIZE` analytics to `pulse.walletconnect.org`,
+  plus `api.web3modal.org`) before any wallet was chosen.
+- `src/lib/deferredWalletConnector.mjs` keeps the Coinbase Wallet and
+  WalletConnect connectors dormant until the visitor picks them (or they are
+  Wagmi's recent connector, so existing sessions still restore).
+- Coinbase Wallet SDK `preference.telemetry: false` and WalletConnect Core
+  `telemetryEnabled: false` stay off after a wallet is chosen too.
+- A confirmed disconnect (in the app or in the wallet) and a failed session restore clear
+  the connector's session marker and Wagmi's `recentConnectorId`, so a
+  returning visitor who disconnected loads no wallet SDK until choosing again;
+  a visitor who is still connected restores as before.
+
+### Changed
+
+- `manifest.json` `theme_color` aligned with the head `theme-color`
+  (`#F5F1E8`, the paper page background); previously `#B0481E`.
+
+### Tests
+
+- `scripts/test-benefits-wallet-telemetry.js` (`npm run
+  test:benefits-wallet-telemetry`, in the Benefits CI browser job): no wallet
+  telemetry request before a wallet is chosen: hard assertions on every route
+  at 375/1440, plus returning visitors (disconnected: no SDK load; still
+  connected: restore runs, no telemetry). A page only counts when it is proven
+  to work (HTTP OK, hydrated, route headings visible, no page error or error
+  boundary, network idle); `test:benefits-wallet-telemetry-gate` proves the
+  gate fails on late telemetry, broken/empty/unhydrated pages and invalid
+  durations.
+- Frontend `test:wallet-selection` adds `test-wallet-telemetry-config.mjs`;
+  `test:discoverability` asserts manifest/head theme-color parity.
+
 ## [Unreleased] — 2026-03-08
 
 ### Added

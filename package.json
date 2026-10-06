@@ -26,6 +26,8 @@
     "test:benefits-touch-targets": "node scripts/test-benefits-touch-targets.js",
     "test:benefits-recovery": "node scripts/test-benefits-route-recovery.js",
     "test:benefits-csp": "node scripts/test-benefits-csp.js",
+    "test:benefits-wallet-telemetry": "node scripts/test-benefits-wallet-telemetry.js",
+    "test:benefits-wallet-telemetry-gate": "node scripts/test-benefits-wallet-telemetry-gate.js",
     "test:benefits-support": "node scripts/test-benefits-support-ui.js",
     "test:benefits-fullstack": "node scripts/test-benefits-fullstack-e2e.js",
     "test:benefits-bundle": "node scripts/test-benefits-bundle-budget.cjs",
