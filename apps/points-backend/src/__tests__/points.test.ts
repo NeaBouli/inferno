@@ -1,5 +1,6 @@
 import "dotenv/config";
 import type { Server } from "node:http";
+import express, { type Request } from "express";
 import app, { resolveAllowedOrigins } from "../app.js";
 import { prisma } from "../db.js";
 import { createToken } from "../middleware/auth.js";
@@ -10,6 +11,7 @@ import {
   admitNonce,
   ipv6Prefix48Key,
   rateLimitKey,
+  TRUSTED_PROXY_HOPS,
 } from "../middleware/rate-limit.js";
 import { MAX_OUTSTANDING_NONCES } from "../routes/auth.js";
 import { POINTS_CONFIG } from "../config/points.js";
@@ -477,6 +479,35 @@ async function run() {
       headers: { "Content-Type": "application/json", "X-Forwarded-For": `1.2.3.4, 198.51.100.77` },
     });
     assert(other.status === 200, "a different proxy-appended client keeps its own nonce budget");
+  }
+
+  // ---- req.ip classifier behind TRUSTED_PROXY_HOPS; proxy-addr advisory canary (T-283) ----
+  console.log("\nTrusted proxy classifier (GHSA-jqcg-44mw-7w3h)");
+  {
+    const appTrusting = (subnets: string[]) => {
+      const trusting = express();
+      trusting.set("trust proxy", subnets);
+      return trusting;
+    };
+    const clientIp = (on: ReturnType<typeof express>, peer: string, forwardedFor: string) => {
+      const socket = { remoteAddress: peer };
+      const req = Object.create(on.request) as Request;
+      Object.defineProperty(req, "headers", { value: { "x-forwarded-for": forwardedFor } });
+      Object.defineProperty(req, "socket", { value: socket });
+      Object.defineProperty(req, "connection", { value: socket });
+      return req.ip;
+    };
+    const ours = appTrusting(TRUSTED_PROXY_HOPS);
+    assert(clientIp(ours, "203.0.113.9", "6.6.6.6") === "203.0.113.9", "untrusted IPv4 peer: spoofed XFF ignored");
+    assert(clientIp(ours, "::ffff:203.0.113.9", "6.6.6.6") === "::ffff:203.0.113.9", "untrusted IPv4-mapped peer: spoofed XFF ignored");
+    assert(clientIp(ours, "2001:db8::9", "6.6.6.6") === "2001:db8::9", "untrusted IPv6 peer: spoofed XFF ignored");
+    assert(clientIp(ours, "172.18.0.5", "6.6.6.6, 198.51.100.7") === "198.51.100.7", "trusted Traefik hop: first untrusted hop wins");
+    for (const subnet of ["::ffff:10.0.0.0/8", "::/1"]) {
+      assert(
+        clientIp(appTrusting([subnet]), "203.0.113.9", "6.6.6.6") === "203.0.113.9",
+        `patched proxy-addr: misconfigured ${subnet} no longer trusts every IPv4 peer`
+      );
+    }
   }
 
   // ---- Rate-limit keys: IPv4 single address, IPv4-mapped == IPv4, IPv6 /64 (T-259) ----
