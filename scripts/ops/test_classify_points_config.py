@@ -156,9 +156,18 @@ class FailClosedTests(unittest.TestCase):
         finally:
             mod.classify_chain = original  # type: ignore[assignment]
 
-    def test_non_ascii_router_is_noncanonical(self) -> None:
-        lines, _ = run(base("FEE_ROUTER_ADDRESS=" + CANONICAL.replace("B", "\uff22")))
-        self.assertIn("fee_router=noncanonical", lines)
+    def test_non_ascii_router_is_unreadable_not_canonical(self) -> None:
+        # Python strip removes these, the JS loader's trim does not (or vice versa):
+        # never report canonical for them.
+        for wrapped in ("\x1c" + CANONICAL, CANONICAL + "\x1f", "\x85" + CANONICAL, CANONICAL + "\u2028",
+                        "\u00a0" + CANONICAL, "\ufeff" + CANONICAL, CANONICAL.replace("B", "\uff22")):
+            lines, code = run(base("FEE_ROUTER_ADDRESS=" + wrapped))
+            self.assertNotIn("fee_router=canonical", lines, repr(wrapped))
+            if not wrapped.isascii():
+                self.assertIn("fee_router=unreadable", lines, repr(wrapped))
+                self.assertEqual(code, 2, repr(wrapped))
+            else:
+                self.assertIn("fee_router=noncanonical", lines, repr(wrapped))
 
 
 class NoLeakTests(unittest.TestCase):

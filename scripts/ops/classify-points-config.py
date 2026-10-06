@@ -5,6 +5,7 @@ Run by the owner on the production host (needs Docker access). It inspects the
 running container's effective environment IN MEMORY and prints categories only:
 
     fee_router=<absent|empty|canonical|noncanonical|duplicate|unreadable>
+        (a router value containing any non-ASCII character is "unreadable")
     chain_mainnet=<true|false|unknown>
     mode=<production-safe|development|test|unknown>
 
@@ -33,6 +34,8 @@ from typing import Any, Callable, Optional, Sequence
 DEFAULT_CONTAINER = "inferno-points-backend"
 CANONICAL_FEE_ROUTER = "0x4807b77b2e25cd055da42b09ba4d0af9e580c60a"
 _TRACKED = ("FEE_ROUTER_ADDRESS", "CHAIN_ID", "NODE_ENV")
+# ASCII whitespace that both Python and JS String.prototype.trim remove.
+_ASCII_WS = " \t\n\r\f\v"
 
 Inspector = Callable[[str], str]
 
@@ -87,11 +90,14 @@ def classify_fee_router(values: Sequence[str]) -> str:
         return "absent"
     if len(values) > 1:
         return "duplicate"
-    value = values[0].strip()
+    raw = values[0]
+    if not raw.isascii():
+        # Python str.strip and JS String.prototype.trim disagree on Unicode
+        # whitespace/separators; do not guess which value the loader would see.
+        return "unreadable"
+    value = raw.strip(_ASCII_WS)
     if not value:
         return "empty"
-    if not value.isascii():
-        return "noncanonical"
     return "canonical" if value.lower() == CANONICAL_FEE_ROUTER else "noncanonical"
 
 
@@ -114,7 +120,7 @@ def classify_chain(values: Sequence[str], mode: str) -> str:
         return "unknown"
     if values and not values[0].isascii():
         return "unknown"  # conservative: JS trim and Python strip differ on Unicode whitespace
-    value = values[0].strip(" \t\n\r\f\v") if values else ""
+    value = values[0].strip(_ASCII_WS) if values else ""
     if not value:
         if mode == "test":
             value = "11155111"
