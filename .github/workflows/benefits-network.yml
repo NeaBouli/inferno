@@ -22,6 +22,7 @@ on:
       - 'scripts/test-benefits-accessibility.js'
       - 'scripts/test-benefits-csp.js'
       - 'scripts/test-benefits-wallet-telemetry.js'
+      - 'scripts/test-benefits-wallet-telemetry-gate.js'
       - 'scripts/test-benefits-fullstack-e2e.js'
       - 'scripts/test-benefits-bundle-budget.cjs'
       - 'scripts/test-benefits-doc-consistency.cjs'
@@ -63,6 +64,7 @@ on:
       - 'scripts/test-benefits-accessibility.js'
       - 'scripts/test-benefits-csp.js'
       - 'scripts/test-benefits-wallet-telemetry.js'
+      - 'scripts/test-benefits-wallet-telemetry-gate.js'
       - 'scripts/test-benefits-fullstack-e2e.js'
       - 'scripts/test-benefits-bundle-budget.cjs'
       - 'scripts/test-benefits-doc-consistency.cjs'
@@ -255,6 +257,7 @@ jobs:
           NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: 0123456789abcdef0123456789abcdef
         run: |
           set -euo pipefail
+          npm run test:benefits-wallet-telemetry-gate
           npm run build --prefix apps/benefits-network/frontend
           (cd apps/benefits-network/frontend && BENEFITS_API_INTERNAL_URL=http://127.0.0.1:9 npx next start --port 3100 >/tmp/benefits-telemetry-next.log 2>&1) &
           server_pid="$!"

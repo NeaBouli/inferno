@@ -10,9 +10,9 @@
 //   - the visitor explicitly starts connect() with it in this page, or
 //   - the visitor is still connected with it: a successful connect() stores a
 //     session marker in Wagmi's storage, so the session restores on reload.
-// The marker (and Wagmi's recentConnectorId for this connector) is cleared on
-// disconnect from the app, on a wallet-side disconnect and when a restore
-// finds the session gone, so a returning visitor who disconnected loads no
+// The marker (and Wagmi's recentConnectorId for this connector) is cleared
+// after a confirmed disconnect from the app, on a wallet-side disconnect and
+// when a restore finds the session gone (a failed disconnect keeps it), so a returning visitor who disconnected loads no
 // wallet SDK until they choose one again.
 // Wagmi's own persisted `store` is not usable as that signal: with `ssr: true`
 // it is overwritten with the empty pre-hydration state before reconnect runs.
@@ -70,11 +70,11 @@ export function deferUntilChosen(connectorFn) {
         return result;
       },
       async disconnect() {
-        try {
-          if (await activated()) await base.disconnect.call(this);
-        } finally {
-          await forgetChoice();
-        }
+        // Forget the choice only after a confirmed disconnect: if the SDK
+        // rejects, the error propagates, Wagmi keeps the connection and the
+        // marker stays, so the still-existing session restores on reload.
+        if (await activated()) await base.disconnect.call(this);
+        await forgetChoice();
       },
       async onDisconnect(error) {
         // Wallet-side disconnect (session deleted in the wallet app).

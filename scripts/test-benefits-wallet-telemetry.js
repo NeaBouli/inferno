@@ -5,33 +5,50 @@
 // are aborted (never sent upstream) and only recorded. The test never connects
 // or signs with a wallet.
 //
-// Part 1, fresh visitor: every route x viewport gets its own hard assertions
-// (page served, observation window completed, zero telemetry requests, zero
-// wallet-SDK hosts or sockets, no Coinbase SDK initialisation).
-// Part 2, returning visitor (Wagmi storage seeded exactly as Wagmi leaves it):
-//   - disconnected after using Coinbase Wallet / WalletConnect: no SDK load
-//     and no telemetry until a wallet is chosen again;
-//   - still connected with Coinbase Wallet: the session restore still runs
-//     (SDK initialises) and still sends no telemetry.
+// A page only counts when it is proven to work: HTTP 2xx/3xx, no page error,
+// no error boundary, React hydrated, network idle reached, and the
+// route-specific headings visible (synthetic slugs must show their explicit
+// "unavailable" state). Only then is "0 telemetry" meaningful.
+//
+// Part 1, fresh visitor: every route x viewport.
+// Part 2, returning visitor (Wagmi storage seeded the way the app leaves it):
+//   - disconnected after using Coinbase Wallet / WalletConnect: no SDK load;
+//   - still connected with Coinbase Wallet: the session restore still runs.
+// scripts/test-benefits-wallet-telemetry-gate.js proves the gate itself fails
+// on late telemetry, broken/unhydrated pages and invalid durations.
 
 const { chromium } = require('playwright');
 
-const BASE_URL = process.env.BENEFITS_BASE_URL || 'http://127.0.0.1:3000';
 // AppKit flushes its analytics queue on a 10 s interval, so every page is
-// observed for at least 15 s after the network went idle. The env var can only
-// lengthen this window, never shorten it.
+// observed for at least 15 s after the network went idle.
 const MIN_OBSERVE_MS = 15_000;
-const OBSERVE_MS = Math.max(MIN_OBSERVE_MS, Number(process.env.BENEFITS_TELEMETRY_SETTLE_MS || 0));
-// Set to 1 when the bundle was built with NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
-// so the WalletConnect/AppKit path is really present (otherwise the gate would
-// be vacuous for WalletConnect telemetry).
-const EXPECT_WALLETCONNECT = process.env.BENEFITS_EXPECT_WALLETCONNECT === '1';
-const ROUTES = ['/', '/?mode=seller', '/guide', '/b/telemetry-check', '/r/telemetry-check'];
+
+/**
+ * @param {string | undefined} raw BENEFITS_TELEMETRY_SETTLE_MS
+ * @returns {number} observation window in ms (finite integer >= 15000)
+ */
+function parseObserveMs(raw) {
+  if (raw === undefined || raw === '') return MIN_OBSERVE_MS;
+  const value = Number(raw);
+  if (!/^\d+$/.test(String(raw).trim()) || !Number.isFinite(value) || value < MIN_OBSERVE_MS) {
+    throw new Error(`BENEFITS_TELEMETRY_SETTLE_MS must be a finite integer >= ${MIN_OBSERVE_MS}, got "${raw}"`);
+  }
+  return value;
+}
+
+// Route expectations for the Benefits app. Synthetic slugs have no backing
+// record, so the working app shows its explicit unavailable state there.
+const BENEFITS_ROUTES = [
+  { path: '/', headings: [/Locked IFR\. Benefits at checkout\./, /Access status/], walletControl: true },
+  { path: '/?mode=seller', headings: [/Locked IFR\. Benefits at checkout\./, /Benefit rule manager/] },
+  { path: '/guide', headings: [/Customer proof and seller checkout/] },
+  { path: '/b/telemetry-check', headings: [/Business console/, /Seller profile unavailable|not found/i] },
+  { path: '/r/telemetry-check', headings: [/Sign to verify IFR access/, /Verification unavailable|not found/i], walletControl: true },
+];
 const VIEWPORTS = [
   { name: 'mobile 375x812', viewport: { width: 375, height: 812 }, isMobile: true, hasTouch: true },
   { name: 'desktop 1440x1000', viewport: { width: 1440, height: 1000 }, isMobile: false, hasTouch: false },
 ];
-const DESKTOP = VIEWPORTS[1];
 
 // Hosts that only exist for wallet SDK telemetry/analytics.
 const TELEMETRY_HOSTS = [
@@ -43,8 +60,12 @@ const TELEMETRY_HOSTS = [
   'pulse.walletconnect.org', // WalletConnect core event client + AppKit analytics
   'pulse.walletconnect.com',
 ];
-// Any host of a wallet SDK vendor: none may be contacted before a choice.
+// Wallet SDK vendor hosts (incl. AppKit's api.web3modal.org): none may be
+// contacted before a wallet is chosen.
 const WALLET_SDK_DOMAINS = ['coinbase.com', 'walletconnect.org', 'walletconnect.com', 'web3modal.org', 'web3modal.com', 'reown.com'];
+// Intended third-party traffic of the app: public chain RPC and IFR services.
+const ALLOWED_THIRD_PARTY = ['ethereum-rpc.publicnode.com', 'ethereum-sepolia-rpc.publicnode.com', 'ifrunit.tech'];
+const ERROR_BOUNDARY_SELECTOR = '#root-error-title, #global-error-title, [data-testid="shop-global-error"], [data-testid="shop-not-found"]';
 
 function hostMatches(url, list) {
   try {
@@ -55,63 +76,99 @@ function hostMatches(url, list) {
   }
 }
 
-async function observe(browser, vp, { seed, route = '/' } = {}) {
+async function observe(browser, vp, options, { route, seed }) {
+  const { baseUrl, observeMs, expectWalletConnect } = options;
+  const failures = [];
+  const result = { telemetry: [], sdkInit: [], failures, observedMs: 0 };
   const context = await browser.newContext({
     viewport: vp.viewport,
     isMobile: vp.isMobile,
     hasTouch: vp.hasTouch,
     serviceWorkers: 'block',
   });
-  const result = { telemetry: [], walletHosts: [], sockets: [], sdkInit: [], status: 0, connectorIds: null };
   let recording = !seed;
   await context.route('**/*', (r) => {
     const req = r.request();
     const url = req.url();
+    const telemetry = hostMatches(url, TELEMETRY_HOSTS);
     if (recording) {
-      if (hostMatches(url, TELEMETRY_HOSTS)) result.telemetry.push(`${req.method()} ${url}`);
-      else if (hostMatches(url, WALLET_SDK_DOMAINS)) result.walletHosts.push(`${req.method()} ${url}`);
+      if (telemetry) result.telemetry.push(`${req.method()} ${url}`);
+      else if (hostMatches(url, WALLET_SDK_DOMAINS)) failures.push(`wallet SDK host ${req.method()} ${url}`);
+      else if (/^https?:/.test(url) && !url.startsWith(baseUrl) && !hostMatches(url, ALLOWED_THIRD_PARTY)) {
+        failures.push(`unexpected third-party request ${req.method()} ${url}`);
+      }
       // Coinbase Wallet SDK runs a HEAD request against the current page
       // (Cross-Origin-Opener-Policy check) as soon as it is created.
-      if (req.method() === 'HEAD' && url.startsWith(BASE_URL)) result.sdkInit.push(`HEAD ${url}`);
+      if (req.method() === 'HEAD' && url.startsWith(baseUrl)) result.sdkInit.push(`HEAD ${url}`);
     }
-    if (hostMatches(url, TELEMETRY_HOSTS)) return r.abort();
+    if (telemetry) return r.abort();
     return r.continue();
   });
   context.on('websocket', (ws) => {
-    if (recording && hostMatches(ws.url(), WALLET_SDK_DOMAINS)) result.sockets.push(ws.url());
+    if (recording && hostMatches(ws.url(), WALLET_SDK_DOMAINS)) failures.push(`wallet SDK socket ${ws.url()}`);
   });
   const page = await context.newPage();
+  page.on('pageerror', (error) => { if (recording) failures.push(`page error: ${String(error.message).slice(0, 160)}`); });
   try {
-    let response = await page.goto(`${BASE_URL}${route}`, { waitUntil: 'load', timeout: 60_000 });
-    if (seed) {
-      // Seed Wagmi storage the way Wagmi itself leaves it, then load again.
-      await page.waitForLoadState('networkidle', { timeout: 30_000 }).catch(() => {});
-      await page.evaluate(seed);
-      recording = true;
-      response = await page.reload({ waitUntil: 'load', timeout: 60_000 });
+    let response;
+    try {
+      response = await page.goto(`${baseUrl}${route.path}`, { waitUntil: 'load', timeout: 60_000 });
+      if (seed) {
+        await page.waitForLoadState('networkidle', { timeout: 30_000 }).catch(() => {});
+        await page.evaluate(seed);
+        recording = true;
+        response = await page.reload({ waitUntil: 'load', timeout: 60_000 });
+      }
+    } catch (error) {
+      failures.push(`navigation failed: ${String(error.message).split('\n')[0]}`);
+      return result;
     }
-    result.status = response?.status() ?? 0;
-    await page.waitForLoadState('networkidle', { timeout: 30_000 }).catch(() => {});
-    const control = page.locator('[data-wallet-connect-control][data-wallet-connectors-ready="true"]').first();
-    if (route === '/') {
-      await control.waitFor({ state: 'attached', timeout: 30_000 });
-      result.connectorIds = (await control.getAttribute('data-wallet-connector-ids')) || '';
+    const status = response?.status() ?? 0;
+    if (!(status >= 200 && status < 400)) failures.push(`HTTP ${status}`);
+
+    let idle = true;
+    await page.waitForLoadState('networkidle', { timeout: 30_000 }).catch(() => { idle = false; });
+    if (!idle) failures.push('network never reached idle within 30 s; post-idle observation not possible');
+
+    if (await page.locator(ERROR_BOUNDARY_SELECTOR).count()) failures.push('error boundary rendered');
+    const hydrated = await page.evaluate(() => {
+      const nodes = [document.querySelector('main'), document.body?.firstElementChild].filter(Boolean);
+      return nodes.some((node) => Object.keys(node).some((key) => key.startsWith('__reactFiber') || key.startsWith('__reactProps')));
+    });
+    if (!hydrated) failures.push('React did not hydrate the page');
+    for (const heading of route.headings || []) {
+      const visible = await page.getByRole('heading', { name: heading }).first().isVisible().catch(() => false);
+      if (!visible) failures.push(`expected heading ${heading} not visible`);
     }
+    if (route.walletControl) {
+      const control = page.locator('[data-wallet-connect-control][data-wallet-connectors-ready="true"]').first();
+      const ready = await control.waitFor({ state: 'attached', timeout: 30_000 }).then(() => true, () => false);
+      if (!ready) failures.push('wallet chooser did not become ready');
+      else if (expectWalletConnect) {
+        const ids = (await control.getAttribute('data-wallet-connector-ids')) || '';
+        if (!ids.split(',').includes('walletConnect')) {
+          failures.push(`WalletConnect connector missing (ids="${ids}"); build with NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`);
+        }
+      }
+    }
+
     const started = Date.now();
-    while (Date.now() - started < OBSERVE_MS) {
-      await page.waitForTimeout(Math.max(50, OBSERVE_MS - (Date.now() - started)));
+    while (Date.now() - started < observeMs) {
+      await page.waitForTimeout(Math.max(50, observeMs - (Date.now() - started)));
     }
     result.observedMs = Date.now() - started;
+    if (!(result.observedMs >= observeMs)) failures.push(`observation window too short (${result.observedMs} ms)`);
   } finally {
     await page.close();
     await context.close();
   }
+  for (const hit of result.telemetry) failures.push(`telemetry ${hit}`);
   return result;
 }
 
 // Browser-side seeds: Wagmi storage exactly as the app leaves it.
 // - Disconnected: Wagmi keeps `recentConnectorId` and an empty store; before
-//   the fix this alone re-activated the SDK on the next visit.
+//   the disconnect fix this alone re-activated the SDK on the next visit.
 // - Still connected: the deferred connector's session marker is present.
 function seedDisconnected(connectorId) {
   return new Function(`
@@ -133,58 +190,63 @@ function seedConnected(connectorId) {
   `);
 }
 
-(async () => {
+/**
+ * @param {{ baseUrl: string, routes: typeof BENEFITS_ROUTES, viewports: typeof VIEWPORTS,
+ *   observeMs: number, expectWalletConnect?: boolean, returningVisitors?: boolean }} options
+ * @returns {Promise<{ failures: string[], passes: string[], expectedChecks: number }>}
+ */
+async function runGate(options) {
   const failures = [];
   const passes = [];
-  const fail = (label, detail) => failures.push(`${label} -> ${detail}`);
   const browser = await chromium.launch({ headless: true });
+  const record = (label, r, okText) => {
+    if (r.failures.length) for (const f of r.failures) failures.push(`${label} -> ${f}`);
+    else passes.push(`${label} ${okText(r)}`);
+  };
   try {
-    // Part 1: every route and viewport, fresh visitor, hard assertions each.
-    for (const vp of VIEWPORTS) {
-      for (const route of ROUTES) {
-        const label = `[fresh ${vp.name}] ${route}`;
-        const before = failures.length;
-        const r = await observe(browser, vp, { route });
-        if (!(r.status >= 200 && r.status < 500)) fail(label, `page not served (HTTP ${r.status})`);
-        if (!(r.observedMs >= MIN_OBSERVE_MS)) fail(label, `observation window too short (${r.observedMs} ms)`);
-        for (const hit of r.telemetry) fail(label, `telemetry ${hit}`);
-        for (const hit of r.walletHosts) fail(label, `wallet SDK host ${hit}`);
-        for (const ws of r.sockets) fail(label, `wallet SDK socket ${ws}`);
-        for (const hit of r.sdkInit) fail(label, `Coinbase SDK initialised (${hit})`);
-        if (r.connectorIds !== null && EXPECT_WALLETCONNECT && !r.connectorIds.split(',').includes('walletConnect')) {
-          fail(label, `WalletConnect connector missing (ids="${r.connectorIds}"); build with NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`);
-        }
-        if (failures.length === before) passes.push(`${label} HTTP ${r.status}, ${r.observedMs} ms, 0 telemetry, 0 wallet hosts`);
+    for (const vp of options.viewports) {
+      for (const route of options.routes) {
+        const r = await observe(browser, vp, options, { route });
+        for (const hit of r.sdkInit) r.failures.push(`Coinbase SDK initialised (${hit})`);
+        record(`[fresh ${vp.name}] ${route.path}`, r, (x) => `working page, ${x.observedMs} ms observed, 0 telemetry, 0 wallet-SDK hosts`);
       }
     }
-
-    // Part 2: returning visitors.
-    const disconnected = [['coinbaseWalletSDK', 'Coinbase Wallet']];
-    if (EXPECT_WALLETCONNECT) disconnected.push(['walletConnect', 'WalletConnect']);
-    for (const [id, name] of disconnected) {
-      const label = `[returning, disconnected from ${name}] /`;
-      const before = failures.length;
-      const r = await observe(browser, DESKTOP, { seed: seedDisconnected(id) });
-      for (const hit of r.telemetry) fail(label, `telemetry ${hit}`);
-      for (const hit of r.walletHosts) fail(label, `wallet SDK host ${hit}`);
-      for (const ws of r.sockets) fail(label, `wallet SDK socket ${ws}`);
-      for (const hit of r.sdkInit) fail(label, `Coinbase SDK initialised (${hit})`);
-      if (failures.length === before) passes.push(`${label} no SDK load, 0 telemetry`);
-    }
-    {
-      const label = '[returning, still connected with Coinbase Wallet] /';
-      const before = failures.length;
-      const r = await observe(browser, DESKTOP, { seed: seedConnected('coinbaseWalletSDK') });
-      if (r.sdkInit.length === 0) fail(label, 'session restore did not initialise the Coinbase SDK (restore behaviour changed)');
-      for (const hit of r.telemetry) fail(label, `telemetry ${hit}`);
-      if (failures.length === before) passes.push(`${label} restore ran (SDK initialised), 0 telemetry`);
+    if (options.returningVisitors) {
+      const home = options.routes.find((route) => route.path === '/');
+      const desktop = options.viewports[options.viewports.length - 1];
+      const disconnected = [['coinbaseWalletSDK', 'Coinbase Wallet']];
+      if (options.expectWalletConnect) disconnected.push(['walletConnect', 'WalletConnect']);
+      for (const [id, name] of disconnected) {
+        const r = await observe(browser, desktop, options, { route: home, seed: seedDisconnected(id) });
+        for (const hit of r.sdkInit) r.failures.push(`Coinbase SDK initialised (${hit})`);
+        record(`[returning, disconnected from ${name}] /`, r, () => 'working page, no SDK load, 0 telemetry');
+      }
+      const r = await observe(browser, desktop, options, { route: home, seed: seedConnected('coinbaseWalletSDK') });
+      // The restore legitimately starts the Coinbase SDK (and may reach its hosts).
+      r.failures.splice(0, r.failures.length, ...r.failures.filter((f) => !f.startsWith('wallet SDK host') && !f.startsWith('wallet SDK socket')));
+      if (r.sdkInit.length === 0) r.failures.push('session restore did not initialise the Coinbase SDK (restore behaviour changed)');
+      record('[returning, still connected with Coinbase Wallet] /', r, () => 'working page, restore ran (SDK initialised), 0 telemetry');
     }
   } finally {
     await browser.close();
   }
+  const expectedChecks = options.viewports.length * options.routes.length
+    + (options.returningVisitors ? (options.expectWalletConnect ? 3 : 2) : 0);
+  return { failures, passes, expectedChecks };
+}
 
-  const expectedChecks = ROUTES.length * VIEWPORTS.length + (EXPECT_WALLETCONNECT ? 3 : 2);
-  console.log(`[benefits-wallet-telemetry] observe>=${OBSERVE_MS}ms after network idle; expect-walletconnect=${EXPECT_WALLETCONNECT}`);
+async function main() {
+  const observeMs = parseObserveMs(process.env.BENEFITS_TELEMETRY_SETTLE_MS);
+  const expectWalletConnect = process.env.BENEFITS_EXPECT_WALLETCONNECT === '1';
+  const { failures, passes, expectedChecks } = await runGate({
+    baseUrl: process.env.BENEFITS_BASE_URL || 'http://127.0.0.1:3000',
+    routes: BENEFITS_ROUTES,
+    viewports: VIEWPORTS,
+    observeMs,
+    expectWalletConnect,
+    returningVisitors: true,
+  });
+  console.log(`[benefits-wallet-telemetry] observe=${observeMs}ms after network idle; expect-walletconnect=${expectWalletConnect}`);
   for (const line of passes) console.log(`[benefits-wallet-telemetry] ok ${line}`);
   if (failures.length > 0) {
     console.error(`[benefits-wallet-telemetry] FAIL: ${failures.length} finding(s):\n${failures.join('\n')}`);
@@ -196,8 +258,14 @@ function seedConnected(connectorId) {
     process.exitCode = 1;
     return;
   }
-  console.log(`[benefits-wallet-telemetry] PASS ${passes.length}/${expectedChecks} checks (routes=${ROUTES.length} x viewports=${VIEWPORTS.length} fresh + returning visitors), telemetry-requests=0`);
-})().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+  console.log(`[benefits-wallet-telemetry] PASS ${passes.length}/${expectedChecks} checks (routes=${BENEFITS_ROUTES.length} x viewports=${VIEWPORTS.length} fresh + returning visitors), telemetry-requests=0`);
+}
+
+module.exports = { runGate, parseObserveMs, MIN_OBSERVE_MS, BENEFITS_ROUTES, VIEWPORTS, TELEMETRY_HOSTS };
+
+if (require.main === module) {
+  main().catch((error) => {
+    console.error(`[benefits-wallet-telemetry] FAIL: ${error.message}`);
+    process.exitCode = 1;
+  });
+}

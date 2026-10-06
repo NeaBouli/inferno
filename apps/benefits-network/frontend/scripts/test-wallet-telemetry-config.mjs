@@ -43,7 +43,10 @@ function fakeSdkConnector(id, log, session = { live: true }) {
       assert.ok(provider, 'connect() must reach the SDK provider');
       return { accounts: ['0x0000000000000000000000000000000000000001'], chainId: mainnet.id };
     },
-    async disconnect() { log.push(`${id}:disconnect`); },
+    async disconnect() {
+      log.push(`${id}:disconnect`);
+      if (session.failDisconnect) throw new Error('fixture: wallet refused to disconnect');
+    },
     async getAccounts() { return ['0x0000000000000000000000000000000000000001']; },
     async getChainId() { return mainnet.id; },
     async getProvider() { log.push(`${id}:sdk-init`); return { sdk: id }; },
@@ -140,6 +143,50 @@ const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
   await settle();
   assert.equal(second.restored.length, 0);
   assert.deepEqual(log, [], `SDK loaded after a wallet-side disconnect: ${log.join(', ')}`);
+}
+
+{
+  // A FAILED disconnect keeps the session marker and a consistent connected
+  // state, so the still-existing session restores on reload.
+  const storage = memoryStorage();
+  const session = { live: true, failDisconnect: false };
+  const first = await visit([], storage, session);
+  const [sdkA] = first.config.connectors;
+  await connect(first.config, { connector: sdkA });
+  session.failDisconnect = true;
+  await assert.rejects(disconnect(first.config, { connector: sdkA }), /refused to disconnect/);
+  await settle();
+  assert.equal(first.config.state.status, 'connected', 'state must stay connected after a failed disconnect');
+  assert.equal(await storage.getItem(SDK_SESSION_STORAGE_KEY), 'sdkA', 'a failed disconnect must keep the session marker');
+
+  session.failDisconnect = false;
+  const log = [];
+  const second = await visit(log, storage, session);
+  assert.equal(second.restored.length, 1, 'the still-existing session must restore after a failed disconnect');
+  assert.equal(second.restored[0].connector.id, 'sdkA');
+  assert.ok(log.includes('sdkA:sdk-init'));
+}
+
+{
+  // Clearing is scoped: another connector's stored choice survives, and an
+  // explicit new choice after a disconnect works again.
+  const storage = memoryStorage();
+  const first = await visit([], storage);
+  const [sdkA, sdkB] = first.config.connectors;
+  await connect(first.config, { connector: sdkA });
+  await disconnect(first.config, { connector: sdkA });
+  await storage.setItem(RECENT_CONNECTOR_STORAGE_KEY, 'sdkB');
+  await sdkA.onDisconnect();
+  await settle();
+  assert.equal(await storage.getItem(RECENT_CONNECTOR_STORAGE_KEY), 'sdkB', "another connector's stored choice must survive");
+
+  const log = [];
+  const second = await visit(log, storage);
+  assert.deepEqual(log, [], 'neither SDK may load without a session marker');
+  const again = await connect(second.config, { connector: second.config.connectors[0] });
+  assert.equal(again.accounts.length, 1, 'an explicit new choice must still connect');
+  assert.ok(log.includes('sdkA:sdk-init'));
+  void sdkB;
 }
 
 {
