@@ -5,6 +5,9 @@
  * Run: npx tsx src/__tests__/captcha.test.ts
  */
 
+// These cases cover the dev bypass; the secret is read at import time, so clear it first.
+delete process.env.CAPTCHA_SECRET;
+
 let passed = 0;
 let failed = 0;
 

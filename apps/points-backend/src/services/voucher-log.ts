@@ -20,6 +20,11 @@ const DATABASE_ERROR_NAMES = new Set([
   "PrismaClientValidationError",
 ]);
 
+/** True for Prisma client errors, judged only by their constant class name. */
+export function isDatabaseError(err: unknown): boolean {
+  return err instanceof Error && DATABASE_ERROR_NAMES.has(err.name);
+}
+
 /**
  * Map a voucher issuance failure to a constant log category. Only the error class and
  * its constant class name are inspected; message text, wallet, keys and any other
@@ -27,6 +32,6 @@ const DATABASE_ERROR_NAMES = new Set([
  */
 export function categorizeVoucherIssueError(err: unknown): VoucherIssueErrorCategory {
   if (err instanceof VoucherIssueFailure) return err.category;
-  if (err instanceof Error && DATABASE_ERROR_NAMES.has(err.name)) return "voucher_error:database";
+  if (isDatabaseError(err)) return "voucher_error:database";
   return "voucher_error:unknown";
 }

@@ -1,5 +1,6 @@
 import "dotenv/config";
 import type { Server } from "node:http";
+import { format } from "node:util";
 import express, { type Request } from "express";
 import app, { resolveAllowedOrigins } from "../app.js";
 import { prisma } from "../db.js";
@@ -422,6 +423,78 @@ async function run() {
     );
     const { status } = await api("POST", "/auth/siwe/verify", signed);
     assert(status === 401, "wrong SIWE chain is rejected");
+  }
+  {
+    // T-289d: SIWE failures log only a constant category, never address, signature or free text.
+    const sentinelWallet = ethers.Wallet.createRandom();
+    const signed = await signedSiweMessage(
+      sentinelWallet,
+      await issueNonce(),
+      "localhost:3004",
+      "http://localhost:3004",
+      11155111,
+    );
+    const foreignSignature = await ethers.Wallet.createRandom().signMessage(signed.message);
+    const sentinelKey = "sk_live_FAKEKEY0000SENTINEL";
+    const sentinelHex = "0x" + "c".repeat(40);
+    const sentinelFreeText = "free text sentinel do not log";
+    const garbageMessage =
+      `${sentinelFreeText} key=${sentinelKey} url=https://apiuser:hunter2sentinel@rpc.example owner=${sentinelHex}`;
+    // Own client IP so the per-IP SIWE verify budget of the cases above is untouched.
+    const verifyFrom = async (body: object) => {
+      const res = await fetch(`${baseUrl}/auth/siwe/verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-Forwarded-For": "10.28.9.4" },
+        body: JSON.stringify(body),
+      });
+      return { status: res.status, data: await res.json() as Record<string, unknown> };
+    };
+    // Capture every console channel, not only console.error.
+    const channels = ["log", "info", "warn", "error", "debug", "trace"] as const;
+    const lines: string[] = [];
+    const originals = channels.map((channel) => [channel, console[channel]] as const);
+    for (const channel of channels) {
+      console[channel] = (...args: unknown[]) => { lines.push(format(...args)); };
+    }
+    let badSignature = { status: 0, data: {} as Record<string, unknown> };
+    let badMessage = { status: 0, data: {} as Record<string, unknown> };
+    try {
+      badSignature = await verifyFrom({ message: signed.message, signature: foreignSignature });
+      badMessage = await verifyFrom({ message: garbageMessage, signature: foreignSignature });
+    } finally {
+      for (const [channel, original] of originals) console[channel] = original;
+    }
+    assert(
+      badSignature.status === 400 && badSignature.data.error === "Failed to verify SIWE message" &&
+        badSignature.data.token === undefined,
+      "SIWE signature from another key is rejected without a token",
+    );
+    assert(
+      badMessage.status === 400 && badMessage.data.error === "Failed to verify SIWE message" &&
+        badMessage.data.token === undefined,
+      "unparseable SIWE message is rejected without a token",
+    );
+    assert(
+      (await prisma.wallet.findUnique({ where: { address: sentinelWallet.address.toLowerCase() } })) === null,
+      "rejected SIWE creates no wallet row",
+    );
+    assert(
+      lines.length === 2 &&
+        lines[0] === "[AUTH] siwe_failed category=siwe_error:invalid_signature" &&
+        lines[1] === "[AUTH] siwe_failed category=siwe_error:parse",
+      "SIWE failures log exactly the constant category lines",
+    );
+    const logText = lines.join("\n").toLowerCase();
+    const leaked = [
+      sentinelWallet.address.slice(2),
+      foreignSignature.slice(2, 42),
+      signed.signature.slice(2, 42),
+      sentinelKey,
+      "hunter2sentinel",
+      sentinelHex.slice(2),
+      sentinelFreeText,
+    ].filter((sentinel) => logText.includes(sentinel.toLowerCase()));
+    assert(leaked.length === 0, "SIWE failure log carries no address, signature or free text");
   }
 
   // ---- Auth Required ----

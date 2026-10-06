@@ -2,6 +2,7 @@ import { Response, NextFunction } from "express";
 import { ethers } from "ethers";
 import { AuthRequest } from "./auth.js";
 import { canSkipLockProof, pointsSecurityConfig } from "../config/security.js";
+import { categorizeFeeReadError } from "../services/fee-router-fee.js";
 
 const IFR_LOCK_ABI = [
   "function isLocked(address wallet, uint256 minAmount) view returns (bool)",
@@ -64,7 +65,8 @@ export async function requireLockProof(req: AuthRequest, res: Response, next: Ne
 
     next();
   } catch (err) {
-    console.error("[lockProof] RPC check failed:", err);
+    // Constant category only: ethers errors carry the wallet (calldata), RPC URL and RPC text.
+    console.error(`[LOCKPROOF] read_failed category=${categorizeFeeReadError(err)}`);
     // Fail-open would be insecure — fail-closed
     res.status(503).json({ error: "Lock verification temporarily unavailable" });
   } finally {

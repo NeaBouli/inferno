@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import { categorizeCaptchaError } from "../services/request-error-log.js";
 
 const CAPTCHA_SECRET = process.env.CAPTCHA_SECRET || "";
 const CAPTCHA_VERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
@@ -40,7 +41,8 @@ export async function requireCaptcha(req: Request, res: Response, next: NextFunc
 
     next();
   } catch (err) {
-    console.error("[captcha] Verification failed:", err);
+    // Constant category only: the raw error may carry the token, secret or response body.
+    console.error(`[CAPTCHA] verify_failed category=${categorizeCaptchaError(err)}`);
     res.status(503).json({ error: "Captcha service unavailable" });
   }
 }
