@@ -2,7 +2,6 @@ import crypto from 'crypto';
 import { Prisma, PrismaClient } from '@prisma/client';
 import { config } from '../config';
 import { checkBenefitEligibility, recoverSigner } from './ifrLockService';
-import { toIFRBaseUnits } from './rewardService';
 import { normalizeAddress } from './sellerAuth';
 import { consumeSellerAuthorizationChallenge } from './sellerAuthorizationChallenge';
 import { safeProductPrice } from './productPrice';
@@ -15,7 +14,35 @@ export { prisma };
 // ── Session State Machine ──────────────────────────────────
 
 type SessionStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED' | 'REDEEMED';
-export const CUSTOMER_CHALLENGE_DOMAIN = 'shop.ifrunit.tech';
+
+// Owner decision B (T-231b): the customer proof is processed in-request only. The signed text binds
+// version/purpose, deployment audience, chain, shop, the seller-created session, expiry and the
+// immutable checkout terms; only the outcome (status, lock source, self-redemption flag) is stored.
+export const CHECKOUT_PROOF_VERSION = 2;
+export const CHECKOUT_PROOF_VERSION_LABEL = 'ifr-benefits/checkout-proof/2';
+// Non-payable outbox status: a seller-confirmed checkout whose reward needs a policy that does not
+// exist under owner decision B (no per-customer dedup). No queue transitions it.
+export const REWARD_BLOCKED_POLICY = 'BLOCKED_POLICY';
+export const REWARD_BLOCKED_POLICY_REASON =
+  'Customer-privacy policy gap: per-customer reward dedup is not available without customer data (T-231b); not payable';
+
+/** The signature does not recover to the wallet the customer claimed in the same request. */
+export class CustomerProofMismatchError extends Error {
+  constructor() {
+    super('Customer signature does not match the claimed wallet address');
+    this.name = 'CustomerProofMismatchError';
+  }
+}
+
+export class CustomerLimitNotHostedError extends Error {
+  constructor() {
+    super(
+      'Per-customer redemption limits are no longer enforced by IFR (customer privacy). ' +
+      'Set this rule\'s daily and monthly limits to 0 and enforce limits in your own checkout.'
+    );
+    this.name = 'CustomerLimitNotHostedError';
+  }
+}
 
 function benefitFromSession(session: {
   benefitRuleId: string | null;
@@ -121,75 +148,6 @@ function benefitFromSession(session: {
     monthlyRedemptionLimit: session.benefitRule.monthlyRedemptionLimit,
     tierLabel: session.benefitRule.label,
   };
-}
-
-type RedemptionLimitDecision = {
-  period: 'daily' | 'monthly';
-  used: number;
-  limit: number;
-  resetsAt: Date;
-  message: string;
-};
-
-function utcRedemptionPeriods(now: Date) {
-  const dayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-  const nextDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
-  const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
-  const nextMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, 1));
-  return { dayStart, nextDay, monthStart, nextMonth };
-}
-
-async function getRedemptionLimitDecision(
-  tx: Prisma.TransactionClient,
-  session: {
-    businessId: string;
-    benefitRuleId: string | null;
-    recoveredAddress: string | null;
-    benefitDailyRedemptionLimit: number | null;
-    benefitMonthlyRedemptionLimit: number | null;
-  },
-  now: Date
-): Promise<RedemptionLimitDecision | null> {
-  const dailyLimit = Math.max(0, session.benefitDailyRedemptionLimit ?? 0);
-  const monthlyLimit = Math.max(0, session.benefitMonthlyRedemptionLimit ?? 0);
-  if ((!dailyLimit && !monthlyLimit) || !session.benefitRuleId || !session.recoveredAddress) {
-    return null;
-  }
-
-  const { dayStart, nextDay, monthStart, nextMonth } = utcRedemptionPeriods(now);
-  const [usage] = await tx.$queryRaw<Array<{ dailyCount: bigint | number; monthlyCount: bigint | number }>>`
-    SELECT
-      SUM(CASE WHEN "redeemedAt" >= ${dayStart} THEN 1 ELSE 0 END) AS "dailyCount",
-      COUNT(*) AS "monthlyCount"
-    FROM "Session"
-    WHERE "businessId" = ${session.businessId}
-      AND "benefitRuleId" = ${session.benefitRuleId}
-      AND "status" = 'REDEEMED'
-      AND "redeemedAt" >= ${monthStart}
-      AND LOWER("recoveredAddress") = LOWER(${session.recoveredAddress})
-  `;
-  const dailyUsed = Number(usage?.dailyCount ?? 0);
-  const monthlyUsed = Number(usage?.monthlyCount ?? 0);
-
-  if (dailyLimit > 0 && dailyUsed >= dailyLimit) {
-    return {
-      period: 'daily',
-      used: dailyUsed,
-      limit: dailyLimit,
-      resetsAt: nextDay,
-      message: `Daily redemption limit reached for this wallet (${dailyUsed}/${dailyLimit}); resets ${nextDay.toISOString()}`,
-    };
-  }
-  if (monthlyLimit > 0 && monthlyUsed >= monthlyLimit) {
-    return {
-      period: 'monthly',
-      used: monthlyUsed,
-      limit: monthlyLimit,
-      resetsAt: nextMonth,
-      message: `Monthly redemption limit reached for this wallet (${monthlyUsed}/${monthlyLimit}); resets ${nextMonth.toISOString()}`,
-    };
-  }
-  return null;
 }
 
 /**
@@ -308,6 +266,10 @@ export async function createSessionSnapshot(
       })
     : null;
   if (benefitRuleId && !benefitRule) throw new Error('Benefit rule not found or inactive');
+  if (benefitRule && (benefitRule.dailyRedemptionLimit > 0 || benefitRule.monthlyRedemptionLimit > 0)) {
+    // Fail closed instead of silently dropping a limit the seller configured earlier.
+    throw new CustomerLimitNotHostedError();
+  }
 
   const ttlSeconds = benefitRule?.ttlSeconds ?? business.ttlSeconds;
   const productPrice = safeProductPrice({
@@ -350,6 +312,9 @@ export async function createSessionSnapshot(
       customerPassId,
       benefitSnapshotVersion: 5,
       ...benefitSnapshot,
+      confirmedByWallet: creator?.walletAddress ?? null,
+      confirmedByRole: creator?.role ?? null,
+      confirmedByOperatorId: creator?.operatorId ?? null,
       nonce,
       expiresAt: new Date(Date.now() + ttlSeconds * 1000),
     },
@@ -419,13 +384,74 @@ export function createAuthorizedSession(
   return createSessionInternal(businessId, benefitRuleId, creatorAuthorization);
 }
 
+type ProofSession = Prisma.SessionGetPayload<{ include: { business: true; benefitRule: true } }>;
+
+function checkoutTerms(session: ProofSession) {
+  const benefit = benefitFromSession(session);
+  return {
+    benefitRuleId: benefit.benefitRuleId ?? 'business-default',
+    label: benefit.label ?? 'Standard',
+    productName: benefit.productName ?? 'Business default benefit',
+    basePriceMinor: benefit.basePriceMinor,
+    currency: benefit.currency,
+    requiredLockIFR: benefit.requiredLockIFR,
+    minIFRHeld: benefit.minIFRHeld,
+    lockSource: benefit.lockSource,
+    discountPercent: benefit.discountPercent,
+  };
+}
+
+/** sha256 over the canonical (fixed key order) JSON of the immutable checkout terms. */
+export function checkoutTermsDigest(session: ProofSession) {
+  const terms = checkoutTerms(session);
+  return 'sha256:' + crypto.createHash('sha256').update(JSON.stringify(terms)).digest('hex');
+}
+
+function proofAudience() {
+  return config.SELLER_AUTH_DOMAIN;
+}
+
+/**
+ * Exact text the customer signs (EIP-191). Derived by the server from the stored session snapshot,
+ * so any substitution of shop, session, chain, audience, expiry or terms changes the signed text.
+ */
+export function buildCheckoutProofMessage(session: ProofSession, claimedWallet: string): string {
+  const terms = checkoutTerms(session);
+  return [
+    'IFR Benefits Network - Checkout Proof',
+    `Version: ${CHECKOUT_PROOF_VERSION_LABEL}`,
+    'Purpose: Redeem this one checkout with verified IFR benefit eligibility',
+    `Wallet: ${claimedWallet}`,
+    `Audience: ${proofAudience()}`,
+    `Chain ID: ${config.CHAIN_ID}`,
+    `Shop: ${session.businessId}`,
+    `Session: ${session.id}`,
+    `Nonce: ${session.nonce}`,
+    `Expires: ${session.expiresAt.toISOString()}`,
+    `Benefit Rule: ${terms.benefitRuleId}`,
+    `Benefit: ${terms.label}`,
+    `Product: ${terms.productName}`,
+    ...(terms.basePriceMinor !== null && terms.currency !== null
+      ? [`Reference Price: ${terms.currency} ${terms.basePriceMinor} minor units`]
+      : []),
+    `Required Lock IFR: ${terms.requiredLockIFR}`,
+    `Minimum Held IFR: ${terms.minIFRHeld}`,
+    `Lock Source: ${terms.lockSource}`,
+    `Discount Percent: ${terms.discountPercent}`,
+    `Terms Digest: ${checkoutTermsDigest(session)}`,
+    'This signature redeems this checkout only. It does not move tokens. The wallet is checked in this request and not stored.',
+  ].join('\n');
+}
+
 /**
  * Build the challenge message for the customer to sign.
  */
 export async function buildChallengeMessage(
   sessionId: string,
+  claimedWallet: string,
   options: { allowCustomerPass?: boolean } = {}
 ): Promise<string> {
+  const wallet = normalizeClaimedWallet(claimedWallet);
   const session = await prisma.session.findUnique({
     where: { id: sessionId },
     include: { business: true, benefitRule: true },
@@ -434,68 +460,97 @@ export async function buildChallengeMessage(
   if (session.customerPassId && !options.allowCustomerPass) {
     throw new Error('Customer pass confirmation required');
   }
-  const benefit = benefitFromSession(session);
+  return buildCheckoutProofMessage(session, wallet);
+}
 
+/** Full checksummed address supplied by the customer in this request; never stored. */
+export function normalizeClaimedWallet(walletAddress: string) {
+  if (!/^0x[a-fA-F0-9]{40}$/.test(walletAddress)) throw new CustomerProofInputError();
+  try {
+    return normalizeAddress(walletAddress);
+  } catch {
+    throw new CustomerProofInputError();
+  }
+}
+
+export class CustomerProofInputError extends Error {
+  constructor() {
+    super('A valid wallet address is required for the checkout proof');
+    this.name = 'CustomerProofInputError';
+  }
+}
+
+/** Owner, every checkout operator (any status), reward and builder wallet of the shop. */
+async function isSellerControlledWallet(
+  tx: Prisma.TransactionClient,
+  businessId: string,
+  wallet: string
+) {
+  const business = await tx.business.findUnique({
+    where: { id: businessId },
+    select: {
+      ownerAddress: true,
+      rewardLink: { select: { rewardWallet: true, builderWallet: true } },
+      checkoutOperators: { select: { walletAddress: true } },
+    },
+  });
+  const target = wallet.toLowerCase();
   return [
-    'IFR Benefits Network - Discount Verification',
-    `Domain: ${CUSTOMER_CHALLENGE_DOMAIN}`,
-    `Business: ${session.businessId}`,
-    `Benefit Rule: ${benefit.benefitRuleId ?? 'business-default'}`,
-    `Benefit: ${benefit.label ?? 'Standard'}`,
-    `Product: ${benefit.productName ?? 'Business default benefit'}`,
-    ...(benefit.basePriceMinor !== null && benefit.currency !== null
-      ? [`Reference Price: ${benefit.currency} ${benefit.basePriceMinor} minor units`]
-      : []),
-    `Required Lock IFR: ${benefit.requiredLockIFR}`,
-    `Minimum Held IFR: ${benefit.minIFRHeld}`,
-    ...((session.benefitSnapshotVersion ?? 0) >= 5
-      ? [`Lock Source: ${benefit.lockSource}`]
-      : []),
-    `Discount Percent: ${benefit.discountPercent}`,
-    `Session: ${session.id}`,
-    `Nonce: ${session.nonce}`,
-    `Expires: ${session.expiresAt.toISOString()}`,
-    `Chain ID: ${config.CHAIN_ID}`,
-    (session.benefitSnapshotVersion ?? 0) >= 5
-      ? 'Action: Verify IFR Benefit Eligibility'
-      : 'Action: Verify IFR Lock Eligibility',
-  ].join('\n');
+    business?.ownerAddress,
+    business?.rewardLink?.rewardWallet,
+    business?.rewardLink?.builderWallet,
+    ...(business?.checkoutOperators.map((operator) => operator.walletAddress) ?? []),
+  ].some((candidate) => Boolean(candidate) && (candidate as string).toLowerCase() === target);
 }
 
 /**
- * Attest: verify signature, check expiry, check on-chain lock.
+ * Final redemption (owner decision B, T-231b). One customer request carries the claimed wallet and
+ * the signature over the server-derived checkout proof. In this request only: the signature must
+ * recover exactly to the claimed wallet, on-chain eligibility is read fresh, and self-redemption is
+ * decided. One DB transaction then re-validates the seller confirmation, OPEN status, server-time
+ * expiry, attempts and the signed terms, and flips PENDING (OPEN) -> REDEEMED exactly once.
+ * Any failure before the commit changes nothing; the checkout stays OPEN.
  */
 export async function attest(
   sessionId: string,
+  walletAddress: string,
   signature: string,
-  options: { expectedWallet?: string } = {}
+  options: { allowCustomerPass?: boolean } = {}
 ) {
-  const message = await buildChallengeMessage(sessionId, {
-    allowCustomerPass: Boolean(options.expectedWallet),
+  const claimedWallet = normalizeClaimedWallet(walletAddress);
+  const proofSession = await prisma.session.findUnique({
+    where: { id: sessionId },
+    include: { business: true, benefitRule: true },
   });
+  if (!proofSession) throw new Error('Session not found');
+  if (proofSession.customerPassId && !options.allowCustomerPass) {
+    throw new Error('Customer pass confirmation required');
+  }
+  const message = buildCheckoutProofMessage(proofSession, claimedWallet);
+  const signedTermsDigest = checkoutTermsDigest(proofSession);
   let recoveredAddress: string;
   try {
     recoveredAddress = recoverSigner(message, signature);
   } catch {
     // An unrecoverable signature proves no wallet authority, so it must not
     // consume the session's attempt budget or mutate session state (CWA-37).
-    const current = await assertAttestable(sessionId, options.expectedWallet);
+    const current = await assertAttestable(sessionId, options.allowCustomerPass);
     return {
       status: 'REJECTED' as SessionStatus,
       reason: 'Invalid signature. You can retry this QR session.',
       attemptsRemaining: Math.max(0, 3 - current.attestAttempts),
     };
   }
+  // Explicit binding: the recovered signer must equal the claimed wallet, independent of whether
+  // some other address happens to be eligible.
+  if (normalizeAddress(recoveredAddress) !== claimedWallet) {
+    await assertAttestable(sessionId, options.allowCustomerPass);
+    throw new CustomerProofMismatchError();
+  }
 
-  // CWA-37: everything up to the approval commit is read-only. Invalid,
-  // valid-but-ineligible and RPC-failed attestations never touch attempts,
-  // the wallet binding, status or the audit log, so a session-ID holder cannot
-  // bind a foreign wallet or burn the budget.
-  const { benefit, attestAttempts } = await readAttestContext(
-    sessionId,
-    recoveredAddress,
-    options.expectedWallet
-  );
+  // CWA-37: everything up to the commit is read-only. Invalid, mismatched, ineligible and
+  // RPC-failed proofs never touch attempts, status or the audit log.
+  const { benefit, attestAttempts } = await readAttestContext(sessionId, options.allowCustomerPass);
 
   let eligibilityResult: {
     eligible: boolean;
@@ -516,9 +571,10 @@ export async function attest(
       benefit.minIFRHeld,
       benefit.lockSource
     );
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : 'RPC error';
-    throw new Error(`On-chain verification failed: ${msg}`);
+  } catch {
+    // RPC/library errors can embed the eth_call calldata, i.e. the customer address. Never
+    // propagate them to responses or logs (owner decision B).
+    throw new Error('On-chain verification failed. Retry this checkout in a moment.');
   }
 
   if (!eligibilityResult.eligible) {
@@ -551,35 +607,57 @@ export async function attest(
         : 'Insufficient wallet balance';
     return {
       status: 'REJECTED' as SessionStatus,
-      wallet: recoveredAddress,
+      // Returned to the signing device only; never persisted.
+      wallet: claimedWallet,
       eligible: false,
       reason: `${reasonLabel}: ${deficits.join('; ')}. ${retryAction}`,
       attemptsRemaining: Math.max(0, 3 - attestAttempts),
     };
   }
 
-  await commitApprovedAttest(sessionId, recoveredAddress, options.expectedWallet, eligibilityResult, {
-    lockSource: benefit.lockSource,
-    minIFRHeld: benefit.minIFRHeld,
-    benefitRuleId: benefit.benefitRuleId,
+  const outcome = await commitCheckoutRedemption(sessionId, claimedWallet, {
+    allowCustomerPass: options.allowCustomerPass,
+    signedTermsDigest,
+    verifiedLockSource: eligibilityResult.verifiedLockSource,
+    audit: {
+      lockSource: benefit.lockSource,
+      minIFRHeld: benefit.minIFRHeld,
+      benefitRuleId: benefit.benefitRuleId,
+    },
   });
 
   return {
-    status: 'APPROVED' as SessionStatus,
-    wallet: recoveredAddress,
+    status: 'REDEEMED' as SessionStatus,
+    // Returned to the signing device only; never persisted.
+    wallet: claimedWallet,
     eligible: true,
+    redeemedAt: outcome.redeemedAt,
     benefit,
+    proof: {
+      version: CHECKOUT_PROOF_VERSION_LABEL,
+      sessionId,
+      businessId: proofSession.businessId,
+      termsDigest: signedTermsDigest,
+      message,
+      selfRedemption: outcome.selfRedemption,
+    },
   };
 }
 
-// Read-only precondition check for requests that proved no wallet authority.
-async function assertAttestable(sessionId: string, expectedWallet?: string) {
+// Read-only precondition check for requests that proved no (matching) wallet authority.
+async function assertAttestable(sessionId: string, allowCustomerPass?: boolean) {
   const session = await prisma.session.findUnique({
     where: { id: sessionId },
-    select: { status: true, attestAttempts: true, expiresAt: true, customerPassId: true },
+    select: {
+      status: true,
+      attestAttempts: true,
+      expiresAt: true,
+      customerPassId: true,
+      confirmedByWallet: true,
+    },
   });
   if (!session) throw new Error('Session not found');
-  if (session.customerPassId && !expectedWallet) {
+  if (session.customerPassId && !allowCustomerPass) {
     throw new Error('Customer pass confirmation required');
   }
   if (session.status !== 'PENDING') {
@@ -587,320 +665,184 @@ async function assertAttestable(sessionId: string, expectedWallet?: string) {
   }
   if (session.attestAttempts >= 3) throw new Error('Maximum attest attempts exceeded');
   if (session.expiresAt <= new Date()) throw new Error('Session expired');
+  if (!session.confirmedByWallet) {
+    throw new Error('Session has no seller checkout confirmation, cannot attest');
+  }
   return session;
 }
 
-type AttestSession = Prisma.SessionGetPayload<{
-  include: { business: true; benefitRule: true; customerPass: true };
-}>;
-
-// Wallet/pass/binding checks shared by the read-only precheck and the commit.
-function assertWalletMayAttest(
-  session: AttestSession,
-  recoveredAddress: string,
-  expectedWallet?: string
-) {
-  const normalizedExpected = expectedWallet ? normalizeAddress(expectedWallet) : null;
-  if (normalizedExpected && normalizeAddress(session.customerPass?.walletAddress || '') !== normalizedExpected) {
-    throw new Error('Customer pass wallet mismatch');
-  }
-  const normalizedRecovered = normalizeAddress(recoveredAddress);
-  if (normalizedExpected && normalizedRecovered !== normalizedExpected) {
-    throw new Error('Customer signature does not match this checkout pass');
-  }
-  if (
-    session.recoveredAddress &&
-    normalizeAddress(session.recoveredAddress) !== normalizedRecovered
-  ) {
-    throw new Error('Session is already bound to another customer wallet');
-  }
-  return normalizedRecovered;
-}
-
-async function readAttestContext(
-  sessionId: string,
-  recoveredAddress: string,
-  expectedWallet?: string
-) {
-  await assertAttestable(sessionId, expectedWallet);
+async function readAttestContext(sessionId: string, allowCustomerPass?: boolean) {
+  await assertAttestable(sessionId, allowCustomerPass);
   const session = await prisma.session.findUnique({
     where: { id: sessionId },
-    include: { business: true, benefitRule: true, customerPass: true },
+    include: { business: true, benefitRule: true },
   });
   if (!session) throw new Error('Session not found');
-  assertWalletMayAttest(session, recoveredAddress, expectedWallet);
-  return { benefit: benefitFromSession(session), attestAttempts: session.attestAttempts };
+  const benefit = benefitFromSession(session);
+  if (benefit.dailyRedemptionLimit > 0 || benefit.monthlyRedemptionLimit > 0) {
+    // A snapshot that still carries a per-customer limit cannot be honoured without customer data.
+    throw new CustomerLimitNotHostedError();
+  }
+  return { benefit, attestAttempts: session.attestAttempts };
 }
 
-// Single atomic transition for an eligible wallet: lock the row, revalidate
-// every precondition, then bind, count the attempt, approve and audit together.
-async function commitApprovedAttest(
-  sessionId: string,
-  recoveredAddress: string,
-  expectedWallet: string | undefined,
-  eligibility: {
-    lockedAmount: string;
-    walletAmount: string | null;
-    walletBalanceRaw: string | null;
-    verifiedLockSource: VerifiedLockSource | null;
-    verificationBlock: number;
-  },
-  audit: { lockSource: string; minIFRHeld: number; benefitRuleId: string | null }
+/** The seller who confirmed (opened) this checkout must still be the owner or an active operator. */
+async function sellerConfirmationStillValid(
+  tx: Prisma.TransactionClient,
+  session: { businessId: string; confirmedByWallet: string | null; confirmedByRole: string | null; confirmedByOperatorId: string | null },
+  now: Date
 ) {
-  const expired = await prisma.$transaction(async (tx) => {
+  if (!session.confirmedByWallet) return false;
+  if (session.confirmedByRole === 'OWNER') {
+    const business = await tx.business.findUnique({
+      where: { id: session.businessId },
+      select: { ownerAddress: true, active: true },
+    });
+    return Boolean(
+      business?.active && business.ownerAddress &&
+      business.ownerAddress.toLowerCase() === session.confirmedByWallet.toLowerCase()
+    );
+  }
+  if (session.confirmedByRole === 'OPERATOR' && session.confirmedByOperatorId) {
+    return Boolean(await tx.checkoutOperator.findFirst({
+      where: {
+        id: session.confirmedByOperatorId,
+        businessId: session.businessId,
+        walletAddress: session.confirmedByWallet,
+        active: true,
+        OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+      },
+      select: { id: true },
+    }));
+  }
+  return false;
+}
+
+async function commitCheckoutRedemption(
+  sessionId: string,
+  claimedWallet: string,
+  input: {
+    allowCustomerPass?: boolean;
+    signedTermsDigest: string;
+    verifiedLockSource: VerifiedLockSource | null;
+    audit: { lockSource: string; minIFRHeld: number; benefitRuleId: string | null };
+  }
+) {
+  const result = await prisma.$transaction(async (tx) => {
     const locked = await tx.$executeRaw`
       UPDATE "Session" SET "attestAttempts" = "attestAttempts" WHERE "id" = ${sessionId}
     `;
     if (locked !== 1) throw new Error('Session not found');
     const session = await tx.session.findUnique({
       where: { id: sessionId },
-      include: { business: true, benefitRule: true, customerPass: true },
+      include: { business: true, benefitRule: true },
     });
     if (!session) throw new Error('Session not found');
-    if (session.customerPassId && !expectedWallet) {
+    if (session.customerPassId && !input.allowCustomerPass) {
       throw new Error('Customer pass confirmation required');
     }
+    if (session.status === 'REDEEMED') throw new Error('Session already redeemed');
     if (session.status !== 'PENDING') {
       throw new Error(`Session is ${session.status}, cannot attest`);
     }
     if (session.attestAttempts >= 3) throw new Error('Maximum attest attempts exceeded');
-    if (session.expiresAt <= new Date()) {
+    const now = new Date();
+    if (session.expiresAt <= now) {
       await tx.session.update({ where: { id: sessionId }, data: { status: 'EXPIRED' } });
       await tx.auditLog.create({
         data: {
           sessionId,
           type: 'EXPIRED',
-          payload: JSON.stringify({ reason: 'TTL expired during attest' }),
+          payload: JSON.stringify({ reason: 'TTL expired during checkout proof' }),
         },
       });
-      return true;
+      return { expired: true as const };
     }
-    const normalizedRecovered = assertWalletMayAttest(session, recoveredAddress, expectedWallet);
+    if (checkoutTermsDigest(session) !== input.signedTermsDigest) {
+      throw new Error('Checkout terms changed after signing, cannot attest');
+    }
+    if (!session.business.active) throw new Error('Seller business is no longer active');
+    if (!(await sellerConfirmationStillValid(tx, session, now))) {
+      throw new Error('Seller wallet is no longer authorized for checkout');
+    }
+    // Decided while the customer address is still in request memory; only the boolean is stored.
+    const selfRedemption = await isSellerControlledWallet(tx, session.businessId, claimedWallet);
 
-    const approved = await tx.session.updateMany({
+    const redeemed = await tx.session.updateMany({
       where: {
         id: sessionId,
         status: 'PENDING',
         attestAttempts: session.attestAttempts,
-        OR: [{ recoveredAddress: null }, { recoveredAddress: session.recoveredAddress }],
+        expiresAt: { gt: now },
       },
       data: {
-        status: 'APPROVED',
+        status: 'REDEEMED',
+        redeemedAt: now,
         attestAttempts: session.attestAttempts + 1,
-        recoveredAddress: normalizedRecovered,
-        lockAmountRaw: eligibility.lockedAmount,
-        walletBalanceRaw: eligibility.walletBalanceRaw,
-        verifiedLockSource: eligibility.verifiedLockSource,
-        verificationBlock: eligibility.verificationBlock,
+        verifiedLockSource: input.verifiedLockSource,
+        selfRedemption,
+        proofVersion: CHECKOUT_PROOF_VERSION,
         reason: null,
       },
     });
-    if (approved.count !== 1) throw new Error('Session is no longer PENDING, cannot attest');
+    if (redeemed.count !== 1) throw new Error('Session is no longer PENDING, cannot attest');
     await tx.auditLog.create({
       data: {
         sessionId,
         type: 'ATTEST_OK',
         payload: JSON.stringify({
-          wallet: recoveredAddress,
-          locked: eligibility.lockedAmount,
-          lockSource: audit.lockSource,
-          verifiedLockSource: eligibility.verifiedLockSource,
-          held: eligibility.walletAmount,
-          minIFRHeld: audit.minIFRHeld,
-          verificationBlock: eligibility.verificationBlock,
-          benefitRuleId: audit.benefitRuleId,
+          proofVersion: CHECKOUT_PROOF_VERSION,
+          lockSource: input.audit.lockSource,
+          verifiedLockSource: input.verifiedLockSource,
+          minIFRHeld: input.audit.minIFRHeld,
+          benefitRuleId: input.audit.benefitRuleId,
+          selfRedemption,
         }),
       },
     });
-    return false;
-  });
-  if (expired) throw new Error('Session expired');
-}
-
-/**
- * Redeem an approved session (one-time only).
- */
-export async function redeem(
-  sessionId: string,
-  actor: { walletAddress: string; role: 'OWNER' | 'OPERATOR'; operatorId?: string | null }
-) {
-  const session = await prisma.session.findUnique({ where: { id: sessionId } });
-  if (!session) throw new Error('Session not found');
-
-  if (session.status === 'REDEEMED') {
-    throw new Error('Session already redeemed');
-  }
-  if (session.status !== 'APPROVED') {
-    throw new Error(`Session is ${session.status}, cannot redeem`);
-  }
-
-  const redeemedAt = new Date();
-  const update = await prisma.$transaction(async (tx) => {
-    // SQLite permits only one writer. This no-op update acquires the write lock before
-    // reading cap usage, so concurrent counters cannot both redeem below the same limit.
-    const lockedBusiness = await tx.$executeRaw`
-      UPDATE "Business"
-      SET "active" = "active"
-      WHERE "id" = ${session.businessId} AND "active" = 1
-    `;
-    if (lockedBusiness !== 1) throw new Error('Seller business is no longer active');
-
-    const business = await tx.business.findUnique({
-      where: { id: session.businessId },
-      select: { ownerAddress: true, active: true, rewardLink: true },
-    });
-    const ownerAuthorized = actor.role === 'OWNER' && Boolean(
-      business?.active && business.ownerAddress &&
-      business.ownerAddress.toLowerCase() === actor.walletAddress.toLowerCase()
-    );
-    const operatorAuthorized = actor.role === 'OPERATOR' && Boolean(await tx.checkoutOperator.findFirst({
-      where: {
-        id: actor.operatorId ?? undefined,
-        businessId: session.businessId,
-        walletAddress: actor.walletAddress,
-        active: true,
-        OR: [{ expiresAt: null }, { expiresAt: { gt: redeemedAt } }],
+    // Seller confirmation of this checkout = the seller's authenticated session opening, re-validated above.
+    await tx.auditLog.create({
+      data: {
+        sessionId,
+        type: 'REDEEMED',
+        payload: JSON.stringify({
+          redeemedAt: now.toISOString(),
+          actorWallet: session.confirmedByWallet,
+          actorRole: session.confirmedByRole,
+          operatorId: session.confirmedByOperatorId,
+          confirmation: session.customerPassId ? 'passes:bind' : 'sessions:create',
+        }),
       },
-      select: { id: true },
-    }));
-    if (!ownerAuthorized && !operatorAuthorized) {
-      throw new Error('Seller wallet is no longer authorized for checkout');
-    }
+    });
 
-    const limitDecision = await getRedemptionLimitDecision(tx, session, redeemedAt);
-    if (limitDecision) {
-      const denied = await tx.session.updateMany({
-        where: { id: sessionId, status: 'APPROVED', expiresAt: { gt: redeemedAt } },
-        data: { status: 'REJECTED', reason: limitDecision.message },
-      });
-      if (denied.count === 1) {
+    const rewardLink = await tx.sellerRewardLink.findUnique({ where: { businessId: session.businessId } });
+    // Fail closed: only a VERIFIED link with a bound partnerId creates an outbox row, and under
+    // owner decision B that row is non-payable (no accepted reward rule without customer dedup).
+    if (rewardLink?.status === 'VERIFIED' && rewardLink.partnerId) {
+      if (selfRedemption) {
         await tx.auditLog.create({
           data: {
             sessionId,
-            type: 'REDEEM_DENIED_LIMIT',
-            payload: JSON.stringify({
-              period: limitDecision.period,
-              used: limitDecision.used,
-              limit: limitDecision.limit,
-              resetsAt: limitDecision.resetsAt.toISOString(),
-              wallet: session.recoveredAddress,
-              benefitRuleId: session.benefitRuleId,
-              actorWallet: actor.walletAddress,
-              actorRole: actor.role,
-            }),
+            type: 'REWARD_SKIPPED_POLICY',
+            payload: JSON.stringify({ reason: 'seller-controlled customer wallet' }),
           },
         });
-        return { count: 0, limitError: limitDecision.message };
+      } else {
+        await tx.$executeRaw`
+          INSERT OR IGNORE INTO "RewardEvent" (
+            "id", "businessId", "sessionId", "partnerId", "chainId", "status", "reason",
+            "createdAt", "updatedAt"
+          ) VALUES (
+            ${crypto.randomUUID()}, ${session.businessId}, ${sessionId}, ${rewardLink.partnerId},
+            ${config.CHAIN_ID}, ${REWARD_BLOCKED_POLICY}, ${REWARD_BLOCKED_POLICY_REASON}, ${now}, ${now}
+          )
+        `;
       }
     }
-
-    const result = await tx.session.updateMany({
-      where: { id: sessionId, status: 'APPROVED', expiresAt: { gt: redeemedAt } },
-      data: { status: 'REDEEMED', redeemedAt },
-    });
-    if (result.count === 1) {
-      await tx.auditLog.create({
-        data: {
-          sessionId,
-          type: 'REDEEMED',
-          payload: JSON.stringify({
-            redeemedAt: redeemedAt.toISOString(),
-            actorWallet: actor.walletAddress,
-            actorRole: actor.role,
-            operatorId: actor.operatorId ?? null,
-          }),
-        },
-      });
-
-      const rewardLink = business?.rewardLink;
-      // Fail closed: only a VERIFIED link with a bound partnerId creates an
-      // outbox row. APPLIED, STALE, REVOKED and DISABLED (seller opt-out)
-      // links never create reward events, and a missing link keeps the
-      // default rewards-OFF behavior.
-      if (rewardLink?.status === 'VERIFIED' && rewardLink.partnerId && session.recoveredAddress && session.lockAmountRaw) {
-        const customerWallet = session.recoveredAddress;
-        const ownerIsCustomer = Boolean(
-          business?.ownerAddress && business.ownerAddress.toLowerCase() === customerWallet.toLowerCase()
-        );
-        const operatorIsCustomer = Boolean(await tx.checkoutOperator.findFirst({
-          where: {
-            businessId: session.businessId,
-            walletAddress: customerWallet,
-            active: true,
-            OR: [{ expiresAt: null }, { expiresAt: { gt: redeemedAt } }],
-          },
-          select: { id: true },
-        }));
-
-        if (ownerIsCustomer || operatorIsCustomer) {
-          await tx.auditLog.create({
-            data: {
-              sessionId,
-              type: 'REWARD_SKIPPED_POLICY',
-              payload: JSON.stringify({ reason: ownerIsCustomer ? 'seller owner wallet' : 'active checkout operator wallet' }),
-            },
-          });
-        } else {
-          let lockAmountBaseUnits: string | null = null;
-          try {
-            lockAmountBaseUnits = toIFRBaseUnits(session.lockAmountRaw);
-          } catch {
-            await tx.auditLog.create({
-              data: {
-                sessionId,
-                type: 'REWARD_OUTBOX_SKIPPED',
-                payload: JSON.stringify({ reason: 'invalid lock amount' }),
-              },
-            });
-          }
-          if (lockAmountBaseUnits) {
-            const now = new Date();
-            await tx.$executeRaw`
-              INSERT OR IGNORE INTO "RewardEvent" (
-                "id", "businessId", "sessionId", "partnerId", "customerWallet",
-                "lockAmountRaw", "chainId", "status", "reason", "createdAt", "updatedAt"
-              ) VALUES (
-                ${crypto.randomUUID()}, ${session.businessId}, ${sessionId}, ${rewardLink.partnerId},
-                ${customerWallet}, ${lockAmountBaseUnits}, ${config.CHAIN_ID},
-                'PENDING', 'Awaiting live governance and caller reconciliation', ${now}, ${now}
-              )
-            `;
-          }
-        }
-      }
-    }
-    return { count: result.count, limitError: null as string | null };
+    return { expired: false as const, selfRedemption, redeemedAt: now };
   });
-
-  if (update.limitError) throw new Error(update.limitError);
-
-  if (update.count !== 1) {
-    const latest = await prisma.session.findUnique({ where: { id: sessionId } });
-    if (!latest) throw new Error('Session not found');
-    if (latest.status === 'REDEEMED') throw new Error('Session already redeemed');
-    if (latest.expiresAt <= redeemedAt) {
-      await prisma.$transaction(async (tx) => {
-        const result = await tx.session.updateMany({
-          where: { id: sessionId, status: 'APPROVED' },
-          data: { status: 'EXPIRED' },
-        });
-        if (result.count === 1) {
-          await tx.auditLog.create({
-            data: {
-              sessionId,
-              type: 'EXPIRED',
-              payload: JSON.stringify({ reason: 'TTL expired before redeem' }),
-            },
-          });
-        }
-        return result;
-      });
-      throw new Error('Session expired');
-    }
-    throw new Error(`Session is ${latest.status}, cannot redeem`);
-  }
-
-  return { status: 'REDEEMED' as SessionStatus };
+  if (result.expired) throw new Error('Session expired');
+  return { selfRedemption: result.selfRedemption, redeemedAt: result.redeemedAt };
 }
 
 /**

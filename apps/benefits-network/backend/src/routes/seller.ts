@@ -53,17 +53,14 @@ import {
   publicBusinessReference,
 } from '../services/businessSlug';
 
+const CUSTOMER_LIMIT_NOT_HOSTED =
+  'Per-customer redemption limits are not enforced by IFR (customer privacy); use 0 and enforce limits in your own checkout';
+
 const router = Router();
 const MAX_ACTIVE_CHECKOUT_OPERATORS = 10;
 
 function setPrivateNoStore(res: Response) {
   res.set('Cache-Control', 'private, no-store, max-age=0');
-}
-
-function maskCustomerWallet(address: string | null) {
-  if (!address) return null;
-  if (!/^0x[a-fA-F0-9]{40}$/.test(address)) return 'verified';
-  return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
 const businessDescriptionSchema = z.string().trim().max(500).nullable();
@@ -119,8 +116,10 @@ const createBenefitRuleSchema = z.object({
   requiredLockIFR: z.number().int().positive(),
   minIFRHeld: z.number().int().min(0).max(1_000_000_000).optional(),
   lockSource: z.enum(LOCK_SOURCES).optional(),
-  dailyRedemptionLimit: z.number().int().min(0).max(1000).optional(),
-  monthlyRedemptionLimit: z.number().int().min(0).max(10000).optional(),
+  // Owner decision B (T-231b): per-customer limits need customer identity, which IFR no longer
+  // stores. Only 0 (no IFR-hosted limit) is accepted; merchants enforce limits in their own systems.
+  dailyRedemptionLimit: z.number().int().min(0).max(0, CUSTOMER_LIMIT_NOT_HOSTED).optional(),
+  monthlyRedemptionLimit: z.number().int().min(0).max(0, CUSTOMER_LIMIT_NOT_HOSTED).optional(),
   ttlSeconds: z.number().int().min(10).max(3600).optional(),
   active: z.boolean().optional(),
 });
@@ -967,11 +966,9 @@ router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next)
         select: {
           id: true,
           status: true,
-          recoveredAddress: true,
-          lockAmountRaw: true,
-          walletBalanceRaw: true,
           verifiedLockSource: true,
-          verificationBlock: true,
+          selfRedemption: true,
+          proofVersion: true,
           reason: true,
           expiresAt: true,
           createdAt: true,
@@ -1055,11 +1052,10 @@ router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next)
       sessions: pageSessions.map((session) => ({
         id: session.id,
         status: session.status,
-        customerWalletMasked: maskCustomerWallet(session.recoveredAddress),
-        lockAmountRaw: session.lockAmountRaw,
-        walletBalanceRaw: session.walletBalanceRaw,
+        // Owner decision B (T-231b): no customer wallet, amount or block is stored or shown.
+        customerProof: session.proofVersion ? 'verified' : null,
+        selfRedemption: session.selfRedemption,
         verifiedLockSource: session.verifiedLockSource,
-        verificationBlock: session.verificationBlock,
         reason: session.reason,
         expiresAt: session.expiresAt,
         createdAt: session.createdAt,

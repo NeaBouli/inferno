@@ -1,9 +1,8 @@
 import { Request, Response, Router } from 'express';
 import { z } from 'zod';
-import { createAuthorizedSession, getSession, prisma, redeem } from '../services/sessionService';
+import { CustomerLimitNotHostedError, createAuthorizedSession, getSession } from '../services/sessionService';
 import { config } from '../config';
 import { SellerAuthError, resolveSellerAuthContext, verifySellerSignature } from '../services/sellerAuth';
-import { resolveCheckoutActor } from '../services/sellerAccess';
 import { validate } from '../middleware/validator';
 import { redeemRateLimiter, sessionRateLimiter, sessionStatusRateLimiter } from '../middleware/rateLimiter';
 import {
@@ -11,7 +10,6 @@ import {
   assertSellerWalletActionAllowed,
 } from '../services/authenticatedRateLimiter';
 import { RateLimitStoreUnavailableError } from '../services/rateLimitInfrastructure';
-import { consumeSellerAuthorizationChallenge } from '../services/sellerAuthorizationChallenge';
 
 const router = Router();
 
@@ -27,45 +25,6 @@ function getSellerAuth(req: Request) {
     timestamp: String(req.header('x-ifr-timestamp') || ''),
     nonce: String(req.header('x-ifr-nonce') || ''),
   };
-}
-
-async function requireSessionRedeemer(req: Request, sessionId: string) {
-  const session = await prisma.session.findUnique({
-    where: { id: sessionId },
-    select: {
-      id: true,
-      businessId: true,
-      business: {
-        select: { ownerAddress: true },
-      },
-    },
-  });
-
-  if (!session) throw new Error('Session not found');
-  if (!session.business.ownerAddress) {
-    throw new Error('Seller-owned business required to redeem');
-  }
-
-  const auth = getSellerAuth(req);
-  if (!auth.nonce) throw new SellerAuthError('Seller authorization nonce is required');
-  const wallet = verifySellerSignature({
-    ...auth,
-    context: resolveSellerAuthContext(config),
-    action: 'sessions:redeem',
-    businessId: sessionId,
-    scope: sessionId,
-  });
-  await assertSellerWalletActionAllowed(wallet);
-  await consumeSellerAuthorizationChallenge(prisma, {
-    nonce: auth.nonce,
-    walletAddress: wallet,
-    action: 'sessions:redeem',
-    businessId: sessionId,
-    scope: sessionId,
-  });
-  const actor = await resolveCheckoutActor(session.businessId, wallet);
-  if (!actor) throw new Error('Seller wallet is not authorized for checkout');
-  return actor;
 }
 
 async function requireSessionCreator(req: Request, businessId: string, scope: string) {
@@ -148,6 +107,10 @@ router.post('/', sessionRateLimiter, validate(createSessionSchema), async (req, 
     });
   } catch (err) {
     if (handleSessionAuthError(err, res)) return;
+    if (err instanceof CustomerLimitNotHostedError) {
+      res.status(409).json({ error: err.message });
+      return;
+    }
     if (err instanceof Error && err.message.includes('not found')) {
       res.status(404).json({ error: err.message });
       return;
@@ -181,29 +144,14 @@ router.get('/:id', sessionStatusRateLimiter, async (req, res, next) => {
   }
 });
 
-router.post('/:id/redeem', redeemRateLimiter, async (req, res, next) => {
-  try {
-    const actor = await requireSessionRedeemer(req, req.params.id);
-    const result = await redeem(req.params.id, actor);
-    res.json(result);
-  } catch (err) {
-    if (handleSessionAuthError(err, res)) return;
-    if (err instanceof Error) {
-      if (err.message.includes('not found')) {
-        res.status(404).json({ error: err.message });
-        return;
-      }
-      if (err.message.includes('redemption limit reached')) {
-        res.status(429).json({ error: err.message });
-        return;
-      }
-      if (err.message.includes('already redeemed') || err.message.includes('cannot redeem') || err.message.includes('expired')) {
-        res.status(409).json({ error: err.message });
-        return;
-      }
-    }
-    next(err);
-  }
+// Owner decision B (T-231b): redemption completes atomically inside the customer's checkout proof
+// (fresh eligibility needs the wallet, which exists only in that request). The seller's
+// confirmation is the authenticated sessions:create / passes:bind that opened the checkout.
+router.post('/:id/redeem', redeemRateLimiter, (_req, res) => {
+  res.set('Cache-Control', 'private, no-store');
+  res.status(410).json({
+    error: 'Separate seller redemption was removed: the checkout is redeemed atomically when the customer proof is accepted. Poll GET /api/sessions/:id for REDEEMED.',
+  });
 });
 
 export default router;

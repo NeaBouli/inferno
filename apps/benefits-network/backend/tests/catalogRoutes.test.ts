@@ -40,7 +40,13 @@ jest.mock('../src/config', () => ({
   },
 }));
 
-import { attest, buildChallengeMessage, createSession, prisma } from '../src/services/sessionService';
+import {
+  CHECKOUT_PROOF_VERSION_LABEL,
+  attest,
+  buildChallengeMessage,
+  createSession,
+  prisma,
+} from '../src/services/sessionService';
 import { config as backendConfig } from '../src/config';
 import { server } from '../src/index';
 
@@ -116,15 +122,36 @@ function rulePayload(productId: string) {
     requiredLockIFR: 1000,
     minIFRHeld: 250,
     ttlSeconds: 90,
-    dailyRedemptionLimit: 1,
-    monthlyRedemptionLimit: 10,
+    // Per-customer limits are not IFR-hosted (owner decision B, T-231b): only 0 is accepted.
+    dailyRedemptionLimit: 0,
+    monthlyRedemptionLimit: 0,
   };
 }
 
 describe('Seller catalog routes', () => {
   const owner = ethers.Wallet.createRandom();
   const otherOwner = ethers.Wallet.createRandom();
+  const customer = ethers.Wallet.createRandom();
   let businessId: string;
+
+  // Proof text for the test customer (owner decision B: the proof binds the claimed wallet).
+  const challengeFor = (sessionId: string) => buildChallengeMessage(sessionId, customer.address);
+  const termsDigestOf = (message: string) =>
+    message.split('\n').find((line) => line.startsWith('Terms Digest: '));
+
+  // Service-level sessions are opened without seller authentication; record the owner as the
+  // confirming seller the way the authenticated sessions:create route does.
+  async function confirmByOwner(sessionId: string) {
+    await prisma.session.update({
+      where: { id: sessionId },
+      data: { confirmedByWallet: owner.address, confirmedByRole: 'OWNER' },
+    });
+  }
+
+  async function proveAsCustomer(sessionId: string) {
+    const message = await challengeFor(sessionId);
+    return attest(sessionId, customer.address, await customer.signMessage(message));
+  }
 
   it('sets the API response security baseline without framework disclosure', async () => {
     const response = await fetch(`${baseUrl()}/api/health`);
@@ -139,6 +166,9 @@ describe('Seller catalog routes', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
+    mockRecoverSigner.mockReset();
+    mockRecoverSigner.mockImplementation((message: string, signature: string) =>
+      ethers.verifyMessage(message, signature));
     mockCheckBenefitEligibility.mockImplementation((...args: unknown[]) => mockCheckLock(...args));
     await prisma.sellerAuthorizationChallenge.deleteMany();
     await prisma.auditLog.deleteMany();
@@ -1566,21 +1596,40 @@ describe('Seller catalog routes', () => {
 
   it('does not let a session-ID holder without wallet authority burn attest attempts', async () => {
     const session = await createSession(businessId);
+    await confirmByOwner(session.sessionId);
+    const headers = { 'content-type': 'application/json', 'x-forwarded-for': '203.0.113.84' };
+
+    // A valid signature by another wallet presented for the customer's wallet proves no authority.
+    const mismatched = await fetch(`${baseUrl()}/api/attest`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        sessionId: session.sessionId,
+        walletAddress: customer.address,
+        signature: await otherOwner.signMessage(await challengeFor(session.sessionId)),
+      }),
+    });
+    expect(mismatched.status).toBe(403);
+
     mockRecoverSigner.mockImplementation(() => {
       throw new Error('invalid signature');
     });
-    const headers = { 'content-type': 'application/json', 'x-forwarded-for': '203.0.113.84' };
     for (let attempt = 0; attempt < 4; attempt += 1) {
       const response = await fetch(`${baseUrl()}/api/attest`, {
         method: 'POST',
         headers,
-        body: JSON.stringify({ sessionId: session.sessionId, signature: '0xdeadbeef' }),
+        body: JSON.stringify({
+          sessionId: session.sessionId,
+          walletAddress: customer.address,
+          signature: '0xdeadbeef',
+        }),
       });
       expect(response.status).toBe(200);
       expect(await response.json()).toMatchObject({ status: 'REJECTED', attemptsRemaining: 3 });
     }
+    expect(mockCheckLock).not.toHaveBeenCalled();
     expect(await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } }))
-      .toMatchObject({ status: 'PENDING', attestAttempts: 0, recoveredAddress: null });
+      .toMatchObject({ status: 'PENDING', attestAttempts: 0, redeemedAt: null, selfRedemption: null });
   });
 
   it('binds rules only to active products from the same business and preserves snapshots', async () => {
@@ -1658,10 +1707,14 @@ describe('Seller catalog routes', () => {
     })).status).toBe(401);
 
     const session = await createSession(businessId, rule.id);
-    expect(await buildChallengeMessage(session.sessionId)).toContain('Product: Premium espresso');
-    expect(await buildChallengeMessage(session.sessionId)).toContain('Reference Price: USD 1999 minor units');
-    expect(await buildChallengeMessage(session.sessionId)).toContain('Lock Source: commitment_time_only');
-    expect(await buildChallengeMessage(session.sessionId)).toContain('Action: Verify IFR Benefit Eligibility');
+    expect(await challengeFor(session.sessionId)).toContain('Product: Premium espresso');
+    expect(await challengeFor(session.sessionId)).toContain('Reference Price: USD 1999 minor units');
+    expect(await challengeFor(session.sessionId)).toContain('Lock Source: commitment_time_only');
+    const signedTermsMessage = await challengeFor(session.sessionId);
+    expect(signedTermsMessage).toContain(`Version: ${CHECKOUT_PROOF_VERSION_LABEL}`);
+    expect(signedTermsMessage).toContain(`Wallet: ${customer.address}`);
+    const snapshotDigest = termsDigestOf(signedTermsMessage);
+    expect(snapshotDigest).toMatch(/^Terms Digest: sha256:[0-9a-f]{64}$/);
 
     const productUpdateHeaders = await sellerHeaders(owner, 'products:update', businessId, product.id);
     const updateResponse = await fetch(`${baseUrl()}/api/seller/products/${product.id}`, {
@@ -1678,7 +1731,7 @@ describe('Seller catalog routes', () => {
 
     const storedSnapshot = await prisma.benefitRule.findUniqueOrThrow({ where: { id: rule.id } });
     expect(storedSnapshot.productName).toBe('Premium espresso');
-    expect(await buildChallengeMessage(session.sessionId)).toContain('Product: Premium espresso');
+    expect(await challengeFor(session.sessionId)).toContain('Product: Premium espresso');
 
     const refreshHeaders = await sellerHeaders(owner, 'rules:update', businessId, rule.id);
     const refreshResponse = await fetch(`${baseUrl()}/api/seller/rules/${rule.id}`, {
@@ -1701,10 +1754,12 @@ describe('Seller catalog routes', () => {
       minIFRHeld: 500,
       lockSource: 'either',
     });
-    expect(await buildChallengeMessage(session.sessionId)).toContain('Product: Premium espresso');
-    expect(await buildChallengeMessage(session.sessionId)).toContain('Required Lock IFR: 1000');
-    expect(await buildChallengeMessage(session.sessionId)).toContain('Minimum Held IFR: 250');
-    expect(await buildChallengeMessage(session.sessionId)).toContain('Lock Source: commitment_time_only');
+    expect(await challengeFor(session.sessionId)).toContain('Product: Premium espresso');
+    expect(await challengeFor(session.sessionId)).toContain('Required Lock IFR: 1000');
+    expect(await challengeFor(session.sessionId)).toContain('Minimum Held IFR: 250');
+    expect(await challengeFor(session.sessionId)).toContain('Lock Source: commitment_time_only');
+    // The signed terms come from the session snapshot, not from the edited rule/product.
+    expect(termsDigestOf(await challengeFor(session.sessionId))).toBe(snapshotDigest);
     const oldSessionStatus = await fetch(`${baseUrl()}/api/sessions/${session.sessionId}`);
     expect(await oldSessionStatus.json()).toMatchObject({
       benefit: {
@@ -1715,8 +1770,8 @@ describe('Seller catalog routes', () => {
         requiredLockIFR: 1000,
         minIFRHeld: 250,
         lockSource: 'commitment_time_only',
-        dailyRedemptionLimit: 1,
-        monthlyRedemptionLimit: 10,
+        dailyRedemptionLimit: 0,
+        monthlyRedemptionLimit: 0,
       },
     });
     const historyHeaders = await sellerHeaders(owner, 'sessions:list', businessId);
@@ -1733,10 +1788,10 @@ describe('Seller catalog routes', () => {
       requiredLockIFR: 1000,
       minIFRHeld: 250,
       lockSource: 'commitment_time_only',
-      dailyRedemptionLimit: 1,
-      monthlyRedemptionLimit: 10,
+      dailyRedemptionLimit: 0,
+      monthlyRedemptionLimit: 0,
     });
-    mockRecoverSigner.mockReturnValue(owner.address);
+    await confirmByOwner(session.sessionId);
     mockCheckBenefitEligibility.mockResolvedValue({
       eligible: true,
       lockEligible: true,
@@ -1749,61 +1804,86 @@ describe('Seller catalog routes', () => {
       verifiedLockSource: 'commitment_time_only',
       verificationBlock: 123,
     });
-    await expect(attest(session.sessionId, '0xsnapshot-signature')).resolves.toMatchObject({
-      status: 'APPROVED',
+    // The commit compares the snapshot terms digest that the customer signed.
+    await expect(attest(
+      session.sessionId,
+      customer.address,
+      await customer.signMessage(signedTermsMessage)
+    )).resolves.toMatchObject({
+      status: 'REDEEMED',
+      proof: { termsDigest: snapshotDigest?.replace('Terms Digest: ', '') },
     });
     expect(mockCheckBenefitEligibility).toHaveBeenCalledWith(
-      owner.address,
+      customer.address,
       1000,
       250,
       'commitment_time_only'
     );
 
     const refreshedSession = await createSession(businessId, rule.id);
-    expect(await buildChallengeMessage(refreshedSession.sessionId)).toContain('Product: Reserve espresso');
-    expect(await buildChallengeMessage(refreshedSession.sessionId)).toContain('Reference Price: USD 2499 minor units');
-    expect(await buildChallengeMessage(refreshedSession.sessionId)).toContain('Required Lock IFR: 5000');
-    expect(await buildChallengeMessage(refreshedSession.sessionId)).toContain('Minimum Held IFR: 500');
-    expect(await buildChallengeMessage(refreshedSession.sessionId)).toContain('Lock Source: either');
+    expect(await challengeFor(refreshedSession.sessionId)).toContain('Product: Reserve espresso');
+    expect(await challengeFor(refreshedSession.sessionId)).toContain('Reference Price: USD 2499 minor units');
+    expect(await challengeFor(refreshedSession.sessionId)).toContain('Required Lock IFR: 5000');
+    expect(await challengeFor(refreshedSession.sessionId)).toContain('Minimum Held IFR: 500');
+    expect(await challengeFor(refreshedSession.sessionId)).toContain('Lock Source: either');
+    expect(termsDigestOf(await challengeFor(refreshedSession.sessionId))).not.toBe(snapshotDigest);
     await prisma.session.update({
       where: { id: refreshedSession.sessionId },
       data: { benefitBasePriceMinor: '0', benefitCurrency: 'EUR' },
     });
-    expect(await buildChallengeMessage(refreshedSession.sessionId))
+    expect(await challengeFor(refreshedSession.sessionId))
       .toContain('Reference Price: EUR 0 minor units');
   });
 
   it('keeps customer identity and exact rejection details out of public proof links', async () => {
-    const approvedSession = await createSession(businessId);
-    mockRecoverSigner.mockReturnValue(owner.address);
+    const redeemedSession = await createSession(businessId);
+    await confirmByOwner(redeemedSession.sessionId);
     mockCheckLock.mockResolvedValue({ eligible: true, lockedAmount: '2500.0' });
 
+    // The customer address must never travel in a URL.
+    const getChallenge = await fetch(
+      `${baseUrl()}/api/sessions/${redeemedSession.sessionId}/challenge?wallet=${customer.address}`
+    );
+    expect(getChallenge.status).toBe(410);
     const challengeResponse = await fetch(
-      `${baseUrl()}/api/sessions/${approvedSession.sessionId}/challenge`
+      `${baseUrl()}/api/sessions/${redeemedSession.sessionId}/challenge`,
+      {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ walletAddress: customer.address }),
+      }
     );
     expect(challengeResponse.status).toBe(200);
     expect(challengeResponse.headers.get('cache-control')).toContain('no-store');
+    const { message } = await challengeResponse.json() as { message: string };
 
     const attestResponse = await fetch(`${baseUrl()}/api/attest`, {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ sessionId: approvedSession.sessionId, signature: '0x1234' }),
+      body: JSON.stringify({
+        sessionId: redeemedSession.sessionId,
+        walletAddress: customer.address,
+        signature: await customer.signMessage(message),
+      }),
     });
     expect(attestResponse.status).toBe(200);
     expect(attestResponse.headers.get('cache-control')).toContain('no-store');
+    // The full wallet is returned to the signing device only.
     expect(await attestResponse.json()).toMatchObject({
-      status: 'APPROVED',
-      wallet: owner.address,
+      status: 'REDEEMED',
+      wallet: customer.address,
     });
 
-    const approvedStatusResponse = await fetch(
-      `${baseUrl()}/api/sessions/${approvedSession.sessionId}`
+    const redeemedStatusResponse = await fetch(
+      `${baseUrl()}/api/sessions/${redeemedSession.sessionId}`
     );
-    expect(approvedStatusResponse.headers.get('cache-control')).toContain('private');
-    expect(approvedStatusResponse.headers.get('cache-control')).toContain('no-store');
-    const approvedStatus = await approvedStatusResponse.json() as Record<string, unknown>;
-    expect(approvedStatus).not.toHaveProperty('recoveredAddress');
-    expect(approvedStatus).toMatchObject({ status: 'APPROVED', reason: null });
+    expect(redeemedStatusResponse.headers.get('cache-control')).toContain('private');
+    expect(redeemedStatusResponse.headers.get('cache-control')).toContain('no-store');
+    const redeemedStatus = await redeemedStatusResponse.json() as Record<string, unknown>;
+    expect(redeemedStatus).not.toHaveProperty('recoveredAddress');
+    expect(JSON.stringify(redeemedStatus)).not.toContain(customer.address);
+    expect(JSON.stringify(redeemedStatus).toLowerCase()).not.toContain(customer.address.toLowerCase());
+    expect(redeemedStatus).toMatchObject({ status: 'REDEEMED', reason: null });
 
     const rejectedSession = await createSession(businessId);
     const detailedReason = 'Only 250.0 IFR locked; 1000 IFR required.';
@@ -1811,8 +1891,6 @@ describe('Seller catalog routes', () => {
       where: { id: rejectedSession.sessionId },
       data: {
         status: 'REJECTED',
-        recoveredAddress: owner.address,
-        lockAmountRaw: '250.0',
         reason: detailedReason,
         attestAttempts: 3,
       },
@@ -1823,7 +1901,7 @@ describe('Seller catalog routes', () => {
     );
     const rejectedStatus = await rejectedStatusResponse.json() as Record<string, unknown>;
     expect(rejectedStatus).not.toHaveProperty('recoveredAddress');
-    expect(JSON.stringify(rejectedStatus)).not.toContain(owner.address);
+    expect(JSON.stringify(rejectedStatus)).not.toContain(customer.address);
     expect(JSON.stringify(rejectedStatus)).not.toContain('250.0');
     expect(rejectedStatus).toMatchObject({
       status: 'REJECTED',
@@ -1837,14 +1915,69 @@ describe('Seller catalog routes', () => {
     expect(historyResponse.status).toBe(200);
     expect(historyResponse.headers.get('cache-control')).toBe('private, no-store, max-age=0');
     const history = await historyResponse.json() as { sessions: Array<Record<string, unknown>> };
-    const rejectedHistory = history.sessions.find((item) => item.id === rejectedSession.sessionId);
-    expect(rejectedHistory).not.toHaveProperty('recoveredAddress');
-    expect(JSON.stringify(rejectedHistory)).not.toContain(owner.address);
-    expect(rejectedHistory).toMatchObject({
-      customerWalletMasked: `${owner.address.slice(0, 6)}...${owner.address.slice(-4)}`,
-      lockAmountRaw: '250.0',
+    // Owner decision B: the seller history carries no customer wallet (full or masked) or amounts.
+    expect(JSON.stringify(history).toLowerCase()).not.toContain(customer.address.toLowerCase());
+    for (const item of history.sessions) {
+      for (const removed of ['recoveredAddress', 'customerWalletMasked', 'lockAmountRaw', 'walletBalanceRaw', 'verificationBlock']) {
+        expect(item).not.toHaveProperty(removed);
+      }
+    }
+    expect(history.sessions.find((item) => item.id === redeemedSession.sessionId)).toMatchObject({
+      status: 'REDEEMED',
+      customerProof: 'verified',
+      selfRedemption: false,
+      verifiedLockSource: 'ifrlock',
+    });
+    expect(history.sessions.find((item) => item.id === rejectedSession.sessionId)).toMatchObject({
+      status: 'REJECTED',
+      customerProof: null,
       reason: detailedReason,
     });
+  });
+
+  it('refuses IFR-hosted per-customer limits on rules and at checkout open', async () => {
+    const product = await prisma.product.create({ data: { businessId, ...productPayload() } });
+    const createHeaders = await sellerHeaders(owner, 'rules:create', businessId);
+    for (const limits of [
+      { dailyRedemptionLimit: 1 },
+      { monthlyRedemptionLimit: 10 },
+    ]) {
+      const refused = await fetch(`${baseUrl()}/api/seller/businesses/${businessId}/rules`, {
+        method: 'POST',
+        headers: await sellerHeaders(owner, 'rules:create', businessId),
+        body: JSON.stringify({ ...rulePayload(product.id), ...limits }),
+      });
+      expect(refused.status).toBe(400);
+    }
+    expect(await prisma.benefitRule.count({ where: { businessId } })).toBe(0);
+
+    const created = await fetch(`${baseUrl()}/api/seller/businesses/${businessId}/rules`, {
+      method: 'POST',
+      headers: createHeaders,
+      body: JSON.stringify(rulePayload(product.id)),
+    });
+    expect(created.status).toBe(201);
+    const rule = await created.json() as { id: string };
+    const refusedUpdate = await fetch(`${baseUrl()}/api/seller/rules/${rule.id}`, {
+      method: 'PATCH',
+      headers: await sellerHeaders(owner, 'rules:update', businessId, rule.id),
+      body: JSON.stringify({ dailyRedemptionLimit: 3 }),
+    });
+    expect(refusedUpdate.status).toBe(400);
+    expect(await prisma.benefitRule.findUniqueOrThrow({ where: { id: rule.id } })).toMatchObject({
+      dailyRedemptionLimit: 0,
+      monthlyRedemptionLimit: 0,
+    });
+
+    // A legacy rule that still carries a limit fails closed when a checkout is opened.
+    await prisma.benefitRule.update({ where: { id: rule.id }, data: { monthlyRedemptionLimit: 5 } });
+    const openResponse = await fetch(`${baseUrl()}/api/sessions`, {
+      method: 'POST',
+      headers: await sellerHeaders(owner, 'sessions:create', businessId, rule.id),
+      body: JSON.stringify({ businessId, benefitRuleId: rule.id }),
+    });
+    expect(openResponse.status).toBe(409);
+    expect(await prisma.session.count({ where: { benefitRuleId: rule.id } })).toBe(0);
   });
 
   it('archives products and linked rules without deleting session history', async () => {
@@ -1876,7 +2009,7 @@ describe('Seller catalog routes', () => {
     expect(savedProduct.active).toBe(false);
     expect(savedRule.active).toBe(false);
     expect(savedSession.benefitRuleId).toBe(rule.id);
-    expect(await buildChallengeMessage(session.sessionId)).toContain('Product: Premium espresso');
+    expect(await challengeFor(session.sessionId)).toContain('Product: Premium espresso');
 
     const publicProducts = await fetch(`${baseUrl()}/api/businesses/${businessId}/products`);
     expect(publicProducts.status).toBe(200);
@@ -1934,7 +2067,7 @@ describe('Seller catalog routes', () => {
       benefitSnapshotVersion: 5,
       benefitProductName: 'Consultation',
     });
-    expect(await buildChallengeMessage(session.sessionId)).toContain('Product: Consultation');
+    expect(await challengeFor(session.sessionId)).toContain('Product: Consultation');
     await expect(createSession(businessId, rule.id)).rejects.toThrow('not found or inactive');
   });
 
@@ -1958,7 +2091,7 @@ describe('Seller catalog routes', () => {
       },
     });
 
-    expect(await buildChallengeMessage(legacy.id)).toContain('Product: Legacy service');
+    expect(await challengeFor(legacy.id)).toContain('Product: Legacy service');
     const statusResponse = await fetch(`${baseUrl()}/api/sessions/${legacy.id}`);
     expect(await statusResponse.json()).toMatchObject({
       benefit: { label: 'Legacy benefit', discountPercent: 9, requiredLockIFR: 900 },
@@ -2006,6 +2139,8 @@ describe('Seller catalog routes', () => {
           : {}),
         nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 60_000),
+        confirmedByWallet: owner.address,
+        confirmedByRole: 'OWNER',
       },
     })));
     await prisma.benefitRule.update({
@@ -2013,26 +2148,25 @@ describe('Seller catalog routes', () => {
       data: { minIFRHeld: 500 },
     });
 
-    mockRecoverSigner.mockReturnValue(owner.address);
     mockCheckLock.mockResolvedValue({ eligible: true, lockedAmount: '900.0' });
     for (const session of legacySessions) {
-      const challenge = await buildChallengeMessage(session.id);
+      const challenge = await challengeFor(session.id);
+      // Legacy sessions sign the same v2 proof text, with the lock-only terms they were opened with.
       expect(challenge).toContain('Minimum Held IFR: 0');
-      expect(challenge).not.toContain('Lock Source:');
-      expect(challenge).toContain('Action: Verify IFR Lock Eligibility');
-      expect(challenge).not.toContain('Action: Verify IFR Benefit Eligibility');
+      expect(challenge).toContain('Lock Source: ifrlock');
+      expect(challenge).toContain(`Version: ${CHECKOUT_PROOF_VERSION_LABEL}`);
       const statusResponse = await fetch(`${baseUrl()}/api/sessions/${session.id}`);
       expect(await statusResponse.json()).toMatchObject({
         benefit: { minIFRHeld: 0, lockSource: 'ifrlock' },
       });
-      await expect(attest(session.id, '0xlegacy-signature')).resolves.toMatchObject({
-        status: 'APPROVED',
+      await expect(proveAsCustomer(session.id)).resolves.toMatchObject({
+        status: 'REDEEMED',
         benefit: { minIFRHeld: 0 },
       });
     }
 
     expect(mockCheckBenefitEligibility).toHaveBeenCalledTimes(legacySessions.length);
-    expect(mockCheckBenefitEligibility).toHaveBeenCalledWith(owner.address, 900, 0, 'ifrlock');
+    expect(mockCheckBenefitEligibility).toHaveBeenCalledWith(customer.address, 900, 0, 'ifrlock');
     const historyHeaders = await sellerHeaders(owner, 'sessions:list', businessId);
     const historyResponse = await fetch(`${baseUrl()}/api/seller/businesses/${businessId}/sessions`, {
       headers: historyHeaders,

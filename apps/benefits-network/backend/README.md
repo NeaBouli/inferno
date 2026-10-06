@@ -80,19 +80,17 @@ is not ready.
 | GET | `/api/businesses/:idOrSlug/products` | Public | List active products/services with active benefits |
 | POST | `/api/sessions` | Owner/operator wallet signature | Start verification session, optionally bound to a seller benefit rule |
 | GET | `/api/sessions/:id` | Public | Poll minimal, non-cacheable session status; no customer address or detailed rejection data |
-| GET | `/api/sessions/:id/challenge` | Public | Get signature challenge |
-| POST | `/api/attest` | Public | Submit signature + verify |
-| POST | `/api/sessions/:id/redeem` | Owner/operator wallet signature | Mark an approved session as redeemed |
-| POST | `/api/customer/history/challenge` | Public, rate limited | Issue a wallet-bound one-time message for customer history |
-| POST | `/api/customer/history/authorize` | Customer wallet signature | Exchange the signed one-time challenge for a ten-minute read token |
-| GET | `/api/customer/history?limit=20&cursor=...&snapshot=...` | Customer history read token | Return only the signer's verified benefit history, maximum 50 rows per page |
-| POST | `/api/passes/challenge` | Public, rate limited | Issue a wallet-bound one-time customer-pass creation message |
-| POST | `/api/passes` | Customer wallet signature | Consume challenge and create an opaque short-lived pass plus control token |
+| POST | `/api/sessions/:id/challenge` | Public, rate limited | Body `{walletAddress}`; return the exact checkout-proof text for that wallet (nothing stored). `GET` returns 410 so no address appears in a URL |
+| POST | `/api/attest` | Customer wallet signature | Body `{sessionId, walletAddress, signature}`; verify signer, fresh eligibility and seller authority, then redeem the checkout once |
+| POST | `/api/sessions/:id/redeem` | - | Retired: always 410 (the customer proof redeems) |
+| any | `/api/customer/history*` | - | Retired: 410 `{storage: 'device-local'}`; customer history is kept only in the browser |
+| POST | `/api/passes/challenge` | - | Retired: always 410 |
+| POST | `/api/passes` | Public, rate limited | Empty body; create an opaque short-lived pass plus control token (no wallet) |
 | GET | `/api/passes/:id` | Public, rate limited | Return only generic availability and expiry; no wallet, rule or session |
 | GET | `/api/passes/:id/control` | Customer pass control token | Return the exact seller/rule checkout to the originating customer tab |
 | POST | `/api/passes/:id/bind` | Owner/operator wallet signature | Atomically bind one active seller rule to one open pass |
-| POST | `/api/passes/:id/challenge` | Customer pass control token | Return the exact linked checkout challenge |
-| POST | `/api/passes/:id/confirm` | Customer pass control token + wallet signature | Verify the original pass wallet against the snapshotted lock source |
+| POST | `/api/passes/:id/challenge` | Customer pass control token | Body `{walletAddress}`; return the exact linked checkout-proof text |
+| POST | `/api/passes/:id/confirm` | Customer pass control token + wallet signature | Body `{walletAddress, signature}`; same checks as `/api/attest`, redeems the checkout once |
 | POST | `/api/passes/:id/cancel` | Customer pass control token | Cancel an open or still-pending checkout pass |
 
 Public offer discovery accepts an optional exact `serviceArea` filter and returns the available
@@ -115,39 +113,41 @@ Business ID. Existing ID links therefore remain valid without weakening checkout
 
 Recommended customer-presented flow:
 
-1. Customer creates a signed short-lived `/p/:passId` QR. It contains no wallet or reusable proof.
-2. Seller selects a rule and signs `passes:bind` scoped to `passId:benefitRuleId`; backend claims the pass and creates its immutable session in one transaction.
-3. Customer reviews the exact seller/rule through a random control token, signs the linked challenge, and backend requires the same wallet that created the pass.
-4. Seller sees `APPROVED` and redeems once. Public legacy challenge/attest routes cannot operate on the linked session.
+1. Customer creates a short-lived `/p/:passId` QR with an empty request; no wallet is involved. It contains no wallet or reusable proof.
+2. Seller selects a rule and signs `passes:bind` scoped to `passId:benefitRuleId`; backend claims the pass and creates its immutable session in one transaction, recording the seller wallet and role that opened it.
+3. Customer reviews the exact seller/rule through a random control token, requests the checkout-proof text for its wallet and signs it.
+4. On confirm, the backend checks recovered signer == claimed wallet, reads eligibility fresh on-chain, re-checks that the opening seller is still owner or an active operator and, in one transaction, moves the checkout `PENDING` -> `REDEEMED` exactly once. Seller sees `REDEEMED`. Public legacy challenge/attest routes cannot operate on the linked session.
 
 Compatible seller-issued flow:
 
 1. Merchant selects a seller rule or falls back to the business default.
 2. Owner or active checkout operator requests and signs a one-time `sessions:create` challenge bound to wallet, business and selected rule. The backend atomically consumes it, rechecks current checkout access and creates the QR. Benefit text, discount, required lock and TTL are frozen into that session.
-3. Customer scans QR → connects wallet → signs challenge with the selected benefit details.
-4. Backend verifies signature → checks the rule's immutable `ifrlock`, `commitment_time_only` or
-   `either` source at one Ethereum block. `either` requires the full threshold in one source.
-5. If the wallet is not eligible yet, the customer response is `REJECTED` but the stored session stays `PENDING` and unchanged (no attempt consumed, no wallet bound), so the customer can lock more IFR and retry the same QR while it is valid.
-6. Merchant sees APPROVED → owner or active checkout operator signs Redeem → backend atomically marks the session as redeemed once.
+3. Customer scans QR → connects wallet → requests the checkout-proof text (`POST /api/sessions/:id/challenge`) → signs it.
+4. Backend checks recovered signer == claimed wallet → checks the rule's immutable `ifrlock`,
+   `commitment_time_only` or `either` source in a fresh read at one Ethereum block. `either`
+   requires the full threshold in one source.
+5. If the wallet is not eligible yet, the customer response is `REJECTED` but the stored session stays `PENDING` and unchanged (no attempt consumed), so the customer can lock more IFR and retry the same QR while it is valid. An RPC failure returns 503 and also changes nothing.
+6. If eligible and the opening seller is still authorized, one database transaction moves the checkout `PENDING` -> `REDEEMED` exactly once. There is no `APPROVED` step and no separate seller redeem call.
 
-Customer signatures are bound to the fixed canonical domain
-`shop.ifrunit.tech` as well as the selected business/rule snapshot, session,
-nonce, expiry and chain ID. The backend does not derive this boundary from a
-request Host header. A signature over an older or foreign-domain challenge
-therefore does not authenticate the same wallet against the current challenge.
+The checkout-proof text (EIP-191, version `ifr-benefits/checkout-proof/2`) binds purpose, the
+full claimed wallet, the configured audience domain (`SELLER_AUTH_DOMAIN`), chain ID, shop,
+checkout ID, nonce, expiry and the offer terms plus a terms digest. The backend does not derive the
+audience from a request Host header. A signature over an older, foreign-domain or altered text
+recovers a different signer and is refused (403) without changing the checkout.
+
+The backend stores no customer wallet address, hash or fingerprint of it, signature or signed text,
+lock/balance amounts, block numbers, payment transaction hashes or customer history. It keeps the
+merchant checkout record (random checkout ID, shop, offer terms, status, timestamps, lock source,
+self-redemption flag, the seller wallet that opened it) and seller-side audit events, so checkouts
+are not anonymous.
 
 ## Customer Benefits History
 
-Customer history is not authorized by a wallet query parameter. The customer first requests a
-server-time, random one-time challenge and signs its canonical `shop.ifrunit.tech` message. A
-successful exchange atomically consumes the challenge and returns a random ten-minute read token.
-Only its SHA-256 hash is stored; the frontend keeps the bearer token in memory and never writes it
-to local storage.
-
-The history endpoint is signer-bound and snapshot/cursor-paginated with a maximum of 50 rows per
-request. It returns seller identity, immutable benefit snapshots, status and timestamps for the
-signer's own verified sessions. It excludes recovered wallet addresses, signatures, challenge
-nonces, authorization tokens, audit logs, lock balances and seller-only data.
+Customer history is device-local only. The frontend keeps a signed receipt (checkout, shop,
+terms, status, signed proof text and signature) in the browser so the customer can verify locally
+what they signed. The former server history (`/api/customer/history`, `/challenge`, `/authorize`)
+returns 410 `{storage: 'device-local'}`; its challenge and access-token tables were removed.
+Losing the browser data loses this history.
 
 ## Benefit Rules
 
@@ -180,7 +180,7 @@ active rules while preserving sessions and audit history.
 `commitment_time_only` or `either`. Commitment eligibility sums only non-unlocked `TIME_ONLY`
 tranches. `PRICE_ONLY`, `TIME_OR_PRICE` and `TIME_AND_PRICE` never qualify. `either` does not add
 partial balances across vaults. `minIFRHeld` is an optional nonnegative whole-IFR amount; `0` or
-omission disables the free-wallet balance gate. For a positive value, approval additionally
+omission disables the free-wallet balance gate. For a positive value, redemption additionally
 requires the ERC-20 wallet threshold. The backend verifies deployed bytecode and each selected
 vault's token against `IFR_TOKEN_ADDRESS`, pins all reads to one block, compares exact 9-decimal
 base units with `bigint`, and fails closed on identity, ABI or RPC errors.
@@ -233,15 +233,15 @@ and each checkout operator requires a fresh owner authorization.
 
 Seller session history uses the same headers with `Action: sessions:list` and the
 business id as `Business`. Each snapshot/cursor page is clamped from 1 to 50 rows.
-Responses include the session status, recovered customer wallet, locked amount, any verified
-free-wallet IFR balance, rejection reason, redeem timestamp and attached rule/default benefit fields. The
-frontend masks wallets and builds the full paginated CSV locally without exposing
-customer signatures or creating a server-side export file.
+Responses include the session status, `customerProof` (`verified` or `null`), `selfRedemption`,
+`verifiedLockSource`, rejection reason, redeem timestamp and attached rule/default benefit fields.
+They contain no customer wallet, lock or balance amount or block number, because none is stored.
+The frontend builds the full paginated CSV locally without creating a server-side export file.
 
 The separate public `GET /api/sessions/:id` projection is intentionally smaller. It is
-served with `Cache-Control: private, no-store`, never returns the recovered customer
+served with `Cache-Control: private, no-store`, never returns a customer
 address or exact lock/rejection details, and exposes only a generic terminal reason.
-Detailed operational fields remain available only through the owner-signed history API.
+Seller operational fields remain available only through the owner-signed history API.
 
 Seller write requests use these headers:
 
@@ -265,19 +265,23 @@ Only sign this message inside shop.ifrunit.tech.
 ```
 
 The nonce and scope lines are present only for mutations. Read-only actions use
-the same deterministic prefix without those lines. Redeem signs
-`Action: sessions:redeem` with the session id as both `Business` and `Scope`.
-This keeps the customer QR public while making redemption seller-owned and
-prevents a captured seller mutation signature from being replayed.
+the same deterministic prefix without those lines. Opening a checkout
+(`sessions:create`, `passes:bind`) is the seller's single-use authorization; the
+seller wallet and role are recorded on the checkout and re-checked when the
+customer proof redeems it. The former seller `sessions:redeem` step is retired
+(`POST /api/sessions/:id/redeem` returns 410). This keeps the customer QR public
+and prevents a captured seller mutation signature from being replayed.
 
 ## Checkout Operators
 
 The owner can delegate checkout-only access to up to ten active wallets per
 business. Each operator may have a label and expiry. Operators can sign
-`operators:status`, `sessions:create` and `sessions:redeem`; they cannot list history, manage
+`operators:status`, `sessions:create` and `passes:bind`; they cannot list history, manage
 profiles or rules, or add/revoke other operators. Revocation is effective on
-the next server request. Redemption audit payloads record the actor wallet and
-`OWNER`/`OPERATOR` role, never the wallet signature.
+the next server request, including for checkouts the operator already opened:
+the redeeming transaction re-checks the opening seller and refuses (409) a
+revoked or expired operator. `REDEEMED` audit payloads record the opening seller's
+wallet and `OWNER`/`OPERATOR` role, never a signature or customer wallet.
 
 Deactivating a seller profile also deactivates every checkout operator in the same
 database transaction and invalidates every unused `operators:create` challenge for that
@@ -288,8 +292,8 @@ checkout access.
 Every seller mutation requires a resource-bound single-use nonce in `x-ifr-nonce`
 in addition to the wallet, signature and timestamp headers. Session creation
 consumes the nonce atomically with the current owner/operator recheck and session
-insert. Redemption and all owner-management mutations reject replayed, expired or
-wrong-scope nonces before changing state. POS helpers receive only public
+insert. All owner-management mutations reject replayed, expired or wrong-scope
+nonces before changing state. POS helpers receive only public
 integration code; they never embed a seller private key or reusable seller secret.
 
 ## Rate-limit identities
@@ -301,19 +305,15 @@ an additional process-local fixed-window budget is charged to the recovered wall
 The production backend currently runs as one instance; a shared external store is
 required before horizontal scaling.
 
-## Per-wallet redemption limits
+## Per-customer redemption limits (not IFR-hosted)
 
-Each benefit rule can set `dailyRedemptionLimit` and `monthlyRedemptionLimit`.
-Both use UTC calendar boundaries and `0` means unlimited. New QR sessions copy
-the two values into immutable session snapshots, so editing a rule does not
-change an already issued checkout. Legacy sessions without these fields remain
-unlimited.
-
-Redeem acquires the SQLite writer lock before counting successful redemptions
-for the same business, benefit rule and customer wallet. A concurrent checkout
-therefore cannot exceed the configured cap. A denied session becomes
-`REJECTED`, returns HTTP `429`, and records `REDEEM_DENIED_LIMIT` without storing
-wallet signatures.
+Because the backend stores no customer wallet or identity, IFR does not enforce
+per-customer redemption limits. Rule create/update with a non-zero
+`dailyRedemptionLimit` or `monthlyRedemptionLimit` returns 400. Opening a
+checkout (`POST /api/sessions` or pass bind) for a legacy rule that still carries
+a non-zero limit returns 409 with guidance, so no limit is silently dropped. A
+merchant that needs per-customer limits enforces them in its own systems. The
+columns remain for data compatibility only.
 
 ## Immutable eligibility snapshots
 
@@ -321,8 +321,8 @@ New rule-bound sessions snapshot `requiredLockIFR`, `minIFRHeld` and `lockSource
 product, discount, price and redemption terms. Later rule edits cannot change an issued checkout.
 Snapshot version 5 includes the lock source; versions 0-4 remain `ifrlock`, and versions 0-3
 interpret the held threshold as `0`. Version-5 challenges include the source without changing old
-challenge text. A positive held threshold stores the exact observed ERC-20 balance only in
-seller-authorized operational history; public proof status does not expose customer inventory.
+challenge text. Observed lock and balance amounts are used only within the proof request and are
+not stored; public proof status and seller history do not expose customer inventory.
 
 ## Verified Seller Rewards Foundation
 
@@ -363,12 +363,16 @@ Disabling does not erase a previously confirmed payout-wallet preference; a
 later application continues to use it unless the owner explicitly clears or
 replaces it before governance verification.
 
-A successful redeem creates a `PENDING` reward outbox row in the same SQLite
-transaction only for a locally verified link. Seller owner and active checkout
-operator wallets are excluded from reward eligibility. The admin reconciliation
-route repeats all live governance checks, checks PartnerVault anti-double-count
-state and moves the event to `READY`, `BLOCKED_CALLER` or `CONFIRMED`. It never
-signs or broadcasts `recordLockReward`.
+A successful redemption creates one reward outbox row per checkout in the same
+SQLite transaction only for a locally verified link. Since storage-free customer
+sessions it is created as non-payable `BLOCKED_POLICY`; a self-redemption (owner,
+any checkout operator, reward or builder wallet) creates no row and is audited as
+`REWARD_SKIPPED_POLICY`. The lock-reward path needs a customer wallet and cannot
+run: the admin `rewards:queue` lock path moves open events (`PENDING`, `READY`,
+`BLOCKED_CALLER`, `BLOCKED_GOVERNANCE`) to `BLOCKED_POLICY` and reports
+`submissionReady: false`. The Model B export always adds blocker
+`CUSTOMER_DEDUP_UNAVAILABLE_OWNER_B` and is diagnostic only until a new reward
+policy is accepted. The backend never signs or broadcasts `recordLockReward`.
 
 `REWARD_CALLER_ADDRESS` is only a public address used for the read-only
 `authorizedCaller` check. No private key, mnemonic or transaction signer belongs
@@ -408,13 +412,13 @@ BENEFITS_BASE_URL=http://localhost:3001 MUTATE=true node scripts/seller-wallet-s
 Default mode is read-only: health, server-issued seller auth and signed owned
 profile listing with a throwaway wallet. `MUTATE=true` creates a wallet-owned
 seller profile, reloads it, creates a benefit rule, lists the rule and deletes
-the smoke rule again. It also creates a QR session for that rule, signs the
-customer challenge, submits `/api/attest` and signs the seller-owned redeem
-attempt. Without `CUSTOMER_PRIVATE_KEY` the customer wallet is throwaway and
-should receive a retryable rejected attest response from the live IFRLock check;
-signed redeem is expected to be blocked because the session is not approved.
-With `CUSTOMER_PRIVATE_KEY`, use a real eligible customer wallet to verify the
-approved-and-redeemed path. The script then soft-deactivates the smoke seller
+the smoke rule again. It also creates a QR session for that rule, requests and
+signs the customer checkout proof and submits `/api/attest`. Without
+`CUSTOMER_PRIVATE_KEY` the customer wallet is throwaway and should receive a
+rejected response from the live IFRLock check while the checkout stays `PENDING`;
+the retired seller redeem route is expected to answer 410. With
+`CUSTOMER_PRIVATE_KEY`, use a real eligible customer wallet to verify that the
+proof redeems the checkout (`REDEEMED`). The script then soft-deactivates the smoke seller
 profile so it no longer appears in owned active profile reloads. Seller private
 keys are generated in memory. The optional customer private key is never printed.
 

@@ -18,11 +18,17 @@ jest.mock('../src/services/rewardService', () => {
   };
 });
 
-jest.mock('../src/services/ifrLockService', () => ({
-  checkLock: jest.fn(),
-  recoverSigner: jest.fn(),
-  initProvider: jest.fn(),
-}));
+const mockEligibility = jest.fn();
+
+jest.mock('../src/services/ifrLockService', () => {
+  const actual = jest.requireActual('ethers');
+  return {
+    checkLock: jest.fn(),
+    checkBenefitEligibility: (...args: unknown[]) => mockEligibility(...args),
+    recoverSigner: (message: string, signature: string) => actual.verifyMessage(message, signature),
+    initProvider: jest.fn(),
+  };
+});
 
 const IFR_TOKEN = '0x77e99917Eca8539c62F509ED1193ac36580A6e7B';
 const PARTNER_VAULT = '0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D';
@@ -50,12 +56,13 @@ jest.mock('../src/config', () => ({
 }));
 
 import { config } from '../src/config';
-import { prisma } from '../src/services/sessionService';
+import { prisma, REWARD_BLOCKED_POLICY } from '../src/services/sessionService';
 import { server } from '../src/index';
 import { parseModelBPolicy, type ModelBPolicy } from '../src/services/modelBPolicy';
 import {
   buildSettlementExport,
   computeMilestoneId,
+  CUSTOMER_DEDUP_POLICY_GAP,
   convertEurMinorToIfrBase,
   isInPeriod,
   parseSettlementPeriod,
@@ -87,7 +94,7 @@ function baseUrl() {
 
 async function sellerHeaders(wallet: TestWallet, action: string, businessId: string, scope = businessId) {
   const query = new URLSearchParams({ action, businessId, walletAddress: wallet.address });
-  if (['rewards:disable', 'sessions:redeem'].includes(action)) query.set('scope', scope);
+  if (['rewards:disable', 'sessions:redeem', 'sessions:create'].includes(action)) query.set('scope', scope);
   const challengeResponse = await fetch(`${baseUrl()}/api/seller/auth-message?${query}`);
   expect(challengeResponse.status).toBe(200);
   const challenge = await challengeResponse.json() as { message: string; timestamp: string; nonce?: string };
@@ -203,15 +210,17 @@ describe('Model B verified-redemption settlement (T-275)', () => {
   let businessId: string;
   let operatorId: string;
 
+  // Owner decision B (T-231b): no customer wallet is stored; the session only carries the
+  // in-request self-redemption outcome. Seeding rows directly keeps the Model B queue/export
+  // logic covered even though the customer proof itself now only creates BLOCKED_POLICY rows.
   async function redemption(options: {
     redeemedAt: string;
-    customer?: string;
+    selfRedemption?: boolean | null;
     status?: string;
     confirmations?: Array<Record<string, unknown>>;
     eventPartnerId?: string | null;
     sessionStatus?: string;
   }) {
-    const customer = options.customer ?? ethers.Wallet.createRandom().address;
     const session = await prisma.session.create({
       data: {
         businessId,
@@ -219,8 +228,8 @@ describe('Model B verified-redemption settlement (T-275)', () => {
         expiresAt: new Date(options.redeemedAt),
         status: options.sessionStatus ?? 'REDEEMED',
         redeemedAt: new Date(options.redeemedAt),
-        recoveredAddress: customer,
-        lockAmountRaw: '1000',
+        selfRedemption: options.selfRedemption === undefined ? false : options.selfRedemption,
+        proofVersion: 2,
       },
     });
     for (const payload of options.confirmations ?? [{ actorWallet: owner.address, actorRole: 'OWNER', operatorId: null }]) {
@@ -232,8 +241,6 @@ describe('Model B verified-redemption settlement (T-275)', () => {
         businessId,
         sessionId: session.id,
         partnerId: options.eventPartnerId ?? partnerId,
-        customerWallet: customer,
-        lockAmountRaw: (1000n * IFR).toString(),
         chainId: 1,
         status: options.status ?? 'SETTLEMENT_PENDING',
         createdAt: new Date(options.redeemedAt),
@@ -321,6 +328,18 @@ describe('Model B verified-redemption settlement (T-275)', () => {
     mockGetRewardOnChainStatus.mockResolvedValue(sellerStatus());
     mockIsWalletAlreadyRewarded.mockResolvedValue(false);
     mockGetModelBVaultState.mockResolvedValue(vaultState());
+    mockEligibility.mockResolvedValue({
+      eligible: true,
+      lockEligible: true,
+      heldEligible: true,
+      lockedAmount: '2500.0',
+      walletAmount: '10.0',
+      walletBalanceRaw: '10000000000000000000',
+      ifrLockAmount: '2500.0',
+      commitmentAmount: null,
+      verifiedLockSource: 'ifrlock',
+      verificationBlock: 123456,
+    });
   });
 
   afterAll(async () => {
@@ -380,10 +399,9 @@ describe('Model B verified-redemption settlement (T-275)', () => {
     expect(mockGetModelBVaultState).not.toHaveBeenCalled();
   });
 
-  it('exports an unsigned template over HTTP without wallets, signatures or a settled transition', async () => {
-    const customers = [ethers.Wallet.createRandom().address, ethers.Wallet.createRandom().address];
-    for (const [index, customer] of customers.entries()) {
-      await redemption({ redeemedAt: `2026-08-1${index}T10:00:00.000Z`, customer });
+  it('exports over HTTP without wallets, signatures or a settled transition; owner B keeps it diagnostic', async () => {
+    for (const index of [0, 1]) {
+      await redemption({ redeemedAt: `2026-08-1${index}T10:00:00.000Z` });
     }
     const before = await prisma.rewardEvent.findMany({ orderBy: { id: 'asc' } });
     const body = { partnerId, period: PERIOD, sellerConfirmedRedemptions: 2, priceEvidence: evidence() };
@@ -392,13 +410,17 @@ describe('Model B verified-redemption settlement (T-275)', () => {
     expect(first.headers.get('cache-control')).toBe('no-store');
     const firstText = await first.text();
     const exported = JSON.parse(firstText);
-    expect(exported.mode).toBe('proposal-template');
+    // Owner decision B (T-231b): per-customer dedup is unavailable, so the only blocker is the
+    // policy gap and no template (calldata) is produced; amounts stay visible for diagnosis.
+    expect(exported.mode).toBe('diagnostic');
+    expect(exported.blockers).toEqual([CUSTOMER_DEDUP_POLICY_GAP]);
+    expect(exported.template).toBeNull();
+    expect(firstText).not.toMatch(/"data":"0x/);
     expect(exported.settlement).toMatchObject({ status: 'NOT_SUBMITTED', settled: false, paid: false });
-    expect(exported.template).toMatchObject({ unsigned: true, submitted: false });
     expect(exported.totals).toMatchObject({ settleableCount: 2, eurMinorTotal: '400', ifrBaseUnits: (4_000_000_000_000n / 3n).toString() });
 
-    // Privacy: no customer, owner, operator or reward wallet, and no signature material.
-    for (const wallet of [...customers, owner.address, operatorWallet, rewardWallet]) {
+    // Privacy: no owner, operator or reward wallet, and no signature or customer material.
+    for (const wallet of [owner.address, operatorWallet, rewardWallet]) {
       expect(firstText.toLowerCase()).not.toContain(wallet.toLowerCase().slice(2));
     }
     expect(firstText).not.toMatch(/signature|recoveredAddress|customerWallet/i);
@@ -415,67 +437,95 @@ describe('Model B verified-redemption settlement (T-275)', () => {
 
   // ── Hop 1 -> 2 -> 3: real redeem, pilot reconcile and export ───────────────
 
-  it('routes verified pilot redemptions through the outbox into SETTLEMENT_PENDING without the caller gate', async () => {
+  it('routes customer-proof redemptions into non-payable BLOCKED_POLICY rows the Model B queue never transitions', async () => {
     const customer = ethers.Wallet.createRandom();
-    const makeSession = () => prisma.session.create({
-      data: {
-        businessId,
-        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
-        expiresAt: new Date(Date.now() + 60_000),
-        status: 'APPROVED',
-        recoveredAddress: customer.address,
-        lockAmountRaw: '1000',
-      },
-    });
-    const first = await makeSession();
-    const second = await makeSession();
-    for (const session of [first, second]) {
-      const redeemed = await fetch(`${baseUrl()}/api/sessions/${session.id}/redeem`, {
+    const openCheckout = async () => {
+      const response = await fetch(`${baseUrl()}/api/sessions`, {
         method: 'POST',
-        headers: await sellerHeaders(owner, 'sessions:redeem', session.id),
+        headers: await sellerHeaders(owner, 'sessions:create', businessId, 'default'),
+        body: JSON.stringify({ businessId }),
       });
-      expect(redeemed.status).toBe(200);
+      expect(response.status).toBe(201);
+      return (await response.json() as { sessionId: string }).sessionId;
+    };
+    const prove = async (sessionId: string) => {
+      const challenge = await fetch(`${baseUrl()}/api/sessions/${sessionId}/challenge`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ walletAddress: customer.address }),
+  });
+      expect(challenge.status).toBe(200);
+      const { message } = await challenge.json() as { message: string };
+      return fetch(`${baseUrl()}/api/attest`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ sessionId, walletAddress: customer.address, signature: await customer.signMessage(message) }),
+      });
+    };
+    const first = await openCheckout();
+    const second = await openCheckout();
+    for (const sessionId of [first, second]) {
+      const proved = await prove(sessionId);
+      expect(proved.status).toBe(200);
+      expect(await proved.json()).toMatchObject({ status: 'REDEEMED' });
     }
-    // A replayed redeem of the same session is rejected and creates nothing.
-    const replay = await fetch(`${baseUrl()}/api/sessions/${first.id}/redeem`, {
+    // The separate seller redeem step is gone and creates nothing.
+    const legacyRedeem = await fetch(`${baseUrl()}/api/sessions/${first}/redeem`, {
       method: 'POST',
-      headers: await sellerHeaders(owner, 'sessions:redeem', first.id),
+      headers: await sellerHeaders(owner, 'sessions:redeem', businessId, first),
     });
-    expect(replay.status).not.toBe(200);
-    // Existing outbox: one event per customer wallet and partner (documented gap G1).
-    expect(await prisma.rewardEvent.count()).toBe(1);
+    expect(legacyRedeem.status).toBe(410);
+    // A replayed proof of the same session is rejected and creates nothing.
+    expect((await prove(first)).status).not.toBe(200);
+    // One non-payable outbox row per session (no per-wallet dedup), without any customer data.
+    const proofEvents = await prisma.rewardEvent.findMany({ orderBy: { sessionId: 'asc' } });
+    expect(proofEvents).toHaveLength(2);
+    expect(proofEvents.map((event) => event.sessionId).sort()).toEqual([first, second].sort());
+    for (const event of proofEvents) {
+      expect(event).toMatchObject({ businessId, partnerId, status: REWARD_BLOCKED_POLICY });
+      expect(JSON.stringify(event).toLowerCase()).not.toContain(customer.address.toLowerCase().slice(2));
+    }
+    expect((await prisma.session.findUniqueOrThrow({ where: { id: first } })).selfRedemption).toBe(false);
 
+    // A seeded open pilot event (pre-owner-B shape) still moves to SETTLEMENT_PENDING; BLOCKED_POLICY never does.
+    const seeded = await redemption({ redeemedAt: new Date().toISOString(), status: 'PENDING' });
     const queue = await fetch(`${baseUrl()}/api/admin/businesses/${businessId}/rewards/queue`, { method: 'POST', headers: AUTH });
     expect(queue.status).toBe(200);
     expect(await queue.json()).toEqual({ mode: 'model-b', settlementPending: 1, scanned: 1, submissionReady: false });
     expect(mockIsWalletAlreadyRewarded).not.toHaveBeenCalled();
-    expect(await prisma.rewardEvent.findFirstOrThrow()).toMatchObject({ status: 'SETTLEMENT_PENDING' });
+    expect(await prisma.rewardEvent.findUniqueOrThrow({ where: { id: seeded.event!.id } })).toMatchObject({ status: 'SETTLEMENT_PENDING' });
+    expect(await prisma.rewardEvent.count({ where: { status: REWARD_BLOCKED_POLICY } })).toBe(2);
 
     // The current month is still open, so only a diagnostic export is possible.
     const now = new Date();
     const period = `${now.getUTCFullYear()}-${String(now.getUTCMonth() + 1).padStart(2, '0')}`;
-    const response = await postExport({ partnerId, period, sellerConfirmedRedemptions: 2, priceEvidence: evidence() });
+    const response = await postExport({ partnerId, period, sellerConfirmedRedemptions: 3, priceEvidence: evidence() });
     expect(response.status).toBe(200);
     const exported = await response.json() as {
       mode: string; template: unknown; blockers: string[];
+      events: { eligible: string[]; excluded: { id: string; reason: string }[] };
       reconciliation: Record<string, unknown> & { discrepancies: { code: string; count: number }[] };
     };
     expect(exported.mode).toBe('diagnostic');
     expect(exported.template).toBeNull();
-    expect(exported.blockers).toContain('PERIOD_NOT_CLOSED');
-    expect(exported.reconciliation).toMatchObject({ backendRedemptions: 2, rewardEventsInPeriod: 1, redemptionsWithoutRewardEvent: 1 });
-    expect(exported.reconciliation.discrepancies).toContainEqual({ code: 'REDEMPTION_WITHOUT_REWARD_EVENT', count: 1 });
+    expect(exported.blockers).toEqual(expect.arrayContaining(['PERIOD_NOT_CLOSED', CUSTOMER_DEDUP_POLICY_GAP]));
+    expect(exported.reconciliation).toMatchObject({ backendRedemptions: 3, rewardEventsInPeriod: 3, redemptionsWithoutRewardEvent: 0 });
+    expect(exported.events.eligible).toEqual([seeded.event!.id]);
+    for (const event of proofEvents) {
+      expect(exported.events.excluded).toContainEqual({ id: event.id, reason: 'STATUS_INELIGIBLE' });
+    }
 
-    // A seller opt-out blocks settlement-pending events again.
+    // A seller opt-out blocks settlement-pending events again; BLOCKED_POLICY rows stay non-payable.
     const disabled = await fetch(`${baseUrl()}/api/seller/businesses/${businessId}/rewards/disable`, {
       method: 'POST',
       headers: await sellerHeaders(owner, 'rewards:disable', businessId),
     });
     expect(disabled.status).toBe(200);
-    expect(await prisma.rewardEvent.findFirstOrThrow()).toMatchObject({ status: 'BLOCKED_GOVERNANCE' });
+    expect(await prisma.rewardEvent.findUniqueOrThrow({ where: { id: seeded.event!.id } })).toMatchObject({ status: 'BLOCKED_GOVERNANCE' });
+    expect(await prisma.rewardEvent.count({ where: { status: REWARD_BLOCKED_POLICY } })).toBe(2);
   });
 
-  it('never reclassifies pre-pilot events and keeps non-pilot sellers on the existing caller gate', async () => {
+  it('never reclassifies pre-pilot events and turns lock-path events into BLOCKED_POLICY when Model B is off', async () => {
     mutableConfig.MODEL_B_PILOT_POLICY_JSON = JSON.stringify(policy(businessId, {}, { startsAt: '2026-08-15T00:00:00Z' }));
     const old = await redemption({ redeemedAt: '2026-08-10T12:00:00.000Z', status: 'PENDING' });
     const fresh = await redemption({ redeemedAt: '2026-08-20T12:00:00.000Z', status: 'BLOCKED_CALLER' });
@@ -487,30 +537,36 @@ describe('Model B verified-redemption settlement (T-275)', () => {
     const exported = await exportDirect();
     expect(exported.events.excluded).toContainEqual({ id: old.event!.id, reason: 'PRE_PILOT' });
     expect(exported.events.eligible).toEqual([fresh.event!.id]);
-    expect(exported.mode).toBe('proposal-template');
+    expect(exported.blockers).toEqual([CUSTOMER_DEDUP_POLICY_GAP]);
+    expect(exported.template).toBeNull();
 
-    // Disabled Model B: the old lock-path reconciliation stays exactly as before.
+    // Disabled Model B: the lock path (owner decision B) turns open events into non-payable
+    // BLOCKED_POLICY without any on-chain walletRewardClaimed lookup; Model B rows stay untouched.
     mutableConfig.MODEL_B_SETTLEMENT_ENABLED = undefined;
     const legacy = await fetch(`${baseUrl()}/api/admin/businesses/${businessId}/rewards/queue`, { method: 'POST', headers: AUTH });
-    expect(await legacy.json()).toMatchObject({ blocked: 1, ready: 0, submissionReady: false });
-    expect(await prisma.rewardEvent.findUniqueOrThrow({ where: { id: old.event!.id } })).toMatchObject({ status: 'BLOCKED_CALLER' });
+    expect(await legacy.json()).toMatchObject({ blocked: 1, scanned: 1, ready: 0, confirmed: 0, submissionReady: false });
+    expect(mockIsWalletAlreadyRewarded).not.toHaveBeenCalled();
+    expect(await prisma.rewardEvent.findUniqueOrThrow({ where: { id: old.event!.id } })).toMatchObject({ status: REWARD_BLOCKED_POLICY });
     expect(await prisma.rewardEvent.findUniqueOrThrow({ where: { id: fresh.event!.id } })).toMatchObject({ status: 'SETTLEMENT_PENDING' });
   });
 
   // ── Eligibility negatives ──────────────────────────────────────────────────
 
-  it('excludes self-redemptions by every seller-controlled wallet, including inactive operators', async () => {
+  // Which wallets count as seller-controlled (owner, any operator, reward and builder wallet) is
+  // decided at the final commit and covered in customerSessionPrivacy.test.ts; the export only
+  // trusts the stored Session.selfRedemption outcome and fails closed on a missing one.
+  it('excludes self-redemptions flagged at the final commit and fails closed on a missing outcome', async () => {
     const ok = await redemption({ redeemedAt: '2026-08-02T00:00:00.000Z' });
-    const viaReward = await redemption({ redeemedAt: '2026-08-03T00:00:00.000Z', customer: rewardWallet });
-    const viaOperator = await redemption({ redeemedAt: '2026-08-04T00:00:00.000Z', customer: operatorWallet.toLowerCase() });
-    const viaOwner = await redemption({ redeemedAt: '2026-08-05T00:00:00.000Z', customer: owner.address });
+    const viaSeller = await redemption({ redeemedAt: '2026-08-03T00:00:00.000Z', selfRedemption: true });
+    const unknown = await redemption({ redeemedAt: '2026-08-04T00:00:00.000Z', selfRedemption: null });
     const exported = await exportDirect();
     expect(exported.events.eligible).toEqual([ok.event!.id]);
-    for (const item of [viaReward, viaOperator, viaOwner]) {
+    for (const item of [viaSeller, unknown]) {
       expect(exported.events.excluded).toContainEqual({ id: item.event!.id, reason: 'SELF_REDEMPTION' });
     }
     expect(exported.reconciliation.discrepancies).toEqual([]);
-    expect(exported.mode).toBe('proposal-template');
+    expect(exported.blockers).toEqual([CUSTOMER_DEDUP_POLICY_GAP]);
+    expect(exported.template).toBeNull();
   });
 
   it('blocks proposals for unconfirmed, unauthorized and replayed seller confirmations', async () => {
@@ -563,7 +619,12 @@ describe('Model B verified-redemption settlement (T-275)', () => {
     await redemption({ redeemedAt: '2026-08-03T00:00:00.000Z' });
     const skipped = await exportDirect();
     expect(skipped.events.excluded).toContainEqual({ id: pending.event!.id, reason: 'STATUS_INELIGIBLE' });
-    expect(skipped.template).not.toBeNull();
+    expect(skipped.blockers).toEqual([CUSTOMER_DEDUP_POLICY_GAP]);
+    expect(skipped.template).toBeNull();
+
+    // A non-payable owner-B outbox row is never settleable either.
+    await prisma.rewardEvent.update({ where: { id: pending.event!.id }, data: { status: REWARD_BLOCKED_POLICY } });
+    expect((await exportDirect()).events.excluded).toContainEqual({ id: pending.event!.id, reason: 'STATUS_INELIGIBLE' });
 
     // An outbox row for the pilot partner that belongs to another business is a discrepancy.
     const foreign = await prisma.business.create({
@@ -576,7 +637,7 @@ describe('Model B verified-redemption settlement (T-275)', () => {
         expiresAt: new Date('2026-08-05T00:00:00.000Z'),
         status: 'REDEEMED',
         redeemedAt: new Date('2026-08-05T00:00:00.000Z'),
-        recoveredAddress: ethers.Wallet.createRandom().address,
+        selfRedemption: false,
       },
     });
     const foreignEvent = await prisma.rewardEvent.create({
@@ -584,8 +645,6 @@ describe('Model B verified-redemption settlement (T-275)', () => {
         businessId: foreign.id,
         sessionId: foreignSession.id,
         partnerId,
-        customerWallet: ethers.Wallet.createRandom().address,
-        lockAmountRaw: '1',
         chainId: 1,
         status: 'SETTLEMENT_PENDING',
       },
@@ -596,7 +655,7 @@ describe('Model B verified-redemption settlement (T-275)', () => {
     await prisma.rewardEvent.delete({ where: { id: foreignEvent.id } });
 
     // An outbox row whose session never reached REDEEMED is an integrity discrepancy.
-    await redemption({ redeemedAt: '2026-08-04T00:00:00.000Z', sessionStatus: 'APPROVED', confirmations: [] });
+    await redemption({ redeemedAt: '2026-08-04T00:00:00.000Z', sessionStatus: 'PENDING', confirmations: [] });
     const orphan = await exportDirect();
     expect(orphan.reconciliation.discrepancies).toContainEqual({ code: 'EVENT_WITHOUT_REDEMPTION', count: 1 });
     expect(orphan.template).toBeNull();
@@ -647,7 +706,10 @@ describe('Model B verified-redemption settlement (T-275)', () => {
     expect(missing.reconciliation.status).toBe('INCOMPLETE');
     expect(missing.blockers).toContain('RECONCILIATION_INCOMPLETE');
     expect(missing.template).toBeNull();
-    expect((await exportDirect()).mode).toBe('proposal-template');
+    const matched = await exportDirect();
+    expect(matched.reconciliation.status).toBe('RECONCILED');
+    expect(matched.blockers).toEqual([CUSTOMER_DEDUP_POLICY_GAP]);
+    expect(matched.template).toBeNull();
   });
 
   // ── Price evidence ────────────────────────────────────────────────────────
@@ -714,10 +776,14 @@ describe('Model B verified-redemption settlement (T-275)', () => {
       const exported = await exportDirect({ priceEvidence });
       expect({ label, status: exported.priceEvidence.status, reason: exported.priceEvidence.reason })
         .toEqual({ label, status, reason });
-      expect({ label, mode: exported.mode }).toEqual({ label, mode: status === 'VALID' ? 'proposal-template' : 'diagnostic' });
+      // Owner decision B: every export is diagnostic; valid evidence leaves only the policy-gap blocker.
+      expect({ label, mode: exported.mode }).toEqual({ label, mode: 'diagnostic' });
+      expect(exported.template).toBeNull();
       if (status === 'INVALID') {
-        expect(exported.template).toBeNull();
         expect(exported.blockers).toContain('PRICE_EVIDENCE_INVALID');
+      } else {
+        expect({ label, blockers: exported.blockers }).toEqual({ label, blockers: [CUSTOMER_DEDUP_POLICY_GAP] });
+        expect(exported.totals.ifrBaseUnits).not.toBeNull();
       }
     }
   });
@@ -769,13 +835,15 @@ describe('Model B verified-redemption settlement (T-275)', () => {
     expect(capped.mode).toBe('diagnostic');
     expect(capped.template).toBeNull();
 
-    // A month that exactly fits the remaining allocation still yields a template (stops exactly at budget).
+    // A month that exactly fits the remaining allocation is WITHIN_BUDGET (stops exactly at budget);
+    // under owner decision B it stays diagnostic only because of the customer-dedup policy gap.
     const exactFit = await exportDirect({
       chain: { partner: { active: true, milestonesFinal: false, maxAllocation: 3_000n * IFR, unlockedTotal: 1_000n * IFR, rewardAccrued: 0n }, pilotUsage: { [partnerId]: 1_000n * IFR, [otherPilotId]: 0n } },
     });
     expect(exactFit.budgets.status).toBe('WITHIN_BUDGET');
     expect(exactFit.totals).toMatchObject({ settleableCount: 3, ifrBaseUnits: '2000000000000' });
-    expect(exactFit.mode).toBe('proposal-template');
+    expect(exactFit.blockers).toEqual([CUSTOMER_DEDUP_POLICY_GAP]);
+    expect(exactFit.template).toBeNull();
 
     // The global pilot budget is exhausted by another pilot partner.
     const globalExhausted = await exportDirect({ chain: { pilotUsage: { [partnerId]: 0n, [otherPilotId]: 1_000_000n * IFR } } });
@@ -797,15 +865,16 @@ describe('Model B verified-redemption settlement (T-275)', () => {
       { eurMinorPerRedemption: '600000', partnerBudgetBaseUnits: (10_000_000n * IFR).toString() }));
     const large = await exportDirect({ chain: { partner: { active: true, milestonesFinal: false, maxAllocation: 10_000_000n * IFR, unlockedTotal: 0n, rewardAccrued: 0n } } });
     expect(BigInt(large.totals.ifrBaseUnits as string)).toBe(6_000_000n * IFR);
-    expect(large.mode).toBe('proposal-template');
+    expect(large.budgets.status).toBe('WITHIN_BUDGET');
+    expect(large.blockers).toEqual([CUSTOMER_DEDUP_POLICY_GAP]);
+    expect(large.template).toBeNull();
   });
 
   it('blocks the template while a post-pilot, non-self redemption has no reward event (F1, gap G1)', async () => {
     mutableConfig.MODEL_B_PILOT_POLICY_JSON = JSON.stringify(policy(businessId, {}, { startsAt: '2026-08-15T00:00:00Z' }));
-    const repeatCustomer = ethers.Wallet.createRandom().address;
-    const first = await redemption({ redeemedAt: '2026-08-16T00:00:00.000Z', customer: repeatCustomer });
-    // Expected missing events: owner self-test (skipped at redeem time) and a pre-pilot redemption.
-    await redemption({ redeemedAt: '2026-08-17T00:00:00.000Z', customer: owner.address, eventPartnerId: null });
+    const first = await redemption({ redeemedAt: '2026-08-16T00:00:00.000Z' });
+    // Expected missing events: owner self-test (skipped at the final commit) and a pre-pilot redemption.
+    await redemption({ redeemedAt: '2026-08-17T00:00:00.000Z', selfRedemption: true, eventPartnerId: null });
     await redemption({ redeemedAt: '2026-08-10T00:00:00.000Z', eventPartnerId: null });
     const clean = await exportDirect();
     expect(clean.reconciliation).toMatchObject({
@@ -813,10 +882,11 @@ describe('Model B verified-redemption settlement (T-275)', () => {
       redemptionsWithoutRewardEvent: 2,
       redemptionsWithoutRewardEventReasons: { SELF_REDEMPTION: 1, PRE_PILOT: 1, MISSING_REWARD_EVENT: 0 },
     });
-    expect(clean.mode).toBe('proposal-template');
+    expect(clean.blockers).toEqual([CUSTOMER_DEDUP_POLICY_GAP]);
+    expect(clean.template).toBeNull();
 
-    // A repeat redemption by the same customer was dropped by the one-per-wallet outbox constraint.
-    await redemption({ redeemedAt: '2026-08-20T00:00:00.000Z', customer: repeatCustomer, eventPartnerId: null });
+    // A post-pilot, non-self redemption whose outbox row is missing.
+    await redemption({ redeemedAt: '2026-08-20T00:00:00.000Z', eventPartnerId: null });
     const blocked = await exportDirect();
     expect(blocked.reconciliation).toMatchObject({
       status: 'MISMATCH',
@@ -831,9 +901,7 @@ describe('Model B verified-redemption settlement (T-275)', () => {
     expect(blocked.events.eligible).toEqual([first.event!.id]);
     expect(blocked.totals.ifrBaseUnits).toBe('666666666666');
     expect(blocked.priceEvidence.status).toBe('VALID');
-    expect(blocked.blockers).toEqual(['RECONCILIATION_DISCREPANCY']);
-    // The customer wallet used to explain the gap never leaves the service.
-    expect(JSON.stringify(blocked).toLowerCase()).not.toContain(repeatCustomer.toLowerCase().slice(2));
+    expect(blocked.blockers).toEqual([CUSTOMER_DEDUP_POLICY_GAP, 'RECONCILIATION_DISCREPANCY']);
   });
 
   it('refuses a template for replayed milestones, paused vaults, lock-path use, inactive partners or missing chain state', async () => {
@@ -874,12 +942,30 @@ describe('Model B verified-redemption settlement (T-275)', () => {
 
   // ── Template bytes ─────────────────────────────────────────────────────────
 
-  it('decodes the template against the recordMilestone/propose ABI and rejects tampering', async () => {
+  // Owner decision B: buildSettlementExport never yields a template any more (CUSTOMER_DEDUP_POLICY_GAP),
+  // so the template-shape checks run against the golden fixture, bound to the values the export
+  // still computes (milestoneId, unlock amount, evidence digest) and validated by the exported validator.
+  it('withholds the template, and the golden recordMilestone/propose fixture still validates and rejects tampering', async () => {
     await redemption({ redeemedAt: '2026-08-02T00:00:00.000Z' });
     await redemption({ redeemedAt: '2026-08-03T00:00:00.000Z' });
     await redemption({ redeemedAt: '2026-08-04T00:00:00.000Z' });
     const exported = await exportDirect();
-    const template = exported.template as RecordMilestoneTemplate;
+    expect(exported.template).toBeNull();
+    expect(exported.mode).toBe('diagnostic');
+    expect(exported.blockers).toEqual([CUSTOMER_DEDUP_POLICY_GAP]);
+    expect(exported.totals).toMatchObject({ settleableCount: 3, ifrBaseUnits: '2000000000000' });
+
+    // Golden fixture consumed by the isolated Hardhat allocation test (test/PartnerVaultModelB.test.js).
+    const fixturePath = path.join(__dirname, 'fixtures', 'model-b-recordMilestone-template.json');
+    const golden = JSON.parse(fs.readFileSync(fixturePath, 'utf8')) as {
+      partnerId: string; milestoneId: string; unlockAmount: string; template: RecordMilestoneTemplate;
+    };
+    const template = golden.template;
+    expect(golden.partnerId).toBe(partnerId);
+    expect(golden.milestoneId).toBe(exported.milestoneId);
+    expect(golden.unlockAmount).toBe(exported.totals.ifrBaseUnits);
+    expect(template.meta).toMatchObject({ evidenceDigest: exported.priceEvidence.digest, period: PERIOD, milestoneId: exported.milestoneId });
+
     const vaultAbi = new ethers.Interface(['function recordMilestone(bytes32 partnerId, bytes32 milestoneId, uint256 unlockAmount)']);
     const govAbi = new ethers.Interface(['function propose(address target, bytes data) returns (uint256)']);
     expect(template.transactions[0].to).toBe(GOVERNANCE);
@@ -891,7 +977,6 @@ describe('Model B verified-redemption settlement (T-275)', () => {
     expect(decodedPartner).toBe(partnerId);
     expect(decodedMilestone).toBe(exported.milestoneId);
     expect(amount).toBe(2_000_000_000_000n);
-    expect(template.meta).toMatchObject({ batchDigest: exported.batchDigest, evidenceDigest: exported.priceEvidence.digest, period: PERIOD });
 
     const expected = {
       chainId: 1, governance: GOVERNANCE, partnerVault: PARTNER_VAULT, partnerId,
@@ -905,20 +990,5 @@ describe('Model B verified-redemption settlement (T-275)', () => {
     const wrongTarget = govAbi.encodeFunctionData('propose', [GOVERNANCE, inner]);
     expect(() => validateRecordMilestoneTemplate({ ...template, transactions: [{ ...template.transactions[0], data: wrongTarget }] }, expected))
       .toThrow(/PartnerVault/);
-
-    // Golden fixture consumed by the isolated Hardhat allocation test (test/PartnerVaultModelB.test.js).
-    const fixturePath = path.join(__dirname, 'fixtures', 'model-b-recordMilestone-template.json');
-    const fixture = {
-      note: 'Deterministic Model B template fixture (T-275). Unsigned test data only; never submit.',
-      partnerId,
-      milestoneId: exported.milestoneId,
-      unlockAmount: amount.toString(),
-      template: { ...template, meta: { ...template.meta, batchDigest: '<varies with test event ids>' } },
-    };
-    if (process.env.UPDATE_MODEL_B_FIXTURE === '1') fs.writeFileSync(fixturePath, `${JSON.stringify(fixture, null, 2)}\n`);
-    const golden = JSON.parse(fs.readFileSync(fixturePath, 'utf8'));
-    expect(golden.template.transactions).toEqual(template.transactions);
-    expect(golden.template.inner).toEqual(template.inner);
-    expect(golden.milestoneId).toBe(exported.milestoneId);
   });
 });

@@ -1,8 +1,4 @@
 import crypto from 'crypto';
-import { verifyMessage } from 'ethers';
-import { PrismaClient } from '@prisma/client';
-import { config } from '../config';
-import { normalizeAddress } from './sellerAuth';
 import { consumeSellerAuthorizationChallenge } from './sellerAuthorizationChallenge';
 import {
   attest,
@@ -14,7 +10,6 @@ import {
 import { safeBusinessLogoUrl } from './businessProfile';
 import { safeProductPrice } from './productPrice';
 
-const CUSTOMER_PASS_CHALLENGE_TTL_MS = 5 * 60 * 1000;
 const CUSTOMER_PASS_TTL_MS = 5 * 60 * 1000;
 
 export class CustomerPassAuthError extends Error {
@@ -28,76 +23,17 @@ function hashControlToken(token: string) {
   return crypto.createHash('sha256').update(token).digest('hex');
 }
 
-function buildCreateMessage(input: {
-  walletAddress: string;
-  nonce: string;
-  issuedAt: Date;
-  expiresAt: Date;
-}) {
-  return [
-    'IFR Benefits Network - Create Checkout Pass',
-    'Domain: shop.ifrunit.tech',
-    `Wallet: ${input.walletAddress}`,
-    `Nonce: ${input.nonce}`,
-    `Issued: ${input.issuedAt.toISOString()}`,
-    `Expires: ${input.expiresAt.toISOString()}`,
-    `Chain ID: ${config.CHAIN_ID}`,
-    'Action: Create one short-lived customer checkout pass',
-    'This does not move tokens or approve a seller benefit.',
-  ].join('\n');
-}
-
-export async function issueCustomerPassChallenge(db: PrismaClient, walletAddress: string) {
-  const wallet = normalizeAddress(walletAddress);
-  const issuedAt = new Date();
-  const expiresAt = new Date(issuedAt.getTime() + CUSTOMER_PASS_CHALLENGE_TTL_MS);
-  const nonce = crypto.randomBytes(32).toString('hex');
-  await db.$transaction([
-    db.customerPassChallenge.deleteMany({ where: { expiresAt: { lt: issuedAt } } }),
-    db.customerPassChallenge.create({ data: { nonce, walletAddress: wallet, issuedAt, expiresAt } }),
-  ]);
-  return {
-    walletAddress: wallet,
-    nonce,
-    issuedAt: issuedAt.toISOString(),
-    expiresAt: expiresAt.toISOString(),
-    message: buildCreateMessage({ walletAddress: wallet, nonce, issuedAt, expiresAt }),
-  };
-}
-
-export async function createCustomerPass(input: {
-  walletAddress: string;
-  nonce: string;
-  signature: string;
-}) {
-  const wallet = normalizeAddress(input.walletAddress);
-  const challenge = await prisma.customerPassChallenge.findUnique({ where: { nonce: input.nonce } });
-  if (!challenge || challenge.walletAddress !== wallet || challenge.consumedAt || challenge.expiresAt <= new Date()) {
-    throw new CustomerPassAuthError('Customer pass challenge is invalid, expired, or already used');
-  }
-  const message = buildCreateMessage(challenge);
-  let recovered: string;
-  try {
-    recovered = normalizeAddress(verifyMessage(message, input.signature));
-  } catch {
-    throw new CustomerPassAuthError('Customer pass signature is invalid');
-  }
-  if (recovered !== wallet) throw new CustomerPassAuthError('Customer pass signature does not match wallet');
-
+/**
+ * Owner decision B (T-231b): a pass is an opaque, device-held capability (id + control token).
+ * No wallet is proven or stored at creation; the customer proves wallet control once, in the
+ * checkout proof, and only the outcome is stored.
+ */
+export async function createCustomerPass() {
   const id = crypto.randomBytes(24).toString('base64url');
   const controlToken = crypto.randomBytes(32).toString('base64url');
   const expiresAt = new Date(Date.now() + CUSTOMER_PASS_TTL_MS);
-  await prisma.$transaction(async (tx) => {
-    const consumed = await tx.customerPassChallenge.updateMany({
-      where: { nonce: input.nonce, walletAddress: wallet, consumedAt: null, expiresAt: { gt: new Date() } },
-      data: { consumedAt: new Date() },
-    });
-    if (consumed.count !== 1) {
-      throw new CustomerPassAuthError('Customer pass challenge is invalid, expired, or already used');
-    }
-    await tx.customerPass.create({
-      data: { id, walletAddress: wallet, controlHash: hashControlToken(controlToken), expiresAt },
-    });
+  await prisma.customerPass.create({
+    data: { id, controlHash: hashControlToken(controlToken), expiresAt },
   });
   return { passId: id, controlToken, expiresAt, qrUrl: `/p/${id}` };
 }
@@ -261,18 +197,23 @@ export async function bindCustomerPass(input: {
   });
 }
 
-export async function getCustomerPassChallenge(passId: string, authorization?: string) {
+export async function getCustomerPassChallenge(passId: string, walletAddress: string, authorization?: string) {
   const pass = await requireCustomerPassControl(passId, authorization);
   if (await expireBoundCustomerPass(pass)) throw new Error('Customer pass expired');
   if (pass.status !== 'BOUND' || !pass.session) throw new Error('Customer pass is not ready for confirmation');
-  return buildChallengeMessage(pass.session.id, { allowCustomerPass: true });
+  return buildChallengeMessage(pass.session.id, walletAddress, { allowCustomerPass: true });
 }
 
-export async function confirmCustomerPass(passId: string, signature: string, authorization?: string) {
+export async function confirmCustomerPass(
+  passId: string,
+  walletAddress: string,
+  signature: string,
+  authorization?: string
+) {
   const pass = await requireCustomerPassControl(passId, authorization);
   if (await expireBoundCustomerPass(pass)) throw new Error('Customer pass expired');
   if (pass.status !== 'BOUND' || !pass.session) throw new Error('Customer pass is not ready for confirmation');
-  return attest(pass.session.id, signature, { expectedWallet: pass.walletAddress });
+  return attest(pass.session.id, walletAddress, signature, { allowCustomerPass: true });
 }
 
 export async function cancelCustomerPass(passId: string, authorization?: string) {

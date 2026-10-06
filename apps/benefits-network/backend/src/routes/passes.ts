@@ -21,13 +21,12 @@ import {
   getControlledCustomerPass,
   getCustomerPassChallenge,
   getPublicCustomerPass,
-  issueCustomerPassChallenge,
 } from '../services/customerPassService';
-import { prisma } from '../services/sessionService';
+import { CustomerLimitNotHostedError } from '../services/sessionService';
+import { customerProofErrorStatus } from './attest';
 
 const router = Router();
 const passIdSchema = z.string().regex(/^[A-Za-z0-9_-]{32}$/);
-const walletSchema = z.string().regex(/^0x[a-fA-F0-9]{40}$/);
 
 function privateNoStore(res: Response) {
   res.set('Cache-Control', 'private, no-store, max-age=0');
@@ -65,6 +64,15 @@ function handleError(err: unknown, res: Response, next: (err: unknown) => void) 
     res.status(503).json({ error: err.message });
     return;
   }
+  if (err instanceof CustomerLimitNotHostedError) {
+    res.status(409).json({ error: err.message });
+    return;
+  }
+  const proofStatus = customerProofErrorStatus(err);
+  if (proofStatus && proofStatus !== 404 && err instanceof Error) {
+    res.status(proofStatus).json({ error: err.message });
+    return;
+  }
   if (err instanceof Error) {
     if (err.message.includes('not found')) return void res.status(404).json({ error: err.message });
     if (err.message.includes('not authorized')) return void res.status(403).json({ error: err.message });
@@ -78,21 +86,18 @@ function handleError(err: unknown, res: Response, next: (err: unknown) => void) 
   next(err);
 }
 
-router.post('/challenge', challengeRateLimiter, validate(z.object({ walletAddress: walletSchema }).strict()), async (req, res, next) => {
-  try {
-    privateNoStore(res);
-    res.json(await issueCustomerPassChallenge(prisma, req.body.walletAddress));
-  } catch (err) { handleError(err, res, next); }
+// Owner decision B (T-231b): pass creation no longer takes or stores a wallet.
+router.post('/challenge', challengeRateLimiter, (_req, res) => {
+  privateNoStore(res);
+  res.status(410).json({
+    error: 'Customer pass wallet challenges were removed; create a pass without a wallet (POST /api/passes).',
+  });
 });
 
-router.post('/', customerPassRateLimiter, validate(z.object({
-  walletAddress: walletSchema,
-  nonce: z.string().regex(/^[a-f0-9]{64}$/),
-  signature: z.string().regex(/^0x[a-fA-F0-9]+$/),
-}).strict()), async (req, res, next) => {
+router.post('/', customerPassRateLimiter, validate(z.object({}).strict()), async (_req, res, next) => {
   try {
     privateNoStore(res);
-    res.status(201).json(await createCustomerPass(req.body));
+    res.status(201).json(await createCustomerPass());
   } catch (err) { handleError(err, res, next); }
 });
 
@@ -146,19 +151,32 @@ router.post('/:id/bind', sellerRateLimiter, validate(z.object({
   } catch (err) { handleError(err, res, next); }
 });
 
-router.post('/:id/challenge', customerPassRateLimiter, async (req, res, next) => {
+// Owner decision B (T-231b): the full wallet is supplied per request and never stored.
+const walletSchema = z.string().regex(/^0x[a-fA-F0-9]{40}$/);
+
+router.post('/:id/challenge', customerPassRateLimiter, validate(z.object({
+  walletAddress: walletSchema,
+}).strict()), async (req, res, next) => {
   try {
     privateNoStore(res);
-    res.json({ message: await getCustomerPassChallenge(req.params.id, req.header('authorization')) });
+    res.json({
+      message: await getCustomerPassChallenge(req.params.id, req.body.walletAddress, req.header('authorization')),
+    });
   } catch (err) { handleError(err, res, next); }
 });
 
 router.post('/:id/confirm', customerPassRateLimiter, validate(z.object({
+  walletAddress: walletSchema,
   signature: z.string().regex(/^0x[a-fA-F0-9]+$/),
 }).strict()), async (req, res, next) => {
   try {
     privateNoStore(res);
-    res.json(await confirmCustomerPass(req.params.id, req.body.signature, req.header('authorization')));
+    res.json(await confirmCustomerPass(
+      req.params.id,
+      req.body.walletAddress,
+      req.body.signature,
+      req.header('authorization')
+    ));
   } catch (err) { handleError(err, res, next); }
 });
 

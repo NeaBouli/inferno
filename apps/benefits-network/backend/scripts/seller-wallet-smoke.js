@@ -26,7 +26,7 @@ What it checks:
   - server-issued seller auth messages
   - signed seller profile list
   - with MUTATE=true: create wallet-owned seller profile, create/list/archive a catalog item and bound rule,
-    create QR session, sign customer challenge, attest, redeem approved sessions,
+    create QR session, sign the customer checkout proof (redeems atomically),
     deactivate the seller profile
 
 Seller keys are always throwaway and in-memory. CUSTOMER_PRIVATE_KEY is optional for testing
@@ -269,54 +269,42 @@ async function main() {
   }
   console.log('Session history after QR: OK');
 
-  const challenge = await fetchJson(`/api/sessions/${session.sessionId}/challenge`);
+  // Owner decision B (T-231b): the full customer wallet travels in the request only; a successful
+  // proof redeems the checkout atomically (no separate seller redeem step).
+  const challenge = await fetchJson(`/api/sessions/${session.sessionId}/challenge`, {
+    method: 'POST',
+    body: JSON.stringify({ walletAddress: customerWallet.address }),
+  });
   const customerSignature = await customerWallet.signMessage(challenge.message);
   const attest = await fetchJson('/api/attest', {
     method: 'POST',
     body: JSON.stringify({
       sessionId: session.sessionId,
+      walletAddress: customerWallet.address,
       signature: customerSignature,
     }),
   });
-  console.log(`Customer attest result: ${attest.status}`);
+  console.log(`Customer proof result: ${attest.status}`);
 
-  if (attest.status === 'APPROVED') {
-    const redeemAuth = await signSellerAction(wallet, 'sessions:redeem', session.sessionId);
-    const redeemed = await fetchJson(`/api/sessions/${session.sessionId}/redeem`, {
-      method: 'POST',
-      headers: sellerHeaders(redeemAuth),
-    });
-    if (redeemed.status !== 'REDEEMED') {
-      throw new Error(`Expected redeemed session, got ${JSON.stringify(redeemed)}`);
+  if (attest.status === 'REDEEMED') {
+    const redeemedStatus = await fetchJson(`/api/sessions/${session.sessionId}`);
+    if (redeemedStatus.status !== 'REDEEMED') {
+      throw new Error(`Expected redeemed session, got ${JSON.stringify(redeemedStatus)}`);
     }
-    console.log('Redeemed approved session: OK');
+    console.log('Customer proof redeemed the checkout: OK');
   } else if (attest.status === 'REJECTED') {
     if (customerPrivateKey) {
       throw new Error(`Customer wallet was expected to be eligible, got rejected: ${attest.reason || 'no reason'}`);
     }
-    if (attest.attemptsRemaining !== 2) {
-      throw new Error(`Expected 2 retry attempts after first rejected attest, got ${attest.attemptsRemaining}`);
-    }
     const retryableStatus = await fetchJson(`/api/sessions/${session.sessionId}`);
     if (retryableStatus.status !== 'PENDING') {
-      throw new Error(`Rejected throwaway attest should keep session retryable PENDING, got ${retryableStatus.status}`);
+      throw new Error(`Rejected throwaway proof should keep the checkout open (PENDING), got ${retryableStatus.status}`);
     }
-    if (retryableStatus.attestAttempts !== 1) {
-      throw new Error(`Expected one recorded attest attempt, got ${retryableStatus.attestAttempts}`);
-    }
-    if (!String(retryableStatus.reason || '').includes('retry this QR session')) {
-      throw new Error(`Expected retry guidance in session reason, got ${retryableStatus.reason || '<empty>'}`);
-    }
-    const redeemAuth = await signSellerAction(wallet, 'sessions:redeem', session.sessionId);
-    await expectHttpStatus(`/api/sessions/${session.sessionId}/redeem`, 409, {
-      method: 'POST',
-      headers: sellerHeaders(redeemAuth),
-    });
+    await expectHttpStatus(`/api/sessions/${session.sessionId}/redeem`, 410, { method: 'POST' });
     console.log(`Rejected throwaway customer as expected: ${attest.reason || 'not eligible'}`);
-    console.log('Rejected customer session remains retryable: OK');
-    console.log('Redeem rejected session blocked: OK');
+    console.log('Rejected customer checkout remains open: OK');
   } else {
-    throw new Error(`Unexpected attest status ${attest.status}`);
+    throw new Error(`Unexpected proof status ${attest.status}`);
   }
 
   if (cleanup) {
