@@ -1,45 +1,25 @@
 import { ethers } from "ethers";
 import { pointsSecurityConfig } from "../config/security.js";
+import { signVoucherTypedData, voucherDomain, type VoucherData } from "./voucher-eip712.js";
+
+export type { VoucherData } from "./voucher-eip712.js";
 
 const CHAIN_ID = pointsSecurityConfig.chainId;
-const FEE_ROUTER_ADDRESS = process.env.FEE_ROUTER_ADDRESS || (() => {
+export const FEE_ROUTER_ADDRESS = process.env.FEE_ROUTER_ADDRESS || (() => {
   if (pointsSecurityConfig.isProduction) {
     throw new Error("FEE_ROUTER_ADDRESS is required in production-safe mode");
   }
   return ethers.ZeroAddress;
 })();
 
-const domain = {
-  name: "InfernoFeeRouter",
-  version: "1",
-  chainId: CHAIN_ID,
-  verifyingContract: FEE_ROUTER_ADDRESS,
-};
-
-const types = {
-  Voucher: [
-    { name: "user", type: "address" },
-    { name: "discountBps", type: "uint16" },
-    { name: "maxUses", type: "uint32" },
-    { name: "expiry", type: "uint64" },
-    { name: "nonce", type: "uint256" },
-  ],
-};
-
-export interface VoucherData {
-  user: string;
-  discountBps: number;
-  maxUses: number;
-  expiry: number;
-  nonce: string;
-}
+const domain = voucherDomain(CHAIN_ID, FEE_ROUTER_ADDRESS);
 
 export async function signVoucher(voucher: VoucherData): Promise<string> {
   const privateKey = process.env.VOUCHER_SIGNER_PRIVATE_KEY;
   if (!privateKey) throw new Error("VOUCHER_SIGNER_PRIVATE_KEY not configured");
 
   const signer = new ethers.Wallet(privateKey);
-  return signer.signTypedData(domain, types, voucher);
+  return signVoucherTypedData(signer, domain, voucher);
 }
 
 export function getSignerAddress(): string {
