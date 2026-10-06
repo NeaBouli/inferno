@@ -141,6 +141,7 @@ jobs:
             -e IFRLOCK_ADDRESS=0x0000000000000000000000000000000000000001 \
             -e COMMITMENT_VAULT_ADDRESS=0x0000000000000000000000000000000000000003 \
             -e ADMIN_SECRET=ci-admin-secret-0123456789abcdef0123456789 \
+            -e CUSTOMER_WALLET_HMAC_KEY=ci-customer-wallet-hmac-key-0123456789abcdef \
             inferno-benefits-backend:ci)"
           cleanup() { docker rm -f "$container" >/dev/null 2>&1 || true; }
           trap cleanup EXIT
@@ -151,6 +152,7 @@ jobs:
           done
           if [ "$ready" != 1 ]; then docker logs "$container"; exit 1; fi
           curl -fsS http://127.0.0.1:3001/api/health >/dev/null
+          curl -fsS http://127.0.0.1:3001/api/ready | grep -q '"customerWalletProtection":"configured"'
           curl -fsS 'http://127.0.0.1:3001/api/businesses?limit=1' >/dev/null
           docker exec "$container" node --version | grep -E '^v22\.'
 

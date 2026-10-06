@@ -15,6 +15,7 @@ jest.mock('../src/config', () => ({
     RPC_URL: 'https://mock-rpc.example.com',
     IFRLOCK_ADDRESS: '0x0000000000000000000000000000000000000001',
     ADMIN_SECRET: 'test-secret-12345',
+    CUSTOMER_WALLET_HMAC_KEY: 'test-customer-wallet-hmac-key-0123456789abcdef',
     DATABASE_URL: 'file:./test.db',
     MAX_ACTIVE_SELLER_BUSINESSES_PER_WALLET: 5,
     MAX_TOTAL_SELLER_BUSINESSES_PER_WALLET: 25,
@@ -22,6 +23,7 @@ jest.mock('../src/config', () => ({
   },
 }));
 
+import { fingerprintWallet } from '../src/services/walletFingerprint';
 import { prisma } from '../src/services/sessionService';
 import { app, server } from '../src/index';
 
@@ -156,7 +158,7 @@ describe('Customer benefits history authorization and pagination', () => {
         expiresAt: new Date(now + 10 * 60_000),
         createdAt: new Date(now - 3 * 60_000),
         status: 'REDEEMED',
-        recoveredAddress: customer.address,
+        customerFingerprint: fingerprintWallet(customer.address),
         redeemedAt: new Date(now - 2 * 60_000),
         benefitSnapshotVersion: 4,
         benefitLabel: 'Member coffee',
@@ -174,7 +176,7 @@ describe('Customer benefits history authorization and pagination', () => {
         expiresAt: new Date(now + 11 * 60_000),
         createdAt: new Date(now - 2 * 60_000),
         status: 'APPROVED',
-        recoveredAddress: otherCustomer.address,
+        customerFingerprint: fingerprintWallet(otherCustomer.address),
       },
       {
         id: 'customer-history-unverified',
@@ -224,7 +226,7 @@ describe('Customer benefits history authorization and pagination', () => {
           expiresAt: new Date(now + (index + 1) * 60_000),
           createdAt: new Date(createdAt[index]),
           status: 'APPROVED',
-          recoveredAddress: customer.address,
+          customerFingerprint: fingerprintWallet(customer.address),
         },
       });
     }
@@ -236,7 +238,7 @@ describe('Customer benefits history authorization and pagination', () => {
         expiresAt: new Date(now + 4 * 60_000),
         createdAt: new Date(now - 30_000),
         status: 'APPROVED',
-        recoveredAddress: otherCustomer.address,
+        customerFingerprint: fingerprintWallet(otherCustomer.address),
       },
     });
 
@@ -257,7 +259,7 @@ describe('Customer benefits history authorization and pagination', () => {
         expiresAt: new Date(Date.now() + 60_000),
         createdAt: new Date(Date.now() + 1_000),
         status: 'APPROVED',
-        recoveredAddress: customer.address,
+        customerFingerprint: fingerprintWallet(customer.address),
       },
     });
     const secondResponse = await getHistory(authorization.body.accessToken, {
@@ -282,7 +284,7 @@ describe('Customer benefits history authorization and pagination', () => {
     expect((await getHistory()).status).toBe(401);
     const authorization = await authorize(customer);
     const access = await prisma.customerHistoryAccess.findFirstOrThrow({
-      where: { walletAddress: customer.address },
+      where: { walletFingerprint: fingerprintWallet(customer.address) },
     });
     await prisma.customerHistoryAccess.update({
       where: { tokenHash: access.tokenHash },

@@ -34,11 +34,13 @@ jest.mock('../src/config', () => ({
     RPC_URL: 'https://mock-rpc.example.com',
     IFRLOCK_ADDRESS: '0x0000000000000000000000000000000000000001',
     ADMIN_SECRET: 'test-secret-12345',
+    CUSTOMER_WALLET_HMAC_KEY: 'test-customer-wallet-hmac-key-0123456789abcdef',
     DATABASE_URL: 'file:./test.db',
     PORT: 3001,
   },
 }));
 
+import { fingerprintWallet } from '../src/services/walletFingerprint';
 import {
   createSession,
   buildChallengeMessage,
@@ -194,9 +196,9 @@ describe('Replay Prevention', () => {
     const stored = await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } });
     expect(stored.status).toBe('APPROVED');
     expect(stored.attestAttempts).toBe(1);
-    expect([TEST_WALLET, otherWallet]).toContain(stored.recoveredAddress);
+    expect([TEST_WALLET, otherWallet].map(fingerprintWallet)).toContain(stored.customerFingerprint);
     const winner = outcomes.find((outcome) => outcome.status === 'fulfilled') as PromiseFulfilledResult<{ wallet?: string }>;
-    expect(winner.value.wallet).toBe(stored.recoveredAddress);
+    expect(fingerprintWallet(winner.value.wallet as string)).toBe(stored.customerFingerprint);
     const audits = await prisma.auditLog.findMany({ where: { sessionId: session.sessionId } });
     expect(audits.filter((entry) => entry.type === 'ATTEST_FAIL')).toHaveLength(0);
     expect(audits.filter((entry) => entry.type === 'ATTEST_OK')).toHaveLength(1);
@@ -221,7 +223,7 @@ describe('Replay Prevention', () => {
     }
     const stored = await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } });
     expect(stored).toMatchObject({ status: 'APPROVED', attestAttempts: 1 });
-    expect(wallets).toContain(stored.recoveredAddress);
+    expect(wallets.map(fingerprintWallet)).toContain(stored.customerFingerprint);
     expect(await prisma.auditLog.count({ where: { sessionId: session.sessionId, type: 'ATTEST_OK' } })).toBe(1);
   }, 30_000);
 });
@@ -316,7 +318,7 @@ describe('Lock Threshold', () => {
       benefitSnapshotVersion: 5,
       benefitMinIFRHeld: 1250,
       attestAttempts: 0,
-      recoveredAddress: null,
+      customerFingerprint: null,
       walletBalanceRaw: null,
       reason: null,
     });
@@ -365,13 +367,13 @@ describe('Attest Attempt Limit', () => {
       where: { id: session.sessionId },
     });
     expect(savedAfterFirst).toMatchObject({
-      status: 'PENDING', attestAttempts: 0, recoveredAddress: null, reason: null,
+      status: 'PENDING', attestAttempts: 0, customerFingerprint: null, reason: null,
     });
 
     const second = await attest(session.sessionId, TEST_SIGNATURE);
     expect(second.status).toBe('APPROVED');
     const savedAfterSecond = await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } });
-    expect(savedAfterSecond).toMatchObject({ status: 'APPROVED', attestAttempts: 1, recoveredAddress: TEST_WALLET });
+    expect(savedAfterSecond).toMatchObject({ status: 'APPROVED', attestAttempts: 1, customerFingerprint: fingerprintWallet(TEST_WALLET) });
   });
 
   it('lets neither invalid nor valid-but-ineligible signatures burn attempts or bind the session', async () => {
@@ -380,7 +382,7 @@ describe('Attest Attempt Limit', () => {
     });
     const session = await createSession(biz.id);
     const auditsBefore = await prisma.auditLog.count({ where: { sessionId: session.sessionId } });
-    const pristine = { status: 'PENDING', attestAttempts: 0, recoveredAddress: null, reason: null };
+    const pristine = { status: 'PENDING', attestAttempts: 0, customerFingerprint: null, reason: null };
 
     // Session-ID holders without wallet authority (CWA-37).
     mockRecoverSigner.mockImplementation(() => {
@@ -410,7 +412,7 @@ describe('Attest Attempt Limit', () => {
     mockCheckBenefitEligibility.mockResolvedValue({ eligible: true, lockedAmount: '5000.0' });
     await expect(attest(session.sessionId, TEST_SIGNATURE)).resolves.toMatchObject({ status: 'APPROVED', wallet: TEST_WALLET });
     expect(await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } }))
-      .toMatchObject({ status: 'APPROVED', attestAttempts: 1, recoveredAddress: TEST_WALLET });
+      .toMatchObject({ status: 'APPROVED', attestAttempts: 1, customerFingerprint: fingerprintWallet(TEST_WALLET) });
   });
 
   it('leaves attempts, binding, status and audit untouched when the eligibility RPC fails', async () => {
@@ -426,7 +428,7 @@ describe('Attest Attempt Limit', () => {
       await expect(attest(session.sessionId, TEST_SIGNATURE)).rejects.toThrow('On-chain verification failed: rpc down');
     }
     expect(await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } }))
-      .toMatchObject({ status: 'PENDING', attestAttempts: 0, recoveredAddress: null, reason: null });
+      .toMatchObject({ status: 'PENDING', attestAttempts: 0, customerFingerprint: null, reason: null });
     expect(await prisma.auditLog.count({ where: { sessionId: session.sessionId } })).toBe(auditsBefore);
 
     mockCheckBenefitEligibility.mockResolvedValue({ eligible: true, lockedAmount: '5000.0' });
@@ -442,7 +444,7 @@ describe('Attest Attempt Limit', () => {
     mockRecoverSigner.mockReturnValue(ethers.Wallet.createRandom().address);
     await expect(attest(session.sessionId, TEST_SIGNATURE)).rejects.toThrow('Session is APPROVED, cannot attest');
     expect(await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } }))
-      .toMatchObject({ status: 'APPROVED', attestAttempts: 1, recoveredAddress: TEST_WALLET });
+      .toMatchObject({ status: 'APPROVED', attestAttempts: 1, customerFingerprint: fingerprintWallet(TEST_WALLET) });
   });
 
   it('still enforces the stored attempt ceiling', async () => {
@@ -453,7 +455,7 @@ describe('Attest Attempt Limit', () => {
     await expect(attest(session.sessionId, TEST_SIGNATURE)).rejects.toThrow('Maximum attest attempts exceeded');
     expect(mockCheckBenefitEligibility).not.toHaveBeenCalled();
     expect(await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } }))
-      .toMatchObject({ status: 'PENDING', attestAttempts: 3, recoveredAddress: null });
+      .toMatchObject({ status: 'PENDING', attestAttempts: 3, customerFingerprint: null });
   });
 
   it('does not expire a session on invalid-signature input', async () => {

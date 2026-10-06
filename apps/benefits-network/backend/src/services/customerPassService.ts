@@ -13,6 +13,7 @@ import {
 } from './sessionService';
 import { safeBusinessLogoUrl } from './businessProfile';
 import { safeProductPrice } from './productPrice';
+import { fingerprintWallet } from './walletFingerprint';
 
 const CUSTOMER_PASS_CHALLENGE_TTL_MS = 5 * 60 * 1000;
 const CUSTOMER_PASS_TTL_MS = 5 * 60 * 1000;
@@ -49,12 +50,14 @@ function buildCreateMessage(input: {
 
 export async function issueCustomerPassChallenge(db: PrismaClient, walletAddress: string) {
   const wallet = normalizeAddress(walletAddress);
+  // T-231a: only the keyed fingerprint is stored; fails closed without the server key.
+  const walletFingerprint = fingerprintWallet(wallet);
   const issuedAt = new Date();
   const expiresAt = new Date(issuedAt.getTime() + CUSTOMER_PASS_CHALLENGE_TTL_MS);
   const nonce = crypto.randomBytes(32).toString('hex');
   await db.$transaction([
     db.customerPassChallenge.deleteMany({ where: { expiresAt: { lt: issuedAt } } }),
-    db.customerPassChallenge.create({ data: { nonce, walletAddress: wallet, issuedAt, expiresAt } }),
+    db.customerPassChallenge.create({ data: { nonce, walletFingerprint, issuedAt, expiresAt } }),
   ]);
   return {
     walletAddress: wallet,
@@ -71,11 +74,22 @@ export async function createCustomerPass(input: {
   signature: string;
 }) {
   const wallet = normalizeAddress(input.walletAddress);
+  const walletFingerprint = fingerprintWallet(wallet);
   const challenge = await prisma.customerPassChallenge.findUnique({ where: { nonce: input.nonce } });
-  if (!challenge || challenge.walletAddress !== wallet || challenge.consumedAt || challenge.expiresAt <= new Date()) {
+  if (
+    !challenge || challenge.walletFingerprint !== walletFingerprint ||
+    challenge.consumedAt || challenge.expiresAt <= new Date()
+  ) {
     throw new CustomerPassAuthError('Customer pass challenge is invalid, expired, or already used');
   }
-  const message = buildCreateMessage(challenge);
+  // The challenge row holds no address; the signed message is rebuilt from the request wallet,
+  // which the fingerprint check above has bound to this nonce.
+  const message = buildCreateMessage({
+    walletAddress: wallet,
+    nonce: challenge.nonce,
+    issuedAt: challenge.issuedAt,
+    expiresAt: challenge.expiresAt,
+  });
   let recovered: string;
   try {
     recovered = normalizeAddress(verifyMessage(message, input.signature));
@@ -89,14 +103,14 @@ export async function createCustomerPass(input: {
   const expiresAt = new Date(Date.now() + CUSTOMER_PASS_TTL_MS);
   await prisma.$transaction(async (tx) => {
     const consumed = await tx.customerPassChallenge.updateMany({
-      where: { nonce: input.nonce, walletAddress: wallet, consumedAt: null, expiresAt: { gt: new Date() } },
+      where: { nonce: input.nonce, walletFingerprint, consumedAt: null, expiresAt: { gt: new Date() } },
       data: { consumedAt: new Date() },
     });
     if (consumed.count !== 1) {
       throw new CustomerPassAuthError('Customer pass challenge is invalid, expired, or already used');
     }
     await tx.customerPass.create({
-      data: { id, walletAddress: wallet, controlHash: hashControlToken(controlToken), expiresAt },
+      data: { id, walletFingerprint, controlHash: hashControlToken(controlToken), expiresAt },
     });
   });
   return { passId: id, controlToken, expiresAt, qrUrl: `/p/${id}` };
@@ -272,7 +286,7 @@ export async function confirmCustomerPass(passId: string, signature: string, aut
   const pass = await requireCustomerPassControl(passId, authorization);
   if (await expireBoundCustomerPass(pass)) throw new Error('Customer pass expired');
   if (pass.status !== 'BOUND' || !pass.session) throw new Error('Customer pass is not ready for confirmation');
-  return attest(pass.session.id, signature, { expectedWallet: pass.walletAddress });
+  return attest(pass.session.id, signature, { expectedWalletFingerprint: pass.walletFingerprint });
 }
 
 export async function cancelCustomerPass(passId: string, authorization?: string) {

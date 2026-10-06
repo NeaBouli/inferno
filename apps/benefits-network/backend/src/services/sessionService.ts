@@ -7,6 +7,13 @@ import { normalizeAddress } from './sellerAuth';
 import { consumeSellerAuthorizationChallenge } from './sellerAuthorizationChallenge';
 import { safeProductPrice } from './productPrice';
 import { snapshotLockSource, type LockSource, type VerifiedLockSource } from './lockSource';
+import {
+  WalletFingerprintUnavailableError,
+  fingerprintWallet,
+  fingerprintWallets,
+  isWalletFingerprint,
+  isWalletFingerprintConfigured,
+} from './walletFingerprint';
 
 const prisma = new PrismaClient();
 
@@ -144,7 +151,7 @@ async function getRedemptionLimitDecision(
   session: {
     businessId: string;
     benefitRuleId: string | null;
-    recoveredAddress: string | null;
+    customerFingerprint: string | null;
     benefitDailyRedemptionLimit: number | null;
     benefitMonthlyRedemptionLimit: number | null;
   },
@@ -152,7 +159,7 @@ async function getRedemptionLimitDecision(
 ): Promise<RedemptionLimitDecision | null> {
   const dailyLimit = Math.max(0, session.benefitDailyRedemptionLimit ?? 0);
   const monthlyLimit = Math.max(0, session.benefitMonthlyRedemptionLimit ?? 0);
-  if ((!dailyLimit && !monthlyLimit) || !session.benefitRuleId || !session.recoveredAddress) {
+  if ((!dailyLimit && !monthlyLimit) || !session.benefitRuleId || !session.customerFingerprint) {
     return null;
   }
 
@@ -166,7 +173,7 @@ async function getRedemptionLimitDecision(
       AND "benefitRuleId" = ${session.benefitRuleId}
       AND "status" = 'REDEEMED'
       AND "redeemedAt" >= ${monthStart}
-      AND LOWER("recoveredAddress") = LOWER(${session.recoveredAddress})
+      AND "recoveredAddress" = ${session.customerFingerprint}
   `;
   const dailyUsed = Number(usage?.dailyCount ?? 0);
   const monthlyUsed = Number(usage?.monthlyCount ?? 0);
@@ -468,10 +475,13 @@ export async function buildChallengeMessage(
 export async function attest(
   sessionId: string,
   signature: string,
-  options: { expectedWallet?: string } = {}
+  options: { expectedWalletFingerprint?: string } = {}
 ) {
+  // T-231a fail closed: without the server key no customer identity can be stored or compared.
+  if (!isWalletFingerprintConfigured()) throw new WalletFingerprintUnavailableError();
+  const expectedWallet = options.expectedWalletFingerprint;
   const message = await buildChallengeMessage(sessionId, {
-    allowCustomerPass: Boolean(options.expectedWallet),
+    allowCustomerPass: Boolean(expectedWallet),
   });
   let recoveredAddress: string;
   try {
@@ -479,7 +489,7 @@ export async function attest(
   } catch {
     // An unrecoverable signature proves no wallet authority, so it must not
     // consume the session's attempt budget or mutate session state (CWA-37).
-    const current = await assertAttestable(sessionId, options.expectedWallet);
+    const current = await assertAttestable(sessionId, expectedWallet);
     return {
       status: 'REJECTED' as SessionStatus,
       reason: 'Invalid signature. You can retry this QR session.',
@@ -491,10 +501,13 @@ export async function attest(
   // valid-but-ineligible and RPC-failed attestations never touch attempts,
   // the wallet binding, status or the audit log, so a session-ID holder cannot
   // bind a foreign wallet or burn the budget.
+  // The raw address stays in memory for the on-chain read; only its keyed fingerprint is compared
+  // and persisted.
+  const customerFingerprint = fingerprintWallet(recoveredAddress);
   const { benefit, attestAttempts } = await readAttestContext(
     sessionId,
-    recoveredAddress,
-    options.expectedWallet
+    customerFingerprint,
+    expectedWallet
   );
 
   let eligibilityResult: {
@@ -558,7 +571,7 @@ export async function attest(
     };
   }
 
-  await commitApprovedAttest(sessionId, recoveredAddress, options.expectedWallet, eligibilityResult, {
+  await commitApprovedAttest(sessionId, customerFingerprint, expectedWallet, eligibilityResult, {
     lockSource: benefit.lockSource,
     minIFRHeld: benefit.minIFRHeld,
     benefitRuleId: benefit.benefitRuleId,
@@ -594,32 +607,29 @@ type AttestSession = Prisma.SessionGetPayload<{
   include: { business: true; benefitRule: true; customerPass: true };
 }>;
 
-// Wallet/pass/binding checks shared by the read-only precheck and the commit.
+// Wallet/pass/binding checks shared by the read-only precheck and the commit. All inputs are keyed
+// fingerprints (T-231a); a legacy raw value never equals a fingerprint, so it fails closed.
 function assertWalletMayAttest(
   session: AttestSession,
-  recoveredAddress: string,
-  expectedWallet?: string
+  customerFingerprint: string,
+  expectedWalletFingerprint?: string
 ) {
-  const normalizedExpected = expectedWallet ? normalizeAddress(expectedWallet) : null;
-  if (normalizedExpected && normalizeAddress(session.customerPass?.walletAddress || '') !== normalizedExpected) {
+  if (!isWalletFingerprint(customerFingerprint)) throw new WalletFingerprintUnavailableError();
+  if (expectedWalletFingerprint && session.customerPass?.walletFingerprint !== expectedWalletFingerprint) {
     throw new Error('Customer pass wallet mismatch');
   }
-  const normalizedRecovered = normalizeAddress(recoveredAddress);
-  if (normalizedExpected && normalizedRecovered !== normalizedExpected) {
+  if (expectedWalletFingerprint && customerFingerprint !== expectedWalletFingerprint) {
     throw new Error('Customer signature does not match this checkout pass');
   }
-  if (
-    session.recoveredAddress &&
-    normalizeAddress(session.recoveredAddress) !== normalizedRecovered
-  ) {
+  if (session.customerFingerprint && session.customerFingerprint !== customerFingerprint) {
     throw new Error('Session is already bound to another customer wallet');
   }
-  return normalizedRecovered;
+  return customerFingerprint;
 }
 
 async function readAttestContext(
   sessionId: string,
-  recoveredAddress: string,
+  customerFingerprint: string,
   expectedWallet?: string
 ) {
   await assertAttestable(sessionId, expectedWallet);
@@ -628,7 +638,7 @@ async function readAttestContext(
     include: { business: true, benefitRule: true, customerPass: true },
   });
   if (!session) throw new Error('Session not found');
-  assertWalletMayAttest(session, recoveredAddress, expectedWallet);
+  assertWalletMayAttest(session, customerFingerprint, expectedWallet);
   return { benefit: benefitFromSession(session), attestAttempts: session.attestAttempts };
 }
 
@@ -636,7 +646,7 @@ async function readAttestContext(
 // every precondition, then bind, count the attempt, approve and audit together.
 async function commitApprovedAttest(
   sessionId: string,
-  recoveredAddress: string,
+  customerFingerprint: string,
   expectedWallet: string | undefined,
   eligibility: {
     lockedAmount: string;
@@ -675,19 +685,19 @@ async function commitApprovedAttest(
       });
       return true;
     }
-    const normalizedRecovered = assertWalletMayAttest(session, recoveredAddress, expectedWallet);
+    const boundFingerprint = assertWalletMayAttest(session, customerFingerprint, expectedWallet);
 
     const approved = await tx.session.updateMany({
       where: {
         id: sessionId,
         status: 'PENDING',
         attestAttempts: session.attestAttempts,
-        OR: [{ recoveredAddress: null }, { recoveredAddress: session.recoveredAddress }],
+        OR: [{ customerFingerprint: null }, { customerFingerprint: session.customerFingerprint }],
       },
       data: {
         status: 'APPROVED',
         attestAttempts: session.attestAttempts + 1,
-        recoveredAddress: normalizedRecovered,
+        customerFingerprint: boundFingerprint,
         lockAmountRaw: eligibility.lockedAmount,
         walletBalanceRaw: eligibility.walletBalanceRaw,
         verifiedLockSource: eligibility.verifiedLockSource,
@@ -700,8 +710,8 @@ async function commitApprovedAttest(
       data: {
         sessionId,
         type: 'ATTEST_OK',
+        // No customer wallet or fingerprint in audit payloads (T-231a).
         payload: JSON.stringify({
-          wallet: recoveredAddress,
           locked: eligibility.lockedAmount,
           lockSource: audit.lockSource,
           verifiedLockSource: eligibility.verifiedLockSource,
@@ -724,6 +734,8 @@ export async function redeem(
   sessionId: string,
   actor: { walletAddress: string; role: 'OWNER' | 'OPERATOR'; operatorId?: string | null }
 ) {
+  // T-231a fail closed: limits and self-redemption checks compare keyed fingerprints.
+  if (!isWalletFingerprintConfigured()) throw new WalletFingerprintUnavailableError();
   const session = await prisma.session.findUnique({ where: { id: sessionId } });
   if (!session) throw new Error('Session not found');
 
@@ -783,7 +795,6 @@ export async function redeem(
               used: limitDecision.used,
               limit: limitDecision.limit,
               resetsAt: limitDecision.resetsAt.toISOString(),
-              wallet: session.recoveredAddress,
               benefitRuleId: session.benefitRuleId,
               actorWallet: actor.walletAddress,
               actorRole: actor.role,
@@ -817,20 +828,23 @@ export async function redeem(
       // outbox row. APPLIED, STALE, REVOKED and DISABLED (seller opt-out)
       // links never create reward events, and a missing link keeps the
       // default rewards-OFF behavior.
-      if (rewardLink?.status === 'VERIFIED' && rewardLink.partnerId && session.recoveredAddress && session.lockAmountRaw) {
-        const customerWallet = session.recoveredAddress;
-        const ownerIsCustomer = Boolean(
-          business?.ownerAddress && business.ownerAddress.toLowerCase() === customerWallet.toLowerCase()
-        );
-        const operatorIsCustomer = Boolean(await tx.checkoutOperator.findFirst({
+      // A legacy raw value (pre-migration row) never creates an outbox row.
+      const customerFingerprint = isWalletFingerprint(session.customerFingerprint) ? session.customerFingerprint : null;
+      if (rewardLink?.status === 'VERIFIED' && rewardLink.partnerId && customerFingerprint && session.lockAmountRaw) {
+        // Self-redemption: the seller's own (business) wallets are fingerprinted in memory and
+        // compared with the stored customer fingerprint.
+        const ownerIsCustomer = fingerprintWallets([business?.ownerAddress]).has(customerFingerprint);
+        const activeOperators = await tx.checkoutOperator.findMany({
           where: {
             businessId: session.businessId,
-            walletAddress: customerWallet,
             active: true,
             OR: [{ expiresAt: null }, { expiresAt: { gt: redeemedAt } }],
           },
-          select: { id: true },
-        }));
+          select: { walletAddress: true },
+        });
+        const operatorIsCustomer = fingerprintWallets(
+          activeOperators.map((operator) => operator.walletAddress)
+        ).has(customerFingerprint);
 
         if (ownerIsCustomer || operatorIsCustomer) {
           await tx.auditLog.create({
@@ -861,7 +875,7 @@ export async function redeem(
                 "lockAmountRaw", "chainId", "status", "reason", "createdAt", "updatedAt"
               ) VALUES (
                 ${crypto.randomUUID()}, ${session.businessId}, ${sessionId}, ${rewardLink.partnerId},
-                ${customerWallet}, ${lockAmountBaseUnits}, ${config.CHAIN_ID},
+                ${customerFingerprint}, ${lockAmountBaseUnits}, ${config.CHAIN_ID},
                 'PENDING', 'Awaiting live governance and caller reconciliation', ${now}, ${now}
               )
             `;

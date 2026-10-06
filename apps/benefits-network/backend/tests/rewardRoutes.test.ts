@@ -30,6 +30,7 @@ jest.mock('../src/config', () => ({
     BUILDER_REGISTRY_ADDRESS: '0x0000000000000000000000000000000000000003',
     REWARD_CALLER_ADDRESS: '0x0000000000000000000000000000000000000004',
     ADMIN_SECRET: 'test-secret-12345',
+    CUSTOMER_WALLET_HMAC_KEY: 'test-customer-wallet-hmac-key-0123456789abcdef',
     DATABASE_URL: 'file:./test.db',
     MAX_ACTIVE_SELLER_BUSINESSES_PER_WALLET: 5,
     MAX_TOTAL_SELLER_BUSINESSES_PER_WALLET: 25,
@@ -37,6 +38,8 @@ jest.mock('../src/config', () => ({
   },
 }));
 
+import { fingerprintWallet } from '../src/services/walletFingerprint';
+import { LOCK_REWARD_PATH_BLOCKED_REASON } from '../src/services/rewardService';
 import { prisma } from '../src/services/sessionService';
 import { server } from '../src/index';
 
@@ -208,7 +211,7 @@ describe('Verified seller reward foundation', () => {
       .toMatchObject({ status: 'VERIFIED', partnerId: partnerId.toLowerCase(), builderWallet: owner.address });
   });
 
-  it('creates the reward outbox atomically on redeem and reconciles each wallet/partner once', async () => {
+  it('creates the fingerprint-only reward outbox atomically on redeem, once per wallet/partner', async () => {
     await prisma.sellerRewardLink.create({
       data: { businessId, status: 'VERIFIED', partnerId, builderWallet: owner.address, verifiedAt: new Date() },
     });
@@ -219,7 +222,7 @@ describe('Verified seller reward foundation', () => {
         nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 60_000),
         status: 'APPROVED',
-        recoveredAddress: customer,
+        customerFingerprint: fingerprintWallet(customer),
         lockAmountRaw: '2500.125',
       },
     });
@@ -229,7 +232,7 @@ describe('Verified seller reward foundation', () => {
         nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 60_000),
         status: 'APPROVED',
-        recoveredAddress: customer,
+        customerFingerprint: fingerprintWallet(customer),
         lockAmountRaw: '2500.125',
       },
     });
@@ -251,7 +254,7 @@ describe('Verified seller reward foundation', () => {
     expect(await prisma.rewardEvent.findMany()).toEqual([
       expect.objectContaining({
         sessionId: first.id,
-        customerWallet: customer,
+        customerFingerprint: fingerprintWallet(customer),
         partnerId,
         chainId: 1,
         lockAmountRaw: ethers.parseUnits('2500.125', 9).toString(),
@@ -264,16 +267,19 @@ describe('Verified seller reward foundation', () => {
       headers: { authorization: 'Bearer test-secret-12345' },
     });
     expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ ready: 1, scanned: 1, submissionReady: true });
+    // T-231a: the lock-reward path needs a raw customer address, which is not stored.
+    expect(await response.json()).toMatchObject({ ready: 0, blocked: 1, scanned: 1, submissionReady: false });
     expect(await prisma.rewardEvent.findMany()).toEqual([
       expect.objectContaining({
         sessionId: first.id,
-        customerWallet: customer,
+        customerFingerprint: fingerprintWallet(customer),
         partnerId,
         lockAmountRaw: ethers.parseUnits('2500.125', 9).toString(),
-        status: 'READY',
+        status: 'BLOCKED_CALLER',
+        reason: LOCK_REWARD_PATH_BLOCKED_REASON,
       }),
     ]);
+    expect(mockIsWalletAlreadyRewarded).not.toHaveBeenCalled();
 
     const retry = await fetch(`${baseUrl()}/api/admin/businesses/${businessId}/rewards/queue`, {
       method: 'POST',
@@ -293,7 +299,7 @@ describe('Verified seller reward foundation', () => {
         nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 60_000),
         status: 'APPROVED',
-        recoveredAddress: owner.address,
+        customerFingerprint: fingerprintWallet(owner.address),
         lockAmountRaw: '1000',
       },
     });
@@ -317,7 +323,7 @@ describe('Verified seller reward foundation', () => {
         nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 60_000),
         status: 'REDEEMED',
-        recoveredAddress: rewardCustomer,
+        customerFingerprint: fingerprintWallet(rewardCustomer),
         lockAmountRaw: '1000',
       },
     });
@@ -326,7 +332,7 @@ describe('Verified seller reward foundation', () => {
         businessId,
         sessionId: session.id,
         partnerId,
-        customerWallet: rewardCustomer,
+        customerFingerprint: fingerprintWallet(rewardCustomer),
         lockAmountRaw: ethers.parseUnits('1000', 9).toString(),
         chainId: 1,
         status: 'READY',
@@ -349,7 +355,7 @@ describe('Verified seller reward foundation', () => {
       .toMatchObject({ status: 'STALE', reason: 'Seller owner is not active in BuilderRegistry' });
   });
 
-  it('rechecks previously blocked events after governance and caller authorization recover', async () => {
+  it('keeps lock-path events blocked even after governance and caller authorization recover', async () => {
     await prisma.sellerRewardLink.create({
       data: { businessId, status: 'VERIFIED', partnerId, builderWallet: owner.address, verifiedAt: new Date() },
     });
@@ -359,7 +365,7 @@ describe('Verified seller reward foundation', () => {
         nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 60_000),
         status: 'REDEEMED',
-        recoveredAddress: rewardCustomer,
+        customerFingerprint: fingerprintWallet(rewardCustomer),
         lockAmountRaw: '1000',
       },
     });
@@ -368,7 +374,7 @@ describe('Verified seller reward foundation', () => {
         businessId,
         sessionId: session.id,
         partnerId,
-        customerWallet: rewardCustomer,
+        customerFingerprint: fingerprintWallet(rewardCustomer),
         lockAmountRaw: ethers.parseUnits('1000', 9).toString(),
         chainId: 1,
         status: 'BLOCKED_CALLER',
@@ -382,12 +388,12 @@ describe('Verified seller reward foundation', () => {
     });
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ ready: 1, scanned: 1, submissionReady: true });
+    expect(await response.json()).toMatchObject({ ready: 0, blocked: 1, scanned: 1, submissionReady: false });
     expect(await prisma.rewardEvent.findUniqueOrThrow({ where: { sessionId: session.id } }))
-      .toMatchObject({ status: 'READY' });
+      .toMatchObject({ status: 'BLOCKED_CALLER', reason: LOCK_REWARD_PATH_BLOCKED_REASON });
   });
 
-  it('reconciles a ready event to confirmed after the external on-chain submission', async () => {
+  it('never confirms a lock-path event from on-chain state without a stored customer address', async () => {
     await prisma.sellerRewardLink.create({
       data: { businessId, status: 'VERIFIED', partnerId, builderWallet: owner.address, verifiedAt: new Date() },
     });
@@ -397,7 +403,7 @@ describe('Verified seller reward foundation', () => {
         nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 60_000),
         status: 'REDEEMED',
-        recoveredAddress: rewardCustomer,
+        customerFingerprint: fingerprintWallet(rewardCustomer),
         lockAmountRaw: '1000',
       },
     });
@@ -406,7 +412,7 @@ describe('Verified seller reward foundation', () => {
         businessId,
         sessionId: session.id,
         partnerId,
-        customerWallet: rewardCustomer,
+        customerFingerprint: fingerprintWallet(rewardCustomer),
         lockAmountRaw: ethers.parseUnits('1000', 9).toString(),
         chainId: 1,
         status: 'READY',
@@ -420,12 +426,10 @@ describe('Verified seller reward foundation', () => {
     });
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ confirmed: 1, scanned: 1, submissionReady: true });
+    expect(await response.json()).toMatchObject({ confirmed: 0, blocked: 1, scanned: 1, submissionReady: false });
+    expect(mockIsWalletAlreadyRewarded).not.toHaveBeenCalled();
     expect(await prisma.rewardEvent.findUniqueOrThrow({ where: { sessionId: session.id } }))
-      .toMatchObject({
-        status: 'CONFIRMED',
-        reason: 'Confirmed from PartnerVault anti-double-count state',
-      });
+      .toMatchObject({ status: 'BLOCKED_CALLER', reason: LOCK_REWARD_PATH_BLOCKED_REASON });
   });
 
   it('processes actionable rewards even when the ready reconciliation window is full', async () => {
@@ -438,7 +442,7 @@ describe('Verified seller reward foundation', () => {
       nonce: (index + 1).toString(16).padStart(64, '0'),
       expiresAt: new Date(Date.now() + 60_000),
       status: 'REDEEMED',
-      recoveredAddress: `0x${(index + 1).toString(16).padStart(40, '0')}`,
+      customerFingerprint: fingerprintWallet(`0x${(index + 1).toString(16).padStart(40, '0')}`),
       lockAmountRaw: '1000',
     }));
     await prisma.session.createMany({ data: readySessions });
@@ -448,7 +452,7 @@ describe('Verified seller reward foundation', () => {
         businessId,
         sessionId: session.id,
         partnerId,
-        customerWallet: session.recoveredAddress,
+        customerFingerprint: session.customerFingerprint,
         lockAmountRaw: ethers.parseUnits('1000', 9).toString(),
         chainId: 1,
         status: 'READY',
@@ -461,7 +465,7 @@ describe('Verified seller reward foundation', () => {
         nonce: 'ff'.repeat(32),
         expiresAt: new Date(Date.now() + 60_000),
         status: 'REDEEMED',
-        recoveredAddress: `0x${'ff'.repeat(20)}`,
+        customerFingerprint: fingerprintWallet(`0x${'ff'.repeat(20)}`),
         lockAmountRaw: '1000',
       },
     });
@@ -470,7 +474,7 @@ describe('Verified seller reward foundation', () => {
         businessId,
         sessionId: 'pending-after-ready-backlog',
         partnerId,
-        customerWallet: `0x${'ff'.repeat(20)}`,
+        customerFingerprint: fingerprintWallet(`0x${'ff'.repeat(20)}`),
         lockAmountRaw: ethers.parseUnits('1000', 9).toString(),
         chainId: 1,
         status: 'PENDING',
@@ -483,9 +487,9 @@ describe('Verified seller reward foundation', () => {
     });
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ ready: 51, scanned: 51, submissionReady: true });
+    expect(await response.json()).toMatchObject({ blocked: 51, scanned: 51, submissionReady: false });
     expect(await prisma.rewardEvent.findUniqueOrThrow({ where: { sessionId: 'pending-after-ready-backlog' } }))
-      .toMatchObject({ status: 'READY' });
+      .toMatchObject({ status: 'BLOCKED_CALLER' });
   }, 15_000);
 
   it('shows reward status only to the seller owner and never exposes signatures', async () => {
@@ -498,7 +502,7 @@ describe('Verified seller reward foundation', () => {
         nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 60_000),
         status: 'REDEEMED',
-        recoveredAddress: rewardCustomer,
+        customerFingerprint: fingerprintWallet(rewardCustomer),
         lockAmountRaw: '1000',
       },
     });
@@ -507,7 +511,7 @@ describe('Verified seller reward foundation', () => {
         businessId,
         sessionId: session.id,
         partnerId,
-        customerWallet: rewardCustomer,
+        customerFingerprint: fingerprintWallet(rewardCustomer),
         lockAmountRaw: ethers.parseUnits('1000', 9).toString(),
         chainId: 1,
         status: 'READY',
@@ -650,7 +654,7 @@ describe('Verified seller reward foundation', () => {
         nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 60_000),
         status: 'APPROVED',
-        recoveredAddress: rewardCustomer,
+        customerFingerprint: fingerprintWallet(rewardCustomer),
         lockAmountRaw: '1000',
       },
     });
@@ -905,7 +909,7 @@ describe('Verified seller reward foundation', () => {
         nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 60_000),
         status: 'REDEEMED',
-        recoveredAddress: rewardCustomer,
+        customerFingerprint: fingerprintWallet(rewardCustomer),
         lockAmountRaw: '1000',
       },
     });
@@ -915,7 +919,7 @@ describe('Verified seller reward foundation', () => {
         nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 60_000),
         status: 'REDEEMED',
-        recoveredAddress: `0x${'cc'.repeat(20)}`,
+        customerFingerprint: fingerprintWallet(`0x${'cc'.repeat(20)}`),
         lockAmountRaw: '1000',
       },
     });
@@ -924,7 +928,7 @@ describe('Verified seller reward foundation', () => {
         businessId,
         sessionId: readySession.id,
         partnerId,
-        customerWallet: rewardCustomer,
+        customerFingerprint: fingerprintWallet(rewardCustomer),
         lockAmountRaw: ethers.parseUnits('1000', 9).toString(),
         chainId: 1,
         status: 'READY',
@@ -935,7 +939,7 @@ describe('Verified seller reward foundation', () => {
         businessId,
         sessionId: confirmedSession.id,
         partnerId: `0x${'cd'.repeat(32)}`,
-        customerWallet: `0x${'cc'.repeat(20)}`,
+        customerFingerprint: fingerprintWallet(`0x${'cc'.repeat(20)}`),
         lockAmountRaw: ethers.parseUnits('1000', 9).toString(),
         chainId: 1,
         status: 'CONFIRMED',
@@ -982,7 +986,7 @@ describe('Verified seller reward foundation', () => {
         nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 60_000),
         status: 'REDEEMED',
-        recoveredAddress: rewardCustomer,
+        customerFingerprint: fingerprintWallet(rewardCustomer),
         lockAmountRaw: '1000',
       },
     });
@@ -992,7 +996,7 @@ describe('Verified seller reward foundation', () => {
         nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 60_000),
         status: 'REDEEMED',
-        recoveredAddress: `0x${'dd'.repeat(20)}`,
+        customerFingerprint: fingerprintWallet(`0x${'dd'.repeat(20)}`),
         lockAmountRaw: '1000',
       },
     });
@@ -1002,7 +1006,7 @@ describe('Verified seller reward foundation', () => {
           businessId,
           sessionId: previousSession.id,
           partnerId: previousPartnerId,
-          customerWallet: rewardCustomer,
+          customerFingerprint: fingerprintWallet(rewardCustomer),
           lockAmountRaw: ethers.parseUnits('1000', 9).toString(),
           chainId: 1,
           status: 'BLOCKED_GOVERNANCE',
@@ -1012,7 +1016,7 @@ describe('Verified seller reward foundation', () => {
           businessId,
           sessionId: currentSession.id,
           partnerId,
-          customerWallet: `0x${'dd'.repeat(20)}`,
+          customerFingerprint: fingerprintWallet(`0x${'dd'.repeat(20)}`),
           lockAmountRaw: ethers.parseUnits('1000', 9).toString(),
           chainId: 1,
           status: 'PENDING',
@@ -1025,10 +1029,10 @@ describe('Verified seller reward foundation', () => {
       headers: { authorization: 'Bearer test-secret-12345' },
     });
     expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ scanned: 1, ready: 1 });
+    expect(await response.json()).toMatchObject({ scanned: 1, blocked: 1 });
     expect(await prisma.rewardEvent.findUniqueOrThrow({ where: { sessionId: previousSession.id } }))
       .toMatchObject({ status: 'BLOCKED_GOVERNANCE', reason: 'Previous partner link invalidated' });
     expect(await prisma.rewardEvent.findUniqueOrThrow({ where: { sessionId: currentSession.id } }))
-      .toMatchObject({ status: 'READY' });
+      .toMatchObject({ status: 'BLOCKED_CALLER' });
   });
 });

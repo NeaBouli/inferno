@@ -7,6 +7,8 @@ export IFR_TOKEN_ADDRESS="${IFR_TOKEN_ADDRESS:-0x0000000000000000000000000000000
 export IFRLOCK_ADDRESS="${IFRLOCK_ADDRESS:-0x0000000000000000000000000000000000000001}"
 export COMMITMENT_VAULT_ADDRESS="${COMMITMENT_VAULT_ADDRESS:-0x0000000000000000000000000000000000000003}"
 export ADMIN_SECRET="${ADMIN_SECRET:-ci-admin-secret-0123456789abcdef0123456789}"
+# CI-only value (T-231a); production provisions its own key and never commits it.
+export CUSTOMER_WALLET_HMAC_KEY="${CUSTOMER_WALLET_HMAC_KEY:-ci-customer-wallet-hmac-key-0123456789abcdef}"
 export DATABASE_URL="${DATABASE_URL:-file:./test.db}"
 export PORT="${PORT:-3001}"
 
@@ -23,7 +25,7 @@ trap cleanup EXIT
 
 for _ in $(seq 1 40); do
   if curl -fsS "http://127.0.0.1:${PORT}/api/health" >/dev/null 2>&1; then
-    curl -fsS "http://127.0.0.1:${PORT}/api/ready" >/dev/null
+    curl -fsS "http://127.0.0.1:${PORT}/api/ready" | grep -q '"customerWalletProtection":"configured"'
     BENEFITS_BASE_URL="http://127.0.0.1:${PORT}" node scripts/seller-wallet-smoke.js
     exit 0
   fi

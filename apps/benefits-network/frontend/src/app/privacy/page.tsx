@@ -25,8 +25,12 @@ const browserItems = [
 
 const backendItems = [
   {
-    title: 'Wallet address',
-    body: 'The backend stores the wallet addresses that verify or interact, together with verification amounts, statuses and timestamps, so it can enforce eligibility, limits and rewards.',
+    title: 'No customer wallet address',
+    body: 'The backend uses your wallet address only in memory while it checks a signature and reads your IFR status on-chain. It does not store the address. It stores a keyed fingerprint instead (HMAC-SHA256 with a secret that exists only on the server), so it can still enforce one-time use, per-wallet limits, one reward per wallet and seller, and your own history view. Without that server secret the fingerprint cannot be matched to an address. If the secret is missing, customer checkout, passes and history refuse to run rather than store anything.',
+  },
+  {
+    title: 'Verification results, kept for a bounded time',
+    body: 'Checkout records keep the verified lock amount, wallet balance, block number, status and timestamps. Ethereum balances are public, so these values could in principle be compared with chain data. Checkout records, their audit events, passes and reward records are kept for at least 35 days (the longest monthly limit and the reward settlement window) and then become eligible for deletion by an operator-run retention job; deletion is not automatic.',
   },
   {
     title: 'Hashed control tokens and audit events',
@@ -155,10 +159,10 @@ export default function PrivacyPage() {
           </div>
 
           <section className="rounded-[2rem] border border-green-300/20 bg-green-300/[0.07] p-6">
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-green-100/80">Masked seller history</p>
-            <h2 className="mt-2 text-3xl font-black text-white">Sellers see a masked wallet, not the full address.</h2>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-green-100/80">Seller history</p>
+            <h2 className="mt-2 text-3xl font-black text-white">Sellers see that a wallet was verified, never which one.</h2>
             <p className="mt-4 max-w-3xl text-sm leading-7 text-stone-300">
-              Seller-facing session history displays masked wallet identifiers, so a seller reviewing recent checks does not receive your full address in that history response. Seller reward status returns only an event count, not customer event details. The backend still retains the full wallet address, because eligibility checks, usage limits and rewards depend on it. Masking is a display choice in seller views, not anonymity.
+              Seller-facing session history shows only that a wallet was verified, not the address and not the stored fingerprint. Seller reward status returns only an event count, not customer event details. This is data minimisation, not anonymity: a seller who meets you at the till, your wallet provider and the public RPC endpoints can still see or infer your wallet, and on-chain transactions you sign are public.
             </p>
           </section>
 
@@ -166,7 +170,7 @@ export default function PrivacyPage() {
             <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-200/80">Open items</p>
             <h2 className="mt-2 text-3xl font-black text-white">What is not decided yet</h2>
             <p className="mt-4 max-w-3xl text-sm leading-7 text-stone-300">
-              The backend has a manual operator tool for counting and removing expired, unlinked authorization artifacts after an approved cutoff. It does not automatically delete checkout sessions, session audit records, reward records or passes linked to sessions. The long-term server-side retention, deletion and support policy is not finalized. This page therefore makes no promise that backend records can be deleted on request, and it does not claim compliance with GDPR or any other specific legal framework. There is no dedicated privacy support channel at this time. When a final policy exists, this page will be updated to match it.
+              The backend has a manual operator tool that removes expired authorization artifacts and, after at least 35 days, checkout sessions with their audit events, passes and reward records. It does not run on its own schedule. The long-term server-side retention, deletion and support policy is not finalized. This page therefore makes no promise that backend records can be deleted on request, and it does not claim compliance with GDPR or any other specific legal framework. There is no dedicated privacy support channel at this time. When a final policy exists, this page will be updated to match it.
             </p>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-stone-300">
               What you can always do today: clear this browser&apos;s local app data with the controls above, disconnect your wallet in your wallet app, and simply stop using the service. On-chain transactions you have already signed remain public on Ethereum and cannot be altered or removed by anyone.

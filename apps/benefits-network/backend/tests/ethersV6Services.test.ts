@@ -34,7 +34,6 @@ import { checkBenefitEligibility, checkLock, initProvider } from '../src/service
 import {
   getModelBVaultState,
   getRewardOnChainStatus,
-  isWalletAlreadyRewarded,
   toIFRBaseUnits,
 } from '../src/services/rewardService';
 
@@ -573,20 +572,12 @@ describe('Ethers v6 service boundaries', () => {
     });
   });
 
-  it('keeps reward amount validation and rewarded-wallet reads exact', async () => {
+  // T-231a removed the customer-wallet PartnerVault read (walletRewardClaimed): the backend no
+  // longer holds a customer address to query with.
+  it('keeps reward amount validation exact', async () => {
     expect(toIFRBaseUnits('2500.125')).toBe(ethers.parseUnits('2500.125', 9).toString());
     expect(() => toIFRBaseUnits('0')).toThrow('Reward lock amount must be positive');
     expect(() => toIFRBaseUnits('-1')).toThrow('Reward lock amount must be positive');
-    await expect(isWalletAlreadyRewarded(OWNER, PARTNER_ID)).resolves.toBe(true);
-    expect(state.methods).not.toContain('eth_sendTransaction');
-  });
-
-  it('cleans up a failed reward provider before the next read', async () => {
-    state.failNextWalletRewardRead = true;
-
-    await expect(isWalletAlreadyRewarded(OWNER, PARTNER_ID))
-      .rejects.toMatchObject({ code: 'CALL_EXCEPTION' });
-    await expect(isWalletAlreadyRewarded(OWNER, PARTNER_ID)).resolves.toBe(true);
     expect(state.methods).not.toContain('eth_sendTransaction');
   });
 

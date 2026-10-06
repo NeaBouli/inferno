@@ -189,8 +189,10 @@ assert.ok(
 assert.ok(
   content.frontendPrivacy.includes('not a finalized legal policy') &&
     content.frontendPrivacy.includes('retention, deletion and support policy is not finalized') &&
-    content.frontendPrivacy.includes('Masking is a display choice in seller views, not anonymity'),
-  'Shop privacy route must preserve the evidence-only policy and masking boundary'
+    content.frontendPrivacy.includes('It does not store the address. It stores a keyed fingerprint instead') &&
+    content.frontendPrivacy.includes('This is data minimisation, not anonymity') &&
+    !content.frontendPrivacy.includes('The backend still retains the full wallet address'),
+  'Shop privacy route must preserve the evidence-only policy and the fingerprint-only customer boundary (T-231a)'
 );
 assert.ok(
   content.frontendSupport.includes('Nothing here connects a wallet') &&
@@ -226,7 +228,8 @@ assert.ok(
   'local data control must stay prefix-scoped and preserve unrelated browser data'
 );
 assert.ok(
-  content.sellerRoutes.includes('customerWalletMasked: maskCustomerWallet(session.recoveredAddress)') &&
+  content.sellerRoutes.includes('customerWalletMasked: customerVerificationLabel(session.customerFingerprint)') &&
+    content.sellerRoutes.includes("return customerFingerprint ? 'verified' : null;") &&
     content.sellerRoutes.includes('eventCount,') &&
     !content.sellerRoutes.includes('events.map(({ customerWallet, ...event })') &&
     content.sellerRoutes.includes("res.set('Cache-Control', 'private, no-store, max-age=0')"),

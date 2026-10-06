@@ -60,10 +60,10 @@ function setPrivateNoStore(res: Response) {
   res.set('Cache-Control', 'private, no-store, max-age=0');
 }
 
-function maskCustomerWallet(address: string | null) {
-  if (!address) return null;
-  if (!/^0x[a-fA-F0-9]{40}$/.test(address)) return 'verified';
-  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+// T-231a: the backend keeps no customer address, only a keyed fingerprint. Sellers learn that a
+// wallet was verified, never which one, and the fingerprint itself is never returned.
+function customerVerificationLabel(customerFingerprint: string | null) {
+  return customerFingerprint ? 'verified' : null;
 }
 
 const businessDescriptionSchema = z.string().trim().max(500).nullable();
@@ -967,7 +967,7 @@ router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next)
         select: {
           id: true,
           status: true,
-          recoveredAddress: true,
+          customerFingerprint: true,
           lockAmountRaw: true,
           walletBalanceRaw: true,
           verifiedLockSource: true,
@@ -1055,7 +1055,7 @@ router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next)
       sessions: pageSessions.map((session) => ({
         id: session.id,
         status: session.status,
-        customerWalletMasked: maskCustomerWallet(session.recoveredAddress),
+        customerWalletMasked: customerVerificationLabel(session.customerFingerprint),
         lockAmountRaw: session.lockAmountRaw,
         walletBalanceRaw: session.walletBalanceRaw,
         verifiedLockSource: session.verifiedLockSource,

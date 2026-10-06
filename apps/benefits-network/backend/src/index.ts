@@ -16,6 +16,7 @@ import {
   isRateLimitInfrastructureReady,
 } from './services/rateLimitInfrastructure';
 import { adminRateLimiter, TRUSTED_PROXY_SUBNETS } from './middleware/rateLimiter';
+import { WalletFingerprintUnavailableError, isWalletFingerprintConfigured } from './services/walletFingerprint';
 
 const app = express();
 app.disable('x-powered-by');
@@ -89,6 +90,8 @@ const readyPayload = async (_req: express.Request, res: express.Response) => {
       chainId: config.CHAIN_ID,
       database: 'ok',
       rateLimitStore: 'ok',
+      // T-231a: without the key every customer identity path refuses with 503 (fail closed).
+      customerWalletProtection: isWalletFingerprintConfigured() ? 'configured' : 'missing',
     });
   } catch {
     res.status(503).json({ status: 'not_ready', chainId: config.CHAIN_ID });
@@ -108,7 +111,7 @@ app.use((err: Error & { type?: string }, _req: express.Request, res: express.Res
     res.status(413).json({ error: 'Request body too large' });
     return;
   }
-  if (err instanceof RateLimitStoreUnavailableError) {
+  if (err instanceof RateLimitStoreUnavailableError || err instanceof WalletFingerprintUnavailableError) {
     res.status(503).json({ error: err.message });
     return;
   }
@@ -122,6 +125,9 @@ function listen() {
     console.log(`IFR Benefits Network backend running on port ${config.PORT}`);
     console.log(`Chain ID: ${config.CHAIN_ID}`);
     console.log(`Rate limit store: ${config.RATE_LIMIT_STORE ?? 'memory'}`);
+    console.log(`Customer wallet protection: ${isWalletFingerprintConfigured()
+      ? 'configured'
+      : 'missing (customer checkout, passes and history refuse with 503)'}`);
   });
 }
 

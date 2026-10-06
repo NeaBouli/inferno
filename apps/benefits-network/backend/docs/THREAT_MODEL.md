@@ -173,10 +173,13 @@ correlated without retaining sensitive request data.
 
 **Known operational boundaries:** SQLite does not prune `AdminAuditLog`
 automatically. A manual, bounded retention tool can report and explicitly prune
-old admin audit rows plus expired unlinked authorization artifacts, but it has
-no startup hook or scheduler and cannot delete Session, session AuditLog,
-RewardEvent, or linked CustomerPass records. Production retention periods and
-execution still require approval; see `../../../../docs/BENEFITS_RETENTION_RUNBOOK.md`.
+old admin audit rows, expired authorization artifacts and, after a fixed 35-day
+floor, sessions with their audit rows and passes plus reward events; it has no
+startup hook or scheduler. Customer wallets are stored only as keyed
+fingerprints (T-231a); a database leak without `CUSTOMER_WALLET_HMAC_KEY` does
+not reveal customer addresses, but verified balances with block numbers remain
+quasi-identifiers until pruned. Production execution still requires approval;
+see `../../../../docs/BENEFITS_RETENTION_RUNBOOK.md`.
 Reward verification observes external chain state before the paired database
 mutation and audit transaction. Reward queue reconciliation updates individual
 events before its final summary audit, so an interruption can leave partial

@@ -33,6 +33,7 @@ jest.mock('../src/config', () => ({
     RPC_URL: 'https://mock-rpc.example.com',
     IFRLOCK_ADDRESS: '0x0000000000000000000000000000000000000001',
     ADMIN_SECRET: 'test-secret-12345',
+    CUSTOMER_WALLET_HMAC_KEY: 'test-customer-wallet-hmac-key-0123456789abcdef',
     DATABASE_URL: 'file:./test.db',
     MAX_ACTIVE_SELLER_BUSINESSES_PER_WALLET: 5,
     MAX_TOTAL_SELLER_BUSINESSES_PER_WALLET: 25,
@@ -40,6 +41,7 @@ jest.mock('../src/config', () => ({
   },
 }));
 
+import { fingerprintWallet } from '../src/services/walletFingerprint';
 import {
   createSession,
   buildChallengeMessage,
@@ -270,7 +272,7 @@ describe('E2E: IFR Lock → Benefits Network Verification', () => {
     expect(saved).toMatchObject({
       status: 'PENDING',
       attestAttempts: 0,
-      recoveredAddress: null,
+      customerFingerprint: null,
       lockAmountRaw: null,
       reason: null,
     });
@@ -445,7 +447,7 @@ describe('E2E: IFR Lock → Benefits Network Verification', () => {
         nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 60_000),
         status: 'APPROVED',
-        recoveredAddress: wallet,
+        customerFingerprint: fingerprintWallet(wallet),
       },
     });
     const first = await createApproved(TEST_WALLET);
@@ -483,7 +485,7 @@ describe('E2E: IFR Lock → Benefits Network Verification', () => {
         nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 60_000),
         status: 'APPROVED',
-        recoveredAddress: TEST_WALLET,
+        customerFingerprint: fingerprintWallet(TEST_WALLET),
       },
     });
     const first = await createApproved(true);
@@ -519,7 +521,7 @@ describe('E2E: IFR Lock → Benefits Network Verification', () => {
         nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 60_000),
         status: 'APPROVED',
-        recoveredAddress: TEST_WALLET,
+        customerFingerprint: fingerprintWallet(TEST_WALLET),
       },
     })));
 

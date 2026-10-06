@@ -227,8 +227,8 @@ export interface RedemptionConfirmation {
 export interface RedemptionRecord {
   sessionId: string;
   redeemedAt: Date;
-  // Existing Session.recoveredAddress; used only to explain a missing outbox row, never exported.
-  customerWallet: string | null;
+  // Keyed customer fingerprint (T-231a); used only to explain a missing outbox row, never exported.
+  customerFingerprint: string | null;
   confirmations: RedemptionConfirmation[];
 }
 
@@ -236,7 +236,7 @@ export interface RewardEventRecord {
   id: string;
   businessId: string;
   partnerId: string;
-  customerWallet: string;
+  customerFingerprint: string;
   status: string;
   session: { id: string; businessId: string; status: string; redeemedAt: Date | null };
 }
@@ -245,6 +245,9 @@ export interface OwnershipRecord {
   businessActive: boolean;
   ownerAddress: string | null;
   operators: { id: string; walletAddress: string }[];
+  // Keyed fingerprints of every wallet the seller controls (owner, all operators, reward and
+  // builder wallet), computed in memory by the loader for the self-redemption exclusion.
+  sellerFingerprints: string[];
   link: {
     status: string;
     partnerId: string | null;
@@ -339,15 +342,9 @@ function checkConfirmation(redemption: RedemptionRecord | undefined, ownership: 
   return 'UNCONFIRMED_REDEMPTION';
 }
 
-/** Every wallet the seller controls in the existing ownership model, regardless of current status. */
+/** Fingerprints of every wallet the seller controls in the existing ownership model, regardless of current status. */
 function sellerWallets(ownership: OwnershipRecord): Set<string> {
-  const wallets = new Set<string>();
-  const add = (value: string | null | undefined) => { const item = lower(value); if (item) wallets.add(item); };
-  add(ownership.ownerAddress);
-  for (const operator of ownership.operators) add(operator.walletAddress);
-  add(ownership.link?.rewardWallet);
-  add(ownership.link?.builderWallet);
-  return wallets;
+  return new Set(ownership.sellerFingerprints);
 }
 
 // ── Template ────────────────────────────────────────────────────────────────
@@ -548,7 +545,7 @@ export function buildSettlementExport(input: ExportInput): SettlementExport {
     if (redeemedAt.getTime() < pilotStart.getTime()) { exclude('PRE_PILOT'); continue; }
     const confirmation = checkConfirmation(redemptionsBySession.get(event.session.id), ownership);
     if (confirmation !== 'OK') { exclude(confirmation); continue; }
-    if (selfWallets.has(event.customerWallet.toLowerCase())) { exclude('SELF_REDEMPTION'); continue; }
+    if (selfWallets.has(event.customerFingerprint)) { exclude('SELF_REDEMPTION'); continue; }
     if (event.status === 'CONFIRMED') { exclude('LOCK_REWARD_ALREADY_RECORDED'); continue; }
     if (UNRECONCILED_STATUSES.has(event.status)) { exclude('NOT_RECONCILED'); continue; }
     if (event.status !== MODEL_B_SETTLEMENT_PENDING) { exclude('STATUS_INELIGIBLE'); continue; }
@@ -567,7 +564,7 @@ export function buildSettlementExport(input: ExportInput): SettlementExport {
   const withoutEventReasons = { SELF_REDEMPTION: 0, PRE_PILOT: 0, MISSING_REWARD_EVENT: 0 };
   for (const redemption of records.redemptions) {
     if (seenSessions.has(redemption.sessionId)) continue;
-    if (redemption.customerWallet && selfWallets.has(redemption.customerWallet.toLowerCase())) {
+    if (redemption.customerFingerprint && selfWallets.has(redemption.customerFingerprint)) {
       withoutEventReasons.SELF_REDEMPTION += 1;
     } else if (redemption.redeemedAt.getTime() < pilotStart.getTime()) {
       withoutEventReasons.PRE_PILOT += 1;

@@ -33,6 +33,7 @@ jest.mock('../src/config', () => ({
     RPC_URL: 'https://mock-rpc.example.com',
     IFRLOCK_ADDRESS: '0x0000000000000000000000000000000000000001',
     ADMIN_SECRET: 'test-secret-12345',
+    CUSTOMER_WALLET_HMAC_KEY: 'test-customer-wallet-hmac-key-0123456789abcdef',
     DATABASE_URL: 'file:./test.db',
     MAX_ACTIVE_SELLER_BUSINESSES_PER_WALLET: 5,
     MAX_TOTAL_SELLER_BUSINESSES_PER_WALLET: 25,
@@ -40,6 +41,7 @@ jest.mock('../src/config', () => ({
   },
 }));
 
+import { fingerprintWallet } from '../src/services/walletFingerprint';
 import { prisma } from '../src/services/sessionService';
 import { server } from '../src/index';
 
@@ -194,7 +196,8 @@ describe('customer-presented checkout passes', () => {
     expect(created.body.passId).toMatch(/^[A-Za-z0-9_-]{32}$/);
     expect(created.body.qrUrl).toBe(`/p/${created.body.passId}`);
     const stored = await prisma.customerPass.findUniqueOrThrow({ where: { id: created.body.passId } });
-    expect(stored.walletAddress).toBe(customer.address);
+    expect(stored.walletFingerprint).toBe(fingerprintWallet(customer.address));
+    expect(JSON.stringify(stored)).not.toMatch(/0x[0-9a-fA-F]{40}/);
     expect(stored.controlHash).not.toContain(created.body.controlToken);
 
     const publicResponse = await fetch(`${baseUrl()}/api/passes/${created.body.passId}`);

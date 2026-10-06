@@ -7,7 +7,6 @@ const PARTNER_VAULT_ABI = [
   'function partners(bytes32 partnerId) view returns (address beneficiary, uint256 maxAllocation, uint256 unlockedTotal, uint256 rewardAccrued, uint256 claimedTotal, uint32 vestingStart, uint32 vestingDuration, uint32 cliff, bool active, bool milestonesFinal, uint8 tier)',
   'function claimable(bytes32 partnerId) view returns (uint256)',
   'function vestedAmount(bytes32 partnerId) view returns (uint256)',
-  'function walletRewardClaimed(address wallet, bytes32 partnerId) view returns (bool)',
   'function authorizedCaller(address caller) view returns (bool)',
   'function paused() view returns (bool)',
   'function milestoneDone(bytes32 partnerId, bytes32 milestoneId) view returns (bool)',
@@ -164,14 +163,13 @@ export async function getRewardOnChainStatus(
   };
 }
 
-export async function isWalletAlreadyRewarded(wallet: string, rawPartnerId: string): Promise<boolean> {
-  const addresses = requireRewardConfig();
-  const partnerId = validatePartnerId(rawPartnerId);
-  const provider = new ethers.JsonRpcProvider(config.RPC_URL);
-  const partnerVault = new ethers.Contract(addresses.partnerVaultAddress, PARTNER_VAULT_ABI, provider);
-  return (partnerVault.walletRewardClaimed(normalizeAddress(wallet), partnerId) as Promise<boolean>)
-    .finally(() => provider.destroy());
-}
+/**
+ * T-231a: the backend stores no customer wallet address, only a keyed fingerprint. The legacy
+ * lock-reward path would need the raw address (PartnerVault.walletRewardClaimed(address) and a
+ * caller submission), so its events are held as BLOCKED_CALLER with this reason.
+ */
+export const LOCK_REWARD_PATH_BLOCKED_REASON =
+  'Lock-reward path needs a customer wallet address, which this service does not store (T-231a); use Model B settlement';
 
 /**
  * Read-only PartnerVault state for a Model B settlement export (T-275): pause state, pilot partner

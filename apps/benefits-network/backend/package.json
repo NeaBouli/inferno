@@ -17,6 +17,7 @@
     "test:migration-upgrade": "node scripts/verify-populated-migration-upgrade.cjs",
     "retention:report": "npm run build --silent && node dist/retentionCli.js report",
     "retention:prune": "npm run build --silent && node dist/retentionCli.js apply",
+    "fingerprint:migrate": "npm run build --silent && node dist/walletFingerprintMigrationCli.js",
     "smoke:http": "bash scripts/ci-http-smoke.sh",
     "prisma:generate": "prisma generate",
     "prisma:deploy": "prisma migrate deploy",

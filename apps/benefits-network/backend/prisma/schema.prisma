@@ -117,7 +117,8 @@ model Session {
   nonce            String     @unique
   expiresAt        DateTime
   status           String     @default("PENDING")
-  recoveredAddress String?
+  // T-231a: keyed customer wallet fingerprint (wfp1:...), never a raw address.
+  customerFingerprint String? @map("recoveredAddress")
   lockAmountRaw    String?
   walletBalanceRaw String?
   verifiedLockSource String?
@@ -135,13 +136,13 @@ model Session {
   @@index([businessId])
   @@index([benefitRuleId])
   @@index([benefitRuleId, status, redeemedAt], map: "Session_redemptionLimitLookup_idx")
-  @@index([recoveredAddress, createdAt, id], map: "Session_customerHistory_idx")
+  @@index([customerFingerprint, createdAt, id], map: "Session_customerHistory_idx")
   @@index([status])
 }
 
 model CustomerPass {
   id            String   @id
-  walletAddress String
+  walletFingerprint String @map("walletAddress")
   controlHash   String   @unique
   status        String   @default("OPEN")
   expiresAt     DateTime
@@ -152,19 +153,19 @@ model CustomerPass {
   session       Session?
 
   @@index([status, expiresAt])
-  @@index([walletAddress, createdAt])
+  @@index([walletFingerprint, createdAt], map: "CustomerPass_walletAddress_createdAt_idx")
 }
 
 model CustomerPassChallenge {
   nonce         String   @id
-  walletAddress String
+  walletFingerprint String @map("walletAddress")
   issuedAt      DateTime
   expiresAt     DateTime
   consumedAt    DateTime?
   createdAt     DateTime @default(now())
 
   @@index([expiresAt])
-  @@index([walletAddress, consumedAt])
+  @@index([walletFingerprint, consumedAt], map: "CustomerPassChallenge_walletAddress_consumedAt_idx")
 }
 
 model SellerRewardLink {
@@ -193,7 +194,7 @@ model RewardEvent {
   sessionId        String   @unique
   session          Session  @relation(fields: [sessionId], references: [id])
   partnerId        String
-  customerWallet   String
+  customerFingerprint String @map("customerWallet")
   lockAmountRaw    String
   chainId          Int
   status           String   @default("PENDING")
@@ -202,7 +203,7 @@ model RewardEvent {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  @@unique([customerWallet, partnerId])
+  @@unique([customerFingerprint, partnerId], map: "RewardEvent_customerWallet_partnerId_key")
   @@index([businessId, status])
   @@index([partnerId])
 }
@@ -251,22 +252,22 @@ model SellerAuthorizationChallenge {
 
 model CustomerHistoryChallenge {
   nonce         String   @id
-  walletAddress String
+  walletFingerprint String @map("walletAddress")
   issuedAt      DateTime
   expiresAt     DateTime
   consumedAt    DateTime?
   createdAt     DateTime @default(now())
 
   @@index([expiresAt])
-  @@index([walletAddress, consumedAt])
+  @@index([walletFingerprint, consumedAt], map: "CustomerHistoryChallenge_walletAddress_consumedAt_idx")
 }
 
 model CustomerHistoryAccess {
   tokenHash     String   @id
-  walletAddress String
+  walletFingerprint String @map("walletAddress")
   expiresAt     DateTime
   createdAt     DateTime @default(now())
 
   @@index([expiresAt])
-  @@index([walletAddress, expiresAt])
+  @@index([walletFingerprint, expiresAt], map: "CustomerHistoryAccess_walletAddress_expiresAt_idx")
 }

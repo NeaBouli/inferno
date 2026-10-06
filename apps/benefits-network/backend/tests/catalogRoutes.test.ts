@@ -33,6 +33,7 @@ jest.mock('../src/config', () => ({
     RPC_URL: 'https://mock-rpc.example.com',
     IFRLOCK_ADDRESS: '0x0000000000000000000000000000000000000001',
     ADMIN_SECRET: 'test-secret-12345',
+    CUSTOMER_WALLET_HMAC_KEY: 'test-customer-wallet-hmac-key-0123456789abcdef',
     DATABASE_URL: 'file:./test.db',
     MAX_ACTIVE_SELLER_BUSINESSES_PER_WALLET: 5,
     MAX_TOTAL_SELLER_BUSINESSES_PER_WALLET: 25,
@@ -40,6 +41,7 @@ jest.mock('../src/config', () => ({
   },
 }));
 
+import { fingerprintWallet } from '../src/services/walletFingerprint';
 import { attest, buildChallengeMessage, createSession, prisma } from '../src/services/sessionService';
 import { config as backendConfig } from '../src/config';
 import { server } from '../src/index';
@@ -1580,7 +1582,7 @@ describe('Seller catalog routes', () => {
       expect(await response.json()).toMatchObject({ status: 'REJECTED', attemptsRemaining: 3 });
     }
     expect(await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } }))
-      .toMatchObject({ status: 'PENDING', attestAttempts: 0, recoveredAddress: null });
+      .toMatchObject({ status: 'PENDING', attestAttempts: 0, customerFingerprint: null });
   });
 
   it('binds rules only to active products from the same business and preserves snapshots', async () => {
@@ -1811,7 +1813,7 @@ describe('Seller catalog routes', () => {
       where: { id: rejectedSession.sessionId },
       data: {
         status: 'REJECTED',
-        recoveredAddress: owner.address,
+        customerFingerprint: fingerprintWallet(owner.address),
         lockAmountRaw: '250.0',
         reason: detailedReason,
         attestAttempts: 3,
@@ -1841,7 +1843,8 @@ describe('Seller catalog routes', () => {
     expect(rejectedHistory).not.toHaveProperty('recoveredAddress');
     expect(JSON.stringify(rejectedHistory)).not.toContain(owner.address);
     expect(rejectedHistory).toMatchObject({
-      customerWalletMasked: `${owner.address.slice(0, 6)}...${owner.address.slice(-4)}`,
+      // T-231a: sellers learn only that a wallet was verified.
+      customerWalletMasked: 'verified',
       lockAmountRaw: '250.0',
       reason: detailedReason,
     });

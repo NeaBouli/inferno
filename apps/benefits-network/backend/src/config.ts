@@ -4,6 +4,7 @@ import { getRateLimitTopologyIssues } from './services/rateLimitTopology';
 import { getAdminSecretPolicyIssue } from './services/adminSecretPolicy';
 import { getSellerBusinessLimitConfigIssue } from './services/sellerLimitPolicy';
 import { getSellerAuthConfigIssues } from './services/sellerAuthConfigPolicy';
+import { getCustomerWalletKeyPolicyIssue } from './services/walletFingerprint';
 
 dotenv.config();
 
@@ -38,6 +39,12 @@ const envSchema = z.object({
   MODEL_B_SETTLEMENT_ENABLED: z.string().optional(),
   MODEL_B_PILOT_POLICY_JSON: z.string().optional(),
   ADMIN_SECRET: z.string(),
+  // T-231a: server-side HMAC key for customer wallet fingerprints. Never logged. When absent, every
+  // path that would store or compare a customer identity refuses with 503 (fail closed).
+  CUSTOMER_WALLET_HMAC_KEY: z.preprocess(
+    (value) => value === '' ? undefined : value,
+    z.string().optional()
+  ),
   DATABASE_URL: z.string().default('file:./dev.db'),
   PORT: z.coerce.number().int().positive().default(3001),
   MAX_ACTIVE_SELLER_BUSINESSES_PER_WALLET: z.coerce.number().int().min(1).max(50).default(5),
@@ -74,6 +81,14 @@ const envSchema = z.object({
       code: z.ZodIssueCode.custom,
       path: ['ADMIN_SECRET'],
       message: adminSecretIssue,
+    });
+  }
+  const customerWalletKeyIssue = getCustomerWalletKeyPolicyIssue(env.CUSTOMER_WALLET_HMAC_KEY, env.ADMIN_SECRET);
+  if (customerWalletKeyIssue) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['CUSTOMER_WALLET_HMAC_KEY'],
+      message: customerWalletKeyIssue,
     });
   }
   for (const issue of getRateLimitTopologyIssues({

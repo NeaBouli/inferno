@@ -1,6 +1,7 @@
 import { ethers } from 'ethers';
 
 type TestWallet = ReturnType<typeof ethers.Wallet.createRandom>;
+import { fingerprintWallet } from '../src/services/walletFingerprint';
 import * as authenticatedRateLimiter from '../src/services/authenticatedRateLimiter';
 
 jest.setTimeout(15_000);
@@ -18,6 +19,7 @@ jest.mock('../src/config', () => ({
     RPC_URL: 'https://mock-rpc.example.com',
     IFRLOCK_ADDRESS: '0x0000000000000000000000000000000000000001',
     ADMIN_SECRET: 'test-secret-12345',
+    CUSTOMER_WALLET_HMAC_KEY: 'test-customer-wallet-hmac-key-0123456789abcdef',
     DATABASE_URL: 'file:./test.db',
     MAX_ACTIVE_SELLER_BUSINESSES_PER_WALLET: 5,
     MAX_TOTAL_SELLER_BUSINESSES_PER_WALLET: 25,
@@ -202,7 +204,7 @@ describe('Redeem route authorization', () => {
         nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 300_000),
         status: 'APPROVED',
-        recoveredAddress: ethers.Wallet.createRandom().address,
+        customerFingerprint: fingerprintWallet(ethers.Wallet.createRandom().address),
         lockAmountRaw: '2500.0',
       },
     });
@@ -427,7 +429,7 @@ describe('Redeem route authorization', () => {
           nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
           expiresAt: new Date(Date.now() + 300_000),
           status,
-          recoveredAddress: ethers.Wallet.createRandom().address,
+          customerFingerprint: fingerprintWallet(ethers.Wallet.createRandom().address),
         },
       });
       const headers = await sellerHeaders(seller, 'sessions:redeem', session.id);
@@ -465,7 +467,7 @@ describe('Redeem route authorization', () => {
         nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 300_000),
         status: 'APPROVED',
-        recoveredAddress: customer,
+        customerFingerprint: fingerprintWallet(customer),
       },
     })));
 
@@ -552,7 +554,7 @@ describe('Redeem route authorization', () => {
         nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 300_000),
         status: 'APPROVED',
-        recoveredAddress: ethers.Wallet.createRandom().address,
+        customerFingerprint: fingerprintWallet(ethers.Wallet.createRandom().address),
       },
     });
     await prisma.checkoutOperator.update({ where: { id: expired.id }, data: { active: false } });
@@ -756,7 +758,7 @@ describe('Redeem route authorization', () => {
           nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
           expiresAt: new Date(Date.now() + 300_000),
           status: 'REDEEMED',
-          recoveredAddress: ethers.Wallet.createRandom().address,
+          customerFingerprint: fingerprintWallet(ethers.Wallet.createRandom().address),
           redeemedAt: new Date(),
         },
         {
@@ -777,7 +779,7 @@ describe('Redeem route authorization', () => {
           expiresAt: new Date(todayStartedAt.getTime() - 1),
           createdAt: new Date(todayStartedAt.getTime() - 1),
           status: 'REDEEMED',
-          recoveredAddress: ethers.Wallet.createRandom().address,
+          customerFingerprint: fingerprintWallet(ethers.Wallet.createRandom().address),
           redeemedAt: new Date(),
         },
         {
@@ -810,9 +812,9 @@ describe('Redeem route authorization', () => {
       }>;
     };
     const storedCustomerSession = await prisma.session.findFirstOrThrow({
-      where: { businessId, recoveredAddress: { not: null } },
+      where: { businessId, customerFingerprint: { not: null } },
       orderBy: { createdAt: 'asc' },
-      select: { recoveredAddress: true },
+      select: { customerFingerprint: true },
     });
 
     expect(response.status).toBe(200);
@@ -825,10 +827,14 @@ describe('Redeem route authorization', () => {
     expect(body.sessions.some((session) =>
       Object.prototype.hasOwnProperty.call(session, 'recoveredAddress')
     )).toBe(false);
-    expect(JSON.stringify(body)).not.toContain(storedCustomerSession.recoveredAddress);
-    expect(body.sessions).toContainEqual(expect.objectContaining({
-      customerWalletMasked: `${storedCustomerSession.recoveredAddress!.slice(0, 6)}...${storedCustomerSession.recoveredAddress!.slice(-4)}`,
-    }));
+    expect(body.sessions.some((session) =>
+      Object.prototype.hasOwnProperty.call(session, 'customerFingerprint')
+    )).toBe(false);
+    // T-231a: neither an address nor the stored fingerprint reaches the seller.
+    expect(storedCustomerSession.customerFingerprint).toMatch(/^wfp1:[0-9a-f]{64}$/);
+    expect(JSON.stringify(body)).not.toContain(storedCustomerSession.customerFingerprint!);
+    expect(JSON.stringify(body)).not.toContain(storedCustomerSession.customerFingerprint!.slice(5, 17));
+    expect(body.sessions).toContainEqual(expect.objectContaining({ customerWalletMasked: 'verified' }));
   }, 15_000);
 
   it('paginates seller history without duplicates and rejects foreign or invalid cursors', async () => {

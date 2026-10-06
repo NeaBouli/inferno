@@ -104,10 +104,14 @@ Yes — each business independently configures tier and discount.
 
 **What customer data is processed?**
 The short-lived pass QR contains no wallet, lock amount, signature, control token, rule, or
-internal session ID. The backend processes the wallet address and current IFRLock result to verify
-eligibility; checkout and history API responses are bounded. This data-minimizing design is not a
-legal compliance guarantee; each operator remains responsible for its applicable privacy and
-retention obligations.
+internal session ID. The backend uses the customer wallet address only in memory to check the
+signature and read the current IFRLock result on-chain; it does not store the address. For one-time
+use, per-wallet limits, one reward per wallet and partner, and the customer's own history it stores
+only a keyed fingerprint (HMAC-SHA256 with a server-side secret). Sellers see that a wallet was
+verified, never which one. Checkout records with verified amounts, block number and timestamps are
+kept for at least 35 days and then become eligible for an operator-run retention job. This
+data-minimizing design is not a legal compliance guarantee; each operator remains responsible for its
+applicable privacy and retention obligations.
 
 ---
 *As of: July 2026 | Version 2.0*

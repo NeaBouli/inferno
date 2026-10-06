@@ -42,6 +42,7 @@ jest.mock('../src/config', () => ({
     MODEL_B_SETTLEMENT_ENABLED: 'true',
     MODEL_B_PILOT_POLICY_JSON: undefined,
     ADMIN_SECRET: 'test-secret-12345',
+    CUSTOMER_WALLET_HMAC_KEY: 'test-customer-wallet-hmac-key-0123456789abcdef',
     DATABASE_URL: 'file:./test.db',
     MAX_ACTIVE_SELLER_BUSINESSES_PER_WALLET: 5,
     MAX_TOTAL_SELLER_BUSINESSES_PER_WALLET: 25,
@@ -49,6 +50,7 @@ jest.mock('../src/config', () => ({
   },
 }));
 
+import { fingerprintWallet } from '../src/services/walletFingerprint';
 import { config } from '../src/config';
 import { prisma } from '../src/services/sessionService';
 import { server } from '../src/index';
@@ -219,7 +221,7 @@ describe('Model B verified-redemption settlement (T-275)', () => {
         expiresAt: new Date(options.redeemedAt),
         status: options.sessionStatus ?? 'REDEEMED',
         redeemedAt: new Date(options.redeemedAt),
-        recoveredAddress: customer,
+        customerFingerprint: fingerprintWallet(customer),
         lockAmountRaw: '1000',
       },
     });
@@ -232,7 +234,7 @@ describe('Model B verified-redemption settlement (T-275)', () => {
         businessId,
         sessionId: session.id,
         partnerId: options.eventPartnerId ?? partnerId,
-        customerWallet: customer,
+        customerFingerprint: fingerprintWallet(customer),
         lockAmountRaw: (1000n * IFR).toString(),
         chainId: 1,
         status: options.status ?? 'SETTLEMENT_PENDING',
@@ -423,7 +425,7 @@ describe('Model B verified-redemption settlement (T-275)', () => {
         nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 60_000),
         status: 'APPROVED',
-        recoveredAddress: customer.address,
+        customerFingerprint: fingerprintWallet(customer.address),
         lockAmountRaw: '1000',
       },
     });
@@ -576,7 +578,7 @@ describe('Model B verified-redemption settlement (T-275)', () => {
         expiresAt: new Date('2026-08-05T00:00:00.000Z'),
         status: 'REDEEMED',
         redeemedAt: new Date('2026-08-05T00:00:00.000Z'),
-        recoveredAddress: ethers.Wallet.createRandom().address,
+        customerFingerprint: fingerprintWallet(ethers.Wallet.createRandom().address),
       },
     });
     const foreignEvent = await prisma.rewardEvent.create({
@@ -584,7 +586,7 @@ describe('Model B verified-redemption settlement (T-275)', () => {
         businessId: foreign.id,
         sessionId: foreignSession.id,
         partnerId,
-        customerWallet: ethers.Wallet.createRandom().address,
+        customerFingerprint: fingerprintWallet(ethers.Wallet.createRandom().address),
         lockAmountRaw: '1',
         chainId: 1,
         status: 'SETTLEMENT_PENDING',

@@ -203,13 +203,26 @@ record before the response. Audit rows contain only route/action metadata plus
 SHA-256 role and client digests; request bodies, bearer values, secrets and raw
 IP addresses are never stored.
 
-The audit table has no automatic SQLite TTL. The manual phase-one retention
-tool provides an authenticated count report and an explicitly confirmed,
-bounded CLI prune for old admin audit rows and expired unlinked auth artifacts.
-It never runs at startup and deliberately excludes Session, session AuditLog,
-RewardEvent, and linked CustomerPass records. See
-`../../../docs/BENEFITS_RETENTION_RUNBOOK.md`. The actual retention windows and
-production schedule still require approval. Reward verification reads chain
+## Customer Wallet Data (T-231a)
+
+The backend never persists a raw customer wallet address. Signature recovery and
+on-chain eligibility reads use the address in memory only; challenges, passes,
+sessions, history tokens and reward events store a keyed fingerprint
+(`wfp1:` + HMAC-SHA256 under `CUSTOMER_WALLET_HMAC_KEY`), and session audit
+payloads carry no customer wallet. Without the key, every customer identity path
+returns `503` and stores nothing; `/api/ready` reports
+`customerWalletProtection`. Seller wallets are business identities and stay in
+clear text. The legacy lock-reward path needs a raw customer address and is
+therefore held as `BLOCKED_CALLER`; Model B settlement works on fingerprints.
+Existing rows are converted once with `npm run fingerprint:migrate` (see the
+retention runbook).
+
+The audit table has no automatic SQLite TTL. The manual retention tool provides
+an authenticated count report and an explicitly confirmed, bounded CLI prune for
+old admin audit rows, expired auth artifacts and, after at least 35 days,
+sessions with their audit rows and passes plus reward events. It never runs at
+startup. See `../../../docs/BENEFITS_RETENTION_RUNBOOK.md`. The production
+schedule still requires approval. Reward verification reads chain
 state before its database transaction, and reward queue reconciliation updates
 individual events before its final summary audit; those external/iterative
 boundaries cannot be made one atomic database operation.

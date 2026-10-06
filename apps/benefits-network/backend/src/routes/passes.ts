@@ -12,6 +12,7 @@ import { config } from '../config';
 import { SellerAuthError, resolveSellerAuthContext, verifySellerSignature } from '../services/sellerAuth';
 import { assertSellerWalletActionAllowed, AuthenticatedRateLimitError } from '../services/authenticatedRateLimiter';
 import { RateLimitStoreUnavailableError } from '../services/rateLimitInfrastructure';
+import { WalletFingerprintUnavailableError } from '../services/walletFingerprint';
 import {
   CustomerPassAuthError,
   bindCustomerPass,
@@ -61,7 +62,7 @@ function handleError(err: unknown, res: Response, next: (err: unknown) => void) 
     res.status(429).json({ error: err.message });
     return;
   }
-  if (err instanceof RateLimitStoreUnavailableError) {
+  if (err instanceof RateLimitStoreUnavailableError || err instanceof WalletFingerprintUnavailableError) {
     res.status(503).json({ error: err.message });
     return;
   }

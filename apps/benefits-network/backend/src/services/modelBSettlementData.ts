@@ -1,6 +1,7 @@
 import type { PrismaClient } from '@prisma/client';
 import type { ModelBPilot } from './modelBPolicy';
 import type { RedemptionConfirmation, SettlementPeriod, SettlementRecords } from './modelBSettlement';
+import { fingerprintWallets } from './walletFingerprint';
 
 function parseConfirmation(payload: string): RedemptionConfirmation {
   try {
@@ -39,7 +40,7 @@ export async function loadSettlementRecords(
   const [sessions, events, orphanEvents] = await Promise.all([
     db.session.findMany({
       where: { businessId: pilot.businessId, status: 'REDEEMED', redeemedAt: range },
-      select: { id: true, redeemedAt: true, recoveredAddress: true },
+      select: { id: true, redeemedAt: true, customerFingerprint: true },
     }),
     db.rewardEvent.findMany({
       where: { partnerId: pilot.partnerId, session: { redeemedAt: range } },
@@ -47,7 +48,7 @@ export async function loadSettlementRecords(
         id: true,
         businessId: true,
         partnerId: true,
-        customerWallet: true,
+        customerFingerprint: true,
         status: true,
         session: { select: { id: true, businessId: true, status: true, redeemedAt: true } },
       },
@@ -68,17 +69,26 @@ export async function loadSettlementRecords(
     bySession.set(log.sessionId, list);
   }
 
+  // Seller (business) wallets are fingerprinted in memory; customer rows hold only fingerprints.
+  const sellerFingerprints = [...fingerprintWallets([
+    business.ownerAddress,
+    ...business.checkoutOperators.map((operator) => operator.walletAddress),
+    business.rewardLink?.rewardWallet,
+    business.rewardLink?.builderWallet,
+  ])];
+
   return {
     ownership: {
       businessActive: business.active,
       ownerAddress: business.ownerAddress,
       operators: business.checkoutOperators,
+      sellerFingerprints,
       link: business.rewardLink,
     },
     redemptions: sessions.map((session) => ({
       sessionId: session.id,
       redeemedAt: session.redeemedAt as Date,
-      customerWallet: session.recoveredAddress,
+      customerFingerprint: session.customerFingerprint,
       confirmations: bySession.get(session.id) ?? [],
     })),
     events,

@@ -1,8 +1,16 @@
 import { createHash } from 'node:crypto';
 import type { Prisma, PrismaClient } from '@prisma/client';
 
-export const RETENTION_POLICY = 'phase-one-expired-auth-artifacts';
-export const RETENTION_APPLY_CONFIRMATION = 'PRUNE_EXPIRED_BENEFITS_DATA';
+export const RETENTION_POLICY = 'phase-two-bounded-customer-data';
+export const RETENTION_APPLY_CONFIRMATION = 'PRUNE_BENEFITS_DATA_WINDOW';
+/**
+ * T-231a: customer-linked rows (sessions with their audit rows and passes, reward events) are kept
+ * for at least this many days and pruned afterwards. 35 days covers the longest monthly
+ * redemption-limit look-back (31 days) and the Model B rule that a period is settled within 72 h
+ * after it ends; no live check can need an older row.
+ */
+export const CUSTOMER_DATA_MIN_RETENTION_DAYS = 35;
+const DAY_MS = 24 * 60 * 60 * 1000;
 export const DEFAULT_RETENTION_BATCH_LIMIT = 1000;
 export const MAX_RETENTION_BATCH_LIMIT = 10_000;
 
@@ -13,6 +21,10 @@ type RetentionEligibleCounts = {
   customerHistoryChallenges: number;
   customerHistoryAccess: number;
   orphanCustomerPasses: number;
+  rewardEvents: number;
+  sessions: number;
+  sessionAuditLogs: number;
+  linkedCustomerPasses: number;
 };
 
 type RetentionProtectedCounts = {
@@ -25,6 +37,7 @@ type RetentionProtectedCounts = {
 export type RetentionReport = {
   policy: typeof RETENTION_POLICY;
   cutoff: string;
+  customerDataCutoff: string;
   generatedAt: string;
   batchLimit: number;
   eligible: RetentionEligibleCounts;
@@ -44,6 +57,23 @@ function validateInputs(cutoff: Date, now: Date, batchLimit: number) {
   }
 }
 
+/** The requested cutoff, but never younger than the customer-data floor. */
+export function customerDataCutoff(cutoff: Date, now: Date): Date {
+  const floor = new Date(now.getTime() - CUSTOMER_DATA_MIN_RETENTION_DAYS * DAY_MS);
+  return cutoff < floor ? cutoff : floor;
+}
+
+function rewardEventWhere(customerCutoff: Date): Prisma.RewardEventWhereInput {
+  // Every status: after the window no reward event can enter a valid settlement (see above).
+  return { createdAt: { lt: customerCutoff } };
+}
+
+function sessionWhere(customerCutoff: Date): Prisma.SessionWhereInput {
+  // Session TTLs are seconds to minutes, so every session this old is terminal. A session whose
+  // reward event is still inside the window stays until that event is pruned.
+  return { createdAt: { lt: customerCutoff }, expiresAt: { lt: customerCutoff }, rewardEvent: { is: null } };
+}
+
 function customerPassWhere(cutoff: Date): Prisma.CustomerPassWhereInput {
   return {
     expiresAt: { lt: cutoff },
@@ -59,7 +89,18 @@ export async function getRetentionReport(
   batchLimit = DEFAULT_RETENTION_BATCH_LIMIT,
 ): Promise<RetentionReport> {
   validateInputs(cutoff, now, batchLimit);
+  const customerCutoff = customerDataCutoff(cutoff, now);
+  // A session becomes prunable together with its reward event, so the report counts both.
+  const sessionsAfterEvents: Prisma.SessionWhereInput = {
+    createdAt: { lt: customerCutoff },
+    expiresAt: { lt: customerCutoff },
+    OR: [{ rewardEvent: { is: null } }, { rewardEvent: { is: rewardEventWhere(customerCutoff) } }],
+  };
   const [
+    rewardEventsEligible,
+    sessionsEligible,
+    sessionAuditLogs,
+    linkedCustomerPassesEligible,
     adminAuditLogs,
     customerPassChallenges,
     sellerAuthorizationChallenges,
@@ -71,21 +112,26 @@ export async function getRetentionReport(
     rewardEvents,
     linkedCustomerPasses,
   ] = await Promise.all([
+    db.rewardEvent.count({ where: rewardEventWhere(customerCutoff) }),
+    db.session.count({ where: sessionsAfterEvents }),
+    db.auditLog.count({ where: { session: sessionsAfterEvents } }),
+    db.customerPass.count({ where: { session: { is: sessionsAfterEvents } } }),
     db.adminAuditLog.count({ where: { createdAt: { lt: cutoff } } }),
     db.customerPassChallenge.count({ where: { expiresAt: { lt: cutoff } } }),
     db.sellerAuthorizationChallenge.count({ where: { expiresAt: { lt: cutoff } } }),
     db.customerHistoryChallenge.count({ where: { expiresAt: { lt: cutoff } } }),
     db.customerHistoryAccess.count({ where: { expiresAt: { lt: cutoff } } }),
     db.customerPass.count({ where: customerPassWhere(cutoff) }),
-    db.session.count(),
-    db.auditLog.count(),
-    db.rewardEvent.count(),
-    db.customerPass.count({ where: { session: { isNot: null } } }),
+    db.session.count({ where: { NOT: sessionsAfterEvents } }),
+    db.auditLog.count({ where: { session: { NOT: sessionsAfterEvents } } }),
+    db.rewardEvent.count({ where: { NOT: rewardEventWhere(customerCutoff) } }),
+    db.customerPass.count({ where: { session: { is: { NOT: sessionsAfterEvents } } } }),
   ]);
 
   return {
     policy: RETENTION_POLICY,
     cutoff: cutoff.toISOString(),
+    customerDataCutoff: customerCutoff.toISOString(),
     generatedAt: now.toISOString(),
     batchLimit,
     eligible: {
@@ -95,6 +141,10 @@ export async function getRetentionReport(
       customerHistoryChallenges,
       customerHistoryAccess,
       orphanCustomerPasses,
+      rewardEvents: rewardEventsEligible,
+      sessions: sessionsEligible,
+      sessionAuditLogs,
+      linkedCustomerPasses: linkedCustomerPassesEligible,
     },
     protected: {
       sessions,
@@ -124,7 +174,35 @@ export async function applyRetention(db: PrismaClient, input: RetentionApplyInpu
     throw new Error(`Retention apply requires confirmation ${RETENTION_APPLY_CONFIRMATION}`);
   }
 
+  const customerCutoff = customerDataCutoff(input.cutoff, now);
   const deleted = await db.$transaction(async (tx) => {
+    // Customer-linked data first: reward events, then sessions without a remaining event, their
+    // audit rows and the passes they were bound to.
+    const rewardEventRows = await tx.rewardEvent.findMany({
+      where: rewardEventWhere(customerCutoff),
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+      take: batchLimit,
+      select: { id: true },
+    });
+    const rewardEvents = await tx.rewardEvent.deleteMany({
+      where: { ...rewardEventWhere(customerCutoff), id: { in: rewardEventRows.map(({ id }) => id) } },
+    });
+    const sessionRows = await tx.session.findMany({
+      where: sessionWhere(customerCutoff),
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+      take: batchLimit,
+      select: { id: true, customerPassId: true },
+    });
+    const sessionIds = sessionRows.map(({ id }) => id);
+    const linkedPassIds = sessionRows.flatMap(({ customerPassId }) => customerPassId ? [customerPassId] : []);
+    const sessionAuditLogs = await tx.auditLog.deleteMany({ where: { sessionId: { in: sessionIds } } });
+    const sessions = await tx.session.deleteMany({
+      where: { ...sessionWhere(customerCutoff), id: { in: sessionIds } },
+    });
+    const linkedCustomerPasses = await tx.customerPass.deleteMany({
+      where: { id: { in: linkedPassIds }, session: { is: null } },
+    });
+
     const [
       adminAuditRows,
       customerPassChallengeRows,
@@ -221,12 +299,17 @@ export async function applyRetention(db: PrismaClient, input: RetentionApplyInpu
       customerHistoryChallenges: customerHistoryChallenges.count,
       customerHistoryAccess: customerHistoryAccess.count,
       orphanCustomerPasses: orphanCustomerPasses.count,
+      rewardEvents: rewardEvents.count,
+      sessions: sessions.count,
+      sessionAuditLogs: sessionAuditLogs.count,
+      linkedCustomerPasses: linkedCustomerPasses.count,
     };
   });
 
   return {
     policy: RETENTION_POLICY,
     cutoff: input.cutoff.toISOString(),
+    customerDataCutoff: customerCutoff.toISOString(),
     appliedAt: now.toISOString(),
     batchLimit,
     deleted,

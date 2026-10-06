@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 import { ethers } from 'ethers';
 import type { PrismaClient } from '@prisma/client';
+import { fingerprintWallet } from './walletFingerprint';
 
 const CUSTOMER_HISTORY_DOMAIN = 'shop.ifrunit.tech';
 export const CUSTOMER_HISTORY_CHALLENGE_TTL_MS = 5 * 60 * 1000;
@@ -45,6 +46,8 @@ function tokenHash(token: string) {
 
 export async function issueCustomerHistoryChallenge(db: PrismaClient, walletAddress: string) {
   const wallet = normalizeCustomerAddress(walletAddress);
+  // T-231a: only the keyed fingerprint is stored; fails closed without the server key.
+  const walletFingerprint = fingerprintWallet(wallet);
   const issuedAt = new Date();
   const expiresAt = new Date(issuedAt.getTime() + CUSTOMER_HISTORY_CHALLENGE_TTL_MS);
   const nonce = crypto.randomBytes(32).toString('hex');
@@ -53,7 +56,7 @@ export async function issueCustomerHistoryChallenge(db: PrismaClient, walletAddr
     db.customerHistoryChallenge.deleteMany({ where: { expiresAt: { lt: issuedAt } } }),
     db.customerHistoryAccess.deleteMany({ where: { expiresAt: { lt: issuedAt } } }),
     db.customerHistoryChallenge.create({
-      data: { nonce, walletAddress: wallet, issuedAt, expiresAt },
+      data: { nonce, walletFingerprint, issuedAt, expiresAt },
     }),
   ]);
 
@@ -70,17 +73,19 @@ export async function authorizeCustomerHistory(db: PrismaClient, input: {
   signature: string;
 }) {
   const wallet = normalizeCustomerAddress(input.walletAddress);
+  const walletFingerprint = fingerprintWallet(wallet);
   const challenge = await db.customerHistoryChallenge.findUnique({ where: { nonce: input.nonce } });
   const now = new Date();
   if (
-    !challenge || challenge.walletAddress !== wallet || challenge.consumedAt ||
+    !challenge || challenge.walletFingerprint !== walletFingerprint || challenge.consumedAt ||
     challenge.expiresAt <= now
   ) {
     throw new CustomerHistoryAuthError('Customer history challenge is invalid, expired, or already used');
   }
 
+  // Rebuilt from the request wallet; the fingerprint check above bound it to this nonce.
   const message = buildCustomerHistoryMessage({
-    walletAddress: challenge.walletAddress,
+    walletAddress: wallet,
     nonce: challenge.nonce,
     issuedAt: challenge.issuedAt,
     expiresAt: challenge.expiresAt,
@@ -102,7 +107,7 @@ export async function authorizeCustomerHistory(db: PrismaClient, input: {
     const consumed = await tx.customerHistoryChallenge.updateMany({
       where: {
         nonce: challenge.nonce,
-        walletAddress: wallet,
+        walletFingerprint,
         consumedAt: null,
         expiresAt: { gt: now },
       },
@@ -112,7 +117,7 @@ export async function authorizeCustomerHistory(db: PrismaClient, input: {
       throw new CustomerHistoryAuthError('Customer history challenge is invalid, expired, or already used');
     }
     await tx.customerHistoryAccess.create({
-      data: { tokenHash: tokenHash(accessToken), walletAddress: wallet, expiresAt: accessExpiresAt },
+      data: { tokenHash: tokenHash(accessToken), walletFingerprint, expiresAt: accessExpiresAt },
     });
   });
 
@@ -132,5 +137,5 @@ export async function requireCustomerHistoryAccess(db: PrismaClient, authorizati
   if (!access || access.expiresAt <= new Date()) {
     throw new CustomerHistoryAuthError('Customer history access expired');
   }
-  return access.walletAddress;
+  return access.walletFingerprint;
 }

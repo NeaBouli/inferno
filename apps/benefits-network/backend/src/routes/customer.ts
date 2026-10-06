@@ -70,7 +70,7 @@ router.get('/', customerHistoryRateLimiter, async (req, res, next) => {
       res.status(400).json({ error: 'Invalid customer history pagination' });
       return;
     }
-    const wallet = await requireCustomerHistoryAccess(prisma, req.header('authorization'));
+    const customerFingerprint = await requireCustomerHistoryAccess(prisma, req.header('authorization'));
     const now = new Date();
     const snapshot = parsed.data.snapshot ? new Date(parsed.data.snapshot) : now;
     if (snapshot > now) {
@@ -81,7 +81,7 @@ router.get('/', customerHistoryRateLimiter, async (req, res, next) => {
       ? await prisma.session.findFirst({
           where: {
             id: parsed.data.cursor,
-            recoveredAddress: wallet,
+            customerFingerprint,
             createdAt: { lte: snapshot },
           },
           select: { id: true },
@@ -93,7 +93,7 @@ router.get('/', customerHistoryRateLimiter, async (req, res, next) => {
     }
 
     const rows = await prisma.session.findMany({
-      where: { recoveredAddress: wallet, createdAt: { lte: snapshot } },
+      where: { customerFingerprint, createdAt: { lte: snapshot } },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       ...(cursor ? { cursor: { id: cursor.id }, skip: 1 } : {}),
       take: parsed.data.limit + 1,

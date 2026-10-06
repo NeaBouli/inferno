@@ -16,6 +16,7 @@ jest.mock('../src/config', () => ({
     IFRLOCK_ADDRESS: '0x0000000000000000000000000000000000000001',
     COMMITMENT_VAULT_ADDRESS: '0x0000000000000000000000000000000000000003',
     ADMIN_SECRET: 'test-admin-secret-0123456789abcdef0123456789',
+    CUSTOMER_WALLET_HMAC_KEY: 'test-customer-wallet-hmac-key-0123456789abcdef',
     DATABASE_URL: 'file:./test.db',
     RATE_LIMIT_STORE: 'memory',
     MAX_ACTIVE_SELLER_BUSINESSES_PER_WALLET: 5,
@@ -24,9 +25,11 @@ jest.mock('../src/config', () => ({
   },
 }));
 
+import { fingerprintWallet } from '../src/services/walletFingerprint';
 import { prisma } from '../src/services/sessionService';
 import { server } from '../src/index';
 import {
+  CUSTOMER_DATA_MIN_RETENTION_DAYS,
   RETENTION_APPLY_CONFIRMATION,
   applyRetention,
   getRetentionReport,
@@ -38,6 +41,9 @@ const CUTOFF = new Date('2026-06-27T00:00:00.000Z');
 const OLD = new Date('2026-06-01T00:00:00.000Z');
 const RECENT = new Date('2026-07-01T00:00:00.000Z');
 const WALLET = '0x00000000000000000000000000000000000000AA';
+const FP = fingerprintWallet(WALLET);
+// Older than the 30-day CUTOFF but younger than the 35-day customer-data floor (2026-06-22).
+const FLOOR_PROTECTED = new Date('2026-06-25T00:00:00.000Z');
 
 function baseUrl() {
   const address = server.address();
@@ -89,8 +95,8 @@ async function seedRetentionRows() {
   });
   await prisma.customerPassChallenge.createMany({
     data: [
-      { nonce: 'pass-old', walletAddress: WALLET, issuedAt: OLD, expiresAt: OLD, createdAt: OLD },
-      { nonce: 'pass-recent', walletAddress: WALLET, issuedAt: RECENT, expiresAt: RECENT, createdAt: RECENT },
+      { nonce: 'pass-old', walletFingerprint: FP, issuedAt: OLD, expiresAt: OLD, createdAt: OLD },
+      { nonce: 'pass-recent', walletFingerprint: FP, issuedAt: RECENT, expiresAt: RECENT, createdAt: RECENT },
     ],
   });
   await prisma.sellerAuthorizationChallenge.createMany({
@@ -117,21 +123,21 @@ async function seedRetentionRows() {
   });
   await prisma.customerHistoryChallenge.createMany({
     data: [
-      { nonce: 'history-old', walletAddress: WALLET, issuedAt: OLD, expiresAt: OLD, createdAt: OLD },
-      { nonce: 'history-recent', walletAddress: WALLET, issuedAt: RECENT, expiresAt: RECENT, createdAt: RECENT },
+      { nonce: 'history-old', walletFingerprint: FP, issuedAt: OLD, expiresAt: OLD, createdAt: OLD },
+      { nonce: 'history-recent', walletFingerprint: FP, issuedAt: RECENT, expiresAt: RECENT, createdAt: RECENT },
     ],
   });
   await prisma.customerHistoryAccess.createMany({
     data: [
-      { tokenHash: 'token-old', walletAddress: WALLET, expiresAt: OLD, createdAt: OLD },
-      { tokenHash: 'token-recent', walletAddress: WALLET, expiresAt: RECENT, createdAt: RECENT },
+      { tokenHash: 'token-old', walletFingerprint: FP, expiresAt: OLD, createdAt: OLD },
+      { tokenHash: 'token-recent', walletFingerprint: FP, expiresAt: RECENT, createdAt: RECENT },
     ],
   });
   await prisma.customerPass.createMany({
     data: [
       {
         id: 'orphan-open-old',
-        walletAddress: WALLET,
+        walletFingerprint: FP,
         controlHash: 'control-open-old',
         status: 'OPEN',
         expiresAt: OLD,
@@ -140,7 +146,7 @@ async function seedRetentionRows() {
       },
       {
         id: 'orphan-cancelled-old',
-        walletAddress: WALLET,
+        walletFingerprint: FP,
         controlHash: 'control-cancelled-old',
         status: 'CANCELLED',
         expiresAt: OLD,
@@ -150,7 +156,7 @@ async function seedRetentionRows() {
       },
       {
         id: 'orphan-recent',
-        walletAddress: WALLET,
+        walletFingerprint: FP,
         controlHash: 'control-recent',
         status: 'OPEN',
         expiresAt: RECENT,
@@ -163,7 +169,7 @@ async function seedRetentionRows() {
   const linkedPass = await prisma.customerPass.create({
     data: {
       id: 'linked-old',
-      walletAddress: WALLET,
+      walletFingerprint: FP,
       controlHash: 'control-linked-old',
       status: 'EXPIRED',
       expiresAt: OLD,
@@ -217,7 +223,7 @@ async function seedRetentionRows() {
       businessId: business.id,
       sessionId: session.id,
       partnerId: `0x${'12'.repeat(32)}`,
-      customerWallet: WALLET,
+      customerFingerprint: fingerprintWallet(WALLET),
       lockAmountRaw: '1000000000000',
       chainId: 1,
       status: 'PENDING',
@@ -225,6 +231,30 @@ async function seedRetentionRows() {
       updatedAt: OLD,
     },
   });
+
+  // Customer rows inside the window: one after the cutoff, one protected only by the 35-day floor.
+  for (const [id, at] of [['recent-session', RECENT], ['floor-session', FLOOR_PROTECTED]] as const) {
+    const pass = await prisma.customerPass.create({
+      data: {
+        id: `${id}-pass`, walletFingerprint: FP, controlHash: `control-${id}`, status: 'BOUND',
+        expiresAt: at, createdAt: at, updatedAt: at,
+      },
+    });
+    await prisma.session.create({
+      data: {
+        id, businessId: business.id, customerPassId: pass.id, nonce: `${id}-nonce`, expiresAt: at,
+        status: 'REDEEMED', redeemedAt: at, customerFingerprint: FP, lockAmountRaw: '1000', createdAt: at, updatedAt: at,
+      },
+    });
+    await prisma.auditLog.create({ data: { sessionId: id, type: 'REDEEMED', payload: '{}', ts: at } });
+    await prisma.rewardEvent.create({
+      data: {
+        businessId: business.id, sessionId: id, partnerId: `0x${(id === 'recent-session' ? '34' : '56').repeat(32)}`,
+        customerFingerprint: FP, lockAmountRaw: '1000000000000', chainId: 1, status: 'SETTLEMENT_PENDING',
+        createdAt: at, updatedAt: at,
+      },
+    });
+  }
 }
 
 describe('Benefits retention operations', () => {
@@ -241,11 +271,13 @@ describe('Benefits retention operations', () => {
     });
   });
 
-  it('reports only eligible phase-one rows and never mutates during preview', async () => {
+  it('reports eligible rows, applies the 35-day customer floor and never mutates during preview', async () => {
     const report = await getRetentionReport(prisma, CUTOFF, NOW);
 
     expect(report).toMatchObject({
+      policy: 'phase-two-bounded-customer-data',
       cutoff: CUTOFF.toISOString(),
+      customerDataCutoff: new Date(NOW.getTime() - CUSTOMER_DATA_MIN_RETENTION_DAYS * 86_400_000).toISOString(),
       generatedAt: NOW.toISOString(),
       eligible: {
         adminAuditLogs: 1,
@@ -254,16 +286,32 @@ describe('Benefits retention operations', () => {
         customerHistoryChallenges: 1,
         customerHistoryAccess: 1,
         orphanCustomerPasses: 2,
+        rewardEvents: 1,
+        sessions: 1,
+        sessionAuditLogs: 1,
+        linkedCustomerPasses: 1,
       },
       protected: {
-        sessions: 1,
-        auditLogs: 1,
-        rewardEvents: 1,
-        linkedCustomerPasses: 1,
+        sessions: 2,
+        auditLogs: 2,
+        rewardEvents: 2,
+        linkedCustomerPasses: 2,
       },
     });
     expect(await prisma.adminAuditLog.count()).toBe(2);
-    expect(await prisma.customerPass.count()).toBe(4);
+    expect(await prisma.customerPass.count()).toBe(6);
+    expect(await prisma.session.count()).toBe(3);
+  });
+
+  it('never prunes customer rows younger than the floor, whatever the requested cutoff', async () => {
+    const oneDay = new Date(NOW.getTime() - 86_400_000);
+    const report = await getRetentionReport(prisma, oneDay, NOW);
+    expect(report.customerDataCutoff).toBe(new Date('2026-06-22T00:00:00.000Z').toISOString());
+    expect(report.eligible).toMatchObject({ sessions: 1, rewardEvents: 1 });
+    await applyRetention(prisma, { cutoff: oneDay, now: NOW, confirmation: RETENTION_APPLY_CONFIRMATION });
+    expect((await prisma.session.findMany({ orderBy: { id: 'asc' } })).map(({ id }) => id))
+      .toEqual(['floor-session', 'recent-session']);
+    expect(await prisma.rewardEvent.count()).toBe(2);
   });
 
   it('requires the exact confirmation before applying retention', async () => {
@@ -290,9 +338,10 @@ describe('Benefits retention operations', () => {
     });
 
     expect(result.deleted.orphanCustomerPasses).toBe(1);
+    expect(result.deleted).toMatchObject({ rewardEvents: 1, sessions: 1, sessionAuditLogs: 1, linkedCustomerPasses: 1 });
     const report = await getRetentionReport(prisma, CUTOFF, NOW, 1);
     expect(report.eligible.orphanCustomerPasses).toBe(1);
-    expect(await prisma.customerPass.count({ where: { session: { isNot: null } } })).toBe(1);
+    expect(await prisma.customerPass.count({ where: { session: { isNot: null } } })).toBe(2);
   });
 
   it('deletes only eligible rows and appends a non-sensitive operator audit', async () => {
@@ -309,11 +358,18 @@ describe('Benefits retention operations', () => {
       customerHistoryChallenges: 1,
       customerHistoryAccess: 1,
       orphanCustomerPasses: 2,
+      rewardEvents: 1,
+      sessions: 1,
+      sessionAuditLogs: 1,
+      linkedCustomerPasses: 1,
     });
-    expect(await prisma.session.count()).toBe(1);
-    expect(await prisma.auditLog.count()).toBe(1);
-    expect(await prisma.rewardEvent.count()).toBe(1);
-    expect(await prisma.customerPass.findUnique({ where: { id: 'linked-old' } })).not.toBeNull();
+    expect(await prisma.session.findUnique({ where: { id: 'protected-session' } })).toBeNull();
+    expect(await prisma.auditLog.findUnique({ where: { id: 'protected-audit' } })).toBeNull();
+    expect(await prisma.rewardEvent.findUnique({ where: { id: 'protected-reward-event' } })).toBeNull();
+    expect(await prisma.customerPass.findUnique({ where: { id: 'linked-old' } })).toBeNull();
+    expect(await prisma.session.count()).toBe(2);
+    expect(await prisma.auditLog.count()).toBe(2);
+    expect(await prisma.rewardEvent.count()).toBe(2);
     expect(await prisma.customerPass.findUnique({ where: { id: 'orphan-recent' } })).not.toBeNull();
     expect(await prisma.adminAuditLog.findFirstOrThrow({
       where: { action: 'retention:prune' },
@@ -337,6 +393,10 @@ describe('Benefits retention operations', () => {
       customerHistoryChallenges: 0,
       customerHistoryAccess: 0,
       orphanCustomerPasses: 0,
+      rewardEvents: 0,
+      sessions: 0,
+      sessionAuditLogs: 0,
+      linkedCustomerPasses: 0,
     });
     expect(await prisma.adminAuditLog.count({
       where: { action: 'retention:prune' },
@@ -356,7 +416,7 @@ describe('Benefits retention operations', () => {
     );
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({
-      policy: 'phase-one-expired-auth-artifacts',
+      policy: 'phase-two-bounded-customer-data',
       eligible: expect.any(Object),
       protected: expect.any(Object),
     });

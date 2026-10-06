@@ -1,5 +1,37 @@
 # Changelog
 
+## [Unreleased] — 2026-10-06 — Benefits stores no customer wallet addresses (T-231a)
+
+### Security
+
+- `security:` Benefits backend: raw customer wallet addresses are no longer
+  persisted (owner decision 2026-10-06). Challenges, passes, sessions, history
+  tokens and reward events store a keyed fingerprint (`wfp1:` + HMAC-SHA256 under
+  the new server-side `CUSTOMER_WALLET_HMAC_KEY`); session audit payloads carry no
+  customer wallet. Raw addresses live only in request memory for signature
+  recovery and on-chain reads. Without the key, customer checkout, passes, history
+  and redeem return `503` and store nothing; `/api/ready` reports
+  `customerWalletProtection`.
+- Model B one-reward-per-wallet-and-partner, redemption limits, customer history
+  and the self-redemption exclusion (seller wallets fingerprinted in memory) work on
+  fingerprints. Seller wallets remain business identities in clear text. Sellers
+  now see only `verified`, never an address or fingerprint.
+- The legacy lock-reward path needs a raw customer address
+  (`walletRewardClaimed(address)`), so `rewards:queue` holds those events as
+  `BLOCKED_CALLER`; `isWalletAlreadyRewarded` is removed.
+- Retention (`phase-two-bounded-customer-data`, new confirmation
+  `PRUNE_BENEFITS_DATA_WINDOW`) also prunes reward events and sessions with their
+  audit rows and passes, never younger than 35 days.
+- No schema migration (Prisma `@map` onto existing columns). Existing rows need the
+  one-off keyed data migration `npm run fingerprint:migrate` in its own reviewed
+  release; see `docs/BENEFITS_RETENTION_RUNBOOK.md`.
+- `/privacy`, `docs/BUSINESS_ONBOARDING.md`, backend README, threat model and
+  retention runbook state the fingerprint-only storage and the 35-day window.
+- `test:` `tests/customerWalletPrivacy.test.ts`: DB-wide scan after a full pass,
+  redeem, reward and history flow; HMAC stability; self-redemption and limits on
+  fingerprints; fail-closed without key; migration transform, idempotency,
+  collision refusal and key refusal.
+
 ## [Unreleased] — 2026-10-06 — Web3 narrow hero in degraded wallet state (T-285)
 
 ### Fixed

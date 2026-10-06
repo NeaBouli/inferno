@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { prisma } from '../services/sessionService';
 import { adminAuth } from '../middleware/auth';
 import { validate } from '../middleware/validator';
-import { getModelBVaultState, getRewardOnChainStatus, isWalletAlreadyRewarded } from '../services/rewardService';
+import { LOCK_REWARD_PATH_BLOCKED_REASON, getModelBVaultState, getRewardOnChainStatus } from '../services/rewardService';
 import { findPilot, getModelBPolicy } from '../services/modelBPolicy';
 import {
   buildSettlementExport,
@@ -597,7 +597,11 @@ router.post('/businesses/:id/rewards/queue', adminAuth, async (req, res, next) =
       return;
     }
 
-    const eventSelect = { id: true, customerWallet: true } as const;
+    // T-231a: reward events hold only a keyed customer fingerprint. The legacy lock-reward path needs
+    // the raw customer address (PartnerVault.walletRewardClaimed(address) and a caller submission),
+    // which this service no longer stores, so those events stay blocked. Model B (above) is the
+    // adopted path and needs no customer address.
+    const eventSelect = { id: true } as const;
     const [readyEvents, actionableEvents] = await Promise.all([
       prisma.rewardEvent.findMany({
         where: { businessId: business.id, partnerId: link.partnerId, status: 'READY' },
@@ -618,28 +622,18 @@ router.post('/businesses/:id/rewards/queue', adminAuth, async (req, res, next) =
     ]);
     const events = [...readyEvents, ...actionableEvents];
 
-    let ready = 0;
-    let confirmed = 0;
+    const ready = 0;
+    const confirmed = 0;
     let blocked = 0;
     for (const event of events) {
-      const alreadyRewarded = await isWalletAlreadyRewarded(event.customerWallet, link.partnerId);
-      const status = alreadyRewarded ? 'CONFIRMED' : onChain.submissionReady ? 'READY' : 'BLOCKED_CALLER';
-      const reason = alreadyRewarded
-        ? 'Confirmed from PartnerVault anti-double-count state'
-        : onChain.submissionReady
-          ? 'Governance and authorized caller checks passed; no transaction submitted by this service'
-          : onChain.reason || 'Dedicated reward caller is not authorized';
       const updated = await prisma.rewardEvent.updateMany({
         where: {
           id: event.id,
           status: { in: ['PENDING', 'READY', 'BLOCKED_CALLER', 'BLOCKED_GOVERNANCE'] },
         },
-        data: { status, reason },
+        data: { status: 'BLOCKED_CALLER', reason: LOCK_REWARD_PATH_BLOCKED_REASON },
       });
-      if (updated.count !== 1) continue;
-      if (status === 'CONFIRMED') confirmed += 1;
-      else if (status === 'READY') ready += 1;
-      else blocked += 1;
+      if (updated.count === 1) blocked += 1;
     }
 
     await prisma.$transaction(async (tx) => {
@@ -653,7 +647,7 @@ router.post('/businesses/:id/rewards/queue', adminAuth, async (req, res, next) =
       });
       await recordAdminAudit(tx, req, 'rewards:queue', 200, { type: 'Business', id: business.id });
     });
-    res.json({ ready, confirmed, blocked, scanned: events.length, submissionReady: onChain.submissionReady });
+    res.json({ ready, confirmed, blocked, scanned: events.length, submissionReady: false });
   } catch (err) {
     next(err);
   }
