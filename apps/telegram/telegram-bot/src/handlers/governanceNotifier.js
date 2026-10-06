@@ -1,6 +1,7 @@
 // handlers/governanceNotifier.js — Poll for new governance proposals every 30 min
 const { ethers } = require('ethers');
 const logger = require('../services/logger');
+const { sendToGroup } = require('../services/topicRouter');
 
 const GOV_ABI = [
   'function proposalCount() view returns (uint256)',
@@ -12,7 +13,6 @@ let lastSeenProposalId = -1;
 
 function startGovernanceNotifier(bot) {
   const chatId = process.env.TELEGRAM_GROUP_ID;
-  const topicId = process.env.TELEGRAM_ANNOUNCEMENTS_TOPIC_ID || null;
   const govAddress = process.env.GOVERNANCE_ADDRESS;
   const rpcUrl = process.env.ALCHEMY_RPC_URL;
 
@@ -55,9 +55,8 @@ function startGovernanceNotifier(bot) {
             `🔗 [Governance Dashboard](https://ifrunit.tech/wiki/governance.html)`;
 
           const opts = { parse_mode: 'Markdown', disable_web_page_preview: true };
-          if (topicId && Number(topicId) > 1) opts.message_thread_id = Number(topicId);
-
-          await bot.telegram.sendMessage(chatId, text, opts);
+          // New proposals are pending, not decisions: Vote topic (T-286).
+          await sendToGroup(bot.telegram, chatId, 'vote', text, opts);
           logger.info({ proposalId: i, target: prop.target }, 'New proposal notification sent');
         }
 

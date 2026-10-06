@@ -1,8 +1,8 @@
 // commands/announce.js — /announce <message> (Admin only)
 const logger = require('../services/logger');
+const { sendToGroup } = require('../services/topicRouter');
 
 const GROUP_ID = process.env.TELEGRAM_GROUP_ID;
-const TOPIC_ID = process.env.TELEGRAM_ANNOUNCEMENTS_TOPIC_ID;
 const CHANNEL_ID = process.env.TELEGRAM_CHANNEL_ID;
 
 async function announceCommand(ctx) {
@@ -23,13 +23,10 @@ async function announceCommand(ctx) {
     `🌐 ifrunit.tech\n` +
     `💬 *Join the community:* [t.me/IFR\\_token](https://t.me/IFR_token)`;
   const opts = { parse_mode: 'Markdown' };
-  if (TOPIC_ID && Number(TOPIC_ID) > 1) {
-    opts.message_thread_id = Number(TOPIC_ID);
-  }
 
   let posted = 0;
   try {
-    const sentMsg = await ctx.telegram.sendMessage(GROUP_ID, formatted, opts);
+    const sentMsg = await sendToGroup(ctx.telegram, GROUP_ID, 'announcements', formatted, opts);
     posted++;
     // Auto-pin announcement in group
     try {

@@ -1,7 +1,9 @@
 // services/voteAnnouncement.js — IFR Governance Proposal Announcement Service
 //
 // Monitors Governance contract for proposal lifecycle changes and announces them
-// to Telegram Channel + Community Announcements topic.
+// to Telegram Channel + community forum topics (T-286): pending proposals
+// (new, executable) go to the Vote topic, decisions (executed, cancelled) to
+// the Council topic. A pending proposal is never posted as a decision.
 //
 // Features:
 // - Polls Governance contract every 30 minutes for new proposals
@@ -12,6 +14,7 @@
 
 const { ethers } = require('ethers');
 const logger = require('./logger');
+const { sendToGroup } = require('./topicRouter');
 
 const GOV_ABI = [
   'function proposalCount() view returns (uint256)',
@@ -46,10 +49,9 @@ function decodeAction(data) {
   return KNOWN[sel] || `call(${sel})`;
 }
 
-async function sendToChannelAndCommunity(bot, msg, govAddress) {
+async function sendToChannelAndCommunity(bot, msg, category) {
   const channelId = process.env.TELEGRAM_CHANNEL_ID;
   const groupId = process.env.TELEGRAM_GROUP_ID;
-  const topicId = process.env.TELEGRAM_ANNOUNCEMENTS_TOPIC_ID;
 
   const opts = {
     parse_mode: 'Markdown',
@@ -66,9 +68,7 @@ async function sendToChannelAndCommunity(bot, msg, govAddress) {
 
   if (groupId) {
     try {
-      const groupOpts = { ...opts };
-      if (topicId && Number(topicId) > 1) groupOpts.message_thread_id = Number(topicId);
-      await bot.telegram.sendMessage(groupId, msg, groupOpts);
+      await sendToGroup(bot.telegram, groupId, category, msg, opts);
     } catch (e) {
       logger.error({ err: e.message }, 'VoteAnnounce: community send failed');
     }
@@ -98,7 +98,7 @@ function announceNewProposal(bot, id, proposal, govAddress) {
     `📖 [Governance Docs](https://ifrunit.tech/wiki/governance.html)`;
 
   logger.info({ proposalId: id, action, target: proposal.target }, 'Announcing new proposal');
-  return sendToChannelAndCommunity(bot, msg, govAddress);
+  return sendToChannelAndCommunity(bot, msg, 'vote');
 }
 
 function announceExecutable(bot, id, govAddress) {
@@ -111,7 +111,7 @@ function announceExecutable(bot, id, govAddress) {
     `📖 [Governance Docs](https://ifrunit.tech/wiki/governance.html)`;
 
   logger.info({ proposalId: id }, 'Announcing proposal executable');
-  return sendToChannelAndCommunity(bot, msg, govAddress);
+  return sendToChannelAndCommunity(bot, msg, 'vote');
 }
 
 function announceExecuted(bot, id, govAddress) {
@@ -125,7 +125,7 @@ function announceExecuted(bot, id, govAddress) {
     `📖 [Governance Docs](https://ifrunit.tech/wiki/governance.html)`;
 
   logger.info({ proposalId: id }, 'Announcing proposal executed');
-  return sendToChannelAndCommunity(bot, msg, govAddress);
+  return sendToChannelAndCommunity(bot, msg, 'council');
 }
 
 function announceCancelled(bot, id, govAddress) {
@@ -137,7 +137,7 @@ function announceCancelled(bot, id, govAddress) {
     `This governance proposal has been cancelled by the owner or guardian.`;
 
   logger.info({ proposalId: id }, 'Announcing proposal cancelled');
-  return sendToChannelAndCommunity(bot, msg, govAddress);
+  return sendToChannelAndCommunity(bot, msg, 'council');
 }
 
 // Main check function — called by scheduler
