@@ -4,6 +4,7 @@
 
 const { ethers } = require('ethers');
 const logger = require('./logger');
+const { sendToGroup } = require('./topicRouter');
 
 const BOOTSTRAP_VAULT = '0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141';
 const BOOTSTRAP_START = new Date('2026-03-07T00:00:00Z').getTime();
@@ -69,8 +70,6 @@ async function sendAlert(bot, diffETH, totalETH, contributors, ifrAlloc) {
 
   var channelId = process.env.TELEGRAM_CHANNEL_ID;
   var groupId = process.env.TELEGRAM_GROUP_ID;
-  var announceTopic = process.env.TELEGRAM_ANNOUNCEMENTS_TOPIC_ID
-    ? parseInt(process.env.TELEGRAM_ANNOUNCEMENTS_TOPIC_ID, 10) : null;
   var opts = { parse_mode: 'Markdown', disable_web_page_preview: true };
 
   // Channel
@@ -85,9 +84,7 @@ async function sendAlert(bot, diffETH, totalETH, contributors, ifrAlloc) {
   // Community — Announcements topic
   if (groupId) {
     try {
-      var groupOpts = Object.assign({}, opts);
-      if (announceTopic) groupOpts.message_thread_id = announceTopic;
-      await bot.telegram.sendMessage(groupId, msg, groupOpts);
+      await sendToGroup(bot.telegram, groupId, 'announcements', msg, opts);
     } catch (e) {
       logger.error({ err: e.message }, 'Bootstrap alert: group send failed');
     }

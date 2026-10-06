@@ -1,7 +1,10 @@
 # IFR SDK npm Release Runbook
 
-Status: **NOT PUBLISHED**; publication approved by the project (2026-10-03, Lane 7). First version:
-manual bootstrap; later versions: manually dispatched workflow on protected `main`
+Status: **NOT PUBLISHED**; publication approved by the project (2026-10-03, Lane 7) and confirmed by the
+owner on 2026-10-06 as a public MIT package with provenance and no proprietary lock-in. First version:
+manual bootstrap; later versions: manually dispatched workflow on protected `main`.
+
+Plain-language owner click guide (npmjs.com and GitHub): [`docs/SDK_RELEASE.md`](../SDK_RELEASE.md).
 
 Package: `ifr-sdk`
 
@@ -143,9 +146,33 @@ npm Trusted Publishing is configured per existing package, so the first version 
 the registry and refuses every run before the package exists):
 
 1. The owner publishes the version in `apps/sdk/package.json` on the exact reviewed `main` commit
-   (currently `0.3.0`) once, locally, signed in as `ifr-protocol` with 2FA and the project alias e-mail:
-   `npm ci && npm test && npm run test:package && npm publish --access public` in `apps/sdk`. No token is
-   created for this. No `sdk-v*` tag or workflow run is used for this version.
+   (currently `0.3.0`) once, locally, signed in as `ifr-protocol` with 2FA and the project alias e-mail,
+   only after an explicit action-time approval that names the version, the exact commit SHA, the
+   seven-file package listing and the missing provenance. Publishing this first version with
+   `--provenance=false` is a separately approved exception: `publishConfig.provenance` is `true` for the
+   workflow and npm refuses provenance outside a supported CI provider. The general publication decision
+   is not this action-time approval. No `sdk-v*` tag or workflow run is used for this version.
+
+   Local bootstrap authentication is not credential-free: `npm login` writes a session token into the npm
+   user config. This is distinct from the CI path, which never has an `NPM_TOKEN`. The bootstrap runs only
+   through the fail-closed script, from a clean checkout of the approved commit:
+
+   ```bash
+   git fetch origin && git checkout --detach <approved-sha>   # the reviewed main commit
+   bash scripts/sdk-bootstrap-publish.sh 0.3.0 <approved-sha>
+   ```
+
+   The script binds the run to the approved version and SHA, uses a private temporary
+   `NPM_CONFIG_USERCONFIG` (no other npm configuration is read, changed or removed), runs the package
+   checks, logs in with `npm login --auth-type=web`, publishes only if `npm whoami` is exactly
+   `ifr-protocol`, preserves the publish exit status, and runs `npm logout` (which ends the token session
+   on the registry) on every exit after a login, including publish failure and interruption. The temporary
+   config is deleted only after a successful logout and a verified clean file; otherwise the run ends in
+   HOLD (non-zero) and keeps the file so the session can be revoked under npmjs.com -> Access Tokens before
+   the file is removed by hand. Credentials are never printed. Fixture tests:
+   `scripts/test-sdk-bootstrap-publish.cjs` (dummy npm and git; failing git status or rev-parse, dirty tree, mktemp failure, approval mismatch, failed checks,
+   failed login, wrong account, publish failure, interruption, logout failure, credential left, unreadable
+   or missing config, success).
 2. Immediately configure Trusted Publishing for `ifr-sdk` with all four bindings (see Blocking Release
    Gates) and, in the package settings, require two-factor authentication and disallow tokens.
 3. Verify the bootstrap as in step 4 of the workflow release below; optionally create the marker tag

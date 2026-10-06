@@ -173,17 +173,15 @@ const { sendDailyBurnReport } = require('./handlers/dailyReport');
 
 bot.command('testwelcome', adminOnly, async (ctx) => {
   const chatId = process.env.TELEGRAM_GROUP_ID;
-  const topicId = process.env.TELEGRAM_GENERAL_TOPIC_ID;
   if (!chatId) return ctx.reply('❌ TELEGRAM_GROUP_ID not set.');
-  await sendDailyWelcome(bot, chatId, topicId ? parseInt(topicId, 10) : null);
+  await sendDailyWelcome(bot, chatId);
   await ctx.reply('✅ Daily welcome sent.');
 });
 
 bot.command('testburn', adminOnly, async (ctx) => {
   const chatId = process.env.TELEGRAM_GROUP_ID;
-  const topicId = process.env.TELEGRAM_BURNS_TOPIC_ID;
   if (!chatId) return ctx.reply('❌ TELEGRAM_GROUP_ID not set.');
-  await sendDailyBurnReport(bot, chatId, topicId ? parseInt(topicId, 10) : null);
+  await sendDailyBurnReport(bot, chatId);
   await ctx.reply('✅ Burn report sent.');
 });
 

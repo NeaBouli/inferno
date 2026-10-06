@@ -1,10 +1,11 @@
 // handlers/dailyWelcome.js — Daily welcome message at 08:00 CET (07:00 UTC)
 const { getBurnStats } = require('../services/onchain');
 const logger = require('../services/logger');
+const { sendToGroup, resolveTopicId } = require('../services/topicRouter');
 
 const WELCOME_HOUR_UTC = 7; // 08:00 CET = 07:00 UTC
 
-async function sendDailyWelcome(bot, chatId, topicId) {
+async function sendDailyWelcome(bot, chatId) {
   try {
     const stats = await getBurnStats();
 
@@ -21,10 +22,8 @@ async function sendDailyWelcome(bot, chatId, topicId) {
       `🌐 [ifrunit.tech](https://ifrunit.tech)`;
 
     const opts = { parse_mode: 'Markdown', disable_web_page_preview: true };
-    if (topicId) opts.message_thread_id = topicId;
-
-    await bot.telegram.sendMessage(chatId, text, opts);
-    logger.info({ chatId, topicId }, 'Daily welcome sent');
+    await sendToGroup(bot.telegram, chatId, 'general', text, opts);
+    logger.info({ chatId, topicId: resolveTopicId('general') }, 'Daily welcome sent');
   } catch (err) {
     logger.error({ err: err.message }, 'Failed to send daily welcome');
   }
@@ -32,7 +31,6 @@ async function sendDailyWelcome(bot, chatId, topicId) {
 
 function scheduleDailyWelcome(bot) {
   const chatId = process.env.TELEGRAM_GROUP_ID;
-  const topicId = process.env.TELEGRAM_GENERAL_TOPIC_ID || null;
 
   if (!chatId) {
     logger.warn('TELEGRAM_GROUP_ID not set — daily welcome disabled');
@@ -51,7 +49,7 @@ function scheduleDailyWelcome(bot) {
     const delay = msUntilNext();
     logger.info({ delayMinutes: Math.round(delay / 60000) }, 'Next daily welcome scheduled');
     setTimeout(async () => {
-      await sendDailyWelcome(bot, chatId, topicId ? parseInt(topicId, 10) : null);
+      await sendDailyWelcome(bot, chatId);
       scheduleNext();
     }, delay);
   }
