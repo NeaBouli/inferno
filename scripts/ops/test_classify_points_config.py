@@ -24,11 +24,13 @@ OTHER = "0x1111111111111111111111111111111111111111"
 SENTINEL_URL = "https://user:SENTINEL-PASS@rpc.example.invalid/v3/SENTINEL-KEY"
 
 
-def inspect_json(env: Optional[list[str]]) -> str:
+def inspect_json(env: Optional[list[str]], name: str = "/inferno-points-backend",
+                 running: bool = True, status: str = "running") -> str:
     config: dict[str, object] = {"Image": "dummy"}
     if env is not None:
         config["Env"] = env
-    return json.dumps([{"Id": "dummy", "Config": config}])
+    state = {"Running": running, "Status": status}
+    return json.dumps([{"Id": "dummy", "Name": name, "State": state, "Config": config}])
 
 
 def run(env: Optional[list[str]] = None, raw: Optional[str] = None) -> tuple[list[str], int]:
@@ -57,9 +59,10 @@ class FeeRouterTests(unittest.TestCase):
         self.assertIn("fee_router=empty", run(base("FEE_ROUTER_ADDRESS="))[0])
         self.assertIn("fee_router=empty", run(base("FEE_ROUTER_ADDRESS=   "))[0])
 
-    def test_duplicate(self) -> None:
-        lines, _ = run(base(f"FEE_ROUTER_ADDRESS={CANONICAL}", f"FEE_ROUTER_ADDRESS={OTHER}"))
+    def test_duplicate_is_ambiguous_exit_2(self) -> None:
+        lines, code = run(base(f"FEE_ROUTER_ADDRESS={CANONICAL}", f"FEE_ROUTER_ADDRESS={OTHER}"))
         self.assertIn("fee_router=duplicate", lines)
+        self.assertEqual(code, 2)
 
     def test_prefix_key_is_not_matched(self) -> None:
         lines, _ = run(base(f"FEE_ROUTER_ADDRESS_OLD={CANONICAL}"))
@@ -67,11 +70,24 @@ class FeeRouterTests(unittest.TestCase):
 
 
 class ContextTests(unittest.TestCase):
-    def test_chain(self) -> None:
-        self.assertIn("chain_mainnet=true", run(base())[0])
+    def test_chain_mirrors_js_number(self) -> None:
+        # Values Number() + isSafeInteger accept as chain 1.
+        for value in ("1", " 1 ", "01", "1.0", "1e0", "0x1", "0X01", "0b1", "0o1", "+1"):
+            lines, code = run([f"CHAIN_ID={value}", "NODE_ENV=production"])
+            self.assertIn("chain_mainnet=true", lines, value)
+            self.assertEqual(code, 0, value)
         self.assertIn("chain_mainnet=false", run(["CHAIN_ID=11155111"])[0])
-        self.assertIn("chain_mainnet=unknown", run(["CHAIN_ID=one"])[0])
-        self.assertIn("chain_mainnet=unknown", run([])[0])
+        # Values the loader rejects -> ambiguous.
+        for value in ("one", "0", "-1", "1.5", "0x", "+0x1", "1_0", "0xg", "1e400", "Infinity", "9007199254740992"):
+            lines, code = run([f"CHAIN_ID={value}", "NODE_ENV=production"])
+            self.assertIn("chain_mainnet=unknown", lines, value)
+            self.assertEqual(code, 2, value)
+
+    def test_chain_missing(self) -> None:
+        self.assertEqual(run(["NODE_ENV=production"])[1], 2)
+        self.assertIn("chain_mainnet=unknown", run(["NODE_ENV=production"])[0])
+        self.assertIn("chain_mainnet=false", run(["NODE_ENV=test"])[0])  # test fallback 11155111
+        self.assertIn("chain_mainnet=unknown", run(["CHAIN_ID=1", "CHAIN_ID=1"])[0])
 
     def test_mode(self) -> None:
         self.assertIn("mode=production-safe", run(["NODE_ENV=production"])[0])
@@ -93,6 +109,17 @@ class FailClosedTests(unittest.TestCase):
         def boom(_name: str) -> str:
             raise RuntimeError(SENTINEL_URL)
         self.assertEqual(mod.classify("inferno-points-backend", boom), (self.UNREADABLE, 2))
+
+    def test_not_the_named_running_container(self) -> None:
+        env = base(f"FEE_ROUTER_ADDRESS={CANONICAL}")
+        for raw in (inspect_json(env, name="/other"), inspect_json(env, running=False, status="exited"),
+                    inspect_json(env, status="restarting")):
+            self.assertEqual(run(raw=raw), (self.UNREADABLE, 2))
+
+    def test_ambiguous_mode(self) -> None:
+        lines, code = run(base("NODE_ENV=test"))
+        self.assertIn("mode=unknown", lines)
+        self.assertEqual(code, 2)
 
     def test_bad_container_name(self) -> None:
         for name in ("", "-x", "a b", "x;rm", "a" * 200):

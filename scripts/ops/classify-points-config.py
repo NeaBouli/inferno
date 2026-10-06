@@ -12,11 +12,13 @@ It never prints, logs or writes any environment value, address, URL or raw
 error text. Classification mirrors apps/points-backend/src/config/security.ts
 (loadPointsSecurityConfig): the router value is trimmed, compared
 case-insensitively with the canonical mainnet FeeRouterV1, NODE_ENV "test" and
-"development" are the only non-production modes, CHAIN_ID is parsed as a
-decimal integer.
+"development" are the only non-production modes, CHAIN_ID follows
+requiredValue + parseChainId (trim, JS Number semantics, positive safe integer,
+test-mode fallback). The inspected object must be the named container and running.
 
 Usage: python3 classify-points-config.py [container-name]
-Exit codes: 0 classified, 2 unreadable/ambiguous input.
+Exit codes: 0 every field classified unambiguously; 2 unreadable, not the named
+running container, or any ambiguous field (duplicate key, unknown chain/mode).
 """
 
 from __future__ import annotations
@@ -25,6 +27,7 @@ import json
 import re
 import subprocess
 import sys
+from decimal import Decimal, InvalidOperation
 from typing import Any, Callable, Optional, Sequence
 
 DEFAULT_CONTAINER = "inferno-points-backend"
@@ -49,13 +52,18 @@ def _docker_inspect(container: str) -> str:
     return result.stdout
 
 
-def _env_entries(raw: str) -> Optional[list[str]]:
-    """Extract Config.Env from inspect JSON; None when the shape is ambiguous."""
+def _env_entries(raw: str, container: str) -> Optional[list[str]]:
+    """Extract Config.Env of the named, running container; None when ambiguous."""
     try:
         data: Any = json.loads(raw)
     except ValueError:
         return None
     if not isinstance(data, list) or len(data) != 1 or not isinstance(data[0], dict):
+        return None
+    if data[0].get("Name") != f"/{container}":
+        return None
+    state = data[0].get("State")
+    if not isinstance(state, dict) or state.get("Running") is not True or state.get("Status") != "running":
         return None
     config = data[0].get("Config")
     if not isinstance(config, dict):
@@ -86,13 +94,47 @@ def classify_fee_router(values: Sequence[str]) -> str:
     return "canonical" if value.lower() == CANONICAL_FEE_ROUTER else "noncanonical"
 
 
-def classify_chain(values: Sequence[str]) -> str:
-    if len(values) != 1:
+_MAX_SAFE_INTEGER = 2**53 - 1
+_DECIMAL_RE = re.compile(r"^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$")
+
+
+def _js_number_to_safe_int(text: str) -> Optional[int]:
+    """Mirror `Number(text)` + `Number.isSafeInteger` for already-trimmed text."""
+    if text == "":
+        return 0  # Number("") === 0, rejected by the positive check
+    base_prefixes = {"0x": 16, "0X": 16, "0b": 2, "0B": 2, "0o": 8, "0O": 8}
+    prefix = text[:2]
+    if prefix in base_prefixes:
+        try:
+            value = int(text[2:], base_prefixes[prefix])
+        except ValueError:
+            return None
+        return value if text[2:].isalnum() else None
+    if not _DECIMAL_RE.fullmatch(text):
+        return None
+    try:
+        number = Decimal(text)
+    except InvalidOperation:
+        return None
+    if number != number.to_integral_value():
+        return None
+    return int(number)
+
+
+def classify_chain(values: Sequence[str], mode: str) -> str:
+    """Mirror requiredValue("CHAIN_ID", "11155111") + parseChainId."""
+    if len(values) > 1:
         return "unknown"
-    value = values[0].strip()
-    if not value.isdigit():
-        return "unknown"
-    return "true" if int(value) == 1 else "false"
+    value = values[0].strip() if values else ""
+    if not value:
+        if mode == "test":
+            value = "11155111"
+        else:
+            return "unknown"  # loader throws: CHAIN_ID is required
+    chain_id = _js_number_to_safe_int(value)
+    if chain_id is None or chain_id <= 0 or chain_id > _MAX_SAFE_INTEGER:
+        return "unknown"  # loader throws: not a positive safe integer
+    return "true" if chain_id == 1 else "false"
 
 
 def classify_mode(values: Sequence[str]) -> str:
@@ -116,16 +158,16 @@ def classify(container: str, inspector: Inspector = _docker_inspect) -> tuple[li
         raw = inspector(container)
     except Exception:  # noqa: BLE001 - every failure maps to one constant category
         return unreadable, 2
-    env = _env_entries(raw)
+    env = _env_entries(raw, container)
     if env is None:
         return unreadable, 2
     found = _collect(env)
-    lines = [
-        f"fee_router={classify_fee_router(found['FEE_ROUTER_ADDRESS'])}",
-        f"chain_mainnet={classify_chain(found['CHAIN_ID'])}",
-        f"mode={classify_mode(found['NODE_ENV'])}",
-    ]
-    return lines, 0
+    fee_router = classify_fee_router(found["FEE_ROUTER_ADDRESS"])
+    mode = classify_mode(found["NODE_ENV"])
+    chain = classify_chain(found["CHAIN_ID"], mode)
+    lines = [f"fee_router={fee_router}", f"chain_mainnet={chain}", f"mode={mode}"]
+    ambiguous = fee_router in ("duplicate", "unreadable") or chain == "unknown" or mode == "unknown"
+    return lines, 2 if ambiguous else 0
 
 
 def main(argv: Sequence[str]) -> int:
