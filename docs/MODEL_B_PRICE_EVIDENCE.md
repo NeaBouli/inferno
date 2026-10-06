@@ -1,8 +1,13 @@
-# Model B Price Evidence — Generation and Independent Verification
+# Model B Price Evidence — Generation and Chain-Reproduction Verification
 
 Operator runbook for the Lane 4 Model B settlement price evidence: how to generate the
-7-day TWAP + ETH/EUR evidence JSON and how to verify it independently against the chain
-before it is attached to any settlement export or Safe proposal.
+7-day TWAP + ETH/EUR evidence JSON and how to re-derive it from chain state via an RPC
+provider before it is attached to any settlement export or Safe proposal.
+
+**Trust limit:** both commands trust the JSON-RPC responses they receive. They do not
+verify Merkle state proofs or header chains, so a dishonest or compromised provider can
+return fabricated but self-consistent data. The checks below detect inconsistent, reorged,
+unpinned or non-matching responses; they do not authenticate the provider.
 
 Status: review finding **F3** (T-275 security review: evidence is only schema-checked by
 `validatePriceEvidence` in `apps/benefits-network/backend/src/services/modelBSettlement.ts`)
@@ -62,8 +67,11 @@ settlement export to accept the evidence.
 - Node.js >= 22.13 and `npm ci` at the repository root (provides ethers 6.17.0).
 - An **archive-capable Ethereum mainnet RPC with EIP-1898 support**: every `eth_call` and
   `eth_getCode` is pinned with `{ blockHash, requireCanonical: true }` at blocks 7+ days
-  old. The tool first probes that the endpoint rejects a read pinned to a nonexistent block
-  hash; an endpoint that ignores the pin fails with `PINNING_UNSUPPORTED`. Pruned state
+  old. The tool first sends one probe read pinned to a nonexistent block hash; an endpoint
+  that answers it (i.e. visibly ignores the pin) fails with `PINNING_UNSUPPORTED`. A passed
+  probe only shows that the endpoint rejected that request; it does not prove the endpoint
+  honours `requireCanonical` on every later read or that its data is honest. The final
+  number -> hash re-check is the tool's own canonicality check. Pruned state
   fails with `ARCHIVE_UNAVAILABLE`. Both blocks must be **finalized**.
 - Pass the endpoint via `MODEL_B_EVIDENCE_RPC_URL` (preferred; keeps it out of the process
   list) or `--rpc`. URL userinfo is sent as a Basic `Authorization` header; redirects are
@@ -100,10 +108,10 @@ node scripts/model-b-price-evidence.mjs generate \
 
 The generator (output files are never overwritten):
 
-1. requires chain id 1, proves EIP-1898 pinning is enforced, and requires the end block to
+1. requires chain id 1 (as reported by the RPC), runs the EIP-1898 pinning probe, and requires the end block to
    be finalized,
 2. selects the start block **deterministically** as the latest canonical block with
-   `timestamp <= endBlock.timestamp - 604800` and proves the boundary with the header of
+   `timestamp <= endBlock.timestamp - 604800` and checks the boundary against the RPC-reported header of
    the next block (whose `parentHash` must be the start hash); the window must stay within
    `[7d, 7d + 1h]`,
 3. binds both headers by number and by hash, then reads every value pinned to the two
@@ -128,7 +136,7 @@ The generator (output files are never overwritten):
 reference is only as fresh as its stalest leg. `ethEur.rate` carries 8 explicit decimals
 (`241505369862` = 2415.05369862 EUR per ETH).
 
-## Step 3 — Verify independently
+## Step 3 — Verify by re-derivation
 
 ```bash
 export MODEL_B_EVIDENCE_RPC_URL=<second-archive-mainnet-rpc-url>
@@ -151,10 +159,12 @@ verifier distrusts every supplied field:
   altered round data, decimals, prices, source labels or period all fail and **all**
   mismatches are listed.
 
-**Operator rule:** run `verify` at least once, preferably against a *different* RPC
-endpoint than the one used for generation, so a compromised or broken endpoint cannot
-fabricate evidence. Evidence that fails verification must never reach a settlement
-export, a Safe proposal, or a reviewer.
+**Operator rule:** run `verify` at least once against an RPC provider operated
+independently from the provider used for generation (a different URL of the same provider
+is not a different trust domain). This reduces endpoint risk, but does not authenticate
+RPC responses or eliminate the risk of fabricated evidence. Independent acceptance needs a
+reproduction by a second party with its own provider. Evidence that fails verification
+must never reach a settlement export, a Safe proposal, or a reviewer.
 
 Exit codes: `0` success, `1` generation/verification failure, `2` usage error.
 

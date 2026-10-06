@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Model B price-evidence generator and independent verifier (T-290).
+ * Model B price-evidence generator and chain-reproduction verifier (T-290).
  *
  * Produces the JSON document consumed as `priceEvidence` by the Lane 4 Model B settlement
  * export (apps/benefits-network/backend/src/services/modelBSettlement.ts, priceEvidenceSchema)
@@ -18,6 +18,13 @@
  * number -> hash mapping of both blocks is re-checked. A reorg, unsupported pinning, missing
  * archive state or any inconsistent response fails closed and produces no evidence.
  *
+ * Trust limit: values are re-derived from JSON-RPC responses, not authenticated with state or
+ * header proofs. The pinning probe only shows that the endpoint rejected one read pinned to a
+ * nonexistent hash; it does not show that the endpoint is honest. A dishonest or compromised
+ * provider can still fabricate consistent responses. Running verify through a separately
+ * operated provider reduces, but does not eliminate, that risk; independent acceptance needs a
+ * reproduction by a second party/provider.
+ *
  * Diagnostics never contain the RPC URL, raw RPC/HTTP error text or argument values: every
  * failure is reported as a constant category (EvidenceError.code) plus a detail built only
  * from pinned constants and validated chain values.
@@ -33,7 +40,7 @@
  */
 import crypto from 'node:crypto';
 import fs from 'node:fs';
-import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 import process from 'node:process';
 import { ethers } from 'ethers';
 
@@ -762,7 +769,7 @@ export async function verifyEvidence(reader, evidence, { period } = {}) {
   return {
     receipt,
     checks: [
-      `chainId = ${EXPECTED_CHAIN_ID}; EIP-1898 pinning enforced by the RPC`,
+      `chainId = ${EXPECTED_CHAIN_ID}; RPC rejected a read pinned to a nonexistent block hash (EIP-1898 probe; not proof of provider honesty)`,
       `end block ${expected.end.blockNumber} ${expected.end.blockHash} finalized and canonical before and after all reads`,
       `start block ${expected.start.blockNumber} is the deterministic latest block at/before end - 7d`,
       `pair ${expected.pair}: factory ${UNISWAP_V2_FACTORY.toLowerCase()} getPair, token0 IFR (9), token1 WETH (18) at both blocks`,
@@ -883,8 +890,20 @@ export function renderError(error) {
   return { text: 'Error [INTERNAL]: unexpected failure (details suppressed to avoid leaking endpoint data)\n', exitCode: 1, usage: false };
 }
 
-const isMain = process.argv[1] && import.meta.url === new URL(`file://${path.resolve(process.argv[1])}`).href;
-if (isMain) {
+/**
+ * True when this file is the process entry point. Compares Node's own file-URL encoding of the
+ * real path (symlinks, spaces, '#', '%', '?', Windows drive letters) with import.meta.url.
+ */
+export function isEntryPoint(argvPath = process.argv[1], moduleUrl = import.meta.url) {
+  if (!argvPath) return false;
+  try {
+    return moduleUrl === pathToFileURL(fs.realpathSync(argvPath)).href;
+  } catch {
+    return false;
+  }
+}
+
+if (isEntryPoint()) {
   main(process.argv.slice(2)).then(
     () => process.exit(0),
     (error) => {

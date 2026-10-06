@@ -47,6 +47,7 @@ import {
   currentCumulativePrice0,
   ethEurSourceLabel,
   generateEvidence,
+  isEntryPoint,
   makeChainReader,
   makeHttpTransport,
   parseArgs,
@@ -581,6 +582,44 @@ const assertClean = (text, label) => {
   }
 }
 pass('finding 2 follow-up: hostile description/evidence strings/key names never echoed (ANSI, control chars, length, sentinel)');
+
+// ── CLI entry-point guard (CodeRabbit PR232): never a silent exit 0 ──
+// The script must run main() (here: a usage error, exit 2) when invoked via a symlink or from a
+// real path containing spaces, '#', '%' or '?'. Before the fix these exited 0 without output.
+{
+  assert.equal(isEntryPoint(undefined), false);
+  assert.equal(isEntryPoint(path.join(os.tmpdir(), 'does-not-exist-model-b.mjs')), false);
+  const repoRoot = path.dirname(path.dirname(SCRIPT));
+  const odd = fs.mkdtempSync(path.join(repoRoot, '.model-b cli #%?test '));
+  const linkDir = fs.mkdtempSync(path.join(os.tmpdir(), 'model-b link '));
+  try {
+    const copied = path.join(odd, 'model-b-price-evidence.mjs');
+    fs.copyFileSync(SCRIPT, copied); // resolves ethers via the repo root node_modules
+    const fileLink = path.join(linkDir, 'evidence tool #1.mjs');
+    fs.symlinkSync(SCRIPT, fileLink);
+    const dirLink = path.join(linkDir, 'linked dir %20');
+    fs.symlinkSync(path.dirname(SCRIPT), dirLink);
+    for (const [label, entry] of [
+      ['real path with spaces/#/%/?', copied],
+      ['file symlink', fileLink],
+      ['directory symlink', path.join(dirLink, 'model-b-price-evidence.mjs')],
+    ]) {
+      const r = await new Promise((resolve) => {
+        const child = spawn(process.execPath, [entry, 'verify'], { env: { PATH: process.env.PATH }, stdio: ['ignore', 'pipe', 'pipe'] });
+        let all = '';
+        child.stdout.on('data', (d) => { all += d; });
+        child.stderr.on('data', (d) => { all += d; });
+        child.on('close', (code) => resolve({ code, all }));
+      });
+      assert.equal(r.code, 2, `${label}: expected usage exit 2, got ${r.code}: ${r.all}`);
+      assert.match(r.all, /Error \[USAGE\]/, label);
+    }
+  } finally {
+    fs.rmSync(odd, { recursive: true, force: true });
+    fs.rmSync(linkDir, { recursive: true, force: true });
+  }
+}
+pass('CLI entry-point guard: symlinks and special-character paths run main (no silent exit 0)');
 
 // ── Finding 3: verify needs the expected period and the deterministic start ──
 
