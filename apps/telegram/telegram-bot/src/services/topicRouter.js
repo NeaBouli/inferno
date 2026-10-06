@@ -4,17 +4,34 @@
 //
 // Every bot-initiated post to the community group (TELEGRAM_GROUP_ID) goes
 // through sendToGroup() with a message category. The category maps to a forum
-// topic (message_thread_id) that is configurable via env, with defaults that
-// match the live community group. Unknown categories fall back to General.
+// topic (message_thread_id) that is configurable via env. The defaults are the
+// IDs from the repo .env.example and the owner relay; only Council (21) and
+// Vote (23) are also published as topic links in docs/wiki/dao-governance.html.
+// They are NOT verified against the live group — the deployment env may
+// override them.
+//
+// Main-thread policy: thread 1 is the forum's first thread (Main). Only the
+// explicit `announcements` category may resolve to it. Every other category,
+// including unknown, legacy and inherited Object property names, resolves to
+// a thread > 1; a misconfigured ID 1 is rejected with a warning and replaced
+// by General (or General's default when General itself is set to 1).
 //
 // Replies to user commands do NOT use this router: Telegraf's ctx.reply() keeps
 // the thread the command was posted in.
 
 const logger = require('./logger');
 
+const MAIN_THREAD_ID = 1;
+const MAIN_CATEGORY = 'announcements';
+const DEFAULT_CATEGORY = 'general';
+
+function frozenMap(entries) {
+  return Object.freeze(Object.assign(Object.create(null), entries));
+}
+
 // category → { env var, default message_thread_id }
-const TOPIC_ROUTES = Object.freeze({
-  announcements: { env: 'TELEGRAM_ANNOUNCEMENTS_TOPIC_ID', fallback: 1 },
+const TOPIC_ROUTES = frozenMap({
+  announcements: { env: 'TELEGRAM_ANNOUNCEMENTS_TOPIC_ID', fallback: MAIN_THREAD_ID },
   general:       { env: 'TELEGRAM_GENERAL_TOPIC_ID',       fallback: 5 },
   burns:         { env: 'TELEGRAM_BURNS_TOPIC_ID',         fallback: 7 },
   dev:           { env: 'TELEGRAM_DEV_BUILDER_TOPIC_ID',   fallback: 11 },
@@ -25,18 +42,55 @@ const TOPIC_ROUTES = Object.freeze({
   coredev:       { env: 'TELEGRAM_COREDEV_TOPIC_ID',       fallback: 58 },
 });
 
-const DEFAULT_CATEGORY = 'general';
+// Legacy/alternate names → canonical category. Exact match only. `main` is
+// deliberately General: Main (thread 1) is reachable only via `announcements`.
+const LEGACY_ALIASES = frozenMap({
+  announce: 'announcements',
+  announcement: 'announcements',
+  main: 'general',
+  burn: 'burns',
+  devs: 'dev',
+  builder: 'dev',
+  dev_builder: 'dev',
+  'dev-builder': 'dev',
+  votes: 'vote',
+  proposal: 'vote',
+  core_dev: 'coredev',
+  'core-dev': 'coredev',
+});
+
+/** Canonical category name; own keys only, anything else is General. */
+function canonicalCategory(category) {
+  if (typeof category !== 'string') return DEFAULT_CATEGORY;
+  if (Object.hasOwn(TOPIC_ROUTES, category)) return category;
+  if (Object.hasOwn(LEGACY_ALIASES, category)) return LEGACY_ALIASES[category];
+  return DEFAULT_CATEGORY;
+}
+
+function configuredTopicId(route, env) {
+  const raw = String(env[route.env] ?? '').trim();
+  const parsed = /^\d+$/.test(raw) ? Number(raw) : NaN;
+  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : null;
+}
 
 /**
  * Resolve the forum thread id for a message category. A positive integer in
  * the category's env var wins; anything else uses the documented default.
- * Unknown categories resolve to General.
+ * Unknown categories resolve to General. Only `announcements` can resolve to
+ * thread 1 (Main); a configured 1 elsewhere is rejected and logged.
  */
 function resolveTopicId(category, env = process.env) {
-  const route = TOPIC_ROUTES[category] || TOPIC_ROUTES[DEFAULT_CATEGORY];
-  const raw = String(env[route.env] ?? '').trim();
-  const parsed = /^\d+$/.test(raw) ? Number(raw) : NaN;
-  return Number.isSafeInteger(parsed) && parsed > 0 ? parsed : route.fallback;
+  const name = canonicalCategory(category);
+  const route = TOPIC_ROUTES[name];
+  const configured = configuredTopicId(route, env);
+  if (configured === MAIN_THREAD_ID && name !== MAIN_CATEGORY) {
+    logger.warn(
+      { category: name, envVar: route.env },
+      'Topic ID 1 (Main) is not allowed for this category — using General'
+    );
+    return name === DEFAULT_CATEGORY ? route.fallback : resolveTopicId(DEFAULT_CATEGORY, env);
+  }
+  return configured ?? route.fallback;
 }
 
 /**
@@ -47,12 +101,14 @@ function threadOptions(threadId) {
   return Number.isInteger(threadId) && threadId > 1 ? { message_thread_id: threadId } : {};
 }
 
-// Telegram reports a deleted/closed/unknown forum topic as a 400 whose
-// description mentions the thread or topic (e.g. "message thread not found",
-// "TOPIC_CLOSED", "TOPIC_DELETED").
+// Only an explicit Telegram 400 topic rejection is retried. Rate limits,
+// 5xx, timeouts/transport errors and other 400s are ambiguous (the post may
+// have been delivered) and propagate without a second send.
+const TOPIC_REJECTION = /^Bad Request: (message thread not found|TOPIC_CLOSED|TOPIC_DELETED|TOPIC_ID_INVALID)\b/i;
+
 function isTopicError(err) {
-  const description = String(err?.response?.description ?? err?.description ?? err?.message ?? '');
-  return /thread|topic/i.test(description);
+  return err?.response?.error_code === 400
+    && TOPIC_REJECTION.test(String(err.response.description ?? ''));
 }
 
 // Log-safe error summary: only the Telegram error code/description, never the
@@ -96,7 +152,10 @@ async function sendToGroup(telegram, chatId, category, text, extra = {}, env = p
 
 module.exports = {
   TOPIC_ROUTES,
+  LEGACY_ALIASES,
   DEFAULT_CATEGORY,
+  MAIN_CATEGORY,
+  canonicalCategory,
   resolveTopicId,
   threadOptions,
   isTopicError,

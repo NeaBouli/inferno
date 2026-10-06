@@ -247,3 +247,121 @@ test('command replies outside a topic carry no thread id', async () => {
   await ctx.reply('answer');
   assert.equal(sent[0].opts.message_thread_id, undefined);
 });
+
+// ── Review follow-up (T-286-review-followup F1/F2/F3) ───────────────────────
+
+const SPECIALIZED_ROUTES = {
+  burns: 'TELEGRAM_BURNS_TOPIC_ID',
+  dev: 'TELEGRAM_DEV_BUILDER_TOPIC_ID',
+  release: 'TELEGRAM_DEV_BUILDER_TOPIC_ID',
+  council: 'TELEGRAM_COUNCIL_TOPIC_ID',
+  governance: 'TELEGRAM_COUNCIL_TOPIC_ID',
+  vote: 'TELEGRAM_VOTE_TOPIC_ID',
+  coredev: 'TELEGRAM_COREDEV_TOPIC_ID',
+};
+
+test('F1: inherited Object property names resolve to General, never Main', async () => {
+  for (const name of ['constructor', 'toString', '__proto__', 'hasOwnProperty', 'valueOf']) {
+    assert.equal(resolveTopicId(name, {}), 5, name);
+    const telegram = fakeTelegram();
+    await sendToGroup(telegram, '-100999', name, 'x', {}, {});
+    assert.equal(telegram.sent[0].opts.message_thread_id, 5, name);
+  }
+});
+
+test('F1: legacy names are mapped explicitly; only Announcements may reach thread 1', async () => {
+  const legacy = {
+    announce: 1, announcement: 1,
+    main: 5,
+    burn: 7,
+    devs: 11, builder: 11, dev_builder: 11, 'dev-builder': 11,
+    votes: 23, proposal: 23,
+    core_dev: 58, 'core-dev': 58,
+  };
+  for (const [name, id] of Object.entries(legacy)) {
+    assert.equal(resolveTopicId(name, {}), id, name);
+  }
+  for (const name of ['main', 'Main', 'MAIN', 'unknown', '', 'Announcements ']) {
+    const telegram = fakeTelegram();
+    await sendToGroup(telegram, '-100999', name, 'x', {}, {});
+    assert.equal(telegram.sent[0].opts.message_thread_id, 5, `category "${name}"`);
+  }
+});
+
+test('F2: configured ID 1 for a specialized route is rejected and goes to General', async () => {
+  for (const [category, envKey] of Object.entries(SPECIALIZED_ROUTES)) {
+    assert.equal(resolveTopicId(category, { [envKey]: '1' }), 5, category);
+    const telegram = fakeTelegram();
+    await sendToGroup(telegram, '-100999', category, 'x', {}, { [envKey]: '1' });
+    assert.equal(telegram.sent.length, 1);
+    assert.equal(telegram.sent[0].opts.message_thread_id, 5, category);
+  }
+});
+
+test('F2: General configured as 1 is rejected; fallback never goes to Main', async () => {
+  assert.equal(resolveTopicId('general', { TELEGRAM_GENERAL_TOPIC_ID: '1' }), 5);
+  const telegram = fakeTelegram({ failThreads: [21] });
+  await sendToGroup(telegram, '-100999', 'council', 'x', {}, { TELEGRAM_GENERAL_TOPIC_ID: '1' });
+  assert.deepEqual(telegram.sent.map((s) => s.opts.message_thread_id), [21, 5]);
+});
+
+test('F2: only the explicit Announcements category is sent without a thread id', async () => {
+  const categories = [...Object.keys(TOPIC_ROUTES), 'constructor', 'main', 'nope'];
+  for (const category of categories) {
+    const env = Object.fromEntries(TOPIC_ENV_KEYS.map((k) => [k, '1']));
+    const telegram = fakeTelegram();
+    await sendToGroup(telegram, '-100999', category, 'x', {}, env);
+    const thread = telegram.sent[0].opts.message_thread_id;
+    if (category === 'announcements') assert.equal(thread, undefined);
+    else assert.ok(Number.isInteger(thread) && thread > 1, `${category} -> ${thread}`);
+  }
+});
+
+test('F2: a misconfigured ID 1 logs a warning', async () => {
+  const logger = require('../src/services/logger');
+  const original = logger.warn;
+  const warnings = [];
+  logger.warn = (obj, msg) => warnings.push({ obj, msg });
+  try {
+    resolveTopicId('council', { TELEGRAM_COUNCIL_TOPIC_ID: '1' });
+  } finally {
+    logger.warn = original;
+  }
+  assert.equal(warnings.length, 1);
+  assert.equal(warnings[0].obj.envVar, 'TELEGRAM_COUNCIL_TOPIC_ID');
+});
+
+test('F3: only explicit Telegram 400 topic rejections are retried', async () => {
+  const ambiguous = [
+    telegramError('Too Many Requests: retry after 5', 429),
+    telegramError('Internal Server Error: thread pool exhausted', 500),
+    telegramError('Bad Gateway', 502),
+    Object.assign(new Error('request to https://api.telegram.org/bot.../sendMessage failed, reason: topic timeout'), { code: 'ETIMEDOUT' }),
+    telegramError('Bad Request: message text is empty (topic)', 400),
+  ];
+  for (const err of ambiguous) {
+    assert.equal(isTopicError(err), false, err.message);
+    const telegram = fakeTelegram({ failWith: err });
+    await assert.rejects(sendToGroup(telegram, '-100999', 'dev', 'x', {}, {}));
+    assert.equal(telegram.sent.length, 1, err.message);
+  }
+  for (const d of ['Bad Request: message thread not found', 'Bad Request: TOPIC_CLOSED',
+    'Bad Request: TOPIC_DELETED', 'Bad Request: TOPIC_ID_INVALID']) {
+    assert.equal(isTopicError(telegramError(d, 400)), true, d);
+  }
+});
+
+test('F3: fallback warning carries no raw error message, URL or token', async () => {
+  const logger = require('../src/services/logger');
+  const original = logger.warn;
+  const logged = [];
+  logger.warn = (obj, msg) => logged.push(JSON.stringify({ obj, msg }));
+  try {
+    const telegram = fakeTelegram({ failThreads: [11] });
+    await sendToGroup(telegram, '-100999', 'dev', 'x', {}, {});
+  } finally {
+    logger.warn = original;
+  }
+  assert.equal(logged.length, 1);
+  assert.ok(!/api\.telegram\.org|SECRET|bot[^a-z]/i.test(logged[0]), logged[0]);
+});
