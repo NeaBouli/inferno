@@ -50,6 +50,18 @@ describe("Points backend voucher parity with FeeRouterV1", function () {
     expect(await router.protocolFeeBps()).to.equal(5n);
   });
 
+  it("exposes the EIP-712 domain the backend signs and verifies at startup", async function () {
+    const { chainId } = await ethers.provider.getNetwork();
+    const expected = voucherDomain(chainId, router.target);
+    const [, name, version, domainChainId, verifyingContract] = await router.eip712Domain();
+    expect({ name, version, chainId: domainChainId, verifyingContract }).to.deep.equal({
+      name: expected.name,
+      version: expected.version,
+      chainId: expected.chainId,
+      verifyingContract: expected.verifyingContract,
+    });
+  });
+
   it("rejects a 15 bps voucher with 'Discount exceeds fee'", async function () {
     await expect(swap(await issue(15))).to.be.revertedWith("Discount exceeds fee");
   });

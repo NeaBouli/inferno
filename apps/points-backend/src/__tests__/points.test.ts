@@ -19,7 +19,6 @@ import { getSignerAddress } from "../services/voucher-signer.js";
 import { capVoucherDiscountBps } from "../services/voucher-eip712.js";
 import {
   getProtocolFeeBps,
-  PROTOCOL_FEE_CACHE_TTL_MS,
   setProtocolFeeReader,
 } from "../services/fee-router-fee.js";
 import { ethers } from "ethers";
@@ -30,6 +29,10 @@ import {
   loadPointsSecurityConfig,
   verifyLockProofRuntime,
 } from "../config/security.js";
+
+// Canonical mainnet FeeRouterV1 (T-289); defined here so the test fails red, not at import, before the fix.
+const CANONICAL_FEE_ROUTER = "0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a";
+const SEPOLIA_FEE_ROUTER = "0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4";
 
 let server: Server;
 let baseUrl: string;
@@ -122,24 +125,40 @@ async function run() {
   }
   {
     let reads = 0;
-    setProtocolFeeReader(async () => { reads++; return { chainId: BigInt(loadPointsSecurityConfig().chainId), feeBps: 5 }; });
-    const t0 = 1_000_000;
-    await getProtocolFeeBps(t0);
-    await getProtocolFeeBps(t0 + PROTOCOL_FEE_CACHE_TTL_MS - 1);
-    assert(reads === 1, "fee read is cached within the TTL");
-    await getProtocolFeeBps(t0 + PROTOCOL_FEE_CACHE_TTL_MS);
-    assert(reads === 2, "fee is re-read after the TTL");
+    let fee = 5;
+    const chainId = BigInt(loadPointsSecurityConfig().chainId);
+    setProtocolFeeReader(async () => { reads++; return { chainId, feeBps: fee }; });
+    await getProtocolFeeBps();
+    await getProtocolFeeBps();
+    assert(reads === 2, "every issuance reads the fee fresh (no success cache)");
+    fee = 3;
+    assert(await getProtocolFeeBps() === 3, "a fee change is visible on the very next issuance");
+    reads = 0;
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    setProtocolFeeReader(async () => { reads++; await gate; return { chainId, feeBps: 5 }; });
+    const pending = Promise.all([getProtocolFeeBps(), getProtocolFeeBps()]);
+    release();
+    const shared = await pending;
+    assert(reads === 1 && shared.every((v) => v === 5), "concurrent requests share one in-flight read");
+    await getProtocolFeeBps();
+    assert(reads === 2, "the in-flight read is not reused once settled");
+    let down = false;
+    setProtocolFeeReader(async () => { if (down) throw new Error("rpc down"); return { chainId, feeBps: 5 }; });
+    await getProtocolFeeBps();
+    down = true;
+    await assertRejects(() => getProtocolFeeBps(), "an RPC outage after a successful read fails closed (no stale reuse)");
     let fail = true;
-    setProtocolFeeReader(async () => { reads++; if (fail) throw new Error("rpc down"); return { chainId: BigInt(loadPointsSecurityConfig().chainId), feeBps: 4 }; });
-    await assertRejects(() => getProtocolFeeBps(t0), "fee read failure propagates");
+    setProtocolFeeReader(async () => { reads++; if (fail) throw new Error("rpc down"); return { chainId, feeBps: 4 }; });
+    await assertRejects(() => getProtocolFeeBps(), "fee read failure propagates");
     fail = false;
-    assert(await getProtocolFeeBps(t0) === 4, "fee read failure is not cached");
+    assert(await getProtocolFeeBps() === 4, "fee read failure is not cached");
     setProtocolFeeReader(feeReading(5, 1n));
-    await assertRejects(() => getProtocolFeeBps(t0), "fee read from the wrong chain is rejected");
+    await assertRejects(() => getProtocolFeeBps(), "fee read from the wrong chain is rejected");
     setProtocolFeeReader(feeReading(5.5));
-    await assertRejects(() => getProtocolFeeBps(t0), "non-integer fee is rejected");
+    await assertRejects(() => getProtocolFeeBps(), "non-integer fee is rejected");
     setProtocolFeeReader(feeReading(26));
-    await assertRejects(() => getProtocolFeeBps(t0), "fee above FEE_CAP_BPS is rejected");
+    await assertRejects(() => getProtocolFeeBps(), "fee above FEE_CAP_BPS is rejected");
     setProtocolFeeReader(feeReading(5));
   }
 
@@ -155,6 +174,7 @@ async function run() {
     CHAIN_ID: "1",
     RPC_URL: "https://mainnet.example",
     IFR_LOCK_ADDRESS: MAINNET_IFR_LOCK_ADDRESS,
+    FEE_ROUTER_ADDRESS: CANONICAL_FEE_ROUTER.toLowerCase(),
     SIWE_ALLOWED_ORIGINS: "https://ifrunit.tech,https://www.ifrunit.tech",
   });
   assert(productionConfig.chainId === 1, "production config accepts mainnet chain");
@@ -169,6 +189,7 @@ async function run() {
       CHAIN_ID: "11155111",
       RPC_URL: "https://sepolia.example",
       IFR_LOCK_ADDRESS: MAINNET_IFR_LOCK_ADDRESS,
+      FEE_ROUTER_ADDRESS: CANONICAL_FEE_ROUTER.toLowerCase(),
       SIWE_ALLOWED_ORIGINS: "https://ifrunit.tech",
     }),
     "production config rejects non-mainnet chain",
@@ -198,6 +219,7 @@ async function run() {
       CHAIN_ID: "1",
       RPC_URL: "https://mainnet.example",
       IFR_LOCK_ADDRESS: MAINNET_IFR_LOCK_ADDRESS,
+      FEE_ROUTER_ADDRESS: CANONICAL_FEE_ROUTER.toLowerCase(),
       SIWE_ALLOWED_ORIGINS: "http://ifrunit.tech",
     }),
     "production config rejects non-HTTPS SIWE origins",
@@ -208,6 +230,7 @@ async function run() {
       CHAIN_ID: "1",
       RPC_URL: "http://mainnet.example",
       IFR_LOCK_ADDRESS: MAINNET_IFR_LOCK_ADDRESS,
+      FEE_ROUTER_ADDRESS: CANONICAL_FEE_ROUTER.toLowerCase(),
       SIWE_ALLOWED_ORIGINS: "https://ifrunit.tech",
     }),
     "production config rejects a remote plaintext RPC",
@@ -217,6 +240,7 @@ async function run() {
     CHAIN_ID: "1",
     RPC_URL: "http://127.0.0.1:8545",
     IFR_LOCK_ADDRESS: MAINNET_IFR_LOCK_ADDRESS,
+    FEE_ROUTER_ADDRESS: CANONICAL_FEE_ROUTER.toLowerCase(),
     SIWE_ALLOWED_ORIGINS: "https://ifrunit.tech",
   });
   assert(loopbackProductionConfig.isProduction, "production permits loopback RPC transport");
@@ -230,15 +254,18 @@ async function run() {
   assert(developmentConfig.chainId === 11155111, "explicit development network remains supported");
   assert(!canSkipLockProof(productionConfig, "true"), "production lock proof cannot be bypassed");
   assert(canSkipLockProof(developmentConfig, "true"), "explicit development may bypass lock proof");
+  const routerOk = { feeRouterCode: "0x6000", feeRouterDomain: { name: "InfernoFeeRouter", version: "1", chainId: 1n, verifyingContract: CANONICAL_FEE_ROUTER } };
   await verifyLockProofRuntime(productionConfig, async () => ({
     chainId: 1n,
     contractCode: "0x6000",
+    ...routerOk,
   }));
   assert(true, "runtime verification accepts mainnet RPC with deployed contract code");
   await assertRejects(
     () => verifyLockProofRuntime(productionConfig, async () => ({
       chainId: 11155111n,
       contractCode: "0x6000",
+      ...routerOk,
     })),
     "runtime verification rejects RPC chain mismatch",
   );
@@ -246,8 +273,76 @@ async function run() {
     () => verifyLockProofRuntime(productionConfig, async () => ({
       chainId: 1n,
       contractCode: "0x",
+      ...routerOk,
     })),
     "runtime verification rejects missing IFRLock bytecode",
+  );
+
+  console.log("FeeRouter binding (T-289):");
+  assert(
+    productionConfig.feeRouterAddress === CANONICAL_FEE_ROUTER,
+    "production accepts the canonical mainnet FeeRouterV1 (case-insensitive) and checksums it",
+  );
+  {
+    const mainnetEnv = {
+      NODE_ENV: "production",
+      CHAIN_ID: "1",
+      RPC_URL: "https://mainnet.example",
+      IFR_LOCK_ADDRESS: MAINNET_IFR_LOCK_ADDRESS,
+      SIWE_ALLOWED_ORIGINS: "https://ifrunit.tech",
+    };
+    let wrongRouterRejected = false;
+    try { loadPointsSecurityConfig({ ...mainnetEnv, FEE_ROUTER_ADDRESS: SEPOLIA_FEE_ROUTER }); } catch { wrongRouterRejected = true; }
+    assert(wrongRouterRejected, "mainnet config rejects a non-canonical FeeRouter (Sepolia address)");
+    let missingRouterRejected = false;
+    try { loadPointsSecurityConfig(mainnetEnv); } catch { missingRouterRejected = true; }
+    assert(missingRouterRejected, "production config rejects a missing FEE_ROUTER_ADDRESS");
+    let devMainnetWrongRouter = false;
+    try {
+      loadPointsSecurityConfig({ ...mainnetEnv, NODE_ENV: "development", FEE_ROUTER_ADDRESS: SEPOLIA_FEE_ROUTER });
+    } catch { devMainnetWrongRouter = true; }
+    assert(devMainnetWrongRouter, "CHAIN_ID 1 binds the canonical FeeRouter in every mode");
+    const sepoliaConfig = loadPointsSecurityConfig({
+      NODE_ENV: "development",
+      CHAIN_ID: "11155111",
+      RPC_URL: "https://sepolia.example",
+      IFR_LOCK_ADDRESS: "0x0000000000000000000000000000000000000001",
+      SIWE_ALLOWED_ORIGINS: "http://localhost:3004",
+      FEE_ROUTER_ADDRESS: SEPOLIA_FEE_ROUTER,
+    });
+    assert(sepoliaConfig.feeRouterAddress === SEPOLIA_FEE_ROUTER, "Sepolia keeps its configured FeeRouter");
+  }
+  const routerProbe = (overrides: Record<string, unknown>) => async () => ({
+    chainId: 1n,
+    contractCode: "0x6000",
+    ...routerOk,
+    ...overrides,
+  });
+  await assertRejects(
+    () => verifyLockProofRuntime(productionConfig, routerProbe({ feeRouterCode: "0x" })),
+    "runtime verification rejects a FeeRouter without bytecode",
+  );
+  await assertRejects(
+    () => verifyLockProofRuntime(productionConfig, routerProbe({ feeRouterDomain: null })),
+    "runtime verification rejects an unreadable FeeRouter EIP-712 domain",
+  );
+  await assertRejects(
+    () => verifyLockProofRuntime(productionConfig, routerProbe({
+      feeRouterDomain: { ...routerOk.feeRouterDomain, name: "OtherRouter" },
+    })),
+    "runtime verification rejects a FeeRouter with a foreign EIP-712 name",
+  );
+  await assertRejects(
+    () => verifyLockProofRuntime(productionConfig, routerProbe({
+      feeRouterDomain: { ...routerOk.feeRouterDomain, verifyingContract: SEPOLIA_FEE_ROUTER },
+    })),
+    "runtime verification rejects a FeeRouter domain bound to another contract",
+  );
+  await assertRejects(
+    () => verifyLockProofRuntime(productionConfig, routerProbe({
+      feeRouterDomain: { ...routerOk.feeRouterDomain, chainId: 11155111n },
+    })),
+    "runtime verification rejects a FeeRouter domain on another chain",
   );
 
   server = app.listen(0, "127.0.0.1");
