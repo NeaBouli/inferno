@@ -2,19 +2,34 @@ import { ethers } from "ethers";
 
 export const MAINNET_CHAIN_ID = 1;
 export const MAINNET_IFR_LOCK_ADDRESS = "0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb";
+/** Canonical FeeRouterV1 on Ethereum mainnet: EIP-712 verifyingContract and voucher fee source. */
+export const MAINNET_FEE_ROUTER_ADDRESS = "0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a";
+export const FEE_ROUTER_EIP712_NAME = "InfernoFeeRouter";
+export const FEE_ROUTER_EIP712_VERSION = "1";
 
 export interface PointsSecurityConfig {
   chainId: number;
   rpcUrl: string;
   ifrLockAddress: string;
+  feeRouterAddress: string;
   siweAllowedOrigins: ReadonlySet<string>;
   isProduction: boolean;
   isTest: boolean;
 }
 
+export interface FeeRouterDomainState {
+  name: string;
+  version: string;
+  chainId: bigint;
+  verifyingContract: string;
+}
+
 interface LockProofRpcState {
   chainId: bigint;
   contractCode: string;
+  feeRouterCode: string;
+  /** eip712Domain() of the FeeRouter; null when it cannot be read. */
+  feeRouterDomain: FeeRouterDomainState | null;
 }
 
 type LockProofRpcProbe = (config: PointsSecurityConfig) => Promise<LockProofRpcState>;
@@ -104,7 +119,17 @@ export function loadPointsSecurityConfig(
     throw new Error("[security] production IFR_LOCK_ADDRESS must be the canonical mainnet contract");
   }
 
-  return { chainId, rpcUrl, ifrLockAddress, siweAllowedOrigins, isProduction, isTest };
+  // Non-production may omit the router (voucher issuance then fails closed on the fee read).
+  const feeRouterValue = env.FEE_ROUTER_ADDRESS?.trim();
+  if (!feeRouterValue && isProduction) {
+    throw new Error("FEE_ROUTER_ADDRESS is required in production-safe mode");
+  }
+  const feeRouterAddress = feeRouterValue ? ethers.getAddress(feeRouterValue.toLowerCase()) : ethers.ZeroAddress;
+  if (chainId === MAINNET_CHAIN_ID && feeRouterAddress !== MAINNET_FEE_ROUTER_ADDRESS) {
+    throw new Error("[security] CHAIN_ID 1 requires FEE_ROUTER_ADDRESS to be the canonical mainnet FeeRouterV1");
+  }
+
+  return { chainId, rpcUrl, ifrLockAddress, feeRouterAddress, siweAllowedOrigins, isProduction, isTest };
 }
 
 export const pointsSecurityConfig = loadPointsSecurityConfig();
@@ -116,14 +141,24 @@ export function canSkipLockProof(
   return skipValue === "true" && !config.isProduction;
 }
 
+const FEE_ROUTER_DOMAIN_ABI = [
+  "function eip712Domain() view returns (bytes1 fields, string name, string version, uint256 chainId, address verifyingContract, bytes32 salt, uint256[] extensions)",
+];
+
 async function probeLockProofRpc(config: PointsSecurityConfig): Promise<LockProofRpcState> {
   const provider = new ethers.JsonRpcProvider(config.rpcUrl);
   try {
-    const [network, contractCode] = await Promise.all([
+    const router = new ethers.Contract(config.feeRouterAddress, FEE_ROUTER_DOMAIN_ABI, provider);
+    const [network, contractCode, feeRouterCode, feeRouterDomain] = await Promise.all([
       provider.getNetwork(),
       provider.getCode(config.ifrLockAddress),
+      provider.getCode(config.feeRouterAddress),
+      (router.eip712Domain() as Promise<[string, string, string, bigint, string]>).then(
+        ([, name, version, chainId, verifyingContract]) => ({ name, version, chainId, verifyingContract }),
+        () => null,
+      ),
     ]);
-    return { chainId: network.chainId, contractCode };
+    return { chainId: network.chainId, contractCode, feeRouterCode, feeRouterDomain };
   } finally {
     provider.destroy();
   }
@@ -143,6 +178,21 @@ export async function verifyLockProofRuntime(
   }
   if (state.contractCode === "0x") {
     throw new Error("[security] IFR_LOCK_ADDRESS has no contract code on the configured RPC");
+  }
+  // Development without a router skips the binding; voucher issuance then fails closed.
+  if (config.feeRouterAddress === ethers.ZeroAddress && !config.isProduction) return;
+  if (state.feeRouterCode === "0x") {
+    throw new Error("[security] FEE_ROUTER_ADDRESS has no contract code on the configured RPC");
+  }
+  const domain = state.feeRouterDomain;
+  if (
+    !domain
+    || domain.name !== FEE_ROUTER_EIP712_NAME
+    || domain.version !== FEE_ROUTER_EIP712_VERSION
+    || domain.chainId !== BigInt(config.chainId)
+    || ethers.getAddress(domain.verifyingContract) !== config.feeRouterAddress
+  ) {
+    throw new Error("[security] FEE_ROUTER_ADDRESS does not expose the FeeRouterV1 EIP-712 domain");
   }
 }
 

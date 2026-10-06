@@ -2332,3 +2332,83 @@ for (const [width, height] of [[305, 720], [320, 740], [375, 812], [390, 844], [
     }
   });
 }
+
+// T-287 fab-clearance: on narrow phones the hero body text, the full-width access-panel buttons and the panel
+// footnote scroll past the fixed Copilot launcher in every wallet state. Their rendered boxes (text boxes for prose,
+// element boxes for buttons) must end left of the launcher band, with no horizontal document overflow.
+for (const [width, height] of [[305, 720], [320, 740], [375, 812], [1440, 1000]]) {
+  for (const state of ["connected", "degraded"]) {
+    test(`T-287 fab-clearance: hero copy and access-panel buttons clear the launcher (${state}, ${width}px)`, async ({ browser }) => {
+      const { context, page, pageErrors } = await preparePage(browser, {
+        ...(state === "degraded" ? { readChainId: "0x5" } : {}),
+        contextOptions: { viewport: { width, height } },
+      });
+      try {
+        await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+        await connect(page);
+        const expected = state === "degraded" ? "Connected · status unavailable" : "Connected";
+        await expect(page.locator("[data-wallet-state]")).toHaveText(expected, { timeout: 15_000 });
+        // Account buttons appear only once connected; they are part of the full-width button column.
+        await expect(page.locator("[data-wallet-disconnect]")).toBeVisible();
+        await page.evaluate(() => document.fonts.ready);
+        const layout = await page.evaluate(() => {
+          const launcher = document.querySelector(".copilot-launcher");
+          const s = getComputedStyle(launcher);
+          const z = launcher.getBoundingClientRect();
+          const inBand = (r) => r.width > 0 && r.left < z.right && r.right > z.left;
+          const hits = [];
+          for (const el of document.querySelectorAll(".hero .hero-copy, .access-panel .panel-foot")) {
+            const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+            for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+              if (!n.textContent.trim()) continue;
+              const range = document.createRange();
+              range.selectNodeContents(n);
+              for (const r of range.getClientRects()) {
+                if (inBand(r)) {
+                  hits.push(`text ${el.className}: right=${Math.round(r.right)}`);
+                  break;
+                }
+              }
+            }
+          }
+          const buttons = [...document.querySelectorAll(".access-panel .panel-actions .btn")].filter((el) => el.getClientRects().length);
+          for (const el of buttons) {
+            const r = el.getBoundingClientRect();
+            if (inBand(r)) hits.push(`button ${el.textContent.trim()}: right=${Math.round(r.right)}`);
+          }
+          return {
+            vw: document.documentElement.clientWidth,
+            scrollWidth: document.documentElement.scrollWidth,
+            buttons: buttons.length,
+            hits,
+            shown: s.display !== "none" && s.visibility !== "hidden" && Number(s.opacity) > 0,
+          };
+        });
+        expect(layout.buttons, "connected panel shows its full-width buttons").toBeGreaterThanOrEqual(7);
+        expect.soft(layout.scrollWidth, "no horizontal document overflow").toBeLessThanOrEqual(layout.vw);
+        expect.soft(layout.hits, "hero copy, panel footnote and panel buttons end left of the launcher band").toEqual([]);
+        expect(layout.shown, "the launcher stays available for chat").toBe(true);
+        if (process.env.T287_SHOTS) {
+          // Viewport captures with the hero copy, then the panel buttons, at the launcher's height (no injected CSS).
+          const fs = require("node:fs");
+          const atLauncher = async (selector) => {
+            await page.evaluate((sel) => {
+              const target = document.querySelector(sel).getBoundingClientRect();
+              const launcher = document.querySelector(".copilot-launcher").getBoundingClientRect();
+              window.scrollTo({ top: window.scrollY + target.bottom - launcher.bottom, behavior: "instant" });
+            }, selector);
+            await page.waitForTimeout(400);
+          };
+          await atLauncher(".hero .hero-copy");
+          await page.screenshot({ path: `${process.env.T287_SHOTS}/web3-${state}-hero-copy-${width}.png` });
+          await atLauncher(".access-panel .panel-actions");
+          await page.screenshot({ path: `${process.env.T287_SHOTS}/web3-${state}-panel-buttons-${width}.png` });
+          fs.writeFileSync(`${process.env.T287_SHOTS}/web3-${state}-${width}.json`, JSON.stringify(layout, null, 1));
+        }
+        expect(pageErrors).toEqual([]);
+      } finally {
+        await context.close();
+      }
+    });
+  }
+}

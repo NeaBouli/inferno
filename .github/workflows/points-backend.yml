@@ -51,7 +51,8 @@ jobs:
           missing_rpc_log="$(mktemp)"
           unsafe_chain_log="$(mktemp)"
           missing_jwt_log="$(mktemp)"
-          trap 'rm -f "$missing_rpc_log" "$unsafe_chain_log" "$missing_jwt_log"' EXIT
+          wrong_router_log="$(mktemp)"
+          trap 'rm -f "$missing_rpc_log" "$unsafe_chain_log" "$missing_jwt_log" "$wrong_router_log"' EXIT
 
           if docker run --rm \
             --network none \
@@ -104,7 +105,7 @@ jobs:
             --tmpfs /data:rw,uid=1001,gid=1001 \
             -e DATABASE_URL=file:/data/ci.db \
             -e VOUCHER_SIGNER_PRIVATE_KEY \
-            -e FEE_ROUTER_ADDRESS \
+            -e FEE_ROUTER_ADDRESS=0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a \
             -e CHAIN_ID=1 \
             -e RPC_URL=https://mainnet.example \
             -e IFR_LOCK_ADDRESS=0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb \
@@ -118,6 +119,30 @@ jobs:
           if ! grep -q 'JWT_SECRET is required in production-safe mode' "$missing_jwt_log"; then
             cat "$missing_jwt_log"
             echo "::error::Missing-JWT image failed for an unexpected reason"
+            exit 1
+          fi
+
+          if docker run --rm \
+            --network none \
+            --tmpfs /data:rw,uid=1001,gid=1001 \
+            -e DATABASE_URL=file:/data/ci.db \
+            -e JWT_SECRET \
+            -e VOUCHER_SIGNER_PRIVATE_KEY \
+            -e FEE_ROUTER_ADDRESS=0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4 \
+            -e CHAIN_ID=1 \
+            -e RPC_URL=https://mainnet.example \
+            -e IFR_LOCK_ADDRESS=0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb \
+            -e SIWE_ALLOWED_ORIGINS=https://ifrunit.tech \
+            -e PORT \
+            -e ADMIN_SECRET \
+            -e NODE_ENV=production \
+            inferno-points-backend:ci >"$wrong_router_log" 2>&1; then
+            echo "::error::Production image started with a non-canonical mainnet FeeRouter"
+            exit 1
+          fi
+          if ! grep -q 'CHAIN_ID 1 requires FEE_ROUTER_ADDRESS to be the canonical mainnet FeeRouterV1' "$wrong_router_log"; then
+            cat "$wrong_router_log"
+            echo "::error::Wrong-router image failed for an unexpected reason"
             exit 1
           fi
       - name: Smoke production image

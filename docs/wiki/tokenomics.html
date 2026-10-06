@@ -1462,7 +1462,9 @@ if (from != address(0) && to != address(0)
       <p>
         Users earn points through verified actions in the IFR ecosystem.
         Points can be redeemed for a signed EIP-712 discount voucher,
-        applied against the protocol fee at swap time.
+        applied against the FeeRouter protocol fee at swap time. A voucher waives that fee
+        up to the current on-chain protocol fee (currently 5 bps, 0.05%); it never reduces
+        the IFR token transfer fee or burn.
       </p>
 
       <table>

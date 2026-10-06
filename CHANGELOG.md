@@ -35,6 +35,82 @@
   "Connect with" box keeps at least 12 px gap and there is no horizontal overflow.
 - `chore:` `scripts/smoke-benefits-network.js` expects the v25 service worker after release.
 
+## [Unreleased] — 2026-10-06 — Points vouchers match FeeRouterV1 and follow the on-chain fee (T-289)
+
+### Fixed
+
+- `fix:` Points backend (`apps/points-backend`): vouchers were signed with the EIP-712 primary
+  type `Voucher`, while FeeRouterV1 hashes `DiscountVoucher(address user,uint16 discountBps,uint32
+  maxUses,uint64 expiry,uint256 nonce)`. Every issued voucher therefore failed on-chain with
+  "Invalid voucher signature". The format now lives in the dependency-free
+  `src/services/voucher-eip712.ts` and uses `DiscountVoucher`.
+- `fix:` For every issuance the backend reads `FeeRouterV1.protocolFeeBps` fresh over the chain-pinned
+  RPC (no success cache; concurrent requests share one in-flight read) and signs `min(discountBps, maxDiscountBps, protocolFeeBps)`,
+  so a future fee change cannot produce vouchers that revert with "Discount exceeds fee". An
+  unreadable, out-of-range or wrong-chain fee read, or a fee of 0, fails closed with HTTP 503 before
+  any points are deducted. Per-wallet and global daily caps are unchanged. Residual (documented):
+  already signed vouchers are immutable and a later fee reduction can invalidate them.
+- `security:` With `CHAIN_ID=1` the points backend refuses to start unless `FEE_ROUTER_ADDRESS` is the
+  canonical FeeRouterV1 `0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a` (case-insensitive); production
+  startup also requires router bytecode and a matching `eip712Domain()`. CI proves a production image
+  with the Sepolia router refuses to start.
+- `docs:` Points README, `DEPLOY.md`, `docs/RAILWAY_ENV.md` and the tokenomics wiki state that a
+  voucher waives the FeeRouter protocol (swap) fee up to the current on-chain fee (currently 5 bps,
+  0.05%) and never the IFR transfer fee or burn. The deploy docs listed the Sepolia FeeRouter
+  (`0x4992…9aa4`) as the mainnet value; they now name `0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a`.
+- `security:` A failed fee read logs only a constant category (`rpc_error:timeout|network|rate_limited|bad_response|unknown`,
+  `fee_error:not_configured|wrong_chain|out_of_range`) and no wallet; raw error text, URLs and keys never reach the log.
+
+### Tests
+
+- `test/PointsVoucherParity.test.js` (Hardhat, real FeeRouterV1 at 5 bps): a backend-format voucher
+  at the configured discount is accepted and the fee is waived; 15 bps reverts with "Discount
+  exceeds fee"; after `setFeeBps(3)` the capped voucher is accepted and an uncapped 5 bps one
+  reverts; a 0 bps fee yields no discount.
+- Points unit tests: discount cap, fee cache and failure handling, and route checks that an
+  unreadable or zero fee issues no voucher and deducts no points; failures carrying API-key,
+  credential-URL, address and free-text sentinels log exactly the constant category.
+
+Release: needs a points-backend release via the Codex gate.
+
+## [Unreleased] — 2026-10-06 — Web3/Wiki polish and Copilot SDK version (T-287, T-269, T-276)
+
+### Fixed
+
+- `fix:` Web3 (`docs/web3/index.html`, T-287): on phones (680 px and narrower, measured at
+  305/320/375 px) the hero body text, the full-width access-panel buttons and the panel
+  footnote scrolled under the fixed Copilot launcher in every wallet state. The hero copy
+  now gets the same 60 px right clearance as the hero buttons and wallet labels; the panel
+  buttons and footnote get 40 px (the panel already sits 35 px inside the viewport edge).
+  Below 401 px the panel button labels may wrap, so "Loans (borrowing closed)" no longer
+  widens the hero column (keeps the T-285 guarantee). Heading, eyebrow and status-card notes
+  are unchanged.
+- `fix:` Wiki wallet guide (`docs/wiki/wallet-guide.html`, T-269): a 42-character address in
+  `<code>` (LP token) widened the single-column card track by 5 px at 375 px, and at 320 px
+  the nowrap "Staged Governance" badge did the same. Card `<code>` values now wrap anywhere
+  and card heads wrap the badge under the name.
+- `fix:` Wiki LendingVault (`docs/wiki/lending-vault.html`, T-276): the page-load market read
+  and the connect-triggered read could overlap and interleave their writes to the shared
+  borrow-offer list (duplicate or reordered options, 4 instead of 2). Each load now takes a
+  request token, collects offers locally and renders only if it is still the newest load.
+- `fix:` Copilot dev prompt (`apps/ai-copilot/src/context/system-prompts.ts`) and
+  `docs/llms.txt`: the IFR SDK is stated as v0.3.0 (the `apps/sdk` manifest version)
+  instead of the stale v0.2 / v0.2.0.
+
+### Tests
+
+- `test:` `tests/browser/web3-write.spec.js`: T-287 fab-clearance at 305/320/375 in the
+  connected and degraded (read RPC on the wrong chain) states — hero copy and footnote text
+  boxes and all panel buttons end left of the launcher band, no horizontal overflow.
+  `tests/browser/fab-clearance.spec.js`: the same check for the disconnected page.
+- `test:` `tests/browser/wiki-shell.spec.js`: wallet-guide cards stay inside their grid and
+  `main` has no horizontal overflow at 320/375/390.
+- `test:` `tests/browser/lending-retired.spec.js`: with delayed `getOffer` reads, overlapping
+  market loads render offers #0 and #1 exactly once.
+- `test:` `apps/ai-copilot/scripts/test-copilot-correctness.ts`: no prompt, the knowledge
+  object or `docs/llms.txt` may state "SDK v0.2"; every "SDK vX.Y" mention must match the
+  manifest version.
+
 ## [Unreleased] — 2026-10-06 — IFR SDK npm publish path (T-288)
 
 ### Added
