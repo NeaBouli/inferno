@@ -1443,6 +1443,9 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
   var lvRate = 200n;
   var lvIfrPriceWei = 0n;
   var lvBorrowOffers = [];
+  // T-276: page load, wallet connect, writes and the 60 s refresh can start overlapping market loads.
+  // Each load takes a token; only the newest load renders, so offers never appear twice.
+  var lvMarketLoadToken = 0;
 
   function el(id) { return document.getElementById(id); }
   function shortAddr(a) { return a ? a.slice(0, 6) + "..." + a.slice(-4) : ""; }
@@ -1786,6 +1789,8 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
 
   // ── Market Data ──────────────────────────────────────
   async function loadMarketData() {
+    var loadToken = ++lvMarketLoadToken;
+    var isStale = function() { return loadToken !== lvMarketLoadToken; };
     try {
       var provider = lvReadProvider();
       if (!provider) throw new Error("chain-pinned read provider unavailable");
@@ -1797,6 +1802,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
         vault.ifrPriceWei(),
         vault.getOfferCount()
       ]);
+      if (isStale()) return;
       var totalAvailable = values[0];
       var totalLent = values[1];
       var rate = values[2];
@@ -1828,13 +1834,13 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       }
       var rows = [];
       var borrowerRows = [];
-      lvBorrowOffers = [];
+      var borrowOffers = [];
       var max = Math.min(count, 50);
       for (var i = 0; i < max; i++) {
         try {
           var offer = await vault.getOffer(i);
           if (!offer.active) continue;
-          if (offer.availableIFR !== 0n) lvBorrowOffers.push({ id: i, offer: offer });
+          if (offer.availableIFR !== 0n) borrowOffers.push({ id: i, offer: offer });
           rows.push(
             "<div style='display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid var(--border);padding:8px 0;'>" +
             "<span style='font-family:monospace;color:var(--muted);'>" + shortAddr(offer.lender) + "</span>" +
@@ -1849,6 +1855,8 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
           );
         } catch(e) {}
       }
+      if (isStale()) return;
+      lvBorrowOffers = borrowOffers;
       if (offersEl) offersEl.innerHTML = rows.length ? rows.join("") : "No active offers yet.";
       if (borrowerOffersEl) {
         var priceNote = "<div style='margin-top:12px;color:var(--muted);'>LendingVault V1 is retired: borrowing stays disabled regardless of <code>ifrPriceWei</code>. Lenders withdraw these offers.</div>";

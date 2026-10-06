@@ -10,7 +10,7 @@ As of: March 2026
 | `NODE_ENV` | `production` | Enables the production runtime contract |
 | `JWT_SECRET` | `<random 32+ chars>` | Signature for SIWE JWT token |
 | `VOUCHER_SIGNER_PRIVATE_KEY` | `0x...` | Dedicated EIP-712 voucher signer; never reuse a Safe owner key |
-| `FEE_ROUTER_ADDRESS` | `0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4` | FeeRouterV1 Contract (Mainnet) |
+| `FEE_ROUTER_ADDRESS` | `0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a` | FeeRouterV1 on Mainnet; EIP-712 `verifyingContract` and source of the live `protocolFeeBps` that caps every voucher (the `0x4992…9aa4` address is the Sepolia deployment) |
 | `CHAIN_ID` | `1` | Ethereum Mainnet; production rejects other chains |
 | `RPC_URL` | `https://<mainnet-rpc>` | Server-managed Ethereum Mainnet RPC endpoint |
 | `IFR_LOCK_ADDRESS` | `0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb` | Canonical IFRLock contract on Mainnet |

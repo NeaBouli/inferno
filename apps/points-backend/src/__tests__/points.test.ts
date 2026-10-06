@@ -16,6 +16,12 @@ import {
 import { MAX_OUTSTANDING_NONCES } from "../routes/auth.js";
 import { POINTS_CONFIG } from "../config/points.js";
 import { getSignerAddress } from "../services/voucher-signer.js";
+import { capVoucherDiscountBps } from "../services/voucher-eip712.js";
+import {
+  categorizeFeeReadError,
+  getProtocolFeeBps,
+  setProtocolFeeReader,
+} from "../services/fee-router-fee.js";
 import { ethers } from "ethers";
 import { SiweMessage } from "siwe";
 import {
@@ -24,6 +30,10 @@ import {
   loadPointsSecurityConfig,
   verifyLockProofRuntime,
 } from "../config/security.js";
+
+// Canonical mainnet FeeRouterV1 (T-289); defined here so the test fails red, not at import, before the fix.
+const CANONICAL_FEE_ROUTER = "0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a";
+const SEPOLIA_FEE_ROUTER = "0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4";
 
 let server: Server;
 let baseUrl: string;
@@ -98,6 +108,60 @@ async function signedSiweMessage(
 
 async function run() {
   console.log("\n🔥 Points Backend Tests\n");
+  // No chain in unit tests: serve the deployed FeeRouterV1 fee (5 bps) unless a test overrides it.
+  const feeReading = (feeBps: number, chainId = BigInt(loadPointsSecurityConfig().chainId)) =>
+    async () => ({ chainId, feeBps });
+  setProtocolFeeReader(feeReading(5));
+
+  console.log("Voucher discount cap (T-289):");
+  assert(capVoucherDiscountBps({ discountBps: 15, maxDiscountBps: 25 }, 5) === 5, "15 bps config is capped at a 5 bps on-chain fee");
+  assert(capVoucherDiscountBps({ discountBps: 5, maxDiscountBps: 5 }, 3) === 3, "discount follows a lowered on-chain fee");
+  assert(capVoucherDiscountBps({ discountBps: 5, maxDiscountBps: 5 }, 25) === 5, "a raised fee never raises the configured discount");
+  assert(capVoucherDiscountBps({ discountBps: 15, maxDiscountBps: 5 }, 25) === 5, "maxDiscountBps bounds the configured discount");
+  assert(capVoucherDiscountBps(POINTS_CONFIG.voucher, 0) === 0, "a zero on-chain fee yields no discount");
+  {
+    let threw = false;
+    try { capVoucherDiscountBps(POINTS_CONFIG.voucher, 26); } catch { threw = true; }
+    assert(threw, "a fee above FEE_CAP_BPS is rejected as unreadable");
+  }
+  {
+    let reads = 0;
+    let fee = 5;
+    const chainId = BigInt(loadPointsSecurityConfig().chainId);
+    setProtocolFeeReader(async () => { reads++; return { chainId, feeBps: fee }; });
+    await getProtocolFeeBps();
+    await getProtocolFeeBps();
+    assert(reads === 2, "every issuance reads the fee fresh (no success cache)");
+    fee = 3;
+    assert(await getProtocolFeeBps() === 3, "a fee change is visible on the very next issuance");
+    reads = 0;
+    let release: () => void = () => undefined;
+    const gate = new Promise<void>((resolve) => { release = resolve; });
+    setProtocolFeeReader(async () => { reads++; await gate; return { chainId, feeBps: 5 }; });
+    const pending = Promise.all([getProtocolFeeBps(), getProtocolFeeBps()]);
+    release();
+    const shared = await pending;
+    assert(reads === 1 && shared.every((v) => v === 5), "concurrent requests share one in-flight read");
+    await getProtocolFeeBps();
+    assert(reads === 2, "the in-flight read is not reused once settled");
+    let down = false;
+    setProtocolFeeReader(async () => { if (down) throw new Error("rpc down"); return { chainId, feeBps: 5 }; });
+    await getProtocolFeeBps();
+    down = true;
+    await assertRejects(() => getProtocolFeeBps(), "an RPC outage after a successful read fails closed (no stale reuse)");
+    let fail = true;
+    setProtocolFeeReader(async () => { reads++; if (fail) throw new Error("rpc down"); return { chainId, feeBps: 4 }; });
+    await assertRejects(() => getProtocolFeeBps(), "fee read failure propagates");
+    fail = false;
+    assert(await getProtocolFeeBps() === 4, "fee read failure is not cached");
+    setProtocolFeeReader(feeReading(5, 1n));
+    await assertRejects(() => getProtocolFeeBps(), "fee read from the wrong chain is rejected");
+    setProtocolFeeReader(feeReading(5.5));
+    await assertRejects(() => getProtocolFeeBps(), "non-integer fee is rejected");
+    setProtocolFeeReader(feeReading(26));
+    await assertRejects(() => getProtocolFeeBps(), "fee above FEE_CAP_BPS is rejected");
+    setProtocolFeeReader(feeReading(5));
+  }
 
   console.log("CORS defaults (T-212b-10):");
   assert(resolveAllowedOrigins({ NODE_ENV: "production" }).length === 0, "production without ALLOWED_ORIGINS refuses cross-origin");
@@ -111,6 +175,7 @@ async function run() {
     CHAIN_ID: "1",
     RPC_URL: "https://mainnet.example",
     IFR_LOCK_ADDRESS: MAINNET_IFR_LOCK_ADDRESS,
+    FEE_ROUTER_ADDRESS: CANONICAL_FEE_ROUTER.toLowerCase(),
     SIWE_ALLOWED_ORIGINS: "https://ifrunit.tech,https://www.ifrunit.tech",
   });
   assert(productionConfig.chainId === 1, "production config accepts mainnet chain");
@@ -125,6 +190,7 @@ async function run() {
       CHAIN_ID: "11155111",
       RPC_URL: "https://sepolia.example",
       IFR_LOCK_ADDRESS: MAINNET_IFR_LOCK_ADDRESS,
+      FEE_ROUTER_ADDRESS: CANONICAL_FEE_ROUTER.toLowerCase(),
       SIWE_ALLOWED_ORIGINS: "https://ifrunit.tech",
     }),
     "production config rejects non-mainnet chain",
@@ -154,6 +220,7 @@ async function run() {
       CHAIN_ID: "1",
       RPC_URL: "https://mainnet.example",
       IFR_LOCK_ADDRESS: MAINNET_IFR_LOCK_ADDRESS,
+      FEE_ROUTER_ADDRESS: CANONICAL_FEE_ROUTER.toLowerCase(),
       SIWE_ALLOWED_ORIGINS: "http://ifrunit.tech",
     }),
     "production config rejects non-HTTPS SIWE origins",
@@ -164,6 +231,7 @@ async function run() {
       CHAIN_ID: "1",
       RPC_URL: "http://mainnet.example",
       IFR_LOCK_ADDRESS: MAINNET_IFR_LOCK_ADDRESS,
+      FEE_ROUTER_ADDRESS: CANONICAL_FEE_ROUTER.toLowerCase(),
       SIWE_ALLOWED_ORIGINS: "https://ifrunit.tech",
     }),
     "production config rejects a remote plaintext RPC",
@@ -173,6 +241,7 @@ async function run() {
     CHAIN_ID: "1",
     RPC_URL: "http://127.0.0.1:8545",
     IFR_LOCK_ADDRESS: MAINNET_IFR_LOCK_ADDRESS,
+    FEE_ROUTER_ADDRESS: CANONICAL_FEE_ROUTER.toLowerCase(),
     SIWE_ALLOWED_ORIGINS: "https://ifrunit.tech",
   });
   assert(loopbackProductionConfig.isProduction, "production permits loopback RPC transport");
@@ -186,15 +255,18 @@ async function run() {
   assert(developmentConfig.chainId === 11155111, "explicit development network remains supported");
   assert(!canSkipLockProof(productionConfig, "true"), "production lock proof cannot be bypassed");
   assert(canSkipLockProof(developmentConfig, "true"), "explicit development may bypass lock proof");
+  const routerOk = { feeRouterCode: "0x6000", feeRouterDomain: { name: "InfernoFeeRouter", version: "1", chainId: 1n, verifyingContract: CANONICAL_FEE_ROUTER } };
   await verifyLockProofRuntime(productionConfig, async () => ({
     chainId: 1n,
     contractCode: "0x6000",
+    ...routerOk,
   }));
   assert(true, "runtime verification accepts mainnet RPC with deployed contract code");
   await assertRejects(
     () => verifyLockProofRuntime(productionConfig, async () => ({
       chainId: 11155111n,
       contractCode: "0x6000",
+      ...routerOk,
     })),
     "runtime verification rejects RPC chain mismatch",
   );
@@ -202,8 +274,76 @@ async function run() {
     () => verifyLockProofRuntime(productionConfig, async () => ({
       chainId: 1n,
       contractCode: "0x",
+      ...routerOk,
     })),
     "runtime verification rejects missing IFRLock bytecode",
+  );
+
+  console.log("FeeRouter binding (T-289):");
+  assert(
+    productionConfig.feeRouterAddress === CANONICAL_FEE_ROUTER,
+    "production accepts the canonical mainnet FeeRouterV1 (case-insensitive) and checksums it",
+  );
+  {
+    const mainnetEnv = {
+      NODE_ENV: "production",
+      CHAIN_ID: "1",
+      RPC_URL: "https://mainnet.example",
+      IFR_LOCK_ADDRESS: MAINNET_IFR_LOCK_ADDRESS,
+      SIWE_ALLOWED_ORIGINS: "https://ifrunit.tech",
+    };
+    let wrongRouterRejected = false;
+    try { loadPointsSecurityConfig({ ...mainnetEnv, FEE_ROUTER_ADDRESS: SEPOLIA_FEE_ROUTER }); } catch { wrongRouterRejected = true; }
+    assert(wrongRouterRejected, "mainnet config rejects a non-canonical FeeRouter (Sepolia address)");
+    let missingRouterRejected = false;
+    try { loadPointsSecurityConfig(mainnetEnv); } catch { missingRouterRejected = true; }
+    assert(missingRouterRejected, "production config rejects a missing FEE_ROUTER_ADDRESS");
+    let devMainnetWrongRouter = false;
+    try {
+      loadPointsSecurityConfig({ ...mainnetEnv, NODE_ENV: "development", FEE_ROUTER_ADDRESS: SEPOLIA_FEE_ROUTER });
+    } catch { devMainnetWrongRouter = true; }
+    assert(devMainnetWrongRouter, "CHAIN_ID 1 binds the canonical FeeRouter in every mode");
+    const sepoliaConfig = loadPointsSecurityConfig({
+      NODE_ENV: "development",
+      CHAIN_ID: "11155111",
+      RPC_URL: "https://sepolia.example",
+      IFR_LOCK_ADDRESS: "0x0000000000000000000000000000000000000001",
+      SIWE_ALLOWED_ORIGINS: "http://localhost:3004",
+      FEE_ROUTER_ADDRESS: SEPOLIA_FEE_ROUTER,
+    });
+    assert(sepoliaConfig.feeRouterAddress === SEPOLIA_FEE_ROUTER, "Sepolia keeps its configured FeeRouter");
+  }
+  const routerProbe = (overrides: Record<string, unknown>) => async () => ({
+    chainId: 1n,
+    contractCode: "0x6000",
+    ...routerOk,
+    ...overrides,
+  });
+  await assertRejects(
+    () => verifyLockProofRuntime(productionConfig, routerProbe({ feeRouterCode: "0x" })),
+    "runtime verification rejects a FeeRouter without bytecode",
+  );
+  await assertRejects(
+    () => verifyLockProofRuntime(productionConfig, routerProbe({ feeRouterDomain: null })),
+    "runtime verification rejects an unreadable FeeRouter EIP-712 domain",
+  );
+  await assertRejects(
+    () => verifyLockProofRuntime(productionConfig, routerProbe({
+      feeRouterDomain: { ...routerOk.feeRouterDomain, name: "OtherRouter" },
+    })),
+    "runtime verification rejects a FeeRouter with a foreign EIP-712 name",
+  );
+  await assertRejects(
+    () => verifyLockProofRuntime(productionConfig, routerProbe({
+      feeRouterDomain: { ...routerOk.feeRouterDomain, verifyingContract: SEPOLIA_FEE_ROUTER },
+    })),
+    "runtime verification rejects a FeeRouter domain bound to another contract",
+  );
+  await assertRejects(
+    () => verifyLockProofRuntime(productionConfig, routerProbe({
+      feeRouterDomain: { ...routerOk.feeRouterDomain, chainId: 11155111n },
+    })),
+    "runtime verification rejects a FeeRouter domain on another chain",
   );
 
   server = app.listen(0, "127.0.0.1");
@@ -351,6 +491,118 @@ async function run() {
     assert(belowThreshold.pointsTotal === 30, "threshold rejection leaves points unchanged");
   }
 
+  // ---- On-chain fee guard (T-289): no voucher and no point debit unless the fee is verified ----
+  if (process.env.VOUCHER_SIGNER_PRIVATE_KEY) {
+    await prisma.wallet.update({
+      where: { address: TEST_WALLET },
+      data: { pointsTotal: POINTS_CONFIG.voucher.threshold },
+    });
+    const assertNothingIssued = async (label: string) => {
+      const w = await prisma.wallet.findUniqueOrThrow({ where: { address: TEST_WALLET } });
+      assert(w.pointsTotal === POINTS_CONFIG.voucher.threshold, `${label}: points are not deducted`);
+      assert(await prisma.voucher.count() === 0, `${label}: no voucher is stored`);
+      assert(
+        await prisma.pointEvent.count({ where: { type: "voucher_redemption" } }) === 0,
+        `${label}: no redemption event is recorded`,
+      );
+    };
+
+    // Fee-read failures log only a constant category, never raw error text (T-289).
+    const LOG_SENTINELS = [
+      "sk-TEST-SENTINEL-123",
+      "apikey=SENTINEL",
+      "SENTINEL",
+      "user:pa55w0rd",
+      "rpc.example",
+      "0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a",
+      "requestBody",
+      "arbitrary free text",
+    ];
+    const hostileMessage =
+      `missing response (requestBody={"to":"0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a"}, ` +
+      `url="https://user:pa55w0rd@rpc.example/v3/sk-TEST-SENTINEL-123?apikey=SENTINEL") arbitrary free text`;
+    const failureCases: Array<{ label: string; error: unknown; category: string }> = [
+      { label: "timeout", error: Object.assign(new Error(hostileMessage), { code: "TIMEOUT" }), category: "rpc_error:timeout" },
+      { label: "network", error: Object.assign(new Error(hostileMessage), { code: "ECONNREFUSED" }), category: "rpc_error:network" },
+      {
+        label: "rate limited",
+        error: Object.assign(new Error(hostileMessage), { code: "SERVER_ERROR", response: { statusCode: 429 } }),
+        category: "rpc_error:rate_limited",
+      },
+      { label: "bad response", error: Object.assign(new Error(hostileMessage), { code: "BAD_DATA" }), category: "rpc_error:bad_response" },
+      { label: "sentinel as code", error: Object.assign(new Error(hostileMessage), { code: "sk-TEST-SENTINEL-123" }), category: "rpc_error:unknown" },
+      { label: "plain error", error: new Error(hostileMessage), category: "rpc_error:unknown" },
+      { label: "thrown string", error: hostileMessage, category: "rpc_error:unknown" },
+    ];
+    let unreadable: Awaited<ReturnType<typeof api>> | undefined;
+    for (const failure of failureCases) {
+      setProtocolFeeReader(async () => { throw failure.error; });
+      const loggedErrors: unknown[][] = [];
+      const originalConsoleError = console.error;
+      console.error = (...args: unknown[]) => { loggedErrors.push(args); };
+      try {
+        unreadable = await api("POST", "/voucher/issue", {}, authToken);
+      } finally {
+        console.error = originalConsoleError;
+      }
+      const logged = loggedErrors.map((args) => args.map((a) => (typeof a === "string" ? a : JSON.stringify(a))).join(" ")).join("\n");
+      assert(
+        logged === `[VOUCHER] issued=false fee_check=failed category=${failure.category}`,
+        `fee read failure (${failure.label}) logs exactly the constant category ${failure.category}`,
+      );
+      assert(
+        LOG_SENTINELS.every((sentinel) => !logged.includes(sentinel)),
+        `fee read failure (${failure.label}) log contains no key, credential, URL, address or message text`,
+      );
+      assert(categorizeFeeReadError(failure.error) === failure.category, `categorizeFeeReadError maps ${failure.label}`);
+      assert(unreadable.status === 503, `unreadable on-chain fee (${failure.label}) refuses voucher issuance`);
+      await assertNothingIssued(`unreadable fee (${failure.label})`);
+    }
+    assert(categorizeFeeReadError(null) === "rpc_error:unknown", "categorizeFeeReadError maps null to unknown");
+    assert(
+      categorizeFeeReadError({ code: "UNKNOWN_ERROR", error: { code: -32005, message: "apikey=SENTINEL" } }) === "rpc_error:rate_limited",
+      "categorizeFeeReadError maps JSON-RPC -32005 to rate_limited",
+    );
+    assert(
+      categorizeFeeReadError({ code: "toString" }) === "rpc_error:unknown",
+      "categorizeFeeReadError ignores prototype keys as codes",
+    );
+    assert(unreadable !== undefined && typeof unreadable.data.error === "string" && !("signature" in unreadable.data), "unreadable fee returns no signature");
+
+    setProtocolFeeReader(feeReading(5, 1n));
+    const wrongChainLogs: unknown[][] = [];
+    const consoleErrorBeforeWrongChain = console.error;
+    console.error = (...args: unknown[]) => { wrongChainLogs.push(args); };
+    let wrongChain: Awaited<ReturnType<typeof api>>;
+    try {
+      wrongChain = await api("POST", "/voucher/issue", {}, authToken);
+    } finally {
+      console.error = consoleErrorBeforeWrongChain;
+    }
+    assert(wrongChain.status === 503, "fee read from the wrong chain refuses voucher issuance");
+    assert(
+      wrongChainLogs.length === 1 && wrongChainLogs[0].join(" ") === "[VOUCHER] issued=false fee_check=failed category=fee_error:wrong_chain",
+      "wrong-chain fee read logs only the constant fee_error:wrong_chain category",
+    );
+    await assertNothingIssued("wrong-chain fee");
+
+    setProtocolFeeReader(feeReading(0));
+    const zeroFee = await api("POST", "/voucher/issue", {}, authToken);
+    assert(zeroFee.status === 503, "zero on-chain fee refuses voucher issuance");
+    await assertNothingIssued("zero fee");
+
+    setProtocolFeeReader(feeReading(3));
+    const lowered = await api("POST", "/voucher/issue", {}, authToken);
+    assert(lowered.status === 200, "voucher issues under a lowered on-chain fee");
+    assert((lowered.data.voucher as { discountBps: number }).discountBps === 3, "issued discount is capped at the on-chain fee");
+    const storedLowered = await prisma.voucher.findFirst();
+    assert(storedLowered?.discountBps === 3, "stored voucher records the capped discount");
+
+    setProtocolFeeReader(feeReading(5));
+    await prisma.voucher.deleteMany();
+    await prisma.pointEvent.deleteMany({ where: { type: "voucher_redemption" } });
+  }
+
   // ---- Reach Threshold and Issue Voucher ----
   {
     // Add more points to reach threshold (100)
@@ -361,8 +613,52 @@ async function run() {
 
     // Need VOUCHER_SIGNER_PRIVATE_KEY for this test
     if (process.env.VOUCHER_SIGNER_PRIVATE_KEY) {
-      const { status, data } = await api("POST", "/voucher/issue", {}, authToken);
+      // Success logging carries only constant fields: no wallet, signature or nonce (T-289c).
+      const successLogs: unknown[][] = [];
+      const originalConsoleLog = console.log;
+      const originalConsoleInfo = console.info;
+      const originalConsoleWarn = console.warn;
+      const originalConsoleErrorOnSuccess = console.error;
+      const captureLog = (...args: unknown[]) => { successLogs.push(args); };
+      console.log = captureLog;
+      console.info = captureLog;
+      console.warn = captureLog;
+      console.error = captureLog;
+      let issued: Awaited<ReturnType<typeof api>>;
+      try {
+        issued = await api("POST", "/voucher/issue", {}, authToken);
+      } finally {
+        console.log = originalConsoleLog;
+        console.info = originalConsoleInfo;
+        console.warn = originalConsoleWarn;
+        console.error = originalConsoleErrorOnSuccess;
+      }
+      const { status, data } = issued;
       assert(status === 200, "voucher issued at threshold");
+      const successLogText = successLogs.map((args) => args.map(String).join(" ")).join("\n");
+      const issuedVoucher = data.voucher as { nonce: string; discountBps: number };
+      assert(
+        successLogs.length === 1 &&
+          successLogText === `[VOUCHER] issued=true discountBps=${issuedVoucher.discountBps}`,
+        "voucher success logs exactly the constant fields",
+      );
+      const successLogLower = successLogText.toLowerCase();
+      assert(
+        !successLogLower.includes(TEST_WALLET.toLowerCase()) &&
+          !successLogText.includes(ethers.getAddress(TEST_WALLET)) &&
+          !successLogLower.includes(TEST_WALLET.slice(2, 10).toLowerCase()),
+        "voucher success log omits the wallet (lowercase and checksummed)",
+      );
+      assert(
+        typeof data.signature === "string" &&
+          !successLogLower.includes((data.signature as string).toLowerCase()) &&
+          !successLogLower.includes((data.signature as string).slice(2, 12).toLowerCase()),
+        "voucher success log omits the signature",
+      );
+      assert(
+        !successLogText.includes(issuedVoucher.nonce) && !successLogText.includes(issuedVoucher.nonce.slice(0, 8)),
+        "voucher success log omits the nonce",
+      );
       assert(typeof data.signature === "string", "voucher has signature");
       assert((data.voucher as { discountBps: number }).discountBps === POINTS_CONFIG.voucher.discountBps, "voucher discountBps correct");
       const issuedNonce = (data.voucher as { nonce: string }).nonce;
@@ -391,11 +687,77 @@ async function run() {
         where: { address: TEST_WALLET },
         data: { pointsTotal: POINTS_CONFIG.voucher.threshold },
       });
+      // Issuance failures log only a constant category: no wallet, no error text (T-289b).
+      const ISSUE_LOG_SENTINELS = [
+        "sk-TEST-SENTINEL-123",
+        "apikey=SENTINEL",
+        "SENTINEL",
+        "user:pa55w0rd",
+        "rpc.example",
+        "0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a",
+        "arbitrary free text",
+        TEST_WALLET.toLowerCase(),
+        ethers.getAddress(TEST_WALLET),
+      ];
+      const issueSentinelMessage =
+        `boom sk-TEST-SENTINEL-123 apikey=SENTINEL https://user:pa55w0rd@rpc.example/v3 ` +
+        `0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a ${TEST_WALLET} arbitrary free text`;
+      const issueWithCapturedLog = async () => {
+        const logs: unknown[][] = [];
+        const originalConsoleError = console.error;
+        console.error = (...args: unknown[]) => { logs.push(args); };
+        try {
+          const response = await api("POST", "/voucher/issue", {}, authToken);
+          const logged = logs.map((args) => args.map((a) => (typeof a === "string" ? a : JSON.stringify(a))).join(" ")).join("\n");
+          return { response, logged };
+        } finally {
+          console.error = originalConsoleError;
+        }
+      };
+      const assertConstantIssueLog = (logged: string, category: string, label: string) => {
+        assert(logged === `[VOUCHER] issued=false category=${category}`, `issuance failure (${label}) logs exactly ${category}`);
+        assert(
+          ISSUE_LOG_SENTINELS.every((sentinel) => !logged.toLowerCase().includes(sentinel.toLowerCase())),
+          `issuance failure (${label}) log contains no wallet, key, credential, URL, address or message text`,
+        );
+      };
+
       const testSignerKey = process.env.VOUCHER_SIGNER_PRIVATE_KEY;
       delete process.env.VOUCHER_SIGNER_PRIVATE_KEY;
-      const failedIssue = await api("POST", "/voucher/issue", {}, authToken);
+      const { response: failedIssue, logged: signerLog } = await issueWithCapturedLog();
+      process.env.VOUCHER_SIGNER_PRIVATE_KEY = "sk-TEST-SENTINEL-123";
+      const { response: badKeyIssue, logged: badKeyLog } = await issueWithCapturedLog();
       process.env.VOUCHER_SIGNER_PRIVATE_KEY = testSignerKey;
       assert(failedIssue.status === 500, "signer failure rejects voucher issuance");
+      assertConstantIssueLog(signerLog, "voucher_error:signer", "missing signer key");
+      assert(badKeyIssue.status === 500, "invalid signer key rejects voucher issuance");
+      assertConstantIssueLog(badKeyLog, "voucher_error:signer", "invalid signer key");
+
+      const injectedFailures: Array<{ label: string; error: unknown; category: string }> = [
+        {
+          label: "database",
+          error: Object.assign(new Error(issueSentinelMessage), { name: "PrismaClientKnownRequestError", code: "P2002" }),
+          category: "voucher_error:database",
+        },
+        { label: "plain error", error: new Error(issueSentinelMessage), category: "voucher_error:unknown" },
+        { label: "thrown string", error: issueSentinelMessage, category: "voucher_error:unknown" },
+      ];
+      const originalTransaction = prisma.$transaction;
+      for (const failure of injectedFailures) {
+        (prisma as unknown as { $transaction: () => Promise<never> }).$transaction = async () => { throw failure.error; };
+        let injected: Awaited<ReturnType<typeof issueWithCapturedLog>>;
+        try {
+          injected = await issueWithCapturedLog();
+        } finally {
+          (prisma as unknown as { $transaction: typeof originalTransaction }).$transaction = originalTransaction;
+        }
+        assert(injected.response.status === 500, `issuance failure (${failure.label}) returns 500`);
+        assert(
+          injected.response.data.error === "Failed to issue voucher",
+          `issuance failure (${failure.label}) returns only the generic public error`,
+        );
+        assertConstantIssueLog(injected.logged, failure.category, failure.label);
+      }
       const afterFailure = await prisma.wallet.findUniqueOrThrow({ where: { address: TEST_WALLET } });
       assert(afterFailure.pointsTotal === POINTS_CONFIG.voucher.threshold, "signer failure rolls back points");
       assert(await prisma.voucher.count() === 0, "signer failure creates no voucher");

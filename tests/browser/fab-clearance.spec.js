@@ -212,3 +212,40 @@ for (const [width, height] of [[375, 812], [390, 844], [680, 900], [820, 1180], 
     expect(result.shown, "the launcher stays available for chat").toBe(true);
   });
 }
+
+// T-287: on narrow phones the hero body text and the full-width access-panel buttons pass the fixed launcher while
+// scrolling. Disconnected baseline here; the connected and degraded wallet states run in web3-write.spec.js (mock wallet).
+for (const [width, height] of [[305, 720], [320, 740], [375, 812]]) {
+  test(`Web3 hero copy and access-panel buttons stay clear of the Copilot launcher band at ${width}x${height}`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    await page.route(/^https?:\/\/(?!localhost)/, (route) => route.abort());
+    await page.goto("/web3/");
+    await page.evaluate(() => document.fonts.ready);
+    const result = await page.evaluate(() => {
+      const launcher = document.querySelector(".copilot-launcher");
+      const buttons = [...document.querySelectorAll(".access-panel .panel-actions .btn")].filter((el) => el.getClientRects().length);
+      if (!launcher || !buttons.length) return { hits: ["missing launcher or panel buttons"], shown: false };
+      const s = getComputedStyle(launcher);
+      const z = launcher.getBoundingClientRect();
+      const inBand = (r) => r.width > 0 && r.left < z.right && r.right > z.left;
+      const hits = buttons.filter((el) => inBand(el.getBoundingClientRect())).map((el) => `button ${el.textContent.trim()}`);
+      for (const el of document.querySelectorAll(".hero .hero-copy, .access-panel .panel-foot")) {
+        const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+        for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+          if (!n.textContent.trim()) continue;
+          const range = document.createRange();
+          range.selectNodeContents(n);
+          if ([...range.getClientRects()].some(inBand)) hits.push(`text ${el.className}`);
+        }
+      }
+      return {
+        hits,
+        overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        shown: s.display !== "none" && s.visibility !== "hidden" && Number(s.opacity) > 0,
+      };
+    });
+    expect(result.hits).toEqual([]);
+    expect(result.overflow, "no horizontal document overflow").toBeLessThanOrEqual(0);
+    expect(result.shown, "the launcher stays available for chat").toBe(true);
+  });
+}

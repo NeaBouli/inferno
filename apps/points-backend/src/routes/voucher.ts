@@ -4,6 +4,9 @@ import { prisma } from "../db.js";
 import { AuthRequest, requireAuth } from "../middleware/auth.js";
 import { POINTS_CONFIG } from "../config/points.js";
 import { signVoucher } from "../services/voucher-signer.js";
+import { categorizeVoucherIssueError, VoucherIssueFailure } from "../services/voucher-log.js";
+import { capVoucherDiscountBps } from "../services/voucher-eip712.js";
+import { categorizeFeeReadError, getProtocolFeeBps } from "../services/fee-router-fee.js";
 import { requireLockProof } from "../middleware/lockProof.js";
 
 const router = Router();
@@ -26,9 +29,25 @@ router.post("/issue", requireAuth, requireLockProof, async (req: AuthRequest, re
   const nonce = ethers.toBigInt(ethers.randomBytes(32)).toString();
   const expiresAt = new Date(Date.now() + POINTS_CONFIG.voucher.expiryDays * 86400_000);
 
+  // Fail closed before any point debit: FeeRouterV1 reverts vouchers above its current
+  // protocolFeeBps ("Discount exceeds fee"), and a 0 bps fee makes a voucher worthless (T-289).
+  let discountBps: number;
+  try {
+    discountBps = capVoucherDiscountBps(POINTS_CONFIG.voucher, await getProtocolFeeBps());
+  } catch (err) {
+    // Constant category only: never log err.message or any raw error text here.
+    console.error(`[VOUCHER] issued=false fee_check=failed category=${categorizeFeeReadError(err)}`);
+    res.status(503).json({ error: "Voucher issuance unavailable: FeeRouter fee could not be verified" });
+    return;
+  }
+  if (discountBps <= 0) {
+    res.status(503).json({ error: "Voucher issuance paused: FeeRouter protocol fee is 0" });
+    return;
+  }
+
   const voucherData = {
     user: ethers.getAddress(wallet),
-    discountBps: POINTS_CONFIG.voucher.discountBps,
+    discountBps,
     maxUses: 1,
     expiry: Math.floor(expiresAt.getTime() / 1000),
     nonce,
@@ -67,7 +86,9 @@ router.post("/issue", requireAuth, requireLockProof, async (req: AuthRequest, re
         );
       }
 
-      const voucherSignature = await signVoucher(voucherData);
+      const voucherSignature = await signVoucher(voucherData).catch(() => {
+        throw new VoucherIssueFailure("voucher_error:signer");
+      });
       await tx.pointEvent.create({
         data: {
           walletId: walletRecord.id,
@@ -88,14 +109,16 @@ router.post("/issue", requireAuth, requireLockProof, async (req: AuthRequest, re
       return voucherSignature;
     });
 
-    console.log(`[VOUCHER] wallet=${wallet} issued=true discount=${voucherData.discountBps}bps nonce=${nonce.slice(0, 8)}...`);
+    // Constant fields only: never log the wallet, signature, nonce or any customer identifier (T-289c).
+    console.log(`[VOUCHER] issued=true discountBps=${voucherData.discountBps}`);
     res.json({ voucher: voucherData, signature });
   } catch (err) {
     if (err instanceof VoucherIssueError) {
       res.status(err.status).json({ error: err.publicMessage });
       return;
     }
-    console.error(`[VOUCHER] wallet=${wallet} issued=false error=${err}`);
+    // Constant category only: never log the wallet, err.message or any raw error text here.
+    console.error(`[VOUCHER] issued=false category=${categorizeVoucherIssueError(err)}`);
     res.status(500).json({ error: "Failed to issue voucher" });
   }
 });
