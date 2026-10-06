@@ -1,5 +1,36 @@
 # Changelog
 
+## [Unreleased] — 2026-10-06 — Benefits PWA cache release v25 and light offline page (T-284)
+
+### Fixed
+
+- `fix:` Benefits service worker: cache release `ifr-benefits-v24` -> `ifr-benefits-v25`
+  and registration `/sw.js?v=25`. The manifest (cache-first in the SW) changed its theme
+  to `#F5F1E8` without a cache bump, so PWAs installed earlier kept the old manifest; the
+  new release replaces it and activation deletes v21-v24. Cache strategy unchanged
+  (network-first navigations, cache-first hashed Next assets, `/api/` never cached).
+- `fix:` `offline.html` (precached deep-link fallback): the old dark card is replaced by the
+  light shop design — the `.shop-shell` tokens from `globals.css` (`--shop-paper` #f5f1e8,
+  panel, ink, muted, border, ember), `color-scheme: light`, theme-color `#F5F1E8`. The page
+  stays static and self-contained: no scripts, `<link>`, `@import`, `url()` or other origins;
+  its only asset (the 192 icon) is precached.
+- `fix:` Shop wallet chooser at phone widths (820 px and narrower): the "Connect with" box,
+  which holds the connector buttons and the WalletConnect hint, ended 1 px left of the fixed
+  Copilot launcher, so the launcher sat on its border at the end of the hint. A 16 px right
+  margin keeps a visible gap (17 px at 375 px).
+
+### Tests
+
+- `test:` `scripts/test-benefits-service-worker.js`: v25 pins (v24 is now stale; v26 is the
+  simulated next release) and an offline-fallback contract — theme matches the manifest,
+  light scheme, tokens equal the `globals.css` `.shop-shell` tokens, no retired dark colours,
+  no scripts/stylesheets/remote references, every local asset precached.
+- `test:` `scripts/test-benefits-offline-shell.js`: v25 cache and the rendered fallback uses
+  the light tokens (body, card, heading colour, theme-color).
+- `test:` `scripts/test-benefits-wallet-telemetry.js` (WalletConnect build, 375 px): the hint
+  text stays left of the launcher band and the "Connect with" box keeps at least 12 px gap.
+- `chore:` `scripts/smoke-benefits-network.js` expects the v25 service worker after release.
+
 ## [Unreleased] — 2026-10-06 — IFR SDK npm publish path (T-288)
 
 ### Added
