@@ -2258,3 +2258,77 @@ for (const [width, height] of [[1440, 1000], [1180, 820], [820, 1180], [390, 844
     });
   }
 }
+
+// T-285: in the degraded state "connected, chain reads unavailable" the long wallet status note must not widen the
+// single hero column on narrow phones. Hero text stays inside the viewport (ancestor clipping considered), the
+// document never scrolls horizontally, and the full-width hero buttons stay left of the fixed Copilot launcher band.
+for (const [width, height] of [[305, 720], [320, 740], [375, 812], [390, 844], [1440, 1000]]) {
+  test(`T-285 degraded wallet state keeps the hero inside ${width}px and clear of the launcher`, async ({ browser }) => {
+    const { context, page, pageErrors } = await preparePage(browser, {
+      readChainId: "0x5",
+      contextOptions: { viewport: { width, height } },
+    });
+    try {
+      await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+      await connect(page);
+      await expect(page.locator("[data-wallet-state]")).toHaveText("Connected · status unavailable", { timeout: 15_000 });
+      // Dismiss the RPC outage notice so the screenshots show the hero itself (the notice has its own T-221 gate).
+      const notice = page.locator("#ifr-rpc-error");
+      await expect(notice).toBeVisible({ timeout: 15_000 });
+      await notice.locator("button").click();
+      await expect(notice).toBeHidden();
+      await page.evaluate(() => document.fonts.ready);
+      const layout = await page.evaluate(() => {
+        const vw = document.documentElement.clientWidth;
+        const launcher = document.querySelector(".copilot-launcher").getBoundingClientRect();
+        // Visible right edge of an element: its own box, cut by every ancestor that clips overflow.
+        const visibleRight = (el) => {
+          let right = el.getBoundingClientRect().right;
+          for (let a = el.parentElement; a; a = a.parentElement) {
+            const s = getComputedStyle(a);
+            if (s.overflowX !== "visible") right = Math.min(right, a.getBoundingClientRect().right);
+          }
+          return right;
+        };
+        const clipped = [];
+        const hero = document.querySelector(".hero");
+        const walker = document.createTreeWalker(hero, NodeFilter.SHOW_TEXT);
+        for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+          if (!node.textContent.trim() || !node.parentElement.getClientRects().length) continue;
+          const range = document.createRange();
+          range.selectNodeContents(node);
+          for (const r of range.getClientRects()) {
+            if (r.width > 0 && (r.right > vw + 0.5 || r.right > visibleRight(node.parentElement) + 0.5)) {
+              clipped.push(`${node.textContent.trim().slice(0, 40)} right=${Math.round(r.right)}`);
+              break;
+            }
+          }
+        }
+        const buttons = Array.from(document.querySelectorAll(".hero .hero-actions .btn"))
+          .filter((el) => el.getClientRects().length)
+          .map((el) => ({ text: el.textContent.trim(), right: Math.round(el.getBoundingClientRect().right) }));
+        return {
+          vw,
+          scrollWidth: document.documentElement.scrollWidth,
+          heroGridRight: Math.round(document.querySelector(".hero-grid").getBoundingClientRect().right),
+          launcherLeft: Math.round(launcher.left),
+          clipped,
+          buttons,
+        };
+      });
+      expect.soft(layout.scrollWidth, "no horizontal document overflow").toBeLessThanOrEqual(layout.vw);
+      expect.soft(layout.heroGridRight, "hero grid stays inside the viewport").toBeLessThanOrEqual(layout.vw);
+      expect.soft(layout.clipped, "hero text is not clipped on the right").toEqual([]);
+      expect(layout.buttons.length).toBeGreaterThan(0);
+      expect.soft(layout.buttons.filter((b) => b.right > layout.launcherLeft), "hero buttons end left of the launcher band").toEqual([]);
+      if (process.env.T285_SHOTS) {
+        await page.screenshot({ path: `${process.env.T285_SHOTS}/t285-degraded-hero-${width}.png` });
+        await page.locator("#access").screenshot({ path: `${process.env.T285_SHOTS}/t285-degraded-access-panel-${width}.png` });
+        require("node:fs").writeFileSync(`${process.env.T285_SHOTS}/t285-degraded-hero-${width}.json`, JSON.stringify(layout, null, 1));
+      }
+      expect(pageErrors).toEqual([]);
+    } finally {
+      await context.close();
+    }
+  });
+}
