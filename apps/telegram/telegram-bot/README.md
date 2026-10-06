@@ -62,7 +62,7 @@ The topic IDs are fixed constants in code. They were confirmed by the owner on
 proven from the code alone:
 
 | Topic | ID | Status | Bot categories |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | General | 5 | confirmed 2026-10-06 | `general`, unknown categories |
 | Dev/Builder | 11 | confirmed 2026-10-06 | `dev`, `release` |
 | Council | 21 | confirmed 2026-10-06 | `council`, `governance` |
