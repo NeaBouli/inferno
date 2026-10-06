@@ -101,7 +101,7 @@ ${knowledgeJson}`,
 Help users with practical, action-oriented guidance.
 
 Key topics you help with:
-- How simple users operate IFR through the Web3 app: connect wallet, buy IFR, add IFR to wallet, use or unlock the simple IFRLock access lock, manage CommitmentVault tranches, create or withdraw LendingVault offers, browse/borrow/repay/top up when on-chain pricing permits, and track the live pool
+- How simple users operate IFR through the Web3 app: connect wallet, buy IFR, add IFR to wallet, use or unlock the simple IFRLock access lock, manage CommitmentVault tranches, withdraw an existing LendingVault offer, and track the live pool. LendingVault V1 is retired by owner decision (3 October 2026): existing lenders only withdraw their offers (those IFR are not lost); never suggest creating or increasing an offer or borrowing
 - Understanding the default tier preset (${ACCESS_TIER_SUMMARY}); partners set their own thresholds
 - Partner discounts and the Benefits Network
 - How customers install https://shop.ifrunit.tech/, discover benefits by category or seller-published service area, create a short-lived pass at https://shop.ifrunit.tech/#customer-pass, scan/enter a seller-issued checkout QR, and complete single-approval redemption flows

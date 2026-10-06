@@ -1,5 +1,38 @@
 # Changelog
 
+## 5 October 2026 — Lending Market Page Shows LendingVault V1 as Retired (T-271)
+
+- `docs/wiki/lending-market.html`: title, meta, Open Graph, Twitter and JSON-LD descriptions no longer call
+  the market live. A visible RETIRED notice near the top uses the canonical wording: V1 retired by owner
+  decision (3 October 2026); borrowing stays disabled (`ifrPriceWei = 0`, no activation planned or
+  authorized) and lenders are withdrawing their offers; those IFR are not lost. No V2 is planned until a
+  reviewed price source exists.
+- The page no longer guides lenders to create offers; the offer table always shows a read-only "View"
+  action and never a borrow call to action. Withdraw guidance (`withdrawOffer`) and the read-only on-chain
+  stats stay.
+- Copilot knowledge (`ifr-knowledge.ts`): the LendingVault entry and the Web3 distinction now state V1 is
+  retired (withdraw only) instead of describing a live lender offer flow; wiki RAG content regenerated.
+- `docs/wiki/lending-vault.html`: metadata no longer says live; a visible RETIRED notice replaces the live
+  banner. The guided lender flow and the create/increase offer form are hidden, and the offer handler refuses
+  to send any `createOffer`/`increaseOffer` transaction. `withdrawOffer` stays and now allows the full
+  available amount (the old 1 IFR keep-alive only served later offer increases).
+- `docs/llms.txt`, `docs/GOVERNANCE_PRODUCT_DECISION_REGISTER.md` (Lane 1 current truth) and
+  `docs/COINMARKETCAP_SUBMISSION.md` describe LendingVault V1 as retired, withdraw only.
+- Borrowing on the wiki stays disabled regardless of the read `ifrPriceWei`: the "Request Loan" form on
+  `lending-vault.html` is hidden behind a retired note, the button is never re-enabled, the loan preview no
+  longer computes collateral, and the borrow handler refuses before any wallet call. The Lending Market
+  borrower and repayment steps no longer describe a future borrow path.
+- New Playwright spec `tests/browser/lending-retired.spec.js` (in `test:landing-wiki-ui`): with a mocked
+  non-zero price, forced borrow and create-offer clicks send no transaction; withdraw max sends
+  `withdrawOffer` with exactly the full available amount (12,345,678.123456789 IFR fixture). Further mocked
+  regressions: exact full withdrawal of 1 IFR, 0.999999999 IFR and 0.000000001 IFR; refusal above the
+  available amount and without an active offer; explicit create and increase refusal; the borrow lock holds
+  after the handler and after a 60-second market refresh.
+- Copilot system prompt: the Web3 lending topic now says existing lenders only withdraw (no new offers, no
+  borrowing) instead of inviting create/borrow "when on-chain pricing permits".
+- The retired notes in the lending-vault Lender and Borrower tabs and the refusal messages use readable
+  (WCAG AA) colours on the light skin.
+
 ## 6 October 2026 — Canonical Contract Test Count 693 (T-275 Follow-Up)
 
 - `npx hardhat test` on main `f39de412` passes 693 tests (690 before, plus the three PartnerVault

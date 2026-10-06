@@ -22,7 +22,7 @@ IFR includes a read-only AI Copilot assistant for general protocol and surface-s
 - Developer routing: https://ifrunit.tech/wiki/contracts.html, https://ifrunit.tech/wiki/integration.html, https://ifrunit.tech/wiki/wallet-guide.html
 - Community routing: https://ifrunit.tech/wiki/governance.html, https://ifrunit.tech/wiki/community-signer-expansion.html, https://ifrunit.tech/wiki/transparency.html
 - Council votes (published record): every Council ballot, signed vote and tally, with each signature independently verifiable against its exact ballot text: https://ifrunit.tech/wiki/council-votes.html. Current status: EX-01 approved on 2026-10-04 (no IFR incentives for exchanges; policy decision, no on-chain action); EX-02 open; CV-01 open, not approved. Agenda: https://ifrunit.tech/wiki/governance.html#council-agenda (agenda items are not spending authority)
-- Important distinction: CommitmentVault and LendingVault Wiki pages are documentation/reference pages; current user-facing Lock IFR and Create offer execution is intended to happen on Web3.
+- Important distinction: CommitmentVault and LendingVault Wiki pages are documentation/reference pages; current user-facing Lock IFR execution is intended to happen on Web3. LendingVault V1 is retired (3 October 2026): no new offers are invited; existing lenders only withdraw their offers with withdrawOffer.
 - Canonical capability status: https://ifrunit.tech/CURRENT_FUNCTIONALITY_STATUS.md
 - July 2026 community-audit current status: https://github.com/NeaBouli/inferno/blob/main/docs/community-audits/JULY_2026_REMEDIATION_REGISTER.md
 - Public CWA-01...CWA-82 remediation register: https://github.com/NeaBouli/inferno/blob/main/docs/community-audits/CWA_REMEDIATION_REGISTER.md

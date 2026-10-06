@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Lending Market &mdash; Inferno (IFR) Documentation</title>
   <meta name="keywords" content="IFR lending market, LendingVault offers, IFR borrower, IFR lender, Ethereum Mainnet, ETH collateral, DeFi market">
-  <meta name="description" content="Live IFR Lending Market on Ethereum Mainnet. Browse LendingVault offers, available IFR, utilization, loan count, rate and borrow readiness directly from the contract.">
+  <meta name="description" content="IFR Lending Market (LendingVault V1, retired 3 October 2026). Read-only view of remaining LendingVault offers, available IFR, utilization and loan count on Ethereum Mainnet; lenders withdraw their offers.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -621,19 +621,19 @@
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Inferno Protocol">
   <meta property="og:title" content="Lending Market — Inferno Protocol (IFR)">
-  <meta property="og:description" content="Live IFR Lending Market on Ethereum Mainnet with direct LendingVault reads for offers, liquidity, loans, rate and borrow readiness.">
+  <meta property="og:description" content="IFR Lending Market: LendingVault V1 retired on 3 October 2026. Read-only on-chain view of remaining offers, liquidity and loans; lenders withdraw their offers.">
   <meta property="og:url" content="https://ifrunit.tech/wiki/lending-market.html">
   <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Lending Market — Inferno Protocol (IFR)">
-  <meta name="twitter:description" content="Live IFR Lending Market on Ethereum Mainnet with direct LendingVault reads.">
+  <meta name="twitter:description" content="IFR Lending Market: LendingVault V1 retired on 3 October 2026; read-only on-chain view.">
   <meta name="twitter:site" content="@IFRtoken">
   <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">  <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "TechArticle",
     "headline": "Lending Market — IFR Lending against ETH Collateral",
-    "description": "Live IFR Lending Market on Ethereum Mainnet. Browse LendingVault offers, available IFR, utilization, loan count, rate and borrow readiness directly from the contract.",
+    "description": "IFR Lending Market (LendingVault V1, retired 3 October 2026). Read-only view of remaining LendingVault offers, available IFR, utilization and loan count on Ethereum Mainnet; lenders withdraw their offers.",
     "url": "https://ifrunit.tech/wiki/lending-market.html",
     "isPartOf": {"@id": "https://ifrunit.tech/#website"},
     "publisher": {"@id": "https://ifrunit.tech/#organization"},
@@ -784,15 +784,19 @@
         </div>
       </div>
 
-      <!-- Phase 3 Live Banner -->
+      <!-- Phase 3 Deployment Banner -->
       <div class="coming-soon-banner">
         <span class="badge">Phase 3</span>
         <span class="text">Deployed on Ethereum Mainnet &mdash; LendingVault: <code style="font-size:0.8rem;">0x974305Ab0EC905172e697271C3d7d385194EB9DF</code> &mdash; feeExempt active</span>
       </div>
 
       <h1>Lending <span class="accent">Market</span></h1>
-      <p class="subtitle">P2P IFR Lending &mdash; Browse Offers, Borrow, Earn Interest</p>
-      <p data-lending-status><strong>Status:</strong> Retired (V1) since 3 October 2026: borrowing stays disabled by Governance decision (no activation is planned or authorized) and no V2 is planned yet. Lenders can still withdraw their unlent offers with <code>withdrawOffer</code>; these IFR are not lost.</p>
+      <p class="subtitle">P2P IFR Lending (V1, retired) &mdash; read-only view of remaining offers</p>
+      <div id="retired-notice" role="note" style="background:rgba(185,28,28,0.06);border:1px solid rgba(185,28,28,0.35);border-left:4px solid #b91c1c;border-radius:8px;padding:14px 18px;margin:16px 0;">
+        <div style="font-size:0.78rem;font-weight:700;color:#b91c1c;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Retired &mdash; LendingVault V1</div>
+        <p data-lending-status style="margin:0 0 6px;">V1 retired by owner decision (3 October 2026): borrowing stays disabled (<code>ifrPriceWei = 0</code>, no activation planned or authorized) and lenders are withdrawing their offers; those IFR are not lost. No V2 is planned until a reviewed price source exists.</p>
+        <p style="margin:0;font-size:0.88rem;color:var(--muted);">No new offers are invited. Existing lenders withdraw unlent IFR with <code>withdrawOffer</code> on the <a href="lending-vault.html#lending-widget">LendingVault page</a>.</p>
+      </div>
 
       <!-- ======================================== -->
       <!-- Marketplace Content -->
@@ -810,18 +814,19 @@
         .market-widget{background:rgba(255,69,0,0.04);border:1px solid rgba(255,69,0,0.18);border-radius:12px;padding:24px;margin:20px 0}
         .market-btn{display:inline-block;padding:6px 16px;background:var(--accent);color:#fff;border:none;border-radius:6px;font-size:0.82rem;font-weight:600;cursor:pointer;text-decoration:none;transition:opacity 0.2s}
         .market-btn:hover{opacity:0.9}
+        .main a.market-btn{color:#fff}
         .market-hidden{display:none!important}
         .how-step{display:flex;gap:16px;align-items:flex-start;margin:16px 0}
         .how-num{flex-shrink:0;width:32px;height:32px;border-radius:50%;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:0.88rem}
       </style>
 
-      <!-- Live Status -->
-      <div class="market-widget" style="background:rgba(34,197,94,0.06);border-color:rgba(34,197,94,0.25);text-align:center;">
-        <div style="font-size:0.78rem;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Live on Ethereum Mainnet</div>
-        <p style="color:var(--muted);font-size:0.88rem;margin:0;">LendingVault is live on Mainnet. New lenders use the guided 1-5 flow on the LendingVault page; offers appear after <code>createOffer</code> confirms.<br>Data reads directly from LendingVault on Ethereum Mainnet.</p>
+      <!-- Read-only Status -->
+      <div class="market-widget" style="text-align:center;">
+        <div style="font-size:0.78rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Read-only on-chain view</div>
+        <p style="color:var(--muted);font-size:0.88rem;margin:0;">The figures below read directly from the retired LendingVault V1 contract on Ethereum Mainnet. They show what remains in the contract while lenders withdraw; they are not an invitation to lend or borrow.</p>
       </div>
 
-      <!-- Live Stats -->
+      <!-- On-chain Stats -->
       <h2 id="stats">Market Stats</h2>
       <div class="market-stats-grid">
         <div class="market-stat"><div class="m-label">Total Available</div><div class="m-value" id="m-available">&mdash;</div></div>
@@ -831,8 +836,8 @@
       </div>
 
       <!-- Offers Table -->
-      <h2 id="offers">Active Lending Offers</h2>
-      <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;">Browse available IFR lending offers. Borrow transactions require at least one active offer and a non-zero <code>ifrPriceWei</code> collateral price on LendingVault.</p>
+      <h2 id="offers">Remaining Lending Offers</h2>
+      <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;">Offers still held in the retired LendingVault V1, shown read-only. Borrowing stays disabled (<code>ifrPriceWei = 0</code>); lenders withdraw these balances with <code>withdrawOffer</code>.</p>
       <table class="offers-table" id="offers-table">
         <thead>
           <tr>
@@ -851,20 +856,20 @@
       <h2 id="how-it-works">How It Works</h2>
       <div class="how-step">
         <div class="how-num">1</div>
-        <div><strong>Lender creates offer</strong><br><span style="color:var(--muted);font-size:0.88rem;">Open the <a href="https://ifrunit.tech/wiki/lending-vault.html#lending-widget">guided Lender Flow</a>, connect wallet, choose amount, approve if needed, then create the offer. Offers are live; interest can accrue only if borrowing is activated and a borrower later repays.</span></div>
+        <div><strong>Existing lenders withdraw offers</strong><br><span style="color:var(--muted);font-size:0.88rem;">V1 is retired and no new offers are invited. Lenders with an existing offer open the <a href="https://ifrunit.tech/wiki/lending-vault.html#lending-widget">LendingVault page</a>, connect the lender wallet and withdraw unlent IFR with <code>withdrawOffer</code>; those IFR are not lost. No interest accrues because borrowing stays disabled.</span></div>
       </div>
       <div class="how-step">
         <div class="how-num">2</div>
-        <div><strong>Future borrower path &mdash; currently disabled</strong><br><span style="color:var(--muted);font-size:0.88rem;">Borrower selection and collateral posting remain unavailable while <code>ifrPriceWei = 0</code>. Activation requires a separately audited price path and controls.</span></div>
+        <div><strong>Borrower path &mdash; disabled (V1 retired)</strong><br><span style="color:var(--muted);font-size:0.88rem;">Borrowing stays disabled (<code>ifrPriceWei = 0</code>, no activation planned or authorized). No V2 is planned until a reviewed price source exists.</span></div>
       </div>
       <div class="how-step">
         <div class="how-num">3</div>
-        <div><strong>Future repayment path &mdash; currently disabled</strong><br><span style="color:var(--muted);font-size:0.88rem;">IFR receipt, repayment and collateral return apply only if borrowing is activated in a future audited design. The V1 contract's configured interest split is 50% lender and 50% protocol.</span></div>
+        <div><strong>Repayment path &mdash; not applicable (V1 retired)</strong><br><span style="color:var(--muted);font-size:0.88rem;">V1 has no loans, and no loans can be opened. For reference only: the V1 contract's configured interest split is 50% lender and 50% protocol.</span></div>
       </div>
 
       <!-- Interest Rate Table -->
       <h2 id="rates">Interest Rate Curve</h2>
-      <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;">Rates increase with utilization to ensure fair pricing and available liquidity.</p>
+      <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;">V1 contract parameters, for reference only (V1 is retired; borrowing stays disabled). Rates increase with utilization.</p>
       <table style="width:100%;font-size:0.88rem;margin-bottom:24px;">
         <thead><tr><th style="text-align:left;padding:8px 12px;">Utilization</th><th style="text-align:right;padding:8px 12px;">Monthly Rate</th><th style="text-align:right;padding:8px 12px;">Effective Annual</th></tr></thead>
         <tbody>
@@ -1070,8 +1075,9 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
 
     if (offers && offers.length > 0) {
       tbody.innerHTML = offers.map(function(o) {
-        var actionLabel = stats.priceSet ? "Borrow \u2192" : "View";
-        var actionTitle = stats.priceSet ? "Open LendingVault borrower flow" : "Borrowing opens after ifrPriceWei is set";
+        // LendingVault V1 is retired (3 October 2026): the market never links to a borrow flow.
+        var actionLabel = "View";
+        var actionTitle = "LendingVault V1 is retired; borrowing stays disabled";
         return "<tr>" +
           "<td style='font-family:monospace;font-size:0.82rem;'>" + shortAddr(o.lender) + "</td>" +
           "<td>" + fmt(o.availableAmount) + " IFR</td>" +
@@ -1080,10 +1086,10 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
           "</tr>";
       }).join("");
       if (!stats.priceSet) {
-        tbody.innerHTML += "<tr><td colspan='4' style='color:#fbbf24;padding:12px;'>Borrow transactions are pending until Governance sets <code>ifrPriceWei</code>. Offers can still be viewed.</td></tr>";
+        tbody.innerHTML += "<tr><td colspan='4' style='color:#fbbf24;padding:12px;'>V1 retired: borrowing stays disabled (<code>ifrPriceWei = 0</code>, no activation planned or authorized). Lenders withdraw these offers with <code>withdrawOffer</code>.</td></tr>";
       }
     } else {
-      tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;color:var(--muted);padding:24px;'>No offers yet. If you already approved IFR, return to LendingVault and click <strong>Create Offer</strong> to deposit IFR into the market.</td></tr>";
+      tbody.innerHTML = "<tr><td colspan='4' style='text-align:center;color:var(--muted);padding:24px;'>No active offers. LendingVault V1 is retired; no new offers are invited.</td></tr>";
     }
   }
 

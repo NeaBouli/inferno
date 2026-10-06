@@ -8,7 +8,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LendingVault &mdash; Inferno (IFR) Documentation</title>
   <meta name="keywords" content="LendingVault, IFR lending, IFR borrower, lending market, Ethereum Mainnet, ETH collateral, interest rate, createOffer, IFR approval">
-  <meta name="description" content="Live IFR LendingVault on Ethereum Mainnet with a guided 1-5 lender flow. Connect MetaMask, choose amount, approve IFR if needed, create offer, then verify live market status.">
+  <meta name="description" content="IFR LendingVault V1 on Ethereum Mainnet, retired on 3 October 2026. Borrowing stays disabled and no new offers are invited; existing lenders withdraw unlent IFR with withdrawOffer. Read-only market stats.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -621,19 +621,19 @@
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Inferno Protocol">
   <meta property="og:title" content="LendingVault — Inferno Protocol (IFR)">
-  <meta property="og:description" content="Live IFR LendingVault on Ethereum Mainnet with guided lender steps, direct market reads, and borrower readiness status.">
+  <meta property="og:description" content="IFR LendingVault V1, retired on 3 October 2026: borrowing stays disabled, existing lenders withdraw their offers. Read-only on-chain market reads.">
   <meta property="og:url" content="https://ifrunit.tech/wiki/lending-vault.html">
   <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="LendingVault — Inferno Protocol (IFR)">
-  <meta name="twitter:description" content="Live IFR LendingVault on Ethereum Mainnet with guided lender steps and live market reads.">
+  <meta name="twitter:description" content="IFR LendingVault V1, retired on 3 October 2026: withdraw only, read-only market reads.">
   <meta name="twitter:site" content="@IFRtoken">
   <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">  <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "TechArticle",
     "headline": "LendingVault — IFR Lending against ETH Collateral",
-    "description": "Live IFR LendingVault on Ethereum Mainnet with a guided 1-5 lender flow: connect wallet, choose amount, approve IFR if needed, create offer, then verify live market status.",
+    "description": "IFR LendingVault V1 on Ethereum Mainnet, retired on 3 October 2026. Borrowing stays disabled and no new offers are invited; existing lenders withdraw unlent IFR with withdrawOffer. Read-only market stats.",
     "url": "https://ifrunit.tech/wiki/lending-vault.html",
     "isPartOf": {"@id": "https://ifrunit.tech/#website"},
     "publisher": {"@id": "https://ifrunit.tech/#organization"},
@@ -785,10 +785,10 @@
         </div>
       </div>
 
-      <!-- Phase 3 Live Banner -->
+      <!-- Phase 3 Deployment Banner -->
       <div class="coming-soon-banner">
         <span class="badge">Phase 3</span>
-        <span class="text">Live on Ethereum Mainnet &mdash; <code style="font-size:0.8rem;">0x974305Ab0EC905172e697271C3d7d385194EB9DF</code> &mdash; feeExempt active</span>
+        <span class="text">Deployed on Ethereum Mainnet (V1 retired) &mdash; <code style="font-size:0.8rem;">0x974305Ab0EC905172e697271C3d7d385194EB9DF</code> &mdash; feeExempt active</span>
       </div>
 
       <h1>Lending<span class="accent">Vault</span></h1>
@@ -802,15 +802,15 @@
       <!-- ======================================== -->
       <h2>1. The Idea</h2>
       <p>
-        A lender follows a guided 1-5 flow: connect MetaMask, choose the free IFR amount, approve the LendingVault if needed, confirm <code>createOffer(amount)</code>, then verify that the offer is live in the market. Only after <code>createOffer</code> confirms on-chain does the amount appear in the market and borrower views. Unlent offer balances can be withdrawn again with <code>withdrawOffer(amount)</code>.
+        In the V1 design a lender approved IFR and deposited it with <code>createOffer(amount)</code>; unlent offer balances can be withdrawn again with <code>withdrawOffer(amount)</code>. V1 is retired: this page no longer creates or increases offers, and existing lenders withdraw their unlent IFR.
       </p>
       <p>
-        <strong>Builders</strong> can browse live offers and borrow IFR against ETH collateral after the contract price parameter <code>ifrPriceWei</code> is set for collateral calculation. Approval alone is not a lending offer; it only gives the vault permission to transfer IFR in the next transaction.
+        In the V1 design, <strong>builders</strong> would borrow IFR against ETH collateral only after the contract price parameter <code>ifrPriceWei</code> is set for collateral calculation. That price stays unset: borrowing stays disabled and no activation is planned or authorized.
       </p>
 
       <div class="callout-green">
         <p>
-          <strong>Current Mainnet flow:</strong> Lender approves IFR, creates an offer, borrowers see it in the market, and later loan repayment or liquidation routes value back through the protocol. Lenders can withdraw only the currently available, unlent part of an offer; IFR already borrowed stays active until repayment or liquidation.
+          <strong>Current Mainnet state:</strong> V1 retired by owner decision (3 October 2026): borrowing stays disabled (<code>ifrPriceWei = 0</code>, no activation planned or authorized) and lenders are withdrawing their offers; those IFR are not lost. No V2 is planned until a reviewed price source exists. Lenders can withdraw the currently available, unlent part of an offer; V1 has 0 loans, so no IFR is lent out.
         </p>
       </div>
 
@@ -965,7 +965,7 @@
       <!-- ======================================== -->
       <h2>6. As a Builder &mdash; Step by Step</h2>
       <p>
-        How to use the LendingVault as a builder:
+        V1 design reference only: LendingVault V1 is retired and borrowing stays disabled (<code>ifrPriceWei = 0</code>, no activation planned or authorized), so these steps cannot be performed.
       </p>
 
       <ol class="step-list">
@@ -1041,6 +1041,8 @@
         .lv-stat .stat-value{font-size:1.3rem;font-weight:700;color:var(--accent)}
         .lv-info-box{background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px;padding:14px;margin:14px 0;font-size:0.88rem;line-height:1.7}
         .lv-status-msg{margin-top:12px;padding:12px;border-radius:8px;font-size:0.88rem}
+        .lv-retired-note{background:#FEF2F2;border:1px solid rgba(185,28,28,0.35);border-left:4px solid #b91c1c;border-radius:8px;padding:12px 14px;margin:0 0 14px;color:#211C17;font-size:0.92rem;line-height:1.5}
+        .lv-retired-note strong{color:#991b1b}
         .lv-withdraw-panel{margin-top:16px;border-top:1px solid var(--border);padding-top:16px}
         .lv-withdraw-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
         .lv-withdraw-actions .lv-form-group{flex:1 1 220px;margin:0}
@@ -1067,16 +1069,17 @@
         @media(max-width:560px){.lv-guide-step{grid-template-columns:30px 1fr}.lv-guide-state{grid-column:2}.lv-guide-cta{display:block}.lv-guide-cta .lv-btn{margin-top:10px;width:100%;text-align:center}}
       </style>
 
-      <!-- Live Status Banner -->
-      <div class="lv-widget" style="background:rgba(34,197,94,0.06);border-color:rgba(34,197,94,0.25);text-align:center;">
-        <div style="font-size:0.78rem;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:4px;">Live on Ethereum Mainnet</div>
-        <p style="color:var(--muted);font-size:0.88rem;margin:0;">LendingVault deployed on Mainnet. feeExempt active since 06.04.2026.<br>The page now guides lenders step by step from wallet connection to a live market offer.</p>
+      <!-- Retired Status Banner -->
+      <div class="lv-widget" id="lv-retired-notice" role="note" style="background:rgba(185,28,28,0.06);border-color:rgba(185,28,28,0.35);border-left:4px solid #b91c1c;">
+        <div style="font-size:0.78rem;font-weight:700;color:#b91c1c;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Retired &mdash; LendingVault V1</div>
+        <p style="font-size:0.9rem;margin:0 0 6px;">V1 retired by owner decision (3 October 2026): borrowing stays disabled (<code>ifrPriceWei = 0</code>, no activation planned or authorized) and lenders are withdrawing their offers; those IFR are not lost. No V2 is planned until a reviewed price source exists.</p>
+        <p style="color:var(--muted);font-size:0.88rem;margin:0;">This page no longer creates or increases offers. Existing lenders connect the lender wallet and use <strong>Withdraw Available IFR</strong> below.</p>
       </div>
 
       <!-- Connect Wallet -->
       <div class="lv-widget" id="lv-connect-section">
         <h3 style="margin-bottom:8px;">Connect Wallet</h3>
-        <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;">Use the same IFR wallet connector as the header. After connection, you can offer free IFR in LendingVault.</p>
+        <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;">Use the same IFR wallet connector as the header. After connection, you can withdraw unlent IFR from an existing offer.</p>
         <button class="lv-btn" id="lv-connect-btn">Connect Wallet</button>
       <div id="lv-wallet-info" class="lv-hidden" style="margin-top:14px;">
           <div style="display:flex;gap:20px;flex-wrap:wrap;">
@@ -1088,7 +1091,8 @@
         </div>
       </div>
 
-      <div class="lv-widget" id="lv-lender-guide">
+      <!-- V1 retired: the guided create-offer flow is hidden; no offer transaction can be sent from this page. -->
+      <div class="lv-widget lv-hidden" id="lv-lender-guide" aria-hidden="true">
         <h3 style="margin-bottom:8px;">Lender Flow</h3>
         <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;">Follow the active step. Completed steps turn green automatically after the Mainnet state updates.</p>
         <div class="lv-guide">
@@ -1134,16 +1138,16 @@
       <!-- LENDER TAB -->
       <div id="lv-lender-tab" class="lv-tab-content lv-visible">
         <div class="lv-widget">
-          <h3>Create Lending Offer</h3>
-          <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;">Deposit free IFR into LendingVault. Borrowers can then borrow against ETH collateral and pay interest through the contract.</p>
+          <h3>Your Lending Offer</h3>
+          <p class="lv-retired-note" role="note" id="lv-create-retired-note"><strong>Retired.</strong> LendingVault V1 is retired: creating or increasing offers is disabled on this page. Existing lenders withdraw unlent IFR below; those IFR are not lost.</p>
 
-          <div class="lv-form-group">
+          <div class="lv-form-group lv-hidden" aria-hidden="true">
             <label>IFR Amount to Offer</label>
             <input type="text" id="lv-offer-amount" inputmode="decimal" placeholder="e.g. 50000000" autocomplete="off">
             <div class="lv-hint">Available: <span id="lv-lender-balance">—</span></div>
           </div>
 
-          <div style="display:flex;gap:8px;flex-wrap:wrap;margin:-4px 0 14px;">
+          <div class="lv-hidden" aria-hidden="true" style="display:flex;gap:8px;flex-wrap:wrap;margin:-4px 0 14px;">
             <button class="lv-btn" id="lv-use-half" style="padding:8px 14px;font-size:0.82rem;background:#374151;">Use 50%</button>
             <button class="lv-btn" id="lv-use-max" style="padding:8px 14px;font-size:0.82rem;background:#374151;">Use max</button>
           </div>
@@ -1155,13 +1159,13 @@
             <strong>Existing Offer:</strong> <span id="lv-existing-offer">—</span>
           </div>
 
-          <button class="lv-btn" id="lv-create-offer-btn" disabled>Approve + Create Offer</button>
+          <button class="lv-btn lv-hidden" id="lv-create-offer-btn" aria-hidden="true" disabled>Approve + Create Offer</button>
           <div id="lv-offer-status" class="lv-hidden lv-status-msg"></div>
 
           <div class="lv-withdraw-panel">
             <h4 style="margin:0 0 8px;color:var(--text);font-size:1rem;">Withdraw Available IFR</h4>
             <p style="color:var(--muted);font-size:0.82rem;line-height:1.5;margin:0 0 12px;">
-              You can withdraw only the unlent part of your offer. The UI keeps a small live balance when needed so the current contract does not mark your offer inactive.
+              You can withdraw the unlent part of your offer, up to the full available amount. Withdrawing everything closes the offer only when none of its IFR is still lent out.
             </p>
             <div class="lv-withdraw-actions">
               <div class="lv-form-group">
@@ -1169,7 +1173,7 @@
                 <input type="text" id="lv-withdraw-amount" inputmode="decimal" placeholder="e.g. 5000000" autocomplete="off">
                 <div class="lv-hint">Available: <span id="lv-withdrawable">—</span></div>
               </div>
-              <button class="lv-btn lv-btn-muted" id="lv-withdraw-max" type="button" disabled>Use safe max</button>
+              <button class="lv-btn lv-btn-muted" id="lv-withdraw-max" type="button" disabled>Use max</button>
               <button class="lv-btn lv-btn-danger" id="lv-withdraw-offer-btn" type="button" disabled>Withdraw IFR</button>
             </div>
             <div id="lv-withdraw-note" class="lv-hint" style="margin-top:8px;">Connect wallet to see withdraw limits.</div>
@@ -1186,9 +1190,11 @@
       <!-- BORROWER TAB -->
       <div id="lv-borrower-tab" class="lv-tab-content">
         <div class="lv-widget">
-          <h3>Borrow IFR</h3>
-          <p style="color:var(--muted);font-size:0.88rem;margin-bottom:14px;">Post ETH collateral to borrow IFR. Use it for product access, builder discounts, or lock in IFRLock.</p>
+          <h3>Borrow IFR &mdash; disabled</h3>
+          <p class="lv-retired-note" role="note" id="lv-borrow-retired-note"><strong>Retired.</strong> LendingVault V1 is retired: borrowing stays disabled regardless of the on-chain price (<code>ifrPriceWei = 0</code>, no activation planned or authorized). No V2 is planned until a reviewed price source exists.</p>
 
+          <!-- V1 retired: the borrow form is hidden and the borrow handler refuses before any wallet call. -->
+          <div class="lv-hidden" aria-hidden="true">
           <div class="lv-form-group">
             <label>Offer to Accept</label>
             <select id="lv-borrow-offer">
@@ -1217,13 +1223,14 @@
             <div id="lv-loan-preview-content" style="margin-top:8px;">Enter an amount to see collateral required and total cost.</div>
           </div>
 
-          <button class="lv-btn" id="lv-borrow-btn" disabled>Request Loan</button>
+          <button class="lv-btn" id="lv-borrow-btn" disabled>Borrowing disabled &mdash; V1 retired</button>
+          </div>
           <div id="lv-borrow-status" class="lv-hidden lv-status-msg"></div>
         </div>
 
         <div class="lv-widget">
-          <h3>Available Offers for Borrowers</h3>
-          <div id="lv-borrower-offers" style="color:var(--muted);font-size:0.88rem;">Offers will appear here after lenders create positions.</div>
+          <h3>Remaining Offers (read-only)</h3>
+          <div id="lv-borrower-offers" style="color:var(--muted);font-size:0.88rem;">Borrowing stays disabled: LendingVault V1 is retired.</div>
         </div>
 
         <div class="lv-widget">
@@ -1242,8 +1249,8 @@
         </div>
 
         <div class="lv-widget">
-          <h3>Available Lending Offers</h3>
-          <div id="lv-offers-list" style="color:var(--muted);font-size:0.88rem;">LendingVault is live. Offers will appear here once lenders create positions.</div>
+          <h3>Remaining Lending Offers (read-only)</h3>
+          <div id="lv-offers-list" style="color:var(--muted);font-size:0.88rem;">LendingVault V1 is retired; no new offers are invited. Remaining offers are shown read-only while lenders withdraw.</div>
         </div>
 
         <div class="lv-widget">
@@ -1486,16 +1493,12 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       return null;
     }
   }
-  function oneIFR() {
-    return 10n ** BigInt(IFR_DECIMALS);
-  }
+  // LendingVault V1 is retired (3 October 2026): offers are never increased again, so the full
+  // available amount can be withdrawn. LendingVault.withdrawOffer closes the offer only when none of its IFR
+  // is still lent out (availableIFR == 0 && lentIFR == 0, LendingVault.sol:157).
+  var LV_V1_RETIRED = true;
   function safeWithdrawMax() {
     if (!lvOffer || !lvOffer.active || !lvOffer.availableIFR) return 0n;
-    if (lvOffer.lentIFR === 0n) {
-      var keepAlive = oneIFR();
-      if (lvOffer.availableIFR <= keepAlive) return 0n;
-      return lvOffer.availableIFR - keepAlive;
-    }
     return lvOffer.availableIFR;
   }
   function setGuideStep(id, state) {
@@ -1570,8 +1573,8 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     var styles = {
       info: ["#d97706", "#f59e0b", "#1f1300"],
       warn: ["#d97706", "#f59e0b", "#1f1300"],
-      error: ["rgba(239,68,68,0.1)", "rgba(239,68,68,0.3)", "#fca5a5"],
-      success: ["rgba(34,197,94,0.1)", "rgba(34,197,94,0.3)", "#86efac"]
+      error: ["#FEF2F2", "rgba(185,28,28,0.35)", "#991b1b"],
+      success: ["#F0FDF4", "rgba(22,101,52,0.35)", "#166534"]
     };
     var st = styles[type] || styles.info;
     s.style.background = st[0];
@@ -1586,8 +1589,8 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     var styles = {
       info: ["#d97706", "#f59e0b", "#1f1300"],
       warn: ["#d97706", "#f59e0b", "#1f1300"],
-      error: ["rgba(239,68,68,0.1)", "rgba(239,68,68,0.3)", "#fca5a5"],
-      success: ["rgba(34,197,94,0.1)", "rgba(34,197,94,0.3)", "#86efac"]
+      error: ["#FEF2F2", "rgba(185,28,28,0.35)", "#991b1b"],
+      success: ["#F0FDF4", "rgba(22,101,52,0.35)", "#166534"]
     };
     var st = styles[type] || styles.info;
     s.style.background = st[0];
@@ -1618,7 +1621,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     if (withdrawNoteEl) {
       if (!lvAddress) withdrawNoteEl.textContent = "Connect wallet to see withdraw limits.";
       else if (!hasWithdrawable) withdrawNoteEl.textContent = "No available IFR can be withdrawn from this offer right now.";
-      else if (lvOffer.lentIFR === 0n) withdrawNoteEl.textContent = "Safe max leaves 1 IFR in the offer. Withdrawing the full amount would deactivate the offer for this wallet.";
+      else if (lvOffer.lentIFR === 0n) withdrawNoteEl.textContent = "Max withdraws the full available amount; this closes the offer only when none of its IFR is still lent out.";
       else withdrawNoteEl.textContent = "All currently available IFR can be withdrawn; lent IFR remains active until repayment or liquidation.";
     }
     if (withdrawMaxBtn) withdrawMaxBtn.disabled = !hasWithdrawable || !lvAddress || maxWithdraw === 0n;
@@ -1702,7 +1705,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
     await loadLVState();
     await loadMarketData();
 
-    el("lv-create-offer-btn").disabled = false;
+    el("lv-create-offer-btn").disabled = LV_V1_RETIRED;
     updateLenderGuide();
   }
   window.lvAdoptMainWallet = lvAdoptMainWallet;
@@ -1767,9 +1770,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       } else {
         el("lv-existing-offer").textContent = "No existing offer";
         if (lvAllowance > 0n) {
-          el("lv-my-offers").innerHTML = "<strong>Approval done, offer pending.</strong><br>Allowance: " + formatIFR(lvAllowance, 3) + " IFR<br>Click <strong>Create Offer</strong> to deposit IFR into LendingVault.";
-          if (!el("lv-offer-amount").value) el("lv-offer-amount").value = formatInput(lvAllowance > lvBalance ? lvBalance : lvAllowance);
-          setStatus("warn", "<strong>Approval is already confirmed.</strong><br>No LendingVault offer exists yet. Click <strong>Create Offer</strong> once, then confirm the <code>createOffer</code> transaction in MetaMask.");
+          el("lv-my-offers").innerHTML = "<strong>No lending offer.</strong><br>This wallet has a LendingVault allowance of " + formatIFR(lvAllowance, 3) + " IFR but no offer. LendingVault V1 is retired, so no offer can be created here.";
         } else {
           el("lv-my-offers").textContent = "No lending offer yet.";
         }
@@ -1816,12 +1817,12 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       var offersEl = el("lv-offers-list");
       var borrowerOffersEl = el("lv-borrower-offers");
       if (!count) {
-        if (offersEl) offersEl.textContent = "No offers yet. LendingVault is live — offers appear here once lenders create positions.";
-        if (borrowerOffersEl) borrowerOffersEl.textContent = "No borrowable offers yet. A lender must create an offer first.";
+        if (offersEl) offersEl.textContent = "No active offers. LendingVault V1 is retired; no new offers are invited.";
+        if (borrowerOffersEl) borrowerOffersEl.textContent = "No borrowable offers. LendingVault V1 is retired; borrowing stays disabled.";
         var emptyBorrowBtn = el("lv-borrow-btn");
         if (emptyBorrowBtn) {
           emptyBorrowBtn.disabled = true;
-          emptyBorrowBtn.textContent = lvIfrPriceWei === 0n ? "Borrow Disabled — Price Not Set" : "No Offers Available";
+          emptyBorrowBtn.textContent = "Borrowing disabled — V1 retired";
         }
         return;
       }
@@ -1850,9 +1851,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       }
       if (offersEl) offersEl.innerHTML = rows.length ? rows.join("") : "No active offers yet.";
       if (borrowerOffersEl) {
-        var priceNote = lvIfrPriceWei === 0n
-          ? "<div style='margin-top:12px;color:#fff7cc;'>Borrow transactions are disabled until Governance sets <code>ifrPriceWei</code> for collateral calculation.</div>"
-          : "";
+        var priceNote = "<div style='margin-top:12px;color:var(--muted);'>LendingVault V1 is retired: borrowing stays disabled regardless of <code>ifrPriceWei</code>. Lenders withdraw these offers.</div>";
         borrowerOffersEl.innerHTML = borrowerRows.length ? borrowerRows.join("") + priceNote : "No active offers yet.";
       }
       var borrowOfferSelect = el("lv-borrow-offer");
@@ -1865,8 +1864,8 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       }
       var borrowBtn = el("lv-borrow-btn");
       if (borrowBtn) {
-        borrowBtn.disabled = lvIfrPriceWei === 0n || rows.length === 0;
-        borrowBtn.textContent = lvIfrPriceWei === 0n ? "Borrow Disabled — Price Not Set" : "Request Loan";
+        borrowBtn.disabled = true;
+        borrowBtn.textContent = "Borrowing disabled — V1 retired";
       }
       updateLoanPreview();
     } catch(e) {
@@ -1942,8 +1941,8 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       previewEl.innerHTML = "Amount exceeds this offer's available IFR.";
       return;
     }
-    if (lvIfrPriceWei === 0n) {
-      previewEl.innerHTML = "Borrow transactions are disabled until Governance sets <code>ifrPriceWei</code> for collateral calculation.";
+    if (LV_V1_RETIRED || lvIfrPriceWei === 0n) {
+      previewEl.innerHTML = "LendingVault V1 is retired: borrowing stays disabled.";
       return;
     }
     var months = Math.ceil(days / 30);
@@ -1973,6 +1972,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
   var offerBtn = document.getElementById("lv-create-offer-btn");
   if (offerBtn) offerBtn.addEventListener("click", async function() {
     try {
+      if (LV_V1_RETIRED) throw new Error("LendingVault V1 is retired: creating or increasing offers is disabled.");
       if (!lvSigner || !lvAddress) throw new Error("Connect your wallet first.");
       if (lvHasOffer && lvOffer && !lvOffer.active) {
         throw new Error("This wallet has an inactive offer. The current contract cannot create a second offer for the same wallet.");
@@ -2007,7 +2007,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
         setStatus("error", e.message || "Could not create lending offer.");
       }
     } finally {
-      offerBtn.disabled = !lvAddress;
+      offerBtn.disabled = LV_V1_RETIRED || !lvAddress;
     }
   });
 
@@ -2020,9 +2020,6 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
       if (!amount) throw new Error("Enter an IFR amount greater than 0.");
       var maxWithdraw = safeWithdrawMax();
       if (amount > maxWithdraw) {
-        if (lvOffer.lentIFR === 0n) {
-          throw new Error("Use a smaller amount. The UI keeps 1 IFR in the offer so this wallet can continue increasing the offer later.");
-        }
         throw new Error("Amount exceeds the offer's available, unlent IFR.");
       }
 
@@ -2052,10 +2049,11 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
   if (borrowBtn) borrowBtn.addEventListener("click", async function() {
     var s = document.getElementById("lv-borrow-status");
     s.classList.remove("lv-hidden");
-    s.style.background = "rgba(251,191,36,0.1)";
-    s.style.border = "1px solid rgba(251,191,36,0.3)";
-    s.style.color = "#fff7cc";
+    s.style.background = "#FEF2F2";
+    s.style.border = "1px solid rgba(185,28,28,0.35)";
+    s.style.color = "#991b1b";
     try {
+      if (LV_V1_RETIRED) throw new Error("LendingVault V1 is retired: borrowing stays disabled.");
       if (!lvSigner || !lvAddress) throw new Error("Connect your wallet first.");
       if (lvIfrPriceWei === 0n) {
         throw new Error("Borrowing is not active yet. LendingVault requires ifrPriceWei for ETH collateral calculation.");
@@ -2091,7 +2089,7 @@ var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.ad
         s.innerHTML = e.message || "Borrow transaction failed.";
       }
     } finally {
-      borrowBtn.disabled = lvIfrPriceWei === 0n || !lvBorrowOffers.length;
+      borrowBtn.disabled = LV_V1_RETIRED || lvIfrPriceWei === 0n || !lvBorrowOffers.length;
     }
   });
 })();

@@ -54,7 +54,9 @@ assert.ok(!landing.includes("ALL 61 QUESTIONS &amp; ANSWERS"));
 
 const copilotWiki = read("apps/ai-copilot/src/context/wiki-content.json");
 assert.ok(copilotWiki.includes("Borrowing is disabled while LendingVault.ifrPriceWei = 0"));
-assert.ok(copilotWiki.includes("Future borrower path — currently disabled"));
+// T-271: V1 is retired (3 October 2026); the borrower path is permanently disabled, not "future".
+assert.ok(copilotWiki.includes("Borrower path — disabled (V1 retired)"));
+assert.ok(!copilotWiki.includes("Future borrower path"));
 assert.ok(!copilotWiki.includes("every step creates buy pressure on Uniswap"));
 
 const onePager = read("docs/ONE-PAGER.md");

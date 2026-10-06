@@ -117,8 +117,9 @@ Checked on Ethereum Mainnet at block `25682361` (2026-08-04 15:10:47 UTC):
 - Uniswap V2 LP is live at `0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0`.
 - LP token fee exemption was executed through governance.
 - P0 was set on CommitmentVault through governance.
-- CommitmentVault and LendingVault are live on Ethereum Mainnet.
-- Current live protocol locks/offers:
+- CommitmentVault is live on Ethereum Mainnet. LendingVault V1 is deployed but retired by owner decision
+  (3 October 2026): borrowing stays disabled and lenders are withdrawing their offers (withdraw only).
+- Protocol locks/offers at the snapshot below (taken before the LendingVault V1 retirement):
   - IFRLock locked: `2,000` IFR
   - CommitmentVault locked: `47,952,476.871794375` IFR
   - LendingVault available: `52,155,440.952845656` IFR across 3 offers
@@ -207,7 +208,7 @@ If the form has stricter choices, prioritize `DeFi`, `Ethereum Ecosystem`, and `
 One-liner description:
 
 ```text
-Inferno is a deflationary Ethereum utility token for lock-to-access products, commitment locks, and IFR-backed lending flows.
+Inferno is a deflationary Ethereum utility token for lock-to-access products, commitment locks, and a retired IFR lending pilot (LendingVault V1, withdraw only).
 ```
 
 Detailed Project Description:
@@ -217,7 +218,7 @@ Launched on 2026-03-05 (5 March 2026), Inferno is an Ethereum Mainnet ERC-20 uti
 
 Inferno is designed around deflationary token mechanics and on-chain utility flows. The token has a fixed genesis supply of 1,000,000,000 IFR, uses 9 decimals, and has no mint function. Supply can only decrease. Non-exempt transfers burn 2.5% of the transferred amount and route a 1% protocol pool fee. Certain protocol contracts and the Uniswap V2 pair are fee-exempt where required for correct operation.
 
-The core utility model is lock-to-access. Users can lock IFR in IFRLock to prove on-chain access status for premium features and ecosystem products. The protocol also includes CommitmentVault, where users can create time- or price-conditioned token lock tranches, and LendingVault, where lenders can offer available IFR and borrowers can use ETH collateral in the protocol's lending flow.
+The core utility model is lock-to-access. Users can lock IFR in IFRLock to prove on-chain access status for premium features and ecosystem products. The protocol also includes CommitmentVault, where users can create time- or price-conditioned token lock tranches, and LendingVault V1, which is retired (3 October 2026): borrowing stays disabled, no new offers are invited and lenders withdraw their offers.
 
 Inferno was launched without a presale, VC round, private sale, or IDO. The Bootstrap event finalized on 2026-06-05 (5 June 2026) and created the live Uniswap V2 IFR/WETH pool. The token contract, governance contract, vaults, and related protocol contracts are verified on Etherscan. Governance actions are controlled by a 48-hour timelock Governance contract owned by the Treasury Safe.
 
@@ -292,7 +293,7 @@ Inferno is an open-source, community-driven project. It launched with no presale
 - Traction/Adoption/Partnerships/MVPs/Apps:
 
 ```text
-Inferno has verified Ethereum Mainnet contracts, a live Uniswap V2 IFR/WETH pool, live IFRLock access locks, live CommitmentVault locks, and an active LendingVault offer flow. At Ethereum block 25682361, protocol values include 2,000 IFR held in IFRLock, 47,952,476.871794375 IFR locked in CommitmentVault, and 52,155,440.952845656 IFR available across three LendingVault offers, with 0 IFR lent. The project also operates public documentation, token lists, a transparency page, AI Copilot context, and social automation for the official @IFRtoken account.
+Inferno has verified Ethereum Mainnet contracts, a live Uniswap V2 IFR/WETH pool, live IFRLock access locks, live CommitmentVault locks, and a deployed LendingVault V1 that is retired (withdraw only since 3 October 2026). At Ethereum block 25682361, protocol values include 2,000 IFR held in IFRLock, 47,952,476.871794375 IFR locked in CommitmentVault, and 52,155,440.952845656 IFR available across three LendingVault offers, with 0 IFR lent. The project also operates public documentation, token lists, a transparency page, AI Copilot context, and social automation for the official @IFRtoken account.
 ```
 
 - Annex A - Rich List & Reserve Addresses: `NA` for initial submission unless Gio prepares the CMC Google Sheet.
