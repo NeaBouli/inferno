@@ -643,11 +643,77 @@ async function run() {
         where: { address: TEST_WALLET },
         data: { pointsTotal: POINTS_CONFIG.voucher.threshold },
       });
+      // Issuance failures log only a constant category: no wallet, no error text (T-289b).
+      const ISSUE_LOG_SENTINELS = [
+        "sk-TEST-SENTINEL-123",
+        "apikey=SENTINEL",
+        "SENTINEL",
+        "user:pa55w0rd",
+        "rpc.example",
+        "0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a",
+        "arbitrary free text",
+        TEST_WALLET.toLowerCase(),
+        ethers.getAddress(TEST_WALLET),
+      ];
+      const issueSentinelMessage =
+        `boom sk-TEST-SENTINEL-123 apikey=SENTINEL https://user:pa55w0rd@rpc.example/v3 ` +
+        `0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a ${TEST_WALLET} arbitrary free text`;
+      const issueWithCapturedLog = async () => {
+        const logs: unknown[][] = [];
+        const originalConsoleError = console.error;
+        console.error = (...args: unknown[]) => { logs.push(args); };
+        try {
+          const response = await api("POST", "/voucher/issue", {}, authToken);
+          const logged = logs.map((args) => args.map((a) => (typeof a === "string" ? a : JSON.stringify(a))).join(" ")).join("\n");
+          return { response, logged };
+        } finally {
+          console.error = originalConsoleError;
+        }
+      };
+      const assertConstantIssueLog = (logged: string, category: string, label: string) => {
+        assert(logged === `[VOUCHER] issued=false category=${category}`, `issuance failure (${label}) logs exactly ${category}`);
+        assert(
+          ISSUE_LOG_SENTINELS.every((sentinel) => !logged.toLowerCase().includes(sentinel.toLowerCase())),
+          `issuance failure (${label}) log contains no wallet, key, credential, URL, address or message text`,
+        );
+      };
+
       const testSignerKey = process.env.VOUCHER_SIGNER_PRIVATE_KEY;
       delete process.env.VOUCHER_SIGNER_PRIVATE_KEY;
-      const failedIssue = await api("POST", "/voucher/issue", {}, authToken);
+      const { response: failedIssue, logged: signerLog } = await issueWithCapturedLog();
+      process.env.VOUCHER_SIGNER_PRIVATE_KEY = "sk-TEST-SENTINEL-123";
+      const { response: badKeyIssue, logged: badKeyLog } = await issueWithCapturedLog();
       process.env.VOUCHER_SIGNER_PRIVATE_KEY = testSignerKey;
       assert(failedIssue.status === 500, "signer failure rejects voucher issuance");
+      assertConstantIssueLog(signerLog, "voucher_error:signer", "missing signer key");
+      assert(badKeyIssue.status === 500, "invalid signer key rejects voucher issuance");
+      assertConstantIssueLog(badKeyLog, "voucher_error:signer", "invalid signer key");
+
+      const injectedFailures: Array<{ label: string; error: unknown; category: string }> = [
+        {
+          label: "database",
+          error: Object.assign(new Error(issueSentinelMessage), { name: "PrismaClientKnownRequestError", code: "P2002" }),
+          category: "voucher_error:database",
+        },
+        { label: "plain error", error: new Error(issueSentinelMessage), category: "voucher_error:unknown" },
+        { label: "thrown string", error: issueSentinelMessage, category: "voucher_error:unknown" },
+      ];
+      const originalTransaction = prisma.$transaction;
+      for (const failure of injectedFailures) {
+        (prisma as unknown as { $transaction: () => Promise<never> }).$transaction = async () => { throw failure.error; };
+        let injected: Awaited<ReturnType<typeof issueWithCapturedLog>>;
+        try {
+          injected = await issueWithCapturedLog();
+        } finally {
+          (prisma as unknown as { $transaction: typeof originalTransaction }).$transaction = originalTransaction;
+        }
+        assert(injected.response.status === 500, `issuance failure (${failure.label}) returns 500`);
+        assert(
+          injected.response.data.error === "Failed to issue voucher",
+          `issuance failure (${failure.label}) returns only the generic public error`,
+        );
+        assertConstantIssueLog(injected.logged, failure.category, failure.label);
+      }
       const afterFailure = await prisma.wallet.findUniqueOrThrow({ where: { address: TEST_WALLET } });
       assert(afterFailure.pointsTotal === POINTS_CONFIG.voucher.threshold, "signer failure rolls back points");
       assert(await prisma.voucher.count() === 0, "signer failure creates no voucher");
