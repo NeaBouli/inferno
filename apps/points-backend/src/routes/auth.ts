@@ -4,6 +4,7 @@ import { prisma } from "../db.js";
 import { createToken } from "../middleware/auth.js";
 import { siweNonceLimit, siweVerifyLimit } from "../middleware/rate-limit.js";
 import { isAllowedSiweContext, pointsSecurityConfig } from "../config/security.js";
+import { categorizeSiweError, type SiweStage } from "../services/request-error-log.js";
 
 const router = Router();
 
@@ -47,8 +48,10 @@ router.post("/siwe/verify", siweVerifyLimit, async (req: Request, res: Response)
     return;
   }
 
+  let stage: SiweStage = "parse";
   try {
     const siweMessage = new SiweMessage(message);
+    stage = "verify";
     const nonce = siweMessage.nonce;
     const expiresAt = nonceStore.get(nonce);
     if (!expiresAt || expiresAt <= Date.now()) {
@@ -83,6 +86,7 @@ router.post("/siwe/verify", siweVerifyLimit, async (req: Request, res: Response)
     }
 
     const address = siweMessage.address.toLowerCase();
+    stage = "persist";
 
     // Upsert wallet
     await prisma.wallet.upsert({
@@ -94,7 +98,8 @@ router.post("/siwe/verify", siweVerifyLimit, async (req: Request, res: Response)
     const token = await createToken(address);
     res.json({ token, wallet: address });
   } catch (err) {
-    console.error("SIWE verify error:", err);
+    // Constant category only: siwe rejections carry the address, signature and message.
+    console.error(`[AUTH] siwe_failed category=${categorizeSiweError(err, stage)}`);
     res.status(400).json({ error: "Failed to verify SIWE message" });
   }
 });
