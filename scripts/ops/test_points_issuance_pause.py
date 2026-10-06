@@ -225,6 +225,35 @@ class PauseTests(unittest.TestCase):
         self.assertEqual(self.fx.out()["action"], "none")
         self.assertNoLeak()
 
+    def _ready_for_resume(self) -> bytes:
+        self.assertEqual(self.fx.run("--pause"), 0)
+        (self.fx.root / "points-backend" / "RELEASE_SHA").write_text(NEW_SHA + "\n")
+        self.fx.router_value = CANONICAL
+        return self.fx.pause_file.read_bytes()
+
+    def test_resume_check_failure_restores_pause(self) -> None:
+        content = self._ready_for_resume()
+        self.fx.edge.preflight_issue = 502  # backend not answering 401 after the pause is lifted
+        self.assertEqual(self.fx.run("--resume", "--expected-release", NEW_SHA), 1)
+        out = self.fx.out()
+        self.assertEqual(out["resume"], "resume_failed_pause_restored")
+        self.assertEqual(out["restored_issue"], "503,503,503,503")
+        self.assertEqual(out["restored_health"], "200")
+        self.assertEqual(self.fx.pause_file.read_bytes(), content)
+        self.assertEqual(self.fx.run("--status"), 0)
+        self.assertEqual(self.fx.out()["pause"], "active")
+        self.assertNoLeak()
+
+    def test_resume_check_failure_and_restore_unverified(self) -> None:
+        content = self._ready_for_resume()
+        self.fx.edge.preflight_issue = 502
+        self.fx.edge.honor = False  # edge no longer applies the file
+        self.assertEqual(self.fx.run("--resume", "--expected-release", NEW_SHA), 1)
+        out = self.fx.out()
+        self.assertEqual(out["resume"], "resume_failed_pause_restore_unverified")
+        self.assertEqual(self.fx.pause_file.read_bytes(), content)  # file kept in place, no further action
+        self.assertNoLeak()
+
     def test_unavailable_topologies_change_nothing(self) -> None:
         dyn_bind = {"Type": "bind", "Destination": "/etc/traefik/dynamic"}
         cases: list[tuple[dict[str, Any], str]] = [

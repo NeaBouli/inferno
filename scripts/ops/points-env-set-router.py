@@ -22,6 +22,12 @@ as shell code. All bytes other than the one value (including the key, the line
 ending, every other line and a missing final newline) are preserved, as are the
 mode, owner, group and extended attributes (POSIX ACLs) of the file.
 
+--apply also writes `<backup>.postapply-sha256` (0600) with the digest of the
+file right after the change. --restore is key-scoped: it reverts only the
+FEE_ROUTER_ADDRESS value to the backup's bytes, and only while every byte of the
+current file still equals that recorded post-apply state; otherwise it refuses
+with `restore_refused_file_changed` and leaves the file untouched.
+
 Changing the file does NOT change the running container: compose reads env_file
 only when the container is (re)created, i.e. at the next reviewed Points release.
 
@@ -31,6 +37,7 @@ from the backup when possible); 2 refused (nothing written).
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import re
@@ -51,6 +58,8 @@ _ASCII_WS = " \t\n\r\f\v"
 _ASCII_WS_B = b" \t\n\r\f\v"
 _BACKUP_TAG = ".router-backup-"
 _STAMP_RE = re.compile(r"[0-9]{8}T[0-9]{6}Z")
+_DIGEST_SUFFIX = ".postapply-sha256"
+_DIGEST_RE = re.compile(rb"[0-9a-f]{64}\n?")
 # Any line that a dotenv/compose parser could read as this key (indented, export
 # prefix, spaces around "=" or ":"). Only the exact column-0 "KEY=" form is accepted.
 _KEYLIKE_RE = re.compile(rb"^[ \t]*(?:export[ \t]+)?FEE_ROUTER_ADDRESS[ \t]*[=:]")
@@ -469,6 +478,14 @@ def set_router(apply: bool, deps: Deps) -> int:
     deps.out("action=replaced")
     deps.out("after=canonical")
     deps.out("restore_check=identical")
+    digest = backup.with_name(backup.name + _DIGEST_SUFFIX)
+    try:
+        # Post-apply state for a later key-scoped restore; private, never printed.
+        _write_new(digest, hashlib.sha256(new_data).hexdigest().encode("ascii") + b"\n", 0o600, st.st_uid, st.st_gid, {})
+    except OSError:
+        deps.out("postapply_digest=failed")
+        return 1
+    deps.out(f"postapply_digest={digest}")
     deps.out("effective=after-next-container-recreate")
     return 0
 
@@ -500,19 +517,43 @@ def restore(backup_arg: str, apply: bool, deps: Deps) -> int:
     line = find_key_line(data)
     if line is None:
         raise Refuse("backup_key_absent")
-    deps.out(f"env_file={env_path}")
-    deps.out(f"backup={backup}")
-    deps.out(f"current={category(file_value(current, find_key_line(current) or line))}")
-    deps.out(f"restore_to={category(file_value(data, line))}")
+    cur_line = find_key_line(current)
+    if cur_line is None:
+        raise Refuse("restore_refused_file_changed")
+    restore_to = category(file_value(data, line))
     if current == data:
+        deps.out(f"env_file={env_path}")
         deps.out("action=none")
         return 0
+    # Key-scoped: only when the whole file is still exactly the recorded post-apply state.
+    digest = backup.with_name(backup.name + _DIGEST_SUFFIX)
+    try:
+        dst = os.lstat(digest)
+    except OSError:
+        raise Refuse("restore_digest_unexpected") from None
+    if not stat.S_ISREG(dst.st_mode) or stat.S_IMODE(dst.st_mode) != 0o600:
+        raise Refuse("restore_digest_unexpected")
+    recorded = _read(digest)
+    if not _DIGEST_RE.fullmatch(recorded):
+        raise Refuse("restore_digest_unexpected")
+    if hashlib.sha256(current).hexdigest().encode("ascii") != recorded.strip():
+        raise Refuse("restore_refused_file_changed")
+    data = current[:cur_line.start] + data[line.start:line.end] + current[cur_line.end:]
+    if data != _read(backup):
+        raise Refuse("restore_refused_file_changed")  # backup and post-apply differ outside the key
+    deps.out(f"env_file={env_path}")
+    deps.out(f"backup={backup}")
+    deps.out(f"current={category(file_value(current, cur_line))}")
+    deps.out(f"restore_to={restore_to}")
+    deps.out("scope=key-only")
     if not apply:
         deps.out("action=would-restore")
         deps.out("mode=dry-run (nothing written; rerun with --apply)")
         return 0
     st = _check_regular(env_path)
     xattrs = _xattrs(env_path)
+    if _read(env_path) != current:
+        raise Refuse("restore_refused_file_changed")
     safety = _backup(env_path, current, st, deps.now)
     deps.out(f"pre_restore_backup={safety}")
     try:

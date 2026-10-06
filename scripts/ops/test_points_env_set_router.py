@@ -107,7 +107,8 @@ class Fixture:
         return dict(line.split("=", 1) for line in self.lines)
 
     def backups(self) -> list[Path]:
-        return sorted(self.root.glob(".env.points-backend.router-backup-*"))
+        return sorted(p for p in self.root.glob(".env.points-backend.router-backup-*")
+                      if not p.name.endswith(".postapply-sha256"))
 
     def close(self) -> None:
         self.tmp.cleanup()
@@ -236,6 +237,55 @@ class EnvSetTests(unittest.TestCase):
         self.assertEqual(stat.S_IMODE(os.lstat(self.fx.env_path).st_mode), 0o640)
         self.assertEqual(Path(out["pre_restore_backup"]).read_bytes(), changed)
         self.assertNoLeak()
+
+    def test_apply_records_private_post_apply_digest(self) -> None:
+        self.assertEqual(self.fx.run("--apply"), 0)
+        backup = Path(self.fx.out()["backup"])
+        digest = backup.with_name(backup.name + ".postapply-sha256")
+        self.assertTrue(digest.is_file())
+        self.assertEqual(stat.S_IMODE(os.lstat(digest).st_mode), 0o600)
+        self.assertEqual(Path(self.fx.out()["postapply_digest"]).resolve(), digest.resolve())
+        self.assertNoLeak()
+
+    def test_restore_is_key_scoped_and_refuses_later_changes(self) -> None:
+        self.assertEqual(self.fx.run("--apply"), 0)
+        backup = self.fx.out()["backup"]
+        later = self.fx.env_path.read_bytes().replace(b"CHAIN_ID=1\n", b"CHAIN_ID=1\nNEW_UNRELATED=SENTINEL-SECRET-JWT\n")
+        self.fx.env_path.write_bytes(later)
+        self.fx.now += 60
+        for args in (("--restore", backup), ("--restore", backup, "--apply")):
+            self.assertEqual(self.fx.run(*args), 2)
+            self.assertEqual(self.fx.out()["refuse"], "restore_refused_file_changed")
+            self.assertEqual(self.fx.env_path.read_bytes(), later)
+            self.assertNoLeak()
+        self.assertEqual(len(self.fx.backups()), 1)  # no pre-restore backup written on refusal
+
+    def test_restore_untouched_reverts_only_the_key_byte_exact(self) -> None:
+        env = b"A=1\r\nFEE_ROUTER_ADDRESS=" + OTHER.encode() + b"  \r\nB=2"
+        fx = Fixture(env=env)
+        try:
+            os.chmod(fx.env_path, 0o604)
+            self.assertEqual(fx.run("--apply"), 0)
+            backup = fx.out()["backup"]
+            fx.now += 60
+            self.assertEqual(fx.run("--restore", backup, "--apply"), 0)
+            self.assertEqual(fx.out()["restore_check"], "identical")
+            self.assertEqual(fx.env_path.read_bytes(), env)
+            self.assertEqual(stat.S_IMODE(os.lstat(fx.env_path).st_mode), 0o604)
+            self.assertNoLeak(fx)
+        finally:
+            fx.close()
+
+    def test_restore_without_or_with_bad_digest_refuses(self) -> None:
+        self.assertEqual(self.fx.run("--apply"), 0)
+        backup = Path(self.fx.out()["backup"])
+        digest = backup.with_name(backup.name + ".postapply-sha256")
+        after = self.fx.env_path.read_bytes()
+        os.chmod(digest, 0o644)
+        self.refused(self.fx, "restore_digest_unexpected", "--restore", str(backup), "--apply")
+        digest.unlink()
+        self.refused(self.fx, "restore_digest_unexpected", "--restore", str(backup), "--apply")
+        self.assertEqual(self.fx.env_path.read_bytes(), after)
 
     # ---------------------------------------------------------------- failures
 

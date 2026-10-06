@@ -35,6 +35,10 @@ back. If the topology does not provide this mechanism it prints
 --resume removes only a byte-identical file of ours, and only when the Points
 build context carries the expected (new, reviewed) release and the running
 container's FEE_ROUTER_ADDRESS is canonical (compared in memory, never printed).
+It is fail-safe: if the check after removal (401 on all variants, /health 200)
+fails, it reinstalls the identical pause file, re-verifies 503 + /health 200 and
+exits 1 with `resume=resume_failed_pause_restored`, or with
+`resume=resume_failed_pause_restore_unverified` (incident: stop, no further action).
 
 Only status words, paths and HTTP status codes are printed. No container
 environment, no Traefik environment and no foreign dynamic-config content is
@@ -436,13 +440,7 @@ def pause(deps: Deps) -> int:
     if pre["/health"] != 200 or pre[ISSUE_VARIANTS[0]] != 401:
         _print_codes(deps, "preflight", pre)
         raise Refuse("preflight_probe_unexpected")
-    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0), 0o644)
-    try:
-        os.write(fd, content)
-        os.fchmod(fd, 0o644)  # no secret; Traefik must read it
-        os.fsync(fd)
-    finally:
-        os.close(fd)
+    _install(path, content)
     deps.out("action=written")
     ok, codes = _wait(deps, 503)
     _print_codes(deps, "check", codes)
@@ -455,6 +453,18 @@ def pause(deps: Deps) -> int:
     deps.out("pause=failed")
     deps.out("reverted=" + ("verified" if back else "file-removed-probes-unexpected"))
     return 1
+
+
+def _install(path: Path, content: bytes) -> None:
+    fd = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0), 0o644)
+    try:
+        view = memoryview(content)
+        while view:
+            view = view[os.write(fd, view):]
+        os.fchmod(fd, 0o644)  # no secret; Traefik must read it
+        os.fsync(fd)
+    finally:
+        os.close(fd)
 
 
 def _container_router_canonical(deps: Deps) -> bool:
@@ -481,13 +491,32 @@ def resume(expected_release: str, deps: Deps) -> int:
         raise Refuse("live_release_mismatch")
     if not _container_router_canonical(deps):
         raise Refuse("container_router_not_canonical")
+    content = render(topo)
     path.unlink()
     deps.out("action=removed")
-    ok, codes = _wait(deps, 401)
+    try:
+        ok, codes = _wait(deps, 401)
+    except Exception:  # noqa: BLE001 - any check failure keeps issuance closed
+        ok, codes = False, {}
     _print_codes(deps, "check", codes)
-    deps.out("pause=inactive")
-    deps.out("issuance_reachable=" + ("verified" if ok else "probes-unexpected"))
-    return 0 if ok else 1
+    if ok:
+        deps.out("pause=inactive")
+        deps.out("issuance_reachable=verified")
+        return 0
+    # Fail safe: the check after lifting the pause failed, so put the identical pause back.
+    try:
+        if _state(path, content) != "active":
+            _install(path, content)
+        back, codes = _wait(deps, 503)
+    except Exception:  # noqa: BLE001 - constant category, never raw error text
+        back, codes = False, {}
+    _print_codes(deps, "restored", codes)
+    if back:
+        deps.out("pause=active")
+        deps.out("resume=resume_failed_pause_restored")
+    else:
+        deps.out("resume=resume_failed_pause_restore_unverified")  # incident: stop, no further action
+    return 1
 
 
 USAGE = "usage: points-issuance-pause.py --status | --pause | --resume --expected-release <sha>"
