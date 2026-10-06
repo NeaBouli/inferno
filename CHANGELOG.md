@@ -1,5 +1,36 @@
 # Changelog
 
+## [Unreleased] — 2026-10-06 — Dependency advisories (T-282)
+
+### Security
+
+- `security:` Benefits backend, AI Copilot and Creator Gateway: `proxy-addr`
+  2.0.7 -> 2.0.8 (via `express` 4.22.2, lockfile-only, within express' `~2.0.7`
+  range) for GHSA-jqcg-44mw-7w3h (critical, IP spoofing via IPv4-mapped / zero-prefix
+  IPv6 trust subnets). The Benefits backend and AI Copilot trust only the named
+  ranges `loopback`, `linklocal`, `uniquelocal`; tests show these resolve `req.ip`
+  identically on 2.0.7 and 2.0.8 (spoofed `X-Forwarded-For` from untrusted IPv4,
+  IPv4-mapped and IPv6 peers is ignored), so the advisory precondition is not met by
+  that configuration. Creator Gateway does not enable `trust proxy`.
+- `security:` Benefits frontend: `source-map-js` 1.2.1 -> 1.2.2 (via `postcss`,
+  lockfile-only) for GHSA-68fv-2mgg-jv7q (high, event-loop DoS via indexed
+  source-map offsets). AI Copilot (dev) updated the same way.
+- `security:` Benefits frontend and AI Copilot: `postcss-selector-parser` 6.1.4 ->
+  7.1.6 via an exact `overrides` pin (Tailwind 3.4 asks for `^6.1.2`; no patched
+  6.x exists) for GHSA-rj75-hqrm-r3gf (moderate, dev-only build tooling). The
+  PostCSS/Tailwind output (CSS and source map) is byte-identical before and after.
+- Dev-advisory gate: reviewed exception for GHSA-hp3w-g68c-fv3c (`sprintf-js`
+  <= 1.1.3, no patched release; dev-only via jest coverage tooling, review by
+  2026-11-06).
+
+### Tests
+
+- Benefits backend `tests/rateLimiter.test.ts`: `req.ip` and the rate-limit key
+  behind the production trust-proxy setting (now one exported
+  `TRUSTED_PROXY_SUBNETS` constant) for untrusted IPv4 / IPv4-mapped / IPv6 peers
+  with spoofed `X-Forwarded-For`, trusted Traefik/frontend hops, and an advisory
+  canary that fails on `proxy-addr` 2.0.7.
+
 ## [Unreleased] — 2026-10-05 — Benefits wallet telemetry (T-280)
 
 ### Security / Privacy

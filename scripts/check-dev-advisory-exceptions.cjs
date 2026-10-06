@@ -18,6 +18,11 @@ const EXCEPTIONS = {
   // (2026-10-03). Reached only through test/build tooling (jest, micromatch, chokidar); application
   // code never expands untrusted brace patterns.
   "GHSA-vfj7-8cjw-p6xm": { package: "braces", range: "<=3.0.3", reviewBy: "2026-11-03" },
+  // sprintf-js <= 1.1.3: RangeError on unbounded precision specifiers in attacker-controlled format
+  // strings. No patched release exists (2026-10-06). Reached only through jest coverage tooling
+  // (@istanbuljs/load-nyc-config -> js-yaml 3 -> argparse 1), where only the js-yaml CLI binary loads
+  // argparse; application code never formats untrusted strings with sprintf-js.
+  "GHSA-hp3w-g68c-fv3c": { package: "sprintf-js", range: "<=1.1.3", reviewBy: "2026-11-06" },
 };
 
 const SEVERITIES = ["info", "low", "moderate", "high", "critical"];

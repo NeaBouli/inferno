@@ -5,6 +5,7 @@ jest.mock('../src/config', () => ({
 }));
 
 import express from 'express';
+import type { Request } from 'express';
 import type { Server } from 'node:http';
 import {
   AuthenticatedRateLimitError,
@@ -18,6 +19,7 @@ import {
   createAdminRateLimiter,
   customerPassControlRateLimitKey,
   rateLimitIpKey,
+  TRUSTED_PROXY_SUBNETS,
 } from '../src/middleware/rateLimiter';
 
 describe('Authenticated seller wallet limiter', () => {
@@ -226,5 +228,67 @@ describe('IPv6 /64 rate-limit keys (T-259)', () => {
         probeServer.close((error) => error ? reject(error) : resolve());
       });
     }
+  });
+});
+
+describe('Client IP behind the trusted proxy chain (T-282, GHSA-jqcg-44mw-7w3h)', () => {
+  function appTrusting(subnets: string[]) {
+    const trusting = express();
+    trusting.set('trust proxy', subnets);
+    return trusting;
+  }
+  const app = appTrusting(TRUSTED_PROXY_SUBNETS);
+
+  /** Resolves Express `req.ip` for a TCP peer and an optional X-Forwarded-For header. */
+  function clientIp(peer: string, forwardedFor?: string, on = app): string | undefined {
+    const socket = { remoteAddress: peer };
+    const req = Object.create(on.request) as Request;
+    Object.defineProperty(req, 'headers', {
+      value: forwardedFor === undefined ? {} : { 'x-forwarded-for': forwardedFor },
+    });
+    Object.defineProperty(req, 'socket', { value: socket });
+    Object.defineProperty(req, 'connection', { value: socket });
+    return req.ip;
+  }
+
+  it('ignores a spoofed X-Forwarded-For from untrusted IPv4, IPv4-mapped and IPv6 peers', () => {
+    const spoof = '10.0.0.1, 198.51.100.66';
+    expect(clientIp('203.0.113.9', spoof)).toBe('203.0.113.9');
+    expect(clientIp('::ffff:203.0.113.9', spoof)).toBe('::ffff:203.0.113.9');
+    expect(clientIp('2001:db8:abcd:ef01::9', spoof)).toBe('2001:db8:abcd:ef01::9');
+    expect(clientIpRateLimitKey({ ip: clientIp('203.0.113.9', spoof) })).toBe('203.0.113.9');
+    expect(clientIpRateLimitKey({ ip: clientIp('::ffff:203.0.113.9', spoof) })).toBe('203.0.113.9');
+    expect(clientIpRateLimitKey({ ip: clientIp('2001:db8:abcd:ef01::9', spoof) })).toBe('2001:db8:abcd:ef01::/64');
+  });
+
+  it('takes the first untrusted hop when the peer is a trusted private proxy', () => {
+    // Traefik on a private Docker network (IPv4, IPv4-mapped and unique-local IPv6 peers).
+    expect(clientIp('172.18.0.5', '198.51.100.7')).toBe('198.51.100.7');
+    expect(clientIp('::ffff:172.18.0.5', '198.51.100.7')).toBe('198.51.100.7');
+    expect(clientIp('fd00::5', '2001:db8:1::7')).toBe('2001:db8:1::7');
+    expect(clientIp('127.0.0.1', '198.51.100.7')).toBe('198.51.100.7');
+    expect(clientIp('::1', '198.51.100.7')).toBe('198.51.100.7');
+    expect(clientIp('169.254.10.1', '198.51.100.7')).toBe('198.51.100.7');
+    expect(clientIp('fe80::1', '198.51.100.7')).toBe('198.51.100.7');
+    // Frontend -> Traefik -> client: a value the client prepended before the public hop is ignored.
+    expect(clientIp('172.18.0.6', '6.6.6.6, 198.51.100.7, 172.18.0.5')).toBe('198.51.100.7');
+    expect(clientIpRateLimitKey({ ip: clientIp('172.18.0.6', '6.6.6.6, 198.51.100.7, 172.18.0.5') })).toBe('198.51.100.7');
+    expect(clientIpRateLimitKey({ ip: clientIp('172.18.0.5', '2001:db8:1:2::7') })).toBe('2001:db8:1:2::/64');
+    // Without a forwarded header the trusted peer itself is the client.
+    expect(clientIp('172.18.0.5')).toBe('172.18.0.5');
+  });
+
+  it('runs a patched proxy-addr: zero-prefix IPv6 trust subnets no longer trust every IPv4 peer', () => {
+    // Advisory precondition (not our configuration): these subnets trusted every IPv4 peer in <= 2.0.7,
+    // so req.ip became the spoofed header value.
+    for (const subnet of ['::ffff:10.0.0.0/8', '::/1']) {
+      const misconfigured = appTrusting([subnet]);
+      expect(clientIp('203.0.113.9', '6.6.6.6', misconfigured)).toBe('203.0.113.9');
+      expect(clientIp('::ffff:203.0.113.9', '6.6.6.6', misconfigured)).toBe('::ffff:203.0.113.9');
+    }
+    // The correctly written mapped block still covers exactly 10.0.0.0/8.
+    const mapped = appTrusting(['::ffff:10.0.0.0/104']);
+    expect(clientIp('10.1.2.3', '198.51.100.7', mapped)).toBe('198.51.100.7');
+    expect(clientIp('11.1.2.3', '198.51.100.7', mapped)).toBe('11.1.2.3');
   });
 });

@@ -17,6 +17,13 @@ export function customerPassControlRateLimitKey(
   return `${String(request.params.id || 'unknown')}:${authorizationDigest}`;
 }
 
+/**
+ * Proxy hops trusted for `X-Forwarded-For` (Express `trust proxy`). Production traffic reaches the
+ * backend only through Traefik and the Next.js frontend on private Docker networks, so only
+ * loopback, link-local and unique-local/private peers are trusted; a public peer is always req.ip.
+ */
+export const TRUSTED_PROXY_SUBNETS = ['loopback', 'linklocal', 'uniquelocal'];
+
 /** Expands a validated IPv6 address (optionally with an embedded dotted IPv4 tail) to eight 16-bit groups. */
 function ipv6Groups(addr: string): number[] {
   let text = addr;
