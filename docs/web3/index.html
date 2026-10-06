@@ -1487,8 +1487,16 @@
       /* Full-width hero buttons and the wallet labels end left of the fixed launcher band (54px at 16px
          from the right below 821px), so no scroll position puts them under the launcher. */
       .hero-actions,
-      .wallet-strip {
+      .wallet-strip,
+      .hero-copy {
         padding-right: 60px;
+      }
+
+      /* T-287: the access panel's full-width buttons and footnote end 35px inside the viewport edge (shell 12px,
+         panel border 1px, padding 22px); 40px more keeps them left of the launcher band while scrolling. */
+      .panel-actions,
+      .panel-foot {
+        padding-right: 40px;
       }
 
       .trust-row {
@@ -1565,6 +1573,13 @@
       .status-note {
         white-space: normal;
         text-align: right;
+      }
+
+      /* T-287: with the launcher clearance the panel buttons are narrower than "Loans (borrowing closed)" on
+         305-320px phones; a nowrap label would widen the hero column again, so labels wrap inside the button. */
+      .panel-actions .btn {
+        white-space: normal;
+        text-align: center;
       }
     }
 

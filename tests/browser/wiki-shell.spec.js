@@ -100,3 +100,31 @@ for (const viewport of VIEWPORTS) {
     });
   });
 }
+
+// T-269: on phones every wallet-guide card stays inside its grid track and the main column never scrolls
+// sideways; a long unbreakable value (an address in <code>) must wrap instead of widening the track.
+for (const [width, height] of [[320, 740], [375, 812], [390, 844]]) {
+  test(`wallet-guide cards stay inside the main column at ${width}x${height}`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    await blockNetwork(page);
+    await page.goto("/wiki/wallet-guide.html");
+    await page.evaluate(() => document.fonts.ready);
+    const layout = await page.evaluate(() => {
+      const main = document.querySelector("main");
+      const overflowing = [...document.querySelectorAll(".wg-grid")].flatMap((grid) => {
+        const g = grid.getBoundingClientRect();
+        return [...grid.querySelectorAll(":scope > .wg-card")]
+          .filter((card) => card.getClientRects().length && card.getBoundingClientRect().right > g.right + 0.5)
+          .map((card) => `${card.querySelector(".wg-card-name")?.textContent.trim()} +${Math.round(card.getBoundingClientRect().right - g.right)}px`);
+      });
+      return {
+        overflowing,
+        mainOverflow: main ? main.scrollWidth - main.clientWidth : -1,
+        docOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      };
+    });
+    expect(layout.overflowing, "cards end inside their grid").toEqual([]);
+    expect(layout.mainOverflow, "main column has no horizontal overflow").toBeLessThanOrEqual(0);
+    expect(layout.docOverflow, "document has no horizontal overflow").toBeLessThanOrEqual(0);
+  });
+}

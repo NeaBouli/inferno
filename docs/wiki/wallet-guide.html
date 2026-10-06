@@ -384,7 +384,10 @@
     .wg-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(340px,1fr)); gap:16px; margin:20px 0 40px; }
     .wg-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:20px; transition:border-color 0.2s; }
     .wg-card:hover { border-color:rgba(255,69,0,0.3); }
-    .wg-card-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+    /* T-269: long unbreakable values (addresses in <code>) and the nowrap badge next to a long card name wrap
+       instead of widening the single-column track on phones */
+    .wg-card code { overflow-wrap:anywhere; }
+    .wg-card-head { display:flex; flex-wrap:wrap; gap:6px 8px; justify-content:space-between; align-items:center; margin-bottom:10px; }
     .wg-card-name { font-size:15px; font-weight:700; display:flex; align-items:center; gap:8px; }
     .wg-badge { font-size:10px; font-weight:700; padding:3px 10px; border-radius:20px; white-space:nowrap; }
     .wg-badge-active { background:rgba(255,69,0,0.12); color:var(--accent); }
