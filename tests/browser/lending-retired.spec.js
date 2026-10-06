@@ -66,9 +66,14 @@ const BLOCK = {
 /** Chain-pinned read endpoints answer Mainnet with the retired-vault fixtures above. */
 async function mockRpc(page, scenario) {
   const calls = buildCalls(scenario);
+  // Optional per-request latency for getOffer reads, so overlapping market loads interleave (T-276).
+  const offerDelayMs = (scenario && scenario.offerDelayMs) || 0;
   await page.route(/^https?:\/\/(?!localhost|127\.0\.0\.1)/, (route) => route.abort());
   await page.route(RPC_HOSTS, async (route) => {
     const body = route.request().postDataJSON();
+    if (offerDelayMs && JSON.stringify(body).includes(sel("getOffer(uint256)").slice(2))) {
+      await new Promise((resolve) => setTimeout(resolve, offerDelayMs));
+    }
     const one = (req) => {
       if (req.method === "eth_chainId") return { jsonrpc: "2.0", id: req.id, result: "0x1" };
       if (req.method === "eth_blockNumber") return { jsonrpc: "2.0", id: req.id, result: "0x100" };
@@ -246,4 +251,26 @@ test.describe("LendingVault V1 retired: Lending Market page", () => {
     const [color, background] = await btn.evaluate((el) => [getComputedStyle(el).color, getComputedStyle(el).backgroundColor]);
     expect(color).not.toBe(background);
   });
+});
+
+// T-276: the page-load market read and the connect-triggered market read overlap. Each load must render the two
+// fixture offers exactly once: no duplicated rows in the lender list, the borrower list or the offer selector.
+test("overlapping market loads render each offer exactly once", async ({ page }) => {
+  await openConnectedVault(page, { offerDelayMs: 400 });
+  // A later refresh may still be in flight; wait until the selector has settled on the final rendering.
+  await expect(page.locator("#lv-borrow-offer option").first()).toContainText("Offer #0", { timeout: 30000 });
+  await page.waitForTimeout(2500);
+  await expect(page.locator("#lv-borrow-offer option")).toHaveCount(2);
+  await expect(page.locator("#lv-borrower-offers strong")).toHaveCount(2);
+  await expect(page.locator("#lv-offers-list > div")).toHaveCount(2);
+  const ids = await page.locator("#lv-borrow-offer option").evaluateAll((options) => options.map((o) => o.value));
+  expect(ids).toEqual(["0", "1"]);
+  if (process.env.T287_SHOTS) {
+    await page.locator('.lv-tab[data-tab="borrower"]').click();
+    for (const [width, height] of [[305, 720], [320, 740], [375, 812], [1440, 1000]]) {
+      await page.setViewportSize({ width, height });
+      await page.locator("#lv-borrower-offers").scrollIntoViewIfNeeded();
+      await page.screenshot({ path: `${process.env.T287_SHOTS}/lending-vault-borrower-offers-${width}.png` });
+    }
+  }
 });
