@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useConnect, useDisconnect, useSignMessage } from 'wagmi';
 import QRCode from 'react-qr-code';
 import { AppShell } from '@/components/AppShell';
+import { BreakableWalletLabel } from '@/components/BreakableWalletLabel';
 import { Countdown } from '@/components/Countdown';
 import { StatusBadge } from '@/components/StatusBadge';
 import { SellerCustomerPassScanner } from '@/components/SellerCustomerPassScanner';
@@ -812,9 +813,9 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
                             type="button"
                             onClick={() => connectCheckoutConnector(availableConnector)}
                             disabled={connecting}
-                            className="rounded-xl border border-green-200/30 px-3 py-2 text-xs font-black text-green-50 disabled:opacity-50"
+                            className="rounded-xl border border-green-200/30 px-3 py-2 text-xs font-black text-green-50 [overflow-wrap:anywhere] disabled:opacity-50"
                           >
-                            {walletConnectorLabel(availableConnector)}
+                            <BreakableWalletLabel label={walletConnectorLabel(availableConnector)} />
                           </button>
                         ))}
                       </div>

@@ -383,7 +383,8 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
             </div>
           ) : null}
 
-          <div className="mt-6 rounded-2xl border border-white/10 bg-black/25 p-4">
+          {/* Phones drop this extra frame (the control has its own) so the wallet connector labels keep their width. */}
+          <div className="mt-6 rounded-2xl sm:border sm:border-white/10 sm:bg-black/25 sm:p-4">
             <WalletConnectControl />
           </div>
 

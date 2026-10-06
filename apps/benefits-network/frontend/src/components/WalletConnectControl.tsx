@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useChainId, useConnect, useDisconnect } from 'wagmi';
+import { BreakableWalletLabel } from '@/components/BreakableWalletLabel';
 import { useHydratedAccount } from '@/hooks/useHydratedAccount';
 import { getMobileWalletLaunches } from '@/lib/walletLaunch';
 import { hasWalletConnectProjectId, targetChain } from '@/lib/wagmi';
@@ -290,7 +291,7 @@ export function WalletConnectControl() {
           </div>
           {copyStatus ? <p className="text-xs font-semibold text-orange-100">{copyStatus}</p> : null}
           {availableConnectors.length > 0 ? (
-            <div data-wallet-connect-with className="shop-launcher-clearance rounded-xl border border-orange-200/15 bg-white/[0.04] p-3">
+            <div data-wallet-connect-with className="shop-launcher-clearance rounded-xl border border-orange-200/15 bg-white/[0.04] p-2 sm:p-3">
               <p className="text-xs font-black uppercase tracking-[0.12em] text-orange-100">
                 Connect with
               </p>
@@ -301,9 +302,9 @@ export function WalletConnectControl() {
                     type="button"
                     onClick={() => connectWallet(availableConnector)}
                     disabled={isPending}
-                    className="rounded-xl border border-orange-200/20 bg-orange-300 px-4 py-3 text-xs font-black uppercase tracking-[0.1em] text-stone-950 transition hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="min-h-11 rounded-xl border border-orange-200/20 bg-orange-300 px-2 py-3 text-xs font-black uppercase tracking-[0.1em] text-stone-950 transition [overflow-wrap:anywhere] hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4"
                   >
-                    {isPending ? 'Connecting...' : walletConnectorLabel(availableConnector)}
+                    {isPending ? 'Connecting...' : <BreakableWalletLabel label={walletConnectorLabel(availableConnector)} />}
                   </button>
                 ))}
               </div>
