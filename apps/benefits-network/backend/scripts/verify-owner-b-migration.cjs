@@ -35,7 +35,7 @@ function assert(condition, message) {
  * Builds the pre-migration database with the real runner (`prisma migrate deploy`) from a private
  * copy of the migrations that stops right before the owner-B migration.
  */
-function buildPreMigrationDb(name, { openObligation }) {
+function buildPreMigrationDb(name, { obligationStatus = null, failureStage = false } = {}) {
   const workDir = path.join(tempDir, name);
   const workMigrations = path.join(workDir, 'migrations');
   fs.mkdirSync(workMigrations, { recursive: true });
@@ -82,12 +82,17 @@ function buildPreMigrationDb(name, { openObligation }) {
     INSERT INTO CustomerHistoryAccess (tokenHash, walletAddress, expiresAt, createdAt)
     VALUES ('t1', '${CUSTOMER}', '2099-01-01T00:00:00.000Z', '${old}');
   `);
-  if (openObligation) {
-    // An unsettled obligation from long before any 72h settlement lag: still refused.
+  if (obligationStatus) {
+    // A non-terminal or unknown obligation from long before any 72h settlement lag: still refused.
     sqlite(db, `
       INSERT INTO RewardEvent (id, businessId, sessionId, partnerId, customerWallet, lockAmountRaw, chainId, status, createdAt, updatedAt)
-      VALUES ('r-open', 'shop', 's-old', '0x${'ab'.repeat(32)}', '0x${'11'.repeat(20)}', '1', 11155111, 'SETTLEMENT_PENDING', '${old}', '${old}');
+      VALUES ('r-open', 'shop', 's-old', '0x${'ab'.repeat(32)}', '0x${'11'.repeat(20)}', '1', 11155111, '${obligationStatus}', '${old}', '${old}');
     `);
+  }
+  if (failureStage) {
+    // Forces a failure late in the migration (table redefinition) after the guard, invalidation and
+    // audit scrub statements have run: the whole migration must roll back.
+    sqlite(db, 'CREATE TABLE "new_RewardEvent" ("blocker" TEXT);');
   }
   return { db, workDir };
 }
@@ -112,18 +117,28 @@ function dataDump(db) {
 }
 
 try {
-  // ── 1. Refusal ────────────────────────────────────────────────────────────
-  const { db: refusedDb, workDir: refusedDir } = buildPreMigrationDb('refused', { openObligation: true });
-  const before = dataDump(refusedDb);
-  const refused = applyTarget(refusedDir);
-  assert(refused.status !== 0, 'Migration must refuse while an open reward obligation exists');
-  assert(/open_reward_events_must_be_resolved_first/.test(refused.stdout + refused.stderr), `Unexpected refusal output: ${refused.stdout}${refused.stderr}`);
-  const after = dataDump(refusedDb);
-  assert(after === before, 'Refused migration must not change the database');
-  assert(sqlite(refusedDb, "SELECT status FROM RewardEvent WHERE id = 'r-open'") === 'SETTLEMENT_PENDING', 'Open obligation must be kept');
+  // ── 1. Refusal: fail closed on anything but the explicit terminal allowlist (CONFIRMED) ──
+  for (const status of ['SETTLEMENT_PENDING', 'PENDING', 'READY', 'BLOCKED_CALLER', 'BLOCKED_GOVERNANCE', 'UNEXPECTED_FUTURE_STATUS']) {
+    const { db: refusedDb, workDir: refusedDir } = buildPreMigrationDb(`refused-${status.toLowerCase()}`, { obligationStatus: status });
+    const before = dataDump(refusedDb);
+    const refused = applyTarget(refusedDir);
+    assert(refused.status !== 0, `Migration must refuse while a ${status} reward event exists`);
+    assert(/non_terminal_reward_events_must_be_resolved_first/.test(refused.stdout + refused.stderr), `Unexpected refusal output: ${refused.stdout}${refused.stderr}`);
+    assert(dataDump(refusedDb) === before, `Refused migration (${status}) must not change the database`);
+    assert(sqlite(refusedDb, "SELECT status FROM RewardEvent WHERE id = 'r-open'") === status, 'Obligation must be kept');
+  }
+
+  // ── 1b. Atomic failure stage: a late failure leaves the database unchanged ──
+  {
+    const { db: failedDb, workDir: failedDir } = buildPreMigrationDb('failure-stage', { failureStage: true });
+    const before = dataDump(failedDb);
+    const failed = applyTarget(failedDir);
+    assert(failed.status !== 0, 'Migration must fail when the table redefinition fails');
+    assert(dataDump(failedDb) === before, 'A failure late in the migration must roll back every earlier statement');
+  }
 
   // ── 2. Continuity ─────────────────────────────────────────────────────────
-  const { db, workDir } = buildPreMigrationDb('migrated', { openObligation: false });
+  const { db, workDir } = buildPreMigrationDb('migrated');
   const applied = applyTarget(workDir);
   assert(applied.status === 0, `Migration failed: ${applied.stdout}${applied.stderr}`);
 
@@ -167,7 +182,7 @@ try {
   const bytes = fs.readFileSync(db).toString('latin1').toLowerCase();
   assert(!bytes.includes(CUSTOMER_BARE), 'Customer address still present in the database file after VACUUM');
 
-  console.log('Owner-B migration verified: refusal leaves the DB unchanged; continuity keeps sessions, closed events and audit rows without customer data.');
+  console.log('Owner-B migration verified: refusal (non-terminal and unknown statuses) and a late failure leave the DB unchanged; continuity keeps sessions, closed events and audit rows without customer data.');
 } finally {
   fs.rmSync(tempDir, { recursive: true, force: true });
 }

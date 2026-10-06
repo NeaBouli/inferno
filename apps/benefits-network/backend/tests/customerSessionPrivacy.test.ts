@@ -40,6 +40,8 @@ jest.mock('../src/config', () => ({
 }));
 
 import { CHECKOUT_PROOF_VERSION_LABEL, prisma } from '../src/services/sessionService';
+// Cross-check the device-side parser against the server derivation (no aliases, dependency-free).
+import { canonicalTermsJson, parseCheckoutProof } from '../../frontend/src/lib/checkoutProof';
 import { server } from '../src/index';
 
 type Wallet = ReturnType<typeof ethers.Wallet.createRandom>;
@@ -434,6 +436,11 @@ describe('device-local receipt', () => {
     expect(proof.message).toContain(`Shop: ${proof.businessId}`);
     expect(proof.message).toContain(`Terms Digest: ${proof.termsDigest}`);
     expect(proof.version).toBe(CHECKOUT_PROOF_VERSION_LABEL);
+    const parsed = parseCheckoutProof(proof.message);
+    expect(parsed).not.toBeNull();
+    expect(parsed!.wallet).toBe(customer.address);
+    expect(parsed!.terms.discountPercent).toBe(10);
+    expect(`sha256:${createHash('sha256').update(canonicalTermsJson(parsed!.terms)).digest('hex')}`).toBe(proof.termsDigest);
     // A redacted display label alone is not a verification input.
     expect(ethers.verifyMessage(proof.message, signature)).not.toBe(`${fullAddress.slice(0, 6)}...${fullAddress.slice(-4)}`);
   });

@@ -3,17 +3,25 @@
 -- (stop backend -> verified backup -> migrate -> VACUUM -> start). See
 -- docs/BENEFITS_CUSTOMER_PRIVACY_MIGRATION.md.
 
--- 1. Refusal guard (runs first, changes nothing): every open reward obligation must be settled or
---    resolved under the previous release. Open obligations are never deleted, and elapsed time
---    (e.g. periodEnd + 72h) is not treated as settlement.
+-- 1. Refusal guard (runs first, changes nothing). Fail closed on an explicit allowlist: the only
+--    reward status treated as finished is CONFIRMED (recorded on-chain). Every other status - open,
+--    blocked, settlement-pending or any unknown/unexpected value - aborts the migration. Obligations
+--    must be resolved under the previous release first; nothing is deleted, and elapsed time
+--    (e.g. periodEnd + 72h) is never treated as settlement.
 CREATE TEMP TABLE "owner_b_migration_guard" (
-    "open_reward_events_must_be_resolved_first" INTEGER NOT NULL
-        CHECK ("open_reward_events_must_be_resolved_first" = 0)
+    "non_terminal_reward_events_must_be_resolved_first" INTEGER NOT NULL
+        CHECK ("non_terminal_reward_events_must_be_resolved_first" = 0)
 );
-INSERT INTO "owner_b_migration_guard" ("open_reward_events_must_be_resolved_first")
-SELECT COUNT(*) FROM "RewardEvent"
-WHERE "status" IN ('PENDING', 'READY', 'BLOCKED_CALLER', 'BLOCKED_GOVERNANCE', 'SETTLEMENT_PENDING');
+INSERT INTO "owner_b_migration_guard" ("non_terminal_reward_events_must_be_resolved_first")
+SELECT COUNT(*) FROM "RewardEvent" WHERE "status" IS NULL OR "status" NOT IN ('CONFIRMED');
 DROP TABLE "owner_b_migration_guard";
+
+-- Everything below runs in ONE transaction: a failure at any later statement rolls back the
+-- invalidation, the audit scrub and the DDL together (verified with a forced late failure).
+-- Foreign-key enforcement is switched off outside the transaction (PRAGMA foreign_keys is a no-op
+-- inside one) for the SQLite table redefinition, and checked again after COMMIT.
+PRAGMA foreign_keys=OFF;
+BEGIN;
 
 -- 2. In-flight invalidation. Checkouts live for minutes. Open checkouts from before the cutover have
 --    no recorded seller confirmation and APPROVED ones no proof-v2 outcome, so all fail closed.
@@ -146,4 +154,5 @@ CREATE INDEX "Session_redemptionLimitLookup_idx" ON "Session"("benefitRuleId", "
 CREATE INDEX "Session_status_idx" ON "Session"("status");
 PRAGMA foreign_keys=ON;
 PRAGMA defer_foreign_keys=OFF;
-
+COMMIT;
+PRAGMA foreign_keys=ON;
