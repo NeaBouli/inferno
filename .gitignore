@@ -61,3 +61,6 @@ Bannerr/
 # Auto-generated type declarations
 next-env.d.ts
 inferno-redesign.html
+
+# Python bytecode
+__pycache__/
