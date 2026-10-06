@@ -1,5 +1,35 @@
 # Changelog
 
+## [Unreleased] — 2026-10-06 — Points vouchers match FeeRouterV1 and follow the on-chain fee (T-289)
+
+### Fixed
+
+- `fix:` Points backend (`apps/points-backend`): vouchers were signed with the EIP-712 primary
+  type `Voucher`, while FeeRouterV1 hashes `DiscountVoucher(address user,uint16 discountBps,uint32
+  maxUses,uint64 expiry,uint256 nonce)`. Every issued voucher therefore failed on-chain with
+  "Invalid voucher signature". The format now lives in the dependency-free
+  `src/services/voucher-eip712.ts` and uses `DiscountVoucher`.
+- `fix:` At issue time the backend reads `FeeRouterV1.protocolFeeBps` over the chain-pinned RPC
+  (cached 60 s, failures never cached) and signs `min(discountBps, maxDiscountBps, protocolFeeBps)`,
+  so a future fee change cannot produce vouchers that revert with "Discount exceeds fee". An
+  unreadable or out-of-range fee, or a fee of 0, fails closed with HTTP 503 before any points are
+  deducted. Per-wallet and global daily caps are unchanged.
+- `docs:` Points README, `DEPLOY.md`, `docs/RAILWAY_ENV.md` and the tokenomics wiki state that a
+  voucher waives the FeeRouter protocol (swap) fee up to the current on-chain fee (currently 5 bps,
+  0.05%) and never the IFR transfer fee or burn. The deploy docs listed the Sepolia FeeRouter
+  (`0x4992…9aa4`) as the mainnet value; they now name `0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a`.
+
+### Tests
+
+- `test/PointsVoucherParity.test.js` (Hardhat, real FeeRouterV1 at 5 bps): a backend-format voucher
+  at the configured discount is accepted and the fee is waived; 15 bps reverts with "Discount
+  exceeds fee"; after `setFeeBps(3)` the capped voucher is accepted and an uncapped 5 bps one
+  reverts; a 0 bps fee yields no discount.
+- Points unit tests: discount cap, fee cache and failure handling, and route checks that an
+  unreadable or zero fee issues no voucher and deducts no points.
+
+Release: needs a points-backend release via the Codex gate.
+
 ## [Unreleased] — 2026-10-06 — Web3 narrow hero in degraded wallet state (T-285)
 
 ### Fixed

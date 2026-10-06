@@ -11,7 +11,7 @@
    NODE_ENV=production
    JWT_SECRET=<random 32 chars>
    VOUCHER_SIGNER_PRIVATE_KEY=<dedicated voucher signer key>
-   FEE_ROUTER_ADDRESS=0x499289C8Ef49769F4FcFF3ca86D4BD7b55B49aa4
+   FEE_ROUTER_ADDRESS=0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a
    CHAIN_ID=1
    RPC_URL=<ethereum-mainnet-rpc>
    IFR_LOCK_ADDRESS=0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb
@@ -22,6 +22,9 @@
    ```
    Production startup fails closed unless the RPC reports Ethereum mainnet and
    the configured IFRLock has deployed bytecode at the canonical address.
+   `FEE_ROUTER_ADDRESS` must be the mainnet FeeRouterV1: it is the EIP-712
+   `verifyingContract`, and voucher issuance reads its `protocolFeeBps` at issue
+   time. A wrong or unreadable router makes `/voucher/issue` fail closed (503).
 5. Deploy → Note the URL (e.g. `https://ifr-points.railway.app`)
 6. Set URL in `apps/ai-copilot/.env`: `POINTS_BACKEND_URL=https://ifr-points.railway.app`
 
