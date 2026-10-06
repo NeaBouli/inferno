@@ -53,7 +53,7 @@ async function run() {
           setTimeout(resolve, 5000);
         });
       }
-      const cache = await caches.open('ifr-benefits-v24');
+      const cache = await caches.open('ifr-benefits-v25');
       const keys = await cache.keys();
       return keys.map((request) => new URL(request.url).pathname);
     });
@@ -80,6 +80,18 @@ async function run() {
       await page.goto(`${origin}${pathname}`, { waitUntil: 'domcontentloaded' });
       await page.getByRole('heading', { name: "You're offline" }).waitFor();
       await page.getByRole('link', { name: 'Open the offline app' }).waitFor();
+      // T-284: the fallback renders the light shop design, not the retired dark card.
+      const look = await page.evaluate(() => ({
+        body: getComputedStyle(document.body).backgroundColor,
+        card: getComputedStyle(document.querySelector('main')).backgroundColor,
+        heading: getComputedStyle(document.querySelector('h1')).color,
+        theme: document.querySelector('meta[name="theme-color"]')?.getAttribute('content'),
+      }));
+      assert.deepEqual(
+        look,
+        { body: 'rgb(245, 241, 232)', card: 'rgb(255, 253, 248)', heading: 'rgb(33, 28, 23)', theme: '#F5F1E8' },
+        `offline ${pathname} must use the light shop design tokens`
+      );
       assert.equal(
         await page.getByText('Internal Server Error', { exact: true }).count(),
         0,

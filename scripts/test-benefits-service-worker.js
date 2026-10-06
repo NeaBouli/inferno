@@ -32,7 +32,7 @@ const context = {
   setTimeout,
   caches: {
     open: async () => cache,
-    keys: async () => ['ifr-benefits-v21', 'ifr-benefits-v22', 'ifr-benefits-v23', 'unrelated-cache'],
+    keys: async () => ['ifr-benefits-v21', 'ifr-benefits-v22', 'ifr-benefits-v23', 'ifr-benefits-v24', 'unrelated-cache'],
     delete: async (name) => {
       deletedCaches.push(name);
       return true;
@@ -192,12 +192,50 @@ async function navigate(url) {
   await responsePromise;
 }
 
+// T-284: the precached offline fallback follows the light shop design (manifest theme #F5F1E8 and the
+// .shop-shell tokens in globals.css) and stays static and self-contained: no scripts, stylesheets, fonts or
+// any other request may leave the page while the device is offline.
+function assertOfflineFallbackDesign() {
+  const offline = fs.readFileSync(path.join(publicRoot, 'offline.html'), 'utf8');
+  const manifest = JSON.parse(fs.readFileSync(path.join(publicRoot, 'manifest.json'), 'utf8'));
+  const globals = fs.readFileSync(path.join(publicRoot, '..', 'src', 'app', 'globals.css'), 'utf8');
+  const themeMeta = offline.match(/<meta name="theme-color" content="([^"]+)"/);
+  assert(themeMeta, 'offline fallback must declare a theme-color');
+  assert.strictEqual(themeMeta[1].toLowerCase(), manifest.theme_color.toLowerCase(), 'offline theme-color must match the manifest theme');
+  assert.strictEqual(manifest.theme_color.toUpperCase(), '#F5F1E8', 'manifest theme must stay the light paper colour');
+  assert(/color-scheme:\s*light/.test(offline), 'offline fallback must use the light colour scheme');
+  assert(!/color-scheme:\s*dark/.test(offline), 'offline fallback must not keep the retired dark scheme');
+  const shopShell = globals.match(/\.shop-shell\s*\{([^}]*)\}/);
+  assert(shopShell, 'globals.css must define the .shop-shell design tokens');
+  const tokens = [...shopShell[1].matchAll(/(--shop-[a-z-]+):\s*(#[0-9a-fA-F]{3,8})/g)];
+  for (const name of ['--shop-paper', '--shop-panel', '--shop-ink', '--shop-muted', '--shop-border', '--shop-ember']) {
+    const token = tokens.find(([, tokenName]) => tokenName === name);
+    assert(token, `globals.css must define ${name}`);
+    const local = offline.match(new RegExp(`${name}:\\s*(#[0-9a-fA-F]{3,8})`));
+    assert(local, `offline fallback must define ${name}`);
+    assert.strictEqual(local[1].toLowerCase(), token[2].toLowerCase(), `offline ${name} must match globals.css`);
+  }
+  assert(/background:[^;]*var\(--shop-paper\)/.test(offline), 'offline page background must use --shop-paper');
+  for (const retired of ['#17130f', '#241b15', '#f7f1e8']) {
+    assert(!offline.toLowerCase().includes(retired), `offline fallback must not keep the dark colour ${retired}`);
+  }
+  assert(!/<script\b/i.test(offline), 'offline fallback must not load or inline scripts');
+  assert(!/<link\b/i.test(offline), 'offline fallback must not load stylesheets, fonts or icons via <link>');
+  assert(!/@import|url\(/i.test(offline), 'offline fallback CSS must not fetch resources');
+  assert(!/(?:src|href)=["'](?:https?:)?\/\//i.test(offline), 'offline fallback must not reference another origin');
+  for (const [, ref] of offline.matchAll(/(?:src|href)="(\/[^"]*)"/g)) {
+    if (ref === '/' || ref === '/support') continue;
+    assert(source.includes(`'${ref}'`), `offline fallback asset ${ref} must be precached by the service worker`);
+  }
+}
+
 async function main() {
   const registrationScript = extractRegistrationScript();
 
   assert(listeners.has('fetch'), 'service worker must register a fetch handler');
-  assert(source.includes("const CACHE_NAME = 'ifr-benefits-v24'"), 'service worker cache version must be v24');
+  assert(source.includes("const CACHE_NAME = 'ifr-benefits-v25'"), 'service worker cache version must be v25');
   assert(source.includes('const NAVIGATION_TIMEOUT_MS = 5000'), 'navigation requests must have a bounded network timeout');
+  assertOfflineFallbackDesign();
   assert(source.includes("'/offline.html'"), 'service worker must precache the branded deep-link fallback');
   assert(source.includes("'/icons/ifr-token-64-v11.png'"), 'service worker must precache the canonical PNG favicon');
   assert(source.includes("'/icons/ifr-token-180-v11.png'"), 'service worker must precache the canonical Apple touch icon');
@@ -206,7 +244,7 @@ async function main() {
   assert(source.includes("'/icons/ifr-token-512-v11.png'"), 'service worker must precache the canonical 512 icon');
   assert(source.includes("'/icons/favicon-v11.ico'"), 'service worker must precache the versioned browser favicon');
   assert(!source.includes("favicon-v4.ico"), 'service worker must not precache the competing ICO favicon');
-  assert(layoutSource.includes("'/sw.js?v=24'"), 'layout must register the current service-worker release');
+  assert(layoutSource.includes("'/sw.js?v=25'"), 'layout must register the current service-worker release');
   assert(source.includes("'/copilot-avatar.jpg'"), 'service worker must precache the Copilot launcher asset');
   assert(layoutSource.includes("updateViaCache:'none'"), 'registration must bypass stale service-worker HTTP caches');
   assert(layoutSource.includes("'controllerchange'"), 'controlled clients must reload after a service-worker update');
@@ -229,9 +267,9 @@ async function main() {
 
   const firstInstall = createRegistrationHarness(registrationScript);
   firstInstall.fireLoad();
-  firstInstall.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=24' });
+  firstInstall.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=25' });
   assert.strictEqual(firstInstall.registrations.length, 1, 'first install must register the service worker once');
-  assert.strictEqual(firstInstall.registrations[0].scriptUrl, '/sw.js?v=24', 'registration must use the current release');
+  assert.strictEqual(firstInstall.registrations[0].scriptUrl, '/sw.js?v=25', 'registration must use the current release');
   assert.strictEqual(
     firstInstall.registrations[0].options.updateViaCache,
     'none',
@@ -245,23 +283,23 @@ async function main() {
     controller: { scriptURL: 'https://shop.ifrunit.tech/sw.js?v=22' },
     storage: sharedStorage,
   });
-  controlledPage.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=24' });
-  controlledPage.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=24' });
+  controlledPage.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=25' });
+  controlledPage.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=25' });
   controlledPage.fireControllerChange(null);
   assert.strictEqual(controlledPage.reloads, 1, 'one service-worker release may trigger at most one reload per session');
 
   const reloadedPage = createRegistrationHarness(registrationScript, {
-    controller: { scriptURL: 'https://shop.ifrunit.tech/sw.js?v=24' },
+    controller: { scriptURL: 'https://shop.ifrunit.tech/sw.js?v=25' },
     storage: sharedStorage,
   });
-  reloadedPage.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=24' });
+  reloadedPage.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=25' });
   assert.strictEqual(reloadedPage.reloads, 0, 'the same service-worker release must not reload again after page re-execution');
 
   const nextReleasePage = createRegistrationHarness(registrationScript, {
-    controller: { scriptURL: 'https://shop.ifrunit.tech/sw.js?v=24' },
+    controller: { scriptURL: 'https://shop.ifrunit.tech/sw.js?v=25' },
     storage: sharedStorage,
   });
-  nextReleasePage.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=25' });
+  nextReleasePage.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=26' });
   assert.strictEqual(nextReleasePage.reloads, 1, 'a different service-worker URL must receive its own single reload allowance');
 
   const storageFailure = createRegistrationHarness(registrationScript, {
@@ -269,8 +307,8 @@ async function main() {
     storage: createSessionStorage({ fail: true }),
   });
   storageFailure.fireLoad();
-  storageFailure.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=24' });
-  storageFailure.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=24' });
+  storageFailure.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=25' });
+  storageFailure.fireControllerChange({ scriptURL: 'https://shop.ifrunit.tech/sw.js?v=25' });
   assert.strictEqual(storageFailure.registrations.length, 1, 'storage failure must not prevent service-worker registration');
   assert.strictEqual(storageFailure.reloads, 0, 'storage failure must fail safe without automatic reloads');
 
@@ -287,7 +325,7 @@ async function main() {
   await activate();
   assert.deepStrictEqual(
     deletedCaches,
-    ['ifr-benefits-v21', 'ifr-benefits-v22', 'ifr-benefits-v23'],
+    ['ifr-benefits-v21', 'ifr-benefits-v22', 'ifr-benefits-v23', 'ifr-benefits-v24'],
     'activation must delete only stale IFR Benefits caches and preserve unrelated origin caches'
   );
 
