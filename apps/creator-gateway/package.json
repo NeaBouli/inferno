@@ -34,6 +34,9 @@
     "typescript": "^5.3.3"
   },
   "overrides": {
+    "@istanbuljs/load-nyc-config": {
+      "js-yaml": "4.3.2"
+    },
     "qs": "6.16.0"
   }
 }

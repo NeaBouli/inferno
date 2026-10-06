@@ -22,6 +22,17 @@
   patched release) removed from the tree by a scoped override
   `@istanbuljs/load-nyc-config` -> `js-yaml` 4.3.2 (argparse 2, no sprintf-js);
   no new advisory exception.
+- `security:` Same advisory wave outside Benefits (all fail-closed CI audit gates):
+  - root (dev tooling): `compression` 1.8.1 -> 1.8.2 (GHSA-vc2v-76pw-4v95, scoped
+    override under `serve`), `smol-toml` 1.7.2 -> 1.9.0 (GHSA-r4xh-jqrq-34v2, under
+    `markdownlint-cli`), `katex` 0.16.47 -> 0.18.2 (GHSA-238p-pmpm-9mq7, under
+    `micromark-extension-math`).
+  - AI Copilot: `proxy-addr` 2.0.8 (prod, lockfile-only; trusts the same named
+    ranges as Benefits), dev `source-map-js` 1.2.2 and `postcss-selector-parser`
+    7.1.6 (exact override; CSS + source map byte-identical).
+  - Creator Gateway: `proxy-addr` 2.0.8 (prod, lockfile-only; `trust proxy` not
+    enabled), dev `sprintf-js` removed via the same scoped `js-yaml` 4.3.2 override;
+    dependency baseline pins updated.
 
 ### Tests
 
