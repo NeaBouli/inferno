@@ -30,7 +30,6 @@ import {
   getCheckoutOperatorStatus,
   getSellerAuthMessage,
   getSessionStatus,
-  redeemSession,
 } from '@/lib/api';
 import { lockSourceLabel, lockSourceRequirement } from '@/lib/lockSource';
 import { formatProductPrice } from '@/lib/money';
@@ -129,11 +128,9 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
   const previewBenefit = session ?? selectedRule ?? business;
   const previewLockSource = session?.lockSource ?? selectedRule?.lockSource ?? 'ifrlock';
   const previewMinIFRHeld = session?.minIFRHeld ?? selectedRule?.minIFRHeld ?? 0;
-  const previewDailyLimit = session?.dailyRedemptionLimit ?? selectedRule?.dailyRedemptionLimit ?? 0;
-  const previewMonthlyLimit = session?.monthlyRedemptionLimit ?? selectedRule?.monthlyRedemptionLimit ?? 0;
   const sellerWalletLabel = address ? `${address.slice(0, 6)}...${address.slice(-4)}` : 'Not connected';
   const sessionActive = Boolean(session && !isDone);
-  const customerApproved = status?.status === 'APPROVED';
+  const customerRedeemed = status?.status === 'REDEEMED';
   const sellerWalletReady = Boolean(address && isConnected);
   const checkoutAuthorized = Boolean(
     checkoutAccess?.authorized && address && checkoutAccess.walletAddress.toLowerCase() === address.toLowerCase()
@@ -148,15 +145,11 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
       ? 'Select benefit'
       : !session
         ? 'Authorize QR session'
-        : customerApproved && checkoutAuthorized
-          ? 'Ready to redeem'
-          : customerApproved && sellerWalletReady
-            ? 'Check seller access'
-          : customerApproved
-            ? 'Connect seller wallet'
-            : isDone
-              ? 'Session closed'
-              : 'Waiting for customer';
+        : customerRedeemed
+          ? 'Redeemed - apply the discount'
+          : isDone
+            ? 'Session closed'
+            : 'Waiting for customer';
   const scannerNextStep = !business
     ? businessLoading
       ? 'The scanner is loading the seller profile and active checkout rules.'
@@ -165,30 +158,24 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
       ? 'Connect the business owner or an active checkout operator. The app verifies current access when creating the QR.'
     : !session
       ? 'Choose the benefit rule, then sign one short authorization to create the customer QR.'
-      : customerApproved && checkoutAuthorized
-        ? 'Redeem first to enforce this wallet\'s usage limit. Grant the benefit only after redemption succeeds.'
-        : customerApproved && sellerWalletReady
-          ? 'Confirm this wallet as the business owner or an active checkout operator.'
-        : customerApproved
-          ? 'The customer is approved. Connect the seller wallet to redeem once.'
-          : isDone
-            ? 'This QR session is closed. Create a new verification for the next customer.'
-            : 'Show the QR code or share the customer link. This screen updates when the customer signs.';
+      : customerRedeemed
+        ? 'The customer proof was accepted and this use is recorded. Apply the discount now.'
+        : isDone
+          ? 'This QR session is closed. Create a new verification for the next customer.'
+          : 'Show the QR code or share the customer link. The customer\'s signed proof redeems the benefit once; this screen updates automatically.';
   const scannerReadinessSteps = [
     { label: 'Seller profile loaded', ready: Boolean(business) },
     { label: 'Benefit or rule selected', ready: Boolean(previewBenefit) },
     { label: 'Checkout wallet connected', ready: sellerWalletReady },
     { label: 'Checkout access confirmed', ready: checkoutAuthorized },
     { label: 'QR session active', ready: sessionActive },
-    { label: 'Customer approved', ready: customerApproved },
+    { label: 'Customer proof redeemed', ready: customerRedeemed },
   ];
   const checkoutReceipt = useMemo(() => {
     if (!session) return '';
 
     const benefit = status?.benefit ?? session;
-    const wallet = status?.status === 'APPROVED' || status?.status === 'REDEEMED'
-      ? 'verified (private)'
-      : 'not verified yet';
+    const customerProof = status?.status === 'REDEEMED' ? 'verified' : 'not verified yet';
     return [
       'IFR Benefits Network checkout receipt',
       `Seller: ${business?.name || businessId}`,
@@ -201,13 +188,12 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
       ...(benefit.minIFRHeld > 0
         ? [`Required held: ${benefit.minIFRHeld.toLocaleString('en-US')} IFR`]
         : []),
-      `Wallet limit: ${benefit.dailyRedemptionLimit || 'unlimited'}/UTC day / ${benefit.monthlyRedemptionLimit || 'unlimited'}/UTC month`,
       `Rule: ${benefit.label || 'Business default'}`,
       `Product: ${benefit.productName || 'Business default benefit'}`,
       ...(formatProductPrice(benefit.basePriceMinor, benefit.currency)
         ? [`Reference price: ${formatProductPrice(benefit.basePriceMinor, benefit.currency)}`]
         : []),
-      `Customer wallet: ${wallet}`,
+      `Customer proof: ${customerProof}`,
       `Expires: ${session.expiresAt}`,
       `Redeemed: ${status?.redeemedAt || 'not redeemed'}`,
       `Customer link: ${customerUrl || 'not ready'}`,
@@ -306,44 +292,6 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
       setLinkStatus('Checkout session saved on this device.');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Session failed';
-      if (message.includes('authorized for checkout')) {
-        setCheckoutAccess(null);
-        setAccessStatus('Checkout access changed. Ask the owner or check access again.');
-      }
-      setError(message);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function redeem() {
-    if (!session) return;
-    if (!address || !isConnected) {
-      setError('Connect the seller wallet before redeeming an approved benefit.');
-      return;
-    }
-    if (!checkoutAuthorized) {
-      setError('Check this wallet\'s checkout access before redeeming.');
-      return;
-    }
-    setLoading(true);
-    setError('');
-    try {
-      const challenge = await getSellerAuthMessage('sessions:redeem', session.sessionId, {
-        walletAddress: address,
-        scope: session.sessionId,
-      });
-      if (!challenge.nonce) throw new Error('Seller authorization challenge is incomplete');
-      const signature = await signMessageAsync({ message: challenge.message });
-      await redeemSession(session.sessionId, {
-        walletAddress: address,
-        signature,
-        timestamp: challenge.timestamp,
-        nonce: challenge.nonce,
-      });
-      setStatus(await getSessionStatus(session.sessionId));
-    } catch (err) {
-      const message = err instanceof Error ? err.message : 'Redeem failed';
       if (message.includes('authorized for checkout')) {
         setCheckoutAccess(null);
         setAccessStatus('Checkout access changed. Ask the owner or check access again.');
@@ -693,7 +641,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
               <SellerCustomerPassScanner onPass={setCustomerPassInput} />
             </div>
 
-            <div className="mt-4 grid gap-2 sm:grid-cols-3">
+            <div className="mt-4 grid gap-2 sm:grid-cols-2">
               <button
                 type="button"
                 onClick={startSession}
@@ -709,14 +657,6 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
                 className="rounded-2xl border border-white/15 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-orange-200/60 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Copy customer link
-              </button>
-              <button
-                type="button"
-                onClick={redeem}
-                disabled={loading || !customerApproved || !checkoutAuthorized}
-                className="rounded-2xl bg-orange-300 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/30 transition hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                Redeem
               </button>
             </div>
 
@@ -824,8 +764,8 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
               )}
             </div>
             <p className="mt-2 text-xs leading-5 text-stone-400">
-              The owner can authorize checkout wallets in Seller mode. Operators can redeem approved sessions only;
-              the backend checks current access again for every redeem signature.
+              The owner can authorize checkout wallets in Seller mode. Opening a checkout is the seller confirmation;
+              the backend checks this wallet's access again when the customer's proof is redeemed.
             </p>
             {accessStatus ? <p className="mt-2 text-xs font-semibold text-green-100">{accessStatus}</p> : null}
           </div>
@@ -901,12 +841,6 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
                 </strong>
               </div>
             ) : null}
-            <div className="flex justify-between gap-4">
-              <span>Per-wallet use</span>
-              <strong className="text-right text-white">
-                {previewDailyLimit || 'unlimited'} / UTC day · {previewMonthlyLimit || 'unlimited'} / UTC month
-              </strong>
-            </div>
             <div className="flex justify-between gap-4">
               <span>Selected rule</span>
               <strong className="text-white">{selectedRule?.label || business?.tierLabel || 'Standard'}</strong>
@@ -1036,15 +970,12 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
                 </div>
               )}
 
-              {status?.status === 'APPROVED' ? (
+              {status?.status === 'REDEEMED' ? (
                 <div className="rounded-3xl border border-green-300/40 bg-green-50 p-6 text-center">
                   <p className="text-5xl">✓</p>
-                  <h3 className="mt-3 text-3xl font-black text-green-800">Approved</h3>
-                  <p className="mt-2 text-sm text-green-900">Customer wallet verified privately.</p>
+                  <h3 className="mt-3 text-3xl font-black text-green-800">Redeemed - apply the discount</h3>
+                  <p className="mt-2 text-sm text-green-900">Customer proof verified. This use is already recorded.</p>
                   <p className="mt-4 text-2xl font-black">{status.benefit.discountPercent}% benefit</p>
-                  <p className="mt-2 text-sm font-semibold text-green-900">
-                    Redeem now to reserve this use before granting the benefit.
-                  </p>
                   {status.benefit.productName ? (
                     <p className="mt-2 text-sm font-semibold text-green-900">
                       {status.benefit.label} / {status.benefit.productName}
@@ -1102,15 +1033,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
                 {customerUrl ? <div className="break-all text-xs text-stone-500">{customerUrl}</div> : null}
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2">
-                <button
-                  type="button"
-                  onClick={redeem}
-                  disabled={loading || status?.status !== 'APPROVED' || !address}
-                  className="rounded-2xl bg-stone-950 px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-white transition hover:bg-stone-800 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  Redeem approved benefit
-                </button>
+              <div className="grid gap-3">
                 <button
                   type="button"
                   onClick={startSession}

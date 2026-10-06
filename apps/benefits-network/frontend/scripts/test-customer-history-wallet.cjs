@@ -125,4 +125,64 @@ assert.strictEqual(
   'A public proof loaded without its direct attest response must remain private.'
 );
 
-console.log('[customer-history-wallet-test] PASS');
+// ── T-231b: device-local receipts verify offline against the full address in the signed text ──
+const { verifyCustomerProofReceipt, CHECKOUT_PROOF_VERSION_LABEL } = moduleUnderTest.exports;
+const { recoverMessageAddress } = require('viem');
+const { privateKeyToAccount } = require('viem/accounts');
+
+(async () => {
+  const customer = privateKeyToAccount(`0x${'11'.repeat(32)}`);
+  const stranger = privateKeyToAccount(`0x${'22'.repeat(32)}`);
+  const termsDigest = `sha256:${'ab'.repeat(32)}`;
+  const message = [
+    'IFR Benefits Network - Checkout Proof',
+    `Version: ${CHECKOUT_PROOF_VERSION_LABEL}`,
+    'Purpose: Redeem this one checkout with verified IFR benefit eligibility',
+    `Wallet: ${customer.address}`,
+    'Audience: shop.example.test',
+    'Chain ID: 11155111',
+    'Shop: business-1',
+    'Session: session-3',
+    `Terms Digest: ${termsDigest}`,
+  ].join('\n');
+  const recover = (text, signature) => recoverMessageAddress({ message: text, signature });
+  const signature = await customer.signMessage({ message });
+  saveCustomerProofHistoryItem({
+    sessionId: 'session-3',
+    status: { ...status, status: 'REDEEMED', redeemedAt: '2026-07-20T00:00:00.000Z' },
+    verifiedWalletAddress: customer.address,
+    proof: { version: CHECKOUT_PROOF_VERSION_LABEL, termsDigest, message, signature },
+  });
+  const stored = readCustomerProofHistory().find((item) => item.sessionId === 'session-3');
+  assert.ok(stored.proof, 'A redeemed proof must keep its device-local receipt.');
+  const verified = await verifyCustomerProofReceipt(stored, recover);
+  assert.deepStrictEqual(verified, { ok: true, wallet: customer.address });
+
+  const wrongSigner = await verifyCustomerProofReceipt(
+    { ...stored, proof: { ...stored.proof, signature: await stranger.signMessage({ message }) } },
+    recover
+  );
+  assert.strictEqual(wrongSigner.ok, false, 'A signature by another wallet must not verify.');
+
+  const otherCheckout = await verifyCustomerProofReceipt({ ...stored, sessionId: 'session-9' }, recover);
+  assert.strictEqual(otherCheckout.ok, false, 'A receipt must not verify for another checkout.');
+
+  const tampered = await verifyCustomerProofReceipt(
+    { ...stored, proof: { ...stored.proof, message: message.replace('Shop: business-1', 'Shop: business-2') } },
+    recover
+  );
+  assert.strictEqual(tampered.ok, false, 'Edited signed text must not verify.');
+
+  const labelOnly = await verifyCustomerProofReceipt({ ...stored, proof: null }, recover);
+  assert.strictEqual(labelOnly.ok, false, 'A redacted wallet label alone is never a verification input.');
+
+  window.localStorage.setItem('ifr.shop.customerProofHistory.v1', JSON.stringify([
+    { ...stored, proof: { ...stored.proof, signature: 'not-a-signature' } },
+  ]));
+  assert.strictEqual(readCustomerProofHistory()[0].proof, null, 'Malformed stored proofs are dropped.');
+
+  console.log('[customer-history-wallet-test] PASS');
+})().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

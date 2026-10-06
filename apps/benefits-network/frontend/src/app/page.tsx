@@ -135,7 +135,7 @@ const flowSteps = [
   },
   {
     title: 'Confirm and redeem once',
-    body: 'The customer approves the exact seller rule, then the seller redeems the approved checkout once.',
+    body: 'The seller opens the checkout; the customer signs the exact seller rule, and that proof redeems the checkout once.',
   },
 ];
 
@@ -371,7 +371,7 @@ function CodeGenerator() {
       return `1. Request a one-time, rule-bound challenge:\nGET https://shop.ifrunit.tech/api/seller/auth-message?action=sessions%3Acreate&businessId=${encodeURIComponent(normalizedBusinessId)}&walletAddress=<seller-wallet>&scope=${encodeURIComponent(normalizedRuleId)}\n\n2. Verify action, businessId, walletAddress, scope, nonce and expiry in the response. Ask the authorized owner/operator wallet to sign the exact returned message.\n\n3. Create the checkout:\nPOST https://shop.ifrunit.tech/api/sessions\nRequired headers: content-type, x-ifr-wallet, x-ifr-signature, x-ifr-timestamp, x-ifr-nonce\nBody:\n${JSON.stringify({
         businessId: normalizedBusinessId,
         benefitRuleId: normalizedRuleId,
-      }, null, 2)}\n\n4. Poll the public checkout status until the customer acts:\nGET https://shop.ifrunit.tech/api/sessions/<session-id>\nStatus is one of PENDING, APPROVED, REJECTED, REDEEMED, EXPIRED.\n\n5. Redeem an approved session once. Request a fresh one-time challenge:\nGET https://shop.ifrunit.tech/api/seller/auth-message?action=sessions%3Aredeem&businessId=<session-id>&walletAddress=<seller-wallet>&scope=<session-id>\nVerify and sign it exactly as in step 2, then:\nPOST https://shop.ifrunit.tech/api/sessions/<session-id>/redeem\nRequired headers: x-ifr-wallet, x-ifr-signature, x-ifr-timestamp, x-ifr-nonce\nThe session is redeemed only when the API confirms REDEEMED.`;
+      }, null, 2)}\n\n4. Poll the public checkout status:\nGET https://shop.ifrunit.tech/api/sessions/<session-id>\nStatus is one of PENDING, REJECTED, REDEEMED, EXPIRED. Poll until REDEEMED (or REJECTED/EXPIRED).\n\n5. There is no seller redeem call. Opening the checkout in step 3 is the seller confirmation; the customer's signed proof redeems the session once, atomically, after a fresh on-chain eligibility check. Apply the discount only when the status is REDEEMED.`;
     }
     if (mode === 'pos') {
       return `import { IFRBenefitsClient } from "ifr-sdk";
@@ -528,7 +528,7 @@ export async function redeemIFRCheckout({ sessionId, sellerWalletAddress, signMe
       </div>
       {mode === 'pos' ? (
         <p className="mt-3 text-xs leading-5 text-stone-400">
-          Signer-neutral SDK/POS JavaScript for the full checkout loop: create the session, poll its public status and redeem an approved session once with a fresh session-bound challenge. The SDK validates every one-time challenge before signing and returns the short-lived customer URL. Its repository tarball has locked npm-ci, CommonJS, ESM-import and TypeScript coverage on Node.js 20 and 22; npm publication and platform plugins remain pending.
+          Signer-neutral SDK/POS JavaScript for the full checkout loop: create the session, poll its public status until the customer proof redeems it. Its older separate seller redeem helper targets an endpoint that now returns 410 and needs an SDK update. The SDK validates every one-time challenge before signing and returns the short-lived customer URL. Its repository tarball has locked npm-ci, CommonJS, ESM-import and TypeScript coverage on Node.js 20 and 22; npm publication and platform plugins remain pending.
         </p>
       ) : null}
       {copyStatus ? <p className="mt-3 text-xs font-semibold text-stone-300">{copyStatus}</p> : null}

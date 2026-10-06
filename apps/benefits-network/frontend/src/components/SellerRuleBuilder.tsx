@@ -57,7 +57,6 @@ import {
   type LockSource,
 } from '@/lib/api';
 import { formatProductPrice } from '@/lib/money';
-import { formatIFR } from '@/lib/contracts';
 import {
   isLockSource,
   lockSourceLabel,
@@ -93,8 +92,6 @@ const ruleTemplates = [
     discount: 5,
     minLocked: 500,
     minHeld: 0,
-    dailyLimit: 1,
-    monthlyLimit: 1,
     ttl: 90,
   },
   {
@@ -106,8 +103,6 @@ const ruleTemplates = [
     discount: 10,
     minLocked: 1000,
     minHeld: 0,
-    dailyLimit: 1,
-    monthlyLimit: 10,
     ttl: 90,
   },
   {
@@ -119,24 +114,22 @@ const ruleTemplates = [
     discount: 15,
     minLocked: 5000,
     minHeld: 0,
-    dailyLimit: 1,
-    monthlyLimit: 4,
     ttl: 120,
   },
   {
     name: 'Event pass',
-    detail: 'Single-use monthly offer',
+    detail: 'Highest lock threshold',
     label: 'Event pass',
     category: 'Events',
     product: 'Event member benefit',
     discount: 20,
     minLocked: 10000,
     minHeld: 0,
-    dailyLimit: 1,
-    monthlyLimit: 1,
     ttl: 120,
   },
 ] as const;
+const CUSTOMER_LIMIT_NOTE =
+  'Per-customer limits are not enforced by IFR (no customer data is stored). Enforce limits in your own checkout if you need them.';
 const LAST_BUSINESS_STORAGE_KEY = 'ifr.shop.lastSellerBusinessId';
 const SHOP_ORIGIN = 'https://shop.ifrunit.tech';
 const DEFAULT_RULE_DRAFT = {
@@ -147,31 +140,8 @@ const DEFAULT_RULE_DRAFT = {
   minLocked: 1000,
   minHeld: 0,
   lockSource: 'ifrlock' as const,
-  dailyLimit: 1,
-  monthlyLimit: 10,
   ttl: 90,
 };
-
-function formatSessionLockedIFR(value: string | null) {
-  if (!value) return null;
-
-  const [whole = '0', fraction = ''] = value.split('.');
-  if (!/^\d+$/.test(whole) || (fraction && !/^\d+$/.test(fraction))) return null;
-  const groupedWhole = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  const trimmedFraction = fraction.replace(/0+$/, '').slice(0, 3);
-
-  return trimmedFraction ? `${groupedWhole}.${trimmedFraction}` : groupedWhole;
-}
-
-function formatSessionHeldIFR(value: string | null) {
-  if (!value || !/^\d+$/.test(value)) return null;
-
-  try {
-    return formatIFR(BigInt(value));
-  } catch {
-    return null;
-  }
-}
 
 export function SellerRuleBuilder() {
   const { address, isConnected } = useHydratedAccount();
@@ -198,8 +168,6 @@ export function SellerRuleBuilder() {
   const [minLocked, setMinLocked] = useState(DEFAULT_RULE_DRAFT.minLocked);
   const [minHeld, setMinHeld] = useState(DEFAULT_RULE_DRAFT.minHeld);
   const [lockSource, setLockSource] = useState<LockSource>(DEFAULT_RULE_DRAFT.lockSource);
-  const [dailyLimit, setDailyLimit] = useState(DEFAULT_RULE_DRAFT.dailyLimit);
-  const [monthlyLimit, setMonthlyLimit] = useState(DEFAULT_RULE_DRAFT.monthlyLimit);
   const [ttl, setTtl] = useState(DEFAULT_RULE_DRAFT.ttl);
   const [rules, setRules] = useState<BenefitRule[]>([]);
   const [catalogProducts, setCatalogProducts] = useState<CatalogProduct[]>([]);
@@ -353,7 +321,7 @@ export function SellerRuleBuilder() {
         ? 'Review the selected product, benefit threshold and limits, then save the active rule.'
         : !publicListingReady
           ? 'Run the public check to prove this exact seller offer appears in customer discovery.'
-          : 'Open the scanner at checkout, create a QR session, and redeem approved benefits once.';
+          : 'Open the scanner at checkout and create a QR session; the customer\'s signed proof redeems the benefit once.';
   const sellerReadinessSteps = [
     { label: 'Wallet-owned seller profile', ready: walletOwnedProfileReady },
     { label: 'Seller profile selected', ready: profileReady },
@@ -382,11 +350,11 @@ export function SellerRuleBuilder() {
       `Available in: ${businessServiceArea.trim() || 'not published'}`,
       `Default benefit: ${discount}% off when ${minLocked.toLocaleString('en-US')} IFR is locked ${lockSourceRequirement(lockSource)}`,
       ...(minHeld > 0 ? [`Free wallet balance: ${minHeld.toLocaleString('en-US')} IFR`] : []),
-      `Wallet limit: ${dailyLimit || 'unlimited'}/day / ${monthlyLimit || 'unlimited'}/month (UTC)`,
+      CUSTOMER_LIMIT_NOTE,
       `Rule draft: ${label || 'IFR Benefit'} / ${category} / ${product || 'IFR Benefit'}`,
-      'At checkout: open scanner, create QR session, let the customer scan and sign, then redeem only after APPROVED.',
+      'At checkout: open scanner, create QR session, let the customer scan and sign, then apply the discount once the scanner shows REDEEMED.',
     ].join('\n'),
-    [businessName, businessServiceArea, category, dailyLimit, discount, label, lockSource, minHeld, minLocked, monthlyLimit, product, scannerUrl]
+    [businessName, businessServiceArea, category, discount, label, lockSource, minHeld, minLocked, product, scannerUrl]
   );
   const sellerBackupText = useMemo(() => JSON.stringify(
     {
@@ -412,8 +380,8 @@ export function SellerRuleBuilder() {
         requiredLockIFR: minLocked,
         minIFRHeld: minHeld,
         lockSource,
-        dailyRedemptionLimit: dailyLimit,
-        monthlyRedemptionLimit: monthlyLimit,
+        dailyRedemptionLimit: 0,
+        monthlyRedemptionLimit: 0,
         ttlSeconds: ttl,
       },
       activeRulesLoaded: activeRulesCount,
@@ -421,16 +389,13 @@ export function SellerRuleBuilder() {
     },
     null,
     2
-  ), [activeRulesCount, address, businessCategories, businessDescription, businessId, businessLogoUrl, businessName, businessServiceArea, businessWebsite, catalogUrl, category, dailyLimit, discount, label, lockSource, minHeld, minLocked, monthlyLimit, product, scannerUrl, selectedBusiness, ttl]);
+  ), [activeRulesCount, address, businessCategories, businessDescription, businessId, businessLogoUrl, businessName, businessServiceArea, businessWebsite, catalogUrl, category, discount, label, lockSource, minHeld, minLocked, product, scannerUrl, selectedBusiness, ttl]);
 
   function getCustomerProofUrl(sessionId: string) {
     return `${SHOP_ORIGIN}/r/${sessionId}`;
   }
 
   function getSessionRestoreReceipt(session: SellerSessionSummary) {
-    const lockedIFR = formatSessionLockedIFR(session.lockAmountRaw);
-    const heldIFR = formatSessionHeldIFR(session.walletBalanceRaw);
-
     return [
       'IFR Benefits Network session restore receipt',
       `Seller: ${selectedBusiness?.name || businessName || businessId || 'IFR Partner Shop'}`,
@@ -447,13 +412,9 @@ export function SellerRuleBuilder() {
       ...(formatProductPrice(session.basePriceMinor, session.currency)
         ? [`Reference price: ${formatProductPrice(session.basePriceMinor, session.currency)}`]
         : []),
-      `Customer wallet: ${session.customerWalletMasked || 'not verified yet'}`,
-      `Locked: ${lockedIFR ? `${lockedIFR} IFR` : 'not verified yet'}`,
+      `Customer proof: ${session.customerProof === 'verified' ? 'verified' : 'not verified yet'}`,
+      ...(session.selfRedemption ? ['Self-redemption (no reward)'] : []),
       `Verified source: ${verifiedLockSourceLabel(session.verifiedLockSource)}`,
-      ...(session.verificationBlock ? [`Verification block: ${session.verificationBlock}`] : []),
-      ...(session.minIFRHeld > 0
-        ? [`Held at verification: ${heldIFR ? `${heldIFR} IFR` : 'not verified yet'}`]
-        : []),
       `Expires: ${session.expiresAt}`,
       `Redeemed: ${session.redeemedAt || 'not redeemed'}`,
       `Customer link: ${getCustomerProofUrl(session.id)}`,
@@ -517,12 +478,13 @@ export function SellerRuleBuilder() {
       requiredLockIFR: minLocked,
       minIFRHeld: minHeld,
       lockSource,
-      dailyRedemptionLimit: dailyLimit,
-      monthlyRedemptionLimit: monthlyLimit,
+      // Per-customer limits are not hosted by IFR (owner decision B); the backend rejects non-zero values.
+      dailyRedemptionLimit: 0,
+      monthlyRedemptionLimit: 0,
       ttlSeconds: ttl,
       active: true,
     }),
-    [category, dailyLimit, discount, label, lockSource, minHeld, minLocked, monthlyLimit, product, selectedProductId, ttl]
+    [category, discount, label, lockSource, minHeld, minLocked, product, selectedProductId, ttl]
   );
 
   function resetRuleDraft() {
@@ -533,8 +495,6 @@ export function SellerRuleBuilder() {
     setMinLocked(DEFAULT_RULE_DRAFT.minLocked);
     setMinHeld(DEFAULT_RULE_DRAFT.minHeld);
     setLockSource(DEFAULT_RULE_DRAFT.lockSource);
-    setDailyLimit(DEFAULT_RULE_DRAFT.dailyLimit);
-    setMonthlyLimit(DEFAULT_RULE_DRAFT.monthlyLimit);
     setTtl(DEFAULT_RULE_DRAFT.ttl);
     setSelectedProductId('');
   }
@@ -545,8 +505,6 @@ export function SellerRuleBuilder() {
     setMinLocked(template.minLocked);
     setMinHeld(template.minHeld);
     setLockSource(DEFAULT_RULE_DRAFT.lockSource);
-    setDailyLimit(template.dailyLimit);
-    setMonthlyLimit(template.monthlyLimit);
     setTtl(template.ttl);
     if (!selectedProductId) {
       setCategory(template.category);
@@ -1052,7 +1010,7 @@ export function SellerRuleBuilder() {
       }
       const sellerName = selectedBusiness?.name || businessName || businessId || 'IFR Partner Shop';
       saveSessionCsv(sellerName, exportSessions);
-      setStatus(`Downloaded ${exportSessions.length} session${exportSessions.length === 1 ? '' : 's'} with masked customer wallets.`);
+      setStatus(`Downloaded ${exportSessions.length} session${exportSessions.length === 1 ? '' : 's'} (no customer wallet data is stored).`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to export full session history');
     } finally {
@@ -1190,7 +1148,7 @@ export function SellerRuleBuilder() {
         ...current.filter((item) => item.id !== operator.id),
       ]);
       setOperatorWallet('');
-      setStatus('Checkout operator added. The wallet can verify access and redeem approved sessions only.');
+      setStatus('Checkout operator added. The wallet can verify access and open checkouts only.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to add checkout operator');
     } finally {
@@ -1214,7 +1172,7 @@ export function SellerRuleBuilder() {
       setCheckoutOperators((current) => current.map((item) => (
         item.id === operator.id ? { ...item, active: false } : item
       )));
-      setStatus('Checkout operator revoked. New redeem attempts from that wallet are blocked immediately.');
+      setStatus('Checkout operator revoked. Checkouts opened by that wallet can no longer be redeemed.');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to revoke checkout operator');
     } finally {
@@ -1293,13 +1251,6 @@ export function SellerRuleBuilder() {
       setError('Business ID plus seller wallet or admin secret are required.');
       return;
     }
-    if (
-      !Number.isInteger(dailyLimit) || dailyLimit < 0 || dailyLimit > 1000 ||
-      !Number.isInteger(monthlyLimit) || monthlyLimit < 0 || monthlyLimit > 10000
-    ) {
-      setError('Wallet limits must be whole numbers. Use 0 for unlimited, up to 1,000/day and 10,000/month.');
-      return;
-    }
     setLoading(true);
     setError('');
     setStatus('');
@@ -1363,8 +1314,6 @@ export function SellerRuleBuilder() {
     setMinLocked(rule.requiredLockIFR);
     setMinHeld(rule.minIFRHeld);
     setLockSource(rule.lockSource);
-    setDailyLimit(rule.dailyRedemptionLimit);
-    setMonthlyLimit(rule.monthlyRedemptionLimit);
     setTtl(rule.ttlSeconds);
     setError('');
     setStatus(`Editing ${rule.label}. Changes apply only after the signed update is confirmed.`);
@@ -1629,8 +1578,6 @@ export function SellerRuleBuilder() {
           if (typeof parsed.defaultBenefit.requiredLockIFR === 'number') setMinLocked(parsed.defaultBenefit.requiredLockIFR);
           if (typeof parsed.defaultBenefit.minIFRHeld === 'number') setMinHeld(parsed.defaultBenefit.minIFRHeld);
           if (isLockSource(parsed.defaultBenefit.lockSource)) setLockSource(parsed.defaultBenefit.lockSource);
-          if (typeof parsed.defaultBenefit.dailyRedemptionLimit === 'number') setDailyLimit(parsed.defaultBenefit.dailyRedemptionLimit);
-          if (typeof parsed.defaultBenefit.monthlyRedemptionLimit === 'number') setMonthlyLimit(parsed.defaultBenefit.monthlyRedemptionLimit);
           if (typeof parsed.defaultBenefit.ttlSeconds === 'number') setTtl(parsed.defaultBenefit.ttlSeconds);
         }
         setRules([]);
@@ -2415,7 +2362,7 @@ export function SellerRuleBuilder() {
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-green-100/80">Counter team</p>
               <h3 className="mt-1 text-xl font-black text-white">Delegate checkout access</h3>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-stone-300">
-                Add a staff wallet for checkout. Operators can verify their role and redeem an approved QR once;
+                Add a staff wallet for checkout. Operators can verify their role and open checkouts;
                 they cannot change seller profiles, rules, history or team access.
               </p>
             </div>
@@ -2654,15 +2601,12 @@ export function SellerRuleBuilder() {
             </div>
           </div>
           <p className="mt-3 text-xs leading-5 text-stone-400">
-            History is owner-only and loaded in pages of 50. Full CSV export fetches every page,
-            masks customer wallets, and creates the file locally without uploading or storing a copy.
+            History is owner-only and loaded in pages of 50. The server stores no customer wallet, amount or history.
+            Full CSV export fetches every page and creates the file locally without uploading or storing a copy.
           </p>
           {visibleSessions.length > 0 ? (
             <div className="mt-4 grid gap-3">
               {visibleSessions.slice(0, 10).map((session) => {
-                const lockedIFR = formatSessionLockedIFR(session.lockAmountRaw);
-                const heldIFR = formatSessionHeldIFR(session.walletBalanceRaw);
-
                 return (
                   <div key={session.id} className="rounded-2xl border border-white/10 bg-black/25 p-4">
                     <div className="flex flex-wrap items-start justify-between gap-3">
@@ -2678,9 +2622,6 @@ export function SellerRuleBuilder() {
                             Reference price: {formatProductPrice(session.basePriceMinor, session.currency)}
                           </p>
                         ) : null}
-                        <p className="mt-1 text-xs leading-5 text-stone-400">
-                          Wallet use: {session.dailyRedemptionLimit || 'unlimited'} / UTC day and {session.monthlyRedemptionLimit || 'unlimited'} / UTC month
-                        </p>
                       </div>
                       <span
                         className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] ${
@@ -2696,17 +2637,11 @@ export function SellerRuleBuilder() {
                     </div>
                     <div className="mt-3 grid gap-2 text-xs leading-5 text-stone-400">
                       <p className="break-all font-mono">Session: {session.id}</p>
-                      {session.customerWalletMasked ? <p className="font-mono">Wallet: {session.customerWalletMasked}</p> : null}
-                      {lockedIFR ? <p>Locked: {lockedIFR} IFR</p> : null}
+                      {session.customerProof === 'verified' ? <p className="text-green-100">Customer proof verified</p> : null}
+                      {session.selfRedemption ? <p className="text-orange-100">Self-redemption (no reward)</p> : null}
                       <p>Accepted source: {lockSourceLabel(session.lockSource)}</p>
                       {session.verifiedLockSource ? (
-                        <p>
-                          Verified source: {verifiedLockSourceLabel(session.verifiedLockSource)}
-                          {session.verificationBlock ? ` at block ${session.verificationBlock}` : ''}
-                        </p>
-                      ) : null}
-                      {session.minIFRHeld > 0 && heldIFR ? (
-                        <p>Held at verification: {heldIFR} IFR</p>
+                        <p>Verified source: {verifiedLockSourceLabel(session.verifiedLockSource)}</p>
                       ) : null}
                       {session.reason ? <p className="text-red-100">Reason: {session.reason}</p> : null}
                       {session.redeemedAt ? <p>Redeemed: {new Date(session.redeemedAt).toLocaleString()}</p> : null}
@@ -3023,30 +2958,6 @@ export function SellerRuleBuilder() {
             className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
           />
         </label>
-        <label className="grid gap-2 text-sm font-semibold text-stone-200">
-          Uses per wallet / UTC day
-          <input
-            type="number"
-            min="0"
-            max="1000"
-            value={dailyLimit}
-            onChange={(event) => setDailyLimit(Number(event.target.value))}
-            className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
-          />
-          <span className="text-xs font-normal text-stone-400">0 means unlimited.</span>
-        </label>
-        <label className="grid gap-2 text-sm font-semibold text-stone-200">
-          Uses per wallet / UTC month
-          <input
-            type="number"
-            min="0"
-            max="10000"
-            value={monthlyLimit}
-            onChange={(event) => setMonthlyLimit(Number(event.target.value))}
-            className="rounded-2xl border border-white/10 bg-black/30 px-4 py-3 text-white outline-none focus:border-orange-300"
-          />
-          <span className="text-xs font-normal text-stone-400">0 means unlimited.</span>
-        </label>
       </div>
 
       <div className="mt-5 rounded-2xl border border-white/10 bg-black/25 p-4">
@@ -3056,9 +2967,7 @@ export function SellerRuleBuilder() {
           {minHeld > 0 ? ` and ${minHeld.toLocaleString('en-US')} IFR stays in the wallet` : ''}
         </p>
         <p className="mt-2 text-sm text-stone-300">{label} / {category} / {product}</p>
-        <p className="mt-2 text-xs text-stone-400">
-          Per wallet: {dailyLimit || 'unlimited'} / UTC day and {monthlyLimit || 'unlimited'} / UTC month.
-        </p>
+        <p className="mt-2 text-xs text-stone-400">{CUSTOMER_LIMIT_NOTE}</p>
       </div>
 
       <button
@@ -3090,9 +2999,11 @@ export function SellerRuleBuilder() {
                       ? ` plus ${rule.minIFRHeld.toLocaleString('en-US')} IFR held`
                       : ''}
                   </p>
-                  <p className="mt-1 text-xs text-stone-400">
-                    Per wallet: {rule.dailyRedemptionLimit || 'unlimited'} / UTC day and {rule.monthlyRedemptionLimit || 'unlimited'} / UTC month
-                  </p>
+                  {rule.dailyRedemptionLimit > 0 || rule.monthlyRedemptionLimit > 0 ? (
+                    <p className="mt-1 text-xs text-red-100">
+                      This rule still carries a per-customer limit, so checkouts are refused. Edit and save it to remove the limit.
+                    </p>
+                  ) : null}
                 </div>
                 <span className={`rounded-full px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] ${rule.active ? 'bg-green-400/15 text-green-100' : 'bg-stone-500/20 text-stone-300'}`}>
                   {rule.active ? 'Active' : 'Paused'}

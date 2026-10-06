@@ -14,18 +14,21 @@ import {
   cancelCustomerPass,
   confirmCustomerPass,
   createCustomerPass,
-  getCustomerPassChallenge,
   getCustomerPassConfirmationChallenge,
   getCustomerPassStatus,
   getBusiness,
   getBusinessRules,
+  getSessionStatus,
 } from '@/lib/api';
+import { saveCustomerProofHistoryItem } from '@/lib/customerHistory';
 import { lockSourceLabel, lockSourceRequirement } from '@/lib/lockSource';
 import { formatProductPrice } from '@/lib/money';
 
 const TAB_STORAGE_KEY = 'ifr.shop.activeCustomerPass';
 const CLOSED_CHECKOUT = new Set(['REDEEMED', 'REJECTED', 'EXPIRED']);
 
+// The wallet stays in this tab only (to warn about a wallet switch); the server never receives it at
+// pass creation and stores no wallet at all (owner decision B, T-231b).
 type StoredPass = CustomerPassCreated & { walletAddress: string };
 type SelectedOffer = { businessId: string; sellerName: string; sellerLogoUrl: string | null; rule: BenefitRule };
 
@@ -172,9 +175,7 @@ export function CustomerCheckoutPass() {
     setLoading(true);
     setError('');
     try {
-      const challenge = await getCustomerPassChallenge(address);
-      const signature = await signMessageAsync({ message: challenge.message });
-      const created = await createCustomerPass({ walletAddress: address, nonce: challenge.nonce, signature });
+      const created = await createCustomerPass();
       const next = { ...created, walletAddress: address };
       remember(next);
       setStatus({ status: 'OPEN', expiresAt: created.expiresAt, checkout: null });
@@ -191,12 +192,32 @@ export function CustomerCheckoutPass() {
     setLoading(true);
     setError('');
     try {
-      const challenge = await getCustomerPassConfirmationChallenge(pass.passId, pass.controlToken);
+      if (!address) throw new Error('Connect your customer wallet first.');
+      const challenge = await getCustomerPassConfirmationChallenge(pass.passId, pass.controlToken, address);
       const signature = await signMessageAsync({ message: challenge.message });
-      const result = await confirmCustomerPass(pass.passId, pass.controlToken, signature);
-      setMessage(result.status === 'APPROVED'
-        ? 'IFR access approved. The seller can now redeem this checkout once.'
+      const result = await confirmCustomerPass(pass.passId, pass.controlToken, address, signature);
+      setMessage(result.status === 'REDEEMED'
+        ? 'Checkout redeemed once. Show this screen to the seller; their console shows the same result.'
         : result.reason || 'This wallet is not eligible yet.');
+      if (result.status === 'REDEEMED' && result.proof) {
+        try {
+          const sessionStatus = await getSessionStatus(result.proof.sessionId);
+          saveCustomerProofHistoryItem({
+            sessionId: result.proof.sessionId,
+            sellerName: status?.checkout?.sellerName,
+            status: sessionStatus,
+            verifiedWalletAddress: address,
+            proof: {
+              version: result.proof.version,
+              termsDigest: result.proof.termsDigest,
+              message: result.proof.message,
+              signature,
+            },
+          });
+        } catch {
+          // The receipt is a device convenience; the redemption itself already succeeded.
+        }
+      }
       await refresh(pass);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not confirm checkout.');
@@ -264,7 +285,7 @@ export function CustomerCheckoutPass() {
         </span>
       </div>
       <p className="mt-3 text-sm leading-6 text-stone-300">
-        The QR is a short-lived presentation handle, not proof of eligibility. Only a second signature from this wallet can approve the seller and selected benefit.
+        The QR is a short-lived presentation handle, not proof of eligibility, and creating it sends no wallet address. Your one signature on the exact seller offer checks eligibility and redeems that checkout once.
       </p>
 
       {selectedOffer ? (

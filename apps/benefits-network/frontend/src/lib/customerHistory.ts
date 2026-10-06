@@ -2,6 +2,20 @@ import { LockSource, SessionStatus } from '@/lib/api';
 import { isLockSource } from '@/lib/lockSource';
 import { ProductCurrency, productCurrencies } from '@/lib/money';
 
+/**
+ * Owner decision B (T-231b): customer history lives only on this device. The server keeps no
+ * customer-linked history. A receipt carries the exact signed checkout-proof text (which contains the
+ * full wallet address) and the signature, so the device can re-verify what it signed offline.
+ */
+export const CHECKOUT_PROOF_VERSION_LABEL = 'ifr-benefits/checkout-proof/2';
+
+export interface CustomerProofReceipt {
+  version: string;
+  termsDigest: string;
+  message: string;
+  signature: string;
+}
+
 export interface CustomerProofHistoryItem {
   sessionId: string;
   businessId: string;
@@ -19,6 +33,7 @@ export interface CustomerProofHistoryItem {
   redeemedAt: string | null;
   walletLabel: string;
   savedAt: string;
+  proof: CustomerProofReceipt | null;
 }
 
 const STORAGE_KEY = 'ifr.shop.customerProofHistory.v1';
@@ -38,6 +53,25 @@ function normalizeWholeIFR(value: unknown) {
 export function redactVerifiedAddress(address?: string | null) {
   if (!address) return 'not verified';
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}
+
+function normalizeProof(value: unknown): CustomerProofReceipt | null {
+  if (!value || typeof value !== 'object') return null;
+  const proof = value as Partial<CustomerProofReceipt>;
+  if (
+    typeof proof.version !== 'string' ||
+    typeof proof.termsDigest !== 'string' ||
+    typeof proof.message !== 'string' ||
+    proof.message.length > 4000 ||
+    typeof proof.signature !== 'string' ||
+    !/^0x[0-9a-fA-F]{130}$/.test(proof.signature)
+  ) return null;
+  return {
+    version: proof.version,
+    termsDigest: proof.termsDigest,
+    message: proof.message,
+    signature: proof.signature,
+  };
 }
 
 function normalizeItem(item: Partial<CustomerProofHistoryItem>): CustomerProofHistoryItem | null {
@@ -65,6 +99,7 @@ function normalizeItem(item: Partial<CustomerProofHistoryItem>): CustomerProofHi
     redeemedAt: item.redeemedAt || null,
     walletLabel: item.walletLabel || 'not verified',
     savedAt: item.savedAt,
+    proof: normalizeProof(item.proof),
   };
 }
 
@@ -90,6 +125,7 @@ export function saveCustomerProofHistoryItem(args: {
   sellerName?: string | null;
   status: SessionStatus;
   verifiedWalletAddress?: string | null;
+  proof?: CustomerProofReceipt | null;
 }) {
   if (!canUseStorage()) return;
 
@@ -115,6 +151,7 @@ export function saveCustomerProofHistoryItem(args: {
       ? redactVerifiedAddress(args.verifiedWalletAddress)
       : existing?.walletLabel || 'not verified',
     savedAt: existing?.savedAt || new Date().toISOString(),
+    proof: normalizeProof(args.proof) ?? existing?.proof ?? null,
   };
 
   try {
@@ -135,4 +172,46 @@ export function clearCustomerProofHistory() {
   } catch {
     // Ignore storage failures.
   }
+}
+
+function messageField(message: string, label: string) {
+  const prefix = `${label}: `;
+  const line = message.split('\n').find((entry) => entry.startsWith(prefix));
+  return line ? line.slice(prefix.length) : null;
+}
+
+export type ReceiptVerification =
+  | { ok: true; wallet: string }
+  | { ok: false; reason: string };
+
+/**
+ * Offline check of a device-local receipt. The full address comes from the signed text itself
+ * (never from the redacted display label); the injected `recover` performs EIP-191 recovery.
+ * This proves what this wallet signed for this checkout, not that the seller redeemed it: status
+ * and redemption time come from the server while the merchant keeps the checkout record.
+ */
+export async function verifyCustomerProofReceipt(
+  item: CustomerProofHistoryItem,
+  recover: (message: string, signature: string) => Promise<string>
+): Promise<ReceiptVerification> {
+  const proof = item.proof;
+  if (!proof) return { ok: false, reason: 'No signed proof is stored for this entry.' };
+  const wallet = messageField(proof.message, 'Wallet');
+  if (!wallet || !/^0x[0-9a-fA-F]{40}$/.test(wallet)) return { ok: false, reason: 'The signed text has no full wallet address.' };
+  if (messageField(proof.message, 'Version') !== CHECKOUT_PROOF_VERSION_LABEL || proof.version !== CHECKOUT_PROOF_VERSION_LABEL) {
+    return { ok: false, reason: 'Unsupported proof version.' };
+  }
+  if (messageField(proof.message, 'Session') !== item.sessionId) return { ok: false, reason: 'The signed text is for another checkout.' };
+  if (messageField(proof.message, 'Shop') !== item.businessId) return { ok: false, reason: 'The signed text is for another shop.' };
+  if (messageField(proof.message, 'Terms Digest') !== proof.termsDigest) return { ok: false, reason: 'The signed terms do not match the receipt.' };
+  let recovered: string;
+  try {
+    recovered = await recover(proof.message, proof.signature);
+  } catch {
+    return { ok: false, reason: 'The signature cannot be recovered.' };
+  }
+  if (recovered.toLowerCase() !== wallet.toLowerCase()) {
+    return { ok: false, reason: 'The signature does not match the wallet in the signed text.' };
+  }
+  return { ok: true, wallet };
 }
