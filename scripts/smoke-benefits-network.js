@@ -507,17 +507,7 @@ async function addEligibilityWallet(context, { rpcError = false } = {}) {
   }, { shouldFail: rpcError });
 }
 
-function smokeReceiptMessage({ wallet, businessId, sessionId, termsDigest }) {
-  return [
-    'IFR Benefits Network - Checkout Proof',
-    'Version: ifr-benefits/checkout-proof/2',
-    'Purpose: Redeem this one checkout with verified IFR benefit eligibility',
-    `Wallet: ${wallet}`,
-    `Shop: ${businessId}`,
-    `Session: ${sessionId}`,
-    `Terms Digest: ${termsDigest}`,
-  ].join('\n');
-}
+const { receiptProof } = require('./lib/benefits-receipt-fixture.cjs');
 
 // Owner decision B (T-231b): customer history is device-local only. The server keeps no
 // customer-linked history (/api/customer/history* answers 410); receipts carry the exact signed
@@ -530,63 +520,45 @@ async function verifyCustomerWalletHistory() {
   // Deterministic throwaway test key (no funds, smoke-only) so the receipt has a real EIP-191 signature.
   const receiptSigner = new ethersUtils.Wallet(`0x${'42'.repeat(32)}`);
   const receiptWallet = receiptSigner.address;
-  const termsDigest = `sha256:${'c'.repeat(64)}`;
-  const validMessage = smokeReceiptMessage({
-    wallet: receiptWallet, businessId: 'smoke-seller-coffee', sessionId: 'customer-benefit-redeemed', termsDigest,
-  });
-  const tamperedMessage = smokeReceiptMessage({
-    wallet: receiptWallet, businessId: 'smoke-seller-older', sessionId: 'customer-benefit-older', termsDigest,
-  });
+  const validItem = {
+    sessionId: 'customer-benefit-redeemed',
+    businessId: 'smoke-seller-coffee',
+    sellerName: 'IFR Coffee House',
+    status: 'REDEEMED',
+    discountPercent: 15,
+    requiredLockIFR: 1000,
+    minIFRHeld: 250,
+    lockSource: 'commitment_time_only',
+    ruleLabel: 'Premium coffee',
+    productName: 'Reserve espresso',
+    basePriceMinor: null,
+    currency: null,
+    expiresAt: '2026-07-19T09:10:00.000Z',
+    redeemedAt: '2026-07-19T09:05:00.000Z',
+    walletLabel: `${receiptWallet.slice(0, 6)}...${receiptWallet.slice(-4)}`,
+    savedAt: '2026-07-19T09:05:30.000Z',
+  };
+  const tamperedItem = {
+    ...validItem,
+    sessionId: 'customer-benefit-older',
+    businessId: 'smoke-seller-older',
+    sellerName: 'Older IFR Studio',
+    discountPercent: 10,
+    requiredLockIFR: 2500,
+    minIFRHeld: 0,
+    lockSource: 'ifrlock',
+    ruleLabel: 'Studio access',
+    productName: 'Member session',
+    expiresAt: '2026-07-18T09:10:00.000Z',
+    redeemedAt: '2026-07-18T09:05:00.000Z',
+    savedAt: '2026-07-18T09:05:30.000Z',
+  };
+  const validProof = receiptProof(validItem, { wallet: receiptWallet });
+  const tamperedProof = receiptProof(tamperedItem, { wallet: receiptWallet });
   const receipts = [
-    {
-      sessionId: 'customer-benefit-redeemed',
-      businessId: 'smoke-seller-coffee',
-      sellerName: 'IFR Coffee House',
-      status: 'REDEEMED',
-      discountPercent: 15,
-      requiredLockIFR: 1000,
-      minIFRHeld: 250,
-      lockSource: 'commitment_time_only',
-      ruleLabel: 'Premium coffee',
-      productName: 'Reserve espresso',
-      basePriceMinor: null,
-      currency: null,
-      expiresAt: '2026-07-19T09:10:00.000Z',
-      redeemedAt: '2026-07-19T09:05:00.000Z',
-      walletLabel: `${receiptWallet.slice(0, 6)}...${receiptWallet.slice(-4)}`,
-      savedAt: '2026-07-19T09:05:30.000Z',
-      proof: {
-        version: 'ifr-benefits/checkout-proof/2',
-        termsDigest,
-        message: validMessage,
-        signature: await receiptSigner.signMessage(validMessage),
-      },
-    },
-    {
-      sessionId: 'customer-benefit-older',
-      businessId: 'smoke-seller-older',
-      sellerName: 'Older IFR Studio',
-      status: 'REDEEMED',
-      discountPercent: 10,
-      requiredLockIFR: 2500,
-      minIFRHeld: 0,
-      lockSource: 'ifrlock',
-      ruleLabel: 'Studio access',
-      productName: 'Member session',
-      basePriceMinor: null,
-      currency: null,
-      expiresAt: '2026-07-18T09:10:00.000Z',
-      redeemedAt: '2026-07-18T09:05:00.000Z',
-      walletLabel: `${receiptWallet.slice(0, 6)}...${receiptWallet.slice(-4)}`,
-      savedAt: '2026-07-18T09:05:30.000Z',
-      proof: {
-        version: 'ifr-benefits/checkout-proof/2',
-        termsDigest,
-        message: tamperedMessage,
-        // Signature over a different text: device verification must fail closed.
-        signature: await receiptSigner.signMessage(validMessage),
-      },
-    },
+    { ...validItem, proof: { ...validProof, signature: await receiptSigner.signMessage(validProof.message) } },
+    // Signature over a different text: device verification must fail closed.
+    { ...tamperedItem, proof: { ...tamperedProof, signature: await receiptSigner.signMessage(validProof.message) } },
   ];
   await context.addInitScript((items) => {
     if (!window.sessionStorage.getItem('ifr.smoke.receiptsSeeded')) {
@@ -618,10 +590,10 @@ async function verifyCustomerWalletHistory() {
 
     const valid = history.getByTestId('device-receipt').filter({ hasText: 'IFR Coffee House' });
     await valid.getByRole('button', { name: 'Verify receipt', exact: true }).click();
-    await valid.getByText('Signature verified on this device', { exact: false }).waitFor({ timeout: timeoutMs });
+    await valid.getByText('Signed terms verified on this device', { exact: false }).waitFor({ timeout: timeoutMs });
     const tampered = history.getByTestId('device-receipt').filter({ hasText: 'Older IFR Studio' });
     await tampered.getByRole('button', { name: 'Verify receipt', exact: true }).click();
-    await tampered.getByText('The signature does not match the wallet in the signed text.', { exact: true }).waitFor({ timeout: timeoutMs });
+    await tampered.getByText('Receipt invalid: The signature does not match the wallet in the signed text.', { exact: true }).waitFor({ timeout: timeoutMs });
     if (shouldScreenshot) {
       fs.mkdirSync(screenshotDir, { recursive: true });
       await history.screenshot({

@@ -38,6 +38,7 @@ const customerWallet = customerSigner.address;
 const dummySignature = `0x${'11'.repeat(65)}`;
 const businessId = 'business-touch-e2e';
 const ruleId = 'rule-touch-e2e';
+const { receiptProof } = require('./lib/benefits-receipt-fixture.cjs');
 const productId = 'product-touch-e2e';
 const sessionId = 'session-touch-e2e';
 const passId = 'T'.repeat(32);
@@ -114,17 +115,7 @@ const offer = {
 };
 // Owner decision B (T-231b): "My benefits" is device-local only. The receipt holds the exact signed
 // proof v2 text (with the full wallet) and its signature, as saved after a REDEEMED proof.
-const receiptTermsDigest = `sha256:${'b'.repeat(64)}`;
-const receiptMessage = [
-  'IFR Benefits Network - Checkout Proof',
-  'Version: ifr-benefits/checkout-proof/2',
-  'Purpose: Redeem this one checkout with verified IFR benefit eligibility',
-  `Wallet: ${customerWallet}`,
-  `Shop: ${businessId}`,
-  `Session: ${sessionId}`,
-  `Terms Digest: ${receiptTermsDigest}`,
-].join('\n');
-const localHistory = [{
+const localHistoryItem = {
   sessionId,
   businessId,
   sellerName: business.name,
@@ -141,13 +132,10 @@ const localHistory = [{
   redeemedAt: now,
   walletLabel: `${customerWallet.slice(0, 6)}...${customerWallet.slice(-4)}`,
   savedAt: now,
-  proof: {
-    version: 'ifr-benefits/checkout-proof/2',
-    termsDigest: receiptTermsDigest,
-    message: receiptMessage,
-    signature: null,
-  },
-}];
+};
+const receipt = receiptProof(localHistoryItem, { wallet: customerWallet, ruleId });
+const receiptMessage = receipt.message;
+const localHistory = [{ ...localHistoryItem, proof: { ...receipt, signature: null } }];
 
 function json(route, body, status = 200) {
   return route.fulfill({
@@ -360,7 +348,7 @@ const STATES = [
       await history.getByTestId('device-history-notice').waitFor();
       await history.getByTestId('device-receipt').first().waitFor();
       await history.getByRole('button', { name: 'Verify receipt', exact: true }).click();
-      await history.getByText('Signature verified on this device', { exact: false }).waitFor();
+      await history.getByText('Signed terms verified on this device', { exact: false }).waitFor();
       await history.getByRole('button', { name: 'Clear', exact: true }).waitFor();
       await history.getByRole('button', { name: 'Scan QR', exact: false }).or(history.getByRole('link', { name: 'Scan QR' })).first().waitFor();
     },

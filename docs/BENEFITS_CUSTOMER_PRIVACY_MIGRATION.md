@@ -34,12 +34,16 @@ and existing backups (see below).
 
 ## Migration steps (in SQL order)
 
-1. **Refusal guard.** The migration fails before it changes anything if any `RewardEvent` has
-   status `PENDING`, `READY`, `BLOCKED_CALLER`, `BLOCKED_GOVERNANCE` or `SETTLEMENT_PENDING`.
-   These open reward obligations must be settled or resolved under the **old release** first.
-   Never delete a pending obligation to pass the guard, and never treat elapsed time (for example
-   `periodEnd + 72h`) as settlement. How each open event is resolved is an owner/governance
-   decision recorded before the release.
+1. **Refusal guard (fail closed, explicit allowlist).** The only reward status treated as finished
+   is `CONFIRMED` (recorded on-chain). If any `RewardEvent` has another status, including the open
+   statuses `PENDING`, `READY`, `BLOCKED_CALLER`, `BLOCKED_GOVERNANCE`, `SETTLEMENT_PENDING` and any
+   unknown, unexpected or NULL value, the migration fails before it changes anything. These
+   obligations must be settled or explicitly resolved under the **old release** first. Never
+   delete a pending obligation to pass the guard, and never treat elapsed time (for example
+   `periodEnd + 72h`) as settlement. How each event is resolved is an owner/governance decision
+   recorded before the release. A non-payable residue (for example permanently blocked governance
+   events) needs an explicitly accepted terminal disposition; the guard does not assume one.
+   Steps 2–4 run in **one transaction**, so a failure at any later statement rolls everything back.
 2. **In-flight invalidation.** `PENDING` and `APPROVED` sessions become `EXPIRED` with a "start a
    new checkout" reason; `OPEN` and `BOUND` customer passes become `EXPIRED`. Customers and
    sellers start a new checkout after the cutover. Dropping `CustomerHistoryAccess` invalidates
@@ -98,8 +102,10 @@ applies.
 `npm run test:migration-upgrade`) builds a pre-migration database with dummy data using the real
 `prisma migrate deploy` runner in a temporary directory and checks that:
 
-- an open reward obligation, even one older than `periodEnd + 72h`, makes the migration fail
-  without changing data;
+- every non-`CONFIRMED` reward status (all open statuses and an unknown status), even older than
+  `periodEnd + 72h`, makes the migration fail without changing data;
+- a failure forced late in the migration (table redefinition) rolls back the earlier
+  invalidation and audit scrub, leaving the data unchanged;
 - without open obligations, sessions, closed reward events and audit rows are kept, in-flight
   checkouts and passes expire, customer tables and columns are dropped, audit payloads are
   scrubbed, and after `VACUUM` no customer address remains in the dump or the file.
