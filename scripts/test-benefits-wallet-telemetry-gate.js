@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 // T-280: self-test for the wallet telemetry gate. Serves small fixture pages
 // and proves the gate FAILS on late telemetry (>10 s), on broken, unhydrated
-// or empty pages and on invalid observation durations, and passes a working
-// fixture page. No wallet, no real third-party request (telemetry is aborted).
+// or empty pages, on WebSockets and on invalid observation durations, and passes a working
+// fixture page. No wallet, no real third-party request (telemetry is aborted,
+// wallet SDK sockets are intercepted).
 
 const assert = require('node:assert/strict');
 const http = require('node:http');
@@ -10,7 +11,7 @@ const { runGate, parseObserveMs, MIN_OBSERVE_MS } = require('./test-benefits-wal
 
 // Mirrors React's hydration marker so the fixture counts as hydrated.
 const HYDRATED = `<script>document.querySelector('main').__reactFiber$fixture = {};</script>`;
-const PAGES = {
+const PAGES = (socketPort) => ({
   '/ok': `<main><h1>Fixture working page</h1></main>${HYDRATED}`,
   '/late-telemetry': `<main><h1>Fixture working page</h1></main>${HYDRATED}
     <script>setTimeout(() => fetch('https://pulse.walletconnect.org/batch?fixture=late', { method: 'POST', mode: 'no-cors', body: '{}' }).catch(() => {}), 11000);</script>`,
@@ -18,15 +19,30 @@ const PAGES = {
   '/unhydrated': `<main><h1>Fixture working page</h1></main>`,
   '/empty': ``,
   '/error-boundary': `<main><h1 id="root-error-title">Something went wrong</h1><h1>Fixture working page</h1></main>${HYDRATED}`,
-};
+  // Wallet SDK socket: intercepted by the gate's routeWebSocket, never reaches the network.
+  '/socket-wallet': `<main><h1>Fixture working page</h1></main>${HYDRATED}
+    <script>setTimeout(() => { try { new WebSocket('wss://relay.walletconnect.org/?fixture=1'); } catch (e) {} }, 2000);</script>`,
+  // Any other non-app socket: a local listener that never completes the handshake.
+  '/socket-local': `<main><h1>Fixture working page</h1></main>${HYDRATED}
+    <script>setTimeout(() => { try { new WebSocket('ws://127.0.0.1:${socketPort}/fixture'); } catch (e) {} }, 2000);</script>`,
+});
 
-function serve() {
+function listen(server) {
+  return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve(server)));
+}
+
+async function serve() {
+  // Socket target: accepts the upgrade request and never answers it.
+  const socketServer = await listen(http.createServer((req, res) => res.end()));
+  socketServer.on('upgrade', (req, socket) => { socket.on('error', () => {}); });
+  const pages = PAGES(socketServer.address().port);
   return new Promise((resolve) => {
     const server = http.createServer((req, res) => {
-      const body = PAGES[new URL(req.url, 'http://x').pathname];
+      const body = pages[new URL(req.url, 'http://x').pathname];
       res.writeHead(body === undefined ? 404 : 200, { 'Content-Type': 'text/html' });
       res.end(`<!doctype html><html><head><title>fixture</title></head><body>${body ?? 'missing'}</body></html>`);
     });
+    server.on('close', () => socketServer.close());
     server.listen(0, '127.0.0.1', () => resolve(server));
   });
 }
@@ -52,6 +68,8 @@ function serve() {
     { path: '/empty', expect: /expected heading .* not visible/ },
     { path: '/error-boundary', expect: /error boundary rendered/ },
     { path: '/missing', expect: /HTTP 404/ },
+    { path: '/socket-wallet', expect: /wallet SDK socket wss:\/\/relay\.walletconnect\.org/ },
+    { path: '/socket-local', expect: /unexpected third-party socket ws:\/\/127\.0\.0\.1:/ },
   ];
   try {
     const { failures, passes } = await runGate({
@@ -69,7 +87,7 @@ function serve() {
         assert.ok(mine.some((f) => expect.test(f)), `${path} must fail with ${expect}; got: ${mine.join('; ') || 'PASS'}`);
       }
     }
-    console.log(`[benefits-wallet-telemetry-gate] PASS - gate fails on late telemetry, page error, unhydrated, empty, error-boundary and HTTP 404 fixtures, rejects invalid durations, passes a working page`);
+    console.log(`[benefits-wallet-telemetry-gate] PASS - gate fails on late telemetry, page error, unhydrated, empty, error-boundary, HTTP 404, wallet-SDK socket and third-party socket fixtures, rejects invalid durations, passes a working page`);
   } finally {
     server.close();
   }

@@ -104,8 +104,26 @@ async function observe(browser, vp, options, { route, seed }) {
     if (telemetry) return r.abort();
     return r.continue();
   });
-  context.on('websocket', (ws) => {
-    if (recording && hostMatches(ws.url(), WALLET_SDK_DOMAINS)) failures.push(`wallet SDK socket ${ws.url()}`);
+  // WebSockets are Page events in Playwright (BrowserContext has none), so the
+  // listener is attached to every page of the context, including later ones.
+  const sockets = new Set();
+  const baseOrigin = new URL(baseUrl);
+  const onSocket = (url) => {
+    if (!recording || sockets.has(url)) return;
+    sockets.add(url);
+    if (hostMatches(url, WALLET_SDK_DOMAINS)) failures.push(`wallet SDK socket ${url}`);
+    else {
+      const target = new URL(url);
+      const sameApp = target.hostname === baseOrigin.hostname && target.port === baseOrigin.port;
+      if (!sameApp && !hostMatches(url, ALLOWED_THIRD_PARTY)) failures.push(`unexpected third-party socket ${url}`);
+    }
+  };
+  const watchPage = (p) => p.on('websocket', (ws) => onSocket(ws.url()));
+  context.on('page', watchPage);
+  // Wallet SDK sockets never reach the network; they are recorded and closed.
+  await context.routeWebSocket((url) => hostMatches(url.href, WALLET_SDK_DOMAINS), (ws) => {
+    onSocket(ws.url());
+    ws.close();
   });
   const page = await context.newPage();
   page.on('pageerror', (error) => { if (recording) failures.push(`page error: ${String(error.message).slice(0, 160)}`); });
