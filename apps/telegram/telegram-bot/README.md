@@ -53,6 +53,40 @@ Der Bot nutzt die ABIs aus `/abi/` im Root-Repo:
 
 Siehe `.env.example` für alle Variablen.
 
+## Forum topic routing (T-286 / T-286b)
+
+Bot-initiated posts to the community group go through
+`src/services/topicRouter.js` (`sendToGroup(telegram, chatId, category, ...)`).
+The topic IDs are fixed constants in code. They were confirmed by the owner on
+**2026-10-06** (links `t.me/IFR_token/<id>`), so the effective routing can be
+proven from the code alone:
+
+| Topic | ID | Status | Bot categories |
+|---|---|---|---|
+| General | 5 | confirmed 2026-10-06 | `general`, unknown categories |
+| Dev/Builder | 11 | confirmed 2026-10-06 | `dev`, `release` |
+| Council | 21 | confirmed 2026-10-06 | `council`, `governance` |
+| Vote | 23 | confirmed 2026-10-06 | `vote` |
+| CoreDev | 58 | confirmed 2026-10-06 | `coredev` |
+| Roadmap | 13 | confirmed 2026-10-06 | reserved, no bot posts yet |
+| Locks & Assets | 9 | confirmed 2026-10-06 | reserved, no bot posts yet |
+| Announcements | (assumed 1) | **not confirmed** | `announcements` → General (5) for now |
+| Burns | (assumed 7) | **not confirmed** | `burns` → General (5) for now |
+
+- The `TELEGRAM_*_TOPIC_ID` env variables cannot move a post. A value is
+  accepted only if it equals the category's own confirmed ID. Any other value
+  is ignored, the constant is used, and a warning names the variable (never
+  the value). This includes another category's confirmed ID, for example
+  `TELEGRAM_COUNCIL_TOPIC_ID=11`.
+- Thread 1 (Main) is never used for non-announcement posts.
+- If Telegram rejects the topic (400 thread not found / closed / deleted /
+  invalid), the post is retried once in General; there is no fallback into
+  Main. Other errors are not retried.
+- Replies to user commands stay in the thread the command was sent in.
+- Once Announcements and Burns are confirmed, update the `TODO(T-286b)`
+  constants in `topicRouter.js`, the tests in `test/topic-routing.test.js`,
+  `.env.example` and this table.
+
 ## Verify API — CORS-Policy (CWA-39)
 
 Die Verify API (`POST /api/verify`) akzeptiert Browser-Aufrufe ausschließlich
