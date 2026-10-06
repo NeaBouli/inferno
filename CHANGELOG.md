@@ -13,8 +13,9 @@
   light shop design — the `.shop-shell` tokens from `globals.css` (`--shop-paper` #f5f1e8,
   panel, ink, muted, border, ember), `color-scheme: light`, theme-color `#F5F1E8`. The page
   stays static and self-contained: no scripts, `<link>`, `@import`, `url()` or other origins;
-  its only asset (the 192 icon) is precached. Typography uses fixed px sizes (12/16/34 px,
-  nothing scales with the viewport) and zero letter-spacing on all text.
+  its only asset (the 192 icon) is precached. Typography uses fixed px sizes (12/16 px text,
+  heading 34 px and 48 px from an explicit 640 px breakpoint instead of `clamp(…vw…)`) and
+  zero letter-spacing on all text.
 - `fix:` Shop wallet chooser and the fixed Copilot launcher: the "Connect with" box, which
   holds the connector buttons and the WalletConnect hint, ended 1 px left of the launcher at
   820 px and narrower and ran 9 px under it from 821 px (tablet portrait 834 px, 1024 px). A

@@ -8,7 +8,7 @@
     <style>
       /* Static, self-contained offline fallback. Tokens mirror the light shop design in src/app/globals.css
          (.shop-shell); no fonts, scripts or other resources are fetched. Typography uses fixed px sizes (nothing
-         scales with the viewport) and zero letter-spacing on all text. */
+         scales with the viewport; the heading steps up at one explicit breakpoint) and zero letter-spacing. */
       :root {
         --shop-paper: #f5f1e8;
         --shop-panel: #fffdf8;
@@ -45,7 +45,7 @@
 
       main {
         width: min(100%, 560px);
-        padding: 40px 28px;
+        padding: 28px;
         border: 1px solid var(--shop-border);
         border-radius: 24px;
         background: var(--shop-panel);
@@ -125,6 +125,18 @@
       a:focus-visible {
         outline: 3px solid rgba(176, 72, 30, 0.32);
         outline-offset: 3px;
+      }
+
+      /* Fixed steps at an explicit breakpoint instead of viewport-scaled clamp(): phones keep the 34px heading on one
+         line at 375px, wider screens get the original 48px heading and padding. */
+      @media (min-width: 640px) {
+        main {
+          padding: 48px;
+        }
+
+        h1 {
+          font-size: 48px;
+        }
       }
     </style>
   </head>
