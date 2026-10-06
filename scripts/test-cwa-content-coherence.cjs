@@ -40,7 +40,15 @@ forbidText("docs/POINTS_BACKEND_MIGRATION.md", ["15 BPS Discount"]);
 forbidText("docs/CHATGPT_AUDIT_PROMPT_V2.md", ["max 15 bps"]);
 requireText("docs/POINTS_BACKEND_MIGRATION.md", ["5 BPS Discount"]);
 requireText("docs/CHATGPT_AUDIT_PROMPT_V2.md", ["Voucher discount: 5 bps"]);
-requireText("apps/points-backend/README.md", ["0.05% protocol fee discount (5 bps"]);
+requireText("apps/points-backend/README.md", [
+  "currently 5 bps (0.05%)",
+  "Vouchers never affect the IFR token transfer fee or burn.",
+]);
+// T-289: the issuer signs the contract's type and caps the discount at the live on-chain fee.
+requireText("apps/points-backend/src/services/voucher-eip712.ts", ["DiscountVoucher: ["]);
+requireText("apps/points-backend/src/routes/voucher.ts", [
+  "capVoucherDiscountBps(POINTS_CONFIG.voucher, await getProtocolFeeBps())",
+]);
 
 // CWA-58 and CWA-59: current lending and fee-flow copy follows deployed source.
 requireText("docs/wiki/lending-vault.html", [
