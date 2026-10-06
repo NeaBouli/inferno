@@ -92,6 +92,8 @@ async function configureRuntime() {
     IFR_TOKEN_ADDRESS: '0x0000000000000000000000000000000000000002',
     COMMITMENT_VAULT_ADDRESS: '0x0000000000000000000000000000000000000003',
     ADMIN_SECRET: adminSecret,
+    // CI-only key (T-231a): customer identities are stored only as keyed fingerprints.
+    CUSTOMER_WALLET_HMAC_KEY: 'ci-fullstack-customer-wallet-hmac-key-0123456789',
     DATABASE_URL: databaseUrl,
     PORT: String(backendPort),
     ALLOWED_ORIGINS: frontendOrigin,
@@ -383,6 +385,7 @@ async function main() {
       chainId: 1,
       database: 'ok',
       rateLimitStore: 'ok',
+      customerWalletProtection: 'configured',
     });
     const fixture = await seedRealApi();
     await verifyBrowser(fixture);
