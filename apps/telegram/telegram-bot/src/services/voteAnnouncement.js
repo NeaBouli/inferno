@@ -1,7 +1,7 @@
 // services/voteAnnouncement.js — IFR Governance Proposal Announcement Service
 //
 // Monitors Governance contract for proposal lifecycle changes and announces them
-// to Telegram Channel + Community Announcements topic.
+// to Telegram Channel + Community Council topic (governance decisions, T-286).
 //
 // Features:
 // - Polls Governance contract every 30 minutes for new proposals
@@ -12,6 +12,7 @@
 
 const { ethers } = require('ethers');
 const logger = require('./logger');
+const { sendToGroup } = require('./topicRouter');
 
 const GOV_ABI = [
   'function proposalCount() view returns (uint256)',
@@ -49,7 +50,6 @@ function decodeAction(data) {
 async function sendToChannelAndCommunity(bot, msg, govAddress) {
   const channelId = process.env.TELEGRAM_CHANNEL_ID;
   const groupId = process.env.TELEGRAM_GROUP_ID;
-  const topicId = process.env.TELEGRAM_ANNOUNCEMENTS_TOPIC_ID;
 
   const opts = {
     parse_mode: 'Markdown',
@@ -66,9 +66,7 @@ async function sendToChannelAndCommunity(bot, msg, govAddress) {
 
   if (groupId) {
     try {
-      const groupOpts = { ...opts };
-      if (topicId && Number(topicId) > 1) groupOpts.message_thread_id = Number(topicId);
-      await bot.telegram.sendMessage(groupId, msg, groupOpts);
+      await sendToGroup(bot.telegram, groupId, 'council', msg, opts);
     } catch (e) {
       logger.error({ err: e.message }, 'VoteAnnounce: community send failed');
     }

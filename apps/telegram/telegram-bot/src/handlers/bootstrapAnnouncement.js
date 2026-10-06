@@ -1,5 +1,6 @@
 // handlers/bootstrapAnnouncement.js — Automatic Bootstrap start/end announcement + 7-day countdown
 const logger = require('../services/logger');
+const { sendToGroup } = require('../services/topicRouter');
 
 const BOOTSTRAP_START = new Date('2026-03-07T00:00:00Z').getTime();
 const BOOTSTRAP_END   = new Date('2026-06-05T00:00:00Z').getTime();
@@ -23,8 +24,6 @@ async function checkAndAnnounceBootstrap(bot) {
 
   const groupId = process.env.TELEGRAM_GROUP_ID;
   const channelId = process.env.TELEGRAM_CHANNEL_ID;
-  const announceTopic = process.env.TELEGRAM_ANNOUNCEMENTS_TOPIC_ID
-    ? parseInt(process.env.TELEGRAM_ANNOUNCEMENTS_TOPIC_ID, 10) : null;
 
   if (!groupId) {
     logger.warn('TELEGRAM_GROUP_ID not set — bootstrap announcements disabled');
@@ -48,7 +47,7 @@ async function checkAndAnnounceBootstrap(bot) {
       `🌐 *Participate:* [ifrunit.tech/wiki/bootstrap](https://ifrunit.tech/wiki/bootstrap.html)\n\n` +
       `$IFR — Lock. Use. Benefit.`;
 
-    await sendToAll(bot, groupId, channelId, announceTopic, msg);
+    await sendToAll(bot, groupId, channelId, msg);
     logger.info('Bootstrap START announcement sent');
   }
 
@@ -65,7 +64,7 @@ async function checkAndAnnounceBootstrap(bot) {
       `└ IFR/ETH LP will be created on Uniswap\n\n` +
       `🔔 We will announce when finalization is complete.`;
 
-    await sendToAll(bot, groupId, channelId, announceTopic, msg);
+    await sendToAll(bot, groupId, channelId, msg);
     logger.info('Bootstrap END announcement sent');
   }
 }
@@ -78,8 +77,6 @@ async function sendBootstrapCountdown(bot) {
   const now = Date.now();
 
   const groupId = process.env.TELEGRAM_GROUP_ID;
-  const generalTopic = process.env.TELEGRAM_GENERAL_TOPIC_ID
-    ? parseInt(process.env.TELEGRAM_GENERAL_TOPIC_ID, 10) : null;
 
   if (!groupId) return;
 
@@ -99,9 +96,7 @@ async function sendBootstrapCountdown(bot) {
 
   if (msg) {
     try {
-      const opts = { parse_mode: 'Markdown' };
-      if (generalTopic) opts.message_thread_id = generalTopic;
-      await bot.telegram.sendMessage(groupId, msg, opts);
+      await sendToGroup(bot.telegram, groupId, 'general', msg, { parse_mode: 'Markdown' });
       logger.info('Bootstrap countdown sent');
     } catch (err) {
       logger.error({ err: err.message }, 'Failed to send bootstrap countdown');
@@ -156,7 +151,7 @@ function scheduleBootstrapAnnouncements(bot) {
   scheduleNext();
 }
 
-async function sendToAll(bot, groupId, channelId, announceTopic, msg) {
+async function sendToAll(bot, groupId, channelId, msg) {
   const opts = { parse_mode: 'Markdown', disable_web_page_preview: false };
 
   // Channel
@@ -170,9 +165,7 @@ async function sendToAll(bot, groupId, channelId, announceTopic, msg) {
 
   // Community — Announcements topic
   try {
-    const groupOpts = { ...opts };
-    if (announceTopic) groupOpts.message_thread_id = announceTopic;
-    await bot.telegram.sendMessage(groupId, msg, groupOpts);
+    await sendToGroup(bot.telegram, groupId, 'announcements', msg, opts);
   } catch (err) {
     logger.error({ err: err.message }, 'Bootstrap announcement: community send failed');
   }

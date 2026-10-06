@@ -7,6 +7,7 @@
 // metadata-less sources fail closed: nothing is sent and nothing is pinned.
 
 const logger = require('../services/logger');
+const { sendToGroup } = require('../services/topicRouter');
 const { toPlainText, TELEGRAM_MAX_MESSAGE_LENGTH } = require('../services/telegramText');
 
 /**
@@ -41,7 +42,6 @@ async function handleChannelPost(ctx) {
   try {
     const channelRef = process.env.TELEGRAM_CHANNEL_ID;
     const groupId = process.env.TELEGRAM_GROUP_ID;
-    const topicId = process.env.TELEGRAM_ANNOUNCEMENTS_TOPIC_ID;
     // Fail closed: without an explicitly configured trusted source and target
     // group the sync (and with it the auto-pin) stays disabled.
     if (!channelRef || !groupId) return;
@@ -55,13 +55,12 @@ async function handleChannelPost(ctx) {
     // Channel content is untrusted: repost as plain text (no parse_mode) with
     // Telegram's length limit enforced.
     const body = toPlainText(text, TELEGRAM_MAX_MESSAGE_LENGTH - HEADER.length - FOOTER.length);
-    const sentMsg = await ctx.telegram.sendMessage(
+    const sentMsg = await sendToGroup(
+      ctx.telegram,
       groupId,
+      'announcements',
       `${HEADER}${body}${FOOTER}`,
-      {
-        message_thread_id: topicId ? parseInt(topicId, 10) : undefined,
-        disable_web_page_preview: true
-      }
+      { disable_web_page_preview: true }
     );
 
     // Auto-pin only after the trusted repost above succeeded.

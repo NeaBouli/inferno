@@ -1,6 +1,7 @@
 // handlers/verification.js — New member verification gate
 const { Markup } = require('telegraf');
 const logger = require('../services/logger');
+const { sendToGroup } = require('../services/topicRouter');
 
 // pending userId -> { chatId, timeout, messageId }
 const pendingVerifications = new Map();
@@ -154,7 +155,7 @@ async function onVerifyCallback(ctx) {
     `Website: https://ifrunit\\.tech`;
 
   try {
-    await ctx.telegram.sendMessage(chatId, welcomeText, { parse_mode: 'MarkdownV2' });
+    await sendToGroup(ctx.telegram, chatId, 'general', welcomeText, { parse_mode: 'MarkdownV2' });
   } catch (e) {
     logger.warn({ err: e.message }, 'Could not send welcome message');
   }
