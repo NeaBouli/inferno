@@ -250,7 +250,7 @@ npx hardhat test --network sepolia --grep "smoke"
 npx hardhat test
 ```
 
-Expected result on the current baseline: **690 contract tests passing**
+Expected result on the current baseline: **693 contract tests passing**
 
 ---
 

@@ -22,7 +22,7 @@ governance-gated contract path is active.
 - Root is ESM with explicit CommonJS boundaries for legacy scripts and
   standalone test packages. Waffle, Ganache and `solidity-coverage` are no
   longer active root dependencies; native Hardhat 3 coverage is used.
-- Current repository verification: contracts `690/690`, Generator Engine
+- Current repository verification: contracts `693/693`, Generator Engine
   `30/30`, IFR SDK `36/36`.
 - Landing/Wiki wallet browser tests `26/26` and Web3 write-path browser tests
   `45/45` passed. The complete Benefits preflight passed.
