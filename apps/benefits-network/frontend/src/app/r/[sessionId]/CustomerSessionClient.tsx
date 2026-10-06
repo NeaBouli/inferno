@@ -245,7 +245,7 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
   return (
     <AppShell>
       <section className="mx-auto grid min-h-[calc(100vh-6rem)] w-full max-w-3xl place-items-center px-5 pb-16 pt-8">
-        <div className="w-full rounded-[2rem] border border-white/10 bg-white/[0.06] p-6 shadow-2xl shadow-black/30">
+        <div className="shop-launcher-band-clearance-compact w-full rounded-[2rem] border border-white/10 bg-white/[0.06] p-6 shadow-2xl shadow-black/30">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-orange-200/80">

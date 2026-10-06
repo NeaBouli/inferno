@@ -12,12 +12,6 @@ import {
 import { formatProductPrice } from '@/lib/money';
 import { lockSourceRequirement } from '@/lib/lockSource';
 
-function statusTone(status: CustomerProofHistoryItem['status']) {
-  if (status === 'APPROVED' || status === 'REDEEMED') return 'border-green-300/25 bg-green-300/[0.08] text-green-50';
-  if (status === 'REJECTED' || status === 'EXPIRED') return 'border-red-300/25 bg-red-300/[0.08] text-red-200';
-  return 'border-orange-200/25 bg-orange-200/[0.08] text-orange-50';
-}
-
 function formatDate(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
@@ -29,9 +23,14 @@ function formatDate(value: string) {
   });
 }
 
-function recoverSigner(message: string, signature: string) {
-  return recoverMessageAddress({ message, signature: signature as `0x${string}` });
-}
+const verifier = {
+  recover: (message: string, signature: string) =>
+    recoverMessageAddress({ message, signature: signature as `0x${string}` }),
+  sha256Hex: async (text: string) => {
+    const digest = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+    return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+  },
+};
 
 /**
  * Owner decision B (T-231b): customer history exists only on this device. The server keeps no
@@ -52,12 +51,12 @@ export function CustomerProofHistory() {
   }
 
   async function verifyItem(item: CustomerProofHistoryItem) {
-    const result = await verifyCustomerProofReceipt(item, recoverSigner);
+    const result = await verifyCustomerProofReceipt(item, verifier);
     setChecks((current) => ({ ...current, [item.sessionId]: result }));
   }
 
   return (
-    <section className="rounded-[2rem] border border-white/10 bg-white/[0.055] p-5 shadow-2xl shadow-black/25 backdrop-blur">
+    <section data-testid="device-history" className="shop-launcher-band-clearance rounded-[2rem] border border-white/10 bg-white/[0.055] p-5 shadow-2xl shadow-black/25 backdrop-blur">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-200/80">
@@ -99,29 +98,35 @@ export function CustomerProofHistory() {
             const check = checks[item.sessionId];
             return (
               <article key={item.sessionId} data-testid="device-receipt" className="min-w-0 rounded-2xl border border-white/10 bg-black/20 p-4">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h3 className="break-words text-sm font-black text-white">{item.sellerName}</h3>
-                    <p className="mt-1 break-words text-xs leading-5 text-stone-400">
-                      {item.productName} / {item.discountPercent}% / {item.requiredLockIFR.toLocaleString('en-US')} IFR locked
-                      {' '}{lockSourceRequirement(item.lockSource)}
-                      {item.minIFRHeld > 0 ? ` + ${item.minIFRHeld.toLocaleString('en-US')} held` : ''}
-                    </p>
+                <div className="min-w-0">
+                  <p className="text-[0.68rem] font-black uppercase tracking-[0.14em] text-stone-400">
+                    {item.proof ? 'Signed checkout terms' : 'Saved checkout (no signed proof)'}
+                  </p>
+                  <p className="mt-1 break-words text-sm font-black text-white">
+                    {item.productName} / {item.discountPercent}% / {item.requiredLockIFR.toLocaleString('en-US')} IFR locked
+                    {' '}{lockSourceRequirement(item.lockSource)}
+                    {item.minIFRHeld > 0 ? ` + ${item.minIFRHeld.toLocaleString('en-US')} held` : ''}
+                  </p>
+                  <div className="mt-2 grid gap-1 text-xs leading-5 text-stone-400 sm:grid-cols-2">
+                    <p className="break-words">Rule: <span className="text-stone-200">{item.ruleLabel}</span></p>
                     {formatProductPrice(item.basePriceMinor, item.currency) ? (
-                      <p className="mt-1 text-xs text-stone-400">
-                        Reference price: {formatProductPrice(item.basePriceMinor, item.currency)}
-                      </p>
+                      <p>Reference price: <span className="text-stone-200">{formatProductPrice(item.basePriceMinor, item.currency)}</span></p>
                     ) : null}
+                    <p>Wallet: <span className="font-mono text-stone-200">{item.walletLabel}</span></p>
+                    <p>Offer valid until: <span className="text-stone-200">{formatDate(item.expiresAt)}</span></p>
+                    <p className="break-all">Checkout: <span className="font-mono text-stone-200">{item.sessionId}</span></p>
+                    <p className="break-all">Shop ID: <span className="font-mono text-stone-200">{item.businessId}</span></p>
                   </div>
-                  <span className={`rounded-full border px-3 py-1 text-[0.68rem] font-black uppercase tracking-[0.12em] ${statusTone(item.status)}`}>
-                    {item.status}
-                  </span>
                 </div>
-                <div className="mt-3 grid gap-1 text-xs leading-5 text-stone-400 sm:grid-cols-2">
-                  <p>Rule: <span className="text-stone-200">{item.ruleLabel}</span></p>
-                  <p>Wallet: <span className="font-mono text-stone-200">{item.walletLabel}</span></p>
-                  <p>Saved: <span className="text-stone-200">{formatDate(item.savedAt)}</span></p>
-                  {item.redeemedAt ? <p>Redeemed: <span className="text-stone-200">{formatDate(item.redeemedAt)}</span></p> : null}
+                <div data-testid="receipt-unverified-notes" className="mt-3 rounded-xl border border-white/10 p-3 text-xs leading-5 text-stone-400">
+                  <p className="font-black uppercase tracking-[0.12em] text-stone-300">Saved on this device - not verified</p>
+                  <p className="mt-1 break-words">
+                    Seller: <span className="text-stone-200">{item.sellerName}</span>
+                    {' '}/ Last seen status: <span className="text-stone-200">{item.status}</span>
+                    {item.redeemedAt ? <> / Redeemed: <span className="text-stone-200">{formatDate(item.redeemedAt)}</span></> : null}
+                    {' '}/ Saved: <span className="text-stone-200">{formatDate(item.savedAt)}</span>
+                  </p>
+                  <p className="mt-1">Use Check status for the shop&apos;s current answer; your signature does not prove redemption.</p>
                 </div>
                 {check ? (
                   <p
@@ -129,8 +134,8 @@ export function CustomerProofHistory() {
                     className={`mt-3 text-xs font-semibold ${check.ok ? 'text-green-100' : 'text-red-200'}`}
                   >
                     {check.ok
-                      ? 'Signature verified on this device: your wallet signed exactly this checkout. Redemption status comes from the shop.'
-                      : check.reason}
+                      ? 'Signed terms verified on this device: your wallet signed exactly these checkout terms. This does not prove redemption.'
+                      : `Receipt invalid: ${check.reason}`}
                   </p>
                 ) : null}
                 <div className="mt-3 flex flex-wrap gap-2">

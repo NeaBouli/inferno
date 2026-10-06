@@ -641,7 +641,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
               <SellerCustomerPassScanner onPass={setCustomerPassInput} />
             </div>
 
-            <div className="mt-4 grid gap-2 sm:grid-cols-2">
+            <div className="shop-launcher-band-clearance-compact mt-4 grid gap-2 sm:grid-cols-2">
               <button
                 type="button"
                 onClick={startSession}
@@ -924,7 +924,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
           ) : null}
         </div>
 
-        <div className="rounded-[2rem] border border-white/10 bg-stone-100 p-6 text-stone-950 shadow-2xl shadow-black/30">
+        <div className="shop-launcher-band-clearance-compact rounded-[2rem] border border-white/10 bg-stone-100 p-6 text-stone-950 shadow-2xl shadow-black/30">
           {session && (customerUrl || customerPresented) ? (
             <div className="grid gap-5">
               <div className="flex flex-wrap items-center justify-between gap-3">
