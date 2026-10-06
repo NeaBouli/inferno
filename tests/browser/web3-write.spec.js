@@ -2412,3 +2412,169 @@ for (const [width, height] of [[305, 720], [320, 740], [375, 812], [1440, 1000]]
     });
   }
 }
+
+// Web3 e90 follow-up (F1): the fixed Copilot launcher is a 2D box. While the page scrolls, every part of the hero
+// passes its vertical position, so a horizontal-band check alone gives false positives (an element may share the band
+// but never reach the launcher's rows) and misses nothing only by luck. This sweep measures what a visitor hits:
+// at each scroll position it intersects the real launcher rectangle with the rendered text boxes and control boxes of
+// the hero copy, hero actions and the whole access panel, and it asks the browser which element receives a pointer at
+// sample points of each of those boxes (elementFromPoint). Neither may report the launcher. The scroll grid includes
+// scrollY 590, where the e90 release gate observed the 820x1180 "Commitment lock" and 1180x820 footnote interceptions.
+async function sweepLauncherInterception(page) {
+  return page.evaluate(async () => {
+    const settle = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    const launcher = document.querySelector(".copilot-launcher");
+    const shown = () => {
+      const s = getComputedStyle(launcher);
+      return s.display !== "none" && s.visibility !== "hidden" && Number(s.opacity) > 0;
+    };
+    const roots = () => [...document.querySelectorAll(".hero .hero-copy, .hero .hero-actions, .hero .access-panel")]
+      .filter((el) => el.getClientRects().length > 0);
+    const targetsOf = (root) => {
+      const boxes = [];
+      for (const el of root.querySelectorAll("a, button, input, select, label, summary, [role=button]")) {
+        if (!el.getClientRects().length) continue;
+        boxes.push({ kind: "control", label: el.textContent.trim().slice(0, 40) || el.tagName, rect: el.getBoundingClientRect(), owner: el });
+      }
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        if (!node.textContent.trim() || !node.parentElement.getClientRects().length) continue;
+        const range = document.createRange();
+        range.selectNodeContents(node);
+        for (const rect of range.getClientRects()) {
+          if (rect.width > 0 && rect.height > 0) boxes.push({ kind: "text", label: node.textContent.trim().slice(0, 40), rect, owner: node.parentElement });
+        }
+      }
+      return boxes;
+    };
+    const docBoxes = roots().map((el) => el.getBoundingClientRect());
+    const top = Math.min(...docBoxes.map((b) => b.top)) + window.scrollY;
+    const bottom = Math.max(...docBoxes.map((b) => b.bottom)) + window.scrollY;
+    const positions = new Set([590]);
+    for (let y = Math.max(0, Math.floor(top - window.innerHeight)); y <= Math.ceil(bottom); y += 10) positions.add(y);
+    const intersections = new Set();
+    const hitTargets = new Set();
+    const hiddenAt = [];
+    let measured = 0;
+    for (const y of [...positions].sort((a, b) => a - b)) {
+      window.scrollTo({ top: y, behavior: "instant" });
+      await settle();
+      if (!shown()) {
+        hiddenAt.push(window.scrollY);
+        continue;
+      }
+      const z = launcher.getBoundingClientRect();
+      for (const root of roots()) {
+        for (const box of targetsOf(root)) {
+          const r = box.rect;
+          if (r.bottom <= 0 || r.top >= window.innerHeight) continue;
+          measured += 1;
+          if (r.left < z.right && r.right > z.left && r.top < z.bottom && r.bottom > z.top) {
+            intersections.add(`${box.kind} "${box.label}" x${Math.round(r.left)}..${Math.round(r.right)} vs launcher x${Math.round(z.left)}..${Math.round(z.right)}`);
+          }
+          // Pointer hit-test on a 3x3 grid inside the box (1px inset); only points inside the viewport are testable.
+          for (const fx of [0, 0.5, 1]) {
+            for (const fy of [0, 0.5, 1]) {
+              const x = Math.min(r.right - 1, Math.max(r.left + 1, r.left + fx * r.width));
+              const py = Math.min(r.bottom - 1, Math.max(r.top + 1, r.top + fy * r.height));
+              if (x < 0 || py < 0 || x >= window.innerWidth || py >= window.innerHeight) continue;
+              const hit = document.elementFromPoint(x, py);
+              if (hit && launcher.contains(hit)) hitTargets.add(`${box.kind} "${box.label}" -> ${hit.closest("[aria-label]")?.getAttribute("aria-label") || hit.tagName}`);
+            }
+          }
+        }
+      }
+    }
+    window.scrollTo({ top: 0, behavior: "instant" });
+    await settle();
+    // The clearance narrows the panel buttons: every label must stay inside its own button.
+    const overflowingLabels = [];
+    for (const button of document.querySelectorAll(".hero .access-panel .panel-actions .btn, .hero .hero-actions .btn")) {
+      if (!button.getClientRects().length) continue;
+      const b = button.getBoundingClientRect();
+      const range = document.createRange();
+      range.selectNodeContents(button);
+      for (const r of range.getClientRects()) {
+        if (r.width > 0 && (r.left < b.left - 0.5 || r.right > b.right + 0.5)) {
+          overflowingLabels.push(`${button.textContent.trim()} text x${Math.round(r.left)}..${Math.round(r.right)} button x${Math.round(b.left)}..${Math.round(b.right)}`);
+          break;
+        }
+      }
+    }
+    return {
+      overflowingLabels,
+      vw: document.documentElement.clientWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+      positions: positions.size,
+      measured,
+      intersections: [...intersections],
+      hitTargets: [...hitTargets],
+      hiddenAt,
+      reachable: shown(),
+    };
+  });
+}
+
+const E90_WIDTHS = [[305, 720], [320, 740], [375, 812], [390, 844], [820, 1180], [1180, 820], [1440, 1000]];
+for (const [width, height] of E90_WIDTHS) {
+  for (const state of ["disconnected", "connected", "degraded"]) {
+    test(`e90 F1: launcher never intercepts hero copy or access panel while scrolling (${state}, ${width}x${height})`, async ({ browser }) => {
+      const { context, page, writes, pageErrors } = await preparePage(browser, {
+        ...(state === "degraded" ? { readChainId: "0x5" } : {}),
+        contextOptions: { viewport: { width, height } },
+      });
+      // The launcher check opens the Copilot panel; its iframe and web fonts never reach the real network.
+      await page.route(/^https:\/\/(copilot-api\.ifrunit\.tech|fonts\.(googleapis|gstatic)\.com)\//, (route) => route.abort());
+      try {
+        await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+        if (state === "disconnected") {
+          await expect(page.locator("[data-wallet-address]")).toHaveText("Not connected");
+        } else {
+          await connect(page);
+          const expected = state === "degraded" ? "Connected · status unavailable" : "Connected";
+          await expect(page.locator("[data-wallet-state]")).toHaveText(expected, { timeout: 15_000 });
+          await expect(page.locator("[data-wallet-disconnect]")).toBeVisible();
+        }
+        if (state === "degraded") {
+          // The RPC outage notice has its own T-221 gate; dismiss it so the sweep measures the hero itself.
+          const notice = page.locator("#ifr-rpc-error");
+          await expect(notice).toBeVisible({ timeout: 15_000 });
+          await notice.locator("button").click();
+          await expect(notice).toBeHidden();
+        }
+        await page.evaluate(() => document.fonts.ready);
+        const result = await sweepLauncherInterception(page);
+        expect(result.measured, "the sweep measured rendered hero boxes").toBeGreaterThan(100);
+        expect.soft(result.intersections, "no hero text or control box intersects the launcher rectangle").toEqual([]);
+        expect.soft(result.hitTargets, "no hero text or control point is intercepted by the launcher").toEqual([]);
+        expect.soft(result.overflowingLabels, "button labels stay inside their buttons").toEqual([]);
+        expect.soft(result.hiddenAt, "with no dialog open the launcher stays shown at every scroll position").toEqual([]);
+        expect.soft(result.scrollWidth, "no horizontal document overflow").toBeLessThanOrEqual(result.vw);
+        expect(result.reachable, "the launcher stays available for chat").toBe(true);
+        await page.locator(".copilot-launcher").click();
+        await expect(page.locator("[data-copilot-panel]")).toHaveAttribute("aria-hidden", "false");
+        if (process.env.E90_SHOTS) {
+          const fs = require("node:fs");
+          // Viewport captures at the release-gate position (scrollY 590) and with the panel buttons at launcher height.
+          await page.locator("[data-copilot-close]").first().click().catch(() => {});
+          await page.evaluate(() => window.scrollTo({ top: 590, behavior: "instant" }));
+          await page.waitForTimeout(300);
+          await page.screenshot({ path: `${process.env.E90_SHOTS}/web3-${state}-scroll590-${width}x${height}.png` });
+          await page.evaluate(() => {
+            const target = document.querySelector(".access-panel .panel-actions").getBoundingClientRect();
+            const launcher = document.querySelector(".copilot-launcher").getBoundingClientRect();
+            window.scrollTo({ top: window.scrollY + target.bottom - launcher.bottom, behavior: "instant" });
+          });
+          await page.waitForTimeout(300);
+          await page.screenshot({ path: `${process.env.E90_SHOTS}/web3-${state}-panel-at-launcher-${width}x${height}.png` });
+          await page.locator("#access").screenshot({ path: `${process.env.E90_SHOTS}/web3-${state}-access-panel-${width}x${height}.png` });
+          fs.writeFileSync(`${process.env.E90_SHOTS}/web3-${state}-${width}x${height}.json`, JSON.stringify(result, null, 1));
+        }
+        expect(writes, "layout checks never send a wallet write").toEqual([]);
+        expect(pageErrors).toEqual([]);
+      } finally {
+        await context.close();
+      }
+    });
+  }
+}

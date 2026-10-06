@@ -1,5 +1,22 @@
 # Changelog
 
+## [Unreleased] — 2026-10-06 — Web3 e90 residuals: launcher clearance on tablets, tokenomics live supply
+
+### Fixed
+
+- `fix:` Web3 access panel and the fixed Copilot launcher: between 681 and 1300 px the panel content
+  (status notes, "Commitment lock", footnote) ran under the launcher while scrolling (e90 gate: 820x1180 and
+  1180x820 at scrollY 590). The whole panel now keeps a right clearance (68 px there, 62 px on phones, replacing
+  the T-287 button/footnote-only padding); long button labels wrap inside their buttons, on 305-400 px phones the
+  status note moves under its value and the network badge may wrap under the title. Launcher size/position and
+  the dialog hide rule are unchanged. New sweep test: real 2D rectangle intersection plus `elementFromPoint`
+  hit-tests at every scroll position, 7 widths x disconnected/connected/degraded.
+- `fix:` Tokenomics wiki live supply: reads IFR `totalSupply()` through wallet-core's chain-pinned
+  `getReadProvider()` instead of `copilot-api.ifrunit.tech/api/ifr/supply` (blocked by the Web3 CSP and without
+  ACAO for the Web3 origin). Burned = genesis − current supply in BigInt base units (lost IFR is never counted as
+  burned); explicit loading/live/unavailable/error states with recovery on the 60 s refresh; no wallet fallback,
+  no own provider; the redundant API prefetch is removed. No CSP, CORS, host or backend change.
+
 ## [Unreleased] — 2026-10-06 — Benefits wallet connector labels fit at 305 px (release e90e2501 follow-up)
 
 ### Fixed
