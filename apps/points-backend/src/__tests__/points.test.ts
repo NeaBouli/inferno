@@ -105,12 +105,15 @@ async function signedSiweMessage(
 async function run() {
   console.log("\n🔥 Points Backend Tests\n");
   // No chain in unit tests: serve the deployed FeeRouterV1 fee (5 bps) unless a test overrides it.
-  setProtocolFeeReader(async () => 5);
+  const feeReading = (feeBps: number, chainId = BigInt(loadPointsSecurityConfig().chainId)) =>
+    async () => ({ chainId, feeBps });
+  setProtocolFeeReader(feeReading(5));
 
   console.log("Voucher discount cap (T-289):");
   assert(capVoucherDiscountBps({ discountBps: 15, maxDiscountBps: 25 }, 5) === 5, "15 bps config is capped at a 5 bps on-chain fee");
   assert(capVoucherDiscountBps({ discountBps: 5, maxDiscountBps: 5 }, 3) === 3, "discount follows a lowered on-chain fee");
   assert(capVoucherDiscountBps({ discountBps: 5, maxDiscountBps: 5 }, 25) === 5, "a raised fee never raises the configured discount");
+  assert(capVoucherDiscountBps({ discountBps: 15, maxDiscountBps: 5 }, 25) === 5, "maxDiscountBps bounds the configured discount");
   assert(capVoucherDiscountBps(POINTS_CONFIG.voucher, 0) === 0, "a zero on-chain fee yields no discount");
   {
     let threw = false;
@@ -119,7 +122,7 @@ async function run() {
   }
   {
     let reads = 0;
-    setProtocolFeeReader(async () => { reads++; return 5; });
+    setProtocolFeeReader(async () => { reads++; return { chainId: BigInt(loadPointsSecurityConfig().chainId), feeBps: 5 }; });
     const t0 = 1_000_000;
     await getProtocolFeeBps(t0);
     await getProtocolFeeBps(t0 + PROTOCOL_FEE_CACHE_TTL_MS - 1);
@@ -127,11 +130,17 @@ async function run() {
     await getProtocolFeeBps(t0 + PROTOCOL_FEE_CACHE_TTL_MS);
     assert(reads === 2, "fee is re-read after the TTL");
     let fail = true;
-    setProtocolFeeReader(async () => { reads++; if (fail) throw new Error("rpc down"); return 4; });
+    setProtocolFeeReader(async () => { reads++; if (fail) throw new Error("rpc down"); return { chainId: BigInt(loadPointsSecurityConfig().chainId), feeBps: 4 }; });
     await assertRejects(() => getProtocolFeeBps(t0), "fee read failure propagates");
     fail = false;
     assert(await getProtocolFeeBps(t0) === 4, "fee read failure is not cached");
-    setProtocolFeeReader(async () => 5);
+    setProtocolFeeReader(feeReading(5, 1n));
+    await assertRejects(() => getProtocolFeeBps(t0), "fee read from the wrong chain is rejected");
+    setProtocolFeeReader(feeReading(5.5));
+    await assertRejects(() => getProtocolFeeBps(t0), "non-integer fee is rejected");
+    setProtocolFeeReader(feeReading(26));
+    await assertRejects(() => getProtocolFeeBps(t0), "fee above FEE_CAP_BPS is rejected");
+    setProtocolFeeReader(feeReading(5));
   }
 
   console.log("CORS defaults (T-212b-10):");
@@ -408,19 +417,24 @@ async function run() {
     assert(typeof unreadable.data.error === "string" && !("signature" in unreadable.data), "unreadable fee returns no signature");
     await assertNothingIssued("unreadable fee");
 
-    setProtocolFeeReader(async () => 0);
+    setProtocolFeeReader(feeReading(5, 1n));
+    const wrongChain = await api("POST", "/voucher/issue", {}, authToken);
+    assert(wrongChain.status === 503, "fee read from the wrong chain refuses voucher issuance");
+    await assertNothingIssued("wrong-chain fee");
+
+    setProtocolFeeReader(feeReading(0));
     const zeroFee = await api("POST", "/voucher/issue", {}, authToken);
     assert(zeroFee.status === 503, "zero on-chain fee refuses voucher issuance");
     await assertNothingIssued("zero fee");
 
-    setProtocolFeeReader(async () => 3);
+    setProtocolFeeReader(feeReading(3));
     const lowered = await api("POST", "/voucher/issue", {}, authToken);
     assert(lowered.status === 200, "voucher issues under a lowered on-chain fee");
     assert((lowered.data.voucher as { discountBps: number }).discountBps === 3, "issued discount is capped at the on-chain fee");
     const storedLowered = await prisma.voucher.findFirst();
     assert(storedLowered?.discountBps === 3, "stored voucher records the capped discount");
 
-    setProtocolFeeReader(async () => 5);
+    setProtocolFeeReader(feeReading(5));
     await prisma.voucher.deleteMany();
     await prisma.pointEvent.deleteMany({ where: { type: "voucher_redemption" } });
   }

@@ -12,8 +12,9 @@
 - `fix:` At issue time the backend reads `FeeRouterV1.protocolFeeBps` over the chain-pinned RPC
   (cached 60 s, failures never cached) and signs `min(discountBps, maxDiscountBps, protocolFeeBps)`,
   so a future fee change cannot produce vouchers that revert with "Discount exceeds fee". An
-  unreadable or out-of-range fee, or a fee of 0, fails closed with HTTP 503 before any points are
-  deducted. Per-wallet and global daily caps are unchanged.
+  unreadable, out-of-range or wrong-chain fee read, or a fee of 0, fails closed with HTTP 503 before
+  any points are deducted. Per-wallet and global daily caps are unchanged. Residual (documented):
+  already signed vouchers are immutable and a later fee reduction can invalidate them.
 - `docs:` Points README, `DEPLOY.md`, `docs/RAILWAY_ENV.md` and the tokenomics wiki state that a
   voucher waives the FeeRouter protocol (swap) fee up to the current on-chain fee (currently 5 bps,
   0.05%) and never the IFR transfer fee or burn. The deploy docs listed the Sepolia FeeRouter

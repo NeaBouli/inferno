@@ -47,8 +47,10 @@ Server runs on http://localhost:3004
 | `partner_onboarding` | 50 | 1 |
 
 **Voucher threshold:** 100 available points → an EIP-712 signed voucher that waives the FeeRouterV1
-protocol (swap) fee, up to the current on-chain `protocolFeeBps` — currently 5 bps (0.05%).
+protocol (swap) fee, up to the current on-chain `protocolFeeBps` — currently 5 bps (0.05%), so a
+5 bps voucher waives that fee entirely. It only reduces the ETH protocol fee charged by the FeeRouter.
 Vouchers never affect the IFR token transfer fee or burn.
+They are not a swap-price, slippage or shop discount.
 Issuance consumes those 100 points, so `pointsTotal` is the wallet's spendable points balance.
 
 At issue time the backend reads `protocolFeeBps` from `FEE_ROUTER_ADDRESS` over the chain-pinned
@@ -57,6 +59,10 @@ because FeeRouterV1 reverts vouchers above its fee ("Discount exceeds fee"). If 
 read, or is 0, issuance fails closed with HTTP 503 and no points are deducted. The signed type is
 `DiscountVoucher(address user,uint16 discountBps,uint32 maxUses,uint64 expiry,uint256 nonce)`,
 matching `FeeRouterV1.VOUCHER_TYPEHASH`; `test/PointsVoucherParity.test.js` proves acceptance.
+
+Residual: a signed voucher is immutable. If governance lowers `protocolFeeBps` below a voucher's
+`discountBps` before it is redeemed (expiry is 7 days), FeeRouterV1 rejects that voucher; the backend
+does not re-sign or refund it. Redemption state is only known on-chain (`usedNonces`).
 
 ## Rate Limits
 

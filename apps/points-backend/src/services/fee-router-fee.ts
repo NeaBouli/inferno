@@ -8,9 +8,14 @@ const FEE_ROUTER_ABI = ["function protocolFeeBps() view returns (uint16)"];
 /** Successful reads are reused briefly; failures are never cached. */
 export const PROTOCOL_FEE_CACHE_TTL_MS = 60_000;
 
-export type ProtocolFeeReader = () => Promise<number>;
+export interface ProtocolFeeReading {
+  chainId: bigint;
+  feeBps: number;
+}
 
-async function readProtocolFeeFromChain(): Promise<number> {
+export type ProtocolFeeReader = () => Promise<ProtocolFeeReading>;
+
+async function readProtocolFeeFromChain(): Promise<ProtocolFeeReading> {
   if (FEE_ROUTER_ADDRESS === ethers.ZeroAddress) {
     throw new Error("FEE_ROUTER_ADDRESS not configured");
   }
@@ -21,8 +26,12 @@ async function readProtocolFeeFromChain(): Promise<number> {
   );
   try {
     const router = new ethers.Contract(FEE_ROUTER_ADDRESS, FEE_ROUTER_ABI, provider);
-    const feeBps: bigint = await router.protocolFeeBps();
-    return Number(feeBps);
+    // staticNetwork skips chain detection, so confirm the RPC chain with each read.
+    const [chainIdHex, feeBps] = await Promise.all([
+      provider.send("eth_chainId", []) as Promise<string>,
+      router.protocolFeeBps() as Promise<bigint>,
+    ]);
+    return { chainId: BigInt(chainIdHex), feeBps: Number(feeBps) };
   } finally {
     provider.destroy();
   }
@@ -40,7 +49,10 @@ export function setProtocolFeeReader(next?: ProtocolFeeReader): void {
 /** Current FeeRouterV1.protocolFeeBps from the chain-pinned RPC. Throws when unreadable. */
 export async function getProtocolFeeBps(now: number = Date.now()): Promise<number> {
   if (cached && now - cached.readAt < PROTOCOL_FEE_CACHE_TTL_MS) return cached.feeBps;
-  const feeBps = await reader();
+  const { chainId, feeBps } = await reader();
+  if (chainId !== BigInt(pointsSecurityConfig.chainId)) {
+    throw new Error(`FeeRouter fee read from chain ${chainId}, expected ${pointsSecurityConfig.chainId}`);
+  }
   if (!Number.isInteger(feeBps) || feeBps < 0 || feeBps > FEE_ROUTER_FEE_CAP_BPS) {
     throw new Error(`FeeRouter returned an out-of-range protocolFeeBps: ${feeBps}`);
   }
