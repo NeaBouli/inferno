@@ -16,6 +16,7 @@
   ACAO for the Web3 origin). Burned = genesis − current supply in BigInt base units (lost IFR is never counted as
   burned); explicit loading/live/unavailable/error states with recovery on the 60 s refresh; no wallet fallback,
   no own provider; the redundant API prefetch is removed. No CSP, CORS, host or backend change.
+
 ## [Unreleased] — 2026-10-06 — Benefits wallet connector labels fit at 305 px (release e90e2501 follow-up)
 
 ### Fixed
