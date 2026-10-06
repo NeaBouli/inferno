@@ -60,6 +60,9 @@ jobs:
       - name: Verify LendingVault price tooling
         run: npm run test:lending-price
 
+      - name: Verify Model B price-evidence generator and verifier (T-290)
+        run: npm run test:model-b-price-evidence
+
       - name: Run contract and tooling tests
         run: npm run test:contracts:all
 

@@ -1,0 +1,24 @@
+{
+  "reviewedSourceId": "uniswap-v2-twap:chainlink-eth-usd:eur-usd",
+  "pair": "0xbe495e9c0d8cc2dcf95570cf95b63c4844df31a0",
+  "token0": "0x77e99917eca8539c62f509ed1193ac36580a6e7b",
+  "start": {
+    "blockNumber": 26049600,
+    "blockHash": "0x018d7c40abababababababababababababababababababababababababababab",
+    "timestamp": 1790209800,
+    "price0Cumulative": "35917855120426886251494314590495104756328800"
+  },
+  "end": {
+    "blockNumber": 26100000,
+    "blockHash": "0x018e4120abababababababababababababababababababababababababababab",
+    "timestamp": 1790814600,
+    "price0Cumulative": "35986107697883681821171433064301389089666400"
+  },
+  "ethEur": {
+    "source": "chainlink eth/usd 0x5f4ec3df9cbd43714fe2740f5e3616155c5b8419 eur/usd 0xb49f677943bc038e9857d61e7d053caa2c1734c1",
+    "publishedAt": "2026-10-01T00:16:40.000Z",
+    "rate": "241505369862",
+    "decimals": 8
+  },
+  "rounding": "floor"
+}

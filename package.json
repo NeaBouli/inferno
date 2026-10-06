@@ -12,6 +12,7 @@
     "test:browser-ethers6": "node scripts/check-browser-ethers6.cjs",
     "test:mocha-serializer": "mocha --parallel --jobs 2 test/mocha-serializer-compat.test.cjs",
     "test:lending-price": "node scripts/prepare-lending-price-governance.js --self-test",
+    "test:model-b-price-evidence": "node scripts/test-model-b-price-evidence.mjs",
     "smoke:benefits": "node scripts/smoke-benefits-network.js",
     "test:benefits-sw": "node scripts/test-benefits-service-worker.js",
     "test:benefits-offline": "node scripts/test-benefits-offline-shell.js",
