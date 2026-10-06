@@ -16,6 +16,26 @@
   ACAO for the Web3 origin). Burned = genesis − current supply in BigInt base units (lost IFR is never counted as
   burned); explicit loading/live/unavailable/error states with recovery on the 60 s refresh; no wallet fallback,
   no own provider; the redundant API prefetch is removed. No CSP, CORS, host or backend change.
+## [Unreleased] — 2026-10-06 — Benefits wallet connector labels fit at 305 px (release e90e2501 follow-up)
+
+### Fixed
+
+- `fix:` Wallet chooser "Connect with" buttons: since the T-284 launcher clearance the
+  "WalletConnect" label crossed its button at 305/320 px on the customer home and the customer
+  session page (session page also "Coinbase Wallet" and the Connecting... state). Below 640 px the
+  buttons use 8 px side padding (the box 8 px), the label gets a `<wbr>` between camel-case words
+  (`BreakableWalletLabel`, text unchanged) with `overflow-wrap: anywhere` as a last resort, and the
+  session page drops its extra wrapper frame on phones. Launcher clearance (16/26 px), 44 px
+  targets, font sizes and wallet logic unchanged; the seller console chooser gets the same label
+  break hints.
+
+### Tests
+
+- `test:` `npm run test:benefits-wallet-label-fit` (CI: WalletConnect telemetry step) measures
+  each connector label's text box against its button content box and every clipping ancestor,
+  44 px targets and the launcher gap, for the real labels, every button showing the longest
+  labels and the Connecting... state, on customer home, customer session and seller console at
+  305/320/375/768/819/820/821/834/1024/1440 px. Red before (13 failing cases at 305/320), 110/110 after.
 
 ## [Unreleased] — 2026-10-06 — Benefits PWA cache release v25 and light offline page (T-284)
 

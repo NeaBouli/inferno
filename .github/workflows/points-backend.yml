@@ -4,10 +4,14 @@ on:
   push:
     paths:
       - 'apps/points-backend/**'
+      - 'scripts/ops/classify-points-config.py'
+      - 'scripts/ops/test_classify_points_config.py'
       - '.github/workflows/points-backend.yml'
   pull_request:
     paths:
       - 'apps/points-backend/**'
+      - 'scripts/ops/classify-points-config.py'
+      - 'scripts/ops/test_classify_points_config.py'
       - '.github/workflows/points-backend.yml'
 
 permissions:
@@ -36,6 +40,9 @@ jobs:
           node-version: '22'
           cache: 'npm'
           cache-dependency-path: apps/points-backend/package-lock.json
+      - name: Test owner-only config classifier (dummy fixtures)
+        working-directory: .
+        run: PYTHONDONTWRITEBYTECODE=1 python3 scripts/ops/test_classify_points_config.py
       - run: npm ci
       - run: npm run test:dependencies
       - run: npx prisma generate
