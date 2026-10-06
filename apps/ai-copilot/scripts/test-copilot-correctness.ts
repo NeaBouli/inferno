@@ -88,6 +88,23 @@ assert.ok(
   SYSTEM_PROMPTS.dev.includes(`local repository package v${sdkManifest.version}`),
   "Dev prompt must state the SDK manifest version",
 );
+// No prompt, knowledge source or public llms.txt may keep a stale SDK version: every "SDK v0.x" mention
+// states the manifest version.
+const llmsTxt = await readFile(new URL("../../../docs/llms.txt", import.meta.url), "utf8");
+const sdkVersionSurfaces: Array<[string, string]> = [
+  ...Object.entries(SYSTEM_PROMPTS).map(([mode, prompt]) => [`SYSTEM_PROMPTS.${mode}`, String(prompt)] as [string, string]),
+  ["src/context/ifr-knowledge.ts", JSON.stringify(knowledge)],
+  ["docs/llms.txt", llmsTxt],
+];
+for (const [name, text] of sdkVersionSurfaces) {
+  assert.doesNotMatch(text, /SDK v0\.2\b/, `${name} must not state the stale SDK v0.2`);
+  for (const match of text.matchAll(/\bSDK[^\n]{0,40}?\bv(\d+\.\d+(?:\.\d+)?)\b/g)) {
+    assert.ok(
+      sdkManifest.version.startsWith(match[1]) && match[1].split(".").length >= 2,
+      `${name} states SDK v${match[1]}, manifest is ${sdkManifest.version}`,
+    );
+  }
+}
 
 // The Builder score is a configuration heuristic, never an audit or a SAFE verdict.
 const builderFeatures = knowledge.phase5.integrationBuilder.features.join("\n");
