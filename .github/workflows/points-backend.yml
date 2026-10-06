@@ -6,12 +6,20 @@ on:
       - 'apps/points-backend/**'
       - 'scripts/ops/classify-points-config.py'
       - 'scripts/ops/test_classify_points_config.py'
+      - 'scripts/ops/points-env-set-router.py'
+      - 'scripts/ops/test_points_env_set_router.py'
+      - 'scripts/ops/points-issuance-pause.py'
+      - 'scripts/ops/test_points_issuance_pause.py'
       - '.github/workflows/points-backend.yml'
   pull_request:
     paths:
       - 'apps/points-backend/**'
       - 'scripts/ops/classify-points-config.py'
       - 'scripts/ops/test_classify_points_config.py'
+      - 'scripts/ops/points-env-set-router.py'
+      - 'scripts/ops/test_points_env_set_router.py'
+      - 'scripts/ops/points-issuance-pause.py'
+      - 'scripts/ops/test_points_issuance_pause.py'
       - '.github/workflows/points-backend.yml'
 
 permissions:
@@ -43,6 +51,11 @@ jobs:
       - name: Test owner-only config classifier (dummy fixtures)
         working-directory: .
         run: PYTHONDONTWRITEBYTECODE=1 python3 scripts/ops/test_classify_points_config.py
+      - name: Test owner-only incident tools (dummy fixtures)
+        working-directory: .
+        run: |
+          PYTHONDONTWRITEBYTECODE=1 python3 scripts/ops/test_points_env_set_router.py
+          PYTHONDONTWRITEBYTECODE=1 python3 scripts/ops/test_points_issuance_pause.py
       - run: npm ci
       - run: npm run test:dependencies
       - run: npx prisma generate
