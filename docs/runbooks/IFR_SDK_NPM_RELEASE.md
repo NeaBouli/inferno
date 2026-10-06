@@ -1,7 +1,10 @@
 # IFR SDK npm Release Runbook
 
-Status: **NOT PUBLISHED**; publication approved by the project (2026-10-03, Lane 7). First version:
-manual bootstrap; later versions: manually dispatched workflow on protected `main`
+Status: **NOT PUBLISHED**; publication approved by the project (2026-10-03, Lane 7) and confirmed by the
+owner on 2026-10-06 as a public MIT package with provenance and no proprietary lock-in. First version:
+manual bootstrap; later versions: manually dispatched workflow on protected `main`.
+
+Plain-language owner click guide (npmjs.com and GitHub): [`docs/SDK_RELEASE.md`](../SDK_RELEASE.md).
 
 Package: `ifr-sdk`
 
@@ -144,8 +147,11 @@ the registry and refuses every run before the package exists):
 
 1. The owner publishes the version in `apps/sdk/package.json` on the exact reviewed `main` commit
    (currently `0.3.0`) once, locally, signed in as `ifr-protocol` with 2FA and the project alias e-mail:
-   `npm ci && npm test && npm run test:package && npm publish --access public` in `apps/sdk`. No token is
-   created for this. No `sdk-v*` tag or workflow run is used for this version.
+   `npm ci && npm test && npm run test:package && npm publish --access public --provenance=false` in
+   `apps/sdk`. `--provenance=false` is required here: `publishConfig.provenance` is `true` for the workflow,
+   and npm refuses provenance outside a supported CI provider, so a plain local `npm publish` fails before
+   upload. The bootstrap version therefore carries no provenance attestation; every workflow release does.
+   No token is created for this. No `sdk-v*` tag or workflow run is used for this version.
 2. Immediately configure Trusted Publishing for `ifr-sdk` with all four bindings (see Blocking Release
    Gates) and, in the package settings, require two-factor authentication and disallow tokens.
 3. Verify the bootstrap as in step 4 of the workflow release below; optionally create the marker tag

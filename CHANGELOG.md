@@ -1,5 +1,24 @@
 # Changelog
 
+## [Unreleased] — 2026-10-06 — IFR SDK npm publish path (T-288)
+
+### Added
+
+- `docs:` `docs/SDK_RELEASE.md`: plain-language one-time owner setup for publishing `ifr-sdk`
+  (public MIT package, provenance, no long-lived npm token): GitHub environment `npm-release`
+  (required reviewer, branch `main` only, no secrets), npm account preparation, the single manual
+  `0.3.0` bootstrap, and the npm Trusted Publisher binding (`NeaBouli/inferno`, `sdk-publish.yml`,
+  `npm-release`) with "require 2FA and disallow tokens".
+- `ci:` `IFR SDK CI` now shows the exact tarball listing and runs `npm publish --dry-run` on every
+  PR touching `apps/sdk` (no registry write; the file allowlist stays enforced by `test:package`).
+
+### Fixed
+
+- `docs:` SDK release runbook: the bootstrap command now uses `npm publish --access public
+  --provenance=false`. With `publishConfig.provenance: true`, a local `npm publish` stops with
+  `EUSAGE Automatic provenance generation not supported`, so the documented bootstrap would have
+  failed. Records the owner decision of 2026-10-06.
+
 ## [Unreleased] — 2026-10-06 — Web3 narrow hero in degraded wallet state (T-285)
 
 ### Fixed
