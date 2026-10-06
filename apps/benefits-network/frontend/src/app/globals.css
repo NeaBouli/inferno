@@ -480,6 +480,13 @@ textarea {
     width: 54px;
     height: 54px;
   }
+
+  /* T-284: the wallet chooser's "Connect with" box (connector buttons and the WalletConnect hint) ended 1px left of
+     the fixed launcher band (54px at 16px below 821px), so the launcher sat on its border at the end of the hint.
+     A right margin keeps a visible gap while scrolling; the outer panels only lend their padding to the band. */
+  .shop-launcher-clearance {
+    margin-right: 16px;
+  }
 }
 
 @media (max-width: 420px) {

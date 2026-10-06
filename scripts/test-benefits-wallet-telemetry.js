@@ -168,6 +168,26 @@ async function observe(browser, vp, options, { route, seed }) {
           failures.push(`WalletConnect connector missing (ids="${ids}"); build with NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`);
         }
       }
+      // T-284: on phones the fixed Copilot launcher must not sit on the "Connect with" box or the WalletConnect
+      // hint at its end. Hint text boxes stay left of the launcher band and the box keeps a visible 12px gap.
+      if (ready && expectWalletConnect && vp.viewport.width < 821) {
+        const clearance = await page.evaluate(() => {
+          const launcher = document.querySelector('.shop-copilot-button');
+          const hint = document.querySelector('[data-walletconnect-hint]');
+          const box = document.querySelector('[data-wallet-connect-with]');
+          if (!launcher || !hint || !box) return { missing: true };
+          const band = launcher.getBoundingClientRect();
+          const range = document.createRange();
+          range.selectNodeContents(hint);
+          const textRight = Math.max(...[...range.getClientRects()].map((r) => r.right));
+          return { launcherLeft: band.left, textRight, boxRight: box.getBoundingClientRect().right };
+        });
+        if (clearance.missing) failures.push('wallet chooser hint, Connect-with box or Copilot launcher missing');
+        else {
+          if (clearance.textRight > clearance.launcherLeft) failures.push(`WalletConnect hint text reaches the launcher band (${Math.round(clearance.textRight)} > ${Math.round(clearance.launcherLeft)})`);
+          if (clearance.boxRight > clearance.launcherLeft - 12) failures.push(`Connect-with box ends ${Math.round(clearance.launcherLeft - clearance.boxRight)}px before the launcher band (needs >= 12px)`);
+        }
+      }
     }
 
     const started = Date.now();

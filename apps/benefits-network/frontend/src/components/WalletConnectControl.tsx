@@ -290,7 +290,7 @@ export function WalletConnectControl() {
           </div>
           {copyStatus ? <p className="text-xs font-semibold text-orange-100">{copyStatus}</p> : null}
           {availableConnectors.length > 0 ? (
-            <div className="rounded-xl border border-orange-200/15 bg-white/[0.04] p-3">
+            <div data-wallet-connect-with className="shop-launcher-clearance rounded-xl border border-orange-200/15 bg-white/[0.04] p-3">
               <p className="text-xs font-black uppercase tracking-[0.12em] text-orange-100">
                 Connect with
               </p>
@@ -308,7 +308,7 @@ export function WalletConnectControl() {
                 ))}
               </div>
               {hasWalletConnectProjectId ? (
-                <p className="mt-2 text-xs leading-5 text-stone-400">
+                <p data-walletconnect-hint className="mt-2 text-xs leading-5 text-stone-400">
                   WalletConnect is for another device or a wallet scanner. Scan a QR shown on another screen inside the wallet app, never with the normal camera. On this phone, use Open in wallet app above instead of opening a raw wc: link.
                 </p>
               ) : null}
