@@ -24,7 +24,7 @@ workflow) to a package that already exists on npm. So:
 ## Order of the steps
 
 | # | Where | What | When |
-|---|-------|------|------|
+| --- | --- | --- | --- |
 | A | GitHub | Create the protected environment `npm-release` | any time, before the first workflow release |
 | B | npmjs.com | Prepare the publisher account `ifr-protocol` (2FA, project e-mail) | before the bootstrap |
 | C | Terminal + npmjs.com | Bootstrap publish of `0.3.0` | after an explicit "yes" from the owner |
