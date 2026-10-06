@@ -613,8 +613,52 @@ async function run() {
 
     // Need VOUCHER_SIGNER_PRIVATE_KEY for this test
     if (process.env.VOUCHER_SIGNER_PRIVATE_KEY) {
-      const { status, data } = await api("POST", "/voucher/issue", {}, authToken);
+      // Success logging carries only constant fields: no wallet, signature or nonce (T-289c).
+      const successLogs: unknown[][] = [];
+      const originalConsoleLog = console.log;
+      const originalConsoleInfo = console.info;
+      const originalConsoleWarn = console.warn;
+      const originalConsoleErrorOnSuccess = console.error;
+      const captureLog = (...args: unknown[]) => { successLogs.push(args); };
+      console.log = captureLog;
+      console.info = captureLog;
+      console.warn = captureLog;
+      console.error = captureLog;
+      let issued: Awaited<ReturnType<typeof api>>;
+      try {
+        issued = await api("POST", "/voucher/issue", {}, authToken);
+      } finally {
+        console.log = originalConsoleLog;
+        console.info = originalConsoleInfo;
+        console.warn = originalConsoleWarn;
+        console.error = originalConsoleErrorOnSuccess;
+      }
+      const { status, data } = issued;
       assert(status === 200, "voucher issued at threshold");
+      const successLogText = successLogs.map((args) => args.map(String).join(" ")).join("\n");
+      const issuedVoucher = data.voucher as { nonce: string; discountBps: number };
+      assert(
+        successLogs.length === 1 &&
+          successLogText === `[VOUCHER] issued=true discountBps=${issuedVoucher.discountBps}`,
+        "voucher success logs exactly the constant fields",
+      );
+      const successLogLower = successLogText.toLowerCase();
+      assert(
+        !successLogLower.includes(TEST_WALLET.toLowerCase()) &&
+          !successLogText.includes(ethers.getAddress(TEST_WALLET)) &&
+          !successLogLower.includes(TEST_WALLET.slice(2, 10).toLowerCase()),
+        "voucher success log omits the wallet (lowercase and checksummed)",
+      );
+      assert(
+        typeof data.signature === "string" &&
+          !successLogLower.includes((data.signature as string).toLowerCase()) &&
+          !successLogLower.includes((data.signature as string).slice(2, 12).toLowerCase()),
+        "voucher success log omits the signature",
+      );
+      assert(
+        !successLogText.includes(issuedVoucher.nonce) && !successLogText.includes(issuedVoucher.nonce.slice(0, 8)),
+        "voucher success log omits the nonce",
+      );
       assert(typeof data.signature === "string", "voucher has signature");
       assert((data.voucher as { discountBps: number }).discountBps === POINTS_CONFIG.voucher.discountBps, "voucher discountBps correct");
       const issuedNonce = (data.voucher as { nonce: string }).nonce;
