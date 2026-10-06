@@ -125,6 +125,14 @@ Benefits seller authorization/session trace (`apps/benefits-network/backend`):
 6. public catalog → `src/routes/businesses.ts::GET /:id{,/rules,/products}`
    (`discoveryRateLimiter`) — Daten: business reference → public profile/rules/products
 
+Pre-routing client-IP hop for every rate limiter above: TCP peer (Traefik / Next.js
+frontend on private Docker networks) + `X-Forwarded-For` → `src/index.ts`
+`app.set('trust proxy', TRUSTED_PROXY_SUBNETS)` (`middleware/rateLimiter.ts`:
+`loopback`, `linklocal`, `uniquelocal`) → Express `req.ip` (proxy-addr) →
+`middleware/rateLimiter.ts::clientIpRateLimitKey` — Daten: first untrusted hop →
+IPv4 address / IPv6 `/64` key. Frontend build hop: PostCSS (Tailwind,
+postcss-selector-parser, source-map-js) runs at build time on trusted CSS only.
+
 Web3 browser runtime trace (`docs/web3/index.html`, landing + wiki pages):
 
 1. page `<script>` tags → `docs/web3-wallet-core.js` (`/web3/` dApp) or
