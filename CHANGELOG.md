@@ -1,5 +1,38 @@
 # Changelog
 
+## [Unreleased] — 2026-10-06 — IFR SDK npm publish path (T-288)
+
+### Added
+
+- `docs:` `docs/SDK_RELEASE.md`: plain-language one-time owner setup for publishing `ifr-sdk`
+  (public MIT package, provenance, no long-lived npm token): GitHub environment `npm-release`
+  (required reviewer, branch `main` only, no secrets), npm account preparation, the single manual
+  `0.3.0` bootstrap, and the npm Trusted Publisher binding (`NeaBouli/inferno`, `sdk-publish.yml`,
+  `npm-release`) with "require 2FA and disallow tokens".
+- `ci:` `IFR SDK CI` now shows the exact tarball listing and runs `npm publish --dry-run` on every
+  PR touching `apps/sdk` (no registry write; the file allowlist stays enforced by `test:package`).
+
+### Fixed
+
+- `docs:` SDK release runbook: the bootstrap command now uses `npm publish --access public
+  --provenance=false`. With `publishConfig.provenance: true`, a local `npm publish` stops with
+  `EUSAGE Automatic provenance generation not supported`, so the documented bootstrap would have
+  failed. Records the owner decision of 2026-10-06.
+- `docs:` Bootstrap token handling stated truthfully: `npm login` writes a session token into the
+  npm user config; local bootstrap authentication is distinct from the CI path, which has no
+  `NPM_TOKEN`. The first-version `--provenance=false` publish is a separately approved exception whose
+  action-time approval names version, commit SHA, the seven-file package and the missing provenance.
+- `feat:` `scripts/sdk-bootstrap-publish.sh`: fail-closed one-time bootstrap. Binds the run to the
+  approved version and SHA, uses a private temporary `NPM_CONFIG_USERCONFIG` (no other npm config is
+  read or changed), runs the package checks, `npm login --auth-type=web`, publishes only if
+  `npm whoami` is `ifr-protocol`, keeps the publish exit status, and runs `npm logout` on every exit
+  after a login. The temp config is deleted only after a successful logout and a verified clean file;
+  otherwise HOLD (non-zero) and the file is kept for revocation under npmjs.com Access Tokens.
+- `test:` `scripts/test-sdk-bootstrap-publish.cjs` (dummy npm, throwaway HOME/TMPDIR, run in
+  `IFR SDK CI`): success, approval mismatch, failing `git status`/`rev-parse`, dirty tree, mktemp failure, failed package check, failed login
+  (with and without a written credential), wrong account, publish failure, interruption, logout
+  failure, credential left after logout, unreadable and missing config.
+
 ## [Unreleased] — 2026-10-06 — Web3 narrow hero in degraded wallet state (T-285)
 
 ### Fixed
