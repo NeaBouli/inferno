@@ -110,13 +110,20 @@ trap 'say "Interrupted."; exit 130' INT TERM
 [ "$#" -eq 2 ] || hold "usage: $0 <version> <full-commit-sha>"
 approved_version="$1"
 approved_sha="$2"
-root="$(git -C "$(dirname "$0")" rev-parse --show-toplevel)" || hold "not inside the repository"
+# Every captured value that feeds a decision is assigned on its own line so a failing command stops the run
+# (an exit status inside `[ ... "$(cmd)" ]` would be lost).
+script_dir="$(dirname -- "$0")" || hold "cannot resolve the script directory"
+root="$(git -C "$script_dir" rev-parse --show-toplevel)" || hold "not inside the repository"
+[ -n "$root" ] || hold "empty repository root"
 cd "$root/apps/sdk" || hold "apps/sdk missing"
 head_sha="$(git rev-parse HEAD)" || hold "cannot read HEAD"
+[[ "$head_sha" =~ ^[0-9a-f]{40}$ ]] || hold "unexpected HEAD value"
 [ "$head_sha" = "$approved_sha" ] || hold "HEAD $head_sha is not the approved commit $approved_sha"
-[ -z "$(git status --porcelain)" ] || hold "working tree is not clean"
+status_out="$(git status --porcelain)" || hold "git status failed; cannot prove a clean checkout"
+[ -z "$status_out" ] || hold "working tree is not clean"
 version="$(node -p "require('./package.json').version")" || hold "cannot read package version"
 name="$(node -p "require('./package.json').name")" || hold "cannot read package name"
+[ -n "$version" ] && [ -n "$name" ] || hold "empty package name or version"
 [ "$name" = "$PACKAGE_NAME" ] || hold "package name $name is not $PACKAGE_NAME"
 [ "$version" = "$approved_version" ] || hold "package version $version is not the approved $approved_version"
 

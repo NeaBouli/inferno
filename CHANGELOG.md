@@ -29,7 +29,7 @@
   after a login. The temp config is deleted only after a successful logout and a verified clean file;
   otherwise HOLD (non-zero) and the file is kept for revocation under npmjs.com Access Tokens.
 - `test:` `scripts/test-sdk-bootstrap-publish.cjs` (dummy npm, throwaway HOME/TMPDIR, run in
-  `IFR SDK CI`): success, approval mismatch, mktemp failure, failed package check, failed login
+  `IFR SDK CI`): success, approval mismatch, failing `git status`/`rev-parse`, dirty tree, mktemp failure, failed package check, failed login
   (with and without a written credential), wrong account, publish failure, interruption, logout
   failure, credential left after logout, unreadable and missing config.
 

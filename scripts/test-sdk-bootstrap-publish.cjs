@@ -11,6 +11,8 @@ const { spawnSync } = require("node:child_process");
 
 const script = path.join(__dirname, "sdk-bootstrap-publish.sh");
 const FAKE_TOKEN = "npm_FIXTURE_ONLY_NOT_A_TOKEN";
+const realGit = spawnSync("bash", ["-c", "command -v git"], { encoding: "utf8" }).stdout.trim();
+assert.ok(realGit, "git must be installed");
 
 const stubNpm = `#!/usr/bin/env bash
 echo "$1" >> "$FAKE_LOG"
@@ -60,6 +62,10 @@ function makeFixture() {
   fs.writeFileSync(path.join(repo, "apps", "sdk", "package.json"), JSON.stringify({ name: "ifr-sdk", version: "0.3.0" }));
   fs.copyFileSync(script, path.join(repo, "scripts", "sdk-bootstrap-publish.sh"));
   fs.writeFileSync(path.join(bin, "npm"), stubNpm, { mode: 0o755 });
+  fs.writeFileSync(path.join(bin, "git"), `#!/usr/bin/env bash
+for arg in "$@"; do [ -n "\${FAKE_GIT_FAIL:-}" ] && [ "$arg" = "$FAKE_GIT_FAIL" ] && exit 128; done
+exec "${realGit}" "$@"
+`, { mode: 0o755 });
   git(repo, "init", "-q");
   git(repo, "add", ".");
   git(repo, "-c", "user.name=fixture", "-c", "user.email=fixture@example.invalid", "commit", "-q", "-m", "fixture");
@@ -103,6 +109,22 @@ const cases = [
     assert.notEqual(r.status, 0);
     assert.deepEqual(r.calls, []);
     assert.match(r.output, /HOLD: package version 0.3.0 is not the approved 0.3.1/);
+  }],
+  ["git status fails", { env: { FAKE_GIT_FAIL: "status" } }, (r) => {
+    assert.notEqual(r.status, 0);
+    assert.deepEqual(r.calls, []);
+    assert.deepEqual(r.leftovers, []);
+    assert.match(r.output, /HOLD: git status failed; cannot prove a clean checkout/);
+  }],
+  ["git rev-parse fails", { env: { FAKE_GIT_FAIL: "rev-parse" } }, (r) => {
+    assert.notEqual(r.status, 0);
+    assert.deepEqual(r.calls, []);
+    assert.match(r.output, /HOLD: not inside the repository/);
+  }],
+  ["dirty working tree", { dirty: true }, (r) => {
+    assert.notEqual(r.status, 0);
+    assert.deepEqual(r.calls, []);
+    assert.match(r.output, /HOLD: working tree is not clean/);
   }],
   ["mktemp failure", { env: { TMPDIR: "/nonexistent/ifr-bootstrap-test" } }, (r) => {
     assert.notEqual(r.status, 0);
@@ -181,6 +203,7 @@ for (const [name, options, check] of cases) {
   const fixture = makeFixture();
   try {
     const args = options.args ? [options.args[0], options.args[1] || fixture.sha] : undefined;
+    if (options.dirty) fs.writeFileSync(path.join(fixture.repo, "untracked.txt"), "x");
     check(run(fixture, options.env, args));
     passed += 1;
     console.log(`  ok ${name}`);

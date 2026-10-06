@@ -170,7 +170,7 @@ the registry and refuses every run before the package exists):
    config is deleted only after a successful logout and a verified clean file; otherwise the run ends in
    HOLD (non-zero) and keeps the file so the session can be revoked under npmjs.com -> Access Tokens before
    the file is removed by hand. Credentials are never printed. Fixture tests:
-   `scripts/test-sdk-bootstrap-publish.cjs` (dummy npm; mktemp failure, approval mismatch, failed checks,
+   `scripts/test-sdk-bootstrap-publish.cjs` (dummy npm and git; failing git status or rev-parse, dirty tree, mktemp failure, approval mismatch, failed checks,
    failed login, wrong account, publish failure, interruption, logout failure, credential left, unreadable
    or missing config, success).
 2. Immediately configure Trusted Publishing for `ifr-sdk` with all four bindings (see Blocking Release
