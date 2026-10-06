@@ -146,12 +146,38 @@ npm Trusted Publishing is configured per existing package, so the first version 
 the registry and refuses every run before the package exists):
 
 1. The owner publishes the version in `apps/sdk/package.json` on the exact reviewed `main` commit
-   (currently `0.3.0`) once, locally, signed in as `ifr-protocol` with 2FA and the project alias e-mail:
-   `npm ci && npm test && npm run test:package && npm publish --access public --provenance=false` in
-   `apps/sdk`. `--provenance=false` is required here: `publishConfig.provenance` is `true` for the workflow,
-   and npm refuses provenance outside a supported CI provider, so a plain local `npm publish` fails before
-   upload. The bootstrap version therefore carries no provenance attestation; every workflow release does.
-   No token is created for this. No `sdk-v*` tag or workflow run is used for this version.
+   (currently `0.3.0`) once, locally, signed in as `ifr-protocol` with 2FA and the project alias e-mail.
+   `--provenance=false` is required here: `publishConfig.provenance` is `true` for the workflow, and npm
+   refuses provenance outside a supported CI provider, so a plain local `npm publish` fails before upload.
+   The bootstrap version therefore carries no provenance attestation; every workflow release does.
+   `npm login` writes a **session token** into the npm user config. The bootstrap therefore uses a
+   temporary user config (`NPM_CONFIG_USERCONFIG`, deleted afterwards) so the global `~/.npmrc` is never
+   touched, and runs `npm logout` immediately after the publish, which revokes the token on the registry.
+   No long-lived token is created and nothing is stored in GitHub. No `sdk-v*` tag or workflow run is
+   used for this version. Exact commands, from the repository root:
+
+   ```bash
+   cd apps/sdk
+   npm ci
+   npm test
+   npm run test:package
+   npm pack --dry-run --ignore-scripts   # must list exactly the 7 approved files
+
+   # Temporary npm user config: the session token never touches the global ~/.npmrc.
+   export NPM_CONFIG_USERCONFIG="$(mktemp "${TMPDIR:-/tmp}/ifr-npm-bootstrap.XXXXXX")"
+   npm login --auth-type=web             # browser sign-in as ifr-protocol with 2FA
+   npm whoami                            # must print: ifr-protocol
+   npm publish --access public --provenance=false
+   npm logout                            # revokes the session token on the registry and removes it locally
+
+   # Verify no token is left behind, then delete the temporary config.
+   if grep -q '//registry.npmjs.org/:_authToken' "$NPM_CONFIG_USERCONFIG"; then echo "TOKEN STILL PRESENT - stop"; else echo "temp config: no token"; fi
+   rm -f "$NPM_CONFIG_USERCONFIG"
+   unset NPM_CONFIG_USERCONFIG
+   if grep -q '//registry.npmjs.org/:_authToken' ~/.npmrc 2>/dev/null; then echo "~/.npmrc HAS A TOKEN - check"; else echo "~/.npmrc: no token"; fi
+   ```
+
+   Stop if either check reports a token; revoke it under npmjs.com -> Access Tokens before continuing.
 2. Immediately configure Trusted Publishing for `ifr-sdk` with all four bindings (see Blocking Release
    Gates) and, in the package settings, require two-factor authentication and disallow tokens.
 3. Verify the bootstrap as in step 4 of the workflow release below; optionally create the marker tag

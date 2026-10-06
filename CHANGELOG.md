@@ -18,6 +18,10 @@
   --provenance=false`. With `publishConfig.provenance: true`, a local `npm publish` stops with
   `EUSAGE Automatic provenance generation not supported`, so the documented bootstrap would have
   failed. Records the owner decision of 2026-10-06.
+- `docs:` Bootstrap token handling stated truthfully: `npm login` writes a session token. The
+  bootstrap now uses `npm login --auth-type=web` with a temporary `NPM_CONFIG_USERCONFIG`, runs
+  `npm logout` right after the publish (server-side revocation), verifies that neither the temp
+  config nor `~/.npmrc` holds an `_authToken` for `registry.npmjs.org`, and deletes the temp file.
 
 ## [Unreleased] — 2026-10-06 — Web3 narrow hero in degraded wallet state (T-285)
 
