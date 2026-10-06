@@ -31,8 +31,15 @@ with `restore_refused_file_changed` and leaves the file untouched.
 Changing the file does NOT change the running container: compose reads env_file
 only when the container is (re)created, i.e. at the next reviewed Points release.
 
-Exit codes: 0 ok / nothing to do; 1 apply or verify failed (automatically restored
-from the backup when possible); 2 refused (nothing written).
+Every write after the backup (temp file, chmod/chown, rename, directory fsync,
+read-back verification, post-apply digest) runs as one transaction: on any failure
+the previous env bytes are put back and verified byte-identical with the original
+mode/owner/xattrs, partial digest files are removed, and the tool prints
+`action=<apply|restore>_failed_restored`, or `action=<apply|restore>_failed_restore_unverified`
+plus `incident=stop` when that cannot be verified.
+
+Exit codes: 0 ok / nothing to do; 1 failed (see action= for whether the previous state
+was verified restored); 2 refused before any env write (a backup may exist).
 """
 
 from __future__ import annotations
@@ -464,42 +471,63 @@ def set_router(apply: bool, deps: Deps) -> int:
     deps.out(f"backup={backup}")
     if _read(env_path) != data:
         raise Refuse("env_changed_during_run")
-    try:
-        _swap_in(env_path, new_data, st, xattrs, "router", deps.now)
-    except OSError:
-        deps.out("action=failed")
-        return _auto_restore(env_path, backup, data, st, xattrs, deps)
-    if not _verify(env_path, new_data, st, xattrs):
-        deps.out("action=verify-failed")
-        return _auto_restore(env_path, backup, data, st, xattrs, deps)
-    if _read(backup) != data:
-        deps.out("restore_check=failed")
+    digest = backup.with_name(backup.name + _DIGEST_SUFFIX)
+
+    def after_commit() -> None:
+        if _read(backup) != data:
+            raise OSError("backup changed")
+        # Post-apply state for a later key-scoped restore; private, never printed.
+        _write_new(digest, hashlib.sha256(new_data).hexdigest().encode("ascii") + b"\n",
+                   0o600, st.st_uid, st.st_gid, {})
+
+    result = _transact(env_path, data, new_data, st, xattrs, "router", deps, after_commit, [digest])
+    if result != "ok":
+        _report_failure("apply", result, deps)
         return 1
     deps.out("action=replaced")
     deps.out("after=canonical")
     deps.out("restore_check=identical")
-    digest = backup.with_name(backup.name + _DIGEST_SUFFIX)
-    try:
-        # Post-apply state for a later key-scoped restore; private, never printed.
-        _write_new(digest, hashlib.sha256(new_data).hexdigest().encode("ascii") + b"\n", 0o600, st.st_uid, st.st_gid, {})
-    except OSError:
-        deps.out("postapply_digest=failed")
-        return 1
     deps.out(f"postapply_digest={digest}")
     deps.out("effective=after-next-container-recreate")
     return 0
 
 
-def _auto_restore(env_path: Path, backup: Path, original: bytes, st: os.stat_result, xattrs: dict[str, bytes],
-                  deps: Deps) -> int:
+def _transact(env_path: Path, original: bytes, new_data: bytes, st: os.stat_result, xattrs: dict[str, bytes],
+              tag: str, deps: Deps, after_commit: Optional[Callable[[], None]], owned: Sequence[Path]) -> str:
+    """Replace original with new_data; on ANY failure roll back and verify.
+
+    Returns "ok", "failed_restored" (env verified byte-identical to original with the
+    original mode/owner/xattrs, partial owned files removed) or "failed_restore_unverified".
+    """
     try:
-        if _read(env_path) != original:
-            _swap_in(env_path, _read(backup), st, xattrs, "restore", deps.now)
-    except (OSError, Refuse):
-        deps.out("auto_restore=failed")
-        return 1
-    deps.out("auto_restore=" + ("identical" if _verify(env_path, original, st, xattrs) else "failed"))
-    return 1
+        _swap_in(env_path, new_data, st, xattrs, tag, deps.now)
+        if not _verify(env_path, new_data, st, xattrs):
+            raise OSError("verify")
+        if after_commit is not None:
+            after_commit()
+        return "ok"
+    except Exception:  # noqa: BLE001 - every failure after the backup leads to a verified rollback
+        pass
+    cleaned = True
+    for path in owned:
+        try:
+            if path.exists() or path.is_symlink():
+                path.unlink()
+        except OSError:
+            cleaned = False
+    try:
+        if not _verify(env_path, original, st, xattrs):
+            _swap_in(env_path, original, st, xattrs, f"{tag}-rollback", deps.now)
+    except Exception:  # noqa: BLE001 - verified below; never raw error text
+        pass
+    restored = _verify(env_path, original, st, xattrs) and cleaned
+    return "failed_restored" if restored else "failed_restore_unverified"
+
+
+def _report_failure(op: str, result: str, deps: Deps) -> None:
+    deps.out(f"action={op}_{result}")  # apply|restore _ failed_restored|failed_restore_unverified
+    if result == "failed_restore_unverified":
+        deps.out("incident=stop")
 
 
 def restore(backup_arg: str, apply: bool, deps: Deps) -> int:
@@ -556,15 +584,13 @@ def restore(backup_arg: str, apply: bool, deps: Deps) -> int:
         raise Refuse("restore_refused_file_changed")
     safety = _backup(env_path, current, st, deps.now)
     deps.out(f"pre_restore_backup={safety}")
-    try:
-        _swap_in(env_path, data, st, xattrs, "restore", deps.now)
-    except OSError:
-        deps.out("action=failed")
+    result = _transact(env_path, current, data, st, xattrs, "restore", deps, None, [])
+    if result != "ok":
+        _report_failure("restore", result, deps)
         return 1
-    ok = _verify(env_path, data, st, xattrs)
-    deps.out("action=restored" if ok else "action=verify-failed")
-    deps.out("restore_check=" + ("identical" if ok else "failed"))
-    return 0 if ok else 1
+    deps.out("action=restored")
+    deps.out("restore_check=identical")
+    return 0
 
 
 USAGE = "usage: points-env-set-router.py [--apply] | --restore <backup> [--apply]"

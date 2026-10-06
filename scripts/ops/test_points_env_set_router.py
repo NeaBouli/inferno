@@ -13,6 +13,7 @@ import tempfile
 import unittest
 from contextlib import redirect_stderr
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any, Optional
 from unittest import mock
 
@@ -124,6 +125,9 @@ class EnvSetTests(unittest.TestCase):
     def assertNoLeak(self, fx: Optional[Fixture] = None) -> None:
         fx = fx or self.fx
         text = "\n".join(fx.lines) + fx.err
+        # Random tmp dir names may contain "0x"; paths are not values.
+        for root in (str(Path(fx.tmp.name).resolve()), fx.tmp.name):
+            text = text.replace(root, "<tmp>")
         for s in SENTINELS:
             self.assertNotIn(s, text)
         self.assertNotIn("0x", text)
@@ -292,7 +296,7 @@ class EnvSetTests(unittest.TestCase):
     def test_replace_failure_leaves_original(self) -> None:
         with mock.patch.object(mod.os, "replace", side_effect=OSError("boom SENTINEL-SECRET-JWT")):
             self.assertEqual(self.fx.run("--apply"), 1)
-        self.assertEqual(self.fx.out()["auto_restore"], "identical")
+        self.assertEqual(self.fx.out()["action"], "apply_failed_restored")
         self.assertEqual(self.fx.env_path.read_bytes(), BASE_ENV)
         self.assertFalse(list(self.fx.root.glob("*tmp*")))
         self.assertNoLeak()
@@ -309,9 +313,153 @@ class EnvSetTests(unittest.TestCase):
 
         with mock.patch.object(mod, "_fsync_dir", side_effect=flaky):
             self.assertEqual(self.fx.run("--apply"), 1)
-        self.assertEqual(self.fx.out()["auto_restore"], "identical")
+        self.assertEqual(self.fx.out()["action"], "apply_failed_restored")
         self.assertEqual(self.fx.env_path.read_bytes(), BASE_ENV)
         self.assertEqual(stat.S_IMODE(os.lstat(self.fx.env_path).st_mode), 0o640)
+        self.assertNoLeak()
+
+    # ------------------------------------------- injected failures (apply/restore transaction)
+
+    def assertRolledBack(self, fx: Fixture, original: bytes, category: str = "apply_failed_restored") -> None:
+        out = fx.out()
+        self.assertEqual(out["action"], category)
+        self.assertEqual(fx.env_path.read_bytes(), original)
+        st = os.lstat(fx.env_path)
+        self.assertEqual(stat.S_IMODE(st.st_mode), 0o640)
+        self.assertEqual((st.st_uid, st.st_gid), (os.getuid(), os.getgid()))
+        self.assertFalse(list(fx.root.glob("*tmp*")))
+        self.assertFalse(list(fx.root.glob("*.postapply-sha256")))
+        self.assertNoLeak(fx)
+
+    def _apply_with(self, target: str, side_effect: Any) -> int:
+        with mock.patch.object(*self._split(target), side_effect=side_effect):
+            return self.fx.run("--apply")
+
+    @staticmethod
+    def _split(target: str) -> tuple[Any, str]:
+        if target.startswith("os."):
+            return mod.os, target[3:]
+        return mod, target
+
+    def test_inject_rename_failure(self) -> None:
+        self.assertEqual(self._apply_with("os.replace", OSError("rename SENTINEL-SECRET-JWT")), 1)
+        self.assertRolledBack(self.fx, BASE_ENV)
+
+    def test_inject_chmod_failure(self) -> None:
+        real = os.fchmod
+        calls = {"n": 0}
+
+        def after_backup(fd: int, mode: int) -> None:
+            calls["n"] += 1
+            if calls["n"] > 1:  # call 1 = backup; later = env temp file
+                raise PermissionError("chmod")
+            real(fd, mode)
+
+        self.assertEqual(self._apply_with("os.fchmod", after_backup), 1)
+        self.assertRolledBack(self.fx, BASE_ENV)
+
+    def test_inject_chown_failure(self) -> None:
+        real_fstat = os.fstat
+
+        calls = {"n": 0}
+
+        def foreign_owner(fd: int) -> Any:
+            calls["n"] += 1
+            st = real_fstat(fd)
+            if calls["n"] == 1:  # backup keeps the real owner
+                return st
+            return SimpleNamespace(st_uid=st.st_uid + 4242, st_gid=st.st_gid)
+
+        with mock.patch.object(mod.os, "fstat", side_effect=foreign_owner), \
+                mock.patch.object(mod.os, "fchown", side_effect=PermissionError("chown")):
+            self.assertEqual(self.fx.run("--apply"), 1)
+        self.assertRolledBack(self.fx, BASE_ENV)
+
+    def test_inject_fsync_failure_after_rename(self) -> None:
+        real = mod._fsync_dir
+        calls = {"n": 0}
+
+        def first_fails(d: Path) -> None:
+            calls["n"] += 1
+            if calls["n"] == 1:
+                raise OSError("fsync")
+            real(d)
+
+        self.assertEqual(self._apply_with("_fsync_dir", first_fails), 1)
+        self.assertRolledBack(self.fx, BASE_ENV)
+
+    def test_inject_checksum_write_failure_after_rename(self) -> None:
+        real = mod._write_new
+
+        def partial_digest(path: Path, data: bytes, *rest: Any) -> None:
+            if path.name.endswith(".postapply-sha256"):
+                path.write_bytes(data[:10])  # partial file, then failure
+                raise OSError("disk full")
+            real(path, data, *rest)
+
+        self.assertEqual(self._apply_with("_write_new", partial_digest), 1)
+        self.assertRolledBack(self.fx, BASE_ENV)
+
+    def test_inject_verification_read_failure(self) -> None:
+        real = mod._verify
+        calls = {"n": 0}
+
+        def first_false(*args: Any) -> bool:
+            calls["n"] += 1
+            return False if calls["n"] == 1 else bool(real(*args))
+
+        self.assertEqual(self._apply_with("_verify", first_false), 1)
+        self.assertRolledBack(self.fx, BASE_ENV)
+
+    def test_inject_rollback_failure_is_unverified_incident(self) -> None:
+        real = os.replace
+        calls = {"n": 0}
+
+        def only_first(src: Any, dst: Any) -> None:
+            calls["n"] += 1
+            if calls["n"] > 1:
+                raise OSError("rename")
+            real(src, dst)
+
+        real_fsync = mod._fsync_dir
+        fs = {"n": 0}
+
+        def fsync_first_fails(d: Path) -> None:
+            fs["n"] += 1
+            if fs["n"] == 1:
+                raise OSError("fsync")
+            real_fsync(d)
+
+        with mock.patch.object(mod.os, "replace", side_effect=only_first), \
+                mock.patch.object(mod, "_fsync_dir", side_effect=fsync_first_fails):
+            self.assertEqual(self.fx.run("--apply"), 1)
+        out = self.fx.out()
+        self.assertEqual(out["action"], "apply_failed_restore_unverified")
+        self.assertEqual(out["incident"], "stop")
+        self.assertNotIn("restore_check", out)
+        self.assertNoLeak()
+
+    def test_inject_failure_after_restore_rename_returns_pre_restore_state(self) -> None:
+        self.assertEqual(self.fx.run("--apply"), 0)
+        backup = self.fx.out()["backup"]
+        applied = self.fx.env_path.read_bytes()
+        self.fx.now += 60
+        real = mod._fsync_dir
+        calls = {"n": 0}
+
+        def first_fails(d: Path) -> None:
+            calls["n"] += 1
+            if calls["n"] == 1:
+                raise OSError("fsync")
+            real(d)
+
+        with mock.patch.object(mod, "_fsync_dir", side_effect=first_fails):
+            self.assertEqual(self.fx.run("--restore", backup, "--apply"), 1)
+        out = self.fx.out()
+        self.assertEqual(out["action"], "restore_failed_restored")
+        self.assertEqual(self.fx.env_path.read_bytes(), applied)
+        self.assertEqual(stat.S_IMODE(os.lstat(self.fx.env_path).st_mode), 0o640)
+        self.assertFalse(list(self.fx.root.glob("*tmp*")))
         self.assertNoLeak()
 
     def test_refusals(self) -> None:
