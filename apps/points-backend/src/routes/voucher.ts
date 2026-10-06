@@ -109,7 +109,8 @@ router.post("/issue", requireAuth, requireLockProof, async (req: AuthRequest, re
       return voucherSignature;
     });
 
-    console.log(`[VOUCHER] wallet=${wallet} issued=true discount=${voucherData.discountBps}bps nonce=${nonce.slice(0, 8)}...`);
+    // Constant fields only: never log the wallet, signature, nonce or any customer identifier (T-289c).
+    console.log(`[VOUCHER] issued=true discountBps=${voucherData.discountBps}`);
     res.json({ voucher: voucherData, signature });
   } catch (err) {
     if (err instanceof VoucherIssueError) {
