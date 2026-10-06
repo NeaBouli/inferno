@@ -868,10 +868,10 @@
       </ul>
 
       <!-- Live Supply Widget -->
-      <div style="background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px 20px; margin:20px 0;">
+      <div data-supply-widget data-supply-state="loading" style="background:var(--card); border:1px solid var(--border); border-radius:10px; padding:16px 20px; margin:20px 0;">
         <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px; font-size:13px; color:var(--muted);">
-          <span id="tokenomics-dot" style="width:8px; height:8px; border-radius:50%; background:#22c55e; animation:pulse-dot 2s ease-in-out infinite;"></span>
-          <span id="live-tokenomics-timestamp">Connecting to Ethereum Mainnet&hellip;</span>
+          <span id="tokenomics-dot" style="width:8px; height:8px; border-radius:50%; background:#9ca3af; animation:pulse-dot 2s ease-in-out infinite;"></span>
+          <span id="live-tokenomics-timestamp" aria-live="polite">Connecting to Ethereum Mainnet&hellip;</span>
         </div>
         <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px;">
           <div>
@@ -1530,46 +1530,80 @@ if (from != address(0) && to != address(0)
 
 <!-- Live Supply Tracking -->
 <script>
+// Reads IFR totalSupply() through wallet-core's chain-pinned Mainnet read provider (every endpoint must answer
+// eth_chainId 0x1 first). No API proxy, no wallet provider, no provider of its own: if the read provider is missing or
+// no endpoint is usable the widget says so instead of showing numbers. Burned = genesis - current supply, in base
+// units (BigInt, 9 decimals); tokens that are lost or held elsewhere are never counted as burned.
 (function() {
-  var PROXY = 'https://copilot-api.ifrunit.tech';
-  var GENESIS = 1000000000;
+  var IFR_TOKEN = '0x77e99917Eca8539c62F509ED1193ac36580A6e7B';
+  var UNIT = BigInt(1000000000); // 10^9 base units per IFR
+  var GENESIS = BigInt(1000000000) * UNIT;
+  var widget = document.querySelector('[data-supply-widget]');
+  var inFlight = false;
 
-  function fmtNum(n) {
-    return n.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  function el(id) { return document.getElementById(id); }
+
+  function wholeIfr(units) {
+    return ((units + UNIT / BigInt(2)) / UNIT).toLocaleString('en-US') + ' IFR';
+  }
+
+  function percentOfGenesis(units) {
+    // percent with 4 decimals, rounded half up: units / GENESIS * 100 * 10^4
+    var scaled = (units * BigInt(1000000) + GENESIS / BigInt(2)) / GENESIS;
+    var whole = scaled / BigInt(10000);
+    var frac = (scaled % BigInt(10000)).toString();
+    while (frac.length < 4) frac = '0' + frac;
+    return whole.toString() + '.' + frac + '%';
+  }
+
+  function render(state, message, values) {
+    if (widget) widget.setAttribute('data-supply-state', state);
+    var dot = el('tokenomics-dot');
+    if (dot) dot.style.background = state === 'live' ? '#22c55e' : (state === 'loading' ? '#9ca3af' : '#ef4444');
+    var stamp = el('live-tokenomics-timestamp');
+    if (stamp) stamp.textContent = message;
+    var dash = '\u2014';
+    if (el('live-total-supply')) el('live-total-supply').textContent = values ? values.supply : dash;
+    if (el('live-burned')) el('live-burned').textContent = values ? values.burned : dash;
+    if (el('live-burn-pct')) el('live-burn-pct').textContent = values ? values.pct : dash;
   }
 
   function loadTokenomicsLive() {
-    fetch(PROXY + '/api/ifr/supply')
-      .then(function(r) { return r.json(); })
-      .then(function(data) {
-        if (!data || !data.totalSupply) return;
-        var totalSupply = data.totalSupply;
-        var burned = data.burned || (GENESIS - totalSupply);
-        var pct = (burned / GENESIS * 100);
-
-        var tsEl = document.getElementById('live-total-supply');
-        var brEl = document.getElementById('live-burned');
-        var bpEl = document.getElementById('live-burn-pct');
-        var dot = document.getElementById('tokenomics-dot');
-        var stamp = document.getElementById('live-tokenomics-timestamp');
-
-        if (tsEl) tsEl.textContent = fmtNum(Math.round(totalSupply)) + ' IFR';
-        if (brEl) brEl.textContent = fmtNum(Math.round(burned)) + ' IFR';
-        if (bpEl) bpEl.textContent = pct.toFixed(4) + '%';
-        if (dot) dot.style.background = '#22c55e';
-        if (stamp) stamp.textContent = 'Live via copilot-api.ifrunit.tech \u2192 Ethereum \u2014 ' +
-          new Date().toLocaleString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    if (inFlight) return;
+    var wallet = window.IFRWallet;
+    if (typeof window.ethers === 'undefined' || !wallet || typeof wallet.getReadProvider !== 'function') {
+      render('unavailable', 'Live supply unavailable \u2014 the Mainnet read provider did not load. Refresh to retry.', null);
+      return;
+    }
+    inFlight = true;
+    var provider;
+    try {
+      provider = wallet.getReadProvider();
+    } catch (e) {
+      provider = null;
+    }
+    if (!provider) {
+      inFlight = false;
+      render('unavailable', 'Live supply unavailable \u2014 the Mainnet read provider did not load. Refresh to retry.', null);
+      return;
+    }
+    var token = new window.ethers.Contract(IFR_TOKEN, ['function totalSupply() view returns (uint256)'], provider);
+    token.totalSupply()
+      .then(function(value) {
+        var supply = BigInt(value.toString());
+        if (supply <= BigInt(0) || supply > GENESIS) throw new Error('totalSupply outside 0..genesis');
+        var burned = GENESIS - supply;
+        render('live', 'Live from Ethereum Mainnet (IFR totalSupply) \u2014 ' +
+          new Date().toLocaleString('de-DE', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit', second:'2-digit' }),
+          { supply: wholeIfr(supply), burned: wholeIfr(burned), pct: percentOfGenesis(burned) });
       })
       .catch(function() {
-        var dot = document.getElementById('tokenomics-dot');
-        var stamp = document.getElementById('live-tokenomics-timestamp');
-        if (dot) dot.style.background = '#ef4444';
-        if (stamp) stamp.textContent = 'Connection failed \u2014 retry in 60s';
-      });
+        render('error', 'Ethereum Mainnet data unavailable \u2014 retry in 60s', null);
+      })
+      .then(function() { inFlight = false; });
   }
 
-  fetch(PROXY + '/api/ifr/supply').catch(function() {});
-  setTimeout(loadTokenomicsLive, 1000);
+  loadTokenomicsLive();
   setInterval(loadTokenomicsLive, 60000);
 })();
 </script>
