@@ -16,6 +16,12 @@ import {
 import { MAX_OUTSTANDING_NONCES } from "../routes/auth.js";
 import { POINTS_CONFIG } from "../config/points.js";
 import { getSignerAddress } from "../services/voucher-signer.js";
+import { capVoucherDiscountBps } from "../services/voucher-eip712.js";
+import {
+  getProtocolFeeBps,
+  PROTOCOL_FEE_CACHE_TTL_MS,
+  setProtocolFeeReader,
+} from "../services/fee-router-fee.js";
 import { ethers } from "ethers";
 import { SiweMessage } from "siwe";
 import {
@@ -98,6 +104,35 @@ async function signedSiweMessage(
 
 async function run() {
   console.log("\n🔥 Points Backend Tests\n");
+  // No chain in unit tests: serve the deployed FeeRouterV1 fee (5 bps) unless a test overrides it.
+  setProtocolFeeReader(async () => 5);
+
+  console.log("Voucher discount cap (T-289):");
+  assert(capVoucherDiscountBps({ discountBps: 15, maxDiscountBps: 25 }, 5) === 5, "15 bps config is capped at a 5 bps on-chain fee");
+  assert(capVoucherDiscountBps({ discountBps: 5, maxDiscountBps: 5 }, 3) === 3, "discount follows a lowered on-chain fee");
+  assert(capVoucherDiscountBps({ discountBps: 5, maxDiscountBps: 5 }, 25) === 5, "a raised fee never raises the configured discount");
+  assert(capVoucherDiscountBps(POINTS_CONFIG.voucher, 0) === 0, "a zero on-chain fee yields no discount");
+  {
+    let threw = false;
+    try { capVoucherDiscountBps(POINTS_CONFIG.voucher, 26); } catch { threw = true; }
+    assert(threw, "a fee above FEE_CAP_BPS is rejected as unreadable");
+  }
+  {
+    let reads = 0;
+    setProtocolFeeReader(async () => { reads++; return 5; });
+    const t0 = 1_000_000;
+    await getProtocolFeeBps(t0);
+    await getProtocolFeeBps(t0 + PROTOCOL_FEE_CACHE_TTL_MS - 1);
+    assert(reads === 1, "fee read is cached within the TTL");
+    await getProtocolFeeBps(t0 + PROTOCOL_FEE_CACHE_TTL_MS);
+    assert(reads === 2, "fee is re-read after the TTL");
+    let fail = true;
+    setProtocolFeeReader(async () => { reads++; if (fail) throw new Error("rpc down"); return 4; });
+    await assertRejects(() => getProtocolFeeBps(t0), "fee read failure propagates");
+    fail = false;
+    assert(await getProtocolFeeBps(t0) === 4, "fee read failure is not cached");
+    setProtocolFeeReader(async () => 5);
+  }
 
   console.log("CORS defaults (T-212b-10):");
   assert(resolveAllowedOrigins({ NODE_ENV: "production" }).length === 0, "production without ALLOWED_ORIGINS refuses cross-origin");
@@ -349,6 +384,45 @@ async function run() {
     assert(status === 400, "voucher below threshold is rejected");
     const belowThreshold = await prisma.wallet.findUniqueOrThrow({ where: { address: TEST_WALLET } });
     assert(belowThreshold.pointsTotal === 30, "threshold rejection leaves points unchanged");
+  }
+
+  // ---- On-chain fee guard (T-289): no voucher and no point debit unless the fee is verified ----
+  if (process.env.VOUCHER_SIGNER_PRIVATE_KEY) {
+    await prisma.wallet.update({
+      where: { address: TEST_WALLET },
+      data: { pointsTotal: POINTS_CONFIG.voucher.threshold },
+    });
+    const assertNothingIssued = async (label: string) => {
+      const w = await prisma.wallet.findUniqueOrThrow({ where: { address: TEST_WALLET } });
+      assert(w.pointsTotal === POINTS_CONFIG.voucher.threshold, `${label}: points are not deducted`);
+      assert(await prisma.voucher.count() === 0, `${label}: no voucher is stored`);
+      assert(
+        await prisma.pointEvent.count({ where: { type: "voucher_redemption" } }) === 0,
+        `${label}: no redemption event is recorded`,
+      );
+    };
+
+    setProtocolFeeReader(async () => { throw new Error("rpc down"); });
+    const unreadable = await api("POST", "/voucher/issue", {}, authToken);
+    assert(unreadable.status === 503, "unreadable on-chain fee refuses voucher issuance");
+    assert(typeof unreadable.data.error === "string" && !("signature" in unreadable.data), "unreadable fee returns no signature");
+    await assertNothingIssued("unreadable fee");
+
+    setProtocolFeeReader(async () => 0);
+    const zeroFee = await api("POST", "/voucher/issue", {}, authToken);
+    assert(zeroFee.status === 503, "zero on-chain fee refuses voucher issuance");
+    await assertNothingIssued("zero fee");
+
+    setProtocolFeeReader(async () => 3);
+    const lowered = await api("POST", "/voucher/issue", {}, authToken);
+    assert(lowered.status === 200, "voucher issues under a lowered on-chain fee");
+    assert((lowered.data.voucher as { discountBps: number }).discountBps === 3, "issued discount is capped at the on-chain fee");
+    const storedLowered = await prisma.voucher.findFirst();
+    assert(storedLowered?.discountBps === 3, "stored voucher records the capped discount");
+
+    setProtocolFeeReader(async () => 5);
+    await prisma.voucher.deleteMany();
+    await prisma.pointEvent.deleteMany({ where: { type: "voucher_redemption" } });
   }
 
   // ---- Reach Threshold and Issue Voucher ----

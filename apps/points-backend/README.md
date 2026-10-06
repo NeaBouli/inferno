@@ -46,9 +46,17 @@ Server runs on http://localhost:3004
 | `guide_lock` | 30 | 1 |
 | `partner_onboarding` | 50 | 1 |
 
-**Voucher threshold:** 100 available points → 0.05% protocol fee discount (5 bps, EIP-712 signed).
+**Voucher threshold:** 100 available points → an EIP-712 signed voucher that waives the FeeRouterV1
+protocol (swap) fee, up to the current on-chain `protocolFeeBps` — currently 5 bps (0.05%).
+Vouchers never affect the IFR token transfer fee or burn.
 Issuance consumes those 100 points, so `pointsTotal` is the wallet's spendable points balance.
-The configured discount must not exceed the deployed FeeRouter protocol fee.
+
+At issue time the backend reads `protocolFeeBps` from `FEE_ROUTER_ADDRESS` over the chain-pinned
+`RPC_URL` (cached for 60 seconds) and signs `min(discountBps, maxDiscountBps, protocolFeeBps)`,
+because FeeRouterV1 reverts vouchers above its fee ("Discount exceeds fee"). If the fee cannot be
+read, or is 0, issuance fails closed with HTTP 503 and no points are deducted. The signed type is
+`DiscountVoucher(address user,uint16 discountBps,uint32 maxUses,uint64 expiry,uint256 nonce)`,
+matching `FeeRouterV1.VOUCHER_TYPEHASH`; `test/PointsVoucherParity.test.js` proves acceptance.
 
 ## Rate Limits
 

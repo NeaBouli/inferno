@@ -2,6 +2,7 @@ import { expect } from "chai";
 import { ethers } from "./helpers/hardhat.js";
 import { POINTS_CONFIG } from "../apps/points-backend/src/config/points.ts";
 import {
+  capVoucherDiscountBps,
   signVoucherTypedData,
   voucherDomain,
 } from "../apps/points-backend/src/services/voucher-eip712.ts";
@@ -59,6 +60,20 @@ describe("Points backend voucher parity with FeeRouterV1", function () {
     expect(reason).to.equal("Valid");
     expect(valid).to.equal(true);
     await expect(swap(issued)).to.emit(router, "VoucherUsed").and.not.to.emit(router, "FeeCharged");
+  });
+
+  it("issues at the backend cap of the on-chain fee and is accepted after a fee change", async function () {
+    await router.connect(governance).setFeeBps(3);
+    const discountBps = capVoucherDiscountBps(POINTS_CONFIG.voucher, Number(await router.protocolFeeBps()));
+    expect(discountBps).to.equal(3);
+    await expect(swap(await issue(discountBps))).to.emit(router, "VoucherUsed").and.not.to.emit(router, "FeeCharged");
+    // Without the cap the configured 5 bps would now revert.
+    await expect(swap(await issue(POINTS_CONFIG.voucher.discountBps))).to.be.revertedWith("Discount exceeds fee");
+  });
+
+  it("yields no discount when the on-chain fee is 0", async function () {
+    await router.connect(governance).setFeeBps(0);
+    expect(capVoucherDiscountBps(POINTS_CONFIG.voucher, Number(await router.protocolFeeBps()))).to.equal(0);
   });
 
   it("accepts a voucher below the fee and charges the remainder", async function () {
