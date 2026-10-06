@@ -1,5 +1,42 @@
 # Changelog
 
+## [Unreleased] — 2026-10-06 — Web3/Wiki polish and Copilot SDK version (T-287, T-269, T-276)
+
+### Fixed
+
+- `fix:` Web3 (`docs/web3/index.html`, T-287): on phones (680 px and narrower, measured at
+  305/320/375 px) the hero body text, the full-width access-panel buttons and the panel
+  footnote scrolled under the fixed Copilot launcher in every wallet state. The hero copy
+  now gets the same 60 px right clearance as the hero buttons and wallet labels; the panel
+  buttons and footnote get 40 px (the panel already sits 35 px inside the viewport edge).
+  Below 401 px the panel button labels may wrap, so "Loans (borrowing closed)" no longer
+  widens the hero column (keeps the T-285 guarantee). Heading, eyebrow and status-card notes
+  are unchanged.
+- `fix:` Wiki wallet guide (`docs/wiki/wallet-guide.html`, T-269): a 42-character address in
+  `<code>` (LP token) widened the single-column card track by 5 px at 375 px, and at 320 px
+  the nowrap "Staged Governance" badge did the same. Card `<code>` values now wrap anywhere
+  and card heads wrap the badge under the name.
+- `fix:` Wiki LendingVault (`docs/wiki/lending-vault.html`, T-276): the page-load market read
+  and the connect-triggered read could overlap and interleave their writes to the shared
+  borrow-offer list (duplicate or reordered options, 4 instead of 2). Each load now takes a
+  request token, collects offers locally and renders only if it is still the newest load.
+- `fix:` Copilot dev prompt (`apps/ai-copilot/src/context/system-prompts.ts`) and
+  `docs/llms.txt`: the IFR SDK is stated as v0.3.0 (the `apps/sdk` manifest version)
+  instead of the stale v0.2 / v0.2.0.
+
+### Tests
+
+- `test:` `tests/browser/web3-write.spec.js`: T-287 fab-clearance at 305/320/375 in the
+  connected and degraded (read RPC on the wrong chain) states — hero copy and footnote text
+  boxes and all panel buttons end left of the launcher band, no horizontal overflow.
+  `tests/browser/fab-clearance.spec.js`: the same check for the disconnected page.
+- `test:` `tests/browser/wiki-shell.spec.js`: wallet-guide cards stay inside their grid and
+  `main` has no horizontal overflow at 320/375/390.
+- `test:` `tests/browser/lending-retired.spec.js`: with delayed `getOffer` reads, overlapping
+  market loads render offers #0 and #1 exactly once.
+- `test:` `apps/ai-copilot/scripts/test-copilot-correctness.ts`: no prompt, the knowledge
+  object or `docs/llms.txt` may state "SDK v0.2"; every "SDK vX.Y" mention must match the
+  manifest version.
 ## [Unreleased] — 2026-10-06 — IFR SDK npm publish path (T-288)
 
 ### Added
