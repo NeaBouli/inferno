@@ -15,7 +15,9 @@ const expectedVersions = {
   'node_modules/qs': '6.16.0',
   'node_modules/path-to-regexp': '0.1.13',
   'node_modules/form-data': '4.0.6',
-  'node_modules/js-yaml': '3.15.2',
+  // js-yaml 4 (argparse 2) drops the unpatched dev-only sprintf-js chain (GHSA-hp3w-g68c-fv3c).
+  'node_modules/js-yaml': '4.3.2',
+  'node_modules/proxy-addr': '2.0.8',
   'node_modules/brace-expansion': '5.0.12',
   'node_modules/test-exclude/node_modules/brace-expansion': '1.1.21',
   'node_modules/picomatch': '2.3.2',
@@ -23,6 +25,8 @@ const expectedVersions = {
   'node_modules/@babel/core': '7.29.7',
   'node_modules/esbuild': '0.28.1',
 };
+
+assert.equal(lockfile.packages['node_modules/sprintf-js'], undefined, 'sprintf-js must not be installed');
 
 for (const [packagePath, expectedVersion] of Object.entries(expectedVersions)) {
   assert.equal(

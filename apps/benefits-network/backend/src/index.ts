@@ -15,14 +15,14 @@ import {
   initializeRateLimitInfrastructure,
   isRateLimitInfrastructureReady,
 } from './services/rateLimitInfrastructure';
-import { adminRateLimiter } from './middleware/rateLimiter';
+import { adminRateLimiter, TRUSTED_PROXY_SUBNETS } from './middleware/rateLimiter';
 
 const app = express();
 app.disable('x-powered-by');
 
 // Production traffic crosses Traefik and the Next.js frontend on private Docker networks.
 // Trust only private/loopback proxy hops so req.ip resolves to the first public client hop.
-app.set('trust proxy', ['loopback', 'linklocal', 'uniquelocal']);
+app.set('trust proxy', TRUSTED_PROXY_SUBNETS);
 
 app.use((_req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
