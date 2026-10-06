@@ -3,14 +3,27 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#17130f" />
+    <meta name="theme-color" content="#F5F1E8" />
     <title>Offline | IFR Benefits</title>
     <style>
+      /* Static, self-contained offline fallback. Tokens mirror the light shop design in src/app/globals.css
+         (.shop-shell); no fonts, scripts or other resources are fetched. Typography uses fixed px sizes (nothing
+         scales with the viewport; the heading steps up at one explicit breakpoint) and zero letter-spacing. */
       :root {
-        color-scheme: dark;
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background: #17130f;
-        color: #f7f1e8;
+        --shop-paper: #f5f1e8;
+        --shop-panel: #fffdf8;
+        --shop-panel-soft: #eee8dd;
+        --shop-ink: #211c17;
+        --shop-muted: #675d54;
+        --shop-border: #d7ccbb;
+        --shop-ember: #b0481e;
+        --shop-ember-deep: #8f3519;
+        color-scheme: light;
+        font-family: "IBM Plex Sans", "Avenir Next", Avenir, Helvetica, sans-serif;
+        font-size: 16px;
+        letter-spacing: 0;
+        background: var(--shop-paper);
+        color: var(--shop-ink);
       }
 
       * {
@@ -23,42 +36,54 @@
         display: grid;
         place-items: center;
         padding: 24px;
-        background: #17130f;
+        background:
+          linear-gradient(rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.58)),
+          repeating-linear-gradient(90deg, rgba(67, 54, 42, 0.018) 0, rgba(67, 54, 42, 0.018) 1px, transparent 1px, transparent 7px),
+          var(--shop-paper);
+        color: var(--shop-ink);
       }
 
       main {
         width: min(100%, 560px);
-        padding: clamp(28px, 7vw, 48px);
-        border: 1px solid rgba(240, 166, 96, 0.28);
+        padding: 28px;
+        border: 1px solid var(--shop-border);
         border-radius: 24px;
-        background: #241b15;
-        box-shadow: 0 24px 70px rgba(0, 0, 0, 0.34);
+        background: var(--shop-panel);
+        box-shadow: 0 18px 48px rgba(79, 59, 43, 0.13);
         text-align: center;
       }
 
       img {
         width: 72px;
         height: 72px;
+        border: 1px solid rgba(176, 72, 30, 0.2);
+        border-radius: 50%;
+        box-shadow: 0 5px 16px rgba(176, 72, 30, 0.14);
       }
 
       p:first-of-type {
         margin: 20px 0 8px;
-        color: #efa660;
+        color: var(--shop-ember);
+        font-family: "IBM Plex Mono", "SFMono-Regular", Consolas, monospace;
         font-size: 12px;
-        font-weight: 800;
-        letter-spacing: 0.16em;
+        font-weight: 700;
+        letter-spacing: 0;
         text-transform: uppercase;
       }
 
       h1 {
         margin: 0;
-        font-size: clamp(32px, 8vw, 48px);
+        font-family: Newsreader, Georgia, "Times New Roman", serif;
+        font-size: 34px;
+        font-weight: 600;
         line-height: 1.05;
+        color: var(--shop-ink);
       }
 
       p {
         margin: 18px auto 0;
-        color: #d7cec3;
+        color: var(--shop-muted);
+        font-size: 16px;
         line-height: 1.65;
       }
 
@@ -74,21 +99,44 @@
         align-items: center;
         justify-content: center;
         padding: 12px 18px;
-        border: 1px solid rgba(240, 166, 96, 0.42);
+        border: 1px solid var(--shop-border);
         border-radius: 14px;
-        color: #fff7ed;
-        font-weight: 800;
+        background: var(--shop-panel-soft);
+        color: var(--shop-ink);
+        font-size: 16px;
+        font-weight: 700;
         text-decoration: none;
       }
 
+      a:hover {
+        border-color: var(--shop-ember);
+      }
+
       a:first-child {
-        background: #b94b1d;
-        border-color: #d66a33;
+        background: var(--shop-ember);
+        border-color: var(--shop-ember);
+        color: #fffdf8;
+      }
+
+      a:first-child:hover {
+        background: var(--shop-ember-deep);
       }
 
       a:focus-visible {
-        outline: 3px solid #f4b77c;
+        outline: 3px solid rgba(176, 72, 30, 0.32);
         outline-offset: 3px;
+      }
+
+      /* Fixed steps at an explicit breakpoint instead of viewport-scaled clamp(): phones keep the 34px heading on one
+         line at 375px, wider screens get the original 48px heading and padding. */
+      @media (min-width: 640px) {
+        main {
+          padding: 48px;
+        }
+
+        h1 {
+          font-size: 48px;
+        }
       }
     </style>
   </head>

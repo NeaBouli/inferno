@@ -253,17 +253,81 @@ async function runGate(options) {
   return { failures, passes, expectedChecks };
 }
 
+// T-284: the fixed Copilot launcher (54px at 16px up to 820px, 60px at 20px above) must never sit on the wallet
+// chooser's "Connect with" box or the WalletConnect hint at its end. Phone, tablet portrait (both sides of the
+// 820px breakpoint) and desktop widths are checked with the end of the hint scrolled level with the launcher.
+const LAUNCHER_CLEARANCE_WIDTHS = [[375, 812], [768, 1024], [819, 1180], [820, 1180], [821, 1180], [834, 1194], [1024, 1366], [1440, 1000]];
+const LAUNCHER_MIN_GAP_PX = 12;
+
+async function checkLauncherClearance(baseUrl) {
+  const failures = [];
+  const passes = [];
+  const browser = await chromium.launch({ headless: true });
+  try {
+    for (const [width, height] of LAUNCHER_CLEARANCE_WIDTHS) {
+      const context = await browser.newContext({ viewport: { width, height }, serviceWorkers: 'block' });
+      const page = await context.newPage();
+      await page.route(/^https?:\/\/(?!127\.0\.0\.1|localhost)/, (route) => route.abort());
+      try {
+        await page.goto(new URL('/', baseUrl).toString(), { waitUntil: 'domcontentloaded' });
+        await page.locator('[data-wallet-connect-control][data-wallet-connectors-ready="true"]').first().waitFor({ state: 'attached', timeout: 30_000 });
+        await page.locator('[data-walletconnect-hint]').first().waitFor({ state: 'attached', timeout: 10_000 });
+        await page.evaluate(() => document.fonts.ready);
+        await page.evaluate(() => {
+          const launcher = document.querySelector('.shop-copilot-button').getBoundingClientRect();
+          const hint = document.querySelector('[data-walletconnect-hint]').getBoundingClientRect();
+          window.scrollTo({ top: window.scrollY + hint.bottom - launcher.bottom, behavior: 'instant' });
+        });
+        const m = await page.evaluate(() => {
+          const launcher = document.querySelector('.shop-copilot-button').getBoundingClientRect();
+          const hint = document.querySelector('[data-walletconnect-hint]');
+          const box = document.querySelector('[data-wallet-connect-with]').getBoundingClientRect();
+          const range = document.createRange();
+          range.selectNodeContents(hint);
+          const textRight = Math.max(...[...range.getClientRects()].map((r) => r.right));
+          return {
+            launcherLeft: launcher.left,
+            textRight,
+            boxRight: box.right,
+            overflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+          };
+        });
+        const gap = Math.round(m.launcherLeft - m.boxRight);
+        const label = `[launcher clearance ${width}x${height}]`;
+        const before = failures.length;
+        if (m.textRight > m.launcherLeft) failures.push(`${label} WalletConnect hint text reaches the launcher band (${Math.round(m.textRight)} > ${Math.round(m.launcherLeft)})`);
+        if (gap < LAUNCHER_MIN_GAP_PX) failures.push(`${label} Connect-with box ends ${gap}px before the launcher band (needs >= ${LAUNCHER_MIN_GAP_PX}px)`);
+        if (m.overflow > 0) failures.push(`${label} horizontal overflow ${m.overflow}px`);
+        if (failures.length === before) passes.push(`${label} gap ${gap}px, overflow 0`);
+      } catch (error) {
+        failures.push(`[launcher clearance ${width}x${height}] ${error.message.split('\n')[0]}`);
+      } finally {
+        await context.close();
+      }
+    }
+  } finally {
+    await browser.close();
+  }
+  return { failures, passes, expectedChecks: LAUNCHER_CLEARANCE_WIDTHS.length };
+}
+
 async function main() {
   const observeMs = parseObserveMs(process.env.BENEFITS_TELEMETRY_SETTLE_MS);
   const expectWalletConnect = process.env.BENEFITS_EXPECT_WALLETCONNECT === '1';
-  const { failures, passes, expectedChecks } = await runGate({
-    baseUrl: process.env.BENEFITS_BASE_URL || 'http://127.0.0.1:3000',
+  const baseUrl = process.env.BENEFITS_BASE_URL || 'http://127.0.0.1:3000';
+  const gate = await runGate({
+    baseUrl,
     routes: BENEFITS_ROUTES,
     viewports: VIEWPORTS,
     observeMs,
     expectWalletConnect,
     returningVisitors: true,
   });
+  // The WalletConnect hint only renders with a project ID, so the launcher sweep runs in the WalletConnect build.
+  const clearance = expectWalletConnect ? await checkLauncherClearance(baseUrl) : { failures: [], passes: [], expectedChecks: 0 };
+  const failures = [...gate.failures, ...clearance.failures];
+  const passes = [...gate.passes, ...clearance.passes];
+  const expectedChecks = gate.expectedChecks + clearance.expectedChecks;
   console.log(`[benefits-wallet-telemetry] observe=${observeMs}ms after network idle; expect-walletconnect=${expectWalletConnect}`);
   for (const line of passes) console.log(`[benefits-wallet-telemetry] ok ${line}`);
   if (failures.length > 0) {
@@ -276,7 +340,7 @@ async function main() {
     process.exitCode = 1;
     return;
   }
-  console.log(`[benefits-wallet-telemetry] PASS ${passes.length}/${expectedChecks} checks (routes=${BENEFITS_ROUTES.length} x viewports=${VIEWPORTS.length} fresh + returning visitors), telemetry-requests=0`);
+  console.log(`[benefits-wallet-telemetry] PASS ${passes.length}/${expectedChecks} checks (routes=${BENEFITS_ROUTES.length} x viewports=${VIEWPORTS.length} fresh + returning visitors, launcher widths=${clearance.expectedChecks}), telemetry-requests=0`);
 }
 
 module.exports = { runGate, parseObserveMs, MIN_OBSERVE_MS, BENEFITS_ROUTES, VIEWPORTS, TELEMETRY_HOSTS };

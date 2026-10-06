@@ -370,6 +370,14 @@ textarea {
   object-fit: cover;
 }
 
+/* T-284: the wallet chooser's "Connect with" box (connector buttons and the WalletConnect hint) ends about 71px from
+   the viewport's right edge in the single-column layout and in the right column above it. The fixed launcher band is
+   80px wide here (60px at 20px), so without clearance the launcher covered the box's right edge by 9px from 821px
+   upwards. A right margin keeps the same 17px gap as on phones; the outer panels only lend their padding to the band. */
+.shop-launcher-clearance {
+  margin-right: 26px;
+}
+
 .shop-copilot-panel {
   position: fixed;
   right: 20px;
@@ -479,6 +487,11 @@ textarea {
     right: 16px;
     width: 54px;
     height: 54px;
+  }
+
+  /* T-284: up to 820px the launcher band is 70px (54px at 16px), so a 16px margin gives the same 17px gap. */
+  .shop-launcher-clearance {
+    margin-right: 16px;
   }
 }
 
