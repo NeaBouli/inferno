@@ -37,6 +37,7 @@
 - `test:` `apps/ai-copilot/scripts/test-copilot-correctness.ts`: no prompt, the knowledge
   object or `docs/llms.txt` may state "SDK v0.2"; every "SDK vX.Y" mention must match the
   manifest version.
+
 ## [Unreleased] — 2026-10-06 — IFR SDK npm publish path (T-288)
 
 ### Added
