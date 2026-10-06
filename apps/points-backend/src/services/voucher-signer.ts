@@ -5,12 +5,8 @@ import { signVoucherTypedData, voucherDomain, type VoucherData } from "./voucher
 export type { VoucherData } from "./voucher-eip712.js";
 
 const CHAIN_ID = pointsSecurityConfig.chainId;
-export const FEE_ROUTER_ADDRESS = process.env.FEE_ROUTER_ADDRESS || (() => {
-  if (pointsSecurityConfig.isProduction) {
-    throw new Error("FEE_ROUTER_ADDRESS is required in production-safe mode");
-  }
-  return ethers.ZeroAddress;
-})();
+/** Validated in loadPointsSecurityConfig: canonical on CHAIN_ID 1, required in production. */
+export const FEE_ROUTER_ADDRESS = pointsSecurityConfig.feeRouterAddress;
 
 const domain = voucherDomain(CHAIN_ID, FEE_ROUTER_ADDRESS);
 

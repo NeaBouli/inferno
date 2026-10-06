@@ -23,8 +23,11 @@
    Production startup fails closed unless the RPC reports Ethereum mainnet and
    the configured IFRLock has deployed bytecode at the canonical address.
    `FEE_ROUTER_ADDRESS` must be the mainnet FeeRouterV1: it is the EIP-712
-   `verifyingContract`, and voucher issuance reads its `protocolFeeBps` at issue
-   time. A wrong or unreadable router makes `/voucher/issue` fail closed (503).
+   `verifyingContract`, and voucher issuance reads its `protocolFeeBps` fresh for
+   every request. With `CHAIN_ID=1` startup refuses any other address
+   (case-insensitive compare), and production startup also requires router
+   bytecode and an `eip712Domain()` of `InfernoFeeRouter`/`1`/chain 1/that
+   address. An unreadable fee at issue time makes `/voucher/issue` fail closed (503).
 5. Deploy → Note the URL (e.g. `https://ifr-points.railway.app`)
 6. Set URL in `apps/ai-copilot/.env`: `POINTS_BACKEND_URL=https://ifr-points.railway.app`
 

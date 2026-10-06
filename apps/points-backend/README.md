@@ -53,12 +53,15 @@ Vouchers never affect the IFR token transfer fee or burn.
 They are not a swap-price, slippage or shop discount.
 Issuance consumes those 100 points, so `pointsTotal` is the wallet's spendable points balance.
 
-At issue time the backend reads `protocolFeeBps` from `FEE_ROUTER_ADDRESS` over the chain-pinned
-`RPC_URL` (cached for 60 seconds) and signs `min(discountBps, maxDiscountBps, protocolFeeBps)`,
+For every issuance the backend reads `protocolFeeBps` fresh from `FEE_ROUTER_ADDRESS` over the
+chain-pinned `RPC_URL` (no success cache; only concurrent requests share one in-flight read) and signs `min(discountBps, maxDiscountBps, protocolFeeBps)`,
 because FeeRouterV1 reverts vouchers above its fee ("Discount exceeds fee"). If the fee cannot be
 read, or is 0, issuance fails closed with HTTP 503 and no points are deducted. The signed type is
 `DiscountVoucher(address user,uint16 discountBps,uint32 maxUses,uint64 expiry,uint256 nonce)`,
 matching `FeeRouterV1.VOUCHER_TYPEHASH`; `test/PointsVoucherParity.test.js` proves acceptance.
+With `CHAIN_ID=1` the router must be the canonical FeeRouterV1
+`0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a`, or the service refuses to start; production startup
+also verifies its bytecode and EIP-712 domain on-chain.
 
 Residual: a signed voucher is immutable. If governance lowers `protocolFeeBps` below a voucher's
 `discountBps` before it is redeemed (expiry is 7 days), FeeRouterV1 rejects that voucher; the backend

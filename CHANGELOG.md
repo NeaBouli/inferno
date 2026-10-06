@@ -9,12 +9,16 @@
   maxUses,uint64 expiry,uint256 nonce)`. Every issued voucher therefore failed on-chain with
   "Invalid voucher signature". The format now lives in the dependency-free
   `src/services/voucher-eip712.ts` and uses `DiscountVoucher`.
-- `fix:` At issue time the backend reads `FeeRouterV1.protocolFeeBps` over the chain-pinned RPC
-  (cached 60 s, failures never cached) and signs `min(discountBps, maxDiscountBps, protocolFeeBps)`,
+- `fix:` For every issuance the backend reads `FeeRouterV1.protocolFeeBps` fresh over the chain-pinned
+  RPC (no success cache; concurrent requests share one in-flight read) and signs `min(discountBps, maxDiscountBps, protocolFeeBps)`,
   so a future fee change cannot produce vouchers that revert with "Discount exceeds fee". An
   unreadable, out-of-range or wrong-chain fee read, or a fee of 0, fails closed with HTTP 503 before
   any points are deducted. Per-wallet and global daily caps are unchanged. Residual (documented):
   already signed vouchers are immutable and a later fee reduction can invalidate them.
+- `security:` With `CHAIN_ID=1` the points backend refuses to start unless `FEE_ROUTER_ADDRESS` is the
+  canonical FeeRouterV1 `0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a` (case-insensitive); production
+  startup also requires router bytecode and a matching `eip712Domain()`. CI proves a production image
+  with the Sepolia router refuses to start.
 - `docs:` Points README, `DEPLOY.md`, `docs/RAILWAY_ENV.md` and the tokenomics wiki state that a
   voucher waives the FeeRouter protocol (swap) fee up to the current on-chain fee (currently 5 bps,
   0.05%) and never the IFR transfer fee or burn. The deploy docs listed the Sepolia FeeRouter
