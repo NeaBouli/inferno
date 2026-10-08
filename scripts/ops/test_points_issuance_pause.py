@@ -8,6 +8,7 @@ import io
 import json
 import re
 import sys
+import tarfile
 import tempfile
 import unittest
 from contextlib import redirect_stderr
@@ -73,7 +74,8 @@ class Fixture:
                  traefik_name: str = "/traefik-central", traefik_project: Optional[str] = "traefik",
                  traefik_networks: Any = None, points_networks: Any = None,
                  workdir: Any = "", static_yaml: Optional[str] = None, static_dest: str = "/traefik.yml",
-                 diff_rows: Optional[list[str]] = None) -> None:
+                 container_files: Optional[dict[str, bytes]] = None, user: str = "",
+                 env_rows: Optional[list[str]] = None) -> None:
         self.tmp = tempfile.TemporaryDirectory()
         base = Path(self.tmp.name)
         self.root = base / "opt-inferno"
@@ -105,11 +107,16 @@ class Fixture:
             "traefik-public": {"IPAddress": "172.18.0.5"}, "inferno-default": {}}
         self.inspected: list[str] = []
         self.workdir = workdir
-        self.diff_rows = diff_rows or []
+        self.user = user
+        self.env_rows = env_rows if env_rows is not None else []
+        # what `docker cp` sees in the container's merged filesystem (image + layer + mounts)
+        self.container_files: dict[str, bytes] = dict(container_files or {})
+        self.copied: list[str] = []
         if static_yaml is not None:
             self.static = base / "traefik-static.yml"
             self.static.write_text(static_yaml)
             self.mounts = [*self.mounts, {"Type": "bind", "Source": str(self.static), "Destination": static_dest}]
+            self.container_files.setdefault(static_dest, static_yaml.encode())
         self.edge = Edge(self)
         self.lines: list[str] = []
         self.commands: list[list[str]] = []
@@ -132,6 +139,10 @@ class Fixture:
             return "\n".join([*self.traefik_rows, "pid\tinferno-points-backend:latest\tinferno-points-backend"]) + "\n"
         if cmd[:4] == ["docker", "inspect", "--type", "container"] and "--format" in cmd:
             fmt = cmd[cmd.index("--format") + 1]
+            if fmt == "{{json .Config.User}}":
+                return json.dumps(self.user) + "\n"
+            if fmt == mod._ENV_FMT:
+                return "".join(json.dumps(r) + "\n" for r in self.env_rows) + "\n"  # docker's trailing newline
             assert "Env" not in fmt, "must never request the Traefik environment"
             self.inspected.append(cmd[-1])
             tlabels: dict[str, str] = {}
@@ -142,10 +153,21 @@ class Fixture:
             return "\n".join(json.dumps(x) for x in (
                 self.image, self.args, tlabels, self.mounts, True, self.traefik_name,
                 self.traefik_networks, self.workdir)) + "\n"
-        if cmd[:2] == ["docker", "diff"]:
-            assert len(cmd) == 3
-            return "\n".join(self.diff_rows) + ("\n" if self.diff_rows else "")
+
         raise AssertionError(f"unexpected command {cmd}")
+
+    def copy(self, container: str, path: str) -> Optional[bytes]:
+        assert container == "tid1" or container == "c", container
+        self.copied.append(path)
+        data = self.container_files.get(path)
+        if data is None:
+            return None
+        buf = io.BytesIO()
+        with tarfile.open(fileobj=buf, mode="w") as tf:
+            info = tarfile.TarInfo(path.rsplit("/", 1)[-1])
+            info.size = len(data)
+            tf.addfile(info, io.BytesIO(data))
+        return buf.getvalue()
 
     def tick(self) -> float:
         self.clock += 1.0
@@ -155,7 +177,8 @@ class Fixture:
         self.lines.clear()
         err = io.StringIO()
         deps = mod.Deps(run=self.run_cmd, probe=self.edge.probe, sleep=lambda _s: None,
-                        monotonic=self.tick, out=self.lines.append, wait_seconds=5.0)
+                        monotonic=self.tick, out=self.lines.append, wait_seconds=5.0,
+                        copy=self.copy)
         with redirect_stderr(err):
             code = mod.main(["points-issuance-pause.py", *args], deps)
         self.err = err.getvalue()
@@ -433,10 +456,25 @@ class PauseTests(unittest.TestCase):
             ({"static_yaml": STATIC_OK, "static_dest": "/traefik.toml"}, "reason", "traefik_static_config_toml"),
             ({"static_yaml": STATIC_OK, "args": ["--configFile=/traefik.yml"]}, "reason",
              "traefik_static_config_file"),
-            ({"static_yaml": STATIC_OK, "diff_rows": ["C /etc", "A /etc/traefik", "A /etc/traefik/traefik.toml"]},
-             "reason", "traefik_static_config_unverifiable"),
-            ({"static_yaml": STATIC_OK, "diff_rows": ["A /traefik.toml"]}, "reason",
+            # higher-priority config in an image layer / writable layer (not a mount)
+            ({"static_yaml": STATIC_OK, "container_files": {"/etc/traefik/traefik.toml": b"x"}}, "reason",
+             "traefik_static_config_not_selected"),
+            ({"static_yaml": STATIC_OK, "container_files": {"/traefik.yaml": b"x"}}, "reason",
+             "traefik_static_config_not_selected"),
+            ({"static_yaml": STATIC_OK, "env_rows": ["XDG_CONFIG_HOME=/cfg", "HOME=/home/t"], "container_files": {
+                "/home/t/.config/traefik.yml": b"x"}}, "reason", "traefik_static_config_not_selected"),
+            ({"static_yaml": STATIC_OK, "env_rows": ["XDG_CONFIG_HOME=/cfg"],
+              "container_files": {"/cfg/traefik.toml": b"x"}}, "reason", "traefik_static_config_not_selected"),
+            # what the container sees differs from the host bind source
+            ({"static_yaml": STATIC_OK, "container_files": {"/traefik.yml": b"providers: {}\n"}}, "refuse",
+             "traefik_static_config_mismatch"),
+            # no static mount, but Traefik would load a hidden file -> CLI args do not apply
+            ({"container_files": {"/etc/traefik/traefik.yml": b"x"}}, "reason",
              "traefik_static_config_unverifiable"),
+            ({"static_yaml": STATIC_OK, "user": "1000"}, "reason", "traefik_lookup_env_unknown"),
+            ({"static_yaml": STATIC_OK, "env_rows": ["HOME=relative"]}, "reason", "traefik_lookup_env_unknown"),
+            ({"static_yaml": STATIC_OK, "env_rows": ["HOME=/a", "HOME=/b"]}, "refuse", "traefik_inspect_unreadable"),
+
             ({"mounts": [{"Type": "bind", "Source": "/nonexistent-x", "Destination": "/etc/traefik/traefik.yml"}]},
              "refuse", "traefik_static_config_unreadable"),
             ({"static_yaml": STATIC_OK, "workdir": 5}, "refuse", "traefik_inspect_unreadable"),
@@ -461,10 +499,23 @@ class PauseTests(unittest.TestCase):
             self.assertFalse(fx.pause_file.exists())
         finally:
             fx.close()
-        # unrelated writable-layer changes are fine
-        fx = Fixture(static_yaml=STATIC_OK, diff_rows=["C /tmp", "A /tmp/x", "C /acme"])
+        # with XDG unset, /traefik.yml precedes $HOME/.config; with XDG set it is ./traefik.yml (cwd /)
+        for env, files in ((["HOME=/home/t"], {"/home/t/.config/traefik.yml": b"x"}),
+                           (["XDG_CONFIG_HOME=/cfg"], {})):
+            fx = Fixture(static_yaml=STATIC_OK, env_rows=env, container_files=files)
+            try:
+                with self.subTest(env=env):
+                    self.assertEqual(fx.run("--status"), 0)
+            finally:
+                fx.close()
+        # lower-priority files and the walk order: /traefik.yml wins before ./ (cwd /) duplicates
+        fx = Fixture(static_yaml=STATIC_OK, env_rows=["HOME=/root"], user="root",
+                     container_files={"/other/traefik.yml": b"x"})
         try:
             self.assertEqual(fx.run("--status"), 0)
+            self.assertEqual(fx.copied[:6], ["/etc/traefik/traefik.toml", "/etc/traefik/traefik.yaml",
+                                             "/etc/traefik/traefik.yml", "/traefik.toml", "/traefik.yaml",
+                                             "/traefik.yml"])
         finally:
             fx.close()
 

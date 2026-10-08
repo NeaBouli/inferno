@@ -87,6 +87,9 @@ ISSUE_VARIANTS = ("/voucher/issue", "/Voucher/Issue", "/voucher/issue/", "/VOUCH
 WAIT_SECONDS = 30.0
 
 Runner = Callable[[Sequence[str]], str]
+# (container, absolute path) -> tar stream of that path from the container's merged filesystem
+# (image layers + writable layer + mounts), or None if the path does not exist there.
+Copier = Callable[[str, str], Optional[bytes]]
 Prober = Callable[[str, str], int]
 
 
@@ -107,6 +110,27 @@ def _run(cmd: Sequence[str]) -> str:
     if result.returncode != 0:
         raise Refuse("docker_failed")
     return result.stdout
+
+
+COPY_MAX_BYTES = 262144 + 65536
+
+
+def _copy(container: str, path: str) -> Optional[bytes]:
+    """`docker cp <container>:<path> -` (read-only, no exec); output capped, content never printed."""
+    proc = subprocess.Popen(["docker", "cp", f"{container}:{path}", "-"],
+                            stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    assert proc.stdout is not None and proc.stderr is not None
+    data = proc.stdout.read(COPY_MAX_BYTES + 1)
+    if len(data) > COPY_MAX_BYTES:
+        proc.kill()
+        proc.wait()
+        raise Refuse("traefik_static_config_too_large")
+    err = proc.stderr.read(4096)
+    if proc.wait(timeout=30) == 0:
+        return data
+    if b"Could not find the file" in err or b"No such file or directory" in err:
+        return None
+    raise Refuse("docker_failed")
 
 
 class _NoRedirect(urllib.request.HTTPRedirectHandler):
@@ -268,19 +292,85 @@ _STATIC_NAMES = tuple(f"traefik.{e}" for e in _STATIC_EXTS)
 STATIC_MAX_BYTES = 262144
 
 
-def static_search_paths(workdir: str) -> list[str]:
-    """Traefik v3 default static-config lookup (pkg/cli/loader_file.go, paerser cli.Finder):
-    /etc/traefik/traefik, $XDG_CONFIG_HOME/traefik (unset in the official image -> /traefik),
+def static_search_paths(workdir: str, home: Optional[str] = None, xdg: str = "") -> list[str]:
+    """Traefik v3 default static-config lookup, in Traefik's order (pkg/cli/loader_file.go,
+    paerser cli.Finder with os.ExpandEnv): /etc/traefik/traefik, $XDG_CONFIG_HOME/traefik,
     $HOME/.config/traefik, ./traefik; extensions toml, yaml, yml; the first existing path wins
-    and a loaded file excludes CLI flags. $HOME/.config is not resolvable without reading the
-    container environment, so any mount there is refused below instead of guessed."""
+    and a loaded file excludes CLI flags. Without `home`, the $HOME entry is omitted (mount
+    screening only; the selection proof always passes it)."""
     cwd = (workdir or "/").rstrip("/")
+    bases = ["/etc/traefik/traefik", f"{xdg.rstrip('/')}/traefik"]
+    if home is not None:
+        bases.append(f"{home.rstrip('/')}/.config/traefik")
+    bases.append(f"{cwd}/traefik")
     paths: list[str] = []
-    for base in ("/etc/traefik/traefik", "/traefik", f"{cwd}/traefik"):
+    for base in bases:
         for ext in _STATIC_EXTS:
             if f"{base}.{ext}" not in paths:
                 paths.append(f"{base}.{ext}")
     return paths
+
+
+_ENV_FMT = ('{{range .Config.Env}}{{$k := index (split . "=") 0}}'
+            '{{if or (eq $k "HOME") (eq $k "XDG_CONFIG_HOME")}}{{json .}}{{"\\n"}}{{end}}{{end}}')
+
+
+def traefik_lookup_env(run: Runner, container: str) -> tuple[str, str]:
+    """HOME and XDG_CONFIG_HOME only (no other variable is requested), plus the user, to
+    resolve Traefik's lookup list exactly; anything unusual is unavailable, not guessed."""
+    user = _json(run(["docker", "inspect", "--type", "container", "--format", "{{json .Config.User}}",
+                      container]).strip() or '""')
+    rows = run(["docker", "inspect", "--type", "container", "--format", _ENV_FMT, container]).splitlines()
+    env: dict[str, str] = {}
+    for row in rows:
+        if not row.strip():
+            continue  # docker appends a newline after the template output
+        item = _json(row)
+        if not isinstance(item, str) or "=" not in item:
+            raise Refuse("traefik_inspect_unreadable")
+        k, v = item.split("=", 1)
+        if k in env or k not in ("HOME", "XDG_CONFIG_HOME"):
+            raise Refuse("traefik_inspect_unreadable")
+        env[k] = v
+    if user not in ("", "0", "root", "0:0", "root:root"):
+        raise Unavailable("traefik_lookup_env_unknown")
+    home = env.get("HOME", "/root")  # Docker's default HOME for root
+    xdg = env.get("XDG_CONFIG_HOME", "")
+    for v in (home, xdg):
+        if v and (not v.startswith("/") or not _SAFE_DIR_RE.fullmatch(v) or "/../" in v + "/"):
+            raise Unavailable("traefik_lookup_env_unknown")
+    return home, xdg
+
+
+def _tar_single_file(tar_bytes: bytes) -> Optional[bytes]:
+    import io
+    import tarfile
+    try:
+        with tarfile.open(fileobj=io.BytesIO(tar_bytes), mode="r:") as tf:
+            members = tf.getmembers()
+            if len(members) != 1 or not members[0].isfile():
+                return None
+            fh = tf.extractfile(members[0])
+            return fh.read() if fh is not None else None
+    except tarfile.TarError:
+        return None
+
+
+def prove_selected_config(copy: Copier, container: str, lookup: list[str],
+                          static: Optional[tuple[str, Path]], host_text: Optional[bytes]) -> None:
+    """Fail closed unless the file Traefik loads is exactly the mounted one we parse (or, without
+    one, unless no lookup path exists at all, so the CLI args really apply). Checked through the
+    container's merged filesystem, so image layers and the writable layer are covered."""
+    first = next((p for p in lookup if copy(container, p) is not None), None)
+    if static is None:
+        if first is not None:
+            raise Unavailable("traefik_static_config_unverifiable")
+        return
+    if first != static[0]:
+        raise Unavailable("traefik_static_config_not_selected")
+    seen = copy(container, static[0])
+    if seen is None or host_text is None or _tar_single_file(seen) != host_text:
+        raise Refuse("traefik_static_config_mismatch")
 
 
 def static_config_file(mounts: object, workdir: object) -> Optional[tuple[str, Path]]:
@@ -313,7 +403,7 @@ def static_config_file(mounts: object, workdir: object) -> Optional[tuple[str, P
     return path, host
 
 
-def read_static_config(host: Path) -> str:
+def read_static_config(host: Path) -> bytes:
     try:
         with open(host, "rb") as fh:
             data = fh.read(STATIC_MAX_BYTES + 1)
@@ -321,6 +411,10 @@ def read_static_config(host: Path) -> str:
         raise Refuse("traefik_static_config_unreadable") from None
     if len(data) > STATIC_MAX_BYTES:
         raise Refuse("traefik_static_config_too_large")
+    return data
+
+
+def _decode(data: bytes) -> str:
     try:
         return data.decode("utf-8")
     except UnicodeDecodeError:
@@ -425,7 +519,7 @@ def host_dir_for(container_dir: str, mounts: object) -> Path:
     return host
 
 
-def discover(run: Runner) -> Topology:
+def discover(run: Runner, copy: Copier = _copy) -> Topology:
     raw = run(["docker", "inspect", "--type", "container", POINTS_CONTAINER])
     labels, _env = points_facts(raw)
     pnets = points_networks(raw)
@@ -469,19 +563,19 @@ def discover(run: Runner) -> Topology:
     if any(a.lower().startswith(("--configfile", "--config-file")) for a in sargs):
         raise Unavailable("traefik_static_config_file")
     static = static_config_file(mounts, workdir)
-    # A config file created inside the container's writable layer would be invisible to the
-    # mount check and could take precedence; `docker diff` lists changed paths only (no content).
-    search = static_search_paths(workdir if isinstance(workdir, str) else "/")
-    for row in run(["docker", "diff", central[0]]).splitlines():
-        changed = row[2:].strip() if len(row) > 2 else ""
-        if changed in search or changed.startswith("/etc/traefik") or "/.config" in changed:
-            raise Unavailable("traefik_static_config_unverifiable")
+    home, xdg = traefik_lookup_env(run, central[0])
+    lookup = static_search_paths(str(workdir), home, xdg)
+    if static is not None and static[0] not in lookup:
+        raise Unavailable("traefik_static_config_location_unknown")
+    host_bytes = read_static_config(static[1]) if static is not None else None
+    # Proof before any write path: the 503 probe later is acceptance, not evidence of the source.
+    prove_selected_config(copy, central[0], lookup, static, host_bytes)
     if static is None:
         cdir = file_provider_dir(sargs)
     elif static[0].endswith(".toml"):
         raise Unavailable("traefik_static_config_toml")
     else:
-        cdir = static_file_provider_dir(read_static_config(static[1]))
+        cdir = static_file_provider_dir(_decode(host_bytes or b""))
     host = host_dir_for(cdir, mounts)
     return Topology(eps, tls, resolver, major, host, Path(wd) / "points-backend" / "RELEASE_SHA")
 
@@ -546,6 +640,7 @@ class Deps:
     monotonic: Callable[[], float] = time.monotonic
     out: Callable[[str], None] = print
     wait_seconds: float = WAIT_SECONDS
+    copy: Copier = _copy
 
 
 def _state(path: Path, expected: bytes) -> str:
@@ -578,7 +673,7 @@ def _print_codes(deps: Deps, prefix: str, codes: dict[str, int]) -> None:
 
 def status(deps: Deps) -> tuple[int, Optional[Topology]]:
     try:
-        topo = discover(deps.run)
+        topo = discover(deps.run, deps.copy)
     except Unavailable as exc:
         deps.out("mechanism=unavailable")
         deps.out(f"reason={exc.code}")
