@@ -24,7 +24,8 @@ signed by a release using the wrong EIP-712 primary type ("Voucher" instead of
 "DiscountVoucher") and cannot validate at the canonical FeeRouterV1. Rows at or after
 PAUSE_MS are reported separately (expected 0 while paused).
 
-Small cohorts: per-week distinct-wallet counts below SUPPRESS_BELOW print as "<5".
+Small cohorts: the weekly table is printed only when every cell is 0 or >= SUPPRESS_BELOW; otherwise it is withheld.
+Expiry: a voucher is valid while expiresAt >= as_of (FeeRouterV1: block.timestamp <= expiry).
 
 Exit codes: 0 report printed; 2 refused (container/mount/database/schema not exactly as
 expected); nothing is ever written.
@@ -177,22 +178,13 @@ def _ms(col: str) -> str:
             f"THEN CAST(strftime('%s', {col}) AS INTEGER) * 1000 ELSE NULL END)")
 
 
-def suppress_cells(rows: list[list[int]]) -> Optional[list[list[str]]]:
-    """Primary suppression of cells 1..SUPPRESS_BELOW-1 per column, plus complementary suppression:
-    a column with exactly one suppressed cell also hides its smallest remaining non-zero cell, so the
-    hidden value cannot be recovered from the separately reported total. When no complementary cell
-    exists (a single non-zero week in that column), the whole weekly table is withheld (None)."""
-    out = [[str(v) for v in r] for r in rows]
-    for col in range(len(rows[0]) if rows else 0):
-        hidden = [i for i, r in enumerate(rows) if 0 < r[col] < SUPPRESS_BELOW]
-        if len(hidden) == 1:
-            rest = sorted((rows[i][col], i) for i in range(len(rows)) if i not in hidden and rows[i][col] > 0)
-            if not rest:
-                return None
-            hidden.append(rest[0][1])
-        for i in hidden:
-            out[i][col] = "suppressed"
-    return out
+def weekly_table(rows: list[list[int]]) -> Optional[list[list[str]]]:
+    """Weekly cells are published only when every cell is 0 or at least SUPPRESS_BELOW. Cell suppression
+    is not used: with the published totals, hidden cells can be recovered (e.g. two hidden 1s next to a
+    visible 10 and a total of 12). Any small cell therefore withholds the whole weekly table (None)."""
+    if any(0 < v < SUPPRESS_BELOW for r in rows for v in r):
+        return None
+    return [[str(v) for v in r] for r in rows]
 
 
 def report(conn: sqlite3.Connection, out: Out, day_is_utc: Optional[bool] = True) -> None:
@@ -202,6 +194,8 @@ def report(conn: sqlite3.Connection, out: Out, day_is_utc: Optional[bool] = True
     out("voucher_createdAt_types=" + ",".join(f"{k}:{types[k]}" for k in sorted(types)))
     unparseable = q(f'SELECT COUNT(*) FROM "Voucher" WHERE {c} IS NULL OR {e} IS NULL').fetchone()[0]
     out(f"voucher_timestamp_unparseable={unparseable}")
+    created_unknown = q(f'SELECT COUNT(*) FROM "Voucher" WHERE {c} IS NULL').fetchone()[0]
+    out(f"q1_vouchers_created_unknown={created_unknown}")
     out("scope=all_vouchers_before_pause_2026-10-08T21:55:00Z")
     out("mainnet_start=" + ("unknown" if MAINNET_START_MS is None else str(MAINNET_START_MS)))
     out("mainnet_cohort=" + ("unknown" if MAINNET_START_MS is None else "bounded"))
@@ -209,7 +203,7 @@ def report(conn: sqlite3.Connection, out: Out, day_is_utc: Optional[bool] = True
     win = f"{c} >= ? AND {c} < ?"
     args = (lo, PAUSE_MS)
     total, wallets, expired, unexpired, used, used_any = q(
-        f'SELECT COUNT(*), COUNT(DISTINCT "walletId"), COALESCE(SUM({e} <= ?), 0), COALESCE(SUM({e} > ?), 0), '
+        f'SELECT COUNT(*), COUNT(DISTINCT "walletId"), COALESCE(SUM({e} < ?), 0), COALESCE(SUM({e} >= ?), 0), '
         f'COALESCE(SUM("used" = 1), 0), COALESCE(SUM("usedCount" > 0), 0) FROM "Voucher" WHERE {win}',
         (AS_OF_MS, AS_OF_MS, *args)).fetchone()
     out(f"q1_vouchers_issued={total}")
@@ -250,10 +244,10 @@ def report(conn: sqlite3.Connection, out: Out, day_is_utc: Optional[bool] = True
         out(f"vouchers_before_mainnet_start={before}")
     weeks = q(
         f'SELECT strftime(\'%Y-W%W\', {c} / 1000, \'unixepoch\') wk, COUNT(*), COUNT(DISTINCT "walletId"), '
-        f'COALESCE(SUM({e} <= ?), 0) FROM "Voucher" WHERE {win} GROUP BY wk ORDER BY wk', (AS_OF_MS, *args)).fetchall()
-    cells = suppress_cells([[n, w, ex] for _, n, w, ex in weeks])
+        f'COALESCE(SUM({e} < ?), 0) FROM "Voucher" WHERE {win} GROUP BY wk ORDER BY wk', (AS_OF_MS, *args)).fetchall()
+    cells = weekly_table([[n, w, ex] for _, n, w, ex in weeks])
     if cells is None:
-        out("weekly=withheld_insufficient_cohort")
+        out("weekly=withheld_small_cells")
         return
     for (wk, *_), (n, w, ex) in zip(weeks, cells):
         out(f"week={wk} vouchers={n} wallets={w} expired={ex}")

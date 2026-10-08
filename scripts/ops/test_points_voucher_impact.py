@@ -123,7 +123,7 @@ class ImpactTests(unittest.TestCase):
         d = self.db
         d.voucher(0, PAUSE - 20 * DAY, PAUSE - 13 * DAY)             # expired at as_of, int ms
         d.voucher(0, PAUSE - 2 * DAY, PAUSE + 5 * DAY, used=1)       # unexpired, DB-used
-        d.voucher(1, PAUSE - 1 * DAY, PAUSE)                         # expires exactly at as_of -> expired
+        d.voucher(1, PAUSE - 1 * DAY, PAUSE)                         # expires exactly at as_of -> still valid
         d.voucher(2, "2026-10-07 10:00:00", "2026-10-14 10:00:00")   # TEXT form, unexpired
         d.voucher(3, PAUSE - 3 * DAY, PAUSE + 3_600_000, debit=False)  # no debit; expires 1 h after as_of
         d.voucher(4, PAUSE, PAUSE + 7 * DAY)                         # exactly at pause: out of window
@@ -135,8 +135,10 @@ class ImpactTests(unittest.TestCase):
         self.assertEqual(kv["q3_points_debited"], "400")
         self.assertEqual(kv["q3_debit_events"], "4")
         self.assertEqual(kv["q3_debit_events_linked_to_voucher"], "4")
-        self.assertEqual(kv["q4_vouchers_expired"], "2")
-        self.assertEqual(kv["q4_vouchers_unexpired"], "3")
+        self.assertEqual(kv["q4_vouchers_expired"], "1")
+        self.assertEqual(kv["q4_vouchers_unexpired"], "4")
+        self.assertEqual(kv["q4_vouchers_expiry_unknown"], "0")
+        self.assertEqual(kv["q1_vouchers_created_unknown"], "0")
         self.assertEqual(kv["q5_db_marked_used"], "1")
         self.assertEqual(kv["q5_db_usedcount_gt0"], "1")
         self.assertEqual(kv["q7_wallet_24h_windows_consumed"], "5")
@@ -146,19 +148,26 @@ class ImpactTests(unittest.TestCase):
         self.assertEqual(kv["voucher_timestamp_unparseable"], "0")
         self.assertEqual(kv["voucher_createdAt_types"], "integer:5,text:1")
         self.assertEqual(kv["exit"], "0")
-        weeks = [line for line in lines if line.startswith("week=")]
-        self.assertTrue(weeks)
-        self.assertTrue(all("=suppressed" in w or "=0" in w for w in weeks))
+        self.assertEqual(kv["weekly"], "withheld_small_cells")
+        self.assertFalse([line for line in lines if line.startswith("week=")])
         self.assertNoLeak(lines)
 
-    def test_suppression_is_complementary(self) -> None:
-        cells = mod.suppress_cells([[12, 9, 0], [3, 3, 0], [20, 15, 7]])
-        self.assertEqual(cells[1][0], "suppressed")
-        self.assertEqual(cells[0][0], "suppressed")       # complementary: smallest remaining non-zero
-        self.assertEqual(cells[2][0], "20")
-        self.assertEqual([c[2] for c in cells], ["0", "0", "7"])  # zeros and >=5 stay visible
-        two = mod.suppress_cells([[2, 0, 0], [4, 0, 0], [30, 0, 0]])
-        self.assertEqual([r[0] for r in two], ["suppressed", "suppressed", "30"])
+    def test_weekly_table_rejects_any_small_cell(self) -> None:
+        # adversarial: two hidden 1s next to a visible 10 with total 12 must not be publishable
+        self.assertIsNone(mod.weekly_table([[1, 1, 0], [1, 1, 0], [10, 6, 5]]))
+        self.assertIsNone(mod.weekly_table([[12, 9, 3]]))
+        self.assertEqual(mod.weekly_table([[12, 9, 0], [20, 15, 7]]), [["12", "9", "0"], ["20", "15", "7"]])
+
+    def test_weekly_table_published_when_all_cells_large(self) -> None:
+        for i in range(10):
+            self.db.voucher(i % 8, PAUSE - 30 * DAY + i * 60_000, PAUSE - 20 * DAY)
+        self.db.commit()
+        _, kv, lines = self.run_main()
+        weeks = [line for line in lines if line.startswith("week=")]
+        self.assertEqual(len(weeks), 1)
+        self.assertIn("vouchers=10 wallets=8 expired=10", weeks[0])
+        self.assertNotIn("weekly", kv)
+        self.assertNoLeak(lines)
 
     def test_q7_global_cap_days(self) -> None:
         base = PAUSE - 10 * DAY - (PAUSE % DAY)  # a UTC midnight well inside the window
@@ -251,10 +260,8 @@ class ImpactTests(unittest.TestCase):
         self.db.voucher(0, PAUSE - 2 * DAY, PAUSE + DAY)
         self.db.commit()
         _, kv, lines = self.run_main()
-        self.assertEqual(kv["weekly"], "withheld_insufficient_cohort")
+        self.assertEqual(kv["weekly"], "withheld_small_cells")
         self.assertFalse([line for line in lines if line.startswith("week=")])
-        self.assertIsNone(mod.suppress_cells([[3, 2, 0]]))
-        self.assertIsNone(mod.suppress_cells([[3, 0, 0], [0, 0, 0]]))
 
     def test_unparseable_timestamps_are_counted_not_guessed(self) -> None:
         self.db.voucher(0, "not-a-date", PAUSE + DAY)
@@ -263,6 +270,7 @@ class ImpactTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(kv["voucher_timestamp_unparseable"], "1")
         self.assertEqual(kv["q1_vouchers_issued"], "0")
+        self.assertEqual(kv["q1_vouchers_created_unknown"], "1")
         self.assertNoLeak(lines)
 
     def test_database_is_opened_read_only(self) -> None:
