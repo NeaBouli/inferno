@@ -97,11 +97,12 @@ class ImpactTests(unittest.TestCase):
     def tearDown(self) -> None:
         self.db.close()
 
-    def run_main(self, run: Any = None) -> tuple[int, dict[str, str], list[str]]:
+    def run_main(self, run: Any = None, localtime: Optional[bool] = False) -> tuple[int, dict[str, str], list[str]]:
         lines: list[str] = []
         err = io.StringIO()
         with redirect_stderr(err):
-            code = mod.main(["x"], run=run or fake_run(str(self.db.dir)), out=lines.append)
+            code = mod.main(["x"], run=run or fake_run(str(self.db.dir)), out=lines.append,
+                            exists=lambda c, p: localtime if p == "/etc/localtime" else False)
         lines.append("stderr=" + err.getvalue().replace("\n", " "))
         kv = {}
         for line in lines:
@@ -180,6 +181,12 @@ class ImpactTests(unittest.TestCase):
                 mod.DAILY_ISSUANCE_CAP = len(SECRET_NONCES)
                 _, kv, _ = self.run_main(fake_run(str(self.db.dir), tz_rows=rows))
                 self.assertEqual(kv["q7_days_global_cap_reached"], want, rows)
+            # TZ unset: UTC only if /etc/localtime is absent in the merged filesystem
+            for localtime, want in ((False, "1"), (True, "unknown"), (None, "unknown")):
+                _, kv, _ = self.run_main(localtime=localtime)
+                self.assertEqual(kv["q7_days_global_cap_reached"], want, localtime)
+            _, kv, _ = self.run_main(fake_run(str(self.db.dir), tz_rows=["TZ=UTC"]), localtime=True)
+            self.assertEqual(kv["q7_days_global_cap_reached"], "1")
         finally:
             mod.DAILY_ISSUANCE_CAP = old
 

@@ -58,7 +58,25 @@ EXPECTED_COLUMNS = {
 }
 
 Runner = Callable[[Sequence[str]], str]
+# (container, absolute path) -> whether the path exists in the container's merged filesystem
+# (image layers + writable layer + mounts); content is discarded, never read or printed.
+Exists = Callable[[str, str], Optional[bool]]
 Out = Callable[[str], None]
+
+
+def _exists(container: str, path: str) -> Optional[bool]:
+    """`docker cp <container>:<path> -` with stdout discarded; None on any other error or timeout."""
+    try:
+        result = subprocess.run(["docker", "cp", f"{container}:{path}", "-"], stdout=subprocess.DEVNULL,
+                                stderr=subprocess.PIPE, timeout=30, check=False)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    if result.returncode == 0:
+        return True
+    err = result.stderr[:4096]
+    if b"Could not find the file" in err or b"No such file or directory" in err:
+        return False
+    return None
 
 
 class Refuse(Exception):
@@ -99,13 +117,15 @@ _TZ_FMT = '{{range .Config.Env}}{{if eq (index (split . "=") 0) "TZ"}}{{json .}}
 _UTC_NAMES = {"", "UTC", "UTC0", "Etc/UTC", "Etc/UCT", "UCT", "Zulu", "Etc/Zulu", "GMT", "Etc/GMT", "GMT0"}
 
 
-def container_day_is_utc(run: Runner) -> Optional[bool]:
-    """True when the container's local midnight is UTC midnight. Only the TZ variable is requested
-    (node:22-alpine ships no /etc/localtime, so an unset TZ means UTC). None when unknown."""
+def container_day_is_utc(run: Runner, exists: Exists = _exists) -> Optional[bool]:
+    """True when the container's local midnight is UTC midnight. Only the TZ variable is requested.
+    An explicit UTC alias decides it; with TZ unset the C library falls back to /etc/localtime, so UTC is
+    accepted only when /etc/localtime does not exist in the container's merged filesystem (image, layer
+    or mount). Anything else is None (unknown)."""
     rows = [r for r in run(["docker", "inspect", "--type", "container", "--format", _TZ_FMT, CONTAINER]).splitlines()
             if r.strip()]
     if not rows:
-        return True
+        return True if exists(CONTAINER, "/etc/localtime") is False else None
     if len(rows) != 1:
         return None
     try:
@@ -240,13 +260,13 @@ def report(conn: sqlite3.Connection, out: Out, day_is_utc: Optional[bool] = True
 
 
 def main(argv: Sequence[str], run: Runner = _run, out: Out = print,
-         db_override: Optional[Path] = None) -> int:
+         db_override: Optional[Path] = None, exists: Exists = _exists) -> int:
     if len(argv) != 1:
         out("usage=points-voucher-impact.py (no arguments)")
         return 2
     try:
         db = db_override or database_file(data_dir(run))
-        day_is_utc = True if db_override else container_day_is_utc(run)
+        day_is_utc = True if db_override else container_day_is_utc(run, exists)
         conn = open_readonly(db)
         try:
             check_journal(conn)
