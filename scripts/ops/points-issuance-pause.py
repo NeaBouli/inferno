@@ -24,7 +24,9 @@ Nothing is guessed. Before writing, the tool verifies read-only on the host:
 the Points container (running, exactly one Traefik router with rule
 Host(`points-api.ifrunit.tech`), no non-loopback published port), exactly one
 running central Traefik container (fixed identity, see below) with a known major version (2 or 3), a watched
-file-provider DIRECTORY passed as a CLI argument and bind-mounted from the host,
+file-provider DIRECTORY, taken from the CLI arguments or, when Traefik loads a bind-mounted YAML
+static config file from its default lookup paths, from that file's providers.file block (strictly
+parsed, never printed), and bind-mounted from the host,
 no foreign config using our names, and public probes: GET /health is 200 and an
 unauthenticated POST /voucher/issue is 401 (reaches the backend, rejected before
 any signing). After writing, it waits until every probe variant answers 503 while
@@ -261,25 +263,143 @@ def file_provider_dir(args: Sequence[str]) -> str:
     return dirs[0].rstrip("/") or "/"
 
 
-_STATIC_NAMES = ("traefik.yml", "traefik.yaml", "traefik.toml")
+_STATIC_EXTS = ("toml", "yaml", "yml")  # Traefik's own lookup order
+_STATIC_NAMES = tuple(f"traefik.{e}" for e in _STATIC_EXTS)
+STATIC_MAX_BYTES = 262144
 
 
-def static_file_mounted(mounts: object) -> bool:
-    """Traefik prefers a static config file over CLI args; then the args prove nothing."""
-    if not isinstance(mounts, list):
+def static_search_paths(workdir: str) -> list[str]:
+    """Traefik v3 default static-config lookup (pkg/cli/loader_file.go, paerser cli.Finder):
+    /etc/traefik/traefik, $XDG_CONFIG_HOME/traefik (unset in the official image -> /traefik),
+    $HOME/.config/traefik, ./traefik; extensions toml, yaml, yml; the first existing path wins
+    and a loaded file excludes CLI flags. $HOME/.config is not resolvable without reading the
+    container environment, so any mount there is refused below instead of guessed."""
+    cwd = (workdir or "/").rstrip("/")
+    paths: list[str] = []
+    for base in ("/etc/traefik/traefik", "/traefik", f"{cwd}/traefik"):
+        for ext in _STATIC_EXTS:
+            if f"{base}.{ext}" not in paths:
+                paths.append(f"{base}.{ext}")
+    return paths
+
+
+def static_config_file(mounts: object, workdir: object) -> Optional[tuple[str, Path]]:
+    """The bind-mounted static config file Traefik loads, as (container path, host path)."""
+    if not isinstance(mounts, list) or not all(isinstance(m, dict) for m in mounts):
         raise Refuse("traefik_mounts_unreadable")
+    if not isinstance(workdir, str) or (workdir and not workdir.startswith("/")):
+        raise Refuse("traefik_inspect_unreadable")
+    search = static_search_paths(workdir)
+    hits: list[tuple[str, Path]] = []
     for m in mounts:
-        if not isinstance(m, dict):
-            raise Refuse("traefik_mounts_unreadable")
-        dest = str(m.get("Destination", "")).rstrip("/")
+        dest = str(m.get("Destination", "")).rstrip("/") or "/"
         src = m.get("Source")
-        if dest.rsplit("/", 1)[-1] in _STATIC_NAMES:
-            return True
-        if dest in ("/etc/traefik", "/etc", "/") and isinstance(src, str):
-            base = Path(src) / ("traefik" if dest == "/etc" else "etc/traefik" if dest == "/" else "")
-            if any((base / n).exists() for n in _STATIC_NAMES):
-                return True
-    return False
+        if "/.config" in dest + "/" or (dest.rsplit("/", 1)[-1] in _STATIC_NAMES and dest not in search):
+            raise Unavailable("traefik_static_config_location_unknown")
+        for path in search:
+            if path == dest or path.startswith(dest.rstrip("/") + "/"):
+                if m.get("Type") != "bind" or not isinstance(src, str):
+                    raise Unavailable("traefik_static_config_not_bind_mount")
+                host = Path(src) / path[len(dest.rstrip("/")):].lstrip("/") if path != dest else Path(src)
+                if path == dest or host.exists():
+                    hits.append((path, host))
+    if not hits:
+        return None
+    if len({h[0] for h in hits}) != 1:
+        raise Refuse("traefik_static_config_ambiguous")
+    path, host = hits[0]
+    if host.is_symlink() or not host.is_file():
+        raise Refuse("traefik_static_config_unreadable")
+    return path, host
+
+
+def read_static_config(host: Path) -> str:
+    try:
+        with open(host, "rb") as fh:
+            data = fh.read(STATIC_MAX_BYTES + 1)
+    except OSError:
+        raise Refuse("traefik_static_config_unreadable") from None
+    if len(data) > STATIC_MAX_BYTES:
+        raise Refuse("traefik_static_config_too_large")
+    try:
+        return data.decode("utf-8")
+    except UnicodeDecodeError:
+        raise Refuse("traefik_static_config_unreadable") from None
+
+
+_YAML_KEY_RE = re.compile(r"^( *)([A-Za-z0-9_-]+):(?: +(.*))?$")
+_SAFE_DIR_RE = re.compile(r"/[A-Za-z0-9_./-]*")
+
+
+def _yaml_scalar(raw: str) -> str:
+    value = raw.split(" #", 1)[0].strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in "'\"":
+        value = value[1:-1]
+        if "'" in value or '"' in value or "\\" in value:
+            raise Refuse("static_file_provider_unexpected")
+    elif not value or value[0] in "'\"[{|>&*!%@`":
+        raise Refuse("static_file_provider_unexpected")
+    return value
+
+
+def static_file_provider_dir(text: str) -> str:
+    """providers.file.directory from a YAML static config, accepting only plain block mappings.
+    Values are used in memory only and never printed."""
+    content = [ln.rstrip() for ln in text.splitlines()
+               if ln.strip() and not ln.lstrip().startswith("#")]
+    if content and content[0] == "---":
+        content = content[1:]
+    for ln in content:
+        stripped = ln.lstrip(" ")
+        if ln.startswith("\t") or stripped.startswith(("\t", "---", "...")) or "<<:" in ln \
+                or re.search(r"(?:^|\s)[&*][A-Za-z0-9_]", ln):
+            raise Refuse("traefik_static_config_unsupported")
+    tops = [(i, _YAML_KEY_RE.match(ln)) for i, ln in enumerate(content) if not ln.startswith(" ")]
+    prov = [(i, m) for i, m in tops if m and m.group(2).lower() == "providers"]
+    if not prov:
+        raise Unavailable("file_provider_absent")
+    if len(prov) != 1 or prov[0][1].group(3):
+        raise Refuse("traefik_static_config_unsupported")
+    start = prov[0][0] + 1
+    end = next((i for i, _ in tops if i > prov[0][0]), len(content))
+    block = content[start:end]
+    if not block:
+        raise Unavailable("file_provider_absent")
+    child = len(block[0]) - len(block[0].lstrip(" "))
+    files = [i for i, ln in enumerate(block)
+             if len(ln) - len(ln.lstrip(" ")) == child and (m := _YAML_KEY_RE.match(ln)) and m.group(2).lower() == "file"]
+    if not files:
+        raise Unavailable("file_provider_absent")
+    head = _YAML_KEY_RE.match(block[files[0]])
+    if len(files) != 1 or head is None or head.group(3):
+        raise Refuse("static_file_provider_unexpected")
+    body = []
+    for ln in block[files[0] + 1:]:
+        if len(ln) - len(ln.lstrip(" ")) <= child:
+            break
+        body.append(ln)
+    if not body:
+        raise Unavailable("file_provider_absent")
+    grand = len(body[0]) - len(body[0].lstrip(" "))
+    fields: dict[str, str] = {}
+    for ln in body:
+        m = _YAML_KEY_RE.match(ln)
+        if m is None or len(m.group(1)) != grand or m.group(3) is None:
+            raise Refuse("static_file_provider_unexpected")
+        k = m.group(2).lower()
+        if k in fields or k not in ("directory", "watch", "filename"):
+            raise Refuse("static_file_provider_unexpected")
+        fields[k] = _yaml_scalar(m.group(3))
+    if "filename" in fields:
+        raise Unavailable("file_provider_single_file")
+    if fields.get("watch", "true").lower() != "true":
+        raise Unavailable("file_provider_not_watched")
+    directory = fields.get("directory")
+    if directory is None:
+        raise Unavailable("file_provider_absent")
+    if not _SAFE_DIR_RE.fullmatch(directory) or "/../" in directory + "/" or "//" in directory:
+        raise Refuse("file_provider_ambiguous")
+    return directory.rstrip("/") or "/"
 
 
 def host_dir_for(container_dir: str, mounts: object) -> Path:
@@ -327,11 +447,11 @@ def discover(run: Runner) -> Topology:
         raise Refuse("traefik_central_absent" if not central else "traefik_container_ambiguous")
     # Targeted fields only: never the Traefik container's environment.
     fmt = ("{{json .Config.Image}}\n{{json .Args}}\n{{json .Config.Labels}}\n{{json .Mounts}}\n"
-           "{{json .State.Running}}\n{{json .Name}}\n{{json .NetworkSettings.Networks}}")
+           "{{json .State.Running}}\n{{json .Name}}\n{{json .NetworkSettings.Networks}}\n{{json .Config.WorkingDir}}")
     parts = run(["docker", "inspect", "--type", "container", "--format", fmt, central[0]]).splitlines()
-    if len(parts) != 7:
+    if len(parts) != 8:
         raise Refuse("traefik_inspect_unreadable")
-    timage, args, tlabels, mounts, running, tname, tnets = (_json(p) for p in parts)
+    timage, args, tlabels, mounts, running, tname, tnets, workdir = (_json(p) for p in parts)
     if running is not True or not isinstance(timage, str) or not isinstance(args, list):
         raise Refuse("traefik_inspect_unreadable")
     if tname != f"/{TRAEFIK_CONTAINER}":
@@ -345,9 +465,23 @@ def discover(run: Runner) -> Topology:
     if len(wanted) > 1 or (wanted and wanted[0] not in shared) or not shared:
         raise Refuse("traefik_central_not_on_points_network")
     major = traefik_major(timage, tlabels)
-    if static_file_mounted(mounts):
+    sargs = [str(a) for a in args]
+    if any(a.lower().startswith(("--configfile", "--config-file")) for a in sargs):
         raise Unavailable("traefik_static_config_file")
-    cdir = file_provider_dir([str(a) for a in args])
+    static = static_config_file(mounts, workdir)
+    # A config file created inside the container's writable layer would be invisible to the
+    # mount check and could take precedence; `docker diff` lists changed paths only (no content).
+    search = static_search_paths(workdir if isinstance(workdir, str) else "/")
+    for row in run(["docker", "diff", central[0]]).splitlines():
+        changed = row[2:].strip() if len(row) > 2 else ""
+        if changed in search or changed.startswith("/etc/traefik") or "/.config" in changed:
+            raise Unavailable("traefik_static_config_unverifiable")
+    if static is None:
+        cdir = file_provider_dir(sargs)
+    elif static[0].endswith(".toml"):
+        raise Unavailable("traefik_static_config_toml")
+    else:
+        cdir = static_file_provider_dir(read_static_config(static[1]))
     host = host_dir_for(cdir, mounts)
     return Topology(eps, tls, resolver, major, host, Path(wd) / "points-backend" / "RELEASE_SHA")
 
