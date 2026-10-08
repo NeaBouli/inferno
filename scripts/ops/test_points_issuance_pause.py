@@ -60,7 +60,9 @@ class Fixture:
     def __init__(self, args: Optional[list[str]] = None, image: str = "traefik:v3.1.4",
                  mounts: Optional[list[dict[str, Any]]] = None, labels: Optional[dict[str, str]] = None,
                  ports: Optional[dict[str, Any]] = None, router_value: str = OTHER,
-                 traefik_rows: Optional[list[str]] = None, version_label: Optional[str] = "3.1.4") -> None:
+                 traefik_rows: Optional[list[str]] = None, version_label: Optional[str] = "3.1.4",
+                 traefik_name: str = "/traefik-central", traefik_project: Optional[str] = "traefik",
+                 traefik_networks: Any = None, points_networks: Any = None) -> None:
         self.tmp = tempfile.TemporaryDirectory()
         base = Path(self.tmp.name)
         self.root = base / "opt-inferno"
@@ -81,8 +83,16 @@ class Fixture:
         self.labels["com.docker.compose.project.working_dir"] = str(self.root)
         self.ports = ports if ports is not None else {"3004/tcp": None}
         self.router_value = router_value
-        self.traefik_rows = traefik_rows if traefik_rows is not None else ["tid1\ttraefik:v3.1.4"]
+        self.traefik_rows = traefik_rows if traefik_rows is not None else [
+            "tid1\ttraefik:v3.1.4\ttraefik-central", "pid2\ttraefik:v3.1\tparlay-traefik"]
         self.version_label = version_label
+        self.traefik_name = traefik_name
+        self.traefik_project = traefik_project
+        self.traefik_networks = traefik_networks if traefik_networks is not None else {
+            "traefik-public": {"IPAddress": "172.18.0.2"}, "traefik-internal": {}}
+        self.points_networks = points_networks if points_networks is not None else {
+            "traefik-public": {"IPAddress": "172.18.0.5"}, "inferno-default": {}}
+        self.inspected: list[str] = []
         self.edge = Edge(self)
         self.lines: list[str] = []
         self.commands: list[list[str]] = []
@@ -98,15 +108,23 @@ class Fixture:
                 "State": {"Running": True, "Status": "running"},
                 "Config": {"Labels": self.labels, "Env": [
                     "JWT_SECRET=SENTINEL-SECRET-JWT", f"FEE_ROUTER_ADDRESS={self.router_value}"]},
-                "NetworkSettings": {"Ports": self.ports},
+                "NetworkSettings": {"Ports": self.ports, "Networks": self.points_networks},
             }])
         if cmd[:2] == ["docker", "ps"]:
-            return "\n".join([*self.traefik_rows, "pid\tinferno-points-backend:latest"]) + "\n"
+            assert cmd[-1] == "{{.ID}}\t{{.Image}}\t{{.Names}}"
+            return "\n".join([*self.traefik_rows, "pid\tinferno-points-backend:latest\tinferno-points-backend"]) + "\n"
         if cmd[:4] == ["docker", "inspect", "--type", "container"] and "--format" in cmd:
             fmt = cmd[cmd.index("--format") + 1]
             assert "Env" not in fmt, "must never request the Traefik environment"
+            self.inspected.append(cmd[-1])
+            tlabels: dict[str, str] = {}
+            if self.version_label:
+                tlabels["org.opencontainers.image.version"] = self.version_label
+            if self.traefik_project is not None:
+                tlabels["com.docker.compose.project"] = self.traefik_project
             return "\n".join(json.dumps(x) for x in (
-                self.image, self.args, ({"org.opencontainers.image.version": self.version_label} if self.version_label else {}), self.mounts, True)) + "\n"
+                self.image, self.args, tlabels, self.mounts, True, self.traefik_name,
+                self.traefik_networks)) + "\n"
         raise AssertionError(f"unexpected command {cmd}")
 
     def tick(self) -> float:
@@ -287,7 +305,19 @@ class PauseTests(unittest.TestCase):
         two_hosts = {**POINTS_LABELS, "traefik.http.routers.b.rule": "Host(`points-api.ifrunit.tech`) && PathPrefix(`/x`)"}
         cases: list[tuple[dict[str, Any], str]] = [
             ({"traefik_rows": []}, "traefik_container_absent"),
-            ({"traefik_rows": ["a\ttraefik:v3.1", "b\ttraefik:v3.1"]}, "traefik_container_ambiguous"),
+            ({"traefik_rows": ["a\ttraefik:v3.1\tparlay-traefik", "b\ttraefik:v3.1\tother"]},
+             "traefik_central_absent"),
+            ({"traefik_rows": ["a\ttraefik:v3.1\ttraefik-central", "b\ttraefik:v3.1\ttraefik-central"]},
+             "traefik_container_ambiguous"),
+            ({"traefik_rows": ["a\tnginx:1\ttraefik-central"]}, "traefik_container_absent"),
+            ({"traefik_name": "/parlay-traefik"}, "traefik_central_mismatch"),
+            ({"traefik_project": "parlay"}, "traefik_central_project_mismatch"),
+            ({"traefik_project": None}, "traefik_central_project_mismatch"),
+            ({"traefik_networks": {"parlay-net": {}}}, "traefik_central_not_on_points_network"),
+            ({"traefik_networks": {"inferno-default": {}}}, "traefik_central_not_on_points_network"),
+            ({"points_networks": {}}, "traefik_central_not_on_points_network"),
+            ({"traefik_networks": []}, "traefik_networks_unreadable"),
+            ({"points_networks": []}, "points_networks_unreadable"),
             ({"image": "traefik:latest", "version_label": None}, "traefik_version_unknown"),
             ({"image": "traefik:v4.0", "version_label": None}, "traefik_version_unknown"),
             ({"labels": two_hosts}, "points_router_ambiguous"),
@@ -309,6 +339,33 @@ class PauseTests(unittest.TestCase):
             finally:
                 fx.close()
 
+    def test_selects_central_traefik_among_several(self) -> None:
+        # Host reality 2026-10-08: traefik-central (inferno edge) and parlay-traefik both running.
+        for rows in (["p\ttraefik:v3.1\tparlay-traefik", "c\ttraefik:v3.6\ttraefik-central"],
+                     ["c\ttraefik:v3.6\ttraefik-central"]):
+            fx = Fixture(traefik_rows=rows, image="traefik:v3.6", version_label="3.6.0")
+            try:
+                with self.subTest(rows=len(rows)):
+                    self.assertEqual(fx.run("--status"), 0)
+                    self.assertEqual(fx.inspected, ["c"])
+                    self.assertEqual(fx.out()["mechanism"], "traefik-file-provider")
+                    self.assertEqual(fx.run("--pause"), 0)
+                    self.assertEqual(fx.inspected, ["c", "c"])
+                    self.assertTrue(fx.pause_file.exists())
+                    self.assertNoLeak(fx)
+            finally:
+                fx.close()
+
+    def test_router_network_label_must_be_shared(self) -> None:
+        labels = {**POINTS_LABELS, "traefik.docker.network": "other-net"}
+        fx = Fixture(labels=labels, points_networks={"other-net": {}, "traefik-public": {}})
+        try:
+            self.assertEqual(fx.run("--pause"), 2)
+            self.assertEqual(fx.out()["refuse"], "traefik_central_not_on_points_network")
+            self.assertFalse(fx.pause_file.exists())
+        finally:
+            fx.close()
+
     def test_loopback_port_space_arg_and_camelcase_labels_ok(self) -> None:
         labels = {k.replace("entrypoints", "entryPoints").replace("certresolver", "certResolver"): v
                   for k, v in POINTS_LABELS.items()}
@@ -321,7 +378,7 @@ class PauseTests(unittest.TestCase):
             fx.close()
 
     def test_traefik_v2_rule(self) -> None:
-        fx = Fixture(image="traefik:v2.11", traefik_rows=["t\ttraefik:v2.11"])
+        fx = Fixture(image="traefik:v2.11", traefik_rows=["t\ttraefik:v2.11\ttraefik-central"])
         try:
             # label version 3.1.4 conflicts with tag v2.11 -> refuse rather than guess
             self.assertEqual(fx.run("--status"), 2)
