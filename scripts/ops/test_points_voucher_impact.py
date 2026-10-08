@@ -72,7 +72,7 @@ class Db:
 
 
 def fake_run(source: str, name: str = "/inferno-points-backend", running: bool = True,
-             mounts: Optional[list[dict[str, Any]]] = None) -> Any:
+             mounts: Optional[list[dict[str, Any]]] = None, tz_rows: Optional[list[str]] = None) -> Any:
     calls: list[list[str]] = []
 
     def run(cmd: Sequence[str]) -> str:
@@ -80,6 +80,8 @@ def fake_run(source: str, name: str = "/inferno-points-backend", running: bool =
         calls.append(cmd)
         assert cmd[:4] == ["docker", "inspect", "--type", "container"], cmd
         fmt = cmd[cmd.index("--format") + 1]
+        if fmt == mod._TZ_FMT:
+            return "".join(json.dumps(r) + "\n" for r in (tz_rows or [])) + "\n"
         assert "Env" not in fmt and "Config" not in fmt, "must never request the container environment"
         m = mounts if mounts is not None else [{"Type": "volume", "Source": source, "Destination": "/data"}]
         return "\n".join(json.dumps(x) for x in (name, running, m)) + "\n"
@@ -167,11 +169,17 @@ class ImpactTests(unittest.TestCase):
         try:
             mod.DAILY_ISSUANCE_CAP = len(SECRET_NONCES)
             _, kv, _ = self.run_main()
-            self.assertEqual(kv["q7_days_global_cap_reached_utc"], "1")
+            self.assertEqual(kv["q7_days_global_cap_reached"], "1")
+            self.assertEqual(kv["q7_container_day"], "utc")
             self.assertEqual(kv["q7_issuance_days_utc"], "1")
             mod.DAILY_ISSUANCE_CAP = len(SECRET_NONCES) + 1
             _, kv, _ = self.run_main()
-            self.assertEqual(kv["q7_days_global_cap_reached_utc"], "0")
+            self.assertEqual(kv["q7_days_global_cap_reached"], "0")
+            for rows, want in ((["TZ=UTC"], "1"), (["TZ=Europe/Athens"], "unknown"), (["TZ=CET-1"], "unknown"),
+                               (["TZ=UTC", "TZ=UTC"], "unknown")):
+                mod.DAILY_ISSUANCE_CAP = len(SECRET_NONCES)
+                _, kv, _ = self.run_main(fake_run(str(self.db.dir), tz_rows=rows))
+                self.assertEqual(kv["q7_days_global_cap_reached"], want, rows)
         finally:
             mod.DAILY_ISSUANCE_CAP = old
 

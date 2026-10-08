@@ -95,6 +95,28 @@ def data_dir(run: Runner) -> Path:
     return host
 
 
+_TZ_FMT = '{{range .Config.Env}}{{if eq (index (split . "=") 0) "TZ"}}{{json .}}{{"\\n"}}{{end}}{{end}}'
+_UTC_NAMES = {"", "UTC", "UTC0", "Etc/UTC", "Etc/UCT", "UCT", "Zulu", "Etc/Zulu", "GMT", "Etc/GMT", "GMT0"}
+
+
+def container_day_is_utc(run: Runner) -> Optional[bool]:
+    """True when the container's local midnight is UTC midnight. Only the TZ variable is requested
+    (node:22-alpine ships no /etc/localtime, so an unset TZ means UTC). None when unknown."""
+    rows = [r for r in run(["docker", "inspect", "--type", "container", "--format", _TZ_FMT, CONTAINER]).splitlines()
+            if r.strip()]
+    if not rows:
+        return True
+    if len(rows) != 1:
+        return None
+    try:
+        item = json.loads(rows[0])
+    except ValueError:
+        return None
+    if not isinstance(item, str) or not item.startswith("TZ="):
+        return None
+    return True if item[3:] in _UTC_NAMES else None
+
+
 def database_file(directory: Path) -> Path:
     candidates = [p for p in directory.iterdir()
                   if p.suffix == ".db" and p.is_file() and not p.is_symlink() and p.name != "build.db"]
@@ -151,7 +173,7 @@ def suppress_cells(rows: list[list[int]]) -> list[list[str]]:
     return out
 
 
-def report(conn: sqlite3.Connection, out: Out) -> None:
+def report(conn: sqlite3.Connection, out: Out, day_is_utc: Optional[bool] = True) -> None:
     c, e = _ms('"createdAt"'), _ms('"expiresAt"')
     q = conn.execute
     types = dict(q('SELECT typeof("createdAt"), COUNT(*) FROM "Voucher" GROUP BY 1').fetchall())
@@ -193,8 +215,10 @@ def report(conn: sqlite3.Connection, out: Out) -> None:
         f'WHERE {win} GROUP BY d)', (DAILY_ISSUANCE_CAP, *args)).fetchone()
     out(f"q7_wallet_24h_windows_consumed={total}")
     out(f"q7_issuance_days_utc={days}")
-    out(f"q7_days_global_cap_reached_utc={cap_days}")
-    out("q7_note=global_cap_uses_container_local_midnight;utc_days_assume_container_tz_utc")
+    # The global cap resets at the container's local midnight; UTC-day counts match it only when the
+    # container runs on UTC, otherwise the figure is reported as unknown instead of approximated.
+    out("q7_days_global_cap_reached=" + (str(cap_days) if day_is_utc else "unknown"))
+    out("q7_container_day=" + ("utc" if day_is_utc else "unknown"))
     after = q(f'SELECT COUNT(*) FROM "Voucher" WHERE {c} >= ?', (PAUSE_MS,)).fetchone()[0]
     out(f"vouchers_at_or_after_pause={after}")
     if MAINNET_START_MS is not None:
@@ -215,11 +239,12 @@ def main(argv: Sequence[str], run: Runner = _run, out: Out = print,
         return 2
     try:
         db = db_override or database_file(data_dir(run))
+        day_is_utc = True if db_override else container_day_is_utc(run)
         conn = open_readonly(db)
         try:
             check_journal(conn)
             check_schema(conn)
-            report(conn, out)
+            report(conn, out, day_is_utc)
         except sqlite3.Error:
             raise Refuse("query_failed") from None
         finally:
