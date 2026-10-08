@@ -57,6 +57,7 @@ import os
 import re
 import subprocess
 import sys
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -113,6 +114,7 @@ def _run(cmd: Sequence[str]) -> str:
 
 
 COPY_MAX_BYTES = 262144 + 65536
+COPY_TIMEOUT = 30.0
 
 
 def _copy(container: str, path: str) -> Optional[bytes]:
@@ -120,15 +122,29 @@ def _copy(container: str, path: str) -> Optional[bytes]:
     proc = subprocess.Popen(["docker", "cp", f"{container}:{path}", "-"],
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     assert proc.stdout is not None and proc.stderr is not None
-    data = proc.stdout.read(COPY_MAX_BYTES + 1)
-    if len(data) > COPY_MAX_BYTES:
+    out, err = proc.stdout, proc.stderr
+    got: dict[str, bytes] = {}
+    readers = [threading.Thread(target=lambda: got.__setitem__("out", out.read(COPY_MAX_BYTES + 1)), daemon=True),
+               threading.Thread(target=lambda: got.__setitem__("err", err.read(4096)), daemon=True)]
+    for t in readers:
+        t.start()
+    deadline = time.monotonic() + COPY_TIMEOUT
+    for t in readers:
+        t.join(max(0.0, deadline - time.monotonic()))
+    if any(t.is_alive() for t in readers) or len(got.get("out", b"")) > COPY_MAX_BYTES:
+        proc.kill()  # hung or oversized: never wait on an unbounded stream
+        proc.wait()
+        raise Refuse("traefik_static_config_too_large" if len(got.get("out", b"")) > COPY_MAX_BYTES
+                     else "docker_failed")
+    try:
+        rc = proc.wait(timeout=max(1.0, deadline - time.monotonic()))
+    except subprocess.TimeoutExpired:
         proc.kill()
         proc.wait()
-        raise Refuse("traefik_static_config_too_large")
-    err = proc.stderr.read(4096)
-    if proc.wait(timeout=30) == 0:
-        return data
-    if b"Could not find the file" in err or b"No such file or directory" in err:
+        raise Refuse("docker_failed") from None
+    if rc == 0:
+        return got.get("out", b"")
+    if b"Could not find the file" in got.get("err", b"") or b"No such file or directory" in got.get("err", b""):
         return None
     raise Refuse("docker_failed")
 

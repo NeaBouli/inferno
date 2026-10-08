@@ -6,6 +6,7 @@ from __future__ import annotations
 import importlib.util
 import io
 import json
+import os
 import re
 import sys
 import tarfile
@@ -193,6 +194,43 @@ class Fixture:
 
     def close(self) -> None:
         self.tmp.cleanup()
+
+
+class CopyTests(unittest.TestCase):
+    """The real `docker cp` wrapper against a fake docker binary: missing, ok, oversized, hung, error."""
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        fake = Path(self.tmp.name) / "docker"
+        fake.write_text(
+            "#!/bin/sh\n"
+            'case "$2" in\n'
+            '  c:/missing) echo "Error response from daemon: Could not find the file /missing in container c" >&2; exit 1;;\n'
+            '  c:/ok) printf okdata; exit 0;;\n'
+            '  c:/big) head -c 400000 /dev/zero; exit 0;;\n'
+            '  c:/hang) sleep 30; exit 0;;\n'
+            '  *) echo "permission denied" >&2; exit 1;;\n'
+            "esac\n")
+        fake.chmod(0o755)
+        self.old_path = os.environ["PATH"]
+        os.environ["PATH"] = f"{self.tmp.name}{os.pathsep}{self.old_path}"
+        self.old_timeout = mod.COPY_TIMEOUT
+        mod.COPY_TIMEOUT = 1.0
+
+    def tearDown(self) -> None:
+        os.environ["PATH"] = self.old_path
+        mod.COPY_TIMEOUT = self.old_timeout
+        self.tmp.cleanup()
+
+    def test_copy_outcomes(self) -> None:
+        self.assertIsNone(mod._copy("c", "/missing"))
+        self.assertEqual(mod._copy("c", "/ok"), b"okdata")
+        for path, code in (("/big", "traefik_static_config_too_large"), ("/hang", "docker_failed"),
+                           ("/other", "docker_failed")):
+            with self.subTest(path=path):
+                with self.assertRaises(mod.Refuse) as ctx:
+                    mod._copy("c", path)
+                self.assertEqual(ctx.exception.code, code)
 
 
 class PauseTests(unittest.TestCase):
