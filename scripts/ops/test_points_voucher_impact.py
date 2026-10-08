@@ -158,6 +158,19 @@ class ImpactTests(unittest.TestCase):
         self.assertIsNone(mod.weekly_table([[12, 9, 3]]))
         self.assertEqual(mod.weekly_table([[12, 9, 0], [20, 15, 7]]), [["12", "9", "0"], ["20", "15", "7"]])
 
+    def test_weekly_expiry_unknown_is_its_own_column(self) -> None:
+        for i in range(5):
+            self.db.voucher(i, PAUSE - 30 * DAY + i * 60_000, "not-a-date")
+        for i in range(5, 10):
+            self.db.voucher(i % 8, PAUSE - 30 * DAY + i * 60_000, PAUSE - 20 * DAY)
+        self.db.commit()
+        _, kv, lines = self.run_main()
+        weeks = [line for line in lines if line.startswith("week=")]
+        self.assertEqual(len(weeks), 1)
+        self.assertIn("vouchers=10 wallets=8 expired=5 unexpired=0 expiry_unknown=5", weeks[0])
+        self.assertEqual(kv["q4_vouchers_expiry_unknown"], "5")
+        self.assertNoLeak(lines)
+
     def test_weekly_table_published_when_all_cells_large(self) -> None:
         for i in range(10):
             self.db.voucher(i % 8, PAUSE - 30 * DAY + i * 60_000, PAUSE - 20 * DAY)
@@ -165,7 +178,7 @@ class ImpactTests(unittest.TestCase):
         _, kv, lines = self.run_main()
         weeks = [line for line in lines if line.startswith("week=")]
         self.assertEqual(len(weeks), 1)
-        self.assertIn("vouchers=10 wallets=8 expired=10", weeks[0])
+        self.assertIn("vouchers=10 wallets=8 expired=10 unexpired=0 expiry_unknown=0", weeks[0])
         self.assertNotIn("weekly", kv)
         self.assertNoLeak(lines)
 

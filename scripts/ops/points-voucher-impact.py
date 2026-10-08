@@ -244,13 +244,14 @@ def report(conn: sqlite3.Connection, out: Out, day_is_utc: Optional[bool] = True
         out(f"vouchers_before_mainnet_start={before}")
     weeks = q(
         f'SELECT strftime(\'%Y-W%W\', {c} / 1000, \'unixepoch\') wk, COUNT(*), COUNT(DISTINCT "walletId"), '
-        f'COALESCE(SUM({e} < ?), 0) FROM "Voucher" WHERE {win} GROUP BY wk ORDER BY wk', (AS_OF_MS, *args)).fetchall()
-    cells = weekly_table([[n, w, ex] for _, n, w, ex in weeks])
+        f'COALESCE(SUM({e} < ?), 0), COALESCE(SUM({e} >= ?), 0), SUM({e} IS NULL) FROM "Voucher" WHERE {win} '
+        f'GROUP BY wk ORDER BY wk', (AS_OF_MS, AS_OF_MS, *args)).fetchall()
+    cells = weekly_table([[n, w, ex, un, unk] for _, n, w, ex, un, unk in weeks])
     if cells is None:
         out("weekly=withheld_small_cells")
         return
-    for (wk, *_), (n, w, ex) in zip(weeks, cells):
-        out(f"week={wk} vouchers={n} wallets={w} expired={ex}")
+    for (wk, *_), (n, w, ex, un, unk) in zip(weeks, cells):
+        out(f"week={wk} vouchers={n} wallets={w} expired={ex} unexpired={un} expiry_unknown={unk}")
 
 
 def main(argv: Sequence[str], run: Runner = _run, out: Out = print,
