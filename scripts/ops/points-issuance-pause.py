@@ -23,7 +23,7 @@ Points rollout, a failed rollout and a rollback.
 Nothing is guessed. Before writing, the tool verifies read-only on the host:
 the Points container (running, exactly one Traefik router with rule
 Host(`points-api.ifrunit.tech`), no non-loopback published port), exactly one
-running Traefik container with a known major version (2 or 3), a watched
+running central Traefik container (fixed identity, see below) with a known major version (2 or 3), a watched
 file-provider DIRECTORY passed as a CLI argument and bind-mounted from the host,
 no foreign config using our names, and public probes: GET /health is 200 and an
 unauthenticated POST /voucher/issue is 401 (reaches the backend, rejected before
@@ -63,6 +63,10 @@ from pathlib import Path
 from typing import Callable, Optional, Sequence
 
 POINTS_CONTAINER = "inferno-points-backend"
+# The host also runs other projects' Traefik instances (e.g. parlay-traefik). The edge that
+# serves Points is identified by a fixed name and compose project, never chosen at run time.
+TRAEFIK_CONTAINER = "traefik-central"
+TRAEFIK_COMPOSE_PROJECT = "traefik"
 PUBLIC_HOST = "points-api.ifrunit.tech"
 HOST_RULE = f"Host(`{PUBLIC_HOST}`)"
 PAUSE_NAME = "points-issuance-pause"
@@ -173,6 +177,20 @@ def points_router(raw_labels: dict[str, object]) -> tuple[tuple[str, ...], bool,
     if any(k.startswith(prefix + "tls.options") or k.startswith(prefix + "tls.domains") for k in labels):
         raise Refuse("points_router_options_unsupported")
     return eps, tls, resolver if isinstance(resolver, str) else None
+
+
+def _network_names(networks: object, code: str) -> frozenset[str]:
+    if not isinstance(networks, dict) or not all(isinstance(k, str) and k for k in networks):
+        raise Refuse(code)
+    return frozenset(networks)
+
+
+def points_networks(raw: str) -> frozenset[str]:
+    data = _json(raw)
+    if not isinstance(data, list) or len(data) != 1 or not isinstance(data[0], dict):
+        raise Refuse("points_container_unreadable")
+    net = data[0].get("NetworkSettings")
+    return _network_names(net.get("Networks") if isinstance(net, dict) else None, "points_networks_unreadable")
 
 
 def points_facts(raw: str) -> tuple[dict[str, object], list[str]]:
@@ -288,28 +306,45 @@ def host_dir_for(container_dir: str, mounts: object) -> Path:
 
 
 def discover(run: Runner) -> Topology:
-    labels, _env = points_facts(run(["docker", "inspect", "--type", "container", POINTS_CONTAINER]))
+    raw = run(["docker", "inspect", "--type", "container", POINTS_CONTAINER])
+    labels, _env = points_facts(raw)
+    pnets = points_networks(raw)
     eps, tls, resolver = points_router(labels)
     wd = labels.get("com.docker.compose.project.working_dir")
     if not isinstance(wd, str) or not wd.startswith("/"):
         raise Refuse("points_compose_labels_missing")
-    ps = run(["docker", "ps", "--no-trunc", "--format", "{{.ID}}\t{{.Image}}"])
-    traefik_ids = []
+    ps = run(["docker", "ps", "--no-trunc", "--format", "{{.ID}}\t{{.Image}}\t{{.Names}}"])
+    traefik_rows = []
     for row in ps.splitlines():
-        cid, _, img = row.partition("\t")
+        cid, _, rest = row.partition("\t")
+        img, _, names = rest.partition("\t")
         if _TRAEFIK_IMAGE_RE.match(img.strip()):
-            traefik_ids.append(cid.strip())
-    if len(traefik_ids) != 1:
-        raise Refuse("traefik_container_ambiguous" if traefik_ids else "traefik_container_absent")
+            traefik_rows.append((cid.strip(), names.strip()))
+    if not traefik_rows:
+        raise Refuse("traefik_container_absent")
+    central = [cid for cid, names in traefik_rows if names == TRAEFIK_CONTAINER]
+    if len(central) != 1:
+        raise Refuse("traefik_central_absent" if not central else "traefik_container_ambiguous")
     # Targeted fields only: never the Traefik container's environment.
-    fmt = "{{json .Config.Image}}\n{{json .Args}}\n{{json .Config.Labels}}\n{{json .Mounts}}\n{{json .State.Running}}"
-    parts = run(["docker", "inspect", "--type", "container", "--format", fmt, traefik_ids[0]]).splitlines()
-    if len(parts) != 5:
+    fmt = ("{{json .Config.Image}}\n{{json .Args}}\n{{json .Config.Labels}}\n{{json .Mounts}}\n"
+           "{{json .State.Running}}\n{{json .Name}}\n{{json .NetworkSettings.Networks}}")
+    parts = run(["docker", "inspect", "--type", "container", "--format", fmt, central[0]]).splitlines()
+    if len(parts) != 7:
         raise Refuse("traefik_inspect_unreadable")
-    timage, args, tlabels, mounts, running = (_json(p) for p in parts)
+    timage, args, tlabels, mounts, running, tname, tnets = (_json(p) for p in parts)
     if running is not True or not isinstance(timage, str) or not isinstance(args, list):
         raise Refuse("traefik_inspect_unreadable")
-    major = traefik_major(timage, tlabels if isinstance(tlabels, dict) else {})
+    if tname != f"/{TRAEFIK_CONTAINER}":
+        raise Refuse("traefik_central_mismatch")
+    if not isinstance(tlabels, dict) or tlabels.get("com.docker.compose.project") != TRAEFIK_COMPOSE_PROJECT:
+        raise Refuse("traefik_central_project_mismatch")
+    # The central edge must reach Points over the network Points' router names (or, without that
+    # label, over at least one shared network); otherwise it is not the edge serving Points.
+    shared = pnets & _network_names(tnets, "traefik_networks_unreadable")
+    wanted = [v for k, v in labels.items() if k.lower() == "traefik.docker.network"]
+    if len(wanted) > 1 or (wanted and wanted[0] not in shared) or not shared:
+        raise Refuse("traefik_central_not_on_points_network")
+    major = traefik_major(timage, tlabels)
     if static_file_mounted(mounts):
         raise Unavailable("traefik_static_config_file")
     cdir = file_provider_dir([str(a) for a in args])
