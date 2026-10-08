@@ -488,6 +488,28 @@ class PauseTests(unittest.TestCase):
                     self.assertFalse(fx.pause_file.exists())
             finally:
                 fx.close()
+        # Codex review d85655d8: an earlier XDG/HOME candidate supplied by a PARENT bind mount (or the
+        # image) wins over a lower-priority /traefik.yml mount -> unavailable before any write/probe.
+        parent_cases = [
+            (["XDG_CONFIG_HOME=/custom"], "/custom", "/custom/traefik.yml"),
+            (["XDG_CONFIG_HOME=/x", "HOME=/root"], "/root", "/root/.config/traefik.yml"),
+            (["XDG_CONFIG_HOME=/x"], None, "/root/.config/traefik.yaml"),  # image layer, default HOME
+        ]
+        for env, parent, candidate in parent_cases:
+            fx = Fixture(static_yaml=STATIC_OK, env_rows=env, container_files={candidate: b"providers: {}\n"})
+            try:
+                if parent is not None:
+                    pdir = Path(fx.tmp.name) / "parent"
+                    pdir.mkdir()
+                    fx.mounts.append({"Type": "bind", "Source": str(pdir), "Destination": parent})
+                with self.subTest(candidate=candidate):
+                    for args in (("--status",), ("--pause",)):
+                        self.assertEqual(fx.run(*args), 2)
+                        self.assertEqual(fx.out().get("reason"), "traefik_static_config_not_selected")
+                    self.assertFalse(fx.pause_file.exists())
+                    self.assertEqual(fx.edge.calls, [])
+            finally:
+                fx.close()
         # two static files on the lookup path -> refuse rather than pick Traefik's first
         fx = Fixture(static_yaml=STATIC_OK)
         try:
