@@ -21,6 +21,9 @@
 | #149 | dotenv | 18.0.3 | 18.0.5 | Gebuendelt in T-183 (01.10.2026) | - |
 | #150 | @nomicfoundation/hardhat-mocha | 3.1.0 | 4.0.0 | Gebuendelt in T-183 (01.10.2026); verlangt mocha ^12 | - |
 | #75 | mocha | 11.8.0 | 12.0.3 | Nachgeholt in T-183 (01.10.2026) mit hardhat-mocha 4; Mochas js-yaml jetzt 5.4.2 (GHSA-r3ph-w7gj-g6xm gepatcht) | - |
+| #244 | chai | 6.2.2 | 6.3.0 | Gebuendelt 08.10.2026 (Status-Baseline nachgezogen) | - |
+| #245 | axe-core | 4.13.0 | 4.14.0 | Gebuendelt 08.10.2026 | - |
+| #246 | hardhat | 3.18.0 | 3.18.1 | Gebuendelt 08.10.2026 (Status-Baseline nachgezogen) | - |
 
 ## Migrationsreihenfolge
 
