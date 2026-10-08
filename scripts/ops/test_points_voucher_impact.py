@@ -228,6 +228,27 @@ class ImpactTests(unittest.TestCase):
             mod.open_readonly(missing).execute("SELECT 1 FROM sqlite_master").fetchall()
         self.assertFalse(missing.exists())
 
+    def test_unparseable_expiry_is_not_counted_as_unexpired(self) -> None:
+        self.db.voucher(0, PAUSE - 2 * DAY, "not-a-date")
+        self.db.voucher(1, PAUSE - 2 * DAY, PAUSE + DAY)
+        self.db.commit()
+        _, kv, lines = self.run_main()
+        self.assertEqual(kv["q1_vouchers_issued"], "2")
+        self.assertEqual(kv["q4_vouchers_expired"], "0")
+        self.assertEqual(kv["q4_vouchers_unexpired"], "1")
+        self.assertEqual(kv["q4_vouchers_expiry_unknown"], "1")
+        self.assertEqual(kv["voucher_timestamp_unparseable"], "1")
+        self.assertNoLeak(lines)
+
+    def test_single_small_week_withholds_weekly_table(self) -> None:
+        self.db.voucher(0, PAUSE - 2 * DAY, PAUSE + DAY)
+        self.db.commit()
+        _, kv, lines = self.run_main()
+        self.assertEqual(kv["weekly"], "withheld_insufficient_cohort")
+        self.assertFalse([line for line in lines if line.startswith("week=")])
+        self.assertIsNone(mod.suppress_cells([[3, 2, 0]]))
+        self.assertIsNone(mod.suppress_cells([[3, 0, 0], [0, 0, 0]]))
+
     def test_unparseable_timestamps_are_counted_not_guessed(self) -> None:
         self.db.voucher(0, "not-a-date", PAUSE + DAY)
         self.db.commit()

@@ -157,17 +157,19 @@ def _ms(col: str) -> str:
             f"THEN CAST(strftime('%s', {col}) AS INTEGER) * 1000 ELSE NULL END)")
 
 
-def suppress_cells(rows: list[list[int]]) -> list[list[str]]:
+def suppress_cells(rows: list[list[int]]) -> Optional[list[list[str]]]:
     """Primary suppression of cells 1..SUPPRESS_BELOW-1 per column, plus complementary suppression:
     a column with exactly one suppressed cell also hides its smallest remaining non-zero cell, so the
-    hidden value cannot be recovered from the separately reported total."""
+    hidden value cannot be recovered from the separately reported total. When no complementary cell
+    exists (a single non-zero week in that column), the whole weekly table is withheld (None)."""
     out = [[str(v) for v in r] for r in rows]
     for col in range(len(rows[0]) if rows else 0):
         hidden = [i for i, r in enumerate(rows) if 0 < r[col] < SUPPRESS_BELOW]
         if len(hidden) == 1:
             rest = sorted((rows[i][col], i) for i in range(len(rows)) if i not in hidden and rows[i][col] > 0)
-            if rest:
-                hidden.append(rest[0][1])
+            if not rest:
+                return None
+            hidden.append(rest[0][1])
         for i in hidden:
             out[i][col] = "suppressed"
     return out
@@ -186,9 +188,10 @@ def report(conn: sqlite3.Connection, out: Out, day_is_utc: Optional[bool] = True
     lo = MAINNET_START_MS if MAINNET_START_MS is not None else 0
     win = f"{c} >= ? AND {c} < ?"
     args = (lo, PAUSE_MS)
-    total, wallets, expired, used, used_any = q(
-        f'SELECT COUNT(*), COUNT(DISTINCT "walletId"), COALESCE(SUM({e} <= ?), 0), COALESCE(SUM("used" = 1), 0), '
-        f'COALESCE(SUM("usedCount" > 0), 0) FROM "Voucher" WHERE {win}', (AS_OF_MS, *args)).fetchone()
+    total, wallets, expired, unexpired, used, used_any = q(
+        f'SELECT COUNT(*), COUNT(DISTINCT "walletId"), COALESCE(SUM({e} <= ?), 0), COALESCE(SUM({e} > ?), 0), '
+        f'COALESCE(SUM("used" = 1), 0), COALESCE(SUM("usedCount" > 0), 0) FROM "Voucher" WHERE {win}',
+        (AS_OF_MS, AS_OF_MS, *args)).fetchone()
     out(f"q1_vouchers_issued={total}")
     out(f"q2_wallets_affected={wallets}")
     debits, points = q(
@@ -203,7 +206,8 @@ def report(conn: sqlite3.Connection, out: Out, day_is_utc: Optional[bool] = True
     out(f"q3_debit_events_linked_to_voucher={linked}")
     out("q4_as_of=2026-10-08T21:55:00Z")
     out(f"q4_vouchers_expired={expired}")
-    out(f"q4_vouchers_unexpired={total - expired}")
+    out(f"q4_vouchers_unexpired={unexpired}")
+    out(f"q4_vouchers_expiry_unknown={total - expired - unexpired}")
     out(f"q5_db_marked_used={used}")
     out(f"q5_db_usedcount_gt0={used_any}")
     out("q5_note=backend_bookkeeping_not_onchain_redemption")
@@ -228,6 +232,9 @@ def report(conn: sqlite3.Connection, out: Out, day_is_utc: Optional[bool] = True
         f'SELECT strftime(\'%Y-W%W\', {c} / 1000, \'unixepoch\') wk, COUNT(*), COUNT(DISTINCT "walletId"), '
         f'COALESCE(SUM({e} <= ?), 0) FROM "Voucher" WHERE {win} GROUP BY wk ORDER BY wk', (AS_OF_MS, *args)).fetchall()
     cells = suppress_cells([[n, w, ex] for _, n, w, ex in weeks])
+    if cells is None:
+        out("weekly=withheld_insufficient_cohort")
+        return
     for (wk, *_), (n, w, ex) in zip(weeks, cells):
         out(f"week={wk} vouchers={n} wallets={w} expired={ex}")
 
