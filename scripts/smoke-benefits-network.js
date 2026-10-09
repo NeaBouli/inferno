@@ -135,10 +135,16 @@ async function verifyHttpSurface() {
   // Issues one expiring, wallet-free read challenge; never signs or consumes it.
   const auth = await fetchJson('/api/seller/auth-message?action=business:list&businessId=seller');
   assert(auth.message.includes('IFR Benefits Network - Seller Authorization'), 'seller auth message header mismatch');
-  assert(auth.message.includes('Domain: shop.ifrunit.tech\n'), 'seller auth domain binding missing');
-  assert(/\nChain ID: \d+\n/.test(auth.message), 'seller auth chain binding missing');
+  // Receipt context (F1): the frontend verifies device receipts against its own host and chain, so the
+  // backend's SELLER_AUTH_DOMAIN and CHAIN_ID must equal the served host and the frontend chain.
+  const expectedHost = new URL(baseUrl).host;
+  const expectedChainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID || 1);
+  assert(auth.domain === expectedHost, 'backend SELLER_AUTH_DOMAIN differs from the frontend host');
+  assert(auth.chainId === expectedChainId, 'backend CHAIN_ID differs from the frontend chain');
+  assert(auth.message.includes(`Domain: ${expectedHost}\n`), 'seller auth domain binding missing');
+  assert(auth.message.includes(`\nChain ID: ${expectedChainId}\n`), 'seller auth chain binding missing');
   assert(/^[0-9a-f]{64}$/.test(auth.nonce || ''), 'seller auth nonce missing');
-  assert(auth.message.includes('Only sign this message inside shop.ifrunit.tech.'), 'seller auth safety line missing');
+  assert(auth.message.includes(`Only sign this message inside ${expectedHost}.`), 'seller auth safety line missing');
   assert(auth.timestamp && auth.expiresAt, 'seller auth challenge missing timestamp/expiry');
   log('Seller auth challenge OK');
 

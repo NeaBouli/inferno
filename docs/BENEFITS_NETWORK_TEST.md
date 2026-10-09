@@ -43,6 +43,14 @@ then release the backend. The same release still needs the separate owner-B migr
 (backup, migrate, VACUUM, `node scripts/verify-owner-b-migration.cjs --scan <copy>`), and the edge
 access logs must be checked for query strings of old clients.
 
+Receipt context check (fails closed): device receipts verify only when the backend's
+`SELLER_AUTH_DOMAIN` equals the frontend host and its `CHAIN_ID` equals the frontend
+`NEXT_PUBLIC_CHAIN_ID`. Before a release run
+`node scripts/check-benefits-proof-context.cjs --env <compose env file> --public-host shop.ifrunit.tech`
+(values are never printed; unit test `node scripts/test-benefits-proof-context.cjs`); after a
+release `scripts/smoke-benefits-network.js` asserts the live challenge's domain and chain against
+the served host and `NEXT_PUBLIC_CHAIN_ID` (default 1).
+
 ## Quick Start (Local)
 
 ```bash
