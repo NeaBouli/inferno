@@ -16,7 +16,10 @@
     FeeRouter read failure cannot make the figures unavailable); kept for shape compatibility.
   - `liveSupply` is not a circulating, liquid or spendable figure: it still includes locked, vested
     and Treasury-held IFR, including the recovered, unallocated Treasury IFR.
-- Intentional breaking change of the public response (same unversioned URL, cached response).
+- Intentional breaking change of the public response (same unversioned URL; the HTTP response is
+  sent with `Cache-Control: no-store`; the server keeps the figures in an in-process memory cache
+  for up to 125 s, which a release restarts empty, so the new values apply from the first request
+  served by the new release).
   Previously `permanentlyLostRaw` was CV-01 plus the live FeeRouterV1 balance, the breakdown was
   `{ cv01Raw, feeRouterV1Raw }`, and `permanentlyLostError` was `"unavailable"` (with null figures)
   when the FeeRouterV1 read failed. The new meaning applies from the Copilot release that contains
