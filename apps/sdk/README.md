@@ -76,15 +76,26 @@ failed call, `cause` holds the original error). Treat it as "could not verify", 
 ## Benefits Checkout
 
 `IFRBenefitsClient.createCheckout()` requests a one-time `sessions:create` challenge bound to
-the seller wallet, business and benefit rule, then creates the session.
+the business and benefit rule (the request carries no wallet; the backend recovers the seller from
+the signature), then creates the session.
 `IFRBenefitsClient.getCheckoutStatus(sessionId)` polls `GET /api/sessions/:id` and fail-closed
 validates the public status response (`PENDING`, `APPROVED`, `REJECTED`, `REDEEMED`, `EXPIRED`).
 `IFRBenefitsClient.redeemCheckout({ sessionId, walletAddress, signMessage })` requests a fresh
 one-time `sessions:redeem` challenge bound to the session ID and posts the signed redemption to
 `POST /api/sessions/:id/redeem`; it resolves only after the API confirms `REDEEMED`.
 
-Both signed flows validate action, business, wallet, scope, timestamp, nonce and the exact
-challenge message before any signature is requested. The caller supplies a wallet-native `signMessage`
+Both signed flows validate action, business, scope, domain, chain, timestamp, nonce and the exact
+challenge message before any signature is requested.
+
+### Compatibility: wallet-free seller challenge (unreleased)
+
+The Benefits backend no longer echoes `walletAddress` in `GET /api/seller/auth-message` (owner
+decision B: no wallet in the challenge URL, response or storage; a legacy `walletAddress` query
+parameter is ignored). Released `ifr-sdk` versions up to 0.3.0 require `challenge.walletAddress` in
+that response and reject every challenge from the new backend ("mismatched seller authorization
+challenge"), so `createCheckout()` and `redeemCheckout()` break. Release order: publish and roll out
+the wallet-free SDK from this source **before** the Benefits backend release that ships the
+wallet-free challenge, and tell integrators to upgrade first. Publishing is a separate release gate. The caller supplies a wallet-native `signMessage`
 callback; the SDK never accepts or stores private keys, seed phrases or persistent seller secrets.
 
 ## Verification
