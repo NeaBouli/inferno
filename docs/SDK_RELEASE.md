@@ -64,7 +64,9 @@ explicit "yes" in the chat**; the owner signs in to npm in the browser and confi
 
 The approval for this step is separate from the general publication decision. It must name: version
 `0.4.0`, the exact commit SHA, the seven-file package listing, and that this first version is published
-**without provenance** (provenance can only be created inside GitHub Actions; every later version gets it).
+**without provenance** (in this repository's release path, provenance is produced only by the GitHub Actions
+Trusted Publishing workflow; the local bootstrap uses `--provenance=false`, and every later version is published by
+that workflow with provenance. Any other bootstrap path or an npm token needs a separate owner/security decision).
 
 From a clean checkout of the approved commit, one command does the whole bootstrap:
 
