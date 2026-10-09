@@ -1492,11 +1492,10 @@
         padding-right: 60px;
       }
 
-      /* T-287: the access panel's full-width buttons and footnote end 35px inside the viewport edge (shell 12px,
-         panel border 1px, padding 22px); 40px more keeps them left of the launcher band while scrolling. */
-      .panel-actions,
-      .panel-foot {
-        padding-right: 40px;
+      /* T-287 + e90 F1: the panel content (status notes, buttons, footnote) ended 35px inside the viewport edge (shell
+         12px, panel border 1px, padding 22px); 40px more padding keeps all of it left of the launcher (54px at 16px). */
+      .access-panel {
+        padding-right: 62px;
       }
 
       .trust-row {
@@ -1564,19 +1563,43 @@
       }
 
       /* T-285: a long wallet note ("Connected · status unavailable") used to keep its nowrap min-content and
-         widen the single hero column past 305-320px viewports. Notes now wrap at word boundaries and the value
-         keeps its natural width first, so values like "Unavailable" never break mid-word. */
+         widen the single hero column past 305-320px viewports, so notes wrap at word boundaries.
+         e90 F1: with the launcher clearance on the whole panel, value and note no longer fit side by side
+         ("Unavailable" would break mid-word), so the note moves under the value, left-aligned. */
       .status-card {
-        grid-template-columns: minmax(0, max-content) minmax(min-content, 1fr);
+        grid-template-columns: minmax(0, 1fr);
+        gap: 6px;
       }
 
       .status-note {
         white-space: normal;
-        text-align: right;
+        text-align: left;
       }
 
       /* T-287: with the launcher clearance the panel buttons are narrower than "Loans (borrowing closed)" on
          305-320px phones; a nowrap label would widen the hero column again, so labels wrap inside the button. */
+      .panel-actions .btn {
+        white-space: normal;
+        text-align: center;
+      }
+
+      /* e90 F1: with the full-panel launcher clearance the title plus the nowrap "Mainnet" badge are wider than the
+         305px panel content; the badge wraps under the title instead of widening the hero column. */
+      .panel-top {
+        flex-wrap: wrap;
+      }
+    }
+
+    /* e90 F1: between the phone layout and 1300px the panel's right content edge (shell margin 16-20px + border 1px +
+       padding 22px) reaches the fixed launcher rectangle (60px at 20px, 54px at 16px below 821px): status notes, the
+       "Commitment lock" button and the footnote sat under it while scrolling. 68px padding ends the content at least
+       85px from the viewport edge; from 1300px the centred shell margin alone clears it. */
+    @media (min-width: 681px) and (max-width: 1300px) {
+      .access-panel {
+        padding-right: 68px;
+      }
+
+      /* The two-column panel buttons are narrower now; long labels ("Loans (borrowing closed)") wrap inside. */
       .panel-actions .btn {
         white-space: normal;
         text-align: center;

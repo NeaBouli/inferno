@@ -395,7 +395,8 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
             </div>
           ) : null}
 
-          <div className="mt-6 rounded-2xl border border-white/10 bg-black/25 p-4">
+          {/* Phones drop this extra frame (the control has its own) so the wallet connector labels keep their width. */}
+          <div className="mt-6 rounded-2xl sm:border sm:border-white/10 sm:bg-black/25 sm:p-4">
             <WalletConnectControl />
           </div>
 
@@ -403,7 +404,7 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
             type="button"
             onClick={signAndVerify}
             disabled={!canSign || loading}
-            className="mt-6 w-full rounded-2xl bg-orange-300 px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-stone-950 shadow-xl shadow-orange-950/40 transition hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
+            className="shop-launcher-action-inset mt-6 w-full rounded-2xl bg-orange-300 px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-stone-950 shadow-xl shadow-orange-950/40 transition hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? 'Verifying...' : proofRejected && canSign ? 'Retry verification' : 'Sign and verify'}
           </button>

@@ -1,5 +1,68 @@
 # Changelog
 
+## [Unreleased] — 2026-10-06 — Benefits launcher keeps clear of checkout summary and approval action (release 8c21eb0e follow-up)
+
+### Fixed
+
+- `fix:` The fixed IFR Copilot launcher covered the seller console's checkout summary values
+  ("Per-wallet use", "Selected rule") at 820-900 px and the customer session's "Sign and verify"
+  action at 305-821 px. Below 1024 px the summary box reserves the launcher band on its right
+  (51 px / 41 px up to 820 px, values wrap inside it, rows stack label-over-value up to 420 px) and
+  the approval action ends 26 px / 42 px short of the right edge, so both stay >= 17 px left of the
+  launcher at every scroll position. CSS-only (`globals.css`) plus one class token per hop; launcher,
+  wallet chooser clearance, 44 px targets and typography unchanged.
+- `fix:` Seller console session-recovery input gets `min-w-0`: with Linux fallback fonts its
+  intrinsic width pushed every seller card 6 px past a 305 px viewport (hidden by the app shell).
+- `security:` Benefits frontend `sharp` override 0.35.4 -> 0.35.5 (GHSA-wq5f-xc86-pv6w, librsvg
+  CVE-2026-96889, published 2026-10-06); lockfile changes only the sharp/@img packages.
+
+### Tests
+
+- `test:` `npm run test:benefits-launcher-residuals` (CI: WalletConnect telemetry step) checks real
+  launcher/target rectangle intersection, `elementFromPoint` hit targets, clipping ancestors, 44 px
+  and page overflow at the live-evidence, worst-case and end scroll positions, with long summary
+  values and approval disabled/enabled/retry/loading fixtures at 305/320/375/820/821/900/1024/1440 px;
+  also fails on content overflowing the app shell. Red before (100 of 336 cases), 336/336 after
+  on macOS and in the Linux Playwright 1.63 image.
+
+## [Unreleased] — 2026-10-06 — Web3 e90 residuals: launcher clearance on tablets, tokenomics live supply
+
+### Fixed
+
+- `fix:` Web3 access panel and the fixed Copilot launcher: between 681 and 1300 px the panel content
+  (status notes, "Commitment lock", footnote) ran under the launcher while scrolling (e90 gate: 820x1180 and
+  1180x820 at scrollY 590). The whole panel now keeps a right clearance (68 px there, 62 px on phones, replacing
+  the T-287 button/footnote-only padding); long button labels wrap inside their buttons, on 305-400 px phones the
+  status note moves under its value and the network badge may wrap under the title. Launcher size/position and
+  the dialog hide rule are unchanged. New sweep test: real 2D rectangle intersection plus `elementFromPoint`
+  hit-tests at every scroll position, 7 widths x disconnected/connected/degraded.
+- `fix:` Tokenomics wiki live supply: reads IFR `totalSupply()` through wallet-core's chain-pinned
+  `getReadProvider()` instead of `copilot-api.ifrunit.tech/api/ifr/supply` (blocked by the Web3 CSP and without
+  ACAO for the Web3 origin). Burned = genesis − current supply in BigInt base units (lost IFR is never counted as
+  burned); explicit loading/live/unavailable/error states with recovery on the 60 s refresh; no wallet fallback,
+  no own provider; the redundant API prefetch is removed. No CSP, CORS, host or backend change.
+
+## [Unreleased] — 2026-10-06 — Benefits wallet connector labels fit at 305 px (release e90e2501 follow-up)
+
+### Fixed
+
+- `fix:` Wallet chooser "Connect with" buttons: since the T-284 launcher clearance the
+  "WalletConnect" label crossed its button at 305/320 px on the customer home and the customer
+  session page (session page also "Coinbase Wallet" and the Connecting... state). Below 640 px the
+  buttons use 8 px side padding (the box 8 px), the label gets a `<wbr>` between camel-case words
+  (`BreakableWalletLabel`, text unchanged) with `overflow-wrap: anywhere` as a last resort, and the
+  session page drops its extra wrapper frame on phones. Launcher clearance (16/26 px), 44 px
+  targets, font sizes and wallet logic unchanged; the seller console chooser gets the same label
+  break hints.
+
+### Tests
+
+- `test:` `npm run test:benefits-wallet-label-fit` (CI: WalletConnect telemetry step) measures
+  each connector label's text box against its button content box and every clipping ancestor,
+  44 px targets and the launcher gap, for the real labels, every button showing the longest
+  labels and the Connecting... state, on customer home, customer session and seller console at
+  305/320/375/768/819/820/821/834/1024/1440 px. Red before (13 failing cases at 305/320), 110/110 after.
+
 ## [Unreleased] — 2026-10-06 — Benefits PWA cache release v25 and light offline page (T-284)
 
 ### Fixed

@@ -557,3 +557,49 @@ textarea {
     text-wrap: balance;
   }
 }
+
+/* Release 8c21eb0e follow-up: below the lg two-column layout the fixed launcher band (80px above 820px, 70px up to
+   820px) covered the seller checkout summary values (right-aligned, 62px from the viewport edge) and the customer
+   "Sign and verify" action (45px from the edge up to 820px, centred max-w-3xl card above). These insets keep both
+   17px left of the band at every scroll position, like .shop-launcher-clearance does for the wallet chooser; from
+   1024px the summary sits in the left column and the action clears the band on its own. */
+@media (max-width: 1023px) {
+  .shop-launcher-row-inset {
+    padding-right: 51px;
+  }
+
+  .shop-launcher-action-inset {
+    width: calc(100% - 26px);
+  }
+}
+
+@media (max-width: 820px) {
+  .shop-launcher-row-inset {
+    padding-right: 41px;
+  }
+
+  .shop-launcher-action-inset {
+    width: calc(100% - 42px);
+  }
+}
+
+/* The inset narrows the summary rows; long values (lock source, rule labels, large IFR amounts) wrap inside them. */
+.shop-launcher-row-inset > * {
+  min-width: 0;
+}
+
+.shop-launcher-row-inset strong {
+  overflow-wrap: anywhere;
+}
+
+/* Phones: with the inset a side-by-side row squeezed labels to one word per line, so each value goes below its label. */
+@media (max-width: 420px) {
+  .shop-launcher-row-inset > div {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .shop-launcher-row-inset strong {
+    text-align: left;
+  }
+}

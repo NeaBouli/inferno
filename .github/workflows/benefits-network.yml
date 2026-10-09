@@ -23,6 +23,7 @@ on:
       - 'scripts/test-benefits-csp.js'
       - 'scripts/test-benefits-wallet-telemetry.js'
       - 'scripts/test-benefits-wallet-telemetry-gate.js'
+      - 'scripts/test-benefits-wallet-label-fit.js'
       - 'scripts/test-benefits-fullstack-e2e.js'
       - 'scripts/test-benefits-bundle-budget.cjs'
       - 'scripts/test-benefits-doc-consistency.cjs'
@@ -65,6 +66,7 @@ on:
       - 'scripts/test-benefits-csp.js'
       - 'scripts/test-benefits-wallet-telemetry.js'
       - 'scripts/test-benefits-wallet-telemetry-gate.js'
+      - 'scripts/test-benefits-wallet-label-fit.js'
       - 'scripts/test-benefits-fullstack-e2e.js'
       - 'scripts/test-benefits-bundle-budget.cjs'
       - 'scripts/test-benefits-doc-consistency.cjs'
@@ -273,3 +275,7 @@ jobs:
           done
           if [ "$ready" != 1 ]; then cat /tmp/benefits-telemetry-next.log; exit 1; fi
           BENEFITS_EXPECT_WALLETCONNECT=1 BENEFITS_BASE_URL=http://127.0.0.1:3100 npm run test:benefits-wallet-telemetry
+          # Release e90e2501 follow-up: connector labels fit their buttons (customer + seller, 305-1440px).
+          npm run test:benefits-wallet-label-fit
+          # Release 8c21eb0e follow-up: launcher keeps clear of seller summary values and the customer approval action.
+          npm run test:benefits-launcher-residuals
