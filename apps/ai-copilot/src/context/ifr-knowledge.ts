@@ -22,7 +22,7 @@ export function getIFRKnowledge() {
       july2026Status: "The preserved 27 July community audit (one owner-requested company-name redaction) is paired with an evidence-backed register: 12 fixed and verified, 3 partially remediated, 1 outdated snapshot corrected, 4 governance or future-version gated, 2 accepted or monitored, and 1 open actionable. Historical red or high-severity labels are not proof that an item remains open today.",
       july2026Register: "https://github.com/NeaBouli/inferno/blob/main/docs/community-audits/JULY_2026_REMEDIATION_REGISTER.md",
       pdf: "https://github.com/NeaBouli/inferno/raw/main/docs/community-audits/IFR_Protocol_CWA_Consolidated_Audit_Report_2026-09-14.pdf",
-      tests: "Current canonical evidence: contracts 693/693, Generator Engine 30/30, IFR SDK 36/36, Landing/Wiki browser 26/26, Web3 browser 85/85. Benefits physical device/wallet acceptance remains 1/10.",
+      tests: "Current canonical evidence: contracts 700/700, Generator Engine 30/30, IFR SDK 36/36, Landing/Wiki browser 26/26, Web3 browser 85/85. Contract CI run 37998031908 (9 October 2026), source d095ff4b73ea78466b3aa45ff10e7621f5d2eb57: 693 + 7 FeeRouter parity tests; serializer selfcheck excluded. Browser counts are retained T-274 evidence (6 October 2026, eead5086), not a fresh browser run. Benefits physical device/wallet acceptance remains 1/10.",
       boundary: "These are community audit records, not a professional third-party certification. Never imply that an open finding is remediated without the register's required integration and verification evidence."
     },
     userProvidedLiquidity: {

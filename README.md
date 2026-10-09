@@ -74,7 +74,7 @@ Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every standard
 
 Custody figures verified on-chain at block 26,065,893; the block-pinned breakdown lives on the [transparency page](https://ifrunit.tech/wiki/transparency.html).
 
-Until 5 October 2026 the 1% IFR transfer-pool fee accrued to FeeRouterV1, which has no IFR withdrawal or forwarding function: these fees stay there as a de-facto sink and are not forwarded to BuybackVault or BurnReserve (at block 26,065,893 both held 0 IFR while FeeRouterV1 held 722,304.949548316 IFR). No buyback/burn flywheel is fed by the pool fee today. Since Governance Proposal #21 (executed 5 October 2026, block 26,124,660) new pool fees go to BuybackController, where Governance can recover the IFR through `withdrawIFR`; the 734,545.074097347 IFR held by FeeRouterV1 as of that block were recovered to the Treasury Safe on 7 October 2026 by a governed batch (CWA-02, block 26,143,797). FeeRouterV1 holds 0 IFR; the Treasury Safe held 734,545.074097347 IFR at block 26,151,369, unallocated (no allocation decision exists). Permanently lost IFR is only CV-01: 26,418,467.994338353 IFR.
+Until 5 October 2026 the 1% IFR transfer-pool fee accrued to FeeRouterV1, which has no IFR withdrawal or forwarding function. This led to the historical de-facto sink classification, not automatic forwarding to BuybackVault or BurnReserve (at block 26,065,893 both held 0 IFR while FeeRouterV1 held 722,304.949548316 IFR). No buyback/burn flywheel is fed by the pool fee today. Since Governance Proposal #21 (executed 5 October 2026, block 26,124,660) new pool fees go to BuybackController, where Governance can recover the IFR through `withdrawIFR`; the 734,545.074097347 IFR held by FeeRouterV1 as of that block were recovered to the Treasury Safe on 7 October 2026 by a governed batch (CWA-02, block 26,143,797). The recovery amount is not proof that every recovered IFR unit came from pool fees. FeeRouterV1 holds 0 IFR in the accepted recovery evidence; the Treasury Safe held 734,545.074097347 IFR at block 26,151,369, unallocated (no allocation decision exists). Permanently lost IFR is only CV-01: 26,418,467.994338353 IFR.
 Team tokens: 48-month vesting, 12-month cliff. Liquidity reserve: initial lock ended 01.09.2026; staged Governance-controlled withdrawals remain unused.
 
 ## Fair Launch
@@ -138,8 +138,12 @@ The ecosystem is open and permissionless. Any product can integrate IFR Lock.
 
 **Automated test evidence** — current exact results are recorded by CI and release preflights. The tables below preserve an older internal inventory and must not be read as a current deduplicated total.
 
-**Current canonical matrix:** contracts **693/693**, Generator Engine **30/30**,
+**Current canonical matrix:** contracts **700/700**, Generator Engine **30/30**,
 IFR SDK **36/36**, Landing/Wiki browser **26/26**, Web3 browser **85/85**.
+Contract evidence: CI run `37998031908`, 9 October 2026, source
+`d095ff4b73ea78466b3aa45ff10e7621f5d2eb57`: 693 + 7 FeeRouter parity tests = 700.
+The separate Mocha serializer selfcheck is not a contract test. Browser counts
+are retained T-274 evidence (6 October 2026, `eead5086`), not a fresh browser run.
 See [Current Functionality Status](docs/CURRENT_FUNCTIONALITY_STATUS.md) for
 scope and limitations.
 
@@ -202,7 +206,7 @@ All smart contracts are open source and community review is explicitly encourage
 | Benefits Network Backend | `apps/benefits-network/backend/` | 3001 | Express + Prisma + SQLite + ethers v6 |
 | Benefits Network Frontend | `apps/benefits-network/frontend/` | 3000 | Next.js 15 + Tailwind + wagmi v3 (PWA) |
 | Benefits Wallet Prototype | `apps/benefits-wallet-prototype/` | 3012 | Isolated prototype; not used in production |
-| IFR SDK | `apps/sdk/` | — | TypeScript package; tested locally, npm publication pending |
+| IFR SDK | `apps/sdk/` | — | Published npm `ifr-sdk` **0.4.0**; source/docs **0.4.1** is unpublished and requires a separate npm release gate |
 | Integration Builder Engine | `apps/builder/engine/` | — | Code/config generator; 30 focused tests |
 | Telegram Bot | `apps/telegram/telegram-bot/` | — | Telegraf + ethers v6 + Railway (16 commands, moderation, governance notifier) |
 
@@ -221,6 +225,12 @@ Token dashboard for monitoring balances, transfers, lock management, and contrac
 ### Benefits Network
 
 The IFR Benefits Network lets any business verify on-chain IFR lock status to grant discounts and premium access. QR-based flow — no accounts, no subscriptions.
+
+**Privacy release boundary:** owner-B source is merged (#238), but production
+backend activation remains **HOLD** pending the customer-privacy migration.
+The production backend is unchanged; storage-free customer-wallet/history
+handling is a post-migration contract, not a production guarantee. See the
+[migration plan](docs/BENEFITS_CUSTOMER_PRIVACY_MIGRATION.md).
 
 **Routes:** `/` (role chooser and wallet/seller workspace) · `/b/:businessIdOrSlug` (seller console) · `/s/:businessIdOrSlug` (public catalog) · `/p/:passId` (customer pass) · `/r/:sessionId` (customer verification) · `/scan` (QR/manual entry) · `/guide` · `/support` · `/privacy`
 

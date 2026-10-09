@@ -110,11 +110,20 @@ for (const relative of currentSurfaces) {
   }
 }
 
-// Tests: the register's canonical contract count is the current reproduced count.
+// Tests: the register's contract count is pinned to accepted exact-source CI evidence.
 const register = JSON.parse(read("docs/community-audits/cwa-remediation-register.json"));
-assert.equal(register.canonicalTests.contracts, "693/693");
+assert.equal(register.canonicalTests.contracts, "700/700");
 const status = read("docs/CURRENT_FUNCTIONALITY_STATUS.md");
-assert.ok(status.includes("`693/693` passing"));
+assert.ok(status.includes("`700/700` passing"));
+for (const marker of [
+  "37998031908", "9 October 2026", "22:14:36.8215428Z",
+  "d095ff4b73ea78466b3aa45ff10e7621f5d2eb57",
+  "prior 693 plus exactly 7 FeeRouter parity tests",
+  "700 passing (16s)", "700 passing (700 mocha)",
+  "Mocha serializer selfcheck runs separately",
+]) {
+  assert.ok(status.includes(marker), `contract evidence missing: ${marker}`);
+}
 // Browser suites: "Landing/Wiki browser" = tests/browser/wallet-connect.spec.js (26) and
 // "Web3 browser" = tests/browser/web3-write.spec.js (85), each reproduced with
 // `npx playwright test tests/browser/<spec> --list` on main eead5086 (T-274).
@@ -123,12 +132,55 @@ assert.equal(register.canonicalTests.web3Browser, "85/85");
 assert.ok(status.includes("Landing/Wiki wallet browser suite: `26/26` passing"));
 assert.ok(status.includes("Web3 write-path browser suite: `85/85` passing"));
 assert.ok(readme.includes("Landing/Wiki browser **26/26**, Web3 browser **85/85**"));
+for (const relative of ["README.md", "docs/CURRENT_FUNCTIONALITY_STATUS.md", "docs/llms.txt", "apps/ai-copilot/src/context/ifr-knowledge.ts"]) {
+  const content = read(relative);
+  assert.ok(content.includes("T-274") && content.includes("6 October 2026") && content.includes("eead5086"), `${relative} must date retained browser evidence`);
+}
 for (const relative of ["docs/llms.txt", "apps/ai-copilot/src/context/ifr-knowledge.ts"]) {
   assert.ok(read(relative).includes("Landing/Wiki browser 26/26, Web3 browser 85/85"), `${relative} browser counts`);
 }
 for (const relative of ["README.md", "docs/CURRENT_FUNCTIONALITY_STATUS.md", "docs/index.html"]) {
   assert.ok(!/\b642 (contract )?tests\b/i.test(read(relative)), `${relative} cites the stale 642 count`);
 }
+
+// F6: visible and structured FAQ answers must describe proposals, not settled mechanics.
+const faq = read("docs/wiki/faq.html");
+const faqSchema = [...faq.matchAll(/<script\b[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/g)]
+  .map((match) => JSON.parse(match[1]))
+  .find((data) => data["@type"] === "FAQPage");
+assert.ok(faqSchema, "FAQPage structured data missing");
+const structuredForum = faqSchema.mainEntity.find((entry) => entry.name === "What is the two-chamber governance system?")?.acceptedAnswer?.text;
+const visibleForum = faq.match(/id="faq-two-chamber">[\s\S]*?<div class="faq-a">([\s\S]*?)<\/div>/)?.[1];
+function assertForumProposal(answer) {
+  assert.equal(typeof answer, "string", "Forum answer missing");
+  for (const marker of ["draft proposes", "10 IFR proposal deposit", "1 locked IFR = 1 vote", "neither mechanic is ratified", "not live", "ADVISORY"]) {
+    assert.ok(answer.includes(marker), `Forum answer must retain proposal boundary: ${marker}`);
+  }
+  assert.ok(!answer.includes("(10 IFR spam protection fee)"), "Forum fee must not be presented as settled");
+}
+for (const answer of [structuredForum, visibleForum]) {
+  assertForumProposal(answer);
+  for (const [from, to] of [
+    ["draft proposes", "rules require"],
+    ["neither mechanic is ratified", "both mechanics are ratified"],
+    ["10 IFR proposal deposit", "(10 IFR spam protection fee)"],
+  ]) {
+    assert.throws(() => assertForumProposal(answer.replace(from, to)), { name: "AssertionError" });
+  }
+}
+const depositAnswer = faqSchema.mainEntity.find((entry) => entry.name === "What is the 10 IFR spam protection fee?")?.acceptedAnswer?.text;
+assert.ok(depositAnswer?.includes("unratified") && depositAnswer.includes("not a live fee"), "structured deposit answer must match the visible draft boundary");
+const governance = read("docs/wiki/governance.html");
+const dipBoundary = governance.match(/<p id="ifr-dip-01">([\s\S]*?)<\/p>/)?.[1];
+function assertAdvisoryBoundary(boundary) {
+  assert.equal(typeof boundary, "string", "IFR-DIP-01 boundary missing");
+  for (const marker of ["IFR-DIP-01", "10 October 2026", "ADVISORY", "until binding authority is resolved", "Council readiness, Forum signal and authorized Safe action are separate stages"]) {
+    assert.ok(boundary.includes(marker), `IFR-DIP-01 boundary missing: ${marker}`);
+  }
+}
+assertAdvisoryBoundary(dipBoundary);
+assert.throws(() => assertAdvisoryBoundary(dipBoundary.replace("ADVISORY", "BINDING")), { name: "AssertionError" });
+assert.ok(read("docs/wiki/roadmap.html").includes('href="governance.html#ifr-dip-01"'), "roadmap must link the advisory completion boundary");
 
 // Coverage: README may cite branch coverage only as the dated historical snapshot.
 assert.ok(!readme.includes("91% Branch)"), "README cites unlabelled 91% branch coverage");
@@ -160,4 +212,4 @@ for (const evidence of [
   assert.ok(fs.existsSync(path.join(root, evidence)), `inventory evidence missing: ${evidence}`);
 }
 
-console.log("[docs-truth] PASS - 15 contracts + 3 Safes = 18; 693 tests; historical coverage labelled; 7 deployment units");
+console.log("[docs-truth] PASS - 15 contracts + 3 Safes = 18; 700 contract tests; dated browser evidence; Forum advisory boundary; historical coverage labelled; 7 deployment units");
