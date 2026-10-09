@@ -1439,13 +1439,13 @@ if (from != address(0) && to != address(0)
       </p>
       <p>
         <strong>Where the 1% IFR pool fee goes:</strong> from Proposal #6 until Proposal #21 the token's <code>poolFeeReceiver</code> was FeeRouterV1.
-        FeeRouterV1 forwards only native-ETH swap fees and has no IFR withdrawal path, so those pool fees are
-        <a href="transparency.html#lost-ifr">permanently lost</a> (CWA-02). Since Proposal #21 (executed 5 October 2026, block 26,124,660)
+        FeeRouterV1 forwards only native-ETH swap fees and has no IFR withdrawal function; the IFR it held was
+        <a href="transparency.html#lost-ifr">recovered to the Treasury Safe</a> on 7 October 2026 by a governed batch (CWA-02). Since Proposal #21 (executed 5 October 2026, block 26,124,660)
         pool fees go to BuybackController, where the IFR stays recoverable by Governance via <code>withdrawIFR</code> (the deployed controller is dormant, JUL-08, so nothing is used automatically).
-        IFR already in FeeRouterV1 stays lost.
+        FeeRouterV1 holds 0 IFR since that recovery.
       </p>
       <p>
-        <strong>Permanently lost IFR:</strong> 27,153,013.07 IFR are permanently lost (not burned; still counted in totalSupply): 26,418,467.99 IFR in CommitmentVault V1 price-conditioned tranches (CV-01) and 734,545.07 IFR of pool fees in FeeRouterV1 (CWA-02), as of block 26,124,660 on 5 October 2026. In that block Proposal #21 stopped the pool-fee inflow to FeeRouterV1; direct transfers to that address remain possible, so its part is read live. Details: <a href="transparency.html#lost-ifr">Transparency</a>.
+        <strong>Permanently lost IFR:</strong> only CV-01 &mdash; 26,418,467.99 IFR in CommitmentVault V1 price-conditioned tranches that can never unlock (not burned; still counted in totalSupply), 2.651% of totalSupply at block 26,151,369 (9 October 2026). The 734,545.07 IFR held by FeeRouterV1 are not lost: they were recovered to the Treasury Safe on 7 October 2026 by a governed batch (CWA-02, Proposals #22 and #23, block 26,143,797) and are unallocated Treasury IFR. FeeRouterV1 holds 0 IFR. Details: <a href="transparency.html#lost-ifr">Transparency</a>.
       </p>
 
       <h3>Fee Structure</h3>

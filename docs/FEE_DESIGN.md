@@ -15,7 +15,7 @@ Not daily. Therefore 3.5% is bearable.
 | Fee | Destination | Purpose |
 | --- | --- | --- |
 | 2.5% | Burn (permanent) | Deflation -- supply decreases |
-| 1.0% | BuybackController (since Proposal #21, 5 October 2026) | IFR pool fee; recoverable by Governance through `withdrawIFR`. Until #21 it went to FeeRouterV1, which has no IFR withdrawal path (CWA-02, permanently lost) |
+| 1.0% | BuybackController (since Proposal #21, 5 October 2026) | IFR pool fee; recoverable by Governance through `withdrawIFR`. Until #21 it went to FeeRouterV1, which has no IFR withdrawal function; the IFR it held was recovered to the Treasury Safe on 7 October 2026 (CWA-02) |
 | Total | 3.5% | Automatic, no governance required |
 
 ## Fee-Exempt Addresses
@@ -65,11 +65,12 @@ Since 18.04.2026 (Governance Proposal #14), the `feeCollector` on FeeRouterV1 is
 
 ## Pool Fee Receiver (CWA-02, Decision 3 October 2026)
 
-- From Proposal #6 (13.03.2026) until Proposal #21 (5 October 2026) `InfernoToken.poolFeeReceiver` was FeeRouterV1. FeeRouterV1 has no IFR withdrawal or forwarding function, so every IFR pool fee it received is permanently lost. It is not burned and stays in `totalSupply()`.
+- From Proposal #6 (13.03.2026) until Proposal #21 (5 October 2026) `InfernoToken.poolFeeReceiver` was FeeRouterV1. FeeRouterV1 has no IFR withdrawal or forwarding function, so the IFR pool fees it received stayed there until the CWA-02 recovery batch (7 October 2026, block 26,143,797) moved the IFR held by FeeRouterV1 to the Treasury Safe.
 - At block 26,108,134 FeeRouterV1 held 724,992.668043224 IFR; as of block 26,124,660 (Proposal #21 executed) it holds 734,545.074097347 IFR.
 - Owner decision (Lane 3, option B): future pool fees go to BuybackController `0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c` via `InfernoToken.setPoolFeeReceiver`, a Governance proposal with the 48-hour timelock. There the IFR stays recoverable by Governance through `withdrawIFR`. The deployed controller is dormant (JUL-08), so the IFR is not used automatically until Governance decides how.
-- Status: executed. The Treasury Safe executed Proposal #21 on 5 October 2026, 07:25:23 UTC, block 26,124,660, TX `0x8de48b47dfa8f17b631fb744bc4deef9bbb68271f8b700b422cdd3abb739ca26`; `poolFeeReceiver()` = BuybackController. IFR already in FeeRouterV1 stays lost.
+- Status: executed. The Treasury Safe executed Proposal #21 on 5 October 2026, 07:25:23 UTC, block 26,124,660, TX `0x8de48b47dfa8f17b631fb744bc4deef9bbb68271f8b700b422cdd3abb739ca26`; `poolFeeReceiver()` = BuybackController.
+- Recovery executed (CWA-02): on 7 October 2026 the Treasury Safe executed Proposals #22 and #23 with a FeeRouterV1 `swapWithFee` call in one batch, TX `0x5dc641c7414f4d0f83cd53fbf2dce782cb9bbffd8393ab8246f3ac47932e2881`, block 26,143,797, recovering 734,545.074097347 IFR held by FeeRouterV1 to the Treasury Safe. FeeRouterV1 held 0 IFR at block 26,151,369. The recovered IFR is unallocated Treasury IFR.
 
-27,153,013.07 IFR are permanently lost (not burned; still counted in totalSupply): 26,418,467.99 IFR in CommitmentVault V1 price-conditioned tranches (CV-01) and 734,545.07 IFR of pool fees in FeeRouterV1 (CWA-02), as of block 26,124,660 on 5 October 2026. In that block Proposal #21 stopped the pool-fee inflow to FeeRouterV1; direct transfers to that address remain possible, so its part is read live.
+Permanently lost IFR (not burned; still counted in totalSupply) is only CV-01: 26,418,467.994338353 IFR in CommitmentVault V1 price-conditioned tranches that can never unlock, 2.651% of totalSupply at block 26,151,369 (9 October 2026). The 734,545.074097347 IFR held by FeeRouterV1 are not lost: the Treasury Safe recovered them on 7 October 2026 with a governed batch (CWA-02; Proposals #22 and #23, tx `0x5dc641c7414f4d0f83cd53fbf2dce782cb9bbffd8393ab8246f3ac47932e2881`, block 26,143,797). They are unallocated Treasury IFR; no allocation decision exists. FeeRouterV1 holds 0 IFR and still has no IFR withdrawal function; since Proposal #21 (block 26,124,660) pool fees go to BuybackController, and IFR sent directly to FeeRouterV1 would again be stuck unless recovered by another separately governed batch.
 
-*Version 1.4 | 5 October 2026 | Mainnet Live*
+*Version 1.5 | 9 October 2026 | Mainnet Live*

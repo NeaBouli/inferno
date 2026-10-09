@@ -4,8 +4,15 @@
 block 26124660, TX [`0x8de48b47…739ca26`](https://etherscan.io/tx/0x8de48b47dfa8f17b631fb744bc4deef9bbb68271f8b700b422cdd3abb739ca26).
 `InfernoToken.poolFeeReceiver()` is BuybackController from that block on, so the pool-fee inflow to FeeRouterV1 has
 stopped. The FeeRouterV1 IFR balance as of block 26124660 is 734,545.074097347 IFR (raw `734545074097347`). Direct
-IFR transfers to the FeeRouterV1 address remain possible, so the Landing and the Copilot keep reading it live. Every
-Mainnet step was performed by the Safe signers, never by automation.
+IFR transfers to the FeeRouterV1 address remain possible. Every Mainnet step was performed by the Safe signers, never
+by automation.
+
+**Update (7 October 2026, CWA-02 recovery):** the Treasury Safe executed one governed batch (Proposal #22, a
+FeeRouterV1 `swapWithFee` call, Proposal #23) in TX
+[`0x5dc641c7…2881`](https://etherscan.io/tx/0x5dc641c7414f4d0f83cd53fbf2dce782cb9bbffd8393ab8246f3ac47932e2881), block 26143797. It
+recovered the 734,545.074097347 IFR held by FeeRouterV1 to the Treasury Safe. FeeRouterV1 held 0 IFR at block 26151369.
+The recovered IFR is unallocated Treasury IFR. FeeRouterV1 still has no IFR withdrawal function, so IFR sent to it
+directly would again be stuck unless recovered by another separately governed batch.
 
 ## Decision
 
@@ -13,8 +20,8 @@ Owner decision (2026-10-03, Lane 3 option B in `docs/GOVERNANCE_PRODUCT_DECISION
 pool fees go to BuybackController through `InfernoToken.setPoolFeeReceiver`, where the IFR stays recoverable
 through the governed `withdrawIFR`. The controller is dormant (0 executions, no ETH); when it runs with much
 IFR against little ETH, the LP add fails and the ETH falls back to buyback-and-burn, so accrued IFR is not
-automatically paired into liquidity. The IFR already stranded in FeeRouterV1 stay there: FeeRouterV1 has no sweep,
-and this migration does not recover or re-liquify those funds. At the decision (block 26108134) they were
+automatically paired into liquidity. This migration did not move the IFR already held by FeeRouterV1 (FeeRouterV1 has no
+sweep); that IFR was recovered later by the separate CWA-02 batch (see Update above). At the decision (block 26108134) they were
 724,992.668043224 IFR; pool fees kept arriving until #21 executed; as of block 26124660 the balance is 734,545.074097347 IFR.
 
 ## Proposal #21 (queued evidence at block 26119897, executed at block 26124660)

@@ -489,4 +489,96 @@ for (let number = 57; number <= 73; number += 1) {
   assert.equal(finding.disposition, "fixed_and_verified", `${id} status must match evidence`);
 }
 
-console.log("[cwa-content-coherence] PASS - CWA-06 custody wording, CWA-15, CWA-20, CWA-23, CWA-51...CWA-53, CWA-57...CWA-73 plus CWA-78 source, math, copy and status evidence");
+// CWA-02 recovery (7 October 2026, tx 0x5dc641c7..., block 26143797): the IFR held by FeeRouterV1 was recovered to
+// the Treasury Safe, so permanently lost IFR is CV-01 only. Current surfaces must not keep the superseded
+// combined total, the "stays lost" claims or a circulation label for totalSupply minus CV-01. A clearly dated
+// "History: until 7 October 2026 / 07.10.2026 ..." sentence may still name the old total.
+const CWA02_TX = "0x5dc641c7414f4d0f83cd53fbf2dce782cb9bbffd8393ab8246f3ac47932e2881";
+function withoutDatedHistory(content) {
+  return content.replace(/History: until (?:7 October 2026|07\.10\.2026)[\s\S]*?block 26,124,660\)\./g, "");
+}
+const cwa02CurrentSurfaces = [
+  "README.md",
+  "docs/index.html",
+  "docs/llms.txt",
+  "docs/TRANSPARENCY.md",
+  "docs/FEE_DESIGN.md",
+  "docs/POOL_FEE_RECEIVER.md",
+  "docs/wiki/transparency.html",
+  "docs/wiki/tokenomics.html",
+  "docs/wiki/fee-design.html",
+  "docs/wiki/governance.html",
+  "docs/wiki/press-kit.html",
+  "apps/ai-copilot/src/context/system-prompts.ts",
+];
+const cwa02StaleClaims = [
+  "27,153,013",
+  "27153013",
+  "2.724%",
+  "IFR already in FeeRouterV1 stays lost",
+  "stays lost (CWA-02)",
+  "stay there.",
+  "permanently lost, CWA-02",
+  "CWA-02, permanently lost",
+  "pool fees in FeeRouterV1 (CWA-02)",
+  "Governance is reviewing options",
+  "has no IFR withdrawal path",
+  "Supply that can still move",
+  "IFR already stranded in FeeRouterV1 stay there",
+];
+for (const relative of cwa02CurrentSurfaces) {
+  const current = withoutDatedHistory(read(relative));
+  for (const marker of cwa02StaleClaims) {
+    assert.ok(!current.includes(marker), `${relative} retains superseded CWA-02 claim: ${marker}`);
+  }
+}
+for (const relative of ["docs/llms.txt", "docs/TRANSPARENCY.md", "docs/FEE_DESIGN.md", "docs/wiki/transparency.html", "apps/ai-copilot/src/context/system-prompts.ts"]) {
+  requireText(relative, ["26,418,467.994338353", "2.651%", relative.endsWith(".ts") ? "block 26151369" : "block 26,151,369"]);
+}
+for (const relative of ["docs/llms.txt", "docs/TRANSPARENCY.md", "docs/FEE_DESIGN.md", "docs/DEPLOYMENTS.md", "docs/POOL_FEE_RECEIVER.md", "docs/wiki/fee-design.html", "docs/wiki/transparency.html", "docs/community-audits/cwa-remediation-register.json"]) {
+  requireText(relative, [CWA02_TX]);
+}
+for (const relative of ["docs/llms.txt", "docs/TRANSPARENCY.md", "docs/FEE_DESIGN.md", "docs/wiki/transparency.html", "docs/wiki/tokenomics.html", "README.md", "apps/ai-copilot/src/context/system-prompts.ts"]) {
+  requireText(relative, ["unallocated"]);
+}
+// The Landing lost-IFR card and its client logic count CV-01 only: no FeeRouterV1 floor, and the older API
+// fields that still add the FeeRouterV1 balance are never used.
+const landing = requireText("docs/index.html", [
+  '<div data-lost-ifr-value style="font-size:32px;font-weight:700;color:#ff6a00;">26,418,467.99 IFR</div>',
+  'data-lost-ifr-ledger style="color:inherit;">26.4M IFR</a>',
+  "var LOST_IFR = { cv01Raw: '26418467994338353', block: 26151369, date: '2026-10-09' };",
+  "not classified as permanently lost",
+]);
+for (const marker of ["feeRouterRaw: '734545074097347'", "effectiveFeeRouter", "supply.permanentlyLostRaw", "supply.liveSupplyRaw", "CV-01 + FeeRouterV1", "data-lost-ifr-feerouter", "Balance: 0 IFR. No deployed mechanism automatically refills this Safe."]) {
+  assert.ok(!landing.includes(marker), `docs/index.html retains pre-CWA-02-recovery lost-IFR logic: ${marker}`);
+}
+for (const relative of ["docs/TRANSPARENCY.md", "docs/wiki/transparency.html"]) {
+  const content = requireText(relative, ["Not classified as permanently lost"]);
+  // totalSupply minus CV-01 is only ever introduced by the neutral label, never as circulating/liquid/spendable.
+  for (const match of content.matchAll(/970,241,903/g)) {
+    const lead = content.slice(Math.max(0, match.index - 90), match.index);
+    assert.ok(/not classified as permanently lost/i.test(lead), `${relative} labels totalSupply minus CV-01 without the neutral label`);
+    assert.ok(!/(circulating|liquid|spendable)/i.test(lead), `${relative} labels totalSupply minus CV-01 as circulating`);
+  }
+}
+const cwa02Entry = JSON.parse(read("docs/community-audits/cwa-remediation-register.json")).findings.find((f) => f.id === "CWA-02");
+assert.ok(cwa02Entry, "missing CWA-02");
+assert.ok(cwa02Entry.verification.includes("were recovered to the Treasury Safe") && cwa02Entry.verification.includes(CWA02_TX),
+  "CWA-02 register verification must record the executed recovery");
+for (const marker of ["stay permanently lost", "27,153,013", "as permanently lost (dated balance, read live)"]) {
+  assert.ok(!`${cwa02Entry.nextAction} ${cwa02Entry.verification}`.includes(marker), `CWA-02 register retains superseded claim: ${marker}`);
+}
+
+{
+  // Supply excluding CV-01 includes unallocated Treasury IFR: never present it as a circulating/live supply.
+  const landingSupply = read("docs/index.html");
+  assert.ok(!landingSupply.includes('<div style="font-size:11px;color:var(--text-muted);">Current Supply</div>\n              <div id="donut-live-supply"'),
+    "Donut centre must not label the CV-01 remainder as Current Supply");
+  for (const stale of ["label: 'Live Supply'", "'Live ' + fmt(data.liveSupply)", "'Not classified as lost ' + fmt(data.liveSupply)"]) {
+    assert.ok(!landingSupply.includes(stale), `Landing still labels supply excl. CV-01 as live/circulating: ${stale}`);
+  }
+  assert.ok(landingSupply.includes("label: 'Not classified as permanently lost'") && landingSupply.includes("not a circulating, liquid or spendable figure"),
+    "Landing must label totalSupply minus CV-01 neutrally and state it is not a circulating, liquid or spendable figure");
+}
+
+console.log("[cwa-content-coherence] PASS - CWA-06 custody wording, CWA-15, CWA-20, CWA-23, CWA-51...CWA-53, CWA-57...CWA-73 plus CWA-78 source, math, copy and status evidence; CWA-02 recovery copy");

@@ -1466,7 +1466,7 @@
         <div class="ledger-row"><span class="k">Social cashtag</span><span class="v acc">$IFRp</span></div>
         <div class="ledger-row"><span class="k">Fixed supply</span><span class="v">1,000,000,000</span></div>
         <div class="ledger-row"><span class="k">Burned per transfer</span><span class="v acc">2.50%</span></div>
-        <div class="ledger-row"><span class="k">Permanently lost (not burned)</span><span class="v"><a href="#onchain-transparency" data-lost-ifr-ledger style="color:inherit;">27.2M IFR</a></span></div>
+        <div class="ledger-row"><span class="k">Permanently lost (not burned)</span><span class="v"><a href="#onchain-transparency" data-lost-ifr-ledger style="color:inherit;">26.4M IFR</a></span></div>
         <div class="ledger-row"><span class="k">On-chain components</span><span class="v">18</span></div>
         <div class="ledger-row"><span class="k">Owner</span><span class="v">Governance · 48h timelock</span></div>
       </div>
@@ -2020,7 +2020,7 @@ render();
             <canvas id="dist-donut" width="520" height="520" style="width:260px;height:260px;"></canvas>
             <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
               <div id="donut-supply" style="font-size:20px;font-weight:700;color:#fff;">---</div>
-              <div style="font-size:11px;color:var(--text-muted);">Current Supply</div>
+              <div style="font-size:11px;color:var(--text-muted);">totalSupply()</div>
               <div id="donut-live-supply" style="font-size:12px;font-weight:700;color:#047857;margin-top:4px;"></div>
             </div>
           </div>
@@ -2118,7 +2118,7 @@ render();
             <button class="copy-btn" data-addr="0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b" style="font-size:10px;background:none;border:1px solid #333;color:#6F655A;border-radius:4px;padding:1px 6px;cursor:pointer;">Copy</button>
           </div>
           <div style="font-size:13px;font-weight:600;color:#7e22ce;" data-live-key="card-treasury">loading&hellip;</div>
-          <div style="font-size:10px;color:#666;margin-top:2px;">Protocol treasury. Funded Bootstrap with 144.75M IFR plus a 5.25M IFR top-up. Balance: 0 IFR. No deployed mechanism automatically refills this Safe.</div>
+          <div style="font-size:10px;color:#666;margin-top:2px;">Protocol treasury. Funded Bootstrap with 144.75M IFR plus a 5.25M IFR top-up. Holds the 734,545.07 IFR recovered from FeeRouterV1 on 07.10.2026 (CWA-02), unallocated. No deployed mechanism automatically refills this Safe.</div>
         </div>
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
@@ -2295,7 +2295,7 @@ render();
             <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(251,191,36,0.15);color:#92400e;">Fee Splitter</span>
           </div>
           <a href="https://etherscan.io/address/0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#6F655A;text-decoration:none;">0x4807B77B...580C60a</a>
-          <div style="font-size:10px;color:#666;margin-top:4px;">Swap fee router: its ETH protocol fee goes to BuybackController. Received the 1% IFR pool fee until Proposal #21 (05.10.2026); that IFR is held by FeeRouterV1, the contract has no direct withdrawal function, and Governance is reviewing options.</div>
+          <div style="font-size:10px;color:#666;margin-top:4px;">Swap fee router: its ETH protocol fee goes to BuybackController. Received the 1% IFR pool fee until Proposal #21 (05.10.2026). The 734,545.07 IFR held by FeeRouterV1 were recovered to the Treasury Safe by the governed CWA-02 batch (07.10.2026); FeeRouterV1 holds 0 IFR and still has no IFR withdrawal function.</div>
         </div>
 
         <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
@@ -2437,7 +2437,7 @@ render();
         <text x="314" y="410" fill="#9ca3af" font-size="8">&ge;50% buys IFR</text>
         <text x="484" y="376" fill="#9ca3af" font-size="8">&le;50% LP*</text>
 
-        <!-- FeeRouterV1 (swap fee router; current IFR balance held, no direct withdrawal function) -->
+        <!-- FeeRouterV1 (swap fee router; no IFR withdrawal function; IFR it held was recovered by CWA-02) -->
         <rect x="330" y="440" width="140" height="54" rx="10" fill="#0d1117" stroke="#fbbf24" stroke-width="1.5"/>
         <text x="400" y="457" text-anchor="middle" fill="#fbbf24" font-size="11" font-weight="bold">FeeRouterV1</text>
         <text x="400" y="472" text-anchor="middle" fill="#9ca3af" font-size="8" data-flow-rpc data-live-key="flow-feerouter-bps">ETH swap fee: loading&hellip;</text>
@@ -2835,14 +2835,15 @@ if (isLocked) {
         <p class="transparency-status" data-transparency-status>Reading Ethereum Mainnet&hellip;</p>
       </div>
       <div class="lost-ifr-card" data-lost-ifr data-state="verified" style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:28px 24px;text-align:center;">
-        <div data-lost-ifr-value style="font-size:32px;font-weight:700;color:#ff6a00;">27,153,013.07 IFR</div>
+        <div data-lost-ifr-value style="font-size:32px;font-weight:700;color:#ff6a00;">26,418,467.99 IFR</div>
         <div style="color:#aaa;margin-top:8px;">Permanently Lost IFR</div>
         <div style="color:#666;font-size:13px;margin-top:4px;">Irrecoverable, not burned &mdash; still counted in totalSupply.
-          <span data-lost-ifr-cv01>26,418,467.99</span> in CommitmentVault V1 price tranches
-          (<a href="wiki/commitment-vault-compensation.html" style="color:#aaa;">CV-01</a>) +
-          <span data-lost-ifr-feerouter>734,545.07</span> pool fees in FeeRouterV1
-          (<a href="wiki/transparency.html#lost-ifr" style="color:#aaa;">CWA-02</a>)</div>
-        <p class="transparency-status" data-lost-ifr-status>Last verified 2026-10-05 (Mainnet block 26124660)</p>
+          Only the <span data-lost-ifr-cv01>26,418,467.99</span> IFR in CommitmentVault V1 price tranches
+          (<a href="wiki/commitment-vault-compensation.html" style="color:#aaa;">CV-01</a>), which can never unlock.</div>
+        <div data-lost-ifr-recovered style="color:#666;font-size:13px;margin-top:6px;">Not lost: the 734,545.07 IFR held by FeeRouterV1
+          were recovered to the Treasury Safe on 2026-10-07 (<a href="wiki/transparency.html#lost-ifr" style="color:#aaa;">CWA-02</a>).
+          Unallocated Treasury IFR; FeeRouterV1 holds 0 IFR.</div>
+        <p class="transparency-status" data-lost-ifr-status>Fixed on-chain amount &middot; verified 2026-10-09 (Mainnet block 26151369)</p>
       </div>
       <div style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:28px 24px;text-align:center;">
         <div style="font-size:32px;font-weight:700;color:#ff6a00;"><span data-live-key="lending-available-stat">loading&hellip;</span></div>
@@ -3654,7 +3655,7 @@ if (isLocked) {
     document.querySelectorAll('.live-updated-at').forEach(function(el) {
       el.textContent = 'Connection failed';
     });
-    renderLostIFR(null);
+    renderLostIFR();
     loadIFRPrice();
   }
 
@@ -3746,12 +3747,13 @@ if (isLocked) {
     });
   }
 
-  // Permanently lost IFR (not burned; still in totalSupply). CV-01 is fixed; FeeRouterV1 is read live
-  // because direct transfers can still raise it (Proposal #21 stopped the pool-fee inflow at block
-  // 26124660, balance 734,545.074097347 IFR as of that block). A failed read keeps the last
-  // verified figure with its date; this metric never renders 0 or "Unavailable".
+  // Permanently lost IFR (not burned; still in totalSupply) is only the CV-01 CommitmentVault V1 price tranches,
+  // a fixed on-chain amount that can never unlock. The IFR held by FeeRouterV1 (734,545.074097347 IFR) was recovered
+  // to the Treasury Safe by the governed CWA-02 batch (tx 0x5dc641c7..., block 26143797); FeeRouterV1 held 0 IFR at
+  // block 26151369. A FeeRouterV1 balance is therefore never added here, and older API fields that still add it
+  // (permanentlyLostRaw, liveSupplyRaw) are not used.
   // All IFR arithmetic uses 9-decimal base units (BigInt); decimals are formatted only at the UI boundary.
-  var LOST_IFR = { cv01Raw: '26418467994338353', feeRouterRaw: '734545074097347', block: 26124660, date: '2026-10-05' };
+  var LOST_IFR = { cv01Raw: '26418467994338353', block: 26151369, date: '2026-10-09' };
   function parseBaseUnits(s) { return (typeof s === 'string' && /^[0-9]{1,30}$/.test(s)) ? BigInt(s) : null; }
   function groupThousands(digits) { return digits.replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
   function fmtBaseUnits2(raw) { // round half up to 0.01 IFR
@@ -3760,45 +3762,25 @@ if (isLocked) {
     return groupThousands(whole.toString()) + '.' + (frac < 10n ? '0' : '') + frac.toString();
   }
   function baseUnitsToNumber(raw) { return Number(raw / 10000000n) / 100; } // compact display only
-  function lostTotalRaw(feeRouterRaw) { return parseBaseUnits(LOST_IFR.cv01Raw) + feeRouterRaw; }
-  // Splits live balances into dead (CV-01 + FeeRouterV1) and live parts in 9-decimal base units.
-  // FeeRouterV1 falls back to the verified baseline when the live read is missing, malformed or lower.
-  function splitDead(feeRouterLiveRaw, commitmentRawStr, totalSupplyNum) {
-    var cv01 = parseBaseUnits(LOST_IFR.cv01Raw);
-    var baseline = parseBaseUnits(LOST_IFR.feeRouterRaw);
-    var liveFee = parseBaseUnits(feeRouterLiveRaw);
-    var fee = (liveFee !== null && liveFee >= baseline) ? liveFee : baseline;
-    var deadRaw = cv01 + fee;
+  function lostTotalRaw() { return parseBaseUnits(LOST_IFR.cv01Raw); }
+  // Splits live balances into the dead part (CV-01 only) and the rest in 9-decimal base units. The exact
+  // totalSupplyRaw string is preferred; the decimal totalSupply is a cent-precision fallback; otherwise null (N/A).
+  function splitDead(commitmentRawStr, totalSupplyNum, totalSupplyRawStr) {
+    var cv01 = lostTotalRaw();
     var commitRaw = parseBaseUnits(commitmentRawStr);
     var commitmentLive = (commitRaw !== null && commitRaw >= cv01) ? baseUnitsToNumber(commitRaw - cv01) : null;
-    var liveSupply = null;
-    if (typeof totalSupplyNum === 'number' && isFinite(totalSupplyNum) && totalSupplyNum > 0) {
-      var supplyRaw = BigInt(Math.round(totalSupplyNum * 100)) * 10000000n; // API gives a decimal number; cent precision
-      if (supplyRaw > deadRaw) liveSupply = baseUnitsToNumber(supplyRaw - deadRaw);
+    var supplyRaw = parseBaseUnits(totalSupplyRawStr);
+    if (supplyRaw === null && typeof totalSupplyNum === 'number' && isFinite(totalSupplyNum) && totalSupplyNum > 0) {
+      supplyRaw = BigInt(Math.round(totalSupplyNum * 100)) * 10000000n; // API gives a decimal number; cent precision
     }
-    return { dead: baseUnitsToNumber(deadRaw), cv01: baseUnitsToNumber(cv01), commitmentLive: commitmentLive, liveSupply: liveSupply, deadRaw: deadRaw };
+    var liveSupply = (supplyRaw !== null && supplyRaw > cv01) ? baseUnitsToNumber(supplyRaw - cv01) : null;
+    return { dead: baseUnitsToNumber(cv01), cv01: baseUnitsToNumber(cv01), commitmentLive: commitmentLive, liveSupply: liveSupply, deadRaw: cv01 };
   }
-  // Single source for the effective FeeRouterV1 amount: the live read when present and not lower than the
-  // verified baseline, otherwise the baseline. Card, ledger, metric and donut all derive from this.
-  function effectiveFeeRouter(feeRouterLiveRaw) {
-    var baseline = parseBaseUnits(LOST_IFR.feeRouterRaw);
-    var liveRaw = parseBaseUnits(feeRouterLiveRaw);
-    var live = liveRaw !== null && liveRaw >= baseline;
-    return { raw: live ? liveRaw : baseline, live: live };
-  }
-  function renderLostIFR(feeRouterLiveRaw) {
-    var eff = effectiveFeeRouter(feeRouterLiveRaw);
-    var live = eff.live;
-    var feeRouter = eff.raw;
-    var total = lostTotalRaw(feeRouter);
+  function renderLostIFR() {
+    var total = lostTotalRaw();
     document.querySelectorAll('[data-lost-ifr]').forEach(function(card) {
-      card.setAttribute('data-state', live ? 'live' : 'verified');
+      card.setAttribute('data-state', 'verified');
       var v = card.querySelector('[data-lost-ifr-value]'); if (v) v.textContent = fmtBaseUnits2(total) + ' IFR';
-      var f = card.querySelector('[data-lost-ifr-feerouter]'); if (f) f.textContent = fmtBaseUnits2(feeRouter);
-      var st = card.querySelector('[data-lost-ifr-status]');
-      if (st) st.textContent = live
-        ? 'Live \u2014 FeeRouterV1 balance read ' + clockTime(Date.now()) + '; CV-01 amount fixed'
-        : 'Last verified ' + LOST_IFR.date + ' (Mainnet block ' + LOST_IFR.block + '); live read unavailable';
     });
     document.querySelectorAll('[data-lost-ifr-ledger]').forEach(function(el) { el.textContent = fmt(baseUnitsToNumber(total)) + ' IFR'; });
     setLive('lost-ifr-stat', fmt(baseUnitsToNumber(total)));
@@ -3969,10 +3951,10 @@ if (isLocked) {
     var protocolLocked = sumKnown(data, PROTOCOL_LOCKED_KEYS);
     var items = [
       { key: 'burned-stat',     label: 'Total Burned',    value: fmtNA(data.burned),    sub: 'Since genesis \u2014 decreasing forever', color: '#b3300b' },
-      { key: 'lost-ifr-stat',   label: 'Permanently Lost', value: fmt(baseUnitsToNumber(lostTotalRaw(effectiveFeeRouter(data && data.feeRouterRaw).raw))), sub: 'Not burned \u2014 CV-01 + FeeRouterV1', color: '#92400e' },
+      { key: 'lost-ifr-stat',   label: 'Permanently Lost', value: fmt(baseUnitsToNumber(lostTotalRaw())), sub: 'Not burned \u2014 CV-01 tranches only', color: '#92400e' },
       { key: 'protocol-locked', label: 'Protocol Locked', value: fmtNA(protocolLocked), sub: 'All non-circulating IFR secured', color: '#92400e' },
       { key: 'commitment-locked-stat', label: 'CommitmentVault Locked', value: fmtNA(data.commitmentLocked), sub: 'Time tranches only; CV-01 counted as permanently lost', color: '#92400e' },
-      { key: 'live-supply-stat', label: 'Live Supply', value: data.liveSupply != null ? fmt(data.liveSupply) : 'N/A', sub: 'Current supply excluding permanently lost IFR', color: '#065f46' },
+      { key: 'live-supply-stat', label: 'Not classified as permanently lost', value: data.liveSupply != null ? fmt(data.liveSupply) : 'N/A', sub: 'totalSupply minus CV-01, not classified as permanently lost; includes unallocated Treasury IFR, so it is not a circulating, liquid or spendable figure', color: '#065f46' },
       { key: 'lending-available-stat', label: 'LendingVault V1 Lender Offers', value: fmtNA(data.lendingAvailable), sub: 'Retired: withdrawable by lenders; no borrowing activation planned or authorized', color: '#166534' },
       { key: '',                label: 'Current Supply',  value: fmtNA(data.supply),    sub: 'of 1B genesis',        color: '#fff'    },
       { key: '',                label: 'LP Reserve Safe', value: fmtNA(data.lpReserve), sub: 'LP allocation (3-of-5)',color: '#b3300b' },
@@ -4052,7 +4034,6 @@ if (isLocked) {
         bootstrap: v('BootstrapVaultV3'),
         burnRes:   v('BurnReserve'),
         feeRouter: v('FeeRouterV1'),
-        feeRouterRaw: (bal.FeeRouterV1 && typeof bal.FeeRouterV1.raw === 'string') ? bal.FeeRouterV1.raw : null,
         ifrLock:   v('IFRLock'),
         ifrLockUnlocked: isNum(lockMeta.unlockedFormatted) ? lockMeta.unlockedFormatted : null,
         commitmentLocked: v('CommitmentVault'),
@@ -4060,28 +4041,20 @@ if (isLocked) {
         lendingLent: 0,
         lendingRate: ''
       };
-      // Permanently lost IFR is shown as its own (black) segment and removed from the CommitmentVault
-      // segment, so nothing is counted twice. Base-unit BigInt math; dated fallback, never 0.
-      // If the balances read lacks FeeRouterV1, the supply endpoint's exact permanentlyLostRaw (CV-01 + FeeRouterV1)
-      // is used when present; otherwise the dated verified fallback applies inside splitDead.
-      var feeRaw = data.feeRouterRaw;
-      var serverLost = parseBaseUnits(typeof supply.permanentlyLostRaw === 'string' ? supply.permanentlyLostRaw : null);
-      if (feeRaw === null && serverLost !== null && serverLost > parseBaseUnits(LOST_IFR.cv01Raw)) {
-        feeRaw = (serverLost - parseBaseUnits(LOST_IFR.cv01Raw)).toString();
-        data.feeRouter = baseUnitsToNumber(BigInt(feeRaw));
-        unavailable = unavailable.filter(function(l) { return l !== 'FeeRouterV1'; });
-      }
-      var split = splitDead(feeRaw, bal.CommitmentVault && bal.CommitmentVault.raw, supply.totalSupply);
-      data.feeRouterRaw = feeRaw;
+      // Permanently lost IFR (CV-01 only) is shown as its own (black) segment and removed from the CommitmentVault
+      // segment, so nothing is counted twice. Base-unit BigInt math; N/A (never 0) when the supply is unreadable.
+      // FeeRouterV1 is an ordinary holding here, never dead: an older API's permanentlyLostRaw/liveSupplyRaw
+      // (which add the FeeRouterV1 balance) are deliberately not used.
+      var split = splitDead(bal.CommitmentVault && bal.CommitmentVault.raw, supply.totalSupply,
+        typeof supply.totalSupplyRaw === 'string' ? supply.totalSupplyRaw : null);
       data.dead = split.dead;
       data.commitmentLocked = split.commitmentLive != null ? split.commitmentLive
         : (isNum(data.commitmentLocked) ? Math.max(0, data.commitmentLocked - split.cv01) : null);
-      var serverLive = parseBaseUnits(typeof supply.liveSupplyRaw === 'string' ? supply.liveSupplyRaw : null);
-      data.liveSupply = serverLive !== null && serverLive > 0n ? baseUnitsToNumber(serverLive) : split.liveSupply;
+      data.liveSupply = split.liveSupply;
       // Name the sources the API itself flagged (e.g. IFRLock.unlocked) instead of a generic "some values".
       if (Array.isArray(res[1].unavailable)) {
         res[1].unavailable.forEach(function(l) {
-          if (typeof l === 'string' && /^[A-Za-z0-9.]{1,40}$/.test(l) && unavailable.indexOf(l) === -1 && !(l === 'FeeRouterV1' && feeRaw !== null)) unavailable.push(l);
+          if (typeof l === 'string' && /^[A-Za-z0-9.]{1,40}$/.test(l) && unavailable.indexOf(l) === -1) unavailable.push(l);
         });
       }
       data.unavailable = unavailable;
@@ -4093,12 +4066,12 @@ if (isLocked) {
       var supplyEl = document.getElementById('donut-supply');
       if (supplyEl) supplyEl.textContent = fmt(data.supply);
       var liveEl = document.getElementById('donut-live-supply');
-      if (liveEl) liveEl.textContent = data.liveSupply != null ? 'Live ' + fmt(data.liveSupply) : '';
+      if (liveEl) liveEl.textContent = data.liveSupply != null ? 'Not classified as permanently lost ' + fmt(data.liveSupply) : '';
       renderLegend(data);
       renderMetrics(data);
       updateLiveDisplay(data);
       setTransparencyMetric('burned', fmt(burnedValue) + ' IFR');
-      renderLostIFR(data.feeRouterRaw);
+      renderLostIFR();
       loadCommitmentVaultLive();
 
       document.querySelectorAll('.live-updated-at').forEach(function(el) {

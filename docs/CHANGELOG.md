@@ -1,5 +1,27 @@
 # Changelog
 
+## 9 October 2026 — CWA-02: IFR Held by FeeRouterV1 Recovered; Permanently Lost IFR Is CV-01 Only
+
+- On 7 October 2026 (23:28:23 UTC) the Treasury Safe executed one governed batch: Proposal #22 (temporarily
+  whitelists IFR as a FeeRouterV1 adapter), `FeeRouterV1.swapWithFee` calling `IFR.transfer(TreasurySafe,
+  734545074097347)`, and Proposal #23 (removes the adapter again). TX
+  `0x5dc641c7414f4d0f83cd53fbf2dce782cb9bbffd8393ab8246f3ac47932e2881`, status 1, block 26143797.
+- Dated balances at block 26151369 (9 October 2026): FeeRouterV1 0 IFR; Treasury Safe 734,545.074097347 IFR;
+  totalSupply 996,660,371.641431105 IFR.
+- Current truth: permanently lost IFR (not burned; still in totalSupply) is only CV-01, 26,418,467.994338353 IFR
+  = 2.651% of totalSupply at block 26151369. The recovered 734,545.074097347 IFR are unallocated Treasury IFR (no
+  allocation decision). FeeRouterV1 still has no IFR withdrawal function; IFR sent to it directly would again be
+  stuck unless recovered by another separately governed batch.
+- Landing (`docs/index.html`): the Permanently Lost card, ledger, metric and distribution "dead" segment show
+  CV-01 only (26,418,467.99 IFR); a FeeRouterV1 balance is never added, and older API fields that still add it
+  (`permanentlyLostRaw`, `liveSupplyRaw`) are no longer used. totalSupply minus CV-01 is labelled "not classified
+  as permanently lost", not circulating.
+- Wiki (transparency `#lost-ifr`, tokenomics, fee-design, governance, press-kit), `docs/TRANSPARENCY.md`,
+  `docs/FEE_DESIGN.md`, `docs/POOL_FEE_RECEIVER.md`, `docs/GOVERNANCE_PRODUCT_DECISION_REGISTER.md`,
+  `docs/DEPLOYMENTS.md`, `docs/llms.txt`, `README.md`, `deployments/mainnet.json`, the CWA register and the
+  Copilot system prompt updated; wiki RAG content regenerated. Dated snapshots and audit reports stay unchanged.
+- `scripts/test-cwa-content-coherence.cjs` guards against the superseded present-tense copy and the old total.
+
 ## 5 October 2026 — Lending Market Page Shows LendingVault V1 as Retired (T-271)
 
 - `docs/wiki/lending-market.html`: title, meta, Open Graph, Twitter and JSON-LD descriptions no longer call

@@ -77,7 +77,7 @@
     "source": "contracts/FeeRouterV1.sol",
     "abi": null,
     "provenance": "address from docs/DEPLOYMENTS.md; deployment transaction unknown in repository",
-    "notes": "voucherSigner = 0x790D99c320dafA03d83bEa152178A6523b49CA0d since Governance proposal #18 (executed 2026-10-05T07:17:47Z, block 26124623, tx 0x40a856b9f994a17390c042abe851c5ff99ca86289eb86316eb119f465cd89679). No longer the InfernoToken pool-fee receiver since proposal #21 (block 26124660); IFR balance 734545074097347 base units (734,545.074097347 IFR) as of block 26124660, permanently lost (CWA-02); direct transfers remain possible"
+    "notes": "voucherSigner = 0x790D99c320dafA03d83bEa152178A6523b49CA0d since Governance proposal #18 (executed 2026-10-05T07:17:47Z, block 26124623, tx 0x40a856b9f994a17390c042abe851c5ff99ca86289eb86316eb119f465cd89679). No longer the InfernoToken pool-fee receiver since proposal #21 (block 26124660); IFR balance 734545074097347 base units (734,545.074097347 IFR) as of block 26124660. CWA-02 recovery: the Treasury Safe recovered that IFR held by FeeRouterV1 (734545074097347 base units) in tx 0x5dc641c7414f4d0f83cd53fbf2dce782cb9bbffd8393ab8246f3ac47932e2881 (block 26143797, Proposals #22/#23); FeeRouterV1 IFR balance 0 at block 26151369; it still has no IFR withdrawal function"
   },
   "Vesting": {
     "address": "0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271",

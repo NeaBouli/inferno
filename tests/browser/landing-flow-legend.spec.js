@@ -84,7 +84,7 @@ async function answerProxy(page, balanceOverrides = {}) {
       balances: {
         Deployer: entry(0),
         LPReserveSafe: entry(400600000),
-        GnosisSafe: entry(0),
+        GnosisSafe: { formatted: 734545.074097347, raw: "734545074097347" }, // Treasury Safe at block 26151369 (CWA-02 recovery)
         CommunitySafe: entry(7900000),
         Vesting: entry(150000000),
         LiquidityReserve: entry(200000000),
@@ -92,7 +92,7 @@ async function answerProxy(page, balanceOverrides = {}) {
         BootstrapVaultV3: { formatted: 0.000000001, raw: "1" },
         BuybackVault: entry(0),
         BurnReserve: entry(0),
-        FeeRouterV1: { formatted: 734545.074097347, raw: "734545074097347" },
+        FeeRouterV1: { formatted: 0, raw: "0" }, // block 26151369: the IFR held by FeeRouterV1 was recovered (CWA-02)
         IFRLock: entry(2000),
         CommitmentVault: { formatted: 27786035.918948719, raw: "27786035918948719" },
         LendingVault: entry(0),
@@ -185,7 +185,8 @@ test("token flow: canonical receivers render live split and active fee routes", 
   await expect(key("flow-feerouter-bps")).toHaveText("ETH fee 0.05% → Controller");
   await expect(key("flow-eth-edge")).toHaveText("ETH fee");
   await expect(key("flow-controller")).toHaveText("0 ETH · 0 IFR pending");
-  await expect(key("feerouter-flow")).toHaveText("734.5K IFR held", { timeout: 20000 });
+  await expect(key("feerouter-flow")).toHaveText("0 IFR held", { timeout: 20000 });
+  await expect(key("flow-treasury")).toHaveText("734.5K IFR · 3-of-5");
   await expect(key("flow-lpreserve")).toHaveText("400.6M IFR · 3-of-5");
   await expect(key("lending-flow")).toHaveText("retired · 0 available");
   expectRoute(await routeState(flow, "pool"), true);
