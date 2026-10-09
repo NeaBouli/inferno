@@ -219,7 +219,7 @@ export function getIFRKnowledge() {
       },
       sdk: {
         package: "ifr-sdk",
-        version: "0.3.0",
+        version: "0.4.0",
         availability: "Local repository package; npm publication pending",
         install: "From the Inferno repository root: npm install --install-links ./apps/sdk",
         methods: "getBenefitTier() (default preset or own tiers; locked IFR only), checkAccess(), getBalance(), getLockedBalance(), isBuilder(), getTotalSupply(); getTier() is deprecated legacy",
