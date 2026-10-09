@@ -589,8 +589,10 @@ describe('Seller catalog routes', () => {
       headers: wrongOwnerHeaders,
     })).status).toBe(403);
 
-    const missingHeaders = await sellerHeaders(owner, 'business:reactivate', 'missing-business', 'missing-business');
-    expect((await fetch(`${baseUrl()}/api/seller/businesses/missing-business/reactivate`, {
+    // A well-formed (cuid-shaped) id that does not exist; free-text ids are refused at issuance.
+    const missingBusiness = `c${'0'.repeat(24)}`;
+    const missingHeaders = await sellerHeaders(owner, 'business:reactivate', missingBusiness, missingBusiness);
+    expect((await fetch(`${baseUrl()}/api/seller/businesses/${missingBusiness}/reactivate`, {
       method: 'POST',
       headers: missingHeaders,
     })).status).toBe(404);
@@ -1654,7 +1656,8 @@ describe('Seller catalog routes', () => {
       body: JSON.stringify(rulePayload(product.id)),
     })).status).toBe(403);
 
-    const wrongScopeHeaders = await sellerHeaders(owner, 'rules:create', businessId, 'wrong-scope');
+    // A well-formed scope for another object (free-text scopes are refused at issuance).
+    const wrongScopeHeaders = await sellerHeaders(owner, 'rules:create', businessId, product.id);
     expect((await fetch(`${baseUrl()}/api/seller/businesses/${businessId}/rules`, {
       method: 'POST',
       headers: wrongScopeHeaders,

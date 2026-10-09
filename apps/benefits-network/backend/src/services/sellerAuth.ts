@@ -25,9 +25,13 @@ export type SellerAuthBinding = {
   target?: string;
 };
 
-/** Address-shaped text (0x + 40 hex) - forbidden in challenge scope and business fields. */
+/**
+ * Address-shaped text - forbidden in challenge scope and business fields (defense in depth behind the
+ * per-action shape allowlist). Case-insensitive prefix (0x / 0X) and digits; also any bare run of 40+
+ * hex digits, so an address without prefix (or inside longer hex) is refused as well.
+ */
 export function containsWalletAddress(value: string) {
-  return /0x[0-9a-fA-F]{40}/.test(value);
+  return /0x[0-9a-f]{40}/i.test(value) || /[0-9a-f]{40}/i.test(value);
 }
 
 /** The exact line a targeted seller authorization appends to the server-issued challenge message. */

@@ -455,6 +455,44 @@ describe('Wallet-free seller challenge (nonce-only state)', () => {
     await prisma.checkoutOperator.deleteMany({ where: { businessId } });
   });
 
+  it('refuses wallet-shaped or unknown scope/business at issuance in any case and stores nothing', async () => {
+    const hex = ethers.Wallet.createRandom().address.slice(2);
+    const before = await prisma.sellerAuthorizationChallenge.count();
+    const refused: Array<Record<string, string>> = [];
+    for (const variant of [`0X${hex}`, `0X${hex.toUpperCase()}`, `0x${hex.toUpperCase()}`, hex.toLowerCase(), `op-0X${hex}`]) {
+      refused.push({ action: 'operators:create', businessId, scope: variant });
+      refused.push({ action: 'rules:create', businessId: variant, scope: businessId });
+      refused.push({ action: 'business:list', businessId: variant });
+      refused.push({ action: 'business:slug', businessId, scope: variant.toLowerCase() });
+    }
+    // Unknown scope shapes for each targeted / fixed-scope action are refused too.
+    refused.push({ action: 'operators:create', businessId, scope: 'anything-else' });
+    refused.push({ action: 'rewards:reward-wallet', businessId, scope: businessId });
+    refused.push({ action: 'rules:create', businessId, scope: 'free-text' });
+    refused.push({ action: 'rules:create', businessId: 'not-an-id', scope: businessId });
+    refused.push({ action: 'passes:bind', businessId, scope: `${'P'.repeat(32)}:free` });
+    for (const params of refused) {
+      const result = await issue(params);
+      expect({ params, status: result.status }).toEqual({ params, status: 400 });
+    }
+    expect(await prisma.sellerAuthorizationChallenge.count()).toBe(before);
+    const rows = JSON.stringify(await prisma.sellerAuthorizationChallenge.findMany()).toLowerCase();
+    expect(rows).not.toContain(hex.toLowerCase());
+
+    // The route shapes in use stay accepted.
+    for (const params of [
+      { action: 'business:create', businessId: 'new', scope: 'new' },
+      { action: 'business:create', businessId: 'new', scope: 'athens-ifr-cafe' },
+      { action: 'rules:create', businessId, scope: businessId },
+      { action: 'operators:create', businessId, scope: 'operator-wallet' },
+      { action: 'rewards:reward-wallet', businessId, scope: 'owner-wallet' },
+      { action: 'sessions:create', businessId, scope: 'default' },
+      { action: 'passes:bind', businessId, scope: `${'P'.repeat(32)}:${businessId}` },
+    ]) {
+      expect({ params, status: (await issue(params)).status }).toEqual({ params, status: 200 });
+    }
+  });
+
   it('binds the Target line into the verified message', async () => {
     const wallet = ethers.Wallet.createRandom();
     const targetA = ethers.Wallet.createRandom().address;

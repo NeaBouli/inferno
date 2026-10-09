@@ -269,6 +269,49 @@ function getSellerAuth(req: Request) {
   };
 }
 
+/**
+ * Shapes accepted by the public challenge endpoint (owner decision B: nothing wallet-shaped can be
+ * stored). Every action has an explicit scope shape taken from its route; unknown actions are refused.
+ * Ids are Prisma cuid() values; slugs are canonical business slugs; pass ids are 24 random bytes base64url.
+ */
+const CHALLENGE_ID_PATTERN = /^c[a-z0-9]{24}$/;
+const CHALLENGE_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const CHALLENGE_PASS_ID_PATTERN = /^[A-Za-z0-9_-]{32}$/;
+const isChallengeId = (value: string) => CHALLENGE_ID_PATTERN.test(value);
+const isChallengeSlug = (value: string) => value.length >= 3 && value.length <= 48 && CHALLENGE_SLUG_PATTERN.test(value);
+const CHALLENGE_SCOPE_SHAPES: Record<string, (scope: string) => boolean> = {
+  'business:create': (scope) => scope === 'new' || isChallengeSlug(scope),
+  'business:slug': isChallengeSlug,
+  'business:update': isChallengeId,
+  'business:delete': isChallengeId,
+  'business:reactivate': isChallengeId,
+  'operators:create': (scope) => scope === 'operator-wallet',
+  'operators:delete': isChallengeId,
+  'products:create': isChallengeId,
+  'products:update': isChallengeId,
+  'products:delete': isChallengeId,
+  'rewards:apply': isChallengeId,
+  'rewards:disable': isChallengeId,
+  'rewards:reward-wallet': (scope) => scope === 'reward-wallet' || scope === 'owner-wallet',
+  'rules:create': isChallengeId,
+  'rules:update': isChallengeId,
+  'rules:delete': isChallengeId,
+  'sessions:create': (scope) => scope === 'default' || isChallengeId(scope),
+  'sessions:redeem': isChallengeId,
+  'passes:bind': (scope) => {
+    const [passId, ruleId, ...rest] = scope.split(':');
+    return rest.length === 0 && CHALLENGE_PASS_ID_PATTERN.test(passId ?? '') && isChallengeId(ruleId ?? '');
+  },
+};
+
+function isAllowedChallengeShape(action: string, businessId: string, scope: string) {
+  const businessOk = businessId === 'new' || businessId === 'seller' || isChallengeId(businessId);
+  const scopeOk = isReadOnlySellerAction(action)
+    ? scope === READ_ONLY_SELLER_SCOPE
+    : Boolean(CHALLENGE_SCOPE_SHAPES[action]?.(scope));
+  return businessOk && scopeOk;
+}
+
 /** Fixed, wallet-free scopes of the two actions that act on a target wallet (bound via `Target:`). */
 const OPERATOR_WALLET_SCOPE = 'operator-wallet';
 const REWARD_WALLET_SCOPE = 'reward-wallet';
@@ -456,6 +499,10 @@ router.get('/auth-message', challengeRateLimiter, async (req, res, next) => {
     // `Target:` line from the authenticated request body instead.
     if (containsWalletAddress(scope) || containsWalletAddress(businessId)) {
       res.status(400).json({ error: 'Seller authorization scope must not contain a wallet address' });
+      return;
+    }
+    if (!isAllowedChallengeShape(action, businessId, scope)) {
+      res.status(400).json({ error: 'Invalid seller authorization scope or business' });
       return;
     }
     const context = resolveSellerAuthContext(config);
