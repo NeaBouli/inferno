@@ -106,9 +106,10 @@ remains the only place where agenda items and vote outcomes are published.
 
 ## Lane 3 — FeeRouter sink/accrual and Governance/guardian redeployment
 
-- **Current truth:** As of 5 October 2026, FeeRouterV1 holds 734,545.074097347 IFR of pool fees
-  (as of block 26124660) with no forwarding path (CWA-02); since Proposal #21 new pool fees go
-  to BuybackController. The FeeRouter voucher path is dormant (CWA-18). The Mainnet Governance
+- **Current truth:** Since Proposal #21 new pool fees go to BuybackController. The
+  734,545.074097347 IFR held by FeeRouterV1 were recovered to the Treasury Safe on 7 October 2026
+  (CWA-02 batch with Proposals #22/#23, block 26143797); FeeRouterV1 held 0 IFR at block 26151369
+  and still has no IFR withdrawal function. The recovered IFR is unallocated Treasury IFR. The FeeRouter voucher path is dormant (CWA-18). The Mainnet Governance
   contract predates a later source fix (CWA-25). All six mutable guardians are the Treasury
   Safe (CWA-09, Proposals #19/#20). The voucher signer is a dedicated key outside the Safe
   signer set (CWA-06, Proposal #18).
@@ -120,7 +121,7 @@ remains the only place where agenda items and vote outcomes are published.
 - **Dependencies:** any redeploy should bundle Lane 1/2 V2 wiring where
   practical to limit repeated migrations.
 - **Impact:** redirecting future fees is reversible by a later governed call;
-  fees already accrued in V1 cannot be recovered without a V1 sweep path.
+  fees already accrued in V1 had no sweep path; they were recovered by the governed CWA-02 batch.
   Ownership migration to a new Governance contract is irreversible once
   accepted.
 - **Security/audit gate:** independent review of the migration and new
@@ -138,6 +139,11 @@ remains the only place where agenda items and vote outcomes are published.
 - **Executed (5 October 2026):** the Treasury Safe executed #21 at 07:25:23 UTC, block 26124660
   (transaction in `docs/DEPLOYMENTS.md`); `poolFeeReceiver()` = BuybackController. FeeRouterV1 balance as of that block: 734,545.074097347 IFR. #18
   (block 26124623) and #19/#20 (block 26124647) executed in the same Safe round.
+- **Executed (7 October 2026, CWA-02 recovery):** one Treasury Safe batch (Proposal #22, FeeRouterV1
+  `swapWithFee`, Proposal #23), block 26143797 (transaction in `docs/DEPLOYMENTS.md`),
+  moved the 734,545.074097347 IFR held by FeeRouterV1 to the Treasury Safe. This supersedes the
+  "stay permanently lost" part of the 3 October record above. No allocation decision exists for the
+  recovered IFR.
 - **Execution status (4 October 2026):** option B is queued as Governance proposal #21
   (`InfernoToken.setPoolFeeReceiver(BuybackController)`, ETA 2026-10-05 00:18:23 UTC; read-only
   evidence at block 26119897). The step-2 execute batch is written only after on-chain

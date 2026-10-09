@@ -88,13 +88,24 @@ activation delay prevents premature execution if ETH is deposited.
 
 ## Permanently Lost IFR
 
-27,153,013.07 IFR are permanently lost (not burned; still counted in totalSupply): 26,418,467.99 IFR in CommitmentVault V1 price-conditioned tranches (CV-01) and 734,545.07 IFR of pool fees in FeeRouterV1 (CWA-02), as of block 26,124,660 on 5 October 2026. In that block Proposal #21 stopped the pool-fee inflow to FeeRouterV1; direct transfers to that address remain possible, so its part is read live.
+Permanently lost IFR (not burned; still counted in totalSupply) is only CV-01: 26,418,467.994338353 IFR in CommitmentVault V1 price-conditioned tranches that can never unlock, 2.651% of totalSupply at block 26,151,369 (9 October 2026). The 734,545.074097347 IFR held by FeeRouterV1 are not lost: the Treasury Safe recovered them on 7 October 2026 with a governed batch (CWA-02; Proposals #22 and #23, tx `0x5dc641c7414f4d0f83cd53fbf2dce782cb9bbffd8393ab8246f3ac47932e2881`, block 26,143,797). They are unallocated Treasury IFR; no allocation decision exists. FeeRouterV1 holds 0 IFR and still has no IFR withdrawal function; since Proposal #21 (block 26,124,660) pool fees go to BuybackController, and IFR sent directly to FeeRouterV1 would again be stuck unless recovered by another separately governed batch.
 
 | Where | IFR | Reason | Grows |
 | --- | --- | --- | --- |
 | CommitmentVault V1 `0x0719…73d3` | 26,418,467.994338353 | price conditions V1 cannot evaluate; no rescue path (CV-01) | no |
-| FeeRouterV1 `0x4807…C60a` | 734,545.074097347 | IFR pool fee, no withdrawal path (CWA-02) | pool-fee inflow stopped at block 26,124,660 (Proposal #21); direct transfers remain possible |
-| **Total** | **27,153,013.068435700** | 2.724% of totalSupply 996,663,637.31 at block 26,124,660 | |
+| **Total permanently lost** | **26,418,467.994338353** | 2.651% of totalSupply 996,660,371.641431105 at block 26,151,369 | no |
+
+Not lost (separate, dated Treasury custody):
+
+| Item | IFR | As of |
+| --- | --- | --- |
+| Recovered from FeeRouterV1 `0x4807…C60a` to the Treasury Safe `0x5ad6…cE3b` (CWA-02) | 734,545.074097347 | tx block 26,143,797 (7 October 2026) |
+| FeeRouterV1 IFR balance | 0 | block 26,151,369 |
+| Treasury Safe IFR balance (unallocated; no allocation decision exists) | 734,545.074097347 | block 26,151,369 |
+
+Not classified as permanently lost: totalSupply minus CV-01 = 970,241,903.647092752 IFR at block 26,151,369
+(informational; not a circulating or spendable amount). History: until 7 October 2026 this section also listed
+734,545.074097347 IFR in FeeRouterV1 as lost (total 27,153,013.068435700 IFR at block 26,124,660).
 
 ---
 

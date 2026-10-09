@@ -1197,7 +1197,7 @@ await governance.execute(proposalId);</code></pre>
           <tr>
             <td>#21</td>
             <td><code>setPoolFeeReceiver(BuybackController)</code> on InfernoToken<br>
-              <span class="address">New IFR pool fees go to BuybackController <code>0x1e0547D5...F7c</code>; the balance already held by FeeRouterV1 stays lost (CWA-02)</span><br>
+              <span class="address">New IFR pool fees go to BuybackController <code>0x1e0547D5...F7c</code>; the IFR already held by FeeRouterV1 was later recovered to the Treasury Safe by the CWA-02 batch with Proposals #22 and #23 (07.10.2026, block 26143797)</span><br>
               <span class="address" style="font-size:11px;color:var(--muted);">Execute TX: <a href="https://etherscan.io/tx/0x8de48b47dfa8f17b631fb744bc4deef9bbb68271f8b700b422cdd3abb739ca26" target="_blank">0x8de48b47&hellip;ca26</a> &middot; Block 26124660 &middot; FeeRouterV1 IFR balance 734,545.074097347 IFR as of this block &#x2705;</span>
             </td>
             <td>ETA 05.10.2026 00:18:23 UTC &middot; Executed 05.10.2026 07:25 UTC</td>

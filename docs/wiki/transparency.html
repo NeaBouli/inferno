@@ -958,7 +958,7 @@
         </table>
       </div>
       <div class="callout" style="margin-top:12px;">
-        <p><strong>Note:</strong> BuybackVault and BurnReserve are <em>not</em> genesis allocations. They do <em>not</em> receive the 1% IFR pool fee: from Proposal #6 until Proposal #21 (05.10.2026) that fee landed in FeeRouterV1, which has no IFR withdrawal path (<a href="#lost-ifr">CWA-02</a>); since #21 it goes to BuybackController. BurnReserve receives IFR from BuybackController buybacks. Bootstrap and LP launch are complete; balances are shown live above.</p>
+        <p><strong>Note:</strong> BuybackVault and BurnReserve are <em>not</em> genesis allocations. They do <em>not</em> receive the 1% IFR pool fee: from Proposal #6 until Proposal #21 (05.10.2026) that fee landed in FeeRouterV1, which has no IFR withdrawal function; the IFR held by FeeRouterV1 was recovered to the Treasury Safe on 07.10.2026 by a governed batch (<a href="#lost-ifr">CWA-02</a>); since #21 the fee goes to BuybackController. BurnReserve receives IFR from BuybackController buybacks. Bootstrap and LP launch are complete; balances are shown live above.</p>
       </div>
 
       <h3>All Token Movements &mdash; Chronological Log</h3>
@@ -1410,7 +1410,7 @@
           <strong style="color:#e2e8f0;">Decision:</strong> These fees will not be manually re-routed to FeeRouterV1. A manual transfer would incur an additional 3.5% fee impact (~735 IFR total: 2.5% burned and 1% routed to the pool-fee receiver), creating more harm than benefit for a negligible amount (0.002% of total supply). This is documented here for full transparency.
         </p>
         <p style="margin:8px 0 0 0; font-size:12px; color:#475569;">
-          From Proposal #6 until Proposal #21, the 1% IFR pool fee routed to FeeRouterV1 and stays there: FeeRouterV1 forwards only ETH swap fees and has no IFR withdrawal path (CWA-02). These IFR are <a href="#lost-ifr">permanently lost</a>. Since Proposal #21 (executed 05.10.2026, block 26124660) future pool fees go to BuybackController, so the pool-fee inflow to FeeRouterV1 has stopped.
+          From Proposal #6 until Proposal #21, the 1% IFR pool fee routed to FeeRouterV1, which forwards only ETH swap fees and has no IFR withdrawal function (CWA-02). The IFR held by FeeRouterV1 was recovered to the Treasury Safe on 07.10.2026 by a governed batch (<a href="#lost-ifr">CWA-02</a>); it is not lost. Since Proposal #21 (executed 05.10.2026, block 26124660) future pool fees go to BuybackController, so the pool-fee inflow to FeeRouterV1 has stopped.
         </p>
       </div>
 
@@ -1479,7 +1479,7 @@
 
       <!-- ===== Permanently Lost IFR (T-202) ===== -->
       <h2 id="lost-ifr">Permanently Lost IFR</h2>
-      <p>Some IFR can never move again. They are <strong>not burned</strong>: they remain in <code>totalSupply()</code> and in the table above, but no wallet, contract or Governance call can ever release them. Balances as of Ethereum Mainnet block 26,124,660 (05.10.2026), the block in which Proposal #21 stopped the pool-fee inflow to FeeRouterV1. Direct IFR transfers to the FeeRouterV1 address remain possible, so its part is still read live.</p>
+      <p>Some IFR can never move again. They are <strong>not burned</strong>: they remain in <code>totalSupply()</code> and in the table above, but no wallet, contract or Governance call can ever release them. Since the CWA-02 recovery this is <strong>only CV-01</strong>. Balances as of Ethereum Mainnet block 26,151,369 (09.10.2026).</p>
       <div class="table-wrap">
         <table>
           <thead>
@@ -1492,22 +1492,32 @@
               <td>11 price-conditioned tranches (C1 #0, C3 #0&ndash;#9). V1 cannot read a price, so these conditions can never be met; V1 has no rescue path. See <a href="commitment-vault.html">CommitmentVault</a> and the open <a href="commitment-vault-compensation.html">CV-01 compensation proposal</a>.</td>
               <td>No, fixed</td>
             </tr>
-            <tr>
-              <td>FeeRouterV1 <a href="https://etherscan.io/address/0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a" target="_blank">0x4807&hellip;C60a</a></td>
-              <td>734,545.074097347</td>
-              <td>Received the 1% IFR pool fee from Proposal #6 until Proposal #21 but has no IFR withdrawal or forwarding function (CWA-02).</td>
-              <td>Pool-fee inflow stopped at block 26,124,660 (Proposal #21, 05.10.2026: new pool fees go to BuybackController); direct transfers to the address remain possible</td>
-            </tr>
             <tr style="border-top:2px solid var(--border)">
               <td><strong>Total permanently lost</strong></td>
-              <td><strong>27,153,013.068435700</strong></td>
-              <td>2.724% of <code>totalSupply()</code> at block 26,124,660 (996,663,637.31 IFR)</td>
-              <td>As of block 26,124,660; the Landing reads the FeeRouterV1 part live</td>
+              <td><strong>26,418,467.994338353</strong></td>
+              <td>2.651% of <code>totalSupply()</code> at block 26,151,369 (996,660,371.641431105 IFR)</td>
+              <td>No, fixed</td>
             </tr>
           </tbody>
         </table>
       </div>
-      <p>Supply that can still move: <code>totalSupply()</code> minus the total above = <strong>969,510,624.25 IFR</strong> at block 26,124,660. This is an informational figure, not an on-chain value.</p>
+      <p>Not classified as permanently lost: <code>totalSupply()</code> minus CV-01 = <strong>970,241,903.647092752 IFR</strong> at block 26,151,369. This is an informational figure, not an on-chain value, and not a circulating or spendable amount.</p>
+
+      <h3>Recovered, not lost: IFR held by FeeRouterV1 (CWA-02)</h3>
+      <p>FeeRouterV1 <a href="https://etherscan.io/address/0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a" target="_blank">0x4807&hellip;C60a</a> received the 1% IFR pool fee from Proposal #6 until Proposal #21 (block 26,124,660) and has no IFR withdrawal function. On 07.10.2026 the Treasury Safe executed one governed batch: Proposal #22 temporarily whitelisted IFR as a FeeRouterV1 adapter, <code>swapWithFee</code> transferred the IFR held by FeeRouterV1 to the Treasury Safe, and Proposal #23 removed the adapter again (TX <a href="https://etherscan.io/tx/0x5dc641c7414f4d0f83cd53fbf2dce782cb9bbffd8393ab8246f3ac47932e2881" target="_blank">0x5dc641c7&hellip;2881</a>, block 26,143,797).</p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Item</th><th>IFR</th><th>As of</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Recovered from FeeRouterV1 to the Treasury Safe <code>0x5ad6&hellip;cE3b</code></td><td>734,545.074097347</td><td>TX block 26,143,797 (07.10.2026)</td></tr>
+            <tr><td>FeeRouterV1 IFR balance</td><td>0</td><td>block 26,151,369 (09.10.2026)</td></tr>
+            <tr><td>Treasury Safe IFR balance (unallocated; no allocation decision exists)</td><td>734,545.074097347</td><td>block 26,151,369 (09.10.2026)</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Since Proposal #21 new pool fees go to BuybackController. FeeRouterV1 still has no IFR withdrawal function: IFR sent to it directly would again be stuck unless recovered by another separately governed batch. History: until 07.10.2026 this section listed the FeeRouterV1 balance as lost (734,545.074097347 IFR; total 27,153,013.068435700 IFR at block 26,124,660).</p>
 
       <div class="callout callout-yellow">
         <p><strong>Transparency note:</strong> Community Safe received 57.9M IFR (not 60M) &mdash; 1.5M IFR permanently burned (2.5% burn fee) + 0.6M IFR sent to Pool Fee Receiver (1% pool fee) = 2.1M total deducted. The Community EOA was not registered as feeExempt. The Treasury transfer was feeExempt (150M = 150M, zero burn).</p>

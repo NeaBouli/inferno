@@ -581,7 +581,7 @@
           <tr>
             <td>1.0%</td>
             <td>BuybackController</td>
-            <td>Protocol pool fee, routed to BuybackController (recoverable by Governance via <code>withdrawIFR</code>) following Governance proposal #21 (executed 5 October 2026, Mainnet block 26124660, <a href="https://etherscan.io/tx/0x8de48b47dfa8f17b631fb744bc4deef9bbb68271f8b700b422cdd3abb739ca26" target="_blank" rel="noopener">TX 0x8de48b47&hellip;9ca26</a>). Pool fees received before then are held by FeeRouterV1 (734,545.074097347 IFR as of block 26124660 (2026-10-05)); the contract has no direct withdrawal function, and Governance is reviewing options. Direct transfers can still change FeeRouterV1's balance; read it on Etherscan for the current value. See <a href="#buyback-burn-status">Buyback and burn contracts &mdash; status and access</a>.</td>
+            <td>Protocol pool fee, routed to BuybackController (recoverable by Governance via <code>withdrawIFR</code>) following Governance proposal #21 (executed 5 October 2026, Mainnet block 26124660, <a href="https://etherscan.io/tx/0x8de48b47dfa8f17b631fb744bc4deef9bbb68271f8b700b422cdd3abb739ca26" target="_blank" rel="noopener">TX 0x8de48b47&hellip;9ca26</a>). Until then the fee went to FeeRouterV1, which has no IFR withdrawal function. The 734,545.074097347 IFR held by FeeRouterV1 were recovered to the Treasury Safe on 2026-10-07 by a governed batch (CWA-02, Proposals #22 and #23, <a href="https://etherscan.io/tx/0x5dc641c7414f4d0f83cd53fbf2dce782cb9bbffd8393ab8246f3ac47932e2881" target="_blank" rel="noopener">TX 0x5dc641c7&hellip;2881</a>, block 26143797); they are unallocated Treasury IFR. FeeRouterV1 held 0 IFR at block 26151369; IFR sent to it directly would again be stuck unless recovered by another governed batch. See <a href="#buyback-burn-status">Buyback and burn contracts &mdash; status and access</a>.</td>
           </tr>
           <tr>
             <td><strong>3.5%</strong></td>
@@ -650,7 +650,7 @@
           </tr>
           <tr>
             <td>FeeRouterV1</td>
-            <td>Protocol fee router; holds the IFR transfer-pool fees received until Proposal #21 (05.10.2026); the contract has no direct withdrawal function, and Governance is reviewing options</td>
+            <td>Protocol fee router; received the IFR transfer-pool fee until Proposal #21 (05.10.2026) and has no IFR withdrawal function. The IFR it held was recovered to the Treasury Safe by the governed CWA-02 batch (07.10.2026); it holds 0 IFR since.</td>
           </tr>
           <tr>
             <td>Vesting</td>
@@ -733,9 +733,9 @@
           </tr>
           <tr>
             <td>FeeRouterV1<br><a href="https://etherscan.io/address/0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a" target="_blank" rel="noopener"><code>0x4807B77B&hellip;0C60a</code></a></td>
-            <td><strong>Swap fee router.</strong> Charges <code>protocolFeeBps</code> = 5 (0.05%) on the ETH value of swaps routed through it and sends that fee to BuybackController. It received the 1% IFR pool fee until Proposal #21. That IFR is held by FeeRouterV1; the contract has no direct withdrawal function, and Governance is reviewing options. Fee-exempt.</td>
+            <td><strong>Swap fee router.</strong> Charges <code>protocolFeeBps</code> = 5 (0.05%) on the ETH value of swaps routed through it and sends that fee to BuybackController. It received the 1% IFR pool fee until Proposal #21. It has no IFR withdrawal function; the IFR it held was recovered to the Treasury Safe by the governed CWA-02 batch (07.10.2026, block 26143797). Fee-exempt.</td>
             <td>Admin: Governance.</td>
-            <td>734,545.074097347 IFR, 0 ETH</td>
+            <td>0 IFR (block 26151369), 0 ETH</td>
           </tr>
         </tbody>
       </table>
