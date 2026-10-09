@@ -136,21 +136,46 @@ for (const bad of [
   assert.equal(parseAddressParam(bad), null, `${String(bad)} must be rejected`);
 }
 
-// Permanently lost / live supply: exact base units, unavailable (never 0) when FeeRouterV1 cannot be read.
+// Permanently lost = CV-01 only (CWA-02 owner decision): exact base units; the FeeRouterV1-held IFR was
+// recovered to the Treasury Safe and must neither count as lost nor be able to alter the figure.
 assert.equal(CV01_LOST_RAW, 26418467994338353n);
-const lost = lostSupply("996687518329891940", balanceEntry(724992668043224n));
-assert.equal(lost.permanentlyLostError, null);
-assert.equal(lost.permanentlyLostRaw, "27143460662381577");
-assert.equal(lost.liveSupplyRaw, (996687518329891940n - 27143460662381577n).toString());
-assert.equal(lost.liveSupplyRaw, "969544057667510363");
-assert.equal(lost.permanentlyLostBreakdown.feeRouterV1Raw, "724992668043224");
-assert.equal(lost.permanentlyLost, 27143460.662381577);
-const lostDown = lostSupply("996687518329891940", unavailableEntry());
-assert.equal(lostDown.permanentlyLostError, "unavailable");
-assert.equal(lostDown.permanentlyLostRaw, null);
-assert.equal(lostDown.liveSupplyRaw, null);
-assert.equal(lostDown.liveSupply, null);
-assert.notEqual(lostDown.permanentlyLost, 0);
-assert.equal(lostSupply("996687518329891940", explorerBalanceEntry({ status: "0", result: "rate limit" })).liveSupply, null);
+const TOTAL = "996687518329891940";
+const lost = lostSupply(TOTAL);
+assert.deepEqual(lost, {
+  permanentlyLostRaw: "26418467994338353",
+  permanentlyLost: 26418467.994338353,
+  liveSupplyRaw: "970269050335553587",
+  liveSupply: 970269050.335553587,
+  permanentlyLostBreakdown: { cv01Raw: "26418467994338353" },
+  permanentlyLostError: null,
+});
+assert.equal(BigInt(lost.liveSupplyRaw), BigInt(TOTAL) - CV01_LOST_RAW, "live = totalSupply - CV-01, exact bigint");
+assert.equal(BigInt(lost.liveSupplyRaw) + BigInt(lost.permanentlyLostRaw), BigInt(TOTAL), "lost + live = totalSupply");
+assert.ok(!("feeRouterV1Raw" in lost.permanentlyLostBreakdown), "no FeeRouterV1 entry with changed meaning");
+assert.equal(lostSupply("1000000000000000000").liveSupplyRaw, (10n ** 18n - CV01_LOST_RAW).toString());
+// The FeeRouterV1 balance is not an input: zero, nonzero or a failed read cannot change the result.
+assert.equal(lostSupply.length, 1, "lostSupply takes totalSupply only");
+const untyped = lostSupply as unknown as (...args: unknown[]) => unknown;
+for (const feeRouter of [balanceEntry(0n), balanceEntry(724992668043224n), unavailableEntry(),
+  explorerBalanceEntry({ status: "0", result: "rate limit" })]) {
+  assert.deepEqual(untyped(TOTAL, feeRouter), lost);
+}
+// A malformed totalSupply fails closed instead of producing a number.
+assert.throws(() => lostSupply("not-a-number"), /totalSupply unavailable/);
+assert.throws(() => lostSupply(""), /totalSupply unavailable/);
 
-console.log("[balance-integrity] PASS - failed reads stay null, incomplete responses flagged, addresses validated");
+// Source guards: /api/ifr/supply reads no FeeRouterV1 balance, so an RPC/explorer failure there cannot
+// fail or alter the response; the lost/live fields come from lostSupply(totalSupplyRaw) alone.
+{
+  const readStart = serverSource.indexOf("async function readSupplyInputs");
+  const fetchStart = serverSource.indexOf("async function fetchSupplyData");
+  const fetchEnd = serverSource.indexOf("// GET /api/ifr/balances", fetchStart);
+  assert.ok(readStart > -1 && fetchStart > readStart && fetchEnd > fetchStart);
+  const supplyPath = serverSource.slice(readStart, fetchEnd);
+  assert.ok(!/FeeRouter/.test(supplyPath), "supply path must not read FeeRouterV1");
+  assert.ok(/lostSupply\(totalSupplyRaw\)/.test(supplyPath), "lost/live derive from totalSupply only");
+  assert.ok(/\.\.\.lost,/.test(supplyPath), "response spreads the lostSupply fields");
+  assert.ok(/requireBaseUnits\(supplyData\.result, "totalSupply"\)/.test(supplyPath), "totalSupply read stays fail-closed");
+}
+
+console.log("[balance-integrity] PASS - failed reads stay null, incomplete responses flagged, addresses validated, lost = CV-01 only");

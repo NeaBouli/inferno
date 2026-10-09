@@ -1,5 +1,33 @@
 # Changelog
 
+## [Unreleased] — 2026-10-09 — Copilot supply API: only CV-01 counts as permanently lost (CWA-02)
+
+### Changed (public API)
+
+- `fix:` `GET /api/ifr/supply` now reports only the CV-01 CommitmentVault V1 tranches as permanently
+  lost. The IFR formerly held by FeeRouterV1 was recovered to the Treasury Safe in CWA-02 (tx
+  `0x5dc641c7414f4d0f83cd53fbf2dce782cb9bbffd8393ab8246f3ac47932e2881`, block 26143797) and is no
+  longer counted as lost. Visible response changes for API consumers:
+  - `permanentlyLostRaw` / `permanentlyLost` narrow to CV-01 only (`26418467994338353` raw =
+    26,418,467.994338353 IFR); `liveSupplyRaw` = `totalSupplyRaw` − CV-01, exact.
+  - `permanentlyLostBreakdown.feeRouterV1Raw` is removed; the breakdown is `{ cv01Raw }`. Current
+    FeeRouterV1 balances stay available from `GET /api/ifr/balances`.
+  - `permanentlyLostError` is always `null` (the endpoint no longer reads FeeRouterV1, so a
+    FeeRouter read failure cannot make the figures unavailable); kept for shape compatibility.
+  - `liveSupply` is not a circulating, liquid or spendable figure: it still includes locked, vested
+    and Treasury-held IFR, including the recovered, unallocated Treasury IFR.
+- Intentional breaking change of the public response (same unversioned URL; the HTTP response is
+  sent with `Cache-Control: no-store`; the server keeps the figures in an in-process memory cache
+  for up to 125 s, which a release restarts empty, so the new values apply from the first request
+  served by the new release).
+  Previously `permanentlyLostRaw` was CV-01 plus the live FeeRouterV1 balance, the breakdown was
+  `{ cv01Raw, feeRouterV1Raw }`, and `permanentlyLostError` was `"unavailable"` (with null figures)
+  when the FeeRouterV1 read failed. The new meaning applies from the Copilot release that contains
+  this change; there is no versioned endpoint, so clients reading `feeRouterV1Raw` must switch to
+  `GET /api/ifr/balances` and clients using `permanentlyLostRaw` receive the CV-01-only value.
+- Release order: the landing copy/JS update (#254) ships before or together with this API change,
+  so the landing no longer applies its dated FeeRouter fallback; verify the live landing afterwards.
+
 ## [Unreleased] — 2026-10-09 — Benefits owner-B privacy: wallet-free seller challenge (PR #238)
 
 ### Breaking
