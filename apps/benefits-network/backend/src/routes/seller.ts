@@ -24,6 +24,7 @@ import { pauseSellerBusinessDependents } from '../services/businessLifecycle';
 import { resolveCheckoutActor } from '../services/sellerAccess';
 import { challengeRateLimiter, sellerRateLimiter } from '../middleware/rateLimiter';
 import { validate } from '../middleware/validator';
+import { signedTextSafe } from '../lib/textGuards';
 import { getRewardOnChainStatus } from '../services/rewardService';
 import {
   AuthenticatedRateLimitError,
@@ -81,12 +82,12 @@ const businessCategoriesSchema = z.array(z.string().trim().min(1).max(80))
   );
 
 const createBusinessSchema = z.object({
-  name: z.string().min(1).max(200),
+  name: signedTextSafe(z.string().min(1).max(200)),
   slug: z.string().min(3).max(48).optional(),
   discountPercent: z.number().int().min(0).max(100),
   requiredLockIFR: z.number().int().positive(),
   ttlSeconds: z.number().int().min(10).max(3600).optional(),
-  tierLabel: z.string().max(50).optional(),
+  tierLabel: signedTextSafe(z.string().max(50)).optional(),
   description: businessDescriptionSchema.optional(),
   website: businessWebsiteSchema.optional(),
   logoUrl: businessLogoUrlSchema.optional(),
@@ -99,7 +100,7 @@ const createBusinessSchema = z.object({
 });
 
 const updateBusinessProfileSchema = z.object({
-  name: z.string().trim().min(1).max(200).optional(),
+  name: signedTextSafe(z.string().trim().min(1).max(200)).optional(),
   description: businessDescriptionSchema.optional(),
   website: businessWebsiteSchema.optional(),
   logoUrl: businessLogoUrlSchema.optional(),
@@ -109,9 +110,9 @@ const updateBusinessProfileSchema = z.object({
 
 const createBenefitRuleSchema = z.object({
   productId: z.string().min(1).nullable().optional(),
-  label: z.string().min(1).max(80),
-  category: z.string().min(1).max(80),
-  productName: z.string().min(1).max(160),
+  label: signedTextSafe(z.string().min(1).max(80)),
+  category: signedTextSafe(z.string().min(1).max(80)),
+  productName: signedTextSafe(z.string().min(1).max(160)),
   discountPercent: z.number().int().min(0).max(100),
   requiredLockIFR: z.number().int().positive(),
   minIFRHeld: z.number().int().min(0).max(1_000_000_000).optional(),
@@ -159,16 +160,16 @@ function validateProductPricePair(
 }
 
 const createProductSchema = z.object({
-  name: z.string().trim().min(1).max(160),
-  category: z.string().trim().min(1).max(80),
+  name: signedTextSafe(z.string().trim().min(1).max(160)),
+  category: signedTextSafe(z.string().trim().min(1).max(80)),
   description: z.string().trim().max(500).nullable().optional(),
   ...productPriceFields,
   active: z.boolean().optional(),
 }).strict().superRefine(validateProductPricePair);
 
 const updateProductSchema = z.object({
-  name: z.string().trim().min(1).max(160).optional(),
-  category: z.string().trim().min(1).max(80).optional(),
+  name: signedTextSafe(z.string().trim().min(1).max(160)).optional(),
+  category: signedTextSafe(z.string().trim().min(1).max(80)).optional(),
   description: z.string().trim().max(500).nullable().optional(),
   ...productPriceFields,
   active: z.boolean().optional(),
@@ -184,7 +185,7 @@ const sellerSessionHistoryQuerySchema = z.object({
 
 const createCheckoutOperatorSchema = z.object({
   walletAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
-  label: z.string().trim().min(1).max(80).optional(),
+  label: signedTextSafe(z.string().trim().min(1).max(80)).optional(),
   expiresAt: z.string().datetime().nullable().optional(),
 });
 

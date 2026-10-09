@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { REWARD_BLOCKED_POLICY, REWARD_BLOCKED_POLICY_REASON, prisma } from '../services/sessionService';
 import { adminAuth } from '../middleware/auth';
 import { validate } from '../middleware/validator';
+import { signedTextSafe } from '../lib/textGuards';
 import { getModelBVaultState, getRewardOnChainStatus } from '../services/rewardService';
 import { findPilot, getModelBPolicy } from '../services/modelBPolicy';
 import {
@@ -52,11 +53,11 @@ const businessCategoriesSchema = z.array(z.string().trim().min(1).max(80))
   );
 
 const createBusinessSchema = z.object({
-  name: z.string().min(1).max(200),
+  name: signedTextSafe(z.string().min(1).max(200)),
   discountPercent: z.number().int().min(0).max(100),
   requiredLockIFR: z.number().int().positive(),
   ttlSeconds: z.number().int().min(10).max(3600).optional(),
-  tierLabel: z.string().max(50).optional(),
+  tierLabel: signedTextSafe(z.string().max(50)).optional(),
   description: businessDescriptionSchema.optional(),
   website: businessWebsiteSchema.optional(),
   logoUrl: businessLogoUrlSchema.optional(),
@@ -65,11 +66,11 @@ const createBusinessSchema = z.object({
 }).strict();
 
 const updateBusinessSchema = z.object({
-  name: z.string().min(1).max(200).optional(),
+  name: signedTextSafe(z.string().min(1).max(200)).optional(),
   discountPercent: z.number().int().min(0).max(100).optional(),
   requiredLockIFR: z.number().int().positive().optional(),
   ttlSeconds: z.number().int().min(10).max(3600).optional(),
-  tierLabel: z.string().max(50).nullable().optional(),
+  tierLabel: signedTextSafe(z.string().max(50)).nullable().optional(),
   description: businessDescriptionSchema.optional(),
   website: businessWebsiteSchema.optional(),
   logoUrl: businessLogoUrlSchema.optional(),
@@ -79,9 +80,9 @@ const updateBusinessSchema = z.object({
 }).strict().refine((value) => Object.keys(value).length > 0, 'At least one field is required');
 
 const createBenefitRuleSchema = z.object({
-  label: z.string().min(1).max(80),
-  category: z.string().min(1).max(80),
-  productName: z.string().min(1).max(160),
+  label: signedTextSafe(z.string().min(1).max(80)),
+  category: signedTextSafe(z.string().min(1).max(80)),
+  productName: signedTextSafe(z.string().min(1).max(160)),
   discountPercent: z.number().int().min(0).max(100),
   requiredLockIFR: z.number().int().positive(),
   minIFRHeld: z.number().int().min(0).max(1_000_000_000).optional(),

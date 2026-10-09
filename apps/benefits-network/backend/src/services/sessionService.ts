@@ -6,6 +6,7 @@ import { normalizeAddress } from './sellerAuth';
 import { consumeSellerAuthorizationChallenge } from './sellerAuthorizationChallenge';
 import { safeProductPrice } from './productPrice';
 import { snapshotLockSource, type LockSource, type VerifiedLockSource } from './lockSource';
+import { containsSignedTextControlCharacter } from '../lib/textGuards';
 
 const prisma = new PrismaClient();
 
@@ -31,6 +32,17 @@ export class CustomerProofMismatchError extends Error {
   constructor() {
     super('Customer signature does not match the claimed wallet address');
     this.name = 'CustomerProofMismatchError';
+  }
+}
+
+/**
+ * A stored checkout term contains a control character or line/paragraph separator, so no signed proof
+ * text is built (fail closed). The message keeps "cannot attest" so customer routes answer 409.
+ */
+export class CheckoutTermsUnsignableError extends Error {
+  constructor() {
+    super('Checkout cannot attest: its terms contain control characters or line separators');
+    this.name = 'CheckoutTermsUnsignableError';
   }
 }
 
@@ -416,6 +428,29 @@ function proofAudience() {
  */
 export function buildCheckoutProofMessage(session: ProofSession, claimedWallet: string): string {
   const terms = checkoutTerms(session);
+  // Fail closed: every interpolated value occupies exactly one line of the signed text. A control
+  // character or line/paragraph separator (e.g. a stored label "Coffee\nDiscount Percent: 50") could
+  // inject a fake field, so no proof text is built at all.
+  const interpolated = [
+    claimedWallet,
+    proofAudience(),
+    String(config.CHAIN_ID),
+    session.businessId,
+    session.id,
+    session.nonce,
+    terms.benefitRuleId,
+    terms.label,
+    terms.productName,
+    terms.basePriceMinor,
+    terms.currency,
+    terms.requiredLockIFR,
+    terms.minIFRHeld,
+    terms.lockSource,
+    terms.discountPercent,
+  ];
+  if (interpolated.some((value) => value !== null && value !== undefined && containsSignedTextControlCharacter(String(value)))) {
+    throw new CheckoutTermsUnsignableError();
+  }
   return [
     'IFR Benefits Network - Checkout Proof',
     `Version: ${CHECKOUT_PROOF_VERSION_LABEL}`,
