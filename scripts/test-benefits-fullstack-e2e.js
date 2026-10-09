@@ -190,7 +190,8 @@ async function fetchJson(urlPath, options = {}) {
 }
 
 async function sellerAuth(wallet, action, businessId, scope) {
-  const query = new URLSearchParams({ action, businessId, walletAddress: wallet.address });
+  // Wallet-free challenge: the signer is recovered from the signature (owner decision B).
+  const query = new URLSearchParams({ action, businessId });
   const mutatingActions = new Set(['business:create', 'products:create', 'rules:create']);
   if (mutatingActions.has(action)) {
     query.set('scope', scope || businessId);

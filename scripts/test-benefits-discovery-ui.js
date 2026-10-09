@@ -639,9 +639,9 @@ async function run() {
         assert.equal(url.searchParams.get('businessId'), mutating ? offer.business.id : 'seller');
         assert.equal(url.searchParams.has('scope'), mutating, 'only lifecycle mutations send an exact scope');
         assert.equal(
-          url.searchParams.get('walletAddress')?.toLowerCase(),
-          sellerWallet.toLowerCase(),
-          'every seller action issues a wallet-bound single-use challenge'
+          url.searchParams.has('walletAddress'),
+          false,
+          'every seller action issues a wallet-free single-use challenge'
         );
         if (mutating) assert.equal(url.searchParams.get('scope'), offer.business.id);
         const timestamp = String(Date.now());

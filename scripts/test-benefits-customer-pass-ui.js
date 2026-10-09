@@ -222,7 +222,9 @@ function installApiMock(context, state, calls) {
       assert.equal(action, 'passes:bind', 'the seller signs only the pass bind (no separate redeem step)');
       const nonce = 'pass-bind-nonce';
       assert.equal(scope, `${passId}:${ruleId}`);
-      assert.equal(url.searchParams.get('walletAddress')?.toLowerCase(), sellerWallet.toLowerCase());
+      // Wallet-free challenge (owner decision B): no wallet in the challenge URL.
+      assert.equal(url.searchParams.has('walletAddress'), false, 'the challenge URL carries no wallet');
+      assert.ok(!/0x[0-9a-f]{40}/i.test(url.search), 'no address-shaped text in the challenge URL');
       return json(route, { message: `${action} ${scope}`, timestamp: new Date().toISOString(), nonce, expiresAt });
     }
     if (method === 'POST' && pathname === `/api/passes/${passId}/bind`) {

@@ -2,7 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { createHash, randomBytes } = require('crypto');
+const { createHash } = require('crypto');
 const { ethers: ethersUtils } = require('ethers');
 const { chromium, devices } = require('playwright');
 
@@ -132,11 +132,8 @@ async function verifyHttpSurface() {
   assert((await serviceWorker.text()).includes("ifr-benefits-v25"), 'service worker cache version mismatch');
   log('PWA assets OK');
 
-  // Throwaway address: issues one expiring read challenge, never signs or consumes it.
-  const smokeWallet = `0x${randomBytes(20).toString('hex')}`;
-  const auth = await fetchJson(
-    `/api/seller/auth-message?action=business:list&businessId=seller&walletAddress=${smokeWallet}`
-  );
+  // Issues one expiring, wallet-free read challenge; never signs or consumes it.
+  const auth = await fetchJson('/api/seller/auth-message?action=business:list&businessId=seller');
   assert(auth.message.includes('IFR Benefits Network - Seller Authorization'), 'seller auth message header mismatch');
   assert(auth.message.includes('Domain: shop.ifrunit.tech\n'), 'seller auth domain binding missing');
   assert(/\nChain ID: \d+\n/.test(auth.message), 'seller auth chain binding missing');
