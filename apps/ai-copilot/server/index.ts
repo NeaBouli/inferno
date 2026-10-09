@@ -706,8 +706,9 @@ async function fetchBalancesDataEtherscanFallback() {
 }
 
 /** Supply inputs read on-chain through the shared failover provider (T-219); the explorer API is only a
- *  fallback, because an exhausted explorer quota previously made the live supply disappear. */
-async function readSupplyInputs(): Promise<{ totalSupplyRaw: string; burnReserveBalanceRaw: string; feeRouter: BalanceEntry }> {
+ *  fallback, because an exhausted explorer quota previously made the live supply disappear. A failed
+ *  totalSupply read throws (502), never a zero supply. No FeeRouterV1 read: it no longer affects /supply. */
+async function readSupplyInputs(): Promise<{ totalSupplyRaw: string; burnReserveBalanceRaw: string }> {
   const ethersLib = (await import("ethers")).ethers;
   const token = new ethersLib.Contract(
     IFR_TOKEN,
@@ -715,12 +716,11 @@ async function readSupplyInputs(): Promise<{ totalSupplyRaw: string; burnReserve
     getRpcProvider()
   );
   try {
-    const [supply, burn, feeRouter] = await Promise.all([
+    const [supply, burn] = await Promise.all([
       token.totalSupply() as Promise<bigint>,
       token.balanceOf(BURN_ADDRESS) as Promise<bigint>,
-      (token.balanceOf(PROTOCOL_ADDRESSES.FeeRouterV1) as Promise<bigint>).then(balanceEntry, () => unavailableEntry()),
     ]);
-    return { totalSupplyRaw: supply.toString(), burnReserveBalanceRaw: burn.toString(), feeRouter };
+    return { totalSupplyRaw: supply.toString(), burnReserveBalanceRaw: burn.toString() };
   } catch {
     const supplyData = await esApiFetch(
       `&module=stats&action=tokensupply&contractaddress=${IFR_TOKEN}`
@@ -728,35 +728,32 @@ async function readSupplyInputs(): Promise<{ totalSupplyRaw: string; burnReserve
     const burnReserveData = await esApiFetch(
       `&module=account&action=tokenbalance&contractaddress=${IFR_TOKEN}&address=${BURN_ADDRESS}&tag=latest`
     ) as { result?: string };
-    const feeRouterData = await esApiFetch(
-      `&module=account&action=tokenbalance&contractaddress=${IFR_TOKEN}&address=${PROTOCOL_ADDRESSES.FeeRouterV1}&tag=latest`
-    ).catch(() => null) as { status?: string; result?: unknown } | null;
     // A failed read must surface as an error (502), never as a zero supply.
     return {
       totalSupplyRaw: requireBaseUnits(supplyData.result, "totalSupply"),
       burnReserveBalanceRaw: requireBaseUnits(burnReserveData.result, "burn address balance"),
-      feeRouter: explorerBalanceEntry(feeRouterData),
     };
   }
 }
 
 async function fetchSupplyData() {
-  const { totalSupplyRaw, burnReserveBalanceRaw, feeRouter } = await readSupplyInputs();
+  const { totalSupplyRaw, burnReserveBalanceRaw } = await readSupplyInputs();
   const totalSupply = parseInt(totalSupplyRaw, 10) / 10 ** IFR_DECIMALS;
   const burnAddressBalance = parseInt(burnReserveBalanceRaw, 10) / 10 ** IFR_DECIMALS;
   const burned = TOTAL_MINTED - totalSupply;
   // Legacy semantics, unchanged: circulating = totalSupply - dead-address balance. It still includes
-  // permanently lost IFR; use liveSupply for totalSupply minus permanently lost.
+  // permanently lost IFR; liveSupply is totalSupply minus permanently lost (CV-01 only) and is likewise
+  // not a liquid or spendable figure (see LostSupply).
   const circulating = totalSupply - burnAddressBalance;
-  const lost = lostSupply(totalSupplyRaw, feeRouter);
+  const lost = lostSupply(totalSupplyRaw);
   const response = {
     totalMinted: TOTAL_MINTED, totalSupply, totalSupplyRaw, burnAddressBalance, burned, circulating,
     ...lost,
-    incomplete: lost.permanentlyLostError !== null,
+    // Every field is derived from reads that either succeed or fail the request; kept for shape compatibility.
+    incomplete: false,
     timestamp: new Date().toISOString(), fetchedAt: Date.now(), source: "live" as const,
   };
-  // Never cache a response whose lost/live figures are unavailable as if they were live values.
-  if (!response.incomplete) setCache("supply", response);
+  setCache("supply", response);
   return response;
 }
 
