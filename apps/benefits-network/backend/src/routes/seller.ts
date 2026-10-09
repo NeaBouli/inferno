@@ -9,6 +9,7 @@ import {
   buildSellerAuthMessage,
   normalizeAddress,
   resolveSellerAuthContext,
+  containsWalletAddress,
   verifySellerSignature,
 } from '../services/sellerAuth';
 import {
@@ -24,6 +25,7 @@ import { pauseSellerBusinessDependents } from '../services/businessLifecycle';
 import { resolveCheckoutActor } from '../services/sellerAccess';
 import { challengeRateLimiter, sellerRateLimiter } from '../middleware/rateLimiter';
 import { validate } from '../middleware/validator';
+import { signedTextSafe } from '../lib/textGuards';
 import { getRewardOnChainStatus } from '../services/rewardService';
 import {
   AuthenticatedRateLimitError,
@@ -53,17 +55,14 @@ import {
   publicBusinessReference,
 } from '../services/businessSlug';
 
+const CUSTOMER_LIMIT_NOT_HOSTED =
+  'Per-customer redemption limits are not enforced by IFR (customer privacy); use 0 and enforce limits in your own checkout';
+
 const router = Router();
 const MAX_ACTIVE_CHECKOUT_OPERATORS = 10;
 
 function setPrivateNoStore(res: Response) {
   res.set('Cache-Control', 'private, no-store, max-age=0');
-}
-
-function maskCustomerWallet(address: string | null) {
-  if (!address) return null;
-  if (!/^0x[a-fA-F0-9]{40}$/.test(address)) return 'verified';
-  return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
 
 const businessDescriptionSchema = z.string().trim().max(500).nullable();
@@ -84,12 +83,12 @@ const businessCategoriesSchema = z.array(z.string().trim().min(1).max(80))
   );
 
 const createBusinessSchema = z.object({
-  name: z.string().min(1).max(200),
+  name: signedTextSafe(z.string().min(1).max(200)),
   slug: z.string().min(3).max(48).optional(),
   discountPercent: z.number().int().min(0).max(100),
   requiredLockIFR: z.number().int().positive(),
   ttlSeconds: z.number().int().min(10).max(3600).optional(),
-  tierLabel: z.string().max(50).optional(),
+  tierLabel: signedTextSafe(z.string().max(50)).optional(),
   description: businessDescriptionSchema.optional(),
   website: businessWebsiteSchema.optional(),
   logoUrl: businessLogoUrlSchema.optional(),
@@ -102,7 +101,7 @@ const createBusinessSchema = z.object({
 });
 
 const updateBusinessProfileSchema = z.object({
-  name: z.string().trim().min(1).max(200).optional(),
+  name: signedTextSafe(z.string().trim().min(1).max(200)).optional(),
   description: businessDescriptionSchema.optional(),
   website: businessWebsiteSchema.optional(),
   logoUrl: businessLogoUrlSchema.optional(),
@@ -112,15 +111,17 @@ const updateBusinessProfileSchema = z.object({
 
 const createBenefitRuleSchema = z.object({
   productId: z.string().min(1).nullable().optional(),
-  label: z.string().min(1).max(80),
-  category: z.string().min(1).max(80),
-  productName: z.string().min(1).max(160),
+  label: signedTextSafe(z.string().min(1).max(80)),
+  category: signedTextSafe(z.string().min(1).max(80)),
+  productName: signedTextSafe(z.string().min(1).max(160)),
   discountPercent: z.number().int().min(0).max(100),
   requiredLockIFR: z.number().int().positive(),
   minIFRHeld: z.number().int().min(0).max(1_000_000_000).optional(),
   lockSource: z.enum(LOCK_SOURCES).optional(),
-  dailyRedemptionLimit: z.number().int().min(0).max(1000).optional(),
-  monthlyRedemptionLimit: z.number().int().min(0).max(10000).optional(),
+  // Owner decision B (T-231b): per-customer limits need customer identity, which IFR no longer
+  // stores. Only 0 (no IFR-hosted limit) is accepted; merchants enforce limits in their own systems.
+  dailyRedemptionLimit: z.number().int().min(0).max(0, CUSTOMER_LIMIT_NOT_HOSTED).optional(),
+  monthlyRedemptionLimit: z.number().int().min(0).max(0, CUSTOMER_LIMIT_NOT_HOSTED).optional(),
   ttlSeconds: z.number().int().min(10).max(3600).optional(),
   active: z.boolean().optional(),
 });
@@ -160,16 +161,16 @@ function validateProductPricePair(
 }
 
 const createProductSchema = z.object({
-  name: z.string().trim().min(1).max(160),
-  category: z.string().trim().min(1).max(80),
+  name: signedTextSafe(z.string().trim().min(1).max(160)),
+  category: signedTextSafe(z.string().trim().min(1).max(80)),
   description: z.string().trim().max(500).nullable().optional(),
   ...productPriceFields,
   active: z.boolean().optional(),
 }).strict().superRefine(validateProductPricePair);
 
 const updateProductSchema = z.object({
-  name: z.string().trim().min(1).max(160).optional(),
-  category: z.string().trim().min(1).max(80).optional(),
+  name: signedTextSafe(z.string().trim().min(1).max(160)).optional(),
+  category: signedTextSafe(z.string().trim().min(1).max(80)).optional(),
   description: z.string().trim().max(500).nullable().optional(),
   ...productPriceFields,
   active: z.boolean().optional(),
@@ -185,7 +186,7 @@ const sellerSessionHistoryQuerySchema = z.object({
 
 const createCheckoutOperatorSchema = z.object({
   walletAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
-  label: z.string().trim().min(1).max(80).optional(),
+  label: signedTextSafe(z.string().trim().min(1).max(80)).optional(),
   expiresAt: z.string().datetime().nullable().optional(),
 });
 
@@ -268,7 +269,61 @@ function getSellerAuth(req: Request) {
   };
 }
 
-async function requireSellerAuth(req: Request, action: string, businessId: string, scope?: string) {
+/**
+ * Shapes accepted by the public challenge endpoint (owner decision B: nothing wallet-shaped can be
+ * stored). Every action has an explicit scope shape taken from its route; unknown actions are refused.
+ * Ids are Prisma cuid() values; slugs are canonical business slugs; pass ids are 24 random bytes base64url.
+ */
+const CHALLENGE_ID_PATTERN = /^c[a-z0-9]{24}$/;
+const CHALLENGE_SLUG_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const CHALLENGE_PASS_ID_PATTERN = /^[A-Za-z0-9_-]{32}$/;
+const isChallengeId = (value: string) => CHALLENGE_ID_PATTERN.test(value);
+const isChallengeSlug = (value: string) => value.length >= 3 && value.length <= 48 && CHALLENGE_SLUG_PATTERN.test(value);
+const CHALLENGE_SCOPE_SHAPES: Record<string, (scope: string) => boolean> = {
+  'business:create': (scope) => scope === 'new' || isChallengeSlug(scope),
+  'business:slug': isChallengeSlug,
+  'business:update': isChallengeId,
+  'business:delete': isChallengeId,
+  'business:reactivate': isChallengeId,
+  'operators:create': (scope) => scope === 'operator-wallet',
+  'operators:delete': isChallengeId,
+  'products:create': isChallengeId,
+  'products:update': isChallengeId,
+  'products:delete': isChallengeId,
+  'rewards:apply': isChallengeId,
+  'rewards:disable': isChallengeId,
+  'rewards:reward-wallet': (scope) => scope === 'reward-wallet' || scope === 'owner-wallet',
+  'rules:create': isChallengeId,
+  'rules:update': isChallengeId,
+  'rules:delete': isChallengeId,
+  'sessions:create': (scope) => scope === 'default' || isChallengeId(scope),
+  'sessions:redeem': isChallengeId,
+  'passes:bind': (scope) => {
+    const [passId, ruleId, ...rest] = scope.split(':');
+    return rest.length === 0 && CHALLENGE_PASS_ID_PATTERN.test(passId ?? '') && isChallengeId(ruleId ?? '');
+  },
+};
+
+function isAllowedChallengeShape(action: string, businessId: string, scope: string) {
+  const businessOk = businessId === 'new' || businessId === 'seller' || isChallengeId(businessId);
+  const scopeOk = isReadOnlySellerAction(action)
+    ? scope === READ_ONLY_SELLER_SCOPE
+    : Boolean(CHALLENGE_SCOPE_SHAPES[action]?.(scope));
+  return businessOk && scopeOk;
+}
+
+/** Fixed, wallet-free scopes of the two actions that act on a target wallet (bound via `Target:`). */
+const OPERATOR_WALLET_SCOPE = 'operator-wallet';
+const REWARD_WALLET_SCOPE = 'reward-wallet';
+const OWNER_WALLET_SCOPE = 'owner-wallet';
+
+async function requireSellerAuth(
+  req: Request,
+  action: string,
+  businessId: string,
+  scope?: string,
+  target?: string
+) {
   const auth = getSellerAuth(req);
   const boundScope = isReadOnlySellerAction(action) ? READ_ONLY_SELLER_SCOPE : scope;
   if (!auth.nonce || !boundScope) {
@@ -281,13 +336,13 @@ async function requireSellerAuth(req: Request, action: string, businessId: strin
     businessId,
     nonce: auth.nonce,
     scope: boundScope,
+    target,
   });
   await assertSellerWalletActionAllowed(wallet);
   // Atomic single-use consumption: a replayed or concurrent duplicate proof
   // matches zero unconsumed rows and is rejected.
   await consumeSellerAuthorizationChallenge(prisma, {
     nonce: auth.nonce,
-    walletAddress: wallet,
     action,
     businessId,
     scope: boundScope,
@@ -344,8 +399,14 @@ function handleSellerError(err: unknown, res: Response, next: NextFunction) {
   next(err);
 }
 
-async function requireBusinessOwner(req: Request, action: string, businessId: string, scope?: string) {
-  const wallet = await requireSellerAuth(req, action, businessId, scope);
+async function requireBusinessOwner(
+  req: Request,
+  action: string,
+  businessId: string,
+  scope?: string,
+  target?: string
+) {
+  const wallet = await requireSellerAuth(req, action, businessId, scope, target);
   const business = await prisma.business.findUnique({
     where: { id: businessId },
     select: { id: true, ownerAddress: true, active: true },
@@ -404,9 +465,20 @@ async function lockActiveProduct(
   if (lockedProducts !== 1) throw new Error('Active product not found for this business');
 }
 
+// P2 (owner decision B): seller challenges are wallet-free. The server needs no wallet to issue a
+// nonce; the signer is recovered from the signature when the challenge is used.
+// Decision D1 (Codex, 2026-10-09): a legacy `walletAddress` query parameter sent by released SDK
+// clients is IGNORED - never read, validated, stored, echoed or logged. Switching to D2 (reject
+// stale clients with 400) is this one line: set REJECT_LEGACY_WALLET_QUERY to true.
+const REJECT_LEGACY_WALLET_QUERY = false;
+
 router.get('/auth-message', challengeRateLimiter, async (req, res, next) => {
   setPrivateNoStore(res);
   try {
+    if (REJECT_LEGACY_WALLET_QUERY && req.query.walletAddress !== undefined) {
+      res.status(400).json({ error: 'walletAddress is no longer accepted; request the challenge without it' });
+      return;
+    }
     const action = String(req.query.action || 'business:create');
     const businessId = String(req.query.businessId || 'new');
     if (!isKnownSellerAction(action)) {
@@ -417,24 +489,26 @@ router.get('/auth-message', challengeRateLimiter, async (req, res, next) => {
       res.status(400).json({ error: 'Invalid seller authorization business' });
       return;
     }
-    let walletAddress: string;
-    try {
-      walletAddress = normalizeAddress(String(req.query.walletAddress || ''));
-    } catch {
-      res.status(400).json({ error: 'Valid walletAddress is required for this authorization' });
-      return;
-    }
     const readOnly = isReadOnlySellerAction(action);
     const scope = String(req.query.scope || (readOnly ? READ_ONLY_SELLER_SCOPE : ''));
     if (!isSafeSellerAuthorizationField(scope) || (readOnly && scope !== READ_ONLY_SELLER_SCOPE)) {
       res.status(400).json({ error: 'Invalid seller authorization scope' });
       return;
     }
+    // Owner decision B: a challenge never carries a wallet. Target wallets are bound by the signed
+    // `Target:` line from the authenticated request body instead.
+    if (containsWalletAddress(scope) || containsWalletAddress(businessId)) {
+      res.status(400).json({ error: 'Seller authorization scope must not contain a wallet address' });
+      return;
+    }
+    if (!isAllowedChallengeShape(action, businessId, scope)) {
+      res.status(400).json({ error: 'Invalid seller authorization scope or business' });
+      return;
+    }
     const context = resolveSellerAuthContext(config);
     const timestamp = String(Date.now());
     const expiresAt = new Date(Number(timestamp) + SELLER_AUTH_TTL_MS);
     const nonce = await issueSellerAuthorizationChallenge(prisma, {
-      walletAddress,
       action,
       businessId,
       scope,
@@ -444,7 +518,6 @@ router.get('/auth-message', challengeRateLimiter, async (req, res, next) => {
     res.json({
       action,
       businessId,
-      walletAddress,
       scope,
       nonce,
       domain: context.domain,
@@ -693,11 +766,14 @@ router.post(
     try {
       const authorizationTimestamp = Number(getSellerAuth(req).timestamp);
       const walletAddress = normalizeAddress(req.body.walletAddress);
+      // The operator wallet is bound by the signed `Target:` line rebuilt from this body, never by the
+      // challenge scope (owner decision B: no wallet in the challenge URL or row).
       const ownerWallet = await requireSellerAuth(
         req,
         'operators:create',
         req.params.id,
-        walletAddress.toLowerCase()
+        OPERATOR_WALLET_SCOPE,
+        walletAddress
       );
 
       const expiresAt = req.body.expiresAt ? new Date(req.body.expiresAt) : null;
@@ -967,11 +1043,9 @@ router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next)
         select: {
           id: true,
           status: true,
-          recoveredAddress: true,
-          lockAmountRaw: true,
-          walletBalanceRaw: true,
           verifiedLockSource: true,
-          verificationBlock: true,
+          selfRedemption: true,
+          proofVersion: true,
           reason: true,
           expiresAt: true,
           createdAt: true,
@@ -1055,11 +1129,10 @@ router.get('/businesses/:id/sessions', sellerRateLimiter, async (req, res, next)
       sessions: pageSessions.map((session) => ({
         id: session.id,
         status: session.status,
-        customerWalletMasked: maskCustomerWallet(session.recoveredAddress),
-        lockAmountRaw: session.lockAmountRaw,
-        walletBalanceRaw: session.walletBalanceRaw,
+        // Owner decision B (T-231b): no customer wallet, amount or block is stored or shown.
+        customerProof: session.proofVersion ? 'verified' : null,
+        selfRedemption: session.selfRedemption,
         verifiedLockSource: session.verifiedLockSource,
-        verificationBlock: session.verificationBlock,
         reason: session.reason,
         expiresAt: session.expiresAt,
         createdAt: session.createdAt,
@@ -1237,10 +1310,12 @@ router.post(
   async (req, res, next) => {
     try {
       const requestedWallet = req.body.rewardWallet as string | null;
-      // The owner authorization challenge is bound to this exact decision:
-      // the proposed reward wallet, or the explicit return to owner payouts.
-      const scope = requestedWallet ? requestedWallet.toLowerCase() : 'owner-wallet';
-      const owner = await requireBusinessOwner(req, 'rewards:reward-wallet', req.params.id, scope);
+      // The owner authorization is bound to this exact decision: the proposed reward wallet (fixed scope
+      // plus the signed `Target:` line rebuilt from this body), or the explicit return to owner payouts.
+      // No wallet is placed in the challenge scope, URL or row.
+      const scope = requestedWallet ? REWARD_WALLET_SCOPE : OWNER_WALLET_SCOPE;
+      const target = requestedWallet ? normalizeAddress(requestedWallet) : undefined;
+      const owner = await requireBusinessOwner(req, 'rewards:reward-wallet', req.params.id, scope, target);
 
       let rewardWallet: string | null = null;
       let proofWallet: string | null = null;
@@ -1261,6 +1336,7 @@ router.post(
           businessId: req.params.id,
           nonce: String(req.body.rewardWalletNonce),
           scope,
+          target: rewardWallet,
         });
       }
 
@@ -1284,7 +1360,6 @@ router.post(
         if (proofWallet) {
           await consumeSellerAuthorizationChallenge(tx, {
             nonce: String(req.body.rewardWalletNonce),
-            walletAddress: proofWallet,
             action: 'rewards:reward-wallet',
             businessId: req.params.id,
             scope,

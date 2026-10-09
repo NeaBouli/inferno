@@ -378,6 +378,13 @@ textarea {
   margin-right: 26px;
 }
 
+/* T-231b: the device-local history card scrolls under the fixed launcher (80px band above 820px, 70px
+   up to 820px). Its right padding keeps every text line and control left of that band at any scroll
+   position; asserted in the T-231b visual evidence script. */
+.shop-launcher-band-clearance {
+  padding-right: 80px;
+}
+
 .shop-copilot-panel {
   position: fixed;
   right: 20px;
@@ -492,6 +499,15 @@ textarea {
   /* T-284: up to 820px the launcher band is 70px (54px at 16px), so a 16px margin gives the same 17px gap. */
   .shop-launcher-clearance {
     margin-right: 16px;
+  }
+
+  .shop-launcher-band-clearance {
+    padding-right: 62px;
+  }
+
+  /* T-231b: compact variant for the checkout screens; only applies where the launcher band overlaps. */
+  .shop-launcher-band-clearance-compact {
+    padding-right: 62px;
   }
 }
 

@@ -22,10 +22,14 @@ type ChallengeConsumer = {
   };
 };
 
+/**
+ * Issues a nonce-only seller challenge (owner decision B). Stored: a random 32-byte nonce, action,
+ * business, scope and expiry - never a wallet address, hash or other wallet-derived value. The signer
+ * is bound later only by the signature over the server-built message.
+ */
 export async function issueSellerAuthorizationChallenge(
   db: PrismaClient,
   input: {
-    walletAddress: string;
     action: string;
     businessId: string;
     scope: string;
@@ -47,17 +51,27 @@ export async function issueSellerAuthorizationChallenge(
       });
     }
     await tx.sellerAuthorizationChallenge.create({
-      data: { nonce, ...input },
+      data: {
+        nonce,
+        action: input.action,
+        businessId: input.businessId,
+        scope: input.scope,
+        expiresAt: input.expiresAt,
+      },
     });
   });
   return nonce;
 }
 
+/**
+ * Atomically consumes a challenge matching {nonce, action, business, scope, unconsumed, unexpired}.
+ * There is no wallet predicate: the caller must already have recovered the signer from a signature
+ * over the message for exactly this nonce/action/business/scope and authorizes that signer itself.
+ */
 export async function consumeSellerAuthorizationChallenge(
   db: ChallengeConsumer,
   input: {
     nonce: string;
-    walletAddress: string;
     action: string;
     businessId: string;
     scope: string;
@@ -66,7 +80,10 @@ export async function consumeSellerAuthorizationChallenge(
   const now = new Date();
   const consumed = await db.sellerAuthorizationChallenge.updateMany({
     where: {
-      ...input,
+      nonce: input.nonce,
+      action: input.action,
+      businessId: input.businessId,
+      scope: input.scope,
       consumedAt: null,
       expiresAt: { gt: now },
     },

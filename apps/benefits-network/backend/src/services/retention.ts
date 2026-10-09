@@ -8,10 +8,7 @@ export const MAX_RETENTION_BATCH_LIMIT = 10_000;
 
 type RetentionEligibleCounts = {
   adminAuditLogs: number;
-  customerPassChallenges: number;
   sellerAuthorizationChallenges: number;
-  customerHistoryChallenges: number;
-  customerHistoryAccess: number;
   orphanCustomerPasses: number;
 };
 
@@ -61,10 +58,7 @@ export async function getRetentionReport(
   validateInputs(cutoff, now, batchLimit);
   const [
     adminAuditLogs,
-    customerPassChallenges,
     sellerAuthorizationChallenges,
-    customerHistoryChallenges,
-    customerHistoryAccess,
     orphanCustomerPasses,
     sessions,
     auditLogs,
@@ -72,10 +66,7 @@ export async function getRetentionReport(
     linkedCustomerPasses,
   ] = await Promise.all([
     db.adminAuditLog.count({ where: { createdAt: { lt: cutoff } } }),
-    db.customerPassChallenge.count({ where: { expiresAt: { lt: cutoff } } }),
     db.sellerAuthorizationChallenge.count({ where: { expiresAt: { lt: cutoff } } }),
-    db.customerHistoryChallenge.count({ where: { expiresAt: { lt: cutoff } } }),
-    db.customerHistoryAccess.count({ where: { expiresAt: { lt: cutoff } } }),
     db.customerPass.count({ where: customerPassWhere(cutoff) }),
     db.session.count(),
     db.auditLog.count(),
@@ -90,11 +81,8 @@ export async function getRetentionReport(
     batchLimit,
     eligible: {
       adminAuditLogs,
-      customerPassChallenges,
-      sellerAuthorizationChallenges,
-      customerHistoryChallenges,
-      customerHistoryAccess,
-      orphanCustomerPasses,
+        sellerAuthorizationChallenges,
+          orphanCustomerPasses,
     },
     protected: {
       sessions,
@@ -127,10 +115,7 @@ export async function applyRetention(db: PrismaClient, input: RetentionApplyInpu
   const deleted = await db.$transaction(async (tx) => {
     const [
       adminAuditRows,
-      customerPassChallengeRows,
       sellerAuthorizationChallengeRows,
-      customerHistoryChallengeRows,
-      customerHistoryAccessRows,
       customerPassRows,
     ] = await Promise.all([
       tx.adminAuditLog.findMany({
@@ -139,29 +124,11 @@ export async function applyRetention(db: PrismaClient, input: RetentionApplyInpu
         take: batchLimit,
         select: { id: true },
       }),
-      tx.customerPassChallenge.findMany({
-        where: { expiresAt: { lt: input.cutoff } },
-        orderBy: [{ expiresAt: 'asc' }, { nonce: 'asc' }],
-        take: batchLimit,
-        select: { nonce: true },
-      }),
       tx.sellerAuthorizationChallenge.findMany({
         where: { expiresAt: { lt: input.cutoff } },
         orderBy: [{ expiresAt: 'asc' }, { nonce: 'asc' }],
         take: batchLimit,
         select: { nonce: true },
-      }),
-      tx.customerHistoryChallenge.findMany({
-        where: { expiresAt: { lt: input.cutoff } },
-        orderBy: [{ expiresAt: 'asc' }, { nonce: 'asc' }],
-        take: batchLimit,
-        select: { nonce: true },
-      }),
-      tx.customerHistoryAccess.findMany({
-        where: { expiresAt: { lt: input.cutoff } },
-        orderBy: [{ expiresAt: 'asc' }, { tokenHash: 'asc' }],
-        take: batchLimit,
-        select: { tokenHash: true },
       }),
       tx.customerPass.findMany({
         where: customerPassWhere(input.cutoff),
@@ -173,24 +140,12 @@ export async function applyRetention(db: PrismaClient, input: RetentionApplyInpu
 
     const [
       adminAuditLogs,
-      customerPassChallenges,
-      sellerAuthorizationChallenges,
-      customerHistoryChallenges,
-      customerHistoryAccess,
-      orphanCustomerPasses,
+        sellerAuthorizationChallenges,
+          orphanCustomerPasses,
     ] = await Promise.all([
       tx.adminAuditLog.deleteMany({ where: { id: { in: adminAuditRows.map(({ id }) => id) } } }),
-      tx.customerPassChallenge.deleteMany({
-        where: { nonce: { in: customerPassChallengeRows.map(({ nonce }) => nonce) } },
-      }),
       tx.sellerAuthorizationChallenge.deleteMany({
         where: { nonce: { in: sellerAuthorizationChallengeRows.map(({ nonce }) => nonce) } },
-      }),
-      tx.customerHistoryChallenge.deleteMany({
-        where: { nonce: { in: customerHistoryChallengeRows.map(({ nonce }) => nonce) } },
-      }),
-      tx.customerHistoryAccess.deleteMany({
-        where: { tokenHash: { in: customerHistoryAccessRows.map(({ tokenHash }) => tokenHash) } },
       }),
       tx.customerPass.deleteMany({
         where: {
@@ -216,10 +171,7 @@ export async function applyRetention(db: PrismaClient, input: RetentionApplyInpu
 
     return {
       adminAuditLogs: adminAuditLogs.count,
-      customerPassChallenges: customerPassChallenges.count,
       sellerAuthorizationChallenges: sellerAuthorizationChallenges.count,
-      customerHistoryChallenges: customerHistoryChallenges.count,
-      customerHistoryAccess: customerHistoryAccess.count,
       orphanCustomerPasses: orphanCustomerPasses.count,
     };
   });

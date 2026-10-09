@@ -1,5 +1,14 @@
 # Changelog
 
+## [Unreleased] — 2026-10-09 — Benefits owner-B privacy: wallet-free seller challenge (PR #238)
+
+### Breaking
+
+- `security:` `GET /api/seller/auth-message` no longer takes, stores or echoes a wallet. Released
+  `ifr-sdk` versions (<= 0.3.0) require `challenge.walletAddress` in the response and fail against
+  the new backend; publish and roll out the wallet-free SDK before the backend release
+  (`apps/sdk/README.md`, `docs/BENEFITS_NETWORK_TEST.md`). No SDK was published here.
+
 ## [Unreleased] — 2026-10-06 — Benefits launcher keeps clear of checkout summary and approval action (release 8c21eb0e follow-up)
 
 ### Fixed

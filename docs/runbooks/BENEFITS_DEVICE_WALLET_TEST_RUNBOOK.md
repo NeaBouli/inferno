@@ -22,7 +22,7 @@ Required paths:
 2. Seller wallet entry and seller profile/rule management.
 3. Customer creates a short-lived pass; seller scans it and binds the exact offer.
 4. Customer reviews and signs the exact bound offer.
-5. Seller sees the result and redeems an approved checkout once; replay remains blocked.
+5. The customer's valid proof redeems the checkout once; the seller sees `REDEEMED`; replay remains blocked.
 6. The compatible seller-issued `/r/{sessionId}` QR flow still works through `/scan`.
 7. Rejected, unavailable or transiently failed checks produce clear recovery guidance.
 
@@ -48,7 +48,7 @@ npm run build
 npm run smoke:http
 ```
 
-- Optional full approve/redeem test requires a real customer wallet that is eligible for the selected seller rule:
+- Optional full proof-to-redeemed test requires a real customer wallet that is eligible for the selected seller rule:
 
 ```bash
 CUSTOMER_PRIVATE_KEY=... MUTATE=true node scripts/seller-wallet-smoke.js
@@ -68,7 +68,7 @@ Use that command only with a deliberately prepared test wallet. Never paste the 
 | Android Trust Wallet browser | `shop.ifrunit.tech` | `/p` pass entry works if an Ethereum provider is exposed; otherwise fallback copy/share is clear. |
 | Android OKX Wallet browser | `shop.ifrunit.tech` | `/p` pass entry works if an Ethereum provider is exposed; otherwise fallback copy/share is clear. |
 | Phantom | EVM-capable browser/session | `/p` pass entry works through EIP-6963, `window.ethereum` or the targeted `window.phantom.ethereum` fallback; otherwise the app fails gracefully without claiming a connection. |
-| Desktop Chrome + MetaMask | `shop.ifrunit.tech` | Seller profile, permanent `/s` URL, pass binding, compatible seller QR and redeem signature work; disconnect and reload-reconnect behave per Test Case 2. |
+| Desktop Chrome + MetaMask | `shop.ifrunit.tech` | Seller profile, permanent `/s` URL, pass binding, compatible seller QR and checkout-opening signature work; disconnect and reload-reconnect behave per Test Case 2. |
 | Desktop Chrome + Coinbase Wallet extension | `shop.ifrunit.tech` | Wallet entry works or provides a clear fallback. |
 
 WalletConnect modal support remains gated by `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`. Until that production value is set, success criteria are injected wallet support plus clear mobile wallet-browser fallback. Do not treat a successful wallet-app launch as a successful wallet connection; the injected provider, Ethereum Mainnet, signature and transaction steps must still be tested inside the opened wallet browser.
@@ -150,32 +150,31 @@ Pass criteria:
 ### 5. Exact-Offer Customer Confirmation
 
 1. On the originating customer tab, compare the bound seller and rule with the intended checkout.
-2. Confirm the connected wallet matches the wallet that created the pass.
+2. Connect the eligible customer wallet (pass creation involves no wallet; the proof binds it).
 3. Tap the exact-offer confirmation action.
-4. Sign the one-time challenge.
-5. Confirm the result is APPROVED or a readable ineligible/retry state.
+4. Sign the exact checkout proof text.
+5. Confirm the result is REDEEMED or a readable ineligible/retry state (the checkout stays open).
 
 Pass criteria:
 
 - Wallet signature prompt clearly refers to IFR Benefits Network.
 - No token transfer or approval prompt appears.
-- A different wallet cannot confirm the pass.
+- A signature whose signer differs from the claimed wallet is refused and the checkout stays open.
 - A changed or mismatched seller/rule is not silently accepted.
 - Rejected wallets explain the relevant lock or wallet condition without exposing private data.
 
-### 6. Seller Redeem
+### 6. Seller Sees Redeemed
 
 1. Return to seller scanner.
-2. If customer is approved, confirm scanner status is `Ready to redeem` after seller wallet is connected.
-3. Tap Redeem.
-4. Sign seller redeem message.
-5. Confirm session changes to REDEEMED.
-6. Attempting to redeem again must fail or remain blocked.
+2. Confirm the checkout shows `REDEEMED` after the customer's proof; there is no seller Redeem
+   action or seller redeem signature.
+3. Submitting the same or another proof for this checkout again must fail and stay blocked.
 
 Pass criteria:
 
-- Redeem requires seller wallet signature.
-- Approved benefit can be redeemed once.
+- Only the seller wallet that opened the checkout (owner or active operator) can start it, and its
+  authority is re-checked when the proof redeems it.
+- A valid, eligible proof redeems the checkout exactly once.
 - Reuse is blocked.
 
 ### 7. Compatible Seller-Issued QR
@@ -183,8 +182,8 @@ Pass criteria:
 1. From Seller readiness or `/b/{businessId}`, select an active rule and create a seller QR session.
 2. Open the canonical `/r/{sessionId}` link directly or scan it through `/scan`.
 3. Connect the customer wallet and confirm `Proof readiness`.
-4. Sign the one-time customer challenge and observe the readable result.
-5. For an approved session, complete the seller-signed redeem once.
+4. Sign the exact checkout proof and observe the readable result.
+5. For an eligible wallet, confirm the checkout is `REDEEMED` once on customer and seller screens.
 
 Pass criteria:
 
@@ -267,7 +266,7 @@ evidence may document failures or blockers, but cannot close a physical row.
 
 - The production WalletConnect modal and wallet catalog are live as of 2026-08-06;
   physical QR pairing, connection and signature evidence is still required.
-- Physical APPROVED -> REDEEMED proof requires an eligible locked customer wallet;
+- Physical customer-proof -> REDEEMED evidence requires an eligible locked customer wallet;
   the local state machine is automated, while its on-chain eligibility read remains mocked.
 - Production capacity must still be checked read-only immediately before every deploy; keep the 4-GB hard deploy floor and never rely on an earlier free-space snapshot.
 
@@ -279,5 +278,5 @@ The real-device wallet test gap can be closed only when:
 - At least one Android wallet-browser customer proof path passes.
 - At least one desktop injected seller wallet path passes.
 - A rejected/ineligible customer proof path is observed and readable.
-- The primary customer `/p` pass is seller-bound to an exact offer, confirmed by an eligible locked test wallet, seller-signed REDEEMED once and blocked on replay.
+- The primary customer `/p` pass is seller-bound to an exact offer, redeemed once (`REDEEMED`) by the proof of an eligible locked test wallet and blocked on replay.
 - All results are recorded in `docs/qa/BENEFITS_DEVICE_WALLET_CHECKLIST.json` or a dated derivative file.

@@ -102,8 +102,9 @@ Benefits seller authorization/session trace (`apps/benefits-network/backend`):
 1. seller client (frontend `lib/api.ts::getSellerAuthMessage`, SDK
    `benefits.ts::requestSellerChallenge`) → `src/routes/seller.ts::GET /auth-message`
    (`challengeRateLimiter`) → `services/sellerAuthorizationChallenge.ts::issueSellerAuthorizationChallenge`
-   — Daten: action, businessId, walletAddress, scope (`read` for reads) → 32-byte
-   CSPRNG nonce row (bounded expired-row prune) + message with `Domain`, `Chain ID`,
+   — Daten: action, businessId, scope (`read` for reads); no wallet in the request or the row
+   (owner decision B; a legacy `walletAddress` query parameter is ignored) → 32-byte
+   CSPRNG nonce-only row (bounded expired-row prune) + message with `Domain`, `Chain ID`,
    `Expires` from `config.ts` (`SELLER_AUTH_DOMAIN`, `CHAIN_ID`)
 2. seller request (`x-ifr-wallet/-signature/-timestamp/-nonce`) →
    `src/routes/seller.ts::requireSellerAuth` (also `routes/sessions.ts::requireSession{Creator,Redeemer}`,
@@ -112,8 +113,10 @@ Benefits seller authorization/session trace (`apps/benefits-network/backend`):
    format, TTL window, domain/chain-bound message)
 3. `requireSellerAuth` → `services/authenticatedRateLimiter.ts::assertSellerWalletActionAllowed`
    → `services/sellerAuthorizationChallenge.ts::consumeSellerAuthorizationChallenge`
-   — Daten: nonce+wallet+action+business+scope → atomic single-use `updateMany`
-   (count must be 1)
+   — Daten: nonce+action+business+scope → atomic single-use `updateMany`
+   (count must be 1); the wallet is bound only by the recovered signature. Target
+   wallets (`operators:create`, `rewards:reward-wallet`) use fixed scopes and are bound
+   by a final signed `Target:` line rebuilt from the request body, never URL or row
 4. public checkout status → `src/routes/sessions.ts::GET /:id` (`sessionStatusRateLimiter`)
    → `services/sessionService.ts::getSession` — Daten: sessionId → status
    (stale PENDING/APPROVED reported as EXPIRED, no write)
@@ -190,7 +193,7 @@ Points voucher trace (`apps/points-backend`):
 | benefits seller auth | domain/chain/expiry/nonce-bound message build + signature verification | `apps/benefits-network/backend/src/services/sellerAuth.ts::verifySellerSignature` | gebaut |
 | benefits seller challenge store | one-time challenge issue (bounded prune) and atomic consumption for every seller action | `apps/benefits-network/backend/src/services/sellerAuthorizationChallenge.ts` | gebaut |
 | benefits seller routes | seller API entry, challenge issuance, owner checks | `apps/benefits-network/backend/src/routes/seller.ts::requireSellerAuth` | gebaut |
-| benefits session service | session status read, attest attempt budget, redeem | `apps/benefits-network/backend/src/services/sessionService.ts` | gebaut |
+| benefits session service | session status read, checkout-proof text, attest = single redemption | `apps/benefits-network/backend/src/services/sessionService.ts` | gebaut |
 | benefits public rate limits | per-IP limits for public reads and polling | `apps/benefits-network/backend/src/middleware/rateLimiter.ts` | gebaut |
 | web3 wallet core (dApp) | provider discovery, WalletConnect v2 session lifecycle, mainnet fail-closed connect | `docs/web3-wallet-core.js::IFRWallet` | gebaut |
 | wallet core (landing/wiki) | shared minimalist wallet connect, desktop-only policy | `docs/assets/wallet-core.js::IFRWallet` | gebaut |
@@ -258,12 +261,15 @@ Points voucher trace (`apps/points-backend`):
   closed per request and production startup refuses to run without explicit
   values. The SDK refuses challenges whose domain differs from its API host
   or whose chain differs from its configured chain (CWA-36).
-- Benefits attest is read-only until an eligible wallet is proven: invalid
-  signatures, valid-but-ineligible wallets and eligibility-RPC failures leave
-  `attestAttempts`, `recoveredAddress`, status and audit untouched. Only after
-  `checkBenefitEligibility` succeeds does one transaction lock the row,
-  revalidate status/expiry/pass/binding and bind + count + approve + audit, so
-  racing eligible wallets yield exactly one approval (CWA-37).
+- Benefits attest is read-only until an eligible wallet is proven: invalid or
+  mismatched signatures (recovered signer != claimed wallet), valid-but-ineligible
+  wallets and eligibility-RPC failures leave `attestAttempts`, status and audit
+  untouched. Only after a fresh `checkBenefitEligibility` succeeds does one
+  transaction lock the row, revalidate status/attempts/expiry/terms digest/
+  business/opening-seller authority and move `PENDING` -> `REDEEMED` + audit, so
+  racing eligible proofs yield exactly one redemption (CWA-37; storage-free
+  customer sessions, T-231b: no customer wallet is stored, no `APPROVED` step,
+  seller redeem route returns 410).
 - Benefits public reads (`GET /api/businesses/:id[/rules|/products]`,
   `GET /api/sessions/:id`) are IP rate-limited; `getSession` no longer writes,
   persisted expiry happens only in the conditional attest/redeem transitions
@@ -298,7 +304,8 @@ Points voucher trace (`apps/points-backend`):
   enforced but is now only counted on approval; retries of ineligible
   wallets are bounded by the IP rate limit and the session TTL.
 - Benefits `GET /api/seller/auth-message` remains a GET that inserts a
-  challenge row (existing client contract); it creates no session state and
+  nonce-only challenge row (no wallet stored, none in the URL; a legacy
+  `walletAddress` parameter is ignored); it creates no session state and
   is IP rate-limited. Stale open sessions are only persisted as EXPIRED on
   attest/redeem; seller history may still show PENDING for untouched ones.
 - Web3 runtime: both `IFRWallet` implementations lazy-`import()` the WalletConnect

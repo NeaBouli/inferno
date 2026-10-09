@@ -3,7 +3,6 @@ export type SellerAuthorizationAction = "sessions:create" | "sessions:redeem";
 export interface SellerAuthorizationChallenge {
     action: SellerAuthorizationAction;
     businessId: string;
-    walletAddress: string;
     scope: string;
     domain: string;
     chainId: number;

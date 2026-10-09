@@ -2,49 +2,61 @@
 
 ## 1. Screenshot / Video Attack
 
-**Threat:** Attacker screenshots or records a customer's APPROVED screen and shows it to a merchant.
+**Threat:** Attacker screenshots or records a customer's REDEEMED screen and shows it to a merchant.
 
 **Mitigation:**
+
 - Each session has a unique nonce (32 bytes random) and a TTL (default 60 seconds)
 - After TTL, the session expires and cannot be redeemed
-- One-time redeem: once a session is redeemed, it cannot be reused
-- The merchant must press "Redeem" within the TTL window
+- One-time redemption: once a checkout is redeemed, it cannot be reused
+- Only a checkout the seller opened for this sale is valid; the seller console shows its own
+  checkout as `REDEEMED`, which a screenshot of another checkout cannot produce
 
 ## 2. Wallet Spoofing (Showing Someone Else's Wallet)
 
 **Threat:** Attacker claims to own a wallet with locked IFR by displaying someone else's address.
 
 **Mitigation:**
-- The customer must sign a challenge message with their private key
+
+- The customer must sign the exact checkout-proof text, which contains the full claimed wallet
 - `ethers.verifyMessage()` recovers the actual signer address deterministically
 - Without the private key, it is cryptographically impossible to produce a valid signature
-- The recovered address (not the claimed address) is checked against IFRLock
+- The recovered address must equal the claimed address (else 403, no state change); only then is
+  that address checked against IFRLock, freshly in the same request
 
 ## 3. Nonce Reuse / Replay Attack
 
 **Threat:** Attacker captures a valid signature and replays it on a different session.
 
 **Mitigation:**
+
 - Each session has a unique nonce embedded in the challenge message
 - The nonce has a `@unique` constraint in the database
-- The signature is only valid for the exact message (including session ID, nonce, expiry)
-- A signature from session A cannot pass verification for session B
+- The signature is only valid for the exact message (version, purpose, wallet, audience domain,
+  chain ID, shop, session ID, nonce, expiry, offer terms and terms digest)
+- A signature from session A cannot pass verification for session B: the server-derived text
+  differs, so the recovered signer differs from the claimed wallet (403)
+- Redemption is a conditional `PENDING` -> `REDEEMED` update in one database transaction, so a
+  replayed, retried or parallel proof for the same checkout redeems it at most once (second call 409)
 
 ## 4. RPC Failure / On-Chain Error
 
-**Threat:** The RPC node is down or returns incorrect data, causing false approvals.
+**Threat:** The RPC node is down or returns incorrect data, causing false redemptions.
 
 **Mitigation:**
-- On-chain errors are propagated as errors, never as approvals
-- If `ifrLock.isLocked()` throws, the session remains PENDING (not APPROVED)
-- The attest endpoint returns a 500 error, not a false positive
-- Merchants see "verification failed" rather than "approved"
+
+- On-chain errors are propagated as errors, never as redemptions
+- If the eligibility read throws, the session remains PENDING (not REDEEMED)
+- The attest endpoint returns 503 with a fixed message (`On-chain verification failed. Retry this
+  checkout in a moment.`); RPC detail, which can embed the customer address, is not propagated or logged
+- Merchants see the checkout still open rather than redeemed
 
 ## 5. Brute Force / Rate Limiting
 
 **Threat:** Attacker floods the API with session creation or attest attempts.
 
 **Mitigation:**
+
 - Session creation: pre-auth IP budget plus a post-auth budget charged only to the recovered seller wallet
 - QR creation requires a server-issued, single-use `sessions:create` challenge bound to the recovered wallet, business and selected rule
 - Challenge consumption, current owner/operator recheck and session creation share one database transaction
@@ -58,36 +70,39 @@
 - SQLite is explicitly rejected when more than one backend replica is declared; a shared limiter
   alone does not make the application database safe for horizontal scaling
 - Only private/loopback proxy hops are trusted when resolving the public client IP; arbitrary forwarded headers are not trusted directly
-- Failed attestations (invalid signature, ineligible wallet, eligibility RPC failure) are read-only: the stored session stays PENDING with no attempt consumed, no wallet bound and no audit row, so a session-ID holder cannot grief a real customer and the customer can retry the same QR after locking more IFR
-- Only an eligible wallet is bound, counted and approved, in one transaction that revalidates status, expiry, pass and binding; concurrent eligible wallets yield exactly one approval
+- Failed attestations (invalid or mismatched signature, ineligible wallet, eligibility RPC failure) are read-only: the stored session stays PENDING with no attempt consumed and no audit row, so a session-ID holder cannot grief a real customer and the customer can retry the same QR after locking more IFR
+- Only an eligible proof redeems, in one transaction that revalidates status, attempts, server-time expiry, terms digest, business activity and the opening seller's authority; concurrent eligible proofs yield exactly one redemption
 - TTL, nonce binding and the IP rate limit bound the retry window
 
 ## 6. Seller Account Takeover / Unauthorized Staff Actions
 
-**Threat:** A non-owner tries to list rules, inspect session history or redeem a customer benefit for a seller business.
+**Threat:** A non-owner tries to list rules, inspect session history or open a checkout for a seller business.
 
 **Mitigation:**
+
 - Seller actions require short-lived, server-issued wallet messages
 - Every seller action uses a persisted random nonce bound to wallet, action, business and scope (exact target resource for mutations, fixed `read` scope for reads); replay, wrong-action and wrong-scope use are rejected and concurrent reuse is consumed atomically once
 - Seller messages bind the configured `SELLER_AUTH_DOMAIN`, `CHAIN_ID` and an explicit expiry; production fails closed without explicit values
-- Invalid, ineligible and RPC-failed attestations never consume attest attempts or bind a wallet; public session status reads never write
+- Invalid, ineligible and RPC-failed attestations never consume attest attempts or change state; public session status reads never write
 - Pre-auth rate limits never key on the claimed wallet; wallet budgets are charged only after signature recovery
 - Owner-only actions require the recovered signer to match `Business.ownerAddress`
 - Session history uses `Action: sessions:list` and is limited to the owned business
 - Checkout operators are unique per business, owner-managed, revocable and optionally expiring
-- Operators can only check their checkout role and create/redeem QR sessions; profile, rule, history and delegation routes remain owner-only
-- Redeem uses a one-time `Action: sessions:redeem` challenge with the specific session id as both business and scope, then rechecks current owner/operator access
-- Redeem uses a conditional database update so concurrent requests still produce one redemption and one audit event
-- Audit data stores actor wallet/role but not the wallet signature
+- Operators can only check their checkout role and open checkouts (`sessions:create`, `passes:bind`); profile, rule, history and delegation routes remain owner-only
+- The seller who opened a checkout is recorded on it (wallet, role, operator id) and re-checked inside the redeeming transaction; a revoked or expired operator, or a changed owner, leaves the checkout open (409)
+- The former seller redeem step is retired (`POST /api/sessions/:id/redeem` returns 410)
+- Redemption uses a conditional database update so concurrent requests still produce one redemption and one audit event
+- Audit data stores the opening seller's wallet/role but no signature and no customer wallet
 
 ## 7. Session History Data Exposure
 
 **Threat:** Session history reveals more customer or checkout data than the seller needs.
 
 **Mitigation:**
+
 - Session history is not public; it requires the business owner wallet signature
-- The endpoint returns recent operational fields only: status, recovered wallet, locked amount, reason, timestamps and benefit metadata
-- Customer signatures and raw challenge messages are not returned in the seller history response
+- The endpoint returns recent operational fields only: status, `customerProof` (verified or not), self-redemption flag, lock source, reason, timestamps and benefit metadata
+- No customer wallet, signature, signed text, lock/balance amount or block number is stored, so none can be returned
 - The `limit` query is clamped to 1-50 to prevent large bulk exports
 
 ## 7a. Public Proof-Link Privacy
@@ -96,11 +111,32 @@
 address with a seller, benefit rule, exact lock amount or detailed rejection reason.
 
 **Mitigation:**
-- Public session status never returns the recovered customer address or exact rejection details
+
+- Public session status never returns a customer address or exact rejection details (the backend stores no customer address)
 - Rejected and expired sessions expose only a generic terminal message
 - Public status, challenge and attest responses use `Cache-Control: private, no-store`
 - The signing customer receives their own detailed attest result only in the direct response
-- Detailed operational history remains behind the business owner's wallet signature
+- Seller operational history (without customer wallet data) remains behind the business owner's wallet signature
+
+## 7b. Stored Customer Data
+
+**Threat:** A database leak, backup or seller view links a customer wallet to shops, offers and times.
+
+**Mitigation:**
+
+- The backend stores no customer wallet address, hash or fingerprint of it, signature or signed text,
+  lock/balance amounts, block numbers, payment transaction hashes or customer history
+- The wallet is used only within the proof request (signature check, fresh eligibility read,
+  self-redemption check); audit events carry no customer wallet, amount or block
+- Customer history is device-local (signed receipts in the browser); server history routes return 410
+
+**Known boundaries:** Merchant checkout records (random checkout ID, shop, offer terms, status,
+timestamps, lock source, self-redemption flag, opening seller wallet) and seller-side audit events
+remain, so checkouts are not anonymous; timing, offer details, what the seller sees at the counter
+and public chain data can still be linked. The RPC provider receives the address in the eligibility
+`eth_call`, and reverse-proxy or platform access logs are outside this backend. Data created before
+the storage-free migration remains in old backups and SQLite free pages until the separately approved
+migration, `VACUUM` and backup clean-up (`docs/BENEFITS_CUSTOMER_PRIVACY_MIGRATION.md`) have run.
 
 ## 8. Catalog Tampering / Mutable Checkout Terms
 
@@ -108,6 +144,7 @@ address with a seller, benefit rule, exact lock amount or detailed rejection rea
 creating a QR so the customer signs different terms than the seller originally presented.
 
 **Mitigation:**
+
 - Product CRUD is owner-wallet protected and scoped to the owned business
 - Rule binding accepts only an active product from the same business
 - Product name/category are copied into the rule as display snapshots
@@ -118,7 +155,7 @@ creating a QR so the customer signs different terms than the seller originally p
 - Legacy sessions without a snapshot version use the prior relation fallback for backward compatibility
 - Positive wallet-held requirements are checked from the token returned by `IFRLock.token()` at
   the same block as the lock reads, with exact 9-decimal base-unit comparisons. RPC or contract
-  resolution failures cannot approve a session.
+  resolution failures cannot redeem a session.
 
 ## 9. Reward Fraud / Governance Drift / Double Submission
 
@@ -126,6 +163,7 @@ creating a QR so the customer signs different terms than the seller originally p
 or retried worker causes an unauthorized or duplicate PartnerVault reward.
 
 **Mitigation:**
+
 - Seller registration never enrolls rewards; a missing `SellerRewardLink` keeps rewards off
 - Seller application is not approval and cannot set a PartnerVault ID
 - Admin verification cannot create a missing application and uses an optimistic state check so a concurrent
@@ -141,10 +179,14 @@ or retried worker causes an unauthorized or duplicate PartnerVault reward.
   blocks actionable outbox events fail-closed until governance re-verifies; `CONFIRMED` events stay historical
 - Owner-signed `rewards:disable` blocks outbox creation, queue progression and admin verification until a
   fresh application
-- Successful redeem creates at most one `PENDING` outbox event in the same transaction; unique session and
-  `(customerWallet, partnerId)` constraints mirror PartnerVault anti-double-count semantics
-- Seller-owner and currently active checkout-operator wallets are excluded from the reward outbox
-- Reconciliation repeats all live governance checks and reads `walletRewardClaimed` before marking an event ready
+- Successful redemption creates at most one outbox event per checkout (unique `sessionId`) in the same
+  transaction. Since storage-free customer sessions no customer wallet is stored, so per-customer
+  deduplication is unavailable: every new event is non-payable `BLOCKED_POLICY`, the lock-reward queue path
+  moves open events to `BLOCKED_POLICY` without on-chain reads, and the Model B export always reports blocker
+  `CUSTOMER_DEDUP_UNAVAILABLE_OWNER_B` until a new reward policy is accepted
+- Self-redemption (owner, any checkout operator of the business in any status, reward or builder wallet) is
+  decided inside the redeeming transaction and stored only as a boolean; it creates no reward event.
+  Undisclosed merchant wallets are not detectable
 - Reconciliation advances only events bound to the currently verified PartnerVault ID; events from a replaced
   partner remain blocked until an explicit migration or cancellation decision
 - Builder removal, partner deactivation or beneficiary mismatch marks the local link stale and prevents readiness
@@ -153,8 +195,9 @@ or retried worker causes an unauthorized or duplicate PartnerVault reward.
 
 **Known policy boundary:** The verified eligibility is a point-in-time observation of the
 customer's current IFRLock balance and, when configured, free IFR wallet balance during checkout,
-not cryptographic proof that a new lock transaction was caused by that seller. Governance must approve this
-one-wallet/one-partner usage policy or require a future event-indexed lock adapter before enabling submissions.
+not cryptographic proof that a new lock transaction was caused by that seller. Governance must accept a new
+reward policy (the former one-wallet/one-partner rule needs stored customer wallets, which are no longer kept)
+or require a future event-indexed lock adapter before enabling submissions.
 
 ## 10. Admin Credential Brute Force / Untracked Mutations
 
@@ -163,6 +206,7 @@ payloads create noisy server failures, or an operator mutation cannot later be
 correlated without retaining sensitive request data.
 
 **Mitigation:**
+
 - Admin traffic is rate-limited by resolved client IP before bearer authentication
 - Admin secrets shorter than 32 characters and documented placeholder defaults stop startup
 - Missing, malformed and incorrect credentials share one generic `401` Bearer challenge

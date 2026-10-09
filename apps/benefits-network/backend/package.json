@@ -4,7 +4,7 @@
   "private": true,
   "license": "MIT",
   "engines": {
-    "node": ">=22 <23"
+    "node": ">=22.12 <23"
   },
   "scripts": {
     "dev": "ts-node src/index.ts",
@@ -14,7 +14,7 @@
     "test": "DATABASE_URL=file:./test.db node scripts/reset-test-db.cjs && DATABASE_URL=file:./test.db jest --runInBand --forceExit --detectOpenHandles",
     "test:ethers-v6-lifecycle": "DATABASE_URL=file:./test.db jest tests/ethersV6Services.test.ts --runInBand --detectOpenHandles",
     "test:rate-limit-startup": "node scripts/test-rate-limit-startup.cjs",
-    "test:migration-upgrade": "node scripts/verify-populated-migration-upgrade.cjs",
+    "test:migration-upgrade": "node scripts/verify-populated-migration-upgrade.cjs && node scripts/verify-owner-b-migration.cjs",
     "retention:report": "npm run build --silent && node dist/retentionCli.js report",
     "retention:prune": "npm run build --silent && node dist/retentionCli.js apply",
     "smoke:http": "bash scripts/ci-http-smoke.sh",

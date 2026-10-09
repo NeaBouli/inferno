@@ -10,8 +10,8 @@ Scope: customer and seller app for IFR locked-access benefits
 
 The app has two roles:
 
-- Customer: connect wallet, see ETH/IFR status, lock IFR directly in the shop app, present a short-lived checkout pass or scan a compatible seller QR, approve the exact offer, receive benefit.
-- Seller: create benefit rules, scan and bind a customer pass or create a compatible seller QR, verify locked IFR, redeem approved benefit once.
+- Customer: connect wallet, see ETH/IFR status, lock IFR directly in the shop app, present a short-lived checkout pass or scan a compatible seller QR, sign the exact checkout proof, receive benefit.
+- Seller: create benefit rules, scan and bind a customer pass or create a compatible seller QR, see the checkout redeemed once by the customer's valid proof.
 
 ## Current Implemented Base
 
@@ -29,37 +29,47 @@ The app has two roles:
 - Rule model: `BenefitRule`
 - Session model: `Session` with optional `benefitRuleId` and additive one-to-one `CustomerPass`
 - Recommended customer-presented QR flow:
-  1. Customer signs a server-issued one-time `Create Checkout Pass` challenge.
-  2. Backend atomically consumes it and returns an opaque, five-minute `/p/:passId` QR plus a random control token. Only the SHA-256 token hash is stored; wallet, token, signature and session ID are absent from the QR.
+  1. Customer creates a pass with `POST /api/passes` (empty body). No wallet or signature is involved.
+  2. Backend returns an opaque, five-minute `/p/:passId` QR plus a random control token. Only the SHA-256 token hash is stored; wallet, token, signature and session ID are absent from the QR.
   3. Seller opens `/b/:businessId`, selects an active rule, scans/pastes the pass and signs a one-time `passes:bind` challenge bound to pass and rule.
   4. Backend atomically rechecks current owner/operator access, claims the unexpired pass, freezes the rule snapshot and creates one linked `Session`.
   5. Customer privately receives seller, product, discount, accepted lock source and optional
-     free-wallet IFR details through the control token, then explicitly signs the exact session
-     challenge.
-  6. Backend requires the recovered signer to equal the wallet that created the pass and atomically binds the pending session to one wallet before the source-aware on-chain check.
-  7. Seller sees approval and redeems once. Customer may cancel only while the pass is open or its linked checkout is still pending.
+     free-wallet IFR details through the control token, requests the exact proof text with
+     `POST /api/passes/:id/challenge {walletAddress}` and signs it (EIP-191).
+  6. `POST /api/passes/:id/confirm {walletAddress, signature}`: the backend requires the recovered
+     signer to equal the claimed wallet, reads eligibility fresh on-chain, re-checks that the
+     seller who bound the pass is still authorized and, in one database transaction, moves the
+     checkout `PENDING` to `REDEEMED` exactly once. The wallet address is not stored.
+  7. Seller sees `REDEEMED`; there is no separate seller redeem step. A failed, ineligible or
+     RPC-failed proof leaves the checkout open. Customer may cancel only while the pass is open or
+     its linked checkout is still pending.
 - Compatible seller-issued QR flow:
   1. Seller opens `/b/:businessId`.
   2. Seller selects active benefit rule.
   3. Frontend requests and signs a one-time `sessions:create` challenge bound to seller wallet, business and selected rule, then calls `POST /api/sessions` with the nonce.
   4. Customer scans the seller QR in `/scan`, selects a local QR image, pastes the proof link/session ID, or opens `/r/:sessionId` directly.
-  5. Customer signs challenge.
-  6. Backend checks the frozen lock source and, when configured, the free wallet IFR balance against the frozen
-     selected-rule thresholds.
-  7. Seller sees approval and redeems the session once.
-- Pass QR copying is not authorization: a copied pass can at most be bound once. It cannot approve eligibility or redeem without the original customer wallet's second signature and a currently authorized seller signature.
+  5. Customer requests the exact proof text with `POST /api/sessions/:id/challenge {walletAddress}`
+     and signs it; the text binds version, purpose, the full wallet, audience (deployment domain),
+     chain ID, shop, checkout ID, nonce, expiry and the offer terms plus their digest.
+  6. `POST /api/attest {sessionId, walletAddress, signature}`: the backend checks recovered signer
+     equals the claimed wallet, then the frozen lock source and, when configured, the free wallet
+     IFR balance against the frozen selected-rule thresholds in a fresh on-chain read, and that the
+     seller who opened the checkout is still authorized.
+  7. In one database transaction the checkout moves `PENDING` to `REDEEMED` exactly once; the
+     seller sees `REDEEMED`. `POST /api/sessions/:id/redeem` returns 410.
+- Pass QR copying is not authorization: a copied pass can at most be bound once. It cannot redeem a checkout without an eligible customer wallet's proof signature over that exact checkout, opened by a currently authorized seller.
 - Public proof-link polling is deliberately minimal and non-cacheable: it never exposes the
-  recovered customer address, exact lock amount or detailed rejection reason. The signing
-  customer receives details in the direct attest response; seller operational details remain
-  in owner-wallet-protected history.
+  customer address, exact lock amount or detailed rejection reason. The signing customer
+  receives details in the direct attest response; seller operational details (without customer
+  wallet data) remain in owner-wallet-protected history.
 - Customer proof history:
-  - Customer proof pages save a redacted local browser history entry after session load/refresh.
+  - Customer history is device-local only. After a checkout proof, the browser keeps a signed
+    receipt (checkout, shop, terms, status, signed proof text and signature) so the customer can
+    verify locally what they signed.
   - Home shows the local section `Recent proofs on this device` for reopening checkout proofs.
-  - Stored data is local-only and excludes private keys, seed phrases, signatures and full wallet inventories.
-  - A separate `My benefits` account history uses a server-issued one-time wallet signature and a
-    memory-only ten-minute read token to load the signer's verified sessions across devices.
-  - Account history is snapshot/cursor-paginated, bounded to 50 rows per API call and excludes
-    wallet addresses, signatures, nonces, audit logs, proof URLs and seller-only data.
+  - Stored data is local-only and excludes private keys, seed phrases and full wallet inventories.
+  - There is no server-side customer history: `/api/customer/history*` returns 410 and losing the
+    browser data loses the history.
 - Help surface:
   - The IFR Copilot is available as an opt-in floating panel and loads only after the user opens it.
   - The assistant is read-only, cannot initiate wallet transactions and must never request a seed phrase or private key.
@@ -93,8 +103,8 @@ The app has two roles:
   an explicit connector chooser and readable failure guidance.
 - Show wallet, IFR balance, ETH balance and locked IFR.
 - Explain that signing a QR proof does not move tokens.
-- Let a connected customer load only their own verified benefit history across devices with one
-  explicit read-only signature; clear all account-history state on disconnect or wallet change.
+- Keep customer benefit history device-local (signed receipts in this browser); there is no
+  cross-device server history.
 - Keep the audited simple IFRLock approve, lock and unlock flow inside the shop app. Keep swaps as an explicit Uniswap handoff while the IFR pool remains thin.
 - Keep camera access opt-in. Decode camera frames and selected images only in the browser, then
   accept only a canonical `https://shop.ifrunit.tech/r/:sessionId` proof. Foreign origins,
@@ -103,7 +113,7 @@ The app has two roles:
 - QR session page must show seller, rule, product, optional reference price, discount, required
   locked IFR and any optional free-wallet IFR minimum before signing. Reference prices use exact minor units plus an allowlisted ISO currency,
   are frozen in the signed session snapshot and are never presented as an in-app payment.
-- Customer-presented pass must show the exact bound seller/rule on the originating device and require a second explicit signature. Its control token stays out of URLs, QR payloads, logs and local storage; the first-party UI limits restoration to the same browser tab.
+- Customer-presented pass must show the exact bound seller/rule on the originating device and require an explicit checkout-proof signature. Its control token stays out of URLs, QR payloads, logs and local storage; the first-party UI limits restoration to the same browser tab.
 - Offer discovery and public seller catalogs show a wallet-local, read-only preview against each
   rule's exact lock source and optional wallet-balance thresholds. `minIFRHeld=0` disables the
   second gate without an additional token RPC read. `either` never combines partial amounts;
@@ -149,8 +159,10 @@ The app has two roles:
 - Seller can apply built-in welcome, standard, premium or event templates to the current draft; templates never publish automatically and preserve an explicit catalog binding.
 - Seller can open `/b/:businessId` or the equivalent readable `/b/:slug` scanner.
 - Scanner must list active rules, accept a canonical `/p/:passId` customer pass and bind the selected rule with a fresh seller signature. The existing seller-issued QR remains available for compatible integrations.
-- Scanner must show customer approval/rejection and single-use redeem action.
-- Owner can delegate expiring checkout-only access to staff wallets. Operators can verify their role and create/redeem QR sessions, but cannot manage profiles, rules, history or other operators. Profile deactivation revokes this delegated authority; profile reactivation alone never restores it.
+- Scanner must show the checkout as `REDEEMED` once the customer's proof is accepted (or the
+  rejection, with the checkout left open). There is no separate seller redeem action; the
+  seller's authority from opening the checkout is re-checked when the proof redeems it.
+- Owner can delegate expiring checkout-only access to staff wallets. Operators can verify their role and open checkouts (QR sessions and pass binding), but cannot manage profiles, rules, history or other operators. Profile deactivation revokes this delegated authority; profile reactivation alone never restores it.
 
 ### Developer / Integration Flow
 
@@ -159,8 +171,9 @@ The app has two roles:
 - Show API payload for rule-bound QR sessions.
 - Generate a server-side JavaScript/POS session helper that returns the short-lived customer proof URL.
 - Use the signer-neutral `IFRBenefitsClient` in the repository SDK for one-time challenge
-  checkout integrations: create a session, poll its fail-closed validated public status and
-  redeem an approved session once with a fresh session-bound `sessions:redeem` challenge.
+  checkout integrations: create a session and poll its fail-closed validated public status.
+  Its redeem helper still targets the retired seller redeem endpoint, which now returns 410
+  because the customer's proof redeems the checkout; the SDK needs a follow-up update.
   The versioned tarball is installed with locked `npm ci` and tested
   for CommonJS, ESM named-import interoperability and TypeScript on Node.js 20 and 22;
   public npm publication remains gated by `docs/runbooks/IFR_SDK_NPM_RELEASE.md`, and
@@ -228,10 +241,12 @@ those remain production configuration and physical-wallet acceptance gates.
    five active and 25 total profiles per owner wallet; each paused operator requires a fresh owner
    authorization after profile reactivation. Invitation/review policy remains a future governance
    decision.**
-4. Add QR history and audit view for sellers. **Implemented with owner-wallet-protected, snapshot-anchored cursor pagination, restore receipts, activity metrics, incremental older-session loading and a browser-local masked full-history CSV export. The API remains bounded to 50 rows per request, refreshes an expired read authorization when needed and creates no server-side export file. Retention/compliance policy remains future work.**
-5. Customer benefit history. **Implemented as both a redacted local recent-proof list and a
-   wallet-signed, cross-device `My benefits` history with one-time challenge exchange, memory-only
-   read token and snapshot pagination. Physical wallet/device acceptance remains pending.**
+4. Add QR history and audit view for sellers. **Implemented with owner-wallet-protected, snapshot-anchored cursor pagination, restore receipts, activity metrics, incremental older-session loading and a browser-local full-history CSV export without customer wallet data. The API remains bounded to 50 rows per request, refreshes an expired read authorization when needed and creates no server-side export file. Retention/compliance policy remains future work.**
+5. Customer benefit history. **Device-local only: the browser keeps a signed receipt (proof
+   text and signature) for each checkout. The former wallet-signed, cross-device `My benefits`
+   server history was removed with storage-free customer sessions (`/api/customer/history*`
+   returns 410); losing the browser data loses this history. Physical wallet/device acceptance
+   remains pending.**
 6. Add embedded-wallet provider evaluation and decision record. **The decision record now selects
    Coinbase CDP EOA only for an isolated Sepolia lab. The lab compiles and enforces a source-level
    no-transaction/no-IFR boundary; external wallets remain the production baseline and all real
@@ -252,7 +267,7 @@ those remain production configuration and physical-wallet acceptance gates.
     A blocking composed test now builds the real frontend/backend, applies all migrations to a
     disposable SQLite database, seeds through signed seller APIs and verifies the public browser
     flow through the production Next.js API rewrite without Mainnet.**
-11. Governance-gated seller reward foundation. **Deployed fail-closed: owner application, live BuilderRegistry/PartnerVault linkage checks, atomic redeem outbox and read-only vesting/claim status. Mainnet currently has no registered builders/partners; dedicated authorized submission remains disabled.** Lane 4 decision B (2026-10-03): redeem outbox events are the input for a per-period settlement export. The settlement mode (pilot events become `SETTLEMENT_PENDING` instead of `BLOCKED_CALLER`), the reconciled operator-only monthly export and the unsigned `recordMilestone` proposal template are implemented (T-275) but default-off; no pilot is active and no reviewed price evidence source exists, so exports are diagnostic only. Redemptions without a reward event (one-per-customer outbox limit, policy decision open) and months that the budget covers only partly also block the template. An export is not a payment. Settlement runs through Governance `recordMilestone`; no authorized caller is planned ([model B](PARTNER_REWARDS_MODEL_B.md)).
+11. Governance-gated seller reward foundation. **Deployed fail-closed: owner application, live BuilderRegistry/PartnerVault linkage checks, atomic redeem outbox and read-only vesting/claim status. Mainnet currently has no registered builders/partners; dedicated authorized submission remains disabled.** Lane 4 decision B (2026-10-03): redeem outbox events are the input for a per-period settlement export. The settlement mode (pilot events become `SETTLEMENT_PENDING` instead of `BLOCKED_CALLER`), the reconciled operator-only monthly export and the unsigned `recordMilestone` proposal template are implemented (T-275) but default-off; no pilot is active and no reviewed price evidence source exists, so exports are diagnostic only. Redemptions without a reward event and months that the budget covers only partly also block the template. With storage-free customer sessions, every new reward outbox event is non-payable (`BLOCKED_POLICY`), the lock-reward path cannot run (it needs a customer wallet) and the Model B export always reports blocker `CUSTOMER_DEDUP_UNAVAILABLE_OWNER_B`, so it stays diagnostic only until a new reward policy is accepted. An export is not a payment. Settlement runs through Governance `recordMilestone`; no authorized caller is planned ([model B](PARTNER_REWARDS_MODEL_B.md)).
 12. Public seller identity and discovery metadata. **Implemented with owner-signed single-use
     updates, bounded categories, HTTPS-only websites, optional HTTPS seller logos, an optional
     privacy-preserving city/region/Online service-area filter, defensive legacy-data sanitization
@@ -260,7 +275,8 @@ those remain production configuration and physical-wallet acceptance gates.
     backend; browsers suppress the Shop referrer and use a local seller-initial fallback.**
 13. Customer-presented two-phase checkout pass. **Implemented with an additive migration,
     opaque short-lived QR, hashed tab control token, atomic one-seller binding, exact-offer customer
-    confirmation, signer equality, cancel-before-approval and replay/race regression coverage.
+    proof, cancel-before-redemption and replay/race regression coverage. Pass creation needs no
+    wallet; the wallet is proven once, by the checkout proof that redeems the checkout.
     The backend migration, customer/seller UI and privacy-safe public projections are live in
     production. Automated browser coverage verifies create, bind, exact-offer confirm and one-time
     redeem; physical device/wallet acceptance remains pending.**
@@ -277,10 +293,11 @@ those remain production configuration and physical-wallet acceptance gates.
     from retaining the previous expanded mobile entry. Production deployment remains gated by
     tests, exact-head CI, rollback and device smoke.**
 16. User-visible data boundary. **Implemented locally as `/privacy` with a factual data-flow
-    explanation and selective browser-data controls. Seller session responses expose only
-    server-masked customer wallet identifiers; reward status exposes only an event count. Both use
-    `private, no-store`, while full addresses remain backend-only for eligibility, limits and
-    rewards. The page explicitly leaves long-term
+    explanation and selective browser-data controls. Seller session responses expose no customer
+    wallet data, only whether a customer proof was verified, the lock source and a self-redemption
+    flag; reward status exposes only an event count. Both use `private, no-store`. The backend
+    stores no customer wallet address or derivative; it checks the address only within the proof
+    request. Merchant checkout records and seller audit events remain, so this is not anonymity. The page explicitly leaves long-term
     server retention, deletion handling, legal review and a dedicated support channel open.
     A repository-local phase-one operator tool now reports and, only with an exact manual
     confirmation, prunes old admin audit rows plus expired unlinked auth artifacts in bounded
@@ -294,9 +311,11 @@ those remain production configuration and physical-wallet acceptance gates.
   challenges. The legacy controlled admin fallback is operational recovery only; no admin secret
   may be embedded in the public client, generated snippets, URLs or documentation.
 - QR sessions must remain short-lived and single-use.
-- A QR must never be treated as wallet ownership or eligibility. Customer-presented passes require
-  separate customer creation and exact-offer confirmation signatures; linked session challenge and
-  attest endpoints reject the public legacy path.
+- A QR must never be treated as wallet ownership or eligibility. A checkout is redeemed only by a
+  customer EIP-191 proof whose recovered signer equals the claimed wallet, a fresh eligible
+  on-chain read and a still-authorized opening seller, in one transaction (`PENDING` to
+  `REDEEMED`, exactly once). Linked session challenge and attest endpoints reject the public
+  legacy path.
 - Every seller action must remain bound to a persisted random nonce, wallet, action, business, scope (exact resource for mutations, fixed `read` for reads), configured domain and chain ID, and is consumed once; replayed read proofs are rejected.
 - Challenge text must include rule metadata so the user signs exactly what is being verified.
 - Production logs must avoid storing full signatures unless required for audit and retention is defined.

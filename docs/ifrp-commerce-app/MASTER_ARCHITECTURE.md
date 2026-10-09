@@ -179,16 +179,19 @@ control token stays on the customer's originating browser tab, and only its SHA-
 
 Two-phase verification:
 
-1. Customer signs a one-time pass-creation challenge.
+1. Customer creates the pass (`POST /api/passes`, empty body); no wallet is involved.
 2. Seller scans the pass, selects an active rule and signs a one-time `passes:bind` challenge scoped
    to the exact pass and rule.
 3. Backend atomically rechecks owner/operator access, claims the pass once and freezes the rule in a
    linked `Session`.
-4. Customer reviews seller, product, discount and required IFRLock on the originating device and
-   signs the exact linked session challenge.
-5. Backend requires the signer to equal the pass-creation wallet, atomically binds the pending
-   session to that wallet and checks IFRLock on-chain.
-6. Seller redeems once.
+4. Customer reviews seller, product, discount and required IFRLock on the originating device,
+   requests the exact proof text (`POST /api/passes/:id/challenge {walletAddress}`) and signs it.
+5. On `POST /api/passes/:id/confirm {walletAddress, signature}` the backend requires the recovered
+   signer to equal the claimed wallet, reads IFRLock eligibility fresh on-chain and re-checks that
+   the seller who bound the pass is still authorized.
+6. In one database transaction the checkout moves `PENDING` to `REDEEMED` exactly once. There is no
+   separate seller redeem step; a failed or ineligible proof leaves the checkout open. The wallet
+   address is not stored.
 
 The previous seller-issued `https://shop.ifrunit.tech/r/:sessionId` flow remains implemented as a
 compatible fallback. The in-app `/scan` route decodes it locally and fails closed on foreign or
@@ -204,12 +207,17 @@ letting those requests consume the legitimate control token's polling budget.
 Compatible seller-QR verification:
 
 1. Seller owner or active checkout operator signs a server-issued one-time `sessions:create` challenge bound to wallet, business and selected rule; the backend atomically consumes it while rechecking current access and creating the scan session.
-2. Customer signs the session challenge.
-3. Backend verifies signature.
-4. Backend reads on-chain IFR balance/lock state.
-5. Backend evaluates seller benefit policy.
-6. Seller screen shows `APPROVED` or `REJECTED` and the selected benefit.
-7. Seller redeems session once.
+2. Customer requests the exact proof text (`POST /api/sessions/:id/challenge {walletAddress}`) and
+   signs it (EIP-191). The text binds version, purpose, the full wallet, audience (deployment
+   domain), chain ID, shop, checkout ID, nonce, expiry and the offer terms plus their digest.
+3. On `POST /api/attest {sessionId, walletAddress, signature}` the backend checks that the recovered
+   signer equals the claimed wallet.
+4. Backend reads on-chain IFR balance/lock state fresh in the same request.
+5. Backend evaluates seller benefit policy and re-checks that the seller who opened the checkout is
+   still authorized.
+6. In one database transaction the checkout moves `PENDING` to `REDEEMED` exactly once; the seller
+   screen shows `REDEEMED` (or `REJECTED`, with the checkout left open) and the selected benefit.
+   `POST /api/sessions/:id/redeem` returns 410.
 
 This prevents screenshots/replay from being enough.
 
@@ -228,7 +236,8 @@ The deployed seller rule model configures:
 - discount percent;
 - fixed benefit text;
 - minimum IFR locked in IFRLock;
-- per-wallet daily/monthly redemption limits;
+- daily/monthly redemption limits must be `0`: IFR stores no customer identity and does not
+  enforce per-customer limits (non-zero values are refused; merchants enforce limits themselves);
 - redemption TTL;
 - staff notes.
 
@@ -250,7 +259,9 @@ Decided route (Lane 4 decision B, 2026-10-03; [policy](../PARTNER_REWARDS_MODEL_
 1. Seller applies and is approved as a pilot partner.
 2. Governance registers the seller in BuilderRegistry and creates a capped PartnerVault partner
    (`createPartner` + `activatePartner`).
-3. Each seller-confirmed checkout redemption creates one reward event (idempotent); locks alone never do.
+3. Each redeemed checkout of a verified partner that is not a self-redemption creates one reward
+   event (idempotent); locks alone never do. Under storage-free customer sessions every such event
+   is non-payable (`BLOCKED_POLICY`) until a new reward policy is accepted.
 4. Per period, the EUR-valued events are converted at the published 7-day TWAP and settled by a
    Governance proposal (`recordMilestone`), capped by the partner allocation.
 5. Rewards vest through PartnerVault; the seller claims vested IFR.
@@ -261,7 +272,10 @@ Decided route (Lane 4 decision B, 2026-10-03; [policy](../PARTNER_REWARDS_MODEL_
 default-off and no pilot is active. With `MODEL_B_SETTLEMENT_ENABLED=true` and a reviewed pilot policy
 (EUR per redemption, partner budget, global pilot budget, pilot start), the admin reward queue moves
 verified post-pilot redemption events of that partner to `SETTLEMENT_PENDING` instead of
-`BLOCKED_CALLER`; older lock-path events are never reclassified. An operator-only export
+`BLOCKED_CALLER`; older lock-path events are never reclassified. Since storage-free customer
+sessions, new events are created as non-payable `BLOCKED_POLICY`, which this queue never
+transitions, and open lock-path events are moved to `BLOCKED_POLICY` (the lock-reward path needs a
+customer wallet and cannot run). An operator-only export
 (`POST /api/admin/model-b/settlements/export`) reconciles one UTC calendar month against the
 seller-confirmed redemption total and returns event IDs with exclusion reasons, a deterministic batch
 digest and milestone ID. Only with clean reconciliation, reviewed 7-day TWAP and ETH/EUR evidence and
@@ -271,9 +285,11 @@ exists yet, so every export today is diagnostic. An export or template is not a 
 nothing is marked settled or paid. After the security review, two cases also block the template and
 leave the export diagnostic:
 
-- a post-pilot redemption that is not a self-redemption but has no reward event (the one-per-customer
-  outbox limit, policy decision still open);
-- a month that the budget covers only partly.
+- a post-pilot redemption that is not a self-redemption but has no reward event;
+- a month that the budget covers only partly;
+- always, since storage-free customer sessions: blocker `CUSTOMER_DEDUP_UNAVAILABLE_OWNER_B`,
+  because the backend no longer stores a customer wallet for per-customer deduplication. Every
+  export is diagnostic only until a new reward policy is accepted.
 
 Remaining gates: the first pilot's recorded decision and Safe activation, and a reviewed price
 evidence source whose TWAP and ETH/EUR values are reproduced independently before execution. The
@@ -409,13 +425,13 @@ productId optional
 benefitRuleId
 nonce
 expiresAt
-status: PENDING | APPROVED | REJECTED | REDEEMED | EXPIRED
-customerWallet
-ifrLockedRaw
-walletIFRRaw optional
-signature
-reason
+status: PENDING | REDEEMED | EXPIRED   (REJECTED is a response, not a stored state)
+verifiedLockSource
+selfRedemption (boolean, null until a proof)
+proofVersion
+confirmedByWallet / confirmedByRole / confirmedByOperatorId   (seller who opened it)
 redeemedAt
+(no customer wallet, hash, signature, lock/balance amounts or block number)
 createdAt
 updatedAt
 ```
@@ -426,10 +442,8 @@ updatedAt
 id
 sellerId
 partnerId
-customerWallet
-lockAmountRaw
-txHash optional
-status: pending | submitted | confirmed | skipped | failed
+sessionId (unique, one event per checkout; no customer wallet or amount)
+status: BLOCKED_POLICY (all new events under storage-free customer sessions) | pending | ...
 reason
 createdAt
 updatedAt
@@ -452,9 +466,9 @@ PATCH /api/rules/:id
 
 POST /api/sessions
 GET  /api/sessions/:id
-GET  /api/sessions/:id/challenge
-POST /api/attest
-POST /api/sessions/:id/redeem
+POST /api/sessions/:id/challenge   { walletAddress } -> exact proof text
+POST /api/attest                   { sessionId, walletAddress, signature } -> REDEEMED once
+POST /api/sessions/:id/redeem      410 (retired; the customer proof redeems)
 
 GET /api/wallet/:address/status
 GET /api/sellers/:id/rewards
@@ -522,10 +536,11 @@ Critical rules:
 - Concurrent redemption attempts serialize before counting usage, so a limit cannot be overrun by two counters.
 - Rate limits per seller and wallet.
 - Every seller action requires a one-time authorization nonce bound to domain, chain ID, wallet, action and business; mutations also bind the exact resource.
-- Seller staff can scan/redeem through owner-managed checkout wallets but cannot change owner wallet, profile, rule, history, delegation or reward settings.
+- Seller staff can scan and open checkouts through owner-managed checkout wallets but cannot change owner wallet, profile, rule, history, delegation or reward settings.
 - Reward writes to PartnerVault only after seller is governance-approved.
 - Admin actions must be audited.
-- PII should be avoided. Wallet address and redemption history are enough for MVP.
+- PII should be avoided. The backend stores no customer wallet address, derivative or customer
+  history; it keeps merchant checkout records and seller-side audit events (not anonymity).
 
 Replay protection:
 
@@ -641,7 +656,7 @@ or transaction state as current.
 - IFRLock lock status;
 - seller QR session;
 - customer signature;
-- `APPROVED` / `REJECTED` / one-time `REDEEMED` flow;
+- `REJECTED` / one-time `REDEEMED` flow (the customer proof redeems; formerly `APPROVED` then seller redeem);
 - deploy to `shop.ifrunit.tech`.
 
 ### M2 - Wallet And Swap UX
@@ -667,25 +682,27 @@ or transaction state as current.
 - per-offer wallet eligibility; **implemented as a read-only, fail-closed IFRLock preview in offer
   discovery and public catalogs; checkout attestation remains authoritative**
 - rule templates; **four one-tap seller templates implemented as review-before-save drafts; product binding remains explicit, with owner-signed publication for wallet-owned profiles and the controlled admin fallback otherwise**
-- staff scanner mode; **implemented with owner-managed, expiring checkout operators and atomic role-audited redeem**
+- staff scanner mode; **implemented with owner-managed, expiring checkout operators; the opening seller's authority is re-checked and audited when the customer proof redeems**
 - redemption history. **implemented as owner-protected snapshot/cursor pages, metrics, receipts,
-  incremental older checks and a browser-local masked full-history CSV. Seller-facing API responses
-  expose only a server-masked customer wallet identifier and use private no-store caching; the full
-  wallet remains backend-only for eligibility, limits and rewards. A manual phase-one
+  incremental older checks and a browser-local full-history CSV. Seller-facing API responses
+  contain no customer wallet data (only proof verified, lock source and self-redemption flag) and
+  use private no-store caching; the backend does not store the customer wallet. A manual phase-one
   report/prune tool now covers old admin audit rows and expired unlinked auth artifacts only;
   it is bounded, confirmation-gated, unscheduled and excludes Sessions, session AuditLogs,
   RewardEvents and linked passes. Long-term retention and deletion policy remains separate**
-- per-wallet redemption limits. **implemented per rule for UTC day/month with immutable session snapshots, atomic enforcement and audited denials**
-- customer benefits history. **implemented as a wallet-signed, cross-device `My benefits` view
-  with single-use challenge exchange, memory-only read access, signer-bound snapshot pagination
-  and a separate local offline recent-proof list**
+- per-wallet redemption limits. **removed with storage-free customer sessions: IFR does not
+  enforce per-customer limits; non-zero rule limits are refused and merchants enforce limits
+  themselves**
+- customer benefits history. **device-local only (signed receipts in the browser); the former
+  wallet-signed cross-device `My benefits` server history was removed (`/api/customer/history*`
+  returns 410)**
 
 ### M4 - Verified Seller Rewards
 
 - governance approval workflow; **seller application and admin live-verification flow deployed fail-closed; no Mainnet seller is approved yet**
 - BuilderRegistry/PartnerVault linkage; **runtime checks require aligned Governance owner/admin, active builder, active partner and matching beneficiary**
 - authorized reward caller; **read-only authorization check implemented; no signer or automated transaction path enabled**
-- reward event queue; **atomic redeem outbox plus idempotent reconciliation implemented; lock-path events remain blocked until caller authorization. Model B pilot settlement mode and per-period export implemented (T-275), default-off, no pilot active; the export is not a payment**
+- reward event queue; **atomic redeem outbox plus idempotent reconciliation implemented; lock-path events are non-payable (`BLOCKED_POLICY`) since storage-free customer sessions. Model B pilot settlement mode and per-period export implemented (T-275), default-off, no pilot active; the export is not a payment**
 - PartnerVault record/claim visibility. **owner-only Seller UI reads accrued, vested and claimable state; no claim/write button**
 
 Mainnet read-only evidence on 17.07.2026 at block 25,545,631 showed BuilderRegistry count `0`,
@@ -754,7 +771,7 @@ Mitigation:
 The scoped external-wallet MVP on `shop.ifrunit.tech` is implemented. The next release gates are:
 
 1. Publish and verify the first real wallet-owned seller profile, permanent slug, product and active benefit rule.
-2. Complete the physical iPhone/iPad/Android wallet matrix and record one real customer-presented `APPROVED` to seller-signed `REDEEMED` checkout.
+2. Complete the physical iPhone/iPad/Android wallet matrix and record one real customer-presented checkout redeemed by the customer proof (`REDEEMED`).
 3. Provision a production WalletConnect Project ID before enabling the full Rainbow, Trust, OKX and compatible-wallet modal.
 4. Keep seller rewards read-only until governance has registered the first pilot partner and created its capped PartnerVault budget; settlements follow model B (Governance `recordMilestone`), with no authorized caller.
 5. Keep the embedded-wallet prototype isolated from production until recovery, privacy/legal, real-device and independent security evidence is complete.

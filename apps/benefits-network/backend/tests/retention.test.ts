@@ -47,10 +47,7 @@ function baseUrl() {
 
 async function cleanDatabase() {
   await prisma.adminAuditLog.deleteMany();
-  await prisma.customerHistoryAccess.deleteMany();
-  await prisma.customerHistoryChallenge.deleteMany();
   await prisma.sellerAuthorizationChallenge.deleteMany();
-  await prisma.customerPassChallenge.deleteMany();
   await prisma.rewardEvent.deleteMany();
   await prisma.auditLog.deleteMany();
   await prisma.session.deleteMany();
@@ -87,17 +84,10 @@ async function seedRetentionRows() {
       },
     ],
   });
-  await prisma.customerPassChallenge.createMany({
-    data: [
-      { nonce: 'pass-old', walletAddress: WALLET, issuedAt: OLD, expiresAt: OLD, createdAt: OLD },
-      { nonce: 'pass-recent', walletAddress: WALLET, issuedAt: RECENT, expiresAt: RECENT, createdAt: RECENT },
-    ],
-  });
   await prisma.sellerAuthorizationChallenge.createMany({
     data: [
       {
         nonce: 'seller-old',
-        walletAddress: WALLET,
         action: 'business:update',
         businessId: 'business-old',
         scope: 'business-old',
@@ -106,7 +96,6 @@ async function seedRetentionRows() {
       },
       {
         nonce: 'seller-recent',
-        walletAddress: WALLET,
         action: 'business:update',
         businessId: 'business-recent',
         scope: 'business-recent',
@@ -115,23 +104,10 @@ async function seedRetentionRows() {
       },
     ],
   });
-  await prisma.customerHistoryChallenge.createMany({
-    data: [
-      { nonce: 'history-old', walletAddress: WALLET, issuedAt: OLD, expiresAt: OLD, createdAt: OLD },
-      { nonce: 'history-recent', walletAddress: WALLET, issuedAt: RECENT, expiresAt: RECENT, createdAt: RECENT },
-    ],
-  });
-  await prisma.customerHistoryAccess.createMany({
-    data: [
-      { tokenHash: 'token-old', walletAddress: WALLET, expiresAt: OLD, createdAt: OLD },
-      { tokenHash: 'token-recent', walletAddress: WALLET, expiresAt: RECENT, createdAt: RECENT },
-    ],
-  });
   await prisma.customerPass.createMany({
     data: [
       {
         id: 'orphan-open-old',
-        walletAddress: WALLET,
         controlHash: 'control-open-old',
         status: 'OPEN',
         expiresAt: OLD,
@@ -140,7 +116,6 @@ async function seedRetentionRows() {
       },
       {
         id: 'orphan-cancelled-old',
-        walletAddress: WALLET,
         controlHash: 'control-cancelled-old',
         status: 'CANCELLED',
         expiresAt: OLD,
@@ -150,7 +125,6 @@ async function seedRetentionRows() {
       },
       {
         id: 'orphan-recent',
-        walletAddress: WALLET,
         controlHash: 'control-recent',
         status: 'OPEN',
         expiresAt: RECENT,
@@ -163,7 +137,6 @@ async function seedRetentionRows() {
   const linkedPass = await prisma.customerPass.create({
     data: {
       id: 'linked-old',
-      walletAddress: WALLET,
       controlHash: 'control-linked-old',
       status: 'EXPIRED',
       expiresAt: OLD,
@@ -196,7 +169,7 @@ async function seedRetentionRows() {
       id: 'protected-audit',
       sessionId: session.id,
       type: 'EXPIRED',
-      payload: JSON.stringify({ wallet: WALLET }),
+      payload: JSON.stringify({ reason: 'TTL expired' }),
       ts: OLD,
     },
   });
@@ -217,10 +190,8 @@ async function seedRetentionRows() {
       businessId: business.id,
       sessionId: session.id,
       partnerId: `0x${'12'.repeat(32)}`,
-      customerWallet: WALLET,
-      lockAmountRaw: '1000000000000',
       chainId: 1,
-      status: 'PENDING',
+      status: 'BLOCKED_POLICY',
       createdAt: OLD,
       updatedAt: OLD,
     },
@@ -249,10 +220,7 @@ describe('Benefits retention operations', () => {
       generatedAt: NOW.toISOString(),
       eligible: {
         adminAuditLogs: 1,
-        customerPassChallenges: 1,
         sellerAuthorizationChallenges: 1,
-        customerHistoryChallenges: 1,
-        customerHistoryAccess: 1,
         orphanCustomerPasses: 2,
       },
       protected: {
@@ -262,8 +230,13 @@ describe('Benefits retention operations', () => {
         linkedCustomerPasses: 1,
       },
     });
+    // Owner decision B (T-231b): no customer-wallet challenge/history tables exist to report on.
+    expect(Object.keys(report.eligible).sort()).toEqual([
+      'adminAuditLogs', 'orphanCustomerPasses', 'sellerAuthorizationChallenges',
+    ]);
     expect(await prisma.adminAuditLog.count()).toBe(2);
     expect(await prisma.customerPass.count()).toBe(4);
+    expect(await prisma.sellerAuthorizationChallenge.count()).toBe(2);
   });
 
   it('requires the exact confirmation before applying retention', async () => {
@@ -304,12 +277,12 @@ describe('Benefits retention operations', () => {
 
     expect(result.deleted).toEqual({
       adminAuditLogs: 1,
-      customerPassChallenges: 1,
       sellerAuthorizationChallenges: 1,
-      customerHistoryChallenges: 1,
-      customerHistoryAccess: 1,
       orphanCustomerPasses: 2,
     });
+    expect(await prisma.sellerAuthorizationChallenge.findUnique({ where: { nonce: 'seller-recent' } })).not.toBeNull();
+    expect(await prisma.sellerAuthorizationChallenge.findUnique({ where: { nonce: 'seller-old' } })).toBeNull();
+    expect(await prisma.adminAuditLog.findUnique({ where: { id: 'admin-recent' } })).not.toBeNull();
     expect(await prisma.session.count()).toBe(1);
     expect(await prisma.auditLog.count()).toBe(1);
     expect(await prisma.rewardEvent.count()).toBe(1);
@@ -332,10 +305,7 @@ describe('Benefits retention operations', () => {
     });
     expect(second.deleted).toEqual({
       adminAuditLogs: 0,
-      customerPassChallenges: 0,
       sellerAuthorizationChallenges: 0,
-      customerHistoryChallenges: 0,
-      customerHistoryAccess: 0,
       orphanCustomerPasses: 0,
     });
     expect(await prisma.adminAuditLog.count({

@@ -46,12 +46,12 @@ export function SellerRewardStatus({ businessId, ownerAddress }: { businessId: s
     setWalletProof(null);
   }, [businessId]);
 
-  async function signAction(action: string, scope?: string): Promise<SellerAuth> {
+  async function signAction(action: string, scope?: string, target?: string): Promise<SellerAuth> {
     if (!address || !isConnected) throw new Error('Connect the seller owner wallet first.');
     const mutating = action !== 'rewards:read';
     const challenge = await getSellerAuthMessage(action, businessId, {
-      walletAddress: address,
       scope: mutating ? scope ?? businessId : undefined,
+      target,
     });
     if (!challenge.nonce) throw new Error('Seller authorization challenge is incomplete');
     const signature = await signMessageAsync({ message: challenge.message });
@@ -123,9 +123,10 @@ export function SellerRewardStatus({ businessId, ownerAddress }: { businessId: s
       if (address.toLowerCase() !== rewardWallet.toLowerCase()) {
         throw new Error(`Switch the connected wallet to ${rewardWallet} and retry: only the reward wallet itself can sign its proof.`);
       }
+      // Fixed wallet-free scope; the reward wallet is bound only by the signed `Target:` line.
       const challenge = await getSellerAuthMessage('rewards:reward-wallet', businessId, {
-        walletAddress: address,
-        scope: rewardWallet.toLowerCase(),
+        scope: 'reward-wallet',
+        target: rewardWallet,
       });
       if (!challenge.nonce) throw new Error('Seller authorization challenge is incomplete');
       const signature = await signMessageAsync({ message: challenge.message });
@@ -142,7 +143,7 @@ export function SellerRewardStatus({ businessId, ownerAddress }: { businessId: s
         throw new Error('Sign the reward wallet proof first.');
       }
       requireOwnerWallet();
-      const auth = await signAction('rewards:reward-wallet', rewardWallet.toLowerCase());
+      const auth = await signAction('rewards:reward-wallet', 'reward-wallet', rewardWallet);
       const result = await confirmSellerRewardWallet(businessId, auth, {
         rewardWallet,
         proof: { signature: walletProof.signature, timestamp: walletProof.timestamp, nonce: walletProof.nonce },

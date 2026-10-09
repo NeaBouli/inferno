@@ -203,13 +203,10 @@ export interface SellerBusinessSlugClaim {
 export interface SellerSessionSummary {
   id: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED' | 'REDEEMED';
-  customerWalletMasked: string | null;
-  /** Legacy API field name; value is a human-readable IFR amount from ethers.formatUnits(..., 9). */
-  lockAmountRaw: string | null;
-  /** Exact ERC-20 base-unit balance observed for a positive minIFRHeld rule. */
-  walletBalanceRaw: string | null;
+  /** Owner decision B: no customer wallet, amount or block is stored; only the proof outcome. */
+  customerProof: 'verified' | null;
+  selfRedemption: boolean | null;
   verifiedLockSource: VerifiedLockSource | null;
-  verificationBlock: number | null;
   reason: string | null;
   expiresAt: string;
   createdAt: string;
@@ -338,7 +335,6 @@ export interface SellerAuthMessage {
   message: string;
   nonce: string;
   scope: string;
-  walletAddress: string;
   domain: string;
   chainId: number;
 }
@@ -396,46 +392,25 @@ export interface ChallengeResponse {
   message: string;
 }
 
+/** Signed checkout-proof receipt returned only to the signing device (never stored server-side). */
+export interface CheckoutProofReceipt {
+  version: string;
+  sessionId: string;
+  businessId: string;
+  termsDigest: string;
+  message: string;
+  selfRedemption: boolean;
+}
+
 export interface AttestResult {
-  status: 'APPROVED' | 'REJECTED';
+  status: 'REDEEMED' | 'REJECTED';
   wallet?: string;
   eligible?: boolean;
   reason?: string;
+  redeemedAt?: string;
   benefit?: SessionBenefit;
+  proof?: CheckoutProofReceipt;
   attemptsRemaining?: number;
-}
-
-export interface CustomerHistoryChallenge {
-  message: string;
-  nonce: string;
-  expiresAt: string;
-}
-
-export interface CustomerHistoryAuthorization {
-  accessToken: string;
-  expiresAt: string;
-}
-
-export interface CustomerHistoryItem {
-  id: string;
-  status: SessionStatus['status'];
-  reason: string | null;
-  expiresAt: string;
-  createdAt: string;
-  updatedAt: string;
-  redeemedAt: string | null;
-  seller: { id: string; name: string };
-  benefit: Omit<SessionBenefit, 'ttlSeconds' | 'tierLabel'>;
-}
-
-export interface CustomerHistoryPage {
-  sessions: CustomerHistoryItem[];
-  pagination: {
-    limit: number;
-    hasMore: boolean;
-    nextCursor: string | null;
-    snapshot: string;
-  };
 }
 
 export interface CustomerPassCreated {
@@ -528,20 +503,26 @@ function adminHeaders(adminSecret: string) {
   return { Authorization: `Bearer ${adminSecret}` };
 }
 
-// Every seller action (read or mutation) uses a one-time, wallet-bound challenge.
-// Read-only actions omit the scope; the backend binds them to its fixed read scope.
-export function getSellerAuthMessage(
+// Every seller action (read or mutation) uses a one-time challenge. The request carries no wallet
+// (owner decision B): the connected wallet signs the returned message and the backend recovers the
+// signer. Read-only actions omit the scope; the backend binds them to its fixed read scope.
+// Actions on a target wallet (operators:create, rewards:reward-wallet) pass `target`: it is NOT sent to
+// the challenge endpoint; it is appended to the returned message as the final `Target:` line, and the
+// backend rebuilds that line from the authenticated request body.
+export async function getSellerAuthMessage(
   action: string,
   businessId: string,
-  binding: { walletAddress: string; scope?: string }
+  binding: { scope?: string; target?: string } = {}
 ) {
   const query = new URLSearchParams({
     action,
     businessId: businessId || 'new',
-    walletAddress: binding.walletAddress,
   });
   if (binding.scope) query.set('scope', binding.scope);
-  return fetchJSON<SellerAuthMessage>(`/api/seller/auth-message?${query.toString()}`);
+  const challenge = await fetchJSON<SellerAuthMessage>(`/api/seller/auth-message?${query.toString()}`);
+  return binding.target === undefined
+    ? challenge
+    : { ...challenge, message: `${challenge.message}\nTarget: ${binding.target.trim().toLowerCase()}` };
 }
 
 function sellerHeaders(auth: SellerAuth) {
@@ -857,61 +838,27 @@ export function getSessionStatus(id: string) {
   return fetchJSON<SessionStatus>(`/api/sessions/${id}`);
 }
 
-export function getChallenge(sessionId: string) {
-  return fetchJSON<ChallengeResponse>(`/api/sessions/${sessionId}/challenge`);
+/** The full wallet is sent per request so the server can bind and check it; it is not stored. */
+export function getChallenge(sessionId: string, walletAddress: string) {
+  return fetchJSON<ChallengeResponse>(`/api/sessions/${sessionId}/challenge`, {
+    method: 'POST',
+    body: JSON.stringify({ walletAddress }),
+    cache: 'no-store',
+  });
 }
 
-export function submitAttest(sessionId: string, signature: string) {
+export function submitAttest(sessionId: string, walletAddress: string, signature: string) {
   return fetchJSON<AttestResult>('/api/attest', {
     method: 'POST',
-    body: JSON.stringify({ sessionId, signature }),
-  });
-}
-
-export function getCustomerHistoryChallenge(walletAddress: string) {
-  return fetchJSON<CustomerHistoryChallenge>('/api/customer/history/challenge', {
-    method: 'POST',
-    body: JSON.stringify({ walletAddress }),
-  });
-}
-
-export function authorizeCustomerHistory(input: {
-  walletAddress: string;
-  nonce: string;
-  signature: string;
-}) {
-  return fetchJSON<CustomerHistoryAuthorization>('/api/customer/history/authorize', {
-    method: 'POST',
-    body: JSON.stringify(input),
-  });
-}
-
-export function getCustomerHistory(
-  accessToken: string,
-  limit = 20,
-  cursor?: string | null,
-  snapshot?: string | null
-) {
-  const query = new URLSearchParams({ limit: String(limit) });
-  if (cursor) query.set('cursor', cursor);
-  if (snapshot) query.set('snapshot', snapshot);
-  return fetchJSON<CustomerHistoryPage>(`/api/customer/history?${query.toString()}`, {
-    headers: { Authorization: `Bearer ${accessToken}` },
+    body: JSON.stringify({ sessionId, walletAddress, signature }),
     cache: 'no-store',
   });
 }
 
-export function getCustomerPassChallenge(walletAddress: string) {
-  return fetchJSON<{ message: string; nonce: string; expiresAt: string }>('/api/passes/challenge', {
-    method: 'POST',
-    body: JSON.stringify({ walletAddress }),
-    cache: 'no-store',
-  });
-}
-
-export function createCustomerPass(input: { walletAddress: string; nonce: string; signature: string }) {
+/** Owner decision B: a pass is an opaque device-held capability; no wallet is sent or stored. */
+export function createCustomerPass() {
   return fetchJSON<CustomerPassCreated>('/api/passes', {
-    method: 'POST', body: JSON.stringify(input), cache: 'no-store',
+    method: 'POST', body: '{}', cache: 'no-store',
   });
 }
 
@@ -931,15 +878,18 @@ export function getPublicCustomerPass(passId: string) {
   });
 }
 
-export function getCustomerPassConfirmationChallenge(passId: string, controlToken: string) {
+export function getCustomerPassConfirmationChallenge(passId: string, controlToken: string, walletAddress: string) {
   return fetchJSON<ChallengeResponse>(`/api/passes/${passId}/challenge`, {
-    method: 'POST', headers: passControlHeaders(controlToken), cache: 'no-store',
+    method: 'POST', headers: passControlHeaders(controlToken), body: JSON.stringify({ walletAddress }), cache: 'no-store',
   });
 }
 
-export function confirmCustomerPass(passId: string, controlToken: string, signature: string) {
+export function confirmCustomerPass(passId: string, controlToken: string, walletAddress: string, signature: string) {
   return fetchJSON<AttestResult>(`/api/passes/${passId}/confirm`, {
-    method: 'POST', headers: passControlHeaders(controlToken), body: JSON.stringify({ signature }), cache: 'no-store',
+    method: 'POST',
+    headers: passControlHeaders(controlToken),
+    body: JSON.stringify({ walletAddress, signature }),
+    cache: 'no-store',
   });
 }
 
@@ -963,9 +913,3 @@ export function bindCustomerPass(
   });
 }
 
-export function redeemSession(sessionId: string, auth: SellerAuth) {
-  return fetchJSON<{ status: string }>(`/api/sessions/${sessionId}/redeem`, {
-    method: 'POST',
-    headers: sellerHeaders(auth),
-  });
-}

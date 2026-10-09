@@ -36,6 +36,7 @@ const governanceInterface = new ethers.Interface(GOVERNANCE_PROPOSE_ABI);
 // Reward event statuses that are still on their way through reconciliation.
 const UNRECONCILED_STATUSES = new Set(['PENDING', 'READY', 'BLOCKED_CALLER', 'BLOCKED_GOVERNANCE']);
 export const MODEL_B_SETTLEMENT_PENDING = 'SETTLEMENT_PENDING';
+export const CUSTOMER_DEDUP_POLICY_GAP = 'CUSTOMER_DEDUP_UNAVAILABLE_OWNER_B';
 
 // ── Period ──────────────────────────────────────────────────────────────────
 
@@ -227,8 +228,8 @@ export interface RedemptionConfirmation {
 export interface RedemptionRecord {
   sessionId: string;
   redeemedAt: Date;
-  // Existing Session.recoveredAddress; used only to explain a missing outbox row, never exported.
-  customerWallet: string | null;
+  // In-request self-redemption outcome (owner decision B: no customer wallet is stored).
+  selfRedemption: boolean | null;
   confirmations: RedemptionConfirmation[];
 }
 
@@ -236,9 +237,8 @@ export interface RewardEventRecord {
   id: string;
   businessId: string;
   partnerId: string;
-  customerWallet: string;
   status: string;
-  session: { id: string; businessId: string; status: string; redeemedAt: Date | null };
+  session: { id: string; businessId: string; status: string; redeemedAt: Date | null; selfRedemption: boolean | null };
 }
 
 export interface OwnershipRecord {
@@ -337,17 +337,6 @@ function checkConfirmation(redemption: RedemptionRecord | undefined, ownership: 
     return operator && lower(operator.walletAddress) === actor ? 'OK' : 'UNAUTHORIZED_CONFIRMER';
   }
   return 'UNCONFIRMED_REDEMPTION';
-}
-
-/** Every wallet the seller controls in the existing ownership model, regardless of current status. */
-function sellerWallets(ownership: OwnershipRecord): Set<string> {
-  const wallets = new Set<string>();
-  const add = (value: string | null | undefined) => { const item = lower(value); if (item) wallets.add(item); };
-  add(ownership.ownerAddress);
-  for (const operator of ownership.operators) add(operator.walletAddress);
-  add(ownership.link?.rewardWallet);
-  add(ownership.link?.builderWallet);
-  return wallets;
 }
 
 // ── Template ────────────────────────────────────────────────────────────────
@@ -508,6 +497,10 @@ export function buildSettlementExport(input: ExportInput): SettlementExport {
   if (ownership.link?.status !== 'VERIFIED' || lower(ownership.link.partnerId) !== partnerId) {
     blockers.push('SELLER_LINK_NOT_VERIFIED');
   }
+  // Owner decision B (T-231b): without stored customer identity the "one reward per wallet and
+  // partner" rule cannot be enforced, and no replacement policy is accepted. The export therefore
+  // stays diagnostic and never yields a template (policy gap, see T-231b report).
+  blockers.push(CUSTOMER_DEDUP_POLICY_GAP);
   if (period.end.getTime() > input.now.getTime()) blockers.push('PERIOD_NOT_CLOSED');
   if (period.end.getTime() <= pilotStart.getTime()) blockers.push('PERIOD_BEFORE_PILOT');
 
@@ -522,7 +515,6 @@ export function buildSettlementExport(input: ExportInput): SettlementExport {
   }
   if (records.orphanEventIds.length > 0) addDiscrepancy('EVENT_WITHOUT_REDEMPTION', records.orphanEventIds.length);
 
-  const selfWallets = sellerWallets(ownership);
   const eligible: RewardEventRecord[] = [];
   const excluded: { id: string; reason: ExclusionReason }[] = [];
   const seenSessions = new Set<string>();
@@ -548,7 +540,8 @@ export function buildSettlementExport(input: ExportInput): SettlementExport {
     if (redeemedAt.getTime() < pilotStart.getTime()) { exclude('PRE_PILOT'); continue; }
     const confirmation = checkConfirmation(redemptionsBySession.get(event.session.id), ownership);
     if (confirmation !== 'OK') { exclude(confirmation); continue; }
-    if (selfWallets.has(event.customerWallet.toLowerCase())) { exclude('SELF_REDEMPTION'); continue; }
+    // NULL (no proof-v2 outcome) is treated as self-redemption: fail closed.
+    if (event.session.selfRedemption !== false) { exclude('SELF_REDEMPTION'); continue; }
     if (event.status === 'CONFIRMED') { exclude('LOCK_REWARD_ALREADY_RECORDED'); continue; }
     if (UNRECONCILED_STATUSES.has(event.status)) { exclude('NOT_RECONCILED'); continue; }
     if (event.status !== MODEL_B_SETTLEMENT_PENDING) { exclude('STATUS_INELIGIBLE'); continue; }
@@ -567,7 +560,7 @@ export function buildSettlementExport(input: ExportInput): SettlementExport {
   const withoutEventReasons = { SELF_REDEMPTION: 0, PRE_PILOT: 0, MISSING_REWARD_EVENT: 0 };
   for (const redemption of records.redemptions) {
     if (seenSessions.has(redemption.sessionId)) continue;
-    if (redemption.customerWallet && selfWallets.has(redemption.customerWallet.toLowerCase())) {
+    if (redemption.selfRedemption !== false) {
       withoutEventReasons.SELF_REDEMPTION += 1;
     } else if (redemption.redeemedAt.getTime() < pilotStart.getTime()) {
       withoutEventReasons.PRE_PILOT += 1;

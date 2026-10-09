@@ -123,12 +123,12 @@ participant "sellerAuthorizationChallenge.ts" as Chal
 participant "sellerAuth.ts" as Auth
 participant "sessionService.ts" as Sess
 actor Customer
-Seller -> Routes : GET /auth-message(action, businessId, walletAddress, scope?)
-Routes -> Chal : issueSellerAuthorizationChallenge (bounded prune + insert nonce)
+Seller -> Routes : GET /auth-message(action, businessId, scope?) (no wallet)
+Routes -> Chal : issueSellerAuthorizationChallenge (bounded prune + insert nonce-only row)
 Routes --> Seller : message(Domain, Chain ID, Scope, Nonce, Timestamp, Expires)
 Seller -> Routes : request + x-ifr-wallet/signature/timestamp/nonce
 Routes -> Auth : verifySellerSignature(context, action, business, scope, nonce)
-Routes -> Chal : consumeSellerAuthorizationChallenge (updateMany count == 1)
+Routes -> Chal : consumeSellerAuthorizationChallenge(nonce, action, business, scope; updateMany count == 1)
 alt replayed or concurrent duplicate
   Routes --> Seller : 401 already used
 else first use

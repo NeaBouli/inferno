@@ -2,7 +2,7 @@
   "name": "IFR Benefits Network Device Wallet Acceptance Checklist",
   "target": "https://shop.ifrunit.tech",
   "status": "open",
-  "lastUpdated": "2026-08-27",
+  "lastUpdated": "2026-10-06",
   "rules": {
     "noSecrets": true,
     "recordOnlyTestIds": true,
@@ -11,7 +11,7 @@
   },
   "knownBlockers": [
     "The production WalletConnect modal and wallet catalog are live; physical QR pairing, connection and signature evidence is still required.",
-    "Physical APPROVED -> REDEEMED proof still requires an eligible locked customer wallet; the local state-machine flow is automated, but its on-chain eligibility read is mocked.",
+    "Physical customer-proof -> REDEEMED evidence still requires an eligible locked customer wallet; the local state-machine flow is automated, but its on-chain eligibility read is mocked.",
     "Automated and emulated results support code verification but never satisfy a physical-device matrix PASS.",
     "Production capacity must be checked read-only immediately before every deploy; do not rely on a previously recorded free-space value."
   ],
@@ -146,14 +146,14 @@
       "device": "Desktop",
       "surface": "Chrome + MetaMask extension",
       "wallet": "MetaMask",
-      "path": "Seller profile and /s slug, customer /p pass bind, /b scanner, legacy /r compatibility and redeem signature",
+      "path": "Seller profile and /s slug, customer /p pass bind, /b scanner, legacy /r compatibility and checkout-opening signature",
       "capabilities": [
         "seller-profile",
         "stable-seller-slug",
         "public-seller-catalog",
         "customer-pass-bind",
         "seller-issued-qr-compatibility",
-        "seller-signed-redeem",
+        "seller-signed-checkout-open",
         "wallet-disconnect",
         "reload-reconnect"
       ],
@@ -161,16 +161,16 @@
       "evidence": []
     },
     {
-      "id": "approved-redeemed-eligible-wallet",
+      "id": "proof-redeemed-eligible-wallet",
       "device": "Any supported customer + seller pair",
       "surface": "Wallet browser or extension",
       "wallet": "Eligible locked customer wallet plus seller wallet",
-      "path": "Customer /p pass -> seller bind -> exact-offer confirm -> APPROVED -> seller-signed REDEEMED -> replay blocked",
+      "path": "Customer /p pass -> seller bind -> exact-offer customer proof -> REDEEMED once -> replay blocked",
       "capabilities": [
         "customer-pass-create",
         "customer-pass-bind",
         "exact-offer-confirm",
-        "approved-to-redeemed",
+        "proof-to-redeemed",
         "replay-blocked",
         "wallet-disconnect",
         "reload-reconnect"
@@ -184,6 +184,6 @@
     "At least one Android wallet-browser customer proof path passes.",
     "At least one desktop injected seller wallet path passes.",
     "A rejected or ineligible customer proof path is observed and readable.",
-    "The primary customer /p pass flow is bound to an exact seller offer, approved with an eligible locked test wallet, seller-signed REDEEMED and blocked on replay."
+    "The primary customer /p pass flow is bound to an exact seller offer, redeemed once (REDEEMED) by the proof of an eligible locked test wallet and blocked on replay."
   ]
 }

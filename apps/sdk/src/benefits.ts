@@ -7,7 +7,6 @@ export type SellerAuthorizationAction = "sessions:create" | "sessions:redeem";
 export interface SellerAuthorizationChallenge {
   action: SellerAuthorizationAction;
   businessId: string;
-  walletAddress: string;
   scope: string;
   domain: string;
   chainId: number;
@@ -173,14 +172,14 @@ export class IFRBenefitsClient {
   private async requestSellerChallenge(
     action: SellerAuthorizationAction,
     businessId: string,
-    scope: string,
-    walletAddress: string
+    scope: string
   ): Promise<SellerAuthorizationChallenge> {
+    // The challenge request is wallet-free (no address in the URL): the signer is bound only by the
+    // signature over the returned message, which the backend recovers.
     const challengeUrl = new URL("/api/seller/auth-message", this.baseUrl);
     challengeUrl.search = new URLSearchParams({
       action,
       businessId,
-      walletAddress,
       scope,
     }).toString();
     const challenge = await readJson<SellerAuthorizationChallenge>(
@@ -200,8 +199,6 @@ export class IFRBenefitsClient {
       !Number.isSafeInteger(challenge.chainId) ||
       challenge.chainId <= 0 ||
       (this.chainId !== undefined && challenge.chainId !== this.chainId) ||
-      !/^0x[0-9a-fA-F]{40}$/.test(challenge.walletAddress || "") ||
-      challenge.walletAddress.toLowerCase() !== walletAddress.toLowerCase() ||
       !/^\d{10,16}$/.test(challenge.timestamp || "") ||
       !Number.isSafeInteger(timestampMs) ||
       issuedAtMs !== timestampMs ||
@@ -245,8 +242,7 @@ export class IFRBenefitsClient {
     const challenge = await this.requestSellerChallenge(
       "sessions:create",
       businessId,
-      scope,
-      params.walletAddress
+      scope
     );
     const signature = await this.signSellerChallenge(challenge, params.signMessage);
 
@@ -330,8 +326,7 @@ export class IFRBenefitsClient {
     const challenge = await this.requestSellerChallenge(
       "sessions:redeem",
       params.sessionId,
-      params.sessionId,
-      params.walletAddress
+      params.sessionId
     );
     const signature = await this.signSellerChallenge(challenge, params.signMessage);
 

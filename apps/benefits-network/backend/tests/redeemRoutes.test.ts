@@ -5,11 +5,32 @@ import * as authenticatedRateLimiter from '../src/services/authenticatedRateLimi
 
 jest.setTimeout(15_000);
 
-jest.mock('../src/services/ifrLockService', () => ({
-  checkLock: jest.fn(),
-  recoverSigner: jest.fn(),
-  initProvider: jest.fn(),
-}));
+const mockEligibility = jest.fn();
+
+jest.mock('../src/services/ifrLockService', () => {
+  const actual = jest.requireActual('ethers');
+  return {
+    checkLock: jest.fn(),
+    checkBenefitEligibility: (...args: unknown[]) => mockEligibility(...args),
+    recoverSigner: (message: string, signature: string) => actual.verifyMessage(message, signature),
+    initProvider: jest.fn(),
+  };
+});
+
+function eligible() {
+  return {
+    eligible: true,
+    lockEligible: true,
+    heldEligible: true,
+    lockedAmount: '2500.0',
+    walletAmount: '10.0',
+    walletBalanceRaw: '10000000000000000000',
+    ifrLockAmount: '2500.0',
+    commitmentAmount: null,
+    verifiedLockSource: 'ifrlock',
+    verificationBlock: 123456,
+  };
+}
 
 jest.mock('../src/config', () => ({
   config: {
@@ -49,11 +70,13 @@ async function sellerHeaders(
     'rules:create', 'rules:update', 'rules:delete', 'sessions:create', 'sessions:redeem',
   ]);
   if (mutations.has(action)) {
+    // operators:create: the given value is the target operator wallet. It is never sent to the
+    // challenge endpoint; the fixed scope is used and the wallet is signed as the `Target:` line.
+    const target = action === 'operators:create' ? scope : undefined;
     const query = new URLSearchParams({
       action,
       businessId,
-      walletAddress: wallet.address,
-      scope: scope || (action === 'sessions:create' ? 'default' : businessId),
+      scope: target !== undefined ? 'operator-wallet' : scope || (action === 'sessions:create' ? 'default' : businessId),
     });
     const challengeResponse = await fetch(`${baseUrl()}/api/seller/auth-message?${query}`);
     expect(challengeResponse.status).toBe(200);
@@ -65,7 +88,9 @@ async function sellerHeaders(
     return {
       'content-type': 'application/json',
       'x-ifr-wallet': wallet.address,
-      'x-ifr-signature': await wallet.signMessage(challenge.message),
+      'x-ifr-signature': await wallet.signMessage(
+        target === undefined ? challenge.message : `${challenge.message}\nTarget: ${target.toLowerCase()}`
+      ),
       'x-ifr-timestamp': challenge.timestamp,
       'x-ifr-nonce': challenge.nonce,
     };
@@ -74,7 +99,6 @@ async function sellerHeaders(
     `${baseUrl()}/api/seller/auth-message?${new URLSearchParams({
       action,
       businessId,
-      walletAddress: wallet.address,
     })}`
   );
   expect(challengeResponse.status).toBe(200);
@@ -93,6 +117,40 @@ async function postRedeem(sessionId: string, headers?: Record<string, string>) {
     method: 'POST',
     headers: headers ?? { 'content-type': 'application/json' },
   });
+}
+
+async function openCheckout(seller: TestWallet, businessId: string, benefitRuleId?: string) {
+  const response = await postCreateSession(
+    businessId,
+    await sellerHeaders(seller, 'sessions:create', businessId, benefitRuleId || 'default'),
+    benefitRuleId
+  );
+  const body = await response.json() as { sessionId: string; error?: string };
+  return { status: response.status, body };
+}
+
+async function proofSignature(sessionId: string, customer: TestWallet) {
+  const response = await fetch(`${baseUrl()}/api/sessions/${sessionId}/challenge`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ walletAddress: customer.address }),
+  });
+  expect(response.status).toBe(200);
+  const { message } = await response.json() as { message: string };
+  return customer.signMessage(message);
+}
+
+async function postProof(sessionId: string, walletAddress: string, signature: string) {
+  const response = await fetch(`${baseUrl()}/api/attest`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ sessionId, walletAddress, signature }),
+  });
+  return { status: response.status, body: await response.json() as Record<string, any> };
+}
+
+async function customerProof(sessionId: string, customer: TestWallet) {
+  return postProof(sessionId, customer.address, await proofSignature(sessionId, customer));
 }
 
 async function postCreateSession(
@@ -168,21 +226,31 @@ describe('Redeem route authorization', () => {
   const seller = ethers.Wallet.createRandom();
   const otherSeller = ethers.Wallet.createRandom();
   const checkoutOperator = ethers.Wallet.createRandom();
+  const customer = ethers.Wallet.createRandom();
   let sellerWalletLimiterSpy: jest.SpyInstance;
   let businessId: string;
-  let approvedSessionId: string;
+  let pendingSessionId: string;
+
+  async function cleanDb() {
+    await prisma.sellerAuthorizationChallenge.deleteMany();
+    await prisma.rewardEvent.deleteMany();
+    await prisma.sellerRewardLink.deleteMany();
+    await prisma.auditLog.deleteMany();
+    await prisma.session.deleteMany();
+    await prisma.customerPass.deleteMany();
+    await prisma.benefitRule.deleteMany();
+    await prisma.product.deleteMany();
+    await prisma.checkoutOperator.deleteMany();
+    await prisma.business.deleteMany();
+  }
 
   beforeEach(async () => {
     sellerWalletLimiterSpy = jest
       .spyOn(authenticatedRateLimiter, 'assertSellerWalletActionAllowed')
       .mockResolvedValue(undefined);
-    await prisma.sellerAuthorizationChallenge.deleteMany();
-    await prisma.auditLog.deleteMany();
-    await prisma.session.deleteMany();
-    await prisma.benefitRule.deleteMany();
-    await prisma.product.deleteMany();
-    await prisma.checkoutOperator.deleteMany();
-    await prisma.business.deleteMany();
+    mockEligibility.mockReset();
+    mockEligibility.mockResolvedValue(eligible());
+    await cleanDb();
 
     const business = await prisma.business.create({
       data: {
@@ -196,17 +264,18 @@ describe('Redeem route authorization', () => {
     });
     businessId = business.id;
 
+    // An open checkout confirmed by the owner (what POST /api/sessions records).
     const session = await prisma.session.create({
       data: {
         businessId: business.id,
         nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
         expiresAt: new Date(Date.now() + 300_000),
-        status: 'APPROVED',
-        recoveredAddress: ethers.Wallet.createRandom().address,
-        lockAmountRaw: '2500.0',
+        status: 'PENDING',
+        confirmedByWallet: seller.address,
+        confirmedByRole: 'OWNER',
       },
     });
-    approvedSessionId = session.id;
+    pendingSessionId = session.id;
   });
 
   afterEach(() => {
@@ -214,13 +283,7 @@ describe('Redeem route authorization', () => {
   });
 
   afterAll(async () => {
-    await prisma.sellerAuthorizationChallenge.deleteMany();
-    await prisma.auditLog.deleteMany();
-    await prisma.session.deleteMany();
-    await prisma.benefitRule.deleteMany();
-    await prisma.product.deleteMany();
-    await prisma.checkoutOperator.deleteMany();
-    await prisma.business.deleteMany();
+    await cleanDb();
     await prisma.$disconnect();
     await new Promise<void>((resolve, reject) => {
       server.close((error) => {
@@ -230,16 +293,25 @@ describe('Redeem route authorization', () => {
     });
   });
 
-  it('rejects redeem without seller authorization headers', async () => {
-    const response = await postRedeem(approvedSessionId);
+  it('answers 410 for the removed seller redeem step, with or without seller authorization', async () => {
+    const anonymous = await postRedeem(pendingSessionId);
+    expect(anonymous.status).toBe(410);
+    expect((await anonymous.json() as { error: string }).error).toMatch(/Separate seller redemption was removed/);
 
-    expect(response.status).toBe(401);
+    const ownerSigned = await postRedeem(
+      pendingSessionId,
+      await sellerHeaders(seller, 'sessions:redeem', pendingSessionId)
+    );
+    expect(ownerSigned.status).toBe(410);
+    expect(await prisma.session.findUniqueOrThrow({ where: { id: pendingSessionId } }))
+      .toMatchObject({ status: 'PENDING', redeemedAt: null });
+    expect(await prisma.auditLog.count({ where: { sessionId: pendingSessionId, type: 'REDEEMED' } })).toBe(0);
   });
 
-  it('applies a per-IP rate limit to redeem before seller authorization (T-216)', async () => {
-    const response = await postRedeem(approvedSessionId);
+  it('keeps a per-IP rate limit on the removed redeem route (T-216)', async () => {
+    const response = await postRedeem(pendingSessionId);
 
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(410);
     expect(response.headers.get('ratelimit-policy')).toMatch(/^120;w=600/);
     expect(Number(response.headers.get('ratelimit-remaining'))).toBeLessThan(120);
   });
@@ -373,7 +445,6 @@ describe('Redeem route authorization', () => {
     const query = new URLSearchParams({
       action: 'sessions:create',
       businessId,
-      walletAddress: seller.address,
       scope: 'default',
     });
     const challenge = await (
@@ -398,52 +469,73 @@ describe('Redeem route authorization', () => {
     expect(sellerWalletLimiterSpy).toHaveBeenCalledWith(seller.address);
   });
 
-  it('rejects redeem when the signer is not the seller business owner', async () => {
-    const headers = await sellerHeaders(otherSeller, 'sessions:redeem', approvedSessionId);
+  it('does not let another seller open a checkout for the business', async () => {
+    const opened = await openCheckout(otherSeller, businessId);
+    expect(opened.status).toBe(403);
+    expect(await prisma.session.count({ where: { businessId } })).toBe(1);
 
-    const response = await postRedeem(approvedSessionId, headers);
-
-    expect(response.status).toBe(403);
+    // The old other-seller redeem path is gone and cannot complete an open checkout either.
+    expect((await postRedeem(
+      pendingSessionId,
+      await sellerHeaders(otherSeller, 'sessions:redeem', pendingSessionId)
+    )).status).toBe(410);
+    expect((await prisma.session.findUniqueOrThrow({ where: { id: pendingSessionId } })).status)
+      .toBe('PENDING');
   });
 
-  it('allows the owning seller wallet to redeem an approved session exactly once', async () => {
-    const headers = await sellerHeaders(seller, 'sessions:redeem', approvedSessionId);
+  it('lets the owner open a checkout that the customer proof redeems exactly once', async () => {
+    const { status, body } = await openCheckout(seller, businessId);
+    expect(status).toBe(201);
+    const signature = await proofSignature(body.sessionId, customer);
 
-    const response = await postRedeem(approvedSessionId, headers);
-    const body = await response.json() as { status: string };
+    const first = await postProof(body.sessionId, customer.address, signature);
+    expect(first.status).toBe(200);
+    expect(first.body.status).toBe('REDEEMED');
 
-    expect(response.status).toBe(200);
-    expect(body).toEqual({ status: 'REDEEMED' });
+    const audit = await prisma.auditLog.findFirstOrThrow({
+      where: { sessionId: body.sessionId, type: 'REDEEMED' },
+    });
+    expect(JSON.parse(audit.payload)).toMatchObject({
+      actorWallet: seller.address,
+      actorRole: 'OWNER',
+      operatorId: null,
+      confirmation: 'sessions:create',
+    });
+    expect(audit.payload).not.toContain(customer.address);
+    expect(audit.payload.toLowerCase()).not.toContain(customer.address.slice(2).toLowerCase());
 
-    const secondResponse = await postRedeem(approvedSessionId, headers);
-    expect(secondResponse.status).toBe(401);
+    const second = await postProof(body.sessionId, customer.address, signature);
+    expect(second.status).toBe(409);
+    expect(await prisma.auditLog.count({
+      where: { sessionId: body.sessionId, type: 'REDEEMED' },
+    })).toBe(1);
   });
 
-  it('returns 409 when redeeming an EXPIRED or REJECTED session', async () => {
+  it('returns 409 for a customer proof against an EXPIRED or REJECTED session', async () => {
     for (const status of ['EXPIRED', 'REJECTED'] as const) {
       const session = await prisma.session.create({
         data: {
           businessId,
           nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
           expiresAt: new Date(Date.now() + 300_000),
-          status,
-          recoveredAddress: ethers.Wallet.createRandom().address,
+          status: 'PENDING',
+          confirmedByWallet: seller.address,
+          confirmedByRole: 'OWNER',
         },
       });
-      const headers = await sellerHeaders(seller, 'sessions:redeem', session.id);
+      const signature = await proofSignature(session.id, customer);
+      await prisma.session.update({ where: { id: session.id }, data: { status } });
 
-      const response = await postRedeem(session.id, headers);
-      const body = await response.json() as { error: string };
+      const result = await postProof(session.id, customer.address, signature);
 
-      expect(response.status).toBe(409);
-      expect(body.error).toContain('cannot redeem');
+      expect(result.status).toBe(409);
+      expect(result.body.error).toContain('cannot attest');
       expect(await prisma.session.findUniqueOrThrow({ where: { id: session.id } }))
         .toMatchObject({ status, redeemedAt: null });
     }
   });
 
-  it('returns 429 and audits a per-wallet daily redemption limit', async () => {
-    const customer = ethers.Wallet.createRandom().address;
+  it('rejects non-zero per-customer limits and refuses to open a checkout for a legacy limited rule', async () => {
     const rule = await prisma.benefitRule.create({
       data: {
         businessId,
@@ -452,41 +544,28 @@ describe('Redeem route authorization', () => {
         productName: 'Daily benefit',
         discountPercent: 10,
         requiredLockIFR: 1000,
-        dailyRedemptionLimit: 1,
       },
     });
-    const sessions = await Promise.all([0, 1].map(() => prisma.session.create({
-      data: {
-        businessId,
-        benefitRuleId: rule.id,
-        benefitSnapshotVersion: 2,
-        benefitDailyRedemptionLimit: 1,
-        benefitMonthlyRedemptionLimit: 0,
-        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
-        expiresAt: new Date(Date.now() + 300_000),
-        status: 'APPROVED',
-        recoveredAddress: customer,
-      },
-    })));
+    const limitPatch = await patchSellerRule(
+      rule.id,
+      { dailyRedemptionLimit: 1 },
+      await sellerHeaders(seller, 'rules:update', businessId, rule.id)
+    );
+    expect(limitPatch.status).toBe(400);
+    expect(await prisma.benefitRule.findUniqueOrThrow({ where: { id: rule.id } }))
+      .toMatchObject({ dailyRedemptionLimit: 0, monthlyRedemptionLimit: 0 });
 
-    const firstHeaders = await sellerHeaders(seller, 'sessions:redeem', sessions[0].id);
-    expect((await postRedeem(sessions[0].id, firstHeaders)).status).toBe(200);
-    const secondHeaders = await sellerHeaders(seller, 'sessions:redeem', sessions[1].id);
-    const denied = await postRedeem(sessions[1].id, secondHeaders);
-    const body = await denied.json() as { error: string };
-
-    expect(denied.status).toBe(429);
-    expect(body.error).toContain('Daily redemption limit reached');
-    expect(await prisma.session.findUniqueOrThrow({ where: { id: sessions[1].id } })).toMatchObject({
-      status: 'REJECTED',
-      reason: expect.stringContaining('Daily redemption limit reached'),
-    });
-    expect(await prisma.auditLog.count({
-      where: { sessionId: sessions[1].id, type: 'REDEEM_DENIED_LIMIT' },
-    })).toBe(1);
+    // A rule that still carries a limit from before the cutover fails closed at checkout opening.
+    await prisma.benefitRule.update({ where: { id: rule.id }, data: { dailyRedemptionLimit: 1 } });
+    const sessionsBefore = await prisma.session.count({ where: { businessId } });
+    const opened = await openCheckout(seller, businessId, rule.id);
+    expect(opened.status).toBe(409);
+    expect(opened.body.error).toMatch(/not enforced by IFR|no longer enforced by IFR/);
+    expect(await prisma.session.count({ where: { businessId } })).toBe(sessionsBefore);
+    expect(await prisma.auditLog.count({ where: { type: 'REDEEM_DENIED_LIMIT' } })).toBe(0);
   });
 
-  it('allows an active checkout operator to redeem and records the actor without a signature', async () => {
+  it('lets an active checkout operator open a checkout and records it as the confirming actor', async () => {
     const operator = await prisma.checkoutOperator.create({
       data: {
         businessId,
@@ -495,36 +574,42 @@ describe('Redeem route authorization', () => {
         expiresAt: new Date(Date.now() + 60_000),
       },
     });
-    const headers = await sellerHeaders(checkoutOperator, 'sessions:redeem', approvedSessionId);
+    const headers = await sellerHeaders(checkoutOperator, 'sessions:create', businessId);
+    const response = await postCreateSession(businessId, headers);
+    expect(response.status).toBe(201);
+    const { sessionId } = await response.json() as { sessionId: string };
 
-    const response = await postRedeem(approvedSessionId, headers);
-    expect(response.status).toBe(200);
+    const result = await customerProof(sessionId, customer);
+    expect(result.status).toBe(200);
+    expect(result.body.status).toBe('REDEEMED');
 
     const audit = await prisma.auditLog.findFirstOrThrow({
-      where: { sessionId: approvedSessionId, type: 'REDEEMED' },
+      where: { sessionId, type: 'REDEEMED' },
     });
     const payload = JSON.parse(audit.payload) as Record<string, unknown>;
     expect(payload).toMatchObject({
       actorWallet: checkoutOperator.address,
       actorRole: 'OPERATOR',
       operatorId: operator.id,
+      confirmation: 'sessions:create',
     });
     expect(JSON.stringify(payload)).not.toContain(headers['x-ifr-signature']);
+    expect(JSON.stringify(payload)).not.toContain(customer.address);
   });
 
-  it('allows only one HTTP redemption when signed owner requests race', async () => {
-    const headers = await sellerHeaders(seller, 'sessions:redeem', approvedSessionId);
-    const responses = await Promise.all([
-      postRedeem(approvedSessionId, headers),
-      postRedeem(approvedSessionId, headers),
+  it('allows only one redemption when customer proofs for the same checkout race', async () => {
+    const signature = await proofSignature(pendingSessionId, customer);
+    const results = await Promise.all([
+      postProof(pendingSessionId, customer.address, signature),
+      postProof(pendingSessionId, customer.address, signature),
     ]);
-    expect(responses.map((response) => response.status).sort()).toEqual([200, 401]);
+    expect(results.map((result) => result.status).sort()).toEqual([200, 409]);
     expect(await prisma.auditLog.count({
-      where: { sessionId: approvedSessionId, type: 'REDEEMED' },
+      where: { sessionId: pendingSessionId, type: 'REDEEMED' },
     })).toBe(1);
   });
 
-  it('rejects expired and revoked checkout operators immediately', async () => {
+  it('rejects expired and revoked checkout operators, also after they opened a checkout', async () => {
     const expired = await prisma.checkoutOperator.create({
       data: {
         businessId,
@@ -532,33 +617,42 @@ describe('Redeem route authorization', () => {
         expiresAt: new Date(Date.now() - 1),
       },
     });
-    const headers = await sellerHeaders(checkoutOperator, 'sessions:redeem', approvedSessionId);
-    expect((await postRedeem(approvedSessionId, headers)).status).toBe(403);
+    expect((await openCheckout(checkoutOperator, businessId)).status).toBe(403);
 
     await prisma.checkoutOperator.update({
       where: { id: expired.id },
       data: { active: true, expiresAt: null },
     });
-    const reactivatedHeaders = await sellerHeaders(
-      checkoutOperator,
-      'sessions:redeem',
-      approvedSessionId
-    );
-    expect((await postRedeem(approvedSessionId, reactivatedHeaders)).status).toBe(200);
+    const reactivated = await openCheckout(checkoutOperator, businessId);
+    expect(reactivated.status).toBe(201);
+    expect((await customerProof(reactivated.body.sessionId, customer)).status).toBe(200);
 
-    const nextSession = await prisma.session.create({
-      data: {
-        businessId,
-        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
-        expiresAt: new Date(Date.now() + 300_000),
-        status: 'APPROVED',
-        recoveredAddress: ethers.Wallet.createRandom().address,
-      },
-    });
+    // Operator revoked after opening: the customer proof is refused inside the transaction.
+    const revokedLater = await openCheckout(checkoutOperator, businessId);
+    expect(revokedLater.status).toBe(201);
+    const revokedSignature = await proofSignature(revokedLater.body.sessionId, customer);
     await prisma.checkoutOperator.update({ where: { id: expired.id }, data: { active: false } });
-    const revokedHeaders = await sellerHeaders(checkoutOperator, 'sessions:redeem', nextSession.id);
-    expect((await postRedeem(nextSession.id, revokedHeaders)).status).toBe(403);
-  });
+    const revokedProof = await postProof(revokedLater.body.sessionId, customer.address, revokedSignature);
+    expect(revokedProof.status).toBe(409);
+    expect(revokedProof.body.error).toMatch(/no longer authorized/);
+    expect(await prisma.session.findUniqueOrThrow({ where: { id: revokedLater.body.sessionId } }))
+      .toMatchObject({ status: 'PENDING', redeemedAt: null, attestAttempts: 0 });
+    expect((await openCheckout(checkoutOperator, businessId)).status).toBe(403);
+
+    // Operator expired after opening: same refusal.
+    await prisma.checkoutOperator.update({ where: { id: expired.id }, data: { active: true } });
+    const expiresLater = await openCheckout(checkoutOperator, businessId);
+    expect(expiresLater.status).toBe(201);
+    const expiringSignature = await proofSignature(expiresLater.body.sessionId, customer);
+    await prisma.checkoutOperator.update({
+      where: { id: expired.id },
+      data: { expiresAt: new Date(Date.now() - 1) },
+    });
+    const expiredProof = await postProof(expiresLater.body.sessionId, customer.address, expiringSignature);
+    expect(expiredProof.status).toBe(409);
+    expect((await prisma.session.findUniqueOrThrow({ where: { id: expiresLater.body.sessionId } })).status)
+      .toBe('PENDING');
+  }, 30_000);
 
   it('lets only the business owner manage checkout operators and keeps operator privileges narrow', async () => {
     const payload = {
@@ -749,14 +843,24 @@ describe('Redeem route authorization', () => {
     const todayStartedAt = new Date();
     todayStartedAt.setUTCHours(0, 0, 0, 0);
 
+    // beforeEach already stored one open PENDING checkout created today.
     await prisma.session.createMany({
       data: [
+        {
+          // Pre-cutover row: APPROVED is no longer reachable but must still be counted.
+          businessId,
+          nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
+          expiresAt: new Date(Date.now() + 300_000),
+          status: 'APPROVED',
+        },
         {
           businessId,
           nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
           expiresAt: new Date(Date.now() + 300_000),
           status: 'REDEEMED',
-          recoveredAddress: ethers.Wallet.createRandom().address,
+          proofVersion: 2,
+          selfRedemption: false,
+          verifiedLockSource: 'ifrlock',
           redeemedAt: new Date(),
         },
         {
@@ -777,7 +881,9 @@ describe('Redeem route authorization', () => {
           expiresAt: new Date(todayStartedAt.getTime() - 1),
           createdAt: new Date(todayStartedAt.getTime() - 1),
           status: 'REDEEMED',
-          recoveredAddress: ethers.Wallet.createRandom().address,
+          proofVersion: 2,
+          selfRedemption: false,
+          verifiedLockSource: 'ifrlock',
           redeemedAt: new Date(),
         },
         {
@@ -804,31 +910,49 @@ describe('Redeem route authorization', () => {
         openChecks: number;
         approvalRatePercent: number | null;
       };
-      sessions: Array<{
-        recoveredAddress?: string;
-        customerWalletMasked: string | null;
+      sessions: Array<Record<string, unknown> & {
+        status: string;
+        customerProof: 'verified' | null;
+        selfRedemption: boolean | null;
+        verifiedLockSource: string | null;
       }>;
     };
-    const storedCustomerSession = await prisma.session.findFirstOrThrow({
-      where: { businessId, recoveredAddress: { not: null } },
-      orderBy: { createdAt: 'asc' },
-      select: { recoveredAddress: true },
-    });
 
     expect(response.status).toBe(200);
     expect(response.headers.get('cache-control')).toBe('private, no-store, max-age=0');
-    expect(body.metrics.today).toMatchObject({ checks: 6, approved: 2, redeemed: 2, rejected: 1 });
-    expect(body.metrics.allTime).toMatchObject({ checks: 7, approved: 3, redeemed: 2, rejected: 1 });
-    expect(body.metrics.openChecks).toBe(2);
+    expect(body.metrics.today).toMatchObject({ checks: 7, approved: 2, redeemed: 2, rejected: 1 });
+    expect(body.metrics.allTime).toMatchObject({ checks: 8, approved: 3, redeemed: 2, rejected: 1 });
+    expect(body.metrics.openChecks).toBe(3);
     expect(body.metrics.approvalRatePercent).toBe(75);
-    expect(body.sessions).toHaveLength(7);
-    expect(body.sessions.some((session) =>
-      Object.prototype.hasOwnProperty.call(session, 'recoveredAddress')
-    )).toBe(false);
-    expect(JSON.stringify(body)).not.toContain(storedCustomerSession.recoveredAddress);
-    expect(body.sessions).toContainEqual(expect.objectContaining({
-      customerWalletMasked: `${storedCustomerSession.recoveredAddress!.slice(0, 6)}...${storedCustomerSession.recoveredAddress!.slice(-4)}`,
-    }));
+    expect(body.sessions).toHaveLength(8);
+    // Owner decision B: no customer wallet, masked wallet, amount or block is exposed.
+    for (const removed of [
+      'recoveredAddress',
+      'customerWalletMasked',
+      'customerWallet',
+      'lockAmountRaw',
+      'walletBalanceRaw',
+      'verificationBlock',
+    ]) {
+      expect(body.sessions.some((session) =>
+        Object.prototype.hasOwnProperty.call(session, removed)
+      )).toBe(false);
+    }
+    const ownerWallet = seller.address.toLowerCase();
+    const addresses = (JSON.stringify(body).match(/0x[0-9a-fA-F]{40}/g) ?? [])
+      .filter((address) => address.toLowerCase() !== ownerWallet);
+    expect(addresses).toEqual([]);
+    const redeemed = body.sessions.filter((session) => session.status === 'REDEEMED');
+    expect(redeemed).toHaveLength(2);
+    for (const session of redeemed) {
+      expect(session).toMatchObject({
+        customerProof: 'verified',
+        selfRedemption: false,
+        verifiedLockSource: 'ifrlock',
+      });
+    }
+    expect(body.sessions.filter((session) => session.status !== 'REDEEMED')
+      .every((session) => session.customerProof === null)).toBe(true);
   }, 15_000);
 
   it('paginates seller history without duplicates and rejects foreign or invalid cursors', async () => {
@@ -937,8 +1061,8 @@ describe('Redeem route authorization', () => {
       discountPercent: 20,
       requiredLockIFR: 2500,
       ttlSeconds: 180,
-      dailyRedemptionLimit: 2,
-      monthlyRedemptionLimit: 12,
+      dailyRedemptionLimit: 0,
+      monthlyRedemptionLimit: 0,
     };
 
     const missingAuth = await patchSellerRule(rule.id, payload);
@@ -976,6 +1100,14 @@ describe('Redeem route authorization', () => {
     const nonOwnerHeaders = await sellerHeaders(seller, 'rules:update', otherBusiness.id, otherRule.id);
     const nonOwner = await patchSellerRule(otherRule.id, payload, nonOwnerHeaders);
     expect(nonOwner.status).toBe(403);
+
+    // Per-customer limits are not IFR-hosted: a non-zero limit is refused even for the owner.
+    for (const limit of [{ dailyRedemptionLimit: 2 }, { monthlyRedemptionLimit: 12 }]) {
+      const limitHeaders = await sellerHeaders(seller, 'rules:update', businessId, rule.id);
+      expect((await patchSellerRule(rule.id, { ...payload, ...limit }, limitHeaders)).status).toBe(400);
+    }
+    expect(await prisma.benefitRule.findUniqueOrThrow({ where: { id: rule.id } }))
+      .toMatchObject({ label: 'Original benefit', dailyRedemptionLimit: 0, monthlyRedemptionLimit: 0 });
 
     const ownerHeaders = await sellerHeaders(seller, 'rules:update', businessId, rule.id);
     const response = await patchSellerRule(rule.id, payload, ownerHeaders);

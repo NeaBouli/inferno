@@ -27,11 +27,11 @@ const customerSteps = [
   },
   {
     title: 'Present your QR and confirm',
-    body: 'Create a short-lived customer QR. After the seller scans it and chooses a rule, review seller, product, discount and required IFR on your device, then approve the exact checkout. You can still scan a compatible seller QR instead.',
+    body: 'Create a short-lived customer QR. After the seller scans it and chooses a rule, review seller, product, discount and required IFR on your device, then sign the exact checkout, which redeems it once. You can still scan a compatible seller QR instead.',
   },
   {
-    title: 'Review My benefits anywhere',
-    body: 'On the home screen, sign the explicit read-only history request to load benefits verified by the same wallet across devices. The ten-minute access stays only in browser memory.',
+    title: 'Review My benefits on this device',
+    body: 'My benefits lists the checkout receipts saved in this browser and can re-verify your signature locally. The server keeps no customer wallet or history, so clearing browser data or switching devices loses this list.',
   },
 ];
 
@@ -72,10 +72,10 @@ const developerItems = [
   ['Rules', 'Read with timestamp-signed GET. Every POST/PATCH/DELETE uses a fresh nonce bound to the business or exact rule.'],
   ['Session history', 'GET /api/seller/businesses/:id/sessions?limit=50&cursor=...&snapshot=... with Action: sessions:list. Preserve the first response snapshot across pages.'],
   ['QR session', 'Request a one-time Action: sessions:create message bound to owner/operator, business and rule; sign it, then POST /api/sessions with x-ifr-nonce.'],
-  ['Customer pass', 'POST /api/passes/challenge, sign and create an opaque pass; seller signs passes:bind scoped to pass and rule; customer confirms through the private control-token endpoints.'],
-  ['Customer proof', 'GET /api/sessions/:id/challenge, then POST /api/attest with the customer signature.'],
-  ['Customer history', 'POST /api/customer/history/challenge, sign once, exchange at /authorize, then use the memory-only read token for signer-bound snapshot pages.'],
-  ['Redeem', 'Request a one-time sessions:redeem challenge bound to the session ID, sign it, then POST /api/sessions/:id/redeem with x-ifr-nonce.'],
+  ['Customer pass', 'POST /api/passes with an empty body creates an opaque pass; seller signs passes:bind scoped to pass and rule; the customer fetches the proof text with its wallet (POST /api/passes/:id/challenge) and confirms with walletAddress + signature (POST /api/passes/:id/confirm), which redeems once.'],
+  ['Customer proof', 'POST /api/sessions/:id/challenge with { walletAddress } returns the proof text; POST /api/attest with sessionId, walletAddress and signature redeems once after a fresh on-chain check.'],
+  ['Customer history', 'Device-local only. The server keeps no customer history; /api/customer/history endpoints return 410.'],
+  ['Redeem', 'No separate seller call. The customer proof redeems atomically; POST /api/sessions/:id/redeem returns 410.'],
   ['Seller rewards', 'Rewards are off by default. rewards:apply, rewards:disable and rewards:reward-wallet each use a fresh business-bound nonce; confirming a separate payout wallet also requires that wallet to sign its own one-time proof for the same business and scope.'],
 ];
 

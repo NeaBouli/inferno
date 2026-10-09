@@ -53,15 +53,23 @@ Recommendation: offer at least Bronze (lowest barrier for customers).
 ## Step 4: Cashier Staff Training (5 Minutes)
 
 ### The Recommended Customer-Presented Flow (4 Steps)
+
 1. **Customer creates** an opaque, short-lived pass in IFR Benefits
 2. **Seller scans** the pass, selects the exact active rule, and signs with the owner or authorized checkout-operator wallet
-3. **Customer reviews and confirms** seller, product, discount, and required IFRLock amount in the original browser tab
-4. **Seller sees** `APPROVED` or `REJECTED`; an approval must be redeemed once before granting the benefit
+3. **Customer reviews and signs** the exact checkout proof (seller, product, discount, required IFRLock amount) in the original browser tab
+4. **Seller sees** `REDEEMED` or `REJECTED`: the customer proof redeems the checkout once when the
+   signature matches the claimed wallet, the fresh IFRLock read is eligible and the seller who
+   opened the checkout is still authorized; there is no separate seller redeem step
 
-The compatible seller-issued QR flow remains available. It is also short-lived and requires a
-customer signature before the seller can redeem an approval.
+The compatible seller-issued QR flow remains available. It is also short-lived and the checkout is
+only redeemed by the customer's signed proof. A failed or ineligible proof leaves the checkout open.
 
-### What Cashier Staff Does NOT Need:
+IFR does not enforce per-customer redemption limits, because the backend stores no customer
+identity. Rules with a non-zero daily or monthly limit are refused; a business that needs such
+limits enforces them in its own systems.
+
+### What Cashier Staff Does NOT Need
+
 - No crypto knowledge
 - No handling of customer wallets, tokens, seed phrases, or private keys
 - The checkout device does require the business owner wallet or an active checkout-operator wallet for protected seller actions
@@ -104,10 +112,13 @@ Yes — each business independently configures tier and discount.
 
 **What customer data is processed?**
 The short-lived pass QR contains no wallet, lock amount, signature, control token, rule, or
-internal session ID. The backend processes the wallet address and current IFRLock result to verify
-eligibility; checkout and history API responses are bounded. This data-minimizing design is not a
-legal compliance guarantee; each operator remains responsible for its applicable privacy and
-retention obligations.
+internal session ID. The customer's wallet address is checked within the proof request (signature,
+fresh IFRLock read, self-redemption check) and is not stored: the backend keeps no customer wallet
+address, hash of it, signature, lock or balance amount, or customer history. It does keep a
+merchant checkout record (random checkout ID, shop, offer terms, status, timestamps, lock source,
+self-redemption flag and the seller wallet that opened it) plus seller-side audit events, so
+checkouts are not anonymous. This data-minimizing design is not a legal compliance guarantee; each
+operator remains responsible for its applicable privacy and retention obligations.
 
 ---
 *As of: July 2026 | Version 2.0*
