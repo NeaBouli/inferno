@@ -18,7 +18,8 @@ for (const app of apps) {
   const dockerfile = fs.readFileSync(path.join(appRoot, 'Dockerfile'), 'utf8');
   const baseImages = [...dockerfile.matchAll(/^FROM\s+(node:[^\s]+).*$/gm)].map((match) => match[1]);
 
-  const expectedEngine = app === 'frontend' ? '>=22.6.0 <23' : '>=22 <23';
+  // Backend needs 22.12+: the owner-B read-only scan relies on node:sqlite DatabaseSync readOnly.
+  const expectedEngine = app === 'frontend' ? '>=22.6.0 <23' : '>=22.12 <23';
   assert.equal(manifest.engines?.node, expectedEngine, `${app} package engine drifted from Node 22`);
   assert.equal(manifest.devDependencies?.['@types/node'], '^22.0.0', `${app} Node types drifted`);
   assert.equal(lock.packages?.['']?.engines?.node, expectedEngine, `${app} lock engine drifted`);
