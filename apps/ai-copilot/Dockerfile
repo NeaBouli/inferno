@@ -2,7 +2,7 @@ FROM node:22-alpine
 WORKDIR /app
 RUN apk add --no-cache dumb-init
 COPY package.json package-lock.json* ./
-RUN npm ci --ignore-scripts && npm cache clean --force
+RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 COPY src/ ./src/
 COPY server/ ./server/
 RUN addgroup -g 1001 -S copilot && \

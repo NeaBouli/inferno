@@ -32,4 +32,16 @@ for (const installation of esbuildInstallations) {
   );
 }
 
+// The runtime image must not ship devDependencies (vite, tailwindcss, typescript
+// and their transitive advisories never run in production). The CMD runs tsx,
+// so tsx has to stay a production dependency.
+const dockerfile = await readFile(new URL('../Dockerfile', import.meta.url), 'utf8');
+const npmCiLines = dockerfile.split('\n').filter((line) => /\bnpm ci\b/.test(line));
+assert.ok(npmCiLines.length > 0, 'Dockerfile must install dependencies with npm ci');
+for (const line of npmCiLines) {
+  assert.match(line, /--omit=dev\b/, `Dockerfile npm ci must use --omit=dev: ${line.trim()}`);
+}
+const manifest = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'));
+assert.ok(manifest.dependencies?.tsx, 'tsx must stay in dependencies (Dockerfile CMD runs it)');
+
 console.log('AI Copilot dependency baseline passed.');
