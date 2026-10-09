@@ -3,12 +3,17 @@
  * T-231b (owner decision B) visual evidence + layout assertions for the changed Benefits screens:
  *   - device-local customer history ("My benefits"), scrolled through under the fixed launcher;
  *   - customer seller-QR checkout: idle / signing / success (REDEEMED in one request) / failure;
- *   - seller checkout console: signed open checkout / redeemed / expired, without a redeem button.
+ *   - seller checkout console: signed open checkout / redeemed / expired, without a redeem button;
+ *   - F3 (PR #238): customer-presented checkout pass (components/CustomerCheckoutPass.tsx on /#customer-pass)
+ *     in the states open / bound (offer review) / proof-signing / proof-redeemed / refusal / expired, with
+ *     long-label fixtures (80-char label, 160-char product name; worded and unbroken) under the real
+ *     fixed overlays (Copilot launcher, any fixed toast/status layer).
  * Widths 375, 390, 820, 1440. Per capture: 0 px horizontal overflow, no clipped text, no overlapping
  * text boxes, no text or control under the fixed launcher. All API traffic is mocked (dummy data).
  *
  * Usage: BENEFITS_VISUAL_OUT=<dir> node scripts/test-benefits-owner-b-visual.js
  *        (requires `npm run build` in apps/benefits-network/frontend first)
+ *        BENEFITS_VISUAL_SCREENS=pass (comma list of history,customer,seller,pass; default all)
  *        BENEFITS_VISUAL_PRE_FIX=1 reproduces the pre-fix history padding (expected to fail).
  */
 const assert = require('node:assert/strict');
@@ -25,6 +30,7 @@ const origin = `http://127.0.0.1:${port}`;
 const outDir = process.env.BENEFITS_VISUAL_OUT || path.join(root, '.t231b-visual');
 const preFix = process.env.BENEFITS_VISUAL_PRE_FIX === '1';
 const widths = [375, 390, 820, 1440];
+const screens = new Set((process.env.BENEFITS_VISUAL_SCREENS || 'history,customer,seller,pass').split(',').map((item) => item.trim()));
 
 const customerWallet = '0x1111111111111111111111111111111111111111';
 const sellerWallet = '0x2222222222222222222222222222222222222222';
@@ -43,6 +49,46 @@ const business = {
   discountPercent: 10, requiredLockIFR: 1000, tierLabel: 'Espresso deal',
 };
 const rule = { id: ruleId, businessId, productId: null, ...benefit, active: true, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+
+// ── F3 customer-pass fixtures (dummy data) ──
+const passId = 'pass-demo-1';
+const passControlToken = 'c'.repeat(43);
+const exactLength = (text, length) => text.repeat(Math.ceil(length / text.length)).slice(0, length).trimEnd().padEnd(length, 'x');
+const PASS_FIXTURES = {
+  'long-words': {
+    sellerName: exactLength('Demo Neighbourhood Coffee Roastery and Bakery (dummy data) ', 72),
+    label: exactLength('Seasonal espresso tasting flight with oat milk upgrade for members ', 80),
+    productName: exactLength('Single-origin Ethiopian Yirgacheffe espresso flight, three cups, served with house-baked almond biscotti and a refill ', 160),
+  },
+  'long-unbroken': {
+    sellerName: exactLength('DemoNeighbourhoodCoffeeRoasteryAndBakery', 72),
+    label: exactLength('SeasonalEspressoTastingFlightOatMilk', 80),
+    productName: exactLength('SingleOriginEthiopianYirgacheffeEspressoFlightWithBiscotti', 160),
+  },
+};
+const PASS_REFUSAL_REASON = 'Not eligible yet: the locked IFR for this wallet is below the amount this offer requires. Lock more IFR and ask the seller for a new checkout.';
+
+function passControl(state) {
+  const fixture = PASS_FIXTURES[state.pass.fixture];
+  const checkout = state.pass.checkout ? {
+    status: state.pass.checkout,
+    expiresAt: state.pass.checkout === 'EXPIRED' ? new Date(Date.now() - 60_000).toISOString() : state.expiresAt,
+    businessId,
+    benefitRuleId: ruleId,
+    sellerName: fixture.sellerName,
+    sellerLogoUrl: null,
+    benefit: {
+      label: fixture.label, category: 'Coffee', productName: fixture.productName, basePriceMinor: '350', currency: 'EUR',
+      discountPercent: 10, requiredLockIFR: 1000, minIFRHeld: 250, lockSource: 'ifrlock',
+    },
+    reason: state.pass.checkout === 'REJECTED' ? PASS_REFUSAL_REASON : null,
+  } : null;
+  return {
+    status: state.pass.status,
+    expiresAt: state.pass.status === 'EXPIRED' ? new Date(Date.now() - 60_000).toISOString() : state.expiresAt,
+    checkout,
+  };
+}
 
 function json(route, body, status = 200) {
   return route.fulfill({ status, contentType: 'application/json', headers: { 'Cache-Control': 'private, no-store' }, body: JSON.stringify(body) });
@@ -115,6 +161,30 @@ function installApi(context, state) {
         sessionId, expiresAt: state.expiresAt, qrUrl: `/r/${sessionId}`, ...benefit,
         createdBy: { authorized: true, walletAddress: sellerWallet, role: 'OWNER', operatorId: null, label: 'Business owner', expiresAt: null },
       }, 201);
+    }
+    if (state.pass) {
+      if (method === 'POST' && pathname === '/api/passes') {
+        state.pass.status = 'OPEN';
+        return json(route, { passId, controlToken: passControlToken, expiresAt: state.expiresAt, qrUrl: `/p/${passId}` }, 201);
+      }
+      if (method === 'GET' && pathname === `/api/passes/${passId}/control`) return json(route, passControl(state));
+      if (method === 'POST' && pathname === `/api/passes/${passId}/challenge`) {
+        assert.equal(request.postDataJSON().walletAddress.toLowerCase(), customerWallet, 'the pass proof wallet travels in the body');
+        return json(route, { message: `IFR Benefits Network - Checkout Proof\nWallet: ${customerWallet}\nSession: ${sessionId}` });
+      }
+      if (method === 'POST' && pathname === `/api/passes/${passId}/confirm`) {
+        if (state.pass.outcome === 'REJECTED') {
+          state.pass.checkout = 'REJECTED';
+          return json(route, { status: 'REJECTED', eligible: false, attemptsRemaining: 2, reason: PASS_REFUSAL_REASON });
+        }
+        state.pass.checkout = 'REDEEMED';
+        state.checkout = 'REDEEMED';
+        state.redeemedAt = new Date().toISOString();
+        return json(route, {
+          status: 'REDEEMED', eligible: true, redeemedAt: state.redeemedAt, benefit,
+          proof: { version: 'ifr-benefits/checkout-proof/2', sessionId, businessId, termsDigest: `sha256:${'a'.repeat(64)}`, message: 'x', selfRedemption: false },
+        });
+      }
     }
     return json(route, { error: `Unexpected request ${method} ${pathname}` }, 500);
   });
@@ -225,6 +295,79 @@ async function layoutFindings(page, scopeSelector, label) {
   }, { scopeSelector, label });
 }
 
+/**
+ * F3 assertions inside the customer pass section at the current scroll position: every element stays
+ * inside the section (no element overflow), primary action and status text are not covered by any fixed
+ * overlay (Copilot launcher, toast/status layers), and the long labels are complete and not clipped.
+ */
+async function passFindings(page, label, fixture) {
+  return page.evaluate(({ label, fixture }) => {
+    const findings = [];
+    const section = document.querySelector('#customer-pass');
+    if (!section) return [`${label}: #customer-pass missing`];
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const sr = section.getBoundingClientRect();
+    const visible = (el) => {
+      const style = getComputedStyle(el);
+      return style.visibility !== 'hidden' && style.display !== 'none' && Number(style.opacity) > 0.05;
+    };
+    for (const el of section.querySelectorAll('*')) {
+      if (!visible(el)) continue;
+      const rect = el.getBoundingClientRect();
+      if (rect.width < 1 || rect.height < 1) continue;
+      if (rect.right > sr.right + 1 || rect.left < sr.left - 1) {
+        findings.push(`${label}: element overflow <${el.tagName.toLowerCase()}> "${(el.textContent || '').trim().slice(0, 40)}"`);
+      }
+      const style = getComputedStyle(el);
+      if (['hidden', 'clip'].includes(style.overflowX) && el.scrollWidth > el.clientWidth + 1 && !el.closest('svg')) {
+        findings.push(`${label}: clipped content <${el.tagName.toLowerCase()}> "${(el.textContent || '').trim().slice(0, 40)}"`);
+      }
+    }
+    // Real fixed overlays: the Copilot launcher and any fixed toast/status layer that is not a full-screen dialog.
+    const overlays = [...document.querySelectorAll('body *')].filter((el) => {
+      if (!visible(el) || section.contains(el)) return false;
+      if (getComputedStyle(el).position !== 'fixed') return false;
+      const rect = el.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0 && rect.width * rect.height < vw * vh * 0.5;
+    });
+    const primary = [...section.querySelectorAll('button')].filter(visible);
+    const status = [
+      section.querySelector('span.rounded-full'),
+      ...section.querySelectorAll('[aria-live], [role="alert"]'),
+      ...[...section.querySelectorAll('strong')].filter((el) => ['REDEEMED', 'REJECTED', 'PENDING', 'EXPIRED'].includes(el.textContent.trim())),
+    ].filter((el) => el && visible(el) && el.textContent.trim());
+    const hit = (a, b) => Math.min(a.right, b.right) - Math.max(a.left, b.left) > 0 && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 0;
+    for (const target of [...primary, ...status]) {
+      const rects = target.tagName === 'BUTTON' ? [target.getBoundingClientRect()] : (() => {
+        const range = document.createRange();
+        range.selectNodeContents(target);
+        return [...range.getClientRects()];
+      })();
+      for (const rect of rects) {
+        if (rect.bottom < 0 || rect.top > vh) continue;
+        for (const overlay of overlays) {
+          if (hit(rect, overlay.getBoundingClientRect())) {
+            const name = overlay.className && typeof overlay.className === 'string' ? overlay.className.split(' ')[0] : overlay.tagName.toLowerCase();
+            findings.push(`${label}: ${target.tagName === 'BUTTON' ? 'primary action' : 'status text'} "${target.textContent.trim().slice(0, 40)}" under fixed overlay .${name}`);
+          }
+        }
+      }
+    }
+    if (fixture) {
+      const strongs = [...section.querySelectorAll('strong')];
+      for (const [field, text] of [['label', fixture.label], ['productName', fixture.productName], ['sellerName', fixture.sellerName]]) {
+        const el = strongs.find((candidate) => candidate.textContent.trim() === text);
+        if (!el) { findings.push(`${label}: ${field} not rendered in full`); continue; }
+        const rect = el.getBoundingClientRect();
+        if (rect.right > sr.right + 1 || rect.left < sr.left - 1 || rect.right > vw + 0.5) findings.push(`${label}: ${field} outside the pass card`);
+        if (el.scrollWidth > el.clientWidth + 1 && ['hidden', 'clip'].includes(getComputedStyle(el).overflowX)) findings.push(`${label}: ${field} clipped`);
+      }
+    }
+    return findings;
+  }, { label, fixture });
+}
+
 async function historyItems() {
   const account = privateKeyToAccount(`0x${'11'.repeat(32)}`);
   const terms = {
@@ -290,6 +433,77 @@ async function newContext(browser, width, wallet, holdSigning = false) {
   return context;
 }
 
+// Every mocked endpoint (dummy data; no real backend, wallet or chain is reached).
+const MOCKS = [
+  'GET /api/health, /api/ready -> ok',
+  'GET /api/businesses, /api/businesses/:id, /api/businesses/:id/rules -> demo seller and rule',
+  'GET /api/sessions/:id -> checkout status from the scenario state',
+  'POST /api/sessions/:id/challenge, POST /api/attest -> seller-QR proof (REDEEMED or REJECTED)',
+  'POST /api/sessions/:id/redeem -> 410 (must never be called)',
+  'GET /api/seller/auth-message, GET /api/seller/businesses/:id/operator-status, POST /api/sessions -> seller console',
+  'POST /api/passes -> pass-demo-1 (OPEN)',
+  'GET /api/passes/:id/control -> pass status from the scenario (OPEN | BOUND+PENDING | BOUND+REDEEMED | BOUND+REJECTED | EXPIRED)',
+  'POST /api/passes/:id/challenge -> proof text; POST /api/passes/:id/confirm -> REDEEMED or REJECTED (refusal reason)',
+  'window.ethereum -> injected test wallet 0x1111...1111 / 0x2222...2222 with a fixed dummy signature (signing can be held)',
+  'serviceWorkers blocked; BENEFITS_API_INTERNAL_URL=http://127.0.0.1:9 (no server-side API reachable)',
+];
+
+function buildIdentity() {
+  const run = (args) => { try { return require('node:child_process').execFileSync('git', args, { cwd: root, encoding: 'utf8' }).trim(); } catch { return 'unknown'; } };
+  const buildIdFile = path.join(frontend, '.next', 'BUILD_ID');
+  return {
+    sha: run(['rev-parse', 'HEAD']),
+    frontendClean: run(['status', '--porcelain', '--', 'apps/benefits-network/frontend', 'scripts/test-benefits-owner-b-visual.js']) === '',
+    nextBuildId: fs.existsSync(buildIdFile) ? fs.readFileSync(buildIdFile, 'utf8').trim() : 'missing',
+    nextBuiltAt: fs.existsSync(buildIdFile) ? fs.statSync(buildIdFile).mtime.toISOString() : null,
+  };
+}
+
+function writeEvidenceIndex(build, captures, findings) {
+  const passCaptures = captures.filter((capture) => capture.screen.startsWith('Customer checkout pass'));
+  if (!passCaptures.length) return;
+  const passFindings = findings.filter((finding) => finding.startsWith('pass-'));
+  const categories = {};
+  for (const finding of passFindings) {
+    const match = finding.match(/^pass-(.+?)-(long-[a-z]+)@(\d+)(-launcher)?[^:]*: (.*?)(?: "|$)/);
+    if (!match) continue;
+    const key = `${match[5].replace(/ <\w+>$/, '')} | ${match[1]} / ${match[2]}${match[4] ? ' (viewport at primary action)' : ' (scroll-through)'}`;
+    categories[key] = categories[key] || new Set();
+    categories[key].add(match[3]);
+  }
+  const lines = [
+    '# T-231b F3 evidence - customer-presented checkout pass',
+    '',
+    `Build SHA: \`${build.sha}\` (frontend and harness clean at that SHA: ${build.frontendClean ? 'yes' : 'NO'}); Next.js BUILD_ID \`${build.nextBuildId}\` built ${build.nextBuiltAt}.`,
+    `Harness: \`scripts/test-benefits-owner-b-visual.js\` (BENEFITS_VISUAL_SCREENS=${[...screens].join(',')}). Widths: ${widths.join(', ')} px.`,
+    `Result: **${passFindings.length ? 'FAIL' : 'PASS'}** - ${passCaptures.length} captures, ${passFindings.length} pass findings.`,
+    '',
+    '## Mocks (dummy data only)',
+    ...MOCKS.map((mock) => `- ${mock}`),
+    '',
+    '## Fixtures',
+    ...Object.entries(PASS_FIXTURES).map(([name, fixture]) => `- ${name}: label ${fixture.label.length} chars, product name ${fixture.productName.length} chars, seller name ${fixture.sellerName.length} chars`),
+    '',
+    '## Assertions',
+    '- no horizontal page overflow; no element of #customer-pass outside the card; no clipped text; no overlapping text',
+    '- primary actions (all visible buttons) and status text (status pill, checkout status, aria-live/alert messages) not under any fixed overlay (Copilot launcher .shop-copilot-button; any fixed toast/status layer - none exists in the Benefits frontend)',
+    '- no text or control under the launcher while the card is scrolled through in 60 px steps',
+    '- label, product name and seller name rendered in full, inside the card, not clipped',
+    '',
+    '## Findings by assertion, state / fixture (widths)',
+    ...(Object.keys(categories).length ? Object.entries(categories).sort().map(([key, set]) => `- ${key}: ${[...set].join(', ')}`) : ['- none']),
+    '',
+    '## Captures',
+    '| state | fixture | width | view | overlays present | file |',
+    '|---|---|---|---|---|---|',
+    ...passCaptures.map((capture) => `| ${capture.state} | ${capture.fixture} | ${capture.width} | ${capture.view} | ${[...new Set(capture.overlays)].join(' ')} | [${capture.file}](${capture.file}) |`),
+    '',
+    'Full finding list: assertions.json.',
+    '',
+  ];
+  fs.writeFileSync(path.join(outDir, 'INDEX.md'), lines.join('\n'));
+}
+
 async function main() {
   fs.mkdirSync(outDir, { recursive: true });
   const server = spawn(process.execPath, [path.join(frontend, 'node_modules', 'next', 'dist', 'bin', 'next'), 'start', '--hostname', '127.0.0.1', '--port', String(port)], {
@@ -307,7 +521,7 @@ async function main() {
 
     for (const width of widths) {
       // ── Device-local history: scroll through the card under the fixed launcher ──
-      {
+      if (screens.has('history')) {
         const context = await newContext(browser, width, null);
         await context.addInitScript((data) => window.localStorage.setItem('ifr.shop.customerProofHistory.v1', JSON.stringify(data)), items);
         const state = { calls: [], sellerActions: [], redeemCalls: 0, checkout: 'PENDING', expiresAt: new Date(Date.now() + 300_000).toISOString() };
@@ -339,7 +553,7 @@ async function main() {
       }
 
       // ── Customer seller-QR checkout ──
-      for (const scenario of ['idle', 'signing', 'success', 'failure']) {
+      for (const scenario of screens.has('customer') ? ['idle', 'signing', 'success', 'failure'] : []) {
         const context = await newContext(browser, width, customerWallet, scenario === 'signing');
         const state = {
           calls: [], sellerActions: [], redeemCalls: 0, checkout: 'PENDING',
@@ -383,7 +597,7 @@ async function main() {
       }
 
       // ── Seller checkout console ──
-      for (const scenario of ['open', 'redeemed', 'expired']) {
+      for (const scenario of screens.has('seller') ? ['open', 'redeemed', 'expired'] : []) {
         const context = await newContext(browser, width, sellerWallet);
         const state = {
           calls: [], sellerActions: [], redeemCalls: 0, checkout: 'NONE',
@@ -425,12 +639,106 @@ async function main() {
         captures.push({ file, screen: 'Seller checkout console (/b/:businessId)', state: scenario, width });
         await context.close();
       }
+
+      // ── F3: customer-presented checkout pass (CustomerCheckoutPass on /#customer-pass) ──
+      const passCases = screens.has('pass') ? [
+        ...['open', 'bound', 'proof-signing', 'proof-redeemed', 'refusal', 'expired'].map((scenario) => [scenario, 'long-words']),
+        ['bound', 'long-unbroken'],
+      ] : [];
+      for (const [scenario, fixtureName] of passCases) {
+        const fixture = PASS_FIXTURES[fixtureName];
+        const context = await newContext(browser, width, customerWallet, scenario === 'proof-signing');
+        const state = {
+          calls: [], sellerActions: [], redeemCalls: 0, checkout: 'PENDING',
+          expiresAt: new Date(Date.now() + 300_000).toISOString(),
+          pass: { status: 'NONE', checkout: null, fixture: fixtureName, outcome: scenario === 'refusal' ? 'REJECTED' : 'REDEEMED' },
+        };
+        await installApi(context, state);
+        const page = await context.newPage();
+        const pageErrors = [];
+        page.on('pageerror', (error) => pageErrors.push(error.message));
+        await page.goto(`${origin}/#customer-pass`, { waitUntil: 'networkidle' });
+        await page.getByText('MetaMask provider', { exact: true }).waitFor();
+        await page.getByRole('button', { name: 'Connect wallet', exact: true }).first().click();
+        await page.getByRole('button', { name: 'Disconnect', exact: true }).first().waitFor();
+        const panel = page.locator('#customer-pass');
+        await panel.getByRole('button', { name: 'Create customer QR', exact: true }).click();
+        await panel.getByText('Pass ready. Let the seller scan this QR, then review the exact offer here.').waitFor();
+        const refresh = () => panel.getByRole('button', { name: 'Refresh', exact: true }).click();
+        if (scenario === 'expired') {
+          state.pass.status = 'EXPIRED';
+          state.pass.checkout = 'EXPIRED';
+          await refresh();
+          await panel.getByText('Pass refreshed: EXPIRED').waitFor();
+        } else if (scenario !== 'open') {
+          state.pass.status = 'BOUND';
+          state.pass.checkout = 'PENDING';
+          await refresh();
+          const confirmButton = panel.getByRole('button', { name: 'Confirm this seller and offer', exact: true });
+          await confirmButton.waitFor();
+          if (scenario === 'proof-signing') {
+            await confirmButton.click();
+            await panel.getByRole('button', { name: 'Confirming...', exact: true }).waitFor();
+          } else if (scenario === 'proof-redeemed') {
+            await confirmButton.click();
+            await panel.getByText('Checkout redeemed once. Show this screen to the seller; their console shows the same result.').waitFor();
+            await panel.getByText('REDEEMED', { exact: true }).first().waitFor();
+          } else if (scenario === 'refusal') {
+            await confirmButton.click();
+            await panel.getByText(PASS_REFUSAL_REASON).waitFor();
+            await panel.getByText('REJECTED', { exact: true }).first().waitFor();
+            assert.notEqual(state.checkout, 'REDEEMED', 'a refused proof does not redeem');
+          }
+        }
+        assert.equal(state.redeemCalls, 0, 'no separate seller redemption');
+        const labelBase = `pass-${scenario}-${fixtureName}@${width}`;
+        const labelFixture = scenario === 'open' ? null : fixture;
+        // Scroll through the whole pass card in steps, so every part passes the fixed launcher band.
+        const sectionBox = await panel.evaluate((el) => {
+          const rect = el.getBoundingClientRect();
+          return { y: rect.top + window.scrollY, height: rect.height };
+        });
+        const viewportHeight = page.viewportSize().height;
+        const stops = [];
+        for (let y = Math.max(0, sectionBox.y - viewportHeight + 60); y <= sectionBox.y + sectionBox.height; y += 60) stops.push(y);
+        for (const y of stops) {
+          await page.evaluate((top) => window.scrollTo({ top, behavior: 'instant' }), y);
+          findings.push(...await layoutFindings(page, '#customer-pass', `${labelBase}+${y}`));
+          findings.push(...await passFindings(page, `${labelBase}+${y}`, labelFixture));
+        }
+        if (pageErrors.length) findings.push(`${labelBase}: page errors ${pageErrors.join(' | ').slice(0, 200)}`);
+        // Evidence: (1) the full card, (2) the viewport with the primary action / status at the launcher band.
+        await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+        await page.waitForTimeout(200);
+        const card = await panel.evaluate((el) => {
+          const rect = el.getBoundingClientRect();
+          return { y: rect.top + window.scrollY, height: rect.height };
+        });
+        const cardFile = `pass-${scenario}-${fixtureName}-${width}.png`;
+        await page.screenshot({ path: path.join(outDir, cardFile), fullPage: true, clip: { x: 0, y: Math.max(0, card.y - 16), width, height: card.height + 32 } });
+        const anchor = panel.getByRole('button', { name: /Confirm this seller and offer|Confirming\.\.\.|New pass|Cancel & new pass/ }).first();
+        await anchor.evaluate((el) => el.scrollIntoView({ block: 'end', behavior: 'instant' }));
+        await page.evaluate(() => window.scrollBy({ top: 24, behavior: 'instant' }));
+        await page.waitForTimeout(200);
+        findings.push(...await passFindings(page, `${labelBase}-launcher`, labelFixture));
+        const launcherFile = `pass-${scenario}-${fixtureName}-${width}-launcher.png`;
+        await page.screenshot({ path: path.join(outDir, launcherFile) });
+        const overlays = await page.evaluate(() => [...document.querySelectorAll('body *')]
+          .filter((el) => getComputedStyle(el).position === 'fixed' && getComputedStyle(el).display !== 'none' && el.getBoundingClientRect().width > 0)
+          .map((el) => (typeof el.className === 'string' && el.className ? `.${el.className.split(' ')[0]}` : el.tagName.toLowerCase())));
+        captures.push({ file: cardFile, screen: 'Customer checkout pass (/#customer-pass)', state: scenario, fixture: fixtureName, width, view: 'card', overlays });
+        captures.push({ file: launcherFile, screen: 'Customer checkout pass (/#customer-pass)', state: scenario, fixture: fixtureName, width, view: 'viewport at primary action', overlays });
+        if (scenario === 'proof-signing') await page.evaluate(() => window.__releaseSign && window.__releaseSign());
+        await context.close();
+      }
     }
   } finally {
     if (browser) await browser.close();
     server.kill('SIGTERM');
   }
-  fs.writeFileSync(path.join(outDir, 'assertions.json'), `${JSON.stringify({ preFix, widths, captures, findings }, null, 2)}\n`);
+  const build = buildIdentity();
+  fs.writeFileSync(path.join(outDir, 'assertions.json'), `${JSON.stringify({ build, preFix, widths, screens: [...screens], captures, findings }, null, 2)}\n`);
+  writeEvidenceIndex(build, captures, findings);
   if (findings.length) {
     console.error(findings.slice(0, 40).join('\n'));
     console.error(`[benefits-owner-b-visual] FAIL - ${findings.length} layout findings`);
