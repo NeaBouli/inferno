@@ -16,7 +16,14 @@
     FeeRouter read failure cannot make the figures unavailable); kept for shape compatibility.
   - `liveSupply` is not a circulating, liquid or spendable figure: it still includes locked, vested
     and Treasury-held IFR, including the recovered, unallocated Treasury IFR.
-- Release order: the landing copy/JS update (#254) ships before or together with this API change.
+- Intentional breaking change of the public response (same unversioned URL, cached response).
+  Previously `permanentlyLostRaw` was CV-01 plus the live FeeRouterV1 balance, the breakdown was
+  `{ cv01Raw, feeRouterV1Raw }`, and `permanentlyLostError` was `"unavailable"` (with null figures)
+  when the FeeRouterV1 read failed. The new meaning applies from the Copilot release that contains
+  this change; there is no versioned endpoint, so clients reading `feeRouterV1Raw` must switch to
+  `GET /api/ifr/balances` and clients using `permanentlyLostRaw` receive the CV-01-only value.
+- Release order: the landing copy/JS update (#254) ships before or together with this API change,
+  so the landing no longer applies its dated FeeRouter fallback; verify the live landing afterwards.
 
 ## [Unreleased] — 2026-10-06 — Benefits launcher keeps clear of checkout summary and approval action (release 8c21eb0e follow-up)
 
