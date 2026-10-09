@@ -23,6 +23,14 @@ DROP TABLE "owner_b_migration_guard";
 PRAGMA foreign_keys=OFF;
 BEGIN;
 
+-- 2a. Legacy session reasons. Closed sessions (REJECTED/EXPIRED/REDEEMED or any other non-open status)
+--     may hold customer balance or per-wallet limit text from earlier releases (e.g. "<n> IFR held < <m>
+--     IFR required", "Insufficient wallet balance: ...", "... for this wallet"). Their reason is replaced
+--     by one fixed neutral text, independent of its content. Open sessions are handled in step 2.
+UPDATE "Session"
+SET "reason" = 'Closed before the customer-privacy upgrade; details removed.'
+WHERE "status" NOT IN ('PENDING', 'APPROVED') AND "reason" IS NOT NULL;
+
 -- 2. In-flight invalidation. Checkouts live for minutes. Open checkouts from before the cutover have
 --    no recorded seller confirmation and APPROVED ones no proof-v2 outcome, so all fail closed.
 UPDATE "Session"
@@ -30,10 +38,17 @@ SET "status" = 'EXPIRED', "reason" = 'Checkout closed by the customer-privacy up
 WHERE "status" IN ('PENDING', 'APPROVED');
 UPDATE "CustomerPass" SET "status" = 'EXPIRED' WHERE "status" IN ('OPEN', 'BOUND');
 
--- 3. Scrub customer values from existing audit payloads (seller identities stay).
+-- 3. Scrub customer values from existing audit payloads (seller identities stay). Type-independent:
+--    every historic writer's customer keys (wallet, held, locked, verificationBlock, per-customer
+--    counter used) are removed from every payload. ATTEST_FAIL free text (reason, error) may embed the
+--    customer address (RPC calldata) or balances and is removed as well. Invalid JSON payloads are
+--    left untouched here and make scripts/verify-owner-b-migration.cjs fail closed.
 UPDATE "AuditLog"
-SET "payload" = json_remove("payload", '$.wallet', '$.locked', '$.held', '$.verificationBlock')
-WHERE "type" IN ('ATTEST_OK', 'REDEEM_DENIED_LIMIT') AND json_valid("payload");
+SET "payload" = json_remove("payload", '$.wallet', '$.held', '$.locked', '$.verificationBlock', '$.used')
+WHERE json_valid("payload");
+UPDATE "AuditLog"
+SET "payload" = json_remove("payload", '$.reason', '$.error')
+WHERE "type" = 'ATTEST_FAIL' AND json_valid("payload");
 
 -- 4. Drop customer tables (all customer history read tokens become invalid) and customer columns.
 -- DropIndex

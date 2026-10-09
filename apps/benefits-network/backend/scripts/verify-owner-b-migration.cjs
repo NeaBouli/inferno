@@ -16,8 +16,173 @@ const path = require('path');
 const root = path.resolve(__dirname, '..');
 const migrationsDir = path.join(root, 'prisma', 'migrations');
 const target = '20261006120000_owner_b_customer_session_privacy';
-const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'benefits-owner-b-'));
 const prismaBin = path.join(root, 'node_modules', '.bin', 'prisma');
+let tempDir = null;
+
+// ── Generic post-migration address scan ──────────────────────────────────────
+// Rule (PR238-ARCH-MAP "Generic post-migration address scan"): an EVM address
+// (0x + 40 hex, case-insensitive) may appear only at an explicitly allowlisted
+// (table, column) or (AuditLog type, JSON key path). Allowlisting is by location,
+// never by address value: a customer address may equal a seller address.
+// Fail closed on any other hit, on unreadable/invalid JSON and on any table or
+// column the scanner does not know. Output is counts per location, never values.
+// Address token: 0x + exactly 40 hex digits, case-insensitive, not continued by another hex digit
+// (a bytes32 such as RewardEvent.partnerId or a tx hash is not an address). An address embedded in
+// longer hex (ABI-encoded calldata, left-padded bytes32) is caught by the padded-word pattern.
+const ADDRESS_PATTERN = /0x[0-9a-f]{40}(?![0-9a-f])/gi;
+const PADDED_ADDRESS_PATTERN = /0{24}[0-9a-f]{40}/gi;
+
+// Every table/column the post-migration schema may contain. Anything else fails.
+const KNOWN_COLUMNS = {
+  _prisma_migrations: ['id', 'checksum', 'finished_at', 'migration_name', 'logs', 'rolled_back_at', 'started_at', 'applied_steps_count'],
+  AdminAuditLog: ['id', 'action', 'method', 'routeTemplate', 'targetType', 'targetId', 'actorDigest', 'clientDigest', 'statusCode', 'createdAt'],
+  AuditLog: ['id', 'sessionId', 'type', 'payload', 'ts'],
+  BenefitRule: ['id', 'businessId', 'label', 'category', 'productName', 'discountPercent', 'requiredLockIFR', 'ttlSeconds', 'active',
+    'createdAt', 'updatedAt', 'productId', 'dailyRedemptionLimit', 'monthlyRedemptionLimit', 'minIFRHeld', 'lockSource'],
+  Business: ['id', 'name', 'discountPercent', 'requiredLockIFR', 'ttlSeconds', 'tierLabel', 'active', 'createdAt', 'ownerAddress',
+    'description', 'website', 'categoriesJson', 'serviceArea', 'serviceAreaKey', 'logoUrl', 'slug'],
+  CheckoutOperator: ['id', 'businessId', 'walletAddress', 'label', 'active', 'expiresAt', 'createdAt', 'updatedAt'],
+  CustomerPass: ['id', 'controlHash', 'status', 'expiresAt', 'boundAt', 'cancelledAt', 'createdAt', 'updatedAt'],
+  Product: ['id', 'businessId', 'name', 'category', 'description', 'active', 'createdAt', 'updatedAt', 'basePriceMinor', 'currency'],
+  RewardEvent: ['id', 'businessId', 'sessionId', 'partnerId', 'chainId', 'status', 'reason', 'txHash', 'createdAt', 'updatedAt'],
+  SellerAuthorizationChallenge: ['nonce', 'action', 'businessId', 'scope', 'expiresAt', 'consumedAt', 'createdAt'],
+  SellerRewardLink: ['id', 'businessId', 'status', 'partnerId', 'builderWallet', 'requestedAt', 'verifiedAt', 'lastCheckedAt',
+    'verificationBlock', 'governanceReference', 'reason', 'createdAt', 'updatedAt', 'rewardWallet', 'rewardWalletConfirmedAt'],
+  Session: ['id', 'businessId', 'benefitRuleId', 'benefitSnapshotVersion', 'benefitLabel', 'benefitCategory', 'benefitProductName',
+    'benefitBasePriceMinor', 'benefitCurrency', 'benefitDiscountPercent', 'benefitRequiredLockIFR', 'benefitMinIFRHeld',
+    'benefitLockSource', 'benefitTtlSeconds', 'benefitDailyRedemptionLimit', 'benefitMonthlyRedemptionLimit', 'nonce', 'expiresAt',
+    'status', 'verifiedLockSource', 'selfRedemption', 'proofVersion', 'confirmedByWallet', 'confirmedByRole', 'confirmedByOperatorId',
+    'reason', 'createdAt', 'updatedAt', 'redeemedAt', 'attestAttempts', 'customerPassId'],
+};
+
+// Columns holding JSON: walked recursively (string values and keys), never matched as raw text.
+const JSON_COLUMNS = { AuditLog: ['payload'], Business: ['categoriesJson'] };
+
+// FINAL allowlist (map, Update 2026-10-09). Seller identities written only after seller authorization.
+const ALLOWED_COLUMNS = new Set([
+  'Business.ownerAddress',
+  'CheckoutOperator.walletAddress',
+  'SellerRewardLink.builderWallet',
+  'SellerRewardLink.rewardWallet',
+  'Session.confirmedByWallet',
+]);
+// (AuditLog type -> JSON key paths). A path covers the value at that key, including a nested object
+// written there (current writer: createdBy = { walletAddress, role, operatorId } of the seller creator).
+const ALLOWED_AUDIT_PATHS = {
+  REDEEMED: ['$.actorWallet'],
+  REDEEM_DENIED_LIMIT: ['$.actorWallet'],
+  SESSION_CREATED: ['$.walletAddress', '$.createdBy'],
+};
+
+function quoteIdent(name) {
+  return `"${String(name).replace(/"/g, '""')}"`;
+}
+
+function redact(text) {
+  return String(text).replace(/0x[0-9a-f]{40,}/gi, '0x<redacted>').replace(PADDED_ADDRESS_PATTERN, '<redacted>');
+}
+
+function countAddresses(text) {
+  const value = String(text);
+  return (value.match(ADDRESS_PATTERN) || []).length + (value.match(PADDED_ADDRESS_PATTERN) || []).length;
+}
+
+function sqliteJson(db, sql) {
+  const out = execFileSync('sqlite3', ['-json', db, sql], { encoding: 'utf8', maxBuffer: 1024 * 1024 * 1024 }).trim();
+  return out ? JSON.parse(out) : [];
+}
+
+function childPath(base, key) {
+  if (typeof key === 'number') return `${base}[${key}]`;
+  return /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(key) ? `${base}.${key}` : `${base}[${JSON.stringify(key)}]`;
+}
+
+function pathAllowed(jsonPath, allowed) {
+  return allowed.some((entry) => jsonPath === entry || jsonPath.startsWith(`${entry}.`) || jsonPath.startsWith(`${entry}[`));
+}
+
+/** Walks a parsed JSON value; calls onHit(path, count) for every address in a string value or key. */
+function walkJson(value, jsonPath, onHit) {
+  if (typeof value === 'string') {
+    const count = countAddresses(value);
+    if (count) onHit(jsonPath, count);
+  } else if (Array.isArray(value)) {
+    value.forEach((item, index) => walkJson(item, childPath(jsonPath, index), onHit));
+  } else if (value && typeof value === 'object') {
+    for (const [key, item] of Object.entries(value)) {
+      const keyPath = childPath(jsonPath, key);
+      const keyCount = countAddresses(key);
+      if (keyCount) onHit(`${keyPath} (key)`, keyCount);
+      walkJson(item, keyPath, onHit);
+    }
+  }
+}
+
+/**
+ * Scans a SQLite database file. Returns { ok, failures: { location: count }, allowed: { location: count },
+ * errors: [string] }. Locations and errors never contain an address value.
+ */
+function scanDatabaseForAddresses(db) {
+  const failures = {};
+  const allowed = {};
+  const errors = [];
+  const add = (bucket, location, count) => { bucket[location] = (bucket[location] || 0) + count; };
+
+  const objects = sqliteJson(db, "SELECT type, name FROM sqlite_master WHERE type IN ('table', 'view') AND name NOT LIKE 'sqlite_%' ORDER BY name");
+  for (const { type, name } of objects) {
+    if (type !== 'table' || !Object.prototype.hasOwnProperty.call(KNOWN_COLUMNS, name)) {
+      errors.push(`unknown ${type} ${redact(name)}`);
+      continue;
+    }
+    const columns = sqliteJson(db, `SELECT name FROM pragma_table_info('${name.replace(/'/g, "''")}')`).map((row) => row.name);
+    const known = new Set(KNOWN_COLUMNS[name]);
+    const unknownColumns = columns.filter((column) => !known.has(column));
+    if (unknownColumns.length) {
+      unknownColumns.forEach((column) => errors.push(`unknown column ${name}.${redact(column)}`));
+      continue;
+    }
+    const jsonColumns = new Set(JSON_COLUMNS[name] || []);
+    const selected = columns.map((column) =>
+      `CASE WHEN typeof(${quoteIdent(column)}) IN ('text', 'blob') THEN CAST(${quoteIdent(column)} AS TEXT) END AS ${quoteIdent(column)}`);
+    const rows = sqliteJson(db, `SELECT ${selected.join(', ')} FROM ${quoteIdent(name)}`);
+    for (const row of rows) {
+      for (const column of columns) {
+        const value = row[column];
+        if (value === null || value === undefined) continue;
+        const location = `${name}.${column}`;
+        if (jsonColumns.has(column)) {
+          let parsed;
+          try {
+            parsed = JSON.parse(value);
+          } catch {
+            add(failures, `${location} (invalid JSON)`, 1);
+            continue;
+          }
+          const auditType = name === 'AuditLog' ? String(row.type ?? '') : null;
+          const allowedPaths = auditType !== null ? (ALLOWED_AUDIT_PATHS[auditType] || []) : [];
+          walkJson(parsed, '$', (jsonPath, count) => {
+            const label = auditType !== null
+              ? `${location} type=${redact(auditType)} ${redact(jsonPath)}`
+              : `${location} ${redact(jsonPath)}`;
+            add(pathAllowed(jsonPath, allowedPaths) ? allowed : failures, label, count);
+          });
+          continue;
+        }
+        const count = countAddresses(value);
+        if (count) add(ALLOWED_COLUMNS.has(location) ? allowed : failures, location, count);
+      }
+    }
+  }
+  return { ok: errors.length === 0 && Object.keys(failures).length === 0, failures, allowed, errors };
+}
+
+function formatScan(result) {
+  const lines = [];
+  for (const error of result.errors) lines.push(`  ERROR ${error}`);
+  for (const [location, count] of Object.entries(result.failures).sort()) lines.push(`  HIT   ${location}: ${count}`);
+  for (const [location, count] of Object.entries(result.allowed).sort()) lines.push(`  ok    ${location}: ${count} (allowlisted)`);
+  return lines.join('\n');
+}
 
 const CUSTOMER = '0x8ba1f109551bD432803012645Ac136ddd64DBA72';
 const CUSTOMER_BARE = CUSTOMER.slice(2).toLowerCase();
@@ -72,7 +237,12 @@ function buildPreMigrationDb(name, { obligationStatus = null, failureStage = fal
       ('a1', 's-redeemed', 'ATTEST_OK', '{"wallet":"${CUSTOMER}","locked":"2500.0","held":"10","verificationBlock":123,"lockSource":"ifrlock"}', '${old}'),
       ('a2', 's-redeemed', 'SESSION_CREATED', '{"businessId":"shop","createdBy":{"walletAddress":"${SELLER}","role":"OWNER","operatorId":null}}', '${old}'),
       ('a3', 's-redeemed', 'REDEEMED', '{"actorWallet":"${SELLER}","actorRole":"OWNER","operatorId":null}', '${old}'),
-      ('a4', 's-old', 'REDEEM_DENIED_LIMIT', '{"period":"daily","wallet":"${CUSTOMER}","actorWallet":"${SELLER}"}', '${old}');
+      ('a4', 's-old', 'REDEEM_DENIED_LIMIT', '{"period":"daily","wallet":"${CUSTOMER}","used":3,"actorWallet":"${SELLER}"}', '${old}'),
+      ('a5', 's-old', 'ATTEST_FAIL', '{"wallet":"${CUSTOMER.toLowerCase()}","locked":"1","held":"7","verificationBlock":9,"reason":"7 IFR held < 1000 IFR required","required":1000}', '${old}'),
+      ('a6', 's-old', 'ATTEST_FAIL', '{"error":"On-chain error: call revert data=0x70a08231000000000000000000000000${CUSTOMER_BARE}"}', '${old}');
+    UPDATE Session SET reason = '7 IFR held < 1000 IFR required for this wallet' WHERE id = 's-old';
+    INSERT INTO SellerAuthorizationChallenge (nonce, walletAddress, action, businessId, scope, expiresAt, createdAt)
+    VALUES ('${'c'.repeat(64)}', '${CUSTOMER}', 'business:list', 'seller', 'read', '2099-01-01T00:00:00.000Z', '${old}');
     INSERT INTO RewardEvent (id, businessId, sessionId, partnerId, customerWallet, lockAmountRaw, chainId, status, createdAt, updatedAt)
     VALUES ('r-closed', 'shop', 's-redeemed', '0x${'ab'.repeat(32)}', '${CUSTOMER}', '2500000000000000000000', 11155111, 'CONFIRMED', '${old}', '${old}');
     INSERT INTO CustomerPassChallenge (nonce, walletAddress, issuedAt, expiresAt, createdAt)
@@ -116,7 +286,9 @@ function dataDump(db) {
   return sqlite(db, '.dump').split('\n').filter((line) => !line.includes('_prisma_migrations')).join('\n');
 }
 
-try {
+function runFixture() {
+  tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'benefits-owner-b-'));
+  try {
   // ── 1. Refusal: fail closed on anything but the explicit terminal allowlist (CONFIRMED) ──
   for (const status of ['SETTLEMENT_PENDING', 'PENDING', 'READY', 'BLOCKED_CALLER', 'BLOCKED_GOVERNANCE', 'UNEXPECTED_FUTURE_STATUS']) {
     const { db: refusedDb, workDir: refusedDir } = buildPreMigrationDb(`refused-${status.toLowerCase()}`, { obligationStatus: status });
@@ -146,7 +318,7 @@ try {
     SELECT (SELECT COUNT(*) FROM Session) || '|' || (SELECT COUNT(*) FROM AuditLog) || '|' ||
            (SELECT COUNT(*) FROM RewardEvent) || '|' || (SELECT COUNT(*) FROM CustomerPass);
   `);
-  assert(counts === '4|4|1|2', `Rows were not preserved: ${counts}`);
+  assert(counts === '4|6|1|2', `Rows were not preserved: ${counts}`);
   const statuses = sqlite(db, "SELECT group_concat(id || '=' || status, ',') FROM (SELECT id, status FROM Session ORDER BY id)");
   assert(statuses === 's-approved=EXPIRED,s-old=REDEEMED,s-pending=EXPIRED,s-redeemed=REDEEMED', `Unexpected session statuses: ${statuses}`);
   assert(sqlite(db, "SELECT redeemedAt FROM Session WHERE id = 's-redeemed'") !== '', 'redeemedAt must survive');
@@ -182,7 +354,70 @@ try {
   const bytes = fs.readFileSync(db).toString('latin1').toLowerCase();
   assert(!bytes.includes(CUSTOMER_BARE), 'Customer address still present in the database file after VACUUM');
 
-  console.log('Owner-B migration verified: refusal (non-terminal and unknown statuses) and a late failure leave the DB unchanged; continuity keeps sessions, closed events and audit rows without customer data.');
-} finally {
-  fs.rmSync(tempDir, { recursive: true, force: true });
+  const failPayload = JSON.parse(sqlite(db, "SELECT payload FROM AuditLog WHERE id = 'a5'"));
+  assert(JSON.stringify(failPayload) === '{"required":1000}',
+    `ATTEST_FAIL payload not scrubbed: keys=${Object.keys(failPayload).join(',')}`);
+  assert(sqlite(db, "SELECT payload FROM AuditLog WHERE id = 'a6'") === '{}', 'ATTEST_FAIL error text must be removed');
+  assert(!('used' in limitPayload), 'Per-customer counter must be removed');
+  assert(sqlite(db, "SELECT reason FROM Session WHERE id = 's-old'") === 'Closed before the customer-privacy upgrade; details removed.',
+    'Closed session reason must be neutralised');
+  assert(sqlite(db, 'SELECT COUNT(*) FROM SellerAuthorizationChallenge') === '0', 'Existing seller challenges must be deleted');
+  assert(sqlite(db, "SELECT COUNT(*) FROM pragma_table_info('SellerAuthorizationChallenge') WHERE name = 'walletAddress'") === '0',
+    'SellerAuthorizationChallenge must not have a wallet column');
+
+  const scan = scanDatabaseForAddresses(db);
+  assert(scan.ok, `Generic address scan failed after migration:\n${formatScan(scan)}`);
+  assert(scan.allowed['Business.ownerAddress'] === 1, 'Allowlisted seller owner address must be kept and not flagged');
+  selfTestScanner(db);
+
+  console.log('Owner-B migration verified: refusal (non-terminal and unknown statuses) and a late failure leave the DB unchanged; continuity keeps sessions, closed events and audit rows without customer data; generic address scan clean.');
+  } finally {
+    fs.rmSync(tempDir, { recursive: true, force: true });
+  }
+}
+
+/** Negative cases on copies of the migrated DB: every one must make the scan fail closed. */
+function selfTestScanner(migratedDb) {
+  const cases = [
+    ['unscrubbed ATTEST_FAIL wallet', `INSERT INTO AuditLog (id, sessionId, type, payload, ts) VALUES ('neg', 's-old', 'ATTEST_FAIL', '{"wallet":"${CUSTOMER}"}', '2025-01-01');`],
+    // Open map item: the current pass-bind writer (sessionService createSessionSnapshot) stores the seller
+    // creator at CUSTOMER_PASS_BOUND $.createdBy, which the FINAL allowlist does not list, so such rows fail
+    // closed until the allowlist is extended by a reviewed map change.
+    ['CUSTOMER_PASS_BOUND seller createdBy (not allowlisted)', `INSERT INTO AuditLog (id, sessionId, type, payload, ts) VALUES ('neg', 's-old', 'CUSTOMER_PASS_BOUND', '{"createdBy":{"walletAddress":"${SELLER}","role":"OWNER"}}', '2025-01-01');`],
+    ['allowlisted key under another type', `INSERT INTO AuditLog (id, sessionId, type, payload, ts) VALUES ('neg', 's-old', 'ATTEST_OK', '{"actorWallet":"${SELLER}"}', '2025-01-01');`],
+    ['escaped address in JSON', `INSERT INTO AuditLog (id, sessionId, type, payload, ts) VALUES ('neg', 's-old', 'EXPIRED', '{"reason":"\\u0030x${CUSTOMER_BARE.toUpperCase()}"}', '2025-01-01');`],
+    ['address as JSON key', `INSERT INTO AuditLog (id, sessionId, type, payload, ts) VALUES ('neg', 's-old', 'EXPIRED', '{"${CUSTOMER}":1}', '2025-01-01');`],
+    ['invalid JSON payload', `INSERT INTO AuditLog (id, sessionId, type, payload, ts) VALUES ('neg', 's-old', 'EXPIRED', 'not json', '2025-01-01');`],
+    ['address in Session.reason', `UPDATE Session SET reason = 'denied for ${CUSTOMER}' WHERE id = 's-old';`],
+    ['address in challenge scope', `INSERT INTO SellerAuthorizationChallenge (nonce, action, businessId, scope, expiresAt) VALUES ('n', 'x', 'y', '${CUSTOMER.toLowerCase()}', '2099-01-01');`],
+    ['padded address in RewardEvent.reason', `UPDATE RewardEvent SET reason = 'call 0x70a08231000000000000000000000000${CUSTOMER_BARE}' WHERE id = 'r-closed';`],
+    ['unknown table', 'CREATE TABLE "Shadow" ("note" TEXT);'],
+    ['unknown column', 'ALTER TABLE "Session" ADD COLUMN "recoveredAddress" TEXT;'],
+  ];
+  for (const [name, sql] of cases) {
+    const copy = path.join(tempDir, `neg-${cases.findIndex((entry) => entry[0] === name)}.db`);
+    fs.copyFileSync(migratedDb, copy);
+    sqlite(copy, sql);
+    const result = scanDatabaseForAddresses(copy);
+    assert(!result.ok, `Scanner must fail closed on: ${name}`);
+    assert(!formatScan(result).toLowerCase().includes(CUSTOMER_BARE), `Scanner output must not disclose the address (${name})`);
+  }
+}
+
+module.exports = { scanDatabaseForAddresses, formatScan, ALLOWED_COLUMNS, ALLOWED_AUDIT_PATHS };
+
+if (require.main === module) {
+  const scanIndex = process.argv.indexOf('--scan');
+  if (scanIndex !== -1) {
+    // Read-only scan of a given SQLite file (rehearsal copy). Prints counts per location only.
+    const db = process.argv[scanIndex + 1];
+    if (!db || !fs.existsSync(db)) {
+      console.error('Usage: node scripts/verify-owner-b-migration.cjs --scan <sqlite-file>');
+      process.exit(2);
+    }
+    const result = scanDatabaseForAddresses(db);
+    console.log(`Owner-B address scan: ${result.ok ? 'PASS' : 'FAIL'}\n${formatScan(result)}`);
+    process.exit(result.ok ? 0 : 1);
+  }
+  runFixture();
 }
