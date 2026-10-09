@@ -58,6 +58,10 @@ function composeEntries(text) {
     const item = body.startsWith('- ') ? body.slice(2) : null;
     const keyed = (item ?? body).match(/^(["']?)([A-Za-z0-9_.-]+)\1\s*:(?:\s+(.*))?$/);
     if (/(^|[\s:\[{,])[&*][A-Za-z0-9_-]/.test(body) || /^<<\s*:/.test(item ?? body)) { unsupported = true; continue; }
+    // Interpolated names (`${VAR}` in a key or before `=`/`:` in a list item) resolve to keys this
+    // walk cannot see, e.g. `- "${K:-CHAIN_ID}=5"`; refuse them instead of guessing.
+    const name = (item ?? body).replace(/^(['"])/, '').split(/[=:]/)[0];
+    if (name.includes('$')) { unsupported = true; continue; }
     if (!keyed) {
       if (item === null && !/^[^:]+$/.test(body)) unsupported = true;
       if (item !== null) entries.push({ path: stack.map((frame) => frame.key).join('.'), key: null, item: item.replace(/^(['"])(.*)\1$/, '$2'), value: item });

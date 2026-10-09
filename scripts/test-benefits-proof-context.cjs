@@ -50,6 +50,17 @@ const aliased = parseCompose(`x-args: &args\n  NEXT_PUBLIC_CHAIN_ID: "1"\nservic
 assert.ok(checkProofContext({ envFile: ok, compose: aliased, processEnv: {}, publicHost: host }).length > 0, 'anchors/aliases fail');
 const flowArgs = parseCompose(`services:\n  benefits-frontend:\n    build:\n      args: { NEXT_PUBLIC_CHAIN_ID: "1" }\n`);
 assert.ok(checkProofContext({ envFile: ok, compose: flowArgs, processEnv: {}, publicHost: host }).length > 0, 'flow args fail');
+// Review regression (c162134d): interpolated key names in environment/args lists cannot be resolved
+// statically and must fail closed rather than hide a CHAIN_ID / NEXT_PUBLIC_CHAIN_ID override.
+for (const snippet of [
+  'services:\n  benefits-backend:\n    environment:\n      - "${K:-CHAIN_ID}=5"\n',
+  'services:\n  benefits-backend:\n    environment:\n      - ${K}=5\n',
+  'services:\n  benefits-backend:\n    environment:\n      ${K:-SELLER_AUTH_DOMAIN}: "x"\n',
+  'services:\n  benefits-frontend:\n    build:\n      args:\n        - "${K:-NEXT_PUBLIC_CHAIN_ID}=1"\n',
+]) {
+  const parsed = parseCompose(snippet);
+  assert.ok(parsed.problems.some((problem) => problem.includes('unsupported YAML')), `interpolated key is refused: ${snippet}`);
+}
 const listOverride = parseCompose(`${repoCompose}\n  extra:\n    environment:\n      - "CHAIN_ID=5"\n`);
 assert.equal(listOverride.backendOverrides, true, 'list-form environment override detected');
 const overridden = parseCompose(`${repoCompose}\n    environment:\n      CHAIN_ID: "5"\n`);
