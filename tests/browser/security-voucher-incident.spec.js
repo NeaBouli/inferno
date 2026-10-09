@@ -1,7 +1,8 @@
 // @ts-check
 // The October 2026 Points voucher incident record on the security wiki page must be readable
-// on phones: no horizontal overflow, and every block of the record can be scrolled into a
-// position where the fixed Copilot launcher (#ifr-btn) does not cover any of its text.
+// on phones: no horizontal overflow, and no line of the record may ever run under the fixed
+// Copilot launcher (#ifr-btn) - checked horizontally (independent of scroll position) and at
+// a scroll position per block.
 const { test, expect } = require("@playwright/test");
 
 const VIEWPORTS = [[375, 812], [390, 844], [1440, 1000]];
@@ -42,10 +43,19 @@ for (const [width, height] of VIEWPORTS) {
         const fab = document.getElementById("ifr-btn");
         const f = fab ? fab.getBoundingClientRect() : null;
         const overlaps = f ? !(r.bottom <= f.top || r.right <= f.left || r.top >= f.bottom || r.left >= f.right) : false;
-        return { overflowX: el.scrollWidth > el.clientWidth + 1, overlaps, bottom: r.bottom, fabTop: f ? f.top : null };
+        // Text box of the block (content box), not its padding: the gutter is padding by design.
+        const cs = getComputedStyle(el);
+        const textRight = r.right - parseFloat(cs.paddingRight) - parseFloat(cs.borderRightWidth);
+        const parent = el.closest(".incident-record");
+        const pr = parent ? parent.getBoundingClientRect().right - parseFloat(getComputedStyle(parent).paddingRight) : textRight;
+        return { overflowX: el.scrollWidth > el.clientWidth + 1, overlaps, bottom: r.bottom, fabTop: f ? f.top : null,
+                 right: Math.min(textRight, pr), fabLeft: f ? f.left : Infinity };
       }, { sel: SECTION, i, top: TOP_OFFSET });
       expect(result.overflowX, `block ${i} must not overflow horizontally`).toBe(false);
       expect(result.overlaps, `block ${i} must be fully readable above the launcher (${JSON.stringify(result)})`).toBe(false);
+      if (width <= 480) {
+        expect(result.right, `block ${i} must end left of the launcher at any scroll position`).toBeLessThanOrEqual(result.fabLeft);
+      }
     }
   });
 }

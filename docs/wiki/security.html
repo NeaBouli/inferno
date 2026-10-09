@@ -1331,6 +1331,9 @@
         </p>
       </div>
 
+      <style>@media (max-width:480px){ .incident-record { padding-right:72px; } }</style>
+      <!-- Right gutter = launcher width (52px) + right offset (12px) + 8px, so no line runs under #ifr-btn. -->
+      <div class="incident-record">
       <h3 id="points-voucher-incident-2026-10">Incident record: Points vouchers could not be redeemed (October 2026)</h3>
       <div class="callout">
         <p>
@@ -1342,6 +1345,7 @@
       <p><strong>Impact:</strong> Each issued voucher used up <strong>100 IFR Points</strong> and the wallet's one-voucher-per-24-hours allowance. In <code>FeeRouterV1.swapWithFee</code> the voucher check (<code>_applyVoucher</code>) runs before the fee transfer and the swap, so a redemption attempt with such a voucher reverts as a whole transaction. A failed attempt may have cost its sender network gas; this has not been quantified yet.</p>
       <p><strong>Response:</strong> 6 Oct 2026: cause identified. 8 Oct 2026, 21:55 UTC: voucher issuance paused at the edge (all other Points functions stayed available). Backend FeeRouter setting corrected to the canonical FeeRouterV1 <a href="https://etherscan.io/address/0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a" rel="noopener"><code>0x4807&hellip;C60a</code></a>. 23:03 UTC: corrected backend release deployed; it signs <code>DiscountVoucher</code> and refuses to start unless chain ID 1, the FeeRouter contract code and its EIP-712 domain match. 23:30 UTC: issuance resumed after verification.</p>
       <p><strong>Open:</strong> The number of affected vouchers and wallets is being determined with an aggregate, privacy-preserving review (counts only, no wallet list is published). Compensation, for example re-crediting the 100 Points per affected voucher, will be decided by the project owner after that review and announced here.</p>
+      </div>
 
       <!-- ========== On-Chain Audit ========== -->
       <h2>On-Chain Audit</h2>
