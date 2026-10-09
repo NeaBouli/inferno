@@ -5,11 +5,18 @@ sessions. The package currently supports Ethereum Mainnet only.
 
 ## Availability
 
-The SDK is not yet published to the npm registry. Publication is prepared: the first version is a
-one-time manual bootstrap by the project npm account; every later version is published by
-`.github/workflows/sdk-publish.yml`, dispatched manually on protected `main`, which checks the release
-gate, waits for owner approval, tests the package and publishes it with npm provenance through npm
-Trusted Publishing. Until then, build and pack the versioned artifact from the repository:
+`ifr-sdk` 0.4.0 was published to npm on 9 October 2026 as the explicitly approved, one-time
+manual bootstrap without provenance. This repository prepares the docs-only 0.4.1 patch; it is
+not published until the separate release gate succeeds. Every subsequent version uses
+`.github/workflows/sdk-publish.yml`, dispatched manually on protected `main`, which checks the
+release gate, waits for owner approval, tests the package and publishes with npm provenance through
+Trusted Publishing. To install the verified bootstrap version:
+
+```bash
+npm install --save-exact ifr-sdk@0.4.0
+```
+
+Alternatively, build and pack a reviewed versioned artifact from the repository:
 
 ```bash
 cd apps/sdk
@@ -89,7 +96,7 @@ challenge message before any signature is requested.
 
 ### Compatibility: wallet-free seller challenge (0.4.0)
 
-The Benefits backend no longer echoes `walletAddress` in `GET /api/seller/auth-message` (owner
+The owner-B Benefits backend no longer echoes `walletAddress` in `GET /api/seller/auth-message` (owner
 decision B: no wallet in the challenge URL, response or storage; a legacy `walletAddress` query
 parameter is ignored). Earlier `ifr-sdk` builds up to 0.3.0 (never published to npm; only repository
 tarballs) require `challenge.walletAddress` in that response and reject every challenge from the new backend ("mismatched seller authorization
@@ -97,6 +104,13 @@ challenge"), so `createCheckout()` and `redeemCheckout()` break. Release order: 
 `ifr-sdk` 0.4.0 (wallet-free) **before** the Benefits backend release that ships the
 wallet-free challenge, and tell integrators to upgrade first. Publishing is a separate release gate. The caller supplies a wallet-native `signMessage`
 callback; the SDK never accepts or stores private keys, seed phrases or persistent seller secrets.
+
+**Deployment boundary (9 October 2026):** the public production Benefits backend has not yet
+activated the owner-B migration. SDK 0.4.x `createCheckout()` and `redeemCheckout()` require the
+wallet-free owner-B challenge API and are not compatible with the older wallet-bound API. Package
+publication does not migrate a database or enable partner rewards. POS integrators must coordinate
+their checkout upgrade with the separately approved backend rollout; read-only IFR methods do not
+depend on that rollout. Version 0.4.1 changes documentation/version metadata only, not runtime code.
 
 ## Verification
 

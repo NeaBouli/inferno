@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased - SDK 0.4.1 Documentation Patch
+
+- Correct the packaged README: ifr-sdk 0.4.0 is public on npm, with the approved one-time
+  no-provenance bootstrap exception. Subsequent publication uses the unchanged protected
+  main-only Trusted Publishing workflow and requires a separate owner release approval.
+- State the deployment boundary: wallet-free checkout in SDK 0.4.x requires the owner-B
+  Benefits backend rollout, which remains separately gated. Publishing does not activate
+  the migration, customer privacy cutover or partner rewards.
+- Prepare source version 0.4.1 and dependent manifest-version references; npm stable remains
+  0.4.0 until approval/publication. SDK runtime and committed dist are unchanged.
+
 ## 9 October 2026 — CWA-02: IFR Held by FeeRouterV1 Recovered; Permanently Lost IFR Is CV-01 Only
 
 - On 7 October 2026 (23:28:23 UTC) the Treasury Safe executed one governed batch: Proposal #22 (temporarily
