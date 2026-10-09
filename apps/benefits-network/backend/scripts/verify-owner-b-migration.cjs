@@ -239,7 +239,7 @@ function assert(condition, message) {
  * Builds the pre-migration database with the real runner (`prisma migrate deploy`) from a private
  * copy of the migrations that stops right before the owner-B migration.
  */
-function buildPreMigrationDb(name, { obligationStatus = null, failureStage = false } = {}) {
+function buildPreMigrationDb(name, { obligationStatus = null, failureStage = false, invalidAuditJson = null } = {}) {
   const workDir = path.join(tempDir, name);
   const workMigrations = path.join(workDir, 'migrations');
   fs.mkdirSync(workMigrations, { recursive: true });
@@ -298,6 +298,10 @@ function buildPreMigrationDb(name, { obligationStatus = null, failureStage = fal
       VALUES ('r-open', 'shop', 's-old', '0x${'ab'.repeat(32)}', '0x${'11'.repeat(20)}', '1', 11155111, '${obligationStatus}', '${old}', '${old}');
     `);
   }
+  if (invalidAuditJson !== null) {
+    // An audit payload the JSON scrub cannot read: the migration must abort before any write.
+    sqlite(db, `INSERT INTO AuditLog (id, sessionId, type, payload, ts) VALUES ('a-invalid', 's-old', 'ATTEST_FAIL', '${invalidAuditJson.replace(/'/g, "''")}', '${old}');`);
+  }
   if (failureStage) {
     // Forces a failure late in the migration (table redefinition) after the guard, invalidation and
     // audit scrub statements have run: the whole migration must roll back.
@@ -337,6 +341,17 @@ function runFixture() {
     assert(/non_terminal_reward_events_must_be_resolved_first/.test(refused.stdout + refused.stderr), `Unexpected refusal output: ${refused.stdout}${refused.stderr}`);
     assert(dataDump(refusedDb) === before, `Refused migration (${status}) must not change the database`);
     assert(sqlite(refusedDb, "SELECT status FROM RewardEvent WHERE id = 'r-open'") === status, 'Obligation must be kept');
+  }
+
+  // ── 1a. Invalid audit JSON: abort before any write, database unchanged ──
+  for (const [index, payload] of [`{"wallet":"${CUSTOMER}"`, 'not json', ''].entries()) {
+    const { db: invalidDb, workDir: invalidDir } = buildPreMigrationDb(`invalid-json-${index}`, { invalidAuditJson: payload });
+    const before = dataDump(invalidDb);
+    const refused = applyTarget(invalidDir);
+    assert(refused.status !== 0, 'Migration must refuse while an AuditLog payload is not valid JSON');
+    assert(/invalid_audit_payloads_must_be_repaired_first/.test(refused.stdout + refused.stderr), `Unexpected refusal output: ${refused.stdout}${refused.stderr}`);
+    assert(dataDump(invalidDb) === before, 'Invalid-JSON refusal must not change the database');
+    assert(sqlite(invalidDb, "SELECT status FROM Session WHERE id = 's-approved'") === 'APPROVED', 'No session may be invalidated');
   }
 
   // ── 1b. Atomic failure stage: a late failure leaves the database unchanged ──

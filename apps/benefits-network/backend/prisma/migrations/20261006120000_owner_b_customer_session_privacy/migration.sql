@@ -23,6 +23,18 @@ DROP TABLE "owner_b_migration_guard";
 PRAGMA foreign_keys=OFF;
 BEGIN;
 
+-- 1b. Invalid-JSON guard (first statement of the transaction, before any write): the audit scrub below
+--     can only remove customer keys from valid JSON. If any AuditLog payload is not valid JSON, abort the
+--     whole migration and leave the database unchanged; such rows must be inspected and repaired under
+--     the previous release first.
+CREATE TEMP TABLE "owner_b_audit_json_guard" (
+    "invalid_audit_payloads_must_be_repaired_first" INTEGER NOT NULL
+        CHECK ("invalid_audit_payloads_must_be_repaired_first" = 0)
+);
+INSERT INTO "owner_b_audit_json_guard" ("invalid_audit_payloads_must_be_repaired_first")
+SELECT COUNT(*) FROM "AuditLog" WHERE "payload" IS NULL OR NOT json_valid("payload");
+DROP TABLE "owner_b_audit_json_guard";
+
 -- 2a. Legacy session reasons. Closed sessions (REJECTED/EXPIRED/REDEEMED or any other non-open status)
 --     may hold customer balance or per-wallet limit text from earlier releases (e.g. "<n> IFR held < <m>
 --     IFR required", "Insufficient wallet balance: ...", "... for this wallet"). Their reason is replaced
@@ -41,8 +53,8 @@ UPDATE "CustomerPass" SET "status" = 'EXPIRED' WHERE "status" IN ('OPEN', 'BOUND
 -- 3. Scrub customer values from existing audit payloads (seller identities stay). Type-independent:
 --    every historic writer's customer keys (wallet, held, locked, verificationBlock, per-customer
 --    counter used) are removed from every payload. ATTEST_FAIL free text (reason, error) may embed the
---    customer address (RPC calldata) or balances and is removed as well. Invalid JSON payloads are
---    left untouched here and make scripts/verify-owner-b-migration.cjs fail closed.
+--    customer address (RPC calldata) or balances and is removed as well. Invalid JSON payloads cannot
+--    reach this step (guard 1b aborts the migration).
 UPDATE "AuditLog"
 SET "payload" = json_remove("payload", '$.wallet', '$.held', '$.locked', '$.verificationBlock', '$.used')
 WHERE json_valid("payload");
