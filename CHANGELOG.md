@@ -1,5 +1,23 @@
 # Changelog
 
+## [Unreleased] — 2026-10-09 — Copilot supply API: only CV-01 counts as permanently lost (CWA-02)
+
+### Changed (public API)
+
+- `fix:` `GET /api/ifr/supply` now reports only the CV-01 CommitmentVault V1 tranches as permanently
+  lost. The IFR formerly held by FeeRouterV1 was recovered to the Treasury Safe in CWA-02 (tx
+  `0x5dc641c7414f4d0f83cd53fbf2dce782cb9bbffd8393ab8246f3ac47932e2881`, block 26143797) and is no
+  longer counted as lost. Visible response changes for API consumers:
+  - `permanentlyLostRaw` / `permanentlyLost` narrow to CV-01 only (`26418467994338353` raw =
+    26,418,467.994338353 IFR); `liveSupplyRaw` = `totalSupplyRaw` − CV-01, exact.
+  - `permanentlyLostBreakdown.feeRouterV1Raw` is removed; the breakdown is `{ cv01Raw }`. Current
+    FeeRouterV1 balances stay available from `GET /api/ifr/balances`.
+  - `permanentlyLostError` is always `null` (the endpoint no longer reads FeeRouterV1, so a
+    FeeRouter read failure cannot make the figures unavailable); kept for shape compatibility.
+  - `liveSupply` is not a circulating, liquid or spendable figure: it still includes locked, vested
+    and Treasury-held IFR, including the recovered, unallocated Treasury IFR.
+- Release order: the landing copy/JS update (#254) ships before or together with this API change.
+
 ## [Unreleased] — 2026-10-06 — Benefits launcher keeps clear of checkout summary and approval action (release 8c21eb0e follow-up)
 
 ### Fixed
