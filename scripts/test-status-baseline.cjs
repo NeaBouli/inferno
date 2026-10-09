@@ -25,16 +25,16 @@ const packageJson = JSON.parse(read("package.json"));
 const packageLock = JSON.parse(read("package-lock.json"));
 assert.equal(packageJson.engines?.node, ">=22.13.0");
 assert.equal(packageJson.dependencies?.ethers, "6.17.0");
-assert.equal(packageJson.devDependencies?.hardhat, "3.18.0");
+assert.equal(packageJson.devDependencies?.hardhat, "3.18.1");
 assert.equal(packageJson.devDependencies?.["@nomicfoundation/hardhat-verify"], "3.1.2");
 assert.equal(packageJson.overrides?.["serialize-javascript"], "7.0.5");
-assert.equal(packageJson.devDependencies?.chai, "6.2.2");
+assert.equal(packageJson.devDependencies?.chai, "6.3.0");
 assert.equal(packageJson.devDependencies?.mocha, "12.0.3");
 assert.equal(
   packageJson.scripts?.["test:mocha-serializer"],
   "mocha --parallel --jobs 2 test/mocha-serializer-compat.test.cjs"
 );
-assert.equal(packageLock.packages?.["node_modules/hardhat"]?.version, "3.18.0");
+assert.equal(packageLock.packages?.["node_modules/hardhat"]?.version, "3.18.1");
 assert.equal(
   packageLock.packages?.["node_modules/@nomicfoundation/hardhat-verify"]?.version,
   "3.1.2"
@@ -54,7 +54,7 @@ assert.equal(
 const currentBaseline = [
   "**Current engineering baseline:** 2 October 2026",
   "Current repository verification",
-  "Hardhat `3.18.0`",
+  "Hardhat `3.18.1`",
   "contracts `693/693`",
   "`45/45` passed",
   "Root `npm audit`: 0 vulnerabilities",

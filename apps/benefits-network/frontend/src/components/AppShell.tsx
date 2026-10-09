@@ -6,7 +6,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <main className="shop-shell min-h-screen text-stone-50">
       <header className="shop-header">
         <div className="shop-header-inner">
-          <Link href="/" className="shop-brand" aria-label="IFR Benefits Network home">
+          <Link href="/" className="shop-brand">
             <img src="/icons/ifr-token-256-v11.png" alt="Official Inferno Protocol IFR icon" width="40" height="40" />
             <span className="shop-brand-copy">
               <strong>IFR BENEFITS</strong>
