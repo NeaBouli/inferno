@@ -144,8 +144,10 @@ function countAddresses(text) {
 const MIN_READ_ONLY_NODE = [22, 12];
 
 function readOnlyRuntimeSupported(version = process.versions.node) {
-  const [major, minor] = String(version).split('.').map((part) => Number.parseInt(part, 10));
-  if (!Number.isInteger(major) || !Number.isInteger(minor)) return false;
+  // Canonical stable release only (no prerelease/nightly suffix, no malformed parts).
+  const match = /^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$/.exec(String(version));
+  if (!match) return false;
+  const [major, minor] = [Number(match[1]), Number(match[2])];
   return major > MIN_READ_ONLY_NODE[0] || (major === MIN_READ_ONLY_NODE[0] && minor >= MIN_READ_ONLY_NODE[1]);
 }
 
@@ -547,7 +549,7 @@ function selfTestScanner(migratedDb) {
 
 /** Read-only scan: missing/replaced paths never PASS or create files; the DB and sidecars stay unchanged. */
 function selfTestReadOnly(migratedDb) {
-  for (const version of ['22.11.0', '22.0.0', '20.18.1', 'x']) {
+  for (const version of ['22.11.0', '22.0.0', '20.18.1', 'x', '22.12.0-nightly20241201abc', '22.12x.0', 'v22.12.0', '22.12', '022.12.0']) {
     assert(!readOnlyRuntimeSupported(version), `Node ${version} must be refused for the read-only scan`);
   }
   for (const version of ['22.12.0', '22.20.0']) {
