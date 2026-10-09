@@ -238,6 +238,25 @@ for (const [width, height] of [[375, 812], [390, 844], [1440, 1000]]) {
     expect(fit.page).toBeLessThanOrEqual(0);
     expect(fit.left).toBeGreaterThanOrEqual(fit.hostLeft - 1);
     expect(fit.right).toBeLessThanOrEqual(fit.hostRight + 1);
+    // Bring the whole donut below the fixed/sticky top navigation and prove nothing covers it.
+    const clear = await page.evaluate(() => {
+      document.documentElement.style.scrollBehavior = "auto";
+      const topBars = [...document.querySelectorAll("body *")].filter((e) => {
+        const cs = getComputedStyle(e);
+        const r = e.getBoundingClientRect();
+        return (cs.position === "fixed" || cs.position === "sticky") && r.top <= 1 && r.height > 0 && r.height < innerHeight / 2 && r.width > innerWidth / 2;
+      });
+      const navBottom = Math.max(0, ...topBars.map((e) => e.getBoundingClientRect().bottom));
+      const donut = document.getElementById("dist-donut").parentElement;
+      window.scrollTo({ top: donut.getBoundingClientRect().top + window.scrollY - navBottom - 16, behavior: "instant" });
+      const d = donut.getBoundingClientRect();
+      const bars = topBars.map((e) => e.getBoundingClientRect().bottom);
+      const centre = ["donut-supply", "donut-live-supply"].map((id) => document.getElementById(id).getBoundingClientRect());
+      return { donutTop: d.top, donutBottom: d.bottom, navBottom: Math.max(0, ...bars), centreTops: centre.map((r) => r.top), vh: innerHeight };
+    });
+    if (width <= 480) expect(clear.navBottom, "the fixed mobile navigation must be detected").toBeGreaterThan(0);
+    expect(clear.donutTop).toBeGreaterThanOrEqual(clear.navBottom);
+    for (const top of clear.centreTops) expect(top).toBeGreaterThanOrEqual(clear.navBottom);
     if (process.env.SHOT_DIR) await page.screenshot({ path: `${process.env.SHOT_DIR}/landing-donut-label-${width}x${height}.png` });
   });
 }
