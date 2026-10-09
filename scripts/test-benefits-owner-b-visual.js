@@ -378,7 +378,8 @@ async function historyItems() {
   const message = [
     'IFR Benefits Network - Checkout Proof', 'Version: ifr-benefits/checkout-proof/2',
     'Purpose: Redeem this one checkout with verified IFR benefit eligibility', `Wallet: ${account.address}`,
-    'Audience: shop.example.test', 'Chain ID: 11155111', 'Shop: demo-shop', 'Session: demo-session-1',
+    // F1: receipts verify only for this deployment's audience (page host) and chain (frontend CHAIN_ID).
+    `Audience: ${new URL(origin).host}`, 'Chain ID: 1', 'Shop: demo-shop', 'Session: demo-session-1',
     `Nonce: ${'cd'.repeat(32)}`, 'Expires: 2026-10-06T10:00:00.000Z', 'Benefit Rule: rule-demo', 'Benefit: Espresso deal',
     'Product: Espresso', 'Reference Price: EUR 350 minor units', 'Required Lock IFR: 1000', 'Minimum Held IFR: 0',
     'Lock Source: ifrlock', 'Discount Percent: 10', `Terms Digest: ${termsDigest}`,

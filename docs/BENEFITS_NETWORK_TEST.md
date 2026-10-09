@@ -268,7 +268,10 @@ keeps a signed receipt (proof text and signature). The home page shows this as `
 customer proofs` so a customer can reopen the proof on the same device. This device-local
 history is the only customer history (the backend keeps none); it excludes private keys,
 seed phrases and full wallet inventories, is not a server-side evidence record and does not
-replace the device checklist.
+replace the device checklist. Receipt verification on the device binds the proof to this
+deployment's audience (page host) and chain and requires a 32-byte nonce; its duplicate check
+is local only (the bounded 12-item device history), not global replay prevention. Single
+redemption is enforced by the backend.
 
 The landing integration generator also exposes a `pos` mode. Its generated server-side
 JavaScript creates a rule-bound session and returns a full `customerUrl` for the seller's

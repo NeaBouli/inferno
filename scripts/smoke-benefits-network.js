@@ -550,8 +550,8 @@ async function verifyCustomerWalletHistory() {
     redeemedAt: '2026-07-18T09:05:00.000Z',
     savedAt: '2026-07-18T09:05:30.000Z',
   };
-  const validProof = receiptProof(validItem, { wallet: receiptWallet });
-  const tamperedProof = receiptProof(tamperedItem, { wallet: receiptWallet });
+  const validProof = receiptProof(validItem, { wallet: receiptWallet, audience: new URL(baseUrl).host, chainId: Number(process.env.NEXT_PUBLIC_CHAIN_ID || 1) });
+  const tamperedProof = receiptProof(tamperedItem, { wallet: receiptWallet, audience: new URL(baseUrl).host, chainId: Number(process.env.NEXT_PUBLIC_CHAIN_ID || 1) });
   const receipts = [
     { ...validItem, proof: { ...validProof, signature: await receiptSigner.signMessage(validProof.message) } },
     // Signature over a different text: device verification must fail closed.

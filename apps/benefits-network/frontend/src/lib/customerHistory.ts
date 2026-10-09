@@ -207,6 +207,15 @@ export type ReceiptVerification =
   | { ok: true; wallet: string; signed: SignedCheckoutProof }
   | { ok: false; reason: string };
 
+export interface ReceiptContext {
+  /** Deployment audience the server binds into the proof (this site's host). */
+  expectedAudience: string;
+  /** Canonical chain of this deployment. */
+  expectedChainId: number;
+  /** Every receipt in the local store, to reject duplicated/replayed entries. */
+  receipts: CustomerProofHistoryItem[];
+}
+
 export interface ReceiptVerifier {
   /** EIP-191 signer recovery. */
   recover: (message: string, signature: string) => Promise<string>;
@@ -223,8 +232,18 @@ export interface ReceiptVerifier {
  */
 export async function verifyCustomerProofReceipt(
   item: CustomerProofHistoryItem,
-  verifier: ReceiptVerifier
+  verifier: ReceiptVerifier,
+  context: ReceiptContext
 ): Promise<ReceiptVerification> {
+  // Expected audience and chain come from the running deployment, never from the receipt or
+  // localStorage. Without a trusted context nothing can be verified (fail closed).
+  if (
+    typeof context?.expectedAudience !== 'string' || !context.expectedAudience ||
+    !Number.isSafeInteger(context?.expectedChainId) || context.expectedChainId <= 0 ||
+    !Array.isArray(context?.receipts)
+  ) {
+    return { ok: false, reason: 'This device cannot verify receipts without the deployment context.' };
+  }
   const proof = item.proof;
   if (!proof) return { ok: false, reason: 'No signed proof is stored for this entry.' };
   const signed = parseCheckoutProof(proof.message);
@@ -233,6 +252,22 @@ export async function verifyCustomerProofReceipt(
     return { ok: false, reason: 'Unsupported proof version.' };
   }
   if (signed.purpose !== CHECKOUT_PROOF_PURPOSE) return { ok: false, reason: 'Unexpected proof purpose.' };
+  if (signed.audience !== context.expectedAudience) {
+    return { ok: false, reason: 'The proof was signed for another deployment.' };
+  }
+  if (signed.chainId !== context.expectedChainId) return { ok: false, reason: 'The proof was signed for another chain.' };
+  // Limitation: duplicate detection is LOCAL ONLY. It compares this receipt with the other entries of
+  // this device's bounded history (MAX_HISTORY_ITEMS = 12); it is not global replay prevention. Single
+  // redemption is enforced by the backend (one conditional PENDING -> REDEEMED update per session).
+  const duplicates = context.receipts.filter((other) => {
+    if (other === item) return false;
+    if (other.sessionId === item.sessionId) return true;
+    if (!other.proof) return false;
+    if (other.proof.signature === proof.signature) return true;
+    const otherSigned = parseCheckoutProof(other.proof.message);
+    return Boolean(otherSigned && (otherSigned.nonce === signed.nonce || otherSigned.session === signed.session));
+  });
+  if (duplicates.length > 0) return { ok: false, reason: 'Duplicate receipt: this checkout appears more than once on this device.' };
   if (signed.termsDigest !== proof.termsDigest) return { ok: false, reason: 'The signed terms do not match the receipt.' };
   const digest = `sha256:${await verifier.sha256Hex(canonicalTermsJson(signed.terms))}`;
   if (digest !== signed.termsDigest) return { ok: false, reason: 'The signed terms digest does not match the signed terms.' };

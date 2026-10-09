@@ -25,6 +25,7 @@ export interface SignedCheckoutProof {
   chainId: number;
   shop: string;
   session: string;
+  nonce: string;
   expires: string;
   terms: SignedCheckoutTerms;
   termsDigest: string;
@@ -52,6 +53,7 @@ export function parseCheckoutProof(message: string): SignedCheckoutProof | null 
   const chainId = wholeNumber(field(lines, 'Chain ID'));
   const shop = field(lines, 'Shop');
   const session = field(lines, 'Session');
+  const nonce = field(lines, 'Nonce');
   const expires = field(lines, 'Expires');
   const benefitRuleId = field(lines, 'Benefit Rule');
   const label = field(lines, 'Benefit');
@@ -65,7 +67,8 @@ export function parseCheckoutProof(message: string): SignedCheckoutProof | null 
   const priceMatch = price === null ? null : price.match(/^([A-Z]{3}) (0|[1-9][0-9]{0,17}) minor units$/);
   if (
     !version || !purpose || !wallet || !/^0x[0-9a-fA-F]{40}$/.test(wallet) || !audience || chainId === null ||
-    !shop || !session || !expires || Number.isNaN(Date.parse(expires)) || benefitRuleId === null ||
+    !shop || !/^[A-Za-z0-9_-]{1,64}$/.test(shop) || !session || !/^[A-Za-z0-9_-]{1,64}$/.test(session) ||
+    !nonce || !/^[0-9a-f]{64}$/.test(nonce) || !expires || Number.isNaN(Date.parse(expires)) || benefitRuleId === null ||
     label === null || productName === null || requiredLockIFR === null || minIFRHeld === null ||
     !lockSource || discountPercent === null || !termsDigest || !/^sha256:[0-9a-f]{64}$/.test(termsDigest) ||
     (price !== null && !priceMatch)
@@ -78,6 +81,7 @@ export function parseCheckoutProof(message: string): SignedCheckoutProof | null 
     chainId,
     shop,
     session,
+    nonce,
     expires,
     terms: {
       benefitRuleId,

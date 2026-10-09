@@ -192,13 +192,16 @@ const { privateKeyToAccount } = require('viem/accounts');
   assert.strictEqual(stored.ruleLabel, 'Espresso deal');
   assert.strictEqual(stored.businessId, 'business-1');
   assert.strictEqual(stored.expiresAt, '2026-10-06T10:00:00.000Z');
-  const verified = await verifyCustomerProofReceipt(stored, verifier);
+  const context = { expectedAudience: 'shop.example.test', expectedChainId: 11155111, receipts: [stored] };
+  // Each receipt is verified as the only entry in its store unless a test says otherwise.
+  const check = (item, extra = {}) => verifyCustomerProofReceipt(item, verifier, { ...context, receipts: [item], ...extra });
+  const verified = await check(stored);
   assert.strictEqual(verified.ok, true, verified.reason);
   assert.strictEqual(verified.wallet, customer.address);
 
   // Unsigned local notes may change without making the signed terms invalid; they are never
   // reported as verified (the result carries only the signed payload).
-  const statusEdited = await verifyCustomerProofReceipt({ ...stored, status: 'EXPIRED', redeemedAt: null, sellerName: 'x' }, verifier);
+  const statusEdited = await check({ ...stored, status: 'EXPIRED', redeemedAt: null, sellerName: 'x' });
   assert.strictEqual(statusEdited.ok, true);
   assert.ok(!('status' in statusEdited) && !('redeemedAt' in statusEdited), 'Status/time are not part of a verified result.');
 
@@ -208,30 +211,61 @@ const { privateKeyToAccount } = require('viem/accounts');
     ['expiresAt', '2099-01-01T00:00:00.000Z'], ['businessId', 'business-2'], ['sessionId', 'session-9'],
     ['walletLabel', '0x2222...2222'],
   ]) {
-    const result = await verifyCustomerProofReceipt({ ...stored, [field]: value }, verifier);
+    const result = await check({ ...stored, [field]: value });
     assert.strictEqual(result.ok, false, `A tampered displayed ${field} must make the receipt invalid.`);
   }
 
-  const wrongSigner = await verifyCustomerProofReceipt(
-    { ...stored, proof: { ...stored.proof, signature: await stranger.signMessage({ message }) } },
-    verifier
+  const wrongSigner = await check(
+    { ...stored, proof: { ...stored.proof, signature: await stranger.signMessage({ message }) } }
   );
   assert.strictEqual(wrongSigner.ok, false, 'A signature by another wallet must not verify.');
 
-  const tamperedText = await verifyCustomerProofReceipt(
-    { ...stored, proof: { ...stored.proof, message: message.replace('Discount Percent: 10', 'Discount Percent: 90') } },
-    verifier
+  const tamperedText = await check(
+    { ...stored, proof: { ...stored.proof, message: message.replace('Discount Percent: 10', 'Discount Percent: 90') } }
   );
   assert.strictEqual(tamperedText.ok, false, 'Edited signed text must not verify (digest).');
 
   const selfConsistentForgery = buildMessage({ discountPercent: 90 });
-  const forged = await verifyCustomerProofReceipt(
-    { ...stored, discountPercent: 90, proof: { ...stored.proof, message: selfConsistentForgery } },
-    verifier
+  const forged = await check(
+    { ...stored, discountPercent: 90, proof: { ...stored.proof, message: selfConsistentForgery } }
   );
   assert.strictEqual(forged.ok, false, 'Changed terms with the old digest must not verify.');
 
-  const labelOnly = await verifyCustomerProofReceipt({ ...stored, proof: null }, verifier);
+  // Context binding with RE-SIGNED dummy fixtures (valid signatures; only the context is wrong).
+  const resigned = async (text) => {
+    const item = { ...stored, proof: { ...stored.proof, message: text, signature: await customer.signMessage({ message: text }) } };
+    return item;
+  };
+  const otherAudienceItem = await resigned(message.replace(/^Audience: .*$/m, 'Audience: shop.ifrunit.tech'));
+  assert.strictEqual((await check(otherAudienceItem)).ok, false, 'A re-signed proof for another deployment must not verify.');
+  const otherChainItem = await resigned(message.replace(/^Chain ID: .*$/m, 'Chain ID: 1'));
+  assert.strictEqual((await check(otherChainItem)).ok, false, 'A re-signed proof for another chain must not verify.');
+  const missingNonceItem = await resigned(message.split('\n').filter((line) => !line.startsWith('Nonce: ')).join('\n'));
+  assert.strictEqual((await check(missingNonceItem)).ok, false, 'A re-signed proof without a nonce must not verify.');
+  const malformedNonceItem = await resigned(message.replace(/^Nonce: .*$/m, 'Nonce: 123'));
+  assert.strictEqual((await check(malformedNonceItem)).ok, false, 'A re-signed proof with a malformed nonce must not verify.');
+  const shortNonceItem = await resigned(message.replace(/^Nonce: .*$/m, `Nonce: ${'ab'.repeat(31)}`));
+  assert.strictEqual((await check(shortNonceItem)).ok, false, 'A nonce must be exactly 32 bytes of hex.');
+  // Duplicate nonce in another, independently re-signed receipt for a different checkout.
+  const sameNonceOtherCheckout = await resigned(message.replace('Session: session-3', 'Session: session-4'));
+  const sameNonceItem = { ...sameNonceOtherCheckout, sessionId: 'session-4' };
+  assert.strictEqual((await check(stored, { receipts: [stored, sameNonceItem] })).ok, false, 'A duplicated nonce must not verify.');
+  const copy = { ...stored, savedAt: '2026-10-06T10:00:00.000Z' };
+  assert.strictEqual((await check(stored, { receipts: [stored, copy] })).ok, false, 'A duplicated receipt must not verify.');
+  const replayedSignature = await verifyCustomerProofReceipt(
+    stored,
+    verifier,
+    { ...context, receipts: [stored, { ...stored, sessionId: 'session-x', proof: { ...stored.proof } }] }
+  );
+  assert.strictEqual(replayedSignature.ok, false, 'The same signed proof under another entry must not verify.');
+  // Missing trusted context fails closed; context is never read from the receipt.
+  assert.strictEqual((await verifyCustomerProofReceipt(stored, verifier, { expectedAudience: '', expectedChainId: 11155111, receipts: [stored] })).ok, false);
+  assert.strictEqual((await verifyCustomerProofReceipt(stored, verifier, { expectedAudience: 'shop.example.test', expectedChainId: Number.NaN, receipts: [stored] })).ok, false);
+  assert.strictEqual((await verifyCustomerProofReceipt(stored, verifier, undefined)).ok, false);
+  // Expired historical consent stays verifiable (expiry is not "now"-checked).
+  assert.strictEqual(verified.ok, true);
+
+  const labelOnly = await check({ ...stored, proof: null });
   assert.strictEqual(labelOnly.ok, false, 'A redacted wallet label alone is never a verification input.');
 
   window.localStorage.setItem('ifr.shop.customerProofHistory.v1', JSON.stringify([

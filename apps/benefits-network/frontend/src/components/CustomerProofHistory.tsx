@@ -11,6 +11,7 @@ import {
 } from '@/lib/customerHistory';
 import { formatProductPrice } from '@/lib/money';
 import { lockSourceRequirement } from '@/lib/lockSource';
+import { CHAIN_ID } from '@/lib/contracts';
 
 function formatDate(value: string) {
   const date = new Date(value);
@@ -51,7 +52,11 @@ export function CustomerProofHistory() {
   }
 
   async function verifyItem(item: CustomerProofHistoryItem) {
-    const result = await verifyCustomerProofReceipt(item, verifier);
+    const result = await verifyCustomerProofReceipt(item, verifier, {
+      expectedAudience: window.location.host,
+      expectedChainId: CHAIN_ID,
+      receipts: items,
+    });
     setChecks((current) => ({ ...current, [item.sessionId]: result }));
   }
 

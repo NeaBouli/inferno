@@ -3,7 +3,8 @@
 // verifier accepts it. Shared by browser test scripts; never used by the app.
 const { createHash } = require('node:crypto');
 
-function receiptProof(item, { wallet, ruleId = 'rule-fixture', audience = 'shop.example.test', chainId = 11155111 }) {
+function receiptProof(item, { wallet, ruleId = 'rule-fixture', audience, chainId = 1 }) {
+  if (!audience) throw new Error('receiptProof needs the expected deployment audience (page host)');
   const terms = {
     benefitRuleId: ruleId,
     label: item.ruleLabel,
@@ -25,7 +26,7 @@ function receiptProof(item, { wallet, ruleId = 'rule-fixture', audience = 'shop.
     `Chain ID: ${chainId}`,
     `Shop: ${item.businessId}`,
     `Session: ${item.sessionId}`,
-    `Nonce: ${'ab'.repeat(32)}`,
+    `Nonce: ${createHash('sha256').update(`nonce:${item.sessionId}`).digest('hex')}`,
     `Expires: ${new Date(item.expiresAt).toISOString()}`,
     `Benefit Rule: ${terms.benefitRuleId}`,
     `Benefit: ${terms.label}`,

@@ -133,7 +133,7 @@ const localHistoryItem = {
   walletLabel: `${customerWallet.slice(0, 6)}...${customerWallet.slice(-4)}`,
   savedAt: now,
 };
-const receipt = receiptProof(localHistoryItem, { wallet: customerWallet, ruleId });
+const receipt = receiptProof(localHistoryItem, { wallet: customerWallet, ruleId, audience: new URL(origin).host, chainId: 1 });
 const receiptMessage = receipt.message;
 const localHistory = [{ ...localHistoryItem, proof: { ...receipt, signature: null } }];
 
