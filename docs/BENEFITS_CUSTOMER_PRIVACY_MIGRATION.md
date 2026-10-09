@@ -87,7 +87,8 @@ deploy path; it needs a separate, reviewed migration release with these steps:
    the old bytes of dropped columns and tables until the file is rewritten.
 7. Check that no customer address remains: run the read-only generic scan on the migrated file
    (`node scripts/verify-owner-b-migration.cjs --scan <database file>` in
-   `apps/benefits-network/backend`). It opens the file strictly read-only, fails on any address
+   `apps/benefits-network/backend`, Node >= 22.12; the scan refuses older runtimes before opening
+   anything). It opens the file strictly read-only, fails on any address
    outside the allowlisted seller locations, on invalid JSON and on any unknown table or column, and
    prints counts per location only. Do not start traffic unless it prints PASS.
 8. Start the new image. Smoke: `/api/health`, `/api/ready`, one seller checkout with a customer

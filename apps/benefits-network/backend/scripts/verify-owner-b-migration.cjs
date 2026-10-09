@@ -137,7 +137,22 @@ function countAddresses(text) {
  * symlink). The file and its -wal/-shm/-journal sidecars must be byte-for-byte unchanged in identity,
  * size and mtime after the scan, otherwise the scan fails.
  */
+/**
+ * node:sqlite documents DatabaseSync's readOnly option from Node 22.12. On an older runtime the option
+ * may be unsupported, so the scan refuses before opening anything (never a silent writable fallback).
+ */
+const MIN_READ_ONLY_NODE = [22, 12];
+
+function readOnlyRuntimeSupported(version = process.versions.node) {
+  const [major, minor] = String(version).split('.').map((part) => Number.parseInt(part, 10));
+  if (!Number.isInteger(major) || !Number.isInteger(minor)) return false;
+  return major > MIN_READ_ONLY_NODE[0] || (major === MIN_READ_ONLY_NODE[0] && minor >= MIN_READ_ONLY_NODE[1]);
+}
+
 function openReadOnly(dbPath) {
+  if (!readOnlyRuntimeSupported()) {
+    throw new Error(`read-only scan requires Node >= ${MIN_READ_ONLY_NODE.join('.')} (node:sqlite readOnly)`);
+  }
   const stat = fs.lstatSync(dbPath); // throws when missing
   if (!stat.isFile()) throw new Error('scan target is not a regular file');
   const { DatabaseSync } = require('node:sqlite');
@@ -197,6 +212,9 @@ function scanDatabaseForAddresses(dbPath) {
   const allowed = {};
   let before;
   let db;
+  if (!readOnlyRuntimeSupported()) {
+    return { ok: false, failures, allowed, errors: ['read-only scan requires Node >= 22.12 (node:sqlite readOnly); refusing to open'] };
+  }
   try {
     before = fileFingerprint(dbPath);
     db = openReadOnly(dbPath);
@@ -529,6 +547,13 @@ function selfTestScanner(migratedDb) {
 
 /** Read-only scan: missing/replaced paths never PASS or create files; the DB and sidecars stay unchanged. */
 function selfTestReadOnly(migratedDb) {
+  for (const version of ['22.11.0', '22.0.0', '20.18.1', 'x']) {
+    assert(!readOnlyRuntimeSupported(version), `Node ${version} must be refused for the read-only scan`);
+  }
+  for (const version of ['22.12.0', '22.20.0']) {
+    assert(readOnlyRuntimeSupported(version), `Node ${version} must be accepted for the read-only scan`);
+  }
+  assert(readOnlyRuntimeSupported(), 'This runtime must support the read-only scan (engines >=22.12)');
   const missing = path.join(tempDir, 'does-not-exist.db');
   const result = scanDatabaseForAddresses(missing);
   assert(!result.ok && result.errors.length === 1, 'A missing scan target must fail');
@@ -601,7 +626,7 @@ function selfTestClassifier() {
   }
 }
 
-module.exports = { scanDatabaseForAddresses, formatScan, countAddresses, ALLOWED_COLUMNS, ALLOWED_AUDIT_PATHS };
+module.exports = { scanDatabaseForAddresses, formatScan, countAddresses, readOnlyRuntimeSupported, ALLOWED_COLUMNS, ALLOWED_AUDIT_PATHS };
 
 if (require.main === module) {
   const scanIndex = process.argv.indexOf('--scan');
