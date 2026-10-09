@@ -10,7 +10,7 @@ const { parseEnv, parseCompose, checkProofContext } = require('./check-benefits-
 const host = 'shop.ifrunit.tech';
 const repoCompose = fs.readFileSync(path.join(__dirname, '..', 'apps', 'benefits-network', 'docker-compose.production.example.yml'), 'utf8');
 const compose = parseCompose(repoCompose);
-assert.deepEqual(compose.chainArg, { variable: true, default: '1' }, 'repo compose: ${NEXT_PUBLIC_CHAIN_ID:-1}');
+assert.deepEqual(compose.chainArg, { variable: true, operator: ':-', default: '1' }, 'repo compose: ${NEXT_PUBLIC_CHAIN_ID:-1}');
 assert.deepEqual(compose.problems, [], 'repo compose is structurally supported');
 assert.equal(compose.backendOverrides, false);
 
@@ -60,6 +60,21 @@ for (const snippet of [
 ]) {
   const parsed = parseCompose(snippet);
   assert.ok(parsed.problems.some((problem) => problem.includes('unsupported YAML')), `interpolated key is refused: ${snippet}`);
+}
+// Review regression (c162134d): default-operator semantics. `:-` defaults when unset or empty, `-` only
+// when unset; an explicitly empty value under `-` stays empty and fails.
+for (const [expression, value, expected] of [
+  ['"${NEXT_PUBLIC_CHAIN_ID:-1}"', undefined, 'pass'],
+  ['"${NEXT_PUBLIC_CHAIN_ID:-1}"', '', 'pass'],
+  ['"${NEXT_PUBLIC_CHAIN_ID:-1}"', '11155111', 'fail'],
+  ['"${NEXT_PUBLIC_CHAIN_ID-1}"', undefined, 'pass'],
+  ['"${NEXT_PUBLIC_CHAIN_ID-1}"', '', 'fail'],
+  ['"${NEXT_PUBLIC_CHAIN_ID-1}"', '11155111', 'fail'],
+  ['"${NEXT_PUBLIC_CHAIN_ID-1}"', '1', 'pass'],
+]) {
+  const envFile = { SELLER_AUTH_DOMAIN: host, CHAIN_ID: '1', ...(value === undefined ? {} : { NEXT_PUBLIC_CHAIN_ID: value }) };
+  const problems = checkProofContext({ envFile, compose: parseCompose(frontendArg(expression)), processEnv: {}, publicHost: host });
+  assert.equal(problems.length === 0 ? 'pass' : 'fail', expected, `${expression} with ${value === undefined ? 'unset' : JSON.stringify(value)}`);
 }
 const listOverride = parseCompose(`${repoCompose}\n  extra:\n    environment:\n      - "CHAIN_ID=5"\n`);
 assert.equal(listOverride.backendOverrides, true, 'list-form environment override detected');

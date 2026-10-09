@@ -95,7 +95,7 @@ function parseCompose(text) {
   if (placed.length === 1) {
     const value = placed[0].value.replace(/^(['"])(.*)\1$/, '$2');
     const interpolated = value.match(/^\$\{NEXT_PUBLIC_CHAIN_ID(?:(:?-)([^}]*))?\}$/);
-    if (interpolated) chainArg = { variable: true, default: interpolated[1] ? interpolated[2] : undefined };
+    if (interpolated) chainArg = { variable: true, operator: interpolated[1], default: interpolated[1] ? interpolated[2] : undefined };
     else if (!value.includes('$') && value !== '') chainArg = { literal: value };
     else chainArg = { unsupported: true };
   }
@@ -125,8 +125,13 @@ function checkProofContext({ envFile, compose, processEnv, publicHost }) {
   let frontendChain;
   if (compose.chainArg?.literal !== undefined) frontendChain = compose.chainArg.literal;
   else if (compose.chainArg?.variable) {
+    // Compose semantics: `:-` uses the default when the variable is unset or empty, `-` only when it is
+    // unset (an explicitly empty value stays empty), no operator has no default.
     const fromFile = envFile.NEXT_PUBLIC_CHAIN_ID;
-    frontendChain = fromFile !== undefined && fromFile !== '' ? fromFile : compose.chainArg.default;
+    const { operator } = compose.chainArg;
+    if (fromFile === undefined) frontendChain = compose.chainArg.default;
+    else if (fromFile === '' && operator === ':-') frontendChain = compose.chainArg.default;
+    else frontendChain = fromFile;
   }
   if (frontendChain === undefined || frontendChain === '') problems.push('NEXT_PUBLIC_CHAIN_ID has no value and no literal compose default');
   else if (!POSITIVE_INT.test(frontendChain)) problems.push('NEXT_PUBLIC_CHAIN_ID is not a positive integer');
