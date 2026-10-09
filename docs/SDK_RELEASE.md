@@ -16,7 +16,7 @@ short-lived local login session that is ended with `npm logout` right after the 
 npm can only attach a "Trusted Publisher" (the link between the npm package and our GitHub
 workflow) to a package that already exists on npm. So:
 
-1. version `0.3.0` is published **once by hand** (the "bootstrap"), without provenance;
+1. version `0.4.0` (the first npm version; 0.3.0 was never published) is published **once by hand** (the "bootstrap"), without provenance;
 2. then the Trusted Publisher is switched on;
 3. every later version is published by the GitHub workflow `IFR SDK Publish`
    (`.github/workflows/sdk-publish.yml`) with a public provenance attestation, and only after the owner
@@ -28,7 +28,7 @@ workflow) to a package that already exists on npm. So:
 | --- | --- | --- | --- |
 | A | GitHub | Create the protected environment `npm-release` | any time, before the first workflow release |
 | B | npmjs.com | Prepare the publisher account `ifr-protocol` (2FA, project e-mail) | before the bootstrap |
-| C | Terminal + npmjs.com | Bootstrap publish of `0.3.0` | after an explicit "yes" from the owner |
+| C | Terminal + npmjs.com | Bootstrap publish of `0.4.0` | after an explicit "yes" from the owner |
 | D | npmjs.com | Add the Trusted Publisher and lock the package to it | right after C |
 
 ## A. GitHub: protected environment `npm-release`
@@ -57,20 +57,20 @@ can create release marker tags. Tags trigger nothing; they are only labels after
 4. The package name `ifr-sdk` was free on 2026-10-06 (`npm view ifr-sdk` returns 404). It is checked
    again directly before the bootstrap.
 
-## C. Bootstrap publish of 0.3.0 (once)
+## C. Bootstrap publish of 0.4.0 (once)
 
 This is the only step that needs a terminal. Claude prepares it and runs it **only after the owner's
 explicit "yes" in the chat**; the owner signs in to npm in the browser and confirms the 2FA prompt.
 
 The approval for this step is separate from the general publication decision. It must name: version
-`0.3.0`, the exact commit SHA, the seven-file package listing, and that this first version is published
+`0.4.0`, the exact commit SHA, the seven-file package listing, and that this first version is published
 **without provenance** (provenance can only be created inside GitHub Actions; every later version gets it).
 
 From a clean checkout of the approved commit, one command does the whole bootstrap:
 
 ```bash
 git fetch origin && git checkout --detach <approved-sha>   # the reviewed main commit
-bash scripts/sdk-bootstrap-publish.sh 0.3.0 <approved-sha>
+bash scripts/sdk-bootstrap-publish.sh 0.4.0 <approved-sha>
 ```
 
 What the script (`scripts/sdk-bootstrap-publish.sh`) does, and where it stops (HOLD, non-zero exit):

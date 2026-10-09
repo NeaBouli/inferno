@@ -8,7 +8,7 @@ Plain-language owner click guide (npmjs.com and GitHub): [`docs/SDK_RELEASE.md`]
 
 Package: `ifr-sdk`
 
-Current repository version: `0.3.0`
+Current repository version: `0.4.0`
 
 Supported runtime: Node.js 20 and 22
 
@@ -146,7 +146,7 @@ npm Trusted Publishing is configured per existing package, so the first version 
 the registry and refuses every run before the package exists):
 
 1. The owner publishes the version in `apps/sdk/package.json` on the exact reviewed `main` commit
-   (currently `0.3.0`) once, locally, signed in as `ifr-protocol` with 2FA and the project alias e-mail,
+   (currently `0.4.0`; 0.3.0 was never published) once, locally, signed in as `ifr-protocol` with 2FA and the project alias e-mail,
    only after an explicit action-time approval that names the version, the exact commit SHA, the
    seven-file package listing and the missing provenance. Publishing this first version with
    `--provenance=false` is a separately approved exception: `publishConfig.provenance` is `true` for the
@@ -159,7 +159,7 @@ the registry and refuses every run before the package exists):
 
    ```bash
    git fetch origin && git checkout --detach <approved-sha>   # the reviewed main commit
-   bash scripts/sdk-bootstrap-publish.sh 0.3.0 <approved-sha>
+   bash scripts/sdk-bootstrap-publish.sh 0.4.0 <approved-sha>
    ```
 
    The script binds the run to the approved version and SHA, uses a private temporary

@@ -36,9 +36,9 @@ Mainnet transactions, prove exact-head CI or authorize deployment.
 ### Release order: wallet-free seller challenge (owner decision B)
 
 `GET /api/seller/auth-message` is wallet-free: no wallet in the URL, the response or the challenge
-row; a legacy `walletAddress` parameter is ignored and never echoed. Released `ifr-sdk` versions
-(<= 0.3.0) require `challenge.walletAddress` in the response and reject every challenge from this
-backend, so their seller checkout flows break. Publish and roll out the wallet-free SDK first,
+row; a legacy `walletAddress` parameter is ignored and never echoed. Earlier `ifr-sdk` builds
+(<= 0.3.0, repository tarballs only; never on npm) require `challenge.walletAddress` in the response and reject every challenge from this
+backend, so their seller checkout flows break. Publish and roll out `ifr-sdk` 0.4.0 (wallet-free) first,
 then release the backend. The same release still needs the separate owner-B migration gate
 (backup, migrate, VACUUM, `node scripts/verify-owner-b-migration.cjs --scan <copy>`), and the edge
 access logs must be checked for query strings of old clients.

@@ -87,14 +87,14 @@ one-time `sessions:redeem` challenge bound to the session ID and posts the signe
 Both signed flows validate action, business, scope, domain, chain, timestamp, nonce and the exact
 challenge message before any signature is requested.
 
-### Compatibility: wallet-free seller challenge (unreleased)
+### Compatibility: wallet-free seller challenge (0.4.0)
 
 The Benefits backend no longer echoes `walletAddress` in `GET /api/seller/auth-message` (owner
 decision B: no wallet in the challenge URL, response or storage; a legacy `walletAddress` query
-parameter is ignored). Released `ifr-sdk` versions up to 0.3.0 require `challenge.walletAddress` in
-that response and reject every challenge from the new backend ("mismatched seller authorization
+parameter is ignored). Earlier `ifr-sdk` builds up to 0.3.0 (never published to npm; only repository
+tarballs) require `challenge.walletAddress` in that response and reject every challenge from the new backend ("mismatched seller authorization
 challenge"), so `createCheckout()` and `redeemCheckout()` break. Release order: publish and roll out
-the wallet-free SDK from this source **before** the Benefits backend release that ships the
+`ifr-sdk` 0.4.0 (wallet-free) **before** the Benefits backend release that ships the
 wallet-free challenge, and tell integrators to upgrade first. Publishing is a separate release gate. The caller supplies a wallet-native `signMessage`
 callback; the SDK never accepts or stores private keys, seed phrases or persistent seller secrets.
 
