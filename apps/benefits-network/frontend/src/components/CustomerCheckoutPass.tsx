@@ -274,7 +274,7 @@ export function CustomerCheckoutPass() {
   }
 
   return (
-    <section id="customer-pass" className="scroll-mt-36 rounded-[2rem] border border-orange-200/20 bg-[linear-gradient(145deg,rgba(255,255,255,0.08),rgba(236,118,51,0.08)_52%,rgba(0,0,0,0.2))] p-5 shadow-2xl shadow-black/25">
+    <section id="customer-pass" className="shop-launcher-band-clearance-compact scroll-mt-36 rounded-[2rem] border border-orange-200/20 bg-[linear-gradient(145deg,rgba(255,255,255,0.08),rgba(236,118,51,0.08)_52%,rgba(0,0,0,0.2))] p-5 shadow-2xl shadow-black/25">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-200/80">Customer checkout pass</p>
@@ -295,7 +295,7 @@ export function CustomerCheckoutPass() {
               <BusinessLogo name={selectedOffer.sellerName} logoUrl={selectedOffer.sellerLogoUrl} size="sm" />
               <div className="min-w-0">
                 <p className="text-xs font-black uppercase tracking-[0.14em] text-orange-100">Selected public offer</p>
-                <p className="mt-2 break-words font-black text-white">{selectedOffer.rule.productName} · {selectedOffer.sellerName}</p>
+                <p className="mt-2 font-black text-white [overflow-wrap:anywhere]">{selectedOffer.rule.productName} · {selectedOffer.sellerName}</p>
                 <p className="mt-1 text-stone-300">
                   {selectedOffer.rule.discountPercent}% benefit · {selectedOffer.rule.requiredLockIFR.toLocaleString('en-US')} IFR lock
                   {' '}{lockSourceRequirement(selectedOffer.rule.lockSource)}
@@ -333,14 +333,14 @@ export function CustomerCheckoutPass() {
           {status?.checkout ? (
             <div className="grid gap-3 rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-stone-300">
               <div className="flex items-center justify-between gap-4">
-                <span>Seller</span>
+                <span className="shrink-0">Seller</span>
                 <span className="flex min-w-0 items-center justify-end gap-3">
                   <BusinessLogo name={status.checkout.sellerName} logoUrl={status.checkout.sellerLogoUrl} size="sm" />
-                  <strong className="break-words text-right text-white">{status.checkout.sellerName}</strong>
+                  <strong className="min-w-0 text-right text-white [overflow-wrap:anywhere]">{status.checkout.sellerName}</strong>
                 </span>
               </div>
-              <div className="flex justify-between gap-4"><span>Offer</span><strong className="text-right text-white">{status.checkout.benefit.label || 'Standard benefit'}</strong></div>
-              <div className="flex justify-between gap-4"><span>Product</span><strong className="text-right text-white">{status.checkout.benefit.productName || 'Seller benefit'}</strong></div>
+              <div className="flex justify-between gap-4"><span className="shrink-0">Offer</span><strong className="min-w-0 text-right text-white [overflow-wrap:anywhere]">{status.checkout.benefit.label || 'Standard benefit'}</strong></div>
+              <div className="flex justify-between gap-4"><span className="shrink-0">Product</span><strong className="min-w-0 text-right text-white [overflow-wrap:anywhere]">{status.checkout.benefit.productName || 'Seller benefit'}</strong></div>
               <div className="flex justify-between gap-4"><span>Checkout status</span><strong className="text-right text-white">{status.checkout.status}</strong></div>
               {formatProductPrice(status.checkout.benefit.basePriceMinor, status.checkout.benefit.currency) ? (
                 <div className="flex justify-between gap-4">

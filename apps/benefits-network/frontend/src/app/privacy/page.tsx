@@ -97,7 +97,7 @@ function FactGrid({ eyebrow, title, intro, items }: { eyebrow: string; title: st
 export default function PrivacyPage() {
   return (
     <AppShell>
-      <section className="mx-auto w-full max-w-7xl px-5 pb-16 pt-6">
+      <section className="shop-launcher-band-clearance-compact mx-auto w-full max-w-7xl px-5 pb-16 pt-6">
         <div className="rounded-[2.25rem] border border-orange-200/15 bg-[linear-gradient(135deg,rgba(248,164,92,0.16),rgba(255,255,255,0.055)_44%,rgba(49,151,103,0.12))] p-6 shadow-2xl shadow-black/30 md:p-10">
           <div className="max-w-4xl">
             <p className="text-xs font-black uppercase tracking-[0.2em] text-orange-100">IFR Benefits Network</p>
