@@ -1,11 +1,14 @@
 #!/usr/bin/env node
 'use strict';
 
-// Dummy-only tests. Run in an OS-enforced no-network sandbox, with only --scratch writable.
+// Dummy-only tests. The argument is a trusted parent, never a directory to clean.
+// Run in an OS-enforced no-network sandbox with only that bounded parent writable.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { spawnSync } = require('node:child_process');
+const { spawn, spawnSync } = require('node:child_process');
+const { EventEmitter } = require('node:events');
+const { PassThrough } = require('node:stream');
 const { DatabaseSync } = require('node:sqlite');
 const prep = require('./benefits-owner-b-rehearsal.cjs');
 const ROOT = path.resolve(__dirname, '..');
@@ -15,13 +18,70 @@ const SENTINEL = 'DUMMY_SECRET_SENTINEL_NEVER_EXPORT';
 const policy = { uid: process.getuid(), noAtime: false, anchored: false };
 let sequence = 0;
 let passed = 0;
-const scratch = process.argv[2];
-assert.ok(scratch && path.isAbsolute(scratch) && scratch.startsWith(`${ROOT}/.fleet/`));
-assert.equal(fs.lstatSync(scratch).mode & 0o777, 0o700);
 process.umask(0o077);
 
+function trustedParent(parent) {
+  assert.ok(typeof parent === 'string' && path.isAbsolute(parent) && parent !== '/');
+  assert.equal(path.normalize(parent), parent);
+  assert.equal(fs.realpathSync(parent), parent);
+  let current = path.parse(parent).root;
+  for (const part of parent.slice(current.length).split('/')) {
+    current = path.join(current, part);
+    const stat = fs.lstatSync(current);
+    assert.ok(stat.isDirectory() && !stat.isSymbolicLink());
+    assert.ok(stat.uid === 0 || stat.uid === process.getuid());
+    assert.ok((stat.mode & 0o022) === 0 || (stat.mode & 0o1000) !== 0);
+  }
+  const stat = fs.lstatSync(parent);
+  assert.equal(stat.uid, process.getuid());
+  assert.equal(stat.mode & 0o777, 0o700);
+  return stat;
+}
+async function withScratch(parent, action) {
+  const stat = trustedParent(parent);
+  const fd = fs.openSync(parent, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW | fs.constants.O_DIRECTORY);
+  let run;
+  let owned;
+  const unchanged = () => {
+    const now = trustedParent(parent);
+    const opened = fs.fstatSync(fd);
+    assert.equal(now.dev, stat.dev); assert.equal(now.ino, stat.ino);
+    assert.equal(opened.dev, stat.dev); assert.equal(opened.ino, stat.ino);
+  };
+  try {
+    unchanged();
+    run = fs.mkdtempSync(path.join(parent, 'rehearsal-run-'));
+    owned = fs.lstatSync(run);
+    unchanged();
+    assert.equal(owned.mode & 0o777, 0o700);
+    return await action(run);
+  } finally {
+    try {
+      if (owned) {
+        unchanged();
+        const now = fs.lstatSync(run);
+        assert.ok(now.isDirectory() && !now.isSymbolicLink());
+        assert.equal(now.dev, owned.dev); assert.equal(now.ino, owned.ino);
+        assert.equal(now.uid, process.getuid()); assert.equal(now.mode & 0o777, 0o700);
+        // Only the exclusively created run is owned; never enumerate or remove its parent.
+        fs.rmSync(run, { recursive: true });
+      }
+    } finally { fs.closeSync(fd); }
+  }
+}
+async function runTests(scratch) {
 function dir(label) { return fs.mkdtempSync(path.join(scratch, `${label}-`)); }
 function bytesHash(file) { return prep.hashBuffer(fs.readFileSync(file)); }
+function canonicalDb(after = false, change = (sql) => sql) {
+  const migrations = path.join(BACKEND, 'prisma/migrations');
+  const names = fs.readdirSync(migrations, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name).sort();
+  const db = new DatabaseSync(':memory:');
+  try {
+    for (const name of names.slice(0, after ? 21 : 20))
+      db.exec(change(fs.readFileSync(path.join(migrations, name, 'migration.sql'), 'utf8'), name));
+    return db;
+  } catch (error) { db.close(); throw error; }
+}
 function coldFixture() {
   const source = dir('source');
   const file = path.join(source, 'benefits.db');
@@ -58,7 +118,34 @@ function test(label, fn) {
     process.exitCode = 1; throw new Error('FIXTURE_FAILED');
   }
 }
+async function asyncTest(label, fn) {
+  try { await fn(); passed++; }
+  catch (error) {
+    const category = error instanceof prep.Hold ? error.category : 'ASSERTION_FAILED';
+    process.stdout.write(`${JSON.stringify({ status: 'FAIL', test: label, category })}\n`);
+    throw new Error('FIXTURE_FAILED');
+  }
+}
 try {
+  await asyncTest('owned_scratch_preserves_parent_on_success_and_failure', async () => {
+    const parent = dir('unrelated-parent');
+    const sentinel = path.join(parent, 'unrelated-sentinel');
+    fs.writeFileSync(sentinel, SENTINEL, { flag: 'wx', mode: 0o600 });
+    for (const fail of [false, true]) {
+      const run = withScratch(parent, async (owned) => {
+        assert.notEqual(owned, parent);
+        fs.writeFileSync(path.join(owned, 'own-fixture'), 'dummy', { flag: 'wx', mode: 0o600 });
+        if (fail) throw new Error('DUMMY_FAILURE');
+      });
+      if (fail) await assert.rejects(run, /DUMMY_FAILURE/); else await run;
+      assert.equal(fs.readFileSync(sentinel, 'utf8'), SENTINEL);
+      assert.deepEqual(fs.readdirSync(parent), ['unrelated-sentinel']);
+    }
+    await assert.rejects(withScratch(`${parent}/../${path.basename(parent)}`, async () => {}));
+    const alias = path.join(scratch, 'parent-alias'); fs.symlinkSync(parent, alias);
+    await assert.rejects(withScratch(alias, async () => {}));
+    assert.equal(fs.readFileSync(sentinel, 'utf8'), SENTINEL);
+  });
   test('cold_capture_and_source_unchanged', () => {
     const { source, file } = coldFixture(); const output = dir('output'); const cert = certificate(source, file);
     const before = fs.lstatSync(file, { bigint: true });
@@ -158,6 +245,71 @@ try {
     assert.ok(!after.tables.some((t) => t.name === 'CustomerHistoryAccess'));
     assert.ok(!after.tables.find((t) => t.name === 'Session').columns.some((c) => c.name === 'recoveredAddress'));
   });
+  test('literal_internal_prefix_inventory_before_and_after', () => {
+    for (const after of [false, true]) for (const type of ['table', 'trigger']) {
+      const db = canonicalDb(after);
+      try {
+        const expected = prep.expectedSchema(after);
+        prep.verifySchema(db, expected);
+        if (type === 'table') {
+          db.exec('CREATE TABLE sqliteXcustomer(payload TEXT);');
+          db.prepare('INSERT INTO sqliteXcustomer VALUES (?)').run(SENTINEL + '1'.repeat(40));
+        } else db.exec('CREATE TRIGGER sqliteXcustomer AFTER INSERT ON AuditLog BEGIN SELECT 1; END;');
+        hold(() => prep.verifySchema(db, expected), 'SCHEMA_MISMATCH');
+        assert.equal(db.prepare('SELECT COUNT(*) n FROM sqlite_master WHERE name=?').get('sqliteXcustomer').n, 1);
+      } finally { db.close(); }
+    }
+  });
+  test('root_and_normalized_mount_overlap', () => {
+    for (const [a, b, overlap] of [
+      ['/', '/protected/source', true], ['/protected/source', '/', true], ['/', '/', true],
+      ['/protected/source', '/protected/source', true], ['/protected', '/protected/source', true],
+      ['/protected/source/copy', '/protected/source', true], ['/unrelated', '/protected/source', false],
+      ['/protected/', '/protected/source/', true], ['/protected/source/', '/protected/source', true],
+      ['/protected/source-other', '/protected/source', false],
+    ]) {
+      assert.equal(prep.pathsOverlap(a, b), overlap);
+      assert.equal(prep.pathsOverlap(b, a), overlap);
+    }
+    for (const value of ['/protected/../source', '//protected/source', 'relative', '/protected/source\0', 1])
+      hold(() => prep.pathsOverlap(value, '/protected/source'), 'UNKNOWN_WRITERS');
+  });
+  test('strict_schema_definitions_and_collation_refusal', () => {
+    const expected = prep.expectedSchema();
+    const altered = canonicalDb(false, (sql, name) => name === '20260717030000_add_verified_seller_rewards'
+      ? sql.replace('"status" TEXT NOT NULL DEFAULT \'PENDING\'', '"status" TEXT COLLATE NOCASE NOT NULL DEFAULT \'PENDING\'') : sql);
+    try {
+      assert.deepEqual(altered.prepare('PRAGMA table_info(RewardEvent)').all(), expected.tables.find((t) => t.name === 'RewardEvent').columns);
+      hold(() => prep.verifySchema(altered, expected), 'SCHEMA_MISMATCH');
+    } finally { altered.close(); }
+    for (const after of [false, true]) {
+      const db = canonicalDb(after);
+      try {
+        db.exec('CREATE INDEX unexpected_definition ON RewardEvent(status COLLATE NOCASE)');
+        hold(() => prep.verifySchema(db, prep.expectedSchema(after)), 'SCHEMA_MISMATCH');
+      } finally { db.close(); }
+    }
+  });
+  test('binary_reward_status_and_final_confirmed_invariant', () => {
+    const db = new DatabaseSync(':memory:');
+    try {
+      db.exec('CREATE TABLE RewardEvent(status TEXT COLLATE NOCASE); CREATE TABLE Session(status TEXT); CREATE TABLE CustomerPass(status TEXT)');
+      const tables = ['RewardEvent', 'Session', 'CustomerPass'].map((name) => ({ name, columns: db.prepare(`PRAGMA table_info("${name}")`).all() }));
+      for (const status of ['confirmed', 'Confirmed', 'CONFIRMED ', null, 'UNKNOWN', 'CONFIRMED']) {
+        db.exec('DELETE FROM RewardEvent'); db.prepare('INSERT INTO RewardEvent VALUES (?)').run(status);
+        const counts = prep.analyzeCopy(db, tables, scanner);
+        assert.equal(counts.reward_confirmed, status === 'CONFIRMED' ? 1 : 0);
+        assert.equal(counts.reward_unknown, status !== null && status !== 'CONFIRMED' ? 1 : 0);
+        assert.equal(counts.reward_null, status === null ? 1 : 0);
+        const after = { ...counts, rows_challenge: 0 };
+        if (status === 'CONFIRMED') { prep.preflight(counts); prep.verifyContinuity(after, after); }
+        else {
+          hold(() => prep.preflight(counts), 'OPEN_REWARDS');
+          hold(() => prep.verifyContinuity(after, after), 'OPEN_REWARDS');
+        }
+      }
+    } finally { db.close(); }
+  });
   test('real_sql_refusal_and_late_failure_rollback', () => {
     const migrations = path.join(BACKEND, 'prisma/migrations');
     const names = fs.readdirSync(migrations, { withFileTypes: true }).filter((e) => e.isDirectory()).map((e) => e.name).sort();
@@ -194,6 +346,124 @@ try {
   test('private_subprocess_stderr_and_timeout', () => {
     hold(() => prep.privateTool('/bin/sh', ['-c', `printf '%s\\n' '${SENTINEL}' >&2; exit 1`]), 'TOOL_FAILED');
     hold(() => prep.privateTool('/bin/sleep', ['1'], { timeout: 50 }), 'TOOL_TIMEOUT');
+  });
+  for (const [scenario, category] of [
+    ['normal', null], ['already-absent', null], ['timeout', 'TOOL_TIMEOUT'],
+    ['overflow', 'TOOL_OUTPUT_INVALID'], ['tool-failure', 'TOOL_FAILED'],
+    ['signal-int', 'INTERRUPTED'], ['signal-term', 'INTERRUPTED'],
+    ['remove-failure', 'CLEANUP_REQUIRED'], ['query-failure', 'CLEANUP_REQUIRED'],
+    ['absence-query-failure', 'CLEANUP_REQUIRED'], ['still-present', 'CLEANUP_REQUIRED'],
+    ['cleanup-timeout', 'CLEANUP_REQUIRED'], ['signal-removal', 'CLEANUP_REQUIRED'],
+    ['signal-query', 'CLEANUP_REQUIRED'],
+  ]) await asyncTest(`dummy_client_${scenario}`, async () => {
+    const fixture = dir('client');
+    const privateScratch = path.join(fixture, 'private'); fs.mkdirSync(privateScratch, { mode: 0o700 });
+    const sentinel = path.join(privateScratch, 'sentinel'); fs.writeFileSync(sentinel, SENTINEL, { flag: 'wx', mode: 0o600 });
+    const runner = path.join(fixture, 'runner.cjs');
+    fs.writeFileSync(runner, `
+      'use strict';
+      const fs = require('node:fs');
+      const path = require('node:path');
+      const [scenario, fixture, command] = process.argv.slice(2);
+      const marker = path.join(fixture, 'alive');
+      const wait = () => setInterval(() => {}, 1000);
+      if (command === 'run') {
+        process.stdin.resume();
+        process.stdin.once('end', () => {
+          if (scenario !== 'already-absent') fs.writeFileSync(marker, 'dummy', { flag: 'wx', mode: 0o600 });
+          if (scenario === 'timeout') return wait();
+          if (scenario === 'overflow') { process.stdout.write(Buffer.alloc(200000, 120)); return wait(); }
+          if (scenario.startsWith('signal-') && ['signal-int', 'signal-term'].includes(scenario)) {
+            process.stdout.write('READY'); return wait();
+          }
+          if (scenario === 'tool-failure') { process.stderr.write('${SENTINEL}'); process.exitCode = 1; return; }
+          process.stdout.write('{"status":"PASS","category":"SNAPSHOT_CAPTURED","counts":{}}');
+        });
+      } else {
+        // A prematurely deleted private file makes the simulated daemon operation fail.
+        fs.readFileSync(path.join(fixture, 'private/sentinel'));
+        if (command === 'ps') {
+          if (scenario === 'signal-query') { process.stdout.write('READY'); wait(); }
+          else if (scenario === 'query-failure' || (scenario === 'absence-query-failure' && !fs.existsSync(marker))) process.exitCode = 1;
+          else if (fs.existsSync(marker)) process.stdout.write('aaaaaaaaaaaa\\n');
+        } else if (command === 'rm') {
+          if (scenario === 'remove-failure') process.exitCode = 1;
+          else if (scenario === 'cleanup-timeout') wait();
+          else if (scenario === 'signal-removal') { process.stdout.write('READY'); wait(); }
+          else if (scenario !== 'still-present') fs.unlinkSync(marker);
+        } else process.exitCode = 1;
+      }
+    `, { flag: 'wx', mode: 0o600 });
+    const events = [];
+    let state;
+    let signalled = false;
+    const options = {
+      timeout: scenario === 'timeout' ? 300 : 5000, cleanupTimeout: scenario === 'cleanup-timeout' ? 300 : 5000,
+      reapTimeout: 5000,
+      spawn: (_bin, args, settings) => {
+        const command = args[0];
+        if (command !== 'run') { assert.ok(state.clientReaped); assert.equal(state.child, null); assert.ok(events.includes('closed-run')); }
+        if (command === 'rm') assert.deepEqual(args, ['rm', '-f', 'dummy-container']);
+        if (command === 'ps') assert.deepEqual(args, ['ps', '-aq', '--filter', 'name=^/dummy-container$']);
+        events.push(`spawn-${command}`);
+        const child = spawn(process.execPath, ['--no-warnings', runner, scenario, fixture, ...args], {
+          ...settings, env: { PATH: '/usr/bin:/bin', HOME: fixture, TMPDIR: fixture },
+        });
+        child.once('close', () => events.push(`closed-${command}`));
+        const signalCommand = ['signal-int', 'signal-term'].includes(scenario) ? 'run'
+          : scenario === 'signal-removal' ? 'rm' : scenario === 'signal-query' ? 'ps' : null;
+        if (command === signalCommand) child.stdout.once('data', () => {
+          if (!signalled) { signalled = true; process.kill(process.pid, scenario === 'signal-term' ? 'SIGTERM' : 'SIGINT'); }
+        });
+        return child;
+      },
+    };
+    const operation = prep.withPrivateCleanup(privateScratch, fs.lstatSync(privateScratch, { bigint: true }).ino,
+      async (lifecycle) => {
+        state = lifecycle;
+        return prep.runContainer('DUMMY_NO_DOCKER', ['run'], {}, 'dummy-container', state, options);
+      }, async (owned) => {
+        assert.equal(owned, privateScratch); assert.ok(state.terminationConfirmed && state.clientReaped);
+        assert.equal(state.child, null); assert.equal(fs.existsSync(path.join(fixture, 'alive')), false);
+        assert.equal(fs.readFileSync(sentinel, 'utf8'), SENTINEL);
+        events.push('scratch-cleaned'); fs.unlinkSync(sentinel); fs.rmdirSync(owned);
+      });
+    if (category) await assert.rejects(operation, (error) => error instanceof prep.Hold && error.category === category);
+    else assert.equal((await operation).status, 'PASS');
+    const retained = category === 'CLEANUP_REQUIRED';
+    assert.equal(fs.existsSync(privateScratch), retained);
+    assert.equal(state.terminationConfirmed, !retained);
+    assert.equal(state.child, null); assert.equal(state.clientReaped, true);
+    assert.equal(events.includes('scratch-cleaned'), !retained);
+    if (retained) assert.equal(fs.readFileSync(sentinel, 'utf8'), SENTINEL);
+    if (scenario.startsWith('signal-')) assert.equal(signalled, true);
+  });
+  await asyncTest('unconfirmed_reap_retains_private_scratch', async () => {
+    const owned = dir('unreaped'); const sentinel = path.join(owned, 'sentinel');
+    fs.writeFileSync(sentinel, SENTINEL, { flag: 'wx', mode: 0o600 });
+    let killed = false;
+    let cleanCalled = false;
+    const client = new EventEmitter();
+    client.stdin = new PassThrough(); client.stdout = new PassThrough(); client.stderr = new PassThrough();
+    client.kill = () => { killed = true; return false; }; // No OS child exists in this synthetic missing-close case.
+    await assert.rejects(prep.withPrivateCleanup(owned, 0n,
+      (state) => prep.runContainer('DUMMY_NO_DOCKER', ['run'], {}, 'dummy-container', state, {
+        spawn: () => client, timeout: 5, reapTimeout: 5,
+      }), () => { cleanCalled = true; }), (error) => error.category === 'CLEANUP_REQUIRED');
+    assert.equal(killed, true); assert.equal(cleanCalled, false);
+    assert.equal(fs.readFileSync(sentinel, 'utf8'), SENTINEL);
+    client.stdin.destroy(); client.stdout.destroy(); client.stderr.destroy();
+  });
+  await asyncTest('signal_handlers_remain_through_scratch_cleanup', async () => {
+    const before = process.listenerCount('SIGTERM');
+    await assert.rejects(prep.withPrivateCleanup(scratch, 0n, async () => 'dummy-result', async () => {
+      assert.equal(process.listenerCount('SIGTERM'), before + 1);
+      process.emit('SIGTERM');
+    }), (error) => error.category === 'INTERRUPTED');
+    assert.equal(process.listenerCount('SIGTERM'), before);
+    await assert.rejects(prep.withPrivateCleanup(scratch, 0n, async () => 'dummy-result', async () => {
+      throw new Error('DUMMY_CLEANUP_FAILURE');
+    }), (error) => error.category === 'CLEANUP_REQUIRED');
   });
   test('copy_tool_has_no_production_mount_env_socket', () => {
     const image = `local/rehearsal@sha256:${'a'.repeat(64)}`;
@@ -233,11 +503,16 @@ try {
     assert.equal(refusal.status, 78); assert.equal(JSON.parse(refusal.stdout).category, 'OWNER_GO_REQUIRED');
     assert.equal((refusal.stdout + refusal.stderr).includes(SENTINEL), false);
   });
-  process.stdout.write(`${JSON.stringify({ status: 'PASS', dummyTests: passed, dockerExecuted: false,
-    prismaIntegration: fs.existsSync(path.join(BACKEND, 'node_modules/.bin/prisma')) ? 'NEEDS_VALIDATION' : 'SKIPPED_OFFLINE_TOOL_UNAVAILABLE' })}\n`);
-} catch {
+  return { status: 'PASS', dummyTests: passed, dockerExecuted: false,
+    prismaIntegration: fs.existsSync(path.join(BACKEND, 'node_modules/.bin/prisma')) ? 'NEEDS_VALIDATION' : 'SKIPPED_OFFLINE_TOOL_UNAVAILABLE' };
+} catch (error) {
   process.exitCode = 1;
-} finally {
-  // Every path here was generated by this dummy harness, never a certified source or operator input.
-  for (const entry of fs.readdirSync(scratch)) fs.rmSync(path.join(scratch, entry), { recursive: true, force: true });
+  throw error;
 }
+}
+withScratch(process.argv[2], runTests).then((result) => {
+  process.stdout.write(`${JSON.stringify(result)}\n`);
+}).catch(() => {
+  process.stdout.write('{"status":"FAIL","category":"HARNESS_FAILED"}\n');
+  process.exitCode = 1;
+});

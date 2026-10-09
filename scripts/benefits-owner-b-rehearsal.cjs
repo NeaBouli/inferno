@@ -305,7 +305,9 @@ function enforcePhase(phase, request) {
 function sqlite() { need(runtimeSupported(), 'RUNTIME_NEEDS_VALIDATION'); return require('node:sqlite').DatabaseSync; }
 function qi(name) { return `"${name.replace(/"/g, '""')}"`; }
 function schemaObjects(db) {
-  return db.prepare("SELECT type,name FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' AND name != '_prisma_migrations' ORDER BY type,name").all();
+  // GLOB's underscore is literal; sqliteX is not SQLite's reserved internal namespace.
+  // Exact stored DDL deliberately refuses equivalent-but-unproven schema definitions.
+  return db.prepare("SELECT type,name,tbl_name,sql FROM sqlite_master WHERE name NOT GLOB 'sqlite_*' AND name != '_prisma_migrations' ORDER BY type,name").all();
 }
 function expectedSchema(after = false) {
   const db = new (sqlite())(':memory:');
@@ -359,15 +361,18 @@ function analyzeCopy(db, tables, scanner) {
       }
     }
   }
-  for (const state of REWARDS) counts[`reward_${state.toLowerCase()}`] = count(db, 'SELECT COUNT(*) n FROM RewardEvent WHERE status = ?', state);
+  for (const state of REWARDS) counts[`reward_${state.toLowerCase()}`] = count(db, 'SELECT COUNT(*) n FROM RewardEvent WHERE status COLLATE BINARY = ?', state);
   counts.reward_null = count(db, 'SELECT COUNT(*) n FROM RewardEvent WHERE status IS NULL');
-  counts.reward_unknown = count(db, `SELECT COUNT(*) n FROM RewardEvent WHERE status NOT IN (${REWARDS.map(() => '?').join(',')})`, ...REWARDS);
+  counts.reward_unknown = count(db, `SELECT COUNT(*) n FROM RewardEvent WHERE status COLLATE BINARY NOT IN (${REWARDS.map(() => '?').join(',')})`, ...REWARDS);
   counts.session_open = count(db, "SELECT COUNT(*) n FROM Session WHERE status IN ('PENDING','APPROVED')");
   counts.pass_open = count(db, "SELECT COUNT(*) n FROM CustomerPass WHERE status IN ('OPEN','BOUND')");
   return safeCounts(counts);
 }
-function preflight(counts) {
+function confirmedRewards(counts) {
   if (counts.rows_reward !== counts.reward_confirmed) throw new Hold('OPEN_REWARDS', counts);
+}
+function preflight(counts) {
+  confirmedRewards(counts);
   if (counts.invalid_json) throw new Hold('INVALID_JSON', counts);
   if (counts.invalid_pass_ids || counts.noncuid_references || ['business', 'rule', 'product', 'operator', 'session'].some((k) => counts[`noncuid_${k}`]))
     throw new Hold('AUTH_SHAPE_INCOMPATIBLE', counts);
@@ -404,6 +409,12 @@ function runExistingScan(file) {
   need(output.split('\n')[0] === 'Owner-B address scan: PASS', 'SCAN_FAILED');
 }
 function prefix(counts, label) { return Object.fromEntries(Object.entries(counts).map(([k, v]) => [`${label}_${k}`, v])); }
+function verifyContinuity(before, after) {
+  confirmedRewards(after);
+  for (const key of ['business', 'rule', 'product', 'operator', 'session', 'pass', 'reward', 'audit', 'reward_link', 'admin_audit'])
+    need(before[`rows_${key}`] === after[`rows_${key}`], 'CONTINUITY_FAILED');
+  need(after.session_open === 0 && after.pass_open === 0 && after.rows_challenge === 0, 'CONTINUITY_FAILED');
+}
 function migrateCopy(request) {
   enforcePhase('migrate', request);
   const capturedHash = fileHash('/input/snapshot.db');
@@ -430,9 +441,7 @@ function migrateCopy(request) {
     const final = expectedSchema(true);
     verifySchema(db, final); verifyBaseline(db, true);
     after = analyzeCopy(db, final.tables, scanner);
-    for (const key of ['business', 'rule', 'product', 'operator', 'session', 'pass', 'reward', 'audit', 'reward_link', 'admin_audit'])
-      need(before[`rows_${key}`] === after[`rows_${key}`], 'CONTINUITY_FAILED');
-    need(after.session_open === 0 && after.pass_open === 0 && after.rows_challenge === 0, 'CONTINUITY_FAILED');
+    verifyContinuity(before, after);
   } finally { db.close(); }
   absentSidecars('/scratch/rehearsal.db');
   need(fileHash('/input/snapshot.db') === capturedHash, 'SOURCE_CHANGED');
@@ -477,6 +486,15 @@ function hostDocker(bin, args) {
   need(!result.error && result.status === 0 && result.signal === null, 'TOOL_FAILED');
   return result.stdout;
 }
+function pathsOverlap(a, b) {
+  for (const value of [a, b]) need(typeof value === 'string' && path.posix.isAbsolute(value) &&
+    !/[\r\n\0]/.test(value) && path.posix.normalize(value) === value, 'UNKNOWN_WRITERS');
+  const contains = (parent, child) => {
+    const relative = path.posix.relative(parent, child);
+    return relative === '' || (relative !== '..' && !relative.startsWith('../') && !path.posix.isAbsolute(relative));
+  };
+  return contains(a, b) || contains(b, a);
+}
 function verifyRuntime(bin, cert) {
   need(hashBuffer(fs.readFileSync(process.execPath)) === cert.tools.hostNodeSha256 &&
     hashBuffer(fs.readFileSync(bin)) === cert.tools.hostDockerSha256, 'UNKNOWN_TOOL_PROVENANCE');
@@ -494,37 +512,68 @@ function verifyRuntime(bin, cert) {
     for (const id of ids) {
       need(/^[a-f0-9]+$/.test(id), 'UNKNOWN_WRITERS');
       const mounts = JSON.parse(hostDocker(bin, ['inspect', '--format', '{{json .Mounts}}', id]));
-      need(!mounts.some((m) => m.Source && (m.Source === cert.source.directory ||
-        m.Source.startsWith(`${cert.source.directory}/`) || cert.source.directory.startsWith(`${m.Source}/`))), 'UNKNOWN_WRITERS');
+      need(Array.isArray(mounts) && !mounts.some((m) => m.Source && pathsOverlap(m.Source, cert.source.directory)), 'UNKNOWN_WRITERS');
     }
   }
 }
-async function runContainer(bin, args, request, name, state) {
-  const output = await new Promise((resolve, reject) => {
-    const child = spawn(bin, args, { env: { PATH: '/usr/bin:/bin', HOME: '/nonexistent' }, stdio: ['pipe', 'pipe', 'pipe'] });
+function containerClient(bin, args, input, state, acceptedCodes, options) {
+  return new Promise((resolve, reject) => {
+    const child = (options.spawn || spawn)(bin, args, {
+      env: { PATH: '/usr/bin:/bin', HOME: '/nonexistent' }, stdio: ['pipe', 'pipe', 'pipe'],
+    });
     state.child = child;
+    state.clientReaped = false;
     let bytes = 0;
+    let failure;
+    let reapTimer;
     const chunks = [];
-    const timer = setTimeout(() => { child.kill('SIGKILL'); reject(new Hold('TOOL_TIMEOUT')); }, TIMEOUT);
+    const abort = (category) => {
+      if (failure) return;
+      failure = new Hold(category);
+      try { child.kill('SIGKILL'); } catch { /* Reap/absence evidence, not kill's return value, decides cleanup. */ }
+      reapTimer = setTimeout(() => reject(new Hold('CLEANUP_REQUIRED')), options.reapTimeout ?? 15000);
+    };
+    state.abortClient = () => abort('INTERRUPTED');
+    const timer = setTimeout(() => abort('TOOL_TIMEOUT'), options.timeout ?? TIMEOUT);
     const collect = (chunk, stdout) => {
+      if (failure) return;
       bytes += chunk.length;
-      if (bytes > MAX_OUTPUT) { child.kill('SIGKILL'); reject(new Hold('TOOL_OUTPUT_INVALID')); }
+      if (bytes > (options.maxOutput ?? MAX_OUTPUT)) abort('TOOL_OUTPUT_INVALID');
       else if (stdout) chunks.push(chunk);
     };
     child.stdout.on('data', (c) => collect(c, true)); child.stderr.on('data', (c) => collect(c, false));
     child.stdin.on('error', () => {});
-    child.once('error', () => { clearTimeout(timer); reject(new Hold('TOOL_FAILED')); });
+    child.once('error', () => abort('TOOL_FAILED'));
     child.once('close', (code, signal) => {
-      clearTimeout(timer); state.child = null;
-      if (signal || (code !== 0 && code !== 78)) reject(new Hold('TOOL_FAILED'));
+      clearTimeout(timer); clearTimeout(reapTimer);
+      state.child = null; state.abortClient = null; state.clientReaped = true;
+      if (failure) reject(failure);
+      else if (signal || !acceptedCodes.includes(code)) reject(new Hold('TOOL_FAILED'));
       else resolve(Buffer.concat(chunks).toString('utf8'));
     });
-    child.stdin.end(JSON.stringify(request));
-  }).finally(() => {
-    // This deletes only our uniquely named tool container, never a service.
-    spawnSync(bin, ['rm', '-f', name], { env: { PATH: '/usr/bin:/bin', HOME: '/nonexistent' }, timeout: 15000, stdio: 'ignore' });
-    need(hostDocker(bin, ['ps', '-aq', '--filter', `name=^/${name}$`]).trim() === '', 'CLEANUP_REQUIRED');
+    child.stdin.end(input);
   });
+}
+async function runContainer(bin, args, request, name, state, options = {}) {
+  state.terminationConfirmed = false;
+  let output;
+  try {
+    output = await containerClient(bin, args, JSON.stringify(request), state, [0, 78], options);
+  } finally {
+    try {
+      need(state.clientReaped && state.child === null, 'CLEANUP_REQUIRED');
+      const cleanupOptions = { ...options, timeout: options.cleanupTimeout ?? 15000 };
+      const query = ['ps', '-aq', '--filter', `name=^/${name}$`];
+      const existing = (await containerClient(bin, query, '', state, [0], cleanupOptions)).trim();
+      if (existing !== '') {
+        need(/^[a-f0-9]{12,64}$/.test(existing), 'CLEANUP_REQUIRED');
+        // Remove only our unique tool container, never a service or an arbitrary returned ID.
+        await containerClient(bin, ['rm', '-f', name], '', state, [0], cleanupOptions);
+        need((await containerClient(bin, query, '', state, [0], cleanupOptions)).trim() === '', 'CLEANUP_REQUIRED');
+      }
+      state.terminationConfirmed = true;
+    } catch { throw new Hold('CLEANUP_REQUIRED'); }
+  }
   return toolSummary(output);
 }
 function cleanPrivateScratch(directory, inode) {
@@ -546,6 +595,23 @@ function cleanPrivateScratch(directory, inode) {
   }
   fs.rmdirSync(directory);
 }
+async function withPrivateCleanup(directory, inode, action, cleanup = cleanPrivateScratch) {
+  const state = { child: null, clientReaped: true, terminationConfirmed: true, interrupted: false, abortClient: null };
+  const interrupt = () => { state.interrupted = true; state.abortClient?.(); };
+  process.on('SIGINT', interrupt); process.on('SIGTERM', interrupt);
+  let result;
+  try {
+    try { result = await action(state); }
+    finally {
+      need(state.terminationConfirmed && state.clientReaped && state.child === null, 'CLEANUP_REQUIRED');
+      try { await cleanup(directory, inode); } catch { throw new Hold('CLEANUP_REQUIRED'); }
+    }
+    need(!state.interrupted, 'INTERRUPTED');
+    return result;
+  } finally {
+    process.off('SIGINT', interrupt); process.off('SIGTERM', interrupt);
+  }
+}
 async function execute(cert, ownerGo) {
   need(ownerGo === GO, 'OWNER_GO_REQUIRED');
   need(process.platform === 'linux' && process.getuid() === 0 && runtimeSupported(), 'ROOT_LINUX_REQUIRED');
@@ -558,10 +624,7 @@ async function execute(cert, ownerGo) {
   process.umask(0o077);
   const scratch = fs.mkdtempSync('/var/tmp/benefits-owner-b-');
   const inode = fs.lstatSync(scratch, { bigint: true }).ino;
-  const state = { child: null, interrupted: false };
-  const interrupt = () => { state.interrupted = true; state.child?.kill('SIGKILL'); };
-  process.on('SIGINT', interrupt); process.on('SIGTERM', interrupt);
-  try {
+  return withPrivateCleanup(scratch, inode, async (state) => {
     fs.mkdirSync(path.join(scratch, 'captured'), { mode: 0o700 });
     fs.mkdirSync(path.join(scratch, 'migrated'), { mode: 0o700 });
     const phases = [
@@ -580,10 +643,7 @@ async function execute(cert, ownerGo) {
       counts = { ...counts, ...result.counts };
     }
     return summary('PASS', 'REHEARSAL_PASSED', counts);
-  } finally {
-    process.off('SIGINT', interrupt); process.off('SIGTERM', interrupt);
-    cleanPrivateScratch(scratch, inode);
-  }
+  });
 }
 async function main(args) {
   const [command = 'spec', certificateFile, ownerGo] = args;
@@ -622,8 +682,8 @@ async function main(args) {
 }
 module.exports = { Hold, REAL_POLICY, MAX_BYTES, TARGET, BASE, GO, identity, hashBuffer, fileHash, copyProtected,
   captureStoppedSnapshot, validateCertificate, bundleSpec, buildDockerArgs, childEnv, expectedSchema,
-  analyzeCopy, preflight, verifySchema, integrity, summary, safeCounts, toolSummary, plan, runtimeSupported,
-  cleanPrivateScratch, execute, privateTool };
+  analyzeCopy, preflight, verifySchema, verifyContinuity, integrity, summary, safeCounts, toolSummary, plan, runtimeSupported,
+  cleanPrivateScratch, withPrivateCleanup, runContainer, pathsOverlap, execute, privateTool };
 if (require.main === module) main(process.argv.slice(2)).catch((error) => {
   const category = error instanceof Hold && CATEGORIES.has(error.category) ? error.category : 'TOOL_FAILED';
   try { emitSafeSummary(summary('HOLD', category, error instanceof Hold ? error.counts : {})); }
