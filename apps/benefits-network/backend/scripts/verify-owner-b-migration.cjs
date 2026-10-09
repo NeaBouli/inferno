@@ -26,11 +26,36 @@ let tempDir = null;
 // never by address value: a customer address may equal a seller address.
 // Fail closed on any other hit, on unreadable/invalid JSON and on any table or
 // column the scanner does not know. Output is counts per location, never values.
-// Address token: 0x + exactly 40 hex digits, case-insensitive, not continued by another hex digit
-// (a bytes32 such as RewardEvent.partnerId or a tx hash is not an address). An address embedded in
-// longer hex (ABI-encoded calldata, left-padded bytes32) is caught by the padded-word pattern.
-const ADDRESS_PATTERN = /0x[0-9a-f]{40}(?![0-9a-f])/gi;
-const PADDED_ADDRESS_PATTERN = /0{24}[0-9a-f]{40}/gi;
+// Address classification of hex runs (case-insensitive, hex boundaries on both sides):
+// - `0x` + exactly 40 hex digits: an address token.
+// - `0x` + 64*k hex (k >= 1, e.g. tx hash, partnerId, ABI data) or `0x` + 8 + 64*k hex (4-byte selector
+//   + ABI words, i.e. calldata): split into strict 32-byte words; a word of 12 zero bytes followed by a
+//   non-zero 20-byte value is an ABI-encoded address. Any other bytes32 is NOT an address.
+// - bare (no 0x) runs of 64*k hex: the same strict word check.
+// - any other `0x` run longer than 40 hex digits is ambiguous and counted (fail closed).
+const PREFIXED_HEX_RUN = /0[xX]([0-9a-fA-F]+)(?![0-9a-fA-F])/g;
+const BARE_HEX_RUN = /(?<![0-9a-fA-FxX])([0-9a-fA-F]{64,})(?![0-9a-fA-F])/g;
+const PADDED_WORD = /^0{24}(?!0{40}$)[0-9a-f]{40}$/i;
+
+function paddedWords(hex) {
+  let count = 0;
+  for (let offset = 0; offset < hex.length; offset += 64) {
+    if (PADDED_WORD.test(hex.slice(offset, offset + 64))) count += 1;
+  }
+  return count;
+}
+
+/** Number of address findings in one hex run (prefixed: whether it started with 0x). */
+function classifyHexRun(prefixed, hex) {
+  if (prefixed) {
+    if (hex.length === 40) return 1;
+    if (hex.length < 40) return 0;
+    if (hex.length % 64 === 0) return paddedWords(hex);
+    if (hex.length > 8 && (hex.length - 8) % 64 === 0) return paddedWords(hex.slice(8));
+    return 1; // ambiguous long hex: fail closed
+  }
+  return hex.length >= 64 && hex.length % 64 === 0 ? paddedWords(hex) : 0;
+}
 
 // Every table/column the post-migration schema may contain. Anything else fails.
 const KNOWN_COLUMNS = {
@@ -66,12 +91,20 @@ const ALLOWED_COLUMNS = new Set([
   'SellerRewardLink.rewardWallet',
   'Session.confirmedByWallet',
 ]);
-// (AuditLog type -> JSON key paths). A path covers the value at that key, including a nested object
-// written there (current writer: createdBy = { walletAddress, role, operatorId } of the seller creator).
+// (AuditLog type -> exact scalar LEAF paths). Only a string value at exactly that path is allowed; a
+// sibling, a parent object or any descendant is not. Leaves are the seller identities actually written:
+// - REDEEMED / REDEEM_DENIED_LIMIT $.actorWallet: confirming seller (owner/operator) of the checkout.
+// - SESSION_CREATED / CUSTOMER_PASS_BOUND $.createdBy.walletAddress: written by createSessionSnapshot
+//   (src/services/sessionService.ts:338-344, `createdBy: { walletAddress: creator.walletAddress, ... }`);
+//   creator comes from resolveSessionCreator (sessionService.ts:182) for a wallet recovered from the
+//   seller signature (routes/sessions.ts requireSessionCreator; routes/passes.ts:134 verifySellerSignature
+//   -> customerPassService.ts:160). Historic SESSION_CREATED writers wrote only { businessId, nonce }
+//   (82512c75) or the same createdBy object (5dfa8234, aadba7f8); no flat $.walletAddress writer exists.
 const ALLOWED_AUDIT_PATHS = {
   REDEEMED: ['$.actorWallet'],
   REDEEM_DENIED_LIMIT: ['$.actorWallet'],
-  SESSION_CREATED: ['$.walletAddress', '$.createdBy'],
+  SESSION_CREATED: ['$.createdBy.walletAddress'],
+  CUSTOMER_PASS_BOUND: ['$.createdBy.walletAddress'],
 };
 
 function quoteIdent(name) {
@@ -79,12 +112,17 @@ function quoteIdent(name) {
 }
 
 function redact(text) {
-  return String(text).replace(/0x[0-9a-f]{40,}/gi, '0x<redacted>').replace(PADDED_ADDRESS_PATTERN, '<redacted>');
+  return String(text)
+    .replace(PREFIXED_HEX_RUN, (match, hex) => (hex.length >= 40 ? '0x<hex>' : match))
+    .replace(BARE_HEX_RUN, '<hex>');
 }
 
 function countAddresses(text) {
   const value = String(text);
-  return (value.match(ADDRESS_PATTERN) || []).length + (value.match(PADDED_ADDRESS_PATTERN) || []).length;
+  let count = 0;
+  for (const match of value.matchAll(PREFIXED_HEX_RUN)) count += classifyHexRun(true, match[1]);
+  for (const match of value.matchAll(BARE_HEX_RUN)) count += classifyHexRun(false, match[1]);
+  return count;
 }
 
 function sqliteJson(db, sql) {
@@ -97,8 +135,9 @@ function childPath(base, key) {
   return /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(key) ? `${base}.${key}` : `${base}[${JSON.stringify(key)}]`;
 }
 
+/** Exact scalar leaf match only (called for string values; keys never match an allowlist entry). */
 function pathAllowed(jsonPath, allowed) {
-  return allowed.some((entry) => jsonPath === entry || jsonPath.startsWith(`${entry}.`) || jsonPath.startsWith(`${entry}[`));
+  return allowed.includes(jsonPath);
 }
 
 /** Walks a parsed JSON value; calls onHit(path, count) for every address in a string value or key. */
@@ -369,6 +408,7 @@ function runFixture() {
   assert(scan.ok, `Generic address scan failed after migration:\n${formatScan(scan)}`);
   assert(scan.allowed['Business.ownerAddress'] === 1, 'Allowlisted seller owner address must be kept and not flagged');
   selfTestScanner(db);
+  selfTestClassifier();
 
   console.log('Owner-B migration verified: refusal (non-terminal and unknown statuses) and a late failure leave the DB unchanged; continuity keeps sessions, closed events and audit rows without customer data; generic address scan clean.');
   } finally {
@@ -380,10 +420,12 @@ function runFixture() {
 function selfTestScanner(migratedDb) {
   const cases = [
     ['unscrubbed ATTEST_FAIL wallet', `INSERT INTO AuditLog (id, sessionId, type, payload, ts) VALUES ('neg', 's-old', 'ATTEST_FAIL', '{"wallet":"${CUSTOMER}"}', '2025-01-01');`],
-    // Open map item: the current pass-bind writer (sessionService createSessionSnapshot) stores the seller
-    // creator at CUSTOMER_PASS_BOUND $.createdBy, which the FINAL allowlist does not list, so such rows fail
-    // closed until the allowlist is extended by a reviewed map change.
-    ['CUSTOMER_PASS_BOUND seller createdBy (not allowlisted)', `INSERT INTO AuditLog (id, sessionId, type, payload, ts) VALUES ('neg', 's-old', 'CUSTOMER_PASS_BOUND', '{"createdBy":{"walletAddress":"${SELLER}","role":"OWNER"}}', '2025-01-01');`],
+    // Exact leaves only: siblings, parents and descendants of an allowlisted leaf fail.
+    ['sibling of an allowlisted leaf', `INSERT INTO AuditLog (id, sessionId, type, payload, ts) VALUES ('neg', 's-old', 'SESSION_CREATED', '{"createdBy":{"walletAddress":"${SELLER}","role":"${CUSTOMER}"}}', '2025-01-01');`],
+    ['descendant of an allowlisted leaf', `INSERT INTO AuditLog (id, sessionId, type, payload, ts) VALUES ('neg', 's-old', 'CUSTOMER_PASS_BOUND', '{"createdBy":{"walletAddress":{"value":"${CUSTOMER}"}}}', '2025-01-01');`],
+    ['parent of an allowlisted leaf', `INSERT INTO AuditLog (id, sessionId, type, payload, ts) VALUES ('neg', 's-old', 'SESSION_CREATED', '{"createdBy":"${CUSTOMER}"}', '2025-01-01');`],
+    ['flat SESSION_CREATED walletAddress (no writer)', `INSERT INTO AuditLog (id, sessionId, type, payload, ts) VALUES ('neg', 's-old', 'SESSION_CREATED', '{"walletAddress":"${CUSTOMER}"}', '2025-01-01');`],
+    ['allowlisted leaf in an array element', `INSERT INTO AuditLog (id, sessionId, type, payload, ts) VALUES ('neg', 's-old', 'REDEEMED', '{"actorWallet":["${CUSTOMER}"]}', '2025-01-01');`],
     ['allowlisted key under another type', `INSERT INTO AuditLog (id, sessionId, type, payload, ts) VALUES ('neg', 's-old', 'ATTEST_OK', '{"actorWallet":"${SELLER}"}', '2025-01-01');`],
     ['escaped address in JSON', `INSERT INTO AuditLog (id, sessionId, type, payload, ts) VALUES ('neg', 's-old', 'EXPIRED', '{"reason":"\\u0030x${CUSTOMER_BARE.toUpperCase()}"}', '2025-01-01');`],
     ['address as JSON key', `INSERT INTO AuditLog (id, sessionId, type, payload, ts) VALUES ('neg', 's-old', 'EXPIRED', '{"${CUSTOMER}":1}', '2025-01-01');`],
@@ -402,9 +444,59 @@ function selfTestScanner(migratedDb) {
     assert(!result.ok, `Scanner must fail closed on: ${name}`);
     assert(!formatScan(result).toLowerCase().includes(CUSTOMER_BARE), `Scanner output must not disclose the address (${name})`);
   }
+
+  // Positive cases: exact allowlisted leaves and non-address hex stay clean.
+  const positives = [
+    ['SESSION_CREATED $.createdBy.walletAddress', `INSERT INTO AuditLog (id, sessionId, type, payload, ts) VALUES ('pos', 's-old', 'SESSION_CREATED', '{"createdBy":{"walletAddress":"${SELLER}","role":"OWNER","operatorId":null}}', '2025-01-01');`],
+    ['CUSTOMER_PASS_BOUND $.createdBy.walletAddress', `INSERT INTO AuditLog (id, sessionId, type, payload, ts) VALUES ('pos', 's-old', 'CUSTOMER_PASS_BOUND', '{"createdBy":{"walletAddress":"${SELLER}","role":"OPERATOR","operatorId":"op"}}', '2025-01-01');`],
+    ['REDEEMED $.actorWallet', `INSERT INTO AuditLog (id, sessionId, type, payload, ts) VALUES ('pos', 's-old', 'REDEEMED', '{"actorWallet":"${SELLER}"}', '2025-01-01');`],
+    ['tx hash and bytes32 partner id', `UPDATE RewardEvent SET txHash = '0x${'9f'.repeat(32)}', partnerId = '0x${'ab'.repeat(32)}' WHERE id = 'r-closed';`],
+  ];
+  for (const [name, sql] of positives) {
+    const copy = path.join(tempDir, `pos-${positives.findIndex((entry) => entry[0] === name)}.db`);
+    fs.copyFileSync(migratedDb, copy);
+    sqlite(copy, sql);
+    const result = scanDatabaseForAddresses(copy);
+    assert(result.ok, `Scanner must accept: ${name}\n${formatScan(result)}`);
+  }
 }
 
-module.exports = { scanDatabaseForAddresses, formatScan, ALLOWED_COLUMNS, ALLOWED_AUDIT_PATHS };
+/** Unit fixtures for the hex-run classification (strict 20-byte tokens and 32-byte ABI words). */
+function selfTestClassifier() {
+  const address = CUSTOMER_BARE;
+  const word = (hex) => hex.padStart(64, '0');
+  const findings = [
+    ['exact token', `0x${address}`, 1],
+    ['exact token mixed case', CUSTOMER, 1],
+    ['exact token followed by text', `paid by 0x${address.toUpperCase()}.`, 1],
+    ['exact token glued to a word', `wallet0x${address}`, 1],
+    ['calldata selector + padded word', `0x70a08231${word(address)}`, 1],
+    ['calldata address + random word', `0xa9059cbb${word(address)}${'7e'.repeat(32)}`, 1],
+    // A small uint word is indistinguishable from a padded address: ambiguous, counted (fail closed).
+    ['calldata address + small uint word (ambiguous)', `0xa9059cbb${word(address)}${word('64')}`, 2],
+    ['standalone padded word (ambiguous bytes32 -> fail closed)', `0x${word(address)}`, 1],
+    ['bare padded ABI word', `data ${word(address)}`, 1],
+    ['ambiguous long hex run', `0x${address}ab`, 1],
+    ['signature-length hex (ambiguous)', `0x${'12'.repeat(65)}`, 1],
+  ];
+  const clean = [
+    ['random tx hash', `0x${'9f3a'.repeat(16)}`],
+    ['bytes32 partner id', `0x${'ab'.repeat(32)}`],
+    ['zero bytes32', `0x${'0'.repeat(64)}`],
+    ['two random words', `0x${'12'.repeat(64)}`],
+    ['bare sha256 digest', 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'],
+    ['short hex', '0xdeadbeef'],
+    ['digest prefix', `sha256:${'cd'.repeat(32)}`],
+  ];
+  for (const [name, text, expected] of findings) {
+    assert(countAddresses(text) === expected, `classifier: ${name} must count ${expected}, got ${countAddresses(text)}`);
+  }
+  for (const [name, text] of clean) {
+    assert(countAddresses(text) === 0, `classifier: ${name} must not be an address`);
+  }
+}
+
+module.exports = { scanDatabaseForAddresses, formatScan, countAddresses, ALLOWED_COLUMNS, ALLOWED_AUDIT_PATHS };
 
 if (require.main === module) {
   const scanIndex = process.argv.indexOf('--scan');

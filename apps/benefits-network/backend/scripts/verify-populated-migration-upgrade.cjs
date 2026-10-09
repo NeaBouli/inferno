@@ -324,7 +324,9 @@ try {
   const bare = (address) => address.slice(2);
   const calldata = `0x70a08231000000000000000000000000${bare(CUSTOMERS.calldata).toLowerCase()}`;
   sqlite(`
-    UPDATE SellerRewardLink SET rewardWallet = '${REWARD}' WHERE id = 'upgrade-reward-link';
+    -- A bytes32 partner id and governance tx hash are not addresses and must not be flagged.
+    UPDATE SellerRewardLink SET rewardWallet = '${REWARD}', partnerId = '0x${'7e3a'.repeat(16)}',
+      governanceReference = '0x${'c0de'.repeat(16)}' WHERE id = 'upgrade-reward-link';
     INSERT INTO CheckoutOperator (id, businessId, walletAddress, label, active, createdAt, updatedAt)
     VALUES ('legacy-operator', 'migration-fixture', '${OPERATOR}', 'Till 1', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
     INSERT INTO Session (id, businessId, nonce, expiresAt, status, reason, recoveredAddress, lockAmountRaw, walletBalanceRaw,
@@ -353,8 +355,10 @@ try {
        '{"wallet":"${CUSTOMERS.lower}","used":3,"limit":3,"period":"monthly","actorRole":"OPERATOR","actorWallet":"${OPERATOR}"}', CURRENT_TIMESTAMP),
       ('legacy-redeemed-audit', 'legacy-redeemed', 'REDEEMED',
        '{"actorRole":"OWNER","actorWallet":"${SELLER}","operatorId":null}', CURRENT_TIMESTAMP),
-      ('legacy-created-flat', 'legacy-redeemed', 'SESSION_CREATED',
-       '{"businessId":"migration-fixture","walletAddress":"${SELLER}","createdBy":"${SELLER}","role":"OWNER"}', CURRENT_TIMESTAMP),
+      ('legacy-created-original', 'legacy-redeemed', 'SESSION_CREATED',
+       '{"businessId":"migration-fixture","nonce":"legacy-n3"}', CURRENT_TIMESTAMP),
+      ('legacy-pass-bound', 'legacy-redeemed', 'CUSTOMER_PASS_BOUND',
+       '{"businessId":"migration-fixture","customerPassId":"p1","createdBy":{"walletAddress":"${SELLER}","role":"OWNER","operatorId":null}}', CURRENT_TIMESTAMP),
       ('legacy-created-object', 'legacy-expired', 'SESSION_CREATED',
        '{"businessId":"migration-fixture","createdBy":{"walletAddress":"${OPERATOR}","role":"OPERATOR","operatorId":"legacy-operator"}}', CURRENT_TIMESTAMP),
       ('legacy-expired-audit', 'legacy-expired', 'EXPIRED', '{"reason":"TTL expired before attestation"}', CURRENT_TIMESTAMP);
@@ -379,9 +383,8 @@ try {
     'SellerRewardLink.rewardWallet',
     'AuditLog.payload type=REDEEMED $.actorWallet',
     'AuditLog.payload type=REDEEM_DENIED_LIMIT $.actorWallet',
-    'AuditLog.payload type=SESSION_CREATED $.walletAddress',
-    'AuditLog.payload type=SESSION_CREATED $.createdBy',
     'AuditLog.payload type=SESSION_CREATED $.createdBy.walletAddress',
+    'AuditLog.payload type=CUSTOMER_PASS_BOUND $.createdBy.walletAddress',
   ];
   for (const location of expectedAllowed) {
     if (!scan.allowed[location]) throw new Error(`Allowlisted seller identity missing after migration: ${location}`);
