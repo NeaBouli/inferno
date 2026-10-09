@@ -8,20 +8,21 @@ if [ "$#" -ne 1 ] || [ "$1" != '--owner-go' ]; then
     printf 'status=HOLD\nreason=OWNER_GO_REQUIRED\n'
     exit 2
 fi
-if [ "$(id -u 2>/dev/null)" != '0' ]; then
+if [ "$(/usr/bin/id -u 2>/dev/null)" != '0' ]; then
     printf 'status=HOLD\nreason=ROOT_REQUIRED\n'
     exit 2
 fi
-if ! command -v python3 >/dev/null 2>&1; then
+if [ ! -x /usr/bin/python3 ]; then
     printf 'status=HOLD\nreason=PYTHON_REQUIRED\n'
     exit 2
 fi
 # Discard shell/interpreter startup errors rather than exposing private paths.
-script_dir=$(CDPATH= cd -- "$(dirname -- "$0")" 2>/dev/null && pwd) || {
+script_dir=$(CDPATH= cd -- "$(/usr/bin/dirname -- "$0")" 2>/dev/null && pwd) || {
     printf 'status=HOLD\nreason=WRAPPER_FAILED\n'
     exit 2
 }
-if python3 -I -B "$script_dir/benefits-edge-log-check.py" --owner-go 2>/dev/null; then
+# -I isolates Python imports; env -i sanitizes the interpreter environment.
+if /usr/bin/env -i /usr/bin/python3 -I -B "$script_dir/benefits-edge-log-check.py" --owner-go 2>/dev/null; then
     exit 0
 else
     code=$?

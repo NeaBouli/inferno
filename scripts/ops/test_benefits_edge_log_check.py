@@ -7,6 +7,8 @@ import copy
 import importlib.util
 import io
 import json
+import os
+import subprocess
 import sys
 import tarfile
 import tempfile
@@ -16,7 +18,7 @@ from contextlib import redirect_stderr, redirect_stdout
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Protocol, Sequence, cast
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 SPEC = importlib.util.spec_from_file_location(
     "benefits_edge_check", Path(__file__).with_name("benefits-edge-log-check.py")
@@ -134,19 +136,25 @@ class Fixture:
         }
         self.env = ""
         self.commands: list[list[str]] = []
+        self.transport_commands: list[list[str]] = []
         self.raise_error = False
         self.drift = False
         self.inspect_peers = 0
         self.copy_override: bytes | None = None
+        self.dynamic_visible: dict[str, bytes] = {}
+        self.dynamic_archive: bytes | None = None
         self.helper = mod.helpers()
 
     def close(self) -> None:
         self.temp.cleanup()
 
     def run(self, command: Sequence[str], out_cap: int, err_cap: int) -> Captured:
-        cmd = list(command)
-        self.commands.append(cmd)
+        bound = list(command)
+        self.transport_commands.append(bound)
+        assert tuple(bound[:5]) == mod.DOCKER_PREFIX
+        cmd = ["docker", *bound[5:]]
         self.assert_command(cmd)
+        self.commands.append(cmd)
         if self.raise_error:
             raise RuntimeError(SENTINEL)
         if cmd[:2] == ["docker", "ps"]:
@@ -176,6 +184,19 @@ class Fixture:
             return captured(output.encode())
         if cmd[:2] == ["docker", "cp"]:
             path = cmd[2].split(":", 1)[1]
+            if path == "/etc/traefik/dynamic":
+                if self.dynamic_archive is not None:
+                    return captured(self.dynamic_archive)
+                buffer = io.BytesIO()
+                with tarfile.open(fileobj=buffer, mode="w", format=tarfile.USTAR_FORMAT) as archive:
+                    directory = tarfile.TarInfo("dynamic")
+                    directory.type = tarfile.DIRTYPE
+                    archive.addfile(directory)
+                    for name, data in self.dynamic_visible.items():
+                        info = tarfile.TarInfo("dynamic/" + name)
+                        info.size = len(data)
+                        archive.addfile(info, io.BytesIO(data))
+                return captured(buffer.getvalue())
             if path not in self.files:
                 return captured(
                     stderr=f"Error response from daemon: Could not find the file {path} in container {EDGE}\n".encode(),
@@ -253,7 +274,8 @@ class CheckerTests(unittest.TestCase):
         return text
 
     def test_absent_is_only_scoped_pass(self) -> None:
-        code, text = self.fixture().check()
+        fx = self.fixture()
+        code, text = fx.check()
         self.assertEqual(code, 0)
         for value in (
             "status=PASS",
@@ -267,6 +289,10 @@ class CheckerTests(unittest.TestCase):
             "file_logs=NOT_READ",
         ):
             self.assertIn(value + "\n", text)
+        self.assertTrue(all(tuple(cmd[:5]) == mod.DOCKER_PREFIX for cmd in fx.transport_commands))
+        formats = [cmd[cmd.index("--format") + 1] for cmd in fx.commands if cmd[1] == "inspect"]
+        self.assertIn("{{json .Config.User}}", formats)
+        self.assertIn(fx.helper._ENV_FMT, formats)
 
     def test_owner_and_root_gate_before_reads(self) -> None:
         for uid, parser, args, reason in (
@@ -366,6 +392,97 @@ class CheckerTests(unittest.TestCase):
                 for index in range(mod.MAX_DYNAMIC_FILES + 1):
                     (fx.dynamic / f"fixture-{index}.yml").write_text("http: {}\n")
             self.hold(fx, "ROUTE_UNPROVEN")
+
+    def test_descendant_mounts_hold_before_copy_or_sampling(self) -> None:
+        for destination in ("/etc/traefik/dynamic/foreign.yml", "/etc/traefik/dynamic/nested"):
+            fx = self.fixture()
+            (fx.dynamic / "foreign.yml").write_text("http: {}\n")
+            fx.dynamic_visible["foreign.yml"] = b"http:\n  routers:\n    hidden:\n      rule: 'Host(`benefits.example.invalid`)'\n"
+            cast(list[dict[str, object]], fx.central[7]).append(
+                {"Type": "bind", "Source": str(fx.static), "Destination": destination}
+            )
+            self.hold(fx, "ROUTE_UNPROVEN")
+            self.assertFalse(any(cmd[1] == "logs" for cmd in fx.commands))
+            self.assertFalse(any(cmd[1] == "cp" and cmd[2].endswith(":/etc/traefik/dynamic") for cmd in fx.commands))
+
+    def test_complete_container_directory_bytes_must_match(self) -> None:
+        for visible in (
+            {},
+            {"foreign.yml": b"http: {}\n", "extra.yml": b"http: {}\n"},
+            {"foreign.yml": b"http:\n  routers:\n    hidden:\n      rule: 'Host(`benefits.example.invalid`)'\n"},
+        ):
+            fx = self.fixture()
+            (fx.dynamic / "foreign.yml").write_text("http: {}\n")
+            fx.dynamic_visible = visible
+            self.hold(fx, "CONFIG_UNPROVEN")
+            self.assertFalse(any(cmd[1] == "logs" for cmd in fx.commands))
+        fx = self.fixture()
+        (fx.dynamic / "foreign.yml").write_text("http: {}\n")
+        fx.dynamic_visible = {"foreign.yml": b"http: {}\n"}
+        self.assertEqual(fx.check()[0], 0)
+        copies = [cmd for cmd in fx.commands if cmd[1] == "cp" and cmd[2].endswith(":/etc/traefik/dynamic")]
+        self.assertEqual(len(copies), 2)
+
+    def test_dynamic_archive_envelope(self) -> None:
+        for kind in ("symlink", "hardlink", "nested", "duplicate", "pax", "sparse", "wrong_root", "no_root", "bad_checksum", "truncated", "too_large", "too_many"):
+            fx = self.fixture()
+            buffer = io.BytesIO()
+            with tarfile.open(fileobj=buffer, mode="w", format=tarfile.USTAR_FORMAT) as archive:
+                directory = tarfile.TarInfo("wrong" if kind == "wrong_root" else "dynamic")
+                directory.type = tarfile.DIRTYPE
+                if kind != "no_root":
+                    archive.addfile(directory)
+                info = tarfile.TarInfo("dynamic/nested/entry.yml" if kind == "nested" else "dynamic/entry.yml")
+                if kind in ("symlink", "hardlink"):
+                    info.type = tarfile.SYMTYPE if kind == "symlink" else tarfile.LNKTYPE
+                    info.linkname = "dummy.yml"
+                elif kind in ("pax", "sparse"):
+                    info.type = tarfile.XHDTYPE if kind == "pax" else tarfile.GNUTYPE_SPARSE
+                archive.addfile(info)
+                if kind == "duplicate":
+                    archive.addfile(info)
+                if kind == "too_many":
+                    for index in range(mod.MAX_DYNAMIC_FILES):
+                        archive.addfile(tarfile.TarInfo(f"dynamic/extra-{index}.yml"))
+            data = buffer.getvalue()
+            if kind == "bad_checksum":
+                data = b"X" + data[1:]
+            elif kind == "truncated":
+                data = data[:1024]
+            elif kind == "too_large":
+                data = b"x" * (mod.TAR_BYTES + 1)
+            fx.dynamic_archive = data
+            self.hold(fx)
+            self.assertFalse(any(cmd[1] == "logs" for cmd in fx.commands))
+
+    def test_dynamic_visible_drift_holds(self) -> None:
+        fx = self.fixture()
+        (fx.dynamic / "foreign.yml").write_text("http: {}\n")
+        fx.dynamic_visible = {"foreign.yml": b"http: {}\n"}
+        original = fx.run
+
+        def run(command: Sequence[str], out_cap: int, err_cap: int) -> Captured:
+            if "logs" in command:
+                fx.dynamic_visible["foreign.yml"] = b"http: {}\n# changed\n"
+            return original(command, out_cap, err_cap)
+
+        with patch.object(fx, "run", side_effect=run):
+            self.hold(fx, "CONFIG_UNPROVEN")
+
+    def test_selected_entrypoint_only_allows_address(self) -> None:
+        for extra in (
+            "    http:\n      middlewares:\n        - foreign@file\n",
+            "    http:\n      redirections:\n        entryPoint:\n          to: elsewhere\n",
+            "    http:\n      tls: {}\n",
+            "    http: {}\n",
+            "    asDefault: true\n",
+            "    forwardedHeaders:\n      insecure: true\n",
+            "    proxyProtocol: {}\n",
+            "    unknown: true\n",
+        ):
+            fx = self.fixture(BASE_CONFIG.replace("    address: ':443'\n", "    address: ':443'\n" + extra))
+            self.hold(fx, "ROUTE_UNPROVEN")
+            self.assertFalse(any(cmd[1] == "logs" for cmd in fx.commands))
 
     def test_config_precedence_and_version_refusals(self) -> None:
         for path in (
@@ -478,6 +595,36 @@ class ParserTests(unittest.TestCase):
 
 
 class RunnerTests(unittest.TestCase):
+    def dummy(
+        self, source: str, out_cap: int, err_cap: int,
+        cmd: Sequence[str] = ("docker", "ps"),
+    ) -> Captured:
+        real_spawn = subprocess.Popen
+
+        def spawn(
+            command: Sequence[str], *, stdout: int, stderr: int, stdin: int,
+            start_new_session: bool, env: dict[str, str], cwd: str, close_fds: bool,
+        ) -> subprocess.Popen[bytes]:
+            self.assertEqual(list(command), [*mod.DOCKER_PREFIX, *cmd[1:]])
+            self.assertEqual(env, {})
+            self.assertEqual(cwd, "/")
+            self.assertTrue(close_fds and start_new_session)
+            self.assertEqual((stdout, stderr, stdin), (subprocess.PIPE, subprocess.PIPE, subprocess.DEVNULL))
+            return real_spawn(
+                [sys.executable, "-I", "-B", "-c", source], stdout=stdout, stderr=stderr,
+                stdin=stdin, env=env, cwd=cwd, close_fds=close_fds, start_new_session=start_new_session,
+            )
+
+        ambient = {
+            "PATH": "/dummy", "HOME": "/dummy", "DOCKER_HOST": "ssh://dummy.invalid",
+            "DOCKER_CONTEXT": "dummy", "DOCKER_CONFIG": "/dummy", "DOCKER_TLS_VERIFY": "1",
+            "DOCKER_CERT_PATH": "/dummy", "SSH_AUTH_SOCK": "/dummy", "HTTP_PROXY": "http://dummy.invalid",
+        }
+        with patch.dict(os.environ, ambient, clear=True), patch.object(mod, "trusted_transport"), patch.object(mod.subprocess, "Popen", side_effect=spawn) as actual:
+            raw = mod.Deps().docker(cmd, out_cap, err_cap)
+            self.assertEqual(actual.call_count, 1)
+        return cast(Captured, raw)
+
     def test_caps_timeout_and_error_stream(self) -> None:
         cases = [
             ("import sys;sys.stdout.write('x'*10000)", 10, 4096),
@@ -486,16 +633,92 @@ class RunnerTests(unittest.TestCase):
         ]
         for source, out_cap, err_cap in cases:
             with patch.object(mod, "COMMAND_SECONDS", 0.1):
-                runner = mod.Runner()
                 with self.assertRaises(mod.Hold) as error:
-                    runner([sys.executable, "-I", "-c", source], out_cap, err_cap)
+                    self.dummy(source, out_cap, err_cap)
                 self.assertEqual(error.exception.reason, mod.Reason.LIMIT)
 
     def test_match_split_across_transport_chunks(self) -> None:
         source = "import os;os.write(1,b'wallet');os.write(1,b'Address=OPAQUE');os.write(2,b'walletAddress=OPAQUE')"
-        raw = mod.Runner()([sys.executable, "-I", "-c", source], mod.LOG_BYTES, mod.LOG_BYTES)
+        raw = self.dummy(source, mod.LOG_BYTES, mod.LOG_BYTES)
         self.assertEqual(raw.stdout.count(b"walletAddress=") + raw.stderr.count(b"walletAddress="), 2)
         self.assertEqual(raw.code, 0)
+
+    def test_child_environment_is_empty_not_python_isolation(self) -> None:
+        raw = self.dummy("import os;assert not (set(os.environ)-{'LC_CTYPE'});print('EMPTY')", 4096, 4096)
+        # CPython may inject LC_CTYPE into an otherwise empty process environment.
+        self.assertEqual(raw.stdout, b"EMPTY\n")
+        self.assertEqual(raw.code, 0)
+
+    def test_helper_lookup_reaches_bound_popen(self) -> None:
+        helper = mod.helpers()
+
+        def text(cmd: Sequence[str]) -> str:
+            fmt = cmd[cmd.index("--format") + 1]
+            self.assertIn(fmt, ("{{json .Config.User}}", helper._ENV_FMT))
+            output = '"root"' if fmt == "{{json .Config.User}}" else '"HOME=/root"\n'
+            raw = self.dummy("import sys;sys.stdout.write(" + repr(output) + ")", 4096, 4096, cmd)
+            self.assertEqual(raw.code, 0)
+            self.assertEqual(raw.stderr, b"")
+            return raw.stdout.decode()
+
+        self.assertEqual(helper.traefik_lookup_env(text, EDGE), ("/root", ""))
+
+    def test_unbound_transport_never_spawns(self) -> None:
+        for cmd in (
+            ["docker", "ps"], [sys.executable, "-I", "-c", "pass"],
+            [*mod.DOCKER_PREFIX, "--context", "dummy", "ps"],
+            [mod.DOCKER, "--host", "ssh://dummy.invalid", "--config", mod.DOCKER_CONFIG, "ps"],
+        ):
+            with patch.object(mod.subprocess, "Popen") as spawn:
+                with self.assertRaises(mod.Hold):
+                    mod.Runner()(cmd, 4096, 4096)
+                spawn.assert_not_called()
+        with patch.object(mod.subprocess, "Popen") as spawn:
+            with self.assertRaises(mod.Hold):
+                mod.Deps().text(["docker", "--context", "dummy", "ps"])
+            spawn.assert_not_called()
+
+    def test_streams_close_even_when_cleanup_wait_times_out(self) -> None:
+        streams = []
+        for _ in range(2):
+            read, write = os.pipe()
+            os.close(write)
+            streams.append(os.fdopen(read, "rb"))
+        for stream in streams:
+            self.addCleanup(stream.close)
+        proc = Mock(stdout=streams[0], stderr=streams[1], pid=123456789)
+        proc.wait.side_effect = [0, subprocess.TimeoutExpired("dummy", 2)]
+        with patch.object(mod, "trusted_transport"), patch.object(mod.subprocess, "Popen", return_value=proc) as spawn, patch.object(mod.os, "killpg") as kill:
+            with self.assertRaises(subprocess.TimeoutExpired):
+                mod.Deps().docker(["docker", "ps"], 4096, 4096)
+            self.assertEqual(spawn.call_args.kwargs["env"], {})
+            kill.assert_called_once_with(proc.pid, mod.signal.SIGKILL)
+        self.assertTrue(all(stream.closed for stream in streams))
+
+    def test_transport_requires_trusted_executable_and_empty_config(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="transport-fixture-") as directory:
+            root = Path(directory).resolve()
+
+            def info(path: str, *, follow_symlinks: bool) -> os.stat_result:
+                self.assertFalse(follow_symlinks)
+                mode = mod.stat.S_IFREG | 0o755 if path == mod.DOCKER else mod.stat.S_IFDIR | 0o755
+                return os.stat_result((mode, 1, 1, 1, 0, 0, 0, 0, 0, 0))
+
+            real_open = mod.open_directory
+            with patch.object(mod.os, "stat", side_effect=info), patch.object(mod, "open_directory", side_effect=lambda _: real_open(root)):
+                mod.trusted_transport()
+                (root / "config.json").write_text("dummy")
+                with self.assertRaises(mod.Hold):
+                    mod.trusted_transport()
+            for mode, uid in ((mod.stat.S_IFREG | 0o777, 0), (mod.stat.S_IFLNK | 0o755, 0), (mod.stat.S_IFREG | 0o755, 1), (mod.stat.S_IFREG | 0o644, 0)):
+                unsafe = os.stat_result((mode, 1, 1, 1, uid, 0, 0, 0, 0, 0))
+
+                def unsafe_executable(path: str, *, follow_symlinks: bool) -> os.stat_result:
+                    return unsafe if path == mod.DOCKER else info(path, follow_symlinks=follow_symlinks)
+
+                with patch.object(mod.os, "stat", side_effect=unsafe_executable):
+                    with self.assertRaises(mod.Hold):
+                        mod.trusted_transport()
 
     def test_deadline_prevents_spawn(self) -> None:
         runner = mod.Runner()

@@ -31,11 +31,12 @@ import signal
 import stat
 import subprocess
 import sys
+import tarfile
 import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from types import ModuleType
 from typing import Callable, Protocol, Sequence, cast
 
@@ -49,6 +50,10 @@ COMMAND_SECONDS = 30.0
 TOTAL_SECONDS = 300.0
 MAX_CONTAINERS = 128
 MAX_DYNAMIC_FILES = 32
+DOCKER = "/usr/bin/docker"
+DOCKER_SOCKET = "unix:///var/run/docker.sock"
+DOCKER_CONFIG = "/var/empty"
+DOCKER_PREFIX = (DOCKER, "--host", DOCKER_SOCKET, "--config", DOCKER_CONFIG)
 ID_RE = re.compile(r"[a-f0-9]{64}")
 HOST_RE = re.compile(r"Host\(`([a-z0-9][a-z0-9.-]{0,252})`\)")
 VERSION_RE = re.compile(r"(?:docker\.io/)?(?:library/)?traefik:v?3\.6\.(\d+)(?:@sha256:[a-f0-9]{64})?")
@@ -163,8 +168,18 @@ class Runner:
     def __call__(self, cmd: Sequence[str], out_cap: int, err_cap: int) -> Raw:
         end = min(self.deadline, time.monotonic() + COMMAND_SECONDS)
         require(time.monotonic() < end, Reason.LIMIT)
+        require(
+            tuple(cmd[:5]) == DOCKER_PREFIX
+            and len(cmd) > 5
+            and cmd[5] in ("ps", "inspect", "cp", "logs"),
+            Reason.COMMAND_FAILED,
+        )
+        trusted_transport()
         proc = subprocess.Popen(
             list(cmd),
+            env={},
+            cwd="/",
+            close_fds=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             stdin=subprocess.DEVNULL,
@@ -200,12 +215,14 @@ class Runner:
         finally:
             # Descendants can hold pipes after the CLI process has already exited.
             try:
-                os.killpg(proc.pid, signal.SIGKILL)
-            except ProcessLookupError:
-                proc.poll()
-            proc.wait(timeout=2)
-            for stream in streams:
-                stream.close()
+                try:
+                    os.killpg(proc.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    proc.poll()
+                proc.wait(timeout=2)
+            finally:
+                for stream in streams:
+                    stream.close()
 
 
 def pairs_unique(pairs: list[tuple[str, object]]) -> dict[str, object]:
@@ -344,6 +361,26 @@ def read_file(path: Path, started: float | None = None) -> bytes:
         os.close(directory)
 
 
+def trusted_transport() -> None:
+    # Fixed owner-provisioned paths only; no ambient Docker config/credentials.
+    for path in ("/", "/usr", "/usr/bin", "/var", DOCKER_CONFIG, DOCKER):
+        info = os.stat(path, follow_symlinks=False)
+        require(
+            info.st_uid == 0
+            and not info.st_mode & 0o022
+            and (stat.S_ISREG(info.st_mode) if path == DOCKER else stat.S_ISDIR(info.st_mode)),
+            Reason.COMMAND_FAILED,
+        )
+        if path == DOCKER:
+            require(bool(info.st_mode & 0o111), Reason.COMMAND_FAILED)
+    fd = open_directory(Path(DOCKER_CONFIG))
+    try:
+        with os.scandir(fd) as entries:
+            require(next(entries, None) is None, Reason.COMMAND_FAILED)
+    finally:
+        os.close(fd)
+
+
 @dataclass
 class Deps:
     run: Callable[[Sequence[str], int, int], Raw] = field(default_factory=Runner)
@@ -352,8 +389,15 @@ class Deps:
     yaml: Callable[[], ModuleType | None] = yaml_runtime
     load_helpers: Callable[[], Helpers] = helpers
 
+    def docker(self, cmd: Sequence[str], out_cap: int, err_cap: int) -> Raw:
+        require(
+            len(cmd) > 1 and cmd[0] == "docker" and cmd[1] in ("ps", "inspect", "cp", "logs"),
+            Reason.COMMAND_FAILED,
+        )
+        return self.run([*DOCKER_PREFIX, *cmd[1:]], out_cap, err_cap)
+
     def text(self, cmd: Sequence[str]) -> str:
-        raw = self.run(cmd, STATIC_BYTES, ERROR_BYTES)
+        raw = self.docker(cmd, STATIC_BYTES, ERROR_BYTES)
         require(raw.code == 0 and not raw.stderr, Reason.COMMAND_FAILED)
         require(len(raw.stdout) <= STATIC_BYTES, Reason.LIMIT)
         return raw.stdout.decode("utf-8")
@@ -366,7 +410,7 @@ class Deps:
 
 
 def copy_config(deps: Deps, helper: Helpers, container: str, path: str) -> bytes | None:
-    raw = deps.run(["docker", "cp", f"{container}:{path}", "-"], TAR_BYTES, ERROR_BYTES)
+    raw = deps.docker(["docker", "cp", f"{container}:{path}", "-"], TAR_BYTES, ERROR_BYTES)
     require(len(raw.stdout) <= TAR_BYTES and len(raw.stderr) <= ERROR_BYTES, Reason.LIMIT)
     if raw.code != 0:
         missing = f"Could not find the file {path} in container ".encode()
@@ -492,7 +536,9 @@ def prove_routes(
             )
             entry = meta.get(prefix + "entrypoints")
             require(isinstance(entry, str) and entry in entrypoints, Reason.ROUTE_UNPROVEN)
-            address = mapping(entrypoints[cast(str, entry)]).get("address")
+            selected_entry = mapping(entrypoints[cast(str, entry)])
+            require(set(selected_entry) == {"address"}, Reason.ROUTE_UNPROVEN)
+            address = selected_entry.get("address")
             require(
                 address == ":443"
                 and (
@@ -546,6 +592,8 @@ def prove_routes(
 
 
 def dynamic_snapshot(
+    deps: Deps,
+    container: str,
     cfg: dict[str, object],
     mounts: object,
     helper: Helpers,
@@ -559,11 +607,27 @@ def dynamic_snapshot(
     directory = options.get("directory")
     require(
         isinstance(directory, str)
+        and directory.startswith("/")
+        and directory != "/"
+        and str(PurePosixPath(directory)) == directory
+        and ".." not in PurePosixPath(directory).parts
+        and len(directory) <= 1024
         and set(options) <= {"directory", "watch"}
         and options.get("watch", True) is True,
         Reason.ROUTE_UNPROVEN,
     )
-    root = helper.host_dir_for(cast(str, directory), mounts)
+    assert isinstance(directory, str)
+    for mount in sequence(mounts):
+        destination = mapping(mount).get("Destination")
+        require(
+            isinstance(destination, str)
+            and destination.startswith("/")
+            and str(PurePosixPath(destination)) == destination
+            and ".." not in PurePosixPath(destination).parts
+            and not destination.startswith(directory + "/"),
+            Reason.ROUTE_UNPROVEN,
+        )
+    root = helper.host_dir_for(directory, mounts)
     fd = open_directory(root)
     try:
         with os.scandir(fd) as entries:
@@ -592,6 +656,55 @@ def dynamic_snapshot(
                     Reason.ROUTE_UNPROVEN,
                 )
             snapshot[name] = raw
+        copied = deps.docker(["docker", "cp", f"{container}:{directory}", "-"], TAR_BYTES, ERROR_BYTES)
+        require(copied.code == 0 and not copied.stderr, Reason.COMMAND_FAILED)
+        require(len(copied.stdout) <= TAR_BYTES and len(copied.stderr) <= ERROR_BYTES, Reason.LIMIT)
+        # Walk bounded physical headers only: no extraction or extended-header parsing.
+        archive = copied.stdout
+        offset, total, root_seen = 0, 0, False
+        visible: dict[str, bytes] = {}
+        basename = PurePosixPath(directory).name
+        while offset + 512 <= len(archive) and any(archive[offset : offset + 512]):
+            header = archive[offset : offset + 512]
+            require(header[156:157] in (b"0", b"\0", b"5"), Reason.CONFIG_UNPROVEN)
+            require(not header[124] & 0x80, Reason.CONFIG_UNPROVEN)
+            member = tarfile.TarInfo.frombuf(header, "utf-8", "strict")
+            require(not member.linkname and not member.pax_headers, Reason.CONFIG_UNPROVEN)
+            offset += 512
+            if member.isdir():
+                require(
+                    not root_seen and member.name.rstrip("/") == basename and member.size == 0,
+                    Reason.CONFIG_UNPROVEN,
+                )
+                root_seen = True
+            else:
+                prefix = basename + "/"
+                name = member.name[len(prefix) :]
+                require(
+                    root_seen
+                    and member.name.startswith(prefix)
+                    and name not in ("", ".", "..")
+                    and "/" not in name
+                    and name not in visible
+                    and name.endswith((".yml", ".yaml"))
+                    and len(visible) < MAX_DYNAMIC_FILES,
+                    Reason.CONFIG_UNPROVEN,
+                )
+                total += member.size
+                require(0 <= member.size <= STATIC_BYTES and total <= STATIC_BYTES, Reason.LIMIT)
+                end = offset + member.size
+                padded = offset + ((member.size + 511) // 512) * 512
+                require(padded <= len(archive) and not any(archive[end:padded]), Reason.CONFIG_UNPROVEN)
+                visible[name] = archive[offset:end]
+                offset = padded
+        require(
+            root_seen
+            and len(archive) % 512 == 0
+            and len(archive) >= offset + 1024
+            and not any(archive[offset:])
+            and visible == snapshot,
+            Reason.CONFIG_UNPROVEN,
+        )
         return snapshot
     finally:
         os.close(fd)
@@ -723,7 +836,7 @@ def check(deps: Deps, yaml: ModuleType, helper: Helpers, result: Result) -> None
         Reason.CONFIG_UNPROVEN,
     )
     apps, domains = prove_routes(peers, central, cfg, helper)
-    dynamic = dynamic_snapshot(cfg, central[7], helper, yaml, domains)
+    dynamic = dynamic_snapshot(deps, cid, cfg, central[7], helper, yaml, domains)
     result.access = "ABSENT" if "accessLog" not in cfg else "ENABLED"
     result.sink = "NONE" if result.access == "ABSENT" else "STDOUT"
     candidate = Reason.SAMPLE_COMPLETE if result.access == "ABSENT" else Reason.ACCESS_LOG_UNPROVEN
@@ -758,7 +871,7 @@ def check(deps: Deps, yaml: ModuleType, helper: Helpers, result: Result) -> None
     result.end = int(deps.clock())
     result.start = result.end - WINDOW
     for container in sample_ids:
-        raw = deps.run(
+        raw = deps.docker(
             [
                 "docker",
                 "logs",
@@ -795,7 +908,7 @@ def check(deps: Deps, yaml: ModuleType, helper: Helpers, result: Result) -> None
     )
     require(
         read_file(selected[1], started) == content
-        and dynamic_snapshot(cfg, central[7], helper, yaml, domains) == dynamic,
+        and dynamic_snapshot(deps, cid, cfg, central[7], helper, yaml, domains) == dynamic,
         Reason.DRIFT,
     )
     helper.prove_selected_config(copy, cid, lookup, selected, content)
