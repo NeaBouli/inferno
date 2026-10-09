@@ -383,6 +383,96 @@ describe('Wallet-free seller challenge (nonce-only state)', () => {
       .rejects.toThrow('invalid, expired, or already used');
   });
 
+  it('never puts a target wallet into the challenge: fixed scope, Target line bound from the body', async () => {
+    const operatorA = ethers.Wallet.createRandom().address;
+    const operatorB = ethers.Wallet.createRandom().address;
+    const bare = (address: string) => address.slice(2).toLowerCase();
+
+    // Wallet-bearing scope or business fields are refused at issuance; nothing is stored.
+    const before = await prisma.sellerAuthorizationChallenge.count();
+    for (const params of [
+      { action: 'operators:create', businessId, scope: operatorA.toLowerCase() },
+      { action: 'rewards:reward-wallet', businessId, scope: operatorA },
+      { action: 'rules:create', businessId: operatorA, scope: 'x' },
+      { action: 'operators:create', businessId, scope: `op-${operatorA.slice(2)}`.replace('op-', 'op-0x') },
+    ]) {
+      expect((await issue(params)).status).toBe(400);
+    }
+    expect(await prisma.sellerAuthorizationChallenge.count()).toBe(before);
+
+    // Requests our clients build for the two targeted actions carry no address (URL and row).
+    const challengeUrls: string[] = [];
+    async function targetedHeaders(signer: ethers.HDNodeWallet, action: string, scope: string, target: string) {
+      const query = new URLSearchParams({ action, businessId, scope });
+      challengeUrls.push(query.toString());
+      const issued = await issue(Object.fromEntries(query));
+      expect(issued.status).toBe(200);
+      const challenge = JSON.parse(issued.text) as { message: string; timestamp: string; nonce: string };
+      return {
+        'content-type': 'application/json',
+        'x-ifr-wallet': signer.address,
+        'x-ifr-signature': await signer.signMessage(`${challenge.message}\nTarget: ${target.toLowerCase()}`),
+        'x-ifr-timestamp': challenge.timestamp,
+        'x-ifr-nonce': challenge.nonce,
+      };
+    }
+    const post = (headers: Record<string, string>, walletAddress: string) =>
+      fetch(`${baseUrl()}/api/seller/businesses/${businessId}/operators`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ walletAddress, label: 'Till' }),
+      });
+
+    // A signature over target A cannot be used with body target B.
+    const signedForA = await targetedHeaders(owner, 'operators:create', 'operator-wallet', operatorA);
+    expect((await post(signedForA, operatorB)).status).toBe(401);
+    expect(await prisma.checkoutOperator.count({ where: { businessId } })).toBe(0);
+    // A message signed without the Target line is not accepted either.
+    const untargeted = await signedHeaders(owner, { action: 'operators:create', businessId, scope: 'operator-wallet' });
+    expect((await post(untargeted, operatorA)).status).toBe(401);
+
+    const okHeaders = await targetedHeaders(owner, 'operators:create', 'operator-wallet', operatorA);
+    expect((await post(okHeaders, operatorA)).status).toBe(201);
+    expect((await post(okHeaders, operatorA)).status).toBe(401); // replay
+
+    const expiring = await targetedHeaders(owner, 'operators:create', 'operator-wallet', operatorB);
+    await prisma.sellerAuthorizationChallenge.update({
+      where: { nonce: expiring['x-ifr-nonce'] },
+      data: { expiresAt: new Date(Date.now() - 1000) },
+    });
+    expect((await post(expiring, operatorB)).status).toBe(401); // expired
+
+    await targetedHeaders(owner, 'rewards:reward-wallet', 'reward-wallet', operatorB);
+    for (const url of challengeUrls) {
+      expect(url.toLowerCase()).not.toContain(bare(operatorA));
+      expect(url.toLowerCase()).not.toContain(bare(operatorB));
+      expect(url).not.toMatch(/0x[0-9a-f]{40}/i);
+    }
+    const rows = JSON.stringify(await prisma.sellerAuthorizationChallenge.findMany()).toLowerCase();
+    expect(rows).not.toMatch(/0x[0-9a-f]{40}/);
+    expect(rows).not.toContain(bare(operatorA));
+    expect(rows).not.toContain(bare(operatorB));
+    await prisma.checkoutOperator.deleteMany({ where: { businessId } });
+  });
+
+  it('binds the Target line into the verified message', async () => {
+    const wallet = ethers.Wallet.createRandom();
+    const targetA = ethers.Wallet.createRandom().address;
+    const targetB = ethers.Wallet.createRandom().address;
+    const timestamp = Date.now().toString();
+    const binding = { nonce: freshNonce(), scope: 'reward-wallet' };
+    const message = buildSellerAuthMessage(CONTEXT, 'rewards:reward-wallet', 'biz_1', timestamp, { ...binding, target: targetA });
+    expect(message.split('\n').at(-1)).toBe(`Target: ${targetA.toLowerCase()}`);
+    const input = {
+      context: CONTEXT, walletAddress: wallet.address, signature: await wallet.signMessage(message), timestamp,
+      action: 'rewards:reward-wallet', businessId: 'biz_1', ...binding,
+    };
+    expect(verifySellerSignature({ ...input, target: targetA })).toBe(wallet.address);
+    expect(verifySellerSignature({ ...input, target: targetA.toLowerCase() })).toBe(wallet.address);
+    expect(() => verifySellerSignature({ ...input, target: targetB })).toThrow('signature mismatch');
+    expect(() => verifySellerSignature(input)).toThrow('signature mismatch');
+  });
+
   it('keeps our own clients from sending a wallet to the challenge endpoint', () => {
     const repo = path.resolve(__dirname, '..', '..', '..', '..');
     const sources = [

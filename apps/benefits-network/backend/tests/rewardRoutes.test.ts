@@ -57,7 +57,7 @@ function baseUrl() {
   return `http://127.0.0.1:${address.port}`;
 }
 
-async function sellerHeaders(wallet: TestWallet, action: string, businessId: string, scope = businessId) {
+async function sellerHeaders(wallet: TestWallet, action: string, businessId: string, scope = businessId, target?: string) {
   const query = new URLSearchParams({ action, businessId });
   if (['rewards:apply', 'rewards:disable', 'rewards:reward-wallet', 'sessions:redeem', 'sessions:create', 'business:create'].includes(action)) {
     query.set('scope', scope);
@@ -72,7 +72,10 @@ async function sellerHeaders(wallet: TestWallet, action: string, businessId: str
   const headers: Record<string, string> = {
     'content-type': 'application/json',
     'x-ifr-wallet': wallet.address,
-    'x-ifr-signature': await wallet.signMessage(challenge.message),
+    // A target wallet is never in the challenge URL; it is signed as the final `Target:` line.
+    'x-ifr-signature': await wallet.signMessage(
+      target === undefined ? challenge.message : `${challenge.message}\nTarget: ${target.toLowerCase()}`
+    ),
     'x-ifr-timestamp': challenge.timestamp,
   };
   if (challenge.nonce) headers['x-ifr-nonce'] = challenge.nonce;
@@ -125,13 +128,13 @@ async function rewardWalletProof(signer: TestWallet, businessId: string, rewardW
   const query = new URLSearchParams({
     action: 'rewards:reward-wallet',
     businessId,
-    scope: rewardWallet.toLowerCase(),
+    scope: 'reward-wallet',
   });
   const challengeResponse = await fetch(`${baseUrl()}/api/seller/auth-message?${query}`);
   expect(challengeResponse.status).toBe(200);
   const challenge = await challengeResponse.json() as { message: string; timestamp: string; nonce: string };
   return {
-    rewardWalletSignature: await signer.signMessage(challenge.message),
+    rewardWalletSignature: await signer.signMessage(`${challenge.message}\nTarget: ${rewardWallet.toLowerCase()}`),
     rewardWalletTimestamp: challenge.timestamp,
     rewardWalletNonce: challenge.nonce,
   };
@@ -714,7 +717,7 @@ describe('Verified seller reward foundation', () => {
     // A reward wallet cannot be set before the owner applied.
     const withoutLink = await fetch(confirmUrl, {
       method: 'POST',
-      headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, rewardWallet.address.toLowerCase()),
+      headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, 'reward-wallet', rewardWallet.address),
       body: JSON.stringify({
         rewardWallet: rewardWallet.address,
         ...proofWithoutLink,
@@ -730,7 +733,7 @@ describe('Verified seller reward foundation', () => {
     // Missing proof fields are rejected by validation.
     expect((await fetch(confirmUrl, {
       method: 'POST',
-      headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, rewardWallet.address.toLowerCase()),
+      headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, 'reward-wallet', rewardWallet.address),
       body: JSON.stringify({ rewardWallet: rewardWallet.address }),
     })).status).toBe(400);
 
@@ -738,14 +741,14 @@ describe('Verified seller reward foundation', () => {
     const invalidChecksum = '0x52908400098527886e0F7030069857D2E4169EE7';
     expect((await fetch(confirmUrl, {
       method: 'POST',
-      headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, invalidChecksum.toLowerCase()),
+      headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, 'reward-wallet', invalidChecksum),
       body: JSON.stringify({ rewardWallet: invalidChecksum }),
     })).status).toBe(400);
 
     // Only the owner may confirm a reward wallet.
     expect((await fetch(confirmUrl, {
       method: 'POST',
-      headers: await sellerHeaders(outsider, 'rewards:reward-wallet', businessId, rewardWallet.address.toLowerCase()),
+      headers: await sellerHeaders(outsider, 'rewards:reward-wallet', businessId, 'reward-wallet', rewardWallet.address),
       body: JSON.stringify({
         rewardWallet: rewardWallet.address,
         ...(await rewardWalletProof(rewardWallet, businessId, rewardWallet.address)),
@@ -755,7 +758,7 @@ describe('Verified seller reward foundation', () => {
     // A proof signed by any other wallet than the proposed reward wallet fails.
     expect((await fetch(confirmUrl, {
       method: 'POST',
-      headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, rewardWallet.address.toLowerCase()),
+      headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, 'reward-wallet', rewardWallet.address),
       body: JSON.stringify({
         rewardWallet: rewardWallet.address,
         ...(await rewardWalletProof(outsider, businessId, rewardWallet.address)),
@@ -768,7 +771,7 @@ describe('Verified seller reward foundation', () => {
     });
     expect((await fetch(confirmUrl, {
       method: 'POST',
-      headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, rewardWallet.address.toLowerCase()),
+      headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, 'reward-wallet', rewardWallet.address),
       body: JSON.stringify({
         rewardWallet: rewardWallet.address,
         ...(await rewardWalletProof(rewardWallet, otherBusiness.id, rewardWallet.address)),
@@ -778,17 +781,37 @@ describe('Verified seller reward foundation', () => {
     // The owner wallet itself is never a separate reward wallet.
     expect((await fetch(confirmUrl, {
       method: 'POST',
-      headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, owner.address.toLowerCase()),
+      headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, 'reward-wallet', owner.address),
       body: JSON.stringify({
         rewardWallet: owner.address,
         ...(await rewardWalletProof(owner, businessId, owner.address)),
       }),
     })).status).toBe(400);
 
+    // An owner signature over another target wallet is not accepted for this body (Target line).
+    const otherTarget = ethers.Wallet.createRandom();
+    expect((await fetch(confirmUrl, {
+      method: 'POST',
+      headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, 'reward-wallet', otherTarget.address),
+      body: JSON.stringify({
+        rewardWallet: rewardWallet.address,
+        ...(await rewardWalletProof(rewardWallet, businessId, rewardWallet.address)),
+      }),
+    })).status).toBe(401);
+    // A reward wallet proof over another target is not accepted either.
+    expect((await fetch(confirmUrl, {
+      method: 'POST',
+      headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, 'reward-wallet', rewardWallet.address),
+      body: JSON.stringify({
+        rewardWallet: rewardWallet.address,
+        ...(await rewardWalletProof(rewardWallet, businessId, otherTarget.address)),
+      }),
+    })).status).toBe(401);
+
     // Successful dual authorization stores the wallet and never touches the chain.
     mockGetRewardOnChainStatus.mockClear();
     const proof = await rewardWalletProof(rewardWallet, businessId, rewardWallet.address);
-    const ownerHeaders = await sellerHeaders(owner, 'rewards:reward-wallet', businessId, rewardWallet.address.toLowerCase());
+    const ownerHeaders = await sellerHeaders(owner, 'rewards:reward-wallet', businessId, 'reward-wallet', rewardWallet.address);
     const confirmed = await fetch(confirmUrl, {
       method: 'POST',
       headers: ownerHeaders,
@@ -927,7 +950,7 @@ describe('Verified seller reward foundation', () => {
     const confirmUrl = `${baseUrl()}/api/seller/businesses/${businessId}/rewards/reward-wallet`;
     const changed = await fetch(confirmUrl, {
       method: 'POST',
-      headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, nextWallet.address.toLowerCase()),
+      headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, 'reward-wallet', nextWallet.address),
       body: JSON.stringify({
         rewardWallet: nextWallet.address,
         ...(await rewardWalletProof(nextWallet, businessId, nextWallet.address)),

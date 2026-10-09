@@ -70,10 +70,13 @@ async function sellerHeaders(
     'rules:create', 'rules:update', 'rules:delete', 'sessions:create', 'sessions:redeem',
   ]);
   if (mutations.has(action)) {
+    // operators:create: the given value is the target operator wallet. It is never sent to the
+    // challenge endpoint; the fixed scope is used and the wallet is signed as the `Target:` line.
+    const target = action === 'operators:create' ? scope : undefined;
     const query = new URLSearchParams({
       action,
       businessId,
-      scope: scope || (action === 'sessions:create' ? 'default' : businessId),
+      scope: target !== undefined ? 'operator-wallet' : scope || (action === 'sessions:create' ? 'default' : businessId),
     });
     const challengeResponse = await fetch(`${baseUrl()}/api/seller/auth-message?${query}`);
     expect(challengeResponse.status).toBe(200);
@@ -85,7 +88,9 @@ async function sellerHeaders(
     return {
       'content-type': 'application/json',
       'x-ifr-wallet': wallet.address,
-      'x-ifr-signature': await wallet.signMessage(challenge.message),
+      'x-ifr-signature': await wallet.signMessage(
+        target === undefined ? challenge.message : `${challenge.message}\nTarget: ${target.toLowerCase()}`
+      ),
       'x-ifr-timestamp': challenge.timestamp,
       'x-ifr-nonce': challenge.nonce,
     };

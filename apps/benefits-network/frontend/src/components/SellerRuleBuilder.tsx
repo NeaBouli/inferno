@@ -1136,7 +1136,7 @@ export function SellerRuleBuilder() {
     try {
       const operator = await createSellerCheckoutOperator(
         businessId,
-        await signSellerAction('operators:create', businessId, operatorWallet.trim().toLowerCase()),
+        await signSellerAction('operators:create', businessId, 'operator-wallet', operatorWallet.trim()),
         {
           walletAddress: operatorWallet.trim(),
           label: operatorLabel.trim() || undefined,
@@ -1433,10 +1433,11 @@ export function SellerRuleBuilder() {
   async function signSellerAction(
     action: string,
     targetBusinessId: string,
-    scope?: string
+    scope?: string,
+    target?: string
   ): Promise<SellerAuth> {
     if (!address) throw new Error('Connect the seller wallet first.');
-    const challenge = await getSellerAuthMessage(action, targetBusinessId, { scope });
+    const challenge = await getSellerAuthMessage(action, targetBusinessId, { scope, target });
     if (!challenge.nonce) throw new Error('Seller authorization challenge is incomplete');
     const signature = await signMessageAsync({ message: challenge.message });
     return {

@@ -506,17 +506,23 @@ function adminHeaders(adminSecret: string) {
 // Every seller action (read or mutation) uses a one-time challenge. The request carries no wallet
 // (owner decision B): the connected wallet signs the returned message and the backend recovers the
 // signer. Read-only actions omit the scope; the backend binds them to its fixed read scope.
-export function getSellerAuthMessage(
+// Actions on a target wallet (operators:create, rewards:reward-wallet) pass `target`: it is NOT sent to
+// the challenge endpoint; it is appended to the returned message as the final `Target:` line, and the
+// backend rebuilds that line from the authenticated request body.
+export async function getSellerAuthMessage(
   action: string,
   businessId: string,
-  binding: { scope?: string } = {}
+  binding: { scope?: string; target?: string } = {}
 ) {
   const query = new URLSearchParams({
     action,
     businessId: businessId || 'new',
   });
   if (binding.scope) query.set('scope', binding.scope);
-  return fetchJSON<SellerAuthMessage>(`/api/seller/auth-message?${query.toString()}`);
+  const challenge = await fetchJSON<SellerAuthMessage>(`/api/seller/auth-message?${query.toString()}`);
+  return binding.target === undefined
+    ? challenge
+    : { ...challenge, message: `${challenge.message}\nTarget: ${binding.target.trim().toLowerCase()}` };
 }
 
 function sellerHeaders(auth: SellerAuth) {

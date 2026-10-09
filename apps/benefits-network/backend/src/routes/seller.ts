@@ -9,6 +9,7 @@ import {
   buildSellerAuthMessage,
   normalizeAddress,
   resolveSellerAuthContext,
+  containsWalletAddress,
   verifySellerSignature,
 } from '../services/sellerAuth';
 import {
@@ -268,7 +269,18 @@ function getSellerAuth(req: Request) {
   };
 }
 
-async function requireSellerAuth(req: Request, action: string, businessId: string, scope?: string) {
+/** Fixed, wallet-free scopes of the two actions that act on a target wallet (bound via `Target:`). */
+const OPERATOR_WALLET_SCOPE = 'operator-wallet';
+const REWARD_WALLET_SCOPE = 'reward-wallet';
+const OWNER_WALLET_SCOPE = 'owner-wallet';
+
+async function requireSellerAuth(
+  req: Request,
+  action: string,
+  businessId: string,
+  scope?: string,
+  target?: string
+) {
   const auth = getSellerAuth(req);
   const boundScope = isReadOnlySellerAction(action) ? READ_ONLY_SELLER_SCOPE : scope;
   if (!auth.nonce || !boundScope) {
@@ -281,6 +293,7 @@ async function requireSellerAuth(req: Request, action: string, businessId: strin
     businessId,
     nonce: auth.nonce,
     scope: boundScope,
+    target,
   });
   await assertSellerWalletActionAllowed(wallet);
   // Atomic single-use consumption: a replayed or concurrent duplicate proof
@@ -343,8 +356,14 @@ function handleSellerError(err: unknown, res: Response, next: NextFunction) {
   next(err);
 }
 
-async function requireBusinessOwner(req: Request, action: string, businessId: string, scope?: string) {
-  const wallet = await requireSellerAuth(req, action, businessId, scope);
+async function requireBusinessOwner(
+  req: Request,
+  action: string,
+  businessId: string,
+  scope?: string,
+  target?: string
+) {
+  const wallet = await requireSellerAuth(req, action, businessId, scope, target);
   const business = await prisma.business.findUnique({
     where: { id: businessId },
     select: { id: true, ownerAddress: true, active: true },
@@ -431,6 +450,12 @@ router.get('/auth-message', challengeRateLimiter, async (req, res, next) => {
     const scope = String(req.query.scope || (readOnly ? READ_ONLY_SELLER_SCOPE : ''));
     if (!isSafeSellerAuthorizationField(scope) || (readOnly && scope !== READ_ONLY_SELLER_SCOPE)) {
       res.status(400).json({ error: 'Invalid seller authorization scope' });
+      return;
+    }
+    // Owner decision B: a challenge never carries a wallet. Target wallets are bound by the signed
+    // `Target:` line from the authenticated request body instead.
+    if (containsWalletAddress(scope) || containsWalletAddress(businessId)) {
+      res.status(400).json({ error: 'Seller authorization scope must not contain a wallet address' });
       return;
     }
     const context = resolveSellerAuthContext(config);
@@ -694,11 +719,14 @@ router.post(
     try {
       const authorizationTimestamp = Number(getSellerAuth(req).timestamp);
       const walletAddress = normalizeAddress(req.body.walletAddress);
+      // The operator wallet is bound by the signed `Target:` line rebuilt from this body, never by the
+      // challenge scope (owner decision B: no wallet in the challenge URL or row).
       const ownerWallet = await requireSellerAuth(
         req,
         'operators:create',
         req.params.id,
-        walletAddress.toLowerCase()
+        OPERATOR_WALLET_SCOPE,
+        walletAddress
       );
 
       const expiresAt = req.body.expiresAt ? new Date(req.body.expiresAt) : null;
@@ -1235,10 +1263,12 @@ router.post(
   async (req, res, next) => {
     try {
       const requestedWallet = req.body.rewardWallet as string | null;
-      // The owner authorization challenge is bound to this exact decision:
-      // the proposed reward wallet, or the explicit return to owner payouts.
-      const scope = requestedWallet ? requestedWallet.toLowerCase() : 'owner-wallet';
-      const owner = await requireBusinessOwner(req, 'rewards:reward-wallet', req.params.id, scope);
+      // The owner authorization is bound to this exact decision: the proposed reward wallet (fixed scope
+      // plus the signed `Target:` line rebuilt from this body), or the explicit return to owner payouts.
+      // No wallet is placed in the challenge scope, URL or row.
+      const scope = requestedWallet ? REWARD_WALLET_SCOPE : OWNER_WALLET_SCOPE;
+      const target = requestedWallet ? normalizeAddress(requestedWallet) : undefined;
+      const owner = await requireBusinessOwner(req, 'rewards:reward-wallet', req.params.id, scope, target);
 
       let rewardWallet: string | null = null;
       let proofWallet: string | null = null;
@@ -1259,6 +1289,7 @@ router.post(
           businessId: req.params.id,
           nonce: String(req.body.rewardWalletNonce),
           scope,
+          target: rewardWallet,
         });
       }
 

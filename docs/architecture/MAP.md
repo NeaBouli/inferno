@@ -114,7 +114,9 @@ Benefits seller authorization/session trace (`apps/benefits-network/backend`):
 3. `requireSellerAuth` → `services/authenticatedRateLimiter.ts::assertSellerWalletActionAllowed`
    → `services/sellerAuthorizationChallenge.ts::consumeSellerAuthorizationChallenge`
    — Daten: nonce+action+business+scope → atomic single-use `updateMany`
-   (count must be 1); the wallet is bound only by the recovered signature
+   (count must be 1); the wallet is bound only by the recovered signature. Target
+   wallets (`operators:create`, `rewards:reward-wallet`) use fixed scopes and are bound
+   by a final signed `Target:` line rebuilt from the request body, never URL or row
 4. public checkout status → `src/routes/sessions.ts::GET /:id` (`sessionStatusRateLimiter`)
    → `services/sessionService.ts::getSession` — Daten: sessionId → status
    (stale PENDING/APPROVED reported as EXPIRED, no write)

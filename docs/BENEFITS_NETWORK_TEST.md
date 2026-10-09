@@ -386,7 +386,7 @@ publishes the exact IFRLock threshold and benefit for every real offer.
 | POST | `/api/admin/businesses/:id/rewards/verify` | Admin | Verify a seller reward application against live governance state |
 | POST | `/api/admin/businesses/:id/rewards/revoke` | Admin | Revoke a seller reward link |
 | POST | `/api/admin/businesses/:id/rewards/queue` | Admin | Queue eligible reward outbox events for a verified seller |
-| GET | `/api/seller/auth-message` | - | Issue a server-time, wallet-free seller challenge (`action`, `businessId`, `scope`; nonce-only state, the signer is recovered from the signature; a legacy `walletAddress` is ignored) |
+| GET | `/api/seller/auth-message` | - | Issue a server-time, wallet-free seller challenge (`action`, `businessId`, `scope`; nonce-only state, the signer is recovered from the signature; a legacy `walletAddress` is ignored; a scope or business containing an address is rejected. `operators:create` and `rewards:reward-wallet` use the fixed scopes `operator-wallet` / `reward-wallet` / `owner-wallet`; their target wallet is sent only in the authenticated request body and signed as a final `Target: 0x...` line (lowercase) that the backend rebuilds from the body) |
 | POST | `/api/seller/businesses` | Seller owner signature | Create wallet-owned seller profile |
 | GET | `/api/seller/businesses` | Seller owner signature | List owned active profiles |
 | DELETE | `/api/seller/businesses/:id` | Seller owner signature | Deactivate owned profile |
