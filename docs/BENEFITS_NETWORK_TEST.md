@@ -45,9 +45,11 @@ access logs must be checked for query strings of old clients.
 
 Receipt context check (fails closed): device receipts verify only when the backend's
 `SELLER_AUTH_DOMAIN` equals the frontend host and its `CHAIN_ID` equals the frontend
-`NEXT_PUBLIC_CHAIN_ID`. Before a release run
-`node scripts/check-benefits-proof-context.cjs --env <compose env file> --public-host shop.ifrunit.tech`
-(values are never printed; unit test `node scripts/test-benefits-proof-context.cjs`); after a
+`NEXT_PUBLIC_CHAIN_ID` as Compose resolves it. Gated release step, from a clean shell (any exported
+`SELLER_AUTH_DOMAIN`, `CHAIN_ID` or `NEXT_PUBLIC_CHAIN_ID` fails it, because the shell outranks the
+env file in Compose interpolation): `npm run check:benefits-proof-context -- --env <compose env file>
+--public-host shop.ifrunit.tech` (no defaults; the frontend chain falls back only to the literal
+compose default; values are never printed; CI runs `npm run test:benefits-proof-context`); after a
 release `scripts/smoke-benefits-network.js` asserts the live challenge's domain and chain against
 the served host and `NEXT_PUBLIC_CHAIN_ID` (default 1).
 

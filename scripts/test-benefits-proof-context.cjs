@@ -5,33 +5,59 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
-const { parseEnv, checkProofContext } = require('./check-benefits-proof-context.cjs');
+const { parseEnv, parseCompose, checkProofContext } = require('./check-benefits-proof-context.cjs');
 
 const host = 'shop.ifrunit.tech';
-const ok = { SELLER_AUTH_DOMAIN: host, CHAIN_ID: '1', NEXT_PUBLIC_CHAIN_ID: '1' };
-assert.deepEqual(checkProofContext(ok, host), []);
-assert.deepEqual(checkProofContext({ SELLER_AUTH_DOMAIN: host, CHAIN_ID: '1' }, host), [], 'compose default NEXT_PUBLIC_CHAIN_ID=1');
-assert.ok(checkProofContext({ ...ok, SELLER_AUTH_DOMAIN: 'staging.ifrunit.tech' }, host).length > 0, 'host mismatch fails');
-assert.ok(checkProofContext({ ...ok, CHAIN_ID: '11155111' }, host).length > 0, 'chain mismatch fails');
-assert.ok(checkProofContext({ SELLER_AUTH_DOMAIN: host, CHAIN_ID: '11155111' }, host).length > 0, 'backend Sepolia vs frontend default 1 fails');
-assert.ok(checkProofContext({ CHAIN_ID: '1' }, host).length > 0, 'missing domain fails');
-assert.ok(checkProofContext({ SELLER_AUTH_DOMAIN: host }, host).length > 0, 'missing chain fails');
-assert.ok(checkProofContext({ ...ok, NEXT_PUBLIC_CHAIN_ID: 'one' }, host).length > 0, 'invalid frontend chain fails');
-assert.ok(checkProofContext(ok, '').length > 0, 'missing public host fails');
-assert.deepEqual(parseEnv('# c\nSELLER_AUTH_DOMAIN="shop.ifrunit.tech"\n CHAIN_ID = 1 \n'), { SELLER_AUTH_DOMAIN: host, CHAIN_ID: '1' });
+const repoCompose = fs.readFileSync(path.join(__dirname, '..', 'apps', 'benefits-network', 'docker-compose.production.example.yml'), 'utf8');
+const compose = parseCompose(repoCompose);
+assert.deepEqual(compose.chainArg, { variable: true, default: '1' }, 'repo compose: ${NEXT_PUBLIC_CHAIN_ID:-1}');
+assert.equal(compose.backendOverrides, false);
 
+const check = (envFile, extra = {}) => checkProofContext({ envFile, compose, processEnv: {}, publicHost: host, ...extra });
+const ok = { SELLER_AUTH_DOMAIN: host, CHAIN_ID: '1', NEXT_PUBLIC_CHAIN_ID: '1' };
+assert.deepEqual(check(ok), []);
+assert.deepEqual(check({ SELLER_AUTH_DOMAIN: host, CHAIN_ID: '1' }), [], 'literal compose default 1 applies');
+assert.ok(check({ SELLER_AUTH_DOMAIN: host, CHAIN_ID: '11155111' }).length > 0, 'backend Sepolia vs compose default 1 fails');
+assert.ok(check({ ...ok, SELLER_AUTH_DOMAIN: 'staging.ifrunit.tech' }).length > 0, 'host mismatch fails');
+assert.ok(check({ ...ok, CHAIN_ID: '11155111' }).length > 0, 'chain mismatch fails');
+assert.ok(check({ CHAIN_ID: '1' }).length > 0, 'missing domain fails');
+assert.ok(check({ SELLER_AUTH_DOMAIN: host }).length > 0, 'missing backend chain fails');
+assert.ok(check({ ...ok, NEXT_PUBLIC_CHAIN_ID: 'one' }).length > 0, 'invalid frontend chain fails');
+assert.ok(check(ok, { publicHost: undefined }).length > 0, 'missing public host fails (no default)');
+// Higher-precedence shell overrides fail closed, whatever their value.
+for (const name of ['NEXT_PUBLIC_CHAIN_ID', 'CHAIN_ID', 'SELLER_AUTH_DOMAIN']) {
+  assert.ok(check(ok, { processEnv: { [name]: name === 'SELLER_AUTH_DOMAIN' ? host : '1' } }).length > 0, `${name} in the shell fails`);
+}
+// Compose variants: no default and no value fails; a literal arg wins; backend environment overrides fail.
+const noDefault = parseCompose('    args:\n        NEXT_PUBLIC_CHAIN_ID: "${NEXT_PUBLIC_CHAIN_ID}"\n');
+assert.ok(checkProofContext({ envFile: { SELLER_AUTH_DOMAIN: host, CHAIN_ID: '1' }, compose: noDefault, processEnv: {}, publicHost: host }).length > 0);
+const literal = parseCompose('    args:\n        NEXT_PUBLIC_CHAIN_ID: "11155111"\n');
+assert.ok(checkProofContext({ envFile: ok, compose: literal, processEnv: {}, publicHost: host }).length > 0, 'literal arg wins over env file');
+const overridden = parseCompose(`${repoCompose}\n    environment:\n      CHAIN_ID: "5"\n`);
+assert.ok(checkProofContext({ envFile: ok, compose: overridden, processEnv: {}, publicHost: host }).length > 0);
+assert.ok(checkProofContext({ envFile: ok, compose: parseCompose('services: {}\n'), processEnv: {}, publicHost: host }).length > 0, 'missing build arg fails');
+assert.deepEqual(parseEnv('# c\nSELLER_AUTH_DOMAIN="shop.ifrunit.tech"\n CHAIN_ID = 1 \nexport X=2\n'), { SELLER_AUTH_DOMAIN: host, CHAIN_ID: '1', X: '2' });
+
+// CLI, including the review regression: env file CHAIN_ID=1 without NEXT_PUBLIC_CHAIN_ID and an exported
+// NEXT_PUBLIC_CHAIN_ID=11155111 in the invoking shell -> FAIL.
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'benefits-proof-context-'));
 try {
-  const run = (text, extra = []) => {
+  const cleanEnv = { ...process.env };
+  for (const name of ['SELLER_AUTH_DOMAIN', 'CHAIN_ID', 'NEXT_PUBLIC_CHAIN_ID']) delete cleanEnv[name];
+  const run = (text, { env = cleanEnv, args = ['--public-host', host] } = {}) => {
     const file = path.join(dir, 'env');
     fs.writeFileSync(file, text);
-    return spawnSync(process.execPath, [path.join(__dirname, 'check-benefits-proof-context.cjs'), '--env', file, ...extra], { encoding: 'utf8' });
+    return spawnSync(process.execPath, [path.join(__dirname, 'check-benefits-proof-context.cjs'), '--env', file, ...args], { encoding: 'utf8', env });
   };
   assert.equal(run('SELLER_AUTH_DOMAIN=shop.ifrunit.tech\nCHAIN_ID=1\n').status, 0);
+  const exported = run('SELLER_AUTH_DOMAIN=shop.ifrunit.tech\nCHAIN_ID=1\n', { env: { ...cleanEnv, NEXT_PUBLIC_CHAIN_ID: '11155111' } });
+  assert.equal(exported.status, 1, 'an exported NEXT_PUBLIC_CHAIN_ID override must fail');
+  assert.ok(!`${exported.stdout}${exported.stderr}`.includes('11155111'), 'values are never printed');
+  assert.equal(run('SELLER_AUTH_DOMAIN=shop.ifrunit.tech\nCHAIN_ID=1\n', { args: [] }).status, 1, 'missing --public-host fails');
   const bad = run('SELLER_AUTH_DOMAIN=evil.example\nCHAIN_ID=1\nADMIN_SECRET=do-not-print-me\n');
   assert.equal(bad.status, 1);
   assert.ok(!`${bad.stdout}${bad.stderr}`.includes('evil.example') && !`${bad.stdout}${bad.stderr}`.includes('do-not-print-me'), 'values are never printed');
-  assert.equal(spawnSync(process.execPath, [path.join(__dirname, 'check-benefits-proof-context.cjs'), '--env', path.join(dir, 'missing')]).status, 1, 'missing env file fails');
+  assert.equal(spawnSync(process.execPath, [path.join(__dirname, 'check-benefits-proof-context.cjs'), '--env', path.join(dir, 'missing'), '--public-host', host], { env: cleanEnv }).status, 1, 'missing env file fails');
 } finally {
   fs.rmSync(dir, { recursive: true, force: true });
 }

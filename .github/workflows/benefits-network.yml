@@ -27,6 +27,8 @@ on:
       - 'scripts/test-benefits-fullstack-e2e.js'
       - 'scripts/test-benefits-bundle-budget.cjs'
       - 'scripts/test-benefits-doc-consistency.cjs'
+      - 'scripts/check-benefits-proof-context.cjs'
+      - 'scripts/test-benefits-proof-context.cjs'
       - 'scripts/test-benefits-offline-shell.js'
       - 'scripts/test-benefits-route-recovery.js'
       - 'scripts/test-benefits-seller-loader.js'
@@ -70,6 +72,8 @@ on:
       - 'scripts/test-benefits-fullstack-e2e.js'
       - 'scripts/test-benefits-bundle-budget.cjs'
       - 'scripts/test-benefits-doc-consistency.cjs'
+      - 'scripts/check-benefits-proof-context.cjs'
+      - 'scripts/test-benefits-proof-context.cjs'
       - 'scripts/test-benefits-offline-shell.js'
       - 'scripts/test-benefits-route-recovery.js'
       - 'scripts/test-benefits-seller-loader.js'
@@ -175,6 +179,8 @@ jobs:
       - run: npm run test:discoverability
       - run: npm run test:wallet-selection
       - run: node ../../../scripts/test-benefits-doc-consistency.cjs
+      - name: Receipt context release check (audience/chain must match the frontend)
+        run: node ../../../scripts/test-benefits-proof-context.cjs
       - run: npm run typecheck
       - run: npm run build
       - run: node ../../../scripts/test-benefits-bundle-budget.cjs
