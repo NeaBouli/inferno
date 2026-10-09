@@ -4066,7 +4066,7 @@ if (isLocked) {
       var supplyEl = document.getElementById('donut-supply');
       if (supplyEl) supplyEl.textContent = fmt(data.supply);
       var liveEl = document.getElementById('donut-live-supply');
-      if (liveEl) liveEl.textContent = data.liveSupply != null ? 'Not classified as lost ' + fmt(data.liveSupply) : '';
+      if (liveEl) liveEl.textContent = data.liveSupply != null ? 'Not classified as permanently lost ' + fmt(data.liveSupply) : '';
       renderLegend(data);
       renderMetrics(data);
       updateLiveDisplay(data);

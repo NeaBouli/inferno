@@ -162,7 +162,7 @@ test("distribution shows a black dead segment, splits CommitmentVault without do
   expect(commit + 26418467.99).toBeCloseTo(27786035.92, 1); // dead CV-01 part + live part = vault balance
   // Exact base units: 996660371641431105 − 26418467994338353 = 970241903647092752 (not classified as permanently lost).
   await expect(page.locator('[data-live-key="live-supply-stat"]').first()).toHaveText("970.2M");
-  await expect(page.locator("#donut-live-supply")).toHaveText("Not classified as lost 970.2M");
+  await expect(page.locator("#donut-live-supply")).toHaveText("Not classified as permanently lost 970.2M");
   await expect(page.locator('[data-live-key="lost-ifr-stat"]')).toHaveText("26.4M");
 });
 
@@ -220,14 +220,14 @@ test("mobile: the distribution donut with the dead segment stays visible", async
 });
 
 for (const [width, height] of [[375, 812], [390, 844]]) {
-  test(`mobile: the "not classified as lost" donut label fits at ${width}x${height}`, async ({ page }) => {
+  test(`mobile: the "not classified as permanently lost" donut label fits at ${width}x${height}`, async ({ page }) => {
     await page.setViewportSize({ width, height });
     await blockNetwork(page);
     await answerProxyFull(page);
     await page.goto("/");
     await page.locator("#live-distribution").scrollIntoViewIfNeeded();
     const label = page.locator("#donut-live-supply");
-    await expect(label).toHaveText("Not classified as lost 970.2M", { timeout: 20000 });
+    await expect(label).toHaveText("Not classified as permanently lost 970.2M", { timeout: 20000 });
     const fit = await label.evaluate((el) => {
       const r = el.getBoundingClientRect();
       const host = document.getElementById("dist-donut").getBoundingClientRect();
@@ -269,7 +269,7 @@ test("unavailable balances render N/A, not 0, and the chart shows a partially un
   await expect(page.locator(".live-status").first()).toContainText("Partially live");
   // Dead segment and live supply still use the exact values that are available (CV-01 only).
   expect(Number(await page.locator('[data-dist-cat="dead"]').getAttribute("data-dist-value"))).toBeCloseTo(26418467.99, 2);
-  await expect(page.locator("#donut-live-supply")).toHaveText("Not classified as lost 970.2M");
+  await expect(page.locator("#donut-live-supply")).toHaveText("Not classified as permanently lost 970.2M");
 });
 
 // The still-running older supply API adds the FeeRouterV1 balance to permanentlyLostRaw/liveSupplyRaw. The Landing
@@ -287,7 +287,7 @@ for (const [label, feeRouter] of [["missing FeeRouterV1", null], ["non-zero FeeR
     await page.locator("#live-distribution").scrollIntoViewIfNeeded();
     await expect(page.locator('[data-dist-cat="dead"]')).toBeVisible({ timeout: 20000 });
     expect(Number(await page.locator('[data-dist-cat="dead"]').getAttribute("data-dist-value"))).toBeCloseTo(26418467.99, 2);
-    await expect(page.locator("#donut-live-supply")).toHaveText("Not classified as lost 970.2M");
+    await expect(page.locator("#donut-live-supply")).toHaveText("Not classified as permanently lost 970.2M");
     await expect(page.locator("[data-lost-ifr-value]")).toHaveText("26,418,467.99 IFR");
     await expect(page.locator('[data-live-key="lost-ifr-stat"]')).toHaveText("26.4M");
   });
