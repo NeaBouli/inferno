@@ -6,6 +6,12 @@ The technical details, the trust model and the release gate are in
 [`docs/runbooks/IFR_SDK_NPM_RELEASE.md`](runbooks/IFR_SDK_NPM_RELEASE.md); that runbook is the
 binding reference if the two pages ever disagree.
 
+Status on 9 October 2026: the 0.4.0 bootstrap is complete, as are the protected environment
+and npm Trusted Publisher setup. Do not rerun step C. The connection still needs its first
+successful approved workflow publication by 11 October 2026, 20:37 UTC; otherwise recreate
+it near the next approved release. Expiry is not permission to publish. Source candidate
+0.4.1 is a documentation patch, not yet approved or published; npm stable remains 0.4.0.
+
 Owner decision 2026-10-06: publishing is approved as long as the package stays public (MIT), is
 published from the public repository `NeaBouli/inferno` with provenance, and has no proprietary
 lock-in. No long-lived npm token is created or stored anywhere; the single manual bootstrap uses a

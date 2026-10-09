@@ -1,19 +1,22 @@
 # IFR SDK npm Release Runbook
 
-Status: **NOT PUBLISHED**; publication approved by the project (2026-10-03, Lane 7) and confirmed by the
-owner on 2026-10-06 as a public MIT package with provenance and no proprietary lock-in. First version:
-manual bootstrap; later versions: manually dispatched workflow on protected `main`.
+Status: **0.4.0 PUBLISHED** on 9 October 2026, with the explicitly approved one-time manual
+bootstrap exception (no provenance). The public MIT/no-lock-in policy remains unchanged.
+Later versions use the manually dispatched workflow on protected `main` with provenance.
 
 Plain-language owner click guide (npmjs.com and GitHub): [`docs/SDK_RELEASE.md`](../SDK_RELEASE.md).
 
 Package: `ifr-sdk`
 
-Current repository version: `0.4.0`
+Current repository version: `0.4.1` (unapproved/unpublished documentation-patch candidate).
+Public npm stable: `0.4.0`.
 
 Supported runtime: Node.js 20 and 22
 
-This runbook controls the first public npm release of the IFR SDK. The repository package is
-usable as a versioned tarball, but it is not a public registry release.
+This runbook controls SDK publication. The completed bootstrap instructions below are historical
+and must not be rerun; npm versions are immutable. The 0.4.1 candidate needs its own owner GO.
+Wallet-free checkout in SDK 0.4.x requires the separately approved owner-B Benefits backend
+rollout; publication does not activate that migration or partner rewards.
 
 ## Current Evidence
 
@@ -29,13 +32,13 @@ usable as a versioned tarball, but it is not a public registry release.
 
 Do not run `npm publish` until every item is complete:
 
-- [ ] Publisher account: the existing project npm user account `ifr-protocol` (no organization
-      conversion). Enable mandatory two-factor authentication on it.
-- [ ] Change the account e-mail to a confirmed project alias before the first publication. npm copies
+- [x] Publisher account: project npm user `ifr-protocol` with publishing 2FA confirmed for the
+      0.4.0 bootstrap; recheck authorization before subsequent releases.
+- [x] Project-alias account e-mail confirmed before bootstrap. npm copies
       the account e-mail into public package metadata (`maintainers`); a personal address must never
       appear there.
-- [x] Package name stays `ifr-sdk` (unclaimed on the registry on 2026-10-03); verify again
-      immediately before release.
+- [x] Package name stays `ifr-sdk`; 0.4.0 exists. Verify the requested next version does NOT
+      exist immediately before release; never republish the immutable bootstrap version.
 - [x] License: MIT, `Inferno Protocol contributors` (repository `LICENSE`, shipped as
       `apps/sdk/LICENSE`).
 - [ ] Select and document the release version and changelog.
@@ -43,7 +46,7 @@ Do not run `npm publish` until every item is complete:
       JavaScript and type declarations.
 - [ ] Run clean Node.js 20 and 22 CI against the exact release commit.
 - [ ] Review the public README, security contact and supported Mainnet/API claims.
-- [ ] Owner, before the first workflow release: create the environment `npm-release` with a
+- [x] Owner configured `npm-release` on 9 October 2026 with a
       required reviewer (the owner), `Prevent self-review` off (see Roles), and deployment branches
       set to **selected branches: exactly `main`** (no tag rule, no other branch). No registry token
       is stored in GitHub: publication uses npm Trusted Publishing. The gate fails closed until
@@ -146,7 +149,7 @@ npm Trusted Publishing is configured per existing package, so the first version 
 the registry and refuses every run before the package exists):
 
 1. The owner publishes the version in `apps/sdk/package.json` on the exact reviewed `main` commit
-   (currently `0.4.0`; 0.3.0 was never published) once, locally, signed in as `ifr-protocol` with 2FA and the project alias e-mail,
+   (bootstrap `0.4.0`, completed on 9 October 2026; 0.3.0 was never published) once, locally, signed in as `ifr-protocol` with 2FA and the project alias e-mail,
    only after an explicit action-time approval that names the version, the exact commit SHA, the
    seven-file package listing and the missing provenance. Publishing this first version with
    `--provenance=false` is a separately approved exception: `publishConfig.provenance` is `true` for the
