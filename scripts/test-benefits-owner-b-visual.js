@@ -464,6 +464,8 @@ function writeEvidenceIndex(build, captures, findings) {
   const passCaptures = captures.filter((capture) => capture.screen.startsWith('Customer checkout pass'));
   if (!passCaptures.length) return;
   const passFindings = findings.filter((finding) => finding.startsWith('pass-'));
+  const otherCaptures = captures.filter((capture) => !capture.screen.startsWith('Customer checkout pass'));
+  const otherFindings = findings.filter((finding) => !finding.startsWith('pass-'));
   const categories = {};
   for (const finding of passFindings) {
     const match = finding.match(/^pass-(.+?)-(long-[a-z]+)@(\d+)(-launcher)?[^:]*: (.*?)(?: "|$)/);
@@ -477,7 +479,7 @@ function writeEvidenceIndex(build, captures, findings) {
     '',
     `Build SHA: \`${build.sha}\` (frontend and harness clean at that SHA: ${build.frontendClean ? 'yes' : 'NO'}); Next.js BUILD_ID \`${build.nextBuildId}\` built ${build.nextBuiltAt}.`,
     `Harness: \`scripts/test-benefits-owner-b-visual.js\` (BENEFITS_VISUAL_SCREENS=${[...screens].join(',')}). Widths: ${widths.join(', ')} px.`,
-    `Result: **${passFindings.length ? 'FAIL' : 'PASS'}** - ${passCaptures.length} captures, ${passFindings.length} pass findings.`,
+    `Result: **${findings.length ? 'FAIL' : 'PASS'}** - ${captures.length} captures in this run: ${passCaptures.length} customer-pass (F3) captures with ${passFindings.length} findings, and ${otherCaptures.length} other owner-B screen captures (history/customer/seller) with ${otherFindings.length} findings.`,
     '',
     '## Mocks (dummy data only)',
     ...MOCKS.map((mock) => `- ${mock}`),
@@ -498,6 +500,11 @@ function writeEvidenceIndex(build, captures, findings) {
     '| state | fixture | width | view | overlays present | file |',
     '|---|---|---|---|---|---|',
     ...passCaptures.map((capture) => `| ${capture.state} | ${capture.fixture} | ${capture.width} | ${capture.view} | ${[...new Set(capture.overlays)].join(' ')} | [${capture.file}](${capture.file}) |`),
+    '',
+    '## Other owner-B screens in this run',
+    '| screen | state | width | file |',
+    '|---|---|---|---|',
+    ...otherCaptures.map((capture) => `| ${capture.screen} | ${capture.state} | ${capture.width} | [${capture.file}](${capture.file}) |`),
     '',
     'Full finding list: assertions.json.',
     '',
