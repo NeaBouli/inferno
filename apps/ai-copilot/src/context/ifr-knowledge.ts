@@ -213,14 +213,14 @@ export function getIFRKnowledge() {
           "Tier System (your own Tier 1/2/3 thresholds in the generated contract)",
           "Configuration Score (0-100 heuristic checklist: Strong/Partial/Weak setup) — configuration heuristic only, not audited, not a security audit or certification",
           "Contract code generation",
-          "SDK snippet (local repository package; npm publication pending)",
+          "SDK snippet (repository release candidate; npm stable 0.4.0)",
           "Deploy guide (Sepolia → BuilderRegistry → Mainnet)"
         ]
       },
       sdk: {
         package: "ifr-sdk",
-        version: "0.4.0",
-        availability: "Local repository package; npm publication pending",
+        version: "0.4.1",
+        availability: "Repository 0.4.1 release candidate; npm stable 0.4.0 published without provenance as the one-time bootstrap. Wallet-free Benefits flows require the separately gated owner-B backend rollout.",
         install: "From the Inferno repository root: npm install --install-links ./apps/sdk",
         methods: "getBenefitTier() (default preset or own tiers; locked IFR only), checkAccess(), getBalance(), getLockedBalance(), isBuilder(), getTotalSupply(); getTier() is deprecated legacy",
         restApi: "GET https://copilot-api.ifrunit.tech/api/ifr/check?wallet=0x...&required=1000"
