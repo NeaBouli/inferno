@@ -54,15 +54,15 @@ const LONG_SUMMARY_VALUES = {
   Benefit: '100%',
   'Accepted lock source': 'CommitmentVault TIME_ONLY lock',
   'Required lock': '1,000,000,000 IFR',
-  'Per-wallet use': '999 / UTC day · 9,999 / UTC month',
   'Selected rule': 'Seasonal loyalty tier for returning members',
 };
 
-// Marks the seller summary rows: the grid that holds the "Per-wallet use" row.
+// Marks the seller summary rows: the grid that holds the "Selected rule" row. (The "Per-wallet use"
+// row was removed with owner decision B: IFR no longer hosts per-customer limits.)
 function markSellerSummary(page, long) {
   return page.evaluate(({ long, values }) => {
-    const label = [...document.querySelectorAll('span')].find((s) => s.textContent.trim() === 'Per-wallet use');
-    if (!label) return 'summary row "Per-wallet use" not rendered';
+    const label = [...document.querySelectorAll('span')].find((s) => s.textContent.trim() === 'Selected rule');
+    if (!label) return 'summary row "Selected rule" not rendered';
     const grid = label.parentElement.parentElement;
     grid.dataset.launcherContainer = 'checkout summary';
     const targets = [];
@@ -251,7 +251,7 @@ const SURFACES = [
     path: '/b/launcher-fit',
     ready: async (page) => {
       await page.locator('[aria-label="Connect a checkout wallet"] button').first().waitFor({ state: 'attached', timeout: 35_000 });
-      await page.getByText('Per-wallet use', { exact: true }).waitFor({ state: 'attached', timeout: 15_000 });
+      await page.getByText('Selected rule', { exact: true }).waitFor({ state: 'attached', timeout: 15_000 });
     },
     states: [
       { name: 'as-rendered', apply: (page) => markSellerSummary(page, false) },
@@ -332,7 +332,7 @@ async function run() {
                   if (m.problems.length) failures.push(`${where} [${state.name}] @${position} scrollY=${scrollY} ${t}:\n  - ${m.problems.join('\n  - ')}`);
                 }
                 if (shotDir && SHOT_WIDTHS.has(width) && position !== 'end') {
-                  const focus = position === 'evidence' || /Per-wallet|Sign and verify/.test(target);
+                  const focus = position === 'evidence' || /Selected rule|Sign and verify/.test(target);
                   if (focus) {
                     const slug = `${surface.name}-${width}x${height}-${state.name.replace(/[^a-z]+/gi, '-').replace(/-+$/, '')}-${position}`.toLowerCase();
                     await page.screenshot({ path: path.join(shotDir, `${slug}.png`) });
