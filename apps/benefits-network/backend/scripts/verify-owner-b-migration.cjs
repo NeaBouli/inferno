@@ -34,7 +34,7 @@ let tempDir = null;
 // - bare (no 0x) runs of 64*k hex: the same strict word check.
 // - any other `0x` run longer than 40 hex digits is ambiguous and counted (fail closed).
 const PREFIXED_HEX_RUN = /0[xX]([0-9a-fA-F]+)(?![0-9a-fA-F])/g;
-const BARE_HEX_RUN = /(?<![0-9a-fA-FxX])([0-9a-fA-F]{64,})(?![0-9a-fA-F])/g;
+const BARE_HEX_RUN = /(?<![0-9a-fA-FxX])([0-9a-fA-F]{40,})(?![0-9a-fA-F])/g;
 const PADDED_WORD = /^0{24}(?!0{40}$)[0-9a-f]{40}$/i;
 
 function paddedWords(hex) {
@@ -54,7 +54,13 @@ function classifyHexRun(prefixed, hex) {
     if (hex.length > 8 && (hex.length - 8) % 64 === 0) return paddedWords(hex.slice(8));
     return 1; // ambiguous long hex: fail closed
   }
-  return hex.length >= 64 && hex.length % 64 === 0 ? paddedWords(hex) : 0;
+  // Bare (unprefixed) runs get the same strict word parsing: 64*k hex (bytes32 / ABI words) or a 4-byte
+  // selector + 64*k hex (calldata). Any other bare run of 40+ hex digits - including a bare 40-digit
+  // address - is ambiguous and counted (fail closed).
+  if (hex.length < 40) return 0;
+  if (hex.length % 64 === 0) return paddedWords(hex);
+  if (hex.length > 8 && (hex.length - 8) % 64 === 0) return paddedWords(hex.slice(8));
+  return 1;
 }
 
 // Every table/column the post-migration schema may contain. Anything else fails.
@@ -125,9 +131,34 @@ function countAddresses(text) {
   return count;
 }
 
-function sqliteJson(db, sql) {
-  const out = execFileSync('sqlite3', ['-json', db, sql], { encoding: 'utf8', maxBuffer: 1024 * 1024 * 1024 }).trim();
-  return out ? JSON.parse(out) : [];
+/**
+ * Opens the database strictly read-only with one handle for the whole scan (node:sqlite, readOnly: the
+ * file must exist and is never created; PRAGMA query_only). The path must be a regular file (no
+ * symlink). The file and its -wal/-shm/-journal sidecars must be byte-for-byte unchanged in identity,
+ * size and mtime after the scan, otherwise the scan fails.
+ */
+function openReadOnly(dbPath) {
+  const stat = fs.lstatSync(dbPath); // throws when missing
+  if (!stat.isFile()) throw new Error('scan target is not a regular file');
+  const { DatabaseSync } = require('node:sqlite');
+  const handle = new DatabaseSync(dbPath, { readOnly: true });
+  handle.exec('PRAGMA query_only = ON');
+  return handle;
+}
+
+function fileFingerprint(dbPath) {
+  return ['', '-wal', '-shm', '-journal'].map((suffix) => {
+    try {
+      const stat = fs.lstatSync(`${dbPath}${suffix}`);
+      return `${suffix}:${stat.dev}:${stat.ino}:${stat.size}:${stat.mtimeMs}`;
+    } catch {
+      return `${suffix}:absent`;
+    }
+  }).join('|');
+}
+
+function queryAll(handle, sql) {
+  return handle.prepare(sql).all();
 }
 
 function childPath(base, key) {
@@ -161,19 +192,35 @@ function walkJson(value, jsonPath, onHit) {
  * Scans a SQLite database file. Returns { ok, failures: { location: count }, allowed: { location: count },
  * errors: [string] }. Locations and errors never contain an address value.
  */
-function scanDatabaseForAddresses(db) {
+function scanDatabaseForAddresses(dbPath) {
   const failures = {};
   const allowed = {};
+  let before;
+  let db;
+  try {
+    before = fileFingerprint(dbPath);
+    db = openReadOnly(dbPath);
+  } catch {
+    return { ok: false, failures, allowed, errors: ['database cannot be opened read-only (missing, not a regular file or unreadable)'] };
+  }
+  try {
+    return scanOpenDatabase(db, dbPath, before, failures, allowed);
+  } finally {
+    db.close();
+  }
+}
+
+function scanOpenDatabase(db, dbPath, before, failures, allowed) {
   const errors = [];
   const add = (bucket, location, count) => { bucket[location] = (bucket[location] || 0) + count; };
 
-  const objects = sqliteJson(db, "SELECT type, name FROM sqlite_master WHERE type IN ('table', 'view') AND name NOT LIKE 'sqlite_%' ORDER BY name");
+  const objects = queryAll(db, "SELECT type, name FROM sqlite_master WHERE type IN ('table', 'view') AND name NOT LIKE 'sqlite_%' ORDER BY name");
   for (const { type, name } of objects) {
     if (type !== 'table' || !Object.prototype.hasOwnProperty.call(KNOWN_COLUMNS, name)) {
       errors.push(`unknown ${type} ${redact(name)}`);
       continue;
     }
-    const columns = sqliteJson(db, `SELECT name FROM pragma_table_info('${name.replace(/'/g, "''")}')`).map((row) => row.name);
+    const columns = queryAll(db, `SELECT name FROM pragma_table_info('${name.replace(/'/g, "''")}')`).map((row) => row.name);
     const known = new Set(KNOWN_COLUMNS[name]);
     const unknownColumns = columns.filter((column) => !known.has(column));
     if (unknownColumns.length) {
@@ -183,7 +230,7 @@ function scanDatabaseForAddresses(db) {
     const jsonColumns = new Set(JSON_COLUMNS[name] || []);
     const selected = columns.map((column) =>
       `CASE WHEN typeof(${quoteIdent(column)}) IN ('text', 'blob') THEN CAST(${quoteIdent(column)} AS TEXT) END AS ${quoteIdent(column)}`);
-    const rows = sqliteJson(db, `SELECT ${selected.join(', ')} FROM ${quoteIdent(name)}`);
+    const rows = queryAll(db, `SELECT ${selected.join(', ')} FROM ${quoteIdent(name)}`);
     for (const row of rows) {
       for (const column of columns) {
         const value = row[column];
@@ -212,6 +259,7 @@ function scanDatabaseForAddresses(db) {
       }
     }
   }
+  if (fileFingerprint(dbPath) !== before) errors.push('database or sidecar changed during the read-only scan');
   return { ok: errors.length === 0 && Object.keys(failures).length === 0, failures, allowed, errors };
 }
 
@@ -424,6 +472,7 @@ function runFixture() {
   assert(scan.allowed['Business.ownerAddress'] === 1, 'Allowlisted seller owner address must be kept and not flagged');
   selfTestScanner(db);
   selfTestClassifier();
+  selfTestReadOnly(db);
 
   console.log('Owner-B migration verified: refusal (non-terminal and unknown statuses) and a late failure leave the DB unchanged; continuity keeps sessions, closed events and audit rows without customer data; generic address scan clean.');
   } finally {
@@ -447,6 +496,8 @@ function selfTestScanner(migratedDb) {
     ['invalid JSON payload', `INSERT INTO AuditLog (id, sessionId, type, payload, ts) VALUES ('neg', 's-old', 'EXPIRED', 'not json', '2025-01-01');`],
     ['address in Session.reason', `UPDATE Session SET reason = 'denied for ${CUSTOMER}' WHERE id = 's-old';`],
     ['address in challenge scope', `INSERT INTO SellerAuthorizationChallenge (nonce, action, businessId, scope, expiresAt) VALUES ('n', 'x', 'y', '${CUSTOMER.toLowerCase()}', '2099-01-01');`],
+    ['bare selector + padded address in Session.reason', `UPDATE Session SET reason = 'call 70a08231000000000000000000000000${CUSTOMER_BARE} failed' WHERE id = 's-old';`],
+    ['bare 40-hex address in RewardEvent.reason', `UPDATE RewardEvent SET reason = 'wallet ${CUSTOMER_BARE.toUpperCase()}' WHERE id = 'r-closed';`],
     ['padded address in RewardEvent.reason', `UPDATE RewardEvent SET reason = 'call 0x70a08231000000000000000000000000${CUSTOMER_BARE}' WHERE id = 'r-closed';`],
     ['unknown table', 'CREATE TABLE "Shadow" ("note" TEXT);'],
     ['unknown column', 'ALTER TABLE "Session" ADD COLUMN "recoveredAddress" TEXT;'],
@@ -476,6 +527,39 @@ function selfTestScanner(migratedDb) {
   }
 }
 
+/** Read-only scan: missing/replaced paths never PASS or create files; the DB and sidecars stay unchanged. */
+function selfTestReadOnly(migratedDb) {
+  const missing = path.join(tempDir, 'does-not-exist.db');
+  const result = scanDatabaseForAddresses(missing);
+  assert(!result.ok && result.errors.length === 1, 'A missing scan target must fail');
+  assert(!fs.existsSync(missing), 'Scanning a missing path must not create a database');
+  for (const suffix of ['-wal', '-shm', '-journal']) assert(!fs.existsSync(`${missing}${suffix}`), 'No sidecar may be created');
+  const cli = spawnSync(process.execPath, [__filename, '--scan', missing], { encoding: 'utf8' });
+  assert(cli.status !== 0, 'CLI scan of a missing path must fail');
+  assert(!fs.existsSync(missing), 'CLI scan of a missing path must not create a database');
+
+  const dir = path.join(tempDir, 'replaced.db');
+  fs.mkdirSync(dir);
+  assert(!scanDatabaseForAddresses(dir).ok, 'A directory in place of the database must fail');
+  const link = path.join(tempDir, 'linked.db');
+  fs.symlinkSync(migratedDb, link);
+  assert(!scanDatabaseForAddresses(link).ok, 'A symlinked scan target must fail');
+
+  const copy = path.join(tempDir, 'readonly-copy.db');
+  fs.copyFileSync(migratedDb, copy);
+  const fingerprint = () => ['', '-wal', '-shm', '-journal'].map((suffix) => {
+    const file = `${copy}${suffix}`;
+    if (!fs.existsSync(file)) return `${suffix}:absent`;
+    const stat = fs.statSync(file);
+    return `${suffix}:${stat.size}:${stat.mtimeMs}:${require('crypto').createHash('sha256').update(fs.readFileSync(file)).digest('hex')}`;
+  }).join('|');
+  const before = fingerprint();
+  assert(scanDatabaseForAddresses(copy).ok, 'Read-only scan of the migrated copy must pass');
+  const viaCli = spawnSync(process.execPath, [__filename, '--scan', copy], { encoding: 'utf8' });
+  assert(viaCli.status === 0, `CLI read-only scan must pass: ${viaCli.stdout}${viaCli.stderr}`);
+  assert(fingerprint() === before, 'The scan must not change the database or create/modify sidecars');
+}
+
 /** Unit fixtures for the hex-run classification (strict 20-byte tokens and 32-byte ABI words). */
 function selfTestClassifier() {
   const address = CUSTOMER_BARE;
@@ -492,6 +576,10 @@ function selfTestClassifier() {
     ['standalone padded word (ambiguous bytes32 -> fail closed)', `0x${word(address)}`, 1],
     ['bare padded ABI word', `data ${word(address)}`, 1],
     ['ambiguous long hex run', `0x${address}ab`, 1],
+    ['bare selector + padded word', `call 70a08231${word(address)} reverted`, 1],
+    ['bare selector + two words, one address', `a9059cbb${word(address)}${'7e'.repeat(32)}`, 1],
+    ['bare 40-hex address (ambiguous)', `wallet ${address}`, 1],
+    ['bare ambiguous long hex', `${address}abcdef`, 1],
     ['signature-length hex (ambiguous)', `0x${'12'.repeat(65)}`, 1],
   ];
   const clean = [
@@ -502,6 +590,8 @@ function selfTestClassifier() {
     ['bare sha256 digest', 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'],
     ['short hex', '0xdeadbeef'],
     ['digest prefix', `sha256:${'cd'.repeat(32)}`],
+    ['bare random selector + word', `a9059cbb${'7e'.repeat(32)}`],
+    ['bare random 64-hex nonce', 'ab'.repeat(32)],
   ];
   for (const [name, text, expected] of findings) {
     assert(countAddresses(text) === expected, `classifier: ${name} must count ${expected}, got ${countAddresses(text)}`);
@@ -518,10 +608,11 @@ if (require.main === module) {
   if (scanIndex !== -1) {
     // Read-only scan of a given SQLite file (rehearsal copy). Prints counts per location only.
     const db = process.argv[scanIndex + 1];
-    if (!db || !fs.existsSync(db)) {
+    if (!db) {
       console.error('Usage: node scripts/verify-owner-b-migration.cjs --scan <sqlite-file>');
       process.exit(2);
     }
+    // No existence pre-check (TOCTOU): the scan opens the file strictly read-only and fails if it cannot.
     const result = scanDatabaseForAddresses(db);
     console.log(`Owner-B address scan: ${result.ok ? 'PASS' : 'FAIL'}\n${formatScan(result)}`);
     process.exit(result.ok ? 0 : 1);
