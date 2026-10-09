@@ -60,7 +60,7 @@
   },
   "overrides": {
     "postcss-selector-parser": "7.1.6",
-    "shell-quote": "1.9.0",
+    "shell-quote": "1.11.0",
     "tsx": {
       "esbuild": "0.28.1"
     }
