@@ -569,4 +569,14 @@ for (const marker of ["stay permanently lost", "27,153,013", "as permanently los
   assert.ok(!`${cwa02Entry.nextAction} ${cwa02Entry.verification}`.includes(marker), `CWA-02 register retains superseded claim: ${marker}`);
 }
 
+{
+  // Supply excluding CV-01 includes unallocated Treasury IFR: never present it as a circulating/live supply.
+  const landingSupply = read("docs/index.html");
+  for (const stale of ["label: 'Live Supply'", "'Live ' + fmt(data.liveSupply)"]) {
+    assert.ok(!landingSupply.includes(stale), `Landing still labels supply excl. CV-01 as live/circulating: ${stale}`);
+  }
+  assert.ok(landingSupply.includes("label: 'Not classified as permanently lost'") && landingSupply.includes("not a circulating, liquid or spendable figure"),
+    "Landing must label totalSupply minus CV-01 neutrally and state it is not a circulating, liquid or spendable figure");
+}
+
 console.log("[cwa-content-coherence] PASS - CWA-06 custody wording, CWA-15, CWA-20, CWA-23, CWA-51...CWA-53, CWA-57...CWA-73 plus CWA-78 source, math, copy and status evidence; CWA-02 recovery copy");

@@ -3954,7 +3954,7 @@ if (isLocked) {
       { key: 'lost-ifr-stat',   label: 'Permanently Lost', value: fmt(baseUnitsToNumber(lostTotalRaw())), sub: 'Not burned \u2014 CV-01 tranches only', color: '#92400e' },
       { key: 'protocol-locked', label: 'Protocol Locked', value: fmtNA(protocolLocked), sub: 'All non-circulating IFR secured', color: '#92400e' },
       { key: 'commitment-locked-stat', label: 'CommitmentVault Locked', value: fmtNA(data.commitmentLocked), sub: 'Time tranches only; CV-01 counted as permanently lost', color: '#92400e' },
-      { key: 'live-supply-stat', label: 'Live Supply', value: data.liveSupply != null ? fmt(data.liveSupply) : 'N/A', sub: 'totalSupply minus CV-01: not classified as permanently lost (not a circulation figure)', color: '#065f46' },
+      { key: 'live-supply-stat', label: 'Not classified as permanently lost', value: data.liveSupply != null ? fmt(data.liveSupply) : 'N/A', sub: 'totalSupply minus CV-01, not classified as permanently lost; includes unallocated Treasury IFR, so it is not a circulating, liquid or spendable figure', color: '#065f46' },
       { key: 'lending-available-stat', label: 'LendingVault V1 Lender Offers', value: fmtNA(data.lendingAvailable), sub: 'Retired: withdrawable by lenders; no borrowing activation planned or authorized', color: '#166534' },
       { key: '',                label: 'Current Supply',  value: fmtNA(data.supply),    sub: 'of 1B genesis',        color: '#fff'    },
       { key: '',                label: 'LP Reserve Safe', value: fmtNA(data.lpReserve), sub: 'LP allocation (3-of-5)',color: '#b3300b' },
@@ -4066,7 +4066,7 @@ if (isLocked) {
       var supplyEl = document.getElementById('donut-supply');
       if (supplyEl) supplyEl.textContent = fmt(data.supply);
       var liveEl = document.getElementById('donut-live-supply');
-      if (liveEl) liveEl.textContent = data.liveSupply != null ? 'Live ' + fmt(data.liveSupply) : '';
+      if (liveEl) liveEl.textContent = data.liveSupply != null ? 'Not classified as lost ' + fmt(data.liveSupply) : '';
       renderLegend(data);
       renderMetrics(data);
       updateLiveDisplay(data);
