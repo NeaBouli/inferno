@@ -219,8 +219,8 @@ test("mobile: the distribution donut with the dead segment stays visible", async
   expect(box.width).toBeGreaterThan(200);
 });
 
-for (const [width, height] of [[375, 812], [390, 844]]) {
-  test(`mobile: the "not classified as permanently lost" donut label fits at ${width}x${height}`, async ({ page }) => {
+for (const [width, height] of [[375, 812], [390, 844], [1440, 1000]]) {
+  test(`the "not classified as permanently lost" donut label fits at ${width}x${height}`, async ({ page }) => {
     await page.setViewportSize({ width, height });
     await blockNetwork(page);
     await answerProxyFull(page);

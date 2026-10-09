@@ -572,6 +572,8 @@ for (const marker of ["stay permanently lost", "27,153,013", "as permanently los
 {
   // Supply excluding CV-01 includes unallocated Treasury IFR: never present it as a circulating/live supply.
   const landingSupply = read("docs/index.html");
+  assert.ok(!landingSupply.includes('<div style="font-size:11px;color:var(--text-muted);">Current Supply</div>\n              <div id="donut-live-supply"'),
+    "Donut centre must not label the CV-01 remainder as Current Supply");
   for (const stale of ["label: 'Live Supply'", "'Live ' + fmt(data.liveSupply)", "'Not classified as lost ' + fmt(data.liveSupply)"]) {
     assert.ok(!landingSupply.includes(stale), `Landing still labels supply excl. CV-01 as live/circulating: ${stale}`);
   }
