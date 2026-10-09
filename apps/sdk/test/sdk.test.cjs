@@ -54,7 +54,6 @@ async function testBenefitsCheckout() {
       return jsonResponse(200, {
         action: "sessions:create",
         businessId: "coffee-shop",
-        walletAddress: sellerWallet,
         scope: "rule-premium",
         domain: SELLER_DOMAIN,
         chainId: SELLER_CHAIN_ID,
@@ -95,7 +94,8 @@ async function testBenefitsCheckout() {
   assert.equal(challengeUrl.origin, DEFAULT_BENEFITS_API);
   assert.equal(challengeUrl.searchParams.get("action"), "sessions:create");
   assert.equal(challengeUrl.searchParams.get("businessId"), "coffee-shop");
-  assert.equal(challengeUrl.searchParams.get("walletAddress"), sellerWallet);
+  assert.equal(challengeUrl.searchParams.has("walletAddress"), false);
+  assert.equal(requests[0].url.toLowerCase().includes(sellerWallet.slice(2).toLowerCase()), false);
   assert.equal(challengeUrl.searchParams.get("scope"), "rule-premium");
   assert.equal(requests[1].init.method, "POST");
   assert.equal(requests[1].init.headers["x-ifr-wallet"], sellerWallet);
@@ -118,7 +118,6 @@ async function testChallengeMismatchFailsBeforeWrite() {
       return jsonResponse(200, {
         action: "sessions:create",
         businessId: "another-business",
-        walletAddress: "0x1111111111111111111111111111111111111111",
         scope: "default",
         timestamp: "1784400000000",
         message: "wrong binding",
@@ -150,7 +149,6 @@ async function assertChallengeRejectedBeforeSigning(overrides, expectedPattern, 
   const challenge = {
     action: "sessions:create",
     businessId: "coffee-shop",
-    walletAddress,
     scope: "default",
     domain: SELLER_DOMAIN,
     chainId: SELLER_CHAIN_ID,
@@ -189,7 +187,6 @@ function validRedeemChallenge(sessionId, walletAddress, overrides = {}) {
   return {
     action: "sessions:redeem",
     businessId: sessionId,
-    walletAddress,
     scope: sessionId,
     domain: SELLER_DOMAIN,
     chainId: SELLER_CHAIN_ID,
@@ -341,7 +338,8 @@ async function testRedeemCheckout() {
   assert.equal(challengeUrl.searchParams.get("action"), "sessions:redeem");
   assert.equal(challengeUrl.searchParams.get("businessId"), sessionId);
   assert.equal(challengeUrl.searchParams.get("scope"), sessionId);
-  assert.equal(challengeUrl.searchParams.get("walletAddress"), sellerWallet);
+  assert.equal(challengeUrl.searchParams.has("walletAddress"), false);
+  assert.equal(requests[0].url.toLowerCase().includes(sellerWallet.slice(2).toLowerCase()), false);
   assert.equal(requests[1].url, `${DEFAULT_BENEFITS_API}/api/sessions/session-1/redeem`);
   assert.equal(requests[1].init.method, "POST");
   assert.equal(requests[1].init.headers["x-ifr-wallet"], sellerWallet);
@@ -383,10 +381,6 @@ async function testRedeemChallengeMismatchFailsBeforeSigning() {
   await assertRedeemChallengeRejectedBeforeSigning({ action: "sessions:create" }, /mismatched/);
   await assertRedeemChallengeRejectedBeforeSigning({ businessId: "other-session" }, /mismatched/);
   await assertRedeemChallengeRejectedBeforeSigning({ scope: "other-scope" }, /mismatched/);
-  await assertRedeemChallengeRejectedBeforeSigning(
-    { walletAddress: "0x2222222222222222222222222222222222222222" },
-    /mismatched/
-  );
   await assertRedeemChallengeRejectedBeforeSigning({ nonce: undefined }, /mismatched/);
   await assertRedeemChallengeRejectedBeforeSigning({ message: "Sign an unrelated message" }, /mismatched/);
   const staleTimestamp = String(Date.now() - 11 * 60 * 1000);
@@ -544,12 +538,7 @@ async function main() {
   );
   await testBenefitsCheckout();
   await testChallengeMismatchFailsBeforeWrite();
-  await assertChallengeRejectedBeforeSigning({ walletAddress: undefined }, /mismatched/);
   await assertChallengeRejectedBeforeSigning({ nonce: undefined }, /mismatched/);
-  await assertChallengeRejectedBeforeSigning(
-    { walletAddress: "0x2222222222222222222222222222222222222222" },
-    /mismatched/
-  );
   await assertChallengeRejectedBeforeSigning({ message: "Sign an unrelated message" }, /mismatched/);
   const staleTimestamp = String(Date.now() - 11 * 60 * 1000);
   const staleNonce = "ab".repeat(32);

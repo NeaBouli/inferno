@@ -152,6 +152,22 @@ CREATE INDEX "Session_businessId_idx" ON "Session"("businessId");
 CREATE INDEX "Session_benefitRuleId_idx" ON "Session"("benefitRuleId");
 CREATE INDEX "Session_redemptionLimitLookup_idx" ON "Session"("benefitRuleId", "status", "redeemedAt");
 CREATE INDEX "Session_status_idx" ON "Session"("status");
+-- Seller authorization challenges become nonce-only (no wallet column): the signer is bound by the
+-- signature alone. Existing rows are short-lived single-use challenges and are deleted, not copied;
+-- sellers simply request a new challenge.
+CREATE TABLE "new_SellerAuthorizationChallenge" (
+    "nonce" TEXT NOT NULL PRIMARY KEY,
+    "action" TEXT NOT NULL,
+    "businessId" TEXT NOT NULL,
+    "scope" TEXT NOT NULL,
+    "expiresAt" DATETIME NOT NULL,
+    "consumedAt" DATETIME,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+DROP TABLE "SellerAuthorizationChallenge";
+ALTER TABLE "new_SellerAuthorizationChallenge" RENAME TO "SellerAuthorizationChallenge";
+CREATE INDEX "SellerAuthorizationChallenge_expiresAt_idx" ON "SellerAuthorizationChallenge"("expiresAt");
+CREATE INDEX "SellerAuthorizationChallenge_action_businessId_idx" ON "SellerAuthorizationChallenge"("action", "businessId");
 PRAGMA foreign_keys=ON;
 PRAGMA defer_foreign_keys=OFF;
 COMMIT;

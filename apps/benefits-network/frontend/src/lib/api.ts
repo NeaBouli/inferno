@@ -335,7 +335,6 @@ export interface SellerAuthMessage {
   message: string;
   nonce: string;
   scope: string;
-  walletAddress: string;
   domain: string;
   chainId: number;
 }
@@ -504,17 +503,17 @@ function adminHeaders(adminSecret: string) {
   return { Authorization: `Bearer ${adminSecret}` };
 }
 
-// Every seller action (read or mutation) uses a one-time, wallet-bound challenge.
-// Read-only actions omit the scope; the backend binds them to its fixed read scope.
+// Every seller action (read or mutation) uses a one-time challenge. The request carries no wallet
+// (owner decision B): the connected wallet signs the returned message and the backend recovers the
+// signer. Read-only actions omit the scope; the backend binds them to its fixed read scope.
 export function getSellerAuthMessage(
   action: string,
   businessId: string,
-  binding: { walletAddress: string; scope?: string }
+  binding: { scope?: string } = {}
 ) {
   const query = new URLSearchParams({
     action,
     businessId: businessId || 'new',
-    walletAddress: binding.walletAddress,
   });
   if (binding.scope) query.set('scope', binding.scope);
   return fetchJSON<SellerAuthMessage>(`/api/seller/auth-message?${query.toString()}`);

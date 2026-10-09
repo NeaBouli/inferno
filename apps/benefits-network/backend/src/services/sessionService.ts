@@ -349,7 +349,6 @@ async function createSessionInternal(
     if (creatorAuthorization) {
       await consumeSellerAuthorizationChallenge(tx, {
         nonce: creatorAuthorization.nonce,
-        walletAddress: creatorAuthorization.walletAddress,
         action: 'sessions:create',
         businessId,
         scope: creatorAuthorization.scope,

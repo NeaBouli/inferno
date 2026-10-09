@@ -72,7 +72,6 @@ async function sellerHeaders(
     const query = new URLSearchParams({
       action,
       businessId,
-      walletAddress: wallet.address,
       scope: scope || (action === 'sessions:create' ? 'default' : businessId),
     });
     const challengeResponse = await fetch(`${baseUrl()}/api/seller/auth-message?${query}`);
@@ -94,7 +93,6 @@ async function sellerHeaders(
     `${baseUrl()}/api/seller/auth-message?${new URLSearchParams({
       action,
       businessId,
-      walletAddress: wallet.address,
     })}`
   );
   expect(challengeResponse.status).toBe(200);
@@ -267,7 +265,6 @@ describe('Seller catalog routes', () => {
       `${baseUrl()}/api/seller/auth-message?${new URLSearchParams({
         action: 'business:create',
         businessId: 'new',
-        walletAddress: owner.address,
         scope: 'new\nNonce: misleading',
       })}`
     );
@@ -454,7 +451,6 @@ describe('Seller catalog routes', () => {
     await prisma.sellerAuthorizationChallenge.createMany({
       data: Array.from({ length: 150 }, (_, index) => ({
         nonce: index.toString(16).padStart(64, '0'),
-        walletAddress: owner.address,
         action: 'business:list',
         businessId: 'seller',
         scope: 'read',
@@ -493,21 +489,15 @@ describe('Seller catalog routes', () => {
     expect(statuses.filter((status) => status === 401)).toHaveLength(4);
   });
 
-  it('requires a wallet and the fixed read scope when issuing read challenges', async () => {
+  it('issues wallet-free read challenges and requires the fixed read scope', async () => {
     expect((await fetch(`${baseUrl()}/api/seller/auth-message?${new URLSearchParams({
       action: 'business:list',
       businessId: 'seller',
-    })}`)).status).toBe(400);
-    expect((await fetch(`${baseUrl()}/api/seller/auth-message?${new URLSearchParams({
-      action: 'business:list',
-      businessId: 'seller',
-      walletAddress: owner.address,
       scope: 'other',
     })}`)).status).toBe(400);
     const response = await fetch(`${baseUrl()}/api/seller/auth-message?${new URLSearchParams({
       action: 'business:list',
       businessId: 'seller',
-      walletAddress: owner.address,
     })}`);
     expect(response.status).toBe(200);
     expect(response.headers.get('cache-control')).toBe('private, no-store, max-age=0');
@@ -516,8 +506,8 @@ describe('Seller catalog routes', () => {
       domain: 'shop.example.test',
       chainId: 11155111,
       scope: 'read',
-      walletAddress: owner.address,
     });
+    expect(challenge).not.toHaveProperty('walletAddress');
     expect(String(challenge.message)).toContain('Domain: shop.example.test\nChain ID: 11155111\n');
     expect(String(challenge.message)).toContain(`Expires: ${challenge.expiresAt}`);
   });

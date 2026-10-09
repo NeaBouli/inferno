@@ -153,7 +153,6 @@ export async function bindCustomerPass(input: {
   return prisma.$transaction(async (tx) => {
     await consumeSellerAuthorizationChallenge(tx, {
       nonce: input.nonce,
-      walletAddress: input.sellerWallet,
       action: 'passes:bind',
       businessId: input.businessId,
       scope: input.scope,

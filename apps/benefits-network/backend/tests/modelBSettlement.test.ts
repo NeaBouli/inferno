@@ -93,7 +93,7 @@ function baseUrl() {
 }
 
 async function sellerHeaders(wallet: TestWallet, action: string, businessId: string, scope = businessId) {
-  const query = new URLSearchParams({ action, businessId, walletAddress: wallet.address });
+  const query = new URLSearchParams({ action, businessId });
   if (['rewards:disable', 'sessions:redeem', 'sessions:create'].includes(action)) query.set('scope', scope);
   const challengeResponse = await fetch(`${baseUrl()}/api/seller/auth-message?${query}`);
   expect(challengeResponse.status).toBe(200);

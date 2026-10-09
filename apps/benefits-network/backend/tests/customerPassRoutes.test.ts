@@ -86,7 +86,7 @@ async function sellerHeaders(
 ) {
   const scope = `${passId}:${ruleId}`;
   const query = new URLSearchParams({
-    action: 'passes:bind', businessId, walletAddress: seller.address, scope,
+    action: 'passes:bind', businessId, scope,
   });
   const response = await fetch(`${baseUrl()}/api/seller/auth-message?${query}`);
   expect(response.status).toBe(200);

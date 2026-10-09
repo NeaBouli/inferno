@@ -273,10 +273,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
     setError('');
     try {
       const scope = selectedRuleId || 'default';
-      const challenge = await getSellerAuthMessage('sessions:create', resolvedBusinessId, {
-        walletAddress: address,
-        scope,
-      });
+      const challenge = await getSellerAuthMessage('sessions:create', resolvedBusinessId, { scope });
       if (!challenge.nonce) throw new Error('Seller authorization challenge is incomplete');
       const signature = await signMessageAsync({ message: challenge.message });
       const nextSession = await createSession(resolvedBusinessId, selectedRuleId || undefined, {
@@ -334,10 +331,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
     setError('');
     try {
       const scope = `${passId}:${selectedRuleId}`;
-      const challenge = await getSellerAuthMessage('passes:bind', resolvedBusinessId, {
-        walletAddress: address,
-        scope,
-      });
+      const challenge = await getSellerAuthMessage('passes:bind', resolvedBusinessId, { scope });
       if (!challenge.nonce) throw new Error('Seller authorization challenge is incomplete');
       const signature = await signMessageAsync({ message: challenge.message });
       const bound = await bindCustomerPass(passId, resolvedBusinessId, selectedRuleId, {
@@ -374,9 +368,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
     setError('');
     setAccessStatus('');
     try {
-      const challenge = await getSellerAuthMessage('operators:status', resolvedBusinessId, {
-        walletAddress: address,
-      });
+      const challenge = await getSellerAuthMessage('operators:status', resolvedBusinessId);
       const signature = await signMessageAsync({ message: challenge.message });
       const access = await getCheckoutOperatorStatus(resolvedBusinessId, {
         walletAddress: address,

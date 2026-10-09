@@ -50,7 +50,6 @@ export function SellerRewardStatus({ businessId, ownerAddress }: { businessId: s
     if (!address || !isConnected) throw new Error('Connect the seller owner wallet first.');
     const mutating = action !== 'rewards:read';
     const challenge = await getSellerAuthMessage(action, businessId, {
-      walletAddress: address,
       scope: mutating ? scope ?? businessId : undefined,
     });
     if (!challenge.nonce) throw new Error('Seller authorization challenge is incomplete');
@@ -124,7 +123,6 @@ export function SellerRewardStatus({ businessId, ownerAddress }: { businessId: s
         throw new Error(`Switch the connected wallet to ${rewardWallet} and retry: only the reward wallet itself can sign its proof.`);
       }
       const challenge = await getSellerAuthMessage('rewards:reward-wallet', businessId, {
-        walletAddress: address,
         scope: rewardWallet.toLowerCase(),
       });
       if (!challenge.nonce) throw new Error('Seller authorization challenge is incomplete');

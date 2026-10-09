@@ -58,7 +58,7 @@ function baseUrl() {
 }
 
 async function sellerHeaders(wallet: TestWallet, action: string, businessId: string, scope = businessId) {
-  const query = new URLSearchParams({ action, businessId, walletAddress: wallet.address });
+  const query = new URLSearchParams({ action, businessId });
   if (['rewards:apply', 'rewards:disable', 'rewards:reward-wallet', 'sessions:redeem', 'sessions:create', 'business:create'].includes(action)) {
     query.set('scope', scope);
   }
@@ -125,7 +125,6 @@ async function rewardWalletProof(signer: TestWallet, businessId: string, rewardW
   const query = new URLSearchParams({
     action: 'rewards:reward-wallet',
     businessId,
-    walletAddress: signer.address,
     scope: rewardWallet.toLowerCase(),
   });
   const challengeResponse = await fetch(`${baseUrl()}/api/seller/auth-message?${query}`);

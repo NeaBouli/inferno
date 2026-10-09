@@ -77,12 +77,13 @@ class IFRBenefitsClient {
         }
         this.chainId = config.chainId;
     }
-    async requestSellerChallenge(action, businessId, scope, walletAddress) {
+    async requestSellerChallenge(action, businessId, scope) {
+        // The challenge request is wallet-free (no address in the URL): the signer is bound only by the
+        // signature over the returned message, which the backend recovers.
         const challengeUrl = new URL("/api/seller/auth-message", this.baseUrl);
         challengeUrl.search = new URLSearchParams({
             action,
             businessId,
-            walletAddress,
             scope,
         }).toString();
         const challenge = await readJson(await this.fetchImpl(challengeUrl.toString(), { method: "GET" }));
@@ -98,8 +99,6 @@ class IFRBenefitsClient {
             !Number.isSafeInteger(challenge.chainId) ||
             challenge.chainId <= 0 ||
             (this.chainId !== undefined && challenge.chainId !== this.chainId) ||
-            !/^0x[0-9a-fA-F]{40}$/.test(challenge.walletAddress || "") ||
-            challenge.walletAddress.toLowerCase() !== walletAddress.toLowerCase() ||
             !/^\d{10,16}$/.test(challenge.timestamp || "") ||
             !Number.isSafeInteger(timestampMs) ||
             issuedAtMs !== timestampMs ||
@@ -127,7 +126,7 @@ class IFRBenefitsClient {
             throw new Error("Invalid seller wallet address");
         if (typeof params.signMessage !== "function")
             throw new Error("Seller wallet signer is required");
-        const challenge = await this.requestSellerChallenge("sessions:create", businessId, scope, params.walletAddress);
+        const challenge = await this.requestSellerChallenge("sessions:create", businessId, scope);
         const signature = await this.signSellerChallenge(challenge, params.signMessage);
         const sessionUrl = new URL("/api/sessions", this.baseUrl);
         const session = await readJson(await this.fetchImpl(sessionUrl.toString(), {
@@ -195,7 +194,7 @@ class IFRBenefitsClient {
             throw new Error("Invalid seller wallet address");
         if (typeof params.signMessage !== "function")
             throw new Error("Seller wallet signer is required");
-        const challenge = await this.requestSellerChallenge("sessions:redeem", params.sessionId, params.sessionId, params.walletAddress);
+        const challenge = await this.requestSellerChallenge("sessions:redeem", params.sessionId, params.sessionId);
         const signature = await this.signSellerChallenge(challenge, params.signMessage);
         const redeemUrl = new URL(`/api/sessions/${segment}/redeem`, this.baseUrl);
         const result = await readJson(await this.fetchImpl(redeemUrl.toString(), {

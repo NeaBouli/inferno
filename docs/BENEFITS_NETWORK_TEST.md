@@ -304,7 +304,7 @@ npm run smoke:http
 ```
 
 This verifies the real Express HTTP surface for `/api/health`, `/api/ready`,
-the wallet-bound one-time `/api/seller/auth-message` read challenge and signed seller profile listing with a throwaway
+the wallet-free one-time `/api/seller/auth-message` read challenge and signed seller profile listing with a throwaway
 wallet. `/api/ready` runs a database probe so CI catches a backend that can
 listen on HTTP but cannot serve sessions. It does not mutate production or
 require secrets. `MUTATE=true` remains manual-only for
@@ -386,7 +386,7 @@ publishes the exact IFRLock threshold and benefit for every real offer.
 | POST | `/api/admin/businesses/:id/rewards/verify` | Admin | Verify a seller reward application against live governance state |
 | POST | `/api/admin/businesses/:id/rewards/revoke` | Admin | Revoke a seller reward link |
 | POST | `/api/admin/businesses/:id/rewards/queue` | Admin | Queue eligible reward outbox events for a verified seller |
-| GET | `/api/seller/auth-message` | - | Issue a server-time seller wallet challenge |
+| GET | `/api/seller/auth-message` | - | Issue a server-time, wallet-free seller challenge (`action`, `businessId`, `scope`; nonce-only state, the signer is recovered from the signature; a legacy `walletAddress` is ignored) |
 | POST | `/api/seller/businesses` | Seller owner signature | Create wallet-owned seller profile |
 | GET | `/api/seller/businesses` | Seller owner signature | List owned active profiles |
 | DELETE | `/api/seller/businesses/:id` | Seller owner signature | Deactivate owned profile |

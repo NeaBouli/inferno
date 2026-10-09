@@ -223,16 +223,17 @@ model AdminAuditLog {
   @@index([action, createdAt])
 }
 
+// Nonce-only seller challenge (owner decision B): no wallet, hash or wallet-derived value is stored.
+// The signing wallet is bound only by the signature over the server-issued message.
 model SellerAuthorizationChallenge {
-  nonce         String   @id
-  walletAddress String
-  action        String
-  businessId    String
-  scope         String
-  expiresAt     DateTime
-  consumedAt    DateTime?
-  createdAt     DateTime @default(now())
+  nonce      String    @id
+  action     String
+  businessId String
+  scope      String
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
 
   @@index([expiresAt])
-  @@index([walletAddress, action, businessId])
+  @@index([action, businessId])
 }

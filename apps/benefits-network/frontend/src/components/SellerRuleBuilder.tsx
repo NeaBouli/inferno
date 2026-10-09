@@ -1436,7 +1436,7 @@ export function SellerRuleBuilder() {
     scope?: string
   ): Promise<SellerAuth> {
     if (!address) throw new Error('Connect the seller wallet first.');
-    const challenge = await getSellerAuthMessage(action, targetBusinessId, { walletAddress: address, scope });
+    const challenge = await getSellerAuthMessage(action, targetBusinessId, { scope });
     if (!challenge.nonce) throw new Error('Seller authorization challenge is incomplete');
     const signature = await signMessageAsync({ message: challenge.message });
     return {

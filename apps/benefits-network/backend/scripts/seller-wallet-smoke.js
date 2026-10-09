@@ -79,8 +79,9 @@ async function fetchNoContent(path, options = {}) {
 }
 
 async function signSellerAction(wallet, action, businessId, scope) {
-  // Every seller action, read or mutation, uses a one-time wallet-bound challenge.
-  const query = new URLSearchParams({ action, businessId, walletAddress: wallet.address });
+  // Every seller action, read or mutation, uses a one-time challenge. The request carries no wallet;
+  // the backend recovers the signer from the signature.
+  const query = new URLSearchParams({ action, businessId });
   const mutatingActions = new Set([
     'business:create', 'business:delete', 'operators:create', 'operators:delete',
     'products:create', 'products:update', 'products:delete', 'rewards:apply',

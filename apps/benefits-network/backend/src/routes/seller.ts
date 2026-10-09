@@ -286,7 +286,6 @@ async function requireSellerAuth(req: Request, action: string, businessId: strin
   // matches zero unconsumed rows and is rejected.
   await consumeSellerAuthorizationChallenge(prisma, {
     nonce: auth.nonce,
-    walletAddress: wallet,
     action,
     businessId,
     scope: boundScope,
@@ -403,9 +402,20 @@ async function lockActiveProduct(
   if (lockedProducts !== 1) throw new Error('Active product not found for this business');
 }
 
+// P2 (owner decision B): seller challenges are wallet-free. The server needs no wallet to issue a
+// nonce; the signer is recovered from the signature when the challenge is used.
+// Decision D1 (Codex, 2026-10-09): a legacy `walletAddress` query parameter sent by released SDK
+// clients is IGNORED - never read, validated, stored, echoed or logged. Switching to D2 (reject
+// stale clients with 400) is this one line: set REJECT_LEGACY_WALLET_QUERY to true.
+const REJECT_LEGACY_WALLET_QUERY = false;
+
 router.get('/auth-message', challengeRateLimiter, async (req, res, next) => {
   setPrivateNoStore(res);
   try {
+    if (REJECT_LEGACY_WALLET_QUERY && req.query.walletAddress !== undefined) {
+      res.status(400).json({ error: 'walletAddress is no longer accepted; request the challenge without it' });
+      return;
+    }
     const action = String(req.query.action || 'business:create');
     const businessId = String(req.query.businessId || 'new');
     if (!isKnownSellerAction(action)) {
@@ -414,13 +424,6 @@ router.get('/auth-message', challengeRateLimiter, async (req, res, next) => {
     }
     if (!isSafeSellerAuthorizationField(businessId)) {
       res.status(400).json({ error: 'Invalid seller authorization business' });
-      return;
-    }
-    let walletAddress: string;
-    try {
-      walletAddress = normalizeAddress(String(req.query.walletAddress || ''));
-    } catch {
-      res.status(400).json({ error: 'Valid walletAddress is required for this authorization' });
       return;
     }
     const readOnly = isReadOnlySellerAction(action);
@@ -433,7 +436,6 @@ router.get('/auth-message', challengeRateLimiter, async (req, res, next) => {
     const timestamp = String(Date.now());
     const expiresAt = new Date(Number(timestamp) + SELLER_AUTH_TTL_MS);
     const nonce = await issueSellerAuthorizationChallenge(prisma, {
-      walletAddress,
       action,
       businessId,
       scope,
@@ -443,7 +445,6 @@ router.get('/auth-message', challengeRateLimiter, async (req, res, next) => {
     res.json({
       action,
       businessId,
-      walletAddress,
       scope,
       nonce,
       domain: context.domain,
@@ -1280,7 +1281,6 @@ router.post(
         if (proofWallet) {
           await consumeSellerAuthorizationChallenge(tx, {
             nonce: String(req.body.rewardWalletNonce),
-            walletAddress: proofWallet,
             action: 'rewards:reward-wallet',
             businessId: req.params.id,
             scope,

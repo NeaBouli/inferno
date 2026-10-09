@@ -88,7 +88,6 @@ async function seedRetentionRows() {
     data: [
       {
         nonce: 'seller-old',
-        walletAddress: WALLET,
         action: 'business:update',
         businessId: 'business-old',
         scope: 'business-old',
@@ -97,7 +96,6 @@ async function seedRetentionRows() {
       },
       {
         nonce: 'seller-recent',
-        walletAddress: WALLET,
         action: 'business:update',
         businessId: 'business-recent',
         scope: 'business-recent',

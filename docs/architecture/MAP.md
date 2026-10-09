@@ -102,8 +102,9 @@ Benefits seller authorization/session trace (`apps/benefits-network/backend`):
 1. seller client (frontend `lib/api.ts::getSellerAuthMessage`, SDK
    `benefits.ts::requestSellerChallenge`) → `src/routes/seller.ts::GET /auth-message`
    (`challengeRateLimiter`) → `services/sellerAuthorizationChallenge.ts::issueSellerAuthorizationChallenge`
-   — Daten: action, businessId, walletAddress, scope (`read` for reads) → 32-byte
-   CSPRNG nonce row (bounded expired-row prune) + message with `Domain`, `Chain ID`,
+   — Daten: action, businessId, scope (`read` for reads); no wallet in the request or the row
+   (owner decision B; a legacy `walletAddress` query parameter is ignored) → 32-byte
+   CSPRNG nonce-only row (bounded expired-row prune) + message with `Domain`, `Chain ID`,
    `Expires` from `config.ts` (`SELLER_AUTH_DOMAIN`, `CHAIN_ID`)
 2. seller request (`x-ifr-wallet/-signature/-timestamp/-nonce`) →
    `src/routes/seller.ts::requireSellerAuth` (also `routes/sessions.ts::requireSession{Creator,Redeemer}`,
@@ -112,8 +113,8 @@ Benefits seller authorization/session trace (`apps/benefits-network/backend`):
    format, TTL window, domain/chain-bound message)
 3. `requireSellerAuth` → `services/authenticatedRateLimiter.ts::assertSellerWalletActionAllowed`
    → `services/sellerAuthorizationChallenge.ts::consumeSellerAuthorizationChallenge`
-   — Daten: nonce+wallet+action+business+scope → atomic single-use `updateMany`
-   (count must be 1)
+   — Daten: nonce+action+business+scope → atomic single-use `updateMany`
+   (count must be 1); the wallet is bound only by the recovered signature
 4. public checkout status → `src/routes/sessions.ts::GET /:id` (`sessionStatusRateLimiter`)
    → `services/sessionService.ts::getSession` — Daten: sessionId → status
    (stale PENDING/APPROVED reported as EXPIRED, no write)
@@ -301,7 +302,8 @@ Points voucher trace (`apps/points-backend`):
   enforced but is now only counted on approval; retries of ineligible
   wallets are bounded by the IP rate limit and the session TTL.
 - Benefits `GET /api/seller/auth-message` remains a GET that inserts a
-  challenge row (existing client contract); it creates no session state and
+  nonce-only challenge row (no wallet stored, none in the URL; a legacy
+  `walletAddress` parameter is ignored); it creates no session state and
   is IP rate-limited. Stale open sessions are only persisted as EXPIRED on
   attest/redeem; seller history may still show PENDING for untouched ones.
 - Web3 runtime: both `IFRWallet` implementations lazy-`import()` the WalletConnect

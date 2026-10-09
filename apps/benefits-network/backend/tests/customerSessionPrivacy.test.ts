@@ -68,7 +68,7 @@ function baseUrl() {
 }
 
 async function sellerHeaders(wallet: Wallet, action: string, businessId: string, scope: string) {
-  const query = new URLSearchParams({ action, businessId, walletAddress: wallet.address, scope });
+  const query = new URLSearchParams({ action, businessId, scope });
   const response = await fetch(`${baseUrl()}/api/seller/auth-message?${query}`);
   expect(response.status).toBe(200);
   const challenge = await response.json() as { message: string; timestamp: string; nonce: string };

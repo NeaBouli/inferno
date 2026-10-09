@@ -73,7 +73,6 @@ async function sellerHeaders(
     const query = new URLSearchParams({
       action,
       businessId,
-      walletAddress: wallet.address,
       scope: scope || (action === 'sessions:create' ? 'default' : businessId),
     });
     const challengeResponse = await fetch(`${baseUrl()}/api/seller/auth-message?${query}`);
@@ -95,7 +94,6 @@ async function sellerHeaders(
     `${baseUrl()}/api/seller/auth-message?${new URLSearchParams({
       action,
       businessId,
-      walletAddress: wallet.address,
     })}`
   );
   expect(challengeResponse.status).toBe(200);
@@ -442,7 +440,6 @@ describe('Redeem route authorization', () => {
     const query = new URLSearchParams({
       action: 'sessions:create',
       businessId,
-      walletAddress: seller.address,
       scope: 'default',
     });
     const challenge = await (
