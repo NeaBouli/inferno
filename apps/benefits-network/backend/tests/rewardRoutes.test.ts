@@ -14,11 +14,17 @@ jest.mock('../src/services/rewardService', () => {
   };
 });
 
-jest.mock('../src/services/ifrLockService', () => ({
-  checkLock: jest.fn(),
-  recoverSigner: jest.fn(),
-  initProvider: jest.fn(),
-}));
+const mockEligibility = jest.fn();
+
+jest.mock('../src/services/ifrLockService', () => {
+  const actual = jest.requireActual('ethers');
+  return {
+    checkLock: jest.fn(),
+    checkBenefitEligibility: (...args: unknown[]) => mockEligibility(...args),
+    recoverSigner: (message: string, signature: string) => actual.verifyMessage(message, signature),
+    initProvider: jest.fn(),
+  };
+});
 
 jest.mock('../src/config', () => ({
   config: {
@@ -37,13 +43,13 @@ jest.mock('../src/config', () => ({
   },
 }));
 
-import { prisma } from '../src/services/sessionService';
+import { prisma, REWARD_BLOCKED_POLICY, REWARD_BLOCKED_POLICY_REASON } from '../src/services/sessionService';
 import { server } from '../src/index';
 
 const partnerId = `0x${'ab'.repeat(32)}`;
 const owner = ethers.Wallet.createRandom();
 const outsider = ethers.Wallet.createRandom();
-const rewardCustomer = ethers.Wallet.createRandom().address;
+const ADMIN = { authorization: 'Bearer test-secret-12345' };
 
 function baseUrl() {
   const address = server.address();
@@ -51,9 +57,9 @@ function baseUrl() {
   return `http://127.0.0.1:${address.port}`;
 }
 
-async function sellerHeaders(wallet: TestWallet, action: string, businessId: string, scope = businessId) {
-  const query = new URLSearchParams({ action, businessId, walletAddress: wallet.address });
-  if (['rewards:apply', 'rewards:disable', 'rewards:reward-wallet', 'sessions:redeem', 'business:create'].includes(action)) {
+async function sellerHeaders(wallet: TestWallet, action: string, businessId: string, scope = businessId, target?: string) {
+  const query = new URLSearchParams({ action, businessId });
+  if (['rewards:apply', 'rewards:disable', 'rewards:reward-wallet', 'sessions:redeem', 'sessions:create', 'business:create'].includes(action)) {
     query.set('scope', scope);
   }
   const challengeResponse = await fetch(`${baseUrl()}/api/seller/auth-message?${query}`);
@@ -66,25 +72,69 @@ async function sellerHeaders(wallet: TestWallet, action: string, businessId: str
   const headers: Record<string, string> = {
     'content-type': 'application/json',
     'x-ifr-wallet': wallet.address,
-    'x-ifr-signature': await wallet.signMessage(challenge.message),
+    // A target wallet is never in the challenge URL; it is signed as the final `Target:` line.
+    'x-ifr-signature': await wallet.signMessage(
+      target === undefined ? challenge.message : `${challenge.message}\nTarget: ${target.toLowerCase()}`
+    ),
     'x-ifr-timestamp': challenge.timestamp,
   };
   if (challenge.nonce) headers['x-ifr-nonce'] = challenge.nonce;
   return headers;
 }
 
+// Owner decision B (T-231b): the seller opens the checkout (seller confirmation) and the customer's
+// signed proof is the final redemption; there is no separate seller redeem step.
+async function openCheckout(seller: TestWallet, businessId: string) {
+  const response = await fetch(`${baseUrl()}/api/sessions`, {
+    method: 'POST',
+    headers: await sellerHeaders(seller, 'sessions:create', businessId, 'default'),
+    body: JSON.stringify({ businessId }),
+  });
+  expect(response.status).toBe(201);
+  return (await response.json() as { sessionId: string }).sessionId;
+}
+
+async function proveCheckout(sessionId: string, customer: TestWallet) {
+  const challenge = await fetch(`${baseUrl()}/api/sessions/${sessionId}/challenge`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ walletAddress: customer.address }),
+  });
+  expect(challenge.status).toBe(200);
+  const { message } = await challenge.json() as { message: string };
+  const response = await fetch(`${baseUrl()}/api/attest`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ sessionId, walletAddress: customer.address, signature: await customer.signMessage(message) }),
+  });
+  return { status: response.status, body: await response.json() as Record<string, unknown> };
+}
+
+async function redeemedSession(businessId: string, data: Record<string, unknown> = {}) {
+  return prisma.session.create({
+    data: {
+      businessId,
+      nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
+      expiresAt: new Date(Date.now() + 60_000),
+      status: 'REDEEMED',
+      redeemedAt: new Date(),
+      selfRedemption: false,
+      ...data,
+    },
+  });
+}
+
 async function rewardWalletProof(signer: TestWallet, businessId: string, rewardWallet: string) {
   const query = new URLSearchParams({
     action: 'rewards:reward-wallet',
     businessId,
-    walletAddress: signer.address,
-    scope: rewardWallet.toLowerCase(),
+    scope: 'reward-wallet',
   });
   const challengeResponse = await fetch(`${baseUrl()}/api/seller/auth-message?${query}`);
   expect(challengeResponse.status).toBe(200);
   const challenge = await challengeResponse.json() as { message: string; timestamp: string; nonce: string };
   return {
-    rewardWalletSignature: await signer.signMessage(challenge.message),
+    rewardWalletSignature: await signer.signMessage(`${challenge.message}\nTarget: ${rewardWallet.toLowerCase()}`),
     rewardWalletTimestamp: challenge.timestamp,
     rewardWalletNonce: challenge.nonce,
   };
@@ -145,6 +195,18 @@ describe('Verified seller reward foundation', () => {
     businessId = business.id;
     mockGetRewardOnChainStatus.mockResolvedValue(chainStatus());
     mockIsWalletAlreadyRewarded.mockResolvedValue(false);
+    mockEligibility.mockResolvedValue({
+      eligible: true,
+      lockEligible: true,
+      heldEligible: true,
+      lockedAmount: '2500.0',
+      walletAmount: '10.0',
+      walletBalanceRaw: '10000000000000000000',
+      ifrLockAmount: '2500.0',
+      commitmentAmount: null,
+      verifiedLockSource: 'ifrlock',
+      verificationBlock: 123456,
+    });
   });
 
   afterAll(async () => {
@@ -208,126 +270,110 @@ describe('Verified seller reward foundation', () => {
       .toMatchObject({ status: 'VERIFIED', partnerId: partnerId.toLowerCase(), builderWallet: owner.address });
   });
 
-  it('creates the reward outbox atomically on redeem and reconciles each wallet/partner once', async () => {
+  it('creates one non-payable outbox row per customer proof and never makes it READY', async () => {
     await prisma.sellerRewardLink.create({
       data: { businessId, status: 'VERIFIED', partnerId, builderWallet: owner.address, verifiedAt: new Date() },
     });
-    const customer = ethers.Wallet.createRandom().address;
-    const first = await prisma.session.create({
-      data: {
-        businessId,
-        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
-        expiresAt: new Date(Date.now() + 60_000),
-        status: 'APPROVED',
-        recoveredAddress: customer,
-        lockAmountRaw: '2500.125',
-      },
-    });
-    await prisma.session.create({
-      data: {
-        businessId,
-        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
-        expiresAt: new Date(Date.now() + 60_000),
-        status: 'APPROVED',
-        recoveredAddress: customer,
-        lockAmountRaw: '2500.125',
-      },
-    });
+    const customer = ethers.Wallet.createRandom();
+    const first = await openCheckout(owner, businessId);
+    const second = await openCheckout(owner, businessId);
 
-    const firstRedeem = await fetch(`${baseUrl()}/api/sessions/${first.id}/redeem`, {
+    // The removed seller redeem step creates nothing.
+    const legacyRedeem = await fetch(`${baseUrl()}/api/sessions/${first}/redeem`, {
       method: 'POST',
-      headers: await sellerHeaders(owner, 'sessions:redeem', first.id),
+      headers: await sellerHeaders(owner, 'sessions:redeem', businessId, first),
     });
-    expect(firstRedeem.status).toBe(200);
-    const second = await prisma.session.findFirstOrThrow({
-      where: { businessId, id: { not: first.id } },
-      orderBy: { createdAt: 'desc' },
-    });
-    const secondRedeem = await fetch(`${baseUrl()}/api/sessions/${second.id}/redeem`, {
-      method: 'POST',
-      headers: await sellerHeaders(owner, 'sessions:redeem', second.id),
-    });
-    expect(secondRedeem.status).toBe(200);
-    expect(await prisma.rewardEvent.findMany()).toEqual([
-      expect.objectContaining({
-        sessionId: first.id,
-        customerWallet: customer,
-        partnerId,
-        chainId: 1,
-        lockAmountRaw: ethers.parseUnits('2500.125', 9).toString(),
-        status: 'PENDING',
-      }),
-    ]);
+    expect(legacyRedeem.status).toBe(410);
+    expect(await prisma.rewardEvent.count()).toBe(0);
+
+    for (const sessionId of [first, second]) {
+      const proved = await proveCheckout(sessionId, customer);
+      expect(proved.status).toBe(200);
+      expect(proved.body).toMatchObject({ status: 'REDEEMED' });
+    }
+    // No per-wallet dedup any more: one row per session, created atomically with the redemption.
+    const events = await prisma.rewardEvent.findMany({ orderBy: { sessionId: 'asc' } });
+    expect(events.map((event) => event.sessionId).sort()).toEqual([first, second].sort());
+    for (const event of events) {
+      expect(event).toMatchObject({ businessId, partnerId, chainId: 1, status: REWARD_BLOCKED_POLICY, reason: REWARD_BLOCKED_POLICY_REASON });
+      expect(event).not.toHaveProperty('customerWallet');
+      expect(event).not.toHaveProperty('lockAmountRaw');
+      expect(JSON.stringify(event).toLowerCase()).not.toContain(customer.address.toLowerCase().slice(2));
+    }
+    // A replayed proof of a redeemed session creates nothing.
+    expect((await proveCheckout(first, customer)).status).not.toBe(200);
+    expect(await prisma.rewardEvent.count()).toBe(2);
 
     const response = await fetch(`${baseUrl()}/api/admin/businesses/${businessId}/rewards/queue`, {
       method: 'POST',
-      headers: { authorization: 'Bearer test-secret-12345' },
+      headers: ADMIN,
     });
     expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ ready: 1, scanned: 1, submissionReady: true });
-    expect(await prisma.rewardEvent.findMany()).toEqual([
-      expect.objectContaining({
-        sessionId: first.id,
-        customerWallet: customer,
-        partnerId,
-        lockAmountRaw: ethers.parseUnits('2500.125', 9).toString(),
-        status: 'READY',
-      }),
-    ]);
+    expect(await response.json()).toEqual({
+      ready: 0, confirmed: 0, blocked: 0, scanned: 0, submissionReady: false, reason: REWARD_BLOCKED_POLICY_REASON,
+    });
+    expect(mockIsWalletAlreadyRewarded).not.toHaveBeenCalled();
+    expect(await prisma.rewardEvent.count({ where: { status: REWARD_BLOCKED_POLICY } })).toBe(2);
 
     const retry = await fetch(`${baseUrl()}/api/admin/businesses/${businessId}/rewards/queue`, {
       method: 'POST',
-      headers: { authorization: 'Bearer test-secret-12345' },
+      headers: ADMIN,
     });
     expect(retry.status).toBe(200);
-    expect(await prisma.rewardEvent.count()).toBe(1);
+    expect(await prisma.rewardEvent.count()).toBe(2);
+    expect(await prisma.rewardEvent.count({ where: { status: REWARD_BLOCKED_POLICY } })).toBe(2);
   });
 
-  it('redeems the benefit but creates no reward event for the seller owner wallet', async () => {
+  it('redeems the benefit but creates no reward event for any seller-controlled customer wallet', async () => {
+    const builder = ethers.Wallet.createRandom();
+    const rewardWallet = ethers.Wallet.createRandom();
+    const inactiveOperator = ethers.Wallet.createRandom();
     await prisma.sellerRewardLink.create({
-      data: { businessId, status: 'VERIFIED', partnerId, builderWallet: owner.address, verifiedAt: new Date() },
-    });
-    const session = await prisma.session.create({
       data: {
         businessId,
-        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
-        expiresAt: new Date(Date.now() + 60_000),
-        status: 'APPROVED',
-        recoveredAddress: owner.address,
-        lockAmountRaw: '1000',
+        status: 'VERIFIED',
+        partnerId,
+        builderWallet: builder.address,
+        rewardWallet: rewardWallet.address,
+        rewardWalletConfirmedAt: new Date(),
+        verifiedAt: new Date(),
       },
     });
-    const response = await fetch(`${baseUrl()}/api/sessions/${session.id}/redeem`, {
-      method: 'POST',
-      headers: await sellerHeaders(owner, 'sessions:redeem', session.id),
-    });
-    expect(response.status).toBe(200);
+    // Self-redemption covers every checkout operator regardless of status.
+    await prisma.checkoutOperator.create({ data: { businessId, walletAddress: inactiveOperator.address, active: false } });
+
+    for (const selfWallet of [owner, inactiveOperator, rewardWallet, builder]) {
+      const sessionId = await openCheckout(owner, businessId);
+      const proved = await proveCheckout(sessionId, selfWallet);
+      expect(proved.status).toBe(200);
+      expect(proved.body).toMatchObject({ status: 'REDEEMED' });
+      expect(await prisma.session.findUniqueOrThrow({ where: { id: sessionId } }))
+        .toMatchObject({ status: 'REDEEMED', selfRedemption: true });
+      expect(await prisma.rewardEvent.count({ where: { sessionId } })).toBe(0);
+      expect(await prisma.auditLog.findFirst({ where: { sessionId, type: 'REWARD_SKIPPED_POLICY' } }))
+        .not.toBeNull();
+    }
     expect(await prisma.rewardEvent.count()).toBe(0);
-    expect(await prisma.auditLog.findFirst({ where: { sessionId: session.id, type: 'REWARD_SKIPPED_POLICY' } }))
-      .not.toBeNull();
+
+    // A non-seller customer at the same shop still gets the (non-payable) outbox row.
+    const customerSession = await openCheckout(owner, businessId);
+    expect((await proveCheckout(customerSession, ethers.Wallet.createRandom())).status).toBe(200);
+    expect(await prisma.session.findUniqueOrThrow({ where: { id: customerSession } })).toMatchObject({ selfRedemption: false });
+    expect(await prisma.rewardEvent.findUniqueOrThrow({ where: { sessionId: customerSession } }))
+      .toMatchObject({ status: REWARD_BLOCKED_POLICY });
+    expect(await prisma.auditLog.count({ where: { sessionId: customerSession, type: 'REWARD_SKIPPED_POLICY' } })).toBe(0);
   });
 
   it('fails closed and marks the local link stale when governance eligibility changes', async () => {
     await prisma.sellerRewardLink.create({
       data: { businessId, status: 'VERIFIED', partnerId, builderWallet: owner.address, verifiedAt: new Date() },
     });
-    const session = await prisma.session.create({
-      data: {
-        businessId,
-        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
-        expiresAt: new Date(Date.now() + 60_000),
-        status: 'REDEEMED',
-        recoveredAddress: rewardCustomer,
-        lockAmountRaw: '1000',
-      },
-    });
+    const session = await redeemedSession(businessId);
     await prisma.rewardEvent.create({
       data: {
         businessId,
         sessionId: session.id,
         partnerId,
-        customerWallet: rewardCustomer,
-        lockAmountRaw: ethers.parseUnits('1000', 9).toString(),
         chainId: 1,
         status: 'READY',
       },
@@ -349,27 +395,18 @@ describe('Verified seller reward foundation', () => {
       .toMatchObject({ status: 'STALE', reason: 'Seller owner is not active in BuilderRegistry' });
   });
 
-  it('rechecks previously blocked events after governance and caller authorization recover', async () => {
+  // Owner decision B: without a stored customer wallet the lock path cannot reconcile, so a
+  // recovered governance/caller state no longer revives blocked events into READY.
+  it('turns previously blocked lock-path events into BLOCKED_POLICY after governance and caller authorization recover', async () => {
     await prisma.sellerRewardLink.create({
       data: { businessId, status: 'VERIFIED', partnerId, builderWallet: owner.address, verifiedAt: new Date() },
     });
-    const session = await prisma.session.create({
-      data: {
-        businessId,
-        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
-        expiresAt: new Date(Date.now() + 60_000),
-        status: 'REDEEMED',
-        recoveredAddress: rewardCustomer,
-        lockAmountRaw: '1000',
-      },
-    });
+    const session = await redeemedSession(businessId);
     await prisma.rewardEvent.create({
       data: {
         businessId,
         sessionId: session.id,
         partnerId,
-        customerWallet: rewardCustomer,
-        lockAmountRaw: ethers.parseUnits('1000', 9).toString(),
         chainId: 1,
         status: 'BLOCKED_CALLER',
       },
@@ -382,32 +419,26 @@ describe('Verified seller reward foundation', () => {
     });
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ ready: 1, scanned: 1, submissionReady: true });
+    expect(await response.json()).toEqual({
+      ready: 0, confirmed: 0, blocked: 1, scanned: 1, submissionReady: false, reason: REWARD_BLOCKED_POLICY_REASON,
+    });
+    expect(mockIsWalletAlreadyRewarded).not.toHaveBeenCalled();
     expect(await prisma.rewardEvent.findUniqueOrThrow({ where: { sessionId: session.id } }))
-      .toMatchObject({ status: 'READY' });
+      .toMatchObject({ status: REWARD_BLOCKED_POLICY, reason: REWARD_BLOCKED_POLICY_REASON });
   });
 
-  it('reconciles a ready event to confirmed after the external on-chain submission', async () => {
+  // Owner decision B: the walletRewardClaimed lookup needs the customer wallet, so a READY row is
+  // never confirmed from chain state any more; it becomes non-payable BLOCKED_POLICY.
+  it('never confirms a ready event from PartnerVault state and blocks it by policy instead', async () => {
     await prisma.sellerRewardLink.create({
       data: { businessId, status: 'VERIFIED', partnerId, builderWallet: owner.address, verifiedAt: new Date() },
     });
-    const session = await prisma.session.create({
-      data: {
-        businessId,
-        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
-        expiresAt: new Date(Date.now() + 60_000),
-        status: 'REDEEMED',
-        recoveredAddress: rewardCustomer,
-        lockAmountRaw: '1000',
-      },
-    });
+    const session = await redeemedSession(businessId);
     await prisma.rewardEvent.create({
       data: {
         businessId,
         sessionId: session.id,
         partnerId,
-        customerWallet: rewardCustomer,
-        lockAmountRaw: ethers.parseUnits('1000', 9).toString(),
         chainId: 1,
         status: 'READY',
       },
@@ -420,15 +451,13 @@ describe('Verified seller reward foundation', () => {
     });
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ confirmed: 1, scanned: 1, submissionReady: true });
+    expect(await response.json()).toMatchObject({ confirmed: 0, ready: 0, blocked: 1, scanned: 1, submissionReady: false });
+    expect(mockIsWalletAlreadyRewarded).not.toHaveBeenCalled();
     expect(await prisma.rewardEvent.findUniqueOrThrow({ where: { sessionId: session.id } }))
-      .toMatchObject({
-        status: 'CONFIRMED',
-        reason: 'Confirmed from PartnerVault anti-double-count state',
-      });
+      .toMatchObject({ status: REWARD_BLOCKED_POLICY, reason: REWARD_BLOCKED_POLICY_REASON });
   });
 
-  it('processes actionable rewards even when the ready reconciliation window is full', async () => {
+  it('blocks every open lock-path event, not only a reconciliation window', async () => {
     await prisma.sellerRewardLink.create({
       data: { businessId, status: 'VERIFIED', partnerId, builderWallet: owner.address, verifiedAt: new Date() },
     });
@@ -438,8 +467,8 @@ describe('Verified seller reward foundation', () => {
       nonce: (index + 1).toString(16).padStart(64, '0'),
       expiresAt: new Date(Date.now() + 60_000),
       status: 'REDEEMED',
-      recoveredAddress: `0x${(index + 1).toString(16).padStart(40, '0')}`,
-      lockAmountRaw: '1000',
+      redeemedAt: new Date(),
+      selfRedemption: false,
     }));
     await prisma.session.createMany({ data: readySessions });
     await prisma.rewardEvent.createMany({
@@ -448,30 +477,16 @@ describe('Verified seller reward foundation', () => {
         businessId,
         sessionId: session.id,
         partnerId,
-        customerWallet: session.recoveredAddress,
-        lockAmountRaw: ethers.parseUnits('1000', 9).toString(),
         chainId: 1,
         status: 'READY',
       })),
     });
-    await prisma.session.create({
-      data: {
-        id: 'pending-after-ready-backlog',
-        businessId,
-        nonce: 'ff'.repeat(32),
-        expiresAt: new Date(Date.now() + 60_000),
-        status: 'REDEEMED',
-        recoveredAddress: `0x${'ff'.repeat(20)}`,
-        lockAmountRaw: '1000',
-      },
-    });
+    await redeemedSession(businessId, { id: 'pending-after-ready-backlog', nonce: 'ff'.repeat(32) });
     await prisma.rewardEvent.create({
       data: {
         businessId,
         sessionId: 'pending-after-ready-backlog',
         partnerId,
-        customerWallet: `0x${'ff'.repeat(20)}`,
-        lockAmountRaw: ethers.parseUnits('1000', 9).toString(),
         chainId: 1,
         status: 'PENDING',
       },
@@ -483,32 +498,23 @@ describe('Verified seller reward foundation', () => {
     });
 
     expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ ready: 51, scanned: 51, submissionReady: true });
+    expect(await response.json()).toMatchObject({ ready: 0, blocked: 51, scanned: 51, submissionReady: false });
+    expect(mockIsWalletAlreadyRewarded).not.toHaveBeenCalled();
     expect(await prisma.rewardEvent.findUniqueOrThrow({ where: { sessionId: 'pending-after-ready-backlog' } }))
-      .toMatchObject({ status: 'READY' });
+      .toMatchObject({ status: REWARD_BLOCKED_POLICY });
+    expect(await prisma.rewardEvent.count({ where: { status: REWARD_BLOCKED_POLICY } })).toBe(51);
   }, 15_000);
 
   it('shows reward status only to the seller owner and never exposes signatures', async () => {
     await prisma.sellerRewardLink.create({
       data: { businessId, status: 'VERIFIED', partnerId, builderWallet: owner.address, verifiedAt: new Date() },
     });
-    const session = await prisma.session.create({
-      data: {
-        businessId,
-        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
-        expiresAt: new Date(Date.now() + 60_000),
-        status: 'REDEEMED',
-        recoveredAddress: rewardCustomer,
-        lockAmountRaw: '1000',
-      },
-    });
+    const session = await redeemedSession(businessId);
     await prisma.rewardEvent.create({
       data: {
         businessId,
         sessionId: session.id,
         partnerId,
-        customerWallet: rewardCustomer,
-        lockAmountRaw: ethers.parseUnits('1000', 9).toString(),
         chainId: 1,
         status: 'READY',
       },
@@ -524,7 +530,7 @@ describe('Verified seller reward foundation', () => {
       eventCount: number;
     };
     expect(JSON.stringify(body)).not.toContain('signature');
-    expect(JSON.stringify(body)).not.toContain(rewardCustomer);
+    expect(JSON.stringify(body)).not.toMatch(/customerWallet|recoveredAddress|lockAmountRaw/);
     expect(body).not.toHaveProperty('events');
     expect(body.eventCount).toBe(1);
     expect(body).toMatchObject({ link: { status: 'VERIFIED', partnerId }, onChain: { verified: true } });
@@ -643,23 +649,13 @@ describe('Verified seller reward foundation', () => {
     expect(await prisma.sellerRewardLink.findUniqueOrThrow({ where: { businessId } }))
       .toMatchObject({ status: 'DISABLED', partnerId: null, verifiedAt: null });
 
-    // A DISABLED link creates no new reward outbox rows on redeem.
-    const session = await prisma.session.create({
-      data: {
-        businessId,
-        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
-        expiresAt: new Date(Date.now() + 60_000),
-        status: 'APPROVED',
-        recoveredAddress: rewardCustomer,
-        lockAmountRaw: '1000',
-      },
-    });
-    const redeem = await fetch(`${baseUrl()}/api/sessions/${session.id}/redeem`, {
-      method: 'POST',
-      headers: await sellerHeaders(owner, 'sessions:redeem', session.id),
-    });
-    expect(redeem.status).toBe(200);
+    // A DISABLED link creates no new reward outbox rows on the final (customer-proof) redemption.
+    const sessionId = await openCheckout(owner, businessId);
+    const proved = await proveCheckout(sessionId, ethers.Wallet.createRandom());
+    expect(proved.status).toBe(200);
+    expect(proved.body).toMatchObject({ status: 'REDEEMED' });
     expect(await prisma.rewardEvent.count()).toBe(0);
+    expect(await prisma.auditLog.count({ where: { sessionId, type: 'REWARD_SKIPPED_POLICY' } })).toBe(0);
 
     // The queue cannot progress and governance cannot verify a disabled link.
     expect((await fetch(`${baseUrl()}/api/admin/businesses/${businessId}/rewards/queue`, {
@@ -721,7 +717,7 @@ describe('Verified seller reward foundation', () => {
     // A reward wallet cannot be set before the owner applied.
     const withoutLink = await fetch(confirmUrl, {
       method: 'POST',
-      headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, rewardWallet.address.toLowerCase()),
+      headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, 'reward-wallet', rewardWallet.address),
       body: JSON.stringify({
         rewardWallet: rewardWallet.address,
         ...proofWithoutLink,
@@ -737,7 +733,7 @@ describe('Verified seller reward foundation', () => {
     // Missing proof fields are rejected by validation.
     expect((await fetch(confirmUrl, {
       method: 'POST',
-      headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, rewardWallet.address.toLowerCase()),
+      headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, 'reward-wallet', rewardWallet.address),
       body: JSON.stringify({ rewardWallet: rewardWallet.address }),
     })).status).toBe(400);
 
@@ -745,14 +741,14 @@ describe('Verified seller reward foundation', () => {
     const invalidChecksum = '0x52908400098527886e0F7030069857D2E4169EE7';
     expect((await fetch(confirmUrl, {
       method: 'POST',
-      headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, invalidChecksum.toLowerCase()),
+      headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, 'reward-wallet', invalidChecksum),
       body: JSON.stringify({ rewardWallet: invalidChecksum }),
     })).status).toBe(400);
 
     // Only the owner may confirm a reward wallet.
     expect((await fetch(confirmUrl, {
       method: 'POST',
-      headers: await sellerHeaders(outsider, 'rewards:reward-wallet', businessId, rewardWallet.address.toLowerCase()),
+      headers: await sellerHeaders(outsider, 'rewards:reward-wallet', businessId, 'reward-wallet', rewardWallet.address),
       body: JSON.stringify({
         rewardWallet: rewardWallet.address,
         ...(await rewardWalletProof(rewardWallet, businessId, rewardWallet.address)),
@@ -762,7 +758,7 @@ describe('Verified seller reward foundation', () => {
     // A proof signed by any other wallet than the proposed reward wallet fails.
     expect((await fetch(confirmUrl, {
       method: 'POST',
-      headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, rewardWallet.address.toLowerCase()),
+      headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, 'reward-wallet', rewardWallet.address),
       body: JSON.stringify({
         rewardWallet: rewardWallet.address,
         ...(await rewardWalletProof(outsider, businessId, rewardWallet.address)),
@@ -775,7 +771,7 @@ describe('Verified seller reward foundation', () => {
     });
     expect((await fetch(confirmUrl, {
       method: 'POST',
-      headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, rewardWallet.address.toLowerCase()),
+      headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, 'reward-wallet', rewardWallet.address),
       body: JSON.stringify({
         rewardWallet: rewardWallet.address,
         ...(await rewardWalletProof(rewardWallet, otherBusiness.id, rewardWallet.address)),
@@ -785,17 +781,37 @@ describe('Verified seller reward foundation', () => {
     // The owner wallet itself is never a separate reward wallet.
     expect((await fetch(confirmUrl, {
       method: 'POST',
-      headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, owner.address.toLowerCase()),
+      headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, 'reward-wallet', owner.address),
       body: JSON.stringify({
         rewardWallet: owner.address,
         ...(await rewardWalletProof(owner, businessId, owner.address)),
       }),
     })).status).toBe(400);
 
+    // An owner signature over another target wallet is not accepted for this body (Target line).
+    const otherTarget = ethers.Wallet.createRandom();
+    expect((await fetch(confirmUrl, {
+      method: 'POST',
+      headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, 'reward-wallet', otherTarget.address),
+      body: JSON.stringify({
+        rewardWallet: rewardWallet.address,
+        ...(await rewardWalletProof(rewardWallet, businessId, rewardWallet.address)),
+      }),
+    })).status).toBe(401);
+    // A reward wallet proof over another target is not accepted either.
+    expect((await fetch(confirmUrl, {
+      method: 'POST',
+      headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, 'reward-wallet', rewardWallet.address),
+      body: JSON.stringify({
+        rewardWallet: rewardWallet.address,
+        ...(await rewardWalletProof(rewardWallet, businessId, otherTarget.address)),
+      }),
+    })).status).toBe(401);
+
     // Successful dual authorization stores the wallet and never touches the chain.
     mockGetRewardOnChainStatus.mockClear();
     const proof = await rewardWalletProof(rewardWallet, businessId, rewardWallet.address);
-    const ownerHeaders = await sellerHeaders(owner, 'rewards:reward-wallet', businessId, rewardWallet.address.toLowerCase());
+    const ownerHeaders = await sellerHeaders(owner, 'rewards:reward-wallet', businessId, 'reward-wallet', rewardWallet.address);
     const confirmed = await fetch(confirmUrl, {
       method: 'POST',
       headers: ownerHeaders,
@@ -899,33 +915,14 @@ describe('Verified seller reward foundation', () => {
         rewardWalletConfirmedAt: new Date(),
       },
     });
-    const readySession = await prisma.session.create({
-      data: {
-        businessId,
-        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
-        expiresAt: new Date(Date.now() + 60_000),
-        status: 'REDEEMED',
-        recoveredAddress: rewardCustomer,
-        lockAmountRaw: '1000',
-      },
-    });
-    const confirmedSession = await prisma.session.create({
-      data: {
-        businessId,
-        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
-        expiresAt: new Date(Date.now() + 60_000),
-        status: 'REDEEMED',
-        recoveredAddress: `0x${'cc'.repeat(20)}`,
-        lockAmountRaw: '1000',
-      },
-    });
+    const readySession = await redeemedSession(businessId);
+    const confirmedSession = await redeemedSession(businessId);
+    const policySession = await redeemedSession(businessId);
     await prisma.rewardEvent.create({
       data: {
         businessId,
         sessionId: readySession.id,
         partnerId,
-        customerWallet: rewardCustomer,
-        lockAmountRaw: ethers.parseUnits('1000', 9).toString(),
         chainId: 1,
         status: 'READY',
       },
@@ -935,17 +932,25 @@ describe('Verified seller reward foundation', () => {
         businessId,
         sessionId: confirmedSession.id,
         partnerId: `0x${'cd'.repeat(32)}`,
-        customerWallet: `0x${'cc'.repeat(20)}`,
-        lockAmountRaw: ethers.parseUnits('1000', 9).toString(),
         chainId: 1,
         status: 'CONFIRMED',
+      },
+    });
+    await prisma.rewardEvent.create({
+      data: {
+        businessId,
+        sessionId: policySession.id,
+        partnerId,
+        chainId: 1,
+        status: REWARD_BLOCKED_POLICY,
+        reason: REWARD_BLOCKED_POLICY_REASON,
       },
     });
 
     const confirmUrl = `${baseUrl()}/api/seller/businesses/${businessId}/rewards/reward-wallet`;
     const changed = await fetch(confirmUrl, {
       method: 'POST',
-      headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, nextWallet.address.toLowerCase()),
+      headers: await sellerHeaders(owner, 'rewards:reward-wallet', businessId, 'reward-wallet', nextWallet.address),
       body: JSON.stringify({
         rewardWallet: nextWallet.address,
         ...(await rewardWalletProof(nextWallet, businessId, nextWallet.address)),
@@ -960,9 +965,11 @@ describe('Verified seller reward foundation', () => {
     });
     expect(await prisma.rewardEvent.findUniqueOrThrow({ where: { sessionId: readySession.id } }))
       .toMatchObject({ status: 'BLOCKED_GOVERNANCE' });
-    // Already confirmed events remain historical.
+    // Already confirmed events remain historical; non-payable policy rows stay non-payable.
     expect(await prisma.rewardEvent.findUniqueOrThrow({ where: { sessionId: confirmedSession.id } }))
       .toMatchObject({ status: 'CONFIRMED' });
+    expect(await prisma.rewardEvent.findUniqueOrThrow({ where: { sessionId: policySession.id } }))
+      .toMatchObject({ status: REWARD_BLOCKED_POLICY });
   });
 
   it('never advances blocked events from a previous partner link', async () => {
@@ -976,34 +983,14 @@ describe('Verified seller reward foundation', () => {
         verifiedAt: new Date(),
       },
     });
-    const previousSession = await prisma.session.create({
-      data: {
-        businessId,
-        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
-        expiresAt: new Date(Date.now() + 60_000),
-        status: 'REDEEMED',
-        recoveredAddress: rewardCustomer,
-        lockAmountRaw: '1000',
-      },
-    });
-    const currentSession = await prisma.session.create({
-      data: {
-        businessId,
-        nonce: ethers.hexlify(ethers.randomBytes(32)).slice(2),
-        expiresAt: new Date(Date.now() + 60_000),
-        status: 'REDEEMED',
-        recoveredAddress: `0x${'dd'.repeat(20)}`,
-        lockAmountRaw: '1000',
-      },
-    });
+    const previousSession = await redeemedSession(businessId);
+    const currentSession = await redeemedSession(businessId);
     await prisma.rewardEvent.createMany({
       data: [
         {
           businessId,
           sessionId: previousSession.id,
           partnerId: previousPartnerId,
-          customerWallet: rewardCustomer,
-          lockAmountRaw: ethers.parseUnits('1000', 9).toString(),
           chainId: 1,
           status: 'BLOCKED_GOVERNANCE',
           reason: 'Previous partner link invalidated',
@@ -1012,8 +999,6 @@ describe('Verified seller reward foundation', () => {
           businessId,
           sessionId: currentSession.id,
           partnerId,
-          customerWallet: `0x${'dd'.repeat(20)}`,
-          lockAmountRaw: ethers.parseUnits('1000', 9).toString(),
           chainId: 1,
           status: 'PENDING',
         },
@@ -1025,10 +1010,10 @@ describe('Verified seller reward foundation', () => {
       headers: { authorization: 'Bearer test-secret-12345' },
     });
     expect(response.status).toBe(200);
-    expect(await response.json()).toMatchObject({ scanned: 1, ready: 1 });
+    expect(await response.json()).toMatchObject({ scanned: 1, blocked: 1, ready: 0 });
     expect(await prisma.rewardEvent.findUniqueOrThrow({ where: { sessionId: previousSession.id } }))
       .toMatchObject({ status: 'BLOCKED_GOVERNANCE', reason: 'Previous partner link invalidated' });
     expect(await prisma.rewardEvent.findUniqueOrThrow({ where: { sessionId: currentSession.id } }))
-      .toMatchObject({ status: 'READY' });
+      .toMatchObject({ status: REWARD_BLOCKED_POLICY });
   });
 });

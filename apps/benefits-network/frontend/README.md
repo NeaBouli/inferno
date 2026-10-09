@@ -8,10 +8,10 @@ Next.js 15 PWA for the IFR Benefits Network.
 |-------|---------|
 | `/` | Customer/Seller role chooser, wallet status, seller rule manager |
 | `/guide` | Customer, seller and developer operating guide for the live shop flow, including session history |
-| `/b/:businessIdOrSlug` | Seller Console — scan/paste customer pass, bind selected rule, or create compatible seller QR; redeem once |
+| `/b/:businessIdOrSlug` | Seller Console — scan/paste customer pass, bind selected rule, or create compatible seller QR; see the checkout `REDEEMED` once by the customer proof |
 | `/s/:businessIdOrSlug` | Public seller catalog; legacy IDs redirect to the permanent slug when one exists |
 | `/p/:passId` | Privacy-minimal seller handoff for a customer-presented checkout pass |
-| `/r/:sessionId` | Customer Flow — connect wallet, review selected benefit, sign challenge, show result |
+| `/r/:sessionId` | Customer Flow — connect wallet, review selected benefit, sign the checkout proof that redeems it once, show result |
 | `/scan` | Customer QR entry — opt-in camera, local image scan or manual proof link/session ID |
 
 ## Setup
@@ -97,11 +97,10 @@ area. The exact seller-entered text is stored and public, so the app requires an
 confirmation that it contains only a broad area and no private or street address. Customers are
 never asked for GPS access. Profiles without a service area remain discoverable through `All areas`.
 
-`My benefits` combines two deliberately separate histories. The redacted recent-proof list stays
-local to the current browser for offline checkout recovery. A connected customer can additionally
-sign one read-only message to load their verified benefit history across devices. The resulting
-ten-minute access token remains in React memory only; it is cleared on disconnect or account
-change, and older pages stay bound to the original wallet and snapshot.
+Customer benefit history is device-local only. After a checkout proof the browser keeps a signed
+receipt (proof text and signature) so the customer can verify locally what they signed. The backend
+stores no customer wallet or history, and the former cross-device server history returns 410.
+Clearing browser data or switching devices loses this history.
 
 `Add IFR to wallet` uses the active Wagmi connector first and never falls back
 to a different injected wallet while a connector is active. It requests the
@@ -172,10 +171,11 @@ The browser always resolves a public slug back to the internal Business ID befor
 seller mutation or binding a checkout pass.
 
 Connected sellers can page through session history for the selected Business ID.
-This uses the same seller wallet signature model and shows checkout status, masked
-verified customer wallet, locked amount, rejection reason, redeem time and the
-rule/default benefit attached to each QR session. Full CSV export fetches bounded
-pages of 50 and creates a masked file only in the browser.
+This uses the same seller wallet signature model and shows checkout status, whether a
+customer proof was verified, the qualifying lock source, the self-redemption flag,
+rejection reason, redeem time and the rule/default benefit attached to each QR session.
+It contains no customer wallet or amounts, because the backend stores none. Full CSV
+export fetches bounded pages of 50 and creates the file only in the browser.
 
 The admin bearer secret is still available in the UI as an operator fallback for
 controlled setup and recovery. Do not use the global admin secret as a public

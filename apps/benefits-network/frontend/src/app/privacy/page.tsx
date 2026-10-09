@@ -11,7 +11,11 @@ export const metadata: Metadata = {
 const browserItems = [
   {
     title: 'ifr.shop.* browser keys',
-    body: 'The app stores a small set of localStorage keys whose names start with ifr.shop. : your preferred role, the last seller business ID you used, recent checkout session references and a cached customer proof history. These stay in this browser and are never sent as analytics.',
+    body: 'The app stores a small set of localStorage keys whose names start with ifr.shop. : your preferred role, the last seller business ID you used, recent checkout session references and your customer receipts. These stay in this browser and are never sent as analytics.',
+  },
+  {
+    title: 'Customer receipts (your only checkout history)',
+    body: 'After a successful checkout proof, this browser keeps a receipt: the exact text you signed (which contains your full wallet address, the shop, the checkout and its terms) and your signature, so you can re-verify it on this device. The shop server keeps no customer history. Clearing browser data or changing device loses these receipts for good.',
   },
   {
     title: 'Active pass control token',
@@ -25,16 +29,20 @@ const browserItems = [
 
 const backendItems = [
   {
-    title: 'Wallet address',
-    body: 'The backend stores the wallet addresses that verify or interact, together with verification amounts, statuses and timestamps, so it can enforce eligibility, limits and rewards.',
+    title: 'No customer wallet address, fingerprint or history',
+    body: 'Your wallet address is sent with the checkout proof, checked in that single request (signature, on-chain eligibility, whether it belongs to the seller) and then dropped. The backend stores no customer wallet address, no hash or fingerprint of it, no copy of your signature or signed text, no lock or balance amounts, no block numbers and no payment transaction hashes, and it keeps no customer history.',
   },
   {
-    title: 'Hashed control tokens and audit events',
-    body: 'Customer pass control tokens are stored only as hashes, and security-relevant actions are recorded as audit events.',
+    title: 'Merchant checkout records do exist',
+    body: 'For each checkout the backend keeps a merchant session record: a fresh random checkout ID, the shop, the offer terms, status, timestamps, which lock source qualified, and whether the proof came from a seller-controlled wallet. It also keeps the seller wallet that opened the checkout and seller-side audit events. These records let one checkout be redeemed exactly once; they are not anonymous, and timing or offer details may still be linkable with other information.',
   },
   {
-    title: 'Signatures are verified, not stored',
-    body: 'Wallet signatures are request inputs: the backend verifies each one transiently to authorize a single action. They are not modeled as stored signature fields.',
+    title: 'Hashed control tokens',
+    body: 'Customer checkout passes are created without any wallet. Their control tokens are stored only as hashes.',
+  },
+  {
+    title: 'Limits are up to the shop',
+    body: 'Because no customer identity is stored, IFR does not enforce per-customer redemption limits. A shop that wants such limits must enforce them in its own systems.',
   },
 ];
 
@@ -52,7 +60,11 @@ const publicItems = [
 const thirdPartyItems = [
   {
     title: 'Wallet providers and public RPC',
-    body: 'Your browser-injected Ethereum wallet provider and the public RPC endpoints used for chain reads see your IP address and the requests made through them, under their own policies.',
+    body: 'Your browser-injected Ethereum wallet provider and the public RPC endpoints used for chain reads see your IP address and the requests made through them, under their own policies. To check eligibility, the backend asks its Ethereum RPC provider for your on-chain lock and balance, so that provider sees your wallet address in that request.',
+  },
+  {
+    title: 'Network logs and rate limits',
+    body: 'Hosting and proxy infrastructure may log IP addresses and request paths. Rate limiting uses short-lived counters keyed by IP address or pass ID, never by wallet address. Wallet addresses and signatures travel only in request bodies, never in URLs.',
   },
   {
     title: 'Coinbase Wallet and WalletConnect',
@@ -85,7 +97,7 @@ function FactGrid({ eyebrow, title, intro, items }: { eyebrow: string; title: st
 export default function PrivacyPage() {
   return (
     <AppShell>
-      <section className="mx-auto w-full max-w-7xl px-5 pb-16 pt-6">
+      <section className="shop-launcher-band-clearance-compact mx-auto w-full max-w-7xl px-5 pb-16 pt-6">
         <div className="rounded-[2.25rem] border border-orange-200/15 bg-[linear-gradient(135deg,rgba(248,164,92,0.16),rgba(255,255,255,0.055)_44%,rgba(49,151,103,0.12))] p-6 shadow-2xl shadow-black/30 md:p-10">
           <div className="max-w-4xl">
             <p className="text-xs font-black uppercase tracking-[0.2em] text-orange-100">IFR Benefits Network</p>
@@ -135,7 +147,7 @@ export default function PrivacyPage() {
           <FactGrid
             eyebrow="Backend"
             title="What the backend stores"
-            intro="The Benefits backend keeps records used to run verification, eligibility, limits and rewards:"
+            intro="What the Benefits backend keeps, and what it deliberately does not keep:"
             items={backendItems}
           />
 
@@ -155,10 +167,10 @@ export default function PrivacyPage() {
           </div>
 
           <section className="rounded-[2rem] border border-green-300/20 bg-green-300/[0.07] p-6">
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-green-100/80">Masked seller history</p>
-            <h2 className="mt-2 text-3xl font-black text-white">Sellers see a masked wallet, not the full address.</h2>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-green-100/80">Seller history</p>
+            <h2 className="mt-2 text-3xl font-black text-white">Sellers see checkout outcomes, not your wallet.</h2>
             <p className="mt-4 max-w-3xl text-sm leading-7 text-stone-300">
-              Seller-facing session history displays masked wallet identifiers, so a seller reviewing recent checks does not receive your full address in that history response. Seller reward status returns only an event count, not customer event details. The backend still retains the full wallet address, because eligibility checks, usage limits and rewards depend on it. Masking is a display choice in seller views, not anonymity.
+              Seller session history shows the status of each checkout, whether a customer proof was verified, the qualifying lock source and whether the proof came from a seller-controlled wallet. It contains no customer wallet address, because the backend does not keep one. This is not anonymity: a seller who sees you at the counter, the time of a checkout or public on-chain data can still connect information, and anything you sign on-chain is public.
             </p>
           </section>
 
@@ -166,7 +178,7 @@ export default function PrivacyPage() {
             <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-200/80">Open items</p>
             <h2 className="mt-2 text-3xl font-black text-white">What is not decided yet</h2>
             <p className="mt-4 max-w-3xl text-sm leading-7 text-stone-300">
-              The backend has a manual operator tool for counting and removing expired, unlinked authorization artifacts after an approved cutoff. It does not automatically delete checkout sessions, session audit records, reward records or passes linked to sessions. The long-term server-side retention, deletion and support policy is not finalized. This page therefore makes no promise that backend records can be deleted on request, and it does not claim compliance with GDPR or any other specific legal framework. There is no dedicated privacy support channel at this time. When a final policy exists, this page will be updated to match it.
+              The backend has a manual operator tool for counting and removing expired, unlinked authorization artifacts after an approved cutoff. It does not automatically delete checkout sessions, session audit records, reward records or passes linked to sessions. Records and backups created before the customer-privacy upgrade may still contain wallet data until that upgrade's separately approved migration and backup clean-up have run. The long-term server-side retention, deletion and support policy is not finalized. This page therefore makes no promise that backend records can be deleted on request, and it does not claim compliance with GDPR or any other specific legal framework. There is no dedicated privacy support channel at this time. When a final policy exists, this page will be updated to match it.
             </p>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-stone-300">
               What you can always do today: clear this browser&apos;s local app data with the controls above, disconnect your wallet in your wallet app, and simply stop using the service. On-chain transactions you have already signed remain public on Ethereum and cannot be altered or removed by anyone.

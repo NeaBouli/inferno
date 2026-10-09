@@ -37,8 +37,9 @@ const rule = {
   requiredLockIFR: 1000,
   minIFRHeld: 0,
   lockSource: 'ifrlock',
-  dailyRedemptionLimit: 1,
-  monthlyRedemptionLimit: 4,
+  // Per-customer limits are not IFR-hosted (owner decision B, T-231b): the API only serves 0.
+  dailyRedemptionLimit: 0,
+  monthlyRedemptionLimit: 0,
   ttlSeconds: 300,
   active: true,
   createdAt: new Date(0).toISOString(),

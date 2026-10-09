@@ -14,18 +14,21 @@ import {
   cancelCustomerPass,
   confirmCustomerPass,
   createCustomerPass,
-  getCustomerPassChallenge,
   getCustomerPassConfirmationChallenge,
   getCustomerPassStatus,
   getBusiness,
   getBusinessRules,
+  getSessionStatus,
 } from '@/lib/api';
+import { saveCustomerProofHistoryItem } from '@/lib/customerHistory';
 import { lockSourceLabel, lockSourceRequirement } from '@/lib/lockSource';
 import { formatProductPrice } from '@/lib/money';
 
 const TAB_STORAGE_KEY = 'ifr.shop.activeCustomerPass';
 const CLOSED_CHECKOUT = new Set(['REDEEMED', 'REJECTED', 'EXPIRED']);
 
+// The wallet stays in this tab only (to warn about a wallet switch); the server never receives it at
+// pass creation and stores no wallet at all (owner decision B, T-231b).
 type StoredPass = CustomerPassCreated & { walletAddress: string };
 type SelectedOffer = { businessId: string; sellerName: string; sellerLogoUrl: string | null; rule: BenefitRule };
 
@@ -172,9 +175,7 @@ export function CustomerCheckoutPass() {
     setLoading(true);
     setError('');
     try {
-      const challenge = await getCustomerPassChallenge(address);
-      const signature = await signMessageAsync({ message: challenge.message });
-      const created = await createCustomerPass({ walletAddress: address, nonce: challenge.nonce, signature });
+      const created = await createCustomerPass();
       const next = { ...created, walletAddress: address };
       remember(next);
       setStatus({ status: 'OPEN', expiresAt: created.expiresAt, checkout: null });
@@ -191,12 +192,32 @@ export function CustomerCheckoutPass() {
     setLoading(true);
     setError('');
     try {
-      const challenge = await getCustomerPassConfirmationChallenge(pass.passId, pass.controlToken);
+      if (!address) throw new Error('Connect your customer wallet first.');
+      const challenge = await getCustomerPassConfirmationChallenge(pass.passId, pass.controlToken, address);
       const signature = await signMessageAsync({ message: challenge.message });
-      const result = await confirmCustomerPass(pass.passId, pass.controlToken, signature);
-      setMessage(result.status === 'APPROVED'
-        ? 'IFR access approved. The seller can now redeem this checkout once.'
+      const result = await confirmCustomerPass(pass.passId, pass.controlToken, address, signature);
+      setMessage(result.status === 'REDEEMED'
+        ? 'Checkout redeemed once. Show this screen to the seller; their console shows the same result.'
         : result.reason || 'This wallet is not eligible yet.');
+      if (result.status === 'REDEEMED' && result.proof) {
+        try {
+          const sessionStatus = await getSessionStatus(result.proof.sessionId);
+          saveCustomerProofHistoryItem({
+            sessionId: result.proof.sessionId,
+            sellerName: status?.checkout?.sellerName,
+            status: sessionStatus,
+            verifiedWalletAddress: address,
+            proof: {
+              version: result.proof.version,
+              termsDigest: result.proof.termsDigest,
+              message: result.proof.message,
+              signature,
+            },
+          });
+        } catch {
+          // The receipt is a device convenience; the redemption itself already succeeded.
+        }
+      }
       await refresh(pass);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not confirm checkout.');
@@ -253,7 +274,7 @@ export function CustomerCheckoutPass() {
   }
 
   return (
-    <section id="customer-pass" className="scroll-mt-36 rounded-[2rem] border border-orange-200/20 bg-[linear-gradient(145deg,rgba(255,255,255,0.08),rgba(236,118,51,0.08)_52%,rgba(0,0,0,0.2))] p-5 shadow-2xl shadow-black/25">
+    <section id="customer-pass" className="shop-launcher-band-clearance-compact scroll-mt-36 rounded-[2rem] border border-orange-200/20 bg-[linear-gradient(145deg,rgba(255,255,255,0.08),rgba(236,118,51,0.08)_52%,rgba(0,0,0,0.2))] p-5 shadow-2xl shadow-black/25">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-200/80">Customer checkout pass</p>
@@ -264,7 +285,7 @@ export function CustomerCheckoutPass() {
         </span>
       </div>
       <p className="mt-3 text-sm leading-6 text-stone-300">
-        The QR is a short-lived presentation handle, not proof of eligibility. Only a second signature from this wallet can approve the seller and selected benefit.
+        The QR is a short-lived presentation handle, not proof of eligibility, and creating it sends no wallet address. Your one signature on the exact seller offer checks eligibility and redeems that checkout once.
       </p>
 
       {selectedOffer ? (
@@ -274,7 +295,7 @@ export function CustomerCheckoutPass() {
               <BusinessLogo name={selectedOffer.sellerName} logoUrl={selectedOffer.sellerLogoUrl} size="sm" />
               <div className="min-w-0">
                 <p className="text-xs font-black uppercase tracking-[0.14em] text-orange-100">Selected public offer</p>
-                <p className="mt-2 break-words font-black text-white">{selectedOffer.rule.productName} · {selectedOffer.sellerName}</p>
+                <p className="mt-2 font-black text-white [overflow-wrap:anywhere]">{selectedOffer.rule.productName} · {selectedOffer.sellerName}</p>
                 <p className="mt-1 text-stone-300">
                   {selectedOffer.rule.discountPercent}% benefit · {selectedOffer.rule.requiredLockIFR.toLocaleString('en-US')} IFR lock
                   {' '}{lockSourceRequirement(selectedOffer.rule.lockSource)}
@@ -312,14 +333,14 @@ export function CustomerCheckoutPass() {
           {status?.checkout ? (
             <div className="grid gap-3 rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-stone-300">
               <div className="flex items-center justify-between gap-4">
-                <span>Seller</span>
+                <span className="shrink-0">Seller</span>
                 <span className="flex min-w-0 items-center justify-end gap-3">
                   <BusinessLogo name={status.checkout.sellerName} logoUrl={status.checkout.sellerLogoUrl} size="sm" />
-                  <strong className="break-words text-right text-white">{status.checkout.sellerName}</strong>
+                  <strong className="min-w-0 text-right text-white [overflow-wrap:anywhere]">{status.checkout.sellerName}</strong>
                 </span>
               </div>
-              <div className="flex justify-between gap-4"><span>Offer</span><strong className="text-right text-white">{status.checkout.benefit.label || 'Standard benefit'}</strong></div>
-              <div className="flex justify-between gap-4"><span>Product</span><strong className="text-right text-white">{status.checkout.benefit.productName || 'Seller benefit'}</strong></div>
+              <div className="flex justify-between gap-4"><span className="shrink-0">Offer</span><strong className="min-w-0 text-right text-white [overflow-wrap:anywhere]">{status.checkout.benefit.label || 'Standard benefit'}</strong></div>
+              <div className="flex justify-between gap-4"><span className="shrink-0">Product</span><strong className="min-w-0 text-right text-white [overflow-wrap:anywhere]">{status.checkout.benefit.productName || 'Seller benefit'}</strong></div>
               <div className="flex justify-between gap-4"><span>Checkout status</span><strong className="text-right text-white">{status.checkout.status}</strong></div>
               {formatProductPrice(status.checkout.benefit.basePriceMinor, status.checkout.benefit.currency) ? (
                 <div className="flex justify-between gap-4">

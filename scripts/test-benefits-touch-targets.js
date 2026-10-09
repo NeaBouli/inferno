@@ -12,6 +12,7 @@ const { spawn } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
 const { chromium } = require('playwright');
+const { ethers } = require('ethers');
 
 const root = path.resolve(__dirname, '..');
 const frontend = path.join(root, 'apps', 'benefits-network', 'frontend');
@@ -30,10 +31,14 @@ const VIEWPORTS = [
   { width: 1440, height: 1000, mobile: false },
 ];
 
-const customerWallet = '0x1111111111111111111111111111111111111111';
+// Deterministic throwaway test key (no funds, never used outside this script) so the device-local
+// receipt carries a real EIP-191 signature that the 'Verify receipt' control can check offline.
+const customerSigner = new ethers.Wallet(`0x${'42'.repeat(32)}`);
+const customerWallet = customerSigner.address;
 const dummySignature = `0x${'11'.repeat(65)}`;
 const businessId = 'business-touch-e2e';
 const ruleId = 'rule-touch-e2e';
+const { receiptProof } = require('./lib/benefits-receipt-fixture.cjs');
 const productId = 'product-touch-e2e';
 const sessionId = 'session-touch-e2e';
 const passId = 'T'.repeat(32);
@@ -63,8 +68,8 @@ const benefit = {
   requiredLockIFR: 5000,
   minIFRHeld: 0,
   lockSource: 'either',
-  dailyRedemptionLimit: 1,
-  monthlyRedemptionLimit: 4,
+  dailyRedemptionLimit: 0,
+  monthlyRedemptionLimit: 0,
   ttlSeconds: 300,
   tierLabel: 'Premium',
 };
@@ -89,8 +94,8 @@ const product = {
     requiredLockIFR: benefit.requiredLockIFR,
     minIFRHeld: 0,
     lockSource: 'either',
-    dailyRedemptionLimit: 1,
-    monthlyRedemptionLimit: 4,
+    dailyRedemptionLimit: 0,
+    monthlyRedemptionLimit: 0,
     ttlSeconds: 300,
   }],
 };
@@ -103,37 +108,18 @@ const offer = {
   requiredLockIFR: 5000,
   minIFRHeld: 0,
   lockSource: 'either',
-  dailyRedemptionLimit: 1,
-  monthlyRedemptionLimit: 4,
+  dailyRedemptionLimit: 0,
+  monthlyRedemptionLimit: 0,
   business,
   product: { id: productId, name: benefit.productName, description: null, basePriceMinor: '2500', currency: 'EUR' },
 };
-const historyItem = {
-  id: sessionId,
-  status: 'REDEEMED',
-  reason: null,
-  expiresAt,
-  createdAt: now,
-  updatedAt: now,
-  redeemedAt: now,
-  seller: { id: businessId, name: business.name },
-  benefit: {
-    label: benefit.label,
-    category: benefit.category,
-    productName: benefit.productName,
-    basePriceMinor: '2500',
-    currency: 'EUR',
-    discountPercent: 15,
-    requiredLockIFR: 5000,
-    minIFRHeld: 0,
-    lockSource: 'either',
-  },
-};
-const localHistory = [{
+// Owner decision B (T-231b): "My benefits" is device-local only. The receipt holds the exact signed
+// proof v2 text (with the full wallet) and its signature, as saved after a REDEEMED proof.
+const localHistoryItem = {
   sessionId,
   businessId,
   sellerName: business.name,
-  status: 'APPROVED',
+  status: 'REDEEMED',
   discountPercent: 15,
   requiredLockIFR: 5000,
   minIFRHeld: 0,
@@ -143,10 +129,13 @@ const localHistory = [{
   basePriceMinor: '2500',
   currency: 'EUR',
   expiresAt,
-  redeemedAt: null,
-  walletLabel: '0x1111...1111',
+  redeemedAt: now,
+  walletLabel: `${customerWallet.slice(0, 6)}...${customerWallet.slice(-4)}`,
   savedAt: now,
-}];
+};
+const receipt = receiptProof(localHistoryItem, { wallet: customerWallet, ruleId, audience: new URL(origin).host, chainId: 1 });
+const receiptMessage = receipt.message;
+const localHistory = [{ ...localHistoryItem, proof: { ...receipt, signature: null } }];
 
 function json(route, body, status = 200) {
   return route.fulfill({
@@ -183,24 +172,16 @@ function installApiMock(context) {
     }
     if (method === 'GET' && pathname === `/api/sessions/${sessionId}`) {
       return json(route, {
-        status: 'APPROVED', reason: null, redeemedAt: null, expiresAt, attestAttempts: 1,
+        status: 'REDEEMED', reason: null, redeemedAt: now, expiresAt, attestAttempts: 1,
         businessId, benefitRuleId: ruleId, benefit, presentation: 'SELLER_QR',
       });
     }
     if (method === 'GET' && pathname === `/api/passes/${passId}`) {
       return json(route, { available: true, expiresAt });
     }
-    if (method === 'POST' && pathname === '/api/customer/history/challenge') {
-      return json(route, { message: 'Read IFR benefit history', nonce: 'history-nonce', expiresAt });
-    }
-    if (method === 'POST' && pathname === '/api/customer/history/authorize') {
-      return json(route, { accessToken: 'history-read-token', expiresAt });
-    }
-    if (method === 'GET' && pathname === '/api/customer/history') {
-      return json(route, {
-        sessions: [historyItem],
-        pagination: { limit: 20, hasMore: true, nextCursor: 'cursor-2', snapshot: now },
-      });
+    if (pathname.startsWith('/api/customer/history')) {
+      // Server-side customer history was removed (owner decision B); mirror the backend 410.
+      return json(route, { error: 'Customer history is stored only on the customer device.', storage: 'device-local' }, 410);
     }
     return json(route, { error: `Unexpected touch-target request: ${method} ${pathname}` }, 500);
   });
@@ -364,9 +345,11 @@ const STATES = [
       await page.goto(`${origin}/#my-benefits`, { waitUntil: 'domcontentloaded' });
       await connectWallet(page);
       const history = page.locator('#my-benefits');
-      await history.getByRole('button', { name: 'Load wallet history', exact: true }).click();
-      await history.getByRole('button', { name: 'Refresh history', exact: true }).waitFor();
-      await history.getByRole('button', { name: 'Load older benefits', exact: true }).waitFor();
+      await history.getByTestId('device-history-notice').waitFor();
+      await history.getByTestId('device-receipt').first().waitFor();
+      await history.getByRole('button', { name: 'Verify receipt', exact: true }).click();
+      await history.getByText('Signed terms verified on this device', { exact: false }).waitFor();
+      await history.getByRole('button', { name: 'Clear', exact: true }).waitFor();
       await history.getByRole('button', { name: 'Scan QR', exact: false }).or(history.getByRole('link', { name: 'Scan QR' })).first().waitFor();
     },
   },
@@ -407,7 +390,7 @@ const STATES = [
     name: 'customer-session-evidence',
     async open(page) {
       await page.goto(`${origin}/r/${sessionId}`, { waitUntil: 'domcontentloaded' });
-      await page.getByText('APPROVED evidence').waitFor();
+      await page.getByText('REDEEMED evidence').waitFor();
     },
   },
   {
@@ -449,6 +432,7 @@ async function waitForServer(child) {
 }
 
 async function run() {
+  localHistory[0].proof.signature = await customerSigner.signMessage(receiptMessage);
   fs.mkdirSync(screenshotDir, { recursive: true });
   const server = spawn(process.execPath, [path.join(frontend, 'node_modules', 'next', 'dist', 'bin', 'next'), 'dev', '--hostname', '127.0.0.1', '--port', String(port)], {
     cwd: frontend,

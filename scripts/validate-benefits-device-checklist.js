@@ -20,7 +20,7 @@ const requiredMatrixIds = [
   'android-okx-customer-proof',
   'phantom-evm-fallback',
   'desktop-metamask-seller',
-  'approved-redeemed-eligible-wallet',
+  'proof-redeemed-eligible-wallet',
 ];
 const requiredCapabilitiesById = {
   'ios-safari-pwa': ['pwa-install-guidance', 'wallet-launch-fallback', 'recovery-guidance'],
@@ -67,15 +67,15 @@ const requiredCapabilitiesById = {
     'public-seller-catalog',
     'customer-pass-bind',
     'seller-issued-qr-compatibility',
-    'seller-signed-redeem',
+    'seller-signed-checkout-open',
     'wallet-disconnect',
     'reload-reconnect',
   ],
-  'approved-redeemed-eligible-wallet': [
+  'proof-redeemed-eligible-wallet': [
     'customer-pass-create',
     'customer-pass-bind',
     'exact-offer-confirm',
-    'approved-to-redeemed',
+    'proof-to-redeemed',
     'replay-blocked',
     'wallet-disconnect',
     'reload-reconnect',

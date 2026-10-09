@@ -1,27 +1,17 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import { useSignMessage } from 'wagmi';
-import { useHydratedAccount } from '@/hooks/useHydratedAccount';
+import { useEffect, useState } from 'react';
+import { recoverMessageAddress } from 'viem';
 import {
   CustomerProofHistoryItem,
+  ReceiptVerification,
   clearCustomerProofHistory,
   readCustomerProofHistory,
+  verifyCustomerProofReceipt,
 } from '@/lib/customerHistory';
 import { formatProductPrice } from '@/lib/money';
 import { lockSourceRequirement } from '@/lib/lockSource';
-import {
-  CustomerHistoryItem,
-  authorizeCustomerHistory,
-  getCustomerHistory,
-  getCustomerHistoryChallenge,
-} from '@/lib/api';
-
-function statusTone(status: CustomerProofHistoryItem['status']) {
-  if (status === 'APPROVED' || status === 'REDEEMED') return 'border-green-300/25 bg-green-300/[0.08] text-green-50';
-  if (status === 'REJECTED' || status === 'EXPIRED') return 'border-red-300/25 bg-red-300/[0.08] text-red-50';
-  return 'border-orange-200/25 bg-orange-200/[0.08] text-orange-50';
-}
+import { CHAIN_ID } from '@/lib/contracts';
 
 function formatDate(value: string) {
   const date = new Date(value);
@@ -34,140 +24,46 @@ function formatDate(value: string) {
   });
 }
 
+const verifier = {
+  recover: (message: string, signature: string) =>
+    recoverMessageAddress({ message, signature: signature as `0x${string}` }),
+  sha256Hex: async (text: string) => {
+    const digest = await window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+    return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, '0')).join('');
+  },
+};
+
+/**
+ * Owner decision B (T-231b): customer history exists only on this device. The server keeps no
+ * customer-linked history, so there is nothing to load across devices.
+ */
 export function CustomerProofHistory() {
-  const { address, isConnected } = useHydratedAccount();
-  const { signMessageAsync } = useSignMessage();
   const [items, setItems] = useState<CustomerProofHistoryItem[]>([]);
-  const [walletItems, setWalletItems] = useState<CustomerHistoryItem[]>([]);
-  const [accessToken, setAccessToken] = useState('');
-  const [historyBinding, setHistoryBinding] = useState('');
-  const [nextCursor, setNextCursor] = useState<string | null>(null);
-  const [snapshot, setSnapshot] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(false);
-  const [loadingWalletHistory, setLoadingWalletHistory] = useState(false);
-  const [walletHistoryStatus, setWalletHistoryStatus] = useState('');
-  const [walletHistoryError, setWalletHistoryError] = useState('');
-  const activeWalletRef = useRef('');
-  const normalizedWallet = isConnected && address ? address.toLowerCase() : '';
-  activeWalletRef.current = normalizedWallet;
+  const [checks, setChecks] = useState<Record<string, ReceiptVerification>>({});
 
   useEffect(() => {
     setItems(readCustomerProofHistory());
   }, []);
 
-  useEffect(() => {
-    setWalletItems([]);
-    setAccessToken('');
-    setHistoryBinding('');
-    setNextCursor(null);
-    setSnapshot(null);
-    setHasMore(false);
-    setLoadingWalletHistory(false);
-    setWalletHistoryStatus('');
-    setWalletHistoryError('');
-  }, [normalizedWallet]);
-
   function clearHistory() {
     clearCustomerProofHistory();
     setItems([]);
+    setChecks({});
   }
 
-  async function createReadAccess(requestWallet: string) {
-    if (!address || address.toLowerCase() !== requestWallet) {
-      throw new Error('Wallet changed before history authorization.');
-    }
-    const challenge = await getCustomerHistoryChallenge(address);
-    const signature = await signMessageAsync({ message: challenge.message });
-    if (activeWalletRef.current !== requestWallet) {
-      throw new Error('Wallet changed before history authorization completed.');
-    }
-    return authorizeCustomerHistory({
-      walletAddress: address,
-      nonce: challenge.nonce,
-      signature,
+  async function verifyItem(item: CustomerProofHistoryItem) {
+    const result = await verifyCustomerProofReceipt(item, verifier, {
+      expectedAudience: window.location.host,
+      expectedChainId: CHAIN_ID,
+      receipts: items,
     });
+    setChecks((current) => ({ ...current, [item.sessionId]: result }));
   }
-
-  async function loadWalletHistory() {
-    if (!normalizedWallet) {
-      setWalletHistoryError('Connect the customer wallet above before loading My benefits.');
-      return;
-    }
-    const requestWallet = normalizedWallet;
-    setLoadingWalletHistory(true);
-    setWalletHistoryError('');
-    setWalletHistoryStatus('Sign the read-only request in your wallet.');
-    try {
-      const authorization = await createReadAccess(requestWallet);
-      const page = await getCustomerHistory(authorization.accessToken, 20);
-      if (activeWalletRef.current !== requestWallet) return;
-      setAccessToken(authorization.accessToken);
-      setHistoryBinding(requestWallet);
-      setWalletItems(page.sessions);
-      setNextCursor(page.pagination.nextCursor);
-      setSnapshot(page.pagination.snapshot);
-      setHasMore(page.pagination.hasMore);
-      setWalletHistoryStatus(page.sessions.length
-        ? `Loaded ${page.sessions.length} verified benefit${page.sessions.length === 1 ? '' : 's'} for this wallet.`
-        : 'No verified benefits were found for this wallet.');
-    } catch (err) {
-      if (activeWalletRef.current !== requestWallet) return;
-      setWalletHistoryStatus('');
-      setWalletHistoryError(err instanceof Error ? err.message : 'Could not load wallet history.');
-    } finally {
-      if (activeWalletRef.current === requestWallet) setLoadingWalletHistory(false);
-    }
-  }
-
-  async function loadMoreWalletHistory() {
-    if (
-      !normalizedWallet || historyBinding !== normalizedWallet || !nextCursor || !snapshot
-    ) {
-      setWalletHistoryError('Reload My benefits with the current wallet before loading older entries.');
-      return;
-    }
-    const requestWallet = normalizedWallet;
-    const requestCursor = nextCursor;
-    const requestSnapshot = snapshot;
-    setLoadingWalletHistory(true);
-    setWalletHistoryError('');
-    try {
-      let token = accessToken;
-      let page;
-      try {
-        page = await getCustomerHistory(token, 20, requestCursor, requestSnapshot);
-      } catch (err) {
-        if (!(err instanceof Error) || !err.message.includes('access expired')) throw err;
-        setWalletHistoryStatus('Read access expired. Sign once more to continue.');
-        const authorization = await createReadAccess(requestWallet);
-        token = authorization.accessToken;
-        page = await getCustomerHistory(token, 20, requestCursor, requestSnapshot);
-      }
-      if (activeWalletRef.current !== requestWallet) return;
-      setAccessToken(token);
-      setWalletItems((current) => {
-        const known = new Set(current.map((item) => item.id));
-        return [...current, ...page.sessions.filter((item) => !known.has(item.id))];
-      });
-      setNextCursor(page.pagination.nextCursor);
-      setSnapshot(page.pagination.snapshot);
-      setHasMore(page.pagination.hasMore);
-      setWalletHistoryStatus(`Loaded ${page.sessions.length} older benefit${page.sessions.length === 1 ? '' : 's'}.`);
-    } catch (err) {
-      if (activeWalletRef.current !== requestWallet) return;
-      setWalletHistoryStatus('');
-      setWalletHistoryError(err instanceof Error ? err.message : 'Could not load older benefits.');
-    } finally {
-      if (activeWalletRef.current === requestWallet) setLoadingWalletHistory(false);
-    }
-  }
-
-  const walletHistoryVisible = historyBinding === normalizedWallet;
 
   return (
-    <section className="rounded-[2rem] border border-white/10 bg-white/[0.055] p-5 shadow-2xl shadow-black/25 backdrop-blur">
+    <section data-testid="device-history" className="shop-launcher-band-clearance rounded-[2rem] border border-white/10 bg-white/[0.055] p-5 shadow-2xl shadow-black/25 backdrop-blur">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0">
           <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-200/80">
             Customer history
           </p>
@@ -184,7 +80,7 @@ export function CustomerProofHistory() {
             <button
               type="button"
               onClick={clearHistory}
-              className="rounded-full border border-white/15 px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-orange-200/60"
+              className="min-h-11 rounded-full border border-white/15 px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-orange-200/60"
             >
               Clear
             </button>
@@ -192,124 +88,86 @@ export function CustomerProofHistory() {
         </div>
       </div>
 
-      <p className="mt-3 text-sm leading-6 text-stone-300">
-        Sign one read-only request to load benefits verified by this wallet across devices. Access stays in memory for ten minutes and cannot move tokens.
-      </p>
-
-      <div className="mt-4 rounded-2xl border border-green-300/20 bg-green-300/[0.07] p-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h3 className="text-sm font-black text-green-50">Signed wallet history</h3>
-            <p className="mt-1 text-xs leading-5 text-stone-300">
-              {normalizedWallet
-                ? `Connected: ${address?.slice(0, 6)}...${address?.slice(-4)}`
-                : 'Connect the same customer wallet used for checkout.'}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={loadWalletHistory}
-            disabled={!normalizedWallet || loadingWalletHistory}
-            className="rounded-full bg-green-300 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-stone-950 disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            {loadingWalletHistory ? 'Loading' : walletHistoryVisible ? 'Refresh history' : 'Load wallet history'}
-          </button>
-        </div>
-        {walletHistoryStatus ? <p role="status" aria-live="polite" className="mt-3 text-xs font-semibold text-green-100">{walletHistoryStatus}</p> : null}
-        {walletHistoryError ? <p role="alert" className="mt-3 text-xs font-semibold text-red-200">{walletHistoryError}</p> : null}
-
-        {walletHistoryVisible && walletItems.length > 0 ? (
-          <div className="mt-4 grid gap-3">
-            {walletItems.map((item) => (
-              <article key={item.id} className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <h4 className="text-sm font-black text-white">{item.seller.name}</h4>
-                    <p className="mt-1 text-xs leading-5 text-stone-400">
-                      {item.benefit.productName || 'Business benefit'} / {item.benefit.discountPercent}% / {item.benefit.requiredLockIFR.toLocaleString('en-US')} IFR locked
-                      {' '}{lockSourceRequirement(item.benefit.lockSource)}
-                      {item.benefit.minIFRHeld > 0 ? ` + ${item.benefit.minIFRHeld.toLocaleString('en-US')} held` : ''}
-                    </p>
-                    {formatProductPrice(item.benefit.basePriceMinor, item.benefit.currency) ? (
-                      <p className="mt-1 text-xs text-stone-400">
-                        Reference price: {formatProductPrice(item.benefit.basePriceMinor, item.benefit.currency)}
-                      </p>
-                    ) : null}
-                  </div>
-                  <span className={`rounded-full border px-3 py-1 text-[0.68rem] font-black uppercase tracking-[0.12em] ${statusTone(item.status)}`}>
-                    {item.status}
-                  </span>
-                </div>
-                <div className="mt-3 grid gap-1 text-xs leading-5 text-stone-400 sm:grid-cols-2">
-                  <p>Benefit: <span className="text-stone-200">{item.benefit.label || 'Business default'}</span></p>
-                  <p>Verified: <span className="text-stone-200">{formatDate(item.createdAt)}</span></p>
-                  <p>Expires: <span className="text-stone-200">{formatDate(item.expiresAt)}</span></p>
-                  {item.redeemedAt ? <p>Redeemed: <span className="text-stone-200">{formatDate(item.redeemedAt)}</span></p> : null}
-                </div>
-                {item.reason ? <p className="mt-2 text-xs leading-5 text-stone-300">{item.reason}</p> : null}
-              </article>
-            ))}
-            {hasMore ? (
-              <button
-                type="button"
-                onClick={loadMoreWalletHistory}
-                disabled={loadingWalletHistory}
-                className="rounded-2xl border border-green-200/30 px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-green-50 disabled:opacity-40"
-              >
-                Load older benefits
-              </button>
-            ) : <p className="text-center text-xs text-stone-400">All available wallet benefits are loaded.</p>}
-          </div>
-        ) : null}
-      </div>
-
-      <div className="mt-5 border-t border-white/10 pt-5">
-        <h3 className="text-sm font-black text-white">Recent proofs on this device</h3>
-        <p className="mt-2 text-xs leading-5 text-stone-400">
-          This redacted offline list helps reopen a checkout. It stores no private keys, signatures or full wallet addresses.
+      <div data-testid="device-history-notice" className="mt-4 rounded-2xl border border-green-300/20 bg-green-300/[0.07] p-4 text-xs leading-5 text-stone-200">
+        <p className="font-black text-green-50">Stored only on this device</p>
+        <p className="mt-1">
+          The shop server keeps no list of your checkouts and no wallet address. Your receipts, including the
+          signed checkout text with your full wallet address and your signature, stay in this browser until you
+          clear them. Clearing browser data or switching devices loses this history; it cannot be restored.
         </p>
       </div>
 
       {items.length > 0 ? (
         <div className="mt-4 grid gap-3">
-          {items.map((item) => (
-            <article key={item.sessionId} className="rounded-2xl border border-white/10 bg-black/20 p-4">
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h3 className="text-sm font-black text-white">{item.sellerName}</h3>
-                  <p className="mt-1 text-xs leading-5 text-stone-400">
+          {items.map((item) => {
+            const check = checks[item.sessionId];
+            return (
+              <article key={item.sessionId} data-testid="device-receipt" className="min-w-0 rounded-2xl border border-white/10 bg-black/20 p-4">
+                <div className="min-w-0">
+                  <p className="text-[0.68rem] font-black uppercase tracking-[0.14em] text-stone-400">
+                    {item.proof ? 'Signed checkout terms' : 'Saved checkout (no signed proof)'}
+                  </p>
+                  <p className="mt-1 break-words text-sm font-black text-white">
                     {item.productName} / {item.discountPercent}% / {item.requiredLockIFR.toLocaleString('en-US')} IFR locked
                     {' '}{lockSourceRequirement(item.lockSource)}
                     {item.minIFRHeld > 0 ? ` + ${item.minIFRHeld.toLocaleString('en-US')} held` : ''}
                   </p>
-                  {formatProductPrice(item.basePriceMinor, item.currency) ? (
-                    <p className="mt-1 text-xs text-stone-400">
-                      Reference price: {formatProductPrice(item.basePriceMinor, item.currency)}
-                    </p>
-                  ) : null}
+                  <div className="mt-2 grid gap-1 text-xs leading-5 text-stone-400 sm:grid-cols-2">
+                    <p className="break-words">Rule: <span className="text-stone-200">{item.ruleLabel}</span></p>
+                    {formatProductPrice(item.basePriceMinor, item.currency) ? (
+                      <p>Reference price: <span className="text-stone-200">{formatProductPrice(item.basePriceMinor, item.currency)}</span></p>
+                    ) : null}
+                    <p>Wallet: <span className="font-mono text-stone-200">{item.walletLabel}</span></p>
+                    <p>Offer valid until: <span className="text-stone-200">{formatDate(item.expiresAt)}</span></p>
+                    <p className="break-all">Checkout: <span className="font-mono text-stone-200">{item.sessionId}</span></p>
+                    <p className="break-all">Shop ID: <span className="font-mono text-stone-200">{item.businessId}</span></p>
+                  </div>
                 </div>
-                <span className={`rounded-full border px-3 py-1 text-[0.68rem] font-black uppercase tracking-[0.12em] ${statusTone(item.status)}`}>
-                  {item.status}
-                </span>
-              </div>
-              <div className="mt-3 grid gap-1 text-xs leading-5 text-stone-400 sm:grid-cols-2">
-                <p>Rule: <span className="text-stone-200">{item.ruleLabel}</span></p>
-                <p>Wallet: <span className="font-mono text-stone-200">{item.walletLabel}</span></p>
-                <p>Saved: <span className="text-stone-200">{formatDate(item.savedAt)}</span></p>
-                <p>Expires: <span className="text-stone-200">{formatDate(item.expiresAt)}</span></p>
-              </div>
-              <a
-                href={`/r/${item.sessionId}`}
-                className="mt-3 inline-flex min-h-11 items-center rounded-2xl border border-orange-200/35 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-orange-50 transition hover:bg-orange-200/10"
-              >
-                Reopen proof
-              </a>
-            </article>
-          ))}
+                <div data-testid="receipt-unverified-notes" className="mt-3 rounded-xl border border-white/10 p-3 text-xs leading-5 text-stone-400">
+                  <p className="font-black uppercase tracking-[0.12em] text-stone-300">Saved on this device - not verified</p>
+                  <p className="mt-1 break-words">
+                    Seller: <span className="text-stone-200">{item.sellerName}</span>
+                    {' '}/ Last seen status: <span className="text-stone-200">{item.status}</span>
+                    {item.redeemedAt ? <> / Redeemed: <span className="text-stone-200">{formatDate(item.redeemedAt)}</span></> : null}
+                    {' '}/ Saved: <span className="text-stone-200">{formatDate(item.savedAt)}</span>
+                  </p>
+                  <p className="mt-1">Use Check status for the shop&apos;s current answer; your signature does not prove redemption.</p>
+                </div>
+                {check ? (
+                  <p
+                    role="status"
+                    className={`mt-3 text-xs font-semibold ${check.ok ? 'text-green-100' : 'text-red-200'}`}
+                  >
+                    {check.ok
+                      ? 'Signed terms verified on this device: your wallet signed exactly these checkout terms. This does not prove redemption.'
+                      : `Receipt invalid: ${check.reason}`}
+                  </p>
+                ) : null}
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {item.proof ? (
+                    <button
+                      type="button"
+                      onClick={() => void verifyItem(item)}
+                      className="inline-flex min-h-11 items-center rounded-2xl border border-green-200/35 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-green-50 transition hover:bg-green-200/10"
+                    >
+                      Verify receipt
+                    </button>
+                  ) : null}
+                  <a
+                    href={`/r/${item.sessionId}`}
+                    className="inline-flex min-h-11 items-center rounded-2xl border border-orange-200/35 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-orange-50 transition hover:bg-orange-200/10"
+                  >
+                    Check status
+                  </a>
+                </div>
+              </article>
+            );
+          })}
         </div>
       ) : (
         <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4 text-sm leading-6 text-stone-300">
-          No customer proofs saved on this device yet. Open a seller QR link, sign or refresh the proof, and it will appear here.
+          No receipts on this device yet. Scan a seller QR or show your checkout pass; after a successful proof the
+          receipt appears here.
         </div>
       )}
     </section>

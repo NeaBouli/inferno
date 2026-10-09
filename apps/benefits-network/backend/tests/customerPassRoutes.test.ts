@@ -7,6 +7,7 @@ const mockCheckLock = jest.fn();
 const mockRecoverSigner = jest.fn();
 
 jest.mock('../src/services/ifrLockService', () => ({
+  // Real EIP-191 recovery by default (set in beforeEach); tests may override it.
   checkLock: (...args: unknown[]) => mockCheckLock(...args),
   checkBenefitEligibility: async (...args: unknown[]) => {
     const result = await mockCheckLock(...args);
@@ -49,27 +50,32 @@ function baseUrl() {
   return `http://127.0.0.1:${address.port}`;
 }
 
-async function createPass(wallet: TestWallet) {
-  const challengeResponse = await fetch(`${baseUrl()}/api/passes/challenge`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ walletAddress: wallet.address }),
-  });
-  expect(challengeResponse.status).toBe(200);
-  const challenge = await challengeResponse.json() as { message: string; nonce: string };
-  const payload = {
-    walletAddress: wallet.address,
-    nonce: challenge.nonce,
-    signature: await wallet.signMessage(challenge.message),
-  };
+// Owner decision B (T-231b): a pass is created without any wallet or signature.
+async function createPass() {
   const response = await fetch(`${baseUrl()}/api/passes`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify(payload),
+    body: '{}',
   });
-  return { response, payload, body: await response.json() as {
+  return { response, body: await response.json() as {
     passId: string; controlToken: string; qrUrl: string; expiresAt: string;
   } };
+}
+
+async function passChallenge(passId: string, controlToken: string, walletAddress: string) {
+  return fetch(`${baseUrl()}/api/passes/${passId}/challenge`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${controlToken}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ walletAddress }),
+  });
+}
+
+async function confirmPass(passId: string, controlToken: string, walletAddress: string, signature: string) {
+  return fetch(`${baseUrl()}/api/passes/${passId}/confirm`, {
+    method: 'POST',
+    headers: { authorization: `Bearer ${controlToken}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ walletAddress, signature }),
+  });
 }
 
 async function sellerHeaders(
@@ -80,7 +86,7 @@ async function sellerHeaders(
 ) {
   const scope = `${passId}:${ruleId}`;
   const query = new URLSearchParams({
-    action: 'passes:bind', businessId, walletAddress: seller.address, scope,
+    action: 'passes:bind', businessId, scope,
   });
   const response = await fetch(`${baseUrl()}/api/seller/auth-message?${query}`);
   expect(response.status).toBe(200);
@@ -121,11 +127,13 @@ describe('customer-presented checkout passes', () => {
   beforeEach(async () => {
     limiterSpy = jest.spyOn(authenticatedRateLimiter, 'assertSellerWalletActionAllowed')
       .mockResolvedValue(undefined);
+    mockCheckLock.mockReset();
+    mockRecoverSigner.mockReset();
+    mockRecoverSigner.mockImplementation((message: string, signature: string) => ethers.verifyMessage(message, signature));
     await prisma.rewardEvent.deleteMany();
     await prisma.auditLog.deleteMany();
     await prisma.session.deleteMany();
     await prisma.customerPass.deleteMany();
-    await prisma.customerPassChallenge.deleteMany();
     await prisma.sellerAuthorizationChallenge.deleteMany();
     await prisma.benefitRule.deleteMany();
     await prisma.product.deleteMany();
@@ -177,7 +185,6 @@ describe('customer-presented checkout passes', () => {
     await prisma.auditLog.deleteMany();
     await prisma.session.deleteMany();
     await prisma.customerPass.deleteMany();
-    await prisma.customerPassChallenge.deleteMany();
     await prisma.sellerAuthorizationChallenge.deleteMany();
     await prisma.benefitRule.deleteMany();
     await prisma.product.deleteMany();
@@ -188,14 +195,15 @@ describe('customer-presented checkout passes', () => {
     await new Promise<void>((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
   });
 
-  it('creates a one-time opaque pass without storing or publishing its control token', async () => {
-    const created = await createPass(customer);
+  it('creates a one-time opaque pass without a wallet and without storing or publishing its control token', async () => {
+    const created = await createPass();
     expect(created.response.status).toBe(201);
+    expect(created.response.headers.get('cache-control')).toContain('no-store');
     expect(created.body.passId).toMatch(/^[A-Za-z0-9_-]{32}$/);
     expect(created.body.qrUrl).toBe(`/p/${created.body.passId}`);
     const stored = await prisma.customerPass.findUniqueOrThrow({ where: { id: created.body.passId } });
-    expect(stored.walletAddress).toBe(customer.address);
     expect(stored.controlHash).not.toContain(created.body.controlToken);
+    expect(JSON.stringify(stored)).not.toMatch(/walletAddress|0x[0-9a-fA-F]{40}/);
 
     const publicResponse = await fetch(`${baseUrl()}/api/passes/${created.body.passId}`);
     const publicBody = await publicResponse.json() as Record<string, unknown>;
@@ -204,16 +212,31 @@ describe('customer-presented checkout passes', () => {
     expect(publicBody).toEqual({ available: true, expiresAt: created.body.expiresAt });
     expect(JSON.stringify(publicBody)).not.toMatch(/wallet|session|signature|control|lock/i);
 
-    const replay = await fetch(`${baseUrl()}/api/passes`, {
+    // The former wallet challenge is gone; a legacy wallet/signature payload is refused outright
+    // (nothing to replay) and never creates a pass.
+    const passesBefore = await prisma.customerPass.count();
+    const legacyChallenge = await fetch(`${baseUrl()}/api/passes/challenge`, {
       method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(created.payload),
+      body: JSON.stringify({ walletAddress: customer.address }),
     });
-    expect(replay.status).toBe(401);
+    expect(legacyChallenge.status).toBe(410);
+    const legacyCreate = await fetch(`${baseUrl()}/api/passes`, {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ walletAddress: customer.address, nonce: 'legacy', signature: '0xdeadbeef' }),
+    });
+    expect(legacyCreate.status).toBe(400);
+    expect(await prisma.customerPass.count()).toBe(passesBefore);
+
+    // Every creation yields a fresh, independent capability.
+    const second = await createPass();
+    expect(second.response.status).toBe(201);
+    expect(second.body.passId).not.toBe(created.body.passId);
+    expect(second.body.controlToken).not.toBe(created.body.controlToken);
   });
 
   it('keeps control polling separate from the mutation budget', async () => {
     const clientIp = '198.51.100.29';
-    const created = await createPass(customer);
+    const created = await createPass();
     const controlHeaders = {
       authorization: `Bearer ${created.body.controlToken}`,
       'x-forwarded-for': clientIp,
@@ -248,7 +271,7 @@ describe('customer-presented checkout passes', () => {
   });
 
   it('atomically lets exactly one seller bind a copied pass', async () => {
-    const created = await createPass(customer);
+    const created = await createPass();
     const [first, second] = await Promise.all([
       bindPass(seller, businessId, ruleId, created.body.passId),
       bindPass(otherSeller, otherBusinessId, otherRuleId, created.body.passId),
@@ -257,16 +280,20 @@ describe('customer-presented checkout passes', () => {
     expect(await prisma.session.count({ where: { customerPassId: created.body.passId } })).toBe(1);
   });
 
-  it('requires the original customer to confirm the exact bound seller rule', async () => {
-    const created = await createPass(customer);
+  it('requires a proof from the claimed wallet over the exact bound seller rule and redeems on confirm', async () => {
+    const created = await createPass();
     const bound = await bindPass(seller, businessId, ruleId, created.body.passId);
     expect(bound.status).toBe(201);
     const boundBody = await bound.json() as { sessionId: string };
 
-    expect((await fetch(`${baseUrl()}/api/sessions/${boundBody.sessionId}/challenge`)).status).toBe(403);
+    // A pass-bound checkout can only be proven through the pass control token.
+    expect((await fetch(`${baseUrl()}/api/sessions/${boundBody.sessionId}/challenge`, {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ walletAddress: customer.address }),
+    })).status).toBe(403);
     expect((await fetch(`${baseUrl()}/api/attest`, {
       method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ sessionId: boundBody.sessionId, signature: '0xdeadbeef' }),
+      body: JSON.stringify({ sessionId: boundBody.sessionId, walletAddress: customer.address, signature: '0xdeadbeef' }),
     })).status).toBe(403);
 
     const controlHeaders = { authorization: `Bearer ${created.body.controlToken}` };
@@ -301,33 +328,56 @@ describe('customer-presented checkout passes', () => {
         },
       },
     });
-    const challengeResponse = await fetch(`${baseUrl()}/api/passes/${created.body.passId}/challenge`, {
+    // Challenge and confirm require the claimed wallet in the request body.
+    expect((await fetch(`${baseUrl()}/api/passes/${created.body.passId}/challenge`, {
       method: 'POST', headers: controlHeaders,
-    });
+    })).status).toBe(400);
+    expect((await passChallenge(created.body.passId, 'x'.repeat(43), customer.address)).status).toBe(401);
+    const challengeResponse = await passChallenge(created.body.passId, created.body.controlToken, customer.address);
+    expect(challengeResponse.status).toBe(200);
     const challenge = await challengeResponse.json() as { message: string };
+    expect(challenge.message).toContain(`Wallet: ${customer.address}`);
+    expect(challenge.message).toContain(`Session: ${boundBody.sessionId}`);
     expect(challenge.message).toContain(`Benefit Rule: ${ruleId}`);
     expect(challenge.message).toContain('Reference Price: EUR 450 minor units');
     expect(challenge.message).toContain('Discount Percent: 15');
+    mockCheckLock.mockResolvedValue({ eligible: true, lockedAmount: '2500.0' });
 
-    mockRecoverSigner.mockReturnValue(otherCustomer.address);
-    expect((await fetch(`${baseUrl()}/api/passes/${created.body.passId}/confirm`, {
-      method: 'POST', headers: { ...controlHeaders, 'content-type': 'application/json' },
-      body: JSON.stringify({ signature: '0xdeadbeef' }),
-    })).status).toBe(403);
+    // A different wallet signing the text for the claimed wallet is an explicit mismatch.
+    const foreignSignature = await otherCustomer.signMessage(challenge.message);
+    const mismatch = await confirmPass(created.body.passId, created.body.controlToken, customer.address, foreignSignature);
+    expect(mismatch.status).toBe(403);
+    expect((await mismatch.json() as { error: string }).error).toBe('Customer signature does not match the claimed wallet address');
+    // Claiming the other wallet with the same signature does not match its own proof text either.
+    expect((await confirmPass(created.body.passId, created.body.controlToken, otherCustomer.address, foreignSignature)).status).toBe(403);
+    expect(mockCheckLock).not.toHaveBeenCalled();
     expect((await prisma.session.findUniqueOrThrow({ where: { id: boundBody.sessionId } })).status).toBe('PENDING');
 
-    mockRecoverSigner.mockReturnValue(customer.address);
-    mockCheckLock.mockResolvedValue({ eligible: true, lockedAmount: '2500.0' });
-    const confirmed = await fetch(`${baseUrl()}/api/passes/${created.body.passId}/confirm`, {
-      method: 'POST', headers: { ...controlHeaders, 'content-type': 'application/json' },
-      body: JSON.stringify({ signature: '0xdeadbeef' }),
-    });
+    // Wrong control token cannot confirm even with a valid proof.
+    const signature = await customer.signMessage(challenge.message);
+    expect((await confirmPass(created.body.passId, 'y'.repeat(43), customer.address, signature)).status).toBe(401);
+
+    const confirmed = await confirmPass(created.body.passId, created.body.controlToken, customer.address, signature);
     expect(confirmed.status).toBe(200);
-    expect(await confirmed.json()).toMatchObject({ status: 'APPROVED', wallet: customer.address });
+    expect(await confirmed.json()).toMatchObject({
+      status: 'REDEEMED',
+      wallet: customer.address,
+      eligible: true,
+      proof: { sessionId: boundBody.sessionId, businessId, selfRedemption: false },
+    });
+    expect(mockCheckLock).toHaveBeenCalledTimes(1);
+    expect(mockCheckLock.mock.calls[0][0]).toBe(customer.address);
+    const redeemed = await prisma.session.findUniqueOrThrow({ where: { id: boundBody.sessionId } });
+    expect(redeemed).toMatchObject({ status: 'REDEEMED', selfRedemption: false, proofVersion: 2 });
+    const redeemedAudit = await prisma.auditLog.findFirstOrThrow({ where: { sessionId: boundBody.sessionId, type: 'REDEEMED' } });
+    expect(JSON.parse(redeemedAudit.payload)).toMatchObject({ actorWallet: seller.address, actorRole: 'OWNER', confirmation: 'passes:bind' });
+
+    // Single use: replaying the accepted proof is refused.
+    expect((await confirmPass(created.body.passId, created.body.controlToken, customer.address, signature)).status).toBe(409);
   });
 
   it('cancels an open or pending bound pass and invalidates its session', async () => {
-    const created = await createPass(customer);
+    const created = await createPass();
     const bound = await bindPass(seller, businessId, ruleId, created.body.passId);
     const boundBody = await bound.json() as { sessionId: string };
     const response = await fetch(`${baseUrl()}/api/passes/${created.body.passId}/cancel`, {
@@ -340,7 +390,7 @@ describe('customer-presented checkout passes', () => {
   });
 
   it('expires a bound pass and linked session consistently across control endpoints', async () => {
-    const created = await createPass(customer);
+    const created = await createPass();
     const bound = await bindPass(seller, businessId, ruleId, created.body.passId);
     const { sessionId } = await bound.json() as { sessionId: string };
     await prisma.session.update({
@@ -353,31 +403,30 @@ describe('customer-presented checkout passes', () => {
     expect(await controlled.json()).toMatchObject({ status: 'EXPIRED', checkout: { status: 'EXPIRED' } });
     expect((await prisma.customerPass.findUniqueOrThrow({ where: { id: created.body.passId } })).status).toBe('EXPIRED');
     expect((await prisma.session.findUniqueOrThrow({ where: { id: sessionId } })).status).toBe('EXPIRED');
-    expect((await fetch(`${baseUrl()}/api/passes/${created.body.passId}/challenge`, { method: 'POST', headers })).status).toBe(409);
+    expect((await passChallenge(created.body.passId, created.body.controlToken, customer.address)).status).toBe(409);
     expect((await fetch(`${baseUrl()}/api/passes/${created.body.passId}/cancel`, { method: 'POST', headers })).status).toBe(409);
   });
 
-  it('never reports cancellation while leaving the checkout approved under a confirm race', async () => {
-    const created = await createPass(customer);
+  it('never reports cancellation while leaving the checkout redeemed under a confirm race', async () => {
+    const created = await createPass();
     const bound = await bindPass(seller, businessId, ruleId, created.body.passId);
     const { sessionId } = await bound.json() as { sessionId: string };
-    mockRecoverSigner.mockReturnValue(customer.address);
+    const challenge = await (await passChallenge(created.body.passId, created.body.controlToken, customer.address))
+      .json() as { message: string };
+    const signature = await customer.signMessage(challenge.message);
     mockCheckLock.mockImplementation(async () => {
       await new Promise((resolve) => setTimeout(resolve, 30));
       return { eligible: true, lockedAmount: '2500.0' };
     });
     const headers = { authorization: `Bearer ${created.body.controlToken}` };
     const [confirmation, cancellation] = await Promise.all([
-      fetch(`${baseUrl()}/api/passes/${created.body.passId}/confirm`, {
-        method: 'POST', headers: { ...headers, 'content-type': 'application/json' },
-        body: JSON.stringify({ signature: '0xdeadbeef' }),
-      }),
+      confirmPass(created.body.passId, created.body.controlToken, customer.address, signature),
       fetch(`${baseUrl()}/api/passes/${created.body.passId}/cancel`, { method: 'POST', headers }),
     ]);
     expect([confirmation.status, cancellation.status].sort()).toEqual([200, 409]);
     const pass = await prisma.customerPass.findUniqueOrThrow({ where: { id: created.body.passId } });
     const session = await prisma.session.findUniqueOrThrow({ where: { id: sessionId } });
-    expect(`${pass.status}:${session.status}`).toMatch(/^(BOUND:APPROVED|CANCELLED:REJECTED)$/);
+    expect(`${pass.status}:${session.status}`).toMatch(/^(BOUND:REDEEMED|CANCELLED:REJECTED)$/);
   });
 
   it('rechecks checkout operator authorization inside the pass binding transaction', async () => {
@@ -385,7 +434,7 @@ describe('customer-presented checkout passes', () => {
     const row = await prisma.checkoutOperator.create({
       data: { businessId, walletAddress: operator.address, label: 'Revoked pass scanner' },
     });
-    const created = await createPass(customer);
+    const created = await createPass();
     const headers = await sellerHeaders(operator, businessId, created.body.passId, ruleId);
     await prisma.checkoutOperator.update({ where: { id: row.id }, data: { active: false } });
     const response = await fetch(`${baseUrl()}/api/passes/${created.body.passId}/bind`, {

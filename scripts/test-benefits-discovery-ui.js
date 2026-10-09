@@ -23,8 +23,9 @@ const offer = {
   requiredLockIFR: 1000,
   minIFRHeld: 500,
   lockSource: 'commitment_time_only',
-  dailyRedemptionLimit: 1,
-  monthlyRedemptionLimit: 10,
+  // Per-customer limits are not IFR-hosted (owner decision B, T-231b): the API only serves 0.
+  dailyRedemptionLimit: 0,
+  monthlyRedemptionLimit: 0,
   business: {
     id: 'seller-ui-e2e',
     slug: 'ifr-test-cafe',
@@ -638,9 +639,9 @@ async function run() {
         assert.equal(url.searchParams.get('businessId'), mutating ? offer.business.id : 'seller');
         assert.equal(url.searchParams.has('scope'), mutating, 'only lifecycle mutations send an exact scope');
         assert.equal(
-          url.searchParams.get('walletAddress')?.toLowerCase(),
-          sellerWallet.toLowerCase(),
-          'every seller action issues a wallet-bound single-use challenge'
+          url.searchParams.has('walletAddress'),
+          false,
+          'every seller action issues a wallet-free single-use challenge'
         );
         if (mutating) assert.equal(url.searchParams.get('scope'), offer.business.id);
         const timestamp = String(Date.now());

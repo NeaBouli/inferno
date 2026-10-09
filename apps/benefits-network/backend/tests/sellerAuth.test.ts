@@ -1,5 +1,31 @@
 import crypto from 'crypto';
+import fs from 'fs';
+import path from 'path';
 import { ethers } from 'ethers';
+
+jest.mock('../src/services/ifrLockService', () => ({
+  checkLock: jest.fn(),
+  checkBenefitEligibility: jest.fn(),
+  recoverSigner: jest.fn(),
+  initProvider: jest.fn(),
+}));
+
+jest.mock('../src/config', () => ({
+  config: {
+    CHAIN_ID: 11155111,
+    SELLER_AUTH_DOMAIN: 'shop.example.test',
+    RPC_URL: 'https://mock-rpc.example.com',
+    IFRLOCK_ADDRESS: '0x0000000000000000000000000000000000000001',
+    ADMIN_SECRET: 'test-secret-12345',
+    DATABASE_URL: 'file:./test.db',
+    MAX_ACTIVE_SELLER_BUSINESSES_PER_WALLET: 5,
+    MAX_TOTAL_SELLER_BUSINESSES_PER_WALLET: 25,
+    PORT: 0,
+  },
+}));
+
+import { prisma } from '../src/services/sessionService';
+import { server } from '../src/index';
 import {
   buildSellerAuthMessage,
   resolveSellerAuthContext,
@@ -15,6 +41,8 @@ import {
   isReadOnlySellerAction,
   isSafeSellerAuthorizationField,
   requiresSingleUseSellerChallenge,
+  consumeSellerAuthorizationChallenge,
+  issueSellerAuthorizationChallenge,
 } from '../src/services/sellerAuthorizationChallenge';
 
 const CONTEXT: SellerAuthContext = { domain: 'shop.example.test', chainId: 11155111 };
@@ -199,5 +227,310 @@ describe('Seller wallet authorization', () => {
   it('builds a seller profile limit error once the active profile cap is reached', () => {
     expect(buildSellerBusinessLimitError(4, 5)).toBeNull();
     expect(buildSellerBusinessLimitError(5, 5)?.message).toContain('profile limit reached: 5/5');
+  });
+});
+
+// ── P2: wallet-free seller challenge with nonce-only state (owner decision B, decision D1) ──
+describe('Wallet-free seller challenge (nonce-only state)', () => {
+  const owner = ethers.Wallet.createRandom();
+  const stranger = ethers.Wallet.createRandom();
+  const customer = ethers.Wallet.createRandom();
+  let businessId = '';
+
+  function baseUrl() {
+    const address = server.address();
+    if (!address || typeof address === 'string') throw new Error('Test server did not bind');
+    return `http://127.0.0.1:${address.port}`;
+  }
+
+  /** Every text value in every table of the test database, for an address search. */
+  async function databaseText() {
+    const tables = await prisma.$queryRawUnsafe<{ name: string }[]>(
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'"
+    );
+    const parts: string[] = [];
+    for (const { name } of tables) {
+      const rows = await prisma.$queryRawUnsafe<Record<string, unknown>[]>(`SELECT * FROM "${name}"`);
+      parts.push(JSON.stringify(rows, (_key, value) => (typeof value === 'bigint' ? value.toString() : value)));
+    }
+    return parts.join('\n').toLowerCase();
+  }
+
+  async function issue(params: Record<string, string>) {
+    const response = await fetch(`${baseUrl()}/api/seller/auth-message?${new URLSearchParams(params)}`);
+    return { status: response.status, text: await response.text() };
+  }
+
+  async function signedHeaders(signer: ethers.HDNodeWallet, params: Record<string, string>) {
+    const issued = await issue(params);
+    expect(issued.status).toBe(200);
+    const challenge = JSON.parse(issued.text) as { message: string; timestamp: string; nonce: string };
+    return {
+      'content-type': 'application/json',
+      'x-ifr-wallet': signer.address,
+      'x-ifr-signature': await signer.signMessage(challenge.message),
+      'x-ifr-timestamp': challenge.timestamp,
+      'x-ifr-nonce': challenge.nonce,
+    };
+  }
+
+  beforeAll(async () => {
+    await prisma.sellerAuthorizationChallenge.deleteMany();
+    const business = await prisma.business.create({
+      data: { name: 'P2 Seller', ownerAddress: owner.address, discountPercent: 5, requiredLockIFR: 100 },
+    });
+    businessId = business.id;
+  });
+
+  afterAll(async () => {
+    await prisma.sellerAuthorizationChallenge.deleteMany();
+    await prisma.business.deleteMany({ where: { id: businessId } });
+    await prisma.$disconnect();
+    await new Promise<void>((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
+  });
+
+  it('issues a challenge that persists no wallet and stores only nonce, action, business, scope and expiry', async () => {
+    const issued = await issue({ action: 'business:list', businessId: 'seller' });
+    expect(issued.status).toBe(200);
+    const body = JSON.parse(issued.text) as Record<string, unknown>;
+    expect(body).not.toHaveProperty('walletAddress');
+    const row = await prisma.sellerAuthorizationChallenge.findUniqueOrThrow({ where: { nonce: String(body.nonce) } });
+    expect(Object.keys(row).sort()).toEqual(['action', 'businessId', 'consumedAt', 'createdAt', 'expiresAt', 'nonce', 'scope']);
+    expect(row).toMatchObject({ action: 'business:list', businessId: 'seller', scope: 'read', consumedAt: null });
+    expect(row.nonce).toMatch(/^[0-9a-f]{64}$/);
+  });
+
+  it('ignores a legacy walletAddress parameter (D1): not stored, not echoed, request still served', async () => {
+    const before = await prisma.sellerAuthorizationChallenge.count();
+    for (const walletAddress of [customer.address, customer.address.toLowerCase(), 'not-an-address']) {
+      const issued = await issue({ action: 'business:list', businessId: 'seller', walletAddress });
+      expect(issued.status).toBe(200);
+      expect(issued.text.toLowerCase()).not.toContain(customer.address.slice(2).toLowerCase());
+      expect(JSON.parse(issued.text)).not.toHaveProperty('walletAddress');
+    }
+    const mutation = await issue({ action: 'rules:create', businessId, scope: businessId, walletAddress: customer.address });
+    expect(mutation.status).toBe(200);
+    expect(mutation.text.toLowerCase()).not.toContain(customer.address.slice(2).toLowerCase());
+    expect(await prisma.sellerAuthorizationChallenge.count()).toBe(before + 4);
+    expect(await databaseText()).not.toContain(customer.address.slice(2).toLowerCase());
+  });
+
+  it('binds the signer only through the signature and keeps every authorization check', async () => {
+    // A nonce is not tied to a wallet: a stranger may sign one, but then authenticates only as itself.
+    const strangerRead = await signedHeaders(stranger, { action: 'business:list', businessId: 'seller' });
+    const strangerList = await fetch(`${baseUrl()}/api/seller/businesses`, { headers: strangerRead });
+    expect(strangerList.status).toBe(200);
+    expect(JSON.stringify(await strangerList.json())).not.toContain(businessId);
+
+    // Claiming the owner's wallet with the stranger's signature fails the signature check.
+    const claimed = await signedHeaders(stranger, { action: 'business:update', businessId, scope: businessId });
+    const forged = await fetch(`${baseUrl()}/api/seller/businesses/${businessId}`, {
+      method: 'PATCH',
+      headers: { ...claimed, 'x-ifr-wallet': owner.address },
+      body: JSON.stringify({ name: 'Forged' }),
+    });
+    expect(forged.status).toBe(401);
+
+    // Signed honestly, the stranger is authenticated as the stranger and is not the owner.
+    const strangerUpdate = await signedHeaders(stranger, { action: 'business:update', businessId, scope: businessId });
+    const denied = await fetch(`${baseUrl()}/api/seller/businesses/${businessId}`, {
+      method: 'PATCH',
+      headers: strangerUpdate,
+      body: JSON.stringify({ name: 'Taken over' }),
+    });
+    expect(denied.status).toBe(403);
+
+    const ownerUpdate = await signedHeaders(owner, { action: 'business:update', businessId, scope: businessId });
+    const allowed = await fetch(`${baseUrl()}/api/seller/businesses/${businessId}`, {
+      method: 'PATCH',
+      headers: ownerUpdate,
+      body: JSON.stringify({ name: 'P2 Seller renamed' }),
+    });
+    expect(allowed.status).toBe(200);
+    const replay = await fetch(`${baseUrl()}/api/seller/businesses/${businessId}`, {
+      method: 'PATCH',
+      headers: ownerUpdate,
+      body: JSON.stringify({ name: 'Replayed' }),
+    });
+    expect(replay.status).toBe(401);
+    expect((await prisma.business.findUniqueOrThrow({ where: { id: businessId } })).name).toBe('P2 Seller renamed');
+  });
+
+  it('consumes only on exact nonce, action, business and scope, once, before expiry', async () => {
+    const expiresAt = new Date(Date.now() + 60_000);
+    const issueOne = () => issueSellerAuthorizationChallenge(prisma, {
+      action: 'rules:create', businessId, scope: businessId, expiresAt,
+    });
+    const nonce = await issueOne();
+    const exact = { nonce, action: 'rules:create', businessId, scope: businessId };
+    for (const wrong of [
+      { ...exact, action: 'rules:delete' },
+      { ...exact, businessId: 'other-business' },
+      { ...exact, scope: 'other-scope' },
+      { ...exact, nonce: crypto.randomBytes(32).toString('hex') },
+    ]) {
+      await expect(consumeSellerAuthorizationChallenge(prisma, wrong)).rejects.toThrow('invalid, expired, or already used');
+    }
+    await expect(consumeSellerAuthorizationChallenge(prisma, exact)).resolves.toBeUndefined();
+    await expect(consumeSellerAuthorizationChallenge(prisma, exact)).rejects.toThrow('already used');
+
+    const expiredNonce = await issueOne();
+    await prisma.sellerAuthorizationChallenge.update({
+      where: { nonce: expiredNonce },
+      data: { expiresAt: new Date(Date.now() - 1000) },
+    });
+    await expect(consumeSellerAuthorizationChallenge(prisma, { ...exact, nonce: expiredNonce }))
+      .rejects.toThrow('invalid, expired, or already used');
+  });
+
+  it('never puts a target wallet into the challenge: fixed scope, Target line bound from the body', async () => {
+    const operatorA = ethers.Wallet.createRandom().address;
+    const operatorB = ethers.Wallet.createRandom().address;
+    const bare = (address: string) => address.slice(2).toLowerCase();
+
+    // Wallet-bearing scope or business fields are refused at issuance; nothing is stored.
+    const before = await prisma.sellerAuthorizationChallenge.count();
+    for (const params of [
+      { action: 'operators:create', businessId, scope: operatorA.toLowerCase() },
+      { action: 'rewards:reward-wallet', businessId, scope: operatorA },
+      { action: 'rules:create', businessId: operatorA, scope: 'x' },
+      { action: 'operators:create', businessId, scope: `op-${operatorA.slice(2)}`.replace('op-', 'op-0x') },
+    ]) {
+      expect((await issue(params)).status).toBe(400);
+    }
+    expect(await prisma.sellerAuthorizationChallenge.count()).toBe(before);
+
+    // Requests our clients build for the two targeted actions carry no address (URL and row).
+    const challengeUrls: string[] = [];
+    async function targetedHeaders(signer: ethers.HDNodeWallet, action: string, scope: string, target: string) {
+      const query = new URLSearchParams({ action, businessId, scope });
+      challengeUrls.push(query.toString());
+      const issued = await issue(Object.fromEntries(query));
+      expect(issued.status).toBe(200);
+      const challenge = JSON.parse(issued.text) as { message: string; timestamp: string; nonce: string };
+      return {
+        'content-type': 'application/json',
+        'x-ifr-wallet': signer.address,
+        'x-ifr-signature': await signer.signMessage(`${challenge.message}\nTarget: ${target.toLowerCase()}`),
+        'x-ifr-timestamp': challenge.timestamp,
+        'x-ifr-nonce': challenge.nonce,
+      };
+    }
+    const post = (headers: Record<string, string>, walletAddress: string) =>
+      fetch(`${baseUrl()}/api/seller/businesses/${businessId}/operators`, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ walletAddress, label: 'Till' }),
+      });
+
+    // A signature over target A cannot be used with body target B.
+    const signedForA = await targetedHeaders(owner, 'operators:create', 'operator-wallet', operatorA);
+    expect((await post(signedForA, operatorB)).status).toBe(401);
+    expect(await prisma.checkoutOperator.count({ where: { businessId } })).toBe(0);
+    // A message signed without the Target line is not accepted either.
+    const untargeted = await signedHeaders(owner, { action: 'operators:create', businessId, scope: 'operator-wallet' });
+    expect((await post(untargeted, operatorA)).status).toBe(401);
+
+    const okHeaders = await targetedHeaders(owner, 'operators:create', 'operator-wallet', operatorA);
+    expect((await post(okHeaders, operatorA)).status).toBe(201);
+    expect((await post(okHeaders, operatorA)).status).toBe(401); // replay
+
+    const expiring = await targetedHeaders(owner, 'operators:create', 'operator-wallet', operatorB);
+    await prisma.sellerAuthorizationChallenge.update({
+      where: { nonce: expiring['x-ifr-nonce'] },
+      data: { expiresAt: new Date(Date.now() - 1000) },
+    });
+    expect((await post(expiring, operatorB)).status).toBe(401); // expired
+
+    await targetedHeaders(owner, 'rewards:reward-wallet', 'reward-wallet', operatorB);
+    for (const url of challengeUrls) {
+      expect(url.toLowerCase()).not.toContain(bare(operatorA));
+      expect(url.toLowerCase()).not.toContain(bare(operatorB));
+      expect(url).not.toMatch(/0x[0-9a-f]{40}/i);
+    }
+    const rows = JSON.stringify(await prisma.sellerAuthorizationChallenge.findMany()).toLowerCase();
+    expect(rows).not.toMatch(/0x[0-9a-f]{40}/);
+    expect(rows).not.toContain(bare(operatorA));
+    expect(rows).not.toContain(bare(operatorB));
+    await prisma.checkoutOperator.deleteMany({ where: { businessId } });
+  });
+
+  it('refuses wallet-shaped or unknown scope/business at issuance in any case and stores nothing', async () => {
+    const hex = ethers.Wallet.createRandom().address.slice(2);
+    const before = await prisma.sellerAuthorizationChallenge.count();
+    const refused: Array<Record<string, string>> = [];
+    for (const variant of [`0X${hex}`, `0X${hex.toUpperCase()}`, `0x${hex.toUpperCase()}`, hex.toLowerCase(), `op-0X${hex}`]) {
+      refused.push({ action: 'operators:create', businessId, scope: variant });
+      refused.push({ action: 'rules:create', businessId: variant, scope: businessId });
+      refused.push({ action: 'business:list', businessId: variant });
+      refused.push({ action: 'business:slug', businessId, scope: variant.toLowerCase() });
+    }
+    // Unknown scope shapes for each targeted / fixed-scope action are refused too.
+    refused.push({ action: 'operators:create', businessId, scope: 'anything-else' });
+    refused.push({ action: 'rewards:reward-wallet', businessId, scope: businessId });
+    refused.push({ action: 'rules:create', businessId, scope: 'free-text' });
+    refused.push({ action: 'rules:create', businessId: 'not-an-id', scope: businessId });
+    refused.push({ action: 'passes:bind', businessId, scope: `${'P'.repeat(32)}:free` });
+    for (const params of refused) {
+      const result = await issue(params);
+      expect({ params, status: result.status }).toEqual({ params, status: 400 });
+    }
+    expect(await prisma.sellerAuthorizationChallenge.count()).toBe(before);
+    const rows = JSON.stringify(await prisma.sellerAuthorizationChallenge.findMany()).toLowerCase();
+    expect(rows).not.toContain(hex.toLowerCase());
+
+    // The route shapes in use stay accepted.
+    for (const params of [
+      { action: 'business:create', businessId: 'new', scope: 'new' },
+      { action: 'business:create', businessId: 'new', scope: 'athens-ifr-cafe' },
+      { action: 'rules:create', businessId, scope: businessId },
+      { action: 'operators:create', businessId, scope: 'operator-wallet' },
+      { action: 'rewards:reward-wallet', businessId, scope: 'owner-wallet' },
+      { action: 'sessions:create', businessId, scope: 'default' },
+      { action: 'passes:bind', businessId, scope: `${'P'.repeat(32)}:${businessId}` },
+    ]) {
+      expect({ params, status: (await issue(params)).status }).toEqual({ params, status: 200 });
+    }
+  });
+
+  it('binds the Target line into the verified message', async () => {
+    const wallet = ethers.Wallet.createRandom();
+    const targetA = ethers.Wallet.createRandom().address;
+    const targetB = ethers.Wallet.createRandom().address;
+    const timestamp = Date.now().toString();
+    const binding = { nonce: freshNonce(), scope: 'reward-wallet' };
+    const message = buildSellerAuthMessage(CONTEXT, 'rewards:reward-wallet', 'biz_1', timestamp, { ...binding, target: targetA });
+    expect(message.split('\n').at(-1)).toBe(`Target: ${targetA.toLowerCase()}`);
+    const input = {
+      context: CONTEXT, walletAddress: wallet.address, signature: await wallet.signMessage(message), timestamp,
+      action: 'rewards:reward-wallet', businessId: 'biz_1', ...binding,
+    };
+    expect(verifySellerSignature({ ...input, target: targetA })).toBe(wallet.address);
+    expect(verifySellerSignature({ ...input, target: targetA.toLowerCase() })).toBe(wallet.address);
+    expect(() => verifySellerSignature({ ...input, target: targetB })).toThrow('signature mismatch');
+    expect(() => verifySellerSignature(input)).toThrow('signature mismatch');
+  });
+
+  it('keeps our own clients from sending a wallet to the challenge endpoint', () => {
+    const repo = path.resolve(__dirname, '..', '..', '..', '..');
+    const sources = [
+      'apps/benefits-network/frontend/src/lib/api.ts',
+      'apps/benefits-network/backend/scripts/seller-wallet-smoke.js',
+      'apps/sdk/src/benefits.ts',
+      'apps/sdk/dist/benefits.js',
+    ];
+    for (const relative of sources) {
+      const source = fs.readFileSync(path.join(repo, relative), 'utf8');
+      const start = source.indexOf('auth-message');
+      expect(start).toBeGreaterThan(-1);
+      // The function that builds the challenge request takes no wallet and its query carries none.
+      const fnStart = Math.max(source.lastIndexOf('function ', start), source.lastIndexOf('async ', start));
+      expect(fnStart).toBeGreaterThan(-1);
+      const queries = source.slice(fnStart, start + 400).match(/URLSearchParams\(\{[^}]*\}\)/g) ?? [];
+      expect(queries.length).toBeGreaterThan(0);
+      const sendsWallet = /wallet/i.test(source.slice(fnStart, start).replace(/^.*\n/, '').replace(/\/\/.*$/gm, ''))
+        || queries.some((query) => /wallet/i.test(query));
+      expect({ file: relative, sendsWallet }).toEqual({ file: relative, sendsWallet: false });
+    }
   });
 });

@@ -16,7 +16,28 @@ export class SellerAuthError extends Error {
 export type SellerAuthBinding = {
   nonce: string;
   scope: string;
+  /**
+   * Target wallet of the action (operators:create, rewards:reward-wallet). It never travels in the
+   * challenge URL and is never stored with the challenge: the client appends it to the server-issued
+   * message as the final `Target:` line, and the server rebuilds that line from the authenticated request
+   * body at verification.
+   */
+  target?: string;
 };
+
+/**
+ * Address-shaped text - forbidden in challenge scope and business fields (defense in depth behind the
+ * per-action shape allowlist). Case-insensitive prefix (0x / 0X) and digits; also any bare run of 40+
+ * hex digits, so an address without prefix (or inside longer hex) is refused as well.
+ */
+export function containsWalletAddress(value: string) {
+  return /0x[0-9a-f]{40}/i.test(value) || /[0-9a-f]{40}/i.test(value);
+}
+
+/** The exact line a targeted seller authorization appends to the server-issued challenge message. */
+export function sellerAuthTargetLine(target: string) {
+  return `Target: ${normalizeAddress(target).toLowerCase()}`;
+}
 
 // Deployment identity bound into every seller authorization message.
 export type SellerAuthContext = {
@@ -64,6 +85,7 @@ export function buildSellerAuthMessage(
     `Timestamp: ${timestamp}`,
     `Expires: ${new Date(timestampMs + SELLER_AUTH_TTL_MS).toISOString()}`,
     `Only sign this message inside ${context.domain}.`,
+    ...(binding.target !== undefined ? [sellerAuthTargetLine(binding.target)] : []),
   ].join('\n');
 }
 
@@ -80,6 +102,8 @@ export function verifySellerSignature(input: {
   businessId?: string;
   nonce?: string;
   scope?: string;
+  /** Target wallet from the authenticated request body; rebuilt into the signed `Target:` line. */
+  target?: string;
 }): string {
   if (!isKnownSellerAction(input.action)) {
     throw new SellerAuthError('Unknown seller authorization action');
@@ -111,7 +135,7 @@ export function verifySellerSignature(input: {
       input.action,
       input.businessId || 'new',
       input.timestamp,
-      { nonce: input.nonce, scope: input.scope }
+      { nonce: input.nonce, scope: input.scope, target: input.target }
     );
     const recoveredAddress = normalizeAddress(ethers.verifyMessage(message, input.signature));
     if (recoveredAddress !== expectedAddress) {

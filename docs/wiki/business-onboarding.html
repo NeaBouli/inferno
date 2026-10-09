@@ -838,12 +838,12 @@ npm run dev
         <div class="qr-flow-arrow">&rarr;</div>
         <div class="qr-flow-step">
           <div class="step-num">3</div>
-          <div class="step-text">Customer reviews and confirms seller, product, discount and IFR threshold</div>
+          <div class="step-text">Customer reviews and signs the proof for this seller, product, discount and IFR threshold</div>
         </div>
         <div class="qr-flow-arrow">&rarr;</div>
         <div class="qr-flow-step">
           <div class="step-num">4</div>
-          <div class="step-text">Seller sees APPROVED or REJECTED and redeems an approval once</div>
+          <div class="step-text">Seller sees REDEEMED or REJECTED; a valid proof redeems the checkout once</div>
         </div>
       </div>
 
@@ -867,9 +867,10 @@ npm run dev
         <li>Seller chooses business categories and adds products or services.</li>
         <li>Seller defines discount rules by minimum IFR locked in IFRLock.</li>
         <li>Recommended: customer creates a private short-lived pass; seller scans it and binds the selected rule.</li>
-        <li>Customer reviews the exact seller, product, discount, locked-IFR threshold and any optional wallet-held IFR threshold in the original tab, then confirms.</li>
+        <li>Customer reviews the exact seller, product, discount, locked-IFR threshold and any optional wallet-held IFR threshold in the original tab, then signs the checkout proof.</li>
         <li>Compatible alternative: seller creates a short-lived rule-bound checkout QR that the customer scans and signs.</li>
-        <li>Seller sees APPROVED or REJECTED, redeems an approval once, and applies the configured benefit.</li>
+        <li>The customer proof redeems the checkout once when the signature matches the claimed wallet, a fresh on-chain read is eligible and the seller who opened the checkout is still authorized. Seller sees REDEEMED (or REJECTED, with the checkout left open) and applies the configured benefit. There is no separate seller redeem step.</li>
+        <li>The backend stores no customer wallet address or customer history; it keeps a merchant checkout record (shop, offer terms, status, times, lock source, self-redemption flag, the seller wallet that opened it). IFR does not enforce per-customer redemption limits; a seller that needs them enforces them in its own systems.</li>
         <li>Registered pilot partners may later receive PartnerVault rewards, paid in IFR only for verified checkout redemptions, valued in EUR, within a fixed budget set by a Governance proposal. Rewards are not active yet.</li>
       </ul>
 
@@ -926,7 +927,7 @@ npm run dev
       <div class="faq-item">
         <button class="faq-question">Can customers fake their lock status?</button>
         <div class="faq-answer">
-          <p>The backend verifies the current threshold directly through the <code>IFRLock</code> smart contract. The recommended QR contains only an opaque short-lived <code>/p/:passId</code> URL, not a wallet address, lock amount, signature, control token, rule or internal session ID. Separate customer and authorized-seller signatures bind the exact offer, and only an approved checkout can be redeemed once.</p>
+          <p>The backend verifies the current threshold directly through the <code>IFRLock</code> smart contract. The recommended QR contains only an opaque short-lived <code>/p/:passId</code> URL, not a wallet address, lock amount, signature, control token, rule or internal session ID. The authorized seller's signature opens the checkout for the exact offer; the customer's signature binds that wallet to this checkout and its terms, and a valid proof with a fresh eligible on-chain read redeems the checkout exactly once.</p>
         </div>
       </div>
 

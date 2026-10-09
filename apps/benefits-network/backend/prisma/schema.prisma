@@ -117,11 +117,17 @@ model Session {
   nonce            String     @unique
   expiresAt        DateTime
   status           String     @default("PENDING")
-  recoveredAddress String?
-  lockAmountRaw    String?
-  walletBalanceRaw String?
+  // Owner decision B (T-231b): no customer wallet, amount, block or other customer-derived value is
+  // persisted. Only the in-request outcome of the customer proof is kept.
   verifiedLockSource String?
-  verificationBlock Int?
+  selfRedemption   Boolean?
+  proofVersion     Int?
+  // Seller checkout confirmation (seller identity, not customer data): the authenticated,
+  // single-use sessions:create / passes:bind authorization that opened this checkout. Re-validated
+  // inside the final OPEN -> REDEEMED transaction.
+  confirmedByWallet String?
+  confirmedByRole  String?
+  confirmedByOperatorId String?
   reason           String?
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
@@ -135,13 +141,11 @@ model Session {
   @@index([businessId])
   @@index([benefitRuleId])
   @@index([benefitRuleId, status, redeemedAt], map: "Session_redemptionLimitLookup_idx")
-  @@index([recoveredAddress, createdAt, id], map: "Session_customerHistory_idx")
   @@index([status])
 }
 
 model CustomerPass {
   id            String   @id
-  walletAddress String
   controlHash   String   @unique
   status        String   @default("OPEN")
   expiresAt     DateTime
@@ -152,19 +156,6 @@ model CustomerPass {
   session       Session?
 
   @@index([status, expiresAt])
-  @@index([walletAddress, createdAt])
-}
-
-model CustomerPassChallenge {
-  nonce         String   @id
-  walletAddress String
-  issuedAt      DateTime
-  expiresAt     DateTime
-  consumedAt    DateTime?
-  createdAt     DateTime @default(now())
-
-  @@index([expiresAt])
-  @@index([walletAddress, consumedAt])
 }
 
 model SellerRewardLink {
@@ -193,8 +184,6 @@ model RewardEvent {
   sessionId        String   @unique
   session          Session  @relation(fields: [sessionId], references: [id])
   partnerId        String
-  customerWallet   String
-  lockAmountRaw    String
   chainId          Int
   status           String   @default("PENDING")
   reason           String?
@@ -202,7 +191,6 @@ model RewardEvent {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
-  @@unique([customerWallet, partnerId])
   @@index([businessId, status])
   @@index([partnerId])
 }
@@ -235,38 +223,17 @@ model AdminAuditLog {
   @@index([action, createdAt])
 }
 
+// Nonce-only seller challenge (owner decision B): no wallet, hash or wallet-derived value is stored.
+// The signing wallet is bound only by the signature over the server-issued message.
 model SellerAuthorizationChallenge {
-  nonce         String   @id
-  walletAddress String
-  action        String
-  businessId    String
-  scope         String
-  expiresAt     DateTime
-  consumedAt    DateTime?
-  createdAt     DateTime @default(now())
+  nonce      String    @id
+  action     String
+  businessId String
+  scope      String
+  expiresAt  DateTime
+  consumedAt DateTime?
+  createdAt  DateTime  @default(now())
 
   @@index([expiresAt])
-  @@index([walletAddress, action, businessId])
-}
-
-model CustomerHistoryChallenge {
-  nonce         String   @id
-  walletAddress String
-  issuedAt      DateTime
-  expiresAt     DateTime
-  consumedAt    DateTime?
-  createdAt     DateTime @default(now())
-
-  @@index([expiresAt])
-  @@index([walletAddress, consumedAt])
-}
-
-model CustomerHistoryAccess {
-  tokenHash     String   @id
-  walletAddress String
-  expiresAt     DateTime
-  createdAt     DateTime @default(now())
-
-  @@index([expiresAt])
-  @@index([walletAddress, expiresAt])
+  @@index([action, businessId])
 }

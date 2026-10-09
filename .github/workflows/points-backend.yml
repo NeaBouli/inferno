@@ -10,6 +10,8 @@ on:
       - 'scripts/ops/test_points_env_set_router.py'
       - 'scripts/ops/points-issuance-pause.py'
       - 'scripts/ops/test_points_issuance_pause.py'
+      - 'scripts/ops/points-voucher-impact.py'
+      - 'scripts/ops/test_points_voucher_impact.py'
       - '.github/workflows/points-backend.yml'
   pull_request:
     paths:
@@ -20,6 +22,8 @@ on:
       - 'scripts/ops/test_points_env_set_router.py'
       - 'scripts/ops/points-issuance-pause.py'
       - 'scripts/ops/test_points_issuance_pause.py'
+      - 'scripts/ops/points-voucher-impact.py'
+      - 'scripts/ops/test_points_voucher_impact.py'
       - '.github/workflows/points-backend.yml'
 
 permissions:
@@ -56,6 +60,7 @@ jobs:
         run: |
           PYTHONDONTWRITEBYTECODE=1 python3 scripts/ops/test_points_env_set_router.py
           PYTHONDONTWRITEBYTECODE=1 python3 scripts/ops/test_points_issuance_pause.py
+          PYTHONDONTWRITEBYTECODE=1 python3 scripts/ops/test_points_voucher_impact.py
       - run: npm ci
       - run: npm run test:dependencies
       - run: npx prisma generate

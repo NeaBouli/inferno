@@ -80,6 +80,17 @@ const rule = {
   updatedAt: new Date().toISOString(),
 };
 
+const checkoutTermsDigest = `sha256:${'a'.repeat(64)}`;
+// Mirrors the backend proof v2 text: the claimed wallet is bound inside the signed message.
+const checkoutProofMessage = [
+  'IFR Benefits Network - Checkout Proof',
+  'Version: ifr-benefits/checkout-proof/2',
+  `Wallet: ${customerWallet}`,
+  `Shop: ${businessId}`,
+  `Session: ${sessionId}`,
+  `Terms Digest: ${checkoutTermsDigest}`,
+].join('\n');
+
 function json(route, body, status = 200) {
   return route.fulfill({
     status,
@@ -174,15 +185,12 @@ function installApiMock(context, state, calls) {
       return json(route, { rules: [rule] });
     }
     if (method === 'POST' && pathname === '/api/passes/challenge') {
-      const body = request.postDataJSON();
-      assert.equal(body.walletAddress.toLowerCase(), customerWallet.toLowerCase());
-      return json(route, { message: 'Create IFR checkout pass', nonce: 'pass-create-nonce', expiresAt });
+      // Owner decision B (T-231b): pass creation needs no wallet signature; the route is gone.
+      return json(route, { error: 'Customer pass creation no longer takes a wallet signature.' }, 410);
     }
     if (method === 'POST' && pathname === '/api/passes') {
-      const body = request.postDataJSON();
-      assert.equal(body.walletAddress.toLowerCase(), customerWallet.toLowerCase());
-      assert.equal(body.nonce, 'pass-create-nonce');
-      assert.equal(body.signature, dummySignature);
+      // The pass is an opaque device-held capability: no wallet, nonce or signature is sent.
+      assert.deepEqual(request.postDataJSON(), {}, 'pass creation must not send wallet data');
       state.pass = 'OPEN';
       return json(route, { passId, controlToken, expiresAt, qrUrl: `/p/${passId}` }, 201);
     }
@@ -211,10 +219,12 @@ function installApiMock(context, state, calls) {
     if (method === 'GET' && pathname === '/api/seller/auth-message') {
       const action = url.searchParams.get('action');
       const scope = url.searchParams.get('scope');
-      const nonce = action === 'passes:bind' ? 'pass-bind-nonce' : 'session-redeem-nonce';
-      if (action === 'passes:bind') assert.equal(scope, `${passId}:${ruleId}`);
-      if (action === 'sessions:redeem') assert.equal(scope, sessionId);
-      assert.equal(url.searchParams.get('walletAddress')?.toLowerCase(), sellerWallet.toLowerCase());
+      assert.equal(action, 'passes:bind', 'the seller signs only the pass bind (no separate redeem step)');
+      const nonce = 'pass-bind-nonce';
+      assert.equal(scope, `${passId}:${ruleId}`);
+      // Wallet-free challenge (owner decision B): no wallet in the challenge URL.
+      assert.equal(url.searchParams.has('walletAddress'), false, 'the challenge URL carries no wallet');
+      assert.ok(!/0x[0-9a-f]{40}/i.test(url.search), 'no address-shaped text in the challenge URL');
       return json(route, { message: `${action} ${scope}`, timestamp: new Date().toISOString(), nonce, expiresAt });
     }
     if (method === 'POST' && pathname === `/api/passes/${passId}/bind`) {
@@ -243,13 +253,35 @@ function installApiMock(context, state, calls) {
     }
     if (method === 'POST' && pathname === `/api/passes/${passId}/challenge`) {
       assert.equal(request.headers().authorization, `Bearer ${controlToken}`);
-      return json(route, { message: 'Confirm UI E2E Seller and Premium checkout', timestamp: new Date().toISOString(), expiresAt });
+      assert.equal(request.postDataJSON().walletAddress?.toLowerCase(), customerWallet.toLowerCase());
+      return json(route, { message: checkoutProofMessage });
     }
     if (method === 'POST' && pathname === `/api/passes/${passId}/confirm`) {
       assert.equal(request.headers().authorization, `Bearer ${controlToken}`);
-      assert.equal(request.postDataJSON().signature, dummySignature);
-      state.checkout = 'APPROVED';
-      return json(route, { status: 'APPROVED', reason: null, lockedAmount: '10000', wallet: customerWallet });
+      const body = request.postDataJSON();
+      assert.equal(body.walletAddress?.toLowerCase(), customerWallet.toLowerCase());
+      assert.equal(body.signature, dummySignature);
+      state.confirmAttempts += 1;
+      if (state.checkout !== 'PENDING') {
+        return json(route, { error: 'Checkout is no longer pending.' }, 409);
+      }
+      // The customer's proof redeems the checkout atomically (PENDING -> REDEEMED).
+      state.checkout = 'REDEEMED';
+      return json(route, {
+        status: 'REDEEMED',
+        wallet: customerWallet,
+        eligible: true,
+        redeemedAt: new Date().toISOString(),
+        benefit,
+        proof: {
+          version: 'ifr-benefits/checkout-proof/2',
+          sessionId,
+          businessId,
+          termsDigest: checkoutTermsDigest,
+          message: checkoutProofMessage,
+          selfRedemption: false,
+        },
+      });
     }
     if (method === 'POST' && pathname === `/api/passes/${passId}/cancel`) {
       assert.equal(request.headers().authorization, `Bearer ${controlToken}`);
@@ -262,13 +294,9 @@ function installApiMock(context, state, calls) {
       return json(route, { status: 'CANCELLED' });
     }
     if (method === 'POST' && pathname === `/api/sessions/${sessionId}/redeem`) {
+      // Removed seller redeem step: the backend answers 410; the UI must never call it.
       state.redeemAttempts += 1;
-      if (state.checkout !== 'APPROVED') {
-        return json(route, { error: 'Checkout is not approved or was already redeemed.' }, 409);
-      }
-      assertSellerHeaders(request, 'session-redeem-nonce');
-      state.checkout = 'REDEEMED';
-      return json(route, { status: 'REDEEMED' });
+      return json(route, { error: 'Separate seller redemption was removed.' }, 410);
     }
 
     return json(route, { error: `Unexpected UI E2E request: ${method} ${pathname}` }, 500);
@@ -362,6 +390,7 @@ async function run() {
       pass: 'NONE',
       checkout: 'PENDING',
       redeemAttempts: 0,
+      confirmAttempts: 0,
       cancelAttempts: 0,
       cancelFailure: false,
       controlGate: null,
@@ -536,37 +565,44 @@ async function run() {
     state.controlGate = null;
     await assertNoAxeViolations(customer, `exact bound-offer confirmation (${origin}/#customer-pass, offer bound)`);
     await confirmOffer.click();
-    await passPanel.getByText('IFR access approved. The seller can now redeem this checkout once.').waitFor();
-    assert.equal(state.checkout, 'APPROVED');
-
-    await seller.getByRole('heading', { name: 'Approved', exact: true }).waitFor({ timeout: 10_000 });
-    const redeem = seller.getByRole('button', { name: 'Redeem', exact: true }).first();
-    await redeem.click();
-    await seller.getByText('REDEEMED', { exact: true }).first().waitFor();
+    await passPanel.getByText('Checkout redeemed once. Show this screen to the seller; their console shows the same result.').waitFor();
     assert.equal(state.checkout, 'REDEEMED');
-    assert.equal(await redeem.isDisabled(), true, 'redeem must be disabled after single use');
-    await redeem.evaluate((button) => button.click());
+    assert.equal(state.confirmAttempts, 1, 'one customer proof must redeem the checkout exactly once');
+    // A redeemed checkout must not offer a second confirmation.
+    await confirmOffer.waitFor({ state: 'detached', timeout: 10_000 });
+
+    await seller.getByRole('heading', { level: 3, name: 'Redeemed - apply the discount', exact: true }).waitFor({ timeout: 10_000 });
+    await seller.getByText('REDEEMED', { exact: true }).first().waitFor();
+    assert.equal(
+      await seller.getByRole('button', { name: /^Redeem/ }).count(),
+      0,
+      'the seller console must not offer a separate redeem step'
+    );
     await seller.waitForTimeout(100);
-    assert.equal(state.redeemAttempts, 1, 'disabled redeemed checkout must not submit a replay');
+    assert.equal(state.redeemAttempts, 0, 'no client may call the removed seller redeem endpoint');
     await passPanel.getByRole('button', { name: 'Refresh', exact: true }).click();
     await passPanel.getByRole('button', { name: 'New pass', exact: true }).click();
     await passPanel.getByRole('button', { name: 'Create customer QR', exact: true }).waitFor();
     assert.equal(state.cancelAttempts, 3, 'a terminal checkout should clear locally without a redundant cancellation');
 
-    for (const requiredCall of [
+    for (const forbiddenCall of [
       'POST /api/passes/challenge',
+      `POST /api/sessions/${sessionId}/redeem`,
+    ]) {
+      assert.ok(!calls.includes(forbiddenCall), `removed API transition was called: ${forbiddenCall}`);
+    }
+    for (const requiredCall of [
       'POST /api/passes',
       `POST /api/passes/${passId}/bind`,
       `POST /api/passes/${passId}/challenge`,
       `POST /api/passes/${passId}/confirm`,
       `POST /api/passes/${passId}/cancel`,
-      `POST /api/sessions/${sessionId}/redeem`,
     ]) {
       assert.ok(calls.includes(requiredCall), `missing API transition: ${requiredCall}`);
     }
     assert.deepEqual(pageErrors, []);
     await Promise.all([customerContext.close(), sellerContext.close()]);
-    console.log('[benefits-customer-pass-ui] PASS - create -> bind -> exact-offer confirm -> redeem once');
+    console.log('[benefits-customer-pass-ui] PASS - create -> bind -> exact-offer proof redeems once');
   } finally {
     if (browser) await browser.close();
     server.kill('SIGTERM');

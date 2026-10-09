@@ -2,7 +2,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { createHash, randomBytes } = require('crypto');
+const { createHash } = require('crypto');
 const { ethers: ethersUtils } = require('ethers');
 const { chromium, devices } = require('playwright');
 
@@ -132,16 +132,19 @@ async function verifyHttpSurface() {
   assert((await serviceWorker.text()).includes("ifr-benefits-v25"), 'service worker cache version mismatch');
   log('PWA assets OK');
 
-  // Throwaway address: issues one expiring read challenge, never signs or consumes it.
-  const smokeWallet = `0x${randomBytes(20).toString('hex')}`;
-  const auth = await fetchJson(
-    `/api/seller/auth-message?action=business:list&businessId=seller&walletAddress=${smokeWallet}`
-  );
+  // Issues one expiring, wallet-free read challenge; never signs or consumes it.
+  const auth = await fetchJson('/api/seller/auth-message?action=business:list&businessId=seller');
   assert(auth.message.includes('IFR Benefits Network - Seller Authorization'), 'seller auth message header mismatch');
-  assert(auth.message.includes('Domain: shop.ifrunit.tech\n'), 'seller auth domain binding missing');
-  assert(/\nChain ID: \d+\n/.test(auth.message), 'seller auth chain binding missing');
+  // Receipt context (F1): the frontend verifies device receipts against its own host and chain, so the
+  // backend's SELLER_AUTH_DOMAIN and CHAIN_ID must equal the served host and the frontend chain.
+  const expectedHost = new URL(baseUrl).host;
+  const expectedChainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID || 1);
+  assert(auth.domain === expectedHost, 'backend SELLER_AUTH_DOMAIN differs from the frontend host');
+  assert(auth.chainId === expectedChainId, 'backend CHAIN_ID differs from the frontend chain');
+  assert(auth.message.includes(`Domain: ${expectedHost}\n`), 'seller auth domain binding missing');
+  assert(auth.message.includes(`\nChain ID: ${expectedChainId}\n`), 'seller auth chain binding missing');
   assert(/^[0-9a-f]{64}$/.test(auth.nonce || ''), 'seller auth nonce missing');
-  assert(auth.message.includes('Only sign this message inside shop.ifrunit.tech.'), 'seller auth safety line missing');
+  assert(auth.message.includes(`Only sign this message inside ${expectedHost}.`), 'seller auth safety line missing');
   assert(auth.timestamp && auth.expiresAt, 'seller auth challenge missing timestamp/expiry');
   log('Seller auth challenge OK');
 
@@ -294,8 +297,8 @@ function eligibilityDiscoveryResponse() {
         requiredLockIFR: 1000,
         minIFRHeld: 1000,
         lockSource: 'ifrlock',
-        dailyRedemptionLimit: 1,
-        monthlyRedemptionLimit: 10,
+        dailyRedemptionLimit: 0,
+        monthlyRedemptionLimit: 0,
         business,
         product: null,
       },
@@ -308,8 +311,8 @@ function eligibilityDiscoveryResponse() {
         requiredLockIFR: 2500,
         minIFRHeld: 0,
         lockSource: 'ifrlock',
-        dailyRedemptionLimit: 1,
-        monthlyRedemptionLimit: 4,
+        dailyRedemptionLimit: 0,
+        monthlyRedemptionLimit: 0,
         business,
         product: null,
       },
@@ -351,8 +354,8 @@ async function installEligibilityRoutes(page) {
             minIFRHeld: 0,
             lockSource: 'ifrlock',
             ttlSeconds: 90,
-            dailyRedemptionLimit: 1,
-            monthlyRedemptionLimit: 4,
+            dailyRedemptionLimit: 0,
+            monthlyRedemptionLimit: 0,
           }],
         }],
       }),
@@ -507,113 +510,73 @@ async function addEligibilityWallet(context, { rpcError = false } = {}) {
   }, { shouldFail: rpcError });
 }
 
+const { receiptProof } = require('./lib/benefits-receipt-fixture.cjs');
+
+// Owner decision B (T-231b): customer history is device-local only. The server keeps no
+// customer-linked history (/api/customer/history* answers 410); receipts carry the exact signed
+// proof text and signature so this device can re-verify them offline.
 async function verifyCustomerWalletHistory() {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({ serviceWorkers: 'block' });
   await addEligibilityWallet(context);
   const page = await context.newPage();
-  const expectedWallet = '0x2222222222222222222222222222222222222222';
-  let challengeCount = 0;
-  let authorizationCount = 0;
-  let historyRequestCount = 0;
-  const historyRequests = [];
-
+  // Deterministic throwaway test key (no funds, smoke-only) so the receipt has a real EIP-191 signature.
+  const receiptSigner = new ethersUtils.Wallet(`0x${'42'.repeat(32)}`);
+  const receiptWallet = receiptSigner.address;
+  const validItem = {
+    sessionId: 'customer-benefit-redeemed',
+    businessId: 'smoke-seller-coffee',
+    sellerName: 'IFR Coffee House',
+    status: 'REDEEMED',
+    discountPercent: 15,
+    requiredLockIFR: 1000,
+    minIFRHeld: 250,
+    lockSource: 'commitment_time_only',
+    ruleLabel: 'Premium coffee',
+    productName: 'Reserve espresso',
+    basePriceMinor: null,
+    currency: null,
+    expiresAt: '2026-07-19T09:10:00.000Z',
+    redeemedAt: '2026-07-19T09:05:00.000Z',
+    walletLabel: `${receiptWallet.slice(0, 6)}...${receiptWallet.slice(-4)}`,
+    savedAt: '2026-07-19T09:05:30.000Z',
+  };
+  const tamperedItem = {
+    ...validItem,
+    sessionId: 'customer-benefit-older',
+    businessId: 'smoke-seller-older',
+    sellerName: 'Older IFR Studio',
+    discountPercent: 10,
+    requiredLockIFR: 2500,
+    minIFRHeld: 0,
+    lockSource: 'ifrlock',
+    ruleLabel: 'Studio access',
+    productName: 'Member session',
+    expiresAt: '2026-07-18T09:10:00.000Z',
+    redeemedAt: '2026-07-18T09:05:00.000Z',
+    savedAt: '2026-07-18T09:05:30.000Z',
+  };
+  const validProof = receiptProof(validItem, { wallet: receiptWallet, audience: new URL(baseUrl).host, chainId: Number(process.env.NEXT_PUBLIC_CHAIN_ID || 1) });
+  const tamperedProof = receiptProof(tamperedItem, { wallet: receiptWallet, audience: new URL(baseUrl).host, chainId: Number(process.env.NEXT_PUBLIC_CHAIN_ID || 1) });
+  const receipts = [
+    { ...validItem, proof: { ...validProof, signature: await receiptSigner.signMessage(validProof.message) } },
+    // Signature over a different text: device verification must fail closed.
+    { ...tamperedItem, proof: { ...tamperedProof, signature: await receiptSigner.signMessage(validProof.message) } },
+  ];
+  await context.addInitScript((items) => {
+    if (!window.sessionStorage.getItem('ifr.smoke.receiptsSeeded')) {
+      window.localStorage.setItem('ifr.shop.customerProofHistory.v1', JSON.stringify(items));
+      window.sessionStorage.setItem('ifr.smoke.receiptsSeeded', '1');
+    }
+  }, receipts);
+  const serverHistoryCalls = [];
   await page.route('**/api/customer/history**', async (route) => {
-    const request = route.request();
-    const url = new URL(request.url());
-    if (url.pathname === '/api/customer/history/challenge') {
-      challengeCount += 1;
-      const body = request.postDataJSON();
-      assert(body.walletAddress.toLowerCase() === expectedWallet, 'customer history challenge used the wrong wallet');
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          message: `IFR Benefits Network - Customer History Authorization\nNonce: smoke-customer-${challengeCount}`,
-          nonce: `${String(challengeCount).padStart(64, '0')}`,
-          expiresAt: '2026-07-19T09:10:00.000Z',
-        }),
-      });
-      return;
-    }
-    if (url.pathname === '/api/customer/history/authorize') {
-      authorizationCount += 1;
-      const body = request.postDataJSON();
-      assert(body.walletAddress.toLowerCase() === expectedWallet, 'customer history authorization used the wrong wallet');
-      assert(Boolean(body.signature), 'customer history authorization omitted the wallet signature');
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({ accessToken: `customer-access-token-${authorizationCount}`, expiresAt: '2026-07-19T09:15:00.000Z' }),
-      });
-      return;
-    }
-    if (url.pathname === '/api/customer/history' && request.method() === 'GET') {
-      historyRequestCount += 1;
-      historyRequests.push({
-        authorization: request.headers().authorization,
-        cursor: url.searchParams.get('cursor'),
-        snapshot: url.searchParams.get('snapshot'),
-      });
-      if (historyRequestCount === 2) {
-        await route.fulfill({
-          status: 401,
-          contentType: 'application/json',
-          body: JSON.stringify({ error: 'Customer history access expired' }),
-        });
-        return;
-      }
-      if (historyRequestCount === 4) await new Promise((resolve) => setTimeout(resolve, 300));
-      const older = Boolean(url.searchParams.get('cursor'));
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify({
-          sessions: older ? [{
-            id: 'customer-benefit-older',
-            status: 'APPROVED',
-            reason: null,
-            expiresAt: '2026-07-18T09:10:00.000Z',
-            createdAt: '2026-07-18T09:00:00.000Z',
-            updatedAt: '2026-07-18T09:01:00.000Z',
-            redeemedAt: null,
-            seller: { id: 'smoke-seller-older', name: 'Older IFR Studio' },
-            benefit: {
-              benefitRuleId: 'older-rule', label: 'Studio access', category: 'Services',
-              productName: 'Member session', discountPercent: 10, requiredLockIFR: 2500,
-              minIFRHeld: 0,
-              lockSource: 'ifrlock',
-              verifiedLockSource: null,
-              verificationBlock: null,
-              dailyRedemptionLimit: 0, monthlyRedemptionLimit: 0,
-            },
-          }] : [{
-            id: 'customer-benefit-redeemed',
-            status: 'REDEEMED',
-            reason: null,
-            expiresAt: '2026-07-19T09:10:00.000Z',
-            createdAt: '2026-07-19T09:00:00.000Z',
-            updatedAt: '2026-07-19T09:05:00.000Z',
-            redeemedAt: '2026-07-19T09:05:00.000Z',
-            seller: { id: 'smoke-seller-coffee', name: 'IFR Coffee House' },
-            benefit: {
-              benefitRuleId: 'coffee-rule', label: 'Premium coffee', category: 'Coffee',
-              productName: 'Reserve espresso', discountPercent: 15, requiredLockIFR: 1000,
-              minIFRHeld: 250,
-              lockSource: 'commitment_time_only',
-              verifiedLockSource: 'commitment_time_only',
-              verificationBlock: 123,
-              dailyRedemptionLimit: 1, monthlyRedemptionLimit: 4,
-            },
-          }],
-          pagination: older
-            ? { limit: 20, hasMore: false, nextCursor: null, snapshot: '2026-07-19T09:06:00.000Z' }
-            : { limit: 20, hasMore: true, nextCursor: 'customer-benefit-redeemed', snapshot: '2026-07-19T09:06:00.000Z' },
-        }),
-      });
-      return;
-    }
-    await route.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ error: 'Not mocked' }) });
+    serverHistoryCalls.push(`${route.request().method()} ${new URL(route.request().url()).pathname}`);
+    await route.fulfill({
+      status: 410,
+      contentType: 'application/json',
+      body: JSON.stringify({ error: 'Customer history is stored only on the customer device.', storage: 'device-local' }),
+    });
   });
   await installEligibilityRoutes(page);
   await installEligibilityRpc(page);
@@ -622,47 +585,39 @@ async function verifyCustomerWalletHistory() {
     await gotoAppPage(page, '/');
     await connectEligibilityWallet(page);
     await expectText(page, 'Connected: 0x2222...2222');
-    await page.getByRole('button', { name: 'Load wallet history', exact: true }).click();
-    await expectText(page, 'IFR Coffee House');
-    await expectText(page, 'Loaded 1 verified benefit for this wallet.');
-    assert(challengeCount === 1 && authorizationCount === 1, 'initial customer history load did not use one signed access exchange');
-    assert(historyRequests[0].authorization === 'Bearer customer-access-token-1', 'customer history omitted its memory-only access token');
+    const history = page.getByRole('heading', { name: 'My benefits', exact: true }).locator('xpath=ancestor::section[1]');
+    await history.getByTestId('device-history-notice').waitFor({ timeout: timeoutMs });
+    await expectText(page, 'Stored only on this device');
+    assert(await history.getByTestId('device-receipt').count() === 2, 'device-local receipts did not render');
+    assert(await page.getByRole('button', { name: 'Load wallet history', exact: true }).count() === 0, 'server history loader is still offered');
 
-    await page.getByRole('button', { name: 'Load older benefits', exact: true }).click();
-    await expectText(page, 'Older IFR Studio');
-    await expectText(page, 'Loaded 1 older benefit.');
-    assert(challengeCount === 2 && authorizationCount === 2, 'expired customer history access was not reauthorized once');
-    assert(historyRequests[1].cursor === 'customer-benefit-redeemed', 'older customer history used the wrong cursor');
-    assert(historyRequests[1].snapshot === '2026-07-19T09:06:00.000Z', 'older customer history lost the fixed snapshot');
-    assert(historyRequests[2].authorization === 'Bearer customer-access-token-2', 'reauthorized history did not use the refreshed token');
+    const valid = history.getByTestId('device-receipt').filter({ hasText: 'IFR Coffee House' });
+    await valid.getByRole('button', { name: 'Verify receipt', exact: true }).click();
+    await valid.getByText('Signed terms verified on this device', { exact: false }).waitFor({ timeout: timeoutMs });
+    const tampered = history.getByTestId('device-receipt').filter({ hasText: 'Older IFR Studio' });
+    await tampered.getByRole('button', { name: 'Verify receipt', exact: true }).click();
+    await tampered.getByText('Receipt invalid: The signature does not match the wallet in the signed text.', { exact: true }).waitFor({ timeout: timeoutMs });
     if (shouldScreenshot) {
       fs.mkdirSync(screenshotDir, { recursive: true });
-      await page.getByRole('heading', { name: 'My benefits', exact: true })
-        .locator('xpath=ancestor::section[1]')
-        .screenshot({
-          animations: 'disabled',
-          timeout: screenshotTimeoutMs,
-          path: path.join(screenshotDir, 'benefits-customer-wallet-history.png'),
-        });
+      await history.screenshot({
+        animations: 'disabled',
+        timeout: screenshotTimeoutMs,
+        path: path.join(screenshotDir, 'benefits-customer-wallet-history.png'),
+      });
     }
+    assert(await page.getByText(receiptWallet, { exact: false }).count() === 0, 'customer history UI exposed a full wallet address');
 
-    await page.evaluate(() => window.__ifrSetEligibilityWallet('0x3333333333333333333333333333333333333333'));
-    await expectText(page, 'Connected: 0x3333...3333');
-    assert(await page.getByText('IFR Coffee House', { exact: true }).count() === 0, 'wallet switch exposed the previous customer history');
-
-    await page.evaluate((walletAddress) => window.__ifrSetEligibilityWallet(walletAddress), expectedWallet);
-    await expectText(page, 'Connected: 0x2222...2222');
-    await page.getByRole('button', { name: 'Load wallet history', exact: true }).click();
-    await page.waitForTimeout(50);
-    await page.evaluate(() => window.__ifrSetEligibilityWallet('0x3333333333333333333333333333333333333333'));
-    await page.waitForTimeout(400);
-    assert(await page.getByText('IFR Coffee House', { exact: true }).count() === 0, 'stale customer history rendered after a wallet switch');
+    await history.getByRole('button', { name: 'Clear', exact: true }).click();
+    await expectText(page, 'No receipts on this device yet.');
+    assert(await history.getByTestId('device-receipt').count() === 0, 'clearing did not remove device-local receipts');
     assert(
-      await page.getByRole('button', { name: 'Load wallet history', exact: true }).isEnabled(),
-      'wallet switch left customer history stuck in a loading state'
+      await page.evaluate(() => window.localStorage.getItem('ifr.shop.customerProofHistory.v1')) === null,
+      'clearing did not remove the stored receipts'
     );
-    assert(await page.getByText(expectedWallet, { exact: false }).count() === 0, 'customer history UI exposed a full wallet address');
-    log('Signed cross-device customer history OK');
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await expectText(page, 'No receipts on this device yet.');
+    assert(serverHistoryCalls.length === 0, `device-local history called removed server routes: ${serverHistoryCalls.join(', ')}`);
+    log('Device-local customer receipts OK');
   } finally {
     await context.close();
     await browser.close();
@@ -1004,8 +959,8 @@ async function verifyRuleTemplateAuthorization() {
             {
               id: 'session-older-csv',
               status: 'EXPIRED',
-              customerWalletMasked: null,
-              lockAmountRaw: null,
+              customerProof: null,
+              selfRedemption: null,
               reason: 'QR session expired',
               expiresAt: '2026-07-18T08:35:00.000Z',
               createdAt: '2026-07-18T08:31:00.000Z',
@@ -1021,16 +976,16 @@ async function verifyRuleTemplateAuthorization() {
               minIFRHeld: 0,
               lockSource: 'ifrlock',
               verifiedLockSource: null,
-              verificationBlock: 123,
-              dailyRedemptionLimit: 1,
-              monthlyRedemptionLimit: 1,
+              dailyRedemptionLimit: 0,
+              monthlyRedemptionLimit: 0,
             },
           ] : [
             {
               id: 'session-redeemed-csv',
               status: 'REDEEMED',
-              customerWalletMasked: '0x2222...2222',
-              lockAmountRaw: '1500.000000000',
+              // Owner decision B (T-231b): no customer wallet, amount or block; only the proof outcome.
+              customerProof: 'verified',
+              selfRedemption: false,
               reason: null,
               expiresAt: '2026-07-19T08:30:00.000Z',
               createdAt: '2026-07-19T08:28:00.000Z',
@@ -1046,16 +1001,14 @@ async function verifyRuleTemplateAuthorization() {
               minIFRHeld: 250,
               lockSource: 'commitment_time_only',
               verifiedLockSource: 'commitment_time_only',
-              verificationBlock: 123,
-              walletBalanceRaw: '250000000000',
-              dailyRedemptionLimit: 1,
-              monthlyRedemptionLimit: 4,
+              dailyRedemptionLimit: 0,
+              monthlyRedemptionLimit: 0,
             },
             {
               id: 'session-rejected-csv',
               status: 'REJECTED',
-              customerWalletMasked: null,
-              lockAmountRaw: null,
+              customerProof: null,
+              selfRedemption: null,
               reason: '+SUM(1,1)',
               expiresAt: '2026-07-19T08:35:00.000Z',
               createdAt: '2026-07-19T08:31:00.000Z',
@@ -1071,9 +1024,8 @@ async function verifyRuleTemplateAuthorization() {
               minIFRHeld: 0,
               lockSource: 'ifrlock',
               verifiedLockSource: null,
-              verificationBlock: null,
-              dailyRedemptionLimit: 1,
-              monthlyRedemptionLimit: 1,
+              dailyRedemptionLimit: 0,
+              monthlyRedemptionLimit: 0,
             },
           ],
           metrics: {
@@ -1243,12 +1195,12 @@ async function verifyRuleTemplateAuthorization() {
       'loaded owner history did not render the redeemed session'
     );
     assert(
-      await sessionHistory.getByText('0x2222...2222', { exact: false }).count() === 1,
-      'rendered history must mask the customer wallet'
+      await sessionHistory.getByText('Customer proof verified', { exact: true }).count() === 1,
+      'rendered history must show the verified customer proof outcome'
     );
     assert(
-      await sessionHistory.getByText('0x2222222222222222222222222222222222222222', { exact: false }).count() === 0,
-      'rendered history leaked the full customer wallet'
+      await sessionHistory.getByText(/0x[0-9a-fA-F]{4}/).count() === 0,
+      'rendered history must not show any customer wallet (the server stores none)'
     );
 
     const olderHistoryRequestPromise = page.waitForRequest((request) => (
@@ -1272,14 +1224,16 @@ async function verifyRuleTemplateAuthorization() {
     assert(csv.charCodeAt(0) === 0xfeff, 'downloaded CSV must include a UTF-8 BOM for spreadsheet compatibility');
     assert(csv.includes('"session-redeemed-csv","REDEEMED"'), 'CSV is missing the redeemed session snapshot');
     assert(csv.includes('"session-older-csv","EXPIRED"'), 'CSV is missing the older paginated session');
-    assert(csv.includes('"0x2222...2222"'), 'CSV must contain only the masked customer wallet');
-    assert(!csv.includes('0x2222222222222222222222222222222222222222'), 'CSV leaked the full customer wallet');
+    assert(csv.includes('"Customer proof","Self-redemption"'), 'CSV is missing the proof outcome columns');
+    assert(csv.includes('"250","verified","no"'), 'CSV did not export the redeemed proof outcome');
+    assert(!/customer wallet|lock amount|verification block/i.test(csv.split('\r\n')[0]), 'CSV still exports removed wallet columns');
+    assert(!/0x[0-9a-fA-F]{4}/.test(csv), 'CSV must not contain any customer wallet');
     assert(csv.includes('"\'=HYPERLINK(""https://evil.test"",""open"")"'), 'CSV did not neutralize formula-prefixed rule text');
     assert(csv.includes('"Coffee, ""Premium""\nMembership"'), 'CSV did not quote commas, quotes and newlines');
     assert(csv.includes('"\'+SUM(1,1)"'), 'CSV did not neutralize formula-prefixed rejection text');
     assert(!/signature|nonce|admin secret|\/r\//i.test(csv), 'CSV contains forbidden authorization or proof-link data');
     assert(download.suggestedFilename().startsWith('ifr-benefits-smoke-template-seller-history-'), 'CSV filename is not seller-scoped');
-    await expectText(page, 'Downloaded 3 sessions with masked customer wallets.');
+    await expectText(page, 'Downloaded 3 sessions (no customer wallet data is stored).');
     assert(
       challengeRequests.filter((challenge) => challenge.action === 'sessions:list').length >= 4,
       'full history export did not refresh an expired read authorization'
@@ -1434,8 +1388,8 @@ async function verifyPage(contextOptions, label) {
         requiredLockIFR: 1000,
         minIFRHeld: 250,
         lockSource: 'ifrlock',
-        dailyRedemptionLimit: 1,
-        monthlyRedemptionLimit: 10,
+        dailyRedemptionLimit: 0,
+        monthlyRedemptionLimit: 0,
         business: {
           id: 'smoke-catalog',
           name: 'Smoke Coffee',
@@ -1627,14 +1581,14 @@ async function verifyPage(contextOptions, label) {
             sessionId: 'smoke-customer-session',
             businessId: 'smoke-business',
             sellerName: 'Smoke Coffee',
-            status: 'APPROVED',
+            status: 'REDEEMED',
             discountPercent: 12,
             requiredLockIFR: 1000,
             minIFRHeld: 250,
             ruleLabel: 'Smoke Bronze',
             productName: 'Counter checkout',
             expiresAt: new Date(Date.now() + 60000).toISOString(),
-            redeemedAt: null,
+            redeemedAt: new Date().toISOString(),
             walletLabel: '0x1234...abcd',
             savedAt: new Date().toISOString(),
           },
@@ -1646,9 +1600,9 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Smoke Coffee');
     await expectText(page, 'Counter checkout / 12% / 1,000 IFR');
     await expectText(page, '0x1234...abcd');
-    await expectText(page, 'Reopen proof');
+    await expectText(page, 'Check status');
     await page.getByRole('button', { name: 'Clear' }).click();
-    await expectText(page, 'No customer proofs saved on this device yet');
+    await expectText(page, 'No receipts on this device yet.');
     if (shouldScreenshot) {
       fs.mkdirSync(screenshotDir, { recursive: true });
       await page.screenshot({
@@ -1847,8 +1801,8 @@ async function verifyPage(contextOptions, label) {
               minIFRHeld: 250,
               lockSource: 'commitment_time_only',
               ttlSeconds: 90,
-              dailyRedemptionLimit: 1,
-              monthlyRedemptionLimit: 10,
+              dailyRedemptionLimit: 0,
+              monthlyRedemptionLimit: 0,
             }],
           }],
         }),
@@ -1874,7 +1828,10 @@ async function verifyPage(contextOptions, label) {
       'Verify at least 1,000 IFR in active TIME_ONLY commitments and 250 IFR held at checkout.'
     );
     await expectText(page, 'Connect wallet to check');
-    await expectText(page, 'Per wallet: 1 / UTC day and 10 / UTC month');
+    assert(
+      await page.getByText(/Per wallet: .* UTC day/).count() === 0,
+      'seller catalog must not advertise IFR-hosted per-customer limits (owner decision B)'
+    );
     await expectText(page, 'Seller starts a one-time QR checkout');
     const sellerWebsite = page.getByRole('link', { name: 'Seller website' });
     assert(await sellerWebsite.getAttribute('href') === 'https://seller.example.com/members', 'seller website href mismatch');

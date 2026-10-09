@@ -3,7 +3,10 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
+const { scanDatabaseForAddresses, formatScan } = require('./verify-owner-b-migration.cjs');
+
 const root = path.resolve(__dirname, '..');
+const ownerBMigration = '20261006120000_owner_b_customer_session_privacy';
 const migrationsDir = path.join(root, 'prisma', 'migrations');
 const targetMigration = '20260726000100_add_admin_audit_log';
 const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'benefits-populated-upgrade-'));
@@ -299,7 +302,145 @@ try {
   const foreignKeyErrors = sqlite('PRAGMA foreign_key_check;');
   if (foreignKeyErrors) throw new Error(`Foreign-key errors after migration:\n${foreignKeyErrors}`);
 
-  console.log('Populated Benefits migration upgrade fixture passed');
+  // ── Owner-B upgrade of the populated database with legacy customer data ──────────────
+  // Applies every later migration up to (excluding) owner B, inserts the legacy row shapes that
+  // historic writers produced, applies owner B, VACUUMs, and proves with the generic scan that no
+  // non-allowlisted address remains anywhere while allowlisted seller identities stay.
+  const SELLER = '0x4f632748460E5277bF8435259cADce440AbAC254';
+  const OPERATOR = '0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc';
+  const REWARD = '0x976EA74026E726554dB657fA54763abd0C3a0aa9';
+  const CUSTOMERS = {
+    mixed: '0x8ba1f109551bD432803012645Ac136ddd64DBA72',
+    upper: '0xABCDEF0123456789ABCDEF0123456789ABCDEF01',
+    lower: '0x1234567890abcdef1234567890abcdef12345678',
+    calldata: '0x00c0ffee00c0ffee00c0ffee00c0ffee00c0ffee',
+    reason: '0x0BADC0DE0badc0de0BADC0DE0badc0de0BADC0DE',
+  };
+  const ownerBIndex = migrations.indexOf(ownerBMigration);
+  if (ownerBIndex <= targetIndex) throw new Error(`Expected ${ownerBMigration} after ${targetMigration}`);
+  for (const migration of migrations.slice(targetIndex + 1, ownerBIndex)) {
+    sqlite(`.read ${path.join(migrationsDir, migration, 'migration.sql')}`);
+  }
+  const bare = (address) => address.slice(2);
+  const calldata = `0x70a08231000000000000000000000000${bare(CUSTOMERS.calldata).toLowerCase()}`;
+  sqlite(`
+    -- A bytes32 partner id and governance tx hash are not addresses and must not be flagged.
+    UPDATE SellerRewardLink SET rewardWallet = '${REWARD}', partnerId = '0x${'7e3a'.repeat(16)}',
+      governanceReference = '0x${'c0de'.repeat(16)}' WHERE id = 'upgrade-reward-link';
+    INSERT INTO CheckoutOperator (id, businessId, walletAddress, label, active, createdAt, updatedAt)
+    VALUES ('legacy-operator', 'migration-fixture', '${OPERATOR}', 'Till 1', 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
+    INSERT INTO Session (id, businessId, nonce, expiresAt, status, reason, recoveredAddress, lockAmountRaw, walletBalanceRaw,
+                         verificationBlock, createdAt, updatedAt, redeemedAt, attestAttempts)
+    VALUES
+      ('legacy-rejected', 'migration-fixture', 'legacy-n1', '2025-01-01T00:00:00.000Z', 'REJECTED',
+       '7 IFR held < 1000 IFR required', '${CUSTOMERS.mixed}', '0', '7', 11, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL, 1),
+      ('legacy-expired', 'migration-fixture', 'legacy-n2', '2025-01-01T00:00:00.000Z', 'EXPIRED',
+       'Daily redemption limit reached for this wallet', NULL, NULL, NULL, NULL, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL, 0),
+      ('legacy-redeemed', 'migration-fixture', 'legacy-n3', '2025-01-01T00:00:00.000Z', 'REDEEMED',
+       'Insufficient wallet balance: 5 IFR for ${CUSTOMERS.reason}', '${CUSTOMERS.upper}', '2500.0', '5', 12,
+       CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 1),
+      ('legacy-approved', 'migration-fixture', 'legacy-n4', '2099-01-01T00:00:00.000Z', 'APPROVED',
+       'Monthly limit for this wallet: 2 of 3 used', '${CUSTOMERS.lower}', '2500.0', '10', 13,
+       CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, NULL, 1);
+    INSERT INTO AuditLog (id, sessionId, type, payload, ts) VALUES
+      ('legacy-fail-wallet', 'legacy-rejected', 'ATTEST_FAIL',
+       '{"wallet":"${CUSTOMERS.mixed}","locked":"0","held":"7","verificationBlock":11,"required":1000,"reason":"7 IFR held < 1000 IFR required","attempts":1}', CURRENT_TIMESTAMP),
+      ('legacy-fail-rpc', 'legacy-rejected', 'ATTEST_FAIL',
+       '{"reason":"On-chain error: execution reverted (data=\\"${calldata}\\")","error":"eth_call failed for ${CUSTOMERS.calldata.toUpperCase().replace('0X', '0x')}"}', CURRENT_TIMESTAMP),
+      ('legacy-ok', 'legacy-redeemed', 'ATTEST_OK',
+       '{"wallet":"${CUSTOMERS.upper}","locked":"2500.0","held":"5","verificationBlock":12,"lockSource":"ifrlock"}', CURRENT_TIMESTAMP),
+      ('legacy-ok-self', 'legacy-redeemed', 'ATTEST_OK',
+       '{"wallet":"${SELLER.toLowerCase()}","selfRedemption":true}', CURRENT_TIMESTAMP),
+      ('legacy-limit', 'legacy-expired', 'REDEEM_DENIED_LIMIT',
+       '{"wallet":"${CUSTOMERS.lower}","used":3,"limit":3,"period":"monthly","actorRole":"OPERATOR","actorWallet":"${OPERATOR}"}', CURRENT_TIMESTAMP),
+      ('legacy-redeemed-audit', 'legacy-redeemed', 'REDEEMED',
+       '{"actorRole":"OWNER","actorWallet":"${SELLER}","operatorId":null}', CURRENT_TIMESTAMP),
+      ('legacy-created-original', 'legacy-redeemed', 'SESSION_CREATED',
+       '{"businessId":"migration-fixture","nonce":"legacy-n3"}', CURRENT_TIMESTAMP),
+      ('legacy-pass-bound', 'legacy-redeemed', 'CUSTOMER_PASS_BOUND',
+       '{"businessId":"migration-fixture","customerPassId":"p1","createdBy":{"walletAddress":"${SELLER}","role":"OWNER","operatorId":null}}', CURRENT_TIMESTAMP),
+      ('legacy-created-object', 'legacy-expired', 'SESSION_CREATED',
+       '{"businessId":"migration-fixture","createdBy":{"walletAddress":"${OPERATOR}","role":"OPERATOR","operatorId":"legacy-operator"}}', CURRENT_TIMESTAMP),
+      ('legacy-expired-audit', 'legacy-expired', 'EXPIRED', '{"reason":"TTL expired before attestation"}', CURRENT_TIMESTAMP);
+    INSERT INTO SellerAuthorizationChallenge (nonce, walletAddress, action, businessId, scope, expiresAt)
+    VALUES ('${'d'.repeat(64)}', '${CUSTOMERS.mixed}', 'business:list', 'seller', 'read', '2099-01-01T00:00:00.000Z'),
+           ('${'e'.repeat(64)}', '${SELLER}', 'rules:create', 'migration-fixture', 'migration-fixture', '2099-01-01T00:00:00.000Z');
+  `);
+  const preDump = sqlite('.dump').toLowerCase();
+  for (const [name, address] of Object.entries(CUSTOMERS)) {
+    if (!preDump.includes(bare(address).toLowerCase())) throw new Error(`Fixture must contain the ${name} customer address`);
+  }
+
+  sqlite(`.read ${path.join(migrationsDir, ownerBMigration, 'migration.sql')}`);
+  sqlite('VACUUM;');
+
+  const scan = scanDatabaseForAddresses(dbPath);
+  if (!scan.ok) throw new Error(`Generic address scan failed after owner-B migration:\n${formatScan(scan)}`);
+  const expectedAllowed = [
+    'Business.ownerAddress',
+    'CheckoutOperator.walletAddress',
+    'SellerRewardLink.builderWallet',
+    'SellerRewardLink.rewardWallet',
+    'AuditLog.payload type=REDEEMED $.actorWallet',
+    'AuditLog.payload type=REDEEM_DENIED_LIMIT $.actorWallet',
+    'AuditLog.payload type=SESSION_CREATED $.createdBy.walletAddress',
+    'AuditLog.payload type=CUSTOMER_PASS_BOUND $.createdBy.walletAddress',
+  ];
+  for (const location of expectedAllowed) {
+    if (!scan.allowed[location]) throw new Error(`Allowlisted seller identity missing after migration: ${location}`);
+  }
+
+  const postDump = sqlite('.dump').toLowerCase();
+  const fileBytes = fs.readFileSync(dbPath).toString('latin1').toLowerCase();
+  for (const [name, address] of Object.entries(CUSTOMERS)) {
+    if (postDump.includes(bare(address).toLowerCase())) throw new Error(`Customer address (${name}) remains in the dump`);
+    if (fileBytes.includes(bare(address).toLowerCase())) throw new Error(`Customer address (${name}) remains in the file after VACUUM`);
+  }
+  for (const address of [SELLER, OPERATOR, REWARD]) {
+    if (!postDump.includes(bare(address).toLowerCase())) throw new Error('Allowlisted seller identity was removed');
+  }
+  const neutral = 'Closed before the customer-privacy upgrade; details removed.';
+  const reasons = sqlite(`
+    SELECT group_concat(id || '=' || status || '=' || reason, '|') FROM (
+      SELECT id, status, reason FROM Session WHERE id LIKE 'legacy-%' OR id = 'existing-session' ORDER BY id)
+  `);
+  const cutover = 'Checkout closed by the customer-privacy upgrade; start a new checkout.';
+  const expectedReasons = [
+    `existing-session=EXPIRED=${cutover}`,
+    `legacy-approved=EXPIRED=${cutover}`,
+    `legacy-expired=EXPIRED=${neutral}`,
+    `legacy-redeemed=REDEEMED=${neutral}`,
+    `legacy-rejected=REJECTED=${neutral}`,
+  ].join('|');
+  if (reasons !== expectedReasons) throw new Error(`Unexpected session reasons after migration: ${reasons}`);
+  const failPayloads = sqlite("SELECT group_concat(payload, '|') FROM (SELECT payload FROM AuditLog WHERE type = 'ATTEST_FAIL' ORDER BY id)");
+  if (failPayloads !== '{}|{"required":1000,"attempts":1}') throw new Error('ATTEST_FAIL payloads were not scrubbed to neutral keys');
+  const limitPayload = JSON.parse(sqlite("SELECT payload FROM AuditLog WHERE id = 'legacy-limit'"));
+  if ('wallet' in limitPayload || 'used' in limitPayload || limitPayload.actorWallet !== OPERATOR || limitPayload.limit !== 3) {
+    throw new Error('REDEEM_DENIED_LIMIT must lose only the customer keys');
+  }
+  const selfPayload = JSON.parse(sqlite("SELECT payload FROM AuditLog WHERE id = 'legacy-ok-self'"));
+  if ('wallet' in selfPayload || selfPayload.selfRedemption !== true) throw new Error('ATTEST_OK wallet equal to a seller must still be removed');
+  const challenge = sqlite(`
+    SELECT (SELECT COUNT(*) FROM SellerAuthorizationChallenge) || '|' ||
+           (SELECT COUNT(*) FROM pragma_table_info('SellerAuthorizationChallenge') WHERE name = 'walletAddress') || '|' ||
+           (SELECT group_concat(name, ',') FROM (SELECT name FROM pragma_index_list('SellerAuthorizationChallenge') WHERE origin = 'c' ORDER BY name))
+  `);
+  if (challenge !== '0|0|SellerAuthorizationChallenge_action_businessId_idx,SellerAuthorizationChallenge_expiresAt_idx') {
+    throw new Error(`SellerAuthorizationChallenge must be nonce-only and emptied: ${challenge}`);
+  }
+  const ownerBForeignKeyErrors = sqlite('PRAGMA foreign_key_check;');
+  if (ownerBForeignKeyErrors) throw new Error(`Foreign-key errors after owner-B migration:\n${ownerBForeignKeyErrors}`);
+
+  // Mutation guard: an unscrubbed legacy ATTEST_FAIL wallet re-inserted after the migration must fail the scan.
+  sqlite(`INSERT INTO AuditLog (id, sessionId, type, payload, ts) VALUES
+    ('mutation', 'legacy-rejected', 'ATTEST_FAIL', '{"wallet":"${CUSTOMERS.mixed}"}', CURRENT_TIMESTAMP);`);
+  const mutated = scanDatabaseForAddresses(dbPath);
+  if (mutated.ok || mutated.failures['AuditLog.payload type=ATTEST_FAIL $.wallet'] !== 1) {
+    throw new Error('Generic scan must flag an unscrubbed ATTEST_FAIL wallet');
+  }
+
+  console.log('Populated Benefits migration upgrade fixture passed (incl. owner-B legacy scrub and generic address scan)');
 } finally {
   fs.rmSync(tempDir, { recursive: true, force: true });
 }

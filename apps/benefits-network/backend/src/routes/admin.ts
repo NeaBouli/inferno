@@ -1,9 +1,10 @@
 import { Router } from 'express';
 import { z } from 'zod';
-import { prisma } from '../services/sessionService';
+import { REWARD_BLOCKED_POLICY, REWARD_BLOCKED_POLICY_REASON, prisma } from '../services/sessionService';
 import { adminAuth } from '../middleware/auth';
 import { validate } from '../middleware/validator';
-import { getModelBVaultState, getRewardOnChainStatus, isWalletAlreadyRewarded } from '../services/rewardService';
+import { signedTextSafe } from '../lib/textGuards';
+import { getModelBVaultState, getRewardOnChainStatus } from '../services/rewardService';
 import { findPilot, getModelBPolicy } from '../services/modelBPolicy';
 import {
   buildSettlementExport,
@@ -29,6 +30,9 @@ import { pauseSellerBusinessDependents } from '../services/businessLifecycle';
 import { recordAdminAudit } from '../services/adminAudit';
 import { getRetentionReport } from '../services/retention';
 
+const CUSTOMER_LIMIT_NOT_HOSTED =
+  'Per-customer redemption limits are not enforced by IFR (customer privacy); use 0 and enforce limits in your own checkout';
+
 const router = Router();
 
 const businessDescriptionSchema = z.string().trim().max(500).nullable();
@@ -49,11 +53,11 @@ const businessCategoriesSchema = z.array(z.string().trim().min(1).max(80))
   );
 
 const createBusinessSchema = z.object({
-  name: z.string().min(1).max(200),
+  name: signedTextSafe(z.string().min(1).max(200)),
   discountPercent: z.number().int().min(0).max(100),
   requiredLockIFR: z.number().int().positive(),
   ttlSeconds: z.number().int().min(10).max(3600).optional(),
-  tierLabel: z.string().max(50).optional(),
+  tierLabel: signedTextSafe(z.string().max(50)).optional(),
   description: businessDescriptionSchema.optional(),
   website: businessWebsiteSchema.optional(),
   logoUrl: businessLogoUrlSchema.optional(),
@@ -62,11 +66,11 @@ const createBusinessSchema = z.object({
 }).strict();
 
 const updateBusinessSchema = z.object({
-  name: z.string().min(1).max(200).optional(),
+  name: signedTextSafe(z.string().min(1).max(200)).optional(),
   discountPercent: z.number().int().min(0).max(100).optional(),
   requiredLockIFR: z.number().int().positive().optional(),
   ttlSeconds: z.number().int().min(10).max(3600).optional(),
-  tierLabel: z.string().max(50).nullable().optional(),
+  tierLabel: signedTextSafe(z.string().max(50)).nullable().optional(),
   description: businessDescriptionSchema.optional(),
   website: businessWebsiteSchema.optional(),
   logoUrl: businessLogoUrlSchema.optional(),
@@ -76,15 +80,17 @@ const updateBusinessSchema = z.object({
 }).strict().refine((value) => Object.keys(value).length > 0, 'At least one field is required');
 
 const createBenefitRuleSchema = z.object({
-  label: z.string().min(1).max(80),
-  category: z.string().min(1).max(80),
-  productName: z.string().min(1).max(160),
+  label: signedTextSafe(z.string().min(1).max(80)),
+  category: signedTextSafe(z.string().min(1).max(80)),
+  productName: signedTextSafe(z.string().min(1).max(160)),
   discountPercent: z.number().int().min(0).max(100),
   requiredLockIFR: z.number().int().positive(),
   minIFRHeld: z.number().int().min(0).max(1_000_000_000).optional(),
   lockSource: z.enum(LOCK_SOURCES).optional(),
-  dailyRedemptionLimit: z.number().int().min(0).max(1000).optional(),
-  monthlyRedemptionLimit: z.number().int().min(0).max(10000).optional(),
+  // Owner decision B (T-231b): per-customer limits need customer identity, which IFR no longer
+  // stores. Only 0 (no IFR-hosted limit) is accepted; merchants enforce limits in their own systems.
+  dailyRedemptionLimit: z.number().int().min(0).max(0, CUSTOMER_LIMIT_NOT_HOSTED).optional(),
+  monthlyRedemptionLimit: z.number().int().min(0).max(0, CUSTOMER_LIMIT_NOT_HOSTED).optional(),
   ttlSeconds: z.number().int().min(10).max(3600).optional(),
   active: z.boolean().optional(),
 });
@@ -597,50 +603,17 @@ router.post('/businesses/:id/rewards/queue', adminAuth, async (req, res, next) =
       return;
     }
 
-    const eventSelect = { id: true, customerWallet: true } as const;
-    const [readyEvents, actionableEvents] = await Promise.all([
-      prisma.rewardEvent.findMany({
-        where: { businessId: business.id, partnerId: link.partnerId, status: 'READY' },
-        orderBy: { createdAt: 'asc' },
-        take: 50,
-        select: eventSelect,
-      }),
-      prisma.rewardEvent.findMany({
-        where: {
-          businessId: business.id,
-          partnerId: link.partnerId,
-          status: { in: ['PENDING', 'BLOCKED_CALLER', 'BLOCKED_GOVERNANCE'] },
-        },
-        orderBy: { createdAt: 'asc' },
-        take: 50,
-        select: eventSelect,
-      }),
-    ]);
-    const events = [...readyEvents, ...actionableEvents];
-
-    let ready = 0;
-    let confirmed = 0;
-    let blocked = 0;
-    for (const event of events) {
-      const alreadyRewarded = await isWalletAlreadyRewarded(event.customerWallet, link.partnerId);
-      const status = alreadyRewarded ? 'CONFIRMED' : onChain.submissionReady ? 'READY' : 'BLOCKED_CALLER';
-      const reason = alreadyRewarded
-        ? 'Confirmed from PartnerVault anti-double-count state'
-        : onChain.submissionReady
-          ? 'Governance and authorized caller checks passed; no transaction submitted by this service'
-          : onChain.reason || 'Dedicated reward caller is not authorized';
-      const updated = await prisma.rewardEvent.updateMany({
-        where: {
-          id: event.id,
-          status: { in: ['PENDING', 'READY', 'BLOCKED_CALLER', 'BLOCKED_GOVERNANCE'] },
-        },
-        data: { status, reason },
-      });
-      if (updated.count !== 1) continue;
-      if (status === 'CONFIRMED') confirmed += 1;
-      else if (status === 'READY') ready += 1;
-      else blocked += 1;
-    }
+    // Owner decision B (T-231b): the lock-reward path needs the customer wallet (one reward per
+    // wallet and partner via PartnerVault.walletRewardClaimed). It is no longer stored, so open
+    // lock-path events cannot be reconciled or made READY; they become non-payable BLOCKED_POLICY.
+    const blockedPolicy = await prisma.rewardEvent.updateMany({
+      where: {
+        businessId: business.id,
+        partnerId: link.partnerId,
+        status: { in: ['PENDING', 'READY', 'BLOCKED_CALLER', 'BLOCKED_GOVERNANCE'] },
+      },
+      data: { status: REWARD_BLOCKED_POLICY, reason: REWARD_BLOCKED_POLICY_REASON },
+    });
 
     await prisma.$transaction(async (tx) => {
       await tx.sellerRewardLink.update({
@@ -653,7 +626,14 @@ router.post('/businesses/:id/rewards/queue', adminAuth, async (req, res, next) =
       });
       await recordAdminAudit(tx, req, 'rewards:queue', 200, { type: 'Business', id: business.id });
     });
-    res.json({ ready, confirmed, blocked, scanned: events.length, submissionReady: onChain.submissionReady });
+    res.json({
+      ready: 0,
+      confirmed: 0,
+      blocked: blockedPolicy.count,
+      scanned: blockedPolicy.count,
+      submissionReady: false,
+      reason: REWARD_BLOCKED_POLICY_REASON,
+    });
   } catch (err) {
     next(err);
   }

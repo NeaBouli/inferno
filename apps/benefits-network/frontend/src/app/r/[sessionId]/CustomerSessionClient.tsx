@@ -26,6 +26,8 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
   const [status, setStatus] = useState<SessionStatus | null>(null);
   const [business, setBusiness] = useState<BusinessInfo | null>(null);
   const [result, setResult] = useState<AttestResult | null>(null);
+  // Kept in memory and in the device-local receipt only; never sent anywhere except the proof request.
+  const [proofSignature, setProofSignature] = useState('');
   const [error, setError] = useState('');
   const [refreshMessage, setRefreshMessage] = useState('');
   const [receiptStatus, setReceiptStatus] = useState('');
@@ -35,9 +37,10 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
   const sessionRequestRef = useRef(0);
   const sessionLoaded = Boolean(status);
   const currentSessionStatus = status?.status || '';
-  const proofApproved = status?.status === 'APPROVED' || result?.status === 'APPROVED';
+  // Owner decision B (T-231b): an accepted proof redeems the checkout atomically (no separate seller step).
+  const proofApproved = result?.status === 'REDEEMED';
   const proofRejected = status?.status === 'REJECTED' || result?.status === 'REJECTED';
-  const sellerRedeemed = status?.status === 'REDEEMED';
+  const sellerRedeemed = status?.status === 'REDEEMED' && !proofApproved;
   const canSign = Boolean(isConnected && status && !TERMINAL_STATUSES.includes(status.status));
   const proofStatus = !sessionLoaded
     ? error
@@ -46,7 +49,7 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
     : sellerRedeemed
       ? 'Benefit redeemed'
       : proofApproved
-        ? 'Approved - show seller'
+        ? 'Redeemed - show seller'
         : proofRejected
           ? 'Not eligible'
           : CLOSED_STATUSES.includes(currentSessionStatus)
@@ -59,9 +62,9 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
       ? 'The session did not load. Check your connection and retry this checkout link.'
       : 'The app is loading the QR session from the seller.'
     : sellerRedeemed
-      ? 'This benefit was already redeemed by the seller. Ask for a new QR code for another checkout.'
+      ? 'This checkout was already redeemed. Ask the seller for a new QR code for another checkout.'
       : proofApproved
-        ? 'Show this screen to the seller. This page refreshes while they redeem the approved benefit once.'
+        ? 'Your proof redeemed this checkout once. Show this screen to the seller; their console shows the same result.'
           : proofRejected
           ? (status?.status === 'PENDING' && result?.attemptsRemaining
             ? formatRetryGuidance(result.reason, result.attemptsRemaining)
@@ -75,8 +78,7 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
     { label: 'QR session loaded', ready: sessionLoaded },
     { label: 'Wallet connected', ready: isConnected },
     { label: 'One-time proof signed', ready: Boolean(result) || Boolean(status && TERMINAL_STATUSES.includes(status.status)) },
-    { label: 'IFR access approved', ready: proofApproved || sellerRedeemed },
-    { label: 'Seller redeem complete', ready: sellerRedeemed },
+    { label: 'Eligibility checked and checkout redeemed', ready: proofApproved || status?.status === 'REDEEMED' },
   ];
   const proofReceipt = useMemo(() => {
     if (!status) return '';
@@ -106,7 +108,7 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
       `Customer wallet: ${verifiedWallet}`,
       `Expires: ${status.expiresAt}`,
       `Redeemed: ${status.redeemedAt || 'not redeemed'}`,
-      'Note: seller redemption still requires the seller scanner and seller wallet signature.',
+      'Note: the checkout is redeemed once when the proof is accepted. The shop server stores no wallet address.',
     ].join('\n');
   }, [business?.name, result?.wallet, sessionId, status]);
 
@@ -156,8 +158,16 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
       sellerName: business?.name,
       status,
       verifiedWalletAddress: result?.wallet,
+      proof: result?.proof && proofSignature
+        ? {
+            version: result.proof.version,
+            termsDigest: result.proof.termsDigest,
+            message: result.proof.message,
+            signature: proofSignature,
+          }
+        : null,
     });
-  }, [business?.name, result?.wallet, sessionId, status]);
+  }, [business?.name, proofSignature, result?.proof, result?.wallet, sessionId, status]);
 
   async function refreshStatus() {
     setSessionLoading(true);
@@ -176,9 +186,11 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
     setLoading(true);
     setError('');
     try {
-      const challenge = await getChallenge(sessionId);
+      if (!address) throw new Error('Connect a wallet first.');
+      const challenge = await getChallenge(sessionId, address);
       const signature = await signMessageAsync({ message: challenge.message });
-      const nextResult = await submitAttest(sessionId, signature);
+      const nextResult = await submitAttest(sessionId, address, signature);
+      if (nextResult.status === 'REDEEMED') setProofSignature(signature);
       setResult(nextResult);
       await loadSession(true);
     } catch (err) {
@@ -233,7 +245,7 @@ export function CustomerSessionClient({ sessionId }: { sessionId: string }) {
   return (
     <AppShell>
       <section className="mx-auto grid min-h-[calc(100vh-6rem)] w-full max-w-3xl place-items-center px-5 pb-16 pt-8">
-        <div className="w-full rounded-[2rem] border border-white/10 bg-white/[0.06] p-6 shadow-2xl shadow-black/30">
+        <div className="shop-launcher-band-clearance-compact w-full rounded-[2rem] border border-white/10 bg-white/[0.06] p-6 shadow-2xl shadow-black/30">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.18em] text-orange-200/80">
