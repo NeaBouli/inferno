@@ -11,6 +11,7 @@ const host = 'shop.ifrunit.tech';
 const repoCompose = fs.readFileSync(path.join(__dirname, '..', 'apps', 'benefits-network', 'docker-compose.production.example.yml'), 'utf8');
 const compose = parseCompose(repoCompose);
 assert.deepEqual(compose.chainArg, { variable: true, default: '1' }, 'repo compose: ${NEXT_PUBLIC_CHAIN_ID:-1}');
+assert.deepEqual(compose.problems, [], 'repo compose is structurally supported');
 assert.equal(compose.backendOverrides, false);
 
 const check = (envFile, extra = {}) => checkProofContext({ envFile, compose, processEnv: {}, publicHost: host, ...extra });
@@ -29,10 +30,28 @@ for (const name of ['NEXT_PUBLIC_CHAIN_ID', 'CHAIN_ID', 'SELLER_AUTH_DOMAIN']) {
   assert.ok(check(ok, { processEnv: { [name]: name === 'SELLER_AUTH_DOMAIN' ? host : '1' } }).length > 0, `${name} in the shell fails`);
 }
 // Compose variants: no default and no value fails; a literal arg wins; backend environment overrides fail.
-const noDefault = parseCompose('    args:\n        NEXT_PUBLIC_CHAIN_ID: "${NEXT_PUBLIC_CHAIN_ID}"\n');
+const frontendArg = (value) => `services:\n  benefits-frontend:\n    build:\n      args:\n        NEXT_PUBLIC_CHAIN_ID: ${value}\n`;
+const noDefault = parseCompose(frontendArg('"${NEXT_PUBLIC_CHAIN_ID}"'));
+assert.deepEqual(noDefault.problems, []);
 assert.ok(checkProofContext({ envFile: { SELLER_AUTH_DOMAIN: host, CHAIN_ID: '1' }, compose: noDefault, processEnv: {}, publicHost: host }).length > 0);
-const literal = parseCompose('    args:\n        NEXT_PUBLIC_CHAIN_ID: "11155111"\n');
+const literal = parseCompose(frontendArg('"11155111"'));
+assert.deepEqual(literal, { chainArg: { literal: '11155111' }, backendOverrides: false, problems: [] });
 assert.ok(checkProofContext({ envFile: ok, compose: literal, processEnv: {}, publicHost: host }).length > 0, 'literal arg wins over env file');
+// Review regression (9b896521): the arg is read only from the benefits-frontend service. An earlier
+// service with NEXT_PUBLIC_CHAIN_ID "1" and the frontend on Sepolia must not PASS against backend chain 1.
+const twoServices = parseCompose(`services:\n  other:\n    build:\n      args:\n        NEXT_PUBLIC_CHAIN_ID: "1"\n  benefits-frontend:\n    build:\n      args:\n        NEXT_PUBLIC_CHAIN_ID: "11155111"\n`);
+assert.ok(checkProofContext({ envFile: ok, compose: twoServices, processEnv: {}, publicHost: host }).length > 0, 'two-service false PASS');
+assert.equal(twoServices.chainArg.literal, '11155111', 'frontend value comes from benefits-frontend only');
+const wrongNesting = parseCompose(`services:\n  benefits-frontend:\n    environment:\n      NEXT_PUBLIC_CHAIN_ID: "1"\n`);
+assert.ok(checkProofContext({ envFile: ok, compose: wrongNesting, processEnv: {}, publicHost: host }).length > 0, 'wrong nesting fails');
+const duplicated = parseCompose(`${frontendArg('"1"')}        NEXT_PUBLIC_CHAIN_ID: "11155111"\n`);
+assert.ok(checkProofContext({ envFile: ok, compose: duplicated, processEnv: {}, publicHost: host }).length > 0, 'duplicate arg fails');
+const aliased = parseCompose(`x-args: &args\n  NEXT_PUBLIC_CHAIN_ID: "1"\nservices:\n  benefits-frontend:\n    build:\n      args: *args\n`);
+assert.ok(checkProofContext({ envFile: ok, compose: aliased, processEnv: {}, publicHost: host }).length > 0, 'anchors/aliases fail');
+const flowArgs = parseCompose(`services:\n  benefits-frontend:\n    build:\n      args: { NEXT_PUBLIC_CHAIN_ID: "1" }\n`);
+assert.ok(checkProofContext({ envFile: ok, compose: flowArgs, processEnv: {}, publicHost: host }).length > 0, 'flow args fail');
+const listOverride = parseCompose(`${repoCompose}\n  extra:\n    environment:\n      - "CHAIN_ID=5"\n`);
+assert.equal(listOverride.backendOverrides, true, 'list-form environment override detected');
 const overridden = parseCompose(`${repoCompose}\n    environment:\n      CHAIN_ID: "5"\n`);
 assert.ok(checkProofContext({ envFile: ok, compose: overridden, processEnv: {}, publicHost: host }).length > 0);
 assert.ok(checkProofContext({ envFile: ok, compose: parseCompose('services: {}\n'), processEnv: {}, publicHost: host }).length > 0, 'missing build arg fails');

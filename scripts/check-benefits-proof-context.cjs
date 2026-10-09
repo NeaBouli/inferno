@@ -9,7 +9,8 @@
  * - Compose interpolation gives the invoking shell precedence over the --env-file values, so any of
  *   SELLER_AUTH_DOMAIN, CHAIN_ID or NEXT_PUBLIC_CHAIN_ID set in this process environment fails the check
  *   (run it from a clean shell; an override cannot be verified here).
- * - NEXT_PUBLIC_CHAIN_ID: a literal build arg in the compose file wins; for `${NEXT_PUBLIC_CHAIN_ID:-d}`
+ * - NEXT_PUBLIC_CHAIN_ID is read only at services.benefits-frontend.build.args (block-structure walk;
+ *   any other placement, duplicates or unsupported YAML fail). A literal build arg wins; for `${NEXT_PUBLIC_CHAIN_ID:-d}`
  *   the env file value, else the literal compose default d; no value and no literal default fails.
  * - A compose `environment:` entry for CHAIN_ID / SELLER_AUTH_DOMAIN (overriding the env_file) fails.
  * - The public host is required explicitly (--public-host); there is no default.
@@ -35,27 +36,73 @@ function parseEnv(text) {
   return env;
 }
 
+const FRONTEND_ARG_PATH = 'services.benefits-frontend.build.args.NEXT_PUBLIC_CHAIN_ID';
+
 /**
- * Reads the frontend NEXT_PUBLIC_CHAIN_ID build arg and any backend environment overrides from the
- * compose file text. Returns { chainArg: { literal } | { variable, default } | null, backendOverrides }.
+ * Walks the compose YAML block structure (indentation keys) and returns every mapping key with its full
+ * dotted path. Only plain block mappings are supported: anchors, aliases, merge keys, flow collections,
+ * tabs and multi-document files are refused (fail closed), so a value can never be attributed to the
+ * wrong service.
+ */
+function composeEntries(text) {
+  const entries = [];
+  const stack = [];
+  let unsupported = false;
+  for (const raw of text.split(/\r?\n/)) {
+    if (/^\s*(#|$)/.test(raw)) continue;
+    if (/\t/.test(raw.match(/^\s*/)[0]) || /^---|^\.\.\./.test(raw)) { unsupported = true; continue; }
+    const line = raw.replace(/\s+#.*$/, '');
+    const indent = line.match(/^ */)[0].length;
+    const body = line.slice(indent);
+    while (stack.length && stack[stack.length - 1].indent >= indent) stack.pop();
+    const item = body.startsWith('- ') ? body.slice(2) : null;
+    const keyed = (item ?? body).match(/^(["']?)([A-Za-z0-9_.-]+)\1\s*:(?:\s+(.*))?$/);
+    if (/(^|[\s:\[{,])[&*][A-Za-z0-9_-]/.test(body) || /^<<\s*:/.test(item ?? body)) { unsupported = true; continue; }
+    if (!keyed) {
+      if (item === null && !/^[^:]+$/.test(body)) unsupported = true;
+      if (item !== null) entries.push({ path: stack.map((frame) => frame.key).join('.'), key: null, item: item.replace(/^(['"])(.*)\1$/, '$2'), value: item });
+      continue;
+    }
+    const value = (keyed[3] || '').trim();
+    const key = keyed[2];
+    // Flow collections are refused where they could hide a build arg or an environment entry.
+    if (/^[\[{]/.test(value) && (stack.length < 2 || ['build', 'args', 'environment'].includes(key))) unsupported = true;
+    const pathKey = [...stack.map((frame) => frame.key), key].join('.');
+    entries.push({ path: pathKey, key, value });
+    if (item === null) stack.push({ indent, key });
+  }
+  return { entries, unsupported };
+}
+
+/**
+ * Reads the frontend NEXT_PUBLIC_CHAIN_ID build arg only at services.benefits-frontend.build.args and
+ * any backend environment overrides from the compose file. Returns
+ * { chainArg: { literal } | { variable, default } | { unsupported } | null, backendOverrides, problems }.
  */
 function parseCompose(text) {
-  const argLine = text.split(/\r?\n/).find((line) => /^\s+NEXT_PUBLIC_CHAIN_ID\s*:/.test(line));
+  const { entries, unsupported } = composeEntries(text);
+  const problems = [];
+  if (unsupported) problems.push('compose file uses unsupported YAML (anchors, aliases, merge keys, flow collections or tabs)');
+  const chainKeys = entries.filter((entry) => entry.key === 'NEXT_PUBLIC_CHAIN_ID' || /^NEXT_PUBLIC_CHAIN_ID\s*(=|:|$)/.test(entry.item || ''));
+  const placed = chainKeys.filter((entry) => entry.path === FRONTEND_ARG_PATH);
+  if (chainKeys.length !== placed.length) problems.push('compose defines NEXT_PUBLIC_CHAIN_ID outside services.benefits-frontend.build.args');
+  if (placed.length > 1) problems.push('compose defines the frontend NEXT_PUBLIC_CHAIN_ID build arg more than once');
   let chainArg = null;
-  if (argLine) {
-    const value = argLine.replace(/^\s+NEXT_PUBLIC_CHAIN_ID\s*:\s*/, '').trim().replace(/^(['"])(.*)\1$/, '$2');
+  if (placed.length === 1) {
+    const value = placed[0].value.replace(/^(['"])(.*)\1$/, '$2');
     const interpolated = value.match(/^\$\{NEXT_PUBLIC_CHAIN_ID(?:(:?-)([^}]*))?\}$/);
     if (interpolated) chainArg = { variable: true, default: interpolated[1] ? interpolated[2] : undefined };
-    else if (!value.includes('$')) chainArg = { literal: value };
+    else if (!value.includes('$') && value !== '') chainArg = { literal: value };
     else chainArg = { unsupported: true };
   }
-  const backendOverrides = text.split(/\r?\n/).some((line) => /^\s+-?\s*(CHAIN_ID|SELLER_AUTH_DOMAIN)\s*[:=]/.test(line));
-  return { chainArg, backendOverrides };
+  const backendOverrides = entries.some((entry) => entry.key === 'CHAIN_ID' || entry.key === 'SELLER_AUTH_DOMAIN'
+    || /^(CHAIN_ID|SELLER_AUTH_DOMAIN)\s*(=|:|$)/.test(entry.item || ''));
+  return { chainArg, backendOverrides, problems };
 }
 
 /** Returns a list of problems (empty = consistent). Never includes values. */
 function checkProofContext({ envFile, compose, processEnv, publicHost }) {
-  const problems = [];
+  const problems = [...(compose.problems || [])];
   for (const name of OVERRIDE_VARS) {
     if (processEnv[name] !== undefined) problems.push(`${name} is set in the invoking environment (overrides the env file; unset it)`);
   }
