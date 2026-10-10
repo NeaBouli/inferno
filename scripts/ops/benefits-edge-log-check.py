@@ -309,7 +309,31 @@ def event_envelope(text: str, yaml: ModuleType) -> None:
         elif isinstance(event, (yaml.MappingEndEvent, yaml.SequenceEndEvent)):
             depth -= 1
         elif isinstance(event, yaml.ScalarEvent):
-            require(not (event.style is None and event.value == "<<"), Reason.YAML_UNSUPPORTED)
+            # Any "<<" (also quoted): Go YAML decoders may treat it as a merge key.
+            require(event.value != "<<", Reason.YAML_UNSUPPORTED)
+
+
+# Keys the checker reads in foreign dynamic files. Traefik decodes field names
+# case-insensitively, so a differently cased spelling (e.g. "Routers", "Rule") would be
+# loaded by Traefik but missed here; it HOLDs instead. ruleSyntax (v2 matchers) HOLDs.
+DYNAMIC_READ_KEYS = frozenset({"http", "tls", "routers", "rule", "priority", "entryPoints"})
+
+
+def exact_read_keys(value: object) -> None:
+    if isinstance(value, dict):
+        folded = {str(key).lower() for key in value}
+        require(len(folded) == len(value), Reason.ROUTE_UNPROVEN)
+        for key, item in value.items():
+            require(
+                isinstance(key, str)
+                and "rulesyntax" != key.lower()
+                and (key in DYNAMIC_READ_KEYS or key.lower() not in {k.lower() for k in DYNAMIC_READ_KEYS}),
+                Reason.ROUTE_UNPROVEN,
+            )
+            exact_read_keys(item)
+    elif isinstance(value, list):
+        for item in value:
+            exact_read_keys(item)
 
 
 def parse_yaml(raw: bytes, yaml: ModuleType, foreign: bool = False) -> dict[str, object]:
@@ -558,6 +582,22 @@ def prove_routes(
     app_hosts: set[str] = set()
     for row in peers:
         meta = labels(row, 5)
+        # Traefik matches label names case-insensitively: a differently cased spelling of the
+        # parts read here would be honoured by Traefik but skipped by this check.
+        folded = [key.lower() for key in meta]
+        require(len(set(folded)) == len(folded), Reason.ROUTE_UNPROVEN)
+        for key, low in zip(meta, folded):
+            require(
+                not low.startswith("traefik.")
+                or (
+                    key.startswith("traefik.")
+                    and (low != "traefik.enable" or key == "traefik.enable")
+                    and (not low.startswith("traefik.http.routers.") or key.startswith("traefik.http.routers."))
+                    and (not low.startswith(("traefik.tcp.", "traefik.udp.")) or key.startswith(("traefik.tcp.", "traefik.udp.")))
+                    and (not low.endswith(".rule") or key.endswith(".rule"))
+                ),
+                Reason.ROUTE_UNPROVEN,
+            )
         require(meta.get("traefik.enable") in (None, "true", "false"), Reason.ROUTE_UNPROVEN)
         if meta.get("traefik.enable") != "true":
             require(service(row) != "benefits-frontend", Reason.ROUTE_UNPROVEN)
@@ -748,6 +788,7 @@ def dynamic_snapshot(
             )
             document = parse_yaml(raw, yaml, foreign=True)
             require(set(document) <= {"http", "tls"}, Reason.ROUTE_UNPROVEN)
+            exact_read_keys(document)
             http = mapping(document.get("http", {}))
             for router in mapping(http.get("routers", {})).values():
                 dynamic_router(router)

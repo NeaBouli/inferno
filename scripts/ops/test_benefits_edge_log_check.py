@@ -491,6 +491,32 @@ class CheckerTests(unittest.TestCase):
             # Duplicate keys are refused by the unique-key loader (INPUT_INVALID).
             self.assertRegex(text, r"reason=(YAML_UNSUPPORTED|CONFIG_UNPROVEN|INPUT_INVALID)\n")
 
+    def test_case_variants_and_merge_spellings_hold(self) -> None:
+        fx = self.fixture()
+        self.dyn(fx, "route.yml", b"http:\n  '<<': {routers: {}}\n")
+        self.hold(fx, "YAML_UNSUPPORTED")
+        for body in (
+            b"http:\n  Routers:\n    x:\n      rule: 'Host(`benefits.example.invalid`)'\n",
+            b"http:\n  routers:\n    x:\n      Rule: 'Host(`benefits.example.invalid`)'\n",
+            b"http:\n  routers:\n    x:\n      rule: 'Host(`m.example.invalid`)'\n      ruleSyntax: v2\n",
+            b"http:\n  routers:\n    x:\n      rule: 'Host(`m.example.invalid`)'\n      RULE: 'PathPrefix(`/`)'\n",
+        ):
+            fx = self.fixture()
+            self.dyn(fx, "route.yml", body)
+            # Case-duplicate keys may already be refused by the unique-key loader.
+            self.assertRegex(self.hold(fx), r"reason=(ROUTE_UNPROVEN|INPUT_INVALID)\n")
+        for key in (
+            "Traefik.http.routers.hidden.rule",
+            "traefik.HTTP.routers.hidden.rule",
+            "traefik.http.routers.foreign.Rule",
+            "traefik.Enable",
+        ):
+            fx = self.fixture()
+            row = peer(OTHER, "foreign", "8080", "media.example.invalid")
+            cast(dict[str, object], row[5])[key] = "Host(`benefits.example.invalid`)"
+            fx.peers.append(row)
+            self.assertRegex(self.hold(fx), r"reason=(ROUTE_UNPROVEN|INPUT_INVALID)\n")
+
     def test_dynamic_catchall_needs_low_priority_on_443(self) -> None:
         def catchall(priority: str, entry: str = "websecure") -> bytes:
             return (
