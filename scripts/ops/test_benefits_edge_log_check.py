@@ -143,6 +143,8 @@ class Fixture:
         self.inspect_peers = 0
         self.copy_override: bytes | None = None
         self.dynamic_visible: dict[str, bytes] = {}
+        self.inspect_central = 0
+        self.central_mutation: Callable[[list[object]], None] | None = None
         self.dynamic_archive: bytes | None = None
         self.helper = mod.helpers()
 
@@ -171,7 +173,11 @@ class Fixture:
                 by_id = {str(row[0]): row for row in rows}
                 output = "\n".join(json.dumps(by_id[cid]) for cid in ids)
             elif fmt == mod.CENTRAL_FMT:
-                output = json.dumps(self.central)
+                self.inspect_central += 1
+                row = copy.deepcopy(self.central)
+                if self.central_mutation is not None and self.inspect_central > 1:
+                    self.central_mutation(row)
+                output = json.dumps(row)
             elif fmt == mod.LOG_FMT:
                 output = "\n".join(json.dumps([self.driver, self.started, 0]) for _ in ids)
             elif fmt == mod.ENV_KEYS_FMT:
@@ -727,6 +733,20 @@ class CheckerTests(unittest.TestCase):
         self.hold(fx, "DRIFT")
         fx = self.fixture()
         fx.drift = True
+        self.hold(fx, "DRIFT")
+
+    def test_mount_order_is_not_drift(self) -> None:
+        def reverse(row: list[object]) -> None:
+            cast(list[object], row[7]).reverse()
+
+        def retarget(row: list[object]) -> None:
+            cast(list[dict[str, object]], row[7])[0]["Source"] = "/elsewhere"
+
+        fx = self.fixture()
+        fx.central_mutation = reverse
+        self.assertEqual(fx.check()[0], 0)
+        fx = self.fixture()
+        fx.central_mutation = retarget
         self.hold(fx, "DRIFT")
 
     def test_log_limits_and_errors_never_leak(self) -> None:

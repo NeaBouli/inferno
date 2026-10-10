@@ -73,6 +73,15 @@ CATCHALL_RE = re.compile(r"HostRegexp\(`[^`]{1,256}`\)")
 CONFIG_EXTENSIONS = (".yml", ".yaml")
 
 
+def stable_central(row: list[object]) -> list[object]:
+    """Docker returns .Mounts in no fixed order; compare the mount set, not its order."""
+    mounts = row[7] if len(row) > 7 else None
+    if not isinstance(mounts, list):
+        return row
+    key = [json.dumps(mount, sort_keys=True) for mount in mounts]
+    return [*row[:7], sorted(key), *row[8:]]
+
+
 def go_ext(name: str) -> str:
     """Lower-cased extension as Go's filepath.Ext sees it (from the last dot, ".yml" included)."""
     dot = name.rfind(".")
@@ -1048,7 +1057,7 @@ def check(deps: Deps, yaml: ModuleType, helper: Helpers, result: Result) -> None
     require(
         deps.text(["docker", "ps", "--no-trunc", "--format", "{{.ID}}"]).splitlines() == ids
         and deps.inspect(ids, PEER_FMT) == peers
-        and deps.inspect([cid], CENTRAL_FMT)[0] == central
+        and stable_central(deps.inspect([cid], CENTRAL_FMT)[0]) == stable_central(central)
         and deps.inspect(sample_ids, LOG_FMT) == log_states,
         Reason.DRIFT,
     )
