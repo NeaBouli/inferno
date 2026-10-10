@@ -21,7 +21,7 @@ const TARGETS = {
   landing: {
     core: path.join(root, "docs", "assets", "wallet-core.js"),
     page: path.join(root, "docs", "index.html"),
-    cacheBust: /assets\/wallet-core\.js\?v=20261004-read-provider"/
+    cacheBust: /assets\/wallet-core\.js\?v=20261010-pr261-notice"/
   },
   web3: {
     core: path.join(root, "docs", "web3-wallet-core.js"),
@@ -60,6 +60,18 @@ assert.ok(
   TARGETS[TARGET].cacheBust.test(landing),
   TARGET + " page must cache-bust its wallet core for the RPC fallback"
 );
+if (TARGET === "landing") {
+  const faq = fs.readFileSync(path.join(root, "docs", "wiki", "faq.html"), "utf8");
+  const faqCacheBust = /\.\.\/assets\/wallet-core\.js\?v=20261010-pr261-notice"/;
+  assert.ok(faqCacheBust.test(faq), "FAQ must cache-bust its wallet core for the RPC notice");
+  // Reject obsolete and unversioned page mutations, not just a missing asset reference.
+  for (const oldSuffix of ["?v=20261004-read-provider", ""]) {
+    assert.ok(!TARGETS.landing.cacheBust.test(landing.replace("wallet-core.js?v=20261010-pr261-notice", "wallet-core.js" + oldSuffix)),
+      "landing must reject the obsolete or unversioned wallet core URL");
+    assert.ok(!faqCacheBust.test(faq.replace("wallet-core.js?v=20261010-pr261-notice", "wallet-core.js" + oldSuffix)),
+      "FAQ must reject the obsolete or unversioned wallet core URL");
+  }
+}
 // T-224: page-level inline readers must use IFRWallet.getReadProvider() (chain-pinned), never their own
 // JsonRpcProvider. Only executable <script> blocks are checked; <pre> code samples are documentation.
 assert.ok(/getReadProvider: getReadProvider/.test(source), "wallet-core must export getReadProvider");
