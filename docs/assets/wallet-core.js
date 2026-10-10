@@ -533,7 +533,18 @@ window.IFRWallet = (function() {
     close.addEventListener("click", function() { bar.remove(); });
     bar.appendChild(text);
     bar.appendChild(close);
-    (document.body || document.documentElement).appendChild(bar);
+    var progress = document.querySelector("#wizard #wz-progress");
+    if (progress) {
+      bar.style.position = "static";
+      bar.style.width = "100%";
+      bar.style.maxWidth = "100%";
+      bar.style.margin = "0 0 24px";
+      text.style.minWidth = "0";
+      text.style.overflowWrap = "anywhere";
+      progress.parentNode.insertBefore(bar, progress);
+    } else {
+      (document.body || document.documentElement).appendChild(bar);
+    }
   }
 
   function _hideRpcErrorNotice() {

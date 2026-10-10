@@ -806,6 +806,57 @@ Change only `docs/index.html` (tracker + three cards), `docs/wiki/index.html`
 active-link `aria-current` attribute on sidebar pages. Copilot backend,
 contracts, wallet core and other Landing sections stay untouched.
 
+### 11.8 Release-truth copy addendum (2026-10-10)
+
+Scope: DOCS-LIVE-TRUTH-FIX-20261010, F1-F6; base
+`d095ff4b73ea78466b3aa45ff10e7621f5d2eb57`. This extends the existing
+public-documentation node only; no service behavior or release activation.
+
+1. Accepted Contract CI run `37998031908` (2026-10-09), dated T-274 browser
+   evidence (2026-10-06, `eead5086`) and accepted release holds ->
+   `docs/CURRENT_FUNCTIONALITY_STATUS.md::Verification Evidence` / `README.md`
+   -> current Landing/Wiki copy and both `STATUS-REPORT.md` baselines.
+2. `cwa-remediation-register.json::canonicalTests` ->
+   `scripts/check-cwa-remediation-register.cjs::renderMarkdown` -> generated
+   register Markdown. The accepted total is 700 contracts (693 + 7 FeeRouter
+   parity tests), with 30 Generator Engine and 36 legacy SDK tests separate.
+3. Current count -> `docs/llms.txt`, Copilot greeting/knowledge and the existing
+   T-275 count mirrors `docs/PRESS_KIT.md::Key Facts` and
+   `docs/TESTNET_GUIDE.md::Step 9` -> direct count assertions in the existing
+   docs/register guards. Historical changelog/audit/report tables stay intact.
+4. Public Benefits explanation -> source/post-migration versus unchanged
+   production-backend boundary -> `test-benefits-doc-consistency.cjs`.
+   Recovery copy -> historical sink versus recovered, unallocated Treasury
+   custody -> `test-cwa-content-coherence.cjs`. FAQ proposals and the
+   IFR-DIP-01 advisory boundary -> `test-docs-truth.cjs`.
+5. Changed Wiki HTML -> `scripts/build-wiki-rag.js::main` -> generated
+   `apps/ai-copilot/src/context/wiki-content.json`; generation is parent-owned.
+
+| Module | Responsibility | Entry | State |
+| --- | --- | --- | --- |
+| public release copy | distinguish accepted evidence, history and activation holds | canonical status / Landing / Wiki | built |
+| count mirrors | repeat only the scoped canonical counts | register JSON, llms, Copilot copy, press kit, testnet guide | built |
+| copy guards | reject the reported stale counts and overclaims | six existing docs/status/register/Benefits/CWA guard scripts | built |
+
+Cause: current-copy hops retained stale counts or promoted merged source/design
+intent to operational guarantees. Fix only these hops and focused in-script
+fixtures. Diagrams remain the section-11 files above; this addendum does not
+change the live-metrics or Wiki-shell runtime path. Parent owns generator,
+offline guard execution and responsive visual proof. Privacy activation,
+SDK publication, contracts, historical evidence, Bridges and Fleet plans stay
+untouched.
+
+F7 addendum (owner-authorized same-file follow-up): accepted Web3 frontend
+release `50af` and retirement decisions #209/#211 ->
+`docs/CURRENT_FUNCTIONALITY_STATUS.md::Public Surfaces` / LendingVault snapshot
+meaning / current activation work -> `scripts/test-functionality-status.cjs`.
+Official interfaces permanently retire V1 creation/increase and new borrowing
+regardless of price; full-available withdrawal and existing-loan repayment/top-up
+remain. Contract functions and the dated `ifrPriceWei = 0` input snapshot are
+not a claim of intrinsic contract disablement. The existing Benefits row names
+Model B's per-period Governance `recordMilestone` path and no activated pilot,
+not an authorized-caller reward path. No new measurement or runtime change.
+
 ## 12. Queued guardian batch binding trace
 
 Scope: task T-242 (PR #168). One path only: the CWA-09 step-2 execute batch

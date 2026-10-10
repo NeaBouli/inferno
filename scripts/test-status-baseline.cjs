@@ -55,8 +55,13 @@ const currentBaseline = [
   "**Current engineering baseline:** 2 October 2026",
   "Current repository verification",
   "Hardhat `3.18.1`",
-  "contracts `693/693`",
-  "`45/45` passed",
+  "contracts `700/700`",
+  "37998031908",
+  "d095ff4b73ea78466b3aa45ff10e7621f5d2eb57",
+  "693 + 7 FeeRouter parity tests; serializer selfcheck excluded",
+  "T-274 browser evidence (6 October 2026, `eead5086`)",
+  "Web3 write-path tests `85/85`",
+  "No new browser run",
   "Root `npm audit`: 0 vulnerabilities",
   "Benefits physical device/wallet acceptance remains `1/10`",
   "LendingVault.ifrPriceWei = 0",
@@ -64,6 +69,20 @@ const currentBaseline = [
 ];
 requireText("STATUS-REPORT.md", currentBaseline);
 requireText("docs/STATUS-REPORT.md", currentBaseline);
+function assertCurrentBaselineCounts(copy) {
+  const current = copy.split("## Historical Snapshot")[0];
+  assert.ok(current.includes("contracts `700/700`"), "current contract count must be 700");
+  assert.ok(current.includes("Web3 write-path tests `85/85`") && current.includes("T-274"), "Web3 browser evidence must be the dated 85-test suite");
+  assert.ok(!current.includes("`45/45`"), "current baseline must not retain the older browser subset");
+}
+for (const relative of ["STATUS-REPORT.md", "docs/STATUS-REPORT.md"]) {
+  const copy = read(relative);
+  assertCurrentBaselineCounts(copy);
+  for (const [from, to] of [["700/700", "693/693"], ["700/700", "701/701"], ["85/85", "45/45"]]) {
+    assert.throws(() => assertCurrentBaselineCounts(copy.replace(from, to)), { name: "AssertionError" });
+  }
+  assertCurrentBaselineCounts(`${copy}\nHistorical tests: 693/693, 45/45.`);
+}
 
 const todo = requireText("internal/operations/TODO.md", [
   "> Last updated: 2026-09-06 | Branch: main",

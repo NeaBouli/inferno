@@ -11,7 +11,7 @@ const status = read("docs/CURRENT_FUNCTIONALITY_STATUS.md");
 for (const marker of [
   "**Verified:** 6 September 2026",
   "**Repository baseline:** current release branch",
-  "`693/693` passing",
+  "`700/700` passing",
   "LendingVault.ifrPriceWei = 0",
   "priceOracle` is the zero address",
   "physical device/wallet acceptance matrix is 1/10",
@@ -24,6 +24,43 @@ for (const marker of [
 ]) {
   assert.ok(status.includes(marker), `functionality status missing: ${marker}`);
 }
+
+// F3: npm delivery and the current source patch are separate release states.
+function assertSdkReleaseState(copy) {
+  assert.ok(/Published npm `ifr-sdk` \*\*0\.4\.0\*\*/.test(copy), "SDK npm delivery must identify published 0.4.0");
+  assert.ok(/source\/docs \*\*0\.4\.1\*\* is unpublished/.test(copy), "SDK source patch must identify unpublished 0.4.1");
+  assert.ok(copy.includes("separate npm release gate"), "SDK patch must retain its publication gate");
+  assert.ok(!/Published npm `ifr-sdk` \*\*0\.4\.1\*\*/.test(copy), "source 0.4.1 is not published npm delivery");
+}
+for (const copy of [status, read("README.md")]) {
+  assertSdkReleaseState(copy);
+  assert.throws(() => assertSdkReleaseState(copy.replace("Published npm `ifr-sdk` **0.4.0**", "Published npm `ifr-sdk` **0.4.1**")), { name: "AssertionError" });
+  assert.throws(() => assertSdkReleaseState(copy.replace("is unpublished", "is published")), { name: "AssertionError" });
+}
+assert.ok(status.includes("Publisher validation") && status.includes("#238 compatibility/cutover HOLD"), "SDK status must preserve publisher validation and backend compatibility/cutover hold");
+
+// F7: official-interface retirement is independent of the dated contract-price snapshot.
+function assertLendingInterfaceRetirement(row) {
+  assert.equal(typeof row, "string", "current interface row missing");
+  for (const marker of ["Official interfaces permanently retire LendingVault V1 creation/increase and new borrowing", "#209/#211", "regardless of price"]) {
+    assert.ok(row.includes(marker), `interface retirement boundary missing: ${marker}`);
+  }
+  assert.ok(/underlying contract functions are not removed/i.test(row), "interface retirement must not imply removed contract functions");
+  assert.ok(!row.includes("offer creation/withdrawal"), "current official interfaces do not offer creation");
+  assert.ok(!/borrowing[^.]{0,100}(because|while|until)[^.]{0,100}(price|ifrPriceWei)/i.test(row), "borrowing retirement must not depend on price activation");
+}
+for (const surface of ["Wiki", "Web3"]) {
+  const row = status.match(new RegExp(`^\\| \\[${surface}\\].*$`, "m"))?.[0];
+  assertLendingInterfaceRetirement(row);
+  assert.throws(() => assertLendingInterfaceRetirement(row.replace("regardless of price", "until price is set")), { name: "AssertionError" });
+  assert.throws(() => assertLendingInterfaceRetirement(`${row} offer creation/withdrawal`), { name: "AssertionError" });
+}
+const web3Row = status.match(/^\| \[Web3\].*$/m)?.[0];
+for (const marker of ["full-available lender withdrawal", "existing-loan repayment/top-up", "contract-input snapshot", "LendingVault.ifrPriceWei = 0", "50af"]) {
+  assert.ok(web3Row.includes(marker), `Web3 retained capability/evidence missing: ${marker}`);
+}
+const benefitsRow = status.match(/^\| \[IFR Benefits\].*$/m)?.[0];
+assert.ok(benefitsRow.includes("per-period Governance `recordMilestone`") && benefitsRow.includes("not an authorized-caller path") && benefitsRow.includes("no pilot partner is activated"), "Model B must not imply an activated pilot or authorized-caller reward path");
 
 const statusLinks = {
   "README.md": /\[[^\]]+\]\([^)]*CURRENT_FUNCTIONALITY_STATUS\.md[^)]*\)/,
