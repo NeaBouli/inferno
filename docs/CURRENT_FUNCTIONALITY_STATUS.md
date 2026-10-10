@@ -44,7 +44,7 @@ LiquidityReserve row was refreshed at block `25918433`:
 | Web3 static PWA (`docs/web3`) | Public Mainnet interface; automated wallet/write-path tests pass. |
 | Benefits frontend/backend (`apps/benefits-network`) | Public production application; owner-B source is merged (#238), not activated in production. Production backend activation remains HOLD pending the customer-privacy migration; the frontend-only release did not migrate or restart the backend. Storage-free handling is not a production guarantee. Physical wallet/device acceptance remains incomplete. |
 | Benefits embedded wallet (`apps/benefits-wallet-prototype`) | Isolated prototype; not used by production and not approved for custody or recovery. |
-| IFR SDK (`apps/sdk`) | Published npm `ifr-sdk` **0.4.0**; source/docs **0.4.1** is unpublished. Publisher validation and the separate npm release gate remain pending; source presence is not publication or #238 backend cutover. |
+| IFR SDK (`apps/sdk`) | Published npm `ifr-sdk` **0.4.1** with provenance via Trusted Publishing (2026-10-10; **0.4.0** was the provenance-free one-time bootstrap). Publisher validation is complete; every later version still requires the separate npm release gate. Package publication is not the #238 backend cutover. |
 | Dashboard and governance dashboard | Repository applications; not represented as the primary production user interface. |
 | Points Backend, AI Copilot and Telegram bot | Deployed services listed under Deployed Application Inventory below. |
 | Creator Gateway | Implemented repository service; the repository holds no production deployment record, so availability must not be inferred from source presence alone. |
@@ -120,7 +120,7 @@ production monitoring or an independent professional third-party audit.
    path is deployed and tested; use TIME_ONLY for current commitments.
 4. Register and activate builders/reward wallets only through the documented
    governance-controlled BuilderRegistry and PartnerVault process.
-5. Publish source/docs `ifr-sdk` 0.4.1 only through its separate package release
-   gate and publisher validation; npm 0.4.0 is already published. Preserve the
+5. Publish later `ifr-sdk` versions only through the separate npm release gate
+   (0.4.1 is published with provenance). Preserve the
    #238 compatibility/cutover HOLD until the customer-privacy migration is authorized.
 6. Complete the independent professional third-party audit.
