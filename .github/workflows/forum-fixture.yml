@@ -1,0 +1,42 @@
+name: Forum Synthetic Fixture
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/forum-fixture.yml'
+      - 'scripts/run-forum-fixture-ci.sh'
+      - 'scripts/verify-forum-votes.cjs'
+      - 'scripts/test-forum-votes.cjs'
+      - 'apps/sdk/package.json'
+      - 'apps/sdk/package-lock.json'
+      - 'docs/architecture/forum-fixture-verifier.md'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: forum-fixture-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  fixture:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    permissions:
+      contents: read
+    defaults:
+      run:
+        shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+          fetch-depth: 1
+          submodules: false
+          lfs: false
+      - name: Admit and run the confined synthetic fixture
+        run: |
+          /usr/bin/timeout --signal=TERM --kill-after=10s 600s \
+            /usr/bin/env -i PATH=/usr/bin:/bin HOME=/nonexistent LANG=C LC_ALL=C \
+            /usr/bin/bash --noprofile --norc scripts/run-forum-fixture-ci.sh

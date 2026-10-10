@@ -12,6 +12,7 @@ governance. Real DIP outcomes remain ADVISORY; O1/O2 remain open.
 | --- | --- | --- | --- |
 | Synthetic Forum verification | `scripts/verify-forum-votes.cjs::verifyFixture` | manifest + separately injected trusted synthetic evidence + signed dummy votes -> exact fixture tally | source implementation; NOT RUN |
 | Synthetic regression source | `scripts/test-forum-votes.cjs` | dummy fixtures -> assertions over the pure verifier | source implementation; NOT RUN |
+| CI admission | `.github/workflows/forum-fixture.yml` -> `scripts/run-forum-fixture-ci.sh` | trusted bounded acquisition + effective isolation proofs -> existing regression entry | SOURCE GO; NOT RUN |
 
 ```mermaid
 flowchart LR
@@ -21,9 +22,77 @@ flowchart LR
   V --> R[Deterministic synthetic-only ADVISORY result]
 ```
 
-Only these two scripts and this document are in the implementation boundary.
-Existing maps, Council data, apps, package/lock/CI, and live governance remain
-untouched. This recipe is written before implementation.
+The verifier implementation boundary remains these two scripts and this document.
+The separate CI-admission boundary adds only the dedicated workflow and trusted
+driver named above. Existing maps, Council data, apps, package/locks, SDK CI and
+live governance remain untouched. The admission controls below are recorded
+before the CI implementation, under the parent's source-only authorization.
+
+### CI Admission Controls
+
+The new hop is the dedicated GitHub-hosted `ubuntu-24.04` job -> trusted driver
+-> existing fixture regression -> unchanged pure verifier. The job has only
+`contents: read`, checkout credentials disabled and no secrets, id-token,
+publication, cache/artifact actions, self-hosted runner or deployment. Source GO
+does not authorize local Docker, downloads, installation, syntax checks or tests.
+
+The tool image is the named Node RepoDigest
+`docker.io/library/node@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402`,
+Linux/amd64, Node **22.23.3**. CI must prove RepoDigest, platform, image identity
+and actual Node version, not substitute an available tool. Host prerequisites
+are explicit absolute-path Bash, Docker, GNU coreutils and curl, with no installer
+fallback. Docker uses only `unix:///var/run/docker.sock`, a private empty config
+and cleared environment; inherited contexts, TLS settings and remote endpoints
+cannot redirect it. No container receives a Docker socket or host HOME.
+
+Trusted acquisition is a new bounded hosted-CI phase, separate from target
+execution. Both containers have network/IPC disabled, read-only roots and
+read-only inert Docker-injected hosts/hostname/resolver files, UID/GID 10000,
+all capabilities dropped, seccomp and no-new-privileges. Acquisition has one
+CPU, 512 MiB RAM/no swap, PIDs 64, FDs 64, an 8 MiB regular-file limit, a private
+128 MiB tmpfs work volume and 16 MiB scratch. Its HOME/cache are private quota
+storage; staged SDK manifest/lock are read-only. It receives no hooks, build,
+profile, credential, proxy or host environment.
+
+The only dependency network requests are trusted host curl requests to exact
+`https://registry.npmjs.org/` tarball URLs from the existing SDK lock, with
+redirects/proxies/config/retries disabled and per-request/phase deadlines.
+Downloads stream directly into acquisition quota storage, capped at 8 MiB each
+and verified against the lock's SHA-512 before offline npm cache admission.
+The digest-only image pull is separately bounded trusted tool bootstrap.
+`npm ci --offline --omit=dev --ignore-scripts --no-audit --no-fund` uses the
+unchanged lock; no SDK build or fixture import occurs during acquisition.
+
+Export uses the owned quota-backed Docker volume's `node_modules` subpath,
+mounted read-only into the target, not a host-extracted archive. Only the nine
+lock-pinned production packages are admitted, with ethers **6.17.0**; all tree
+entries must be ordinary directories/files, with no symlink, special file,
+path traversal, unknown package or excess depth/count/size. Closure size is
+capped at 32 MiB and entries at 8192, then files/directories are sealed read-only.
+No archive is generated or extracted on the host, and npm HOME/cache are not
+exported. Unsupported quota or volume-subpath behavior fails closed.
+
+Target limits remain one CPU, 256 MiB RAM/no swap, PIDs 64, FDs 64, 1 MiB files
+and private 16 MiB scratch. Only the two staged source files, sealed tools
+subpath and inert injected files are mounted, all read-only except scratch.
+Before npm acquisition or any target import, trusted preflight checks Docker
+configuration and effective namespaces, UID/capabilities/seccomp/NNP,
+cgroup-v2 limits, rlimits, mount flags, quotas and empty/minimal process env.
+Import admission is bounded to 30s, CLI refusal to 30s and fixtures to 120s.
+Success requires the exact negative CLI exit 1/refusal and fixture exit 0 with
+the existing exact PASS line. Preflight exit 98, missing tests/markers,
+timeouts or unexpected output remain failures, never PASS.
+
+The acquisition phase/container is capped at 180s, target container at 240s,
+image pull at 120s, driver at 600s and job at 12 minutes. Each container's
+trusted initial process enforces its lifetime; expiration exits 98. Captured
+text output is aggregate-bounded at 64 KiB; binary
+downloads are independently bounded and never logged. Cleanup targets only
+this invocation's owner-labelled containers/volume and private temporary
+directory. Cleanup also matches recorded created IDs, not just names/labels.
+Failed or uncertain cleanup prevents PASS; no foreign process,
+container, volume or shared image is killed/pruned. Implementation and parent
+review/CI evidence are still **NOT RUN**.
 
 ## Exact Schema
 
@@ -174,8 +243,9 @@ files, and prints a fixed `OFFLINE_API_ONLY` refusal with the same trust markers
 and nonzero exit status, without loading ethers. There is no file-intake CLI,
 provider, signer in verifier source, network, database, clock, random source or
 service process. Tests generate signatures using public dummy scalar keys only;
-they must run only in the parent's OS-confined cached Linux runner. No host
-execution, dependency installation, download or target build is authorized.
+they must run only in the parent's OS-confined Linux runner. The separate
+hosted-CI acquisition recipe above does not authorize workstation execution,
+installation, downloads or target builds.
 
 Open hops: independently authenticated historical chain/state proofs and order
 completeness; real EIP-1271 execution; ratified policy/O1/O2; intake, identity,
