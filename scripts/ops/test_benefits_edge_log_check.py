@@ -511,6 +511,26 @@ class CheckerTests(unittest.TestCase):
         fx.files["/traefik.yml"] = b"log: {}\n"
         self.hold(fx)
 
+    def test_floating_minor_tag_needs_exact_label(self) -> None:
+        fx = self.fixture()
+        fx.central[5] = "traefik:v3.6"
+        cast(dict[str, object], fx.central[9])["org.opencontainers.image.version"] = "v3.6.24"
+        self.assertEqual(fx.check()[0], 0)
+        for label in (None, "v3.6", "3.5.9", "v3.6.24-rc1", "latest"):
+            fx = self.fixture()
+            fx.central[5] = "traefik:v3.6"
+            lab = cast(dict[str, object], fx.central[9])
+            if label is None:
+                del lab["org.opencontainers.image.version"]
+            else:
+                lab["org.opencontainers.image.version"] = label
+            self.hold(fx, "CONFIG_UNPROVEN")
+        for image in ("traefik:v3", "traefik:latest", "traefik:v3.6@sha256:" + "0" * 64, "evil/traefik:v3.6"):
+            fx = self.fixture()
+            fx.central[5] = image
+            cast(dict[str, object], fx.central[9])["org.opencontainers.image.version"] = "v3.6.24"
+            self.hold(fx, "CONFIG_UNPROVEN")
+
     def test_selected_file_excludes_guessed_cli(self) -> None:
         fx = self.fixture()
         fx.central[6] = ["--accesslog=true"]

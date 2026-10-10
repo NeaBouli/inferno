@@ -6,7 +6,8 @@ Docker host, Python >=3.11 and an owner-provisioned PyYAML SafeLoader. Nothing i
 installed automatically. Run the adjacent shell wrapper with --owner-go only
 after review. No public request, container exec, configuration write or export.
 
-Supported: official traefik-central v3.6.x, compose project traefik, selected
+Supported: official traefik-central v3.6.x (exact tag, or the floating v3.6 tag with an exact
+3.6.x image version label), compose project traefik, selected
 default-location bind-mounted YAML static file; Docker provider with explicit
 exposedByDefault=false; simple exact Host routers and explicit Docker networks.
 Both Benefits compose services must exist in one project. A backend without a
@@ -57,6 +58,9 @@ DOCKER_PREFIX = (DOCKER, "--host", DOCKER_SOCKET, "--config", DOCKER_CONFIG)
 ID_RE = re.compile(r"[a-f0-9]{64}")
 HOST_RE = re.compile(r"Host\(`([a-z0-9][a-z0-9.-]{0,252})`\)")
 VERSION_RE = re.compile(r"(?:docker\.io/)?(?:library/)?traefik:v?3\.6\.(\d+)(?:@sha256:[a-f0-9]{64})?")
+# Floating v3.6 tag: accepted only with an exact 3.6.x image version label (checked below).
+MINOR_TAG_RE = re.compile(r"(?:docker\.io/)?(?:library/)?traefik:v?3\.6")
+LABEL_VERSION_RE = re.compile(r"v?3\.6\.\d+")
 
 # Docker projects only route metadata, never the complete Config or environment.
 LABELS_FMT = (
@@ -779,14 +783,20 @@ def check(deps: Deps, yaml: ModuleType, helper: Helpers, result: Result) -> None
         Reason.TOPOLOGY_UNPROVEN,
     )
     image = central[5]
+    version = labels(central, 9).get("org.opencontainers.image.version")
+    floating = (
+        isinstance(image, str)
+        and MINOR_TAG_RE.fullmatch(image) is not None
+        and isinstance(version, str)
+        and LABEL_VERSION_RE.fullmatch(version) is not None
+    )
     require(
         isinstance(image, str)
-        and VERSION_RE.fullmatch(image) is not None
+        and (VERSION_RE.fullmatch(image) is not None or floating)
         and helper.traefik_major(image, labels(central, 9)) == 3,
         Reason.CONFIG_UNPROVEN,
     )
-    version = labels(central, 9).get("org.opencontainers.image.version")
-    if version is not None:
+    if version is not None and not floating:
         require(
             isinstance(version, str)
             and cast(str, image).split("@", 1)[0].endswith(":v" + version.lstrip("v")),
