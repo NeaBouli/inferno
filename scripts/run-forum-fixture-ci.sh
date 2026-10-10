@@ -518,10 +518,10 @@ child_main() {
   must_capture volume-create 256 10 docker_cmd volume create --driver=local --label "$OWNER_LABEL=$OWNER" \
     --opt type=tmpfs --opt device=tmpfs --opt 'o=size=134217728,uid=10000,gid=10000,mode=0700,nosuid,nodev,noexec' "$VOLUME"
   verify_line volume-create "$VOLUME"
+  printf '%s\n' "$VOLUME" >"$OWN/volume-id"
   must_capture volume-proof 1024 10 docker_cmd volume inspect --format \
     '{{.Name}}|{{.Driver}}|{{index .Labels "org.inferno.forum-fixture.owner"}}|{{index .Options "type"}}|{{index .Options "device"}}|{{index .Options "o"}}' "$VOLUME"
   verify_line volume-proof "$VOLUME|local|$OWNER|tmpfs|tmpfs|size=134217728,uid=10000,gid=10000,mode=0700,nosuid,nodev,noexec"
-  printf '%s\n' "$VOLUME" >"$OWN/volume-id"
   ACQ_DEADLINE=$((SECONDS + 180))
   create_container acquire "$OWNER-acquire" /work/home 536870912 8388608
   ACQ_ID=$CREATED_ID
@@ -640,14 +640,17 @@ cleanup_owned() {
 }
 
 finish() {
-  local status=$?
+  local status=$? cleanup_confirmed=1
   trap - EXIT INT TERM
   set +e
   if ! cleanup_owned; then
     printf '%s\n' 'FORUM_CI_CLEANUP_UNCONFIRMED'
+    cleanup_confirmed=0
     status=1
   fi
-  if [[ "$OWN" =~ ^/tmp/forum-fixture\.[A-Za-z0-9]{6}$ && -d "$OWN" && ! -L "$OWN" ]]; then
+  if [[ $cleanup_confirmed -eq 0 ]]; then
+    printf '%s\n' 'FORUM_CI_RECOVERY_STATE_RETAINED'
+  elif [[ "$OWN" =~ ^/tmp/forum-fixture\.[A-Za-z0-9]{6}$ && -d "$OWN" && ! -L "$OWN" ]]; then
     /usr/bin/timeout --signal=TERM --kill-after=2s 5s /usr/bin/rm -r -- "$OWN"
     if [[ $? -ne 0 || -e "$OWN" ]]; then
       printf '%s\n' 'FORUM_CI_TEMP_CLEANUP_UNCONFIRMED'
