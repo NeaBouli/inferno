@@ -165,6 +165,10 @@ function loadWalletCore(behaviour) {
       documentElement: body,
       createElement: makeElement,
       getElementById: (id) => findById(body, id),
+      querySelector(selector) {
+        assert.strictEqual(selector, "#wizard #wz-progress", "fake document only models the wizard progress lookup");
+        return null;
+      },
       addEventListener() {}
     },
     localStorage: { getItem() { return null; }, setItem() {}, removeItem() {} },
