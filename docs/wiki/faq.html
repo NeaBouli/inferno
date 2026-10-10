@@ -362,6 +362,7 @@
       justify-content: space-between;
       align-items: center;
       width: 100%;
+      min-height: 44px;
       padding: 14px 20px;
       background: var(--card);
       border: none;
@@ -378,16 +379,19 @@
       background: rgba(255, 255, 255, 0.04);
     }
 
+    .faq-q > span:first-child {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+
     .faq-q .icon {
       font-size: 18px;
       color: var(--muted);
-      transition: transform 0.3s;
+      width: 18px;
+      line-height: 1;
+      text-align: center;
       flex-shrink: 0;
       margin-left: 16px;
-    }
-
-    .faq-q.open .icon {
-      transform: rotate(45deg);
     }
 
     .faq-a {
@@ -397,6 +401,7 @@
       font-size: 14px;
       line-height: 1.7;
       background: var(--card);
+      overflow-wrap: anywhere;
     }
 
     .faq-a.open {
@@ -421,6 +426,13 @@
     }
 
     /* ---------- Responsive ---------- */
+    /* Reserve the launcher's horizontal band even while answers scroll past it. */
+    @media (max-width: 1280px) {
+      .faq-section { margin-right: 40px; }
+    }
+    @media (max-width: 900px) {
+      .faq-section { margin-right: 80px; }
+    }
     @media (max-width: 768px) {
       .layout {
         grid-template-columns: 1fr;
@@ -462,6 +474,7 @@
     }
 
     @media (max-width: 480px) {
+      .faq-section { margin-right: 56px; }
       .main h1 {
         font-size: 26px;
       }
@@ -601,7 +614,7 @@
   <meta name="twitter:description" content="All your questions about IFR answered — tokenomics, lock mechanism, bootstrap, fees and governance.">
   <meta name="twitter:site" content="@IFRtoken">
   <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png"><script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
-<script src="../assets/wallet-core.js"></script>
+<script src="../assets/wallet-core.js?v=20261010-pr261-notice"></script>
 <script src="../assets/ifr-state.js"></script>
 <script type="application/ld+json">
   {
@@ -1239,10 +1252,14 @@ const hasLock = await ifrLock.isLocked(walletAddress, ethers.parseUnits("1000", 
     (function () {
       var questions = document.querySelectorAll('.faq-q');
       questions.forEach(function (btn) {
+        btn.type = 'button';
+        btn.setAttribute('aria-expanded', btn.classList.contains('open') ? 'true' : 'false');
+        btn.querySelector('.icon').setAttribute('aria-hidden', 'true');
         btn.addEventListener('click', function () {
           var answer = btn.nextElementSibling;
           var isOpen = btn.classList.toggle('open');
           answer.classList.toggle('open', isOpen);
+          btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
           btn.querySelector('.icon').textContent = isOpen ? '\u2212' : '+';
         });
       });
