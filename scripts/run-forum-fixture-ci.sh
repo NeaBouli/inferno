@@ -13,6 +13,16 @@ STEP_FILE=''
 DIAG_CONTEXT=outer
 FAILURE_REPORTED=0
 
+allowed_preflight_code() {
+  case "$1" in
+    unknown|identity|environment|inspect-input|image|container|host-isolation|host-security|host-resources|\
+    host-surface|host-rlimits|host-tmpfs|host-mounts|mount-table|mount-root|mount-injected|tmpfs-quota|\
+    scratch|sockets|process-status|process-rlimits|namespaces|network|cgroup-memory|cgroup-pids|cgroup-cpu|\
+    source-files|closure|private-home|private-npm-config) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 allowed_step() {
   case "$1" in
     unknown|outer-entry|outer-bootstrap-tools|outer-mktemp|outer-host-tools|outer-host-socket|outer-host-directory|\
@@ -23,6 +33,7 @@ allowed_step() {
     acquire-preflight|acquire-deadline|lock-plan|tarball-fetch|npm-cache|npm-ci|closure-seal|target-create|\
     target-start|acquire-remove|acquire-absent|target-inspect|target-preflight|import|cli-negative|fixture-tests|\
     child-complete|cleanup-resources|cleanup-temp|cleanup-retained) return 0 ;;
+    acquire-preflight-*|target-preflight-*) allowed_preflight_code "${1#*-preflight-}" ;;
     *) return 1 ;;
   esac
 }
@@ -118,6 +129,7 @@ const expected = new Map([
 const digest = "sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402";
 const imageRef = `docker.io/library/node@${digest}`;
 const root = phase === "acquire" ? "/work" : "/tools/node_modules";
+let failureCode = "unknown";
 function mountRows() {
   return new Map(fs.readFileSync("/proc/self/mountinfo", "utf8").trim().split("\n").map(line => {
     const fields = line.split(" ");
@@ -162,18 +174,21 @@ function tree(rootPath, seal) {
   }
 }
 async function main() {
+  failureCode = "identity";
   assert(["acquire", "target"].includes(phase));
   assert.equal(process.version, "v22.23.3");
   assert.equal(process.platform, "linux");
   assert.equal(process.arch, "x64");
   assert.equal(process.getuid(), 10000);
   assert.equal(process.getgid(), 10000);
+  failureCode = "environment";
   const env = { PATH: "/usr/local/bin:/usr/bin:/bin", HOME: phase === "acquire" ? "/work/home" : "/tmp/home",
     TMPDIR: "/tmp", LANG: "C", LC_ALL: "C" };
   assert.deepEqual({ ...process.env }, env);
   const firstEnv = Object.fromEntries(fs.readFileSync("/proc/1/environ", "utf8").split("\0")
     .filter(Boolean).map(entry => [entry.slice(0, entry.indexOf("=")), entry.slice(entry.indexOf("=") + 1)]));
   assert.deepEqual(firstEnv, env);
+  failureCode = "inspect-input";
   let input = "";
   for await (const chunk of process.stdin) {
     input += chunk.toString("utf8");
@@ -182,11 +197,13 @@ async function main() {
   const objects = JSON.parse(input);
   assert.equal(objects.length, 2);
   const [image, container] = objects;
+  failureCode = "image";
   assert.equal(image.Os, "linux");
   assert.equal(image.Architecture, "amd64");
   assert(image.RepoDigests.includes(`node@${digest}`) || image.RepoDigests.includes(imageRef));
   assert.equal(container.Image, image.Id);
   assert.equal(container.Config.Image, imageRef);
+  failureCode = "container";
   assert.equal(container.Config.User, "10000:10000");
   assert.equal(container.Config.Labels["org.inferno.forum-fixture.owner"], owner);
   assert.equal(container.Config.WorkingDir, "/");
@@ -198,21 +215,25 @@ async function main() {
     "/usr/local/bin/node", "-e", `setInterval(() => {}, 1000); setTimeout(() => process.exit(98), ${lifetime})`]);
   assert(container.State.Running && !container.State.OOMKilled);
   const h = container.HostConfig;
+  failureCode = "host-isolation";
   assert.equal(h.NetworkMode, "none");
   assert.equal(h.IpcMode, "none");
   assert.equal(h.PidMode, "");
   assert.equal(h.CgroupnsMode, "private");
   assert.equal(h.Privileged, false);
   assert.equal(h.ReadonlyRootfs, true);
+  failureCode = "host-security";
   assert.deepEqual(h.CapDrop, ["ALL"]);
   assert(!h.CapAdd || h.CapAdd.length === 0);
   assert.deepEqual(h.SecurityOpt, ["no-new-privileges=true"]);
+  failureCode = "host-resources";
   assert.equal(h.NanoCpus, 1000000000);
   const memory = phase === "acquire" ? 536870912 : 268435456;
   const fileSize = phase === "acquire" ? 8388608 : 1048576;
   assert.equal(h.Memory, memory);
   assert.equal(h.MemorySwap, memory);
   assert.equal(h.PidsLimit, 64);
+  failureCode = "host-surface";
   for (const key of ["Binds", "VolumesFrom", "Devices", "DeviceRequests", "ExtraHosts", "Links", "GroupAdd"]) {
     assert(!h[key] || h[key].length === 0);
   }
@@ -221,12 +242,15 @@ async function main() {
   assert.equal(h.PublishAllPorts, false);
   assert.equal(h.Runtime, "runc");
   assert.equal(h.LogConfig.Type, "none");
+  failureCode = "host-rlimits";
   assert.equal(h.Ulimits.length, 2);
   for (const [name, value] of [["nofile", 64], ["fsize", fileSize]]) {
     const setting = h.Ulimits.find(item => item.Name === name);
     assert(setting && setting.Soft === value && setting.Hard === value);
   }
+  failureCode = "host-tmpfs";
   assert.deepEqual(h.Tmpfs, { "/tmp": "rw,noexec,nosuid,nodev,size=16777216,mode=0700,uid=10000,gid=10000" });
+  failureCode = "host-mounts";
   const binds = new Map([
     ["/etc/hosts", `${work}/injected/hosts`], ["/etc/hostname", `${work}/injected/hostname`],
     ["/etc/resolv.conf", `${work}/injected/resolv.conf`],
@@ -251,71 +275,89 @@ async function main() {
     }
   }
   assert.equal(binds.size, 0);
+  failureCode = "mount-table";
   const rows = mountRows();
+  failureCode = "mount-root";
   assert(rows.get("/").flags.includes("ro"));
   assert(rows.get(root).flags.includes(phase === "acquire" ? "rw" : "ro"));
   assert.equal(rows.get(root).type, "tmpfs");
   for (const flag of ["noexec", "nosuid", "nodev"]) assert(rows.get(root).flags.includes(flag));
+  failureCode = "mount-injected";
   for (const path of ["/etc/hosts", "/etc/hostname", "/etc/resolv.conf",
     ...(phase === "acquire" ? ["/work/package.json", "/work/package-lock.json"] : ["/source/scripts"])]) {
     assert(rows.get(path).flags.includes("ro"));
   }
+  failureCode = "tmpfs-quota";
   for (const path of ["/tmp", root]) {
     const stat = fs.statfsSync(path, { bigint: true });
     assert.equal(stat.type, 0x01021994n);
     assert.equal(stat.blocks * stat.bsize, path === "/tmp" ? 16777216n : 134217728n);
   }
+  failureCode = "scratch";
   for (const flag of ["rw", "noexec", "nosuid", "nodev"]) assert(rows.get("/tmp").flags.includes(flag));
   const scratch = fs.statSync("/tmp");
   assert.equal(scratch.uid, 10000);
   assert.equal(scratch.gid, 10000);
   assert.equal(scratch.mode & 0o777, 0o700);
+  failureCode = "sockets";
   assert(!fs.existsSync("/dev/shm") || !rows.has("/dev/shm"));
   assert(!fs.existsSync("/var/run/docker.sock") && !fs.existsSync("/run/docker.sock"));
   for (const pid of ["self", "1"]) {
+    failureCode = "process-status";
     const status = fs.readFileSync(`/proc/${pid}/status`, "utf8");
     for (const key of ["CapInh", "CapPrm", "CapEff", "CapBnd", "CapAmb"]) {
       assert(new RegExp(`^${key}:\\s+0+$`, "m").test(status));
     }
     assert(/^Seccomp:\s+2$/m.test(status));
     assert(/^NoNewPrivs:\s+1$/m.test(status));
+    failureCode = "process-rlimits";
     const limits = fs.readFileSync(`/proc/${pid}/limits`, "utf8");
     assert(/^Max open files\s+64\s+64\s+files$/m.test(limits));
     assert(new RegExp(`^Max file size\\s+${fileSize}\\s+${fileSize}\\s+bytes$`, "m").test(limits));
   }
+  failureCode = "namespaces";
   for (const [index, name] of ["net", "ipc", "pid", "mnt", "cgroup"].entries()) {
     assert(hostNamespaces[index] && fs.readlinkSync(`/proc/self/ns/${name}`) !== hostNamespaces[index]);
     assert.equal(fs.readlinkSync(`/proc/self/ns/${name}`), fs.readlinkSync(`/proc/1/ns/${name}`));
   }
+  failureCode = "network";
   assert.deepEqual(fs.readdirSync("/sys/class/net"), ["lo"]);
+  failureCode = "cgroup-memory";
   assert.equal(fs.readFileSync("/sys/fs/cgroup/memory.max", "utf8").trim(), String(memory));
   assert.equal(fs.readFileSync("/sys/fs/cgroup/memory.swap.max", "utf8").trim(), "0");
+  failureCode = "cgroup-pids";
   assert.equal(fs.readFileSync("/sys/fs/cgroup/pids.max", "utf8").trim(), "64");
+  failureCode = "cgroup-cpu";
   const [quota, period] = fs.readFileSync("/sys/fs/cgroup/cpu.max", "utf8").trim().split(" ");
   assert(/^\d+$/.test(quota) && /^\d+$/.test(period) && BigInt(quota) > 0n && BigInt(quota) === BigInt(period));
   if (phase === "target") {
+    failureCode = "source-files";
     assert.deepEqual(fs.readdirSync("/source/scripts").sort(), ["test-forum-votes.cjs", "verify-forum-votes.cjs"]);
     for (const name of fs.readdirSync("/source/scripts")) {
       const stat = fs.lstatSync(`/source/scripts/${name}`);
       assert(stat.isFile() && !stat.isSymbolicLink() && stat.size <= 262144);
     }
+    failureCode = "closure";
     tree(root, false);
+    failureCode = "private-home";
     fs.mkdirSync("/tmp/home", { mode: 0o700 });
     assert.deepEqual(fs.readdirSync("/tmp/home"), []);
   } else {
+    failureCode = "private-home";
     for (const directory of ["/work/home", "/work/cache"]) {
       assert(!fs.existsSync(directory));
       fs.mkdirSync(directory, { mode: 0o700 });
       assert.deepEqual(fs.readdirSync(directory), []);
       assert.equal(fs.statSync(directory).mode & 0o777, 0o700);
     }
+    failureCode = "private-npm-config";
     for (const config of ["/work/user.npmrc", "/work/global.npmrc"]) {
       fs.writeFileSync(config, "", { flag: "wx", mode: 0o600 });
     }
   }
   process.stdout.write("FORUM_PREFLIGHT_CONTROLS_OK\n");
 }
-main().catch(() => { process.stdout.write("FORUM_PREFLIGHT_REFUSED\n"); process.exitCode = 98; });
+main().catch(() => { process.stdout.write(`FORUM_PREFLIGHT_REFUSED ${failureCode}\n`); process.exitCode = 98; });
 JS
 
 IFS= read -r -d '' LOCK_PLAN <<'JS' || :
@@ -500,11 +542,30 @@ preflight() {
   checkpoint "$phase-inspect"
   must_capture "$phase-inspect" 32768 10 docker_cmd inspect "$IMAGE" "$id"
   checkpoint "$phase-preflight"
-  must_capture "$phase-preflight" 256 15 docker_cmd exec -i "$id" /usr/bin/env -i \
+  capture "$phase-preflight" 256 15 docker_cmd exec -i "$id" /usr/bin/env -i \
     PATH="$CONTAINER_PATH" HOME="$home" TMPDIR=/tmp LANG=C LC_ALL=C \
     /usr/local/bin/node -e "$PREFLIGHT" "$phase" "$OWNER" "$OWN" "$VOLUME" "${HOST_NS[@]}" \
     <"$OWN/$phase-inspect"
+  checkpoint "$phase-preflight-unknown"
+  if [[ $CAPTURE_STATUS -ne 0 ]]; then
+    # Only a canonical fixed refusal may select a known host-private checkpoint.
+    if [[ $CAPTURE_STATUS -eq 98 ]]; then
+      local candidate='' code=''
+      IFS= read -r -n 64 candidate <"$OWN/$phase-preflight" || :
+      case "$candidate" in
+        'FORUM_PREFLIGHT_REFUSED '*) code=${candidate#FORUM_PREFLIGHT_REFUSED } ;;
+      esac
+      if allowed_preflight_code "$code"; then
+        printf 'FORUM_PREFLIGHT_REFUSED %s\n' "$code" >"$OWN/expected"
+        if /usr/bin/cmp -s -- "$OWN/$phase-preflight" "$OWN/expected"; then
+          checkpoint "$phase-preflight-$code"
+        fi
+      fi
+    fi
+    refuse
+  fi
   verify_line "$phase-preflight" 'FORUM_PREFLIGHT_CONTROLS_OK'
+  checkpoint "$phase-preflight"
 }
 
 remaining_acquisition() {
