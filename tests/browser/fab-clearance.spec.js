@@ -8,11 +8,15 @@ const VIEWPORTS = [[1440, 1000], [1180, 820], [820, 1180], [390, 844]];
 
 // PR261: measure the real unavailable state, not an injected notice or a centered-only view.
 for (const [width, height] of [[375, 812], ...VIEWPORTS]) {
-  test(`RPC notice and wizard stay clear at uncentered positions at ${width}x${height}`, async ({ page }) => {
+  test(`RPC notice and wizard stay clear at uncentered positions at ${width}x${height}`, async ({ page, baseURL }) => {
+    if (typeof baseURL !== "string" || !baseURL.trim()) throw new Error("PR261 requires a configured baseURL");
+    const base = new URL(baseURL);
+    if (!["http:", "https:"].includes(base.protocol) || base.username || base.password) throw new Error("PR261 requires an absolute HTTP(S) baseURL without credentials");
+    const pageOrigin = base.origin;
     await page.setViewportSize({ width, height });
     const failedRpc = new Set();
     const rpcHosts = ["ethereum-rpc.publicnode.com", "eth.drpc.org", "1rpc.io"];
-    await page.route(/^https?:\/\/(?!localhost)/, (route) => {
+    await page.route((url) => url.origin !== pageOrigin, (route) => {
       const host = new URL(route.request().url()).hostname;
       if (rpcHosts.includes(host) && route.request().method() === "POST") failedRpc.add(host);
       return route.abort();
@@ -106,9 +110,13 @@ for (const [width, height] of [[375, 812], ...VIEWPORTS]) {
     await expect(page.locator("#ifr-btn")).toBeVisible();
   });
 
-  test(`changed FAQ answers and native toggles stay clear at uncentered positions at ${width}x${height}`, async ({ page }) => {
+  test(`changed FAQ answers and native toggles stay clear at uncentered positions at ${width}x${height}`, async ({ page, baseURL }) => {
+    if (typeof baseURL !== "string" || !baseURL.trim()) throw new Error("PR261 requires a configured baseURL");
+    const base = new URL(baseURL);
+    if (!["http:", "https:"].includes(base.protocol) || base.username || base.password) throw new Error("PR261 requires an absolute HTTP(S) baseURL without credentials");
+    const pageOrigin = base.origin;
     await page.setViewportSize({ width, height });
-    await page.route(/^https?:\/\/(?!localhost)/, (route) => route.abort());
+    await page.route((url) => url.origin !== pageOrigin, (route) => route.abort());
     await page.goto("/wiki/faq.html");
     await page.evaluate(() => document.fonts.ready);
     expect(await page.locator(".faq-q").evaluateAll((buttons) => buttons.every((btn) => btn.getAttribute("aria-expanded") === "false"))).toBe(true);
