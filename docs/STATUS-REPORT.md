@@ -22,14 +22,17 @@ that a governance-gated contract path is active.
 - Root is ESM with explicit CommonJS boundaries for legacy scripts and
   standalone test packages. Waffle, Ganache and `solidity-coverage` are no
   longer active root dependencies; native Hardhat 3 coverage is used.
-- Current repository verification: contracts `693/693`, Generator Engine
-  `30/30`, IFR SDK `36/36`.
+- Current repository verification: contracts `700/700` (CI run `37998031908`,
+  9 October 2026, source `d095ff4b73ea78466b3aa45ff10e7621f5d2eb57`;
+  693 + 7 FeeRouter parity tests; serializer selfcheck excluded), Generator Engine
+  `30/30`, IFR SDK legacy suite `36/36`.
 - Current local static-analysis candidates: recursive Slither over 21
   production sources and bounded Mythril symbolic execution over 17 concrete
   production contracts. Mythril reported zero signals at any severity in the
   verified local run; exact-head Linux CI is still required.
-- Landing/Wiki wallet browser tests `26/26` and Web3 write-path browser tests
-  `45/45` passed. The complete Benefits preflight passed.
+- Retained T-274 browser evidence (6 October 2026, `eead5086`): Landing/Wiki
+  wallet tests `26/26` and Web3 write-path tests `85/85`. No new browser run is
+  implied by the Contract CI result. The complete Benefits preflight passed.
 - Benefits physical device/wallet acceptance remains `1/10` passed and `9`
   pending; this is not represented as complete production acceptance.
 - Mainnet borrowing remains disabled with `LendingVault.ifrPriceWei = 0`.

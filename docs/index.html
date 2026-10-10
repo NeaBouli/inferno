@@ -227,6 +227,10 @@
       font-size: 0.9rem;
       font-weight: 700;
     }
+    #wz-box .wz-option > div:nth-child(2) {
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
     #wz-box .wz-option-description {
       color: #5f574e;
       font-size: 0.8rem;
@@ -238,6 +242,17 @@
       font-size: 1rem;
     }
     #wizard { scroll-margin-top: 82px; }
+    #wizard button {
+      min-width: 44px;
+      min-height: 44px;
+    }
+    /* Keep wizard text and controls left of the visible launcher, including its hover scale. */
+    @media (max-width: 900px) {
+      #wizard > div { padding-right: 96px !important; }
+    }
+    @media (max-width: 768px) {
+      #wizard > div { padding-right: 84px !important; }
+    }
     @media (hover: none) {
       #wz-box .wz-option:hover { transform: none; }
     }
@@ -1346,7 +1361,7 @@
 <script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
 <link rel="stylesheet" href="/assets/liquidity-gauge.css?v=impact2">
 <script type="module" src="/assets/liquidity-gauge.mjs?v=impact2"></script>
-<script src="assets/wallet-core.js?v=20261004-read-provider"></script>
+<script src="assets/wallet-core.js?v=20261010-pr261-notice"></script>
 <script src="assets/ifr-state.js"></script>
   <link rel="stylesheet" href="assets/redesign-skin.css">
   <link rel="stylesheet" href="assets/landing-header-template.css?v=20261006-t279">
@@ -1722,8 +1737,8 @@
           <div class="stat-label">On-chain components</div>
         </div>
         <!-- TODO: IFR_UPDATE — TEST_COUNT — update on each sprint -->
-        <div class="stat-card">
-          <div class="stat-value">693</div>
+        <div class="stat-card" id="contract-test-evidence">
+          <div class="stat-value">700</div>
           <div class="stat-label">Contract tests passing</div>
         </div>
       </div>

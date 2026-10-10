@@ -272,6 +272,63 @@ for (const [key, label] of [
     `${label} must state that merchant checkout records mean this is not anonymity`
   );
 }
+// F2: source consistency does not certify activation of the unchanged production backend.
+const publicReadme = fs.readFileSync(path.join(root, 'README.md'), 'utf8');
+const publicStatus = fs.readFileSync(path.join(root, 'docs/CURRENT_FUNCTIONALITY_STATUS.md'), 'utf8');
+const landing = fs.readFileSync(path.join(root, 'docs/index.html'), 'utf8');
+const privacyReleaseCopy = [
+  ['README Benefits', publicReadme.split('### Benefits Network')[1]?.split('### Governance Dashboard')[0]],
+  ['Benefits public status', publicStatus.match(/^\| \[IFR Benefits\].*$/m)?.[0]],
+  ['Benefits repository status', publicStatus.match(/^\| Benefits frontend\/backend.*$/m)?.[0]],
+];
+const publicPrivacyCopy = [
+  ['Landing My benefits', landing.match(/t:"Open My benefits",d:"([^"]+)"/)?.[1]],
+  ['Wiki onboarding', content.wikiOnboarding.match(/<li id="benefits-privacy-release">([\s\S]*?)<\/li>/)?.[1]],
+  ...['faq-merchant-verification', 'faq-customer-proof'].map((id) => [
+    id, content.wikiFaq.match(new RegExp(`id="${id}">[\\s\\S]*?<div class="faq-a">([\\s\\S]*?)<\\/div>`))?.[1],
+  ]),
+];
+function assertPrivacyReleaseBoundary(copy, label) {
+  assert.equal(typeof copy, 'string', `${label}: public release copy missing`);
+  copy = copy.replace(/\s+/g, ' ');
+  assert.ok(/owner-B source is merged|merged owner-B source/i.test(copy), `${label}: merged source boundary missing`);
+  assert.ok(/production backend activation remains (?:\*\*)?HOLD/i.test(copy), `${label}: production backend must remain HOLD`);
+  assert.ok(/migration/i.test(copy), `${label}: privacy migration is pending`);
+  assert.ok(copy.includes('not a production guarantee'), `${label}: storage-free source behavior is not a production guarantee`);
+}
+for (const [label, copy] of privacyReleaseCopy) {
+  assertPrivacyReleaseBoundary(copy, label);
+  for (const [from, to] of [['HOLD', 'ACTIVE'], ['not a production guarantee', 'a production guarantee']]) {
+    assert.throws(() => assertPrivacyReleaseBoundary(copy.replace(from, to), label), { name: 'AssertionError' });
+  }
+}
+function assertPublicPrivacyBoundary(copy, label) {
+  assert.equal(typeof copy, 'string', `${label}: public privacy copy missing`);
+  assert.ok(copy.includes('Privacy changes await a separately reviewed backend migration'), `${label}: privacy migration must remain pending`);
+  assert.ok(/current backend has not yet adopted storage-free customer history/i.test(copy), `${label}: current backend has not adopted storage-free history`);
+  assert.ok(!/\b(?:Owner-B|HOLD)\b/i.test(copy), `${label}: public privacy copy must use public English`);
+  if (/backend stores no customer|wallet address is used only/i.test(copy)) {
+    assert.ok(copy.includes('After migration'), `${label}: storage-free handling must be post-migration`);
+    assert.ok(copy.includes('not a production guarantee'), `${label}: request-only wallets are not a production guarantee`);
+  }
+}
+for (const [label, copy] of publicPrivacyCopy) {
+  assertPublicPrivacyBoundary(copy, label);
+  assert.throws(() => assertPublicPrivacyBoundary(copy.replace('has not yet adopted', 'has adopted'), label), { name: 'AssertionError' });
+  assert.throws(() => assertPublicPrivacyBoundary(copy.replace('await a separately reviewed', 'have completed a'), label), { name: 'AssertionError' });
+  if (copy.includes('After migration')) {
+    assert.throws(() => assertPublicPrivacyBoundary(copy.replace('After migration', 'Currently'), label), { name: 'AssertionError' });
+  }
+}
+for (const copy of [
+  'The server keeps no customer history.',
+  'The backend stores no customer wallet address or customer history.',
+  'The wallet address is used only within that request and is not stored.',
+  'Owner-B source is merged; the backend stores no customer wallet.',
+]) {
+  assert.throws(() => assertPrivacyReleaseBoundary(copy, 'pre-activation regression'), { name: 'AssertionError' });
+  assert.throws(() => assertPublicPrivacyBoundary(copy, 'public pre-activation regression'), { name: 'AssertionError' });
+}
 assert.ok(
   content.backendReadme.includes('| POST | `/api/sessions/:id/redeem` | - | Retired: always 410') &&
     content.backendReadme.includes('| any | `/api/customer/history*` | - | Retired: 410') &&

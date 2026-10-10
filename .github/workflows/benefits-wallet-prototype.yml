@@ -9,6 +9,8 @@ on:
       - 'docs/ifrp-commerce-app/MASTER_ARCHITECTURE.md'
       - 'docs/SHOP_BENEFITS_APP_ARCHITECTURE.md'
       - '.github/workflows/benefits-wallet-prototype.yml'
+      - 'scripts/check-benefits-wallet-advisory-baseline.cjs'
+      - 'scripts/test-benefits-wallet-advisory-report.cjs'
   pull_request:
     paths:
       - 'apps/benefits-wallet-prototype/**'
@@ -16,6 +18,8 @@ on:
       - 'docs/ifrp-commerce-app/MASTER_ARCHITECTURE.md'
       - 'docs/SHOP_BENEFITS_APP_ARCHITECTURE.md'
       - '.github/workflows/benefits-wallet-prototype.yml'
+      - 'scripts/check-benefits-wallet-advisory-baseline.cjs'
+      - 'scripts/test-benefits-wallet-advisory-report.cjs'
 
 permissions:
   contents: read
@@ -35,6 +39,7 @@ jobs:
           cache: npm
           cache-dependency-path: apps/benefits-wallet-prototype/package-lock.json
       - run: npm ci
+      - run: node ../../scripts/test-benefits-wallet-advisory-report.cjs
       - run: node ../../scripts/check-benefits-wallet-advisory-baseline.cjs
       - run: npm test
       - run: npm run test:bundle-boundary
