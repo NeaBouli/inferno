@@ -15,8 +15,9 @@ import tempfile
 import time
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Callable, Protocol, Sequence, cast
 from unittest.mock import Mock, patch
 
@@ -378,6 +379,52 @@ class CheckerTests(unittest.TestCase):
             fx = self.fixture()
             (fx.dynamic / "route.yml").write_text(f'http:\n  routers:\n    foreign:\n      rule: "{rule}"\n')
             self.hold(fx, "ROUTE_UNPROVEN")
+
+    def test_dynamic_anchored_foreign_route_is_allowed(self) -> None:
+        # The exact file rendered by the Points issuance pause (Traefik v3, TLS with resolver).
+        spec = importlib.util.spec_from_file_location("edge_test_pause", Path(__file__).with_name("points-issuance-pause.py"))
+        assert spec is not None and spec.loader is not None
+        pause_mod = importlib.util.module_from_spec(spec)
+        sys.modules["edge_test_pause"] = pause_mod
+        spec.loader.exec_module(pause_mod)
+        topo = SimpleNamespace(traefik_major=3, entrypoints=["websecure"], tls=True, certresolver="letsencrypt")
+        pause = pause_mod.render(topo)
+        self.assertIn(b"&& Method(`POST`) && PathRegexp(", pause)
+        fx = self.fixture()
+        (fx.dynamic / "points-issuance-pause.yml").write_bytes(pause)
+        fx.dynamic_visible["points-issuance-pause.yml"] = pause
+        # The file predates the edge start, as on the real host.
+        fx.started = (datetime.now(timezone.utc) + timedelta(seconds=1)).isoformat()
+        fx.central[3] = fx.started
+        self.assertEqual(fx.check()[0], 0)
+        for rule in (
+            "Host(`benefits.example.invalid`) && Method(`POST`)",
+            "Host(`points.example.invalid`) || Host(`benefits.example.invalid`)",
+            "Host(`points.example.invalid`) || PathPrefix(`/`)",
+            "!Host(`points.example.invalid`)",
+            "Method(`POST`) && Host(`points.example.invalid`)",
+            "(Host(`points.example.invalid`)) && Method(`POST`)",
+            "Host(`points.example.invalid`) && HostRegexp(`.*`)",
+            "PathPrefix(`/`)",
+        ):
+            data = f'http:\n  routers:\n    foreign:\n      rule: "{rule}"\n'.encode()
+            fx = self.fixture()
+            (fx.dynamic / "route.yml").write_bytes(data)
+            fx.dynamic_visible["route.yml"] = data
+            self.hold(fx, "ROUTE_UNPROVEN")
+
+    def test_quoted_rule_envelope_stays_strict(self) -> None:
+        for line in (
+            'rule: "Host(`points.example.invalid`)" # & tail',
+            'rule: &anchor "Host(`points.example.invalid`)"',
+            'rule: "Host(`points.example.invalid`) \\" && Method(`POST`)"',
+            "rule: 'Host(`points.example.invalid`) && Method(`POST`)'",
+        ):
+            data = f"http:\n  routers:\n    foreign:\n      {line}\n".encode()
+            fx = self.fixture()
+            (fx.dynamic / "route.yml").write_bytes(data)
+            fx.dynamic_visible["route.yml"] = data
+            self.hold(fx, "YAML_UNSUPPORTED")
 
     def test_bounded_dynamic_directory(self) -> None:
         for kind in ("symlink", "subdir", "too_many", "toml"):

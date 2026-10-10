@@ -11,7 +11,8 @@ Supported: official traefik-central v3.6.x (exact tag, or the floating v3.6 tag 
 default-location bind-mounted YAML static file; Docker provider with explicit
 exposedByDefault=false; simple exact Host routers and explicit Docker networks.
 Both Benefits compose services must exist in one project. A backend without a
-public router is supported. File-provider directories are flat, bounded YAML.
+public router is supported. File-provider directories are flat, bounded YAML; their routers
+may narrow one exact non-Benefits Host with &&-joined Method/Path matchers.
 Other providers, complex/competing rules and unproved source selection HOLD.
 
 PASS means ONLY accessLog absent in the proved file and no literal
@@ -57,6 +58,12 @@ DOCKER_CONFIG = "/var/empty"
 DOCKER_PREFIX = (DOCKER, "--host", DOCKER_SOCKET, "--config", DOCKER_CONFIG)
 ID_RE = re.compile(r"[a-f0-9]{64}")
 HOST_RE = re.compile(r"Host\(`([a-z0-9][a-z0-9.-]{0,252})`\)")
+# Dynamic-file routers may narrow one exact Host with &&-joined request matchers (for example the
+# Points issuance pause: Host && Method && PathRegexp). No ||, !, grouping or host-free rules.
+ANCHORED_HOST_RE = re.compile(
+    r"Host\(`([a-z0-9][a-z0-9.-]{0,252})`\)"
+    r"(?:\s*&&\s*(?:Method|Path|PathPrefix|PathRegexp)\(`[^`]{1,256}`\)){0,4}"
+)
 VERSION_RE = re.compile(r"(?:docker\.io/)?(?:library/)?traefik:v?3\.6\.(\d+)(?:@sha256:[a-f0-9]{64})?")
 # Floating v3.6 tag: accepted only with an exact 3.6.x image version label (checked below).
 MINOR_TAG_RE = re.compile(r"(?:docker\.io/)?(?:library/)?traefik:v?3\.6")
@@ -271,13 +278,17 @@ def parse_yaml(raw: bytes, yaml: ModuleType) -> dict[str, object]:
     lines = text.splitlines()
     require(len(lines) <= 2048, Reason.YAML_UNSUPPORTED)
     # A deliberately small block-YAML envelope bounds work BEFORE SafeLoader.
-    for line in lines:
-        stripped = line.strip()
+    for full in lines:
         require(
-            len(line) <= 2048 and len(line) - len(line.lstrip(" ")) <= 32,
+            len(full) <= 2048 and len(full) - len(full.lstrip(" ")) <= 32,
             Reason.YAML_UNSUPPORTED,
         )
-        require(not any(ord(char) < 32 for char in line), Reason.YAML_UNSUPPORTED)
+        require(not any(ord(char) < 32 for char in full), Reason.YAML_UNSUPPORTED)
+        # A router rule in an escape-free double-quoted scalar is literal text: its && and
+        # matcher syntax are not YAML syntax, so only the key part is envelope-checked.
+        quoted_rule = re.fullmatch(r'( *rule: )"[^"\\]*"', full)
+        line = quoted_rule.group(1) + '""' if quoted_rule else full
+        stripped = line.strip()
         require(
             not any(char in line for char in "&*!|>") and "<<" not in line,
             Reason.YAML_UNSUPPORTED,
@@ -446,6 +457,13 @@ def service(row: list[object]) -> str:
 
 def host(rule: object) -> str:
     match = HOST_RE.fullmatch(rule) if isinstance(rule, str) else None
+    require(match is not None, Reason.ROUTE_UNPROVEN)
+    assert match is not None
+    return match.group(1)
+
+
+def anchored_host(rule: object) -> str:
+    match = ANCHORED_HOST_RE.fullmatch(rule) if isinstance(rule, str) else None
     require(match is not None, Reason.ROUTE_UNPROVEN)
     assert match is not None
     return match.group(1)
@@ -656,7 +674,7 @@ def dynamic_snapshot(
             http = mapping(document.get("http", {}))
             for router in mapping(http.get("routers", {})).values():
                 require(
-                    host(mapping(router).get("rule")) not in domains,
+                    anchored_host(mapping(router).get("rule")) not in domains,
                     Reason.ROUTE_UNPROVEN,
                 )
             snapshot[name] = raw
