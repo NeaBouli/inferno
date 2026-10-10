@@ -130,6 +130,14 @@ const digest = "sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2
 const imageRef = `docker.io/library/node@${digest}`;
 const root = phase === "acquire" ? "/work" : "/tools/node_modules";
 let failureCode = "unknown";
+// PROC_LIMIT_ASSERTION_BEGIN
+function assertProcLimitRow(text, label, value, units) {
+  const rows = text.split("\n").filter(line => line.startsWith(label));
+  assert.equal(rows.length, 1, "exactly one process-limit row required");
+  const pattern = new RegExp(`^${label}[ \\t]+${value}[ \\t]+${value}[ \\t]+${units}[ \\t]*(?![\\s\\S])`);
+  assert(pattern.test(rows[0]), "exact finite process-limit values and units required");
+}
+// PROC_LIMIT_ASSERTION_END
 function mountRows() {
   return new Map(fs.readFileSync("/proc/self/mountinfo", "utf8").trim().split("\n").map(line => {
     const fields = line.split(" ");
@@ -312,8 +320,8 @@ async function main() {
     assert(/^NoNewPrivs:\s+1$/m.test(status));
     failureCode = "process-rlimits";
     const limits = fs.readFileSync(`/proc/${pid}/limits`, "utf8");
-    assert(/^Max open files\s+64\s+64\s+files$/m.test(limits));
-    assert(new RegExp(`^Max file size\\s+${fileSize}\\s+${fileSize}\\s+bytes$`, "m").test(limits));
+    assertProcLimitRow(limits, "Max open files", 64, "files");
+    assertProcLimitRow(limits, "Max file size", fileSize, "bytes");
   }
   failureCode = "namespaces";
   for (const [index, name] of ["net", "ipc", "pid", "mnt", "cgroup"].entries()) {
