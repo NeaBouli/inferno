@@ -413,6 +413,31 @@ class CheckerTests(unittest.TestCase):
             fx.dynamic_visible["route.yml"] = data
             self.hold(fx, "ROUTE_UNPROVEN")
 
+    def test_foreign_docker_router_may_narrow_one_host(self) -> None:
+        def foreign(rule: str) -> list[object]:
+            row = peer(OTHER, "foreign", "8080", "media.example.invalid")
+            cast(dict[str, object], row[5])["traefik.http.routers.foreign.rule"] = rule
+            return row
+
+        fx = self.fixture()
+        fx.peers.append(foreign("Host(`media.example.invalid`) && PathPrefix(`/media`)"))
+        self.assertEqual(fx.check()[0], 0)
+        for rule in (
+            "Host(`benefits.example.invalid`) && PathPrefix(`/x`)",
+            "Host(`media.example.invalid`) || Host(`benefits.example.invalid`)",
+            "Host(`media.example.invalid`) || PathPrefix(`/`)",
+            "PathPrefix(`/`)",
+        ):
+            fx = self.fixture()
+            fx.peers.append(foreign(rule))
+            self.hold(fx, "ROUTE_UNPROVEN")
+        fx = self.fixture()
+        labels_front = cast(dict[str, object], fx.peers[1][5])
+        labels_front["traefik.http.routers.benefits-frontend.rule"] = (
+            "Host(`benefits.example.invalid`) && PathPrefix(`/`)"
+        )
+        self.hold(fx, "ROUTE_UNPROVEN")
+
     def test_quoted_rule_envelope_stays_strict(self) -> None:
         for line in (
             'rule: "Host(`points.example.invalid`)" # & tail',

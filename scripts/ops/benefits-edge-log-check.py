@@ -58,8 +58,9 @@ DOCKER_CONFIG = "/var/empty"
 DOCKER_PREFIX = (DOCKER, "--host", DOCKER_SOCKET, "--config", DOCKER_CONFIG)
 ID_RE = re.compile(r"[a-f0-9]{64}")
 HOST_RE = re.compile(r"Host\(`([a-z0-9][a-z0-9.-]{0,252})`\)")
-# Dynamic-file routers may narrow one exact Host with &&-joined request matchers (for example the
-# Points issuance pause: Host && Method && PathRegexp). No ||, !, grouping or host-free rules.
+# Foreign (non-Benefits) Docker and dynamic-file routers may narrow one exact Host with &&-joined
+# request matchers (e.g. the Points issuance pause: Host && Method && PathRegexp). No ||, !,
+# grouping or host-free rules; the host must still be unique and not a Benefits domain.
 ANCHORED_HOST_RE = re.compile(
     r"Host\(`([a-z0-9][a-z0-9.-]{0,252})`\)"
     r"(?:\s*&&\s*(?:Method|Path|PathPrefix|PathRegexp)\(`[^`]{1,256}`\)){0,4}"
@@ -542,7 +543,9 @@ def prove_routes(
         service_names.update(own_services)
         for router in routers:
             prefix = f"traefik.http.routers.{router}."
-            domain = host(meta.get(prefix + "rule"))
+            # Benefits routers must be bare Host(); foreign ones may narrow one exact Host.
+            rule = meta.get(prefix + "rule")
+            domain = host(rule) if row in apps else anchored_host(rule)
             require(domain not in rules, Reason.ROUTE_UNPROVEN)
             rules[domain] = router
             if row not in apps:
