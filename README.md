@@ -206,7 +206,7 @@ All smart contracts are open source and community review is explicitly encourage
 | Benefits Network Backend | `apps/benefits-network/backend/` | 3001 | Express + Prisma + SQLite + ethers v6 |
 | Benefits Network Frontend | `apps/benefits-network/frontend/` | 3000 | Next.js 15 + Tailwind + wagmi v3 (PWA) |
 | Benefits Wallet Prototype | `apps/benefits-wallet-prototype/` | 3012 | Isolated prototype; not used in production |
-| IFR SDK | `apps/sdk/` | — | Published npm `ifr-sdk` **0.4.0**; source/docs **0.4.1** is unpublished and requires a separate npm release gate |
+| IFR SDK | `apps/sdk/` | — | Published npm `ifr-sdk` **0.4.1** with provenance (**0.4.0** was the provenance-free one-time bootstrap); future versions require the separate npm release gate |
 | Integration Builder Engine | `apps/builder/engine/` | — | Code/config generator; 30 focused tests |
 | Telegram Bot | `apps/telegram/telegram-bot/` | — | Telegraf + ethers v6 + Railway (16 commands, moderation, governance notifier) |
 

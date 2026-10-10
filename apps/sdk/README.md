@@ -5,15 +5,15 @@ sessions. The package currently supports Ethereum Mainnet only.
 
 ## Availability
 
-`ifr-sdk` 0.4.0 was published to npm on 9 October 2026 as the explicitly approved, one-time
-manual bootstrap without provenance. This repository prepares the docs-only 0.4.1 patch; it is
-not published until the separate release gate succeeds. Every subsequent version uses
+`ifr-sdk` 0.4.1 is published on npm (10 October 2026) through Trusted Publishing with npm
+provenance. 0.4.0 (9 October 2026) was the explicitly approved, one-time manual bootstrap without
+provenance. Every subsequent version uses
 `.github/workflows/sdk-publish.yml`, dispatched manually on protected `main`, which checks the
 release gate, waits for owner approval, tests the package and publishes with npm provenance through
-Trusted Publishing. To install the verified bootstrap version:
+Trusted Publishing. To install the current version:
 
 ```bash
-npm install --save-exact ifr-sdk@0.4.0
+npm install --save-exact ifr-sdk@0.4.1
 ```
 
 Alternatively, build and pack a reviewed versioned artifact from the repository:

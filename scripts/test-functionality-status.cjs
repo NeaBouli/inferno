@@ -25,17 +25,18 @@ for (const marker of [
   assert.ok(status.includes(marker), `functionality status missing: ${marker}`);
 }
 
-// F3: npm delivery and the current source patch are separate release states.
+// F3: npm delivery. 0.4.1 is published with provenance (2026-10-10); 0.4.0 was the provenance-free
+// bootstrap; later versions keep the separate release gate.
 function assertSdkReleaseState(copy) {
-  assert.ok(/Published npm `ifr-sdk` \*\*0\.4\.0\*\*/.test(copy), "SDK npm delivery must identify published 0.4.0");
-  assert.ok(/source\/docs \*\*0\.4\.1\*\* is unpublished/.test(copy), "SDK source patch must identify unpublished 0.4.1");
-  assert.ok(copy.includes("separate npm release gate"), "SDK patch must retain its publication gate");
-  assert.ok(!/Published npm `ifr-sdk` \*\*0\.4\.1\*\*/.test(copy), "source 0.4.1 is not published npm delivery");
+  assert.ok(/Published npm `ifr-sdk` \*\*0\.4\.1\*\* with provenance/.test(copy), "SDK npm delivery must identify published 0.4.1 with provenance");
+  assert.ok(/\*\*0\.4\.0\*\* was the provenance-free one-time bootstrap/.test(copy), "SDK delivery must label 0.4.0 as the provenance-free bootstrap");
+  assert.ok(copy.includes("separate npm release gate"), "SDK must retain the publication gate for later versions");
+  assert.ok(!/0\.4\.1\*\* is unpublished/.test(copy), "0.4.1 must not be described as unpublished");
 }
 for (const copy of [status, read("README.md")]) {
   assertSdkReleaseState(copy);
-  assert.throws(() => assertSdkReleaseState(copy.replace("Published npm `ifr-sdk` **0.4.0**", "Published npm `ifr-sdk` **0.4.1**")), { name: "AssertionError" });
-  assert.throws(() => assertSdkReleaseState(copy.replace("is unpublished", "is published")), { name: "AssertionError" });
+  assert.throws(() => assertSdkReleaseState(copy.replace("Published npm `ifr-sdk` **0.4.1** with provenance", "Published npm `ifr-sdk` **0.4.0**")), { name: "AssertionError" });
+  assert.throws(() => assertSdkReleaseState(copy.replaceAll("separate npm release gate", "release")), { name: "AssertionError" });
 }
 assert.ok(status.includes("Publisher validation") && status.includes("#238 compatibility/cutover HOLD"), "SDK status must preserve publisher validation and backend compatibility/cutover hold");
 

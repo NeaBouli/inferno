@@ -7,10 +7,9 @@ The technical details, the trust model and the release gate are in
 binding reference if the two pages ever disagree.
 
 Status on 9 October 2026: the 0.4.0 bootstrap is complete, as are the protected environment
-and npm Trusted Publisher setup. Do not rerun step C. The connection still needs its first
-successful approved workflow publication by 11 October 2026, 20:37 UTC; otherwise recreate
-it near the next approved release. Expiry is not permission to publish. Source candidate
-0.4.1 is a documentation patch, not yet approved or published; npm stable remains 0.4.0.
+and npm Trusted Publisher setup. Do not rerun step C. The Trusted Publisher connection was
+validated by its first approved workflow publication: 0.4.1 was published on 10 October 2026
+(run 38078909750, main 68b21b18) with npm provenance. npm latest is 0.4.1.
 
 Owner decision 2026-10-06: publishing is approved as long as the package stays public (MIT), is
 published from the public repository `NeaBouli/inferno` with provenance, and has no proprietary
