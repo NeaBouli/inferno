@@ -163,7 +163,15 @@ function scrollToPosition(page, position, target, primary = false) {
       const r = el.getBoundingClientRect();
       top = window.scrollY + (r.top + r.height / 2) - (launcher.top + launcher.height / 2);
     }
-    window.scrollTo({ top: Math.max(0, Math.min(max, top)), behavior: 'instant' });
+    const clamped = Math.max(0, Math.min(max, top));
+    window.scrollTo({ top: clamped, behavior: 'instant' });
+    if (primary) return {
+      requestedScrollY: top,
+      clampedScrollY: clamped,
+      actualScrollY: window.scrollY,
+      maxScrollY: Math.max(0, max),
+      wasClamped: top !== clamped,
+    };
     return Math.round(window.scrollY);
   }, { position, target, primary });
 }
@@ -242,6 +250,8 @@ function measure(page, target, primary = false) {
     const sharesBand = box.bottom > launcher.top && box.top < launcher.bottom;
     const gap = round(launcher.left - box.right);
     if (sharesBand && gap < minGap) problems.push(`${target} ends ${gap}px before the launcher in its band (needs >= ${minGap}px)`);
+    // Primary clearance is an all-scroll contract, including targets unable to reach the band.
+    if (primary && gap < minGap) problems.push(`${target} horizontal primary clearance is ${gap}px (needs >= ${minGap}px at every position)`);
 
     // Hit targets: sample points across every visible text line and, for the action, its box.
     const points = [];
@@ -300,6 +310,10 @@ function measure(page, target, primary = false) {
         contentBox,
         shellOverflow,
         boxOverlap,
+        viewport: { width: viewport, height: window.innerHeight },
+        targetIntersectsViewport: box.bottom > 0 && box.top < window.innerHeight && box.right > 0 && box.left < viewport,
+        launcherBandReachable: box.bottom + window.scrollY > launcher.top
+          && box.top + window.scrollY - Math.max(0, document.documentElement.scrollHeight - window.innerHeight) < launcher.bottom,
         label: el.textContent.trim(),
         disabled: el.disabled,
         chooserPresent: Boolean(el.closest('[data-wallet-connect-control]').querySelector('[data-wallet-connect-with]')),
@@ -436,16 +450,14 @@ async function run() {
             }
             await page.evaluate(() => document.fonts.ready);
             for (const position of ['evidence', 'worst-case', 'end']) {
-              const scrollY = await scrollToPosition(page, position, PRIMARY_TARGET, true);
+              const scroll = await scrollToPosition(page, position, PRIMARY_TARGET, true);
+              const scrollY = scroll.actualScrollY;
               const m = await measure(page, PRIMARY_TARGET, true);
               if (m.label !== setup.label || m.disabled !== setup.disabled || m.chooserPresent !== setup.chooserPresent) {
                 m.problems.push('primary DOM layout fixture changed before measurement');
               }
-              if (position === 'worst-case' && (!m.sharesBand || !m.hitChecked)) {
-                m.problems.push('worst-case primary scroll did not exercise the launcher band and visible hit points');
-              }
               primaryChecks += 1;
-              primaryRecords.push({ surface: surface.name, width, height, fixture, ...setup, position, scrollY, target: PRIMARY_TARGET, ...m });
+              primaryRecords.push({ surface: surface.name, width, height, fixture, ...setup, position, scrollY, scroll, target: PRIMARY_TARGET, ...m });
               if (m.problems.length) failures.push(`${where} @${position} scrollY=${scrollY}:\n  - ${m.problems.join('\n  - ')}`);
               if (shotDir && position !== 'end') {
                 await page.screenshot({ path: path.join(shotDir, `${surface.name}-${width}x${height}-${fixture}-${position}.png`) });
