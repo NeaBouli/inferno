@@ -337,7 +337,7 @@ export function WalletConnectControl() {
           data-wallet-action="connect"
           onClick={connectPrimaryWallet}
           disabled={isPending || !connectorsResolved || availableConnectors.length === 0}
-          className="rounded-2xl bg-orange-300 px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/30 transition hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50"
+          className="mr-[29px] rounded-2xl bg-orange-300 px-2 py-3 text-sm font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/30 transition [overflow-wrap:anywhere] hover:bg-orange-200 disabled:cursor-not-allowed disabled:opacity-50 sm:px-5 min-[821px]:mr-[39px]"
         >
           {isPending ? 'Connecting...' : 'Connect wallet'}
         </button>
