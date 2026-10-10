@@ -438,18 +438,96 @@ class CheckerTests(unittest.TestCase):
         )
         self.hold(fx, "ROUTE_UNPROVEN")
 
-    def test_quoted_rule_envelope_stays_strict(self) -> None:
-        for line in (
-            'rule: "Host(`points.example.invalid`)" # & tail',
-            'rule: &anchor "Host(`points.example.invalid`)"',
-            'rule: "Host(`points.example.invalid`) \\" && Method(`POST`)"',
-            "rule: 'Host(`points.example.invalid`) && Method(`POST`)'",
+    def dyn(self, fx: Fixture, name: str, data: bytes) -> None:
+        (fx.dynamic / name).write_bytes(data)
+        fx.dynamic_visible[name] = data
+        # Files predate the edge start, as on the real host.
+        fx.started = (datetime.now(timezone.utc) + timedelta(seconds=1)).isoformat()
+        fx.central[3] = fx.started
+
+    def test_foreign_dynamic_yaml_uses_parser_envelope(self) -> None:
+        realistic = (
+            b"http:\n"
+            b"  routers:\n"
+            b"    media:\n"
+            b"      rule: 'Host(`media.example.invalid`) && (PathPrefix(`/a`) || PathPrefix(`/b`))'\n"
+            b"      entryPoints: [websecure]\n"
+            b"      middlewares:\n"
+            b"        - media-redirect\n"
+            b"      tls:\n"
+            b"        certResolver: fixture\n"
+            b"    catchall:\n"
+            b'      rule: "HostRegexp(`{any:.+}`)"\n'
+            b"      priority: 1\n"
+            b"      entryPoints:\n"
+            b"        - websecure\n"
+            b"  middlewares:\n"
+            b"    media-redirect:\n"
+            b"      redirectRegex:\n"
+            b'        regex: "^https://www\\\\.(.*)"\n'
+            b'        replacement: "https://${1}"\n'
+            b"  services:\n"
+            b"    media:\n"
+            b"      loadBalancer:\n"
+            b"        servers:\n"
+            b'          - url: "http://media:8080"\n'
+        )
+        fx = self.fixture()
+        self.dyn(fx, "media.yml", realistic)
+        self.dyn(fx, "media.yml.bak-20260612", b"not: [loaded\n")
+        self.assertEqual(fx.check()[0], 0)
+        for body in (
+            b"http:\n  routers: &r {}\n",
+            b"base: &b {}\nhttp: *b\n",
+            b"http: !!map {}\n",
+            b"http:\n  <<: {routers: {}}\n",
+            b"http: {}\n---\nhttp: {}\n",
+            b"%YAML 1.1\n---\nhttp: {}\n",
+            b"http:\n  routers:\n    a: {rule: 'Host(`x.example.invalid`)', rule: 'Host(`y.example.invalid`)'}\n",
         ):
-            data = f"http:\n  routers:\n    foreign:\n      {line}\n".encode()
             fx = self.fixture()
-            (fx.dynamic / "route.yml").write_bytes(data)
-            fx.dynamic_visible["route.yml"] = data
-            self.hold(fx, "YAML_UNSUPPORTED")
+            self.dyn(fx, "route.yml", body)
+            text = self.hold(fx)
+            # Duplicate keys are refused by the unique-key loader (INPUT_INVALID).
+            self.assertRegex(text, r"reason=(YAML_UNSUPPORTED|CONFIG_UNPROVEN|INPUT_INVALID)\n")
+
+    def test_dynamic_catchall_needs_low_priority_on_443(self) -> None:
+        def catchall(priority: str, entry: str = "websecure") -> bytes:
+            return (
+                "http:\n  routers:\n    catchall:\n"
+                f'      rule: "HostRegexp(`.+`)"\n      priority: {priority}\n'
+                f"      entryPoints: [{entry}]\n"
+            ).encode()
+
+        fx = self.fixture()
+        self.dyn(fx, "catchall.yml", catchall("1"))
+        self.assertEqual(fx.check()[0], 0)
+        floor = len("Host(`benefits.example.invalid`)")
+        for body in (
+            catchall(str(floor)),
+            catchall("100000"),
+            catchall("0"),
+            catchall("true"),
+            catchall("1", "web"),
+            catchall("1", "missing"),
+            b'http:\n  routers:\n    c:\n      rule: "HostRegexp(`.+`)"\n      priority: 1\n',
+            b'http:\n  routers:\n    c:\n      rule: "HostRegexp(`.+`) || Host(`x.example.invalid`)"\n'
+            b"      priority: 1\n      entryPoints: [websecure]\n",
+        ):
+            fx = self.fixture()
+            self.dyn(fx, "catchall.yml", body)
+            self.hold(fx, "ROUTE_UNPROVEN")
+
+    def test_anchored_or_group(self) -> None:
+        for rule, ok in (
+            ("Host(`m.example.invalid`) && (PathPrefix(`/a`) || PathPrefix(`/b`))", True),
+            ("Host(`m.example.invalid`) && (PathPrefix(`/a`) || Host(`benefits.example.invalid`))", False),
+            ("Host(`m.example.invalid`) && (PathPrefix(`/a`))", False),
+            ("Host(`m.example.invalid`) && ((PathPrefix(`/a`) || PathPrefix(`/b`)))", False),
+            ("(Host(`m.example.invalid`) && PathPrefix(`/a`)) || PathPrefix(`/b`)", False),
+            ("Host(`m.example.invalid`) && (PathPrefix(`/a`) || PathPrefix(`/b`)) || PathPrefix(`/`)", False),
+        ):
+            self.assertEqual(mod.ANCHORED_HOST_RE.fullmatch(rule) is not None, ok, rule)
 
     def test_bounded_dynamic_directory(self) -> None:
         for kind in ("symlink", "subdir", "too_many", "toml"):

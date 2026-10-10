@@ -59,12 +59,24 @@ DOCKER_PREFIX = (DOCKER, "--host", DOCKER_SOCKET, "--config", DOCKER_CONFIG)
 ID_RE = re.compile(r"[a-f0-9]{64}")
 HOST_RE = re.compile(r"Host\(`([a-z0-9][a-z0-9.-]{0,252})`\)")
 # Foreign (non-Benefits) Docker and dynamic-file routers may narrow one exact Host with &&-joined
-# request matchers (e.g. the Points issuance pause: Host && Method && PathRegexp). No ||, !,
-# grouping or host-free rules; the host must still be unique and not a Benefits domain.
+# request matchers (e.g. the Points issuance pause: Host && Method && PathRegexp), where one term
+# may be a parenthesised ||-group of request matchers (Host && (PathPrefix || PathPrefix)). No
+# top-level ||, !, nesting or host-free rules; the host must be unique and not a Benefits domain.
+_REQUEST_MATCHER = r"(?:Method|Path|PathPrefix|PathRegexp)\(`[^`]{1,256}`\)"
 ANCHORED_HOST_RE = re.compile(
     r"Host\(`([a-z0-9][a-z0-9.-]{0,252})`\)"
-    r"(?:\s*&&\s*(?:Method|Path|PathPrefix|PathRegexp)\(`[^`]{1,256}`\)){0,4}"
+    rf"(?:\s*&&\s*(?:{_REQUEST_MATCHER}|\(\s*{_REQUEST_MATCHER}(?:\s*\|\|\s*{_REQUEST_MATCHER}){{1,7}}\s*\))){{0,4}}"
 )
+# A file-provider catch-all (HostRegexp only) is accepted only when its explicit priority is
+# below every Benefits router's default priority (rule length) on the same :443 entry point.
+CATCHALL_RE = re.compile(r"HostRegexp\(`[^`]{1,256}`\)")
+CONFIG_EXTENSIONS = (".yml", ".yaml")
+
+
+def go_ext(name: str) -> str:
+    """Lower-cased extension as Go's filepath.Ext sees it (from the last dot, ".yml" included)."""
+    dot = name.rfind(".")
+    return name[dot:].lower() if dot >= 0 else ""
 VERSION_RE = re.compile(r"(?:docker\.io/)?(?:library/)?traefik:v?3\.6\.(\d+)(?:@sha256:[a-f0-9]{64})?")
 # Floating v3.6 tag: accepted only with an exact 3.6.x image version label (checked below).
 MINOR_TAG_RE = re.compile(r"(?:docker\.io/)?(?:library/)?traefik:v?3\.6")
@@ -273,23 +285,50 @@ class Loader(Protocol):
     def construct_object(self, node: Node, deep: bool = False) -> object: ...
 
 
-def parse_yaml(raw: bytes, yaml: ModuleType) -> dict[str, object]:
+def event_envelope(text: str, yaml: ModuleType) -> None:
+    """Parser-level bound for foreign file-provider YAML: one document, no anchors,
+    aliases, explicit tags, merge keys or directives, bounded depth and event count."""
+    depth, events, documents = 0, 0, 0
+    for event in yaml.parse(text, Loader=yaml.SafeLoader):
+        events += 1
+        require(events <= 20000, Reason.LIMIT)
+        require(
+            not isinstance(event, yaml.AliasEvent) and getattr(event, "anchor", None) is None,
+            Reason.YAML_UNSUPPORTED,
+        )
+        require(getattr(event, "tag", None) is None, Reason.YAML_UNSUPPORTED)
+        if isinstance(event, yaml.DocumentStartEvent):
+            documents += 1
+            require(
+                documents == 1 and event.version is None and not event.tags,
+                Reason.YAML_UNSUPPORTED,
+            )
+        elif isinstance(event, (yaml.MappingStartEvent, yaml.SequenceStartEvent)):
+            depth += 1
+            require(depth <= 32, Reason.YAML_UNSUPPORTED)
+        elif isinstance(event, (yaml.MappingEndEvent, yaml.SequenceEndEvent)):
+            depth -= 1
+        elif isinstance(event, yaml.ScalarEvent):
+            require(not (event.style is None and event.value == "<<"), Reason.YAML_UNSUPPORTED)
+
+
+def parse_yaml(raw: bytes, yaml: ModuleType, foreign: bool = False) -> dict[str, object]:
     require(len(raw) <= STATIC_BYTES, Reason.LIMIT)
     text = raw.decode("utf-8")
     lines = text.splitlines()
     require(len(lines) <= 2048, Reason.YAML_UNSUPPORTED)
-    # A deliberately small block-YAML envelope bounds work BEFORE SafeLoader.
-    for full in lines:
+    # A deliberately small block-YAML envelope bounds work BEFORE SafeLoader. Foreign
+    # file-provider files (other projects on a shared edge) get the parser-level envelope
+    # instead, because ordinary Traefik YAML uses flow lists, "- url:" items and quoted rules.
+    for line in lines:
+        stripped = line.strip()
         require(
-            len(full) <= 2048 and len(full) - len(full.lstrip(" ")) <= 32,
+            len(line) <= 2048 and len(line) - len(line.lstrip(" ")) <= 32,
             Reason.YAML_UNSUPPORTED,
         )
-        require(not any(ord(char) < 32 for char in full), Reason.YAML_UNSUPPORTED)
-        # A router rule in an escape-free double-quoted scalar is literal text: its && and
-        # matcher syntax are not YAML syntax, so only the key part is envelope-checked.
-        quoted_rule = re.fullmatch(r'( *rule: )"[^"\\]*"', full)
-        line = quoted_rule.group(1) + '""' if quoted_rule else full
-        stripped = line.strip()
+        require(not any(ord(char) < 32 for char in line), Reason.YAML_UNSUPPORTED)
+        if foreign:
+            continue
         require(
             not any(char in line for char in "&*!|>") and "<<" not in line,
             Reason.YAML_UNSUPPORTED,
@@ -320,6 +359,8 @@ def parse_yaml(raw: bytes, yaml: ModuleType) -> dict[str, object]:
             fields.append((cast(str, key), loader.construct_object(value_node, deep=True)))
         return pairs_unique(fields)
 
+    if foreign:
+        event_envelope(text, yaml)
     safe = type("UniqueSafeLoader", (yaml.SafeLoader,), {})
     getattr(safe, "add_constructor")("tag:yaml.org,2002:map", unique)
     return mapping(yaml.load(text, Loader=safe))
@@ -652,19 +693,52 @@ def dynamic_snapshot(
             and not destination.startswith(directory + "/"),
             Reason.ROUTE_UNPROVEN,
         )
+    entrypoints = mapping(cfg.get("entryPoints"))
+    floor = min(len(f"Host(`{domain}`)") for domain in domains)
+
+    def dynamic_router(router: object) -> None:
+        fields = mapping(router)
+        rule = fields.get("rule")
+        if isinstance(rule, str) and CATCHALL_RE.fullmatch(rule):
+            # Benefits routers are bare Host() on the single :443 entry point with the default
+            # priority len(rule); a lower explicit priority can never win a Benefits request.
+            priority, entries = fields.get("priority"), fields.get("entryPoints")
+            require(
+                isinstance(priority, int)
+                and not isinstance(priority, bool)
+                and 1 <= priority < floor
+                and isinstance(entries, list)
+                and bool(entries)
+                and all(
+                    isinstance(entry, str)
+                    and entry in entrypoints
+                    and mapping(entrypoints[entry]).get("address") == ":443"
+                    for entry in entries
+                ),
+                Reason.ROUTE_UNPROVEN,
+            )
+            return
+        require(anchored_host(rule) not in domains, Reason.ROUTE_UNPROVEN)
+
     root = helper.host_dir_for(directory, mounts)
     fd = open_directory(root)
     try:
         with os.scandir(fd) as entries:
             names: list[str] = []
+            seen = 0
             for entry in entries:
+                seen += 1
+                suffix = go_ext(entry.name)
+                # Traefik's file provider loads only .yml/.yaml/.toml (case-insensitive) and
+                # recurses into directories; other regular files (e.g. *.bak) are not loaded.
                 require(
-                    len(names) < MAX_DYNAMIC_FILES
+                    seen <= MAX_DYNAMIC_FILES
                     and entry.is_file(follow_symlinks=False)
-                    and entry.name.endswith((".yml", ".yaml")),
+                    and suffix != ".toml",
                     Reason.ROUTE_UNPROVEN,
                 )
-                names.append(entry.name)
+                if suffix in CONFIG_EXTENSIONS:
+                    names.append(entry.name)
         snapshot: dict[str, bytes] = {}
         for name in sorted(names):
             raw = read_file(root / name)
@@ -672,14 +746,11 @@ def dynamic_snapshot(
                 sum(map(len, snapshot.values())) + len(raw) <= STATIC_BYTES,
                 Reason.LIMIT,
             )
-            document = parse_yaml(raw, yaml)
+            document = parse_yaml(raw, yaml, foreign=True)
             require(set(document) <= {"http", "tls"}, Reason.ROUTE_UNPROVEN)
             http = mapping(document.get("http", {}))
             for router in mapping(http.get("routers", {})).values():
-                require(
-                    anchored_host(mapping(router).get("rule")) not in domains,
-                    Reason.ROUTE_UNPROVEN,
-                )
+                dynamic_router(router)
             snapshot[name] = raw
         copied = deps.docker(["docker", "cp", f"{container}:{directory}", "-"], TAR_BYTES, ERROR_BYTES)
         require(copied.code == 0 and not copied.stderr, Reason.COMMAND_FAILED)
@@ -688,6 +759,7 @@ def dynamic_snapshot(
         archive = copied.stdout
         offset, total, root_seen = 0, 0, False
         visible: dict[str, bytes] = {}
+        members: set[str] = set()
         basename = PurePosixPath(directory).name
         while offset + 512 <= len(archive) and any(archive[offset : offset + 512]):
             header = archive[offset : offset + 512]
@@ -710,17 +782,19 @@ def dynamic_snapshot(
                     and member.name.startswith(prefix)
                     and name not in ("", ".", "..")
                     and "/" not in name
-                    and name not in visible
-                    and name.endswith((".yml", ".yaml"))
-                    and len(visible) < MAX_DYNAMIC_FILES,
+                    and name not in members
+                    and go_ext(name) != ".toml"
+                    and len(members) < MAX_DYNAMIC_FILES,
                     Reason.CONFIG_UNPROVEN,
                 )
+                members.add(name)
                 total += member.size
                 require(0 <= member.size <= STATIC_BYTES and total <= STATIC_BYTES, Reason.LIMIT)
                 end = offset + member.size
                 padded = offset + ((member.size + 511) // 512) * 512
                 require(padded <= len(archive) and not any(archive[end:padded]), Reason.CONFIG_UNPROVEN)
-                visible[name] = archive[offset:end]
+                if go_ext(name) in CONFIG_EXTENSIONS:
+                    visible[name] = archive[offset:end]
                 offset = padded
         require(
             root_seen
