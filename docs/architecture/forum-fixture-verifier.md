@@ -83,16 +83,17 @@ Success requires the exact negative CLI exit 1/refusal and fixture exit 0 with
 the existing exact PASS line. Preflight exit 98, missing tests/markers,
 timeouts or unexpected output remain failures, never PASS.
 
-The acquisition phase/container is capped at 180s, target container at 240s,
-image pull at 120s, driver at 600s and job at 12 minutes. Each container's
-trusted initial process enforces its lifetime; expiration exits 98. Captured
+The acquisition phase uses a 180s budget and PID1 proposes a 240s target
+lifetime; timer signal isolation and daemon-side termination remain unverified.
+External client/driver deadlines are independent of the target namespace:
+image pull 120s, driver 600s and job 12 minutes. Expiration refuses admission. Captured
 text output is aggregate-bounded at 64 KiB; binary
 downloads are independently bounded and never logged. Cleanup targets only
 this invocation's owner-labelled containers/volume and private temporary
 directory. Cleanup also matches recorded created IDs, not just names/labels.
-Failed or uncertain cleanup prevents PASS; no foreign process,
-container, volume or shared image is killed/pruned. Implementation and parent
-review/CI evidence are still **NOT RUN**.
+Failed or uncertain cleanup prevents PASS and retains private recovery state;
+no foreign process, container, volume or shared image is killed/pruned.
+The source cleanup review is CLEAR; runtime and CI evidence remain **NOT RUN**.
 
 ## Exact Schema
 
