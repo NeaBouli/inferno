@@ -223,14 +223,14 @@ export function WalletConnectControl() {
           <button
             type="button"
             onClick={copyEvidence}
-            className="min-w-0 flex-1 rounded-xl border border-white/10 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-stone-100 transition [overflow-wrap:anywhere] hover:border-orange-200/60"
+            className="min-w-0 flex-[1_1_7rem] rounded-xl border border-white/10 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-stone-100 transition [overflow-wrap:anywhere] hover:border-orange-200/60"
           >
             Copy evidence
           </button>
           <button
             type="button"
             onClick={shareEvidence}
-            className="min-w-0 flex-1 rounded-xl border border-white/10 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-stone-100 transition [overflow-wrap:anywhere] hover:border-orange-200/60"
+            className="min-w-0 flex-[1_1_7rem] rounded-xl border border-white/10 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-stone-100 transition [overflow-wrap:anywhere] hover:border-orange-200/60"
           >
             Share evidence
           </button>
@@ -243,7 +243,7 @@ export function WalletConnectControl() {
           <p className="text-xs font-black uppercase tracking-[0.16em] text-stone-400">
             Supported wallets
           </p>
-          <div aria-label="Wallets supported through browser providers or WalletConnect" className="grid grid-cols-2 gap-2 text-[0.68rem] font-black uppercase tracking-[0.12em] text-stone-300 sm:grid-cols-4">
+          <div aria-label="Wallets supported through browser providers or WalletConnect" className="grid grid-cols-[repeat(auto-fit,minmax(6.5rem,1fr))] gap-2 text-[0.68rem] font-black uppercase tracking-[0.12em] text-stone-300">
             {['MetaMask', 'Coinbase', 'Trust', 'OKX', 'Rainbow', 'Phantom'].map((wallet) => (
               <span key={wallet} className="min-w-0 rounded-full border border-white/10 bg-white/[0.06] px-3 py-2 text-center [overflow-wrap:anywhere]">
                 {wallet}
@@ -277,14 +277,14 @@ export function WalletConnectControl() {
             <button
               type="button"
               onClick={copyCurrentLink}
-              className="min-w-0 flex-1 rounded-xl border border-white/10 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-stone-100 transition [overflow-wrap:anywhere] hover:border-orange-200/60"
+              className="min-w-0 flex-[1_1_7rem] rounded-xl border border-white/10 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-stone-100 transition [overflow-wrap:anywhere] hover:border-orange-200/60"
             >
               Copy link
             </button>
             <button
               type="button"
               onClick={shareCurrentLink}
-              className="min-w-0 flex-1 rounded-xl border border-white/10 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-stone-100 transition [overflow-wrap:anywhere] hover:border-orange-200/60"
+              className="min-w-0 flex-[1_1_7rem] rounded-xl border border-white/10 px-3 py-2 text-xs font-black uppercase tracking-[0.12em] text-stone-100 transition [overflow-wrap:anywhere] hover:border-orange-200/60"
             >
               Share
             </button>
