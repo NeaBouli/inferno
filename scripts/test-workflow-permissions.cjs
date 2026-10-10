@@ -30,6 +30,7 @@ const expectedWorkflowFiles = [
   "creator-gateway.yml",
   "dashboard.yml",
   "docs-validator.yml",
+  "forum-fixture.yml",
   "governance-dashboard.yml",
   "mythril-analysis.yml",
   "points-backend.yml",

@@ -8,7 +8,49 @@ readonly OWNER_LABEL='org.inferno.forum-fixture.owner'
 readonly CONTAINER_PATH='/usr/local/bin:/usr/bin:/bin'
 readonly PASS_LINE='FORUM_FIXTURE_TESTS_PASS synthetic-only ADVISORY productionReady=false chainEvidenceVerified=false'
 
-refuse() { printf '%s\n' 'FORUM_CI_REFUSED'; exit 98; }
+LAST_STEP=outer-entry
+STEP_FILE=''
+DIAG_CONTEXT=outer
+FAILURE_REPORTED=0
+
+allowed_step() {
+  case "$1" in
+    unknown|outer-entry|outer-bootstrap-tools|outer-mktemp|outer-host-tools|outer-host-socket|outer-host-directory|\
+    outer-docker-config|outer-child-supervision|outer-child-output|outer-child-summary|outer-arguments|\
+    child-entry|child-host-tools|child-host-socket|child-host-directory|child-source-root|stage-directories|\
+    stage-sdk-inputs|stage-fixture-source|stage-injected-files|host-namespaces|engine-query|engine-controls|\
+    image-pull|volume-inventory|volume-create|volume-proof|acquire-create|acquire-start|acquire-inspect|\
+    acquire-preflight|acquire-deadline|lock-plan|tarball-fetch|npm-cache|npm-ci|closure-seal|target-create|\
+    target-start|acquire-remove|acquire-absent|target-inspect|target-preflight|import|cli-negative|fixture-tests|\
+    child-complete|cleanup-resources|cleanup-temp|cleanup-retained) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+# This single short host-owned line is never mounted into acquisition or target containers.
+checkpoint() {
+  if allowed_step "$1"; then LAST_STEP=$1; else LAST_STEP=unknown; fi
+  if [[ -n "$STEP_FILE" ]]; then
+    printf '%s\n' "$LAST_STEP" 2>/dev/null >"$STEP_FILE" || :
+  fi
+}
+
+restore_checkpoint() {
+  local candidate=unknown
+  [[ -n "$STEP_FILE" ]] || return 0
+  if [[ -n "$STEP_FILE" && -f "$STEP_FILE" && ! -L "$STEP_FILE" ]]; then
+    IFS= read -r -n 64 candidate 2>/dev/null <"$STEP_FILE" || :
+  fi
+  if allowed_step "$candidate"; then LAST_STEP=$candidate; else LAST_STEP=unknown; fi
+}
+
+report_failure_step() {
+  if ! allowed_step "$LAST_STEP"; then LAST_STEP=unknown; fi
+  printf 'FORUM_CI_FAILURE_STEP %s\n' "$LAST_STEP"
+  FAILURE_REPORTED=1
+}
+
+refuse() { printf '%s\n' 'FORUM_CI_REFUSED'; report_failure_step; exit 98; }
 
 docker_cmd() {
   /usr/bin/timeout --signal=TERM --kill-after="${COMMAND_KILL_AFTER:-5}s" "${COMMAND_TIMEOUT:?}s" \
@@ -18,10 +60,13 @@ docker_cmd() {
 
 check_host() {
   local tool
+  checkpoint "$DIAG_CONTEXT-host-tools"
   for tool in bash docker env timeout head stat mkdir mktemp readlink chmod rm cmp curl; do
     [[ -x "/usr/bin/$tool" ]] || refuse
   done
+  checkpoint "$DIAG_CONTEXT-host-socket"
   [[ ${BASH_VERSINFO[0]} -ge 5 && -S /var/run/docker.sock ]] || refuse
+  checkpoint "$DIAG_CONTEXT-host-directory"
   [[ "$OWN" =~ ^/tmp/forum-fixture\.[A-Za-z0-9]{6}$ && -d "$OWN" && ! -L "$OWN" ]] || refuse
 }
 
@@ -433,6 +478,7 @@ create_container() {
       --mount "type=bind,source=$OWN/source,target=/source/scripts,readonly,bind-propagation=rprivate"
     )
   fi
+  checkpoint "$phase-create"
   must_capture "$phase-create" 256 15 docker_cmd create --pull=never --platform=linux/amd64 \
     --name "$name" --label "$OWNER_LABEL=$OWNER" --network=none --ipc=none --cgroupns=private \
     --read-only --user=10000:10000 --workdir=/ --runtime=runc --cap-drop=ALL --security-opt=no-new-privileges=true \
@@ -445,12 +491,15 @@ create_container() {
   IFS= read -r CREATED_ID <"$OWN/$phase-create"
   [[ "$CREATED_ID" =~ ^[a-f0-9]{64}$ ]] || refuse
   printf '%s\n' "$CREATED_ID" >"$OWN/$phase-id"
+  checkpoint "$phase-start"
   must_capture "$phase-start" 256 15 docker_cmd start "$CREATED_ID"
 }
 
 preflight() {
   local phase=$1 id=$2 home=$3
+  checkpoint "$phase-inspect"
   must_capture "$phase-inspect" 32768 10 docker_cmd inspect "$IMAGE" "$id"
+  checkpoint "$phase-preflight"
   must_capture "$phase-preflight" 256 15 docker_cmd exec -i "$id" /usr/bin/env -i \
     PATH="$CONTAINER_PATH" HOME="$home" TMPDIR=/tmp LANG=C LC_ALL=C \
     /usr/local/bin/node -e "$PREFLIGHT" "$phase" "$OWNER" "$OWN" "$VOLUME" "${HOST_NS[@]}" \
@@ -460,6 +509,7 @@ preflight() {
 
 remaining_acquisition() {
   local requested=$1
+  checkpoint acquire-deadline
   ACQ_REMAINING=$((ACQ_DEADLINE - SECONDS))
   [[ $ACQ_REMAINING -gt 0 ]] || refuse
   if (( ACQ_REMAINING > requested )); then ACQ_REMAINING=$requested; fi
@@ -467,6 +517,7 @@ remaining_acquisition() {
 
 fetch_one() {
   local index=$1 url=$2 integrity=$3 seconds=$4
+  checkpoint tarball-fetch
   local -a results
   set +e
   /usr/bin/timeout --signal=TERM --kill-after=5s "${seconds}s" \
@@ -496,29 +547,41 @@ child_main() {
   OWNER=${OWN##*/}
   VOLUME="$OWNER-tools"
   local script_dir root ns index url integrity extra count=0
+  checkpoint child-source-root
   script_dir=$(cd -- "${BASH_SOURCE[0]%/*}" && pwd -P)
   root=${script_dir%/scripts}
+  checkpoint stage-directories
   /usr/bin/mkdir -- "$OWN/inputs" "$OWN/source" "$OWN/injected"
+  checkpoint stage-sdk-inputs
   stage_file "$root/apps/sdk/package.json" "$OWN/inputs/package.json" 16384
   stage_file "$root/apps/sdk/package-lock.json" "$OWN/inputs/package-lock.json" 16384
+  checkpoint stage-fixture-source
   stage_file "$root/scripts/verify-forum-votes.cjs" "$OWN/source/verify-forum-votes.cjs" 262144
   stage_file "$root/scripts/test-forum-votes.cjs" "$OWN/source/test-forum-votes.cjs" 262144
+  checkpoint stage-injected-files
   printf '127.0.0.1 localhost\n' >"$OWN/injected/hosts"
   printf 'forum-fixture\n' >"$OWN/injected/hostname"
   printf '# No network or resolver\n' >"$OWN/injected/resolv.conf"
   /usr/bin/chmod 0444 -- "$OWN/injected/hosts" "$OWN/injected/hostname" "$OWN/injected/resolv.conf"
   /usr/bin/chmod 0755 -- "$OWN/source"
   HOST_NS=()
+  checkpoint host-namespaces
   for ns in net ipc pid mnt cgroup; do HOST_NS+=("$(/usr/bin/readlink "/proc/self/ns/$ns")"); done
+  checkpoint engine-query
   must_capture engine 1024 10 docker_cmd info --format '{{.CgroupVersion}}|{{json .SecurityOptions}}'
+  checkpoint engine-controls
   [[ $(<"$OWN/engine") == 2\|* && $(<"$OWN/engine") == *'name=seccomp,profile=builtin'* ]] || refuse
+  checkpoint image-pull
   must_capture image-pull 4096 120 docker_cmd pull --platform=linux/amd64 "$IMAGE"
+  checkpoint volume-inventory
   must_capture volume-existing 256 10 docker_cmd volume ls --filter "name=^$VOLUME$" --format '{{.Name}}'
   [[ ! -s "$OWN/volume-existing" ]] || refuse
+  checkpoint volume-create
   must_capture volume-create 256 10 docker_cmd volume create --driver=local --label "$OWNER_LABEL=$OWNER" \
     --opt type=tmpfs --opt device=tmpfs --opt 'o=size=134217728,uid=10000,gid=10000,mode=0700,nosuid,nodev,noexec' "$VOLUME"
   verify_line volume-create "$VOLUME"
   printf '%s\n' "$VOLUME" >"$OWN/volume-id"
+  checkpoint volume-proof
   must_capture volume-proof 1024 10 docker_cmd volume inspect --format \
     '{{.Name}}|{{.Driver}}|{{index .Labels "org.inferno.forum-fixture.owner"}}|{{index .Options "type"}}|{{index .Options "device"}}|{{index .Options "o"}}' "$VOLUME"
   verify_line volume-proof "$VOLUME|local|$OWNER|tmpfs|tmpfs|size=134217728,uid=10000,gid=10000,mode=0700,nosuid,nodev,noexec"
@@ -527,6 +590,7 @@ child_main() {
   ACQ_ID=$CREATED_ID
   preflight acquire "$ACQ_ID" /work/home
   remaining_acquisition 10
+  checkpoint lock-plan
   must_capture lock-plan 4096 "$ACQ_REMAINING" exec_clean "$ACQ_ID" /work/home /usr/local/bin/node -e "$LOCK_PLAN"
   while IFS='|' read -r index url integrity extra; do
     [[ "$index" == "$count" && -z "$extra" && "$url" == https://registry.npmjs.org/* ]] || refuse
@@ -534,6 +598,7 @@ child_main() {
     remaining_acquisition 30
     fetch_one "$index" "$url" "$integrity" "$ACQ_REMAINING"
     remaining_acquisition 15
+    checkpoint npm-cache
     must_capture "cache-$index" 2048 "$ACQ_REMAINING" exec_clean "$ACQ_ID" /work/home \
       /usr/local/bin/npm --userconfig=/work/user.npmrc --globalconfig=/work/global.npmrc --cache=/work/cache \
       --offline --ignore-scripts --no-audit --no-fund --update-notifier=false --loglevel=error \
@@ -542,10 +607,12 @@ child_main() {
   done <"$OWN/lock-plan"
   [[ $count -eq 9 ]] || refuse
   remaining_acquisition 60
+  checkpoint npm-ci
   must_capture npm-ci 4096 "$ACQ_REMAINING" exec_clean "$ACQ_ID" /work/home \
     /usr/local/bin/npm --userconfig=/work/user.npmrc --globalconfig=/work/global.npmrc --cache=/work/cache --prefix=/work \
     --offline --omit=dev --ignore-scripts --no-audit --no-fund --update-notifier=false --loglevel=error ci
   remaining_acquisition 15
+  checkpoint closure-seal
   must_capture closure 256 "$ACQ_REMAINING" exec_clean "$ACQ_ID" /work/home /usr/local/bin/node -e "$SEAL_CLOSURE"
   verify_line closure 'FORUM_CLOSURE_SEALED ethers=6.17.0'
   remaining_acquisition 1
@@ -553,18 +620,24 @@ child_main() {
   # Keep the tmpfs volume mounted through handoff, then remove its sole writable container.
   create_container target "$OWNER-target" /tmp/home 268435456 1048576
   TARGET_ID=$CREATED_ID
+  checkpoint acquire-remove
   must_capture acquire-remove 256 10 docker_cmd rm --force "$ACQ_ID"
+  checkpoint acquire-absent
   must_capture acquire-remaining 256 10 docker_cmd container ls --all --no-trunc \
     --filter "label=$OWNER_LABEL=$OWNER" --filter "name=^/$OWNER-acquire$" --format '{{.ID}}'
   [[ ! -s "$OWN/acquire-remaining" ]] || refuse
   preflight target "$TARGET_ID" /tmp/home
+  checkpoint import
   must_capture import 256 30 exec_target /usr/local/bin/node -e "$IMPORT_CHECK"
   verify_line import 'FORUM_IMPORT_OK ethers=6.17.0'
+  checkpoint cli-negative
   capture cli 1024 30 exec_target /usr/local/bin/node /source/scripts/verify-forum-votes.cjs
   [[ $CAPTURE_STATUS -eq 1 ]] || refuse
   verify_line cli '{"profile":"synthetic-only","authority":"ADVISORY","productionReady":false,"chainEvidenceVerified":false,"status":"refused","error":"OFFLINE_API_ONLY"}'
+  checkpoint fixture-tests
   must_capture fixture 1024 120 exec_target /usr/local/bin/node /source/scripts/test-forum-votes.cjs
   verify_line fixture "$PASS_LINE"
+  checkpoint child-complete
   printf '%s\n' 'FORUM_CI_CHECKS_COMPLETE'
 }
 
@@ -643,20 +716,31 @@ finish() {
   local status=$? cleanup_confirmed=1
   trap - EXIT INT TERM
   set +e
+  if [[ $status -ne 0 && $FAILURE_REPORTED -eq 0 ]]; then
+    restore_checkpoint
+    report_failure_step
+  fi
+  checkpoint cleanup-resources
   if ! cleanup_owned; then
     printf '%s\n' 'FORUM_CI_CLEANUP_UNCONFIRMED'
+    report_failure_step
     cleanup_confirmed=0
     status=1
   fi
   if [[ $cleanup_confirmed -eq 0 ]]; then
+    checkpoint cleanup-retained
     printf '%s\n' 'FORUM_CI_RECOVERY_STATE_RETAINED'
   elif [[ "$OWN" =~ ^/tmp/forum-fixture\.[A-Za-z0-9]{6}$ && -d "$OWN" && ! -L "$OWN" ]]; then
+    checkpoint cleanup-temp
     /usr/bin/timeout --signal=TERM --kill-after=2s 5s /usr/bin/rm -r -- "$OWN"
     if [[ $? -ne 0 || -e "$OWN" ]]; then
       printf '%s\n' 'FORUM_CI_TEMP_CLEANUP_UNCONFIRMED'
+      report_failure_step
       status=1
     fi
   else
+    checkpoint cleanup-temp
+    report_failure_step
     status=1
   fi
   if [[ $status -eq 0 ]]; then
@@ -669,15 +753,25 @@ finish() {
 
 if [[ $# -eq 2 && $1 == --bounded-child ]]; then
   OWN=$2
+  DIAG_CONTEXT=child
+  if [[ "$OWN" =~ ^/tmp/forum-fixture\.[A-Za-z0-9]{6}$ && -d "$OWN" && ! -L "$OWN" ]]; then
+    STEP_FILE="$OWN/last-step"
+  fi
+  checkpoint child-entry
   child_main
 elif [[ $# -eq 0 ]]; then
+  checkpoint outer-bootstrap-tools
   [[ -x /usr/bin/mktemp && -x /usr/bin/timeout && -x /usr/bin/head ]] || refuse
-  OWN=$(/usr/bin/mktemp -d /tmp/forum-fixture.XXXXXX)
+  checkpoint outer-mktemp
+  OWN=$(/usr/bin/mktemp -d /tmp/forum-fixture.XXXXXX) || { status=$?; report_failure_step; exit "$status"; }
   trap finish EXIT
   trap 'exit 130' INT
   trap 'exit 143' TERM
   check_host
+  STEP_FILE="$OWN/last-step"
+  checkpoint outer-docker-config
   /usr/bin/mkdir -- "$OWN/docker-config"
+  checkpoint outer-child-supervision
   set +e
   /usr/bin/timeout --signal=TERM --kill-after=10s 540s \
     /usr/bin/env -i PATH=/usr/bin:/bin HOME=/nonexistent LANG=C LC_ALL=C \
@@ -685,9 +779,12 @@ elif [[ $# -eq 0 ]]; then
     | /usr/bin/head -c 4097 >"$OWN/child-output"
   results=("${PIPESTATUS[@]}")
   set -e
+  if [[ ${results[0]} -ne 0 ]]; then restore_checkpoint; else checkpoint outer-child-output; fi
   [[ ${results[0]} -eq 0 && ${results[1]} -eq 0 && $(/usr/bin/stat -c '%s' -- "$OWN/child-output") -le 4096 ]] || refuse
+  checkpoint outer-child-summary
   printf '%s\n' 'FORUM_CI_CHECKS_COMPLETE' >"$OWN/expected-child-output"
   /usr/bin/cmp -s -- "$OWN/child-output" "$OWN/expected-child-output" || refuse
 else
+  checkpoint outer-arguments
   refuse
 fi
