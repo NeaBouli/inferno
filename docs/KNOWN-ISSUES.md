@@ -55,11 +55,13 @@ on-chain registration/allocation and authorized processing.
 
 ## OPS-006 -- SDK publication pending
 
-**Status:** RESOLVED (2026-10-09)
+**Status:** RESOLVED (2026-10-10)
 
-`ifr-sdk` 0.4.0 is published on npm. Later versions (0.4.1 onward) are
-published only through the Trusted Publishing workflow after a separate
-release gate; a version in the repository must not be read as published.
+`ifr-sdk` 0.4.1 is published on npm through the Trusted Publishing workflow
+with SLSA provenance; 0.4.0 (9 October 2026) was the explicitly approved
+one-time manual bootstrap without provenance. Later versions are published
+only through the same workflow after a separate release gate; a version in
+the repository must not be read as published.
 
 ## OPS-007 -- Dependency advisory monitoring
 

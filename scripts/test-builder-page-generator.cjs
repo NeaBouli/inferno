@@ -134,11 +134,11 @@ for (const combo of combos) {
   // which credits the measured balance delta (behaviour proven by test/library/BuilderFeeOnTransfer.test.js).
   if (/transferFrom/.test(contract)) fail(`${where}: generated contract must not add its own transferFrom deposit path`);
 
-  // ifr-sdk 0.4.0 is on npm (2026-10-09); the snippet pins that published version and must not
-  // call the registry release pending or advertise the unpublished 0.4.1.
-  if (!sdk.includes("npm install ifr-sdk@0.4.0")) fail(`${where}: snippet must pin the published ifr-sdk@0.4.0`);
+  // ifr-sdk 0.4.1 is on npm (2026-10-10, Trusted Publishing with provenance); the snippet pins
+  // that published version and must not call the registry release pending or pin the stale 0.4.0.
+  if (!sdk.includes("npm install ifr-sdk@0.4.1")) fail(`${where}: snippet must pin the published ifr-sdk@0.4.1`);
   if (/publication (is )?pending/i.test(sdk) || guide.match(/publication (is )?pending/i)) fail(`${where}: stale "publication pending" claim`);
-  if (/ifr-sdk@0\.4\.1/.test(sdk + guide)) fail(`${where}: 0.4.1 is not published`);
+  if (/ifr-sdk@0\.4\.0/.test(sdk + guide)) fail(`${where}: 0.4.0 pin is stale; published version is 0.4.1`);
   if (!sdk.includes("copilot-api.ifrunit.tech/api/ifr/check")) fail(`${where}: REST endpoint missing`);
   if (!guide.includes("no Sepolia IFR token is deployed")) fail(`${where}: guide must state there is no Sepolia IFR deployment`);
   if (!guide.includes("lock() credits only the amount that arrives")) fail(`${where}: guide must explain fee-on-transfer lock accounting`);
