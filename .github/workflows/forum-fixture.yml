@@ -23,8 +23,6 @@ jobs:
   fixture:
     runs-on: ubuntu-24.04
     timeout-minutes: 12
-    permissions:
-      contents: read
     defaults:
       run:
         shell: /usr/bin/bash --noprofile --norc -e -o pipefail {0}
