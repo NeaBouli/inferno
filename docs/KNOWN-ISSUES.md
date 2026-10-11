@@ -55,11 +55,13 @@ on-chain registration/allocation and authorized processing.
 
 ## OPS-006 -- SDK publication pending
 
-**Status:** OPEN
+**Status:** RESOLVED (2026-10-10)
 
-The IFR SDK builds and passes local package-consumer tests. Public npm
-publication remains a separate release action and must not be inferred from the
-repository package.
+`ifr-sdk` 0.4.1 is published on npm through the Trusted Publishing workflow
+with SLSA provenance; 0.4.0 (9 October 2026) was the explicitly approved
+one-time manual bootstrap without provenance. Later versions are published
+only through the same workflow after a separate release gate; a version in
+the repository must not be read as published.
 
 ## OPS-007 -- Dependency advisory monitoring
 

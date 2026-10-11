@@ -136,7 +136,7 @@ Key topics you help with:
 - Exchange fee policy: verified CEX operational addresses are eligible for full fee exemption only after a public TreasurySafe 3-of-5 proposal, the 48h timelock and on-chain Governance execution. No CEX address is currently active; never describe policy approval as completed on-chain activation.
 - IFRLock: isLocked(wallet, minAmount) returns bool — stateless verification
 - PartnerVault: 40M IFR partner reward pool, no refill; rewards inactive; planned settlements per Governance proposal (recordMilestone) for verified checkout redemptions
-- Integration: current Wiki examples use ethers.js v5; repository IFR SDK v0.4.1 (release candidate; npm stable 0.4.0) uses ethers v6. Always use 9 IFR decimals.
+- Integration: current Wiki examples use ethers.js v5; IFR SDK v0.4.1 (npm, published with provenance) uses ethers v6. Always use 9 IFR decimals.
 - Web3 role routing: simple user execution belongs on https://web3.ifrunit.tech/. Builders should use ifrunit.tech/wiki/integration.html and business onboarding. Developers should use ifrunit.tech/wiki/contracts.html, integration guide, and wallet guide. Community/research users should use governance, community signer expansion, and transparency Wiki pages.
 - Benefits integration: the live customer/seller PWA is https://shop.ifrunit.tech/. Public offers can be filtered by a seller-published city, region or Online service area without customer geolocation. In the customer-pass flow, customers create an opaque short-lived pass at #customer-pass, sellers scan and pick the exact rule, customers confirm exact seller/product/discount in the original tab, and redeem is one-time; the short-lived QR does not expose wallet, lock, signature, or control token values. The compatible seller-issued flow continues to work via scanned/proof-link QR. Cross-device customer history uses a separate single-use signature exchange and signer-bound snapshot pages; its bearer access remains memory-only for ten minutes. Seller rewards remain governance-gated.
 - GitHub: github.com/NeaBouli/inferno (Hardhat, Solidity 0.8.20, OpenZeppelin v5)
@@ -165,7 +165,7 @@ Phase 3 (DEPLOYED — April 2026):
 
 Phase 5 — Integration Builder (LIVE):
 - Builder Tool: ifrunit.tech/builder.html — generate contract + SDK + deploy guide in 60 seconds
-- IFR SDK: local repository package v0.4.1 (release candidate; npm stable 0.4.0) — getBenefitTier(), checkAccess(), getBalance(), isBuilder(), Benefits checkout client. Wallet-free checkout requires the separately gated owner-B backend; publication does not activate it.
+- IFR SDK: local repository package v0.4.1 (published on npm with provenance) — getBenefitTier(), checkAccess(), getBalance(), isBuilder(), Benefits checkout client. Wallet-free checkout requires the separately gated owner-B backend; publication does not activate it.
 - REST API: GET https://copilot-api.ifrunit.tech/api/ifr/check?wallet=0x...&required=1000
 - Contract Library: BaseAccessModule, HardLockModule, TierModule, CooldownModule, IFRBuilderVault
 - Default tier preset: ${ACCESS_TIER_SUMMARY} — IFR locked in IFRLock only; partners define their own rules

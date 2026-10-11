@@ -1,0 +1,30 @@
+name: Benefits Edge Tools CI
+
+on:
+  push:
+    paths:
+      - 'scripts/ops/benefits-edge-log-check.py'
+      - 'scripts/ops/run-benefits-edge-log-check.sh'
+      - 'scripts/ops/test_benefits_edge_log_check.py'
+      - 'scripts/ops/points-issuance-pause.py'
+      - '.github/workflows/benefits-edge-tools.yml'
+  pull_request:
+    paths:
+      - 'scripts/ops/benefits-edge-log-check.py'
+      - 'scripts/ops/run-benefits-edge-log-check.sh'
+      - 'scripts/ops/test_benefits_edge_log_check.py'
+      - 'scripts/ops/points-issuance-pause.py'
+      - '.github/workflows/benefits-edge-tools.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Install distro PyYAML (same package family as the production host)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq python3-yaml
+      - name: Test owner-only Benefits edge-log checker (dummy fixtures)
+        run: PYTHONDONTWRITEBYTECODE=1 /usr/bin/python3 -I scripts/ops/test_benefits_edge_log_check.py

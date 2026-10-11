@@ -518,6 +518,7 @@ const cwa02StaleClaims = [
   "IFR already in FeeRouterV1 stays lost",
   "stays lost (CWA-02)",
   "stay there.",
+  "these fees stay there as a de-facto sink",
   "permanently lost, CWA-02",
   "CWA-02, permanently lost",
   "pool fees in FeeRouterV1 (CWA-02)",
@@ -526,12 +527,30 @@ const cwa02StaleClaims = [
   "Supply that can still move",
   "IFR already stranded in FeeRouterV1 stay there",
 ];
-for (const relative of cwa02CurrentSurfaces) {
-  const current = withoutDatedHistory(read(relative));
+function assertNoCurrentCwa02Sink(content, relative) {
+  const current = withoutDatedHistory(content);
   for (const marker of cwa02StaleClaims) {
     assert.ok(!current.includes(marker), `${relative} retains superseded CWA-02 claim: ${marker}`);
   }
 }
+for (const relative of cwa02CurrentSurfaces) {
+  assertNoCurrentCwa02Sink(read(relative), relative);
+}
+// F4: an earlier date in the paragraph must not excuse a present-tense sink assertion.
+assert.throws(() => assertNoCurrentCwa02Sink(
+  'Until 5 October 2026 fees accrued to FeeRouterV1: these fees stay there as a de-facto sink.',
+  'README sink regression'
+), { name: 'AssertionError' });
+assertNoCurrentCwa02Sink(
+  'History: until 7 October 2026 these fees stay there as a de-facto sink (block 26,124,660).',
+  'preserved dated history fixture'
+);
+requireText('README.md', [
+  'historical de-facto sink classification',
+  'the 734,545.074097347 IFR held by FeeRouterV1',
+  'The recovery amount is not proof that every recovered IFR unit came from pool fees.',
+  'block 26,143,797', 'block 26,151,369', 'unallocated',
+]);
 for (const relative of ["docs/llms.txt", "docs/TRANSPARENCY.md", "docs/FEE_DESIGN.md", "docs/wiki/transparency.html", "apps/ai-copilot/src/context/system-prompts.ts"]) {
   requireText(relative, ["26,418,467.994338353", "2.651%", relative.endsWith(".ts") ? "block 26151369" : "block 26,151,369"]);
 }

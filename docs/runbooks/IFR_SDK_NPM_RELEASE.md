@@ -8,8 +8,8 @@ Plain-language owner click guide (npmjs.com and GitHub): [`docs/SDK_RELEASE.md`]
 
 Package: `ifr-sdk`
 
-Current repository version: `0.4.1` (unapproved/unpublished documentation-patch candidate).
-Public npm stable: `0.4.0`.
+Current repository version: `0.4.1` (published 2026-10-10 via Trusted Publishing with provenance).
+Public npm latest: `0.4.1`.
 
 Supported runtime: Node.js 20 and 22
 

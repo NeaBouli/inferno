@@ -41,10 +41,14 @@ the original summary arithmetic; no individual finding text or severity label ch
 
 These are the current repository evidence counts referenced by the status surfaces. They
 do not convert an open audit finding into a verified fix.
+Contract evidence: CI run `37998031908`, 9 October 2026, source
+`d095ff4b73ea78466b3aa45ff10e7621f5d2eb57`: 693 + 7 FeeRouter parity tests = 700;
+the separate Mocha serializer selfcheck is excluded. Browser counts are retained T-274
+evidence (6 October 2026, `eead5086`), not a fresh browser run.
 
 | Suite | Current evidence |
 | --- | ---: |
-| Smart contracts | 693/693 |
+| Smart contracts | 700/700 |
 | Generator Engine | 30/30 |
 | IFR SDK | 36/36 |
 | Landing/Wiki browser | 26/26 |

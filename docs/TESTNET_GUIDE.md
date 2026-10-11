@@ -250,7 +250,9 @@ npx hardhat test --network sepolia --grep "smoke"
 npx hardhat test
 ```
 
-Expected result on the current baseline: **693 contract tests passing**
+Accepted contract baseline: **700 contract tests passing** (CI run `37998031908`,
+9 October 2026, source `d095ff4b`; 693 + 7 FeeRouter parity tests, serializer
+selfcheck excluded). This is retained CI evidence, not a fresh Sepolia run.
 
 ---
 

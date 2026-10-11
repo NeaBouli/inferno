@@ -22,6 +22,7 @@ const sdkPublishJobPermissions = "  publish:\n    needs: gate\n    runs-on: ubun
   + "    permissions:\n      contents: read\n      id-token: write\n";
 const expectedWorkflowFiles = [
   "ai-copilot.yml",
+  "benefits-edge-tools.yml",
   "benefits-network.yml",
   "benefits-verify-ci.yml",
   "benefits-verify-live.yml",

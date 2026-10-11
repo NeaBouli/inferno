@@ -197,16 +197,29 @@ assert.ok(contentAudit.includes("10 Medium · 7 Low · 1 Informational"));
 assert.ok(contentAudit.includes("Editorial correction — 2026-09-19"));
 
 const currentCountMarkers = {
-  "README.md": ["contracts **693/693**", "Generator Engine **30/30**", "IFR SDK **36/36**"],
-  "docs/index.html": ['<div class="stat-value">693</div>'],
-  "docs/llms.txt": ["contracts 693/693", "Generator Engine 30/30", "IFR SDK 36/36"],
-  "apps/ai-copilot/server/index.ts": ["693 contract tests", "30 Generator Engine", "36 SDK"],
-  "apps/ai-copilot/src/context/ifr-knowledge.ts": ["contracts 693/693", "30/30 Generator Engine tests passing"],
+  "README.md": ["contracts **700/700**", "Generator Engine **30/30**", "IFR SDK **36/36**"],
+  "docs/index.html": ['<div class="stat-value">700</div>'],
+  "docs/wiki/index.html": ['<span class="stat-value">700</span>'],
+  "docs/wiki/faq.html": ["700 contract tests", "30 Generator Engine tests", "36 SDK legacy tests"],
+  "docs/PRESS_KIT.md": ["700 contract + 30 Generator Engine + 36 SDK legacy tests"],
+  "docs/TESTNET_GUIDE.md": ["**700 contract tests passing**"],
+  "docs/llms.txt": ["contracts 700/700", "Generator Engine 30/30", "IFR SDK 36/36"],
+  "apps/ai-copilot/server/index.ts": ["700 contract tests", "30 Generator Engine", "36 SDK"],
+  "apps/ai-copilot/src/context/ifr-knowledge.ts": ["contracts 700/700", "30/30 Generator Engine tests passing"],
 };
-for (const [relative, markers] of Object.entries(currentCountMarkers)) {
-  const content = fs.readFileSync(path.join(root, relative), "utf8");
+function assertCurrentCountMarkers(content, markers, relative) {
   for (const marker of markers) {
     assert.ok(content.includes(marker), `${relative} missing current test marker: ${marker}`);
+  }
+}
+assert.equal(register.canonicalTests.contracts, "700/700");
+assert.equal(register.canonicalTests.generator, "30/30");
+assert.equal(register.canonicalTests.sdk, "36/36");
+for (const [relative, markers] of Object.entries(currentCountMarkers)) {
+  const content = fs.readFileSync(path.join(root, relative), "utf8");
+  assertCurrentCountMarkers(content, markers, relative);
+  for (const wrongTotal of ["693", "701"]) {
+    assert.throws(() => assertCurrentCountMarkers(content.replaceAll("700", wrongTotal), markers, relative), { name: "AssertionError" });
   }
 }
 assert.ok(
@@ -276,6 +289,10 @@ function renderMarkdown(data) {
     "",
     "These are the current repository evidence counts referenced by the status surfaces. They",
     "do not convert an open audit finding into a verified fix.",
+    "Contract evidence: CI run `37998031908`, 9 October 2026, source",
+    "`d095ff4b73ea78466b3aa45ff10e7621f5d2eb57`: 693 + 7 FeeRouter parity tests = 700;",
+    "the separate Mocha serializer selfcheck is excluded. Browser counts are retained T-274",
+    "evidence (6 October 2026, `eead5086`), not a fresh browser run.",
     "",
     "| Suite | Current evidence |",
     "| --- | ---: |",

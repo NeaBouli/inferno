@@ -1,7 +1,8 @@
 # Inferno Repository Instructions
 
-Read and follow `/Users/gio/AGENTS.md` and `/Users/gio/WORKFLOW_INDEX.md`
-before working in this repository. `BRIDGE.md` is the append-only project
+Read and follow `/Users/gio/AGENTS.md` and `/Users/gio/agent-fleet/FROZEN_WORKFLOW.md`
+before working in this repository. Its hash manifest is
+`/Users/gio/agent-fleet/FROZEN_WORKFLOW.sha256`. `BRIDGE.md` is the append-only project
 handoff and task source of truth.
 
 ## Stack And Verification
