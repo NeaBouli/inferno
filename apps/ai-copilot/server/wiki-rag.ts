@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync, existsSync } from "fs";
 import { join, resolve, dirname } from "path";
 import { fileURLToPath } from "url";
+import { neutralizePromptDelimiters } from "./prompt-safety.js";
 
 const __wikiFilename = fileURLToPath(import.meta.url);
 const __wikiDirname = dirname(__wikiFilename);
@@ -108,7 +109,7 @@ export function buildSystemPrompt(
   if (relevantDocs.length === 0) return basePrompt;
 
   const wikiContext = relevantDocs
-    .map((d) => `### ${d.title} (wiki/${d.slug})\n${d.content}`)
+    .map((d) => `### ${neutralizePromptDelimiters(d.title)} (wiki/${d.slug})\n${neutralizePromptDelimiters(d.content)}`)
     .join("\n\n");
 
   return `${basePrompt}

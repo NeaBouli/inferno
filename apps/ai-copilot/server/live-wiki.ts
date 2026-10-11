@@ -1,3 +1,5 @@
+import { neutralizePromptDelimiters } from "./prompt-safety.js";
+
 /**
  * CWA-24 / CWA-75 / CWA-76: bounded-trust live Wiki snapshot refresh.
  *
@@ -352,7 +354,8 @@ export class LiveWikiRefresher {
         const html = await this.fetchPolicyHtml(pageUrl, this.config.fetchTimeoutMs);
         const text = extractWikiText(html, this.config.maxCharsPerPage);
         if (text.length < 50) throw new Error("page text too short");
-        sections.push(`=== ${pageUrl} ===\n${text}`);
+        // Page text is neutralised before our own "=== url ===" separators are added (IFR-DEV-13).
+        sections.push(`=== ${pageUrl} ===\n${neutralizePromptDelimiters(text)}`);
       } catch (err) {
         console.warn(`[live-wiki] page skipped: ${pageUrl} — ${(err as Error).message}`);
       }
