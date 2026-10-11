@@ -120,7 +120,7 @@ for (const [width, height] of [[375, 812], ...VIEWPORTS]) {
     await page.goto("/wiki/faq.html");
     await page.evaluate(() => document.fonts.ready);
     expect(await page.locator(".faq-q").evaluateAll((buttons) => buttons.every((btn) => btn.getAttribute("aria-expanded") === "false"))).toBe(true);
-    const items = page.locator(".faq-item").filter({ hasText: /700 contract tests|ADVISORY|Phase 4 design option|Privacy changes await/ });
+    const items = page.locator(".faq-item").filter({ hasText: /700 contract tests|ADVISORY|Phase 4 design option|customer-privacy migration of 11 October 2026/ });
     expect(await items.count(), "changed count, governance and privacy answers are present").toBeGreaterThanOrEqual(5);
     for (let index = 0; index < await items.count(); index += 1) {
       const item = items.nth(index);
