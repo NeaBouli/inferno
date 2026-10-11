@@ -165,7 +165,7 @@ Phase 3 (DEPLOYED — April 2026):
 
 Phase 5 — Integration Builder (LIVE):
 - Builder Tool: ifrunit.tech/builder.html — generate contract + SDK + deploy guide in 60 seconds
-- IFR SDK: local repository package v0.4.1 (published on npm with provenance) — getBenefitTier(), checkAccess(), getBalance(), isBuilder(), Benefits checkout client. Wallet-free checkout requires the separately gated owner-B backend; publication does not activate it.
+- IFR SDK: local repository package v0.4.1 (published on npm with provenance) — getBenefitTier(), checkAccess(), getBalance(), isBuilder(), Benefits checkout client. Wallet-free checkout is live since the owner-B backend migration of 2026-10-11.
 - REST API: GET https://copilot-api.ifrunit.tech/api/ifr/check?wallet=0x...&required=1000
 - Contract Library: BaseAccessModule, HardLockModule, TierModule, CooldownModule, IFRBuilderVault
 - Default tier preset: ${ACCESS_TIER_SUMMARY} — IFR locked in IFRLock only; partners define their own rules

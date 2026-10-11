@@ -39,9 +39,9 @@ Mainnet transactions, prove exact-head CI or authorize deployment.
 row; a legacy `walletAddress` parameter is ignored and never echoed. Earlier `ifr-sdk` builds
 (<= 0.3.0, repository tarballs only; never on npm) require `challenge.walletAddress` in the response and reject every challenge from this
 backend, so their seller checkout flows break. Publish and roll out `ifr-sdk` 0.4.0 (wallet-free) first,
-then release the backend. The same release still needs the separate owner-B migration gate
-(backup, migrate, VACUUM, `node scripts/verify-owner-b-migration.cjs --scan <copy>`), and the edge
-access logs must be checked for query strings of old clients.
+then release the backend. This happened on 11 October 2026 with the owner-B migration gate
+(backup, migrate, VACUUM, `node scripts/verify-owner-b-migration.cjs --scan`) after the edge check
+found no access log and no `walletAddress=` in a bounded log sample.
 
 Receipt context check (fails closed): device receipts verify only when the backend's
 `SELLER_AUTH_DOMAIN` equals the frontend host and its `CHAIN_ID` equals the frontend

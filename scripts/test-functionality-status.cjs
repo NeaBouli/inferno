@@ -38,7 +38,8 @@ for (const copy of [status, read("README.md")]) {
   assert.throws(() => assertSdkReleaseState(copy.replace("Published npm `ifr-sdk` **0.4.1** with provenance", "Published npm `ifr-sdk` **0.4.0**")), { name: "AssertionError" });
   assert.throws(() => assertSdkReleaseState(copy.replaceAll("separate npm release gate", "release")), { name: "AssertionError" });
 }
-assert.ok(status.includes("Publisher validation") && status.includes("#238 compatibility/cutover HOLD"), "SDK status must preserve publisher validation and backend compatibility/cutover hold");
+assert.ok(status.includes("Publisher validation") && status.includes("#238 customer-privacy cutover was\n   completed on 11 October 2026"), "SDK status must preserve publisher validation and record the completed #238 cutover");
+assert.ok(!status.includes("cutover HOLD"), "SDK status must not describe the completed #238 cutover as HOLD");
 
 // F7: official-interface retirement is independent of the dated contract-price snapshot.
 function assertLendingInterfaceRetirement(row) {

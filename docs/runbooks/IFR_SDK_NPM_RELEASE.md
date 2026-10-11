@@ -15,8 +15,8 @@ Supported runtime: Node.js 20 and 22
 
 This runbook controls SDK publication. The completed bootstrap instructions below are historical
 and must not be rerun; npm versions are immutable. The 0.4.1 candidate needs its own owner GO.
-Wallet-free checkout in SDK 0.4.x requires the separately approved owner-B Benefits backend
-rollout; publication does not activate that migration or partner rewards.
+Wallet-free checkout in SDK 0.4.x is live since the owner-B Benefits backend migration of
+11 October 2026; publication never activates migrations or partner rewards.
 
 ## Current Evidence
 

@@ -220,7 +220,7 @@ export function getIFRKnowledge() {
       sdk: {
         package: "ifr-sdk",
         version: "0.4.1",
-        availability: "npm ifr-sdk 0.4.1 published with provenance via Trusted Publishing; 0.4.0 was the provenance-free one-time bootstrap. Wallet-free Benefits flows require the separately gated owner-B backend rollout.",
+        availability: "npm ifr-sdk 0.4.1 published with provenance via Trusted Publishing; 0.4.0 was the provenance-free one-time bootstrap. Wallet-free Benefits flows are live since the owner-B backend migration of 2026-10-11.",
         install: "From the Inferno repository root: npm install --install-links ./apps/sdk",
         methods: "getBenefitTier() (default preset or own tiers; locked IFR only), checkAccess(), getBalance(), getLockedBalance(), isBuilder(), getTotalSupply(); getTier() is deprecated legacy",
         restApi: "GET https://copilot-api.ifrunit.tech/api/ifr/check?wallet=0x...&required=1000"
