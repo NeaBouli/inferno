@@ -87,6 +87,22 @@ proven from the code alone:
   constants in `topicRouter.js`, the tests in `test/topic-routing.test.js`,
   `.env.example` and this table.
 
+## Topic write permissions (owner decision 2026-10-11)
+
+The bot deletes a message in a protected topic unless the sender's verified wallet
+(live tier check on every message) is allowed to write there:
+
+| Topic | ID | Who may write |
+| --- | --- | --- |
+| Core Dev | 58 | Safe signers and Council-authorized wallets (`COUNCIL_WALLETS`) |
+| Council | 21 | Safe signers and Council-authorized wallets (`COUNCIL_WALLETS`) |
+| Vote | 23 | **bot only**: Forum/ballot announcements; nobody else, admins included |
+| Dev & Builder | 11 | Safe signers and builders |
+
+Configured `ADMIN_USER_IDS` and chat admins keep their bypass in 58, 21 and 11, not
+in Vote. Telegram has no per-topic read permission: every group member can read
+every topic; the bot only controls who can write.
+
 ## Verify API — CORS-Policy (CWA-39)
 
 Die Verify API (`POST /api/verify`) akzeptiert Browser-Aufrufe ausschließlich

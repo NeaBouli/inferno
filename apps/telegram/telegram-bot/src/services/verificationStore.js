@@ -1,8 +1,11 @@
 // services/verificationStore.js — IFR 3-Tier Wallet Verification Store
 //
 // Tier 1 — SIGNER:    Gnosis Safe owners (on-chain via getOwners()) → Core Dev (58) + Council (21)
-// Tier 2 — VOTER:     IFRLock.lockedBalance > 0                     → Vote (23)
+// Tier 1b — COUNCIL:  COUNCIL_WALLETS allowlist (Council-authorized) → Core Dev (58) + Council (21)
+// Tier 2 — VOTER:     IFRLock.lockedBalance > 0                     → (no write topic)
 // Tier 3 — BUILDER:   BuilderRegistry / Whitelist                   → Dev & Builder (11)
+// Vote (23) is the bot-only Forum/ballot announcement topic: no human writes there
+// (owner decision 2026-10-11, decision register Lane 8).
 //
 // Persistence: wallet mappings saved to WALLET_MAP_PATH (default /tmp/ifr_wallet_map.json)
 // On restart: known mappings are re-verified on-chain in the background
@@ -14,17 +17,27 @@ const path = require('path');
 const WALLET_MAP_PATH = process.env.WALLET_MAP_PATH || '/tmp/ifr_wallet_map.json';
 
 const TOPIC_ACCESS = {
-  58: 'signer',   // Core Dev
-  21: 'signer',   // Council
-  23: 'voter',    // Vote
+  58: 'council',  // Core Dev — Safe signers + Council-authorized
+  21: 'council',  // Council  — Safe signers + Council-authorized
+  23: 'bot',      // Vote     — bot announcements only
   11: 'builder',  // Dev & Builder
 };
+
+function isBotOnlyTopic(topicId) {
+  return TOPIC_ACCESS[topicId] === 'bot';
+}
 
 // Verified Users: userId → { wallet, tier, verifiedAt }
 const verifiedUsers = new Map();
 
 // Wallet Map (persistent): userId → wallet (survives restart via file)
 const walletMap = new Map();
+
+// Council-authorized wallets that are not Safe signers (owner-maintained, addresses only)
+const councilWhitelist = new Set(
+  (process.env.COUNCIL_WALLETS || '').split(',')
+    .map(a => a.trim().toLowerCase()).filter(a => /^0x[0-9a-f]{40}$/.test(a))
+);
 
 // Builder Whitelist (Phase 3 Placeholder)
 const builderWhitelist = new Set(
@@ -113,6 +126,7 @@ async function getTier(wallet) {
   const w = wallet.toLowerCase();
   const signers = await getSignerWallets();
   if (signers.includes(w)) return 'signer';
+  if (councilWhitelist.has(w)) return 'council';
   if (builderWhitelist.has(w)) return 'builder';
   return 'community';
 }
@@ -168,6 +182,8 @@ function getTierForUser(userId) { const u = getUser(userId); return u ? u.tier :
 function tierHasTopicAccess(tier, topicId) {
   const required = TOPIC_ACCESS[topicId];
   if (!required) return true; // Not a protected topic
+  if (required === 'bot') return false;
+  if (required === 'council') return ['signer', 'council'].includes(tier);
   if (required === 'signer') return tier === 'signer';
   if (required === 'voter') return ['signer', 'voter', 'builder'].includes(tier);
   if (required === 'builder') return ['signer', 'builder'].includes(tier);
@@ -184,7 +200,7 @@ function hasTopicAccess(userId, topicId) {
 
 module.exports = {
   setVerified, unverify, isVerified, getUser, getWallet, getTierForUser,
-  hasTopicAccess, tierHasTopicAccess, getTier,
+  hasTopicAccess, tierHasTopicAccess, getTier, isBotOnlyTopic, councilWhitelist,
   autoRestoreAll, reverifyFromMap,
   TOPIC_ACCESS, builderWhitelist
 };

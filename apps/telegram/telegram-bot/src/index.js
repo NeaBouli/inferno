@@ -26,7 +26,7 @@ const express  = require('express');
 const { ethers } = require('ethers');
 const {
   setVerified, getWallet, isVerified: isUserVerified,
-  tierHasTopicAccess, autoRestoreAll, reverifyFromMap
+  tierHasTopicAccess, isBotOnlyTopic, autoRestoreAll, reverifyFromMap
 } = require('./services/verificationStore');
 const { claimNonce } = require('./services/nonceStore');
 const { determineTier } = require('./services/onChainReader');
@@ -80,7 +80,7 @@ bot.action(/^verify_\d+$/, onVerifyCallback);
 // ── Protected Topics — 3-Tier Wallet Verification ────────────────────────────
 // Registered BEFORE the command handlers so a command posted in a protected
 // thread passes this gate first and cannot leak protected output (CWA-40).
-const PROTECTED_TOPICS = [58, 21, 23, 11]; // Core Dev, Council, Vote, Dev&Builder
+const PROTECTED_TOPICS = [58, 21, 23, 11]; // Core Dev, Council, Vote (bot-only), Dev&Builder
 // Fail closed (CWA-38): no hardcoded admin fallback. Unset/unparsable
 // ADMIN_USER_IDS yields an empty list — nobody gets the admin bypass.
 const PROTECTED_ADMIN_IDS = (process.env.ADMIN_USER_IDS || '')
@@ -94,6 +94,19 @@ bot.on('message', async (ctx, next) => {
     if (!threadId || !PROTECTED_TOPICS.includes(threadId)) return next();
     const userId = ctx.from?.id;
     if (!userId) return next();
+    // Vote (23) is bot-only: no bypass for admins or other bots; the bot's own posts
+    // never arrive as updates. Members read announcements there but cannot post.
+    if (isBotOnlyTopic(threadId)) {
+      await ctx.deleteMessage();
+      try {
+        await ctx.telegram.sendMessage(
+          userId,
+          '🗳️ *Vote is the announcement topic for ballots.*\n\nOnly the IFR bot posts there. Please discuss in General.',
+          { parse_mode: 'Markdown' }
+        );
+      } catch (e) { /* user may have blocked DMs */ }
+      return;
+    }
     if (PROTECTED_ADMIN_IDS.includes(userId)) return next();
     const member = await ctx.telegram.getChatMember(ctx.chat.id, userId);
     if (['creator', 'administrator'].includes(member.status)) return next();
@@ -262,14 +275,15 @@ verifyApp.post('/api/verify', verifyApiLimiter, async (req, res) => {
     }
 
     const tierLabel = {
-      signer: '🔑 Signer / Core Team', voter: '🗳️ IFR Holder / Voter',
+      signer: '🔑 Signer / Core Team', council: '🏛️ Council', voter: '🗳️ IFR Holder / Voter',
       builder: '🔨 Builder', community: '👤 Community Member'
     }[tier];
 
     const topicAccess = {
-      signer: ['Core Dev', 'Council', 'Vote', 'Dev & Builder'],
-      voter: ['Vote'],
-      builder: ['Vote', 'Dev & Builder'],
+      signer: ['Core Dev', 'Council', 'Dev & Builder'],
+      council: ['Core Dev', 'Council'],
+      voter: [],
+      builder: ['Dev & Builder'],
       community: []
     }[tier];
 
@@ -281,7 +295,7 @@ verifyApp.post('/api/verify', verifyApiLimiter, async (req, res) => {
         `Tier: ${tierLabel}\n\n` +
         (topicAccess.length > 0
           ? `*Access granted to:*\n${topicAccess.map(t => '• ' + t).join('\n')}`
-          : '_No restricted topic access for this wallet._\n\nLock IFR to gain Vote access.'),
+          : '_No restricted topic access for this wallet._\n\nBallots are announced in the Vote topic.'),
         { parse_mode: 'Markdown' }
       );
     } catch (e) {
