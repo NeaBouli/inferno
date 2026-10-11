@@ -309,3 +309,25 @@ chain before relying on this record.
 | Treasury Safe | [`0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`](https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b) | Governance owner since 20.03.2026; deployed 2026-03-04 |
 | Community Safe | [`0xaC5687547B2B21d80F8fd345B51e608d476667C7`](https://app.safe.global/home?safe=eth:0xaC5687547B2B21d80F8fd345B51e608d476667C7) | Bootstrap Plan B contribution and community operations reserve |
 | LP Reserve Safe | [`0x5D93E7919a71d725054e31017eCA86B026F86C04`](https://app.safe.global/home?safe=eth:0x5D93E7919a71d725054e31017eCA86B026F86C04) | LP reserve for later Uniswap phases; received 400.6M IFR from the deployer on 18.03.2026 |
+
+## Off-chain Service Releases (Runtime Matrix)
+
+Dated snapshot, **11 October 2026 (evening UTC)**, read from the production host through the
+scoped release gate (`DEPLOY_MODE=gate scripts/deploy-compose-service.sh <service> status`) and
+`docker inspect`. Re-read it before relying on it; the gate status is the source of truth.
+
+| Service | Public surface | Source release (`RELEASE_SHA`) | Running image | Started (UTC) | Notes |
+| --- | --- | --- | --- | --- | --- |
+| benefits-frontend | `shop.ifrunit.tech` | `5c592f77` | `sha256:09aad3ab…` | 2026-10-11 18:58 | privacy page states the owner-B migration |
+| benefits-backend | `shop.ifrunit.tech/api` | built from `262a2dcc` | `sha256:01788314…` | 2026-10-11 07:13 | owner-B migration applied; `5c592f77` changes no backend runtime file |
+| telegram-bot | `verify-api.ifrunit.tech` | `5c592f77` | `sha256:b7f0b800…` | 2026-10-11 18:54 | Vote topic bot-only; Core Dev/Council for signers + Council |
+| ai-copilot | `copilot-api.ifrunit.tech` | `5c592f77` | `sha256:c2c93091…` | 2026-10-11 18:55 | knowledge: Council/Forum guides, owner-B live |
+| points-backend | `points-api.ifrunit.tech` | `eb28c1ba` | `sha256:3c497856…` | 2026-10-08 23:03 | voucher issuance resumed after the incident pause |
+| web3-site | `web3.ifrunit.tech` | `50afc5cf` | `sha256:56168782…` | 2026-09-20 08:24 | |
+| Website and Wiki | `ifrunit.tech` | `main` via GitHub Pages | n/a | on every merge to `main` | static `docs/` |
+
+`benefits-network` shares one source directory and `RELEASE_SHA` for both Benefits services; a
+frontend-only release updates `RELEASE_SHA` but leaves the backend container on its previous image,
+which is why the backend row names the release it was built from. Schema migrations never ship
+through the normal deploy path (`require_no_schema_migration`); see
+[BENEFITS_CUSTOMER_PRIVACY_MIGRATION.md](BENEFITS_CUSTOMER_PRIVACY_MIGRATION.md).
