@@ -73,6 +73,17 @@ export function getIFRKnowledge() {
       votingPortal: "Planned, not live and security-gated. Ballot mode must be fixed before opening. Open mode may disclose consented public wallet/initial mappings; secret mode must unlink eligibility from casting through independently reviewed anonymous credentials or ZK membership, one-time nullifiers, encrypted ballots and threshold tallying, and publish only turnout, aggregate result and proof. Eligibility must use a block-numbered Safe-owner snapshot and fail closed, with EOA/EIP-1271 support. The portal targets zero application/proxy log retention but must disclose transient network-provider metadata processing. It must never custody keys or execute Safe/Governance actions automatically.",
       agenda: "https://ifrunit.tech/wiki/governance.html#council-agenda"
     },
+    councilVotingGuide: {
+      who: "The five Safe signers (same 3-of-5 owner set of the Treasury, Community and LP Reserve Safes). A ballot is approved at 3 of 5.",
+      steps: "Copy the exact published ballot text of the chosen option, sign it on Etherscan Verified Signatures with the signer wallet (free, no transaction), publish, and post the link in the Telegram Council topic (t.me/IFR_token/21) after verifying the wallet with /verify in a private chat with the bot. The published checker counts a vote only if the signature recovers to the listed wallet over the exact text. Nothing executes automatically.",
+      guide: "https://ifrunit.tech/wiki/council-votes.html#how-to-vote"
+    },
+    forumVoting: {
+      status: "In development, not live. No Forum ballot is open.",
+      rules: "Owner decisions of 2026-10-11: Forum results are advisory and the Council decides; voting weight is IFR locked in IFRLock at a snapshot block announced before the ballot opens, without delegation; each vote is a free wallet signature over ballot id, chain, snapshot block, choice and frozen proposal-text hash; the last valid vote counts; quorum is 10% of locked IFR and abstentions count towards quorum only.",
+      announcements: "Ballots, snapshot blocks, times and results are posted only by the IFR bot in the Telegram Vote topic (t.me/IFR_token/23); nobody else can post there.",
+      guide: "https://ifrunit.tech/wiki/dao-governance.html#voting"
+    },
     aiCopilot: {
       accessTiers: `The project's default tier preset is ${ACCESS_TIER_SUMMARY} (IFR locked in IFRLock only; same as the Benefits network). Partners set their own thresholds and discounts. Tier calculations use integer base units with 9 IFR decimals.`,
       premiumBenefit: "The current /api/chat path provides general and surface-specific guidance. It does not inject verified wallet balance, lock status or tier into chat; wallet-specific state must be checked in the signed Web3 interfaces or direct chain reads.",
