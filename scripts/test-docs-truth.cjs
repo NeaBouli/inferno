@@ -110,6 +110,31 @@ for (const relative of currentSurfaces) {
   }
 }
 
+// External audit IFRUNIT 2026-10-11 (IFR-DEV-08): since Proposal #21 (05.10.2026) the 1% pool fee goes to
+// BuybackController, and the IFR held by FeeRouterV1 was recovered on 07.10.2026 (Proposals #22/#23).
+const feeSurfaces = [
+  "docs/index.html",
+  "docs/wiki/protocol-plan.html",
+  "docs/wiki/wallet-guide.html",
+  "docs/wiki/tokenomics.html",
+  "docs/wiki/contracts.html",
+  "docs/wiki/fee-design.html",
+];
+const staleFee = [
+  /1% to FeeRouterV1/i,
+  /&rarr; FeeRouterV1 \(1\.0%\)/,
+  /\+ 1% FeeRouter</,
+  />FeeRouterV1 \(1%\)</,
+  /stays without a withdrawal path/i,
+  /held by FeeRouterV1 are not forwarded automatically/i,
+];
+for (const relative of feeSurfaces) {
+  const content = read(relative);
+  for (const pattern of staleFee) {
+    assert.ok(!pattern.test(content), `${relative} matches stale pool-fee claim ${pattern}`);
+  }
+}
+
 // Tests: the register's contract count is pinned to accepted exact-source CI evidence.
 const register = JSON.parse(read("docs/community-audits/cwa-remediation-register.json"));
 assert.equal(register.canonicalTests.contracts, "700/700");

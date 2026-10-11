@@ -2392,7 +2392,7 @@ console.<span class="function">log</span>(<span class="string">"Reserve1:"</span
                 <span class="contract-badge">Deployed / wired</span>
             </div>
             <div class="contract-path">contracts/buyback/BuybackController.sol</div>
-            <p>Native-ETH fee execution controller. FeeRouterV1 is configured to send the ETH fee from routed swaps to this contract. When the controller holds at least its configured trigger amount, permissionless <code>execute()</code> attempts a 50/50 ETH allocation: buy IFR to BurnReserve and add IFR+ETH liquidity. Without an IFR balance, the LP half falls back to another buyback. IFR transfer-pool fees already held by FeeRouterV1 are not forwarded automatically.</p>
+            <p>Native-ETH fee execution controller. FeeRouterV1 is configured to send the ETH fee from routed swaps to this contract. When the controller holds at least its configured trigger amount, permissionless <code>execute()</code> attempts a 50/50 ETH allocation: buy IFR to BurnReserve and add IFR+ETH liquidity. Without an IFR balance, the LP half falls back to another buyback. Since Proposal #21 (05.10.2026) the 1% IFR pool fee also goes to this contract; the IFR previously held by FeeRouterV1 was recovered to the Treasury Safe on 07.10.2026 (Proposals #22/#23).</p>
             <div class="table-wrap">
                 <table>
                     <tbody>
