@@ -37,6 +37,7 @@ on:
       - 'scripts/test-benefits-support-ui.js'
       - 'scripts/test-benefits-wallet-asset-provider.mjs'
       - 'scripts/test-benefits-node-runtime.cjs'
+      - 'scripts/test-benefits-frontend-env-isolation.cjs'
       - 'scripts/test-deploy-benefits-capacity.sh'
       - 'scripts/report-benefits-device-checklist.js'
       - 'scripts/record-benefits-device-evidence.js'
@@ -82,6 +83,7 @@ on:
       - 'scripts/test-benefits-support-ui.js'
       - 'scripts/test-benefits-wallet-asset-provider.mjs'
       - 'scripts/test-benefits-node-runtime.cjs'
+      - 'scripts/test-benefits-frontend-env-isolation.cjs'
       - 'scripts/test-deploy-benefits-capacity.sh'
       - 'scripts/report-benefits-device-checklist.js'
       - 'scripts/record-benefits-device-evidence.js'
@@ -175,6 +177,8 @@ jobs:
       - run: npm ci
       - name: npm audit (production clean; reviewed dev-only exceptions)
         run: node ../../../scripts/check-dev-advisory-exceptions.cjs
+      - name: Frontend must not inherit backend env (external audit IFR-DEV-04)
+        run: node ../../../scripts/test-benefits-frontend-env-isolation.cjs
       - run: npm run test:proof-link
       - run: npm run test:discoverability
       - run: npm run test:wallet-selection

@@ -38,8 +38,8 @@ services:
         NEXT_PUBLIC_COMMITMENT_VAULT_ADDRESS: "${NEXT_PUBLIC_COMMITMENT_VAULT_ADDRESS:-0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3}"
         NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID: "${NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID:-}"
     container_name: inferno-benefits-frontend
-    env_file:
-      - ./.env.benefits
+    # No env_file: .env.benefits holds backend-only settings. NEXT_PUBLIC_* values are build args
+    # (inlined at build time); the frontend needs only the variables below at runtime.
     environment:
       BENEFITS_API_INTERNAL_URL: http://benefits-backend:3001
       HOSTNAME: 0.0.0.0
