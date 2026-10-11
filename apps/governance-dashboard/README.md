@@ -2,6 +2,10 @@
 
 Read-only governance dashboard for the Inferno ($IFR) protocol.
 
+> **Network status:** the dashboard currently reads the **Sepolia testnet** deployment
+> (`src/config/addresses.ts`, chain ID 11155111). It is a local developer tool and is not
+> deployed publicly. Wiring it to the Mainnet contracts below is an open task.
+
 ## Views
 
 | Tab | Description |
@@ -15,13 +19,13 @@ Read-only governance dashboard for the Inferno ($IFR) protocol.
 
 - React 18 + Vite + TypeScript
 - Tailwind CSS
-- ethers.js v5 (read-only, no wallet required)
+- ethers.js v6 (read-only, no wallet required)
 
 ## Setup
 
 ```bash
 cd apps/governance-dashboard
-npm install
+npm ci
 npm run dev
 # → http://localhost:5174
 ```
@@ -29,10 +33,10 @@ npm run dev
 ## Environment
 
 ```env
-VITE_RPC_URL=https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY
+VITE_SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY   # read by src/hooks/useContracts.ts
 ```
 
-## Contracts (Mainnet)
+## Mainnet Contracts (not yet wired into this dashboard)
 
 | Contract | Address |
 |----------|---------|
@@ -41,7 +45,7 @@ VITE_RPC_URL=https://eth-mainnet.g.alchemy.com/v2/YOUR_KEY
 | IFRLock | `0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb` |
 | PartnerVault | `0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D` |
 
-## Legacy: Sepolia Testnet Addresses
+## Sepolia Testnet Addresses (used by the dashboard today)
 
 | Contract | Sepolia Address |
 |----------|----------------|
