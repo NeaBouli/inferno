@@ -6,6 +6,7 @@ const VERIFY_URL = 'https://ifrunit.tech/wiki/verify.html';
 
 const TIER_LABELS = {
   signer:    '🔑 Signer / Core Team',
+  council:   '🏛️ Council',
   voter:     '🗳️ IFR Holder / Voter',
   builder:   '🔨 Builder',
   community: '👤 Community Member'
@@ -68,7 +69,6 @@ async function handleMyStatus(ctx) {
   const topics = [
     { name: 'Core Dev', id: 58 },
     { name: 'Council', id: 21 },
-    { name: 'Vote', id: 23 },
     { name: 'Dev & Builder', id: 11 },
   ];
 

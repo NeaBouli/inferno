@@ -54,7 +54,15 @@ test('tierHasTopicAccess topic matrix', () => {
   assert.equal(store.tierHasTopicAccess('signer', 58), true);   // Core Dev
   assert.equal(store.tierHasTopicAccess('signer', 21), true);   // Council
   assert.equal(store.tierHasTopicAccess('voter', 58), false);
-  assert.equal(store.tierHasTopicAccess('voter', 23), true);    // Vote
+  // Owner decision 2026-10-11: Vote (23) is bot-only; Core Dev/Council admit Council-authorized wallets.
+  assert.equal(store.tierHasTopicAccess('voter', 23), false);   // Vote is bot-only
+  assert.equal(store.tierHasTopicAccess('signer', 23), false);
+  assert.equal(store.tierHasTopicAccess('council', 23), false);
+  assert.equal(store.tierHasTopicAccess('council', 58), true);
+  assert.equal(store.tierHasTopicAccess('council', 21), true);
+  assert.equal(store.tierHasTopicAccess('council', 11), false);
+  assert.equal(store.tierHasTopicAccess('builder', 21), false);
+  assert.ok(store.isBotOnlyTopic(23) && !store.isBotOnlyTopic(21));
   assert.equal(store.tierHasTopicAccess('builder', 11), true);  // Dev & Builder
   assert.equal(store.tierHasTopicAccess('builder', 58), false);
   assert.equal(store.tierHasTopicAccess('community', 23), false);

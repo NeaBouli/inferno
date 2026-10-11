@@ -93,12 +93,15 @@ async function isBuilderOnChain(wallet) {
 
 // ── determineTier() — full on-chain check ───────────
 async function determineTier(wallet) {
-  const { builderWhitelist } = require('./verificationStore');
+  const { builderWhitelist, councilWhitelist } = require('./verificationStore');
   const w = wallet.toLowerCase();
 
   // Tier 1: Signer (Gnosis Safe owners, auto-synced)
   const signers = await getSignerWallets();
   if (signers.includes(w)) return 'signer';
+
+  // Tier 1b: Council-authorized (owner allowlist COUNCIL_WALLETS)
+  if (councilWhitelist.has(w)) return 'council';
 
   // Tier 3: Builder (on-chain or whitelist)
   const builderOnChain = await isBuilderOnChain(w);

@@ -87,6 +87,21 @@ test('unset ADMIN_USER_IDS denies the former hardcoded identity (fail closed)', 
   }
 });
 
+test('Vote (23) is bot-only: configured admins and other users are both removed', async () => {
+  const bot = bootBot({ ADMIN_USER_IDS: '222' });
+  try {
+    await bot.ready;
+    for (const userId of [222, 444]) {
+      const result = await bot.request('dispatch', {
+        update: { text: 'my opinion', chatId: -100999, threadId: 23, userId },
+      });
+      assert.equal(result.calls.deleted, 1, `user ${userId} must not post in the bot-only Vote topic`);
+    }
+  } finally {
+    await bot.close();
+  }
+});
+
 test('channel_post sync is wired through the trusted-source handler', async () => {
   const bot = bootBot();
   try {
