@@ -398,6 +398,25 @@
     @media (max-width: 768px) {
       .phase-card[id] { padding-right: 72px !important; }
     }
+
+    /* Step-by-step governance guide (progressive enhancement: without JS all steps show as a list) */
+    .gov-wizard { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin: 20px 0 28px; }
+    .gov-wizard .gw-intro { color: var(--muted); margin: 0 0 12px; }
+    .gov-wizard .gw-progress { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em; color: var(--accent); margin: 0 0 10px; }
+    .gov-wizard .gw-dots { display: flex; gap: 6px; margin: 0 0 14px; padding: 0; list-style: none; }
+    .gov-wizard .gw-dots button { width: 28px; height: 28px; min-width: 28px; border-radius: 50%; border: 1px solid var(--border); background: transparent; color: var(--muted); font-weight: 700; cursor: pointer; }
+    .gov-wizard .gw-dots button[aria-current="step"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .gov-wizard ol.gw-steps { margin: 0; padding-left: 20px; }
+    .gov-wizard .gw-step { margin: 0 0 14px; }
+    .gov-wizard .gw-step h3 { margin: 0 0 6px; font-size: 1rem; }
+    .gov-wizard .gw-step p { margin: 0 0 8px; overflow-wrap: anywhere; }
+    .gov-wizard.gw-js ol.gw-steps { list-style: none; padding-left: 0; }
+    .gov-wizard .gw-nav { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+    .gov-wizard .gw-nav button { min-height: 44px; padding: 0 18px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text); font-weight: 600; cursor: pointer; }
+    .gov-wizard .gw-nav button[data-gw-next] { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .gov-wizard .gw-nav button:disabled { opacity: 0.45; cursor: default; }
+    .gov-wizard [hidden] { display: none !important; }
+    .gov-wizard .gw-status { display: inline-block; font-size: 0.75rem; font-weight: 700; border-radius: 999px; padding: 3px 10px; margin: 0 0 10px; border: 1px solid var(--border); color: var(--muted); }
   </style>
   <link rel="icon" type="image/png" href="../assets/ifr_icon_64.png">
   <meta property="og:locale" content="en_US">
@@ -575,13 +594,39 @@
         <li><strong>Portal:</strong> a page that automates this procedure (connect wallet, sign the predefined text, automatic verification, publication) is planned.</li>
       </ul>
 
-      <h2>How to Vote</h2>
-      <ol>
-        <li>Open <a href="https://etherscan.io/verifiedSignatures" rel="noopener">etherscan.io/verifiedSignatures</a> and choose <em>Sign Message</em>.</li>
-        <li>Connect your Safe signer wallet.</li>
-        <li>Paste the ballot text of your choice from this page, unchanged.</li>
-        <li>Sign (free, no gas), choose <em>Publish</em>, and send the link to the Council.</li>
-      </ol>
+      <h2 id="how-to-vote">How to Vote &mdash; step by step</h2>
+      <section class="gov-wizard" id="how-to-vote-guide" data-gov-wizard aria-label="Council vote, step by step">
+        <p class="gw-intro">For the five Council members (the Safe signers). About five minutes, no gas, nothing is sent on-chain.</p>
+        <p class="gw-progress" data-gw-progress aria-live="polite"></p>
+        <ol class="gw-dots" data-gw-dots hidden aria-label="Steps"></ol>
+        <ol class="gw-steps">
+          <li class="gw-step" data-gw-step>
+            <h3>1. Check that your wallet may vote</h3>
+            <p>You vote with your Safe signer wallet: one of the five owners of the Treasury, Community and LP Reserve Safes (the same 3-of-5 owner set). Signatures from any other wallet are not counted.</p>
+          </li>
+          <li class="gw-step" data-gw-step>
+            <h3>2. Choose the ballot and copy your text</h3>
+            <p>Find the ballot below. Each ballot publishes one exact text per choice (YES, NO, ABSTAIN). Copy the text of your choice completely and unchanged. It names the ballot id, so it cannot be reused for another ballot.</p>
+          </li>
+          <li class="gw-step" data-gw-step>
+            <h3>3. Sign on Etherscan</h3>
+            <p>Open <a href="https://etherscan.io/verifiedSignatures" rel="noopener">etherscan.io/verifiedSignatures</a>, choose <em>Sign Message</em> and connect your signer wallet (a hardware wallet is recommended). Paste the text and sign. Signing is free and sends no transaction.</p>
+          </li>
+          <li class="gw-step" data-gw-step>
+            <h3>4. Publish and share the link</h3>
+            <p>Choose <em>Publish</em> on Etherscan and post the link in the Council topic on Telegram (<a href="https://t.me/IFR_token/21" rel="noopener">t.me/IFR_token/21</a>). Only verified signer and Council wallets can post there: send <code>/verify</code> to the IFR bot in a private chat once beforehand.</p>
+          </li>
+          <li class="gw-step" data-gw-step>
+            <h3>5. Verification and result</h3>
+            <p>Your vote is added to this record and checked by the published checker: it counts only if the signature recovers to your listed wallet over the exact published text. A ballot is approved at 3 of 5 votes.</p>
+            <p>A ballot never executes anything by itself: any on-chain action still needs its own Safe transaction and, where applicable, the 48-hour Governance timelock.</p>
+          </li>
+        </ol>
+        <div class="gw-nav" data-gw-nav hidden>
+          <button type="button" data-gw-prev>Back</button>
+          <button type="button" data-gw-next>Next</button>
+        </div>
+      </section>
 
       <!-- council-votes:start -->
       <div class="phase-card" id="cv-01">
@@ -819,6 +864,50 @@ IFRState.on("stateLoaded",lpUpdateUI);
 document.addEventListener("visibilitychange",async function(){if(document.visibilityState==="visible"&&!IFRWallet.isConnected()){var ok=await IFRWallet.autoReconnect();if(ok)lpUpdateUI(await IFRState.load(IFRWallet.getAddress()))}});
 (async function(){var ok=await IFRWallet.autoReconnect();if(ok)lpUpdateUI(await IFRState.load(IFRWallet.getAddress()))})();
 var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.addEventListener("mouseenter",function(){this.style.transform="scale(1.04)";this.style.boxShadow="0 4px 20px rgba(249,115,22,0.4)"});_wcBtn.addEventListener("mouseleave",function(){this.style.transform="";this.style.boxShadow="0 2px 12px rgba(249,115,22,0.25)"})}
+</script>
+<script>
+// Step-by-step governance guide: one step at a time with Back/Next; without JS all steps stay visible.
+(function () {
+  document.querySelectorAll('[data-gov-wizard]').forEach(function (wizard) {
+    var steps = Array.prototype.slice.call(wizard.querySelectorAll('[data-gw-step]'));
+    if (!steps.length) return;
+    var progress = wizard.querySelector('[data-gw-progress]');
+    var dots = wizard.querySelector('[data-gw-dots]');
+    var nav = wizard.querySelector('[data-gw-nav]');
+    var prev = wizard.querySelector('[data-gw-prev]');
+    var next = wizard.querySelector('[data-gw-next]');
+    var current = 0;
+    wizard.classList.add('gw-js');
+    nav.hidden = false;
+    dots.hidden = false;
+    steps.forEach(function (step, i) {
+      var li = document.createElement('li');
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = String(i + 1);
+      b.setAttribute('aria-label', 'Step ' + (i + 1) + ': ' + step.querySelector('h3').textContent);
+      b.addEventListener('click', function () { show(i, true); });
+      li.appendChild(b);
+      dots.appendChild(li);
+    });
+    function show(i, focus) {
+      current = Math.max(0, Math.min(steps.length - 1, i));
+      steps.forEach(function (step, j) { step.hidden = j !== current; });
+      Array.prototype.forEach.call(dots.querySelectorAll('button'), function (b, j) {
+        if (j === current) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+      });
+      progress.textContent = 'Step ' + (current + 1) + ' of ' + steps.length;
+      prev.disabled = current === 0;
+      next.disabled = current === steps.length - 1;
+      next.textContent = current === steps.length - 1 ? 'Done' : 'Next';
+      if (focus) steps[current].querySelector('h3').focus();
+    }
+    steps.forEach(function (step) { step.querySelector('h3').setAttribute('tabindex', '-1'); });
+    prev.addEventListener('click', function () { show(current - 1, true); });
+    next.addEventListener('click', function () { show(current + 1, true); });
+    show(0, false);
+  });
+})();
 </script>
 </body>
 <!-- cache-bust: 1775428215 -->

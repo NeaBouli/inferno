@@ -646,6 +646,25 @@
         padding: 4px 0;
       }
     }
+
+    /* Step-by-step governance guide (progressive enhancement: without JS all steps show as a list) */
+    .gov-wizard { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin: 20px 0 28px; }
+    .gov-wizard .gw-intro { color: var(--muted); margin: 0 0 12px; }
+    .gov-wizard .gw-progress { font-size: 0.8rem; font-weight: 700; letter-spacing: 0.04em; color: var(--accent); margin: 0 0 10px; }
+    .gov-wizard .gw-dots { display: flex; gap: 6px; margin: 0 0 14px; padding: 0; list-style: none; }
+    .gov-wizard .gw-dots button { width: 28px; height: 28px; min-width: 28px; border-radius: 50%; border: 1px solid var(--border); background: transparent; color: var(--muted); font-weight: 700; cursor: pointer; }
+    .gov-wizard .gw-dots button[aria-current="step"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .gov-wizard ol.gw-steps { margin: 0; padding-left: 20px; }
+    .gov-wizard .gw-step { margin: 0 0 14px; }
+    .gov-wizard .gw-step h3 { margin: 0 0 6px; font-size: 1rem; }
+    .gov-wizard .gw-step p { margin: 0 0 8px; overflow-wrap: anywhere; }
+    .gov-wizard.gw-js ol.gw-steps { list-style: none; padding-left: 0; }
+    .gov-wizard .gw-nav { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+    .gov-wizard .gw-nav button { min-height: 44px; padding: 0 18px; border-radius: 8px; border: 1px solid var(--border); background: transparent; color: var(--text); font-weight: 600; cursor: pointer; }
+    .gov-wizard .gw-nav button[data-gw-next] { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .gov-wizard .gw-nav button:disabled { opacity: 0.45; cursor: default; }
+    .gov-wizard [hidden] { display: none !important; }
+    .gov-wizard .gw-status { display: inline-block; font-size: 0.75rem; font-weight: 700; border-radius: 999px; padding: 3px 10px; margin: 0 0 10px; border: 1px solid var(--border); color: var(--muted); }
   </style>
   <link rel="icon" type="image/png" href="../assets/ifr_icon_64.png">
   <meta property="og:locale" content="en_US">
@@ -1057,38 +1076,53 @@
       <h2 id="voting">How Voting Works</h2>
 
       <p>
-        The proposed design aims for free, simple and verifiable voting without gas costs. It is not live.
+        Forum voting is <strong>in development and not live</strong>; no Forum ballot is open today. The rules below were decided by the owner on 11 October 2026 for the first version (<a href="https://github.com/NeaBouli/inferno/blob/main/docs/GOVERNANCE_PRODUCT_DECISION_REGISTER.md" rel="noopener">decision register, Lane 8</a>).
       </p>
 
-      <h3>Step-by-Step</h3>
+      <ul>
+        <li><strong>Advisory:</strong> Forum results advise the Council; the Council decides. A Forum result never moves funds or executes a contract.</li>
+        <li><strong>Voting weight:</strong> IFR locked in IFRLock at a snapshot block that is announced before the ballot opens. No delegation; a lock is counted once.</li>
+        <li><strong>Signed votes:</strong> each vote is a free wallet signature (no transaction) over the ballot id, the chain, the snapshot block, your choice and the hash of the frozen proposal text.</li>
+        <li><strong>Changing your vote:</strong> your last valid vote before the ballot closes counts.</li>
+        <li><strong>Quorum:</strong> 10&nbsp;% of the IFR locked at the snapshot block. Abstentions count towards the quorum, not towards the result.</li>
+        <li><strong>Announcements:</strong> ballots, snapshot blocks, times and results are posted only by the IFR bot in the Vote topic (<a href="https://t.me/IFR_token/23" rel="noopener">t.me/IFR_token/23</a>); nobody else can post there.</li>
+        <li><strong>Recount:</strong> the full vote set is published so that anyone can recount the result.</li>
+      </ul>
 
-      <div class="journey-step"><div class="journey-num">1</div><div class="journey-text"><strong>Connect wallet:</strong> Send <code>/connect</code> in @IFR_Forum. The bot opens a Mini-App where you sign a free message with MetaMask. This links your Telegram account to your Ethereum address (one-time only).</div></div>
-
-      <div class="journey-step"><div class="journey-num">2</div><div class="journey-text"><strong>Voting power:</strong> Proposed to be read from eligible locks at a fixed snapshot (read-only query, no transaction needed). Forum weight is not yet ratified; Council ballots are proposed as one vote per eligible member.</div></div>
-
-      <div class="journey-step"><div class="journey-num">3</div><div class="journey-text"><strong>Cast vote:</strong> React with thumbs up or thumbs down on proposals in the <a href="https://t.me/IFR_token" target="_blank" rel="noopener">Community Forum</a>, or cast your vote in the <a href="https://t.me/IFR_token/23" target="_blank" rel="noopener">Vote thread</a> (t.me/IFR_token/23). The bot records your vote and weights it by your lock balance.</div></div>
-
-      <div class="journey-step"><div class="journey-num">4</div><div class="journey-text"><strong>No gas costs:</strong> All voting happens off-chain (reactions and polls). Only the final result is sent on-chain &mdash; and the bot pays for that transaction.</div></div>
-
-      <div class="journey-step"><div class="journey-num">5</div><div class="journey-text"><strong>Verify (planned):</strong> after future deployment, the proposed Merkle-proof function would allow inclusion checks.</div></div>
-
-      <h3>Cost Overview</h3>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Action</th>
-            <th>Gas Cost</th>
-            <th>How</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td>Connect wallet</td><td>Free</td><td>One-time MetaMask signature</td></tr>
-          <tr><td>Vote on proposal</td><td>Free</td><td>Telegram reaction or poll</td></tr>
-          <tr><td>Submit proposal</td><td>10 IFR</td><td><code>/propose</code> command</td></tr>
-          <tr><td>Final on-chain TX</td><td>Bot pays</td><td>Automatic after voting ends</td></tr>
-        </tbody>
-      </table>
+      <h3 id="forum-vote-steps">How to vote &mdash; step by step</h3>
+      <section class="gov-wizard" id="forum-vote-guide" data-gov-wizard aria-label="Forum vote, step by step">
+        <span class="gw-status">In development &mdash; not live</span>
+        <p class="gw-intro">For IFR holders who want to vote in the Forum once it is live.</p>
+        <p class="gw-progress" data-gw-progress aria-live="polite"></p>
+        <ol class="gw-dots" data-gw-dots hidden aria-label="Steps"></ol>
+        <ol class="gw-steps">
+          <li class="gw-step" data-gw-step>
+            <h3>1. Lock IFR</h3>
+            <p>Voting weight comes only from IFR locked in IFRLock. Lock on <a href="https://web3.ifrunit.tech/?action=access-lock#access" rel="noopener">web3.ifrunit.tech</a>. A lock counts for a ballot only if it exists at the snapshot block announced for that ballot; locks made later do not count for it.</p>
+          </li>
+          <li class="gw-step" data-gw-step>
+            <h3>2. Follow the Vote topic</h3>
+            <p>Join <a href="https://t.me/IFR_token" rel="noopener">t.me/IFR_token</a> and follow the Vote topic (<a href="https://t.me/IFR_token/23" rel="noopener">t.me/IFR_token/23</a>). Only the IFR bot posts there: each ballot with its proposal text, the text hash, the snapshot block and the opening and closing time.</p>
+          </li>
+          <li class="gw-step" data-gw-step>
+            <h3>3. Read the proposal</h3>
+            <p>Read the frozen proposal text linked in the announcement and check that it matches the published hash. The text cannot change while the ballot is open.</p>
+          </li>
+          <li class="gw-step" data-gw-step>
+            <h3>4. Sign your vote</h3>
+            <p>On the ballot page, connect your wallet and sign your choice (yes, no or abstain). Signing is free and sends no transaction. You can change your mind until the ballot closes: your last valid vote counts.</p>
+            <p><strong>Not live yet:</strong> the Forum ballot page is in development and no Forum ballot is open today.</p>
+          </li>
+          <li class="gw-step" data-gw-step>
+            <h3>5. Check the result</h3>
+            <p>After the ballot closes, the bot posts the result in the Vote topic together with the full vote set (signatures, wallets, weights). Anyone can recount it with the published checker. Forum results are advisory: the Council decides.</p>
+          </li>
+        </ol>
+        <div class="gw-nav" data-gw-nav hidden>
+          <button type="button" data-gw-prev>Back</button>
+          <button type="button" data-gw-next>Next</button>
+        </div>
+      </section>
 
       <!-- ============================================================
            Section 6: Bot Architecture
@@ -1330,6 +1364,50 @@ IFRState.on("stateLoaded",lpUpdateUI);
 document.addEventListener("visibilitychange",async function(){if(document.visibilityState==="visible"&&!IFRWallet.isConnected()){var ok=await IFRWallet.autoReconnect();if(ok)lpUpdateUI(await IFRState.load(IFRWallet.getAddress()))}});
 (async function(){var ok=await IFRWallet.autoReconnect();if(ok)lpUpdateUI(await IFRState.load(IFRWallet.getAddress()))})();
 var _wcBtn=document.getElementById("lp-header-connect-btn");if(_wcBtn){_wcBtn.addEventListener("mouseenter",function(){this.style.transform="scale(1.04)";this.style.boxShadow="0 4px 20px rgba(249,115,22,0.4)"});_wcBtn.addEventListener("mouseleave",function(){this.style.transform="";this.style.boxShadow="0 2px 12px rgba(249,115,22,0.25)"})}
+</script>
+<script>
+// Step-by-step governance guide: one step at a time with Back/Next; without JS all steps stay visible.
+(function () {
+  document.querySelectorAll('[data-gov-wizard]').forEach(function (wizard) {
+    var steps = Array.prototype.slice.call(wizard.querySelectorAll('[data-gw-step]'));
+    if (!steps.length) return;
+    var progress = wizard.querySelector('[data-gw-progress]');
+    var dots = wizard.querySelector('[data-gw-dots]');
+    var nav = wizard.querySelector('[data-gw-nav]');
+    var prev = wizard.querySelector('[data-gw-prev]');
+    var next = wizard.querySelector('[data-gw-next]');
+    var current = 0;
+    wizard.classList.add('gw-js');
+    nav.hidden = false;
+    dots.hidden = false;
+    steps.forEach(function (step, i) {
+      var li = document.createElement('li');
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = String(i + 1);
+      b.setAttribute('aria-label', 'Step ' + (i + 1) + ': ' + step.querySelector('h3').textContent);
+      b.addEventListener('click', function () { show(i, true); });
+      li.appendChild(b);
+      dots.appendChild(li);
+    });
+    function show(i, focus) {
+      current = Math.max(0, Math.min(steps.length - 1, i));
+      steps.forEach(function (step, j) { step.hidden = j !== current; });
+      Array.prototype.forEach.call(dots.querySelectorAll('button'), function (b, j) {
+        if (j === current) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+      });
+      progress.textContent = 'Step ' + (current + 1) + ' of ' + steps.length;
+      prev.disabled = current === 0;
+      next.disabled = current === steps.length - 1;
+      next.textContent = current === steps.length - 1 ? 'Done' : 'Next';
+      if (focus) steps[current].querySelector('h3').focus();
+    }
+    steps.forEach(function (step) { step.querySelector('h3').setAttribute('tabindex', '-1'); });
+    prev.addEventListener('click', function () { show(current - 1, true); });
+    next.addEventListener('click', function () { show(current + 1, true); });
+    show(0, false);
+  });
+})();
 </script>
 </body>
 <!-- cache-bust: 1775428205 -->
