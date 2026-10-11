@@ -298,3 +298,34 @@ remains the only place where agenda items and vote outcomes are published.
 - **Production gate:** explicit action-time approval for each publication or
   feature-flag activation.
 - **Next evidence:** filled embedded-wallet evidence matrix; license decision.
+
+## Lane 8 — Forum voting (IFR-DIP-01) and Telegram announcements
+
+- **Decision (2026-10-11, owner, first build slice only):**
+  - Forum results are **advisory**; the Council decides. A Forum result never
+    executes TreasurySafe or Governance actions.
+  - Voting weight is IFR locked in the **IFRLock** contract at a block announced
+    before the ballot opens; no delegation; one lock is counted once.
+  - Repeated votes: the **last valid** signed vote per wallet counts. Quorum
+    10 % of locked IFR at the snapshot block; abstain counts towards quorum, not
+    towards the threshold.
+  - Engine: an **in-house collector** around the existing deterministic
+    verifier (`scripts/verify-forum-votes.cjs`), not Snapshot.org (float scores
+    and different final-vote rules).
+  - Announcements of Forum ballots (open, close, result) and Forum information
+    are posted by the project bot in the dedicated Telegram announcement chat;
+    only the bot posts there. The **Dev** and **Council** areas are restricted to
+    Safe signers and Council-authorized members.
+- **Current truth:** not live. The verifier, the disabled synthetic view and the
+  chain-evidence source are dummy-tested; no collector, API, UI or Telegram
+  announcement path exists yet.
+- **Scope of the first slice:** proposal intake with a frozen text hash, signed
+  vote collection, public re-tallyable result; Sepolia only and disabled until
+  the owner accepts it.
+- **Decision needed:** binding effect of Forum results (O1 ratification
+  body); ballot duration and threshold values per proposal type; Mainnet
+  activation.
+- **Production gate:** separate recorded owner decision before the first Mainnet
+  ballot; threat model and independent review per IFR-DIP-01 §15.
+- **Next evidence:** collector and announcement design (architecture map),
+  then a Sepolia staging ballot with test wallets.
