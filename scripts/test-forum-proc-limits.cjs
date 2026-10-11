@@ -180,7 +180,8 @@ for (const limit of limits) {
       test(`${name}: refuses ${boundary} ${order} valid row`, () => {
         assert.throws(() => assertProcLimitRow(text, label, value, units), {
           code: "ERR_ASSERTION",
-          message: "exactly one process-limit row required"
+          // Newer Node 22 releases append the actual/expected diff to custom assert messages.
+          message: /^exactly one process-limit row required(\n|$)/
         });
       });
     }
