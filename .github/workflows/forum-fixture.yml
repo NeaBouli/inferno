@@ -11,6 +11,8 @@ on:
       - 'scripts/test-forum-proc-limits.cjs'
       - 'scripts/build-forum-synthetic-view.cjs'
       - 'scripts/test-forum-synthetic-view.cjs'
+      - 'scripts/forum-chain-evidence.cjs'
+      - 'scripts/test-forum-chain-evidence.cjs'
       - 'docs/architecture/forum-synthetic-view.md'
       - 'apps/sdk/package.json'
       - 'apps/sdk/package-lock.json'
@@ -61,3 +63,4 @@ jobs:
         run: |
           node scripts/test-forum-proc-limits.cjs
           node scripts/test-forum-synthetic-view.cjs
+          node scripts/test-forum-chain-evidence.cjs
