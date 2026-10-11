@@ -39,11 +39,11 @@ for (const stale of [
 
 // T-152: proposed governance/product items must not read as approved or scheduled.
 const register = read("docs/GOVERNANCE_PRODUCT_DECISION_REGISTER.md");
-for (let lane = 1; lane <= 7; lane += 1) {
+for (let lane = 1; lane <= 8; lane += 1) {
   assert.ok(register.includes(`## Lane ${lane} — `), `Decision register must include lane ${lane}`);
 }
 for (const field of ["**Current truth:**", "**Decision needed:**", "**Production gate:**", "**Next evidence:**"]) {
-  assert.equal(register.split(field).length - 1, 7, `Every register lane must include ${field}`);
+  assert.equal(register.split(field).length - 1, 8, `Every register lane must include ${field}`);
 }
 assert.ok(!/0x[0-9a-fA-F]{40}/.test(register), "Decision register must not contain wallet addresses");
 for (const relative of ["docs/ROADMAP.md", "docs/wiki/roadmap.html", "docs/wiki/governance.html"]) {
