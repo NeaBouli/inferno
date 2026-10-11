@@ -1,18 +1,25 @@
 #!/usr/bin/env node
 
 /**
- * Read-only Mainnet safety monitor for the IFR accounting vaults (CommitmentVault V1 and V2, LendingVault).
+ * Read-only Mainnet safety monitor for the IFR accounting vaults (IFRLock, CommitmentVault V1 and V2,
+ * LendingVault).
  *
  * No signer is created and no transaction-capable method is present. The
  * command exits non-zero when a required fee exemption is missing or liquid
  * IFR custody no longer covers the corresponding on-chain accounting.
+ *
+ * RPC integrity (external audit IFRUNIT 2026-10-11, IFR-DEV-01): the RPC must report chain ID 1,
+ * every read is pinned to one block CONFIRMATIONS behind the head, and that block's hash must be
+ * identical before and after the reads; otherwise the run fails instead of reporting.
  */
 
 const CHAIN_ID = 1;
 const DEFAULT_RPC_URL = "https://ethereum-rpc.publicnode.com";
 const REQUEST_TIMEOUT_MS = 15_000;
+const CONFIRMATIONS = 64;
 const ADDRESSES = Object.freeze({
   token: "0x77e99917Eca8539c62F509ED1193ac36580A6e7B",
+  ifrLock: "0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb",
   commitmentVault: "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3",
   commitmentVaultV2: "0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F",
   lendingVault: "0x974305Ab0EC905172e697271C3d7d385194EB9DF",
@@ -22,6 +29,7 @@ const TOKEN_ABI = [
   "function feeExempt(address) view returns (bool)",
   "function balanceOf(address) view returns (uint256)",
 ];
+// IFRLock, CommitmentVault V1 and V2 all expose `uint256 public totalLocked`.
 const COMMITMENT_ABI = ["function totalLocked() view returns (uint256)"];
 const LENDING_ABI = [
   "function totalAvailable() view returns (uint256)",
@@ -38,9 +46,30 @@ function toBigInt(value, field) {
   }
 }
 
+function assertRpcIntegrity({ chainIdHex, head, pinned, hashBefore, hashAfter }) {
+  if (typeof chainIdHex !== "string" || BigInt(chainIdHex) !== BigInt(CHAIN_ID)) {
+    throw new Error(`RPC reports chain ${chainIdHex}, expected ${CHAIN_ID}`);
+  }
+  if (!Number.isSafeInteger(head) || !Number.isSafeInteger(pinned) || pinned !== head - CONFIRMATIONS || pinned < 0) {
+    throw new Error(`pinned block must be ${CONFIRMATIONS} behind the head`);
+  }
+  const hash = /^0x[0-9a-f]{64}$/;
+  if (!hash.test(String(hashBefore)) || !hash.test(String(hashAfter))) {
+    throw new Error("RPC returned no valid block hash");
+  }
+  if (hashBefore !== hashAfter) {
+    throw new Error("pinned block hash changed during the reads (reorg or inconsistent RPC)");
+  }
+}
+
 function evaluateVaultInvariants(snapshot) {
   if (!snapshot || typeof snapshot !== "object") {
     throw new TypeError("snapshot must be an object");
+  }
+  for (const part of ["ifrLock", "commitment", "commitmentV2", "lending"]) {
+    if (!snapshot[part] || typeof snapshot[part] !== "object") {
+      throw new TypeError(`snapshot.${part} is required`);
+    }
   }
 
   const commitmentBalance = toBigInt(snapshot.commitment.balance, "commitment.balance");
@@ -48,8 +77,16 @@ function evaluateVaultInvariants(snapshot) {
   const lendingBalance = toBigInt(snapshot.lending.balance, "lending.balance");
   const totalAvailable = toBigInt(snapshot.lending.totalAvailable, "lending.totalAvailable");
   const totalLent = toBigInt(snapshot.lending.totalLent, "lending.totalLent");
+  const lockBalance = toBigInt(snapshot.ifrLock.balance, "ifrLock.balance");
+  const lockTotal = toBigInt(snapshot.ifrLock.totalLocked, "ifrLock.totalLocked");
   const problems = [];
 
+  if (snapshot.ifrLock.feeExempt !== true) {
+    problems.push("IFRLock fee exemption is not active");
+  }
+  if (lockBalance < lockTotal) {
+    problems.push("IFRLock token balance is below totalLocked");
+  }
   if (snapshot.commitment.feeExempt !== true) {
     problems.push("CommitmentVault fee exemption is not active");
   }
@@ -63,28 +100,21 @@ function evaluateVaultInvariants(snapshot) {
     problems.push("LendingVault token balance is below totalAvailable");
   }
 
-  // CommitmentVault V2 (time-only locks). Its fee exemption is queued as Governance proposal #17;
-  // while V2 holds no locks a missing exemption is reported as pending, not as a failure. Once V2
-  // holds locks, a missing exemption or a custody shortfall is a failure.
-  let commitmentV2Surplus = null;
-  let commitmentV2Pending = false;
-  if (snapshot.commitmentV2) {
-    const v2Balance = toBigInt(snapshot.commitmentV2.balance, "commitmentV2.balance");
-    const v2Locked = toBigInt(snapshot.commitmentV2.totalLocked, "commitmentV2.totalLocked");
-    if (snapshot.commitmentV2.feeExempt !== true) {
-      if (v2Locked > 0n) problems.push("CommitmentVault V2 holds locks but its fee exemption is not active");
-      else commitmentV2Pending = true;
-    }
-    if (v2Balance < v2Locked) problems.push("CommitmentVault V2 token balance is below totalLocked");
-    commitmentV2Surplus = v2Balance - v2Locked;
+  // CommitmentVault V2 (time-only locks): its fee exemption was executed with Governance proposal #17
+  // (4 October 2026), so a missing exemption is a failure whether or not V2 holds locks.
+  const v2Balance = toBigInt(snapshot.commitmentV2.balance, "commitmentV2.balance");
+  const v2Locked = toBigInt(snapshot.commitmentV2.totalLocked, "commitmentV2.totalLocked");
+  if (snapshot.commitmentV2.feeExempt !== true) {
+    problems.push("CommitmentVault V2 fee exemption is not active");
   }
+  if (v2Balance < v2Locked) problems.push("CommitmentVault V2 token balance is below totalLocked");
 
   return {
     ok: problems.length === 0,
     problems,
+    ifrLockSurplus: lockBalance - lockTotal,
     commitmentSurplus: commitmentBalance - totalLocked,
-    commitmentV2Surplus,
-    commitmentV2Pending,
+    commitmentV2Surplus: v2Balance - v2Locked,
     lendingLiquidSurplus: lendingBalance - totalAvailable,
     lendingPrincipalAccounting: totalAvailable + totalLent,
     lendingTotalAssetCoverage: lendingBalance + totalLent,
@@ -104,9 +134,14 @@ async function readMainnetSnapshot({ rpcUrl = process.env.MAINNET_RPC_URL || DEF
   const commitment = new Contract(ADDRESSES.commitmentVault, COMMITMENT_ABI, provider);
   const commitmentV2 = new Contract(ADDRESSES.commitmentVaultV2, COMMITMENT_ABI, provider);
   const lending = new Contract(ADDRESSES.lendingVault, LENDING_ABI, provider);
+  const ifrLock = new Contract(ADDRESSES.ifrLock, COMMITMENT_ABI, provider);
 
   try {
-    const blockNumber = await provider.getBlockNumber();
+    // staticNetwork skips ethers' own chain detection, so the chain ID is checked explicitly.
+    const chainIdHex = await provider.send("eth_chainId", []);
+    const head = await provider.getBlockNumber();
+    const blockNumber = head - CONFIRMATIONS;
+    const hashBefore = (await provider.getBlock(blockNumber))?.hash;
     const block = { blockTag: blockNumber };
     const [
       commitmentFeeExempt,
@@ -119,6 +154,9 @@ async function readMainnetSnapshot({ rpcUrl = process.env.MAINNET_RPC_URL || DEF
       v2FeeExempt,
       v2Balance,
       v2TotalLocked,
+      lockFeeExempt,
+      lockBalance,
+      lockTotal,
     ] = await Promise.all([
       token.feeExempt(ADDRESSES.commitmentVault, block),
       token.balanceOf(ADDRESSES.commitmentVault, block),
@@ -130,11 +168,24 @@ async function readMainnetSnapshot({ rpcUrl = process.env.MAINNET_RPC_URL || DEF
       token.feeExempt(ADDRESSES.commitmentVaultV2, block),
       token.balanceOf(ADDRESSES.commitmentVaultV2, block),
       commitmentV2.totalLocked(block),
+      token.feeExempt(ADDRESSES.ifrLock, block),
+      token.balanceOf(ADDRESSES.ifrLock, block),
+      ifrLock.totalLocked(block),
     ]);
+    const hashAfter = (await provider.getBlock(blockNumber))?.hash;
+    assertRpcIntegrity({ chainIdHex, head, pinned: blockNumber, hashBefore, hashAfter });
 
     return {
       chainId: CHAIN_ID,
       blockNumber,
+      blockHash: hashAfter,
+      confirmations: CONFIRMATIONS,
+      ifrLock: {
+        address: ADDRESSES.ifrLock,
+        feeExempt: lockFeeExempt,
+        balance: lockBalance,
+        totalLocked: lockTotal,
+      },
       commitment: {
         address: ADDRESSES.commitmentVault,
         feeExempt: commitmentFeeExempt,
@@ -164,26 +215,33 @@ function serializeReport(snapshot, evaluation) {
   const amount = (value) => ({ raw: value.toString(), ifr: formatIfr(value) });
   return {
     monitor: "ifr-vault-invariants",
-    version: 1,
+    version: 2,
     checkedAt: new Date().toISOString(),
     chainId: snapshot.chainId,
     blockNumber: snapshot.blockNumber,
+    blockHash: snapshot.blockHash,
+    confirmations: snapshot.confirmations,
     addresses: ADDRESSES,
     ok: evaluation.ok,
     problems: evaluation.problems,
+    ifrLock: {
+      feeExempt: snapshot.ifrLock.feeExempt,
+      balance: amount(snapshot.ifrLock.balance),
+      totalLocked: amount(snapshot.ifrLock.totalLocked),
+      surplus: amount(evaluation.ifrLockSurplus),
+    },
     commitment: {
       feeExempt: snapshot.commitment.feeExempt,
       balance: amount(snapshot.commitment.balance),
       totalLocked: amount(snapshot.commitment.totalLocked),
       surplus: amount(evaluation.commitmentSurplus),
     },
-    commitmentV2: snapshot.commitmentV2 ? {
+    commitmentV2: {
       feeExempt: snapshot.commitmentV2.feeExempt,
-      feeExemptPending: evaluation.commitmentV2Pending,
       balance: amount(snapshot.commitmentV2.balance),
       totalLocked: amount(snapshot.commitmentV2.totalLocked),
       surplus: amount(evaluation.commitmentV2Surplus),
-    } : null,
+    },
     lending: {
       feeExempt: snapshot.lending.feeExempt,
       balance: amount(snapshot.lending.balance),
@@ -227,6 +285,8 @@ if (require.main === module) main();
 module.exports = {
   ADDRESSES,
   CHAIN_ID,
+  CONFIRMATIONS,
+  assertRpcIntegrity,
   DEFAULT_RPC_URL,
   REQUEST_TIMEOUT_MS,
   evaluateVaultInvariants,
