@@ -123,7 +123,7 @@ IFR includes a read-only AI Copilot assistant for general protocol and surface-s
 - Builder Tool: https://ifrunit.tech/builder.html — Generate secure IFR integration code (contract + SDK + deploy guide) in 60 seconds
 - IFRp Commerce App architecture: active customer/seller Benefits Network implementation for QR-based discounts. The governance-gated reward foundation is local/read-only until Mainnet partner approval and authorized submission exist. Architecture: docs/ifrp-commerce-app/MASTER_ARCHITECTURE.md
 - Generator API: POST /api/builder/generate — accepts JSON config, returns contract code + configuration score (heuristic only, not a security audit)
-- IFR SDK: npm ifr-sdk 0.4.1 (published, provenance); from the Inferno repository root use npm install --install-links ./apps/sdk. Wallet-free checkout requires the separately gated owner-B backend rollout.
+- IFR SDK: npm ifr-sdk 0.4.1 (published, provenance); from the Inferno repository root use npm install --install-links ./apps/sdk. Wallet-free checkout is live: the owner-B Benefits backend migration was applied on 2026-10-11 (release 262a2dcc).
 - Access Check API: GET https://copilot-api.ifrunit.tech/api/ifr/check?wallet=0x...&required=1000 — REST API for SDK-less integration
 
 ## Links

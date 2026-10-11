@@ -288,46 +288,40 @@ const publicPrivacyCopy = [
     id, content.wikiFaq.match(new RegExp(`id="${id}">[\\s\\S]*?<div class="faq-a">([\\s\\S]*?)<\\/div>`))?.[1],
   ]),
 ];
+// Owner-B cutover (2026-10-11, Benefits release 262a2dcc): the customer-privacy migration is
+// live. Public copy must state that with the date and must no longer describe it as pending.
+const LIVE_DATE = /11 October 2026/;
 function assertPrivacyReleaseBoundary(copy, label) {
   assert.equal(typeof copy, 'string', `${label}: public release copy missing`);
   copy = copy.replace(/\s+/g, ' ');
-  assert.ok(/owner-B source is merged|merged owner-B source/i.test(copy), `${label}: merged source boundary missing`);
-  assert.ok(/production backend activation remains (?:\*\*)?HOLD/i.test(copy), `${label}: production backend must remain HOLD`);
-  assert.ok(/migration/i.test(copy), `${label}: privacy migration is pending`);
-  assert.ok(copy.includes('not a production guarantee'), `${label}: storage-free source behavior is not a production guarantee`);
+  assert.ok(/owner-B \(#238\) is live/i.test(copy), `${label}: owner-B live statement missing`);
+  assert.ok(/customer-privacy migration was applied in production on 11 October 2026/.test(copy), `${label}: dated migration statement missing`);
+  assert.ok(!/remains (?:\*\*)?HOLD|not activated in production|pending the customer-privacy migration/i.test(copy), `${label}: stale pending/HOLD wording`);
 }
 for (const [label, copy] of privacyReleaseCopy) {
   assertPrivacyReleaseBoundary(copy, label);
-  for (const [from, to] of [['HOLD', 'ACTIVE'], ['not a production guarantee', 'a production guarantee']]) {
-    assert.throws(() => assertPrivacyReleaseBoundary(copy.replace(from, to), label), { name: 'AssertionError' });
-  }
+  assert.throws(() => assertPrivacyReleaseBoundary(copy.replace('11 October 2026', 'a later date'), label), { name: 'AssertionError' });
+  assert.throws(() => assertPrivacyReleaseBoundary(`${copy} Production backend activation remains HOLD.`, label), { name: 'AssertionError' });
 }
 function assertPublicPrivacyBoundary(copy, label) {
   assert.equal(typeof copy, 'string', `${label}: public privacy copy missing`);
-  assert.ok(copy.includes('Privacy changes await a separately reviewed backend migration'), `${label}: privacy migration must remain pending`);
-  assert.ok(/current backend has not yet adopted storage-free customer history/i.test(copy), `${label}: current backend has not adopted storage-free history`);
+  assert.ok(LIVE_DATE.test(copy), `${label}: public privacy copy must name the 11 October 2026 migration`);
+  assert.ok(/backend stores no customer wallet address or customer history/i.test(copy), `${label}: storage-free statement missing`);
+  assert.ok(!/await a separately reviewed backend migration|has not yet adopted storage-free|post-migration flow|After migration/i.test(copy), `${label}: stale pending wording`);
   assert.ok(!/\b(?:Owner-B|HOLD)\b/i.test(copy), `${label}: public privacy copy must use public English`);
-  if (/backend stores no customer|wallet address is used only/i.test(copy)) {
-    assert.ok(copy.includes('After migration'), `${label}: storage-free handling must be post-migration`);
-    assert.ok(copy.includes('not a production guarantee'), `${label}: request-only wallets are not a production guarantee`);
-  }
 }
 for (const [label, copy] of publicPrivacyCopy) {
   assertPublicPrivacyBoundary(copy, label);
-  assert.throws(() => assertPublicPrivacyBoundary(copy.replace('has not yet adopted', 'has adopted'), label), { name: 'AssertionError' });
-  assert.throws(() => assertPublicPrivacyBoundary(copy.replace('await a separately reviewed', 'have completed a'), label), { name: 'AssertionError' });
-  if (copy.includes('After migration')) {
-    assert.throws(() => assertPublicPrivacyBoundary(copy.replace('After migration', 'Currently'), label), { name: 'AssertionError' });
-  }
+  assert.throws(() => assertPublicPrivacyBoundary(copy.replace(/11 October 2026/g, 'soon'), label), { name: 'AssertionError' });
+  assert.throws(() => assertPublicPrivacyBoundary(`Privacy changes await a separately reviewed backend migration. ${copy}`, label), { name: 'AssertionError' });
 }
 for (const copy of [
   'The server keeps no customer history.',
-  'The backend stores no customer wallet address or customer history.',
-  'The wallet address is used only within that request and is not stored.',
-  'Owner-B source is merged; the backend stores no customer wallet.',
+  'Owner-B source is merged, but production backend activation remains HOLD pending the customer-privacy migration.',
+  'Privacy changes await a separately reviewed backend migration. The backend stores no customer wallet address or customer history.',
 ]) {
-  assert.throws(() => assertPrivacyReleaseBoundary(copy, 'pre-activation regression'), { name: 'AssertionError' });
-  assert.throws(() => assertPublicPrivacyBoundary(copy, 'public pre-activation regression'), { name: 'AssertionError' });
+  assert.throws(() => assertPrivacyReleaseBoundary(copy, 'undated or pending regression'), { name: 'AssertionError' });
+  assert.throws(() => assertPublicPrivacyBoundary(copy, 'public undated or pending regression'), { name: 'AssertionError' });
 }
 assert.ok(
   content.backendReadme.includes('| POST | `/api/sessions/:id/redeem` | - | Retired: always 410') &&
@@ -336,7 +330,7 @@ assert.ok(
   'backend README API table must document the retired redeem/history routes and wallet-free pass creation'
 );
 for (const required of [
-  'plan only',
+  'applied in production on 11 October 2026',
   'require_no_schema_migration',
   'BLOCKED_GOVERNANCE',
   'SETTLEMENT_PENDING',

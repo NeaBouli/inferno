@@ -1,5 +1,13 @@
 # Changelog
 
+## 2026-10-11 - Benefits customer-privacy cutover
+
+- Benefits release 262a2dcc is live with the owner-B migration
+  `20261006120000_owner_b_customer_session_privacy`: no customer wallet address or customer
+  history is stored any more; `/api/sessions/:id/redeem` and `/api/customer/history` answer 410.
+  Verified backup, migration, VACUUM and address scan (only seller owner addresses remain).
+  The pre-migration backup is kept for the acceptance window and then deleted.
+
 ## Unreleased - SDK 0.4.1 Documentation Patch
 
 - Correct the packaged README: ifr-sdk 0.4.0 is public on npm, with the approved one-time

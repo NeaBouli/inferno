@@ -1,7 +1,9 @@
 # Benefits Customer Privacy Migration Runbook
 
-Status: **plan only. Nothing in this runbook has been run against production or any backup.**
-The production migration and the backup clean-up need their own approved release.
+Status: **applied in production on 11 October 2026** (Benefits release 262a2dcc): copy rehearsal
+PASS, then backup, `prisma migrate deploy`, VACUUM and address scan PASS before traffic resumed.
+The pre-migration backup is root-only on the host and is deleted after the owner's acceptance
+window; the backup clean-up below still applies to it and to older backups.
 
 Migration: `apps/benefits-network/backend/prisma/migrations/20261006120000_owner_b_customer_session_privacy`
 (owner decision B, T-231b, "storage-free customer sessions").

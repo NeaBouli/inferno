@@ -134,9 +134,9 @@ address with a seller, benefit rule, exact lock amount or detailed rejection rea
 timestamps, lock source, self-redemption flag, opening seller wallet) and seller-side audit events
 remain, so checkouts are not anonymous; timing, offer details, what the seller sees at the counter
 and public chain data can still be linked. The RPC provider receives the address in the eligibility
-`eth_call`, and reverse-proxy or platform access logs are outside this backend. Data created before
-the storage-free migration remains in old backups and SQLite free pages until the separately approved
-migration, `VACUUM` and backup clean-up (`docs/BENEFITS_CUSTOMER_PRIVACY_MIGRATION.md`) have run.
+`eth_call`, and reverse-proxy or platform access logs are outside this backend. The storage-free
+migration and `VACUUM` ran in production on 11 October 2026; data created before it remains only in
+pre-migration backups until their clean-up (`docs/BENEFITS_CUSTOMER_PRIVACY_MIGRATION.md`).
 
 ## 8. Catalog Tampering / Mutable Checkout Terms
 

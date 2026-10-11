@@ -226,11 +226,11 @@ Token dashboard for monitoring balances, transfers, lock management, and contrac
 
 The IFR Benefits Network lets any business verify on-chain IFR lock status to grant discounts and premium access. QR-based flow — no accounts, no subscriptions.
 
-**Privacy release boundary:** owner-B source is merged (#238), but production
-backend activation remains **HOLD** pending the customer-privacy migration.
-The production backend is unchanged; storage-free customer-wallet/history
-handling is a post-migration contract, not a production guarantee. See the
-[migration plan](docs/BENEFITS_CUSTOMER_PRIVACY_MIGRATION.md).
+**Privacy release:** owner-B (#238) is live: the customer-privacy migration was applied in production on 11 October 2026 (Benefits release 262a2dcc).
+The backend no longer stores customer wallet addresses or customer history; the
+legacy redeem and customer-history endpoints answer 410. Backups made before the
+migration still contain such data until they are deleted after the acceptance
+window. See the [migration runbook](docs/BENEFITS_CUSTOMER_PRIVACY_MIGRATION.md).
 
 **Routes:** `/` (role chooser and wallet/seller workspace) · `/b/:businessIdOrSlug` (seller console) · `/s/:businessIdOrSlug` (public catalog) · `/p/:passId` (customer pass) · `/r/:sessionId` (customer verification) · `/scan` (QR/manual entry) · `/guide` · `/support` · `/privacy`
 
