@@ -42,6 +42,13 @@ alarm whenever a legitimate loan is active.
 - [x] Add negative regression tests that remove each exemption and prove the
       resulting deposit/withdrawal behavior is detected and rejected by the
       operational safety gate.
+- [x] Monitor IFRLock (`feeExempt`, token balance against `totalLocked`) and
+      CommitmentVault V2 strictly: its exemption was executed with proposal #17
+      on 4 October 2026, so a missing exemption fails even while V2 is empty
+      (external audit IFRUNIT 2026-10-11, IFR-DEV-01).
+- [x] RPC integrity: the RPC must report chain ID 1, all reads are pinned to one
+      block 64 confirmations behind the head, and that block's hash must be
+      identical before and after the reads; the report records number and hash.
 
 Implementation: `scripts/check-vault-invariants.js`, deterministic test
 `scripts/test-vault-invariants.cjs`, contract regressions `T46` and `T56`, and

@@ -3,7 +3,7 @@
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
-const { evaluateVaultInvariants, formatIfr } = require("./check-vault-invariants.js");
+const { evaluateVaultInvariants, formatIfr, assertRpcIntegrity, CONFIRMATIONS } = require("./check-vault-invariants.js");
 
 const workflow = fs.readFileSync(
   path.join(__dirname, "..", ".github/workflows/vault-invariant-monitor.yml"),
@@ -45,6 +45,18 @@ assert.equal(formatIfr(-1_680_000_000n), "-1.68");
 
 function snapshot(overrides = {}) {
   return {
+    ifrLock: {
+      feeExempt: true,
+      balance: 2_000n,
+      totalLocked: 2_000n,
+      ...overrides.ifrLock,
+    },
+    commitmentV2: {
+      feeExempt: true,
+      balance: 0n,
+      totalLocked: 0n,
+      ...overrides.commitmentV2,
+    },
     commitment: {
       feeExempt: true,
       balance: 48_000n,
@@ -83,7 +95,7 @@ const lendingDeficit = evaluateVaultInvariants(
 assert.equal(lendingDeficit.ok, false);
 assert.match(lendingDeficit.problems.join("\n"), /below totalAvailable/);
 
-for (const target of ["commitment", "lending"]) {
+for (const target of ["ifrLock", "commitment", "commitmentV2", "lending"]) {
   const result = evaluateVaultInvariants(
     snapshot({ [target]: { feeExempt: false } }),
   );
@@ -96,23 +108,39 @@ assert.throws(
   /must be a non-negative integer/,
 );
 
-// CommitmentVault V2: exemption pending while empty, failure once it holds locks; custody must cover locks.
+// IFRLock and CommitmentVault V2 (external audit IFR-DEV-01): both are required; V2's exemption was
+// executed with proposal #17, so a missing exemption fails even while V2 holds no locks.
 {
-  const v2 = (o) => ({ ...snapshot(), commitmentV2: { feeExempt: false, balance: 0n, totalLocked: 0n, ...o } });
-  const pending = evaluateVaultInvariants(v2({}));
-  assert.equal(pending.ok, true, "empty V2 without exemption is pending, not a failure");
-  assert.equal(pending.commitmentV2Pending, true);
-  const lockedNoExempt = evaluateVaultInvariants(v2({ balance: 100n, totalLocked: 100n }));
-  assert.equal(lockedNoExempt.ok, false);
-  assert.match(lockedNoExempt.problems.join("\n"), /V2 holds locks but its fee exemption is not active/);
-  const live = evaluateVaultInvariants(v2({ feeExempt: true, balance: 100n, totalLocked: 100n }));
-  assert.equal(live.ok, true);
-  assert.equal(live.commitmentV2Pending, false);
-  assert.equal(live.commitmentV2Surplus, 0n);
-  const short = evaluateVaultInvariants(v2({ feeExempt: true, balance: 90n, totalLocked: 100n }));
-  assert.equal(short.ok, false);
-  assert.match(short.problems.join("\n"), /V2 token balance is below totalLocked/);
-  assert.equal(evaluateVaultInvariants(snapshot()).commitmentV2Surplus, null, "snapshots without V2 stay valid");
+  assert.equal(evaluateVaultInvariants(snapshot()).ifrLockSurplus, 0n);
+  const lockShort = evaluateVaultInvariants(snapshot({ ifrLock: { balance: 1_999n } }));
+  assert.equal(lockShort.ok, false);
+  assert.match(lockShort.problems.join("\n"), /IFRLock token balance is below totalLocked/);
+  const v2EmptyNoExempt = evaluateVaultInvariants(snapshot({ commitmentV2: { feeExempt: false } }));
+  assert.equal(v2EmptyNoExempt.ok, false, "an empty V2 without exemption is no longer a pending state");
+  assert.match(v2EmptyNoExempt.problems.join("\n"), /CommitmentVault V2 fee exemption is not active/);
+  const v2Short = evaluateVaultInvariants(snapshot({ commitmentV2: { balance: 90n, totalLocked: 100n } }));
+  assert.equal(v2Short.ok, false);
+  assert.match(v2Short.problems.join("\n"), /V2 token balance is below totalLocked/);
+  for (const part of ["ifrLock", "commitmentV2"]) {
+    const missing = snapshot();
+    delete missing[part];
+    assert.throws(() => evaluateVaultInvariants(missing), new RegExp(`snapshot\\.${part} is required`));
+  }
+  assert.equal(require("./check-vault-invariants.js").ADDRESSES.ifrLock, "0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb");
+  assert.doesNotMatch(monitorSource, /commitmentV2Pending|feeExemptPending/, "the stale V2 pending branch must stay removed");
+}
+// RPC integrity: chain ID 1, pinned confirmations, identical block hash before and after the reads.
+{
+  const hash = `0x${"ab".repeat(32)}`;
+  const ok = { chainIdHex: "0x1", head: 1_000, pinned: 1_000 - CONFIRMATIONS, hashBefore: hash, hashAfter: hash };
+  assert.doesNotThrow(() => assertRpcIntegrity(ok));
+  assert.throws(() => assertRpcIntegrity({ ...ok, chainIdHex: "0xaa36a7" }), /expected 1/);
+  assert.throws(() => assertRpcIntegrity({ ...ok, pinned: 1_000 }), /behind the head/);
+  assert.throws(() => assertRpcIntegrity({ ...ok, hashAfter: `0x${"cd".repeat(32)}` }), /hash changed/);
+  assert.throws(() => assertRpcIntegrity({ ...ok, hashBefore: undefined }), /no valid block hash/);
+  assert.throws(() => assertRpcIntegrity({ ...ok, hashBefore: "0x1234" }), /no valid block hash/);
+  assert.ok(CONFIRMATIONS >= 32, "reads must stay well behind the head");
+  assert.match(monitorSource, /eth_chainId/, "the monitor must query the chain ID itself");
 }
 assert.equal(require("./check-vault-invariants.js").ADDRESSES.commitmentVaultV2, "0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F");
 
