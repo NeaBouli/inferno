@@ -60,10 +60,13 @@ function sourceFiles(dir) {
 }
 
 function checkSource(text, label) {
-  assert.ok(!/process\.env\s*\[/.test(text), `${label}: dynamic process.env access`);
-  assert.ok(!/\{[^}]*\}\s*=\s*process\.env\b/.test(text), `${label}: destructured process.env access`);
-  for (const match of text.matchAll(/process\.env\.([A-Za-z_][A-Za-z0-9_]*)/g)) {
-    assert.ok(SOURCE_KEYS.test(match[1]), `${label}: frontend reads non-public env ${match[1]}`);
+  // Every reference to the environment object must be a literal `process.env.NAME` read of an allowed
+  // name: aliasing (`const e = process.env`), bracket or string access (`process['env']`,
+  // `process.env[x]`), destructuring and globalThis lookups are refused (Kimi review of #279).
+  assert.ok(!/process\s*\[|globalThis\s*\.\s*process|globalThis\s*\[|\bimport\.meta\.env\b/.test(text), `${label}: indirect process/env access`);
+  for (const match of text.matchAll(/process\s*\.\s*env\b(\s*\.\s*([A-Za-z_][A-Za-z0-9_]*))?/g)) {
+    assert.ok(match[2], `${label}: process.env used as a value (alias, destructuring or dynamic access)`);
+    assert.ok(SOURCE_KEYS.test(match[2]), `${label}: frontend reads non-public env ${match[2]}`);
   }
 }
 
@@ -83,8 +86,17 @@ const extraRuntime = compose.replace('      HOSTNAME: 0.0.0.0\n', '      HOSTNAM
 assert.notEqual(extraRuntime, compose);
 assert.throws(() => checkCompose(extraRuntime), /runtime key not allowed: ADMIN_SECRET/);
 assert.throws(() => checkSource('const s = process.env.ADMIN_SECRET;', 'fixture'), /non-public env ADMIN_SECRET/);
-assert.throws(() => checkSource('const s = process.env[name];', 'fixture'), /dynamic/);
-assert.throws(() => checkSource('const { RPC_URL } = process.env;', 'fixture'), /destructured/);
+for (const bypass of [
+  'const s = process.env[name];',
+  'const { RPC_URL } = process.env;',
+  'const e = process.env; export const s = e.ADMIN_SECRET;',
+  "const s = process['env'].ADMIN_SECRET;",
+  'const s = globalThis.process.env.ADMIN_SECRET;',
+  'const s = import.meta.env.ADMIN_SECRET;',
+  'f(process.env);',
+]) {
+  assert.throws(() => checkSource(bypass, 'fixture'), /indirect|used as a value|non-public/, bypass);
+}
 assert.doesNotThrow(() => checkSource('const u = process.env.NEXT_PUBLIC_CHAIN_ID;', 'fixture'));
 
 console.log(`[benefits-frontend-env-isolation] PASS - frontend has no env_file, ${files.length} source files read public env only`);
