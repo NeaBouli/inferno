@@ -346,16 +346,21 @@ for (const app of apps) {
 // owned by uid 1000 first (docs/BENEFITS_CAPACITY_RUNBOOK.md).
 {
   const frontendDocker = fs.readFileSync(path.join(root, 'apps', 'benefits-network', 'frontend', 'Dockerfile'), 'utf8');
-  const runner = frontendDocker.slice(frontendDocker.lastIndexOf('\nFROM '));
+  const runner = frontendDocker.slice(frontendDocker.search(/^FROM \S+ AS runner$/m));
+  assert.ok(/^FROM \S+ AS runner$/m.test(frontendDocker) && !/^FROM /m.test(runner.slice(5)), 'frontend runner must be the last stage');
   assert.match(runner, /^USER node$/m, 'frontend runner stage must run as the unprivileged node user');
-  assert.ok(runner.indexOf('USER node') < runner.indexOf('CMD '), 'USER node must precede CMD');
+  assert.ok(runner.search(/^USER node$/m) < runner.search(/^CMD \[/m), 'USER node must precede the real CMD');
+  assert.ok(!/^USER (?!node$)/m.test(runner), 'no other USER in the frontend runner');
   assert.ok(!/^COPY --from=builder (?!--chown=node:node)/m.test(runner), 'frontend runner files must be owned by node');
 }
 {
   const backendDocker = fs.readFileSync(path.join(root, 'apps', 'benefits-network', 'backend', 'Dockerfile'), 'utf8');
-  const runner = backendDocker.slice(backendDocker.lastIndexOf('\nFROM '));
+  const runner = backendDocker.slice(backendDocker.search(/^FROM \S+ AS runner$/m));
+  assert.ok(/^FROM \S+ AS runner$/m.test(backendDocker) && !/^FROM /m.test(runner.slice(5)), 'backend runner must be the last stage');
   assert.match(runner, /^USER node$/m, 'backend runner stage must run as the unprivileged node user');
-  assert.ok(runner.indexOf('USER node') < runner.indexOf('CMD '), 'backend USER node must precede CMD');
+  assert.ok(runner.search(/^USER node$/m) < runner.search(/^CMD \[/m), 'backend USER node must precede the real CMD');
+  assert.ok(!/^USER (?!node$)/m.test(runner), 'no other USER in the backend runner');
+  assert.match(runner, /\/data must be owned by uid 1000/, 'backend start fails fast on a non-writable volume');
 }
 
 const workflow = fs.readFileSync(path.join(root, '.github', 'workflows', 'benefits-network.yml'), 'utf8');

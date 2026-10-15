@@ -34,4 +34,5 @@ COPY prisma ./prisma
 USER node
 EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -q -O- http://127.0.0.1:3001/ready | grep -q '"status":"ready"' || exit 1
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
+# Fail fast with an actionable message when the volume is not writable for uid 1000.
+CMD ["sh", "-c", "if [ ! -w /data ] || { [ -e /data/benefits.db ] && [ ! -w /data/benefits.db ]; }; then echo 'benefits-backend: /data must be owned by uid 1000 (docs/BENEFITS_CAPACITY_RUNBOOK.md, non-root backend)' >&2; exit 78; fi; npx prisma migrate deploy && node dist/index.js"]

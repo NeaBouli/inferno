@@ -143,10 +143,14 @@ volume, so the ownership change can run first without downtime:
 
 1. Take a database backup (copy `benefits.db` with the backend running is not consistent; use the
    SQLite online backup API or stop the backend briefly).
-2. `chown -R 1000:1000` the volume directory of `inferno_benefits-data` (root, owner GO).
+2. Immediately before the release, `chown -R 1000:1000` the volume directory (resolve it with
+   `docker inspect inferno-benefits-backend` for the `/data` mount; do not hard-code the name).
+   Transient journal files are deleted on commit; the database file keeps its new owner.
 3. Release the backend normally (`EXPECTED_SHA=<sha> scripts/deploy-benefits-network.sh backend`).
-4. Rollback: the deploy script restores the previous root image, which still works with the
-   uid-1000-owned files; the ownership itself needs no rollback.
+4. Rollback: the deploy script restores the previous root image (kept as a rollback tag; the
+   script never prunes), which still works with the uid-1000-owned files. If the new image finds
+   the volume not writable it exits 78 with a pointer to this section, the health check fails and
+   the release rolls back. A recreated or new volume needs the same ownership step again.
 
 ## Current Largest Consumers
 
