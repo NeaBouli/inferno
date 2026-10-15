@@ -335,6 +335,9 @@ setTimeout(() => {
     scheduleDailyWelcome(bot);
     startGovernanceNotifier(bot);
     startVoteAnnouncements(bot);
+    if (process.env.FORUM_ENABLED === '1') {
+      require('./forum/announcer').startForumAnnouncer(bot);
+    }
     scheduleBootstrapAnnouncements(bot);
     startBootstrapListener(bot);
     autoRestoreAll().catch(err => logger.error({ err: err.message }, 'Auto-restore failed'));

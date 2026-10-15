@@ -2,8 +2,8 @@
 // the single bot process; it must not be shared by multiple writer processes.
 const fs = require('node:fs');
 const path = require('node:path');
-const { Signature, TypedDataEncoder } = require('ethers');
-const { isBallotId, checksumWallet, voteTypedData } = require('./ballot');
+const { keccak256, toUtf8Bytes, Signature, TypedDataEncoder } = require('ethers');
+const { canonicalJson, isBallotId, checksumWallet, voteTypedData } = require('./ballot');
 
 const MAX_RECORDS = 100000;
 const MAX_WALLET_VOTES = 20;
@@ -94,6 +94,7 @@ function createVoteStore({ dataDir, clock = () => Math.floor(Date.now() / 1000),
     wallets.set(wallet, record);
     index.records.push(record);
     index.count += 1;
+    index.head = keccak256(toUtf8Bytes(canonicalJson(record)));
     index.walletCounts.set(wallet, (index.walletCounts.get(wallet) || 0) + 1);
   }
 
@@ -113,7 +114,7 @@ function createVoteStore({ dataDir, clock = () => Math.floor(Date.now() / 1000),
       if (index.error) throw index.error;
       return index;
     }
-    index = { manifestHash: ballot.manifestHash, records: [], digests: new Map(),
+    index = { manifestHash: ballot.manifestHash, head: ballot.manifestHash, records: [], digests: new Map(),
       count: 0, walletCounts: new Map() };
     indices.set(id, index);
     let fd;
@@ -134,6 +135,9 @@ function createVoteStore({ dataDir, clock = () => Math.floor(Date.now() / 1000),
       for (const line of lines) {
         const record = JSON.parse(line);
         if (!record || record.manifestHash !== ballot.manifestHash) throw manifestChanged();
+        if (typeof record.prevHash !== 'string' || record.prevHash.toLowerCase() !== index.head.toLowerCase()) {
+          throw new Error(`Invalid vote hash chain at receiptOrder ${index.count + 1}`);
+        }
         const integer = (value) => Number.isSafeInteger(value) && value >= 0;
         const sameDigest = index.digests.get(record.digest)?.values().next().value;
         if (record.ballotId !== id || record.chainId !== ballot.manifest.chainId
@@ -177,8 +181,9 @@ function createVoteStore({ dataDir, clock = () => Math.floor(Date.now() / 1000),
       || !Number.isSafeInteger(limit) || limit < 1 || limit > 1000) {
       throw new Error('Invalid pagination');
     }
-    const records = indexFor(ballot).records.slice(after, after + limit);
-    return { records, next: records.at(-1)?.receiptOrder ?? null };
+    const index = indexFor(ballot);
+    const records = index.records.slice(after, after + limit);
+    return { records, next: records.at(-1)?.receiptOrder ?? null, head: index.head, count: index.count };
   }
 
   function append(ballot, { wallet, choice, issuedAt, signature }) {
@@ -203,7 +208,7 @@ function createVoteStore({ dataDir, clock = () => Math.floor(Date.now() / 1000),
     if (!Number.isSafeInteger(receivedAt) || receivedAt < 0) throw new Error('Invalid clock');
     const record = Object.freeze({
       ballotId: ballot.manifest.ballotId, chainId: ballot.manifest.chainId,
-      manifestHash: ballot.manifestHash, digest,
+      manifestHash: ballot.manifestHash, digest, prevHash: index.head,
       receiptOrder: index.count + 1, receivedAt, wallet, choice, issuedAt, signature,
     });
     checkDirectory(true);

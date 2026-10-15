@@ -3,9 +3,9 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { Wallet, Signature, TypedDataEncoder, getAddress } = require('ethers');
+const { Wallet, Signature, TypedDataEncoder, getAddress, keccak256, toUtf8Bytes } = require('ethers');
 const { createVoteStore, MAX_RECORDS, MAX_WALLET_VOTES } = require('../src/forum/store');
-const { loadBallot, manifestHash, voteTypedData } = require('../src/forum/ballot');
+const { canonicalJson, loadBallot, manifestHash, voteTypedData } = require('../src/forum/ballot');
 
 // Public Hardhat test keys only, with no provider.
 const wallet = new Wallet('0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80');
@@ -34,6 +34,10 @@ async function vote(ballot, choice = 'yes', issuedAt = 2000, signer = wallet) {
     signature: await signer.signTypedData(domain, types, value) };
 }
 
+function recordHash(record) {
+  return keccak256(toUtf8Bytes(canonicalJson(record)));
+}
+
 function digest(ballot, input) {
   const { domain, types, value } = voteTypedData(ballot, input.choice, input.issuedAt);
   return TypedDataEncoder.hash(domain, types, value);
@@ -41,20 +45,20 @@ function digest(ballot, input) {
 
 test('store persists only bound receipt fields with checksum addresses and private modes', async (t) => {
   const { dataDir, store, ballot, file } = fixture(t);
-  assert.deepEqual(store.read(ballot), { records: [], next: null });
+  assert.deepEqual(store.read(ballot), { records: [], next: null, head: ballot.manifestHash, count: 0 });
   assert.equal(fs.existsSync(dataDir), false, 'read does not create a data directory');
   const input = { ...await vote(ballot), ip: '192.0.2.1', headers: { secret: 'excluded' }, userAgent: 'excluded' };
   const { record, duplicate } = store.append(ballot, input);
   assert.equal(duplicate, false);
   assert.deepEqual(record, {
-    ballotId, chainId: 11155111, manifestHash: ballot.manifestHash, digest: digest(ballot, input),
+    ballotId, chainId: 11155111, manifestHash: ballot.manifestHash, digest: digest(ballot, input), prevHash: ballot.manifestHash,
     receiptOrder: 1, receivedAt: 2000, wallet: wallet.address,
     choice: 'yes', issuedAt: 2000, signature: input.signature,
   });
   assert.equal(fs.statSync(dataDir).mode & 0o777, 0o700);
   assert.equal(fs.statSync(file).mode & 0o777, 0o600);
   assert.equal(fs.readFileSync(file, 'utf8'), `${JSON.stringify(record)}\n`);
-  assert.deepEqual(store.read(ballot), { records: [record], next: 1 });
+  assert.deepEqual(store.read(ballot), { records: [record], next: 1, head: recordHash(record), count: 1 });
 });
 
 test('digest duplicates survive restarts and normalize 27/28, 0/1 and compact signatures', async (t) => {
@@ -97,6 +101,42 @@ test('same digest signed by different wallets stores both; choice and issuedAt d
   assert.deepEqual(createVoteStore({ dataDir }).read(ballot).records, [first, other, second, third]);
 });
 
+test('hash chain starts at the manifest and links the complete canonical record across restarts', async (t) => {
+  const { store, ballot, dataDir } = fixture(t);
+  const first = store.append(ballot, await vote(ballot)).record;
+  const second = store.append(ballot, await vote(ballot, 'no')).record;
+  assert.equal(first.prevHash, ballot.manifestHash);
+  assert.equal(second.prevHash, recordHash(first));
+  const restarted = createVoteStore({ dataDir, clock: () => 2001 });
+  const third = restarted.append(ballot, await vote(ballot, 'abstain')).record;
+  assert.equal(third.prevHash, recordHash(second));
+  assert.equal(restarted.read(ballot).head, recordHash(third));
+  assert.equal(restarted.read(ballot).count, 3);
+  assert.equal(Object.isFrozen(first), true);
+});
+
+test('tampered middle receipt, missing links and broken genesis fail closed without modifying the log', async (t) => {
+  const { store, ballot, dataDir, file } = fixture(t);
+  for (const choice of ['yes', 'no', 'abstain']) store.append(ballot, await vote(ballot, choice));
+  const records = store.read(ballot).records;
+  const missingLink = { ...records[1] };
+  delete missingLink.prevHash;
+  const variants = [
+    [{ ...records[0], prevHash: `0x${'00'.repeat(32)}` }, ...records.slice(1)],
+    [records[0], { ...records[1], receivedAt: 2001 }, records[2]],
+    [records[0], { ...records[1], signature: Signature.from(records[0].signature).serialized }, records[2]],
+    [records[0], missingLink, records[2]],
+  ];
+  for (const votes of variants) {
+    const bytes = `${votes.map((record) => JSON.stringify(record)).join('\n')}\n{partial`;
+    fs.writeFileSync(file, bytes);
+    const restarted = createVoteStore({ dataDir });
+    assert.throws(() => restarted.read(ballot), /hash chain/);
+    assert.throws(() => restarted.append(ballot, records[0]), /hash chain/);
+    assert.equal(fs.readFileSync(file, 'utf8'), bytes);
+  }
+});
+
 test('first access hydrates once; later appends and pages never read the log again', async (t) => {
   const { store, ballot, dataDir, file } = fixture(t);
   const first = store.append(ballot, await vote(ballot)).record;
@@ -109,10 +149,10 @@ test('first access hydrates once; later appends and pages never read the log aga
   const second = restarted.append(ballot, await vote(ballot, 'no')).record;
   const third = restarted.append(ballot, await vote(ballot, 'abstain')).record;
   assert.equal(restarted.append(ballot, await vote(ballot)).duplicate, true);
-  assert.deepEqual(restarted.read(ballot, { limit: 2 }), { records: [first, second], next: 2 });
-  assert.deepEqual(restarted.read(ballot, { after: 2, limit: 1 }), { records: [third], next: 3 });
-  assert.deepEqual(restarted.read(ballot, { after: 3 }), { records: [], next: null });
-  assert.deepEqual(restarted.read(ballot, { after: Number.MAX_SAFE_INTEGER }), { records: [], next: null });
+  assert.deepEqual(restarted.read(ballot, { limit: 2 }), { records: [first, second], next: 2, head: recordHash(third), count: 3 });
+  assert.deepEqual(restarted.read(ballot, { after: 2, limit: 1 }), { records: [third], next: 3, head: recordHash(third), count: 3 });
+  assert.deepEqual(restarted.read(ballot, { after: 3 }), { records: [], next: null, head: recordHash(third), count: 3 });
+  assert.deepEqual(restarted.read(ballot, { after: Number.MAX_SAFE_INTEGER }), { records: [], next: null, head: recordHash(third), count: 3 });
   assert.equal(reads, 1);
   assert.equal(fs.statSync(file).size > 0, true);
 });
@@ -121,8 +161,13 @@ test('pagination defaults to 1000 and accepts limit boundaries without gaps', as
   const { dataDir, store, ballot, file } = fixture(t);
   const first = store.append(ballot, await vote(ballot)).record;
   // Synthetic public receipt addresses exercise pagination without creating signing keys.
-  const lines = Array.from({ length: 1001 }, (_, i) => JSON.stringify({ ...first,
-    receiptOrder: i + 1, wallet: getAddress(`0x${(i + 1).toString(16).padStart(40, '0')}`) }));
+  let head = ballot.manifestHash;
+  const lines = Array.from({ length: 1001 }, (_, i) => {
+    const record = { ...first, prevHash: head,
+      receiptOrder: i + 1, wallet: getAddress(`0x${(i + 1).toString(16).padStart(40, '0')}`) };
+    head = recordHash(record);
+    return JSON.stringify(record);
+  });
   fs.writeFileSync(file, `${lines.join('\n')}\n`);
   const restarted = createVoteStore({ dataDir });
   const page = restarted.read(ballot);
@@ -174,7 +219,7 @@ test('load truncates only trailing partial bytes, fsyncs and logs only their cou
   const sync = fs.fsyncSync;
   let syncs = 0;
   t.mock.method(fs, 'fsyncSync', (fd) => { syncs += 1; sync(fd); });
-  assert.deepEqual(restarted.read(ballot), { records: [first], next: 1 });
+  assert.deepEqual(restarted.read(ballot), { records: [first], next: 1, head: recordHash(first), count: 1 });
   assert.equal(syncs, 1);
   assert.deepEqual(fs.readFileSync(file), good);
   assert.deepEqual(warnings, [`Truncated incomplete forum vote bytes: ${partial.length}`]);
@@ -185,7 +230,7 @@ test('a file consisting entirely of an unacknowledged partial line recovers as e
   const { dataDir, ballot, file, logger, warnings } = fixture(t);
   fs.mkdirSync(dataDir);
   fs.writeFileSync(file, '{');
-  assert.deepEqual(createVoteStore({ dataDir, logger }).read(ballot), { records: [], next: null });
+  assert.deepEqual(createVoteStore({ dataDir, logger }).read(ballot), { records: [], next: null, head: ballot.manifestHash, count: 0 });
   assert.equal(fs.statSync(file).size, 0);
   assert.deepEqual(warnings, ['Truncated incomplete forum vote bytes: 1']);
 });
@@ -323,8 +368,13 @@ test('100000-record cap rejects new votes but still returns duplicates', async (
   const { dataDir, store, ballot, file } = fixture(t);
   const input = await vote(ballot);
   const first = store.append(ballot, input).record;
-  const lines = Array.from({ length: MAX_RECORDS - 1 }, (_, i) => JSON.stringify({ ...first,
-    receiptOrder: i + 2, wallet: getAddress(`0x${(i + 1).toString(16).padStart(40, '0')}`) }));
+  let head = recordHash(first);
+  const lines = Array.from({ length: MAX_RECORDS - 1 }, (_, i) => {
+    const record = { ...first, prevHash: head,
+      receiptOrder: i + 2, wallet: getAddress(`0x${(i + 1).toString(16).padStart(40, '0')}`) };
+    head = recordHash(record);
+    return JSON.stringify(record);
+  });
   fs.appendFileSync(file, `${lines.join('\n')}\n`);
   const size = fs.statSync(file).size;
   const restarted = createVoteStore({ dataDir });

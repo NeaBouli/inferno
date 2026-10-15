@@ -4,7 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
 const { Contract, Interface, JsonRpcProvider, Wallet, keccak256, toUtf8Bytes, TypedDataEncoder } = require('ethers');
-const { loadBallot, manifestHash, voteTypedData } = require('../src/forum/ballot');
+const { canonicalJson, loadBallot, manifestHash, voteTypedData } = require('../src/forum/ballot');
 const { SELECTION_RULE, tallyBallot } = require('../src/forum/tally');
 const { main } = require('../scripts/forum-tally');
 
@@ -25,12 +25,58 @@ async function receipt(index, choice, receiptOrder, options = {}) {
   const data = voteTypedData(activeBallot, choice, issuedAt);
   return {
     ballotId: activeBallot.manifest.ballotId, chainId: activeBallot.manifest.chainId,
-    manifestHash: activeBallot.manifestHash, digest: TypedDataEncoder.hash(data.domain, data.types, data.value),
+    manifestHash: activeBallot.manifestHash, prevHash: activeBallot.manifestHash, digest: TypedDataEncoder.hash(data.domain, data.types, data.value),
     receiptOrder, receivedAt: (options.clock ?? clock)(),
     wallet: wallets[index].address, choice, issuedAt,
     signature: await wallets[index].signTypedData(data.domain, data.types, data.value),
   };
 }
+
+// Existing tally cases exercise signatures, policies and input validation using
+// freshly chained fixtures. Chain-integrity cases below call tallyBallot directly.
+function chain(votes, genesis = ballot.manifestHash) {
+  let head = genesis;
+  return votes.map((vote) => {
+    if (!vote || typeof vote !== 'object' || Array.isArray(vote)) return vote;
+    const record = Object.hasOwn(vote, 'prevHash') && typeof vote.prevHash === 'string'
+      && /^0x[0-9a-fA-F]{64}$/.test(vote.prevHash) ? { ...vote, prevHash: head } : { ...vote };
+    // Malformed-value tests must reach validation, including BigInt/undefined.
+    if (Object.values(record).every((value) => ['string', 'number'].includes(typeof value))) {
+      head = keccak256(toUtf8Bytes(canonicalJson(record)));
+    }
+    return record;
+  });
+}
+
+function tallyReceipts(options) {
+  return tallyBallot({ ...options, votes: Array.isArray(options.votes)
+    ? chain(options.votes, options.ballot.manifestHash) : options.votes });
+}
+
+test('tally verifies genesis and every canonical link and publishes the final chainHead', async () => {
+  const votes = chain([await receipt(0, 'yes', 1), await receipt(1, 'no', 2), await receipt(2, 'abstain', 3)]);
+  const result = await tallyBallot({ ballot, votes, reader: fakeReader() });
+  assert.equal(result.chainHead, keccak256(toUtf8Bytes(canonicalJson(votes[2]))));
+  assert.equal((await tallyBallot({ ballot, votes: [], reader: fakeReader() })).chainHead, ballot.manifestHash);
+  // Canonical key ordering is independent of the JSONL serializer's insertion order.
+  const reordered = votes.map((vote) => Object.fromEntries(Object.entries(vote).reverse()));
+  assert.equal((await tallyBallot({ ballot, votes: reordered, reader: fakeReader() })).chainHead, result.chainHead);
+});
+
+test('tally aborts broken genesis, links and middle-record tampering before any reader call', async () => {
+  const votes = chain([await receipt(0, 'yes', 1), await receipt(1, 'no', 2), await receipt(2, 'abstain', 3)]);
+  const variants = [
+    [{ ...votes[0], prevHash: `0x${'00'.repeat(32)}` }, ...votes.slice(1)],
+    [votes[0], { ...votes[1], prevHash: ballot.manifestHash }, votes[2]],
+    [votes[0], { ...votes[1], receivedAt: now + 1 }, votes[2]],
+    [votes[0], { ...votes[1], signature: votes[0].signature }, votes[2]],
+  ];
+  for (const records of variants) {
+    const reader = fakeReader();
+    await assert.rejects(tallyBallot({ ballot, votes: records, reader }), /hash chain mismatch/);
+    assert.deepEqual(reader.calls, []);
+  }
+});
 
 function fakeReader({ balances = [100n, 0n, 0n], total = 1000n,
   chain = BigInt(ballot.manifest.chainId), hash = ballot.manifest.snapshot.blockHash, afterHash = hash } = {}) {
@@ -64,7 +110,7 @@ function fakeReader({ balances = [100n, 0n, 0n], total = 1000n,
 test('tally exports exact input hashes and lossless decimal totals above Number precision', async () => {
   const votes = [await receipt(0, 'yes', 1), await receipt(1, 'no', 2), await receipt(2, 'abstain', 3)];
   const large = 2n ** 100n + 1n;
-  const result = await tallyBallot({ ballot, votes,
+  const result = await tallyReceipts({ ballot, votes,
     reader: fakeReader({ balances: [large, 3n, 4n], total: large * 2n }) });
   assert.deepEqual(result.totals, {
     yes: large.toString(), no: '3', abstain: '4',
@@ -77,9 +123,9 @@ test('tally exports exact input hashes and lossless decimal totals above Number 
   assert.equal(result.manifestHash, ballot.manifestHash);
   assert.equal(result.proposalHash, ballot.manifest.proposal.textHash);
   // Independent canonical field order for the published receipt format.
-  const canonical = JSON.stringify(votes.map((vote) => ({
+  const canonical = JSON.stringify(chain(votes).map((vote) => ({
     ballotId: vote.ballotId, chainId: vote.chainId, choice: vote.choice, digest: vote.digest, issuedAt: vote.issuedAt,
-    manifestHash: vote.manifestHash, receiptOrder: vote.receiptOrder,
+    manifestHash: vote.manifestHash, prevHash: vote.prevHash, receiptOrder: vote.receiptOrder,
     receivedAt: vote.receivedAt, signature: vote.signature, wallet: vote.wallet,
   })));
   assert.equal(result.voteSetHash, keccak256(toUtf8Bytes(canonical)));
@@ -91,14 +137,14 @@ test('tally exports exact input hashes and lossless decimal totals above Number 
 
 test('wrong chain fails before snapshot or balance reads', async () => {
   const reader = fakeReader({ chain: 1n });
-  await assert.rejects(tallyBallot({ ballot, votes: [], reader }), /Chain ID mismatch/);
+  await assert.rejects(tallyReceipts({ ballot, votes: [], reader }), /Chain ID mismatch/);
   assert.deepEqual(reader.calls, ['chainId']);
 });
 
 test('wrong or missing snapshot hash fails before balance reads', async () => {
   for (const hash of [`0x${'11'.repeat(32)}`, null]) {
     const reader = fakeReader({ hash });
-    await assert.rejects(tallyBallot({ ballot, votes: [], reader }), /Snapshot block hash mismatch/);
+    await assert.rejects(tallyReceipts({ ballot, votes: [], reader }), /Snapshot block hash mismatch/);
     assert.deepEqual(reader.calls, ['chainId', 'blockHash']);
   }
 });
@@ -108,7 +154,7 @@ test('snapshot hashes compare case-insensitively and preserve the manifest hash 
   copy.manifest.snapshot.blockHash = `0x${'ab'.repeat(32)}`;
   copy.manifestHash = manifestHash(copy.manifest);
   const reader = fakeReader({ hash: `0x${'AB'.repeat(32)}`, afterHash: `0x${'aB'.repeat(32)}` });
-  const result = await tallyBallot({ ballot: copy, votes: [], reader });
+  const result = await tallyReceipts({ ballot: copy, votes: [], reader });
   assert.deepEqual(result.snapshot, copy.manifest.snapshot);
   assert.deepEqual(reader.calls, ['chainId', 'blockHash', 'totalLocked', 'blockHash']);
 });
@@ -116,7 +162,7 @@ test('snapshot hashes compare case-insensitively and preserve the manifest hash 
 test('snapshot hash checks surround every weight read, including zero-weight wallets', async () => {
   const votes = [await receipt(0, 'yes', 1), await receipt(1, 'no', 2)];
   const reader = fakeReader();
-  await tallyBallot({ ballot, votes, reader });
+  await tallyReceipts({ ballot, votes, reader });
   assert.deepEqual(reader.calls, ['chainId', 'blockHash', 'totalLocked',
     ...wallets.slice(0, 2).map((wallet) => `lockedBalance:${wallet.address.toLowerCase()}`).sort(),
     'blockHash']);
@@ -126,7 +172,7 @@ test('a changed or missing hash after weight reads aborts instead of returning a
   const votes = [await receipt(0, 'yes', 1)];
   for (const afterHash of [`0x${'11'.repeat(32)}`, null]) {
     const reader = fakeReader({ afterHash });
-    await assert.rejects(tallyBallot({ ballot, votes, reader }), /Snapshot block hash mismatch/);
+    await assert.rejects(tallyReceipts({ ballot, votes, reader }), /Snapshot block hash mismatch/);
     assert.deepEqual(reader.calls, ['chainId', 'blockHash', 'totalLocked',
       `lockedBalance:${wallets[0].address.toLowerCase()}`, 'blockHash']);
   }
@@ -140,7 +186,7 @@ test('failure of the second snapshot read aborts the tally', async () => {
     if (reads === 2) throw new Error('Snapshot recheck unavailable');
     return ballot.manifest.snapshot.blockHash;
   };
-  await assert.rejects(tallyBallot({ ballot, votes: [], reader }), /Snapshot recheck unavailable/);
+  await assert.rejects(tallyReceipts({ ballot, votes: [], reader }), /Snapshot recheck unavailable/);
   assert.equal(reads, 2);
 });
 
@@ -148,7 +194,7 @@ test('every signature is reverified; rejected later votes cannot replace a valid
   const valid = await receipt(0, 'yes', 1);
   const wrongSigner = { ...await receipt(1, 'no', 2), wallet: wallets[0].address };
   const malformed = { ...await receipt(0, 'abstain', 3), signature: '0x1234' };
-  const result = await tallyBallot({ ballot, votes: [valid, wrongSigner, malformed], reader: fakeReader() });
+  const result = await tallyReceipts({ ballot, votes: [valid, wrongSigner, malformed], reader: fakeReader() });
   assert.deepEqual(result.rejected, [
     { receiptOrder: 2, reason: 'Signer mismatch' },
     { receiptOrder: 3, reason: 'Invalid signature' },
@@ -162,7 +208,7 @@ test('receipt times use an injected clock; opening is inclusive and closing is e
   for (const receivedAt of [opensAt - 1, opensAt, closesAt - 1, closesAt, closesAt + 1]) {
     votes.push(await receipt(0, 'yes', votes.length + 1, { issuedAt: opensAt, clock: () => receivedAt }));
   }
-  const result = await tallyBallot({ ballot, votes, reader: fakeReader() });
+  const result = await tallyReceipts({ ballot, votes, reader: fakeReader() });
   assert.deepEqual(result.rejected, [1, 4, 5].map((receiptOrder) => ({ receiptOrder, reason: 'Ballot not open' })));
   assert.equal(result.counted[0].receiptOrder, 3);
 });
@@ -173,7 +219,7 @@ test('issuedAt validity and future skew are checked at receipt time', async () =
     await receipt(0, 'no', 2, { issuedAt: now + 301 }),
     await receipt(0, 'no', 3, { issuedAt: ballot.manifest.window.closesAt }),
   ];
-  const result = await tallyBallot({ ballot, votes, reader: fakeReader() });
+  const result = await tallyReceipts({ ballot, votes, reader: fakeReader() });
   assert.deepEqual(result.rejected, [
     { receiptOrder: 2, reason: 'issuedAt too far in future' },
     { receiptOrder: 3, reason: 'issuedAt outside window' },
@@ -194,7 +240,7 @@ test('last-valid selects greatest issuedAt, then receiptOrder, across wallet cas
   votes[1].wallet = votes[1].wallet.toLowerCase();
   votes[4].wallet = `0x${votes[4].wallet.slice(2).toUpperCase()}`;
   const reader = fakeReader({ balances: [60n, 40n, 0n] });
-  const result = await tallyBallot({ ballot, votes, reader });
+  const result = await tallyReceipts({ ballot, votes, reader });
   assert.deepEqual(result.counted.map(({ receiptOrder }) => receiptOrder).sort((a, b) => a - b), [2, 5]);
   assert.equal(result.totals.yes, '100');
   assert.deepEqual(result.rejected, []);
@@ -204,7 +250,7 @@ test('last-valid selects greatest issuedAt, then receiptOrder, across wallet cas
 test('zero-weight wallets are sorted, listed once, and excluded from counted votes', async () => {
   const votes = [await receipt(0, 'yes', 1), await receipt(2, 'no', 2),
     await receipt(1, 'abstain', 3), await receipt(2, 'yes', 4)];
-  const result = await tallyBallot({ ballot, votes, reader: fakeReader() });
+  const result = await tallyReceipts({ ballot, votes, reader: fakeReader() });
   const expected = [wallets[1].address, wallets[2].address]
     .sort((a, b) => a.toLowerCase() < b.toLowerCase() ? -1 : 1);
   assert.deepEqual(result.zeroWeight, expected);
@@ -216,7 +262,7 @@ test('zero-weight wallets are sorted, listed once, and excluded from counted vot
 
 for (const [weight, passed] of [[100n, true], [99n, false]]) {
   test(`quorum at ${weight}/1000 ${passed ? 'passes' : 'fails'}`, async () => {
-    const result = await tallyBallot({ ballot, votes: [await receipt(0, 'yes', 1)],
+    const result = await tallyReceipts({ ballot, votes: [await receipt(0, 'yes', 1)],
       reader: fakeReader({ balances: [weight], total: 1000n }) });
     assert.equal(result.quorum.passed, passed);
     assert.equal(result.threshold.passed, true);
@@ -226,7 +272,7 @@ for (const [weight, passed] of [[100n, true], [99n, false]]) {
 
 for (const [yes, no, passed] of [[50n, 50n, false], [51n, 49n, true]]) {
   test(`threshold at ${yes}/${yes + no} ${passed ? 'passes' : 'fails'}`, async () => {
-    const result = await tallyBallot({ ballot, votes: [await receipt(0, 'yes', 1), await receipt(1, 'no', 2)],
+    const result = await tallyReceipts({ ballot, votes: [await receipt(0, 'yes', 1), await receipt(1, 'no', 2)],
       reader: fakeReader({ balances: [yes, no], total: 1000n }) });
     assert.equal(result.quorum.passed, true);
     assert.equal(result.threshold.passed, passed);
@@ -235,7 +281,7 @@ for (const [yes, no, passed] of [[50n, 50n, false], [51n, 49n, true]]) {
 }
 
 test('abstain contributes to quorum while staying outside the threshold denominator', async () => {
-  const result = await tallyBallot({ ballot, votes: [await receipt(0, 'yes', 1),
+  const result = await tallyReceipts({ ballot, votes: [await receipt(0, 'yes', 1),
     await receipt(1, 'no', 2), await receipt(2, 'abstain', 3)],
   reader: fakeReader({ balances: [6n, 4n, 90n] }) });
   assert.equal(result.totals.participating, '100');
@@ -246,7 +292,7 @@ test('abstain contributes to quorum while staying outside the threshold denomina
 
 test('abstain-only and empty vote sets fail the threshold at a nonempty snapshot', async () => {
   for (const votes of [[], [await receipt(0, 'abstain', 1)]]) {
-    const result = await tallyBallot({ ballot, votes, reader: fakeReader() });
+    const result = await tallyReceipts({ ballot, votes, reader: fakeReader() });
     assert.equal(result.quorum.passed, votes.length > 0);
     assert.equal(result.threshold.passed, false);
     assert.equal(result.outcome, 'failed');
@@ -257,7 +303,7 @@ test('abstain-only and empty vote sets fail the threshold at a nonempty snapshot
 test('zero totalLocked aborts with undefined quorum for empty and nonempty vote sets', async () => {
   for (const votes of [[], [await receipt(0, 'yes', 1)]]) {
     const reader = fakeReader({ total: 0n, balances: [0n] });
-    await assert.rejects(tallyBallot({ ballot, votes, reader }),
+    await assert.rejects(tallyReceipts({ ballot, votes, reader }),
       { message: 'Empty snapshot: quorum undefined' });
     assert.equal(reader.calls.filter((call) => call === 'blockHash').length, 2);
     assert.equal(reader.calls.at(-1), 'blockHash');
@@ -269,7 +315,7 @@ test('participating weight cannot exceed totalLocked, including abstain and bigi
     const total = balances[0] === 2n ** 100n ? balances[0] : 100n;
     const votes = [await receipt(0, 'yes', 1), await receipt(1, 'no', 2), await receipt(2, 'abstain', 3)];
     const reader = fakeReader({ balances, total });
-    await assert.rejects(tallyBallot({ ballot, votes, reader }),
+    await assert.rejects(tallyReceipts({ ballot, votes, reader }),
       { message: 'Weight source inconsistent' });
     assert.equal(reader.calls.at(-1), 'blockHash');
   }
@@ -277,7 +323,7 @@ test('participating weight cannot exceed totalLocked, including abstain and bigi
 
 test('participating weight equal to totalLocked is consistent', async () => {
   const votes = [await receipt(0, 'yes', 1), await receipt(1, 'abstain', 2)];
-  const result = await tallyBallot({ ballot, votes, reader: fakeReader({ balances: [60n, 40n], total: 100n }) });
+  const result = await tallyReceipts({ ballot, votes, reader: fakeReader({ balances: [60n, 40n], total: 100n }) });
   assert.equal(result.totals.participating, '100');
   assert.equal(result.outcome, 'passed');
 });
@@ -293,7 +339,7 @@ test('extra, missing and substituted record keys fail closed at the offending re
   }
   for (const record of malformed) {
     const reader = fakeReader();
-    await assert.rejects(tallyBallot({ ballot, votes: [valid, record], reader }),
+    await assert.rejects(tallyReceipts({ ballot, votes: [valid, record], reader }),
       /Invalid vote record at receiptOrder 2: expected exact collector record keys/);
     assert.deepEqual(reader.calls, []);
   }
@@ -307,15 +353,15 @@ test('malformed record values and unsafe or negative integers abort before reads
       malformed.push({ ...vote, [key]: value });
     }
   }
-  for (const key of ['ballotId', 'manifestHash', 'digest', 'wallet', 'choice', 'signature']) {
+  for (const key of ['ballotId', 'manifestHash', 'digest', 'prevHash', 'wallet', 'choice', 'signature']) {
     for (const value of [null, 1, {}, []]) malformed.push({ ...vote, [key]: value });
   }
-  for (const key of ['manifestHash', 'digest']) {
+  for (const key of ['manifestHash', 'digest', 'prevHash']) {
     for (const value of ['', '0x12', `0x${'gg'.repeat(32)}`]) malformed.push({ ...vote, [key]: value });
   }
   for (const record of malformed) {
     const reader = fakeReader();
-    await assert.rejects(tallyBallot({ ballot, votes: [record], reader }), /Invalid vote record at receiptOrder 1/);
+    await assert.rejects(tallyReceipts({ ballot, votes: [record], reader }), /Invalid vote record at receiptOrder 1/);
     assert.deepEqual(reader.calls, []);
   }
 });
@@ -326,7 +372,7 @@ test('EIP-712 digest mismatches and tampering with its signed fields abort befor
   for (const record of [{ ...vote, digest: `0x${'11'.repeat(32)}` },
     { ...vote, digest: valid.digest }, { ...vote, choice: 'yes' }, { ...vote, issuedAt: now + 1 }]) {
     const reader = fakeReader();
-    await assert.rejects(tallyBallot({ ballot, votes: [valid, record], reader }),
+    await assert.rejects(tallyReceipts({ ballot, votes: [valid, record], reader }),
       /Invalid vote record at receiptOrder 2: EIP-712 digest mismatch/);
     assert.deepEqual(reader.calls, []);
   }
@@ -346,7 +392,7 @@ test('manifestHash and digest compare case-insensitively without changing the pu
   assert.equal(result.manifestHash, ballot.manifestHash);
   assert.equal(JSON.stringify(votes), before);
   assert.notEqual(result.voteSetHash,
-    (await tallyBallot({ ballot, votes: [original], reader: fakeReader() })).voteSetHash);
+    (await tallyReceipts({ ballot, votes: [original], reader: fakeReader() })).voteSetHash);
 });
 
 test('non-contiguous, duplicate, reordered and malformed receipt orders throw before reads', async () => {
@@ -356,10 +402,10 @@ test('non-contiguous, duplicate, reordered and malformed receipt orders throw be
     [[]], [{}], [{ toString: null }]]) {
     const reader = fakeReader();
     const votes = orders.map((receiptOrder) => ({ ...vote, receiptOrder }));
-    await assert.rejects(tallyBallot({ ballot, votes, reader }), /Invalid receiptOrder/);
+    await assert.rejects(tallyReceipts({ ballot, votes, reader }), /Invalid receiptOrder/);
     assert.deepEqual(reader.calls, []);
   }
-  await assert.rejects(tallyBallot({ ballot, votes: {}, reader: fakeReader() }), /Votes must be a JSON array/);
+  await assert.rejects(tallyReceipts({ ballot, votes: {}, reader: fakeReader() }), /Votes must be a JSON array/);
 });
 
 test('snapshot reader errors and invalid weights throw instead of returning a partial tally', async () => {
@@ -367,21 +413,21 @@ test('snapshot reader errors and invalid weights throw instead of returning a pa
   for (const method of ['chainId', 'blockHash', 'totalLocked', 'lockedBalance']) {
     const reader = fakeReader({ balances: [60n, 40n] });
     reader[method] = async () => { throw new Error(`${method} unavailable`); };
-    await assert.rejects(tallyBallot({ ballot, votes, reader }), new RegExp(`${method} unavailable`));
+    await assert.rejects(tallyReceipts({ ballot, votes, reader }), new RegExp(`${method} unavailable`));
   }
   for (const invalid of [1, '100', -1n, undefined]) {
     const reader = fakeReader();
     reader.totalLocked = async () => invalid;
-    await assert.rejects(tallyBallot({ ballot, votes, reader }), /Invalid totalLocked/);
+    await assert.rejects(tallyReceipts({ ballot, votes, reader }), /Invalid totalLocked/);
     reader.totalLocked = async () => 1000n;
     reader.lockedBalance = async () => invalid;
-    await assert.rejects(tallyBallot({ ballot, votes, reader }), /Invalid lockedBalance/);
+    await assert.rejects(tallyReceipts({ ballot, votes, reader }), /Invalid lockedBalance/);
   }
 });
 
 test('repeated tallying has identical JSON, sorted arrays and no input mutation or wall clock', async (t) => {
-  const votes = [await receipt(0, 'yes', 1), await receipt(2, 'no', 2), await receipt(1, 'abstain', 3),
-    { ...await receipt(1, 'yes', 4), signature: 'invalid' }];
+  const votes = chain([await receipt(0, 'yes', 1), await receipt(2, 'no', 2), await receipt(1, 'abstain', 3),
+    { ...await receipt(1, 'yes', 4), signature: 'invalid' }]);
   const before = JSON.stringify(votes);
   for (const vote of votes) Object.freeze(vote);
   Object.freeze(votes);
@@ -396,7 +442,7 @@ test('repeated tallying has identical JSON, sorted arrays and no input mutation 
   assert.equal(JSON.stringify(first).includes('receivedAt'), false);
   const reorderedKeys = votes.map((vote) => Object.fromEntries(Object.entries(vote).reverse()));
   assert.equal(JSON.stringify(await tallyBallot({ ballot, votes: reorderedKeys, reader })), JSON.stringify(first));
-  const changedReceipt = votes.map((vote, index) => index ? vote : { ...vote, receivedAt: now + 1 });
+  const changedReceipt = chain(votes.map((vote, index) => index ? vote : { ...vote, receivedAt: now + 1 }));
   assert.notEqual((await tallyBallot({ ballot, votes: changedReceipt, reader })).voteSetHash, first.voteSetHash);
 });
 
@@ -424,7 +470,7 @@ test('installed ethers rejects EIP-1898 contract-call blockTag objects before an
 
 for (const reorg of [false, true]) {
   test(`CLI uses height-pinned reads and uncached hash checks, ${reorg ? 'rejecting a reorg' : 'offline'}`, async (t) => {
-    const votes = [await receipt(0, 'yes', 1)];
+    const votes = chain([await receipt(0, 'yes', 1)]);
     const readFileSync = fs.readFileSync;
     t.mock.method(fs, 'readFileSync', (file, ...args) => file === 'virtual-votes.json'
       ? JSON.stringify(votes) : readFileSync(file, ...args));
@@ -513,7 +559,7 @@ test('votes bound to another manifest abort the tally', async () => {
   for (const field of ['manifestHash', 'ballotId', 'chainId']) {
     const tampered = { ...vote, [field]: field === 'chainId' ? 1 : field === 'ballotId' ? 'FB-OTHER' : `0x${'11'.repeat(32)}` };
     const reader = fakeReader();
-    await assert.rejects(tallyBallot({ ballot, votes: [tampered], reader }), /Vote 1 belongs to a different ballot manifest/);
+    await assert.rejects(tallyReceipts({ ballot, votes: [tampered], reader }), /Vote 1 belongs to a different ballot manifest/);
     assert.deepEqual(reader.calls, []);
   }
 });
