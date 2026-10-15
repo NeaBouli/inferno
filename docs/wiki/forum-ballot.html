@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Forum Ballot &mdash; Inferno (IFR) Documentation</title>
+  <meta name="description" content="Read a frozen IFR Forum proposal, sign an advisory vote and inspect the published vote records.">
+  <link rel="canonical" href="https://ifrunit.tech/wiki/forum-ballot.html">
+  <link rel="alternate" hreflang="en" href="https://ifrunit.tech/wiki/forum-ballot.html">
+  <link rel="alternate" hreflang="x-default" href="https://ifrunit.tech/wiki/forum-ballot.html">
+  <!-- Staging may set the collector base with a meta tag named ifr-forum-api. -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebPage",
+    "name": "IFR Forum Ballot",
+    "description": "Frozen proposals and signed, publicly recorded advisory Forum votes.",
+    "url": "https://ifrunit.tech/wiki/forum-ballot.html"
+  }
+  </script>
+  <style>
+    /* Standalone layout using the Council Votes page's inline theme. */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0a;
+      --card: #111113;
+      --border: #222225;
+      --text: #e8e8ed;
+      --muted: #8a8a96;
+      --accent: #ff4500;
+      --green: #22c55e;
+    }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+    .main { width: 100%; max-width: 960px; margin: 0 auto; padding: 32px 24px 48px; overflow-wrap: anywhere; }
+    nav { display: flex; flex-wrap: wrap; gap: 8px 24px; margin-bottom: 24px; }
+    a { color: var(--accent); }
+    nav a { display: inline-flex; align-items: center; min-height: 44px; }
+    h1 { font-size: 32px; line-height: 1.25; margin: 16px 0; }
+    h2 { font-size: 22px; margin-bottom: 16px; }
+    p { margin-bottom: 16px; }
+    .muted, dt { color: var(--muted); }
+    .phase-card { min-width: 0; background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 24px 28px; margin: 20px 0; }
+    .callout { background: rgba(255, 69, 0, 0.06); border-left: 3px solid var(--accent); border-radius: 0 8px 8px 0; padding: 16px 20px; margin: 20px 0; }
+    #sepolia-banner { font-size: 18px; font-weight: 700; }
+    dl { display: grid; grid-template-columns: minmax(0, 150px) minmax(0, 1fr); gap: 12px 20px; }
+    dd { min-width: 0; }
+    code, pre { font-family: 'SF Mono', 'Cascadia Code', monospace; font-size: 13px; }
+    pre { white-space: pre-wrap; overflow-wrap: anywhere; margin-top: 20px; line-height: 1.7; }
+    fieldset { min-width: 0; border: 0; margin: 20px 0; }
+    legend { font-weight: 600; margin-bottom: 8px; }
+    .choices, .actions { display: flex; flex-wrap: wrap; gap: 12px; }
+    label { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 14px; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; }
+    input { accent-color: var(--accent); width: 20px; height: 20px; }
+    button { max-width: 100%; min-height: 44px; padding: 10px 18px; border: 1px solid var(--border); border-radius: 8px; background: var(--card); color: var(--text); font: inherit; font-weight: 600; white-space: normal; overflow-wrap: anywhere; cursor: pointer; }
+    button[type="submit"] { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+    button:disabled { opacity: 0.6; cursor: default; }
+    :focus-visible { outline: 3px solid var(--accent); outline-offset: 4px; }
+    #wallet-status, #vote-status, #count-status { margin-top: 16px; }
+    #vote-status[data-success="true"] { color: var(--green); }
+    .wiki-footer { margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border); font-size: 13px; color: var(--muted); }
+    [hidden] { display: none !important; }
+    @media (max-width: 480px) {
+      .main { padding: 20px 16px 32px; }
+      .phase-card { padding: 20px 16px; }
+      h1 { font-size: 26px; }
+      dl { grid-template-columns: minmax(0, 1fr); gap: 4px; }
+      dd { margin-bottom: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="main">
+    <nav aria-label="Documentation">
+      <a href="index.html">IFR PROTOCOL Wiki</a>
+      <a href="dao-governance.html#forum-vote-steps">How to vote</a>
+      <a href="council-votes.html">Council Votes</a>
+    </nav>
+    <h1>Forum Ballot</h1>
+    <p class="muted">In development &mdash; not live. Forum results are advisory; the Council decides.</p>
+    <noscript><p class="callout">JavaScript is required to load a ballot and sign a vote with an injected wallet. Read the voting guide above and use the ballot link from the IFR bot announcement.</p></noscript>
+    <p id="load-status" role="status" aria-live="polite">Open the ballot link from the IFR bot announcement to load its proposal.</p>
+    <div id="sepolia-banner" class="callout" role="note" hidden>Sepolia test ballot — results are advisory</div>
+
+    <section id="ballot-details" class="phase-card" aria-labelledby="ballot-title" hidden>
+      <h2 id="ballot-title">Proposal</h2>
+      <dl>
+        <dt>Ballot ID</dt><dd id="ballot-id"></dd>
+        <dt>Chain ID</dt><dd id="chain-id"></dd>
+        <dt>Proposal hash</dt><dd><code id="proposal-hash"></code></dd>
+        <dt>Manifest hash</dt><dd><code id="manifest-hash"></code></dd>
+        <dt>Snapshot height</dt><dd id="snapshot-height"></dd>
+        <dt>Opens (UTC)</dt><dd id="opens-at"></dd>
+        <dt>Closes (UTC)</dt><dd id="closes-at"></dd>
+      </dl>
+      <pre id="proposal-text" aria-label="Frozen proposal text"></pre>
+    </section>
+
+    <section id="voting" class="phase-card" aria-labelledby="vote-heading" hidden>
+      <h2 id="vote-heading">Sign your vote</h2>
+      <p id="vote-explanation">Signing is free and sends no transaction. Your last valid vote before closing counts. Votes, wallet addresses and signatures are published for anyone to recount.</p>
+      <p class="muted">Voting weight uses IFR locked at the snapshot block. The published record count is not a weighted result.</p>
+      <div class="actions">
+        <button id="connect-wallet" type="button" disabled>Connect wallet</button>
+        <button id="switch-chain" type="button" hidden>Switch wallet network</button>
+      </div>
+      <p id="wallet-status" role="status" aria-live="polite">Wallet not connected.</p>
+      <form id="vote-form" aria-describedby="vote-explanation">
+        <fieldset id="vote-choices" disabled>
+          <legend>Your choice</legend>
+          <div class="choices">
+            <label for="choice-yes"><input id="choice-yes" type="radio" name="choice" value="yes" required>Yes</label>
+            <label for="choice-no"><input id="choice-no" type="radio" name="choice" value="no" required>No</label>
+            <label for="choice-abstain"><input id="choice-abstain" type="radio" name="choice" value="abstain" required>Abstain</label>
+          </div>
+        </fieldset>
+        <button id="submit-vote" type="submit" disabled>Sign and submit vote</button>
+      </form>
+      <p id="vote-status" role="status" aria-live="polite"></p>
+    </section>
+
+    <section id="published-votes" class="phase-card" aria-labelledby="published-heading" hidden>
+      <h2 id="published-heading">Published votes</h2>
+      <p>Published vote records: <strong id="vote-count">Loading…</strong></p>
+      <p>Includes changes of choice. Follow the <code>next</code> cursor as <code>after</code> in the raw JSON until <code>next</code> is null to read every record.</p>
+      <p><a id="raw-votes" rel="noopener noreferrer" hidden>View raw vote JSON</a></p>
+      <button id="refresh-votes" type="button">Refresh count</button>
+      <p id="count-status" role="status" aria-live="polite"></p>
+    </section>
+    <footer class="wiki-footer">IFR Forum &mdash; advisory, publicly verifiable signed votes.</footer>
+  </main>
+
+  <script type="application/json" id="forum-vote-schema">
+  {
+    "domain": {
+      "name": "IFR Forum",
+      "version": "1",
+      "salt": "0xd96a6b8f353335963070dfbf37b6dad9b7a33764693bc9758f883953fbbd67e1"
+    },
+    "primaryType": "IFRForumVote",
+    "types": {
+      "EIP712Domain": [
+        { "name": "name", "type": "string" },
+        { "name": "version", "type": "string" },
+        { "name": "chainId", "type": "uint256" },
+        { "name": "salt", "type": "bytes32" }
+      ],
+      "IFRForumVote": [
+        { "name": "manifestHash", "type": "bytes32" },
+        { "name": "ballotId", "type": "string" },
+        { "name": "proposalHash", "type": "bytes32" },
+        { "name": "snapshotHeight", "type": "uint256" },
+        { "name": "choice", "type": "string" },
+        { "name": "issuedAt", "type": "uint256" }
+      ]
+    }
+  }
+  </script>
+  <script>
+  (async function () {
+    'use strict';
+    const FORUM_API = 'https://verify-api.ifrunit.tech/api/forum';
+    const BALLOT_ID_PATTERN = /^FB-[A-Z0-9-]{1,32}$/;
+    const VOTE_SCHEMA = JSON.parse(document.getElementById('forum-vote-schema').textContent);
+    const el = (id) => document.getElementById(id);
+    const provider = window.ethereum;
+    let ballot = null;
+    let ballotUrl = '';
+    let wallet = null;
+    let chainMatches = false;
+    let walletRevision = 0;
+    let busy = false;
+    let counting = false;
+
+    function buildVoteTypedData(ballot, choice, issuedAt) {
+      const { manifest } = ballot;
+      return {
+        domain: {
+          name: VOTE_SCHEMA.domain.name,
+          version: VOTE_SCHEMA.domain.version,
+          chainId: manifest.chainId,
+          salt: VOTE_SCHEMA.domain.salt,
+        },
+        primaryType: VOTE_SCHEMA.primaryType,
+        types: VOTE_SCHEMA.types,
+        message: {
+          manifestHash: ballot.manifestHash,
+          ballotId: manifest.ballotId,
+          proposalHash: manifest.proposal.textHash,
+          snapshotHeight: manifest.snapshot.height,
+          choice,
+          issuedAt,
+        },
+      };
+    }
+
+    function renderControls() {
+      el('connect-wallet').disabled = busy || !ballot;
+      el('switch-chain').hidden = !wallet || chainMatches;
+      el('switch-chain').disabled = busy;
+      el('vote-choices').disabled = busy || !ballot;
+      el('submit-vote').disabled = busy || !ballot || !wallet || !chainMatches;
+    }
+
+    function resetWallet() {
+      walletRevision += 1;
+      wallet = null;
+      chainMatches = false;
+      el('wallet-status').textContent = 'Wallet changed or disconnected. Connect again to review the account and network.';
+      renderControls();
+    }
+
+    async function requestJson(url, options = {}) {
+      const response = await fetch(url, { credentials: 'omit', cache: 'no-store', referrerPolicy: 'no-referrer', ...options });
+      let data;
+      try { data = await response.json(); } catch {
+        throw new Error(`Collector request failed (HTTP ${response.status}).`);
+      }
+      if (!response.ok) throw new Error(typeof data?.error === 'string' ? data.error : `Collector request failed (HTTP ${response.status}).`);
+      return { data, status: response.status };
+    }
+
+    async function refreshCount() {
+      if (counting) return;
+      counting = true;
+      el('refresh-votes').disabled = true;
+      el('count-status').textContent = 'Reading all published pages…';
+      el('vote-count').textContent = 'Loading…';
+      try {
+        let after = 0;
+        let count = 0;
+        while (true) {
+          const { data } = await requestJson(`${ballotUrl}/votes?after=${after}&limit=1000`);
+          if (!Array.isArray(data.records) || (data.next !== null && (!Number.isSafeInteger(data.next) || data.next <= after))) {
+            throw new Error('Invalid vote pagination from collector.');
+          }
+          count += data.records.length;
+          if (data.next === null) break;
+          after = data.next;
+        }
+        el('vote-count').textContent = String(count);
+        el('count-status').textContent = 'All published pages read.';
+      } catch (error) {
+        el('vote-count').textContent = 'Unavailable';
+        el('count-status').textContent = error.message;
+      } finally {
+        counting = false;
+        el('refresh-votes').disabled = false;
+      }
+    }
+
+    async function readWallet(method) {
+      if (!provider?.request) throw new Error('No injected wallet found. Open this page in a browser with an EIP-1193 wallet.');
+      const accounts = await provider.request({ method });
+      const chainId = await provider.request({ method: 'eth_chainId' });
+      if (!Array.isArray(accounts) || !/^0x[0-9a-fA-F]{40}$/.test(accounts[0])) throw new Error('No wallet account available. Connect your wallet.');
+      if (typeof chainId !== 'string' || !/^0x[0-9a-fA-F]+$/.test(chainId)) throw new Error('Wallet returned an invalid chain ID.');
+      return { address: accounts[0], matches: BigInt(chainId) === BigInt(ballot.manifest.chainId) };
+    }
+
+    function showWallet() {
+      el('wallet-status').textContent = chainMatches
+        ? `Connected: ${wallet} · Chain ${ballot.manifest.chainId}`
+        : `Wrong wallet network. This ballot requires chain ${ballot.manifest.chainId}. Switch your wallet network to vote.`;
+    }
+
+    async function connectWallet(method) {
+      const current = await readWallet(method);
+      wallet = current.address;
+      chainMatches = current.matches;
+      showWallet();
+    }
+
+    async function checkSigningWallet(address, revision) {
+      const current = await readWallet('eth_accounts');
+      if (revision !== walletRevision || current.address.toLowerCase() !== address.toLowerCase()) {
+        resetWallet();
+        throw new Error('Wallet account or network changed. Connect again and review your vote.');
+      }
+      chainMatches = current.matches;
+      showWallet();
+      if (!chainMatches) throw new Error(`Wrong wallet network. Switch to chain ${ballot.manifest.chainId} before signing.`);
+    }
+
+    async function walletAction(action) {
+      if (busy) return;
+      busy = true;
+      el('vote-status').textContent = '';
+      el('vote-status').dataset.success = 'false';
+      renderControls();
+      try { await action(); } catch (error) {
+        el('vote-status').textContent = typeof error?.message === 'string' ? error.message : 'Wallet request failed. Please try again.';
+      } finally {
+        busy = false;
+        renderControls();
+      }
+    }
+
+    el('connect-wallet').addEventListener('click', () => walletAction(() => connectWallet('eth_requestAccounts')));
+    el('switch-chain').addEventListener('click', () => walletAction(async () => {
+      await provider.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: `0x${BigInt(ballot.manifest.chainId).toString(16)}` }] });
+      await connectWallet('eth_accounts');
+    }));
+    el('vote-form').addEventListener('submit', (event) => {
+      event.preventDefault();
+      return walletAction(async () => {
+        const choice = document.querySelector('input[name="choice"]:checked')?.value;
+        if (!['yes', 'no', 'abstain'].includes(choice)) throw new Error('Choose yes, no or abstain.');
+        if (!wallet) throw new Error('Connect your wallet first.');
+        const address = wallet;
+        const revision = walletRevision;
+        await checkSigningWallet(address, revision);
+        const issuedAt = Math.floor(Date.now() / 1000);
+        if (issuedAt < ballot.manifest.window.opensAt || issuedAt >= ballot.manifest.window.closesAt) throw new Error('Ballot not open. Check the UTC voting window.');
+        const typedData = buildVoteTypedData(ballot, choice, issuedAt);
+        el('vote-status').textContent = 'Review and sign the vote in your wallet…';
+        const signature = await provider.request({ method: 'eth_signTypedData_v4', params: [address, JSON.stringify(typedData)] });
+        await checkSigningWallet(address, revision);
+        el('vote-status').textContent = 'Submitting signed vote…';
+        const { data, status } = await requestJson(`${ballotUrl}/votes`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ wallet: address, choice, issuedAt, signature }),
+        });
+        if (status !== 200 && status !== 201) throw new Error(`Unexpected collector response (HTTP ${status}).`);
+        el('vote-status').textContent = status === 201 ? `Vote recorded (receipt ${data.receiptOrder})` : 'Already recorded';
+        el('vote-status').dataset.success = 'true';
+        await refreshCount();
+      });
+    });
+    el('refresh-votes').addEventListener('click', refreshCount);
+    if (provider?.on) {
+      provider.on('accountsChanged', resetWallet);
+      provider.on('chainChanged', resetWallet);
+      provider.on('disconnect', resetWallet);
+    }
+
+    try {
+      const ballotId = new URLSearchParams(window.location.search).get('ballot');
+      if (typeof ballotId !== 'string' || ballotId !== ballotId.trim() || !BALLOT_ID_PATTERN.test(ballotId)) {
+        throw new Error('Missing or invalid ballot ID. Use the announcement link with ?ballot=FB-ID.');
+      }
+      const override = document.querySelector('meta[name="ifr-forum-api"]')?.content.trim();
+      const api = new URL(override || FORUM_API);
+      if (!['https:', 'http:'].includes(api.protocol) || api.username || api.password || api.search || api.hash) throw new Error('Invalid collector API meta tag.');
+      ballotUrl = `${api.href.replace(/\/+$/, '')}/ballots/${encodeURIComponent(ballotId)}`;
+      el('load-status').textContent = 'Loading frozen ballot…';
+      const { data } = await requestJson(ballotUrl);
+      const manifest = data.manifest;
+      const hash = /^0x[0-9a-fA-F]{64}$/;
+      const integer = (value) => Number.isSafeInteger(value) && value >= 0;
+      if (manifest?.ballotId !== ballotId || !integer(manifest.chainId) || manifest.chainId === 0
+        || typeof manifest.proposal?.title !== 'string' || typeof data.proposalText !== 'string'
+        || !hash.test(manifest.proposal.textHash) || !hash.test(data.manifestHash)
+        || !integer(manifest.snapshot?.height) || !integer(manifest.window?.opensAt)
+        || !integer(manifest.window.closesAt) || manifest.window.opensAt >= manifest.window.closesAt) {
+        throw new Error('Invalid ballot response from collector.');
+      }
+      const utc = (seconds) => new Date(seconds * 1000).toISOString().replace('T', ' ').replace('.000Z', ' UTC');
+      el('opens-at').textContent = utc(manifest.window.opensAt);
+      el('closes-at').textContent = utc(manifest.window.closesAt);
+      ballot = data;
+      el('ballot-title').textContent = manifest.proposal.title;
+      el('ballot-id').textContent = manifest.ballotId;
+      el('chain-id').textContent = String(manifest.chainId);
+      el('proposal-hash').textContent = manifest.proposal.textHash;
+      el('manifest-hash').textContent = data.manifestHash;
+      el('snapshot-height').textContent = String(manifest.snapshot.height);
+      el('proposal-text').textContent = data.proposalText;
+      el('sepolia-banner').hidden = manifest.chainId !== 11155111;
+      el('raw-votes').href = `${ballotUrl}/votes?after=0&limit=1000`;
+      el('raw-votes').hidden = false;
+      for (const id of ['ballot-details', 'voting', 'published-votes']) el(id).hidden = false;
+      el('load-status').textContent = 'Frozen ballot loaded. Review the proposal and hashes before signing.';
+      renderControls();
+      await refreshCount();
+    } catch (error) {
+      el('load-status').textContent = error.message;
+    }
+  })();
+  </script>
+</body>
+</html>

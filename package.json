@@ -40,6 +40,7 @@
     "check:benefits-proof-context": "node scripts/check-benefits-proof-context.cjs",
     "test:benefits-node-runtime": "node scripts/test-benefits-node-runtime.cjs",
     "test:wiki-heads": "node scripts/test-wiki-head-integrity.cjs",
+    "test:forum-ballot-page": "node scripts/test-forum-ballot-page.cjs",
     "test:wiki-jsonld": "node scripts/test-wiki-jsonld.cjs",
     "test:sitemap-anchors": "node scripts/check-sitemap-anchors.cjs && node scripts/test-sitemap-anchors.cjs",
     "build:sitemap": "node scripts/check-sitemap-anchors.cjs --write",
