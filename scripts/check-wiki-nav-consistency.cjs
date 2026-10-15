@@ -39,7 +39,7 @@ console.log(`[wiki-nav] ${pages.length} pages scanned, ${variants.size} nav vari
 
 if (withoutSidebar.length) {
   console.log(`[wiki-nav] pages without sidebar layout (by design list must stay explicit): ${withoutSidebar.join(", ")}`);
-  const allowed = new Set(["reputation.html"]);
+  const allowed = new Set(["reputation.html", "forum-ballot.html"]);
   const unexpected = withoutSidebar.filter((page) => !allowed.has(page));
   if (unexpected.length) {
     console.error(`[wiki-nav] FAIL - unexpected pages without sidebar-nav: ${unexpected.join(", ")}`);
