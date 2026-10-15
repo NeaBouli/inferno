@@ -12,6 +12,13 @@ async function tallyBallot({ ballot, votes, reader }) {
   }
 
   const { manifest } = ballot;
+  // Published records are bound to the manifest they were collected for (collector slice 1b).
+  for (const vote of votes) {
+    if (vote.manifestHash !== ballot.manifestHash || vote.ballotId !== manifest.ballotId
+      || vote.chainId !== manifest.chainId) {
+      throw new Error(`Vote ${vote.receiptOrder} belongs to a different ballot manifest`);
+    }
+  }
   const chainId = await reader.chainId();
   if (BigInt(chainId) !== BigInt(manifest.chainId)) {
     throw new Error(`Chain ID mismatch: expected ${manifest.chainId}, got ${chainId}`);

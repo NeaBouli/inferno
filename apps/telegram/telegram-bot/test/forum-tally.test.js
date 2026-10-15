@@ -24,6 +24,7 @@ async function receipt(index, choice, receiptOrder, options = {}) {
   const issuedAt = options.issuedAt ?? now;
   const data = voteTypedData(activeBallot, choice, issuedAt);
   return {
+    ballotId: ballot.manifest.ballotId, chainId: ballot.manifest.chainId, manifestHash: ballot.manifestHash,
     receiptOrder, receivedAt: (options.clock ?? clock)(),
     wallet: wallets[index].address, choice, issuedAt,
     signature: await wallets[index].signTypedData(data.domain, data.types, data.value),
@@ -74,7 +75,8 @@ test('tally exports exact input hashes and lossless decimal totals above Number 
   assert.equal(result.proposalHash, ballot.manifest.proposal.textHash);
   // Independent canonical field order for the published receipt format.
   const canonical = JSON.stringify(votes.map((vote) => ({
-    choice: vote.choice, issuedAt: vote.issuedAt, receiptOrder: vote.receiptOrder,
+    ballotId: vote.ballotId, chainId: vote.chainId, choice: vote.choice, issuedAt: vote.issuedAt,
+    manifestHash: vote.manifestHash, receiptOrder: vote.receiptOrder,
     receivedAt: vote.receivedAt, signature: vote.signature, wallet: vote.wallet,
   })));
   assert.equal(result.voteSetHash, keccak256(toUtf8Bytes(canonical)));
@@ -339,3 +341,12 @@ test('CLI errors exit 1, print only the message to stderr and leave stdout empty
     assert.equal(result.stderr.trim().split('\n').length, 1);
   }
 });
+
+test('votes bound to another manifest abort the tally', async () => {
+  const vote = await receipt(0, 'yes', 1);
+  for (const field of ['manifestHash', 'ballotId', 'chainId']) {
+    const tampered = { ...vote, [field]: field === 'chainId' ? 1 : field === 'ballotId' ? 'FB-OTHER' : `0x${'11'.repeat(32)}` };
+    await assert.rejects(tallyBallot({ ballot, votes: [tampered], reader: fakeReader() }), /different ballot manifest/);
+  }
+});
+
