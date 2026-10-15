@@ -1,22 +1,45 @@
 // Deterministic advisory tally; all snapshot reads are supplied by the caller.
-const { keccak256, toUtf8Bytes } = require('ethers');
-const { canonicalJson, checksumWallet, verifyVote } = require('./ballot');
+const { isHexString, keccak256, toUtf8Bytes, TypedDataEncoder } = require('ethers');
+const { canonicalJson, checksumWallet, verifyVote, voteTypedData } = require('./ballot');
+
+const SELECTION_RULE = 'last-valid = among valid votes of a wallet, greatest issuedAt; ties broken by greatest receiptOrder';
+const RECORD_KEYS = ['ballotId', 'chainId', 'manifestHash', 'digest', 'receiptOrder',
+  'receivedAt', 'wallet', 'choice', 'issuedAt', 'signature'];
 
 async function tallyBallot({ ballot, votes, reader }) {
   if (!Array.isArray(votes)) throw new Error('Votes must be a JSON array');
+  const { manifest } = ballot;
   // The published store is ordered, append-only and starts at receipt 1.
   for (let index = 0; index < votes.length; index += 1) {
-    if (votes[index]?.receiptOrder !== index + 1) {
-      throw new Error(`Invalid receiptOrder: expected contiguous receipt ${index + 1}`);
+    const vote = votes[index];
+    const receiptOrder = Number.isSafeInteger(vote?.receiptOrder) ? vote.receiptOrder : index + 1;
+    const invalid = (detail) => new Error(`Invalid vote record at receiptOrder ${receiptOrder}: ${detail}`);
+    if (!vote || typeof vote !== 'object' || Array.isArray(vote)
+      || Object.keys(vote).length !== RECORD_KEYS.length
+      || !RECORD_KEYS.every((key) => Object.hasOwn(vote, key))) {
+      throw invalid('expected exact collector record keys');
     }
-  }
-
-  const { manifest } = ballot;
-  // Published records are bound to the manifest they were collected for (collector slice 1b).
-  for (const vote of votes) {
-    if (vote.manifestHash !== ballot.manifestHash || vote.ballotId !== manifest.ballotId
+    if (!Number.isSafeInteger(vote.receiptOrder) || vote.receiptOrder !== index + 1) {
+      throw invalid(`Invalid receiptOrder: expected contiguous receipt ${index + 1}`);
+    }
+    for (const key of ['chainId', 'receivedAt', 'issuedAt']) {
+      if (!Number.isSafeInteger(vote[key]) || vote[key] < 0) {
+        throw invalid(`${key} must be a non-negative safe integer`);
+      }
+    }
+    for (const key of ['ballotId', 'manifestHash', 'digest', 'wallet', 'choice', 'signature']) {
+      if (typeof vote[key] !== 'string') throw invalid(`${key} must be a string`);
+    }
+    for (const key of ['manifestHash', 'digest']) {
+      if (!isHexString(vote[key].toLowerCase(), 32)) throw invalid(`${key} must be a bytes32 hash`);
+    }
+    if (vote.manifestHash.toLowerCase() !== ballot.manifestHash.toLowerCase() || vote.ballotId !== manifest.ballotId
       || vote.chainId !== manifest.chainId) {
       throw new Error(`Vote ${vote.receiptOrder} belongs to a different ballot manifest`);
+    }
+    const { domain, types, value } = voteTypedData(ballot, vote.choice, vote.issuedAt);
+    if (vote.digest.toLowerCase() !== TypedDataEncoder.hash(domain, types, value).toLowerCase()) {
+      throw invalid('EIP-712 digest mismatch');
     }
   }
   const chainId = await reader.chainId();
@@ -24,10 +47,13 @@ async function tallyBallot({ ballot, votes, reader }) {
     throw new Error(`Chain ID mismatch: expected ${manifest.chainId}, got ${chainId}`);
   }
   const { height, blockHash } = manifest.snapshot;
-  const actualHash = await reader.blockHash(height);
-  if (typeof actualHash !== 'string' || actualHash.toLowerCase() !== blockHash.toLowerCase()) {
-    throw new Error(`Snapshot block hash mismatch at height ${height}`);
+  async function verifySnapshotHash() {
+    const actualHash = await reader.blockHash(height);
+    if (typeof actualHash !== 'string' || actualHash.toLowerCase() !== blockHash.toLowerCase()) {
+      throw new Error(`Snapshot block hash mismatch at height ${height}`);
+    }
   }
+  await verifySnapshotHash();
 
   const voteSetHash = keccak256(toUtf8Bytes(canonicalJson(votes)));
   const selected = new Map();
@@ -73,8 +99,11 @@ async function tallyBallot({ ballot, votes, reader }) {
     weights[vote.choice] += weight;
     counted.push({ wallet, choice: vote.choice, weight: weight.toString(), receiptOrder: vote.receiptOrder });
   }
+  await verifySnapshotHash();
 
   const participating = weights.yes + weights.no + weights.abstain;
+  if (totalLocked === 0n) throw new Error('Empty snapshot: quorum undefined');
+  if (participating > totalLocked) throw new Error('Weight source inconsistent');
   const decisive = weights.yes + weights.no;
   const { quorum, threshold } = manifest.policy;
   const quorumPassed = participating * BigInt(quorum.denominator) >= totalLocked * BigInt(quorum.numerator);
@@ -102,4 +131,4 @@ async function tallyBallot({ ballot, votes, reader }) {
   };
 }
 
-module.exports = { tallyBallot };
+module.exports = { SELECTION_RULE, tallyBallot };
