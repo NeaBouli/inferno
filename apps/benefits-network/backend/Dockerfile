@@ -28,6 +28,11 @@ COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=builder /app/dist ./dist
 COPY package.json package-lock.json ./
 COPY prisma ./prisma
+# Run as the image's unprivileged node user (external audit IFR-DEV-06). Application files stay
+# root-owned and read-only for it; the SQLite volume (/data) must be owned by uid 1000 before this
+# image starts (see docs/BENEFITS_CAPACITY_RUNBOOK.md, non-root backend).
+USER node
 EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 CMD wget -q -O- http://127.0.0.1:3001/ready | grep -q '"status":"ready"' || exit 1
-CMD ["sh", "-c", "npx prisma migrate deploy && node dist/index.js"]
+# Fail fast with an actionable message when the volume is not writable for uid 1000.
+CMD ["sh", "-c", "if [ ! -w /data ] || { [ -e /data/benefits.db ] && [ ! -w /data/benefits.db ]; }; then echo 'benefits-backend: /data must be owned by uid 1000 (docs/BENEFITS_CAPACITY_RUNBOOK.md, non-root backend)' >&2; exit 78; fi; npx prisma migrate deploy && node dist/index.js"]

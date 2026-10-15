@@ -24,6 +24,7 @@
 | #244 | chai | 6.2.2 | 6.3.0 | Gebuendelt 08.10.2026 (Status-Baseline nachgezogen) | - |
 | #245 | axe-core | 4.13.0 | 4.14.0 | Gebuendelt 08.10.2026 | - |
 | #246 | hardhat | 3.18.0 | 3.18.1 | Gebuendelt 08.10.2026 (Status-Baseline nachgezogen) | - |
+| #289 | hardhat | 3.18.1 | 3.19.0 | Gebuendelt 15.10.2026 (Status-Baseline nachgezogen) | - |
 
 ## Migrationsreihenfolge
 
