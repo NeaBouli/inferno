@@ -342,14 +342,20 @@ for (const app of apps) {
   assert.equal(new Set(baseImages).size, 1, `${app} Docker stages must share one pinned base image`);
 }
 
-// The frontend runner stage drops root (external audit IFR-DEV-06); the backend follows with its
-// volume-ownership migration.
+// Both runner stages drop root (external audit IFR-DEV-06); the backend needs its /data volume
+// owned by uid 1000 first (docs/BENEFITS_CAPACITY_RUNBOOK.md).
 {
   const frontendDocker = fs.readFileSync(path.join(root, 'apps', 'benefits-network', 'frontend', 'Dockerfile'), 'utf8');
   const runner = frontendDocker.slice(frontendDocker.lastIndexOf('\nFROM '));
   assert.match(runner, /^USER node$/m, 'frontend runner stage must run as the unprivileged node user');
   assert.ok(runner.indexOf('USER node') < runner.indexOf('CMD '), 'USER node must precede CMD');
   assert.ok(!/^COPY --from=builder (?!--chown=node:node)/m.test(runner), 'frontend runner files must be owned by node');
+}
+{
+  const backendDocker = fs.readFileSync(path.join(root, 'apps', 'benefits-network', 'backend', 'Dockerfile'), 'utf8');
+  const runner = backendDocker.slice(backendDocker.lastIndexOf('\nFROM '));
+  assert.match(runner, /^USER node$/m, 'backend runner stage must run as the unprivileged node user');
+  assert.ok(runner.indexOf('USER node') < runner.indexOf('CMD '), 'backend USER node must precede CMD');
 }
 
 const workflow = fs.readFileSync(path.join(root, '.github', 'workflows', 'benefits-network.yml'), 'utf8');

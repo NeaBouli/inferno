@@ -133,6 +133,21 @@ With `DEPLOY_MODE=gate` the deploy modes run through the scoped deploy gate (inf
 v2), which applies the same floor and single-backend asserts on the host. Gate mode never
 prunes (the Docker daemon is shared with other projects) and refuses a set `ALLOW_PRUNE`. See [gate mode](COMPOSE_SERVICE_RELEASE.md#gate-mode).
 
+## Non-root Backend (one-time volume ownership)
+
+Since the external audit fix IFR-DEV-06 the backend image runs as the unprivileged `node` user
+(uid 1000). Its SQLite volume `/data` must be owned by uid 1000 **before** the first non-root
+release; with a root-owned volume the new image cannot open `benefits.db` (verified locally:
+`unable to open database file`). The current root image keeps working with a uid-1000-owned
+volume, so the ownership change can run first without downtime:
+
+1. Take a database backup (copy `benefits.db` with the backend running is not consistent; use the
+   SQLite online backup API or stop the backend briefly).
+2. `chown -R 1000:1000` the volume directory of `inferno_benefits-data` (root, owner GO).
+3. Release the backend normally (`EXPECTED_SHA=<sha> scripts/deploy-benefits-network.sh backend`).
+4. Rollback: the deploy script restores the previous root image, which still works with the
+   uid-1000-owned files; the ownership itself needs no rollback.
+
 ## Current Largest Consumers
 
 Largest active images from the latest audit:
