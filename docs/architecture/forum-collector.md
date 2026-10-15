@@ -53,7 +53,8 @@ data. The first slice runs on **Sepolia only** and stays **disabled** until the 
 
 ## Vote (EIP-712)
 
-Domain `{ name: "IFR Forum", version: "1", chainId }` (no verifying contract). Primary type
+Domain `{ name: "IFR Forum", version: "1", chainId, salt }` (no verifying contract), where
+`salt = keccak256(utf8("ifrunit.tech/forum/v1"))` namespaces signatures to this application. Primary type
 `IFRForumVote { bytes32 manifestHash; string ballotId; bytes32 proposalHash; uint256 snapshotHeight; string choice; uint256 issuedAt }`.
 The signer is the voting wallet (EOA in this slice; EIP-1271 wallets are a later slice).
 `issuedAt` orders a wallet's votes; the collector's receipt order breaks exact ties.
@@ -63,11 +64,32 @@ The signer is the voting wallet (EOA in this slice; EIP-1271 wallets are a later
 - Disabled unless `FORUM_ENABLED=1`; only chain IDs in `FORUM_ALLOWED_CHAIN_IDS` (slice 1: `11155111`).
 - `POST` accepts only an open ballot (`opensAt <= now < closesAt`), a listed choice,
   `issuedAt` within the window and not more than 5 minutes in the future, and a signature
-  that recovers to the submitted wallet over the exact typed data. Duplicate signatures are
-  idempotent. Rate-limited per IP and per wallet; bounded body size.
-- Storage: append-only JSONL per ballot (`receiptOrder`, `receivedAt`, wallet, choice,
-  `issuedAt`, signature). No IP address, user agent or other metadata is stored.
-- `GET …/votes` returns the complete set; the published set is the tally input.
+  that recovers to the submitted wallet over the exact typed data. Signatures are normalized
+  with `Signature.from(signature).serialized` before verification and storage. The stored
+  `digest = TypedDataEncoder.hash(domain, types, value)` identifies identical typed data
+  (including choice and issuedAt) per wallet: repeats return the original receipt (200),
+  regardless of signature encoding. Different wallets can sign the same typed data.
+- Rate-limited per IP and per wallet; bounded body size. Each rate-limit map holds at most
+  50000 keys; when full, expired entries are swept and a new key is rejected with 429 if
+  no space is available. A wallet may store at most 20 votes per ballot; additional distinct
+  votes return 429 `Wallet vote limit reached`. Duplicates do not consume stored-vote limits.
+- Storage: append-only JSONL per ballot (`ballotId`, `chainId`, `manifestHash`, `digest`,
+  `receiptOrder`, `receivedAt`, wallet, choice, `issuedAt`, normalized signature). No IP
+  address, user agent or other metadata is stored. One process owns the store. A per-ballot
+  in-memory digest/wallet index, count and wallet counts are hydrated once on first access;
+  appends never re-read the file. Records with a different manifest hash fail the ballot
+  closed with 503 `Ballot manifest changed`, including after a restart.
+- Every append fsyncs the descriptor before closing and returning 201. During hydration,
+  only a trailing line without a newline is truncated and fsynced; the log reports only
+  the discarded byte count. Any other corruption fails closed without changing the file.
+- `FORUM_DATA_DIR` must be absolute and outside the bot application directory (including
+  resolved directory aliases). JSONL files are opened with `O_NOFOLLOW` to refuse symlinks.
+  Existing data directories owned by another UID are refused with 503 and never chmodded;
+  owned directories and vote files retain private modes (0700 and 0600).
+- `GET …/votes?after=<receiptOrder>&limit=<1..1000>` returns `{ records, next }`, ordered by
+  receiptOrder and strictly after the cursor; defaults are after=0 and limit=1000.
+  `next` is the last returned receiptOrder, or null for an empty page. Follow pages until
+  null to obtain the complete published set used as tally input.
 
 ## Tally rules
 

@@ -1,7 +1,9 @@
 const express = require('express');
 const path = require('node:path');
 const { checksumWallet, loadBallot, verifyVote } = require('./ballot');
-const { createVoteStore } = require('./store');
+const { createVoteStore, validateDataDir } = require('./store');
+
+const MAX_RATE_LIMIT_KEYS = 50000;
 
 // Fixed windows, req.ip and Retry-After follow middleware/apiRateLimit.js.
 // The injected clock uses integer Unix seconds throughout the collector.
@@ -9,14 +11,18 @@ function rateLimit({ clock, max, key, reason }) {
   const hits = new Map();
   return (req, res, next) => {
     const now = clock();
-    if (hits.size > 10000) {
-      for (const [id, entry] of hits) {
-        if (now >= entry.resetAt) hits.delete(id);
-      }
-    }
     const id = key(req);
     let entry = hits.get(id);
     if (!entry || now >= entry.resetAt) {
+      if (!entry && hits.size >= MAX_RATE_LIMIT_KEYS) {
+        for (const [storedId, stored] of hits) {
+          if (now >= stored.resetAt) hits.delete(storedId);
+        }
+        if (hits.size >= MAX_RATE_LIMIT_KEYS) {
+          res.set('Retry-After', '60');
+          return res.status(429).json({ error: reason });
+        }
+      }
       entry = { count: 0, resetAt: now + 60 };
       hits.set(id, entry);
     }
@@ -39,7 +45,9 @@ function createForumRouter({
   if (env.FORUM_ENABLED !== '1') return router;
   // Votes must survive releases: without an explicit volume path the collector refuses to run
   // instead of writing into the image filesystem.
-  if (typeof dataDir !== 'string' || !path.isAbsolute(dataDir)) {
+  try {
+    validateDataDir(dataDir);
+  } catch {
     router.use((req, res) => res.status(503).json({ error: 'Forum vote storage not configured' }));
     return router;
   }
@@ -47,6 +55,15 @@ function createForumRouter({
   const allowedChains = new Set((env.FORUM_ALLOWED_CHAIN_IDS ?? '11155111')
     .split(',').map((id) => id.trim()).filter((id) => /^[1-9][0-9]*$/.test(id)));
   const store = createVoteStore({ dataDir, clock });
+  function storeFailure(err, res) {
+    if (err.code === 'FORUM_MANIFEST_CHANGED') return res.status(503).json({ error: err.message });
+    if (err.code === 'FORUM_STORAGE_UNSAFE') {
+      return res.status(503).json({ error: 'Forum vote storage not configured' });
+    }
+    if (err.code === 'FORUM_WALLET_LIMIT') return res.status(429).json({ error: err.message });
+    if (err.code === 'FORUM_RECORD_LIMIT') return res.status(400).json({ error: err.message });
+    return res.status(500).json({ error: 'Vote store unavailable' });
+  }
   router.use(rateLimit({
     clock, max: 20,
     key: (req) => req.ip || req.socket?.remoteAddress || 'unknown',
@@ -66,6 +83,11 @@ function createForumRouter({
     if (!allowedChains.has(String(req.forumBallot.manifest.chainId))) {
       return res.status(400).json({ error: 'Chain not allowed' });
     }
+    try {
+      store.check(req.forumBallot);
+    } catch (err) {
+      return storeFailure(err, res);
+    }
     return next();
   });
 
@@ -83,19 +105,24 @@ function createForumRouter({
     return walletLimit(req, res, next);
   }, (req, res) => {
     try {
-      const { record, duplicate } = store.append(req.params.id, req.body);
+      const { record, duplicate } = store.append(req.forumBallot, req.body);
       return res.status(duplicate ? 200 : 201).json(record);
     } catch (err) {
-      if (err.code === 'FORUM_RECORD_LIMIT') return res.status(400).json({ error: err.message });
-      return res.status(500).json({ error: 'Vote store unavailable' });
+      return storeFailure(err, res);
     }
   });
 
   router.get('/ballots/:id/votes', (req, res) => {
+    const { after = '0', limit = '1000' } = req.query;
+    const integer = (value) => typeof value === 'string' && /^(0|[1-9][0-9]*)$/.test(value)
+      && Number.isSafeInteger(Number(value));
+    if (!integer(after) || !integer(limit) || Number(limit) < 1 || Number(limit) > 1000) {
+      return res.status(400).json({ error: 'Invalid pagination' });
+    }
     try {
-      return res.json(store.read(req.params.id));
-    } catch {
-      return res.status(500).json({ error: 'Vote store unavailable' });
+      return res.json(store.read(req.forumBallot, { after: Number(after), limit: Number(limit) }));
+    } catch (err) {
+      return storeFailure(err, res);
     }
   });
 
@@ -108,4 +135,4 @@ function createForumRouter({
   return router;
 }
 
-module.exports = { createForumRouter };
+module.exports = { createForumRouter, rateLimit, MAX_RATE_LIMIT_KEYS };

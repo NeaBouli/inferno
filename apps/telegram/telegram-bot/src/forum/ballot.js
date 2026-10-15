@@ -1,10 +1,11 @@
 // Frozen forum-ballot-v1 manifests and offline EIP-712 vote verification.
 const fs = require('node:fs');
 const path = require('node:path');
-const { getAddress, isHexString, keccak256, toUtf8Bytes, verifyTypedData } = require('ethers');
+const { getAddress, isHexString, keccak256, Signature, toUtf8Bytes, verifyTypedData } = require('ethers');
 
 const BALLOT_ID_PATTERN = /^FB-[A-Z0-9-]{1,32}$/;
 const CHOICES = ['yes', 'no', 'abstain'];
+const DOMAIN_SALT = keccak256(toUtf8Bytes('ifrunit.tech/forum/v1'));
 const POLICY = {
   selection: 'last-valid',
   quorum: { numerator: 10, denominator: 100, basis: 'total-locked-at-snapshot', comparison: 'gte' },
@@ -110,7 +111,7 @@ function loadBallot(dir, ballotId) {
 function voteTypedData(ballot, choice, issuedAt) {
   const { manifest } = ballot;
   return {
-    domain: { name: 'IFR Forum', version: '1', chainId: manifest.chainId },
+    domain: { name: 'IFR Forum', version: '1', chainId: manifest.chainId, salt: DOMAIN_SALT },
     types: VOTE_TYPES,
     value: {
       manifestHash: ballot.manifestHash,
@@ -143,6 +144,7 @@ function verifyVote({ ballot, wallet, choice, issuedAt, signature, now }) {
     return reject('Invalid signature');
   }
   try {
+    signature = Signature.from(signature).serialized;
     const { domain, types, value } = voteTypedData(ballot, choice, issuedAt);
     const signer = getAddress(verifyTypedData(domain, types, value, signature));
     if (signer.toLowerCase() !== expected.toLowerCase()) return reject('Signer mismatch');

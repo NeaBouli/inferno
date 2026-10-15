@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const test = require('node:test');
-const { Wallet, keccak256, toUtf8Bytes } = require('ethers');
+const { Wallet, Signature, keccak256, toUtf8Bytes } = require('ethers');
 const {
   canonicalJson, manifestHash, validateManifest, loadBallot, voteTypedData, verifyVote,
 } = require('../src/forum/ballot');
@@ -30,7 +30,8 @@ function fixture(t) {
 function signingData(ballot, choice = 'yes', issuedAt = 2000) {
   const m = ballot.manifest;
   return {
-    domain: { name: 'IFR Forum', version: '1', chainId: m.chainId },
+    domain: { name: 'IFR Forum', version: '1', chainId: m.chainId,
+      salt: keccak256(toUtf8Bytes('ifrunit.tech/forum/v1')) },
     types: { IFRForumVote: [
       { name: 'manifestHash', type: 'bytes32' },
       { name: 'ballotId', type: 'string' },
@@ -242,10 +243,26 @@ for (const field of ['manifestHash', 'ballotId', 'proposalHash', 'snapshotHeight
 
 test('signature cannot be replayed on another chain or domain', async (t) => {
   const { ballot } = fixture(t);
-  for (const change of [{ chainId: 1 }, { name: 'Other Forum' }, { version: '2' }]) {
+  for (const change of [{ chainId: 1 }, { name: 'Other Forum' }, { version: '2' }, { salt: `0x${'00'.repeat(32)}` }, { salt: undefined }]) {
     const data = signingData(ballot);
     const signature = await wallet.signTypedData({ ...data.domain, ...change }, data.types, data.value);
     assert.deepEqual(verifyVote({ ballot, wallet: wallet.address, choice: 'yes', issuedAt: 2000, signature, now: 2000 }),
       { ok: false, reason: 'Signer mismatch' });
   }
+});
+
+test('verification accepts canonical, compact and 0/1 recovery encodings', async (t) => {
+  const { ballot } = fixture(t);
+  // Exercise both recovery parities with deterministic Hardhat signatures.
+  const parities = new Set();
+  for (let issuedAt = 2000; issuedAt < 2020 && parities.size < 2; issuedAt += 1) {
+    const vote = await signedVote(ballot, 'yes', issuedAt);
+    const signature = Signature.from(vote.signature);
+    parities.add(signature.yParity);
+    for (const encoded of [signature.serialized, signature.compactSerialized,
+      `${signature.serialized.slice(0, -2)}0${signature.yParity}`]) {
+      assert.deepEqual(verifyVote({ ...vote, signature: encoded }), { ok: true, reason: null });
+    }
+  }
+  assert.deepEqual([...parities].sort(), [0, 1]);
 });
