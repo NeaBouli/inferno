@@ -1,0 +1,47 @@
+{
+  "schema": "forum-ballot-v1",
+  "ballotId": "FB-TEST-0001",
+  "chainId": 11155111,
+  "proposal": {
+    "title": "Sepolia test: exercise the Forum collector",
+    "textFile": "FB-TEST-0001.md",
+    "textHash": "0xd71c79221ad85e37985fe82337196f22e4ea99f43132dd79311b0294b7ba451b"
+  },
+  "choices": [
+    "yes",
+    "no",
+    "abstain"
+  ],
+  "snapshot": {
+    "height": 0,
+    "blockHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "weightSource": {
+    "contract": "0x0000000000000000000000000000000000000001",
+    "method": "lockedBalance(address)"
+  },
+  "window": {
+    "opensAt": 1893456000,
+    "closesAt": 1893542400
+  },
+  "policy": {
+    "selection": "last-valid",
+    "quorum": {
+      "numerator": 10,
+      "denominator": 100,
+      "basis": "total-locked-at-snapshot",
+      "comparison": "gte"
+    },
+    "threshold": {
+      "numerator": 50,
+      "denominator": 100,
+      "basis": "yes-of-yes-plus-no",
+      "comparison": "gt"
+    },
+    "abstain": {
+      "quorum": "include",
+      "threshold": "exclude"
+    },
+    "delegation": "disabled"
+  }
+}

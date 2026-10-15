@@ -8,6 +8,8 @@ COPY package.json package-lock.json* ./
 RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 
 COPY src/ ./src/
+# Frozen Forum ballot manifests (reviewed via PR; served only when FORUM_ENABLED=1).
+COPY forum-ballots/ ./forum-ballots/
 
 RUN addgroup -g 1001 -S ifr && \
     adduser -S ifr -u 1001 -G ifr && \

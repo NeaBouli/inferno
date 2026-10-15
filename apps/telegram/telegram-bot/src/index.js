@@ -228,6 +228,10 @@ if (!/^(none|off|false)$/i.test(trustProxyEnv)) {
   verifyApp.set('trust proxy', trustProxyEnv.split(',').map((s) => s.trim()).filter(Boolean));
 }
 
+if (process.env.FORUM_ENABLED === '1') {
+  verifyApp.use('/api/forum', verifyCors(), require('./forum/routes').createForumRouter());
+}
+
 verifyApp.use(express.json());
 verifyApp.use(verifyCors());
 
