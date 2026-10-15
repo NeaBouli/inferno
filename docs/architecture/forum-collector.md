@@ -161,14 +161,15 @@ The signer is the voting wallet (EOA in this slice; EIP-1271 wallets are a later
   close time in UTC and `advisory; the Council decides`. The first poll after the opening
   delivers the notice if the bot was offline. Do not post stale opening notices after close.
 - Post a `checkpoint` containing count and chain head every `FORUM_CHECKPOINT_HOURS`
-  (default 6, positive hours resolving to whole seconds), anchored to `opensAt`, strictly
+  (default 6, at least 1 hour, resolving to whole seconds), anchored to `opensAt`, strictly
   before close. Deduplicate by the checkpoint's scheduled timestamp. On a delayed poll,
   announce only the latest due checkpoint; never invent historical counts for missed slots.
 - At or after `closesAt`, post `close` once with final count, final chain head and
   `tally follows`. Empty chains publish the manifest hash as their final head.
 - After close, a reviewed PR can add bundled `forum-results/<ballotId>.json`. Only a
   `forum-tally-v1` result bound to the ballot ID/chain, matching `manifestHash` and the
-  current final `chainHead`, is announced. Missing or mismatched results are not announced;
+  current final `chainHead`, and whose `voteSetHash` equals the hash of the collector's own
+  stored receipts, is announced. Missing or mismatched results are not announced;
   later polls can discover a corrected reviewed file. Validate outcome, advisory flag,
   quorum/threshold booleans and vote-set hash; do not recompute the tally in the bot.
   The `result` notice contains outcome, yes/no/abstain totals in IFR with exactly nine

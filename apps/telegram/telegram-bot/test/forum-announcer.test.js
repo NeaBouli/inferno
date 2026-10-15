@@ -175,7 +175,7 @@ test('checkpoint cadence is anchored to opening, honors configuration, and stops
   assert.equal(f.messages.filter(([, text]) => text.startsWith('Forum ballot checkpoint')).length, 2);
 });
 
-test('a result must match manifestHash and chainHead and is never posted before close', async (t) => {
+test('a result must match manifestHash, chainHead and voteSetHash and is never posted before close', async (t) => {
   const f = fixture(t);
   const announcer = f.create();
   f.setNow(f.manifest.window.opensAt);
@@ -185,7 +185,8 @@ test('a result must match manifestHash and chainHead and is never posted before 
   assert.equal(f.messages.length, 1);
   f.setNow(f.manifest.window.closesAt);
   for (const overrides of [{ chainHead: `0x${'11'.repeat(32)}` },
-    { manifestHash: `0x${'22'.repeat(32)}` }, { schema: 'wrong' }, { ballotId: 'FB-OTHER' }]) {
+    { manifestHash: `0x${'22'.repeat(32)}` }, { voteSetHash: `0x${'33'.repeat(32)}` },
+    { schema: 'wrong' }, { ballotId: 'FB-OTHER' }]) {
     await f.publishResult(overrides);
     await announcer.poll();
     assert.equal(f.messages.length, 2);
@@ -309,6 +310,7 @@ test('invalid data paths, journal symlinks and checkpoint intervals fail closed'
   f.setNow(f.manifest.window.opensAt);
   for (const options of [{ dataDir: 'relative' },
     { env: { ...f.options.env, FORUM_CHECKPOINT_HOURS: '0' } },
+    { env: { ...f.options.env, FORUM_CHECKPOINT_HOURS: '0.5' } },
     { env: { ...f.options.env, FORUM_CHECKPOINT_HOURS: 'nonsense' } },
     { env: { ...f.options.env, TELEGRAM_GROUP_ID: '' } }]) {
     await createForumAnnouncer({ ...f.options, ...options }).poll();

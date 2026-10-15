@@ -2,13 +2,14 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const { randomUUID } = require('node:crypto');
-const { isHexString } = require('ethers');
-const { isBallotId, loadBallot } = require('./ballot');
+const { isHexString, keccak256, toUtf8Bytes } = require('ethers');
+const { canonicalJson, isBallotId, loadBallot } = require('./ballot');
 const { createVoteStore, validateDataDir } = require('./store');
 const topicRouter = require('../services/topicRouter');
 const defaultLogger = require('../services/logger');
 
 const POLL_MS = 60000;
+const MIN_CHECKPOINT_SECONDS = 3600;
 
 function formatIfr(value) {
   if (typeof value !== 'string' || !/^(0|[1-9][0-9]*)$/.test(value)) {
@@ -111,7 +112,18 @@ function createForumAnnouncer({
     journal = sent;
   }
 
-  function resultText(ballot, head, label) {
+  function storedVoteSetHash(store, ballot) {
+    const records = [];
+    for (let after = 0; ;) {
+      const page = store.read(ballot, { after, limit: 1000 });
+      records.push(...page.records);
+      if (page.next === null) break;
+      after = page.next;
+    }
+    return keccak256(toUtf8Bytes(canonicalJson(records)));
+  }
+
+  function resultText(store, ballot, head, label) {
     let result;
     try {
       result = JSON.parse(fs.readFileSync(path.join(resultsDir, `${ballot.manifest.ballotId}.json`), 'utf8'));
@@ -122,7 +134,9 @@ function createForumAnnouncer({
     const sameHash = (left, right) => typeof left === 'string' && left.toLowerCase() === right.toLowerCase();
     if (result?.schema !== 'forum-tally-v1' || result.ballotId !== ballot.manifest.ballotId
       || result.chainId !== ballot.manifest.chainId
-      || !sameHash(result.manifestHash, ballot.manifestHash) || !sameHash(result.chainHead, head)) {
+      || !sameHash(result.manifestHash, ballot.manifestHash) || !sameHash(result.chainHead, head)
+      // The reviewed result must be tallied from exactly the receipts this collector holds.
+      || !sameHash(result.voteSetHash, storedVoteSetHash(store, ballot))) {
       logger.warn({ ballotId: ballot.manifest.ballotId }, 'Forum result does not match the collected ballot');
       return null;
     }
@@ -140,7 +154,7 @@ function createForumAnnouncer({
   }
 
   async function check() {
-    if (!Number.isSafeInteger(checkpointSeconds) || checkpointSeconds <= 0) {
+    if (!Number.isSafeInteger(checkpointSeconds) || checkpointSeconds < MIN_CHECKPOINT_SECONDS) {
       throw new Error('Invalid FORUM_CHECKPOINT_HOURS');
     }
     if (!env.TELEGRAM_GROUP_ID) throw new Error('Missing TELEGRAM_GROUP_ID');
@@ -182,7 +196,7 @@ function createForumAnnouncer({
         } else {
           await announce(ballot, 'close', `Forum ballot closed\n${label}\nFinal count: ${count}\n`
             + `Final chain head: ${head}\ntally follows`);
-          const text = resultText(ballot, head, label);
+          const text = resultText(store, ballot, head, label);
           if (text) await announce(ballot, 'result', text);
         }
       } catch {
