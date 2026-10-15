@@ -120,6 +120,7 @@ function createForumRouter({
       return res.status(400).json({ error: 'Invalid pagination' });
     }
     try {
+      // The store includes the full chain head/count, independent of this page's cursor.
       return res.json(store.read(req.forumBallot, { after: Number(after), limit: Number(limit) }));
     } catch (err) {
       return storeFailure(err, res);

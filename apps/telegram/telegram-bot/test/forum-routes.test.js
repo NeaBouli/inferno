@@ -7,8 +7,8 @@ const { Duplex } = require('node:stream');
 const test = require('node:test');
 const vm = require('node:vm');
 const express = require('express');
-const { Wallet, Signature, TypedDataEncoder } = require('ethers');
-const { loadBallot, voteTypedData } = require('../src/forum/ballot');
+const { Wallet, Signature, TypedDataEncoder, keccak256, toUtf8Bytes } = require('ethers');
+const { canonicalJson, loadBallot, voteTypedData } = require('../src/forum/ballot');
 const { createForumRouter, MAX_RATE_LIMIT_KEYS } = require('../src/forum/routes');
 
 // Public Hardhat test key, with no provider. All HTTP below uses streams in memory.
@@ -16,6 +16,10 @@ const wallet = new Wallet('0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae7
 const ballotId = 'FB-TEST-0001';
 const baseUrl = `/api/forum/ballots/${ballotId}`;
 const exampleDir = path.resolve(__dirname, 'fixtures/forum-ballots');
+
+function recordHash(record) {
+  return keccak256(toUtf8Bytes(canonicalJson(record)));
+}
 
 function fixture(t, extraEnv = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ifr-forum-routes-'));
@@ -119,7 +123,7 @@ test('GET manifest exposes the complete manifest, canonical hash and exact propo
   assert.deepEqual(res.json, ballot);
   const votes = await request(app, { url: `${baseUrl}/votes` });
   assert.equal(votes.status, 200);
-  assert.deepEqual(votes.json, { records: [], next: null });
+  assert.deepEqual(votes.json, { records: [], next: null, head: ballot.manifestHash, count: 0 });
 });
 
 test('POST creates a receipt, duplicates return the same receipt and GET publishes every vote', async (t) => {
@@ -130,7 +134,7 @@ test('POST creates a receipt, duplicates return the same receipt and GET publish
   assert.equal(first.status, 201);
   const { domain, types, value } = voteTypedData(ballot, body.choice, body.issuedAt);
   assert.deepEqual(first.json, { receiptOrder: 1, receivedAt: 2000, ...body,
-    ballotId, chainId: ballot.manifest.chainId, manifestHash: ballot.manifestHash,
+    ballotId, chainId: ballot.manifest.chainId, manifestHash: ballot.manifestHash, prevHash: ballot.manifestHash,
     digest: TypedDataEncoder.hash(domain, types, value) });
   setNow(2001);
   const duplicate = await request(app, { method: 'POST', url: `${baseUrl}/votes`, body });
@@ -141,8 +145,9 @@ test('POST creates a receipt, duplicates return the same receipt and GET publish
   assert.equal(second.status, 201);
   assert.equal(second.json.receiptOrder, 2);
   assert.equal(second.json.receivedAt, 2001);
+  assert.equal(second.json.prevHash, recordHash(first.json));
   const all = await request(app, { url: `${baseUrl}/votes` });
-  assert.deepEqual(all.json, { records: [first.json, second.json], next: 2 });
+  assert.deepEqual(all.json, { records: [first.json, second.json], next: 2, head: recordHash(second.json), count: 2 });
   const persisted = fs.readFileSync(path.join(dataDir, `${ballotId}.jsonl`), 'utf8');
   assert.equal(persisted, [first.json, second.json].map((r) => `${JSON.stringify(r)}\n`).join(''));
   assert.doesNotMatch(persisted, /must-not-persist|192\.0\.2\.1|headers|user-agent/);
@@ -400,13 +405,13 @@ test('GET votes pages in receipt order and returns an empty terminal cursor', as
     records.push(res.json);
   }
   const first = await request(app, { url: `${baseUrl}/votes?limit=2` });
-  assert.deepEqual(first.json, { records: records.slice(0, 2), next: 2 });
+  assert.deepEqual(first.json, { records: records.slice(0, 2), next: 2, head: recordHash(records[2]), count: 3 });
   const second = await request(app, { url: `${baseUrl}/votes?after=${first.json.next}&limit=1` });
-  assert.deepEqual(second.json, { records: records.slice(2), next: 3 });
+  assert.deepEqual(second.json, { records: records.slice(2), next: 3, head: recordHash(records[2]), count: 3 });
   const empty = await request(app, { url: `${baseUrl}/votes?after=${second.json.next}` });
-  assert.deepEqual(empty.json, { records: [], next: null });
+  assert.deepEqual(empty.json, { records: [], next: null, head: recordHash(records[2]), count: 3 });
   assert.deepEqual((await request(app, { url: `${baseUrl}/votes?limit=1000` })).json,
-    { records, next: 3 });
+    { records, next: 3, head: recordHash(records[2]), count: 3 });
 });
 
 test('GET votes rejects invalid or repeated pagination parameters', async (t) => {

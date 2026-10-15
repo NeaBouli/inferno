@@ -3,12 +3,13 @@ const { isHexString, keccak256, toUtf8Bytes, TypedDataEncoder } = require('ether
 const { canonicalJson, checksumWallet, verifyVote, voteTypedData } = require('./ballot');
 
 const SELECTION_RULE = 'last-valid = among valid votes of a wallet, greatest issuedAt; ties broken by greatest receiptOrder';
-const RECORD_KEYS = ['ballotId', 'chainId', 'manifestHash', 'digest', 'receiptOrder',
+const RECORD_KEYS = ['ballotId', 'chainId', 'manifestHash', 'digest', 'prevHash', 'receiptOrder',
   'receivedAt', 'wallet', 'choice', 'issuedAt', 'signature'];
 
 async function tallyBallot({ ballot, votes, reader }) {
   if (!Array.isArray(votes)) throw new Error('Votes must be a JSON array');
   const { manifest } = ballot;
+  let chainHead = ballot.manifestHash;
   // The published store is ordered, append-only and starts at receipt 1.
   for (let index = 0; index < votes.length; index += 1) {
     const vote = votes[index];
@@ -27,10 +28,10 @@ async function tallyBallot({ ballot, votes, reader }) {
         throw invalid(`${key} must be a non-negative safe integer`);
       }
     }
-    for (const key of ['ballotId', 'manifestHash', 'digest', 'wallet', 'choice', 'signature']) {
+    for (const key of ['ballotId', 'manifestHash', 'digest', 'prevHash', 'wallet', 'choice', 'signature']) {
       if (typeof vote[key] !== 'string') throw invalid(`${key} must be a string`);
     }
-    for (const key of ['manifestHash', 'digest']) {
+    for (const key of ['manifestHash', 'digest', 'prevHash']) {
       if (!isHexString(vote[key].toLowerCase(), 32)) throw invalid(`${key} must be a bytes32 hash`);
     }
     if (vote.manifestHash.toLowerCase() !== ballot.manifestHash.toLowerCase() || vote.ballotId !== manifest.ballotId
@@ -41,6 +42,10 @@ async function tallyBallot({ ballot, votes, reader }) {
     if (vote.digest.toLowerCase() !== TypedDataEncoder.hash(domain, types, value).toLowerCase()) {
       throw invalid('EIP-712 digest mismatch');
     }
+    if (vote.prevHash.toLowerCase() !== chainHead.toLowerCase()) {
+      throw invalid('hash chain mismatch');
+    }
+    chainHead = keccak256(toUtf8Bytes(canonicalJson(vote)));
   }
   const chainId = await reader.chainId();
   if (BigInt(chainId) !== BigInt(manifest.chainId)) {
@@ -115,6 +120,7 @@ async function tallyBallot({ ballot, votes, reader }) {
     chainId: manifest.chainId,
     snapshot: { height, blockHash },
     manifestHash: ballot.manifestHash,
+    chainHead,
     proposalHash: manifest.proposal.textHash,
     voteSetHash,
     totals: {
