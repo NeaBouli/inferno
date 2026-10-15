@@ -36,7 +36,8 @@ async function main(args = process.argv.slice(2)) {
   if (!Array.isArray(votes)) throw new Error('Votes must be a JSON array');
 
   // Detect the static network from eth_chainId, never from the ballot's claim.
-  const provider = new JsonRpcProvider(values.rpc, undefined, { staticNetwork: true });
+  // Disable caching so the before/after hash checks make distinct RPC reads.
+  const provider = new JsonRpcProvider(values.rpc, undefined, { staticNetwork: true, cacheTimeout: -1 });
   try {
     const reader = {
       async chainId() {
@@ -48,6 +49,8 @@ async function main(args = process.argv.slice(2)) {
         return block.hash;
       },
       async lockedBalance(contract, wallet, height) {
+        // ethers 6.17.0 rejects EIP-1898 { blockHash } call overrides. Use the
+        // height, guarded by tallyBallot's hash checks before and after all reads.
         return new Contract(contract, LOCK_ABI, provider).lockedBalance(wallet, { blockTag: height });
       },
       async totalLocked(contract, height) {
