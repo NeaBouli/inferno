@@ -13,7 +13,8 @@ data. The first slice runs on **Sepolia only** and stays **disabled** until the 
 
 - Weight: IFR locked in IFRLock at a snapshot block announced before the ballot opens; no
   delegation; one lock is counted once.
-- Repeated votes: the **last valid** signed vote per wallet before the close counts.
+- Repeated votes: the valid signed vote per wallet with the greatest `issuedAt` counts;
+  ties use the greatest `receiptOrder`. Receipt must be before the close.
 - Quorum: 10 % of the IFR locked in IFRLock at the snapshot block; abstain counts towards the
   quorum, not towards the result.
 - Announcements: only the IFR bot posts ballots and results, in the Telegram Vote topic (23).
@@ -25,7 +26,7 @@ data. The first slice runs on **Sepolia only** and stays **disabled** until the 
 | 1 | Ballot manifest (frozen) | `apps/telegram/telegram-bot/forum-ballots/<ballotId>.json` + `<ballotId>.md` | Added only by reviewed PR; `proposalHash` = keccak256 of the UTF-8 text; `manifestHash` = keccak256 of the canonical manifest JSON |
 | 2 | Ballot core (pure) | `apps/telegram/telegram-bot/src/forum/ballot.js` | manifest validation, EIP-712 domain/types, vote verification, canonical hashing |
 | 3 | Collector API | bot Express app (`verify-api.ifrunit.tech`) | `GET /api/forum/ballots/:id`, `POST /api/forum/ballots/:id/votes`, `GET /api/forum/ballots/:id/votes`; append-only store on the bot volume |
-| 4 | Tally (CLI) | `apps/telegram/telegram-bot/scripts/forum-tally.js` | reads manifest, published vote set and IFRLock balances at the snapshot block (block-hash pinned); deterministic result JSON with input hashes |
+| 4 | Tally (CLI) | `apps/telegram/telegram-bot/scripts/forum-tally.js` | reads manifest, published vote set and IFRLock balances at the snapshot height, checking its hash before and after all weight reads; deterministic result JSON with input hashes |
 | 5 | Ballot page | `docs/wiki/forum-ballot.html?ballot=<id>` | shows text and hash, connects a wallet, signs the typed data, submits; banner "Sepolia test ballot" |
 | 6 | Announcer | bot scheduler | posts open, close and result in Vote (23) from the manifest schedule and the tally file |
 
@@ -50,6 +51,12 @@ data. The first slice runs on **Sepolia only** and stays **disabled** until the 
   }
 }
 ```
+
+The manifest's `policy.selection` has this fixed meaning:
+**last-valid = among valid votes of a wallet, greatest issuedAt; ties broken by greatest receiptOrder**.
+Validity includes signature verification and receipt within the voting window. An invalid
+later vote cannot replace a valid vote. Quorum includes abstain; the strict threshold only
+compares yes with yes + no. An empty locked snapshot has no defined quorum.
 
 ## Vote (EIP-712)
 
@@ -93,13 +100,33 @@ The signer is the voting wallet (EOA in this slice; EIP-1271 wallets are a later
 
 ## Tally rules
 
-- Read `lockedBalance(wallet)` on the weight contract at `snapshot.height` for every voting
-  wallet and the contract's `totalLocked` at that height; refuse if the block hash differs
-  from the manifest.
-- Keep each wallet's vote with the greatest `issuedAt` (receipt order breaks ties); ignore
-  wallets with zero weight.
+- Require exactly these keys on every published record: `ballotId`, `chainId`, `manifestHash`,
+  `digest`, `receiptOrder`, `receivedAt`, `wallet`, `choice`, `issuedAt`, `signature`.
+  All numeric fields must be non-negative safe integers; receipts must be contiguous from 1.
+  Remaining fields must be strings; `manifestHash` and `digest` must be bytes32 hashes.
+  Bind records to the ballot ID, chain ID and manifest hash, recompute the collector's EIP-712
+  `digest` with `voteTypedData` and `TypedDataEncoder.hash`, and compare both hashes
+  case-insensitively. Malformed records, digest mismatches and records bound to another
+  manifest abort the whole tally with the offending `receiptOrder`, before any RPC reads.
+- Verify the RPC chain ID, then read the hash at `snapshot.height` **before and after all
+  weight reads**; both hashes must match the manifest's `snapshot.blockHash` case-insensitively.
+  Read `totalLocked()` and each selected wallet's `lockedBalance(wallet)` at that height.
+  The pinned ethers v6.17.0 does not support EIP-1898 `{ blockHash }` objects in contract-call
+  `blockTag` overrides, so the CLI uses `blockTag: snapshot.height` with these before/after
+  hash checks. RPC caching is disabled so the second check makes a fresh request. These
+  checks detect a changed end hash; they cannot prove consistency of every intermediate read.
+- Reverify every signature and vote's validity at its recorded `receivedAt`; invalid votes
+  are listed as rejected. Apply **last-valid = among valid votes of a wallet, greatest issuedAt; ties broken by greatest receiptOrder**;
+  ignore wallets with zero weight.
+- Reject `totalLocked === 0n` with `Empty snapshot: quorum undefined`, and reject participating
+  weight greater than `totalLocked` with `Weight source inconsistent`. All weights and quorum
+  arithmetic use bigint, without conversion through JavaScript `number`.
 - Quorum: weight(yes + no + abstain) >= 10 % of `totalLocked`. Threshold: weight(yes) >
   50 % of weight(yes + no). Output: totals, quorum and threshold results, input hashes.
+- Trust assumptions: the RPC is trusted for historical state at the verified block; use an
+  archive node. Results are advisory and re-tallyable by anyone with another RPC.
+  `receivedAt` and `receiptOrder` are collector-attested, rather than wallet-signed. A hash
+  chain over records is planned in the next slice.
 
 ## Slices
 

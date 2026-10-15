@@ -3,9 +3,9 @@ const { spawnSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
-const { Interface, JsonRpcProvider, Wallet, keccak256, toUtf8Bytes } = require('ethers');
+const { Contract, Interface, JsonRpcProvider, Wallet, keccak256, toUtf8Bytes, TypedDataEncoder } = require('ethers');
 const { loadBallot, manifestHash, voteTypedData } = require('../src/forum/ballot');
-const { tallyBallot } = require('../src/forum/tally');
+const { SELECTION_RULE, tallyBallot } = require('../src/forum/tally');
 const { main } = require('../scripts/forum-tally');
 
 // Public Hardhat test keys only; none of these wallets has a provider.
@@ -24,7 +24,8 @@ async function receipt(index, choice, receiptOrder, options = {}) {
   const issuedAt = options.issuedAt ?? now;
   const data = voteTypedData(activeBallot, choice, issuedAt);
   return {
-    ballotId: ballot.manifest.ballotId, chainId: ballot.manifest.chainId, manifestHash: ballot.manifestHash,
+    ballotId: activeBallot.manifest.ballotId, chainId: activeBallot.manifest.chainId,
+    manifestHash: activeBallot.manifestHash, digest: TypedDataEncoder.hash(data.domain, data.types, data.value),
     receiptOrder, receivedAt: (options.clock ?? clock)(),
     wallet: wallets[index].address, choice, issuedAt,
     signature: await wallets[index].signTypedData(data.domain, data.types, data.value),
@@ -32,8 +33,9 @@ async function receipt(index, choice, receiptOrder, options = {}) {
 }
 
 function fakeReader({ balances = [100n, 0n, 0n], total = 1000n,
-  chain = BigInt(ballot.manifest.chainId), hash = ballot.manifest.snapshot.blockHash } = {}) {
+  chain = BigInt(ballot.manifest.chainId), hash = ballot.manifest.snapshot.blockHash, afterHash = hash } = {}) {
   const calls = [];
+  let hashReads = 0;
   const weights = new Map(wallets.map((wallet, index) => [wallet.address.toLowerCase(), balances[index] ?? 0n]));
   return {
     calls,
@@ -41,7 +43,8 @@ function fakeReader({ balances = [100n, 0n, 0n], total = 1000n,
     async blockHash(height) {
       calls.push('blockHash');
       assert.equal(height, ballot.manifest.snapshot.height);
-      return hash;
+      hashReads += 1;
+      return hashReads === 1 ? hash : afterHash;
     },
     async lockedBalance(contract, wallet, height) {
       calls.push(`lockedBalance:${wallet.toLowerCase()}`);
@@ -75,7 +78,7 @@ test('tally exports exact input hashes and lossless decimal totals above Number 
   assert.equal(result.proposalHash, ballot.manifest.proposal.textHash);
   // Independent canonical field order for the published receipt format.
   const canonical = JSON.stringify(votes.map((vote) => ({
-    ballotId: vote.ballotId, chainId: vote.chainId, choice: vote.choice, issuedAt: vote.issuedAt,
+    ballotId: vote.ballotId, chainId: vote.chainId, choice: vote.choice, digest: vote.digest, issuedAt: vote.issuedAt,
     manifestHash: vote.manifestHash, receiptOrder: vote.receiptOrder,
     receivedAt: vote.receivedAt, signature: vote.signature, wallet: vote.wallet,
   })));
@@ -104,9 +107,41 @@ test('snapshot hashes compare case-insensitively and preserve the manifest hash 
   const copy = structuredClone(ballot);
   copy.manifest.snapshot.blockHash = `0x${'ab'.repeat(32)}`;
   copy.manifestHash = manifestHash(copy.manifest);
-  const result = await tallyBallot({ ballot: copy, votes: [],
-    reader: fakeReader({ chain: ballot.manifest.chainId, hash: `0x${'AB'.repeat(32)}` }) });
+  const reader = fakeReader({ hash: `0x${'AB'.repeat(32)}`, afterHash: `0x${'aB'.repeat(32)}` });
+  const result = await tallyBallot({ ballot: copy, votes: [], reader });
   assert.deepEqual(result.snapshot, copy.manifest.snapshot);
+  assert.deepEqual(reader.calls, ['chainId', 'blockHash', 'totalLocked', 'blockHash']);
+});
+
+test('snapshot hash checks surround every weight read, including zero-weight wallets', async () => {
+  const votes = [await receipt(0, 'yes', 1), await receipt(1, 'no', 2)];
+  const reader = fakeReader();
+  await tallyBallot({ ballot, votes, reader });
+  assert.deepEqual(reader.calls, ['chainId', 'blockHash', 'totalLocked',
+    ...wallets.slice(0, 2).map((wallet) => `lockedBalance:${wallet.address.toLowerCase()}`).sort(),
+    'blockHash']);
+});
+
+test('a changed or missing hash after weight reads aborts instead of returning a tally', async () => {
+  const votes = [await receipt(0, 'yes', 1)];
+  for (const afterHash of [`0x${'11'.repeat(32)}`, null]) {
+    const reader = fakeReader({ afterHash });
+    await assert.rejects(tallyBallot({ ballot, votes, reader }), /Snapshot block hash mismatch/);
+    assert.deepEqual(reader.calls, ['chainId', 'blockHash', 'totalLocked',
+      `lockedBalance:${wallets[0].address.toLowerCase()}`, 'blockHash']);
+  }
+});
+
+test('failure of the second snapshot read aborts the tally', async () => {
+  const reader = fakeReader();
+  let reads = 0;
+  reader.blockHash = async () => {
+    reads += 1;
+    if (reads === 2) throw new Error('Snapshot recheck unavailable');
+    return ballot.manifest.snapshot.blockHash;
+  };
+  await assert.rejects(tallyBallot({ ballot, votes: [], reader }), /Snapshot recheck unavailable/);
+  assert.equal(reads, 2);
 });
 
 test('every signature is reverified; rejected later votes cannot replace a valid vote', async () => {
@@ -147,6 +182,8 @@ test('issuedAt validity and future skew are checked at receipt time', async () =
 });
 
 test('last-valid selects greatest issuedAt, then receiptOrder, across wallet casing', async () => {
+  assert.equal(SELECTION_RULE,
+    'last-valid = among valid votes of a wallet, greatest issuedAt; ties broken by greatest receiptOrder');
   const votes = [
     await receipt(0, 'no', 1),
     await receipt(0, 'yes', 2, { issuedAt: now + 10 }),
@@ -207,25 +244,121 @@ test('abstain contributes to quorum while staying outside the threshold denomina
   assert.equal(result.outcome, 'passed');
 });
 
-test('abstain-only and empty vote sets fail the threshold even with quorum', async () => {
+test('abstain-only and empty vote sets fail the threshold at a nonempty snapshot', async () => {
   for (const votes of [[], [await receipt(0, 'abstain', 1)]]) {
-    const result = await tallyBallot({ ballot, votes, reader: fakeReader({ total: 0n }) });
-    assert.equal(result.quorum.passed, true);
+    const result = await tallyBallot({ ballot, votes, reader: fakeReader() });
+    assert.equal(result.quorum.passed, votes.length > 0);
     assert.equal(result.threshold.passed, false);
     assert.equal(result.outcome, 'failed');
     assert.equal(result.advisory, true);
   }
 });
 
+test('zero totalLocked aborts with undefined quorum for empty and nonempty vote sets', async () => {
+  for (const votes of [[], [await receipt(0, 'yes', 1)]]) {
+    const reader = fakeReader({ total: 0n, balances: [0n] });
+    await assert.rejects(tallyBallot({ ballot, votes, reader }),
+      { message: 'Empty snapshot: quorum undefined' });
+    assert.equal(reader.calls.filter((call) => call === 'blockHash').length, 2);
+    assert.equal(reader.calls.at(-1), 'blockHash');
+  }
+});
+
+test('participating weight cannot exceed totalLocked, including abstain and bigint boundaries', async () => {
+  for (const balances of [[101n, 0n, 0n], [50n, 50n, 1n], [2n ** 100n, 0n, 1n]]) {
+    const total = balances[0] === 2n ** 100n ? balances[0] : 100n;
+    const votes = [await receipt(0, 'yes', 1), await receipt(1, 'no', 2), await receipt(2, 'abstain', 3)];
+    const reader = fakeReader({ balances, total });
+    await assert.rejects(tallyBallot({ ballot, votes, reader }),
+      { message: 'Weight source inconsistent' });
+    assert.equal(reader.calls.at(-1), 'blockHash');
+  }
+});
+
+test('participating weight equal to totalLocked is consistent', async () => {
+  const votes = [await receipt(0, 'yes', 1), await receipt(1, 'abstain', 2)];
+  const result = await tallyBallot({ ballot, votes, reader: fakeReader({ balances: [60n, 40n], total: 100n }) });
+  assert.equal(result.totals.participating, '100');
+  assert.equal(result.outcome, 'passed');
+});
+
+test('extra, missing and substituted record keys fail closed at the offending receipt before reads', async () => {
+  const valid = await receipt(0, 'yes', 1);
+  const vote = await receipt(1, 'no', 2);
+  const malformed = [{ ...vote, extra: true }];
+  for (const key of Object.keys(vote)) {
+    const copy = { ...vote };
+    delete copy[key];
+    malformed.push(copy, { ...copy, extra: true });
+  }
+  for (const record of malformed) {
+    const reader = fakeReader();
+    await assert.rejects(tallyBallot({ ballot, votes: [valid, record], reader }),
+      /Invalid vote record at receiptOrder 2: expected exact collector record keys/);
+    assert.deepEqual(reader.calls, []);
+  }
+});
+
+test('malformed record values and unsafe or negative integers abort before reads', async () => {
+  const vote = await receipt(0, 'yes', 1);
+  const malformed = [null, undefined, [], 'vote', 1, true];
+  for (const key of ['chainId', 'receivedAt', 'issuedAt']) {
+    for (const value of [-1, 1.5, Number.MAX_SAFE_INTEGER + 1, Infinity, NaN, '1', null, true, 1n, undefined]) {
+      malformed.push({ ...vote, [key]: value });
+    }
+  }
+  for (const key of ['ballotId', 'manifestHash', 'digest', 'wallet', 'choice', 'signature']) {
+    for (const value of [null, 1, {}, []]) malformed.push({ ...vote, [key]: value });
+  }
+  for (const key of ['manifestHash', 'digest']) {
+    for (const value of ['', '0x12', `0x${'gg'.repeat(32)}`]) malformed.push({ ...vote, [key]: value });
+  }
+  for (const record of malformed) {
+    const reader = fakeReader();
+    await assert.rejects(tallyBallot({ ballot, votes: [record], reader }), /Invalid vote record at receiptOrder 1/);
+    assert.deepEqual(reader.calls, []);
+  }
+});
+
+test('EIP-712 digest mismatches and tampering with its signed fields abort before reads', async () => {
+  const valid = await receipt(0, 'yes', 1);
+  const vote = await receipt(1, 'no', 2);
+  for (const record of [{ ...vote, digest: `0x${'11'.repeat(32)}` },
+    { ...vote, digest: valid.digest }, { ...vote, choice: 'yes' }, { ...vote, issuedAt: now + 1 }]) {
+    const reader = fakeReader();
+    await assert.rejects(tallyBallot({ ballot, votes: [valid, record], reader }),
+      /Invalid vote record at receiptOrder 2: EIP-712 digest mismatch/);
+    assert.deepEqual(reader.calls, []);
+  }
+});
+
+test('manifestHash and digest compare case-insensitively without changing the published vote set', async () => {
+  const original = await receipt(0, 'yes', 1);
+  const votes = [{ ...original,
+    manifestHash: original.manifestHash.toUpperCase(),
+    digest: `0x${original.digest.slice(2).split('').map((char, index) => index % 2 ? char : char.toUpperCase()).join('')}`,
+  }];
+  const before = JSON.stringify(votes);
+  const reader = fakeReader();
+  const result = await tallyBallot({ ballot, votes, reader });
+  assert.equal(result.counted[0].receiptOrder, 1);
+  assert.deepEqual(result.rejected, []);
+  assert.equal(result.manifestHash, ballot.manifestHash);
+  assert.equal(JSON.stringify(votes), before);
+  assert.notEqual(result.voteSetHash,
+    (await tallyBallot({ ballot, votes: [original], reader: fakeReader() })).voteSetHash);
+});
+
 test('non-contiguous, duplicate, reordered and malformed receipt orders throw before reads', async () => {
   const vote = await receipt(0, 'yes', 1);
-  for (const orders of [[0], [2], [1, 3], [1, 1], [2, 1], ['1'], [1.5]]) {
+  for (const orders of [[0], [2], [1, 3], [1, 1], [2, 1], ['1'], [1.5], [-1],
+    [Number.MAX_SAFE_INTEGER + 1], [NaN], [Infinity], [null], [undefined], [true], [1n],
+    [[]], [{}], [{ toString: null }]]) {
     const reader = fakeReader();
     const votes = orders.map((receiptOrder) => ({ ...vote, receiptOrder }));
     await assert.rejects(tallyBallot({ ballot, votes, reader }), /Invalid receiptOrder/);
     assert.deepEqual(reader.calls, []);
   }
-  await assert.rejects(tallyBallot({ ballot, votes: [null], reader: fakeReader() }), /Invalid receiptOrder/);
   await assert.rejects(tallyBallot({ ballot, votes: {}, reader: fakeReader() }), /Votes must be a JSON array/);
 });
 
@@ -271,43 +404,76 @@ const cli = path.resolve(__dirname, '../scripts/forum-tally.js');
 const cliArgs = ['--ballot', ballot.manifest.ballotId, '--ballots-dir', ballotsDir,
   '--votes', 'virtual-votes.json', '--rpc', 'https://rpc.invalid'];
 
-test('CLI detects the real static chain and pins contract calls to the snapshot height, offline', async (t) => {
-  const votes = [await receipt(0, 'yes', 1)];
-  const readFileSync = fs.readFileSync;
-  t.mock.method(fs, 'readFileSync', (file, ...args) => file === 'virtual-votes.json'
-    ? JSON.stringify(votes) : readFileSync(file, ...args));
-  const abi = new Interface([
+test('installed ethers rejects EIP-1898 contract-call blockTag objects before any RPC request', async (t) => {
+  const provider = new JsonRpcProvider('https://rpc.invalid', undefined, { staticNetwork: true });
+  t.mock.method(JsonRpcProvider.prototype, '_send', () => {
+    assert.fail('unsupported blockTag must fail without network access');
+  });
+  const contract = new Contract(ballot.manifest.weightSource.contract, [
     'function lockedBalance(address) view returns (uint256)',
     'function totalLocked() view returns (uint256)',
-  ]);
-  const calls = [];
-  t.mock.method(JsonRpcProvider.prototype, '_send', async function (payload) {
-    assert.equal(this._getOption('staticNetwork'), true);
-    return (Array.isArray(payload) ? payload : [payload]).map(({ id, method, params }) => {
-      calls.push(method);
-      let result;
-      if (method === 'eth_chainId') result = '0xaa36a7';
-      else {
-        assert.equal(method, 'eth_call', 'only read-only RPC methods are allowed');
-        assert.equal(params[0].to, ballot.manifest.weightSource.contract.toLowerCase());
-        assert.equal(params[1], '0x0', 'snapshot height 0 must not become latest');
-        const decoded = abi.parseTransaction({ data: params[0].data });
-        if (decoded.name === 'lockedBalance') assert.equal(decoded.args[0], wallets[0].address);
-        result = abi.encodeFunctionResult(decoded.name, [decoded.name === 'totalLocked' ? 1000n : 100n]);
-      }
-      return { id, jsonrpc: '2.0', result };
-    });
-  });
-  t.mock.method(JsonRpcProvider.prototype, 'getBlock', async (height) => {
-    assert.equal(height, ballot.manifest.snapshot.height);
-    return { hash: ballot.manifest.snapshot.blockHash };
-  });
-  const result = await main(cliArgs);
-  assert.equal(result.outcome, 'passed');
-  assert.equal(result.totals.yes, '100');
-  assert.ok(calls.includes('eth_chainId'));
-  assert.equal(calls.filter((method) => method === 'eth_call').length, 2);
+  ], provider);
+  const overrides = { blockTag: { blockHash: ballot.manifest.snapshot.blockHash } };
+  try {
+    await assert.rejects(contract.totalLocked(overrides), /invalid blockTag/);
+    await assert.rejects(contract.lockedBalance(wallets[0].address, overrides), /invalid blockTag/);
+  } finally {
+    provider.destroy();
+  }
 });
+
+for (const reorg of [false, true]) {
+  test(`CLI uses height-pinned reads and uncached hash checks, ${reorg ? 'rejecting a reorg' : 'offline'}`, async (t) => {
+    const votes = [await receipt(0, 'yes', 1)];
+    const readFileSync = fs.readFileSync;
+    t.mock.method(fs, 'readFileSync', (file, ...args) => file === 'virtual-votes.json'
+      ? JSON.stringify(votes) : readFileSync(file, ...args));
+    const abi = new Interface([
+      'function lockedBalance(address) view returns (uint256)',
+      'function totalLocked() view returns (uint256)',
+    ]);
+    const calls = [];
+    let hashReads = 0;
+    t.mock.method(JsonRpcProvider.prototype, '_send', async function (payload) {
+      assert.equal(this._getOption('staticNetwork'), true);
+      assert.equal(this._getOption('cacheTimeout'), -1, 'both hash checks must bypass the ethers cache');
+      return (Array.isArray(payload) ? payload : [payload]).map(({ id, method, params }) => {
+        calls.push(method);
+        let result;
+        if (method === 'eth_chainId') result = '0xaa36a7';
+        else if (method === 'eth_getBlockByNumber') {
+          assert.deepEqual(params, ['0x0', false]);
+          hashReads += 1;
+          result = {
+            hash: reorg && hashReads === 2 ? `0x${'11'.repeat(32)}` : ballot.manifest.snapshot.blockHash,
+            parentHash: ballot.manifest.snapshot.blockHash,
+            number: '0x0', timestamp: '0x0', difficulty: '0x0', gasLimit: '0x1', gasUsed: '0x0',
+            extraData: '0x', transactions: [],
+          };
+        } else {
+          assert.equal(method, 'eth_call', 'only read-only RPC methods are allowed');
+          assert.equal(params[0].to, ballot.manifest.weightSource.contract.toLowerCase());
+          assert.equal(params[1], '0x0', 'snapshot height 0 must not become latest');
+          const decoded = abi.parseTransaction({ data: params[0].data });
+          if (decoded.name === 'lockedBalance') assert.equal(decoded.args[0], wallets[0].address);
+          result = abi.encodeFunctionResult(decoded.name, [decoded.name === 'totalLocked' ? 1000n : 100n]);
+        }
+        return { id, jsonrpc: '2.0', result };
+      });
+    });
+    if (reorg) {
+      await assert.rejects(main(cliArgs), /Snapshot block hash mismatch/);
+    } else {
+      const result = await main(cliArgs);
+      assert.equal(result.outcome, 'passed');
+      assert.equal(result.totals.yes, '100');
+    }
+    assert.equal(hashReads, 2);
+    assert.equal(calls[0], 'eth_chainId');
+    assert.deepEqual(calls.filter((method) => method !== 'eth_chainId'),
+      ['eth_getBlockByNumber', 'eth_call', 'eth_call', 'eth_getBlockByNumber']);
+  });
+}
 
 test('CLI rejects a remote chain mismatch and missing snapshot without network access', async (t) => {
   const readFileSync = fs.readFileSync;
@@ -346,7 +512,9 @@ test('votes bound to another manifest abort the tally', async () => {
   const vote = await receipt(0, 'yes', 1);
   for (const field of ['manifestHash', 'ballotId', 'chainId']) {
     const tampered = { ...vote, [field]: field === 'chainId' ? 1 : field === 'ballotId' ? 'FB-OTHER' : `0x${'11'.repeat(32)}` };
-    await assert.rejects(tallyBallot({ ballot, votes: [tampered], reader: fakeReader() }), /different ballot manifest/);
+    const reader = fakeReader();
+    await assert.rejects(tallyBallot({ ballot, votes: [tampered], reader }), /Vote 1 belongs to a different ballot manifest/);
+    assert.deepEqual(reader.calls, []);
   }
 });
 
