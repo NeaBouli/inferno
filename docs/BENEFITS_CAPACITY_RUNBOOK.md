@@ -139,18 +139,90 @@ Since the external audit fix IFR-DEV-06 the backend image runs as the unprivileg
 (uid 1000). Its SQLite volume `/data` must be owned by uid 1000 **before** the first non-root
 release; with a root-owned volume the new image cannot open `benefits.db` (verified locally:
 `unable to open database file`). The current root image keeps working with a uid-1000-owned
-volume, so the ownership change can run first without downtime:
+volume. Prepare a maintenance window: the operator tool stops the backend and leaves it stopped.
+Do not release the non-root backend before successful ownership preparation. Do not run a
+concurrent deployment, backup writer, or other host operation against this volume.
 
-1. Take a database backup (copy `benefits.db` with the backend running is not consistent; use the
-   SQLite online backup API or stop the backend briefly).
-2. Immediately before the release, `chown -R 1000:1000` the volume directory (resolve it with
-   `docker inspect inferno-benefits-backend` for the `/data` mount; do not hard-code the name).
-   Transient journal files are deleted on commit; the database file keeps its new owner.
-3. Release the backend normally (`EXPECTED_SHA=<sha> scripts/deploy-benefits-network.sh backend`).
-4. Rollback: the deploy script restores the previous root image (kept as a rollback tag; the
-   script never prunes), which still works with the uid-1000-owned files. If the new image finds
-   the volume not writable it exits 78 with a pointer to this section, the health check fails and
-   the release rolls back. A recreated or new volume needs the same ownership step again.
+Use this order; run host commands from a reviewed checkout containing the tool. The normal
+Benefits app upload does not ship `scripts/ops/`. Host commands are for the root operator,
+not the diagnostic-only agent:
+
+1. **Plan (on the Docker host, read-only):**
+
+   ```bash
+   bash scripts/ops/benefits-backend-volume-ownership.sh plan
+   ```
+
+   The tool resolves `inferno_benefits_data` through Docker and verifies it is the named volume
+   mounted at `/data` by the `benefits-backend` service (`inferno-benefits-backend`). The example
+   Compose file calls its volume `benefits-data`; the live name is `inferno_benefits_data`.
+   It prints every entry's numeric owner and mode, counts by uid, SQLite filenames, free disk,
+   backend state, and the exact apply steps. Check that the existing modes allow uid 1000 to
+   write the database and traverse/write `/data`; the tool preserves modes. Other attached
+   containers, cross-filesystem mounts, symlinks, and hard-linked/special files are refused
+   for review.
+
+2. **Apply (on the Docker host, root only):**
+
+   ```bash
+   bash scripts/ops/benefits-backend-volume-ownership.sh apply
+   ```
+
+   Before stopping anything, it creates a private tar and verified SHA-256 sidecar in
+   `/opt/inferno/backups/benefits-data-<UTC>-prestop.tar{,.sha256}`. This live tar proves backup
+   capability; **do not use it as a consistent SQLite restore point**. It then stops only
+   `inferno-benefits-backend` and creates the authoritative, stopped-backend backup
+   `/opt/inferno/backups/benefits-data-<UTC>.tar{,.sha256}`. Only after both backups succeed does
+   it recursively change the mountpoint and contents to `1000:1000`, restore any permission
+   bits cleared by `chown`, and verify every owner and mode. It never deletes or overwrites
+   backups and never restarts or releases. A repeated apply with all owners already correct
+   is a no-op (no backup or stop). Failures after stopping leave the backend stopped and all
+   artifacts retained for the operator; a partial ownership change requires inspection/retry.
+
+3. **Gate release of the Benefits backend:** prepare the reviewed exact-SHA CI/capacity/rollback
+   evidence and obtain separate release authorization. The current gate requires the previous
+   backend container to be running. The root operator must manually start that existing image
+   after apply, then immediately run the gate release from the clean reviewed checkout with
+   the configured deploy-gate connection:
+
+   ```bash
+   # Root operator, on the Docker host; starts the existing image only:
+   docker start inferno-benefits-backend
+   # Release operator, from the clean checkout with exact-head CI:
+   DEPLOY_MODE=gate EXPECTED_SHA=<full-reviewed-40-char-sha> scripts/deploy-benefits-network.sh backend
+   ```
+
+   Keep the interval short: the previous root image can create new root-owned journal/WAL
+   files. If release is delayed, rerun plan and repeat preparation as needed. The tool prints
+   these commands but executes neither. The existing release gate retains its capacity,
+   single-backend, rollback and health checks.
+
+4. **Postcheck:** both public endpoints must return HTTP 200 and the running container's
+   default user must resolve to uid `1000`:
+
+   ```bash
+   curl --fail --silent --show-error https://shop.ifrunit.tech/api/health
+   curl --fail --silent --show-error https://shop.ifrunit.tech/api/ready
+   docker exec inferno-benefits-backend id -u  # expected: 1000
+   ```
+
+Rollback uses the previous root image retained by the release gate; it still works with the
+uid-1000-owned volume. If the non-root image cannot write `/data`, it exits 78, the health
+check fails, and the release rolls back. A recreated/new volume needs preparation again.
+Backups contain private database data: keep the tar and checksum files private (mode `600`)
+and never paste their contents into logs. Failed/partial backups remain for operator review;
+the tool does not implement retention or restoration.
+
+Tool exit codes: `0` success/no-op; `64` usage or unguarded test overrides; `69` missing tools;
+`73` backup failure; `74` inventory/stop/ownership/mode verification failure; `75` concurrent
+apply; `77` non-root apply; `78` unsafe volume/container/topology configuration.
+
+Local tests: `node scripts/ops/test-benefits-backend-volume-ownership.cjs` (also included in
+`npm run test:release-guards`). They use a temporary directory, real tar archives and PATH
+shims for Docker, root identity and ownership metadata; no production access is required.
+`BENEFITS_VOLUME_PATH` and `BENEFITS_BACKUP_DIR` overrides require
+`BENEFITS_OWNERSHIP_TEST_MODE=1` and are for that harness only. Production uses Docker's
+inspected mountpoint and the fixed `/opt/inferno/backups` directory.
 
 ## Current Largest Consumers
 
