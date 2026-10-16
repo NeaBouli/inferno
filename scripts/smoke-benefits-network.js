@@ -5,6 +5,7 @@ const path = require('path');
 const { createHash } = require('crypto');
 const { ethers: ethersUtils } = require('ethers');
 const { chromium, devices } = require('playwright');
+const tierPreset = require('../docs/specs/ifr-benefits-tiers.v1.json');
 
 const baseUrl = (process.env.BENEFITS_BASE_URL || 'https://shop.ifrunit.tech').replace(/\/$/, '');
 const screenshotDir = process.env.SCREENSHOT_DIR || '';
@@ -1133,17 +1134,18 @@ async function verifyRuleTemplateAuthorization() {
     await page.getByRole('button', { name: 'Use in rule', exact: true }).click();
     assert(await page.getByLabel('Catalog binding').inputValue() === productId, 'catalog product was not selected');
 
-    for (const [templateName, templateLabel] of [
-      ['Welcome benefit', 'Welcome'],
-      ['Member standard', 'Member'],
-      ['Premium access', 'Premium'],
-      ['Event pass', 'Event pass'],
-    ]) {
+    for (const [index, templateName] of ['Welcome benefit', 'Member standard', 'Premium access', 'Event pass'].entries()) {
+      const tier = tierPreset.tiers[index];
       await page.getByRole('button', { name: new RegExp(`^${templateName}`) }).click();
       assert(mutatingRequests.length === 0, `${templateName} triggered a write before Save`);
       assert(await page.getByLabel('Catalog binding').inputValue() === productId, `${templateName} changed the catalog binding`);
-      await expectText(page, `${templateLabel} / Coffee / Bound catalog service`);
+      assert(await page.getByLabel('Minimum locked IFR', { exact: true }).inputValue() === tier.minIFR, `${templateName} differs from the canonical tier`);
+      await expectText(page, `${tier.label} / Coffee / Bound catalog service`);
     }
+    await expectText(page, 'Your changes are partner overrides.');
+    await page.getByLabel('Minimum locked IFR', { exact: true }).fill('1234');
+    await expectText(page, '1,234 IFR is locked');
+    assert(mutatingRequests.length === 0, 'a partner override triggered a write before Save');
 
     await page.getByRole('button', { name: /^Premium access/ }).click();
     const saveRequest = page.waitForRequest((request) => (
@@ -1162,7 +1164,8 @@ async function verifyRuleTemplateAuthorization() {
     assert(saved.body.productId === productId, 'signed Save did not preserve the catalog product ID');
     assert(saved.body.category === 'Coffee', 'signed Save did not preserve the catalog category');
     assert(saved.body.productName === 'Bound catalog service', 'signed Save did not preserve the catalog product name');
-    assert(saved.body.discountPercent === 15 && saved.body.requiredLockIFR === 5000, 'signed Save did not preserve template values');
+    assert(saved.body.label === tierPreset.tiers[2].label, 'signed Save did not preserve the canonical tier label');
+    assert(saved.body.discountPercent === 15 && String(saved.body.requiredLockIFR) === tierPreset.tiers[2].minIFR, 'signed Save did not preserve template values');
     assert(saved.body.minIFRHeld === 0, 'signed Save did not preserve the disabled held-IFR gate');
     assert(saved.body.lockSource === 'ifrlock', 'signed Save did not preserve the safe IFRLock template source');
     assert(saved.headers['x-ifr-wallet'] === sellerWallet, 'signed Save is missing the seller wallet header');
