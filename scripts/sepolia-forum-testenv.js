@@ -10,7 +10,8 @@ const { randomUUID } = require("node:crypto");
 const ethers = require("ethers");
 
 const DIRECTORY = "/Users/gio/.ifr-sepolia-testenv";
-const DEFAULT_RPC = "https://ethereum-sepolia-rpc.publicnode.com";
+// publicnode prunes the genesis block that deploy() pins; nodies serves full history.
+const DEFAULT_RPC = "https://ethereum-sepolia-public.nodies.app";
 const TX_TIMEOUT_MS = 120_000;
 const MIN_TIP = ethers.parseUnits("0.1", "gwei");
 const LOCK_AMOUNTS = ["1000", "500", "250"];
