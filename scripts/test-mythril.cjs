@@ -55,7 +55,7 @@ assert.equal(config.tool.solc, "0.8.28");
 assert.equal(config.tool.solcLinuxAmd64Sha256, "9a0fb7e0db2c0641dbae1c5cc645dc686820c83af516226abb1c0a2f76636f25");
 assert.equal(config.tool.setuptools, "80.10.2");
 assert.equal(config.contracts.length, 19, "all concrete production contracts must be explicit");
-assert.equal(new Set(config.contracts.map((item) => `${item.source}:${item.contract}`)).size, 18);
+assert.equal(new Set(config.contracts.map((item) => `${item.source}:${item.contract}`)).size, 19);
 assert.equal(config.contracts.some((item) => item.source.includes("/mocks/")), false);
 assert.deepEqual(config.analysis.gatedSeverities, ["Critical", "High", "Medium"]);
 assert.deepEqual(config.analysis.informationalSeverities, ["Low"]);
