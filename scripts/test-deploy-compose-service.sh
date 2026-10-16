@@ -20,7 +20,7 @@ mkdir -p "$FAKES" "$HOST/backups" "$DOCKER_STATE/images"
 
 # Clone the current commit and overlay the script under test, so the guards run
 # against a real, clean exact-SHA checkout even before these edits are committed.
-git clone -q --local "$ROOT" "$TMP/repo"
+git clone -q --local --no-hardlinks "$ROOT" "$TMP/repo"
 cp "$ROOT/$SCRIPT" "$TMP/repo/$SCRIPT"
 # Nested source dirs that share a name with a root runtime dir must ship.
 NESTED=(src/data/nested.json src/dist/nested.js src/node_modules/nested/index.js)
@@ -37,7 +37,7 @@ SHA="$(git -C "$REPO" rev-parse HEAD)"
 # Host layout as found read-only on 2026-09-30: plain source copies next to the
 # compose file; remote-only env, SQLite and data files inside a source dir must survive.
 echo "services: {}" > "$HOST/docker-compose.yml"
-for svc in telegram-bot points-backend ai-copilot; do
+for svc in telegram-bot points-backend ai-copilot creator-gateway; do
   mkdir -p "$HOST/$svc/src/data" "$HOST/$svc/node_modules/pkg" "$HOST/$svc/data" "$HOST/$svc/dist"
   echo "FROM node:20" > "$HOST/$svc/Dockerfile"
   echo "old code" > "$HOST/$svc/src/old-only-on-host.js"
@@ -147,8 +147,17 @@ EOF
 cat > "$FAKES/curl" <<'EOF'
 #!/usr/bin/env bash
 url="${@: -1}"; url="${url%%\?*}"
-printf 'curl %s\n' "$url" >> "$LOG"
+method=GET
+while [[ $# -gt 1 ]]; do
+  if [[ "$1" == -X ]]; then method="$2"; shift; fi
+  shift
+done
+printf 'curl %s method=%s\n' "$url" "$method" >> "$LOG"
 case "$url" in
+  */auth/siwe/nonce) printf '%s' "${NONCE_CODE:-200}" ;;
+  */auth/wallet) [[ "$method" == POST ]] || exit 99; printf '%s' "${WALLET_CODE:-404}" ;;
+  */access/check) printf '%s' "${ACCESS_CODE:-401}" ;;
+  */auth/google/callback) printf '%s' "${CALLBACK_CODE:-400}" ;;
   */api/verify/status/1) printf '%s' "${STATUS_CODE:-404}" ;;
   https://verify-api.ifrunit.tech/) printf '404' ;;
   */health) printf '%s' "${HEALTH_CODE:-200}" ;;
@@ -212,6 +221,14 @@ EXPECTED_SHA="$SHA" run 1 "$C" points-backend deploy
 assert_out "HEAD is not"
 git -C "$REPO" reset -q --hard "$SHA"
 refute_log "ssh "
+
+# --- creator hostname validation refuses before any HTTP or host access ---------------
+: > "$LOG"
+CREATOR_GATEWAY_HOST='creator.example.invalid/path' run 1 "$C" creator-gateway verify
+assert_out "CREATOR_GATEWAY_HOST must be a plain DNS hostname"
+CREATOR_GATEWAY_HOST='creator.example.invalid;id' run 1 "$C" creator-gateway plan
+refute_log "ssh "
+refute_log "curl "
 
 # --- env values that reach remote shell strings are allow-listed --------------------
 set +e
@@ -364,6 +381,53 @@ assert_out "copilot-api.ifrunit.tech/api/health returned 502"
 refute_log "ssh "
 refute_log "rsync "
 
+# --- creator public safety checks use the right methods and fail independently ---------
+: > "$LOG"
+run 0 "$C" creator-gateway verify
+assert_log "curl https://creator-api.ifrunit.tech/health method=GET"
+assert_log "curl https://creator-api.ifrunit.tech/auth/siwe/nonce method=GET"
+assert_log "curl https://creator-api.ifrunit.tech/auth/wallet method=POST"
+assert_log "curl https://creator-api.ifrunit.tech/access/check method=GET"
+assert_log "curl https://creator-api.ifrunit.tech/auth/google/callback method=GET"
+HEALTH_CODE=502 run 1 "$C" creator-gateway verify
+NONCE_CODE=404 run 1 "$C" creator-gateway verify
+WALLET_CODE=200 run 1 "$C" creator-gateway verify
+ACCESS_CODE=200 run 1 "$C" creator-gateway verify
+CALLBACK_CODE=200 run 1 "$C" creator-gateway verify
+CREATOR_GATEWAY_HOST=approved.example.invalid run 0 "$C" creator-gateway verify
+assert_log "curl https://approved.example.invalid/health method=GET"
+refute_log "ssh "
+refute_log "rsync "
+
+# --- creator uses the same exact-source backup, deploy and restore guarantees ----------
+: > "$LOG"
+EXPECTED_SHA="$SHA" run 0 "$C" creator-gateway plan
+assert_out "RELEASE_SHA"
+same_tree creator-gateway
+refute_log "compose up"
+# Bootstrap stays deliberately refused: no prior image means no automatic rollback.
+mv "$DOCKER_STATE/images/inferno-creator-gateway:latest" "$TMP/creator.image"
+EXPECTED_SHA="$SHA" run 1 "$C" creator-gateway deploy
+assert_out "nothing to roll back to"
+refute_log "mkdir"
+mv "$TMP/creator.image" "$DOCKER_STATE/images/inferno-creator-gateway:latest"
+WALLET_CODE=200 EXPECTED_SHA="$SHA" run 1 "$C" creator-gateway deploy
+assert_out "rolled back to"
+same_tree creator-gateway
+[[ "$(running creator-gateway)" == sha256:old-creator-gateway ]] || fail "creator did not roll back"
+EXPECTED_SHA="$SHA" run 0 "$C" creator-gateway deploy
+assert_out "released: creator-gateway $SHA"
+[[ "$(cat "$HOST/creator-gateway/RELEASE_SHA")" == "$SHA" ]] || fail "creator release marker missing"
+[[ "$(running creator-gateway)" == "sha256:new-$SHA" ]] || fail "creator container not rebuilt"
+cmp -s "$HOST/creator-gateway/package.json" "$ROOT/apps/creator-gateway/package.json" || fail "creator source not shipped"
+cmp -s "$HOST/creator-gateway/.env" "$TMP/host.before/creator-gateway/.env" || fail "creator env overwritten"
+creator_backup="$(ls -d "$HOST"/backups/creator-gateway-* | tail -1)"
+run 0 "$C" creator-gateway rollback "/opt/inferno/backups/${creator_backup##*/}"
+same_tree creator-gateway
+[[ "$(running creator-gateway)" == sha256:old-creator-gateway ]] || fail "manual creator rollback failed"
+assert_content_only_rsync
+same_tree ai-copilot
+
 # --- rollback accepts only a timestamped backup of the same service -------------------
 : > "$LOG"
 run 1 "$C" points-backend rollback /etc
@@ -406,4 +470,4 @@ done
 [[ "$(running points-backend)" == "sha256:old-points-backend" ]] || fail "manual rollback did not restore the image"
 assert_content_only_rsync
 
-echo "Compose release guards hold: plan/deploy/verify/rollback for telegram-bot, points-backend, ai-copilot"
+echo "Compose release guards hold: plan/deploy/verify/rollback for telegram-bot, points-backend, ai-copilot, creator-gateway"

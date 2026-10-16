@@ -1,9 +1,12 @@
-version: '3.8'
+# Local development only; use docker-compose.production.example.yml for the host.
 services:
   creator-gateway:
     build: .
     ports:
-      - "3005:3005"
+      - "127.0.0.1:3005:3005"
     env_file:
       - .env
+    environment:
+      NODE_ENV: development
+      PORT: "3005"
     restart: unless-stopped

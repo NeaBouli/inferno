@@ -315,6 +315,7 @@ chain before relying on this record.
 Dated snapshot, **11 October 2026 (evening UTC)**, read from the production host through the
 scoped release gate (`DEPLOY_MODE=gate scripts/deploy-compose-service.sh <service> status`) and
 `docker inspect`. Re-read it before relying on it; the gate status is the source of truth.
+The Creator Gateway row records local preparation on 17 October 2026, not a host observation.
 
 | Service | Public surface | Source release (`RELEASE_SHA`) | Running image | Started (UTC) | Notes |
 | --- | --- | --- | --- | --- | --- |
@@ -323,6 +324,7 @@ scoped release gate (`DEPLOY_MODE=gate scripts/deploy-compose-service.sh <servic
 | telegram-bot | `verify-api.ifrunit.tech` | `5c592f77` | `sha256:b7f0b800…` | 2026-10-11 18:54 | Vote topic bot-only; Core Dev/Council for signers + Council |
 | ai-copilot | `copilot-api.ifrunit.tech` | `5c592f77` | `sha256:c2c93091…` | 2026-10-11 18:55 | knowledge: Council/Forum guides, owner-B live |
 | points-backend | `points-api.ifrunit.tech` | `eb28c1ba` | `sha256:3c497856…` | 2026-10-08 23:03 | voucher issuance resumed after the incident pause |
+| creator-gateway | proposed `creator-api.ifrunit.tech` (owner decision) | prepared, not deployed | none | not deployed | [first-release preparation](CREATOR_GATEWAY_DEPLOY.md); Google membership, gate onboarding and bootstrap approval pending |
 | web3-site | `web3.ifrunit.tech` | `50afc5cf` | `sha256:56168782…` | 2026-09-20 08:24 | |
 | Website and Wiki | `ifrunit.tech` | `main` via GitHub Pages | n/a | on every merge to `main` | static `docs/` |
 
