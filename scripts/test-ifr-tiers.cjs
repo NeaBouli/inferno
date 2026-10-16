@@ -121,8 +121,12 @@ async function main() {
   const tierPages = rag.filter((page) => /\bBronze\s+[\d,]+\b/i.test(page.content));
   assert.ok(tierPages.length, 'Copilot RAG must include tier documentation');
   for (const page of tierPages) checkInline(`Copilot RAG ${page.slug}`, page.content);
-  // Telegram roles, legacy SDK/Builder tiers and the unresolved wizard conflict are inventoried
-  // in docs/IFR_TIERS.md. They are separate policies, not copies of this Benefits preset.
+  // The public lock wizard shows the Benefits preset (owner decision 2026-10-17).
+  const wizard = read('docs/wizard/lock.html').replace(/<[^>]+>/g, ' ');
+  checkInline('docs/wizard/lock.html', wizard);
+  assert.doesNotMatch(wizard, /\b(Basic|Pro)\b|(?<![\d,])500 IFR|(?<![\d,])2,000 IFR/, 'wizard must not advertise the retired ladder');
+  // Telegram roles and legacy SDK/Builder tiers are inventoried in docs/IFR_TIERS.md.
+  // They are separate policies, not copies of this Benefits preset.
   console.log('[ifr-tiers] PASS canonical data, app/package copies, starter defaults, Wiki, docs and Copilot RAG');
 }
 
