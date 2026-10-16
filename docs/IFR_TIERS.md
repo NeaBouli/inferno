@@ -48,7 +48,7 @@ test fixtures and historical audit/change records do not define current policy.
 | `apps/ai-copilot/server/builder-score.ts` | Recommends a minimum of 500; no tier ladder | Builder scoring guidance, not protocol Benefits tiers |
 | `apps/telegram/telegram-bot/src/services/onChainReader.js`, `verificationStore.js` in the same directory; `src/commands/verify.js`; `docs/wiki/verify.html` | Signer: Safe owner; Council: allowlist; Builder: registry/allowlist; Voter: locked IFR > 0; Community: fallback | Telegram authorization roles, not monetary Benefits tiers; preserved |
 | `contracts/partner/PartnerVault.sol`, `docs/PARTNER_INTEGRATION_SPEC.md` | `uint8 tier` (0–255); no locked-IFR threshold | Governance-assigned partner metadata, not customer Benefits tiers |
-| `docs/wizard/lock.html` | Basic 500 / Premium 2,000 / Pro 10,000 | Unresolved public product-policy conflict; see owner decision below |
+| `docs/wizard/lock.html` | Bronze 1,000 / Silver 2,500 / Gold 5,000 / Platinum 10,000 | Public lock wizard; aligned with the Benefits preset (owner decision 2026-10-17); checked by `scripts/test-ifr-tiers.cjs` |
 
 ## Conflicts and owner decisions
 
@@ -56,13 +56,11 @@ test fixtures and historical audit/change records do not define current policy.
   500 / 1,000 / 5,000 / 10,000 and labels Welcome/Member/Premium/Event pass. New drafts
   now use B/S/G/P from the published preset. Discount percentages and other template
   choices remain partner defaults; editing and saving a custom threshold is allowed.
-- **Wizard policy (owner decision required):** `docs/wizard/lock.html` advertises
-  Basic/Premium/Pro at 500 / 2,000 / 10,000 for CommitmentVault access, with voting,
-  fee and feature promises. It does not identify itself as a legacy or partner override.
-  The owner must decide whether to retire it, explicitly document a separate product
-  policy, or align it with the Benefits preset and an approved lock-source policy.
-  Its names, amounts and behavior remain unchanged. It is excluded from preset equality
-  checks while this conflict is unresolved; this document does not endorse its claims.
+- **Wizard policy (resolved 2026-10-17):** the owner decided to align `docs/wizard/lock.html`
+  with the Benefits preset. It previously advertised Basic/Premium/Pro at 500 / 2,000 / 10,000
+  with voting, fee and feature promises; it now shows Bronze/Silver/Gold/Platinum, locks in
+  IFRLock, states that partners define benefits, and makes no fee, support or governance-right
+  claims. The tier consistency test covers it.
 - **CWA-77 history:** `docs/community-audits/cwa-remediation-register.json` and its
   generated Markdown retain historical verification text naming the old
   Basic/Premium/Pro Copilot ladder. Current `copilot-policy.ts`, the SDK README and
