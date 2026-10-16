@@ -12,6 +12,7 @@ const ethers = require("ethers");
 const DIRECTORY = "/Users/gio/.ifr-sepolia-testenv";
 const DEFAULT_RPC = "https://ethereum-sepolia-rpc.publicnode.com";
 const TX_TIMEOUT_MS = 120_000;
+const MIN_TIP = ethers.parseUnits("0.1", "gwei");
 const LOCK_AMOUNTS = ["1000", "500", "250"];
 const VOTER_ETH = ethers.parseEther("0.01");
 const ROOT = path.resolve(__dirname, "..");
@@ -165,7 +166,12 @@ async function deploy({ directory = DIRECTORY, provider, artifacts,
           // its hash and nonce, including after a timeout or process interruption.
           const nonce = Number(BigInt(await provider.send("eth_getTransactionCount", [signer.address, "pending"])));
           signal.throwIfAborted();
-          const transaction = await signer.populateTransaction({ ...request, nonce, chainId });
+          // Near-zero suggested tips are not propagated by public Sepolia RPCs; enforce a floor.
+          const fees = await provider.getFeeData();
+          const latest = await provider.getBlock("latest");
+          const tip = fees.maxPriorityFeePerGas > MIN_TIP ? fees.maxPriorityFeePerGas : MIN_TIP;
+          const transaction = await signer.populateTransaction({ ...request, nonce, chainId,
+            maxPriorityFeePerGas: tip, maxFeePerGas: latest.baseFeePerGas * 2n + tip });
           signal.throwIfAborted();
           const rawTransaction = await signer.signTransaction(transaction);
           signal.throwIfAborted();
@@ -196,7 +202,11 @@ async function deploy({ directory = DIRECTORY, provider, artifacts,
     } catch (error) {
       if (error instanceof TestenvError) throw error;
       // RPC/ethers errors may contain signed transactions or provider credentials.
-      throw new TestenvError(`${name} failed; progress is saved. Check RPC/funding and rerun deploy.`);
+      // Only the provider's error text, with any long hex (signed payloads) removed.
+      const detail = String(error?.info?.error?.message || error?.error?.message || error?.shortMessage || "")
+        .replace(/0x[0-9a-fA-F]{66,}/g, "0x…").slice(0, 200);
+      throw new TestenvError(`${name} failed; progress is saved. Check RPC/funding and rerun deploy.`
+        + (detail ? ` RPC said: ${detail}` : ""));
     }
   }
 
