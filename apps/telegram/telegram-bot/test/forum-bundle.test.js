@@ -22,4 +22,6 @@ test('the image bundles both reviewed ballots and reviewed results', () => {
   assert.match(dockerfile, /^COPY forum-ballots\/ \.\/forum-ballots\/$/m);
   assert.match(dockerfile, /^COPY forum-results\/ \.\/forum-results\/$/m);
   assert.ok(fs.existsSync(path.join(appDir, 'forum-results')), 'forum-results must exist for the COPY');
+  // A fresh named volume at FORUM_DATA_DIR inherits the image's owner (uid 1001) and 0700.
+  assert.match(dockerfile, /^RUN mkdir -p \/data\/forum && chown ifr:ifr \/data\/forum && chmod 700 \/data\/forum$/m);
 });

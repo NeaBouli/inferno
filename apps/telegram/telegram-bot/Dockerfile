@@ -17,6 +17,9 @@ RUN addgroup -g 1001 -S ifr && \
     adduser -S ifr -u 1001 -G ifr && \
     chown -R ifr:ifr /app
 
+# FORUM_DATA_DIR mount point: a fresh named volume inherits this owner and mode.
+RUN mkdir -p /data/forum && chown ifr:ifr /data/forum && chmod 700 /data/forum
+
 USER ifr
 
 HEALTHCHECK --interval=60s --timeout=5s --start-period=20s --retries=3 \
