@@ -915,7 +915,7 @@ lock.lockWithType(amount, partnerPremium);</code></pre>
           <div class="arch-layer-label">Layer 2 &mdash; Bridge Layer (Stateless)</div>
           <div class="arch-layer-title">License Resolver Service</div>
           <div class="arch-layer-desc">
-            Maps wallet addresses to product entitlements. Queries <code>isLocked()</code> on each request &mdash; fully stateless, no database. Privacy-neutral: knows wallets but not identities.
+            Maps wallet addresses to product entitlements. Queries <code>isLocked()</code> on each request &mdash; fully stateless, no database. No names or emails are required for the lock check; public wallet addresses are processed as pseudonymous identifiers.
           </div>
         </div>
 

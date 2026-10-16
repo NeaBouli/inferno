@@ -31,8 +31,10 @@ Inferno introduces a new access model:
 
 Instead of paying monthly, users lock IFR once (Lock).
 Locked tokens remain the property of the user.
-As long as locked, automatic premium access to all builder products.
-Unlocking is possible at any time — access ends, tokens returned.
+Access depends on each participating product's required IFR amount remaining locked
+and that integration remaining available; a lock does not unlock every builder product.
+IFRLock can be unlocked at any time — lock-based access ends and tokens are returned.
+CommitmentVault tranches are separate locks and remain subject to their unlock conditions.
 
 Analogy: Like a security deposit. You don't spend the money — you deposit it.
 And as long as the deposit is in place, you're in.
@@ -44,7 +46,7 @@ And as long as the deposit is in place, you're in.
 Every standard IFR transfer between non-exempt addresses automatically applies:
 - 2.0% burned from sender (permanent)
 - 0.5% burned from recipient (permanent)
-- 1.0% to protocol pool
+- 1.0% to BuybackController since Proposal #21 (5 October 2026), previously FeeRouterV1
 - Total: 3.5% per standard non-exempt transfer, of which 2.5% is real permanent burn
 
 Maximum fee: 5% (enforced in the smart contract, immutable)
@@ -53,7 +55,9 @@ Result: The supply can only decrease, never increase.
 
 Example:
 If you send 10,000 IFR, the recipient receives 9,650 IFR.
-250 IFR are destroyed forever. 100 IFR go to the pool.
+250 IFR are destroyed forever. 100 IFR go to the configured pool-fee receiver.
+BuybackVault is dormant; no active buyback/burn flywheel is fed by this IFR pool fee.
+BuybackController execution requires separate ETH funding and its configured execution conditions.
 
 ### Core Principle: Lock > Transfer
 
@@ -111,7 +115,8 @@ Total supply: 1,000,000,000 IFR (1 billion, one-time, no minting)
 
 ### Community Fair Launch Model (CFLM)
 
-Fair Launch: No presale, no VC rounds, no insider advantages.
+Fair Launch: No presale or VC rounds; the disclosed 15% team allocation is vested.
+The public Bootstrap ended and finalized on 5 June 2026, creating the Uniswap V2 pool.
 
 Why? Most token projects sell early to VCs and insiders —
 who then immediately sell (dump) at launch. Inferno does the opposite:
@@ -131,7 +136,7 @@ Comparison with other projects:
 | **Inferno (IFR)** | **No** | **0%** | **46% (40% DEX + 6% Grants)** |
 
 Team tokens (15%) are secured by a 4-year vesting contract
-with a 12-month cliff. Until January 2027, not a single team token
+with a 12-month cliff. Until March 2027, not a single team token
 can be released. Verifiable:
 https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271
 
@@ -140,14 +145,11 @@ https://etherscan.io/address/0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271
 ## 5. Builder Ecosystem
 
 ### How Builders Earn IFR
-When a user locks IFR for a builder's product:
-1. The builder automatically receives a percentage of the locked amount
-2. Reward rate: 10-20% (policy target), hard bounds 5-25%
-3. Rewards vest linearly over 6-12 months
-4. Annual emission limit: 4M IFR (bounds: 1-10M)
-
-Why deflationary: Users always lock more IFR than builders receive.
-At 15% reward: 1,000 IFR locked -> 150 IFR reward -> net 850 IFR more bound.
+Partner rewards are planned, not active; no pilot partner is activated:
+1. Locks alone earn no rewards; Model B rewards verified checkout redemptions.
+2. Partners require governance registration and a fixed allocation.
+3. Per-period Governance `recordMilestone` is required for PartnerVault settlement.
+4. Creating a seller profile does not activate rewards.
 
 ### IFR Benefits Network
 
@@ -191,7 +193,8 @@ Single source of truth. No app knowledge, no user IDs.
 
 **Bridge Layer (Stateless)**
 License Resolver: translates wallet queries into access checks.
-Privacy-neutral: no personal data stored.
+No names or emails are required for the lock check; public wallet addresses are
+processed as pseudonymous identifiers. A stateless resolver does not persist those queries.
 
 **Off-Chain (Builder Apps)**
 Each app decides independently what lock amount qualifies for premium access.
@@ -235,10 +238,10 @@ No trust required — only code and chain.
 
 | Phase | Status | Content |
 |-------|--------|---------|
-| Phase 0 — Bootstrap | Complete | Sepolia testnet, all contracts live |
-| Phase 1 — Launch | Complete | Mainnet deployed (2026-03-05), 17 on-chain components verified |
-| Phase 2 — Multisig | In Progress | Governance migration to Gnosis Safe |
-| Phase 3 — Growth | Planned | Ecosystem expansion, Benefits Network, guarded automation |
+| Phase 0 — Bootstrap | Complete | Public Bootstrap finalized on 5 June 2026; Uniswap V2 IFR/WETH pool created |
+| Phase 1 — Launch | Complete | Mainnet deployed (2026-03-05); 15 deployed protocol contracts plus 3 Gnosis Safes, including legacy and dormant components |
+| Phase 2 — Multisig | Complete | Treasury, Community and LP Reserve Safes use 3-of-5 control |
+| Phase 3 — Growth | In Progress | Web3 and Benefits public surfaces available; partner rewards inactive, independent professional third-party audit pending |
 | Phase 4 — DAO | Long-term | Community governance |
 
 ---
@@ -247,9 +250,9 @@ No trust required — only code and chain.
 
 - Real user retention: Users with locked tokens don't churn
 - No subscription management: Lock on-chain, no backend needed
-- Token incentives: Builders receive IFR from the 40M builder pool
+- Token incentives: 40M IFR PartnerVault pool; rewards require governance activation and are not active
 - Simple integration: isLocked() — one API call
-- Privacy: No wallet data stored
+- Data minimization: lock checks process public wallet addresses as pseudonymous identifiers; no names or emails are required
 - Permissionless: Anyone can integrate
 
 Interested? See docs/PARTNER_INTEGRATION_SPEC.md

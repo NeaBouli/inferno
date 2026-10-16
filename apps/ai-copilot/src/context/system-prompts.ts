@@ -2,26 +2,13 @@ import { getIFRKnowledge } from "./ifr-knowledge";
 import { ACCESS_TIER_SUMMARY } from "./copilot-policy";
 
 function getBootstrapPromptBlock(): string {
-  const END = new Date("2026-06-05T00:00:00Z").getTime();
-  const now = Date.now();
-
-  if (now < END) {
-    return `BOOTSTRAP STATUS: NOW ACTIVE
-- Bootstrap phase is LIVE since 07.03.2026 | Ends: June 5, 2026
-- Users CAN contribute 0.01–2 ETH RIGHT NOW
-- Direct them to: ifrunit.tech/wiki/bootstrap.html
-- Vault: 0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141
-- 200M IFR allocated, 100% of ETH goes to Uniswap LP
-- Pro-rata distribution at close`;
-  } else {
-    return `BOOTSTRAP STATUS: ENDED (05.06.2026 23:51 UTC)
+  return `BOOTSTRAP STATUS: ENDED (05.06.2026 23:51 UTC)
 - Bootstrap FINALIZED. finalise() executed. IFR is now live on Uniswap V2.
 - 0.030 ETH raised. 100M IFR + 0.030 ETH paired as LP; 100M IFR reserved for contributor claims.
 - LP Token: 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0. Team.Finance was disabled on Mainnet; LP remains in BootstrapVaultV3, which exposes no LP withdrawal function.
 - Proposal #15 setFeeExempt(LP Token, true) and Proposal #16 setP0(CommitmentVault) were executed in June 2026.
 - Buy IFR: https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B
 - Direct users to Uniswap or ifrunit.tech for current info.`;
-  }
 }
 
 function buildPrompts() {
@@ -146,7 +133,7 @@ Contract Addresses (Mainnet):
 - Governance: 0xc43d48E7FDA576C5022d0670B652A622E8caD041
 - IFRLock: 0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb
 - BurnReserve: 0xaA1496133B6c274190A2113410B501C5802b6fCF
-- BuybackVault: 0x670D293e3D65f96171c10DdC8d88B96b0570F812
+- BuybackVault: 0x670D293e3D65f96171c10DdC8d88B96b0570F812 — dormant; no active buyback/burn flywheel is fed by the IFR pool fee. BuybackController execution requires separate ETH funding and its configured execution conditions.
 - PartnerVault: 0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D
 - FeeRouterV1: 0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a
 - Vesting: 0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271
@@ -157,7 +144,7 @@ Contract Addresses (Mainnet):
 Phase 3 (DEPLOYED — April 2026):
 - CommitmentVaultV2: 0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F — DEPLOYED 02.10.2026, feeExempt since 04.10.2026 (Proposal #17); new locks are TIME_ONLY and go here.
 - CommitmentVault (V1, legacy): 0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3 — existing tranches unlock through V1 only, no new locks; irrevocable lock, 4 condition types, feeExempt active. Wiki: ifrunit.tech/wiki/commitment-vault.html
-- LendingVault: 0x974305Ab0EC905172e697271C3d7d385194EB9DF — IFR lending against ETH collateral, feeExempt active. Wiki: ifrunit.tech/wiki/lending-vault.html
+- LendingVault: 0x974305Ab0EC905172e697271C3d7d385194EB9DF — V1 creation/increase and new borrowing are permanently retired in official interfaces, regardless of price. Full-available withdrawal and existing-loan repayment/top-up remain available; underlying contract functions are not removed. Wiki: ifrunit.tech/wiki/lending-vault.html
 - Vault safety: a read-only four-hour monitor checks both vault fee exemptions and custody coverage. CommitmentVault balance is compared with totalLocked; LendingVault liquid balance is compared with totalAvailable while totalLent is a borrower-held receivable. Both were exactly covered at Mainnet block 25900438. V2 hardening remains future work.
 - BuybackController: 0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c — DEPLOYED 14.04.2026, feeExempt since 16.04.2026 (Proposal #13), native-ETH feeCollector on FeeRouterV1 since 18.04.2026 (Proposal #14). Execution is trigger-, cooldown-, pause- and balance-dependent; IFR transfer-pool fees held by FeeRouterV1 are not forwarded automatically. Since Proposal #21 (executed 05.10.2026, block 26124660) InfernoToken.poolFeeReceiver is BuybackController; new IFR pool fees are recoverable there through governed withdrawIFR. FeeRouterV1 held 734,545.074097347 IFR as of that block; on 07.10.2026 (block 26143797) the Treasury Safe recovered that IFR held by FeeRouterV1 with the governed CWA-02 batch (Proposals #22/#23), and FeeRouterV1 held 0 IFR at block 26151369. The recovered IFR is unallocated Treasury IFR (no allocation decision, not a budget). FeeRouterV1 still has no IFR withdrawal function; IFR sent to it directly would again be stuck unless recovered by another governed batch. Permanently lost IFR is only CV-01: 26,418,467.994338353 IFR (2.651% of totalSupply at block 26151369), not burned.
 - LP Strategy: phased addition, not all 400M at once. Wiki: ifrunit.tech/wiki/lp-strategy.html

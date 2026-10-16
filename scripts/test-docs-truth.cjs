@@ -237,4 +237,101 @@ for (const evidence of [
   assert.ok(fs.existsSync(path.join(root, evidence)), `inventory evidence missing: ${evidence}`);
 }
 
-console.log("[docs-truth] PASS - 15 contracts + 3 Safes = 18; 700 contract tests; dated browser evidence; Forum advisory boundary; historical coverage labelled; 7 deployment units");
+// Public claims must retain the accepted capability boundaries, including copies used by the Copilot.
+// Historical audit submissions and deprecated documents are deliberately outside this current-copy corpus.
+const claimSurfaces = [
+  "README.md", "docs/PRESS_KIT.md", "docs/WHITEPAPER.md", "docs/index.html", "docs/llms.txt",
+  ...["docs/wiki", "docs/web3", "docs/wizard"].flatMap((directory) =>
+    fs.readdirSync(path.join(root, directory))
+      .filter((file) => file.endsWith(".html"))
+      .map((file) => `${directory}/${file}`)
+  ),
+  ...fs.readdirSync(path.join(root, "apps/ai-copilot/src/context"))
+    .filter((file) => /\.(?:ts|json)$/.test(file))
+    .map((file) => `apps/ai-copilot/src/context/${file}`),
+];
+const stalePublicClaims = [
+  /no insider allocations?\b/i,
+  /no private allocation\b/i,
+  /direct Uniswap V2 listing.{0,50}day one/i,
+  /buyback loop from protocol fees adds further pressure/i,
+  /automatic premium access to all builder products/i,
+  /access (?:tiers )?across all partner products/i,
+  /no personal data (?:stored|processed)/i,
+  /no wallet data stored/i,
+  /no privacy concerns/i,
+  /create\/increase LendingVault offers/i,
+  /create or increase LendingVault offers/i,
+  /borrow when on-chain pricing is active/i,
+  /lock with time or price conditions/i,
+  /guided lender flow:.*create offer/i,
+  /the builder automatically receives a percentage of the locked amount/i,
+  /Bootstrap (?:is |phase is )?LIVE since/i,
+  /BOOTSTRAP STATUS: NOW ACTIVE/i,
+];
+function assertCurrentPublicClaims(content, label) {
+  // Join prose across HTML tags, Markdown emphasis and line breaks without discarding FAQ scripts.
+  const prose = content.replace(/<[^>]*>/g, " ").replace(/\*/g, "").replace(/\s+/g, " ");
+  for (const pattern of stalePublicClaims) {
+    assert.ok(!pattern.test(prose), `${label} contains a superseded public claim: ${pattern}`);
+  }
+}
+for (const relative of claimSurfaces) assertCurrentPublicClaims(read(relative), relative);
+
+// Negative fixtures prove the guards reject the actual contradictions, including HTML and wrapped prose.
+for (const stale of [
+  "No insider allocations.", "no private allocation.",
+  "<strong>Direct Uniswap V2 Listing</strong> &mdash; permissionless, day one",
+  "A buyback loop from protocol fees adds further pressure.",
+  "As long as locked, automatic premium access to all builder products.",
+  "Gain access tiers across all partner products.",
+  "Unlock Bronze / Silver / Gold / Platinum access across all partner products.",
+  "Privacy-neutral: no personal data stored.", "No personal data processed",
+  "Privacy: No wallet data stored", "No privacy concerns.",
+  "create/increase LendingVault offers", "create or increase LendingVault offers",
+  "borrow when on-chain pricing is active", "lock with time or price conditions",
+  "Guided lender flow: connect, choose amount, approve, create offer, verify market status.",
+  "The builder automatically receives a percentage\nof the locked amount",
+  "Bootstrap is LIVE since 07.03.2026", "BOOTSTRAP STATUS: NOW ACTIVE",
+]) assert.throws(() => assertCurrentPublicClaims(stale, "negative fixture"), { name: "AssertionError" });
+for (const accurate of [
+  "No names or emails required; public wallet addresses are processed as pseudonymous identifiers.",
+  "The Benefits backend stores no customer wallet addresses, but processes them to check eligibility.",
+  "BuybackVault is dormant; no active buyback/burn flywheel is fed by the IFR pool fee.",
+  "LendingVault V1 creation/increase and new borrowing are permanently retired in official interfaces.",
+]) assertCurrentPublicClaims(accurate, "positive fixture");
+
+const requiredClaimBoundaries = [
+  ["README.md", ["15% team allocation is vested", "Bootstrap ended and finalized on 5 June 2026", "After the separately governed FeeRouterV1 recovery, the Treasury Safe held 734,545.074097347 IFR at block 26,151,369", "No buyback/burn flywheel is fed by the pool fee today"]],
+  ["docs/PRESS_KIT.md", ["15% team allocation is vested", "Bootstrap ended and finalized on 5 June 2026", "BuybackVault is dormant", "no active buyback/burn flywheel", "no pilot partner is activated", "no production deployment record"]],
+  ["docs/WHITEPAPER.md", ["each participating product's required IFR amount remaining locked", "a lock does not unlock every builder product", "IFRLock can be unlocked at any time", "CommitmentVault tranches are separate locks", "Until March 2027", "Locks alone earn no rewards", "recordMilestone", "no pilot partner is activated", "BuybackVault is dormant", "no active buyback/burn flywheel", "15 deployed protocol contracts plus 3 Gnosis Safes", "Phase 2 — Multisig | Complete", "Phase 3 — Growth | In Progress", "public wallet addresses are", "pseudonymous identifiers"]],
+  ["docs/index.html", ["15% team allocation is vested", "Bootstrap finalized 5 June 2026", "BuybackVault is dormant", "no active buyback/burn flywheel", "New CommitmentVault locks are TIME_ONLY in V2", "no new offers, increases or borrowing", "withdrawals and existing-loan repayment/top-up remain available", "New TIME_ONLY locks use V2", "Price-conditioned locks are unavailable", "Withdraw the full available unlent amount", "New borrowing is disabled", "public wallet addresses are processed as pseudonymous identifiers"]],
+  ["docs/wiki/fair-launch.html", ["Public Bootstrap, then Uniswap V2", "finalized on 5 June 2026", "pool was created separately with 100M IFR + 0.030 ETH"]],
+  ["docs/wiki/press-kit.html", ["15% team allocation is vested", "Bootstrap finalized on 5 June 2026", "Bootstrap liquidity followed in Q2", "Partner activation remains open", "Access depends on each participating product's required amount remaining locked"]],
+  ["docs/wiki/one-pager.html", ["BuybackVault is dormant", "no active buyback/burn flywheel", "each participating product sets its own required amount"]],
+  ["docs/wiki/index.html", ["creation/increase and new borrowing are permanently retired", "New TIME_ONLY locks in V2", "V1 retired: no new offers, increases or borrowing"]],
+  ["docs/wiki/integration.html", ["Data minimization", "No names or emails required for lock checks", "Public wallet addresses are processed as pseudonymous identifiers"]],
+  ["docs/wiki/integrate-benefits.html", ["Self-hosted instances process", "public wallet addresses as pseudonymous identifiers", "may also process membership identifiers"]],
+  ["docs/wiki/lock-mechanism.html", ["No names or emails are required for the lock check", "public wallet addresses are processed as pseudonymous identifiers"]],
+  ["docs/wiki/faq.html", ["public wallet addresses are processed as pseudonymous identifiers by the app and its RPC provider", "historical contributor plan", "permanently retire V1 offer creation/increase and new borrowing"]],
+  ["docs/wiki/ecosystem.html", ["retired LendingVault V1", "permanently retired in official interfaces, regardless of price", "existing-loan repayment/top-up remain available", "PartnerVault rewards planned, not active", "no authorized-caller path is used"]],
+  ["docs/wizard/lend.html", ["<title>LendingVault V1 Withdrawals", "permanently disable new offers, offer increases and new borrowing, regardless of price", "existing borrowers can repay or top up collateral", "historical V1 design parameters, not an available earning offer"]],
+  ["docs/web3/index.html", ["CommitmentVault V2 TIME_ONLY locks and existing-tranche unlocks", "existing-loan repayment/top-up (no new offers, increases or borrowing)"]],
+  ["docs/llms.txt", ["create TIME_ONLY locks in CommitmentVault V2", "permanently retired in official interfaces, regardless of price", "underlying contract functions are not removed", "dormant; no active buyback/burn flywheel", "public wallet addresses are processed as pseudonymous identifiers", "retains merchant checkout records, seller wallets and audit events"]],
+  ["apps/ai-copilot/src/context/ifr-knowledge.ts", ["FINALIZED — Bootstrap ended on 5 June 2026", "create TIME_ONLY locks in CommitmentVault V2", "permanently retired in official interfaces, regardless of price", "Full-available withdrawal and existing-loan repayment/top-up remain available", "Retained block-25812380 snapshot", "not a fresh measurement", "V1 price-conditioned tranches can never unlock", "regardless of oracle configuration", "BuybackVault is dormant", "no active buyback/burn flywheel", "public wallet addresses are processed as pseudonymous identifiers"]],
+  ["apps/ai-copilot/src/context/system-prompts.ts", ["BOOTSTRAP STATUS: ENDED (05.06.2026 23:51 UTC)", "permanently retired in official interfaces, regardless of price", "Full-available withdrawal and existing-loan repayment/top-up remain available", "underlying contract functions are not removed", "dormant; no active buyback/burn flywheel"]],
+];
+for (const [relative, markers] of requiredClaimBoundaries) {
+  const content = read(relative);
+  for (const marker of markers) assert.ok(content.includes(marker), `${relative} must retain claim boundary: ${marker}`);
+}
+const rag = JSON.parse(read("apps/ai-copilot/src/context/wiki-content.json"));
+for (const [slug, marker] of [
+  ["index", "creation/increase and new borrowing are permanently retired"],
+  ["fair-launch", "Public Bootstrap, then Uniswap V2"],
+  ["press-kit", "15% team allocation is vested"],
+  ["one-pager", "BuybackVault is dormant"],
+  ["ecosystem", "permanently retired in official interfaces, regardless of price"],
+]) assert.ok(rag.find((entry) => entry.slug === slug)?.content.includes(marker), `Wiki RAG ${slug} must retain ${marker}`);
+
+console.log("[docs-truth] PASS - 15 contracts + 3 Safes = 18; 700 contract tests; dated browser evidence; Forum advisory boundary; historical coverage labelled; 7 deployment units; public launch, buyback, capability and pseudonymous-data boundaries");

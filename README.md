@@ -36,7 +36,7 @@
 
 Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every standard transfer between non-exempt addresses burns 2.5% permanently, reducing total supply over time. Users lock IFR tokens on-chain to activate builder-product access without a recurring subscription; access remains active while each product's required IFR stays locked and that integration remains available.
 
-**Community Fair Launch Model** — No presale, no VC, no insider allocations.
+**Community Fair Launch Model** — No presale or VC funding; the disclosed 15% team allocation is vested.
 
 > Inferno Protocol is fully open source and community-owned. No single entity controls the protocol. All contracts are verified on Ethereum Mainnet and protected by Gnosis Safe multisig. Protocol parameter changes go through Governance proposals with a 48-hour timelock. The deployed Governance contract's ownership itself can be transferred directly by its owner, the Treasury Safe (3-of-5), without that delay (tracked as CWA-25). The protocol lives on-chain — permanently.
 
@@ -68,7 +68,7 @@ Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every standard
 | DEX Liquidity | 40% | 400M IFR | Original intent: governance-controlled LP expansion. Current custody: the LP Reserve Safe (3-of-5, `0x5D93...C04`) holds 400.6M IFR, received from the Deployer on 18.03.2026; it does not hold the Treasury or Community allocations. The Bootstrap pool was created separately with 100M IFR + 0.030 ETH. |
 | Liquidity Reserve | 20% | 200M IFR | Initial timelock ended 01.09.2026. The contract still holds all 200M IFR; the current withdrawal cap is 50M IFR per 90-day period — a Governance parameter (`setMaxWithdrawPerPeriod`, 48h timelock), not an immutable limit; only the 90-day period length is immutable. No withdrawal or LP deployment has occurred. NOT used for Bootstrap. |
 | Team Vesting | 15% | 150M IFR | 12-month cliff, 36-month linear vesting. 0 tokens available before March 2027. |
-| Treasury | 15% | 150M IFR | Original intent: genesis allocation to the Treasury Safe (3-of-5, `0x5ad6193...`). Current custody: the Treasury Safe holds 0 IFR — the full 150M funded BootstrapVaultV3 (144.75M IFR initial funding plus a 5.25M IFR top-up). No automatic refill path is deployed. |
+| Treasury | 15% | 150M IFR | Original intent: genesis allocation to the Treasury Safe (3-of-5, `0x5ad6193...`). The full original 150M funded BootstrapVaultV3 (144.75M IFR initial funding plus a 5.25M IFR top-up). After the separately governed FeeRouterV1 recovery, the Treasury Safe held 734,545.074097347 IFR at block 26,151,369 (9 October 2026), unallocated. No automatic refill path is deployed. |
 | Community & Grants | 6% | 60M IFR | Original intent: genesis allocation to the Community Safe (3-of-5); 57.9M arrived after the 2.5% burn and 1% pool fee on the non-exempt migration transfer. Current custody: 50M funded BootstrapVaultV3 (Plan B, 11.03.2026); the Community Safe holds the remaining 7.9M operational reserve. |
 | Builder Ecosystem | 4% | 40M IFR | PartnerVault contract. Partner rewards not active; planned only for verified checkout redemptions (model B). |
 
@@ -79,7 +79,7 @@ Team tokens: 48-month vesting, 12-month cliff. Liquidity reserve: initial lock e
 
 ## Fair Launch
 
-No presale, no VC, no IDO. Direct Uniswap V2 listing.
+No presale, no VC, no IDO. The public Bootstrap ended and finalized on 5 June 2026, creating the Uniswap V2 IFR/WETH pool.
 Team allocation (15%) is locked in a vesting contract for 4 years
 with a 1-year cliff. See [Fair Launch Statement](docs/FAIR_LAUNCH.md).
 

@@ -436,16 +436,17 @@ assert.equal(
   "0x761ee37c87d528317c5f7da13a2581e037f2fe39c71bfc58ce83a32930391677"
 );
 
-// CWA-51 and CWA-52: README separates allocation intent from current custody and states the
-// FeeRouterV1 sink instead of a BuybackVault/BurnReserve flywheel.
+// CWA-51 and CWA-52: separate allocation intent from dated post-recovery custody;
+// the IFR pool fee still does not fund a BuybackVault/BurnReserve flywheel.
 requireText("README.md", [
-  "Current custody: the Treasury Safe holds 0 IFR",
+  "After the separately governed FeeRouterV1 recovery, the Treasury Safe held 734,545.074097347 IFR at block 26,151,369 (9 October 2026), unallocated",
   "Current custody: 50M funded BootstrapVaultV3",
   "it does not hold the Treasury or Community allocations",
   "Custody figures verified on-chain at block 26,065,893",
   "which has no IFR withdrawal or forwarding function",
 ]);
 forbidText("README.md", [
+  "Current custody: the Treasury Safe holds 0 IFR",
   "BuybackVault and BurnReserve accumulate from the 1% protocol pool fee",
   "| Gnosis Safe multisig (0x5ad6193...). Funded",
 ]);

@@ -4,7 +4,7 @@
 
 Inferno ($IFR) is a deflationary ERC-20 utility token on Ethereum. Users lock IFR tokens on-chain to activate builder-product access without recurring subscription payments; access remains active while the required IFR stays locked and that integration remains available.
 
-**Model:** Community Fair Launch (CFLM) -- no presale, no VC, no insider allocation.
+**Model:** Community Fair Launch (CFLM) -- no presale or VC funding; the disclosed 15% team allocation is vested. Bootstrap ended and finalized on 5 June 2026, creating the Uniswap V2 IFR/WETH pool.
 
 Current application, Mainnet activation and acceptance status:
 [`CURRENT_FUNCTIONALITY_STATUS.md`](CURRENT_FUNCTIONALITY_STATUS.md).
@@ -37,7 +37,7 @@ Current application, Mainnet activation and acceptance status:
 
 ## Deflation Mechanism
 
-Every non-exempt transfer: -2.5% permanently burned + 1% routed to the configured protocol pool-fee receiver.
+Every non-exempt transfer: -2.5% permanently burned + 1% routed to the configured protocol pool-fee receiver. BuybackVault is dormant; no active buyback/burn flywheel is fed by that IFR pool fee. BuybackController execution requires separate ETH funding and its configured execution conditions.
 
 | Fee | Rate | Destination |
 |-----|------|-------------|
@@ -89,8 +89,8 @@ Users lock IFR tokens in IFRLock -> receive builder-product access while the req
 ## Roadmap (Summary)
 
 - **Q1 2026:** Testnet completed, internal test snapshot recorded, applications built, Mainnet deployed (2026-03-05)
-- **Q2 2026:** LP creation, security audit, first builders
-- **Q3 2026:** 10+ builders, Creator Gateway MVP, apps live
+- **Q2 2026:** Bootstrap finalized and Uniswap V2 LP created on 5 June; independent professional third-party audit remains pending
+- **Current availability:** Landing, Wiki, Web3 and IFR Benefits are public surfaces; no pilot partner is activated. Creator Gateway is a repository service with no production deployment record
 - **Q4 2026:** Community governance, CEX outreach
 - **Q2 2027+:** Full DAO, token voting
 
