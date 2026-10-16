@@ -188,11 +188,15 @@ model RewardEvent {
   status           String   @default("PENDING")
   reason           String?
   txHash           String?
+  // EXT-10: scoped pseudonym only for eligible Model B events; no raw customer wallet.
+  rewardPeriod     String?
+  rewardDedupKey   String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 
   @@index([businessId, status])
   @@index([partnerId])
+  @@unique([partnerId, rewardPeriod, rewardDedupKey], map: "RewardEvent_partner_period_dedup_key")
 }
 
 model AuditLog {

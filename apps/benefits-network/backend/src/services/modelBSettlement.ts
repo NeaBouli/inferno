@@ -230,6 +230,7 @@ export interface RedemptionRecord {
   redeemedAt: Date;
   // In-request self-redemption outcome (owner decision B: no customer wallet is stored).
   selfRedemption: boolean | null;
+  exactOfferVerified: boolean;
   confirmations: RedemptionConfirmation[];
 }
 
@@ -238,6 +239,8 @@ export interface RewardEventRecord {
   businessId: string;
   partnerId: string;
   status: string;
+  rewardPeriod: string | null;
+  rewardDedupKey: string | null;
   session: { id: string; businessId: string; status: string; redeemedAt: Date | null; selfRedemption: boolean | null };
 }
 
@@ -306,6 +309,8 @@ export type ExclusionReason =
   | 'LOCK_REWARD_ALREADY_RECORDED'
   | 'NOT_RECONCILED'
   | 'STATUS_INELIGIBLE'
+  | 'DUPLICATE_WALLET_PERIOD'
+  | 'EXACT_OFFER_UNVERIFIED'
   | 'BUDGET_EXHAUSTED';
 
 // Exclusions that indicate an integrity problem and block proposal generation.
@@ -317,6 +322,7 @@ const DISCREPANCY_REASONS = new Set<ExclusionReason>([
   'REPLAYED_CONFIRMATION',
   'LOCK_REWARD_ALREADY_RECORDED',
   'NOT_RECONCILED',
+  'EXACT_OFFER_UNVERIFIED',
 ]);
 
 const lower = (value: string | null | undefined) => (value ? value.toLowerCase() : null);
@@ -392,7 +398,7 @@ export function validateRecordMilestoneTemplate(template: RecordMilestoneTemplat
   if (amount > expected.remainingAllocation) throw new Error('unlockAmount exceeds the remaining allocation');
 }
 
-function buildTemplate(args: {
+export function buildTemplate(args: {
   chainId: number;
   governance: string;
   partnerVault: string;
@@ -497,10 +503,16 @@ export function buildSettlementExport(input: ExportInput): SettlementExport {
   if (ownership.link?.status !== 'VERIFIED' || lower(ownership.link.partnerId) !== partnerId) {
     blockers.push('SELLER_LINK_NOT_VERIFIED');
   }
-  // Owner decision B (T-231b): without stored customer identity the "one reward per wallet and
-  // partner" rule cannot be enforced, and no replacement policy is accepted. The export therefore
-  // stays diagnostic and never yields a template (policy gap, see T-231b report).
-  blockers.push(CUSTOMER_DEDUP_POLICY_GAP);
+  // Legacy rows without EXT-10 evidence remain diagnostic; they can never be backfilled.
+  const needsDedup = records.events.filter((event) => event.session.selfRedemption === false &&
+    event.session.redeemedAt && event.session.redeemedAt >= pilotStart);
+  const dedupAvailable = needsDedup.length > 0 && needsDedup.every((event) =>
+    event.rewardPeriod === period.label && (event.status === 'SKIPPED_DUPLICATE' ||
+      (event.rewardDedupKey !== null && /^[A-Za-z0-9_-]{22}\.[A-Za-z0-9_-]{43}$/.test(event.rewardDedupKey))));
+  if (!dedupAvailable) blockers.push(CUSTOMER_DEDUP_POLICY_GAP);
+  // This legacy admin export has no lifetime-EUR reservation ledger. Proposal creation must use
+  // the offline operator tool that accounts for EUR 250 across all periods.
+  else blockers.push('OPERATOR_LEDGER_REQUIRED');
   if (period.end.getTime() > input.now.getTime()) blockers.push('PERIOD_NOT_CLOSED');
   if (period.end.getTime() <= pilotStart.getTime()) blockers.push('PERIOD_BEFORE_PILOT');
 
@@ -518,6 +530,7 @@ export function buildSettlementExport(input: ExportInput): SettlementExport {
   const eligible: RewardEventRecord[] = [];
   const excluded: { id: string; reason: ExclusionReason }[] = [];
   const seenSessions = new Set<string>();
+  const seenDedupKeys = new Set<string>();
   const eventsInPeriod = [...new Map(records.events.map((event) => [event.id, event])).values()];
 
   for (const event of eventsInPeriod) {
@@ -542,6 +555,13 @@ export function buildSettlementExport(input: ExportInput): SettlementExport {
     if (confirmation !== 'OK') { exclude(confirmation); continue; }
     // NULL (no proof-v2 outcome) is treated as self-redemption: fail closed.
     if (event.session.selfRedemption !== false) { exclude('SELF_REDEMPTION'); continue; }
+    if (event.status === 'SKIPPED_DUPLICATE') { exclude('DUPLICATE_WALLET_PERIOD'); continue; }
+    // Exact-offer evidence is mandatory for EXT-10 rows. Legacy candidates stay diagnostic above.
+    if (event.rewardDedupKey && !redemptionsBySession.get(event.session.id)?.exactOfferVerified) {
+      exclude('EXACT_OFFER_UNVERIFIED'); continue;
+    }
+    if (event.rewardDedupKey && seenDedupKeys.has(event.rewardDedupKey)) { exclude('REPLAYED_CONFIRMATION'); continue; }
+    if (event.rewardDedupKey) seenDedupKeys.add(event.rewardDedupKey);
     if (event.status === 'CONFIRMED') { exclude('LOCK_REWARD_ALREADY_RECORDED'); continue; }
     if (UNRECONCILED_STATUSES.has(event.status)) { exclude('NOT_RECONCILED'); continue; }
     if (event.status !== MODEL_B_SETTLEMENT_PENDING) { exclude('STATUS_INELIGIBLE'); continue; }
@@ -673,6 +693,11 @@ export function buildSettlementExport(input: ExportInput): SettlementExport {
     period: { start: period.start.toISOString(), end: period.end.toISOString() },
     eligible: eligibleIds,
     excluded,
+    // Commit to EXT-10 evidence without exporting the scoped customer keys themselves.
+    dedupEvidence: eventsInPeriod.map((event) => ({
+      id: event.id, period: event.rewardPeriod, key: event.rewardDedupKey,
+      exactOfferVerified: redemptionsBySession.get(event.session.id)?.exactOfferVerified ?? false,
+    })).sort((a, b) => a.id.localeCompare(b.id)),
     reconciliation: {
       sellerConfirmedRedemptions: input.sellerConfirmedRedemptions ?? null,
       backendRedemptions,

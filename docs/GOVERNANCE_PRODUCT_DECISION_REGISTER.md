@@ -165,10 +165,15 @@ remains the only place where agenda items and vote outcomes are published.
   Governance `recordMilestone` proposal; no authorized caller. Rewards stay
   disabled until the first pilot partner, which is activated by its own Safe
   proposal ([policy](PARTNER_REWARDS_MODEL_B.md)).
-- **Decision needed:** (remaining) EUR amount per redemption and budget per
-  pilot partner; global pilot budget; vesting length by budget size;
-  pilot-partner count and selection criteria. Formula, caller model and refill
-  policy are decided (model B, no caller, no refill).
+- **Decision (2026-10-17, owner):** EUR 0.50 per verified reward-eligible checkout
+  redemption, paid in IFR; EUR 250 lifetime budget per pilot partner; one pilot
+  initially (EUR 250 initial total); six-month vesting. EXT-10:
+  one wallet earns at most one redemption reward per partner per UTC monthly
+  settlement period. Governance `recordMilestone` per period; no caller, no refill.
+- **Decision needed:** pilot partner identity (name/business and beneficiary
+  wallet), followed by its individual activation proposal. Before activation, review
+  the narrow period/partner HMAC exception documented in the Model B policy;
+  the agreed reward rule itself is no longer open.
 - **Prerequisites:** written reward policy; a per-period redemption export
   from the Benefits backend with reconciliation against seller-confirmed
   checkouts; the backend change that gates reward events on verified pilot
