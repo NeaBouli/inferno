@@ -1,57 +1,71 @@
 // T-219: the shared read provider must fail over to the next endpoint and must never turn a
-// total outage into a zero. Local mock JSON-RPC servers stand in for the public endpoints.
+// total outage into a zero. An in-memory JSON-RPC transport stands in for the public endpoints.
 import assert from "node:assert/strict";
-import http from "node:http";
 import { readFileSync } from "node:fs";
-import type { AddressInfo } from "node:net";
-import { createRpcProvider, ethCall, rpcEndpoints, rpcHealth, PUBLIC_MAINNET_RPCS } from "../server/rpc.js";
+import { Contract, FetchRequest, type FetchGetUrlFunc } from "ethers";
+import { createRpcProvider, ethCall, rpcEndpoints, rpcHealth, PUBLIC_MAINNET_RPCS, RecoveringRpcProvider } from "../server/rpc.js";
 
 const SUPPLY = "0x" + (996687518329891940n * 1n).toString(16).padStart(64, "0");
 const WRONG_CHAIN_SUPPLY = "0x" + (123n * 10n ** 27n).toString(16).padStart(64, "0");
-type Mode = "ok" | "http500" | "rpcError" | "hang";
+type Mode = "ok" | "http500" | "rpcError" | "blockError" | "hang";
+type MockHandler = (body: string, timeoutMs: number) => ReturnType<FetchGetUrlFunc>;
+const mockHandlers = new Map<string, MockHandler>();
+let nextEndpoint = 0;
+const originalTransport = FetchRequest.createGetUrlFunc();
+FetchRequest.registerGetUrl(async (request) => {
+  const handler = mockHandlers.get(request.url);
+  assert.ok(handler, "test transport must never contact a real endpoint");
+  return handler(Buffer.from(request.body ?? []).toString("utf8"), request.timeout);
+});
 
 /** chainId: the eth_chainId answer; "error" answers eth_chainId with a JSON-RPC error. */
-function mockRpc(mode: Mode, chainId = "0x1"): Promise<{ url: string; calls: () => number; methods: string[]; close: () => Promise<void> }> {
+async function mockRpc(mode: Mode, chainId = "0x1"): Promise<{
+  url: string;
+  calls: () => number;
+  methods: string[];
+  setMode: (value: Mode) => void;
+  setChainId: (value: string) => void;
+  close: () => Promise<void>;
+}> {
   let calls = 0;
   const methods: string[] = [];
-  const server = http.createServer((req, res) => {
-    let body = "";
-    req.on("data", (chunk) => (body += chunk));
-    req.on("end", () => {
-      calls += 1;
-      if (mode === "hang") return; // never answers
-      if (mode === "http500") {
-        res.writeHead(500).end("upstream error");
-        return;
-      }
-      const payload = JSON.parse(body);
-      const requests = Array.isArray(payload) ? payload : [payload];
-      const answers = requests.map((r: { id: number; method: string }) => {
-        methods.push(r.method);
-        if (mode === "rpcError") return { jsonrpc: "2.0", id: r.id, error: { code: -32005, message: "rate limited" } };
-        if (r.method === "eth_chainId") {
-          return chainId === "error"
-            ? { jsonrpc: "2.0", id: r.id, error: { code: -32603, message: "internal error" } }
-            : { jsonrpc: "2.0", id: r.id, result: chainId };
-        }
-        if (r.method === "eth_blockNumber") return { jsonrpc: "2.0", id: r.id, result: "0x18e5d89" };
-        if (r.method === "eth_call") return { jsonrpc: "2.0", id: r.id, result: chainId === "0x1" ? SUPPLY : WRONG_CHAIN_SUPPLY };
-        return { jsonrpc: "2.0", id: r.id, error: { code: -32601, message: "method not found" } };
-      });
-      res.writeHead(200, { "Content-Type": "application/json" }).end(JSON.stringify(Array.isArray(payload) ? answers : answers[0]));
-    });
+  const url = `https://mock-rpc-${nextEndpoint++}.example.invalid`;
+  const response = (statusCode: number, body: string) => ({
+    statusCode, statusMessage: statusCode === 200 ? "OK" : "upstream error",
+    headers: { "content-type": "application/json" }, body: Buffer.from(body),
   });
-  return new Promise((resolve) =>
-    server.listen(0, "127.0.0.1", () => {
-      const { port } = server.address() as AddressInfo;
-      resolve({
-        url: `http://127.0.0.1:${port}`,
-        calls: () => calls,
-        methods,
-        close: () => new Promise<void>((done) => { server.closeAllConnections(); server.close(() => done()); }),
-      });
-    }),
-  );
+  mockHandlers.set(url, async (body, timeoutMs) => {
+    calls += 1;
+    if (mode === "hang") {
+      await new Promise((_, reject) => setTimeout(() => reject(new Error("Mock RPC request timed out")), timeoutMs));
+    }
+    if (mode === "http500") return response(500, "upstream error");
+    const payload = JSON.parse(body);
+    const requests = Array.isArray(payload) ? payload : [payload];
+    const answers = requests.map((r: { id: number; method: string }) => {
+      methods.push(r.method);
+      if (mode === "rpcError" || (mode === "blockError" && r.method === "eth_blockNumber")) {
+        return { jsonrpc: "2.0", id: r.id, error: { code: -32005, message: "rate limited" } };
+      }
+      if (r.method === "eth_chainId") {
+        return chainId === "error"
+          ? { jsonrpc: "2.0", id: r.id, error: { code: -32603, message: "internal error" } }
+          : { jsonrpc: "2.0", id: r.id, result: chainId };
+      }
+      if (r.method === "eth_blockNumber") return { jsonrpc: "2.0", id: r.id, result: "0x18e5d89" };
+      if (r.method === "eth_call") return { jsonrpc: "2.0", id: r.id, result: chainId === "0x1" ? SUPPLY : WRONG_CHAIN_SUPPLY };
+      return { jsonrpc: "2.0", id: r.id, error: { code: -32601, message: "method not found" } };
+    });
+    return response(200, JSON.stringify(Array.isArray(payload) ? answers : answers[0]));
+  });
+  return {
+    url,
+    calls: () => calls,
+    methods,
+    setMode: (value) => { mode = value; },
+    setChainId: (value) => { chainId = value; },
+    close: async () => { mockHandlers.delete(url); },
+  };
 }
 
 const IFR = "0x77e99917Eca8539c62F509ED1193ac36580A6e7B";
@@ -164,9 +178,137 @@ step("Chain check error hides URLs:");
   const provider = createRpcProvider([{ label: "configured", url: goerli.url }], { stallTimeoutMs: 100, requestTimeoutMs: 800 });
   const error = await ethCall(IFR, TOTAL_SUPPLY, provider).then(() => null, (e: unknown) => e);
   assert.ok(error instanceof Error, "single wrong-chain endpoint rejects");
-  assert.ok(!JSON.stringify({ message: error.message, stack: error.stack }).includes(String(new URL(goerli.url).port)), "error does not expose the endpoint URL");
+  assert.ok(!JSON.stringify({ message: error.message, stack: error.stack }).includes(new URL(goerli.url).hostname), "error does not expose the endpoint URL");
   provider.destroy();
   await goerli.close();
+}
+
+step("Recovery after all endpoints fail startup:");
+{
+  const a = await mockRpc("blockError");
+  const b = await mockRpc("rpcError");
+  let now = 0;
+  const provider = new RecoveringRpcProvider(asEndpoints([a.url, b.url]), {
+    stallTimeoutMs: 100, requestTimeoutMs: 800, now: () => now,
+  });
+  const token = new Contract(IFR, ["function totalSupply() view returns (uint256)"], provider);
+  try {
+    await assert.rejects(() => token.totalSupply(), /Chain data is unavailable/);
+    const callsAfterFailure = [a.calls(), b.calls()];
+    assert.deepEqual(callsAfterFailure, [2, 1], "one endpoint fails block sync, the other its chain check");
+    a.setMode("ok");
+    await assert.rejects(() => ethCall(IFR, TOTAL_SUPPLY, provider), /Chain data is unavailable/);
+    assert.deepEqual([a.calls(), b.calls()], callsAfterFailure, "requests during backoff do not probe");
+    now += 1000;
+    assert.equal(await token.totalSupply(), BigInt(SUPPLY), "same Contract and provider recover without restart");
+    assert.equal(a.methods[0], "eth_chainId", "recovery checks Mainnet before any data request");
+    assert.ok(a.methods.includes("eth_call"), "recovered endpoint serves actual chain data");
+    assert.equal(a.methods.filter((method) => method === "eth_chainId").length, 2, "even a previously verified endpoint must prove Mainnet again");
+    assert.equal(b.calls(), 2, "each endpoint is checked again in the new generation");
+  } finally {
+    provider.destroy();
+    await Promise.all([a.close(), b.close()]);
+  }
+}
+
+step("Wrong chain on recovery stays unavailable:");
+{
+  const a = await mockRpc("rpcError");
+  const b = await mockRpc("http500");
+  let now = 0;
+  const provider = new RecoveringRpcProvider(asEndpoints([a.url, b.url]), {
+    stallTimeoutMs: 100, requestTimeoutMs: 800, now: () => now,
+  });
+  try {
+    await assert.rejects(() => ethCall(IFR, TOTAL_SUPPLY, provider), /Chain data is unavailable/);
+    a.setMode("ok");
+    a.setChainId("0x5");
+    b.setMode("ok");
+    b.setChainId("0xaa36a7");
+    now += 1000;
+    await assert.rejects(() => ethCall(IFR, TOTAL_SUPPLY, provider), /Chain data is unavailable/);
+    const callsAfterFailure = [a.calls(), b.calls()];
+    await assert.rejects(() => ethCall(IFR, TOTAL_SUPPLY, provider), /Chain data is unavailable/);
+    assert.deepEqual([a.calls(), b.calls()], callsAfterFailure, "wrong-chain failures also back off");
+    for (const bad of [a, b]) {
+      assert.deepEqual([...new Set(bad.methods)], ["eth_chainId"], "wrong-chain data is never requested or cached");
+    }
+    // Wrong-chain verification is not cached: a later generation must check again before recovering.
+    a.setChainId("0x1");
+    now += 2000;
+    assert.equal(BigInt(await ethCall(IFR, TOTAL_SUPPLY, provider)), BigInt(SUPPLY));
+    assert.equal(a.methods.filter((method) => method === "eth_chainId").length, 3, "every generation rechecks the chain id");
+    assert.ok(!b.methods.includes("eth_call"), "remaining wrong-chain endpoint never serves data");
+  } finally {
+    provider.destroy();
+    await Promise.all([a.close(), b.close()]);
+  }
+}
+
+step("Concurrent requests share one reinitialization:");
+{
+  const endpoint = await mockRpc("rpcError");
+  let now = 0;
+  const provider = new RecoveringRpcProvider(asEndpoints([endpoint.url]), {
+    stallTimeoutMs: 100, requestTimeoutMs: 800, now: () => now,
+  });
+  try {
+    const failed = await Promise.allSettled(Array.from({ length: 12 }, () => ethCall(IFR, TOTAL_SUPPLY, provider)));
+    assert.ok(failed.every((result) => result.status === "rejected"), "concurrent startup reads all fail closed");
+    assert.equal(endpoint.calls(), 1, "only one startup attempt is in flight");
+    endpoint.setMode("ok");
+    now += 1000;
+    const results = await Promise.all([
+      provider.getBlockNumber(),
+      provider.getNetwork(),
+      ...Array.from({ length: 12 }, () => ethCall(IFR, TOTAL_SUPPLY, provider)),
+    ]);
+    assert.equal(results[0], 0x18e5d89);
+    assert.equal((results[1] as { chainId: bigint }).chainId, 1n);
+    for (const value of results.slice(2)) assert.equal(BigInt(value as string), BigInt(SUPPLY));
+    assert.equal(endpoint.methods.filter((method) => method === "eth_chainId").length, 2, "all callers share exactly one new generation");
+  } finally {
+    provider.destroy();
+    await endpoint.close();
+  }
+}
+
+step("Exponential backoff caps at 60 seconds:");
+{
+  const endpoint = await mockRpc("rpcError");
+  let now = 0;
+  const provider = new RecoveringRpcProvider(asEndpoints([endpoint.url]), {
+    stallTimeoutMs: 100, requestTimeoutMs: 800, now: () => now,
+  });
+  try {
+    await assert.rejects(() => provider.getBlockNumber(), /Chain data is unavailable/);
+    let attempts = 1;
+    for (const delay of [1000, 2000, 4000, 8000, 16000, 32000, 60000, 60000]) {
+      now += delay - 1;
+      await assert.rejects(() => provider.getBlockNumber(), /Chain data is unavailable/);
+      assert.equal(endpoint.calls(), attempts, `no retry before ${delay} ms`);
+      now += 1;
+      await assert.rejects(() => provider.getBlockNumber(), /Chain data is unavailable/);
+      assert.equal(endpoint.calls(), ++attempts, `one retry at ${delay} ms`);
+    }
+  } finally {
+    provider.destroy();
+    await endpoint.close();
+  }
+}
+
+step("No endpoints remains fail closed:");
+{
+  let now = 0;
+  const provider = new RecoveringRpcProvider([], { now: () => now });
+  try {
+    await assert.rejects(() => ethCall(IFR, TOTAL_SUPPLY, provider), /Chain data is unavailable/);
+    now += 1000;
+    await assert.rejects(() => provider.getNetwork(), /Chain data is unavailable/);
+    await assert.rejects(() => provider.getBlockNumber(), /Chain data is unavailable/);
+  } finally {
+    provider.destroy();
+  }
 }
 
 step("Health output:");
@@ -174,10 +316,23 @@ step("Health output:");
 {
   const good = await mockRpc("ok");
   const dead = await mockRpc("http500");
-  const health = await rpcHealth([{ label: "configured", url: good.url }, { label: "fallback", url: dead.url }], 1000);
-  assert.deepEqual(health, { healthy: 1, total: 2, endpoints: [{ label: "configured", ok: true }, { label: "fallback", ok: false }] });
-  assert.ok(!JSON.stringify(health).includes("127.0.0.1"), "health never exposes URLs");
-  await Promise.all([good.close(), dead.close()]);
+  const originalFetch = globalThis.fetch;
+  try {
+    globalThis.fetch = async (input, init) => {
+      const handler = mockHandlers.get(String(input));
+      assert.ok(handler, "health test must never contact a real endpoint");
+      const response = await handler(String(init?.body), 1000);
+      return new Response(response.body ? Buffer.from(response.body).toString("utf8") : null, {
+        status: response.statusCode, headers: response.headers,
+      });
+    };
+    const health = await rpcHealth([{ label: "configured", url: good.url }, { label: "fallback", url: dead.url }], 1000);
+    assert.deepEqual(health, { healthy: 1, total: 2, endpoints: [{ label: "configured", ok: true }, { label: "fallback", ok: false }] });
+    assert.ok(!JSON.stringify(health).includes("example.invalid"), "health never exposes URLs");
+  } finally {
+    globalThis.fetch = originalFetch;
+    await Promise.all([good.close(), dead.close()]);
+  }
 }
 
 // Source guards: no per-request providers, and supply is read on-chain before the explorer fallback.
@@ -189,4 +344,5 @@ step("Health output:");
   assert.ok(supply.indexOf("token.totalSupply()") > -1 && supply.indexOf("token.totalSupply()") < supply.indexOf("esApiFetch("), "supply reads the chain first, explorer only as fallback");
 }
 clearTimeout(watchdog);
-console.log("[rpc-failover] PASS - ordered failover, stall bypass, no zero on outage, wrong-chain fail closed, URL-free health");
+FetchRequest.registerGetUrl(originalTransport);
+console.log("[rpc-failover] PASS - ordered failover, stall bypass, no zero on outage, wrong-chain fail closed, bounded single-flight recovery, URL-free health");

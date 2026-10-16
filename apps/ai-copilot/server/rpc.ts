@@ -7,13 +7,13 @@
 // T-236: staticNetwork skips ethers' own chain detection, so each endpoint must prove eth_chainId=0x1
 // before it may answer anything else; a wrong or unreadable chain id fails closed.
 import {
+  AbstractProvider,
   FallbackProvider,
   FetchRequest,
   JsonRpcProvider,
   Network,
-  type JsonRpcError,
   type JsonRpcPayload,
-  type JsonRpcResult,
+  type PerformActionRequest,
   type Provider,
 } from "ethers";
 
@@ -35,7 +35,7 @@ const MAINNET = Network.from(1);
 class MainnetCheckedProvider extends JsonRpcProvider {
   #chainVerified = false;
 
-  async _send(payload: JsonRpcPayload | JsonRpcPayload[]): Promise<(JsonRpcResult | JsonRpcError)[]> {
+  override async _send(payload: JsonRpcPayload | JsonRpcPayload[]): ReturnType<JsonRpcProvider["_send"]> {
     const requests = Array.isArray(payload) ? payload : [payload];
     if (!this.#chainVerified && requests.some((request) => request.method !== "eth_chainId")) {
       const [answer] = await super._send({ id: 0, jsonrpc: "2.0", method: "eth_chainId", params: [] });
@@ -100,11 +100,89 @@ export function createRpcProvider(endpoints: RpcEndpoint[], options: RpcOptions 
   return new FallbackProvider(configs, MAINNET, { quorum: 1, eventQuorum: 1 });
 }
 
-let shared: FallbackProvider | null = null;
+export interface RecoveringRpcOptions extends RpcOptions {
+  initialRetryDelayMs?: number;
+  maxRetryDelayMs?: number;
+  /** Monotonic clock, injectable so backoff tests do not need real waits. */
+  now?: () => number;
+}
+
+/** Keeps a stable Provider for routes and Contracts while replacing a failed initial sync.
+ *  ethers permanently excludes endpoints that fail that sync, so retrying the same instance cannot
+ *  recover. Every replacement starts with fresh Mainnet checks; no failed read is cached here. */
+export class RecoveringRpcProvider extends AbstractProvider {
+  readonly #endpoints: RpcEndpoint[];
+  readonly #options: RecoveringRpcOptions;
+  readonly #now: () => number;
+  readonly #initialRetryDelay: number;
+  readonly #maxRetryDelay: number;
+  #retryDelay: number;
+  #retryAt = 0;
+  #provider: FallbackProvider | null = null;
+  #initializing: Promise<FallbackProvider> | null = null;
+
+  constructor(endpoints: RpcEndpoint[], options: RecoveringRpcOptions = {}) {
+    super(MAINNET, { cacheTimeout: -1 });
+    this.#endpoints = endpoints;
+    this.#options = options;
+    this.#now = options.now ?? (() => performance.now());
+    this.#initialRetryDelay = options.initialRetryDelayMs ?? 1000;
+    this.#maxRetryDelay = options.maxRetryDelayMs ?? 60_000;
+    if (!Number.isFinite(this.#initialRetryDelay) || this.#initialRetryDelay <= 0 ||
+        !Number.isFinite(this.#maxRetryDelay) || this.#maxRetryDelay < this.#initialRetryDelay) {
+      throw new Error("Invalid RPC retry delays");
+    }
+    this.#retryDelay = this.#initialRetryDelay;
+  }
+
+  async #getProvider(): Promise<FallbackProvider> {
+    if (this.destroyed) throw new Error("Chain data is unavailable");
+    if (this.#initializing) return this.#initializing;
+    if (this.#provider) return this.#provider;
+    if (this.#now() < this.#retryAt) throw new Error("Chain data is unavailable");
+    this.#initializing = this.#initialize().finally(() => { this.#initializing = null; });
+    return this.#initializing;
+  }
+
+  async #initialize(): Promise<FallbackProvider> {
+    try {
+      const provider = createRpcProvider(this.#endpoints, this.#options);
+      this.#provider = provider;
+      // Forces initial sync (including eth_chainId) before publishing this generation to callers.
+      await provider.getBlockNumber();
+      if (this.destroyed) throw new Error("Chain data is unavailable");
+      this.#retryDelay = this.#initialRetryDelay;
+      return provider;
+    } catch {
+      await this.#provider?.destroy();
+      this.#provider = null;
+      this.#retryAt = this.#now() + this.#retryDelay;
+      this.#retryDelay = Math.min(this.#retryDelay * 2, this.#maxRetryDelay);
+      // Do not retain upstream errors: they can include configured URLs containing credentials.
+      throw new Error("Chain data is unavailable");
+    }
+  }
+
+  override async _detectNetwork(): Promise<Network> {
+    return (await this.#getProvider()).getNetwork();
+  }
+
+  override async _perform<T = unknown>(request: PerformActionRequest): Promise<T> {
+    return (await this.#getProvider())._perform<T>(request);
+  }
+
+  override destroy(): void {
+    void this.#provider?.destroy();
+    this.#provider = null;
+    super.destroy();
+  }
+}
+
+let shared: RecoveringRpcProvider | null = null;
 
 /** The process-wide read provider. All server routes use this instead of constructing their own. */
 export function getRpcProvider(): Provider {
-  if (!shared) shared = createRpcProvider(rpcEndpoints());
+  if (!shared) shared = new RecoveringRpcProvider(rpcEndpoints());
   return shared;
 }
 
