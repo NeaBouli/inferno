@@ -248,3 +248,18 @@ The reference library uses these error codes:
 - **Other implementations.** Implementations in other languages are welcome.
 - **Name.** "IFR" and "Inferno" are not licensed as trademarks (see the repository README). An integrator
   describes its offer as "works with locked IFR".
+
+### Optional on-chain view helper
+
+[`IFRTierView`](../../contracts/view/IFRTierView.sol) is an optional, read-only helper; it is **not
+deployed**. Any deployment would be a separate governance decision. It has no owner, upgrade mechanism
+or state-changing functions after construction. Source addresses, version 1 thresholds (9-decimal base
+units) and `configVersion = 1` are immutable.
+
+`tierOf(wallet)` returns `(tier, configVersion)`, with `0` for no tier and `1`–`4` for Bronze through
+Platinum. A zero vault address selects IFRLOCK only; a configured vault selects EITHER (§4): the higher
+per-source tier, never the sum of IFRLock and vault balances. Only positive, not-unlocked TIME_ONLY
+tranches count within the vault, including due tranches; price-conditioned tranches never count.
+Source read failures revert. All reads use the calling block and results are not cached. This helper
+only calculates the tier: integrators remain responsible for contract identity, chain, block pinning,
+freshness and wallet-ownership checks under this specification.
