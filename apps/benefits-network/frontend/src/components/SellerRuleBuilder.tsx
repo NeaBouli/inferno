@@ -57,6 +57,7 @@ import {
   type LockSource,
 } from '@/lib/api';
 import { formatProductPrice } from '@/lib/money';
+import { benefitTierDefaults } from '@/lib/benefitTierDefaults.mjs';
 import {
   isLockSource,
   lockSourceLabel,
@@ -85,45 +86,45 @@ const profileCategorySuggestions = [
 const ruleTemplates = [
   {
     name: 'Welcome benefit',
-    detail: 'Low-friction first visit',
-    label: 'Welcome',
+    detail: `${benefitTierDefaults[0].label} starting point`,
+    label: benefitTierDefaults[0].label,
     category: 'Retail',
     product: 'First visit benefit',
     discount: 5,
-    minLocked: 500,
+    minLocked: benefitTierDefaults[0].minLocked,
     minHeld: 0,
     ttl: 90,
   },
   {
     name: 'Member standard',
-    detail: 'Everyday repeat benefit',
-    label: 'Member',
+    detail: `${benefitTierDefaults[1].label} starting point`,
+    label: benefitTierDefaults[1].label,
     category: 'Retail',
     product: 'Member discount',
     discount: 10,
-    minLocked: 1000,
+    minLocked: benefitTierDefaults[1].minLocked,
     minHeld: 0,
     ttl: 90,
   },
   {
     name: 'Premium access',
-    detail: 'Higher lock threshold',
-    label: 'Premium',
+    detail: `${benefitTierDefaults[2].label} starting point`,
+    label: benefitTierDefaults[2].label,
     category: 'Services',
     product: 'Premium member access',
     discount: 15,
-    minLocked: 5000,
+    minLocked: benefitTierDefaults[2].minLocked,
     minHeld: 0,
     ttl: 120,
   },
   {
     name: 'Event pass',
-    detail: 'Highest lock threshold',
-    label: 'Event pass',
+    detail: `${benefitTierDefaults[3].label} starting point`,
+    label: benefitTierDefaults[3].label,
     category: 'Events',
     product: 'Event member benefit',
     discount: 20,
-    minLocked: 10000,
+    minLocked: benefitTierDefaults[3].minLocked,
     minHeld: 0,
     ttl: 120,
   },
@@ -135,9 +136,9 @@ const SHOP_ORIGIN = 'https://shop.ifrunit.tech';
 const DEFAULT_RULE_DRAFT = {
   category: categories[0],
   product: 'Premium customer discount',
-  label: 'Bronze',
+  label: benefitTierDefaults[0].label,
   discount: 10,
-  minLocked: 1000,
+  minLocked: benefitTierDefaults[0].minLocked,
   minHeld: 0,
   lockSource: 'ifrlock' as const,
   ttl: 90,
@@ -2789,7 +2790,7 @@ export function SellerRuleBuilder() {
           <div className="w-full min-w-0 sm:flex-1">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-green-100/80">Quick rule templates</p>
             <p id="seller-rule-template-help" className="mt-1 max-w-full break-words pr-4 text-sm leading-6 text-stone-300 sm:pr-0">
-              Apply a starting point, review every value,<br className="sm:hidden" /> then save through the normal authorization flow.
+              Start with the default IFR tiers. Your changes are partner overrides.<br className="sm:hidden" /> Review every value, then save through the normal authorization flow.
             </p>
           </div>
           <span className="text-xs font-semibold text-stone-500">Draft only</span>

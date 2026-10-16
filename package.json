@@ -37,6 +37,7 @@
     "test:benefits-owner-b-visual": "node scripts/test-benefits-owner-b-visual.js",
     "test:benefits-bundle": "node scripts/test-benefits-bundle-budget.cjs",
     "test:benefits-docs": "node scripts/test-benefits-doc-consistency.cjs",
+    "test:ifr-tiers": "node scripts/test-ifr-tiers.cjs",
     "test:benefits-proof-context": "node scripts/test-benefits-proof-context.cjs",
     "check:benefits-proof-context": "node scripts/check-benefits-proof-context.cjs",
     "test:benefits-node-runtime": "node scripts/test-benefits-node-runtime.cjs",

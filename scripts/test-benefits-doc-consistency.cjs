@@ -1,6 +1,9 @@
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { execFileSync } = require('node:child_process');
+
+execFileSync(process.execPath, [path.join(__dirname, 'test-ifr-tiers.cjs')], { stdio: 'inherit' });
 
 const root = path.resolve(__dirname, '..');
 const files = {
