@@ -10,10 +10,15 @@ RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 COPY src/ ./src/
 # Frozen Forum ballot manifests (reviewed via PR; served only when FORUM_ENABLED=1).
 COPY forum-ballots/ ./forum-ballots/
+# Reviewed tally results (added by PR after close; announced once per ballot).
+COPY forum-results/ ./forum-results/
 
 RUN addgroup -g 1001 -S ifr && \
     adduser -S ifr -u 1001 -G ifr && \
     chown -R ifr:ifr /app
+
+# FORUM_DATA_DIR mount point: a fresh named volume inherits this owner and mode.
+RUN mkdir -p /data/forum && chown ifr:ifr /data/forum && chmod 700 /data/forum
 
 USER ifr
 
