@@ -11,7 +11,7 @@
     "check:server-imports": "tsx -e \"import('./src/context/system-prompts.ts')\"",
     "test:dependencies": "node scripts/test-dependencies.mjs",
     "test:health-shape": "node scripts/test-health-shape.mjs",
-    "test:surface-ui": "node scripts/test-surface-ui.cjs",
+    "test:surface-ui": "node scripts/test-surface-ui.cjs && node scripts/test-security-headers.cjs",
     "test:surface-context": "tsx scripts/test-surface-context.ts",
     "test:liquidity-context": "node --import tsx scripts/test-liquidity-context.ts",
     "test:dynamic-intent": "node --import tsx scripts/test-dynamic-intent.ts",

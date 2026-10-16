@@ -1,6 +1,7 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import { securityHeaders } from "./security-headers.js";
 import { resolve, dirname, join } from "path";
 import { fileURLToPath } from "url";
 import { existsSync, readFileSync } from "fs";
@@ -52,6 +53,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const app = express();
+app.disable("x-powered-by");
+app.use((_req, res, next) => {
+  res.set(securityHeaders);
+  next();
+});
 app.set("trust proxy", TRUSTED_PROXY_HOPS);
 app.use(cors({ origin: resolveAllowedOrigins() }));
 app.use(express.json({ limit: '50kb' }));
@@ -1825,6 +1831,22 @@ app.get("/api/ifr/check", async (req, res) => {
 });
 
 console.log("[SDK] GET /api/ifr/check active");
+
+// Express's default finalhandler replaces CSP on 404/parser/error responses.
+// Finish those responses here so the reviewed embedding policy also survives.
+app.use((_req, res) => {
+  res.status(404).json({ error: "Not found" });
+});
+const handleUnhandledError: express.ErrorRequestHandler = (error: unknown, _req, res, next) => {
+  if (res.headersSent) {
+    next(error);
+    return;
+  }
+  const status = error && typeof error === "object" && "status" in error ? error.status : undefined;
+  res.status(typeof status === "number" && Number.isInteger(status) && status >= 400 && status <= 599
+    ? status : 500).json({ error: "Request failed" });
+};
+app.use(handleUnhandledError);
 
 const PORT = parseInt(process.env.PORT || "3003", 10);
 app.listen(PORT, () => {

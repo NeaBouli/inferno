@@ -46,27 +46,33 @@ function requireCspTokens(directives, directive, tokens) {
 }
 
 // ── Required header set ──────────────────────────────────────────────
-const csp = cspDirectives(requireHeader('Content-Security-Policy'));
+// Frozen origin/main (5e7d7154) baseline; JUL-11 gates stricter enforcement.
+const enforcedCspBaseline = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://explorer-api.walletconnect.com https://*.walletconnect.com; connect-src 'self' https://ethereum-rpc.publicnode.com https://eth.drpc.org https://1rpc.io https://*.walletconnect.com https://*.walletconnect.org wss://*.walletconnect.com wss://*.walletconnect.org https://*.web3modal.org https://*.web3modal.com; frame-src https://copilot-api.ifrunit.tech https://verify.walletconnect.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
+assert.equal(requireHeader('Content-Security-Policy'), enforcedCspBaseline,
+  'enforced Web3 CSP must retain the origin/main baseline until JUL-11 passes');
+const csp = cspDirectives(requireHeader('Content-Security-Policy-Report-Only'));
+assert.notEqual(requireHeader('Content-Security-Policy-Report-Only'), enforcedCspBaseline,
+  'the strict Web3 policy must be staged separately from enforcement');
 
 const expectedCsp = new Map([
   ['default-src', ["'self'"]],
   ['script-src', ["'self'", "'unsafe-inline'"]],
   ['style-src', ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com']],
-  ['font-src', ["'self'", 'https://fonts.gstatic.com']],
-  ['img-src', ["'self'", 'data:', 'blob:', 'https://explorer-api.walletconnect.com', 'https://*.walletconnect.com']],
+  ['font-src', ["'self'", 'https://fonts.gstatic.com', 'https://fonts.reown.com']],
+  ['img-src', ["'self'", 'data:', 'blob:', 'https://ifrunit.tech', 'https://api.web3modal.org']],
   ['connect-src', [
     "'self'",
     'https://ethereum-rpc.publicnode.com',
     'https://eth.drpc.org',
     'https://1rpc.io',
-    'https://*.walletconnect.com',
-    'https://*.walletconnect.org',
-    'wss://*.walletconnect.com',
-    'wss://*.walletconnect.org',
-    'https://*.web3modal.org',
-    'https://*.web3modal.com',
+    'https://rpc.walletconnect.org',
+    'https://relay.walletconnect.org',
+    'wss://relay.walletconnect.org',
+    'https://verify.walletconnect.com',
+    'https://verify.walletconnect.org',
+    'https://api.web3modal.org',
   ]],
-  ['frame-src', ['https://copilot-api.ifrunit.tech', 'https://verify.walletconnect.com']],
+  ['frame-src', ['https://copilot-api.ifrunit.tech', 'https://verify.walletconnect.com', 'https://verify.walletconnect.org']],
   ['worker-src', ["'self'"]],
   ['manifest-src', ["'self'"]],
   ['object-src', ["'none'"]],
@@ -78,13 +84,13 @@ const expectedCsp = new Map([
 assert.deepEqual(
   [...csp.keys()].sort(),
   [...expectedCsp.keys()].sort(),
-  'CSP directive set must match the reviewed Web3 policy exactly',
+  'report-only CSP directive set must match the reviewed Web3 policy exactly',
 );
 for (const [directive, tokens] of expectedCsp) {
   assert.deepEqual(
     csp.get(directive),
     tokens,
-    `CSP ${directive} must match the reviewed Web3 policy exactly`,
+    `report-only CSP ${directive} must match the reviewed Web3 policy exactly`,
   );
 }
 
@@ -133,7 +139,7 @@ const scriptSrcHosts = csp.get('script-src').filter((token) => token.startsWith(
 assert.deepEqual(scriptSrcHosts, [], 'CSP script-src must not allow any third-party host (CWA-47)');
 
 // WalletConnect relay/modal/verify endpoints required by the connector flow.
-requireCspTokens(csp, 'connect-src', ['wss://*.walletconnect.com', 'https://*.walletconnect.com']);
+requireCspTokens(csp, 'connect-src', ['wss://relay.walletconnect.org', 'https://rpc.walletconnect.org', 'https://api.web3modal.org']);
 requireCspTokens(csp, 'frame-src', ['https://verify.walletconnect.com']);
 requireCspTokens(csp, 'img-src', ['data:', 'blob:']);
 
