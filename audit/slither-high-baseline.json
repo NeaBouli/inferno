@@ -36,6 +36,12 @@
       "subject": "LendingVault.liquidate(uint256) arbitrary-send-eth",
       "classification": "By-design destination",
       "rationale": "The liquidator bonus is intentionally paid with a checked call to msg.sender, the permissionless liquidate() caller. The function is nonReentrant, state changes precede the call, a failed payment reverts atomically, and the recipient cannot be chosen independently of the caller."
+    },
+    {
+      "fingerprint": "9f3915f1fbf0f3a99dd53242385a29cc8cc5dbef64cff89283366ff3dfaf2d70",
+      "subject": "LendingVaultV2.claimETH(address,bool) reentrancy-balance",
+      "classification": "Constrained signal / guarded receipt checks",
+      "rationale": "claimETH consumes only msg.sender's ETH credit before calling the immutable, constructor-configured canonical WETH; it and every loan/asset accounting entry point are nonReentrant. The balance snapshots deliberately verify exact wrapping, exact recipient credit and restoration of the vault's prior WETH balance; failed or short wrapping reverts atomically. LendingVaultV2 H01/H03 test wrapped payout and short-mint rollback; H02 tests that a recipient callback cannot reenter claims. Canonical WETH identity remains a deployment trust boundary."
     }
   ]
 }
