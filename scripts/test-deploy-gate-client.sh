@@ -20,7 +20,7 @@ mkdir -p "$FAKES" "$GATE_DIR" "$FAKE_HOME/.fleet-ssh"
 
 # Clone the current commit and overlay the scripts under test, so the exact-SHA guards
 # run against a real, clean checkout even before these edits are committed.
-git clone -q --local "$ROOT" "$TMP/repo"
+git clone -q --local --no-hardlinks "$ROOT" "$TMP/repo"
 REPO="$TMP/repo"
 for f in deploy-gate-lib.sh deploy-compose-service.sh deploy-web3-site.sh deploy-benefits-network.sh; do
   cp "$ROOT/scripts/$f" "$REPO/scripts/$f"
@@ -82,6 +82,15 @@ case "$url" in
   https://points-api.*)   printf '%s' "${POINTS_CODE:-200}"; exit 0 ;;
   https://copilot-api.*)  printf 200; exit 0 ;;
   https://verify-api.*)   printf 404; exit 0 ;;
+  https://creator-api.*)
+    case "${url%%\?*}" in
+      */health|*/auth/siwe/nonce) printf 200 ;;
+      */auth/wallet) printf '%s' "${CREATOR_WALLET_CODE:-404}" ;;
+      */access/check) printf 401 ;;
+      */auth/google/callback) printf 400 ;;
+      *) exit 99 ;;
+    esac
+    exit 0 ;;
 esac
 path="${url#https://web3.ifrunit.tech/}"; path="${path%%\?*}"
 html="$GATE_DIR/html"
@@ -120,6 +129,22 @@ STAMP=20261005T101010Z
 VAULT=0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F
 
 # --- compose service ------------------------------------------------------------
+run 0 env EXPECTED_SHA="$SHA" bash "$COMPOSE" creator-gateway plan
+CREATOR_TSHA="$(sha256 "$GATE_DIR/service-plan.tar")"
+assert_log "$(gate_line "service-plan creator-gateway $SHA $CREATOR_TSHA") stdin=$CREATOR_TSHA"
+git -C "$REPO" archive --format=tar "$SHA:apps/creator-gateway" > "$TMP/creator.tar"
+same_tree "$TMP/creator.tar" "$GATE_DIR/service-plan.tar" || { echo "FAIL: wrong creator app archive" >&2; exit 1; }
+run 0 env EXPECTED_SHA="$SHA" bash "$COMPOSE" creator-gateway deploy
+assert_log "args=service-deploy creator-gateway"
+assert_log "https://creator-api.ifrunit.tech/auth/wallet"
+refute_log "direct ssh"
+run 1 env EXPECTED_SHA="$SHA" CREATOR_WALLET_CODE=200 bash "$COMPOSE" creator-gateway deploy
+assert_out "public checks fail; roll back with:"
+run 1 env EXPECTED_SHA="$SHA" GATE_FAIL=service-deploy bash "$COMPOSE" creator-gateway deploy
+refute_log "curl "
+run 0 bash "$COMPOSE" creator-gateway rollback "$STAMP"
+assert_log "$(gate_line "service-rollback creator-gateway $STAMP") stdin=-"
+
 git -C "$REPO" archive --format=tar "$SHA:apps/points-backend" > "$TMP/points.tar"
 
 run 0 env EXPECTED_SHA="$SHA" bash "$COMPOSE" points-backend plan

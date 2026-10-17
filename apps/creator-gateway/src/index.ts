@@ -1,24 +1,16 @@
-import express from 'express';
-import cors from 'cors';
-import rateLimit from 'express-rate-limit';
 import 'dotenv/config';
 import { CONFIG } from './config';
-import authRouter from './routes/auth';
-import accessRouter from './routes/access';
+import { app } from './app';
+import { verifyRpcChain } from './startup';
 
-const app = express();
+async function start(): Promise<void> {
+  if (CONFIG.isProduction) await verifyRpcChain(CONFIG.rpcUrl, CONFIG.chainId);
+  app.listen(CONFIG.port, '0.0.0.0', () =>
+    console.log(`IFR Creator Gateway on :${CONFIG.port}`)
+  );
+}
 
-app.use(cors({
-  origin: (process.env.ALLOWED_ORIGINS || 'http://localhost:3005').split(','),
-}));
-app.use(express.json({ limit: '10kb' }));
-app.use(rateLimit({ windowMs: 60_000, max: 60 }));
-
-app.use('/auth', authRouter);
-app.use('/access', accessRouter);
-
-app.get('/health', (_, res) => res.json({ status: 'ok', timestamp: new Date().toISOString() }));
-
-app.listen(CONFIG.port, () =>
-  console.log(`IFR Creator Gateway on :${CONFIG.port}`)
-);
+start().catch(() => {
+  console.error('Creator Gateway startup failed (RPC_URL chain check); refusing to listen');
+  process.exitCode = 1;
+});
