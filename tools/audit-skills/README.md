@@ -38,7 +38,7 @@ cross-page consistency matrix for repeated facts, and scripted link/anchor integ
 ### `ai-readiness-audit/`
 AI-readiness audit in two halves: the project's own copilot (knowledge-path map, completeness
 against the canonical fact set, retrieval trust chain, safety rails) and the external
-AI/search anchor layer (robots, sitemaps, llms.txt/ai.txt, JSON-LD, meta/canonical per host).
+AI/search anchor layer (robots, sitemaps, llms.txt/ai.txt, JSON-LD, meta/canonical per host). The first half applies only if the audited project operates an assistant.
 
 ## Provenance
 
