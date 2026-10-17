@@ -607,7 +607,7 @@
 
       <div class="callout">
         <p>
-          <strong>Current functionality:</strong> See the <a href="https://ifrunit.tech/CURRENT_FUNCTIONALITY_STATUS.md">verified surface and application matrix</a> for the Landing, Web3 app, IFR Benefits PWA, repository packages and current Mainnet activation boundaries. Lending borrowing and price-conditioned CommitmentVault locks are presently fail-closed.
+          <strong>Current functionality:</strong> See the <a href="https://ifrunit.tech/CURRENT_FUNCTIONALITY_STATUS.md">verified surface and application matrix</a> for the Landing, Web3 app, IFR Benefits PWA, repository packages and current Mainnet activation boundaries. LendingVault V1 creation/increase and new borrowing are permanently retired in official interfaces; withdrawals and existing-loan repayment/top-up remain available. New CommitmentVault locks are TIME_ONLY in V2; price-conditioned locks are unavailable.
         </p>
       </div>
 
@@ -837,13 +837,13 @@
         <a href="https://ifrunit.tech/wiki/commitment-vault.html" class="card" style="border-color:rgba(59,130,246,0.3);">
           <div class="card-icon">&#x1F512;</div>
           <div class="card-title">CommitmentVault</div>
-          <div class="card-desc">Voluntary token lock with 4 unlock conditions. Anti-dump mechanism.</div>
+          <div class="card-desc">New TIME_ONLY locks in V2. Existing V1 tranches stay in V1; price-conditioned locks are unavailable.</div>
         </a>
 
         <a href="https://ifrunit.tech/wiki/lending-vault.html" class="card" style="border-color:rgba(59,130,246,0.3);">
           <div class="card-icon">&#x1F4B0;</div>
           <div class="card-title">LendingVault</div>
-          <div class="card-desc">IFR lending against ETH collateral. Self-reinforcing buy pressure.</div>
+          <div class="card-desc">V1 retired: no new offers, increases or borrowing. Full-available lender withdrawals remain available.</div>
         </a>
 
         <a href="https://ifrunit.tech/wiki/lending-market.html" class="card" style="border-color:rgba(59,130,246,0.3);">

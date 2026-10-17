@@ -1101,7 +1101,7 @@
   provider
 );
 const hasLock = await ifrLock.isLocked(walletAddress, ethers.parseUnits("1000", 9));
-// true if wallet has >= 1000 IFR locked</pre>This is a single on-chain call. No API keys, no user databases, no privacy concerns.</div>
+// true if wallet has >= 1000 IFR locked</pre>This is a single on-chain call. No names or emails are required for this lock check; public wallet addresses are processed as pseudonymous identifiers by the app and its RPC provider.</div>
         </div>
 
         <div class="faq-item">
@@ -1201,7 +1201,7 @@ const hasLock = await ifrLock.isLocked(walletAddress, ethers.parseUnits("1000", 
       <div class="faq-section">
         <div class="faq-item">
           <button class="faq-q"><span>What happens if Bootstrap finalizes with very little ETH?</span><span class="icon">+</span></button>
-          <div class="faq-a">Bootstrap finalized on 05.06.2026 with 0.030 ETH. The active stabilization path is: 1) contributors buy IFR on Uniswap, 2) contributors lock 50% in <strong>CommitmentVault</strong> using TIME_ONLY tranches, 3) contributors create <strong>LendingVault</strong> offers with the remaining 50%. The LP Reserve Safe remains governance-controlled and has not been automatically added.</div>
+          <div class="faq-a">Bootstrap finalized on 05.06.2026 with 0.030 ETH. The historical contributor plan split claimed IFR between <strong>CommitmentVault</strong> TIME_ONLY tranches and <strong>LendingVault</strong> offers. Current official interfaces permanently retire V1 offer creation/increase and new borrowing; full-available withdrawals and existing-loan repayment/top-up remain available. New time locks use CommitmentVault V2. The LP Reserve Safe remains governance-controlled and has not been automatically added.</div>
         </div>
 
         <div class="faq-item">

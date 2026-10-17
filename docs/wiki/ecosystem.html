@@ -10,7 +10,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Ecosystem &mdash; Inferno (IFR) Documentation</title>
   <meta name="keywords" content="ecosystem, self-reinforcing, buy pressure, utility">
-  <meta name="description" content="The self-reinforcing IFR ecosystem. How CommitmentVault, LendingVault, and builder integrations create sustained buy pressure.">
+  <meta name="description" content="IFR ecosystem status: TIME_ONLY commitments, retired LendingVault V1, builder integrations and inactive partner rewards.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -793,19 +793,19 @@
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Inferno Protocol">
   <meta property="og:title" content="IFR Ecosystem &mdash; Inferno Protocol (IFR)">
-  <meta property="og:description" content="The self-reinforcing IFR ecosystem. How CommitmentVault, LendingVault, and builder integrations create sustained buy pressure.">
+  <meta property="og:description" content="IFR ecosystem status: TIME_ONLY commitments, retired LendingVault V1, builder integrations and inactive partner rewards.">
   <meta property="og:url" content="https://ifrunit.tech/wiki/ecosystem.html">
   <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="IFR Ecosystem &mdash; Inferno Protocol (IFR)">
-  <meta name="twitter:description" content="The self-reinforcing IFR ecosystem. CommitmentVault, LendingVault, and builder integrations create sustained buy pressure.">
+  <meta name="twitter:description" content="IFR ecosystem status: TIME_ONLY commitments, retired LendingVault V1, builder integrations and inactive partner rewards.">
   <meta name="twitter:site" content="@IFRtoken">
   <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">  <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@type": "TechArticle",
     "headline": "IFR Ecosystem",
-    "description": "The self-reinforcing IFR ecosystem. How CommitmentVault, LendingVault, and builder integrations create sustained buy pressure.",
+    "description": "IFR ecosystem status: TIME_ONLY commitments, retired LendingVault V1, builder integrations and inactive partner rewards.",
     "url": "https://ifrunit.tech/wiki/ecosystem.html",
     "isPartOf": {"@id": "https://ifrunit.tech/#website"},
     "publisher": {"@id": "https://ifrunit.tech/#organization"},
@@ -974,7 +974,7 @@
       <!-- ======================================== -->
       <h2>1. Current and Conditional Flow</h2>
       <p>
-        Current Mainnet activity includes contributor commitments, lender offers and user access locks. Borrowing is disabled while <code>LendingVault.ifrPriceWei = 0</code>. The lower part of this diagram is a possible future path only: it requires a separately audited borrowing design and does not guarantee market demand or price growth.
+        Current functionality includes TIME_ONLY commitments and user access locks. LendingVault V1 creation/increase and new borrowing are permanently retired in official interfaces, regardless of price; full-available withdrawals and existing-loan repayment/top-up remain available. Borrowing is disabled while <code>LendingVault.ifrPriceWei = 0</code> in the retained contract-input snapshot; this is separate from permanent interface retirement. The lower part of this diagram is a possible future path only: it requires a separately audited borrowing design and does not guarantee market demand or price growth.
       </p>
 
       <!-- Cycle diagram using styled divs -->
@@ -1051,7 +1051,7 @@
         <h3>Principle 2: Locked Tokens Work</h3>
         <ul>
           <li>Tokens that are locked and forgotten = wasted</li>
-          <li>CommitmentVault + LendingVault make them productive</li>
+          <li>TIME_ONLY commitments support lock-based access; retired LendingVault V1 retains withdrawals and existing-loan servicing</li>
         </ul>
       </div>
 
@@ -1076,7 +1076,7 @@
           <div class="stakeholder-card-body">
             <ul>
               <li>100M IFR locked</li>
-              <li>IFR interest via Lending if borrowing is activated</li>
+              <li>LendingVault V1 retired; no new borrowing or offer increases</li>
               <li>Tranches unlock with growth</li>
             </ul>
           </div>
@@ -1086,8 +1086,8 @@
           <div class="stakeholder-card-top blue">Builder</div>
           <div class="stakeholder-card-body">
             <ul>
-              <li>Borrow IFR for discount programs</li>
-              <li>PartnerVault Rewards</li>
+              <li>Use acquired IFR for discount programs; V1 borrowing is disabled</li>
+              <li>PartnerVault rewards planned, not active</li>
               <li>Customer retention through Lock</li>
             </ul>
           </div>
@@ -1116,7 +1116,7 @@
       </div>
 
       <div class="callout-green callout">
-        <p><strong>IFR Benefits Network is live:</strong> <a href="https://shop.ifrunit.tech/" target="_blank" rel="noopener">shop.ifrunit.tech</a> connects both sides of this loop. Customers discover offers, filter by a seller-published city, region or Online service area, lock IFR and preferably present a private short-lived checkout pass. Sellers publish profiles, products and benefit rules, scan and bind the customer pass to the exact offer; the customer's signed proof, checked against the selected IFRLock or active TIME_ONLY CommitmentVault threshold plus any optional minimum IFR kept free in the customer wallet, redeems the checkout once. An either-source rule requires the full amount in one source; partial balances are not combined and price-conditioned commitments are excluded. The compatible seller-issued QR flow remains available. The service-area label uses no customer GPS or street address. PartnerVault seller rewards remain disabled until governance registration and an authorized reward caller are in place.</p>
+        <p><strong>IFR Benefits Network is live:</strong> <a href="https://shop.ifrunit.tech/" target="_blank" rel="noopener">shop.ifrunit.tech</a> connects both sides of this loop. Customers discover offers, filter by a seller-published city, region or Online service area, lock IFR and preferably present a private short-lived checkout pass. Sellers publish profiles, products and benefit rules, scan and bind the customer pass to the exact offer; the customer's signed proof, checked against the selected IFRLock or active TIME_ONLY CommitmentVault threshold plus any optional minimum IFR kept free in the customer wallet, redeems the checkout once. An either-source rule requires the full amount in one source; partial balances are not combined and price-conditioned commitments are excluded. The compatible seller-issued QR flow remains available. The service-area label uses no customer GPS or street address. PartnerVault seller rewards are not active: Model B requires registration, allocation and per-period Governance <code>recordMilestone</code>; no pilot partner is activated and no authorized-caller path is used.</p>
       </div>
 
       <!-- ======================================== -->

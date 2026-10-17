@@ -1,17 +1,5 @@
 import { ACCESS_TIERS, ACCESS_TIER_SUMMARY } from "./copilot-policy";
 
-const BOOTSTRAP_END = new Date("2026-06-05T00:00:00Z").getTime();
-
-function getBootstrapStatus(): string {
-  const now = Date.now();
-  if (now < BOOTSTRAP_END) {
-    const days = Math.ceil((BOOTSTRAP_END - now) / 86400000);
-    return `NOW ACTIVE — Bootstrap is LIVE since 07.03.2026. Ends June 5, 2026 (${days} days remaining). Contribute at ifrunit.tech/wiki/bootstrap.html`;
-  } else {
-    return `ENDED — Bootstrap closed June 5, 2026. IFR is now on Uniswap.`;
-  }
-}
-
 export function getIFRKnowledge() {
   const [bronzeTier, silverTier, goldTier, platinumTier] = ACCESS_TIERS;
 
@@ -99,11 +87,10 @@ export function getIFRKnowledge() {
         "check IFR balance",
         "check CommitmentVault lock state",
         "use the simple refundable IFRLock access lock or unlock all IFRLock funds",
-        "lock IFR in CommitmentVault",
+        "create TIME_ONLY locks in CommitmentVault V2",
         "unlock matured CommitmentVault tranches",
-        "create or increase LendingVault offers",
-        "withdraw unlent IFR",
-        "browse LendingVault offers, borrow when on-chain pricing is active, repay loans, or top up collateral",
+        "withdraw the full available unlent LendingVault amount",
+        "read remaining LendingVault offers, repay existing loans, or top up their collateral; V1 creation/increase and new borrowing are permanently retired in official interfaces, regardless of price",
         "track the live GeckoTerminal pool"
       ],
       roleRouting: {
@@ -140,7 +127,7 @@ export function getIFRKnowledge() {
         "see the checkout redeemed or rejected; the customer proof redeems it once, there is no separate seller redeem step",
         "review protected recent sessions and a local CSV without customer wallet data"
       ],
-      security: "Customer-initiated flow: the pass is created from shop.ifrunit.tech/#customer-pass and its QR contains only an opaque, short-lived shop.ifrunit.tech/p/:passId URL; it exposes no wallet, lock, signature, control token, rule, or internal session ID. The seller selects one exact rule, and the customer confirms the exact seller, product, discount, and IFRLock threshold in the original tab by signing a proof that binds the wallet, shop, checkout, nonce, expiry and terms; the backend checks the signer, reads eligibility fresh on-chain and redeems the checkout exactly once. Seller-issued flow remains compatible and uses a short-lived shop.ifrunit.tech/r/:sessionId URL. Authoritative seller, rule, nonce, expiry and checkout status stay server-side. The backend stores no customer wallet address, hash of it, signature, lock or balance amount or customer history; it keeps merchant checkout records and seller audit events, so checkouts are not anonymous. IFR does not enforce per-customer redemption limits. Public proof-link polling is non-cacheable and never returns a customer address, exact lock amount, or detailed rejection reason. The signing customer receives their own details in the direct attest response; seller operational details remain owner-wallet protected. Camera and selected QR images are decoded locally. Customer history is device-local only (signed receipts in the browser) and is lost with the browser data. The app never asks for a seed phrase or private key.",
+      security: "No names or emails are required for lock checks; public wallet addresses are processed as pseudonymous identifiers. Customer-initiated flow: the pass is created from shop.ifrunit.tech/#customer-pass and its QR contains only an opaque, short-lived shop.ifrunit.tech/p/:passId URL; it exposes no wallet, lock, signature, control token, rule, or internal session ID. The seller selects one exact rule, and the customer confirms the exact seller, product, discount, and IFRLock threshold in the original tab by signing a proof that binds the wallet, shop, checkout, nonce, expiry and terms; the backend checks the signer, reads eligibility fresh on-chain and redeems the checkout exactly once. Seller-issued flow remains compatible and uses a short-lived shop.ifrunit.tech/r/:sessionId URL. Authoritative seller, rule, nonce, expiry and checkout status stay server-side. The backend stores no customer wallet address, hash of it, signature, lock or balance amount or customer history; it keeps merchant checkout records and seller audit events, so checkouts are not anonymous. IFR does not enforce per-customer redemption limits. Public proof-link polling is non-cacheable and never returns a customer address, exact lock amount, or detailed rejection reason. The signing customer receives their own details in the direct attest response; seller operational details remain owner-wallet protected. Camera and selected QR images are decoded locally. Customer history is device-local only (signed receipts in the browser) and is lost with the browser data. The app never asks for a seed phrase or private key.",
       rewards: "Seller rewards are not active. The decided model pays pilot partners only for verified checkout redemptions within a fixed budget, activated per pilot by a Governance proposal. Since customer sessions store no customer wallet, reward events are non-payable and settlement exports are diagnostic only until a new reward policy is accepted.",
       docs: "https://ifrunit.tech/wiki/business-onboarding.html"
     },
@@ -183,7 +170,7 @@ export function getIFRKnowledge() {
       commitmentVault: {
         status: "DEPLOYED — Mainnet 04.04.2026, feeExempt active",
         address: "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3",
-        description: "Irrevocable tranche lock until its condition is met. TIME_ONLY is operational; price, time+price and time OR price fail closed while Mainnet priceOracle is the zero address.",
+        description: "Existing V1 tranches remain in V1; new TIME_ONLY locks use CommitmentVault V2. Price-conditioned locks are unavailable. V1 price-conditioned tranches can never unlock because its price check always reads zero (CV-01), regardless of oracle configuration.",
         contributorConfig: "C1/C2/C3 use TIME_ONLY tranches; total Mainnet CommitmentVault balance was 47,952,476.871794375 IFR at block 25900438.",
         autoUnlock: "30 days after condition met — anyone can call, tokens always go to original wallet",
         tests: "46/46 passing",
@@ -196,7 +183,7 @@ export function getIFRKnowledge() {
         description: "V1 retired by owner decision (3 October 2026): borrowing stays disabled (ifrPriceWei = 0, no activation planned or authorized) and lenders are withdrawing their offers with withdrawOffer; those IFR are not lost. No new offers are invited. No V2 is planned until a reviewed price source exists.",
         interestRate: "2% to 25% based on utilization",
         collateral: "V1 parameters: 200% initial; checkHealth emits a warning below 150%; an external caller may liquidate below 120%. V1 has no enforced 48-hour grace period.",
-        currentMainnetState: "Three offers provide 52,155,440.952845656 IFR, with 0 IFR lent. Borrowing is intentionally disabled because ifrPriceWei is 0.",
+        currentMainnetState: "Retained block-25812380 snapshot: three offers, 52,155,440.952845656 IFR available, 0 IFR lent and ifrPriceWei = 0; not a fresh measurement. Official interfaces permanently retire V1 creation/increase and new borrowing regardless of price.",
         tests: "56/56 passing",
         wiki: "https://ifrunit.tech/wiki/lending-vault.html",
         apiEndpoints: "GET /api/lending/stats, GET /api/lending/offers, GET /api/lending/loans/:address, GET /api/lending/health/:loanId, GET /api/lending/lender/:address"
@@ -209,7 +196,7 @@ export function getIFRKnowledge() {
       buybackController: {
         status: "DEPLOYED — Mainnet 14.04.2026; governance wiring completed through Proposals #13 and #14",
         address: "0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c",
-        description: "Governance-wired controller for guarded distribution. Permissionless execute() remains subject to its on-chain balance threshold and cooldown.",
+        description: "Governance-wired controller for guarded distribution. Permissionless execute() requires separate ETH funding and its on-chain execution conditions. BuybackVault is dormant; no active buyback/burn flywheel is fed by the IFR pool fee.",
         tests: "50/50 passing"
       },
       ecosystemWiki: "https://ifrunit.tech/wiki/ecosystem.html"
@@ -275,7 +262,7 @@ export function getIFRKnowledge() {
       partners: "Default preset and labels, not a rule: every Benefits partner sets its own thresholds, held-IFR minimums, lock source and discount per benefit. Any project may verify IFR permissionlessly with its own rule (ifr-benefits-verify/1). Discounts are independent of PartnerVault rewards (Lane 4 model B, approved pilots only, currently disabled)."
     },
     bootstrap: {
-      status: getBootstrapStatus(),
+      status: "FINALIZED — Bootstrap ended on 5 June 2026; Uniswap V2 IFR/WETH pool created.",
       phase: "ENDED — Bootstrap closed 05.06.2026 23:51 UTC. finalise() executed. IFR is live on Uniswap V2.",
       currentState: "Bootstrap FINALIZED. finalise() TX: 0x949848bdd09f4c867a2593afffb0137c7db2c1457d8a8f5ff4428f8ecce69c5f (Block 25254575). 100M IFR + 0.030 ETH paired as Uniswap V2 LP; 100M IFR reserved for contributor claims. Team.Finance was disabled on Mainnet. LP remains in BootstrapVaultV3, which exposes no LP withdrawal function.",
       startDate: "07.03.2026 (on-chain startTime) — ENDED 05.06.2026",
@@ -313,7 +300,7 @@ export function getIFRKnowledge() {
       },
       layer2: {
         name: "LendingVault",
-        description: "Contributors can offer IFR. Borrowing is disabled while ifrPriceWei is 0. " +
+        description: "LendingVault V1 creation/increase and new borrowing are permanently retired in official interfaces, regardless of price. Full-available withdrawal and existing-loan repayment/top-up remain available. " +
           "If a future borrower acquires IFR externally for repayment that can create market demand, " +
           "but V1 liquidation only distributes ETH collateral and performs no Uniswap purchase.",
         result: "No guaranteed buy pressure from V1 liquidation"

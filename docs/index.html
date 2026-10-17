@@ -1721,7 +1721,7 @@
           Access remains active while the required IFR stays locked and the product integration remains available.
         </p>
         <p>
-          Built on the <strong>Community Fair Launch Model</strong>: no presale, no VC rounds, no insider advantages.
+          Built on the <strong>Community Fair Launch Model</strong>: no presale or VC rounds; the disclosed 15% team allocation is vested.
           100% transparent, on-chain distribution from day one.
         </p>
       </div>
@@ -2001,7 +2001,7 @@ render();
         </div>
         <div style="margin-top:20px;padding:20px;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);max-width:700px;margin-left:auto;margin-right:auto;text-align:center;">
           <strong style="color:var(--accent);">No Presale. No VC. No IDO.</strong>
-          <span style="color:var(--text-muted);margin-left:12px;">Direct Uniswap V2 listing. Team tokens vested 4 years.</span>
+          <span style="color:var(--text-muted);margin-left:12px;">Bootstrap finalized 5 June 2026; Uniswap V2 pool created. Team tokens vested 4 years.</span>
           <a href="wiki/fair-launch.html" style="color:var(--accent);margin-left:8px;">→ Fair Launch Statement</a>
         </div>
         <div style="margin-top:32px;padding:24px;background:#fffaf2;border:1px solid #e4d8c7;border-radius:var(--radius);box-shadow:0 14px 34px rgba(85,65,42,0.08);">
@@ -2745,7 +2745,7 @@ if (isLocked) {
       <div class="arch-layer">
         <p class="arch-layer-tag">Bridge Layer &mdash; Stateless</p>
         <h3>License Resolver</h3>
-        <p>Stateless middleware that translates wallet queries into license checks. Maps wallet addresses to product entitlements. Privacy-neutral: no personal data stored.</p>
+        <p>Stateless middleware that translates wallet queries into license checks. Maps wallet addresses to product entitlements. No names or emails are required for the lock check; public wallet addresses are processed as pseudonymous identifiers.</p>
       </div>
       <div class="arch-layer">
         <p class="arch-layer-tag">Service Layer &mdash; Off-Chain</p>
@@ -2919,7 +2919,7 @@ if (isLocked) {
     {q:"Can I provide IFR and ETH liquidity myself?",a:"Yes. Use the existing Ethereum Uniswap V2 pool. Our <a href='wiki/liquidity.html'>liquidity guide and live calculator</a> help you prepare; connect and confirm separately on Uniswap. An approval alone does not add liquidity."},
     {q:"Are my LP tokens locked, and is a return guaranteed?",a:"Your own LP tokens represent your share of the current pool and can be used to remove liquidity if you hold them. They are separate from the original Bootstrap LP held in its vault, IFRLock access and Builder rewards. Returns are not guaranteed; price changes, fees and impermanent loss can cause losses. <a href='wiki/liquidity.html#risks'>LP risks</a>."},
     {q:"What is IFR / $IFRp and what makes it deflationary?",
-     a:"IFR is the on-chain token symbol. $IFRp is used for social posts. Fixed supply of 1 billion IFR \u2014 no minting ever. Every standard transfer between non-exempt addresses burns 2.5% of the transferred amount permanently. Verified fee-exempt paths, including the IFR/WETH pair and future activated CEX addresses, bypass the transfer fee. A buyback loop from protocol fees adds further pressure. Supply can only decrease over time."},
+     a:"IFR is the on-chain token symbol. $IFRp is used for social posts. Fixed supply of 1 billion IFR \u2014 no minting ever. Every standard transfer between non-exempt addresses burns 2.5% of the transferred amount permanently. Verified fee-exempt paths, including the IFR/WETH pair and future activated CEX addresses, bypass the transfer fee. BuybackVault is dormant; no active buyback/burn flywheel is fed by the IFR pool fee. BuybackController execution requires separate ETH funding and its configured execution conditions. Supply can only decrease over time."},
     {q:"Can the team rug the liquidity?",
      a:"BootstrapVaultV3 has no admin or LP withdrawal function. Team.Finance was not configured on Mainnet; the LP tokens created by finalise() remain in the vault and are not withdrawable by the team. <a href='wiki/faq.html#rugpull'>Full details \u2192</a>"},
     {q:"Does locking IFR or connecting a wallet change what the AI Copilot knows?",
@@ -3025,23 +3025,23 @@ if (isLocked) {
     <div class="reveal" style="text-align:center;margin-bottom:32px;">
       <p class="section-label">Phase 3</p>
       <h2 class="section-title">DeFi Infrastructure</h2>
-      <p style="color:var(--text-muted);max-width:600px;margin:8px auto 0;font-size:14px;">Bootstrap ENDED 05.06.2026 &mdash; IFR live on Uniswap V2. CommitmentVault locks and LendingVault offers are now guided self-service wallet flows.</p>
+      <p style="color:var(--text-muted);max-width:600px;margin:8px auto 0;font-size:14px;">Bootstrap ENDED 05.06.2026 &mdash; IFR live on Uniswap V2. New CommitmentVault locks are TIME_ONLY in V2. LendingVault V1 is retired: no new offers, increases or borrowing; withdrawals and existing-loan repayment/top-up remain available.</p>
     </div>
     <div class="reveal" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;max-width:960px;margin:0 auto;">
       <a href="wiki/commitment-vault.html" style="background:#111113;border:1px solid #222225;border-radius:12px;padding:20px;text-decoration:none;transition:border-color 0.2s;">
         <div style="font-size:24px;margin-bottom:8px;">&#x1F512;</div>
         <div style="font-weight:700;color:#211C17;margin-bottom:4px;">CommitmentVault</div>
-        <div style="font-size:13px;color:#6F655A;">Live wallet flow: approve IFR, then lock with time or price conditions.</div>
+        <div style="font-size:13px;color:#6F655A;">New TIME_ONLY locks use V2; existing V1 tranches remain in V1. Price-conditioned locks are unavailable.</div>
       </a>
       <a href="wiki/lending-vault.html" style="background:#111113;border:1px solid #222225;border-radius:12px;padding:20px;text-decoration:none;transition:border-color 0.2s;">
         <div style="font-size:24px;margin-bottom:8px;">&#x1F4B0;</div>
         <div style="font-weight:700;color:#211C17;margin-bottom:4px;">LendingVault</div>
-        <div style="font-size:13px;color:#6F655A;">Guided lender flow: connect, choose amount, approve, create offer, verify market status.</div>
+        <div style="font-size:13px;color:#6F655A;">V1 retired: no new offers or increases. Withdraw the full available unlent amount on Web3.</div>
       </a>
       <a href="wiki/lending-market.html" style="background:#111113;border:1px solid #222225;border-radius:12px;padding:20px;text-decoration:none;transition:border-color 0.2s;">
         <div style="font-size:24px;margin-bottom:8px;">&#x1F3EA;</div>
         <div style="font-weight:700;color:#211C17;margin-bottom:4px;">Lending Market</div>
-        <div style="font-size:13px;color:#6F655A;">P2P marketplace. Browse offers, compare rates.</div>
+        <div style="font-size:13px;color:#6F655A;">Read remaining offers. New borrowing is disabled; existing loans can be repaid or topped up.</div>
       </a>
       <a href="wiki/lp-strategy.html" style="background:#111113;border:1px solid #222225;border-radius:12px;padding:20px;text-decoration:none;transition:border-color 0.2s;">
         <div style="font-size:24px;margin-bottom:8px;">&#x1F4C8;</div>
