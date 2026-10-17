@@ -1,6 +1,6 @@
-# Compose Service Release (telegram-bot, points-backend, ai-copilot)
+# Compose Service Release (telegram-bot, points-backend, data-api)
 
-The Telegram verify bot, the Points backend and the AI Copilot run as services of the compose
+The Telegram verify bot, the Points backend and the protocol Data API run as services of the compose
 project `inferno` on the production host (`/opt/inferno/docker-compose.yml`, not in this repo).
 Their build contexts `/opt/inferno/<service>/` are plain copies of the repo app dirs. A merge to
 `main` does **not** update them. On 2026-09-30 the removed Telegram route
@@ -13,7 +13,7 @@ operator-run: the Fleet diagnosis identity has no Docker and no write access to 
 | --- | --- | --- | --- |
 | `telegram-bot` | `apps/telegram/telegram-bot` | `/opt/inferno/telegram-bot` | `verify-api.ifrunit.tech/` 404 **and** `/api/verify/status/1` 404 (CWA-34) |
 | `points-backend` | `apps/points-backend` | `/opt/inferno/points-backend` | `points-api.ifrunit.tech/health` 200 |
-| `ai-copilot` | `apps/ai-copilot` | `/opt/inferno/ai-copilot` | `copilot-api.ifrunit.tech/api/health` 200 |
+| `data-api` | `apps/data-api` | `/opt/inferno/data-api` | `copilot-api.ifrunit.tech/api/health` 200 |
 | `creator-gateway` (prepared, not deployed) | `apps/creator-gateway` | proposed `/opt/inferno/creator-gateway` | proposed `creator-api.ifrunit.tech`: `/health` 200, `/auth/siwe/nonce` 200, `POST /auth/wallet` 404, `/access/check` 401, `/auth/google/callback` 400 |
 
 Creator Gateway is a prepared client target, not an existing production service.
@@ -22,6 +22,22 @@ Google membership blockers, host gate onboarding and the separate bootstrap
 procedure. The normal direct path requires a genuine prior image/source baseline
 and intentionally refuses a first bootstrap. `CREATOR_GATEWAY_HOST` overrides
 the proposed hostname for public checks after owner approval.
+
+## Data API cutover
+
+The source now uses `data-api`. The public data hostname stays unchanged for SDK,
+bot and page compatibility; a neutral hostname migration is a later step.
+Deploy cleaned pages, Web3 and Benefits first, then have an authorized operator
+switch the host Compose service `ai-copilot` to `data-api` on the same router,
+hostname and port 3003. Preserve the bootstrap vote archive and existing mounts.
+Remove the old container/image only after verified backup and rollback preparation.
+The first rename needs operator bootstrap: this helper requires an existing image
+and source baseline and does not edit the host Compose definition.
+
+See [retirement, checks and rollback](COPILOT_CHAT_RETIREMENT.md). The helper keeps
+`ai-copilot` for rollback/inspection only; it rejects new plans and deployments
+for that name. Host gate allowlists and required checks need a separate cutover.
+The dated host assumptions below describe the old service and are historical.
 
 ## What a release changes
 

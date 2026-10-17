@@ -90,7 +90,7 @@ for (const relative of [
   "docs/wiki/open-audit.html",
   "docs/wiki/security.html",
   "docs/llms.txt",
-  "apps/ai-copilot/src/context/ifr-knowledge.ts",
+
 ]) {
   const content = fs.readFileSync(path.join(root, relative), "utf8");
   assert.ok(content.includes("JULY_2026_REMEDIATION_REGISTER"), `${relative} must link to July status register`);
@@ -117,10 +117,7 @@ const publicStatusMarkers = {
     `${statusTotals.fixed_and_verified} fixed and verified`,
     `${statusTotals.partially_remediated} partially remediated`,
   ],
-  "apps/ai-copilot/src/context/ifr-knowledge.ts": [
-    `${statusTotals.fixed_and_verified} fixed and verified`,
-    `${statusTotals.partially_remediated} partially remediated`,
-  ],
+
 };
 for (const [relative, markers] of Object.entries(publicStatusMarkers)) {
   const content = fs.readFileSync(path.join(root, relative), "utf8");

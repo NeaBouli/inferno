@@ -7,7 +7,7 @@
  *   - F3 (PR #238): customer-presented checkout pass (components/CustomerCheckoutPass.tsx on /#customer-pass)
  *     in the states open / bound (offer review) / proof-signing / proof-redeemed / refusal / expired, with
  *     long-label fixtures (80-char label, 160-char product name; worded and unbroken) under the real
- *     fixed overlays (Copilot launcher, any fixed toast/status layer).
+ *     fixed overlays (any fixed toast/status layer).
  * Widths 375, 390, 820, 1440. Per capture: 0 px horizontal overflow, no clipped text, no overlapping
  * text boxes, no text or control under the fixed launcher. All API traffic is mocked (dummy data).
  *
@@ -279,18 +279,6 @@ async function layoutFindings(page, scopeSelector, label) {
         if (hit(a.rect, b.rect, 2)) findings.push(`${label}: overlapping text "${a.text}" / "${b.text}"`);
       }
     }
-    const launcher = document.querySelector('.shop-copilot-button');
-    if (launcher && visible(launcher)) {
-      const lr = launcher.getBoundingClientRect();
-      for (const item of textRects) {
-        if (hit(item.rect, lr, 0)) findings.push(`${label}: text under launcher "${item.text}"`);
-      }
-      for (const control of scope.querySelectorAll('button, a')) {
-        if (!visible(control) || inFixedChrome(control)) continue;
-        const cr = control.getBoundingClientRect();
-        if (cr.width && cr.bottom > 0 && cr.top < vh && hit(cr, lr, 0)) findings.push(`${label}: control under launcher "${control.textContent.trim().slice(0, 30)}"`);
-      }
-    }
     return findings;
   }, { scopeSelector, label });
 }
@@ -298,7 +286,7 @@ async function layoutFindings(page, scopeSelector, label) {
 /**
  * F3 assertions inside the customer pass section at the current scroll position: every element stays
  * inside the section (no element overflow), primary action and status text are not covered by any fixed
- * overlay (Copilot launcher, toast/status layers), and the long labels are complete and not clipped.
+ * overlay (toast/status layers), and the long labels are complete and not clipped.
  */
 async function passFindings(page, label, fixture) {
   return page.evaluate(({ label, fixture }) => {
@@ -324,7 +312,7 @@ async function passFindings(page, label, fixture) {
         findings.push(`${label}: clipped content <${el.tagName.toLowerCase()}> "${(el.textContent || '').trim().slice(0, 40)}"`);
       }
     }
-    // Real fixed overlays: the Copilot launcher and any fixed toast/status layer that is not a full-screen dialog.
+    // Real fixed overlays: the any fixed toast/status layer that is not a full-screen dialog.
     const overlays = [...document.querySelectorAll('body *')].filter((el) => {
       if (!visible(el) || section.contains(el)) return false;
       if (getComputedStyle(el).position !== 'fixed') return false;
@@ -489,7 +477,7 @@ function writeEvidenceIndex(build, captures, findings) {
     '',
     '## Assertions',
     '- no horizontal page overflow; no element of #customer-pass outside the card; no clipped text; no overlapping text',
-    '- primary actions (all visible buttons) and status text (status pill, checkout status, aria-live/alert messages) not under any fixed overlay (Copilot launcher .shop-copilot-button; any fixed toast/status layer - none exists in the Benefits frontend)',
+    '- primary actions (all visible buttons) and status text (status pill, checkout status, aria-live/alert messages) not under any fixed overlay (any fixed toast/status layer - none exists in the Benefits frontend)',
     '- no text or control under the launcher while the card is scrolled through in 60 px steps',
     '- label, product name and seller name rendered in full, inside the card, not clipped',
     '',

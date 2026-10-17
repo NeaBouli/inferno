@@ -71,14 +71,14 @@ inferno/
 │   └── workflows/
 │       ├── creator-gateway.yml       [x] CI: tsc + jest
 │       ├── points-backend.yml        [x] CI: prisma generate + tsc + jest
-│       ├── ai-copilot.yml           [x] CI: tsc + build
+│       ├── data-api.yml           [x] CI: tsc + build
 │       ├── update-stats.yml         [x] Cron: daily 06:00 UTC On-Chain Stats Update
 │       └── post-deploy.yml          [x] Trigger: after deploy/execute script push
 ├── apps/
 │   ├── dashboard/                      [x] React + Vite Frontend (Phase 1 + Phase 2 + LockPanel)
 │   ├── governance-dashboard/          [x] React + Vite + TS + Tailwind (Overview, Builders, Timelock, Calldata, ProposalAlert)
 │   ├── partner-directory/             [removed] Replaced by open ecosystem model
-│   ├── ai-copilot/                   [x] React + Vite + TS + Tailwind + Express (3 modes, RAG, Safety Guards)
+│   ├── data-api/                     [x] JSON protocol API, Express + TypeScript, port 3003
 │   ├── points-backend/               [x] Express + Prisma + SQLite + siwe + jose (SIWE Auth, Points, EIP-712 Voucher, 35 Tests)
 │   ├── creator-gateway/              [x] Express + ethers v5 + googleapis + JWT (YouTube x IFR Lock Bridge, Port 3005, 41 Tests)
 │   ├── benefits-network/
@@ -124,7 +124,6 @@ inferno/
 │   ├── CHATGPT_AUDIT_V3_RESULTS.md Audit V3 Results (12/12 PASS, Methodology, Findings)
 │   ├── CHATGPT_AUDIT_PROMPT_V4.md Independent Audit V4 (8 Self-Checks: Anti-Sybil, SIWE, Integration, Numbers, RAG, Voucher, CHANGELOG, Deployment)
 │   ├── RAILWAY_ENV.md               Points Backend Railway Deploy (Env Vars, CLI Setup, Health Check)
-│   ├── VERCEL_ENV.md                AI Copilot Vercel + Railway Deploy (Two-App, Proxy, Env Vars)
 │   ├── PAGE_UPDATE_CHECKLIST.md    Which files need updating for which event
 │   ├── DASHBOARD_TEST_RESULTS.md   Dashboard Build Results (0 Errors, 198 Modules)
 │   ├── BENEFITS_E2E_RESULTS.md     Benefits Network E2E Checklist (Backend, API, Sepolia)
@@ -134,7 +133,6 @@ inferno/
 │   ├── stats.json                   Auto-generated On-Chain Stats (via update-stats.js)
 │   ├── RELEASE_NOTES_v0.1.0.md        First tagged release (Sepolia Testnet)
 │   ├── LIGHTHOUSE_REPORT.md           SEO Optimizations (OG, Twitter Card, Meta Tags, Sitemap, robots.txt)
-│   ├── COPILOT_TEST_RESULTS.md        AI Copilot RAG Test (6 Questions, 3 Modes, Safety Guards)
 │   ├── ROADMAP_v0.2.0.md             Mainnet-Ready Milestones (Audit, Multisig, Deploy, Post-Launch)
 │   ├── CHATGPT_AUDIT_V4_RESULTS.md    Audit V4 Results (8/8 PASS)
 │   ├── GITHUB_SETUP.md               Repository Setup (Discussions, Topics, Pages)

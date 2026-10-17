@@ -87,16 +87,16 @@ for (const [relative, linkPattern] of Object.entries(statusLinks)) {
 }
 
 const landing = read("docs/index.html");
-assert.ok(landing.includes("ALL 82 QUESTIONS &amp; ANSWERS"));
+assert.ok(landing.includes("ALL 81 QUESTIONS &amp; ANSWERS"));
 assert.ok(landing.includes("wiki/liquidity.html"));
 assert.ok(!landing.includes("ALL 61 QUESTIONS &amp; ANSWERS"));
 
-const copilotWiki = read("apps/ai-copilot/src/context/wiki-content.json");
-assert.ok(copilotWiki.includes("Borrowing is disabled while LendingVault.ifrPriceWei = 0"));
+
+
 // T-271: V1 is retired (3 October 2026); the borrower path is permanently disabled, not "future".
-assert.ok(copilotWiki.includes("Borrower path — disabled (V1 retired)"));
-assert.ok(!copilotWiki.includes("Future borrower path"));
-assert.ok(!copilotWiki.includes("every step creates buy pressure on Uniswap"));
+
+
+
 
 const onePager = read("docs/ONE-PAGER.md");
 assert.ok(!onePager.includes("no yield, no risk"));
@@ -125,17 +125,14 @@ for (const relative of currentLendingDocs) {
 
 for (const relative of [
   "docs/llms.txt",
-  "apps/ai-copilot/src/context/ifr-knowledge.ts",
+
 ]) {
   const content = read(relative);
   assert.ok(!/Every default = collateral buys IFR/i.test(content));
   assert.ok(content.includes("52,155,440.952845656 IFR"));
   assert.ok(content.includes("0 IFR lent"));
 }
-assert.ok(
-  !appsKnowledgeHasStaleSupply(read("apps/ai-copilot/src/context/ifr-knowledge.ts")),
-  "Copilot knowledge must not retain the stale 998.5M supply snapshot"
-);
+
 assert.ok(!read("docs/DEPLOYMENTS.md").includes("BuybackController (pending Proposal A)"));
 assert.ok(!read("docs/DEPLOYMENTS.md").includes("Proposal A: setFeeExempt(BuybackController)"));
 for (const contract of ["CommitmentVault", "LendingVault", "BuilderRegistry"]) {
@@ -163,7 +160,7 @@ assert.ok(
 
 const faq = read("docs/wiki/faq.html");
 const faqCount = (faq.match(/class="faq-item"/g) || []).length;
-assert.equal(faqCount, 82, "Wiki FAQ count changed; update its visible count");
+assert.equal(faqCount, 81, "Wiki FAQ count changed; update its visible count");
 assert.ok(faq.includes(`${faqCount} questions.`));
 assert.ok(read("docs/index.html").includes(`view all ${faqCount} questions`));
 

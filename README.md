@@ -165,7 +165,7 @@ scope and limitations.
 | Browser / WalletConnect | 12 | Playwright |
 
 - Historical coverage snapshot: 90.79% branches / 99.45% statements (solidity-coverage, 544 tests, 05.03.2026) for the contract subset recorded in `docs/COVERAGE_REPORT.md`; not a current full-repository coverage claim. Current Hardhat 3 native coverage reports lines and statements only, so no current branch-coverage figure is published
-- GitHub Actions CI contains scoped workflows for contracts/tooling, Benefits Network, SDK, Creator Gateway, Points Backend, AI Copilot, dashboards, Telegram bot, wallet prototype, documentation and security checks. Deployment availability is verified separately and must not be inferred from a passing source-validation workflow.
+- GitHub Actions CI contains scoped workflows for contracts/tooling, Benefits Network, SDK, Creator Gateway, Points Backend, Data API, dashboards, Telegram bot, wallet prototype, documentation and security checks. Deployment availability is verified separately and must not be inferred from a passing source-validation workflow.
 - Slither CI analyzes all 21 production Solidity sources and fails on every
   Critical signal and every new, changed or stale High signal. The current baseline contains five reviewed
   signals with an explicit classification and rationale. Under the pinned
@@ -200,7 +200,7 @@ All smart contracts are open source and community review is explicitly encourage
 |-----|------|------|-------|
 | Token Dashboard | `apps/dashboard/` | 5173 | React 18 + Vite + ethers v6 + wagmi v2 |
 | Governance Dashboard | `apps/governance-dashboard/` | 5174 | React 18 + Vite + TypeScript + Tailwind + ethers v6 |
-| AI Copilot | `apps/ai-copilot/` | 5175 | React 18 + Vite + TypeScript + Tailwind + Express + ethers v6 |
+| Protocol Data API | `apps/data-api/` | 3003 | TypeScript + Express + ethers v6 |
 | Points Backend | `apps/points-backend/` | 3004 | Express + Prisma 7 + SQLite + ethers v6 + siwe + jose |
 | Creator Gateway | `apps/creator-gateway/` | 3005 | Express + ethers v6 + googleapis + JWT |
 | Benefits Network Backend | `apps/benefits-network/backend/` | 3001 | Express + Prisma + SQLite + ethers v6 |
@@ -256,15 +256,11 @@ Deposits, LP approvals and withdrawals take place **externally on Uniswap V2**, 
 
 Checks: `node scripts/test-liquidity-guide.mjs`, `node scripts/test-liquidity-integration.cjs`, `node scripts/test-liquidity-browser.mjs`. Browser tests use mocked chain data; `RUN_LIVE_POOL=1` adds a public read-only RPC smoke check. No real wallet signing is performed.
 
-### AI Copilot
+### Protocol Data API
 
-Embedded chat widget with RAG knowledge base — helps users, builders, and developers understand IFR.
-
-**Modes:** Customer · Builder · Developer
-
-**Safety:** No surface runs an automatic seed-phrase or private-key detector. The served chat widget (`copilot-api.ifrunit.tech`, embedded on the site) shows a static "never share private keys" notice, and the system prompts instruct the model never to ask for or accept seed phrases, private keys or mnemonics. The standalone React component (`apps/ai-copilot/src/components/IFRCopilot.tsx`) adds a client-side keyword warning for the phrases "seed phrase", "private key", "mnemonic" and "secret recovery"; it does not recognise raw keys or word lists. Source citation tags.
-
-**Start:** `cd apps/ai-copilot && npm ci && cp .env.example .env && npm run dev` → http://localhost:5175
+`apps/data-api/` serves protocol JSON routes for pages, SDK clients and bots on port 3003.
+Run `cd apps/data-api && npm ci && npm start`.
+See [retirement and cutover](docs/COPILOT_CHAT_RETIREMENT.md) for the source split and production order.
 
 ### Points Backend
 
@@ -321,14 +317,12 @@ SIWE authentication, points tracking, and EIP-712 signed voucher issuance for pr
 - [GitHub Secrets Guide](docs/GITHUB_SECRETS.md) — Required secrets for GitHub Actions CI/CD
 - [Internal Audit V3 Results](docs/CHATGPT_AUDIT_V3_RESULTS.md) — Internal V3 self-check record
 - [Railway Env Guide](docs/RAILWAY_ENV.md) — Points Backend Railway deploy (env vars, CLI setup)
-- [Vercel Env Guide](docs/VERCEL_ENV.md) — AI Copilot Vercel + Railway deploy (two-app, proxy config)
 - [Roadmap](docs/ROADMAP.md) — 6-phase roadmap (Foundation → Governance → Ecosystem → Mainnet → Growth → DAO)
 - [Page Update Checklist](docs/PAGE_UPDATE_CHECKLIST.md) — Which files to update for each event
 - [Deployment Stats](docs/stats.json) — Auto-generated on-chain stats (via update-stats.js)
 - [Project Summary](docs/PROJECT-SUMMARY.md) — Historical project snapshot; use current Wiki, CI and release records for live counts
 - [Release Notes v0.1.0](docs/RELEASE_NOTES_v0.1.0.md) — First tagged release (Sepolia testnet)
 - [Lighthouse Report](docs/LIGHTHOUSE_REPORT.md) — SEO optimizations (OG, Twitter Card, meta tags, sitemap, robots.txt)
-- [AI Copilot Test Results](docs/COPILOT_TEST_RESULTS.md) — RAG system test (6 questions, 3 modes, safety guards)
 - [Roadmap v0.2.0](docs/ROADMAP_v0.2.0.md) — Mainnet-ready milestones (audit, multisig, deploy, post-launch)
 - [Internal Audit V4 Results](docs/CHATGPT_AUDIT_V4_RESULTS.md) — Internal V4 self-check record
 - [Internal Audit V5 Results](docs/CHATGPT_AUDIT_V5_RESULTS.md) — Internal cross-audit record for W15-W21

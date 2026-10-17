@@ -21,6 +21,10 @@ mkdir -p "$FAKES" "$HOST/backups" "$DOCKER_STATE/images"
 # Clone the current commit and overlay the script under test, so the guards run
 # against a real, clean exact-SHA checkout even before these edits are committed.
 git clone -q --local --no-hardlinks "$ROOT" "$TMP/repo"
+# Include the renamed service under test even when this worktree is not committed yet.
+mkdir -p "$TMP/repo/apps/data-api"
+tar -C "$ROOT/apps/data-api" --exclude=node_modules --exclude='.env*' -cf - . | tar -C "$TMP/repo/apps/data-api" -xf -
+git -C "$TMP/repo" add apps/data-api
 cp "$ROOT/$SCRIPT" "$TMP/repo/$SCRIPT"
 # Nested source dirs that share a name with a root runtime dir must ship.
 NESTED=(src/data/nested.json src/dist/nested.js src/node_modules/nested/index.js)
@@ -37,7 +41,7 @@ SHA="$(git -C "$REPO" rev-parse HEAD)"
 # Host layout as found read-only on 2026-09-30: plain source copies next to the
 # compose file; remote-only env, SQLite and data files inside a source dir must survive.
 echo "services: {}" > "$HOST/docker-compose.yml"
-for svc in telegram-bot points-backend ai-copilot creator-gateway; do
+for svc in telegram-bot points-backend data-api creator-gateway; do
   mkdir -p "$HOST/$svc/src/data" "$HOST/$svc/node_modules/pkg" "$HOST/$svc/data" "$HOST/$svc/dist"
   echo "FROM node:20" > "$HOST/$svc/Dockerfile"
   echo "old code" > "$HOST/$svc/src/old-only-on-host.js"
@@ -276,12 +280,12 @@ MIN_FREE_MB=0 FREE_MB=4095 EXPECTED_SHA="$SHA" run 1 "$C" points-backend deploy 
 diff -r "$TMP/host.before" "$HOST" >/dev/null || fail "refused deploy changed the host"
 
 # --- a missing image stops before any write (nothing to roll back to) ----------------
-mv "$DOCKER_STATE/images/inferno-ai-copilot:latest" "$TMP/copilot.image"
+mv "$DOCKER_STATE/images/inferno-data-api:latest" "$TMP/data-api.image"
 : > "$LOG"
-EXPECTED_SHA="$SHA" run 1 "$C" ai-copilot deploy
+EXPECTED_SHA="$SHA" run 1 "$C" data-api deploy
 assert_out "nothing to roll back to"
 refute_log "mkdir"
-mv "$TMP/copilot.image" "$DOCKER_STATE/images/inferno-ai-copilot:latest"
+mv "$TMP/data-api.image" "$DOCKER_STATE/images/inferno-data-api:latest"
 
 # --- failed health: automatic rollback of source, image and container ---------------
 : > "$LOG"
@@ -324,18 +328,18 @@ same_tree telegram-bot
 # --- failed sync and failed build also roll back --------------------------------------
 sleep 1   # distinct backup timestamps
 : > "$LOG"
-RSYNC_FAIL=1 EXPECTED_SHA="$SHA" run 1 "$C" ai-copilot deploy
+RSYNC_FAIL=1 EXPECTED_SHA="$SHA" run 1 "$C" data-api deploy
 assert_out "rsync failed"
 assert_out "rolled back to"
 refute_log "compose up -d --build"
-same_tree ai-copilot
+same_tree data-api
 sleep 1
 : > "$LOG"
-BUILD_FAIL=1 EXPECTED_SHA="$SHA" run 1 "$C" ai-copilot deploy
+BUILD_FAIL=1 EXPECTED_SHA="$SHA" run 1 "$C" data-api deploy
 assert_out "compose build/up failed"
 assert_out "rolled back to"
-[[ "$(running ai-copilot)" == "sha256:old-ai-copilot" ]] || fail "copilot container changed"
-same_tree ai-copilot
+[[ "$(running data-api)" == "sha256:old-data-api" ]] || fail "data-api container changed"
+same_tree data-api
 
 # --- successful deploy: exact archive, RELEASE_SHA, excludes protected ----------------
 sleep 1
@@ -376,7 +380,7 @@ refute_log "docker image tag inferno-points-backend:latest"   # the ssh line hol
 run 0 "$C" telegram-bot verify
 assert_out "ok    404 https://verify-api.ifrunit.tech/api/verify/status/1"
 STATUS_CODE=200 run 1 "$C" telegram-bot verify
-HEALTH_CODE=502 run 1 "$C" ai-copilot verify
+HEALTH_CODE=502 run 1 "$C" data-api verify
 assert_out "copilot-api.ifrunit.tech/api/health returned 502"
 refute_log "ssh "
 refute_log "rsync "
@@ -426,7 +430,7 @@ run 0 "$C" creator-gateway rollback "/opt/inferno/backups/${creator_backup##*/}"
 same_tree creator-gateway
 [[ "$(running creator-gateway)" == sha256:old-creator-gateway ]] || fail "manual creator rollback failed"
 assert_content_only_rsync
-same_tree ai-copilot
+same_tree data-api
 
 # --- rollback accepts only a timestamped backup of the same service -------------------
 : > "$LOG"
@@ -470,4 +474,4 @@ done
 [[ "$(running points-backend)" == "sha256:old-points-backend" ]] || fail "manual rollback did not restore the image"
 assert_content_only_rsync
 
-echo "Compose release guards hold: plan/deploy/verify/rollback for telegram-bot, points-backend, ai-copilot, creator-gateway"
+echo "Compose release guards hold: plan/deploy/verify/rollback for telegram-bot, points-backend, data-api, creator-gateway"

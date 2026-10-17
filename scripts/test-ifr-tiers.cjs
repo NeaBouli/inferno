@@ -79,7 +79,7 @@ async function main() {
   }
   checkPreset('SDK source', literal('apps/sdk/src/index.ts', 'DEFAULT_TIERS'), 'name', 'minLocked');
   checkPreset('SDK dist', literal('apps/sdk/dist/index.js', 'DEFAULT_TIERS'), 'name', 'minLocked');
-  checkPreset('Copilot policy', literal('apps/ai-copilot/src/context/copilot-policy.ts', 'ACCESS_TIERS'), 'name', 'minIFR');
+  checkPreset('Data API tiers', literal('apps/data-api/server/access-tiers.ts', 'ACCESS_TIERS'), 'name', 'minIFR');
   checkPreset('dashboard', literal('apps/dashboard/src/components/LockPanel.jsx', 'TIERS'), 'name', 'min');
   checkPreset('wallet guide', literal('apps/benefits-network/frontend/src/components/WalletStatus.tsx', 'BENEFIT_TIERS'), 'label', 'amount');
   checkPreset('widget', literal('docs/widget/ifr-benefits-widget.js', 'TIER_PRESETS'), 'label', 'amount');
@@ -105,29 +105,27 @@ async function main() {
   for (const tier of canonical.tiers) {
     assert.ok(read('docs/WHITEPAPER.md').includes(`${tier.label}: ${BigInt(tier.minIFR).toLocaleString('en-US')} IFR`));
   }
-  const knowledge = read('apps/ai-copilot/src/context/ifr-knowledge.ts');
-  assert.match(knowledge, /import \{ ACCESS_TIERS, ACCESS_TIER_SUMMARY \} from "\.\/copilot-policy"/);
-  assert.match(knowledge, /\[bronzeTier, silverTier, goldTier, platinumTier\] = ACCESS_TIERS/);
-  for (const name of ['bronze', 'silver', 'gold', 'platinum']) {
-    assert.ok(knowledge.includes(`minIFR: ${name}Tier.minIFR, level: ${name}Tier.name`), `Copilot knowledge must derive ${name} from policy`);
-  }
-  const prompts = read('apps/ai-copilot/src/context/system-prompts.ts');
-  assert.match(prompts, /import \{ ACCESS_TIER_SUMMARY \} from "\.\/copilot-policy"/);
-  assert.ok(prompts.includes('${ACCESS_TIER_SUMMARY}'), 'Copilot prompts must use the derived summary');
-  const rag = JSON.parse(read('apps/ai-copilot/src/context/wiki-content.json'));
-  const integrationGuide = rag.find((page) => page.slug === 'integrate-benefits');
-  assert.ok(integrationGuide, 'Copilot RAG must include the Benefits integration guide');
-  checkInline('Copilot RAG integrate-benefits', integrationGuide.content);
-  const tierPages = rag.filter((page) => /\bBronze\s+[\d,]+\b/i.test(page.content));
-  assert.ok(tierPages.length, 'Copilot RAG must include tier documentation');
-  for (const page of tierPages) checkInline(`Copilot RAG ${page.slug}`, page.content);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   // The public lock wizard shows the Benefits preset (owner decision 2026-10-17).
   const wizard = read('docs/wizard/lock.html').replace(/<[^>]+>/g, ' ');
   checkInline('docs/wizard/lock.html', wizard);
   assert.doesNotMatch(wizard, /\b(Basic|Pro)\b|(?<![\d,])500 IFR|(?<![\d,])2,000 IFR/, 'wizard must not advertise the retired ladder');
   // Telegram roles and legacy SDK/Builder tiers are inventoried in docs/IFR_TIERS.md.
   // They are separate policies, not copies of this Benefits preset.
-  console.log('[ifr-tiers] PASS canonical data, app/package copies, starter defaults, Wiki, docs and Copilot RAG');
+  console.log('[ifr-tiers] PASS canonical data, app/package copies, starter defaults, Wiki, docs and data API tiers');
 }
 
 main().catch((error) => { console.error(error); process.exitCode = 1; });

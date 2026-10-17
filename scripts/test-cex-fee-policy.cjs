@@ -191,11 +191,7 @@ requireText('docs/WHITEPAPER.md', [
   'No CEX address is currently active on-chain'
 ]);
 
-requireText('apps/ai-copilot/src/context/ifr-knowledge.ts', [
-  'exchangeFeePolicy',
-  '26 August 2026 at 00:17 MET by a 4-1 vote',
-  'No CEX address is currently fee-exempt on-chain'
-]);
+
 
 requireText('docs/social/telegram-cex-fee-policy.md', [
   '26 August 2026 at 00:17 MET',

@@ -46,14 +46,14 @@ LiquidityReserve row was refreshed at block `25918433`:
 | Benefits embedded wallet (`apps/benefits-wallet-prototype`) | Isolated prototype; not used by production and not approved for custody or recovery. |
 | IFR SDK (`apps/sdk`) | Published npm `ifr-sdk` **0.4.1** with provenance via Trusted Publishing (2026-10-10; **0.4.0** was the provenance-free one-time bootstrap). Publisher validation is complete; every later version still requires the separate npm release gate. Package publication is not the #238 backend cutover. |
 | Dashboard and governance dashboard | Repository applications; not represented as the primary production user interface. |
-| Points Backend, AI Copilot and Telegram bot | Deployed services listed under Deployed Application Inventory below. |
+| Points Backend, Protocol Data API and Telegram bot | Deployed services listed under Deployed Application Inventory below. |
 | Creator Gateway | Implemented repository service; the repository holds no production deployment record, so availability must not be inferred from source presence alone. |
 | Admin console and investor web placeholders | Not implemented applications. |
 
 ## Deployed Application Inventory
 
 The "four" public surfaces in the table above (Landing, Wiki, Web3, IFR
-Benefits) are what users open directly. They run as seven deployment units.
+Benefits) are what users open directly. The retained deployment inventory has seven units; the data API row describes the prepared replacement source, not an executed service cutover.
 The repository evidence below shows where each unit is configured. It records
 deployment, not current health: live availability needs the release/health
 evidence of the respective deploy.
@@ -65,7 +65,7 @@ evidence of the respective deploy.
 | 3 | IFR Benefits frontend | `shop.ifrunit.tech` | `scripts/deploy-benefits-network.sh` |
 | 4 | IFR Benefits backend | `shop.ifrunit.tech/api` | `scripts/deploy-benefits-network.sh` |
 | 5 | Points Backend | `points-api.ifrunit.tech` | `docs/POINTS_BACKEND_MIGRATION.md`, `docs/runbooks/SERVER_CAPACITY_RUNBOOK.md` |
-| 6 | AI Copilot | `copilot-api.ifrunit.tech` | embedded by Web3 via `infra/web3/web3-security-headers.conf` |
+| 6 | Data API | `copilot-api.ifrunit.tech` | `apps/data-api/Dockerfile`; replacement source prepared, production cutover pending authorization |
 | 7 | Telegram bot and wallet-verification API | `verify-api.ifrunit.tech` | `docs/wiki/verify.html` |
 
 Creator Gateway, the dashboards, the SDK and the embedded-wallet prototype are
@@ -92,13 +92,13 @@ browser/application verification retained by the release gates:
   Browser evidence is dated 6 October 2026 (`eead5086`, see the
   [T-274 changelog](CHANGELOG.md)); no new browser run is claimed by the
   9 October Contract CI run or this documentation correction.
-- Surface routing, wiki head integrity, wiki RAG freshness, content trust,
+- Surface routing, wiki head integrity, content trust,
   status baseline and dependency-advisory checks: passing.
 - Benefits full preflight: frontend/backend dependency audits, TypeScript,
   production build, migrations, unit/integration/full-stack/browser/security
   gates and SDK consumer tests passing.
 - Benefits physical device/wallet checklist: `1/10` passed, `9` pending.
-- AI Copilot, dashboard, governance dashboard, Creator Gateway, Points Backend,
+- Protocol Data API, dashboard, governance dashboard, Creator Gateway, Points Backend,
   SDK, Telegram bot and wallet-prototype package gates were exercised from
   their lockfiles. The governance-dashboard `nanoid` advisory was remediated;
   remaining non-primary-app warnings are recorded in `KNOWN-ISSUES.md`.

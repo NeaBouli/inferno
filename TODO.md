@@ -146,7 +146,6 @@ Stand: 07.04.2026 | Konsolidiert (Claude + Core Dev)
 - [x] ✅ Token Flow SVG korrigiert (16.03.2026)
 - [x] ✅ Paragraph.xyz Blog-Link im Footer (17.03.2026, Commit: 2eb00870)
 - [ ] Create animated token GIF (fuer CoinGecko/CMC)
-- [ ] WalletConnect Phase 2: `isLocked(wallet, 1000e9)` Check → Copilot Gate
 - [ ] Uniswap Link aktivieren — NUR wenn LP live
 
 ## MITTEL — Documentation (Session 16-17.03.2026)

@@ -274,7 +274,7 @@ export function CustomerCheckoutPass() {
   }
 
   return (
-    <section id="customer-pass" className="shop-launcher-band-clearance-compact scroll-mt-36 rounded-[2rem] border border-orange-200/20 bg-[linear-gradient(145deg,rgba(255,255,255,0.08),rgba(236,118,51,0.08)_52%,rgba(0,0,0,0.2))] p-5 shadow-2xl shadow-black/25">
+    <section id="customer-pass" className=" scroll-mt-36 rounded-[2rem] border border-orange-200/20 bg-[linear-gradient(145deg,rgba(255,255,255,0.08),rgba(236,118,51,0.08)_52%,rgba(0,0,0,0.2))] p-5 shadow-2xl shadow-black/25">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-200/80">Customer checkout pass</p>

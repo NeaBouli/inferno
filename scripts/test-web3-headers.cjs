@@ -47,7 +47,7 @@ function requireCspTokens(directives, directive, tokens) {
 
 // ── Required header set ──────────────────────────────────────────────
 // Frozen origin/main (5e7d7154) baseline; JUL-11 gates stricter enforcement.
-const enforcedCspBaseline = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://explorer-api.walletconnect.com https://*.walletconnect.com; connect-src 'self' https://ethereum-rpc.publicnode.com https://eth.drpc.org https://1rpc.io https://*.walletconnect.com https://*.walletconnect.org wss://*.walletconnect.com wss://*.walletconnect.org https://*.web3modal.org https://*.web3modal.com; frame-src https://copilot-api.ifrunit.tech https://verify.walletconnect.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
+const enforcedCspBaseline = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://explorer-api.walletconnect.com https://*.walletconnect.com; connect-src 'self' https://ethereum-rpc.publicnode.com https://eth.drpc.org https://1rpc.io https://*.walletconnect.com https://*.walletconnect.org wss://*.walletconnect.com wss://*.walletconnect.org https://*.web3modal.org https://*.web3modal.com; frame-src https://verify.walletconnect.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'";
 assert.equal(requireHeader('Content-Security-Policy'), enforcedCspBaseline,
   'enforced Web3 CSP must retain the origin/main baseline until JUL-11 passes');
 const csp = cspDirectives(requireHeader('Content-Security-Policy-Report-Only'));
@@ -72,7 +72,7 @@ const expectedCsp = new Map([
     'https://verify.walletconnect.org',
     'https://api.web3modal.org',
   ]],
-  ['frame-src', ['https://copilot-api.ifrunit.tech', 'https://verify.walletconnect.com', 'https://verify.walletconnect.org']],
+  ['frame-src', ['https://verify.walletconnect.com', 'https://verify.walletconnect.org']],
   ['worker-src', ["'self'"]],
   ['manifest-src', ["'self'"]],
   ['object-src', ["'none'"]],
@@ -151,10 +151,9 @@ for (const url of ['https://ethereum-rpc.publicnode.com', 'https://eth.drpc.org'
 assert.ok(!walletCore.includes('llamarpc'), 'Web3 wallet core must not use eth.llamarpc.com (HTTP 525, no fallback)');
 requireCspTokens(csp, 'connect-src', ['https://ethereum-rpc.publicnode.com', 'https://eth.drpc.org', 'https://1rpc.io']);
 
-// Embedded copilot iframe.
-assert.ok(web3App.includes('https://copilot-api.ifrunit.tech?embedded=1'),
-  'Web3 copilot iframe changed — re-check CSP frame-src');
-requireCspTokens(csp, 'frame-src', ['https://copilot-api.ifrunit.tech']);
+// The JSON data service cannot be embedded; wallet verification frames remain allowed.
+assert.doesNotMatch(web3App, /data-copilot|copilot-launcher|copilot-panel/);
+assert.ok(!csp.get('frame-src').some(origin => origin.includes('copilot-api')));
 
 // Google Fonts stylesheet + font files.
 assert.ok(web3App.includes('https://fonts.googleapis.com'), 'Web3 Google Fonts stylesheet changed');

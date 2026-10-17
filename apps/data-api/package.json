@@ -1,0 +1,44 @@
+{
+  "name": "ifr-data-api",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test:dependencies": "node scripts/test-dependencies.mjs",
+    "test:health-shape": "node scripts/test-health-shape.mjs",
+    "test:lending-loans": "node --import tsx scripts/test-lending-loans.ts",
+    "test:balance-integrity": "node --import tsx scripts/test-balance-integrity.ts",
+    "test:rpc-failover": "node --import tsx scripts/test-rpc-failover.ts",
+    "test:cors-origins": "node --import tsx scripts/test-cors-origins.ts",
+    "test:request-guard": "node --import tsx scripts/test-request-guard.ts",
+    "test:builder-score": "node --import tsx scripts/test-builder-score.ts",
+    "dev": "tsx watch server/index.ts",
+    "start": "tsx server/index.ts",
+    "typecheck": "tsc --noEmit",
+    "build": "npm run typecheck",
+    "test:security-headers": "node scripts/test-security-headers.cjs",
+    "test": "npm run test:dependencies && npm run test:health-shape && npm run test:lending-loans && npm run test:balance-integrity && npm run test:rpc-failover && npm run test:cors-origins && npm run test:request-guard && npm run test:builder-score && npm run test:security-headers && npm run test:retirement",
+    "test:retirement": "node scripts/test-api-retirement.cjs"
+  },
+  "dependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "ethers": "6.17.0",
+    "express": "^5.2.1",
+    "tsx": "^4.21.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "typescript": "~5.9.3"
+  },
+  "overrides": {
+    "tsx": {
+      "esbuild": "0.28.1"
+    }
+  }
+}

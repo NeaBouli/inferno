@@ -16,8 +16,9 @@ Clear description of what is not working.
 4. Actual result: ...
 
 ## Environment
+
 - Network: [ ] Sepolia [ ] Mainnet
-- App: [ ] Dashboard [ ] Governance [ ] Benefits Network [ ] AI Copilot [ ] Points Backend
+- App: [ ] Dashboard [ ] Governance [ ] Benefits Network [ ] Data API [ ] Points Backend
 - Browser/Node Version:
 - Wallet: [ ] MetaMask [ ] WalletConnect [ ] Other
 

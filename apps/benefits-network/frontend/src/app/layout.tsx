@@ -62,7 +62,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       'Seller profiles, catalogs and benefit rules',
       'Installable progressive web app',
       'Private self-service diagnostics and recovery guidance',
-      'Contextual IFR Copilot help',
     ],
   };
 
@@ -79,7 +78,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Providers>{children}</Providers>
         <script
           dangerouslySetInnerHTML={{
-            __html: `if('serviceWorker' in navigator){const hadController=Boolean(navigator.serviceWorker.controller);let swStore=null;try{window.sessionStorage.setItem('ifr-benefits-sw-probe','1');window.sessionStorage.removeItem('ifr-benefits-sw-probe');swStore=window.sessionStorage}catch(error){}if(hadController&&swStore){navigator.serviceWorker.addEventListener('controllerchange',()=>{const nextController=navigator.serviceWorker.controller;if(!nextController||!nextController.scriptURL)return;const reloadKey='ifr-benefits-sw-reload:'+nextController.scriptURL;try{if(swStore.getItem(reloadKey)==='1')return;swStore.setItem(reloadKey,'1')}catch(error){return}window.location.reload()})}window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js?v=25',{updateViaCache:'none'}).catch(()=>{})})}`,
+            __html: `if('serviceWorker' in navigator){const hadController=Boolean(navigator.serviceWorker.controller);let swStore=null;try{window.sessionStorage.setItem('ifr-benefits-sw-probe','1');window.sessionStorage.removeItem('ifr-benefits-sw-probe');swStore=window.sessionStorage}catch(error){}if(hadController&&swStore){navigator.serviceWorker.addEventListener('controllerchange',()=>{const nextController=navigator.serviceWorker.controller;if(!nextController||!nextController.scriptURL)return;const reloadKey='ifr-benefits-sw-reload:'+nextController.scriptURL;try{if(swStore.getItem(reloadKey)==='1')return;swStore.setItem(reloadKey,'1')}catch(error){return}window.location.reload()})}window.addEventListener('load',()=>{navigator.serviceWorker.register('/sw.js?v=26',{updateViaCache:'none'}).catch(()=>{})})}`,
           }}
         />
       </body>

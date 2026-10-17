@@ -644,7 +644,7 @@
   ]
 }
   </script>
-  <link rel="stylesheet" href="../assets/redesign-skin.css">
+  <link rel="stylesheet" href="../assets/redesign-skin.css?v=20261017-retirement">
 </head>
 <body>
 
@@ -671,6 +671,7 @@
         <li class="nav-divider"></li>
         <li><a href="https://ifrunit.tech/wiki/tokenomics.html">Tokenomics</a></li>
         <li><a href="https://ifrunit.tech/wiki/fee-design.html">Fee Design</a></li>
+        <li><a href="https://ifrunit.tech/wiki/agent.html">Points &amp; Fees</a></li>
         <li><a href="https://ifrunit.tech/wiki/lock-mechanism.html">Lock Mechanism</a></li>
         <li><a href="https://ifrunit.tech/wiki/vesting.html">Vesting Schedule</a></li>
         <li><a href="https://ifrunit.tech/wiki/protocol-plan.html">Protocol Plan</a></li>
@@ -702,7 +703,7 @@
         <li><a href="https://ifrunit.tech/wiki/integration.html">Integration Guide</a></li>
         <li><a href="https://ifrunit.tech/wiki/business-onboarding.html">Business Onboarding</a></li>
         <li><a href="https://ifrunit.tech/wiki/integrate-benefits.html">Integrate Benefits (No Server)</a></li>
-        <li><a href="https://ifrunit.tech/wiki/agent.html">AI Copilot</a></li>
+
         <li><a href="https://ifrunit.tech/wiki/verify.html">Verify Wallet</a></li>
         <li class="nav-divider"></li>
         <li><a href="https://ifrunit.tech/wiki/security.html">Security</a></li>
@@ -723,7 +724,7 @@
           <div id="lp-header-connected" style="display:none;">
             <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:5px 8px;cursor:pointer;display:flex;align-items:center;gap:6px;max-width:100px;white-space:nowrap;overflow:hidden;" onclick="lpToggleDropdown()">
               <span id="lp-header-addr" style="color:#166534;font-family:monospace;font-size:0.72rem;font-weight:600;"></span>
-              
+
             </div>
           </div>
           <div id="lp-header-dropdown" style="display:none;position:fixed;background:#111827;border:1px solid #374151;border-radius:12px;padding:16px;width:280px;max-width:calc(100vw - 24px);z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.6);">
@@ -763,7 +764,7 @@
 
       <h1><span class="accent">Frequently Asked Questions</span></h1>
       <p class="subtitle">
-        Comprehensive answers about IFR &mdash; tokenomics, liquidity provision, security, governance, bootstrap, applications, and the road to decentralization. 82 questions.
+        Comprehensive answers about IFR &mdash; tokenomics, liquidity provision, security, governance, bootstrap, applications, and the road to decentralization. 81 questions.
       </p>
 
       <!-- Quick Nav -->
@@ -1119,10 +1120,7 @@ const hasLock = await ifrLock.isLocked(walletAddress, ethers.parseUnits("1000", 
           <div class="faq-a"><strong>Policy approved at 00:17 MET on 26.08.2026 by a 4-1 Council vote; activation is per address.</strong> Once an officially verified CEX operational address has been activated on-chain, transfers where that address is sender or recipient bypass the complete 3.5% fee: no sender burn, recipient burn or pool fee.<br><br>No CEX address is currently active. Every address must first prove exchange control and then pass a public TreasurySafe 3-of-5 Governance proposal plus the 48-hour timelock. Internal exchange trades are off-chain ledger entries and never invoke the IFR token contract. See the <a href="https://ifrunit.tech/wiki/fee-design.html#cex-fee-policy">full public policy and address register</a>.</div>
         </div>
 
-        <div class="faq-item">
-          <button class="faq-q"><span>What tech stack does the project use?</span><span class="icon">+</span></button>
-          <div class="faq-a">&bull; <strong>Smart contracts</strong>: Solidity 0.8.20, Hardhat 3, OpenZeppelin v5, ethers v6<br>&bull; <strong>Testing</strong>: Chai 6, Hardhat, contract/app/vault suites<br>&bull; <strong>Frontend apps</strong>: React, Next.js, Vite, TypeScript and wagmi/viem where app tooling is used; static wallet widgets use pinned self-hosted ethers.js v6 and static docs are served through GitHub Pages<br>&bull; <strong>Backend apps</strong>: Express.js, Prisma, SQLite, SIWE authentication and ethers v6<br>&bull; <strong>Infrastructure</strong>: GitHub Pages (docs), Hetzner-hosted APIs at <code>copilot-api.ifrunit.tech</code> and <code>points-api.ifrunit.tech</code>, Ethereum RPC providers</div>
-        </div>
+
 
         <div class="faq-item">
           <button class="faq-q"><span>How do I contribute to the repository?</span><span class="icon">+</span></button>
@@ -1287,15 +1285,7 @@ const hasLock = await ifrLock.isLocked(walletAddress, ethers.parseUnits("1000", 
     })();
   </script>
 
-<!-- IFR Copilot Widget -->
-<style>
-#ifr-btn { position:fixed; bottom:24px; right:24px; width:64px; height:64px; border-radius:50%; overflow:hidden; padding:0; cursor:pointer; border:2px solid #f97316; box-shadow:0 4px 20px rgba(249,115,22,0.4); z-index:99999; background:none; transition:transform 0.2s ease,box-shadow 0.2s ease; } #ifr-btn:hover { transform:scale(1.08); box-shadow:0 6px 28px rgba(249,115,22,0.6); } #ifr-btn img { width:100%; height:100%; object-fit:cover; object-position:center center; border-radius:50%; display:block; }
-#ifr-panel { display:none; position:fixed; bottom:100px; right:12px; z-index:99998; width:min(400px, calc(100vw - 24px)); height:min(580px, calc(100vh - 120px)); border-radius:16px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,0.5); background:#1a1a1a; }
-@media(max-width:480px){ #ifr-panel { bottom:0; right:0; left:0; width:100vw; height:calc(100vh - 70px); border-radius:16px 16px 0 0; } #ifr-btn { bottom:12px; right:12px; width:52px; height:52px; } }
-#ifr-panel iframe { width:100%; height:100%; border:none; }
-</style>
-<button id="ifr-btn" onclick="var p=document.getElementById('ifr-panel');p.style.display=p.style.display==='block'?'none':'block';"><img src="../assets/CoPilot.jpg" alt="IFR Copilot"></button>
-<div id="ifr-panel"><iframe src="https://copilot-api.ifrunit.tech" allow="clipboard-write"></iframe></div>
+
 
 <script>
 async function lpConnect(){

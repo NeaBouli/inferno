@@ -9,11 +9,9 @@ const workflowsDirectory = path.join(root, ".github", "workflows");
 // update-stats.yml / post-deploy.yml were removed (T-212b-11): they would have written Sepolia figures
 // into Mainnet pages and pushed to protected main. No workflow needs contents: write.
 const expectedWriteWorkflows = new Set([]);
-// Railway release gate reads workflow runs for the exact SHA (scripts/railway-release-preflight.cjs).
 // sdk-publish.yml reads check runs and the npm-release environment for its fail-closed release gate.
 const expectedExtraReadScopes = {
   "security-audit.yml": ["pull-requests"],
-  "railway-copilot-release.yml": ["actions"],
   "sdk-publish.yml": ["checks", "actions"],
 };
 // npm provenance needs an OIDC token. Only the protected publish job of sdk-publish.yml (environment
@@ -21,7 +19,6 @@ const expectedExtraReadScopes = {
 const sdkPublishJobPermissions = "  publish:\n    needs: gate\n    runs-on: ubuntu-latest\n    environment: npm-release\n"
   + "    permissions:\n      contents: read\n      id-token: write\n";
 const expectedWorkflowFiles = [
-  "ai-copilot.yml",
   "benefits-edge-tools.yml",
   "benefits-network.yml",
   "benefits-verify-ci.yml",
@@ -30,12 +27,12 @@ const expectedWorkflowFiles = [
   "contracts.yml",
   "creator-gateway.yml",
   "dashboard.yml",
+  "data-api.yml",
   "docs-validator.yml",
   "forum-fixture.yml",
   "governance-dashboard.yml",
   "mythril-analysis.yml",
   "points-backend.yml",
-  "railway-copilot-release.yml",
   "sdk-ci.yml",
   "sdk-publish.yml",
   "security-audit.yml",

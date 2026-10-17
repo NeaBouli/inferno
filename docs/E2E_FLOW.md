@@ -9,12 +9,8 @@ User earns points → receives voucher → saves on swap fees
 ### Phase 1: Earning Points
 
 1. User connects wallet on IFR website (WalletConnect/MetaMask)
-2. AI Copilot guides user through guides
-3. Points Backend records events (SIWE Auth):
-   - `guide_wallet_setup`: +20 points
-   - `guide_add_token`: +20 points
-   - `guide_lock`: +30 points
-   - Total: 70 points after 3 guides
+2. Points Backend records the retained `wallet_connect` event under SIWE authentication.
+3. Previously awarded Points remain in the existing ledger. The retired web guides no longer produce events.
 
 ### Phase 2: Voucher Issuance
 
@@ -47,8 +43,6 @@ User earns points → receives voucher → saves on swap fees
 ## Sequence Diagram (Text)
 
 ```
-User → AI Copilot: "How do I lock IFR?"
-AI Copilot → Points Backend: guide_lock event (+30 pts)
 Points Backend → DB: update pointsTotal
 User → Points Backend: POST /voucher/issue
 Points Backend → User: { voucher, signature }
@@ -76,10 +70,11 @@ With voucher (5 bps discount): 0 ETH Protocol Fee
 Savings: ~$1.50 at ETH = $3000
 ```
 
+The web guide event producer has been retired. Already-awarded Points and the backend event schema remain unchanged; `wallet_connect` remains supported.
+
 ## Links
 
 - Points Backend: `apps/points-backend/`
 - FeeRouter: `contracts/FeeRouterV1.sol`
-- AI Copilot: `apps/ai-copilot/`
 - Testnet Guide: `docs/TESTNET_GUIDE.md`
-- Agent Wiki: `docs/wiki/agent.html`
+- Points Wiki: `docs/wiki/agent.html`

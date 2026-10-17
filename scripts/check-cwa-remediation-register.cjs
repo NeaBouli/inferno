@@ -117,7 +117,7 @@ const publicLinks = [
   "docs/wiki/security.html",
   "docs/CURRENT_FUNCTIONALITY_STATUS.md",
   "docs/llms.txt",
-  "apps/ai-copilot/src/context/ifr-knowledge.ts",
+
 ];
 for (const relative of publicLinks) {
   const content = fs.readFileSync(path.join(root, relative), "utf8");
@@ -152,10 +152,7 @@ const publicStatusMarkers = {
     `${dispositionTotals.fixed_and_verified} fixed and verified`,
     `${dispositionTotals.open_actionable} open actionable`,
   ],
-  "apps/ai-copilot/src/context/ifr-knowledge.ts": [
-    `${dispositionTotals.fixed_and_verified} findings are fixed and verified`,
-    `${dispositionTotals.open_actionable} are open actionable`,
-  ],
+
 };
 for (const [relative, markers] of Object.entries(publicStatusMarkers)) {
   const content = fs.readFileSync(path.join(root, relative), "utf8");
@@ -204,8 +201,7 @@ const currentCountMarkers = {
   "docs/PRESS_KIT.md": ["700 contract + 30 Generator Engine + 36 SDK legacy tests"],
   "docs/TESTNET_GUIDE.md": ["**700 contract tests passing**"],
   "docs/llms.txt": ["contracts 700/700", "Generator Engine 30/30", "IFR SDK 36/36"],
-  "apps/ai-copilot/server/index.ts": ["700 contract tests", "30 Generator Engine", "36 SDK"],
-  "apps/ai-copilot/src/context/ifr-knowledge.ts": ["contracts 700/700", "30/30 Generator Engine tests passing"],
+
 };
 function assertCurrentCountMarkers(content, markers, relative) {
   for (const marker of markers) {
@@ -222,12 +218,7 @@ for (const [relative, markers] of Object.entries(currentCountMarkers)) {
     assert.throws(() => assertCurrentCountMarkers(content.replaceAll("700", wrongTotal), markers, relative), { name: "AssertionError" });
   }
 }
-assert.ok(
-  !fs.readFileSync(path.join(root, "apps/ai-copilot/server/index.ts"), "utf8").includes(
-    "544 documented tests"
-  ),
-  "Copilot welcome must not present 544 as the current test count"
-);
+
 
 console.log(
   `[cwa-register] PASS - ${register.findings.length} findings; dispositions ${JSON.stringify(dispositionTotals)}; severities ${JSON.stringify(severityTotals)}`

@@ -31,7 +31,6 @@
     "test:benefits-wallet-telemetry": "node scripts/test-benefits-wallet-telemetry.js",
     "test:benefits-wallet-telemetry-gate": "node scripts/test-benefits-wallet-telemetry-gate.js",
     "test:benefits-wallet-label-fit": "node scripts/test-benefits-wallet-label-fit.js",
-    "test:benefits-launcher-residuals": "node scripts/test-benefits-launcher-residuals.js",
     "test:benefits-support": "node scripts/test-benefits-support-ui.js",
     "test:benefits-fullstack": "node scripts/test-benefits-fullstack-e2e.js",
     "test:benefits-owner-b-visual": "node scripts/test-benefits-owner-b-visual.js",
@@ -46,7 +45,6 @@
     "test:wiki-jsonld": "node scripts/test-wiki-jsonld.cjs",
     "test:sitemap-anchors": "node scripts/check-sitemap-anchors.cjs && node scripts/test-sitemap-anchors.cjs",
     "build:sitemap": "node scripts/check-sitemap-anchors.cjs --write",
-    "test:wiki-rag": "node scripts/build-wiki-rag.js --check",
     "test:content-trust": "node scripts/test-content-trust.cjs",
     "test:builder-page": "node scripts/test-builder-page-generator.cjs",
     "test:cex-fee-policy": "node scripts/test-cex-fee-policy.cjs",
@@ -76,7 +74,6 @@
     "test:mythril": "node scripts/test-mythril.cjs",
     "check:vault-invariants": "node scripts/check-vault-invariants.js",
     "test:vault-invariants": "node scripts/test-vault-invariants.cjs",
-    "test:railway-release": "node scripts/test-railway-release.cjs",
     "ops:benefits-capacity": "scripts/deploy-benefits-network.sh capacity && LIMIT=20 scripts/audit-docker-capacity.sh",
     "qa:benefits-devices": "node scripts/validate-benefits-device-checklist.js",
     "test:benefits-device-checklist": "node scripts/test-benefits-device-checklist.js",
@@ -105,7 +102,8 @@
     "test:commitment-v2-proposal": "node scripts/test-commitment-vault-v2-proposal.cjs",
     "test:commitment-v2-fork": "hardhat test test/fork/CommitmentVaultV2Fork.test.js",
     "test:commitment-v2-synthetic-fork": "hardhat test test/fork/CommitmentVaultV2SyntheticRehearsal.test.js",
-    "test:council-votes": "node scripts/verify-council-votes.cjs && node scripts/test-council-votes.cjs && node scripts/build-council-votes-page.cjs --check"
+    "test:council-votes": "node scripts/verify-council-votes.cjs && node scripts/test-council-votes.cjs && node scripts/build-council-votes-page.cjs --check",
+    "test:data-api-retirement": "node scripts/test-data-api-retirement.cjs"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ethers": "4.2.0",

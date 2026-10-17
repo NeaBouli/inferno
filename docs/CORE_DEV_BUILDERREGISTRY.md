@@ -146,9 +146,10 @@ Mainnet Governance: `0xc43d48E7FDA576C5022d0670B652A622E8caD041`
 
 ---
 
-## Schritt 9 — Railway env vars setzen
+## Step 9 — Service configuration
 
-Railway Dashboard → **ifr-ai-copilot** Service → Variables:
+Set the variable on the retained Data API service (`apps/data-api`) through the authorized operator.
+
 ```
 BUILDER_REGISTRY_ADDR = 0x[mainnet-contract-address]
 ```

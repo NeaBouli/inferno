@@ -7,20 +7,16 @@ Secrets and Variables → Actions.
 
 ### Required for CI/CD
 
-| Secret Name | Description | Where to Generate |
-|-------------|-------------|-------------------|
-| SEPOLIA_RPC_URL | Alchemy/Infura Sepolia RPC | https://alchemy.com |
-| DEPLOYER_PRIVATE_KEY | Deployer wallet private key | MetaMask Export |
+| Secret Name          | Description                 | Where to Generate     |
+| -------------------- | --------------------------- | --------------------- |
+| SEPOLIA_RPC_URL      | Alchemy/Infura Sepolia RPC  | <https://alchemy.com> |
+| DEPLOYER_PRIVATE_KEY | Deployer wallet private key | MetaMask Export       |
 
 ### For Apps (when deployed)
 
-| Secret Name | App | Description |
-|-------------|-----|-------------|
-| ANTHROPIC_API_KEY | AI Copilot | https://console.anthropic.com |
-| RAILWAY_TOKEN | Points Backend | https://railway.app/account/tokens |
-| VERCEL_TOKEN | AI Copilot Frontend | https://vercel.com/account/tokens |
-| VERCEL_ORG_ID | AI Copilot Frontend | vercel env ls |
-| VERCEL_PROJECT_ID | AI Copilot Frontend | vercel env ls |
+| Secret Name   | App            | Description                          |
+| ------------- | -------------- | ------------------------------------ |
+| RAILWAY_TOKEN | Points Backend | <https://railway.app/account/tokens> |
 
 ## Setup Instructions
 
@@ -38,11 +34,11 @@ Secrets and Variables → Actions.
 
 ## Workflows That Require Secrets
 
-| Workflow | Secrets |
-|----------|---------|
-| ci.yml | None (tests only) |
+| Workflow            | Secrets           |
+| ------------------- | ----------------- |
+| ci.yml              | None (tests only) |
 | creator-gateway.yml | None (tests only) |
-| points-backend.yml | None (tests only) |
+| points-backend.yml  | None (tests only) |
 
 ## GitHub Environments (for Mainnet)
 

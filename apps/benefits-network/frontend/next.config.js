@@ -44,7 +44,7 @@ const contentSecurityPolicyReportOnly = [
   `connect-src ${[...new Set(connectOrigins)].join(' ')}`,
   // qr-scanner creates a blob worker from the bundled decoder.
   "worker-src 'self' blob:",
-  "frame-src 'self' https://copilot-api.ifrunit.tech https://verify.walletconnect.com https://verify.walletconnect.org",
+  "frame-src 'self' https://verify.walletconnect.com https://verify.walletconnect.org",
   "media-src 'self' blob:",
   "manifest-src 'self'",
 ].join('; ');

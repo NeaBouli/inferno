@@ -3,9 +3,9 @@
 ## Overview of Off-Chain Components
 
 | App | Critical Assets | Risk |
-|-----|-----------------|------|
+| ----- | ----------------- | ------ |
 | Points Backend | VoucherSigner Private Key | High |
-| AI Copilot | ANTHROPIC_API_KEY | Medium |
+| Data API | RPC/Etherscan provider configuration | Medium |
 | Creator Gateway | JWT_SECRET, Google OAuth | Medium |
 | Benefits Network | Admin Secret | Medium |
 
@@ -52,7 +52,7 @@ Points Backend + Benefits Network use SIWE:
 | Points Backend | 60 req/min/IP | Bot farming |
 | SIWE Auth | 5 req/hour/IP | Brute force |
 | Voucher Issuance | 1/wallet/day | Sybil |
-| AI Copilot | 60 req/min/IP | API abuse |
+| Data API | Data feed default 30 req/min/IP; bounded concurrency | API abuse |
 | Creator Gateway | 60 req/min/IP | Scraping |
 
 ## Admin Endpoints
@@ -75,7 +75,6 @@ and disclosed before launch.
 
 - [ ] VoucherSigner Key: Hardware Wallet or HSM
 - [ ] All JWT Secrets: 32+ characters, random
-- [ ] ANTHROPIC_API_KEY: only in Vercel env
 - [ ] Google OAuth Credentials: keep scope minimal
 - [ ] ADMIN_SECRET: 32+ characters, never in code
 - [ ] Rate Limits: adjust for mainnet load

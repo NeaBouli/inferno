@@ -281,16 +281,9 @@ requireText("docs/wiki/commitment-vault.html", [
   "does not bypass the condition check",
 ]);
 requireText("docs/web3/index.html", ["The current hero uses a static optimized image"]);
-requireText("apps/ai-copilot/src/context/system-prompts.ts", [
-  "Execution is trigger-, cooldown-, pause- and balance-dependent",
-  "IFR transfer-pool fees held by FeeRouterV1 are not forwarded automatically",
-]);
-forbidText("apps/ai-copilot/src/context/system-prompts.ts", ["fully active"]);
-requireText("docs/wiki/agent.html", [
-  "maintained same-project Wiki context",
-  "a page-specific citation is not guaranteed on every answer",
-  "does not pass the connected wallet or its on-chain state to the Copilot chat",
-]);
+
+
+
 forbidText("docs/wiki/agent.html", [
   "?wallet=",
   "Premium Copilot Active",
@@ -305,74 +298,11 @@ requireText("docs/wiki/dao-governance.html", [
   "None is deployed or available for voting today.",
 ]);
 
-// CWA-78: no public surface may promise the Copilot wallet, balance, lock or tier context.
-// Scope is the maintained public files only; published audit reports are immutable evidence
-// and are deliberately excluded from this sweep.
-const copilotClaimSurfaces = [
-  "docs/index.html",
-  "docs/wiki/agent.html",
-  "docs/wiki/roadmap.html",
-  "docs/assets/ifr-state.js",
-];
-const staleCopilotClaims = [
-  "AI Copilot Premium",
-  "AI Copilot Gate",
-  "Premium Copilot",
-  "Premium guidance",
-  "Premium Access",
-  "Premium Locked",
-  "Lock 1,000 IFR for Premium",
-  "&#x26A1; Premium",
-  "Premium &#x2197;",
-  "Free/Premium tier",
-  "more personalized",
-  "personalized responses",
-  "wallet and lock context",
-  "verify wallet context",
-  "tier via URL params",
-  "copilotPremium",
-  "?wallet=",
-];
-for (const relative of copilotClaimSurfaces) {
-  forbidText(relative, staleCopilotClaims);
-}
-
-const copilotBoundary =
-  "The AI Copilot chat stays documentation-only and receives no wallet, balance, lock or tier context.";
-requireText("docs/index.html", [
-  copilotBoundary,
-  '{"@type":"PropertyValue","name":"IFRLock Access","value":"Lock 1,000 IFR in IFRLock for refundable first-party IFRLock access.',
-  "documentation-only AI Copilot guidance",
-  "Lock &ge;1,000 IFR in IFRLock to activate IFRLock access. Refundable anytime",
-  "Lock 1,000 IFR for IFRLock Access",
-  "&#x26A1; IFRLock Access Active",
-  "Lock &ge; 1,000 IFR &rarr; refundable IFRLock access for first-party lock-gated features.",
-  "The chat is documentation-only and receives no wallet, balance, lock or tier context.",
-  "connecting a wallet or locking IFR does not change them",
-  "Does locking IFR or connecting a wallet change what the AI Copilot knows?",
-]);
-// The refundable first-party 1,000 IFR IFRLock access action must stay intact.
-requireText("docs/index.html", [
-  'id="lp-premium-lock-btn"',
-  'onclick="lpLockPremium()"',
-  'onclick="lpUnlockPremium()"',
-  "Unlock all IFRLock",
-]);
-requireText("docs/wiki/agent.html", [
-  "The chat is documentation-only and receives no wallet, balance, lock or tier context.",
-  "&#x26A1; IFRLock Access</span>",
-  "IFRLock access &#x2197;",
-]);
-requireText("docs/wiki/roadmap.html", [
-  "Copilot privacy boundary implemented",
-  "no wallet address, balance, lock status or tier is passed to the Copilot chat",
-  "local IFRLock access status display from an on-chain read, shown on the page only",
-  "Gated content platform &mdash; separate future product concept, not part of the Copilot chat and without an activation schedule",
-  "&#x26A1; IFRLock Access</span>",
-]);
+// The web guide has been retired; independent IFRLock controls remain.
+requireText("docs/index.html", ['id="lp-premium-lock-btn"', 'onclick="lpLockPremium()"', 'onclick="lpUnlockPremium()"', "Unlock all IFRLock"]);
+requireText("docs/wiki/agent.html", ["Already-awarded Points are preserved", "wallet_connect", "IFRLock access &#x2197;"]);
 const ifrState = read("docs/assets/ifr-state.js");
-assert.ok(ifrState.includes("copilotFree: true"), "ifr-state.js must keep the free copilot flag");
-assert.ok(ifrState.includes("result.isLocked1000 = locked >="), "ifr-state.js must keep the IFRLock read");
+assert.ok(ifrState.includes("result.isLocked1000 = locked >="), "preserve the IFRLock read");
 
 // CWA-15: the LiquidityReserve 50M cap is an owner-settable parameter; only the period is immutable.
 const liquidityReserve = requireText("contracts/liquidity/LiquidityReserve.sol", [
@@ -453,17 +383,7 @@ forbidText("README.md", [
 const feeRouter = read("contracts/FeeRouterV1.sol");
 assert.ok(!/function\s+(withdraw|sweep|rescue|recover)\w*\s*\(/i.test(feeRouter), "FeeRouterV1 gained an IFR exit; update CWA-52 copy");
 
-// CWA-53: secret-handling copy stays limited to the controls each Copilot surface ships.
-forbidText("README.md", ["Automatic seed phrase / private key detection"]);
-forbidText("apps/ai-copilot/README.md", ["Automatic seed phrase / private key detection"]);
-requireText("README.md", ["No surface runs an automatic seed-phrase or private-key detector."]);
-requireText("apps/ai-copilot/src/components/IFRCopilot.tsx", [
-  'const SAFETY_WORDS = ["seed phrase", "private key", "mnemonic", "secret recovery"];',
-]);
-assert.ok(
-  !/SAFETY_WORDS|checkSafety|detectSecret|containsSecret/.test(read("apps/ai-copilot/server/index.ts")),
-  "served widget gained a secret check; update CWA-53 copy"
-);
+// CWA-53: retired provider/UI controls are covered by the retirement gate.
 
 // CWA-06: neutral custody/activation wording; no private backend address or unproven "never held" claim.
 const CWA06_ACTIVATION =
@@ -510,7 +430,7 @@ const cwa02CurrentSurfaces = [
   "docs/wiki/fee-design.html",
   "docs/wiki/governance.html",
   "docs/wiki/press-kit.html",
-  "apps/ai-copilot/src/context/system-prompts.ts",
+
 ];
 const cwa02StaleClaims = [
   "27,153,013",
@@ -552,13 +472,13 @@ requireText('README.md', [
   'The recovery amount is not proof that every recovered IFR unit came from pool fees.',
   'block 26,143,797', 'block 26,151,369', 'unallocated',
 ]);
-for (const relative of ["docs/llms.txt", "docs/TRANSPARENCY.md", "docs/FEE_DESIGN.md", "docs/wiki/transparency.html", "apps/ai-copilot/src/context/system-prompts.ts"]) {
+for (const relative of ["docs/llms.txt", "docs/TRANSPARENCY.md", "docs/FEE_DESIGN.md", "docs/wiki/transparency.html", ]) {
   requireText(relative, ["26,418,467.994338353", "2.651%", relative.endsWith(".ts") ? "block 26151369" : "block 26,151,369"]);
 }
 for (const relative of ["docs/llms.txt", "docs/TRANSPARENCY.md", "docs/FEE_DESIGN.md", "docs/DEPLOYMENTS.md", "docs/POOL_FEE_RECEIVER.md", "docs/wiki/fee-design.html", "docs/wiki/transparency.html", "docs/community-audits/cwa-remediation-register.json"]) {
   requireText(relative, [CWA02_TX]);
 }
-for (const relative of ["docs/llms.txt", "docs/TRANSPARENCY.md", "docs/FEE_DESIGN.md", "docs/wiki/transparency.html", "docs/wiki/tokenomics.html", "README.md", "apps/ai-copilot/src/context/system-prompts.ts"]) {
+for (const relative of ["docs/llms.txt", "docs/TRANSPARENCY.md", "docs/FEE_DESIGN.md", "docs/wiki/transparency.html", "docs/wiki/tokenomics.html", "README.md", ]) {
   requireText(relative, ["unallocated"]);
 }
 // The Landing lost-IFR card and its client logic count CV-01 only: no FeeRouterV1 floor, and the older API

@@ -541,7 +541,7 @@
   ]
 }
   </script>
-  <link rel="stylesheet" href="../assets/redesign-skin.css">
+  <link rel="stylesheet" href="../assets/redesign-skin.css?v=20261017-retirement">
 </head>
 <body>
 
@@ -568,6 +568,7 @@
         <li class="nav-divider"></li>
         <li><a href="https://ifrunit.tech/wiki/tokenomics.html">Tokenomics</a></li>
         <li><a href="https://ifrunit.tech/wiki/fee-design.html">Fee Design</a></li>
+        <li><a href="https://ifrunit.tech/wiki/agent.html">Points &amp; Fees</a></li>
         <li><a href="https://ifrunit.tech/wiki/lock-mechanism.html">Lock Mechanism</a></li>
         <li><a href="https://ifrunit.tech/wiki/vesting.html">Vesting Schedule</a></li>
         <li><a href="https://ifrunit.tech/wiki/protocol-plan.html">Protocol Plan</a></li>
@@ -599,7 +600,7 @@
         <li><a href="https://ifrunit.tech/wiki/integration.html">Integration Guide</a></li>
         <li><a href="https://ifrunit.tech/wiki/business-onboarding.html">Business Onboarding</a></li>
         <li><a href="https://ifrunit.tech/wiki/integrate-benefits.html">Integrate Benefits (No Server)</a></li>
-        <li><a href="https://ifrunit.tech/wiki/agent.html">AI Copilot</a></li>
+
         <li><a href="https://ifrunit.tech/wiki/verify.html">Verify Wallet</a></li>
         <li class="nav-divider"></li>
         <li><a href="https://ifrunit.tech/wiki/security.html" class="active" aria-current="page">Security</a></li>
@@ -620,7 +621,7 @@
           <div id="lp-header-connected" style="display:none;">
             <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:5px 8px;cursor:pointer;display:flex;align-items:center;gap:6px;max-width:100px;white-space:nowrap;overflow:hidden;" onclick="lpToggleDropdown()">
               <span id="lp-header-addr" style="color:#166534;font-family:monospace;font-size:0.72rem;font-weight:600;"></span>
-              
+
             </div>
           </div>
           <div id="lp-header-dropdown" style="display:none;position:fixed;background:#111827;border:1px solid #374151;border-radius:12px;padding:16px;width:280px;max-width:calc(100vw - 24px);z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.6);">
@@ -1333,8 +1334,6 @@
         </p>
       </div>
 
-      <style>@media (max-width:480px){ .incident-record { padding-right:72px; } }</style>
-      <!-- Right gutter = launcher width (52px) + right offset (12px) + 8px, so no line runs under #ifr-btn. -->
       <div class="incident-record">
       <h3 id="points-voucher-incident-2026-10">Incident record: Points vouchers could not be redeemed (October 2026)</h3>
       <div class="callout">
@@ -1529,15 +1528,7 @@
     })();
   </script>
 
-<!-- IFR Copilot Widget -->
-<style>
-#ifr-btn { position:fixed; bottom:24px; right:24px; width:64px; height:64px; border-radius:50%; overflow:hidden; padding:0; cursor:pointer; border:2px solid #f97316; box-shadow:0 4px 20px rgba(249,115,22,0.4); z-index:99999; background:none; transition:transform 0.2s ease,box-shadow 0.2s ease; } #ifr-btn:hover { transform:scale(1.08); box-shadow:0 6px 28px rgba(249,115,22,0.6); } #ifr-btn img { width:100%; height:100%; object-fit:cover; object-position:center center; border-radius:50%; display:block; }
-#ifr-panel { display:none; position:fixed; bottom:100px; right:12px; z-index:99998; width:min(400px, calc(100vw - 24px)); height:min(580px, calc(100vh - 120px)); border-radius:16px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,0.5); background:#1a1a1a; }
-@media(max-width:480px){ #ifr-panel { bottom:0; right:0; left:0; width:100vw; height:calc(100vh - 70px); border-radius:16px 16px 0 0; } #ifr-btn { bottom:12px; right:12px; width:52px; height:52px; } }
-#ifr-panel iframe { width:100%; height:100%; border:none; }
-</style>
-<button id="ifr-btn" onclick="var p=document.getElementById('ifr-panel');p.style.display=p.style.display==='block'?'none':'block';"><img src="../assets/CoPilot.jpg" alt="IFR Copilot"></button>
-<div id="ifr-panel"><iframe src="https://copilot-api.ifrunit.tech" allow="clipboard-write"></iframe></div>
+
 
 <script>
 (function() {

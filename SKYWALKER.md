@@ -92,7 +92,6 @@ Inferno ($IFR) ist ein **deflationärer ERC-20 Utility-Token** auf Ethereum. Jed
 - **544 total tests (367 contract + 77 app + 100 vault) — all passing
 - **Solidity Coverage**: 99.45% Stmts, 91% Branch, 98.26% Funcs, 99% Lines
 - **Wiki**: 32 HTML pages
-- **CI**: 5 Workflows (creator-gateway, points-backend, ai-copilot, benefits-network, docs-validator)
 
 ---
 
@@ -191,7 +190,6 @@ scripts/
 apps/
 ├── dashboard/                      # Port 5173, React 18 + Vite + ethers v6
 ├── governance-dashboard/           # Port 5174, React 18 + Vite + TS + Tailwind
-├── ai-copilot/                     # Port 5175/3003, React 18 + Vite + Express
 ├── points-backend/                 # Port 3004, Express + Prisma + SQLite + siwe
 ├── creator-gateway/                # Port 3005, Express + ethers v6 + googleapis
 ├── benefits-network/backend/       # Port 3001, Express + Prisma + SQLite
@@ -228,7 +226,6 @@ docs/wiki/
 - **BootstrapVault** deployed + verified, feeExempt Proposal submitted
 - **Sepolia Testnet** — Full lifecycle getestet (Governance, IFRLock, Fee-on-Transfer, PartnerVault)
 - **Security Review** — 20/25 Findings fixed, 5 documented (APP_SECURITY_REVIEW.md)
-- **AI Copilot** — Railway deployed, 3-Mode System (chat/learn/quiz)
 - **544 tests** (367 contract + 77 app + 100 vault) — All passing
 
 ---
@@ -368,18 +365,17 @@ npx hardhat verify --network sepolia <CONTRACT_ADDR> <CONSTRUCTOR_ARGS>
 
 ## Anhang: Wichtige Links
 
-| Ressource | URL |
-|-----------|-----|
-| GitHub Repository | https://github.com/NeaBouli/inferno |
-| Landing Page | https://neabouli.github.io/inferno/ |
-| Wiki | https://neabouli.github.io/inferno/wiki/ |
-| X / Twitter | https://x.com/IFRtoken |
-| InfernoToken (Mainnet) | https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code |
-| Governance (Mainnet) | https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041#code |
-| IFRLock (Mainnet) | https://etherscan.io/address/0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb#code |
-| BootstrapVaultV3 (Mainnet) | https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141#code |
-| Gnosis Safe | https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b |
-| AI Copilot (Railway) | https://ifr-ai-copilot-production.up.railway.app |
+| Ressource                  | URL                                                                                |
+| -------------------------- | ---------------------------------------------------------------------------------- |
+| GitHub Repository          | <https://github.com/NeaBouli/inferno>                                              |
+| Landing Page               | <https://neabouli.github.io/inferno/>                                              |
+| Wiki                       | <https://neabouli.github.io/inferno/wiki/>                                         |
+| X / Twitter                | <https://x.com/IFRtoken>                                                           |
+| InfernoToken (Mainnet)     | <https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code>     |
+| Governance (Mainnet)       | <https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041#code>     |
+| IFRLock (Mainnet)          | <https://etherscan.io/address/0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb#code>     |
+| BootstrapVaultV3 (Mainnet) | <https://etherscan.io/address/0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141#code>     |
+| Gnosis Safe                | <https://app.safe.global/home?safe=eth:0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b> |
 
 ---
 

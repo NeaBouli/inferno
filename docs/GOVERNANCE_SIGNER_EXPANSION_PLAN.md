@@ -205,7 +205,6 @@ Suggested approach:
 - [ ] Wait 48h timelock where applicable.
 - [ ] Execute signer update.
 - [ ] Verify owners and threshold on Safe.
-- [ ] Update docs, landing, wiki, and AI copilot knowledge.
 
 ## Preferred IFR Path
 
