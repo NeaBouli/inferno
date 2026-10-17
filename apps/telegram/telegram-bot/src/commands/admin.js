@@ -25,7 +25,7 @@ async function adminCommand(ctx) {
 ✅ Cache Hits: ${cacheStats.hits}
 ❌ Cache Misses: ${cacheStats.misses}
 
-🌐 Railway: https://ifr-ai-copilot-production.up.railway.app/health
+🌐 Data API: https://copilot-api.ifrunit.tech/api/health
 📊 Token: 0x77e99917Eca8539c62F509ED1193ac36580A6e7B
 
 _Node ${process.version} | ${process.env.NODE_ENV}_`;
