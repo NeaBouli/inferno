@@ -197,7 +197,7 @@ There are no approvals to routers or discretionary admin recovery powers.
 
 ## Verification
 
-See [.fleet/reports/lendingvault-v2-20261018.md](../../.fleet/reports/lendingvault-v2-20261018.md)
+See the local-only report at `.fleet/reports/lendingvault-v2-20261018.md`
 for exact commands, results, sandbox cache workaround, complete-suite outcome and
 local evidence. No benefits surface changed, so the benefits release preflight
 and frontend visual gate are outside this contract-only task.

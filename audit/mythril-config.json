@@ -32,15 +32,18 @@
     { "source": "contracts/buyback/BuybackController.sol", "contract": "BuybackController" },
     { "source": "contracts/buyback/BuybackVault.sol", "contract": "BuybackVault" },
     { "source": "contracts/governance/Governance.sol", "contract": "Governance" },
+    { "source": "contracts/governance/GovernanceV2.sol", "contract": "GovernanceV2" },
     { "source": "contracts/library/IFRBuilderVault.sol", "contract": "IFRBuilderVault" },
     { "source": "contracts/liquidity/LiquidityReserve.sol", "contract": "LiquidityReserve" },
     { "source": "contracts/lock/IFRLock.sol", "contract": "IFRLock" },
     { "source": "contracts/partner/PartnerVault.sol", "contract": "PartnerVault" },
     { "source": "contracts/token/InfernoToken.sol", "contract": "InfernoToken" },
     { "source": "contracts/vault/CommitmentVault.sol", "contract": "CommitmentVault" },
+    { "source": "contracts/vault/CommitmentVaultV2.sol", "contract": "CommitmentVaultV2" },
     { "source": "contracts/vault/PriceLockVault.sol", "contract": "PriceLockVault" },
     { "source": "contracts/view/IFRTierView.sol", "contract": "IFRTierView" },
     { "source": "contracts/vault/LendingVault.sol", "contract": "LendingVault" },
+    { "source": "contracts/vault/LendingVaultV2.sol", "contract": "LendingVaultV2" },
     { "source": "contracts/vesting/Vesting.sol", "contract": "Vesting" }
   ]
 }
