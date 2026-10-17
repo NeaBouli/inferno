@@ -130,7 +130,7 @@ Baselines and observed states are in `references/project-surface.md`. Verify, do
 ### Phase 4 — API audit
 
 Endpoint map and observed responses: `references/project-surface.md` §API. Source code lives in
-the repo under `apps/ai-copilot/server/`, `apps/points-backend/`, `apps/benefits-network/backend/`
+the repo under `apps/data-api/server/`, `apps/points-backend/`, `apps/benefits-network/backend/`
 — audit the source, probe only public GETs:
 
 - Information disclosure (e.g. `/api/health` revealing key-set flags and deploy versions),

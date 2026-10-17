@@ -2,7 +2,7 @@
 name: ai-readiness-audit
 description: >-
   Audit of how well AI systems can know and serve a Web3 project — two halves: (1) the project's
-  own chatbot/copilot (does its knowledge base cover the canonical facts, is it fresh, is its
+  own chatbot/copilot, if present (does its knowledge base cover the canonical facts, is it fresh, is its
   retrieval chain trustworthy, can it answer correctly), and (2) the project's AI/discovery
   anchors for EXTERNAL models and search engines (llms.txt, ai.txt, robots.txt, sitemaps,
   JSON-LD, meta/og/canonical tags, .well-known manifests). Use this skill whenever the user asks
@@ -45,7 +45,7 @@ quoted tag — never by "the setup looks standard".
 
 ## Method
 
-### Phase A — Copilot knowledge audit (the project's own AI)
+### Phase A — Copilot knowledge audit (only if the project operates one)
 
 1. Map the knowledge path: static knowledge file(s), system prompts, runtime retrieval (wiki
    fetch? RAG? embeddings?), model + parameters, context budget, cache/freshness.
