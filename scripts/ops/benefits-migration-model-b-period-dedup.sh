@@ -38,6 +38,7 @@ COMPOSE_DIR=$(dirname "$COMPOSE_FILE")
 scratch=
 volume_name=
 volume_path=
+runtime_mounts=
 phase=configuration
 maintenance=0
 lock_owned=0
@@ -45,8 +46,15 @@ backup=
 
 say() { [[ "$MODE" != rehearse ]] || return 0; printf '[benefits-migration] %s\n' "$1"; }
 refuse() { say "status=STOP reason=$1" >&2; exit 2; }
+docker_cmd() {
+  local seconds=$1
+  shift
+  timeout --foreground --kill-after=5 "$seconds" docker "$@"
+}
 compose() {
-  (cd "$COMPOSE_DIR" && docker compose --project-directory "$COMPOSE_DIR" --file "$COMPOSE_FILE" \
+  local seconds=30
+  case "$1" in build) seconds=900 ;; stop|up) seconds=90 ;; esac
+  (cd "$COMPOSE_DIR" && docker_cmd "$seconds" compose --project-directory "$COMPOSE_DIR" --file "$COMPOSE_FILE" \
     --env-file "$ENV_FILE" "$@")
 }
 
@@ -61,15 +69,24 @@ for x in "${EXCLUDES[@]}"; do
 done
 
 resolve_volume() {
-  local mount discovered consumers
-  mount=$(docker inspect --format '{{range .Mounts}}{{if eq .Destination "/data"}}{{.Type}}|{{.Name}}|{{.Source}}{{end}}{{end}}' "$BACKEND_CONTAINER")
+  local mount discovered consumers mount_type
+  # Inspect mount metadata only, including API volume options (subpaths are not
+  # consistently exposed in .Mounts). Never dump container env/config.
+  runtime_mounts=$(docker_cmd 30 inspect --format '{"mounts":{{json .Mounts}},"host_mounts":{{json .HostConfig.Mounts}},"tmpfs":{{json .HostConfig.Tmpfs}},"volumes_from":{{json .HostConfig.VolumesFrom}}}' "$BACKEND_CONTAINER")
+  mount=$(python3 -I -B -c '
+import json, sys
+mounts=[v for v in json.loads(sys.argv[1])["mounts"] if v["Destination"] == "/data"]
+assert len(mounts) == 1
+v=mounts[0]
+print("|".join([v["Type"], v.get("Name", ""), v["Source"]]))
+' "$runtime_mounts")
   IFS='|' read -r mount_type volume_name volume_path <<< "$mount"
   [[ "$mount_type" == volume && "$volume_name" =~ ^[a-zA-Z0-9][a-zA-Z0-9_.-]*$ ]]
-  discovered=$(docker volume inspect --format '{{.Mountpoint}}' "$volume_name")
+  discovered=$(docker_cmd 30 volume inspect --format '{{.Mountpoint}}' "$volume_name")
   [[ "$mount" == "volume|$volume_name|$discovered" && "$DB_FILE" == "$discovered/benefits.db" ]]
   [[ -d "$volume_path" && ! -L "$volume_path" ]]
   [[ "$BACKUP_ROOT/" != "$volume_path/"* && "$SOURCE_DIR/" != "$volume_path/"* ]]
-  consumers=$(docker ps -a --filter "volume=$volume_name" --format '{{.Names}}')
+  consumers=$(docker_cmd 30 ps -a --filter "volume=$volume_name" --format '{{.Names}}')
   [[ "$consumers" == "$BACKEND_CONTAINER" ]]
 }
 
@@ -77,7 +94,7 @@ resolve_volume() {
 # exactly as the deploy helper does, retaining ALL configured frontend build args.
 compose_model() {
   compose config --format json | python3 -I -B -c '
-import json, pathlib, sys
+import json, pathlib, posixpath, sys
 m=json.load(sys.stdin); source=pathlib.Path(sys.argv[1]); mode=sys.argv[2]
 assert m["volumes"]["benefits-data"]["name"] == sys.argv[3]
 for name, part in [("benefits-backend", "backend"), ("benefits-frontend", "frontend")]:
@@ -93,14 +110,60 @@ assert backend.get("user", "node") in ("node", "1000", "1000:1000")
 assert not backend.get("command") and not backend.get("entrypoint")
 assert str(frontend["build"]["args"]["NEXT_PUBLIC_CHAIN_ID"]) == "1"
 assert frontend["build"]["args"]["BENEFITS_API_INTERNAL_URL"] == "http://benefits-backend:3001"
-mounts=[v for v in backend["volumes"] if v["target"] == "/data"]
-assert len(mounts) == 1 and mounts[0]["type"] == "volume" and mounts[0]["source"] == "benefits-data"
+# All effective mounts must match the model. Refuse implicit/alternate mount
+# mechanisms rather than guessing how Compose will combine them.
+assert not any(backend.get(k) for k in ["volumes_from", "tmpfs", "configs", "secrets"])
+def no_subpaths(value):
+    if isinstance(value, dict):
+        for k, v in value.items():
+            if k.lower().replace("_", "").replace("-", "") == "subpath":
+                assert v in (None, "")
+            no_subpaths(v)
+    elif isinstance(value, list):
+        for v in value:
+            no_subpaths(v)
+def destination(value):
+    assert isinstance(value, str) and value.startswith("/")
+    return posixpath.normpath("/"+value.lstrip("/"))
+def protected(value):
+    return value in ("/", "/data") or value.startswith("/data/")
+expected={}
+for v in backend.get("volumes", []):
+    no_subpaths(v)
+    target=destination(v["target"]); kind=v["type"]
+    assert target not in expected and kind in ("volume", "bind", "tmpfs")
+    if protected(target):
+        assert v["target"] == "/data" and kind == "volume" and v["source"] == "benefits-data"
+        assert not v.get("read_only", False)
+    src=v.get("source", "")
+    if kind == "volume": src=m["volumes"][src]["name"]
+    if kind == "bind": src=posixpath.normpath(src)
+    expected[target]=(kind, src, not v.get("read_only", False))
+assert "/data" in expected
+runtime=json.loads(sys.argv[4]); no_subpaths(runtime)
+assert not runtime["tmpfs"] and not runtime["volumes_from"]
+actual={}
+for v in runtime["mounts"]:
+    target=destination(v["Destination"]); kind=v["Type"]
+    assert target not in actual
+    if protected(target):
+        assert v["Destination"] == "/data" and kind == "volume"
+        assert v["Name"] == sys.argv[3] and v["Source"] == sys.argv[5] and v["RW"] is True
+    src=v.get("Name", "") if kind == "volume" else v.get("Source", "")
+    if kind == "bind": src=posixpath.normpath(src)
+    actual[target]=(kind, src, v["RW"])
+assert actual == expected
+for v in runtime["host_mounts"] or []:
+    target=destination(v["Target"])
+    assert target in actual and v["Type"] == actual[target][0]
+    if protected(target):
+        assert v["Target"] == "/data" and v["Type"] == "volume" and v["Source"] == sys.argv[3]
 if mode == "images":
     for name in ["benefits-backend", "benefits-frontend"]:
         tag=m["services"][name].get("image") or m["name"] + "-" + name
         assert tag and not any(c.isspace() for c in tag)
         print(tag)
-' "$SOURCE_DIR" "$1" "$volume_name"
+' "$SOURCE_DIR" "$1" "$volume_name" "$runtime_mounts" "$volume_path"
 }
 
 check_artifacts() {
@@ -179,8 +242,11 @@ cleanup_oneoff() {
   [[ -n "$scratch" && -f "$scratch/oneoff-name" ]] || return 0
   local name remaining
   name=$(cat "$scratch/oneoff-name")
-  timeout --foreground --kill-after=5 30 docker rm --force "$name" >/dev/null 2>&1 || return 1
-  remaining=$(timeout --foreground --kill-after=5 30 docker ps -a --filter "name=^/$name$" --format '{{.Names}}') || return 1
+  # A timed-out client is not evidence that its container exited. Isolate the
+  # persisted one-off identity before removal; retain it if absence is unproven.
+  docker_cmd 30 kill "$name" >/dev/null 2>&1 || true
+  docker_cmd 30 rm --force "$name" >/dev/null 2>&1 || return 1
+  remaining=$(docker_cmd 30 ps -a --filter "name=^/$name$" --format '{{.Names}}') || return 1
   [[ -z "$remaining" ]] || return 1
   rm -- "$scratch/oneoff-name"
 }
@@ -190,13 +256,14 @@ run_migration() {
   # Persist identity before create: cleanup can isolate a writer even if start/wait
   # fails. No --rm: inspect Exited/0 before explicitly removing and proving absence.
   printf '%s\n' "$name" >"$scratch/oneoff-name"
-  timeout --foreground --kill-after=5 30 docker create --name "$name" --network none --user 1000:1000 \
+  docker_cmd 30 create --name "$name" --network none --user 1000:1000 \
     --mount "$mount" --env DATABASE_URL=file:/data/benefits.db \
     --entrypoint npx "$image" prisma migrate deploy >/dev/null
-  timeout --foreground --kill-after=5 30 docker start "$name" >/dev/null
-  result=$(timeout --foreground --kill-after=5 300 docker wait "$name")
+  docker_cmd 30 start "$name" >/dev/null
+  result=$(docker_cmd 300 wait "$name")
   [[ "$result" == 0 ]]
-  [[ "$(docker inspect --format '{{.State.Status}} {{.State.ExitCode}}' "$name")" == 'exited 0' ]]
+  result=$(docker_cmd 30 inspect --format '{{.State.Status}} {{.State.ExitCode}}' "$name")
+  [[ "$result" == 'exited 0' ]]
   cleanup_oneoff
   checkpoint
 }
@@ -215,6 +282,7 @@ migration_hook() {
       ;;
     prepare)
       resolve_volume
+      compose_model check
       mkdir "$scratch/source"
       git -C "$REPO" archive --format=tar "$EXPECTED_SHA:apps/benefits-network" >"$scratch/source.tar"
       tar -xf "$scratch/source.tar" -C "$scratch/source"
@@ -226,15 +294,17 @@ migration_hook() {
       local tag id
       : >"$backup/candidate-images"
       while IFS= read -r tag; do
-        id=$(docker image inspect --format '{{.Id}}' "$tag")
+        id=$(docker_cmd 30 image inspect --format '{{.Id}}' "$tag")
         [[ "$id" =~ ^sha256:[0-9a-f]{64}$ ]]
         printf '%s\n' "$id" >>"$backup/candidate-images"
       done <"$backup/candidate-tags"
-      [[ "$(docker image inspect --format '{{.Config.User}}' "$(head -n 1 "$backup/candidate-images")")" == node ]]
+      id=$(docker_cmd 30 image inspect --format '{{.Config.User}}' "$(head -n 1 "$backup/candidate-images")")
+      [[ "$id" == node ]]
       (cd "$backup" && sha256sum candidate-tags candidate-images >>SHA256SUMS)
       ;;
     migrate)
       resolve_volume
+      compose_model check
       bash "$script_dir/benefits-backend-volume-ownership.sh" apply
       run_migration "$(head -n 1 "$backup/candidate-images")" "type=volume,src=$volume_name,dst=/data" \
         "benefits-model-b-migrate-$(basename "$backup" | tr '[:upper:]' '[:lower:]')"
@@ -246,7 +316,7 @@ migration_hook() {
 verify_candidate_images() {
   local tag id index=1
   while IFS= read -r tag; do
-    id=$(docker image inspect --format '{{.Id}}' "$tag")
+    id=$(docker_cmd 30 image inspect --format '{{.Id}}' "$tag")
     [[ "$id" == "$(sed -n "${index}p" "$backup/candidate-images")" ]]
     index=$((index+1))
   done <"$backup/candidate-tags"
@@ -266,14 +336,18 @@ invariant_hook() {
     before) database_invariants before ;;
     after) database_invariants after; verify_candidate_images ;;
     online)
+      resolve_volume
+      compose_model check
       check_endpoints
       probe GET "$FRONTEND_URL" 200
       probe POST "${FRONTEND_URL%/}/api/sessions/cutover-smoke/redeem" 410
       probe GET "${FRONTEND_URL%/}/api/customer/history" 410
-      [[ "$(docker exec "$BACKEND_CONTAINER" id -u)" == 1000 ]]
-      local container index=1
+      local container result index=1
+      result=$(docker_cmd 30 exec "$BACKEND_CONTAINER" id -u)
+      [[ "$result" == 1000 ]]
       for container in "$BACKEND_CONTAINER" "$FRONTEND_CONTAINER"; do
-        [[ "$(docker inspect --format '{{.Image}}' "$container")" == "$(sed -n "${index}p" "$backup/candidate-images")" ]]
+        result=$(docker_cmd 30 inspect --format '{{.Image}}' "$container")
+        [[ "$result" == "$(sed -n "${index}p" "$backup/candidate-images")" ]]
         index=$((index+1))
       done
       ;;
@@ -301,6 +375,7 @@ on_exit() {
       if compose stop "$FRONTEND_SERVICE" "$BACKEND_SERVICE" >/dev/null 2>&1; then
         say 'status=HALTED verify_all_writers_stopped_before_restore' >&2
       else
+        docker_cmd 30 kill "$FRONTEND_CONTAINER" "$BACKEND_CONTAINER" >/dev/null 2>&1 || true
         say 'status=HALTED stop_failed_operator_must_isolate_all_writers' >&2
       fi
       say 'rollback=manual use_backup_RESTORE.txt keep_maintenance_until_pairing_verified' >&2
@@ -375,9 +450,9 @@ check_containers() {
   for service in "$BACKEND_SERVICE" "$FRONTEND_SERVICE"; do
     container=$BACKEND_CONTAINER
     [[ "$service" == "$BACKEND_SERVICE" ]] || container=$FRONTEND_CONTAINER
-    state=$(docker inspect --format '{{.State.Running}} {{if .State.Health}}{{.State.Health.Status}}{{end}}' "$container" 2>/dev/null) || return 1
+    state=$(docker_cmd 30 inspect --format '{{.State.Running}} {{if .State.Health}}{{.State.Health.Status}}{{end}}' "$container" 2>/dev/null) || return 1
     [[ "$state" == 'true healthy' ]] || return 1
-    id=$(docker inspect --format '{{.Id}}' "$container" 2>/dev/null) || return 1
+    id=$(docker_cmd 30 inspect --format '{{.Id}}' "$container" 2>/dev/null) || return 1
     replicas=$(compose ps --all --quiet "$service" 2>/dev/null) || return 1
     [[ -n "$id" && "$replicas" == "$id" ]] || return 1
   done
@@ -420,14 +495,17 @@ if [[ "$MODE" == rehearse ]]; then
   # Keep cleanup identity in the parent for failure and signal traps as well.
   scratch=$(mktemp -d "${TMPDIR:-/tmp}/benefits-model-b-rehearse.XXXXXXXX" 2>/dev/null)
   backup=$scratch
-  (
+  rehearse_copy() {
+    # A function-local database path cannot affect the subsequent apply path.
+    local DB_FILE=$DB_FILE image user
     mkdir "$scratch/source" "$scratch/data"
     git -C "$REPO" archive --format=tar "$EXPECTED_SHA:apps/benefits-network" >"$scratch/source.tar"
     tar -xf "$scratch/source.tar" -C "$scratch/source"
     # --quiet returns an immutable ID without changing the production image tags.
-    image=$(docker build --quiet "$scratch/source/backend")
+    image=$(docker_cmd 900 build --quiet "$scratch/source/backend")
     [[ "$image" =~ ^sha256:[0-9a-f]{64}$ ]]
-    [[ "$(docker image inspect --format '{{.Config.User}}' "$image")" == node ]]
+    user=$(docker_cmd 30 image inspect --format '{{.Config.User}}' "$image")
+    [[ "$user" == node ]]
     python3 -I -B - "$DB_FILE" "$scratch/data/benefits.db" <<'PYBACKUP'
 import pathlib, sqlite3, sys, time
 source=sqlite3.connect(pathlib.Path(sys.argv[1]).as_uri()+"?mode=ro", uri=True)
@@ -447,7 +525,8 @@ PYBACKUP
     chown 1000:1000 "$scratch/data" "$DB_FILE"
     run_migration "$image" "type=bind,src=$scratch/data,dst=/data" "benefits-model-b-$(basename "$scratch" | tr '[:upper:]' '[:lower:]')"
     database_invariants after
-  ) >/dev/null 2>&1
+  }
+  (rehearse_copy) >/dev/null 2>&1
   exit 0
 fi
 if [[ "$MODE" == plan ]]; then
@@ -478,11 +557,12 @@ printf '%s\n' "$EXPECTED_SHA" >"$backup/target-sha"
 : >"$backup/images.tsv"
 index=0
 for container in "$BACKEND_CONTAINER" "$FRONTEND_CONTAINER"; do
-  image=$(docker inspect --format '{{.Image}}' "$container" 2>/dev/null)
+  image=$(docker_cmd 30 inspect --format '{{.Image}}' "$container" 2>/dev/null)
   [[ "$image" =~ ^sha256:[0-9a-f]{64}$ ]] || refuse INVALID_IMAGE_ID
   tag="benefits-migration-rollback-$(basename "$backup" | tr '[:upper:]' '[:lower:]')-$index:retained"
-  docker image tag "$image" "$tag" >/dev/null 2>&1
-  [[ "$(docker image inspect --format '{{.Id}}' "$tag" 2>/dev/null)" == "$image" ]] || refuse ROLLBACK_IMAGE_MISMATCH
+  docker_cmd 30 image tag "$image" "$tag" >/dev/null 2>&1
+  retained_image=$(docker_cmd 30 image inspect --format '{{.Id}}' "$tag" 2>/dev/null)
+  [[ "$retained_image" == "$image" ]] || refuse ROLLBACK_IMAGE_MISMATCH
   printf '%s\t%s\t%s\n' "$container" "$image" "$tag" >>"$backup/images.tsv"
   index=$((index + 1))
 done
@@ -519,12 +599,15 @@ phase=prepare
 check_checkout
 
 phase=maintenance
+(resolve_volume; compose_model check) >/dev/null 2>&1
 maintenance=1
 compose stop "$FRONTEND_SERVICE" "$BACKEND_SERVICE" >/dev/null 2>&1
 for container in "$BACKEND_CONTAINER" "$FRONTEND_CONTAINER"; do
-  [[ "$(docker inspect --format '{{.State.Running}}' "$container" 2>/dev/null)" == false ]] || refuse WRITER_STILL_RUNNING
+  running=$(docker_cmd 30 inspect --format '{{.State.Running}}' "$container" 2>/dev/null)
+  [[ "$running" == false ]] || refuse WRITER_STILL_RUNNING
 done
-[[ -z "$(compose ps --quiet "$BACKEND_SERVICE" "$FRONTEND_SERVICE" 2>/dev/null)" ]] || refuse SERVICE_STILL_RUNNING
+remaining=$(compose ps --quiet "$BACKEND_SERVICE" "$FRONTEND_SERVICE" 2>/dev/null)
+[[ -z "$remaining" ]] || refuse SERVICE_STILL_RUNNING
 
 phase=database_backup
 check_database_file

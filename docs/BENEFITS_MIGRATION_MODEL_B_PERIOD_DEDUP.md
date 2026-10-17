@@ -50,7 +50,20 @@ the previous release and every migration byte equal to that release. Compose mus
 resolve build contexts to its `backend` and `frontend` subdirectories, volume key
 `benefits-data` to the mounted Docker volume, backend `DATABASE_URL` to
 `file:/data/benefits.db`, and backend `CHAIN_ID` and frontend build argument
-`NEXT_PUBLIC_CHAIN_ID` to `1`. Its frontend internal API build argument must be
+`NEXT_PUBLIC_CHAIN_ID` to `1`. The backend must mount the complete named volume
+at exactly `/data`, writable and without a volume subpath (including `.`). The
+complete backend mount set in Compose and the existing container must agree on
+type, destination, source identity and read/write access. Additional mounts at `/`,
+`/data`, or anywhere below `/data` are refused, including `benefits.db` and its
+`-wal`, `-shm` and `-journal` files. Path aliases are normalized for overlap checks.
+The script also inspects runtime `HostConfig.Mounts` options to reject subpaths
+that are not visible in the effective `Mounts` list, and refuses runtime
+`HostConfig.Tmpfs` and `HostConfig.VolumesFrom` entries. Alternate Compose mount
+mechanisms (`volumes_from`, service-level `tmpfs`, configs and secrets) require a
+separate review and are refused by this procedure. Unrelated mounts expressed in
+`volumes` are allowed only when their effective runtime identities match the model.
+
+Its frontend internal API build argument must be
 `http://benefits-backend:3001`. Other frontend build arguments remain exactly those
 in the host Compose configuration, as in `deploy-benefits-network.sh`; no replacement
 frontend configuration or guessed image tag is used. Missing/mismatched arguments
@@ -77,17 +90,19 @@ export MIGRATION_FRONTEND_SERVICE=benefits-frontend
 export MIGRATION_BACKEND_CONTAINER=inferno-benefits-backend
 export MIGRATION_FRONTEND_CONTAINER=inferno-benefits-frontend
 # Resolve Docker's actual volume name and host mountpoint. Never guess from the key.
-benefits_volume=$(docker inspect --format '{{range .Mounts}}{{if eq .Destination "/data"}}{{if eq .Type "volume"}}{{.Name}}{{end}}{{end}}{{end}}' inferno-benefits-backend)
+benefits_volume=$(timeout --foreground --kill-after=5 30 docker inspect --format '{{range .Mounts}}{{if eq .Destination "/data"}}{{if eq .Type "volume"}}{{.Name}}{{end}}{{end}}{{end}}' inferno-benefits-backend) || exit 1
 test -n "$benefits_volume" || exit 1
-benefits_mount=$(docker volume inspect --format '{{.Mountpoint}}' "$benefits_volume") || exit 1
+benefits_mount=$(timeout --foreground --kill-after=5 30 docker volume inspect --format '{{.Mountpoint}}' "$benefits_volume") || exit 1
 test -d "$benefits_mount" || exit 1
 export MIGRATION_DB_FILE="$benefits_mount/benefits.db"
 unset benefits_volume benefits_mount
 cd /opt/inferno/migration-tools
 ```
 
-The script independently rechecks the volume mount, mountpoint, Compose volume name
-and sole consumer. The previous image has no `USER` directive and runs as root;
+The script independently rechecks both complete mount sets, mountpoint, Compose
+volume name and sole consumer before backups/staging or downtime. It repeats the
+identity checks before source sync, service stop and migration, and after restart.
+The previous image has no `USER` directive and runs as root;
 the new backend uses `USER node` (uid 1000) and automatically runs migrations in its
 startup CMD. Therefore do not start it before the explicit migration/ownership steps.
 
@@ -138,12 +153,28 @@ containers continue serving. Candidate IDs are recorded and checked before start
 and after restart.
 
 It then stops both services, proves they stopped, backs up/verifies the database,
-and records aggregate before-counts and zero unfinished migrations. It reuses the
-ownership tool to set the resolved volume to uid/gid 1000, retaining its verified
+and records aggregate before-counts and zero unfinished migrations. This ordering
+matches the template's stopped-database backup contract: a verified database backup
+from this attempt is not available before the initial stop. A failed database copy,
+integrity/count check or checksum therefore causes downtime, but prevents ownership
+changes, migration and application startup; services stay stopped and the lock is
+retained. The earlier source/config/image backups cannot substitute for the database
+backup. If backup-before-any-stop becomes a release requirement, prepare a separately
+reviewed, verified pre-stop SQLite backup through SQLite's backup API and retain the
+final stopped backup as well; never substitute a raw live-file copy.
+
+It reuses the ownership tool to set the resolved volume to uid/gid 1000, retaining its verified
 ownership backups under `/opt/inferno/backups`. It does not restart the old image
 between chown and migration. The named one-off uses the immutable new backend ID,
-`--network none`, uid/gid 1000, a 300-second wait and bounded 30-second lifecycle
-commands. It requires exited/0 and proves removal before WAL checkpoint and all
+`--network none`, uid/gid 1000 and a 300-second wait. Every Docker/Compose invocation
+has a GNU `timeout --foreground --kill-after=5` deadline: 30 seconds for metadata,
+create/start/inspect/kill/removal and absence checks; 90 seconds for Compose stop/up
+and the ownership helper's Docker stop; 900 seconds for image builds. The ownership
+helper's Docker inspections and failure/exit-handler calls use the same bounded
+policy. These are client deadlines, not proof that daemon-side work has stopped.
+The one-off name is persisted before create; cleanup attempts kill, force-removal
+and an absence check, including when inspection after wait times out. It requires
+exited/0 and proves removal before WAL checkpoint and all
 after-invariants. Both images then start without rebuilding or pulling. Postchecks
 require container health, health/ready and `/` HTTP 200, backend uid 1000 and:
 
@@ -157,8 +188,11 @@ Measure rehearsal/backup time to agree the actual window. Migration wait is boun
 at 300 seconds and readiness polling at 60 attempts, five seconds apart (plus probe
 time); this is not a hard upper bound on total downtime. Any failed check after stop
 keeps both services stopped and the lock retained. There is no automatic rollback.
-If cleanup cannot prove one-off removal, its private working directory is retained
-for operator isolation rather than deleting a potentially mounted database.
+If cleanup cannot prove one-off removal, its name marker and private working
+directory are retained for operator isolation rather than deleting a potentially
+mounted database. Failure-path Compose stop is also bounded; if it fails or times
+out, the script attempts a bounded kill of both service containers, reports that
+writer isolation still requires operator verification, and retains the lock.
 
 ## Rollback and evidence
 

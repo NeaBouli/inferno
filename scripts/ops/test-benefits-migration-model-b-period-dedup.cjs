@@ -22,22 +22,38 @@ function command(name, args, options = {}) {
 }
 
 const shim = String.raw`#!/usr/bin/env python3
-import hashlib, json, os, pathlib, sqlite3, sys
+import hashlib, json, os, pathlib, signal, sqlite3, sys, time
 cmd=pathlib.Path(sys.argv[0]).name; a=sys.argv[1:]; e=os.environ
 state_path=pathlib.Path(e['TEST_STATE']); s=json.loads(state_path.read_text())
 def save(): state_path.write_text(json.dumps(s))
 def img(c): return 'sha256:'+c*64
 def fail(): sys.exit(1)
+def stall():
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
+    while True: time.sleep(60)
 with open(e['TEST_LOG'],'a') as f: f.write(json.dumps([cmd,*a])+'\n')
 print(e['TEST_SECRET'],file=sys.stderr)
 if cmd == 'docker':
     if a[0] == 'inspect':
         fmt=a[2]; container=a[-1]; backend=container == 'inferno-benefits-backend'
-        if '.Mounts' in fmt: print('volume|custom-project_benefits-data|'+e['BENEFITS_VOLUME_PATH'])
-        elif '.Config.Labels' in fmt: print('benefits-backend')
+        if 'json .Mounts' in fmt:
+            mounts=[{'Type':'volume','Name':'custom-project_benefits-data','Source':e['BENEFITS_VOLUME_PATH'],'Destination':'/data','RW':True}]
+            if e.get('EXTRA_RUNTIME_MOUNT'): mounts.append(json.loads(e['EXTRA_RUNTIME_MOUNT']))
+            if e.get('BAD_RUNTIME_VOLUME'): mounts[0]['Name']='other-volume'
+            if e.get('BAD_RUNTIME_SOURCE'): mounts[0]['Source']+='/subdir'
+            host=[{'Type':'volume','Source':mounts[0]['Name'],'Target':'/data','VolumeOptions':{'Subpath':e['RUNTIME_SUBPATH']}}] if e.get('RUNTIME_SUBPATH') else None
+            print(json.dumps({'mounts':mounts,'host_mounts':host,'tmpfs':{'/data/cache':'rw'} if e.get('RUNTIME_TMPFS') else None,'volumes_from':None}))
+        elif '.Mounts' in fmt: print('volume|custom-project_benefits-data|'+e['BENEFITS_VOLUME_PATH'])
+        elif '.Config.Labels' in fmt:
+            if e.get('STALL_OWNERSHIP_INSPECT') and not s['running']: stall()
+            print('benefits-backend')
         elif '.State.Health' in fmt: print('true healthy' if s['running'] else 'false unhealthy')
         elif '.State.Running' in fmt: print('true' if s['running'] else 'false')
-        elif '.State.ExitCode' in fmt: print('exited '+('1' if e.get('FAIL_MIGRATE') else '0'))
+        elif '.State.ExitCode' in fmt:
+            if e.get('STALL_INSPECT_OUTPUT'):
+                print('exited 0', flush=True); stall()
+            if e.get('STALL_INSPECT'): stall()
+            print('exited '+('1' if e.get('FAIL_MIGRATE') else '0'))
         elif '.State.Status' in fmt: print('running' if s['running'] else 'exited')
         elif fmt == '{{.Id}}': print('id-'+container)
         elif fmt == '{{.Image}}': print(img(('b' if backend else 'c') if s.get('started') else 'a'))
@@ -72,13 +88,19 @@ if cmd == 'docker':
         if e.get('FAIL_WAIT'): sys.exit(124)
         print('1' if e.get('FAIL_MIGRATE') else '0')
     elif a[0] == 'rm':
+        if e.get('STALL_REMOVE'): stall()
         if e.get('FAIL_REMOVE'): fail()
         s.pop('oneoff',None); save()
+    elif a[0] == 'kill':
+        if 'inferno-benefits-backend' in a: s['running']=False; save()
     elif a[0] == 'exec': print('0' if e.get('BAD_UID') else '1000')
     elif a[0] == 'compose':
         action=next(x for x in a if x in ['config','ps','build','stop','up'])
         if action == 'config':
             backend={'build':{'context':e['MIGRATION_SOURCE_DIR']+'/backend'},'environment':{'DATABASE_URL':'file:/data/benefits.db','CHAIN_ID':'1'},'volumes':[{'target':'/data','source':'benefits-data','type':'volume'}],'image':'fixture-backend:latest'}
+            if e.get('EXTRA_COMPOSE_MOUNT'): backend['volumes'].append(json.loads(e['EXTRA_COMPOSE_MOUNT']))
+            if e.get('COMPOSE_SUBPATH'): backend['volumes'][0]['volume']={'subpath':e['COMPOSE_SUBPATH']}
+            if e.get('COMPOSE_TMPFS'): backend['tmpfs']=['/data/cache']
             frontend={'build':{'context':e['MIGRATION_SOURCE_DIR']+'/frontend','args':{'NEXT_PUBLIC_CHAIN_ID':'11155111' if e.get('BAD_CHAIN') else '1','BENEFITS_API_INTERNAL_URL':'http://benefits-backend:3001'}},'image':'fixture-frontend:latest'}
             print(json.dumps({'name':'fixture','services':{'benefits-backend':backend,'benefits-frontend':frontend},'volumes':{'benefits-data':{'name':'custom-project_benefits-data'}}}))
         elif action == 'ps':
@@ -87,7 +109,9 @@ if cmd == 'docker':
         elif action == 'build':
             assert s['running'], 'built during downtime'
             s['tags'].update({'fixture-backend:latest':img('b'),'fixture-frontend:latest':img('c')}); save()
-        elif action == 'stop': s['running']=False; save()
+        elif action == 'stop':
+            if e.get('STALL_FAILURE_STOP') and s.get('stopCount'): stall()
+            s['running']=False; s['stopCount']=s.get('stopCount',0)+1; save()
         elif action == 'up':
             assert not s.get('oneoff')
             s['running']=True; s['started']=True; save()
@@ -116,11 +140,43 @@ elif cmd == 'df': print('Filesystem 1024-blocks Used Available Capacity Mounted 
 elif cmd == 'sha256sum':
     def digest(f): return hashlib.sha256(pathlib.Path(f).read_bytes()).hexdigest()
     if a and a[0] == '--check':
+        if e.get('FAIL_DATABASE_CHECKSUM') and 'database.sqlite' in pathlib.Path(a[-1]).read_text(): fail()
         for line in pathlib.Path(a[-1]).read_text().strip().split('\n'): assert digest(line[66:]) == line[:64]
     elif not a: print(hashlib.sha256(sys.stdin.buffer.read()).hexdigest()+'  -')
     else:
         for f in a: print(digest(f)+'  '+f)
 else: raise Exception('unknown shim')
+`;
+
+// Exercise real deadlines and TERM/KILL escalation without requiring GNU timeout
+// on macOS. Only the selected stalled Docker call gets a shortened test deadline;
+// logs retain the production deadline so coverage can check every Docker call.
+const timeoutShim = String.raw`#!/usr/bin/env python3
+import json, os, signal, subprocess, sys, time
+a=sys.argv[1:]
+assert a[:2] == ['--foreground','--kill-after=5']
+seconds=float(a[2]); command=a[3:]; grace=5
+with open(os.environ['TEST_LOG'],'a') as f: f.write(json.dumps(['timeout',*a])+'\n')
+if command[0] == 'docker':
+    text=' '.join(command)
+    shortened=((os.environ.get('STALL_INSPECT') or os.environ.get('STALL_INSPECT_OUTPUT')) and command[1] == 'inspect' and '.State.ExitCode' in text
+        or os.environ.get('STALL_FAILURE_STOP') and command[1] == 'compose' and 'stop' in command
+        or os.environ.get('STALL_REMOVE') and command[1] == 'rm'
+        or os.environ.get('STALL_OWNERSHIP_INSPECT') and command[1] == 'inspect' and '.Config.Labels' in text)
+    if shortened: seconds=1; grace=0.1
+started=time.monotonic()
+p=subprocess.Popen(command, start_new_session=True)
+try:
+    rc=p.wait(timeout=seconds)
+except subprocess.TimeoutExpired:
+    with open(os.environ['TEST_LOG'],'a') as f: f.write(json.dumps(['timeout-expired',*command])+'\n')
+    os.killpg(p.pid, signal.SIGTERM)
+    try: p.wait(timeout=grace)
+    except subprocess.TimeoutExpired:
+        os.killpg(p.pid, signal.SIGKILL); p.wait()
+    with open(os.environ['TEST_LOG'],'a') as f: f.write(json.dumps(['timeout-elapsed',str(time.monotonic()-started),*command])+'\n')
+    sys.exit(124)
+sys.exit(128-rc if rc < 0 else rc)
 `;
 
 function fixture(t, variant = '') {
@@ -176,8 +232,7 @@ c.commit(); c.close()`, db, oldSql]);
   fs.writeFileSync(state, JSON.stringify({ running: true, tags: {}, owners: {} })); fs.writeFileSync(log, '');
   const shimFile = path.join(root, 'shim.cjs'); fs.writeFileSync(shimFile, shim, { mode: 0o755 });
   for (const c of ['docker', 'id', 'flock', 'stat', 'chown', 'curl', 'df', 'sha256sum']) fs.symlinkSync(shimFile, path.join(bin, c));
-  // Model bounded timeout forwarding without depending on GNU coreutils on macOS.
-  fs.writeFileSync(path.join(bin, 'timeout'), '#!/usr/bin/env bash\nwhile [[ "$1" == --* ]]; do shift; done\nshift\nexec "$@"\n', { mode: 0o755 });
+  fs.writeFileSync(path.join(bin, 'timeout'), timeoutShim, { mode: 0o755 });
   const env = { ...process.env, LC_ALL: 'C', PATH: bin + path.delimiter + process.env.PATH, TMPDIR: dirs.tmp,
     MIGRATION_REPO: repo, MIGRATION_EXPECTED_SHA: target, MIGRATION_PREVIOUS_SHA: previous,
     MIGRATION_DB_FILE: db, MIGRATION_SOURCE_DIR: runtime, MIGRATION_BACKUP_ROOT: backups,
@@ -186,9 +241,13 @@ c.commit(); c.close()`, db, oldSql]);
     BENEFITS_OWNERSHIP_TEST_MODE: '1', BENEFITS_VOLUME_PATH: volume, BENEFITS_BACKUP_DIR: path.join(root, 'ownership-backups'),
     TEST_STATE: state, TEST_LOG: log, TEST_SECRET: secret, TEST_SQL: sqlFile };
   return { ...dirs, db, target, state: () => JSON.parse(fs.readFileSync(state)), calls: () => fs.readFileSync(log, 'utf8').trim().split('\n').filter(Boolean).map(JSON.parse), env,
-    run(mode, extra = {}) {
-      const r = spawnSync('bash', [path.join(tools, filename), mode], { env: { ...env, ...extra }, encoding: 'utf8', timeout: 180000 });
+    run(mode, extra = {}, seconds = 180) {
+      // A process-group deadline also bounds a regression that bypasses the
+      // production timeout wrapper. Assert below that this outer guard never fires.
+      const r = spawnSync(path.join(bin, 'timeout'), ['--foreground', '--kill-after=5', String(seconds), 'bash', path.join(tools, filename), mode],
+        { env: { ...env, ...extra }, encoding: 'utf8', timeout: (seconds + 10) * 1000 });
       assert.equal(r.error, undefined);
+      assert.ok(!fs.readFileSync(log, 'utf8').includes('["timeout-expired", "bash"'), 'outer fixture deadline expired');
       assert.ok(!(r.stdout + r.stderr).includes(secret), 'raw tool/row/secret output leaked');
       return r;
     } };
@@ -196,6 +255,14 @@ c.commit(); c.close()`, db, oldSql]);
 
 const hash = file => createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 const isDocker = (c, action) => c[0] === 'docker' && c[1] === action;
+function assertBoundedDocker(calls) {
+  const actual = calls.filter(c => c[0] === 'docker').map(JSON.stringify).sort();
+  const bounded = calls.filter(c => c[0] === 'timeout' && c[4] === 'docker').map(c => {
+    assert.ok(['30', '90', '300', '900'].includes(c[3]), 'unexpected Docker deadline');
+    return JSON.stringify(c.slice(4));
+  }).sort();
+  assert.deepEqual(actual, bounded, 'every Docker/Compose call must have a deadline, including ownership and cleanup');
+}
 
 test('plan validates hooks, exact migration set and volume without mutations', t => {
   const f = fixture(t), before = hash(f.db), release = fs.readFileSync(path.join(f.runtime, 'RELEASE_SHA'), 'utf8');
@@ -204,6 +271,15 @@ test('plan validates hooks, exact migration set and volume without mutations', t
   assert.equal(fs.readFileSync(path.join(f.runtime, 'RELEASE_SHA'), 'utf8'), release);
   assert.deepEqual(fs.readdirSync(f.backups), []); assert.deepEqual(fs.readdirSync(f.tmp), []);
   assert.ok(!f.calls().some(c => ['create', 'start', 'rm', 'build'].some(a => isDocker(c, a)) || ['stop', 'up', 'build', 'tag'].some(a => c.includes(a)) || c[0] === 'chown'));
+});
+
+test('accepts an unrelated mount only when the full Compose/runtime identities match', t => {
+  const f = fixture(t), r = f.run('plan', {
+    EXTRA_COMPOSE_MOUNT: JSON.stringify({ type: 'bind', source: '/review/config', target: '/config', read_only: true }),
+    EXTRA_RUNTIME_MOUNT: JSON.stringify({ Type: 'bind', Source: '/review/config', Destination: '/config', RW: false }),
+  });
+  assert.equal(r.status, 0, r.stdout + r.stderr); assert.match(r.stdout, /hook_checks=PASS/);
+  assert.equal(f.state().running, true); assert.deepEqual(fs.readdirSync(f.backups), []);
 });
 
 test('rehearse migrates only a private SQLite backup, deletes it, and prints aggregate PASS', t => {
@@ -249,6 +325,7 @@ test('successful apply builds before stop, owns volume before migration and veri
   assert.ok(build < stop && stop < calls.findIndex(c => c[0] === 'chown') && calls.findIndex(c => c[0] === 'chown') < calls.findIndex(c => isDocker(c, 'create')));
   assert.ok(calls.some(c => isDocker(c, 'exec') && c.at(-1) === '-u'));
   assert.ok(calls.some(c => c[0] === 'curl' && c.includes('POST') && c.at(-1).endsWith('/api/sessions/cutover-smoke/redeem')));
+  assertBoundedDocker(calls);
 });
 
 for (const [label, extra, phase] of [
@@ -262,7 +339,92 @@ for (const [label, extra, phase] of [
   assert.equal(f.state().running, false); assert.ok(fs.existsSync(path.join(f.backups, '.benefits-migration.lock')));
   assert.equal(f.state().oneoff, undefined); assert.deepEqual(fs.readdirSync(f.tmp), []);
   if (phase !== 'postcheck') assert.ok(!f.calls().some(c => c.includes('up')));
+  assertBoundedDocker(f.calls());
 });
+
+for (const [label, extra] of [
+  ['inspector after wait', { STALL_INSPECT: '1' }],
+  ['inspector after valid partial output', { STALL_INSPECT_OUTPUT: '1' }],
+  ['inspector and failure stop', { STALL_INSPECT: '1', STALL_FAILURE_STOP: '1' }],
+  ['failure stop after application restart', { BAD_UID: '1', STALL_FAILURE_STOP: '1' }],
+  ['ownership dependency inspector', { STALL_OWNERSHIP_INSPECT: '1' }],
+]) test(`stalled ${label} exits bounded, fails closed and retains the lock`, t => {
+  const f = fixture(t), r = f.run('apply', extra);
+  assert.notEqual(r.status, 0);
+  assert.equal(f.state().running, false); assert.equal(f.state().oneoff, undefined);
+  assert.ok(fs.existsSync(path.join(f.backups, '.benefits-migration.lock')));
+  assert.deepEqual(fs.readdirSync(f.tmp), []);
+  const calls = f.calls();
+  assert.ok(calls.some(c => c[0] === 'timeout-expired' && c[1] === 'docker'));
+  // Bound the actual stalled call, independently of Git/build/backup staging.
+  // The outer 180-second guard still bounds the whole apply and must never fire.
+  const elapsed = calls.filter(c => c[0] === 'timeout-elapsed');
+  assert.ok(elapsed.length > 0);
+  for (const c of elapsed) assert.ok(Number(c[1]) < 5, `stalled Docker call exceeded its deadline: ${c[1]}s`);
+  if (extra.STALL_INSPECT || extra.STALL_INSPECT_OUTPUT) {
+    const inspection = calls.findIndex(c => c[0] === 'timeout-expired' && c.some(a => a.includes('.State.ExitCode')));
+    const kill = calls.findIndex(c => isDocker(c, 'kill'));
+    const remove = calls.findIndex(c => isDocker(c, 'rm'));
+    assert.ok(inspection >= 0 && inspection < kill && kill < remove);
+    assert.match(r.stderr, /phase=migrate/);
+    assert.ok(!calls.some(c => c.includes('up')));
+  }
+  if (extra.STALL_FAILURE_STOP) {
+    assert.ok(calls.some(c => c[0] === 'timeout-expired' && c.includes('compose') && c.includes('stop')));
+    assert.match(r.stderr, /stop_failed_operator_must_isolate_all_writers/);
+  }
+  assertBoundedDocker(calls);
+});
+
+for (const extra of [{ FAIL_REMOVE: '1' }, { STALL_REMOVE: '1' }]) test(`unproven one-off cleanup retains identity and private directory: ${Object.keys(extra)[0]}`, t => {
+  const f = fixture(t), r = f.run('apply', { FAIL_WAIT: '1', ...extra });
+  assert.notEqual(r.status, 0); assert.match(r.stderr, /oneoff_cleanup_unproven/);
+  assert.equal(f.state().running, false); assert.ok(f.state().oneoff);
+  assert.ok(fs.existsSync(path.join(f.backups, '.benefits-migration.lock')));
+  const scratch = fs.readdirSync(f.tmp); assert.equal(scratch.length, 1);
+  assert.equal(fs.readFileSync(path.join(f.tmp, scratch[0], 'oneoff-name'), 'utf8').trim(), f.state().oneoff);
+  assert.ok(!f.calls().some(c => c.includes('up')));
+  assertBoundedDocker(f.calls());
+});
+
+test('failed stopped-database backup keeps services stopped and never migrates or restarts', t => {
+  const f = fixture(t), before = hash(f.db), r = f.run('apply', { FAIL_DATABASE_CHECKSUM: '1' });
+  assert.notEqual(r.status, 0); assert.match(r.stderr, /phase=database_backup/);
+  assert.equal(f.state().running, false); assert.equal(hash(f.db), before);
+  assert.ok(fs.existsSync(path.join(f.backups, '.benefits-migration.lock')));
+  assert.ok(!f.calls().some(c => c.includes('up') || isDocker(c, 'create') || c[0] === 'chown'));
+});
+
+for (const location of ['COMPOSE', 'RUNTIME']) {
+  for (const target of ['/data/benefits.db', '/data/benefits.db-wal', '/data/benefits.db-shm', '/data/benefits.db-journal', '/data/cache', '/data/../data/cache', '/']) {
+    test(`refuses overlapping ${location.toLowerCase()} mount at ${target} before staging or downtime`, t => {
+      const extra = location === 'COMPOSE' ? { type: 'bind', source: '/unverified', target } : { Type: 'bind', Source: '/unverified', Destination: target, RW: true };
+      assertMountRefused(t, { [`EXTRA_${location}_MOUNT`]: JSON.stringify(extra) });
+    });
+  }
+}
+
+for (const [label, extra] of [
+  ['Compose volume subpath', { COMPOSE_SUBPATH: 'unverified' }],
+  ['runtime volume subpath', { RUNTIME_SUBPATH: 'unverified' }],
+  ['runtime root alias subpath', { RUNTIME_SUBPATH: '.' }],
+  ['runtime volume mismatch', { BAD_RUNTIME_VOLUME: '1' }],
+  ['runtime mountpoint mismatch', { BAD_RUNTIME_SOURCE: '1' }],
+  ['implicit Compose tmpfs under data', { COMPOSE_TMPFS: '1' }],
+  ['runtime tmpfs under data outside Mounts', { RUNTIME_TMPFS: '1' }],
+  ['unapproved unrelated runtime mount', { EXTRA_RUNTIME_MOUNT: JSON.stringify({ Type: 'bind', Source: '/unverified', Destination: '/other', RW: true }) }],
+]) test(`refuses ${label} before staging or downtime`, t => assertMountRefused(t, extra));
+
+function assertMountRefused(t, extra) {
+  const f = fixture(t), before = hash(f.db), release = fs.readFileSync(path.join(f.runtime, 'RELEASE_SHA'), 'utf8');
+  const r = f.run('apply', extra);
+  assert.notEqual(r.status, 0); assert.match(r.stderr, /phase=migration_hook_check/);
+  assert.equal(hash(f.db), before); assert.equal(f.state().running, true);
+  assert.equal(fs.readFileSync(path.join(f.runtime, 'RELEASE_SHA'), 'utf8'), release);
+  assert.ok(fs.existsSync(path.join(f.runtime, 'obsolete-source')));
+  assert.deepEqual(fs.readdirSync(f.backups), []); assert.deepEqual(fs.readdirSync(f.tmp), []);
+  assert.ok(!f.calls().some(c => ['stop', 'up', 'build', 'tag', 'create', 'start'].some(a => c.includes(a)) || c[0] === 'chown'));
+}
 
 for (const variant of ['extra', 'old', 'sql']) test(`refuses migration artifact drift: ${variant}`, t => {
   const f = fixture(t, variant), before = hash(f.db), r = f.run('plan');

@@ -88,6 +88,9 @@ function fixture(t) {
   for (const command of ['docker', 'stat', 'id', 'flock', 'chown', 'sha256sum', 'tar', 'date']) {
     fs.symlinkSync(shimPath, path.join(bin, command));
   }
+  // Model deadline forwarding on hosts without GNU timeout. The migration suite
+  // separately exercises real stalled subprocesses, deadlines and kill escalation.
+  fs.writeFileSync(path.join(bin, 'timeout'), '#!/usr/bin/env bash\n[[ "$1" == --foreground && "$2" == --kill-after=5 && ( "$3" == 30 || "$3" == 90 ) ]] || exit 64\nshift 3\nexec "$@"\n', { mode: 0o755 });
   const statePath = path.join(root, 'state.json');
   const logPath = path.join(root, 'calls.jsonl');
   fs.writeFileSync(statePath, JSON.stringify({ running: true, owners: { [path.join(volume, 'benefits.db')]: [0, 123] } }));

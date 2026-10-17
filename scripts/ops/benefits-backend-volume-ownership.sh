@@ -8,6 +8,11 @@ BACKUP_DIR=/opt/inferno/backups
 STOPPED=0
 
 die() { echo "ERROR: $2" >&2; exit "$1"; }
+docker_cmd() {
+  local seconds=30
+  [[ "$1" != stop ]] || seconds=90
+  timeout --foreground --kill-after=5 "$seconds" docker "$@"
+}
 on_exit() {
   local status=$?
   if [[ "$STOPPED" == 1 ]]; then
@@ -26,7 +31,7 @@ if [[ -n "${BENEFITS_VOLUME_PATH+x}${BENEFITS_BACKUP_DIR+x}" ]]; then
   BACKUP_DIR="$BENEFITS_BACKUP_DIR"
   echo "TEST MODE: injected volume and backup paths; use only with Docker/ownership shims."
 fi
-for tool in docker find stat sort uniq df; do
+for tool in docker timeout find stat sort uniq df; do
   command -v "$tool" >/dev/null || die 69 "Missing required tool: $tool (Linux host required)."
 done
 if [[ "$MODE" == apply ]]; then
@@ -38,25 +43,26 @@ fi
 
 # Resolve the actual volume name from the existing /data mount; Compose keys and
 # project prefixes are not Docker volume names. Never guess or create a volume.
-MOUNT="$(docker inspect --format '{{range .Mounts}}{{if eq .Destination "/data"}}{{.Type}}|{{.Name}}|{{.Source}}{{end}}{{end}}' "$CONTAINER")" || die 78 "Cannot inspect backend /data mount."
+MOUNT="$(docker_cmd inspect --format '{{range .Mounts}}{{if eq .Destination "/data"}}{{.Type}}|{{.Name}}|{{.Source}}{{end}}{{end}}' "$CONTAINER")" || die 78 "Cannot inspect backend /data mount."
 IFS='|' read -r MOUNT_TYPE VOLUME MOUNT_SOURCE <<< "$MOUNT"
 [[ "$MOUNT_TYPE" == volume && "$VOLUME" =~ ^[a-zA-Z0-9][a-zA-Z0-9_.-]*$ ]] || die 78 "Backend /data must be a named volume."
 # Inspect only selected fields: never dump container config, environment, or file contents.
-DISCOVERED="$(docker volume inspect --format '{{.Mountpoint}}' "$VOLUME")" || die 78 "Cannot inspect $VOLUME."
+DISCOVERED="$(docker_cmd volume inspect --format '{{.Mountpoint}}' "$VOLUME")" || die 78 "Cannot inspect $VOLUME."
+[[ "$MOUNT_SOURCE" == "$DISCOVERED" ]] || die 78 "Backend /data source must match the complete volume mountpoint."
 VOLUME_PATH="${BENEFITS_VOLUME_PATH:-$DISCOVERED}"
 [[ "$VOLUME_PATH" == /* && -d "$VOLUME_PATH" && ! -L "$VOLUME_PATH" ]] || die 78 "Volume path must be an existing absolute directory, not a symlink."
 VOLUME_PATH="$(cd "$VOLUME_PATH" && pwd -P)"
 [[ "$VOLUME_PATH" != / ]] || die 78 "Refusing filesystem root."
 [[ "$VOLUME_PATH" == "$(cd "$DISCOVERED" && pwd -P)" ]] || die 78 "Injected path does not match the inspected volume mountpoint."
-MOUNT="$(docker inspect --format '{{range .Mounts}}{{if eq .Destination "/data"}}{{.Type}}|{{.Name}}|{{.Source}}{{end}}{{end}}' "$CONTAINER")" || die 78 "Cannot inspect backend /data mount."
+MOUNT="$(docker_cmd inspect --format '{{range .Mounts}}{{if eq .Destination "/data"}}{{.Type}}|{{.Name}}|{{.Source}}{{end}}{{end}}' "$CONTAINER")" || die 78 "Cannot inspect backend /data mount."
 [[ "$MOUNT" == "volume|$VOLUME|$DISCOVERED" ]] || die 78 "Backend /data does not match the named volume and local mountpoint."
-SERVICE="$(docker inspect --format '{{index .Config.Labels "com.docker.compose.service"}}' "$CONTAINER")" || die 78 "Cannot inspect backend service label."
+SERVICE="$(docker_cmd inspect --format '{{index .Config.Labels "com.docker.compose.service"}}' "$CONTAINER")" || die 78 "Cannot inspect backend service label."
 [[ "$SERVICE" == benefits-backend ]] || die 78 "Container is not the benefits-backend service."
-CONSUMERS="$(docker ps -a --filter "volume=$VOLUME" --format '{{.Names}}')" || die 78 "Cannot inspect volume consumers."
+CONSUMERS="$(docker_cmd ps -a --filter "volume=$VOLUME" --format '{{.Names}}')" || die 78 "Cannot inspect volume consumers."
 [[ "$CONSUMERS" == "$CONTAINER" ]] || die 78 "Volume must be attached only to $CONTAINER (including stopped containers)."
 
 backend_state() {
-  STATE="$(docker inspect --format '{{.State.Status}}' "$CONTAINER")" || die 78 "Cannot inspect backend state."
+  STATE="$(docker_cmd inspect --format '{{.State.Status}}' "$CONTAINER")" || die 78 "Cannot inspect backend state."
   case "$STATE" in running|exited|created) ;; *) die 78 "Unsafe backend state: $STATE" ;; esac
 }
 backend_state
@@ -159,7 +165,7 @@ create_backup() {
 create_backup -prestop
 backend_state
 if [[ "$STATE" == running ]]; then
-  docker stop --time 60 "$CONTAINER" >/dev/null || die 74 "Backend stop failed; ownership unchanged."
+  docker_cmd stop --time 60 "$CONTAINER" >/dev/null || die 74 "Backend stop failed; ownership unchanged."
 fi
 STOPPED=1
 backend_state
