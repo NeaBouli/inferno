@@ -11,21 +11,18 @@ on:
       - 'internal/operations/TODO.md'
       - 'internal/operations/TODO.html'
       - 'reports/*.md'
-      - 'apps/ai-copilot/src/context/ifr-knowledge.ts'
-      - 'apps/ai-copilot/server/wiki-rag.ts'
       - 'scripts/test-liquidity-*'
-      - 'apps/ai-copilot/src/context/wiki-content.json'
-      - 'scripts/build-wiki-rag.js'
       - 'scripts/check-links.js'
       - 'scripts/test-check-links.cjs'
       - 'scripts/test-benefits-doc-consistency.cjs'
       - 'scripts/test-ifr-tiers.cjs'
+      - 'apps/data-api/**'
+      - 'scripts/test-data-api-retirement.cjs'
+      - '.github/workflows/data-api.yml'
       - 'scripts/sync-ifr-tiers.cjs'
       - 'apps/sdk/src/index.ts'
       - 'apps/sdk/dist/index.js'
       - 'apps/benefits-verify/**'
-      - 'apps/ai-copilot/src/context/copilot-policy.ts'
-      - 'apps/ai-copilot/src/context/system-prompts.ts'
       - 'apps/dashboard/src/components/LockPanel.jsx'
       - 'apps/benefits-network/frontend/src/components/SellerRuleBuilder.tsx'
       - 'apps/benefits-network/frontend/src/lib/benefitTierDefaults.mjs'
@@ -50,10 +47,7 @@ on:
       - 'scripts/test-markdownlint-baseline.cjs'
       - 'scripts/test-workflow-triggers.cjs'
       - 'scripts/test-roadmap-status-sync.cjs'
-      - 'scripts/railway-release-preflight.cjs'
-      - 'scripts/test-railway-release.cjs'
-      - '.github/workflows/railway-copilot-release.yml'
-      - '.github/workflows/ai-copilot.yml'
+      - '.github/workflows/data-api.yml'
       - 'scripts/test-wiki-head-integrity.cjs'
       - 'scripts/test-wiki-jsonld.cjs'
       - 'scripts/test-surface-routing.cjs'
@@ -63,8 +57,6 @@ on:
       - 'apps/benefits-network/frontend/next.config.js'
       - 'apps/benefits-network/frontend/src/**'
       - 'apps/benefits-network/frontend/package-lock.json'
-      - 'apps/ai-copilot/server/**'
-      - 'apps/ai-copilot/vercel.json'
       - 'scripts/check-web3-wallet-runtime.cjs'
       - 'scripts/deploy-web3-site.sh'
       - 'scripts/web3-release.cjs'
@@ -97,21 +89,18 @@ on:
       - 'internal/operations/TODO.md'
       - 'internal/operations/TODO.html'
       - 'reports/*.md'
-      - 'apps/ai-copilot/src/context/ifr-knowledge.ts'
-      - 'apps/ai-copilot/server/wiki-rag.ts'
       - 'scripts/test-liquidity-*'
-      - 'apps/ai-copilot/src/context/wiki-content.json'
-      - 'scripts/build-wiki-rag.js'
       - 'scripts/check-links.js'
       - 'scripts/test-check-links.cjs'
       - 'scripts/test-benefits-doc-consistency.cjs'
       - 'scripts/test-ifr-tiers.cjs'
+      - 'apps/data-api/**'
+      - 'scripts/test-data-api-retirement.cjs'
+      - '.github/workflows/data-api.yml'
       - 'scripts/sync-ifr-tiers.cjs'
       - 'apps/sdk/src/index.ts'
       - 'apps/sdk/dist/index.js'
       - 'apps/benefits-verify/**'
-      - 'apps/ai-copilot/src/context/copilot-policy.ts'
-      - 'apps/ai-copilot/src/context/system-prompts.ts'
       - 'apps/dashboard/src/components/LockPanel.jsx'
       - 'apps/benefits-network/frontend/src/components/SellerRuleBuilder.tsx'
       - 'apps/benefits-network/frontend/src/lib/benefitTierDefaults.mjs'
@@ -136,10 +125,7 @@ on:
       - 'scripts/test-markdownlint-baseline.cjs'
       - 'scripts/test-workflow-triggers.cjs'
       - 'scripts/test-roadmap-status-sync.cjs'
-      - 'scripts/railway-release-preflight.cjs'
-      - 'scripts/test-railway-release.cjs'
-      - '.github/workflows/railway-copilot-release.yml'
-      - '.github/workflows/ai-copilot.yml'
+      - '.github/workflows/data-api.yml'
       - 'scripts/test-wiki-head-integrity.cjs'
       - 'scripts/test-surface-routing.cjs'
       - 'scripts/test-wallet-core-rpc.cjs'
@@ -148,8 +134,6 @@ on:
       - 'apps/benefits-network/frontend/next.config.js'
       - 'apps/benefits-network/frontend/src/**'
       - 'apps/benefits-network/frontend/package-lock.json'
-      - 'apps/ai-copilot/server/**'
-      - 'apps/ai-copilot/vercel.json'
       - 'scripts/check-web3-wallet-runtime.cjs'
       - 'scripts/deploy-web3-site.sh'
       - 'scripts/web3-release.cjs'
@@ -280,8 +264,6 @@ jobs:
       - name: Check roadmap and status consistency
         run: npm run test:roadmap-status-sync
 
-      - name: Check Railway release gate contract
-        run: npm run test:railway-release
 
       - name: Check public content trust
         run: npm run test:content-trust
@@ -319,8 +301,6 @@ jobs:
       - name: Check July community-audit remediation status
         run: npm run test:july-audit-register
 
-      - name: Check Wiki RAG freshness
-        run: npm run test:wiki-rag
 
       - name: Check Wiki head integrity
         run: npm run test:wiki-heads
@@ -339,6 +319,9 @@ jobs:
 
       - name: Check social preview card (JUL-20)
         run: npm run test:social-card
+
+      - name: Check web chat retirement
+        run: npm run test:data-api-retirement
 
       - name: Check public surface routing
         run: npm run test:surface-routing

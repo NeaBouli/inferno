@@ -293,7 +293,7 @@ Inferno is an open-source, community-driven project. It launched with no presale
 - Traction/Adoption/Partnerships/MVPs/Apps:
 
 ```text
-Inferno has verified Ethereum Mainnet contracts, a live Uniswap V2 IFR/WETH pool, live IFRLock access locks, live CommitmentVault locks, and a deployed LendingVault V1 that is retired (withdraw only since 3 October 2026). At Ethereum block 25682361, protocol values include 2,000 IFR held in IFRLock, 47,952,476.871794375 IFR locked in CommitmentVault, and 52,155,440.952845656 IFR available across three LendingVault offers, with 0 IFR lent. The project also operates public documentation, token lists, a transparency page, AI Copilot context, and social automation for the official @IFRtoken account.
+Inferno has verified Ethereum Mainnet contracts, a live Uniswap V2 IFR/WETH pool, live IFRLock access locks, live CommitmentVault locks, and a deployed LendingVault V1 that is retired (withdraw only since 3 October 2026). At Ethereum block 25682361, protocol values include 2,000 IFR held in IFRLock, 47,952,476.871794375 IFR locked in CommitmentVault, and 52,155,440.952845656 IFR available across three LendingVault offers, with 0 IFR lent. The project also operates public documentation, token lists, a transparency page and social automation for the official @IFRtoken account.
 ```
 
 - Annex A - Rich List & Reserve Addresses: `NA` for initial submission unless Gio prepares the CMC Google Sheet.

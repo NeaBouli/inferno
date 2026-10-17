@@ -61,7 +61,7 @@ export function CustomerProofHistory() {
   }
 
   return (
-    <section data-testid="device-history" className="shop-launcher-band-clearance rounded-[2rem] border border-white/10 bg-white/[0.055] p-5 shadow-2xl shadow-black/25 backdrop-blur">
+    <section data-testid="device-history" className=" rounded-[2rem] border border-white/10 bg-white/[0.055] p-5 shadow-2xl shadow-black/25 backdrop-blur">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-200/80">

@@ -197,7 +197,7 @@ How the file is published and changed:
 ### Relation to other tier tables
 
 - **One default preset for project surfaces (since 2026-10-03).** The SDK `ifr-sdk` (`apps/sdk`,
-  `DEFAULT_TIERS`) and the AI Copilot (`/api/ifr/check`, `tierBasis: "locked"`) use the same default
+  `DEFAULT_TIERS`) and the AI Data API (`/api/ifr/check`, `tierBasis: "locked"`) use the same default
   preset as the Benefits network: IFR locked in IFRLock only, Bronze 1,000 / Silver 2,500 / Gold 5,000 /
   Platinum 10,000. The former separate access-tier scheme (Basic/Premium/Pro, CWA-77) is retired. The
   preset is a default and label set, not a rule: partners set their own thresholds, held-IFR minimums,

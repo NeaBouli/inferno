@@ -1680,7 +1680,7 @@ test("Android 9 stays in browser mode instead of launching an incompatible WebAP
 test("Web3 service worker bounds offline navigation before using the cache", () => {
   const source = readFileSync("docs/web3-sw.js", "utf8");
   const html = readFileSync("docs/web3/index.html", "utf8");
-  expect(source).toContain('const CACHE_NAME = "ifr-web3-v22"');
+  expect(source).toContain('const CACHE_NAME = "ifr-web3-v23"');
   expect(source).toContain('"/web3-wallet-core.js?v=20261004-rpc-fallback-v6"');
   expect(html).toContain('<script src="/web3-wallet-core.js?v=20261004-rpc-fallback-v6"></script>');
   expect(html).toContain('updateViaCache: "none"');
@@ -2107,51 +2107,6 @@ for (const [width, height] of [[1440, 1000], [1180, 820], [820, 1180], [390, 844
   });
 }
 
-// T-240 follow-up: the fixed Copilot launcher must never sit on visible text or controls of the active lock task.
-// Because the launcher is fixed, every part of the task passes its position while scrolling, so the check walks the
-// whole task region and measures the real launcher rect against rendered text boxes and interactive targets. A hidden
-// launcher (visibility) is allowed inside the task; it must be visible again once the task is out of the way.
-async function expectLauncherClearOfTask(page, taskSelector) {
-  const result = await page.evaluate(async (selector) => {
-    const settle = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-    const launcher = document.querySelector("#ifr-btn");
-    const shown = () => {
-      const s = getComputedStyle(launcher);
-      return s.display !== "none" && s.visibility !== "hidden" && Number(s.opacity) > 0;
-    };
-    const roots = () => Array.from(document.querySelectorAll(selector)).filter((el) => el.getClientRects().length > 0);
-    const boxes = roots().map((el) => el.getBoundingClientRect());
-    const top = Math.min(...boxes.map((b) => b.top)) + window.scrollY;
-    const bottom = Math.max(...boxes.map((b) => b.bottom)) + window.scrollY;
-    const hits = [];
-    for (let y = Math.max(0, Math.floor(top - window.innerHeight)); y <= bottom; y += 24) {
-      window.scrollTo({ top: y, behavior: "instant" });
-      await settle();
-      if (!shown()) continue;
-      const z = launcher.getBoundingClientRect();
-      const overlaps = (r) => r.width > 0 && r.height > 0 && r.left < z.right && r.right > z.left && r.top < z.bottom && r.bottom > z.top;
-      for (const root of roots()) {
-        for (const el of root.querySelectorAll("a, button, input, select, label, [role=button]")) {
-          if (el.getClientRects().length && overlaps(el.getBoundingClientRect())) hits.push(`${window.scrollY}: target ${el.textContent.trim().slice(0, 40)}`);
-        }
-        const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-        for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-          if (!node.textContent.trim()) continue;
-          const range = document.createRange();
-          range.selectNodeContents(node);
-          if (Array.from(range.getClientRects()).some(overlaps)) hits.push(`${window.scrollY}: text ${node.textContent.trim().slice(0, 40)}`);
-        }
-      }
-    }
-    window.scrollTo({ top: 0, behavior: "instant" });
-    await settle();
-    return { hits, reachable: shown() };
-  }, taskSelector);
-  expect(result.hits, "Copilot launcher covers visible task text or controls").toEqual([]);
-  expect(result.reachable, "Copilot launcher stays reachable outside the task").toBe(true);
-}
-
-// T-240 visual gate: V1 warning and V2 path fit without overlap, clipping or horizontal overflow.
 async function measureLockLayout(page, containerSelector, stackSelectors, targetSelectors) {
   return page.evaluate(({ containerSelector, stackSelectors, targetSelectors }) => {
     const rect = (el) => { const r = el.getBoundingClientRect(); return { left: r.left, right: r.right, top: r.top, bottom: r.bottom, width: r.width, height: r.height }; };
@@ -2231,7 +2186,7 @@ for (const [width, height] of [[1440, 1000], [1180, 820], [820, 1180], [390, 844
         assertLockLayout({ ...wikiStack, stack: wikiStack.stack.map((box) => ({ ...box, left: Math.max(box.left, wikiStack.container.left), right: Math.min(box.right, wikiStack.container.right) })) });
         expect(wikiStack.stack[1].left).toBeGreaterThanOrEqual(0);
         expect(wikiStack.stack[1].right).toBeLessThanOrEqual(width);
-        await expectLauncherClearOfTask(page, "#cv-v1-warning, #cv-v2-path, #cv-connect-section, #cv-config-section, #cv-dashboard-section");
+
         if (shots) {
           await page.locator("#cv-v1-warning").scrollIntoViewIfNeeded();
           await page.evaluate(() => window.scrollBy(0, -80));
@@ -2245,7 +2200,7 @@ for (const [width, height] of [[1440, 1000], [1180, 820], [820, 1180], [390, 844
           const landing = await measureLockLayout(page, "#wz-box",
             Array.from({ length: 4 }, (_, i) => `#wz-box a.wz-option:nth-of-type(${i + 1})`), ["#wz-box a.wz-option"]);
           assertLockLayout(landing);
-          await expectLauncherClearOfTask(page, "#wz-box");
+
           if (shots) {
             await page.locator("#wz-box").scrollIntoViewIfNeeded();
             await page.screenshot({ path: `${shots}/t240-landing-wizard-lock-${width}x${height}.png` });
@@ -2261,9 +2216,9 @@ for (const [width, height] of [[1440, 1000], [1180, 820], [820, 1180], [390, 844
 
 // T-285: in the degraded state "connected, chain reads unavailable" the long wallet status note must not widen the
 // single hero column on narrow phones. Hero text stays inside the viewport (ancestor clipping considered), the
-// document never scrolls horizontally, and the full-width hero buttons stay left of the fixed Copilot launcher band.
+// document never scrolls horizontally, and buttons stay within their containers.
 for (const [width, height] of [[305, 720], [320, 740], [375, 812], [390, 844], [1440, 1000]]) {
-  test(`T-285 degraded wallet state keeps the hero inside ${width}px and clear of the launcher`, async ({ browser }) => {
+  test(`T-285 degraded wallet state keeps the hero inside ${width}px `, async ({ browser }) => {
     const { context, page, pageErrors } = await preparePage(browser, {
       readChainId: "0x5",
       contextOptions: { viewport: { width, height } },
@@ -2280,7 +2235,6 @@ for (const [width, height] of [[305, 720], [320, 740], [375, 812], [390, 844], [
       await page.evaluate(() => document.fonts.ready);
       const layout = await page.evaluate(() => {
         const vw = document.documentElement.clientWidth;
-        const launcher = document.querySelector(".copilot-launcher").getBoundingClientRect();
         // Visible right edge of an element: its own box, cut by every ancestor that clips overflow.
         const visibleRight = (el) => {
           let right = el.getBoundingClientRect().right;
@@ -2311,7 +2265,6 @@ for (const [width, height] of [[305, 720], [320, 740], [375, 812], [390, 844], [
           vw,
           scrollWidth: document.documentElement.scrollWidth,
           heroGridRight: Math.round(document.querySelector(".hero-grid").getBoundingClientRect().right),
-          launcherLeft: Math.round(launcher.left),
           clipped,
           buttons,
         };
@@ -2320,7 +2273,6 @@ for (const [width, height] of [[305, 720], [320, 740], [375, 812], [390, 844], [
       expect.soft(layout.heroGridRight, "hero grid stays inside the viewport").toBeLessThanOrEqual(layout.vw);
       expect.soft(layout.clipped, "hero text is not clipped on the right").toEqual([]);
       expect(layout.buttons.length).toBeGreaterThan(0);
-      expect.soft(layout.buttons.filter((b) => b.right > layout.launcherLeft), "hero buttons end left of the launcher band").toEqual([]);
       if (process.env.T285_SHOTS) {
         await page.screenshot({ path: `${process.env.T285_SHOTS}/t285-degraded-hero-${width}.png` });
         await page.locator("#access").screenshot({ path: `${process.env.T285_SHOTS}/t285-degraded-access-panel-${width}.png` });
@@ -2331,250 +2283,4 @@ for (const [width, height] of [[305, 720], [320, 740], [375, 812], [390, 844], [
       await context.close();
     }
   });
-}
-
-// T-287 fab-clearance: on narrow phones the hero body text, the full-width access-panel buttons and the panel
-// footnote scroll past the fixed Copilot launcher in every wallet state. Their rendered boxes (text boxes for prose,
-// element boxes for buttons) must end left of the launcher band, with no horizontal document overflow.
-for (const [width, height] of [[305, 720], [320, 740], [375, 812], [1440, 1000]]) {
-  for (const state of ["connected", "degraded"]) {
-    test(`T-287 fab-clearance: hero copy and access-panel buttons clear the launcher (${state}, ${width}px)`, async ({ browser }) => {
-      const { context, page, pageErrors } = await preparePage(browser, {
-        ...(state === "degraded" ? { readChainId: "0x5" } : {}),
-        contextOptions: { viewport: { width, height } },
-      });
-      try {
-        await page.goto("/web3/", { waitUntil: "domcontentloaded" });
-        await connect(page);
-        const expected = state === "degraded" ? "Connected · status unavailable" : "Connected";
-        await expect(page.locator("[data-wallet-state]")).toHaveText(expected, { timeout: 15_000 });
-        // Account buttons appear only once connected; they are part of the full-width button column.
-        await expect(page.locator("[data-wallet-disconnect]")).toBeVisible();
-        await page.evaluate(() => document.fonts.ready);
-        const layout = await page.evaluate(() => {
-          const launcher = document.querySelector(".copilot-launcher");
-          const s = getComputedStyle(launcher);
-          const z = launcher.getBoundingClientRect();
-          const inBand = (r) => r.width > 0 && r.left < z.right && r.right > z.left;
-          const hits = [];
-          for (const el of document.querySelectorAll(".hero .hero-copy, .access-panel .panel-foot")) {
-            const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
-            for (let n = walker.nextNode(); n; n = walker.nextNode()) {
-              if (!n.textContent.trim()) continue;
-              const range = document.createRange();
-              range.selectNodeContents(n);
-              for (const r of range.getClientRects()) {
-                if (inBand(r)) {
-                  hits.push(`text ${el.className}: right=${Math.round(r.right)}`);
-                  break;
-                }
-              }
-            }
-          }
-          const buttons = [...document.querySelectorAll(".access-panel .panel-actions .btn")].filter((el) => el.getClientRects().length);
-          for (const el of buttons) {
-            const r = el.getBoundingClientRect();
-            if (inBand(r)) hits.push(`button ${el.textContent.trim()}: right=${Math.round(r.right)}`);
-          }
-          return {
-            vw: document.documentElement.clientWidth,
-            scrollWidth: document.documentElement.scrollWidth,
-            buttons: buttons.length,
-            hits,
-            shown: s.display !== "none" && s.visibility !== "hidden" && Number(s.opacity) > 0,
-          };
-        });
-        expect(layout.buttons, "connected panel shows its full-width buttons").toBeGreaterThanOrEqual(7);
-        expect.soft(layout.scrollWidth, "no horizontal document overflow").toBeLessThanOrEqual(layout.vw);
-        expect.soft(layout.hits, "hero copy, panel footnote and panel buttons end left of the launcher band").toEqual([]);
-        expect(layout.shown, "the launcher stays available for chat").toBe(true);
-        if (process.env.T287_SHOTS) {
-          // Viewport captures with the hero copy, then the panel buttons, at the launcher's height (no injected CSS).
-          const fs = require("node:fs");
-          const atLauncher = async (selector) => {
-            await page.evaluate((sel) => {
-              const target = document.querySelector(sel).getBoundingClientRect();
-              const launcher = document.querySelector(".copilot-launcher").getBoundingClientRect();
-              window.scrollTo({ top: window.scrollY + target.bottom - launcher.bottom, behavior: "instant" });
-            }, selector);
-            await page.waitForTimeout(400);
-          };
-          await atLauncher(".hero .hero-copy");
-          await page.screenshot({ path: `${process.env.T287_SHOTS}/web3-${state}-hero-copy-${width}.png` });
-          await atLauncher(".access-panel .panel-actions");
-          await page.screenshot({ path: `${process.env.T287_SHOTS}/web3-${state}-panel-buttons-${width}.png` });
-          fs.writeFileSync(`${process.env.T287_SHOTS}/web3-${state}-${width}.json`, JSON.stringify(layout, null, 1));
-        }
-        expect(pageErrors).toEqual([]);
-      } finally {
-        await context.close();
-      }
-    });
-  }
-}
-
-// Web3 e90 follow-up (F1): the fixed Copilot launcher is a 2D box. While the page scrolls, every part of the hero
-// passes its vertical position, so a horizontal-band check alone gives false positives (an element may share the band
-// but never reach the launcher's rows) and misses nothing only by luck. This sweep measures what a visitor hits:
-// at each scroll position it intersects the real launcher rectangle with the rendered text boxes and control boxes of
-// the hero copy, hero actions and the whole access panel, and it asks the browser which element receives a pointer at
-// sample points of each of those boxes (elementFromPoint). Neither may report the launcher. The scroll grid includes
-// scrollY 590, where the e90 release gate observed the 820x1180 "Commitment lock" and 1180x820 footnote interceptions.
-async function sweepLauncherInterception(page) {
-  return page.evaluate(async () => {
-    const settle = () => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-    const launcher = document.querySelector(".copilot-launcher");
-    const shown = () => {
-      const s = getComputedStyle(launcher);
-      return s.display !== "none" && s.visibility !== "hidden" && Number(s.opacity) > 0;
-    };
-    const roots = () => [...document.querySelectorAll(".hero .hero-copy, .hero .hero-actions, .hero .access-panel")]
-      .filter((el) => el.getClientRects().length > 0);
-    const targetsOf = (root) => {
-      const boxes = [];
-      for (const el of root.querySelectorAll("a, button, input, select, label, summary, [role=button]")) {
-        if (!el.getClientRects().length) continue;
-        boxes.push({ kind: "control", label: el.textContent.trim().slice(0, 40) || el.tagName, rect: el.getBoundingClientRect(), owner: el });
-      }
-      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
-      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
-        if (!node.textContent.trim() || !node.parentElement.getClientRects().length) continue;
-        const range = document.createRange();
-        range.selectNodeContents(node);
-        for (const rect of range.getClientRects()) {
-          if (rect.width > 0 && rect.height > 0) boxes.push({ kind: "text", label: node.textContent.trim().slice(0, 40), rect, owner: node.parentElement });
-        }
-      }
-      return boxes;
-    };
-    const docBoxes = roots().map((el) => el.getBoundingClientRect());
-    const top = Math.min(...docBoxes.map((b) => b.top)) + window.scrollY;
-    const bottom = Math.max(...docBoxes.map((b) => b.bottom)) + window.scrollY;
-    const positions = new Set([590]);
-    for (let y = Math.max(0, Math.floor(top - window.innerHeight)); y <= Math.ceil(bottom); y += 10) positions.add(y);
-    const intersections = new Set();
-    const hitTargets = new Set();
-    const hiddenAt = [];
-    let measured = 0;
-    for (const y of [...positions].sort((a, b) => a - b)) {
-      window.scrollTo({ top: y, behavior: "instant" });
-      await settle();
-      if (!shown()) {
-        hiddenAt.push(window.scrollY);
-        continue;
-      }
-      const z = launcher.getBoundingClientRect();
-      for (const root of roots()) {
-        for (const box of targetsOf(root)) {
-          const r = box.rect;
-          if (r.bottom <= 0 || r.top >= window.innerHeight) continue;
-          measured += 1;
-          if (r.left < z.right && r.right > z.left && r.top < z.bottom && r.bottom > z.top) {
-            intersections.add(`${box.kind} "${box.label}" x${Math.round(r.left)}..${Math.round(r.right)} vs launcher x${Math.round(z.left)}..${Math.round(z.right)}`);
-          }
-          // Pointer hit-test on a 3x3 grid inside the box (1px inset); only points inside the viewport are testable.
-          for (const fx of [0, 0.5, 1]) {
-            for (const fy of [0, 0.5, 1]) {
-              const x = Math.min(r.right - 1, Math.max(r.left + 1, r.left + fx * r.width));
-              const py = Math.min(r.bottom - 1, Math.max(r.top + 1, r.top + fy * r.height));
-              if (x < 0 || py < 0 || x >= window.innerWidth || py >= window.innerHeight) continue;
-              const hit = document.elementFromPoint(x, py);
-              if (hit && launcher.contains(hit)) hitTargets.add(`${box.kind} "${box.label}" -> ${hit.closest("[aria-label]")?.getAttribute("aria-label") || hit.tagName}`);
-            }
-          }
-        }
-      }
-    }
-    window.scrollTo({ top: 0, behavior: "instant" });
-    await settle();
-    // The clearance narrows the panel buttons: every label must stay inside its own button.
-    const overflowingLabels = [];
-    for (const button of document.querySelectorAll(".hero .access-panel .panel-actions .btn, .hero .hero-actions .btn")) {
-      if (!button.getClientRects().length) continue;
-      const b = button.getBoundingClientRect();
-      const range = document.createRange();
-      range.selectNodeContents(button);
-      for (const r of range.getClientRects()) {
-        if (r.width > 0 && (r.left < b.left - 0.5 || r.right > b.right + 0.5)) {
-          overflowingLabels.push(`${button.textContent.trim()} text x${Math.round(r.left)}..${Math.round(r.right)} button x${Math.round(b.left)}..${Math.round(b.right)}`);
-          break;
-        }
-      }
-    }
-    return {
-      overflowingLabels,
-      vw: document.documentElement.clientWidth,
-      scrollWidth: document.documentElement.scrollWidth,
-      positions: positions.size,
-      measured,
-      intersections: [...intersections],
-      hitTargets: [...hitTargets],
-      hiddenAt,
-      reachable: shown(),
-    };
-  });
-}
-
-const E90_WIDTHS = [[305, 720], [320, 740], [375, 812], [390, 844], [820, 1180], [1180, 820], [1440, 1000]];
-for (const [width, height] of E90_WIDTHS) {
-  for (const state of ["disconnected", "connected", "degraded"]) {
-    test(`e90 F1: launcher never intercepts hero copy or access panel while scrolling (${state}, ${width}x${height})`, async ({ browser }) => {
-      const { context, page, writes, pageErrors } = await preparePage(browser, {
-        ...(state === "degraded" ? { readChainId: "0x5" } : {}),
-        contextOptions: { viewport: { width, height } },
-      });
-      // The launcher check opens the Copilot panel; its iframe and web fonts never reach the real network.
-      await page.route(/^https:\/\/(copilot-api\.ifrunit\.tech|fonts\.(googleapis|gstatic)\.com)\//, (route) => route.abort());
-      try {
-        await page.goto("/web3/", { waitUntil: "domcontentloaded" });
-        if (state === "disconnected") {
-          await expect(page.locator("[data-wallet-address]")).toHaveText("Not connected");
-        } else {
-          await connect(page);
-          const expected = state === "degraded" ? "Connected · status unavailable" : "Connected";
-          await expect(page.locator("[data-wallet-state]")).toHaveText(expected, { timeout: 15_000 });
-          await expect(page.locator("[data-wallet-disconnect]")).toBeVisible();
-        }
-        if (state === "degraded") {
-          // The RPC outage notice has its own T-221 gate; dismiss it so the sweep measures the hero itself.
-          const notice = page.locator("#ifr-rpc-error");
-          await expect(notice).toBeVisible({ timeout: 15_000 });
-          await notice.locator("button").click();
-          await expect(notice).toBeHidden();
-        }
-        await page.evaluate(() => document.fonts.ready);
-        const result = await sweepLauncherInterception(page);
-        expect(result.measured, "the sweep measured rendered hero boxes").toBeGreaterThan(100);
-        expect.soft(result.intersections, "no hero text or control box intersects the launcher rectangle").toEqual([]);
-        expect.soft(result.hitTargets, "no hero text or control point is intercepted by the launcher").toEqual([]);
-        expect.soft(result.overflowingLabels, "button labels stay inside their buttons").toEqual([]);
-        expect.soft(result.hiddenAt, "with no dialog open the launcher stays shown at every scroll position").toEqual([]);
-        expect.soft(result.scrollWidth, "no horizontal document overflow").toBeLessThanOrEqual(result.vw);
-        expect(result.reachable, "the launcher stays available for chat").toBe(true);
-        await page.locator(".copilot-launcher").click();
-        await expect(page.locator("[data-copilot-panel]")).toHaveAttribute("aria-hidden", "false");
-        if (process.env.E90_SHOTS) {
-          const fs = require("node:fs");
-          // Viewport captures at the release-gate position (scrollY 590) and with the panel buttons at launcher height.
-          await page.locator("[data-copilot-close]").first().click().catch(() => {});
-          await page.evaluate(() => window.scrollTo({ top: 590, behavior: "instant" }));
-          await page.waitForTimeout(300);
-          await page.screenshot({ path: `${process.env.E90_SHOTS}/web3-${state}-scroll590-${width}x${height}.png` });
-          await page.evaluate(() => {
-            const target = document.querySelector(".access-panel .panel-actions").getBoundingClientRect();
-            const launcher = document.querySelector(".copilot-launcher").getBoundingClientRect();
-            window.scrollTo({ top: window.scrollY + target.bottom - launcher.bottom, behavior: "instant" });
-          });
-          await page.waitForTimeout(300);
-          await page.screenshot({ path: `${process.env.E90_SHOTS}/web3-${state}-panel-at-launcher-${width}x${height}.png` });
-          await page.locator("#access").screenshot({ path: `${process.env.E90_SHOTS}/web3-${state}-access-panel-${width}x${height}.png` });
-          fs.writeFileSync(`${process.env.E90_SHOTS}/web3-${state}-${width}x${height}.json`, JSON.stringify(result, null, 1));
-        }
-        expect(writes, "layout checks never send a wallet write").toEqual([]);
-        expect(pageErrors).toEqual([]);
-      } finally {
-        await context.close();
-      }
-    });
-  }
 }

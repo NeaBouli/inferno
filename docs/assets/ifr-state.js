@@ -70,7 +70,6 @@ window.IFRState = (() => {
 
       // Abgeleitete Berechtigungen
       access: {
-        copilotFree: true,               // immer
         builderTools: false,             // Builder Registry (Phase 3)
         governanceTools: false,          // Core Team Whitelist (Phase 3)
       }

@@ -8,9 +8,9 @@
   <link rel="alternate" hreflang="en" href="https://ifrunit.tech/wiki/agent.html">
   <link rel="alternate" hreflang="x-default" href="https://ifrunit.tech/wiki/agent.html">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI Copilot &amp; Points &mdash; Inferno (IFR) Documentation</title>
+  <title>Points &amp; Fee Discounts &mdash; Inferno (IFR) Documentation</title>
   <meta name="keywords" content="Inferno, IFR, ERC-20, Ethereum, deflationary token, DeFi, blockchain, smart contract, governance, bootstrap">
-  <meta name="description" content="IFR AI Copilot with 3 modes, RAG knowledge base and safety guards. The chat is documentation-only and receives no wallet, balance, lock or tier context.">
+  <meta name="description" content="Inferno protocol documentation, wallet access, Points and integration resources.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
@@ -498,31 +498,34 @@
   <meta property="og:locale" content="en_US">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="Inferno Protocol">
-  <meta property="og:title" content="AI Copilot and Points — Inferno Protocol (IFR)">
-  <meta property="og:description" content="Embedded AI assistant with 3 modes (Explorer, User, Dev). RAG knowledge base, safety guards, points system for fee discounts.">
+  <meta property="og:title" content="Points and Fee Discounts — Inferno Protocol (IFR)">
+  <meta property="og:description" content="Inferno protocol documentation, wallet access, Points and integration resources.">
   <meta property="og:url" content="https://ifrunit.tech/wiki/agent.html">
   <meta property="og:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">
   <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="AI Copilot and Points — Inferno Protocol (IFR)">
-  <meta name="twitter:description" content="AI Copilot: 3 modes, RAG knowledge base and safety guards. The chat is documentation-only and receives no wallet, balance, lock or tier context.">
+  <meta name="twitter:title" content="Points and Fee Discounts — Inferno Protocol (IFR)">
+  <meta name="twitter:description" content="Inferno protocol documentation, wallet access, Points and integration resources.">
   <meta name="twitter:site" content="@IFRtoken">
-  <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "WebPage",
-    "headline": "AI Copilot and Points",
-    "description": "IFR AI Copilot: embedded assistant with Explorer, User, and Dev modes. The chat is documentation-only and receives no wallet, balance, lock or tier context; locking IFR does not change its answers.",
-    "url": "https://ifrunit.tech/wiki/agent.html",
-    "isPartOf": {"@id": "https://ifrunit.tech/#website"},
-    "publisher": {"@id": "https://ifrunit.tech/#organization"},
-    "about": {"@id": "https://ifrunit.tech/#app"}
+  <meta name="twitter:image" content="https://ifrunit.tech/assets/ifr_icon_256.png">  <script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "headline": "Points and Fee Discounts",
+  "description": "Points history, event rules and fee discounts.",
+  "url": "https://ifrunit.tech/wiki/agent.html",
+  "isPartOf": {
+    "@id": "https://ifrunit.tech/#website"
+  },
+  "publisher": {
+    "@id": "https://ifrunit.tech/#organization"
+  },
+  "about": {
+    "@id": "https://ifrunit.tech/#app"
   }
-  </script>
+}</script>
 <script src="/assets/vendor/ethers-6.17.0.umd.min.js"></script>
 <script src="../assets/wallet-core.js"></script>
 <script src="../assets/ifr-state.js"></script>
-<script type="application/ld+json">
-  {
+<script type="application/ld+json">{
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
   "itemListElement": [
@@ -541,13 +544,12 @@
     {
       "@type": "ListItem",
       "position": 3,
-      "name": "AI Copilot",
+      "name": "Points and Fee Discounts",
       "item": "https://ifrunit.tech/wiki/agent.html"
     }
   ]
-}
-  </script>
-  <link rel="stylesheet" href="../assets/redesign-skin.css">
+}</script>
+  <link rel="stylesheet" href="../assets/redesign-skin.css?v=20261017-retirement">
 </head>
 <body>
 
@@ -574,6 +576,7 @@
         <li class="nav-divider"></li>
         <li><a href="https://ifrunit.tech/wiki/tokenomics.html">Tokenomics</a></li>
         <li><a href="https://ifrunit.tech/wiki/fee-design.html">Fee Design</a></li>
+        <li><a href="https://ifrunit.tech/wiki/agent.html" class="active" aria-current="page">Points &amp; Fees</a></li>
         <li><a href="https://ifrunit.tech/wiki/lock-mechanism.html">Lock Mechanism</a></li>
         <li><a href="https://ifrunit.tech/wiki/vesting.html">Vesting Schedule</a></li>
         <li><a href="https://ifrunit.tech/wiki/protocol-plan.html">Protocol Plan</a></li>
@@ -605,7 +608,7 @@
         <li><a href="https://ifrunit.tech/wiki/integration.html">Integration Guide</a></li>
         <li><a href="https://ifrunit.tech/wiki/business-onboarding.html">Business Onboarding</a></li>
         <li><a href="https://ifrunit.tech/wiki/integrate-benefits.html">Integrate Benefits (No Server)</a></li>
-        <li><a href="https://ifrunit.tech/wiki/agent.html" class="active" aria-current="page">AI Copilot</a></li>
+
         <li><a href="https://ifrunit.tech/wiki/verify.html">Verify Wallet</a></li>
         <li class="nav-divider"></li>
         <li><a href="https://ifrunit.tech/wiki/security.html">Security</a></li>
@@ -626,7 +629,7 @@
           <div id="lp-header-connected" style="display:none;">
             <div style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.4);border-radius:8px;padding:5px 8px;cursor:pointer;display:flex;align-items:center;gap:6px;max-width:100px;white-space:nowrap;overflow:hidden;" onclick="lpToggleDropdown()">
               <span id="lp-header-addr" style="color:#166534;font-family:monospace;font-size:0.72rem;font-weight:600;"></span>
-              
+
             </div>
           </div>
           <div id="lp-header-dropdown" style="display:none;position:fixed;background:#111827;border:1px solid #374151;border-radius:12px;padding:16px;width:280px;max-width:calc(100vw - 24px);z-index:9999;box-shadow:0 8px 32px rgba(0,0,0,0.6);">
@@ -664,9 +667,9 @@
       </div>
 
 
-      <h1><span class="accent">AI Copilot</span> &amp; Points</h1>
+      <h1><span class="accent">Points</span> &amp; Fee Discounts</h1>
       <p class="subtitle">
-        Embedded AI assistant and on-chain points system &mdash; contextual help for holders, builders, and developers, plus fee discounts earned through real usage.
+        Points history, event rules and fee discounts for protocol participation.
       </p>
 
       <!-- ========== Local IFRLock Access Status ========== -->
@@ -679,7 +682,7 @@
             <p style="color:#9ca3af;margin-bottom:16px;">
               Optionally connect your wallet to check its IFR status on this page.<br>
               <span style="font-size:0.85rem;color:#6b7280;">
-                The Copilot chat remains documentation-only and receives no wallet, balance, lock or tier data.
+                Wallet status is read on-chain for display on this page.
               </span>
             </p>
             <button onclick="agConnect()"
@@ -689,7 +692,7 @@
               &#x1F98A; Connect Wallet
             </button>
             <p style="color:#6b7280;font-size:0.75rem;margin-top:12px;">
-              Or continue below without connecting &mdash; free tier available
+              Or read the Points rules below without connecting
             </p>
           </div>
         </div>
@@ -720,85 +723,11 @@
           <div style="margin-top:12px;padding:10px 16px;
                background:rgba(107,114,128,0.1);border:1px solid #374151;border-radius:8px;">
             <span style="color:#9ca3af;font-size:0.85rem;">
-              &#x2726; This status panel performs a local read for display only. It does not pass the connected wallet or its on-chain state to the Copilot chat.
+              &#x2726; This status panel performs a local read for display only.
             </span>
           </div>
         </div>
 
-      </div>
-
-      <!-- ========== 1. IFR AI Copilot ========== -->
-      <h2 class="section-title">1. IFR AI Copilot</h2>
-      <p>
-        The IFR AI Copilot is an embedded AI assistant available on the Inferno website. It provides contextual, role-aware guidance to every user type &mdash; from first-time token holders to integration developers. Users can ask general questions without connecting a wallet. The chat uses the curated <code>IFR_KNOWLEDGE</code> base together with maintained same-project Wiki context loaded by the server. It does not receive a connected wallet address, balance, lock status or access tier. Wallet-specific status and transactions remain in the dedicated Web3 and IFR Benefits interfaces.
-      </p>
-      <p>
-        The copilot appears as a floating widget in the bottom-right corner of the main site, Wiki, Web3 app and IFR Benefits app. It understands the Inferno protocol, token mechanics, lock system, governance, Benefits checkout and builder integrations &mdash; and adapts its responses based on the selected mode.
-      </p>
-
-      <div class="callout callout-green">
-        <p>
-          <strong>Always available:</strong> The AI Copilot widget is embedded on the Inferno website, documentation Wiki, <a href="https://web3.ifrunit.tech/">Web3 app</a> and <a href="https://shop.ifrunit.tech/">IFR Benefits app</a>. Click the button in the bottom-right corner to open it. On the main landing, Web3 and IFR Benefits, the chat frame is loaded only after you open it and starts with help tailored to that surface.
-        </p>
-      </div>
-
-      <!-- ========== 2. Three Modes ========== -->
-      <h2 class="section-title">2. Three Modes</h2>
-      <p>
-        The copilot operates in three distinct modes, each tailored to a specific audience. Users can switch modes at any time within the chat interface.
-      </p>
-
-      <table>
-        <thead>
-          <tr>
-            <th>Mode</th>
-            <th>Audience</th>
-            <th>Focus Areas</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td><strong>Explorer</strong></td>
-            <td>Visitors &amp; new users</td>
-            <td>Tokenomics, fair launch, fee design, bootstrap, roadmap, FAQ</td>
-          </tr>
-          <tr>
-            <td><strong>User</strong></td>
-            <td>IFR Holders &amp; Businesses</td>
-            <td>Locking IFR, tier benefits, Benefits Network, partner onboarding, PartnerVault</td>
-          </tr>
-          <tr>
-            <td><strong>Dev</strong></td>
-            <td>Developers</td>
-            <td>Contract addresses &amp; ABIs, ethers.js v6 integration (9 decimals), governance, security audit</td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div class="callout">
-        <p>
-          <strong>Example:</strong> A visitor in <em>Explorer</em> mode asking "How do I lock my tokens?" gets a simple beginner-friendly explanation. A developer asking the same question in <em>Dev</em> mode gets the <code>IFRLock.lock()</code> function signature, ABI snippet, and ethers.js example code.
-        </p>
-      </div>
-
-      <!-- ========== 3. Safety Rules ========== -->
-      <h2 class="section-title">3. Safety Rules</h2>
-      <p>
-        The AI Copilot enforces strict safety rules to protect users from phishing, social engineering, and misinformation:
-      </p>
-
-      <ul>
-        <li><strong>Never asks for seed phrase or private key</strong> &mdash; under no circumstances will the copilot request sensitive credentials</li>
-        <li><strong>Seed phrase warning</strong> &mdash; if a user mentions or pastes anything resembling a seed phrase, the copilot immediately displays a warning and refuses to process it</li>
-        <li><strong>Source boundary</strong> &mdash; the interface identifies the IFR knowledge context; a response may summarize the curated base and maintained Wiki context, but a page-specific citation is not guaranteed on every answer</li>
-        <li><strong>Knowledge-bound</strong> &mdash; the copilot is instructed to stay within maintained IFR knowledge and Wiki context and to state uncertainty rather than invent features, prices or timelines</li>
-        <li><strong>No financial advice</strong> &mdash; the copilot does not provide price predictions, investment advice, or trading recommendations</li>
-      </ul>
-
-      <div class="callout">
-        <p>
-          <strong>Security:</strong> The copilot runs as an isolated cross-origin chat frame. It never needs a private key or seed phrase and is a read-only assistant that cannot initiate transactions. On the main landing, Web3 and IFR Benefits the frame is not loaded until the user opens it.
-        </p>
       </div>
 
       <!-- ========== 4. Points System (IFR Points) ========== -->
@@ -807,9 +736,10 @@
         <p><strong>Status:</strong> The Points System is designed but not yet live. It will be activated in Phase 3 alongside the FeeRouter discount mechanism. The design below describes the planned implementation.</p>
       </div>
       <p>
-        IFR Points are earned through <strong>real on-chain actions</strong>, not through chatting with the copilot. Points track genuine protocol engagement and unlock fee discounts when thresholds are reached.
+        IFR Points are earned through <strong>real on-chain actions</strong>, through the Points backend. Points track genuine protocol engagement and unlock fee discounts when thresholds are reached.
       </p>
 
+      <p>Already-awarded Points are preserved. The backend still accepts legacy guide event types for compatibility, but the retired web chat no longer emits them. Wallet connection events remain supported.</p>
       <h3>Earning Points</h3>
       <p>
         Each qualifying action earns a fixed number of points, subject to daily limits to prevent abuse:
@@ -827,26 +757,6 @@
           <tr>
             <td><code>wallet_connect</code></td>
             <td>10</td>
-            <td>1</td>
-          </tr>
-          <tr>
-            <td><code>guide_wallet_setup</code></td>
-            <td>20</td>
-            <td>1</td>
-          </tr>
-          <tr>
-            <td><code>guide_add_token</code></td>
-            <td>20</td>
-            <td>1</td>
-          </tr>
-          <tr>
-            <td><code>guide_lock</code></td>
-            <td>30</td>
-            <td>1</td>
-          </tr>
-          <tr>
-            <td><code>partner_onboarding</code></td>
-            <td>50</td>
             <td>1</td>
           </tr>
         </tbody>
@@ -1044,22 +954,7 @@ IFRState.on("stateLoaded", agUpdateUI);
 })();
 </script>
 
-<!-- IFR Copilot Widget -->
-<style>
-#ifr-btn { position:fixed; bottom:24px; right:24px; width:64px; height:64px; border-radius:50%; overflow:hidden; padding:0; cursor:pointer; border:2px solid #f97316; box-shadow:0 4px 20px rgba(249,115,22,0.4); z-index:99999; background:none; transition:transform 0.2s ease,box-shadow 0.2s ease; } #ifr-btn:hover { transform:scale(1.08); box-shadow:0 6px 28px rgba(249,115,22,0.6); } #ifr-btn img { width:100%; height:100%; object-fit:cover; object-position:center center; border-radius:50%; display:block; }
-#ifr-panel { display:none; position:fixed; bottom:100px; right:12px; z-index:99998; width:min(400px, calc(100vw - 24px)); height:min(580px, calc(100vh - 120px)); border-radius:16px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,0.5); background:#1a1a1a; }
-@media(max-width:480px){ #ifr-panel { bottom:0; right:0; left:0; width:100vw; height:calc(100vh - 70px); border-radius:16px 16px 0 0; } #ifr-btn { bottom:12px; right:12px; width:52px; height:52px; } }
-#ifr-panel iframe { width:100%; height:100%; border:none; }
-#ifr-panel-close { display:none; }
-@media (max-width: 768px) {
-  #ifr-panel { width:100vw !important; height:calc(100vh - 70px) !important; bottom:0 !important; right:0 !important; left:0 !important; border-radius:16px 16px 0 0 !important; }
-  #ifr-btn { width:52px !important; height:52px !important; bottom:16px !important; right:16px !important; }
-  #ifr-btn.panel-open { display:none !important; }
-  #ifr-panel-close { display:block !important; }
-}
-</style>
-<button id="ifr-btn" onclick="var p=document.getElementById('ifr-panel');var o=p.style.display==='block';p.style.display=o?'none':'block';this.classList.toggle('panel-open',!o);"><img src="../assets/CoPilot.jpg" alt="IFR Copilot"></button>
-<div id="ifr-panel"><button id="ifr-panel-close" onclick="document.getElementById('ifr-panel').style.display='none';document.getElementById('ifr-btn').classList.remove('panel-open');" style="position:absolute;top:8px;right:8px;z-index:10;background:rgba(0,0,0,0.6);color:#fff;border:none;border-radius:50%;width:28px;height:28px;font-size:1.1rem;cursor:pointer;line-height:1;">&times;</button><iframe src="https://copilot-api.ifrunit.tech" allow="clipboard-write"></iframe></div>
+
 
 <script>
 async function lpConnect(){

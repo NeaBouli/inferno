@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Exact-SHA release of one docker compose service on the production host (T-162;
-# merged Telegram/Points/Copilot fixes such as CWA-34 were not live because
+# merged Telegram/Points/data API fixes such as CWA-34 were not live because
 # server releases were manual root sessions).
 #
 #   EXPECTED_SHA=<sha> scripts/deploy-compose-service.sh <service> plan     # read-only
@@ -15,7 +15,7 @@
 # recovery of a real failing service release is not yet verified, so watch the result
 # and use `rollback <stamp>` explicitly. Unset DEPLOY_MODE keeps the direct path below.
 #
-# <service>: telegram-bot | points-backend | ai-copilot | creator-gateway
+# <service>: telegram-bot | points-backend | data-api | creator-gateway
 #
 # Direct path (no DEPLOY_MODE) deploy: capacity floor (never prunes) -> new backup dir with a source tar and the
 # current image id -> rollback image tag -> rsync of the git-archived app dir
@@ -47,9 +47,14 @@ die() { echo "ERROR: $*" >&2; exit 1; }
 case "$SERVICE" in
   telegram-bot)   APP_DIR="apps/telegram/telegram-bot" ;;
   points-backend) APP_DIR="apps/points-backend" ;;
-  ai-copilot)     APP_DIR="apps/ai-copilot" ;;
+  data-api)       APP_DIR="apps/data-api" ;;
+  # Legacy name is accepted only for explicit rollback/inspection of retained backups.
+  ai-copilot)
+    case "$MODE" in rollback|verify|status|health|logs|backups) APP_DIR="apps/data-api" ;;
+      *) die "ai-copilot is retired; use data-api (legacy name is rollback/inspection only)" ;;
+    esac ;;
   creator-gateway) APP_DIR="apps/creator-gateway" ;;
-  *) die "usage: $0 <telegram-bot|points-backend|ai-copilot|creator-gateway> <plan|deploy|verify|rollback>" ;;
+  *) die "usage: $0 <telegram-bot|points-backend|data-api|creator-gateway> <plan|deploy|verify|rollback>" ;;
 esac
 # Proposed hostname only; the first rollout requires owner approval and host
 # gate onboarding. See docs/CREATOR_GATEWAY_DEPLOY.md before any host action.
@@ -156,7 +161,7 @@ verify_public() {
   local failures=0
   case "$SERVICE" in
     points-backend) check_code 200 https://points-api.ifrunit.tech/health || failures=$((failures + 1)) ;;
-    ai-copilot)     check_code 200 https://copilot-api.ifrunit.tech/api/health || failures=$((failures + 1)) ;;
+    data-api|ai-copilot)     check_code 200 https://copilot-api.ifrunit.tech/api/health || failures=$((failures + 1)) ;;
     creator-gateway)
       check_code 200 "https://$CREATOR_GATEWAY_HOST/health" || failures=$((failures + 1))
       check_code 200 "https://$CREATOR_GATEWAY_HOST/auth/siwe/nonce" || failures=$((failures + 1))

@@ -18,7 +18,7 @@ function requireMarkers(name, markers) {
 }
 
 for (const [name, appPath] of [
-  ["ai-copilot.yml", "apps/ai-copilot/**"],
+  ["data-api.yml", "apps/data-api/**"],
   ["creator-gateway.yml", "apps/creator-gateway/**"],
 ]) {
   requireMarkers(name, [
@@ -31,7 +31,7 @@ for (const [name, appPath] of [
   assert.equal(selfPathCount, 2, `${name} must self-trigger on push and pull_request`);
 }
 
-requireMarkers("ai-copilot.yml", [
+requireMarkers("data-api.yml", [
   "branches: [main, master, develop, dev]",
   "branches: [main, master]",
 ]);

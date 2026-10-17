@@ -309,8 +309,8 @@ for (const file of [
   "docs/ROADMAP.md",
   "docs/TOKEN_ICON_DISTRIBUTION.md",
   "docs/COINMARKETCAP_SUBMISSION.md",
-  "apps/ai-copilot/src/context/ifr-knowledge.ts",
-  "apps/ai-copilot/src/context/system-prompts.ts",
+
+
 ]) {
   assert.ok(
     !/CL0309260050[^.]{0,160}(remains pending|is pending)/.test(read(file)),

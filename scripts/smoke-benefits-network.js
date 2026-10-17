@@ -1562,20 +1562,8 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Connect wallet first');
     await expectText(page, 'Create checkout QR');
     await expectText(page, 'Scan seller QR');
-    const copilotButton = page.getByTestId('open-copilot');
-    await copilotButton.click();
-    const copilotPanel = page.locator('#shop-copilot-panel');
-    await copilotPanel.waitFor({ state: 'visible', timeout: timeoutMs });
-    assert(
-      await copilotPanel.locator('iframe').getAttribute('src') === 'https://copilot-api.ifrunit.tech?embedded=1&surface=benefits',
-      `${label} IFR Copilot iframe must use the canonical API origin`
-    );
-    await copilotPanel.getByRole('button', { name: 'Close IFR Copilot' }).click();
-    await copilotPanel.waitFor({ state: 'hidden', timeout: timeoutMs });
-    assert(
-      await copilotPanel.locator('iframe').count() === 0,
-      `${label} IFR Copilot iframe must be removed when the panel closes`
-    );
+    assert(await page.locator('[data-testid="open-copilot"], #shop-copilot-panel').count() === 0,
+      `${label} retired web chat must be absent`);
     await page.evaluate(() => {
       window.localStorage.setItem(
         'ifr.shop.customerProofHistory.v1',

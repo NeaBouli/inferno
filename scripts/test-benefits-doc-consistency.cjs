@@ -16,7 +16,7 @@ const files = {
   testGuide: 'docs/BENEFITS_NETWORK_TEST.md',
   deviceRunbook: 'docs/runbooks/BENEFITS_DEVICE_WALLET_TEST_RUNBOOK.md',
   deviceChecklist: 'docs/qa/BENEFITS_DEVICE_WALLET_CHECKLIST.json',
-  copilotKnowledge: 'apps/ai-copilot/src/context/ifr-knowledge.ts',
+
   frontendReadme: 'apps/benefits-network/frontend/README.md',
   frontendHome: 'apps/benefits-network/frontend/src/app/page.tsx',
   frontendGuide: 'apps/benefits-network/frontend/src/app/guide/page.tsx',
@@ -81,12 +81,8 @@ assert.ok(content.wikiOnboarding.includes('opaque short-lived'), 'Wiki must expl
 assert.ok(content.wikiFaq.includes('REDEEMED or REJECTED'), 'FAQ must use backend status terms');
 assert.ok(!content.wikiFaq.includes('APPROVED'), 'FAQ must not use the retired APPROVED checkout status');
 assert.ok(content.master.includes('minimum IFR locked in IFRLock'), 'master architecture must use the deployed eligibility source');
-assert.ok(content.copilotKnowledge.includes('redeemed or rejected'), 'Copilot knowledge must use backend status terms');
-assert.ok(
-  !content.copilotKnowledge.includes('My benefits history') &&
-    content.copilotKnowledge.includes('no server-side customer history'),
-  'Copilot knowledge must describe device-local customer history only'
-);
+
+
 assert.ok(content.testGuide.includes('| Silver | 2,500 IFR |'), 'test guide must use the current Silver example');
 assert.ok(content.testGuide.includes('| Platinum | 10,000 IFR |'), 'test guide must use the current Platinum example');
 assert.ok(!content.testGuide.includes('| Gold | 25,000 IFR |'), 'test guide contains the retired 25,000 IFR example');

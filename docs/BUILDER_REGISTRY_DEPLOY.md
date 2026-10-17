@@ -23,12 +23,15 @@
 - [x] Etherscan verification ✅
 
 ### After Mainnet Deploy
+
 1. Copy contract address from Etherscan
-2. Railway → ifr-ai-copilot Service → Variables:
+
    ```
    BUILDER_REGISTRY_ADDR = 0x[contract_address]
    ```
-3. Railway redeploys automatically
+
+2. Configure `BUILDER_REGISTRY_ADDR` on the retained Data API service (`apps/data-api`) through the authorized operator.
+3. Release the reviewed service under the Compose release gate.
 4. Verify: `GET /api/builders/count` → returns `{ "count": 0 }`
 5. Verify: `GET /api/builders/check/0x...` → returns `{ "address": "0x...", "isBuilder": false }`
 

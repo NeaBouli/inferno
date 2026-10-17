@@ -634,7 +634,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
               <SellerCustomerPassScanner onPass={setCustomerPassInput} />
             </div>
 
-            <div className="shop-launcher-band-clearance-compact mt-4 grid gap-2 sm:grid-cols-2">
+            <div className=" mt-4 grid gap-2 sm:grid-cols-2">
               <button
                 type="button"
                 onClick={startSession}
@@ -807,7 +807,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
             {receiptStatus ? <p className="mt-3 text-xs font-semibold text-green-100">{receiptStatus}</p> : null}
           </div>
 
-          <div className="shop-launcher-row-inset mt-6 grid gap-3 rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-stone-300">
+          <div className=" mt-6 grid gap-3 rounded-2xl border border-white/10 bg-black/25 p-4 text-sm text-stone-300">
             <div className="flex justify-between gap-4">
               <span>Benefit</span>
               <strong className="text-white">{previewBenefit ? `${previewBenefit.discountPercent}%` : '-'}</strong>
@@ -917,7 +917,7 @@ export function BusinessConsoleClient({ businessId }: { businessId: string }) {
           ) : null}
         </div>
 
-        <div className="shop-launcher-band-clearance-compact rounded-[2rem] border border-white/10 bg-stone-100 p-6 text-stone-950 shadow-2xl shadow-black/30">
+        <div className=" rounded-[2rem] border border-white/10 bg-stone-100 p-6 text-stone-950 shadow-2xl shadow-black/30">
           {session && (customerUrl || customerPresented) ? (
             <div className="grid gap-5">
               <div className="flex flex-wrap items-center justify-between gap-3">

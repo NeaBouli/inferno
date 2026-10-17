@@ -29,7 +29,6 @@
    bytecode and an `eip712Domain()` of `InfernoFeeRouter`/`1`/chain 1/that
    address. An unreadable fee at issue time makes `/voucher/issue` fail closed (503).
 5. Deploy → Note the URL (e.g. `https://ifr-points.railway.app`)
-6. Set URL in `apps/ai-copilot/.env`: `POINTS_BACKEND_URL=https://ifr-points.railway.app`
 
 ## Render (Alternative)
 
@@ -49,11 +48,10 @@ curl https://<your-url>/health
 
 ## After Deployment
 
-1. Update AI Copilot `.env`:
-   ```
-   POINTS_BACKEND_URL=https://ifr-points.railway.app
-   ```
-2. Test:
+1. Test:
+
    ```bash
    curl https://ifr-points.railway.app/auth/siwe/nonce
    ```
+
+The retired web chat no longer sends guide events. Existing Points and event types remain unchanged; wallet connection events remain supported.

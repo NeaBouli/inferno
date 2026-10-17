@@ -1,0 +1,48 @@
+name: Data API CI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master, develop, dev]
+    paths:
+      - 'apps/data-api/**'
+      - '.github/workflows/data-api.yml'
+      - 'scripts/check-dev-advisory-exceptions.cjs'
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'apps/data-api/**'
+      - '.github/workflows/data-api.yml'
+      - 'scripts/check-dev-advisory-exceptions.cjs'
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/data-api
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: apps/data-api/package-lock.json
+      - run: npm ci
+      - run: npm run test:dependencies
+      - run: npm run test:health-shape
+      - run: npm run test:cors-origins
+      - run: npm run test:rpc-failover
+      - name: npm audit (production clean; reviewed dev-only exceptions)
+        run: node ../../scripts/check-dev-advisory-exceptions.cjs
+      - run: npm run test:lending-loans
+      - run: npm run test:request-guard
+      - run: npm run test:balance-integrity
+      - run: npm run test:builder-score
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npm run test:security-headers
+      - run: npm run test:retirement

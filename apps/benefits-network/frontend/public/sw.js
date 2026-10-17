@@ -1,4 +1,4 @@
-const CACHE_NAME = 'ifr-benefits-v25';
+const CACHE_NAME = 'ifr-benefits-v26';
 const NAVIGATION_TIMEOUT_MS = 5000;
 const PRECACHE_URLS = [
   '/',
@@ -10,7 +10,6 @@ const PRECACHE_URLS = [
   '/icons/ifr-token-256-v11.png',
   '/icons/ifr-token-512-v11.png',
   '/icons/favicon-v11.ico',
-  '/copilot-avatar.jpg',
 ];
 
 function isCacheableAppAsset(request) {

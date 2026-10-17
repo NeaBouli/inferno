@@ -86,7 +86,7 @@ Threshold: 3-of-5 (5 active signers: G.M., M.G., A.M., Y.K., A.P.).
 |---|-----|------|-------|--------|
 | 1 | Token Dashboard | 5173 | React 18 + Vite + ethers v5 | Live |
 | 2 | Governance Dashboard | 5174 | React 18 + Vite + TS + Tailwind | Live |
-| 3 | AI Copilot | 5175 | React 18 + Vite + TS + Express | Live |
+| 3 | Data API | 3003 | TypeScript + Express | Live |
 | 4 | Points Backend | 3004 | Express + Prisma + SQLite + SIWE | Live |
 | 5 | Creator Gateway | 3005 | Express + ethers v5 + googleapis | Live |
 | 6 | Benefits Network Backend | 3001 | Express + Prisma + SQLite | Live |
@@ -98,7 +98,7 @@ Threshold: 3-of-5 (5 active signers: G.M., M.G., A.M., Y.K., A.P.).
 |----------|---------|-------|
 | Creator Gateway CI | Push/PR to `apps/creator-gateway/` | tsc + jest |
 | Points Backend CI | Push/PR to `apps/points-backend/` | prisma generate + tsc + jest |
-| AI Copilot CI | Push/PR to `apps/ai-copilot/` | tsc + build |
+| Data API | Push/PR to `apps/data-api/` | tsc + build |
 
 ## Documentation
 

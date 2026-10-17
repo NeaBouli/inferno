@@ -157,11 +157,11 @@ assert.equal(register.canonicalTests.web3Browser, "85/85");
 assert.ok(status.includes("Landing/Wiki wallet browser suite: `26/26` passing"));
 assert.ok(status.includes("Web3 write-path browser suite: `85/85` passing"));
 assert.ok(readme.includes("Landing/Wiki browser **26/26**, Web3 browser **85/85**"));
-for (const relative of ["README.md", "docs/CURRENT_FUNCTIONALITY_STATUS.md", "docs/llms.txt", "apps/ai-copilot/src/context/ifr-knowledge.ts"]) {
+for (const relative of ["README.md", "docs/CURRENT_FUNCTIONALITY_STATUS.md", "docs/llms.txt", ]) {
   const content = read(relative);
   assert.ok(content.includes("T-274") && content.includes("6 October 2026") && content.includes("eead5086"), `${relative} must date retained browser evidence`);
 }
-for (const relative of ["docs/llms.txt", "apps/ai-copilot/src/context/ifr-knowledge.ts"]) {
+for (const relative of ["docs/llms.txt", ]) {
   assert.ok(read(relative).includes("Landing/Wiki browser 26/26, Web3 browser 85/85"), `${relative} browser counts`);
 }
 for (const relative of ["README.md", "docs/CURRENT_FUNCTIONALITY_STATUS.md", "docs/index.html"]) {
@@ -237,7 +237,7 @@ for (const evidence of [
   assert.ok(fs.existsSync(path.join(root, evidence)), `inventory evidence missing: ${evidence}`);
 }
 
-// Public claims must retain the accepted capability boundaries, including copies used by the Copilot.
+// Public claims must retain the accepted capability boundaries, across the retained public surfaces.
 // Historical audit submissions and deprecated documents are deliberately outside this current-copy corpus.
 const claimSurfaces = [
   "README.md", "docs/PRESS_KIT.md", "docs/WHITEPAPER.md", "docs/index.html", "docs/llms.txt",
@@ -246,9 +246,7 @@ const claimSurfaces = [
       .filter((file) => file.endsWith(".html"))
       .map((file) => `${directory}/${file}`)
   ),
-  ...fs.readdirSync(path.join(root, "apps/ai-copilot/src/context"))
-    .filter((file) => /\.(?:ts|json)$/.test(file))
-    .map((file) => `apps/ai-copilot/src/context/${file}`),
+
 ];
 const stalePublicClaims = [
   /no insider allocations?\b/i,
@@ -318,20 +316,11 @@ const requiredClaimBoundaries = [
   ["docs/wizard/lend.html", ["<title>LendingVault V1 Withdrawals", "permanently disable new offers, offer increases and new borrowing, regardless of price", "existing borrowers can repay or top up collateral", "historical V1 design parameters, not an available earning offer"]],
   ["docs/web3/index.html", ["CommitmentVault V2 TIME_ONLY locks and existing-tranche unlocks", "existing-loan repayment/top-up (no new offers, increases or borrowing)"]],
   ["docs/llms.txt", ["create TIME_ONLY locks in CommitmentVault V2", "permanently retired in official interfaces, regardless of price", "underlying contract functions are not removed", "dormant; no active buyback/burn flywheel", "public wallet addresses are processed as pseudonymous identifiers", "retains merchant checkout records, seller wallets and audit events"]],
-  ["apps/ai-copilot/src/context/ifr-knowledge.ts", ["FINALIZED — Bootstrap ended on 5 June 2026", "create TIME_ONLY locks in CommitmentVault V2", "permanently retired in official interfaces, regardless of price", "Full-available withdrawal and existing-loan repayment/top-up remain available", "Retained block-25812380 snapshot", "not a fresh measurement", "V1 price-conditioned tranches can never unlock", "regardless of oracle configuration", "BuybackVault is dormant", "no active buyback/burn flywheel", "public wallet addresses are processed as pseudonymous identifiers"]],
-  ["apps/ai-copilot/src/context/system-prompts.ts", ["BOOTSTRAP STATUS: ENDED (05.06.2026 23:51 UTC)", "permanently retired in official interfaces, regardless of price", "Full-available withdrawal and existing-loan repayment/top-up remain available", "underlying contract functions are not removed", "dormant; no active buyback/burn flywheel"]],
+
+
 ];
 for (const [relative, markers] of requiredClaimBoundaries) {
   const content = read(relative);
   for (const marker of markers) assert.ok(content.includes(marker), `${relative} must retain claim boundary: ${marker}`);
 }
-const rag = JSON.parse(read("apps/ai-copilot/src/context/wiki-content.json"));
-for (const [slug, marker] of [
-  ["index", "creation/increase and new borrowing are permanently retired"],
-  ["fair-launch", "Public Bootstrap, then Uniswap V2"],
-  ["press-kit", "15% team allocation is vested"],
-  ["one-pager", "BuybackVault is dormant"],
-  ["ecosystem", "permanently retired in official interfaces, regardless of price"],
-]) assert.ok(rag.find((entry) => entry.slug === slug)?.content.includes(marker), `Wiki RAG ${slug} must retain ${marker}`);
-
 console.log("[docs-truth] PASS - 15 contracts + 3 Safes = 18; 700 contract tests; dated browser evidence; Forum advisory boundary; historical coverage labelled; 7 deployment units; public launch, buyback, capability and pseudonymous-data boundaries");

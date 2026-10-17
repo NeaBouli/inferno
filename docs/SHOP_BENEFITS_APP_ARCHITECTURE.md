@@ -71,8 +71,6 @@ The app has two roles:
   - There is no server-side customer history: `/api/customer/history*` returns 410 and losing the
     browser data loses the history.
 - Help surface:
-  - The IFR Copilot is available as an opt-in floating panel and loads only after the user opens it.
-  - The assistant is read-only, cannot initiate wallet transactions and must never request a seed phrase or private key.
 
 ## UX Requirements
 

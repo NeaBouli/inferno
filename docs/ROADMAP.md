@@ -37,9 +37,9 @@ with their audit, testnet and on-chain authorization gates, are tracked in the
 - [x] feeExempt set for IFRLock, PartnerVault, LR v2, BV v2, BR v2
 
 ### Applications
+
 - [x] Token Dashboard (React 18 + Vite, lock/unlock UI)
 - [x] Governance Dashboard (React 18 + TS + Tailwind, calldata generator)
-- [x] AI Copilot (Claude-powered, 3 modes, safety guards)
 - [x] Points Backend (SIWE auth, EIP-712 voucher issuance)
 - [x] Creator Gateway source (YouTube x IFR Lock Bridge); no production deployment record
 - [x] Benefits Network (QR-based lock verification, Next.js PWA)
@@ -70,8 +70,9 @@ with their audit, testnet and on-chain authorization gates, are tracked in the
 - [x] Multisig upgraded to 3-of-5 (15.03.2026) — 5 signers on all 3 Safes
 
 ### Post-Launch Follow-Ups (do not reopen Phase 2)
+
 - [ ] Community wallet + team beneficiary addresses finalized
-- [x] Public Web3, Benefits and AI Copilot surfaces deployed on the current
+- [x] Public Web3 and Benefits surfaces deployed on the current
       Hetzner stack; source presence for other apps does not imply deployment
 - [ ] Dashboard + Governance Dashboard switched to mainnet
 - [ ] First real builder integration live

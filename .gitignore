@@ -48,6 +48,7 @@ package-lock.json
 !apps/benefits-network/backend/package-lock.json
 !apps/benefits-network/frontend/package-lock.json
 !apps/dashboard/package-lock.json
+!apps/data-api/package-lock.json
 !apps/sdk/package-lock.json
 !apps/benefits-verify/package-lock.json
 !infra/web3/walletconnect-provider/package-lock.json

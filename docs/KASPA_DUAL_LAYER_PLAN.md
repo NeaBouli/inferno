@@ -159,7 +159,7 @@ Note:
 | Buyback/LP | Live | DEX/liquidity adapter | Very high | Depends on Kaspa DeFi maturity. |
 | Governance | Live Ethereum timelock | Cross-layer governance relay | High | Governance must remain explicit and transparent. |
 | Transparency | Live API/wiki | Kaspa adapter | Medium | Good early integration target. |
-| AI Copilot | Live | Dual-layer knowledge/context | Low | Add only verified facts and clear status labels. |
+| Data API | Live | Dual-layer knowledge/context | Low | Add only verified facts and clear status labels. |
 
 ## 7. Monorepo Target Structure
 
@@ -187,7 +187,6 @@ inferno/
 |       `--- bridge
 |
 |--- apps/
-|   |--- ai-copilot/
 |   |--- kaspa-lab/
 |   `--- dashboard/
 |
@@ -284,7 +283,6 @@ Rule:
 
 - Ethereum remains canonical.
 - Kaspa modules are enabled only for reviewed functions.
-- All live values appear in Transparency and AI Copilot context.
 - Landing page shows Kaspa only as live when the system is actually active.
 
 ## 9. Open Questions

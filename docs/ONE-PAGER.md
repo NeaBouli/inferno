@@ -29,9 +29,8 @@ Deflationary + Utility:
 
 1. **Benefits Network** -- live customer/seller PWA for QR-based benefits; physical wallet/device acceptance remains incomplete
 2. **Creator Gateway** -- YouTube x IFR Lock hybrid access
-3. **AI Copilot** -- Guided onboarding (3 modes: User/Builder/Developer)
-4. **Points System** -- implemented repository service; deployment availability is separate
-5. **Governance Dashboard** -- On-chain proposal management
+3. **Points System** -- implemented repository service; deployment availability is separate
+4. **Governance Dashboard** -- On-chain proposal management
 
 ## Technology
 

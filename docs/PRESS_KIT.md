@@ -83,7 +83,7 @@ Users lock IFR tokens in IFRLock -> receive builder-product access while the req
 | Dashboard | React 18 + Vite + ethers v6 |
 | Static wiki/landing wallet widgets | Self-hosted ethers.js v6 |
 | Governance UI | React 18 + TypeScript + Tailwind |
-| AI Copilot | Claude Haiku 4.5 + RAG |
+| Protocol Data API | Express + TypeScript + ethers v6 |
 | Benefits Network | Next.js 15 + wagmi 3 (PWA) |
 
 ## Roadmap (Summary)

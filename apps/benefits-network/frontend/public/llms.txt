@@ -17,7 +17,6 @@
 - Sellers create wallet-owned profiles, publish service areas, products and benefit rules, delegate checkout operators, bind customer passes, issue compatible checkout QR codes, redeem approved sessions once and export masked recent reconciliation data.
 - The app is a PWA for phone, tablet and desktop. It does not request seed phrases or private keys.
 - Benefit verification reads IFRLock on Ethereum Mainnet. It does not transfer customer tokens.
-- IFR Copilot is contextual read-only help. It cannot sign transactions or access wallet secrets.
 
 ## Important Limits
 

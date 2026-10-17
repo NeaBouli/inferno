@@ -128,7 +128,6 @@ Proposal erstellen: `setP0(p0Value)` auf CommitmentVault → 48h → ausführen.
 
 - `bootstrap.html`: Status auf ENDED setzen
 - `index.html`: Buy IFR Button → Uniswap Link aktivieren
-- Ali Copilot: hardcoded facts updaten + Railway redeploy
 - `transparency.html`: finalise() TX eintragen
 - Telegram @IFRtoken Announcement
 - `TODO.md`: Issues #32–35 schließen

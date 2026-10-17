@@ -21,6 +21,10 @@ mkdir -p "$FAKES" "$GATE_DIR" "$FAKE_HOME/.fleet-ssh"
 # Clone the current commit and overlay the scripts under test, so the exact-SHA guards
 # run against a real, clean checkout even before these edits are committed.
 git clone -q --local --no-hardlinks "$ROOT" "$TMP/repo"
+# Include the renamed service under test even when this worktree is not committed yet.
+mkdir -p "$TMP/repo/apps/data-api"
+tar -C "$ROOT/apps/data-api" --exclude=node_modules --exclude='.env*' -cf - . | tar -C "$TMP/repo/apps/data-api" -xf -
+git -C "$TMP/repo" add apps/data-api
 REPO="$TMP/repo"
 for f in deploy-gate-lib.sh deploy-compose-service.sh deploy-web3-site.sh deploy-benefits-network.sh; do
   cp "$ROOT/scripts/$f" "$REPO/scripts/$f"
@@ -187,18 +191,18 @@ assert_log "args=service-rollback telegram-bot $STAMP"
 run 64 bash "$COMPOSE" telegram-bot rollback "20261005-bad"
 refute_log "gate "
 
-run 0 bash "$COMPOSE" ai-copilot status;  assert_log "args=status stdin=-"
-run 0 bash "$COMPOSE" ai-copilot health;  assert_log "args=health ai-copilot stdin=-"
-run 0 bash "$COMPOSE" ai-copilot logs 50; assert_log "args=logs ai-copilot 50 stdin=-"
-run 0 bash "$COMPOSE" ai-copilot backups; assert_log "args=backups ai-copilot stdin=-"
-run 64 bash "$COMPOSE" ai-copilot logs '50;id'
+run 0 bash "$COMPOSE" data-api status;  assert_log "args=status stdin=-"
+run 0 bash "$COMPOSE" data-api health;  assert_log "args=health data-api stdin=-"
+run 0 bash "$COMPOSE" data-api logs 50; assert_log "args=logs data-api 50 stdin=-"
+run 0 bash "$COMPOSE" data-api backups; assert_log "args=backups data-api stdin=-"
+run 64 bash "$COMPOSE" data-api logs '50;id'
 refute_log "gate "
-run 0 env DEPLOY_GATE_HOST=other-gate bash "$COMPOSE" ai-copilot status
+run 0 env DEPLOY_GATE_HOST=other-gate bash "$COMPOSE" data-api status
 assert_log "host=other-gate args=status"
-run 64 env DEPLOY_GATE_HOST=-oProxyCommand=x bash "$COMPOSE" ai-copilot status
+run 64 env DEPLOY_GATE_HOST=-oProxyCommand=x bash "$COMPOSE" data-api status
 refute_log "gate "
 
-DEPLOY_MODE=bogus run 1 bash "$COMPOSE" ai-copilot status
+DEPLOY_MODE=bogus run 1 bash "$COMPOSE" data-api status
 assert_out "DEPLOY_MODE must be unset"
 refute_log "ssh "
 # Default mode is unchanged: no gate, verify is public HTTP only.

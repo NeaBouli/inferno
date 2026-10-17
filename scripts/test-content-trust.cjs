@@ -73,9 +73,9 @@ const governanceClaimFiles = [
   "docs/TRANSPARENCY.md",
   "docs/CHANGELOG.md",
   "docs/ai.txt",
-  "apps/ai-copilot/src/context/ifr-knowledge.ts",
-  "apps/ai-copilot/src/context/system-prompts.ts",
-  "apps/ai-copilot/src/context/wiki-content.json",
+
+
+
 ];
 
 // Self-test: the exact pre-CWA-25 public wording must be rejected, precise wording must pass.

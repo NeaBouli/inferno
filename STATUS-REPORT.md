@@ -132,7 +132,7 @@ Sepolia deployment served as the full testnet validation phase. All contracts we
 |---|-----|------|-------|
 | 1 | Token Dashboard | 5173 | React 18 + Vite + ethers v5 |
 | 2 | Governance Dashboard | 5174 | React 18 + Vite + TypeScript + Tailwind + ethers v5 |
-| 3 | AI Copilot | 5175 + 3003 | React 18 + Vite + TS + Tailwind + Express |
+| 3 | Data API | 3003 | TypeScript + Express |
 | 4 | Points Backend | 3004 | Express + Prisma + SQLite + SIWE + jose |
 | 5 | Creator Gateway | 3005 | Express + ethers v5 + googleapis + JWT |
 | 6 | Benefits Network Backend | 3001 | Express + Prisma + SQLite + ethers v5 |
@@ -209,7 +209,7 @@ Sepolia deployment served as the full testnet validation phase. All contracts we
 |----------|---------|-------|
 | Creator Gateway CI | Push/PR to `apps/creator-gateway/` | tsc + jest (41 tests) |
 | Points Backend CI | Push/PR to `apps/points-backend/` | prisma generate + tsc + jest (20 tests) |
-| AI Copilot CI | Push/PR to `apps/ai-copilot/` | tsc + build |
+| Data API | Push/PR to `apps/data-api/` | tsc + build |
 | Benefits Network CI | Push/PR to `apps/benefits-network/` | test-backend + test-frontend |
 
 ---

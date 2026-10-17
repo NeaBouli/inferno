@@ -324,10 +324,9 @@ After changing the addresses, complete these steps in order:
 2. **Governance Proposal:** `setFeeExempt(LendingVault, true)` — BEFORE users deposit/borrow
 3. **Governance Proposal:** `setP0(value)` — CommitmentVault, AFTER Bootstrap finalise
 4. **Governance Proposal:** `setIFRPrice(value)` — LendingVault, AFTER Bootstrap finalise
-5. **Ali Copilot:** Update contract addresses in `apps/ai-copilot/server/index.ts` (`PROTOCOL_ADDRESSES`)
-6. **Railway:** Set `COMMITMENT_VAULT_ADDR` + `LENDING_VAULT_ADDR` as env vars
-7. **TODO.md:** Mark deploy items as completed
-8. **Telegram Bot:** Announce new contracts in @IFR_token channel
+5. **Railway:** Set `COMMITMENT_VAULT_ADDR` + `LENDING_VAULT_ADDR` as env vars
+6. **TODO.md:** Mark deploy items as completed
+7. **Telegram Bot:** Announce new contracts in @IFR_token channel
 
 ---
 

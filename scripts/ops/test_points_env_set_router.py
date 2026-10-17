@@ -53,8 +53,8 @@ services:
       - points-data:/data
     labels:
       - traefik.enable=true
-  ai-copilot:
-    env_file: .env.ai-copilot
+  data-api:
+    env_file: .env.data-api
 volumes:
   points-data: { name: inferno_points_data }
 """
@@ -510,7 +510,7 @@ class EnvSetTests(unittest.TestCase):
             base.close()
         variants = [
             ({**good, "com.docker.compose.project": "other"}, "compose_project_mismatch"),
-            ({**good, "com.docker.compose.service": "ai-copilot"}, "compose_service_mismatch"),
+            ({**good, "com.docker.compose.service": "data-api"}, "compose_service_mismatch"),
             ({k: v for k, v in good.items() if k != "com.docker.compose.project.working_dir"}, "compose_labels_missing"),
         ]
         for labels, code in variants:

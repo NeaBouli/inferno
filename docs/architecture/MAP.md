@@ -14,8 +14,7 @@ browser runtime trace `docs/web3/index.html` → `docs/web3-wallet-core.js` /
 renderers (task INFERNO-SECURITY-S2F-WEB3-RUNTIME-20260927).
 It also maps the Points voucher issue/validation trace inside `apps/points-backend`
 (task INFERNO-SECURITY-S2G-POINTS-CWA14-20260927).
-It also maps the IFR Copilot chat trace inside `apps/ai-copilot` (task
-INFERNO-COPILOT-DYNAMIC-DATA-GUARD-20260924, section 8) and the Deploy/Ops
+It also maps the protocol data API trace inside `apps/data-api` (section 8) and the Deploy/Ops
 mainnet continuation trace (task T-137 S3 hardening, section 9).
 The rest of the repository is intentionally unmapped.
 
@@ -199,7 +198,7 @@ Points voucher trace (`apps/points-backend`):
 | wallet core (landing/wiki) | shared minimalist wallet connect, desktop-only policy | `docs/assets/wallet-core.js::IFRWallet` | gebaut |
 | walletconnect provider artifact | pinned, repository-owned, hash-gated WC provider bundle served same-origin | `docs/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js` | gebaut |
 | web3 site release | operator-run exact-SHA release of the `docs/` tree + infra/web3 anchors and CSP to the web3.ifrunit.tech nginx docroot, with backup, `nginx -t`, reload, public hash verify, rollback | `scripts/deploy-web3-site.sh` + `scripts/web3-release.cjs` | gebaut (not yet executed; runbook `docs/WEB3_SITE_RELEASE.md`) |
-| compose service release | operator-run exact-SHA release of `telegram-bot`, `points-backend` or `ai-copilot` into its `/opt/inferno/<service>` build context: 4 GB floor without prune, backup + rollback image tag, excludes for env/SQLite/data, compose rebuild, health wait, public checks (CWA-34 status route 404), automatic rollback | `scripts/deploy-compose-service.sh` | gebaut (not yet executed; runbook `docs/COMPOSE_SERVICE_RELEASE.md`) |
+| compose service release | operator-run exact-SHA release of `telegram-bot`, `points-backend` or `data-api` into its `/opt/inferno/<service>` build context: 4 GB floor without prune, backup + rollback image tag, excludes for env/SQLite/data, compose rebuild, health wait, public checks (CWA-34 status route 404), automatic rollback | `scripts/deploy-compose-service.sh` | gebaut (not yet executed; runbook `docs/COMPOSE_SERVICE_RELEASE.md`) |
 | ifr state reader | bootstrap/token/lock reads with explicit unavailable failure state | `docs/assets/ifr-state.js::load` | gebaut |
 | bootstrap status renderer | stats + claim/refund UI, fail-closed on unavailable status | `docs/wiki/bootstrap.html::bwUpdateUI` | gebaut |
 | points voucher route | atomically redeem points, sign/persist voucher, expose identity-free status | `apps/points-backend/src/routes/voucher.ts` | gebaut |
@@ -408,130 +407,17 @@ Unberührt bleiben Schema/Migrationen, On-Chain-FeeRouter und andere Points-Erei
 
 ---
 
-## 8. IFR Copilot chat trace
+## 8. Protocol data API trace
 
-Scope: the one trace this task touches — Copilot chat request → intent
-classification → retrieval/context → answer policy. Baseline: `main` 8b2a4ba0.
+Pages, SDK and bots -> compatible public data hostname -> `apps/data-api/server/index.ts`
+-> existing RPC provider and cache/archive readers -> unchanged JSON responses.
+The 24 retained route registrations include health, IFR reads, archive, Builder,
+lending and commitment endpoints. `server/access-tiers.ts` supplies the canonical
+integer tier policy. Cache refreshers and the loan-health monitor remain.
 
-### 8.1 Grundidee
-
-The IFR Copilot (`apps/ai-copilot`) answers visitor/user/developer questions
-about the Inferno Protocol from committed documentation (wiki RAG snapshot +
-structured knowledge JSON) and an untrusted live-wiki snapshot, via a single
-Anthropic model call per message (`apps/ai-copilot/server/index.ts`). The chat
-path is documentation-only: no wallet connection, no live chain reads, no
-tools. Live REST reads (`/api/ifr/*`, `/api/lending/*`) exist on the same
-server but are never injected into the chat context.
-
-### 8.2 Spur (Hop-Liste)
-
-1. `src/components/IFRCopilot.tsx::sendMessage` (and the embedded UI in
-   `server/index.ts` GET `/`) → `POST /api/chat` — `{messages, mode, surface}`
-2. `server/index.ts::app.post("/api/chat")` → `checkRateLimit`, message
-   validation (`COPILOT_MESSAGE_LIMIT`, `MAX_MESSAGE_LENGTH`) — abuse/shape gate
-3. `server/index.ts` → `src/context/system-prompts.ts::SYSTEM_PROMPTS[mode]` —
-   static answer policy (security policy, mode topics, knowledge JSON from
-   `src/context/ifr-knowledge.ts::getIFRKnowledge`)
-4. `server/index.ts` → `server/wiki-rag.ts::buildSystemPrompt` →
-   `selectDocsForMode` — retrieval from `src/context/wiki-content.json`
-5. `server/index.ts` → `server/live-wiki.ts::LiveWikiRefresher.getContext` +
-   `buildLiveWikiSection` — untrusted live snapshot (last good, never crawled
-   from chat)
-6. `server/index.ts` → `server/surface-context.ts::buildSurfaceContext` —
-   surface routing context
-7. `server/index.ts` → `server/budget.ts::DailyBudget.tryReserve` — cost gate
-8. `server/index.ts` → fetch `ANTHROPIC_MESSAGES_URL` — model inference
-9. `server/index.ts` → `{reply}` → client render (`textContent`)
-
-Gap found (this task): between hop 2 and 3 there was no intent-classification
-hop. Answer policy for current-state (dynamic) financial data existed only as
-prompt text — model-enforced, not code-enforced. New node added on this map:
-hop 2b `server/dynamic-intent.ts::classifyDynamicIntent` →
-`buildDynamicDataFallback` — fail-closed typed handoff for current-state
-intents (pair reserves/ratio/price/depth, token balance, IFRLock state,
-LendingVault offers, total supply, burned supply), returned before any
-provider call.
-
-### 8.3 Module
-
-| Modul | Eine Aufgabe | Einstieg | Stand |
-| --- | --- | --- | --- |
-| copilot-server | HTTP API, chat orchestration, live REST reads | `server/index.ts::app.post("/api/chat")` | gebaut |
-| dynamic-intent | current-state intent classification + typed handoff | `server/dynamic-intent.ts::classifyDynamicIntent` | gebaut |
-| prompt-policy | static system prompts + security/dynamic-data policy | `src/context/system-prompts.ts::SYSTEM_PROMPTS` | gebaut |
-| knowledge | structured protocol facts | `src/context/ifr-knowledge.ts::getIFRKnowledge` | gebaut |
-| tier-policy | canonical tiers/limits/decimals | `src/context/copilot-policy.ts` | gebaut |
-| wiki-rag | doc loading + retrieval selection | `server/wiki-rag.ts::buildSystemPrompt` | gebaut |
-| live-wiki | bounded-trust live wiki snapshot | `server/live-wiki.ts::LiveWikiRefresher` | gebaut |
-| surface-context | surface routing context | `server/surface-context.ts::buildSurfaceContext` | gebaut |
-| budget | daily cost gate (fail-closed) | `server/budget.ts::DailyBudget` | gebaut |
-| deploy-lane | manual exact-SHA Railway release of `apps/ai-copilot` (preflight gate, `production` approval, single `railway up`) | `.github/workflows/railway-copilot-release.yml` + `scripts/railway-release-preflight.cjs` | gebaut (not yet executed; runbook `docs/RAILWAY_COPILOT_RELEASE.md`) |
-
-### 8.4 Verdrahtung
-
-- UI → server: chat request carries messages/mode/surface, never wallet data.
-- server → dynamic-intent: last user message in, intent class (or null) out;
-  a classified intent short-circuits to the typed fallback — no retrieval, no
-  budget reservation, no provider call.
-- server → prompt-policy/wiki-rag/live-wiki/surface-context: unguarded
-  requests get the composed system prompt; the model answer remains bounded
-  by the dynamic-data policy inside prompt-policy.
-- server → budget → Anthropic: only unguarded requests reserve budget and
-  call the provider.
-- deploy-lane → Railway: out-of-band of the chat trace. `workflow_dispatch` on
-  `main` with `sha` + `mode`; the preflight gate requires SHA == `origin/main`
-  and green `ai-copilot.yml` + `security-audit.yml` runs on that SHA, re-runs
-  after `production` approval, then one `railway up` of the asserted checkout.
-  Railway GitHub autodeploy remains a second path until disabled by Gio.
-
-### 8.5 Widerspruch und Lücken
-
-- `ifr-knowledge.ts` and the wiki RAG snapshot contain historical Bootstrap
-  figures (100M IFR + 0.030 ETH, P0 formula). They are legitimate history but
-  are sufficient for a model to derive a stale "current" ratio; the
-  dynamic-intent guard now makes the safe outcome deterministic for the
-  classified intents. Unguarded phrasings still rely on prompt policy.
-- Live chat reads remain out of scope by decision (separate
-  architecture/security gate); documentation-only mode is the designed state.
-
-### 8.6 Diagrammdateien
-
-- `docs/architecture/map.puml`
-- `docs/architecture/main-path.puml`
-
-```mermaid
-mindmap
-  root((IFR Copilot chat))
-    copilot-server
-      gebaut: server/index.ts::app.post("/api/chat")
-    dynamic-intent
-      gebaut: server/dynamic-intent.ts::classifyDynamicIntent
-      gebaut: server/dynamic-intent.ts::buildDynamicDataFallback
-    prompt-policy
-      gebaut: src/context/system-prompts.ts::SYSTEM_PROMPTS
-    knowledge
-      gebaut: src/context/ifr-knowledge.ts::getIFRKnowledge
-    tier-policy
-      gebaut: src/context/copilot-policy.ts
-    wiki-rag
-      gebaut: server/wiki-rag.ts::buildSystemPrompt
-    live-wiki
-      gebaut: server/live-wiki.ts::LiveWikiRefresher
-    surface-context
-      gebaut: server/surface-context.ts::buildSurfaceContext
-    budget
-      gebaut: server/budget.ts::DailyBudget
-    deploy-lane
-      gebaut: .github/workflows/railway-copilot-release.yml
-      gebaut: scripts/railway-release-preflight.cjs
-```
-
-### 8.7 Nächster Schritt
-
-Done in this diff: dynamic-intent node (classification + typed fallback),
-guard wiring in `server/index.ts`, dynamic-data policy block in
-`src/context/system-prompts.ts`. Untouched by design: live-wiki, budget,
-wiki-rag retrieval selection, all live REST endpoints, client UI.
+The root is a JSON service directory. The retired chat POST returns 410. Public
+clients contain no chat launcher or frame. See `docs/COPILOT_CHAT_RETIREMENT.md`
+for the separately authorized production transition and rollback.
 
 ## 9. Deploy/Ops mainnet continuation trace
 
@@ -767,7 +653,7 @@ Wiki shell:
 ### 11.5 Widerspruch und Lücken
 
 - The burned figure still passes through the copilot-api float response; the
-  backend (`apps/ai-copilot/server/index.ts::fetchSupplyData`) is out of scope.
+  backend (`apps/data-api/server/index.ts::fetchSupplyData`) is out of scope.
 - The distribution section's other `data-live-key` values keep their existing
   behavior (not part of this trace).
 - The SVG flow snapshot text stays a dated snapshot (pinned by `test:cwa-content`).
@@ -803,7 +689,7 @@ mindmap
 Change only `docs/index.html` (tracker + three cards), `docs/wiki/index.html`
 (brand/subtitle/back link), `docs/wiki/open-audit.html` (action controls),
 `docs/assets/redesign-skin.css` (shared wiki action/focus rules) and the
-active-link `aria-current` attribute on sidebar pages. Copilot backend,
+active-link `aria-current` attribute on sidebar pages. Data API backend,
 contracts, wallet core and other Landing sections stay untouched.
 
 ### 11.8 Release-truth copy addendum (2026-10-10)
@@ -820,7 +706,7 @@ public-documentation node only; no service behavior or release activation.
    `scripts/check-cwa-remediation-register.cjs::renderMarkdown` -> generated
    register Markdown. The accepted total is 700 contracts (693 + 7 FeeRouter
    parity tests), with 30 Generator Engine and 36 legacy SDK tests separate.
-3. Current count -> `docs/llms.txt`, Copilot greeting/knowledge and the existing
+3. Current count -> `docs/llms.txt`, the existing
    T-275 count mirrors `docs/PRESS_KIT.md::Key Facts` and
    `docs/TESTNET_GUIDE.md::Step 9` -> direct count assertions in the existing
    docs/register guards. Historical changelog/audit/report tables stay intact.
@@ -830,12 +716,11 @@ public-documentation node only; no service behavior or release activation.
    custody -> `test-cwa-content-coherence.cjs`. FAQ proposals and the
    IFR-DIP-01 advisory boundary -> `test-docs-truth.cjs`.
 5. Changed Wiki HTML -> `scripts/build-wiki-rag.js::main` -> generated
-   `apps/ai-copilot/src/context/wiki-content.json`; generation is parent-owned.
 
 | Module | Responsibility | Entry | State |
 | --- | --- | --- | --- |
 | public release copy | distinguish accepted evidence, history and activation holds | canonical status / Landing / Wiki | built |
-| count mirrors | repeat only the scoped canonical counts | register JSON, llms, Copilot copy, press kit, testnet guide | built |
+| count mirrors | repeat only the scoped canonical counts | register JSON, llms, press kit, testnet guide | built |
 | copy guards | reject the reported stale counts and overclaims | six existing docs/status/register/Benefits/CWA guard scripts | built |
 
 Cause: current-copy hops retained stale counts or promoted merged source/design

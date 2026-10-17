@@ -204,15 +204,7 @@ function measure(page, boxSelector, launcherClearance) {
       };
     });
 
-    let launcherGap = null;
-    const launcher = document.querySelector('.shop-copilot-button');
-    if (launcher && !launcher.classList.contains('is-hidden')) {
-      launcherGap = Math.round(launcher.getBoundingClientRect().left - box.getBoundingClientRect().right);
-      if (launcherClearance && launcherGap < minGap) problems.push(`"Connect with" box ends ${launcherGap}px before the launcher band (needs >= ${minGap}px)`);
-    } else if (launcherClearance) {
-      problems.push('Copilot launcher not rendered');
-    }
-    return { problems, pageOverflow, launcherGap, buttons: results };
+    return { problems, pageOverflow, buttons: results };
   }, { boxSelector, launcherClearance, minTarget: MIN_TARGET_PX, minGap: LAUNCHER_MIN_GAP_PX });
 }
 

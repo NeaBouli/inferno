@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 // Offline serving-policy contract for JUL-09 / CWA-10. This deliberately reads
-// the shipping nginx, Next and Copilot configurations, rather than a test copy.
+// the shipping nginx, Next and data API configurations, rather than a test copy.
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
@@ -11,7 +11,7 @@ const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
 
 // Frozen origin/main (5e7d7154) baselines; keep offline CI independent of Git refs.
 const enforcedCspBaselines = {
-  web3: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://explorer-api.walletconnect.com https://*.walletconnect.com; connect-src 'self' https://ethereum-rpc.publicnode.com https://eth.drpc.org https://1rpc.io https://*.walletconnect.com https://*.walletconnect.org wss://*.walletconnect.com wss://*.walletconnect.org https://*.web3modal.org https://*.web3modal.com; frame-src https://copilot-api.ifrunit.tech https://verify.walletconnect.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
+  web3: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://explorer-api.walletconnect.com https://*.walletconnect.com; connect-src 'self' https://ethereum-rpc.publicnode.com https://eth.drpc.org https://1rpc.io https://*.walletconnect.com https://*.walletconnect.org wss://*.walletconnect.com wss://*.walletconnect.org https://*.web3modal.org https://*.web3modal.com; frame-src https://verify.walletconnect.com; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'",
   benefits: "base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'",
 };
 
@@ -50,9 +50,9 @@ function checkHeaders(headers, embedded = false, enforcedBaseline) {
     assert.notEqual(headers.get('Content-Security-Policy-Report-Only'), enforcedBaseline,
       'the strict policy must be staged separately from enforcement');
   } else {
-    assert.doesNotMatch(hsts, /includeSubDomains/i, 'Copilot HSTS remains host-scoped');
+    assert.doesNotMatch(hsts, /includeSubDomains/i, 'Data API HSTS remains host-scoped');
   }
-  // Wallet surfaces stage the stricter policy; Copilot already enforces its own.
+  // Wallet surfaces stage the stricter policy; the data API enforces its own.
   const policy = headers.get(enforcedBaseline === undefined
     ? 'Content-Security-Policy' : 'Content-Security-Policy-Report-Only');
   assert.doesNotMatch(policy, /unsafe-eval|\*/,
@@ -73,15 +73,8 @@ function checkHeaders(headers, embedded = false, enforcedBaseline) {
   for (const feature of ['microphone', 'geolocation', 'payment', 'usb']) {
     assert.ok(headers.get('Permissions-Policy').includes(`${feature}=()`));
   }
-  if (embedded) {
-    // XFO SAMEORIGIN/DENY would break the first-party cross-origin chat frames.
-    assert.ok(!headers.has('X-Frame-Options'), 'embedded Copilot must rely on frame-ancestors');
-    includesSources(csp, 'frame-ancestors', ["'self'", 'https://ifrunit.tech',
-      'https://www.ifrunit.tech', 'https://web3.ifrunit.tech', 'https://shop.ifrunit.tech']);
-  } else {
-    assert.equal(headers.get('X-Frame-Options'), 'DENY');
-    assert.deepEqual(csp.get('frame-ancestors'), ["'none'"]);
-  }
+  assert.equal(headers.get('X-Frame-Options'), 'DENY');
+  assert.deepEqual(csp.get('frame-ancestors'), ["'none'"]);
   return csp;
 }
 
@@ -138,8 +131,7 @@ async function main() {
   });
   assert.ok(walletUrls.length >= 5, 'provider origins extraction must not silently become empty');
   checkConnections(web3, walletUrls);
-  includesSources(web3, 'frame-src', ['https://copilot-api.ifrunit.tech',
-    'https://verify.walletconnect.com', 'https://verify.walletconnect.org']);
+  includesSources(web3, 'frame-src', ['https://verify.walletconnect.com', 'https://verify.walletconnect.org']);
   includesSources(web3, 'font-src', ['https://fonts.reown.com']);
 
   const benefitsHeaders = await nextHeaders();
@@ -180,8 +172,7 @@ async function main() {
   includesSources(benefits, 'media-src', ["'self'", 'blob:']);
   includesSources(benefits, 'manifest-src', ["'self'"]);
   includesSources(benefits, 'img-src', ['https:']);
-  includesSources(benefits, 'frame-src', ['https://copilot-api.ifrunit.tech',
-    'https://verify.walletconnect.com', 'https://verify.walletconnect.org']);
+  includesSources(benefits, 'frame-src', ['https://verify.walletconnect.com', 'https://verify.walletconnect.org']);
 
   // A custom build-time RPC/API must add only its origin, never a secret path,
   // query string, or a blanket https: permission.
@@ -199,20 +190,24 @@ async function main() {
   includesSources(development, 'script-src', ["'unsafe-eval'"]);
 
   const context = {};
-  vm.runInNewContext(read('apps/ai-copilot/server/security-headers.ts')
+  vm.runInNewContext(read('apps/data-api/server/security-headers.ts')
     .replace('export const securityHeaders =', 'globalThis.securityHeaders ='), context);
-  checkHeaders(new Map(Object.entries(context.securityHeaders)), true);
-  const copilot = read('apps/ai-copilot/server/index.ts');
-  assert.ok(copilot.includes('import { securityHeaders } from "./security-headers.js"'));
-  assert.ok(copilot.indexOf('res.set(securityHeaders)') < copilot.indexOf('app.use(cors('),
-    'headers middleware must precede CORS, JSON parsing, routes and error responses');
-  const finalNotFound = copilot.indexOf('app.use((_req, res) => {\n  res.status(404).json(');
-  assert.ok(finalNotFound > copilot.lastIndexOf('app.get('),
-    'custom 404 must follow all routes so finalhandler cannot replace CSP');
-  assert.ok(copilot.indexOf('app.use(handleUnhandledError)') > finalNotFound);
-  const vercel = JSON.parse(read('apps/ai-copilot/vercel.json'));
-  assert.equal(vercel.headers[0].source, '/(.*)');
-  checkHeaders(new Map(vercel.headers[0].headers.map(({ key, value }) => [key, value])), true);
+  const apiHeaders = new Map(Object.entries(context.securityHeaders));
+  const apiPolicy = parseCsp(apiHeaders.get('Content-Security-Policy'));
+  for (const name of ['Content-Security-Policy', 'Strict-Transport-Security', 'X-Content-Type-Options', 'Referrer-Policy', 'Permissions-Policy']) assert.ok(apiHeaders.has(name));
+  assert.deepEqual(apiPolicy.get('default-src'), ["'none'"]);
+  assert.deepEqual(apiPolicy.get('frame-ancestors'), ["'none'"]);
+  assert.equal(apiHeaders.get('X-Frame-Options'), 'DENY');
+  assert.equal(apiHeaders.get('X-Content-Type-Options'), 'nosniff');
+  assert.equal(apiHeaders.get('Referrer-Policy'), 'no-referrer');
+  assert.match(apiHeaders.get('Strict-Transport-Security'), /^max-age=63072000$/);
+  for (const directive of ['base-uri', 'object-src', 'form-action']) assert.deepEqual(apiPolicy.get(directive), ["'none'"]);
+  for (const feature of ['camera', 'microphone', 'geolocation', 'payment', 'usb']) assert.ok(apiHeaders.get('Permissions-Policy').includes(`${feature}=()`));
+  const api = read('apps/data-api/server/index.ts');
+  assert.ok(api.indexOf('res.set(securityHeaders)') < api.indexOf('app.use(cors('));
+  const finalNotFound = api.indexOf('app.use((_req, res) => {\n  res.status(404).json(');
+  assert.ok(finalNotFound > api.lastIndexOf('app.get('));
+  assert.ok(api.indexOf('app.use(handleUnhandledError)') > finalNotFound);
 
   const pages = ['docs/index.html', 'docs/web3/index.html', ...fs.readdirSync(path.join(root, 'docs/wiki'))
     .filter((file) => file.endsWith('.html')).map((file) => `docs/wiki/${file}`)];
@@ -253,7 +248,7 @@ async function main() {
     weakenedHsts.set('Strict-Transport-Security', 'max-age=63072000');
     assert.throws(() => checkHeaders(weakenedHsts, false, baseline), /HSTS must include subdomains/);
   }
-  console.log(`[security-headers] PASS (nginx, Next, Express, Vercel, ${pages.length} Pages documents; ${walletUrls.length} wallet origins)`);
+  console.log(`[security-headers] PASS (nginx, Next, Express, ${pages.length} Pages documents; ${walletUrls.length} wallet origins)`);
 }
 
 main().catch((error) => { console.error(error); process.exitCode = 1; });

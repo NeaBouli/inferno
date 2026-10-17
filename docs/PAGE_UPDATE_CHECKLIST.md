@@ -45,8 +45,6 @@ Which files need to be updated for each type of event.
 | `docs/WHITEPAPER.md` | Security section |
 | `docs/ONE-PAGER.md` | Key numbers |
 
-## After App Changes (Dashboard/Copilot/Points/Benefits)
-
 | File | What to Update |
 |------|----------------|
 | `docs/DOCS.md` | App status, file structure |

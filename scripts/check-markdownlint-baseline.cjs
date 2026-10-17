@@ -23,9 +23,11 @@ function run(command, args, options = {}) {
 }
 
 function listTrackedMarkdown() {
-  const result = run("git", ["ls-files", "-z", "--", "*.md"]);
+  const result = run("git", ["ls-files", "-z", "--cached", "--others", "--exclude-standard", "--", "*.md"]);
   if (result.status !== 0) throw new Error(`Unable to list tracked Markdown files: ${result.stderr.trim()}`);
-  return result.stdout.split("\0").filter(Boolean).sort();
+  return [...new Set(result.stdout.split("\0").filter(Boolean))]
+    .filter((file) => fs.existsSync(path.join(root, file)))
+    .sort();
 }
 
 function defaultSourceLoader(fileName) {

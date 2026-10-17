@@ -395,12 +395,6 @@
     /* ============================================================
     End Shared Styles
        ============================================================ */
-    /* Keep ballot text, proof links and tables out of the fixed Copilot launcher band on phones/tablets
-       (launcher: 52px at 12px from the right below 481px, 64px at 24px up to 768px). */
-    @media (max-width: 768px) {
-      .phase-card[id] { padding-right: 72px !important; }
-    }
-
     /* Step-by-step governance guide (progressive enhancement: without JS all steps show as a list) */
     .gov-wizard { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin: 20px 0 28px; }
     .gov-wizard .gw-intro { color: var(--muted); margin: 0 0 12px; }
@@ -459,7 +453,7 @@
   ]
 }
   </script>
-  <link rel="stylesheet" href="../assets/redesign-skin.css">
+  <link rel="stylesheet" href="../assets/redesign-skin.css?v=20261017-retirement">
 </head>
 <body>
 
@@ -486,6 +480,7 @@
         <li class="nav-divider"></li>
         <li><a href="https://ifrunit.tech/wiki/tokenomics.html">Tokenomics</a></li>
         <li><a href="https://ifrunit.tech/wiki/fee-design.html">Fee Design</a></li>
+        <li><a href="https://ifrunit.tech/wiki/agent.html">Points &amp; Fees</a></li>
         <li><a href="https://ifrunit.tech/wiki/lock-mechanism.html">Lock Mechanism</a></li>
         <li><a href="https://ifrunit.tech/wiki/vesting.html">Vesting Schedule</a></li>
         <li><a href="https://ifrunit.tech/wiki/protocol-plan.html">Protocol Plan</a></li>
@@ -517,7 +512,7 @@
         <li><a href="https://ifrunit.tech/wiki/integration.html">Integration Guide</a></li>
         <li><a href="https://ifrunit.tech/wiki/business-onboarding.html">Business Onboarding</a></li>
         <li><a href="https://ifrunit.tech/wiki/integrate-benefits.html">Integrate Benefits (No Server)</a></li>
-        <li><a href="https://ifrunit.tech/wiki/agent.html">AI Copilot</a></li>
+
         <li><a href="https://ifrunit.tech/wiki/verify.html">Verify Wallet</a></li>
         <li class="nav-divider"></li>
         <li><a href="https://ifrunit.tech/wiki/security.html">Security</a></li>
@@ -766,15 +761,7 @@ I abstain on proposal EX-02 (governance role of centralized exchanges). My abste
     })();
   </script>
 
-<!-- IFR Copilot Widget -->
-<style>
-#ifr-btn { position:fixed; bottom:24px; right:24px; width:64px; height:64px; border-radius:50%; overflow:hidden; padding:0; cursor:pointer; border:2px solid #f97316; box-shadow:0 4px 20px rgba(249,115,22,0.4); z-index:99999; background:none; transition:transform 0.2s ease,box-shadow 0.2s ease; } #ifr-btn:hover { transform:scale(1.08); box-shadow:0 6px 28px rgba(249,115,22,0.6); } #ifr-btn img { width:100%; height:100%; object-fit:cover; object-position:center center; border-radius:50%; display:block; }
-#ifr-panel { display:none; position:fixed; bottom:100px; right:12px; z-index:99998; width:min(400px, calc(100vw - 24px)); height:min(580px, calc(100vh - 120px)); border-radius:16px; overflow:hidden; box-shadow:0 8px 40px rgba(0,0,0,0.5); background:#1a1a1a; }
-@media(max-width:480px){ #ifr-panel { bottom:0; right:0; left:0; width:100vw; height:calc(100vh - 70px); border-radius:16px 16px 0 0; } #ifr-btn { bottom:12px; right:12px; width:52px; height:52px; } }
-#ifr-panel iframe { width:100%; height:100%; border:none; }
-</style>
-<button id="ifr-btn" onclick="var p=document.getElementById('ifr-panel');p.style.display=p.style.display==='block'?'none':'block';"><img src="../assets/CoPilot.jpg" alt="IFR Copilot"></button>
-<div id="ifr-panel"><iframe src="https://copilot-api.ifrunit.tech" allow="clipboard-write"></iframe></div>
+
 
 <script>
 async function lpConnect(){

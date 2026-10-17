@@ -130,14 +130,14 @@ class FailClosedTests(unittest.TestCase):
             calls.append(name)
             return inspect_json(base(f"FEE_ROUTER_ADDRESS={CANONICAL}"), name=f"/{name}")
 
-        for name in ("inferno-telegram-bot", "inferno-ai-copilot", "", "-x", "a b", "x;rm", "a" * 200):
+        for name in ("inferno-telegram-bot", "inferno-data-api", "", "-x", "a b", "x;rm", "a" * 200):
             self.assertEqual(mod.classify(name, spy), (self.UNREADABLE, 2))
         self.assertEqual(calls, [])
 
     def test_cli_takes_no_arguments(self) -> None:
         err = io.StringIO()
         with redirect_stderr(err), redirect_stdout(io.StringIO()):
-            self.assertEqual(mod.main(["x", "inferno-ai-copilot"]), 2)
+            self.assertEqual(mod.main(["x", "inferno-data-api"]), 2)
 
     def test_parser_failure_stays_inside_boundary(self) -> None:
         # Env entries that are strings but make downstream parsing explode must not traceback.

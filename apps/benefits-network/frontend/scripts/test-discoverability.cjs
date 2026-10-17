@@ -15,7 +15,6 @@ const sellerRuleBuilder = read('src', 'components', 'SellerRuleBuilder.tsx');
 const sellerCatalogManager = read('src', 'components', 'SellerCatalogManager.tsx');
 const apiClient = read('src', 'lib', 'api.ts');
 const shell = read('src', 'components', 'AppShell.tsx');
-const widget = read('src', 'components', 'CopilotWidget.tsx');
 const guide = read('src', 'app', 'guide', 'page.tsx');
 const sellerConsole = read('src', 'app', 'b', '[businessId]', 'page.tsx');
 const customerPass = read('src', 'app', 'p', '[passId]', 'page.tsx');
@@ -28,7 +27,6 @@ const businessSlug = read('src', 'lib', 'businessSlug.ts');
 const nextConfig = read('next.config.js');
 
 assert.ok(layout.includes("'@type': 'WebApplication'"), 'Shop WebApplication structured data is missing');
-assert.ok(layout.includes('Contextual IFR Copilot help'), 'Structured data must describe contextual help');
 assert.ok(robots.includes("disallow: ['/api/', '/b/', '/p/', '/r/']"), 'Private routes must stay out of crawler results');
 assert.ok(sitemap.includes("const siteOrigin = 'https://shop.ifrunit.tech'"), 'Sitemap origin must remain canonical');
 for (const route of ['`${siteOrigin}/`', '`${siteOrigin}/guide`', '`${siteOrigin}/scan`']) {
@@ -104,9 +102,6 @@ assert.ok(sellerCatalogClient.includes('getBusinessRules(businessId, controller.
 assert.ok(sellerCatalogClient.includes('Other member benefits'), 'Product-less public rules need a truthful catalog section');
 assert.ok(sellerCatalogClient.includes('&offer=${encodeURIComponent(rule.id)}#customer-pass'), 'Catalog rules need a contextual checkout handoff');
 assert.ok(sellerCatalogClient.includes('categories.length === 0 && standaloneRules.length === 0'), 'Catalog empty state must account for standalone rules');
-assert.ok(shell.includes('<CopilotWidget />'), 'Every AppShell route must render the IFR Copilot');
-assert.ok(widget.includes('surface=benefits'), 'Shop Copilot must retain Benefits context');
-assert.ok(widget.includes('referrerPolicy="no-referrer"'), 'Shop Copilot must suppress referrer data');
 assert.ok(nextConfig.includes('poweredByHeader: false'), 'Shop must suppress the Next.js powered-by header');
 for (const header of ['X-Content-Type-Options', 'X-Frame-Options', 'Referrer-Policy', 'Permissions-Policy', 'Strict-Transport-Security']) {
   assert.ok(nextConfig.includes(header), `Shop security header missing from Next config: ${header}`);
