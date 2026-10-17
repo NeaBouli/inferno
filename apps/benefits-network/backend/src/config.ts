@@ -37,6 +37,8 @@ const envSchema = z.object({
   // Lane 4 Model B settlement export; default-off, see services/modelBPolicy.ts.
   MODEL_B_SETTLEMENT_ENABLED: z.string().optional(),
   MODEL_B_PILOT_POLICY_JSON: z.string().optional(),
+  // Dedicated random 32-byte hex key, never a signer/admin key. Missing/invalid => rewards blocked.
+  MODEL_B_DEDUP_SECRET: z.string().optional(),
   ADMIN_SECRET: z.string(),
   DATABASE_URL: z.string().default('file:./dev.db'),
   PORT: z.coerce.number().int().positive().default(3001),

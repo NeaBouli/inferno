@@ -1,0 +1,46 @@
+# Reviewed insertion template for /opt/inferno/docker-compose.yml.
+# Set CREATOR_GATEWAY_HOST in the operator shell after owner approval. Do not
+# pass the gateway secret file as a project-wide --env-file.
+services:
+  creator-gateway:
+    build:
+      context: ./creator-gateway
+      dockerfile: Dockerfile
+    image: inferno-creator-gateway:latest
+    container_name: inferno-creator-gateway
+    env_file:
+      - ./.env.creator-gateway
+    environment:
+      NODE_ENV: production
+      PORT: "3005"
+    init: true
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 512m
+    cpus: 1.0
+    pids_limit: 100
+    # Nonces, OAuth state, sessions and rate limits live in process memory.
+    deploy:
+      replicas: 1
+    networks:
+      - traefik-public
+    # No host ports: trust proxy=1 assumes Traefik is the only ingress.
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=traefik-public
+      - traefik.http.routers.ifr-creator.rule=Host(`${CREATOR_GATEWAY_HOST:?owner must approve CREATOR_GATEWAY_HOST}`)
+      - traefik.http.routers.ifr-creator.entrypoints=websecure
+      - traefik.http.routers.ifr-creator.tls=true
+      - traefik.http.routers.ifr-creator.tls.certresolver=letsencrypt
+      - traefik.http.routers.ifr-creator.service=ifr-creator
+      - traefik.http.services.ifr-creator.loadbalancer.server.port=3005
+
+networks:
+  traefik-public:
+    external: true

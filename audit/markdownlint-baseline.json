@@ -2,7 +2,7 @@
   "schemaVersion": 2,
   "tool": "markdownlint-cli@0.49.1",
   "disabledRules": ["MD013","MD033","MD041","MD024","MD036","MD040"],
-  "filesScanned": 229,
+  "filesScanned": 238,
   "baselineIssues": 3742,
   "fingerprints": [
     [".github/ISSUE_TEMPLATE/bug_report.md","MD022","Expected: 1; Actual: 0; Below","## Bug Description","6e754bfe0c2fac07",1],
@@ -66,7 +66,7 @@
     ["apps/benefits-network/backend/README.md","MD060","Table pipe is missing space to the right for style \"compact\"","","f7bc19561ebf2633",3],
     ["apps/benefits-network/frontend/README.md","MD060","Table pipe is missing space to the left for style \"compact\"","","557018a61698a3b0",2],
     ["apps/benefits-network/frontend/README.md","MD060","Table pipe is missing space to the right for style \"compact\"","","557018a61698a3b0",2],
-    ["apps/creator-gateway/README.md","MD022","Expected: 1; Actual: 0; Below","## API Endpoints","9e191fd320aad59e",1],
+    ["apps/creator-gateway/README.md","MD022","Expected: 1; Actual: 0; Below","## API Endpoints","9016f7b710059804",1],
     ["apps/creator-gateway/README.md","MD022","Expected: 1; Actual: 0; Below","## Docker","92c8ee969c58404c",1],
     ["apps/creator-gateway/README.md","MD022","Expected: 1; Actual: 0; Below","## Entitlement Logic","ed3205ade80c0155",1],
     ["apps/creator-gateway/README.md","MD022","Expected: 1; Actual: 0; Below","## Quick Start","e7780e1a209001ef",1],

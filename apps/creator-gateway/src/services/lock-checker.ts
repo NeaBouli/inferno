@@ -19,8 +19,8 @@ export class LockChecker {
     try {
       const minAmount = ethers.parseUnits(minIFR, CONFIG.decimals);
       return await this.contract.isLocked(walletAddress, minAmount);
-    } catch (err) {
-      console.error('LockChecker.isLocked failed:', (err as Error).message);
+    } catch {
+      console.error('LockChecker.isLocked failed');
       return false; // fail-closed
     }
   }
@@ -29,8 +29,8 @@ export class LockChecker {
     try {
       const raw = await this.contract.lockedBalance(walletAddress);
       return ethers.formatUnits(raw, CONFIG.decimals);
-    } catch (err) {
-      console.error('LockChecker.lockedBalance failed:', (err as Error).message);
+    } catch {
+      console.error('LockChecker.lockedBalance failed');
       return '0';
     }
   }
