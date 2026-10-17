@@ -7,6 +7,10 @@ are part of this document. References describe this checkout, not a verified liv
 at `shop.ifrunit.tech`. The three T-231 briefs were historical inputs; their competing
 instructions are not evidence that an implementation or production action was accepted.
 
+The [Model B EXT-10 follow-up](#model-b-ext-10-local-follow-up) below records a later local
+implementation prerequisite requested on 2026-10-17. It is not evidence of deployment or of
+acceptance of a broader customer-identifier exception.
+
 **Recommendation:** continue the existing single, role-aware PWA at
 `https://shop.ifrunit.tech`. Customer and seller modes, installation assets and an offline
 launcher already exist. Concentrate on verification, explicit retention and accurate
@@ -133,7 +137,8 @@ Reward budgets exist in operator-configured
 [modelBPolicy.ts](../apps/benefits-network/backend/src/services/modelBPolicy.ts), not
 as a seller plan editor. Model B is default-off; even when configured,
 [modelBSettlement.ts](../apps/benefits-network/backend/src/services/modelBSettlement.ts)
-adds the customer-deduplication policy blocker, leaving exports diagnostic/non-payable.
+adds the customer-deduplication blocker for legacy events without EXT-10 evidence or when
+the dedicated dedup configuration is absent, leaving those exports diagnostic/non-payable.
 Do not equate a verified seller link, checkout, export or proposed budget with a payout.
 
 ## 2. PWA recommendation and actual remaining work
@@ -177,7 +182,7 @@ Authentication/QR expiry rejects use, but does not itself erase a row.
 | `Session` | Raw **seller** `confirmedByWallet`, `confirmedByRole`, `confirmedByOperatorId`; `id`, `businessId`, `benefitRuleId`, `customerPassId`, `nonce`, all `benefit*` terms/version snapshots including price/currency/thresholds; `status`, `reason`, `verifiedLockSource`, `selfRedemption`, `proofVersion`, `attestAttempts`, `createdAt`, `updatedAt`, `expiresAt`, `redeemedAt`. Timed purchase context and outcomes can be linkable without a stored customer wallet. | `createSessionSnapshot`, `commitCheckoutRedemption`, pass cancellation/expiry. No customer wallet/signature/text/balance/block column in current schema. All sessions are protected from the current retention CLI; no automatic expiry/deletion. |
 | `CustomerPass` | Random `id`, SHA-256 `controlHash`, `status`, `expiresAt`, `boundAt`, `cancelledAt`, timestamps; optional reverse session relation. Fresh checkout capability, not a stable wallet identifier. | `customerPassService.ts`. Initial five-minute TTL; bound pass uses checkout TTL. Manual retention may delete only **unlinked**, expired `OPEN`, `CANCELLED` or `EXPIRED` rows. Linked passes, including expired ones, are protected. No guaranteed maximum. |
 | `SellerRewardLink` | Raw `builderWallet`, `rewardWallet`, `businessId`, `partnerId`, `rewardWalletConfirmedAt`, status, `requestedAt`, `verifiedAt`, `lastCheckedAt`, `verificationBlock`, `governanceReference`, `reason`, timestamps. Seller identity and public-chain linkage. | Seller reward routes and admin verification/revoke. Disabled/revoked links remain. No automatic expiry. Verification block here concerns seller configuration, not a persisted customer eligibility read. |
-| `RewardEvent` | `businessId`, unique `sessionId`, `partnerId`, `chainId`, `status`, `reason`, optional `txHash`, timestamps. Checkout/reward linkage; a transaction hash can lead to public identities. No current customer-wallet or customer lock-amount column. | `commitCheckoutRedemption` creates non-payable `BLOCKED_POLICY`; admin queue/status updates. `txHash` remains in schema and is copied by the historical migration, although the current checkout insert does not populate it. Retention protects **all statuses**; no automatic expiry. Do not relabel it as a customer payment-hash collection feature. |
+| `RewardEvent` | `businessId`, unique `sessionId`, `partnerId`, `chainId`, `status`, `reason`, optional `txHash`, timestamps; the EXT-10 local follow-up adds nullable `rewardPeriod` and scoped HMAC `rewardDedupKey`. Checkout/reward linkage; a transaction hash can lead to public identities. No raw customer-wallet or customer lock-amount column. | `commitCheckoutRedemption` creates `SETTLEMENT_PENDING` only with verified pilot proof and configured dedup; duplicate checkouts get `SKIPPED_DUPLICATE`, other candidates remain non-payable `BLOCKED_POLICY`. No legacy backfill. `txHash` remains in schema and the historical migration, but the current checkout insert does not populate it. Retention protects **all statuses**; no automatic expiry. |
 | `AuditLog` | `sessionId`, `type`, serialized JSON `payload`, `ts`. Current `SESSION_CREATED`/`CUSTOMER_PASS_BOUND` payloads persist seller `createdBy.walletAddress`, role/operator and checkout links. `REDEEMED` persists seller `actorWallet`, role/operator, confirmation and time. `ATTEST_OK` stores proof version, rule/min-held requirement, lock source and self-redemption boolean, not actual customer amounts. | `sessionService.ts`. Historical `REDEEM_DENIED_LIMIT.actorWallet` is also an allowed seller leaf in the migration verifier. Retention protects all session audit rows; no automatic expiry. |
 | `AdminAuditLog` | Action/method/route template, target type/ID, status/time, `actorDigest`, `clientDigest`. [adminAudit.ts](../apps/benefits-network/backend/src/services/adminAudit.ts) hashes fixed `admin-actor:primary` and **unsalted** `admin-client:<IP>` with SHA-256. The fixed actor is not individual operator attribution; IP digest is still correlatable/guessable. CLI pruning uses fixed local-operator/client digests instead. | `recordAdminAudit` on admin operations; retention writes its own aggregate action. Manual pruning uses `createdAt < cutoff`; no scheduler or fixed maximum. |
 | `SellerAuthorizationChallenge` | Random `nonce`, `action`, `businessId`, `scope`, `expiresAt`, `consumedAt`, `createdAt`. No wallet/hash/signature column. A `passes:bind` scope contains pass/rule references and is checkout-linkable. | [sellerAuthorizationChallenge.ts](../apps/benefits-network/backend/src/services/sellerAuthorizationChallenge.ts). Ten-minute auth validity; issuing a challenge opportunistically removes up to 100 expired rows. Manual pruning also deletes `expiresAt < cutoff`. Low traffic/outages leave rows longer. |
@@ -212,6 +217,32 @@ eligible table, capped at 10,000. The admin report counts eligibility; it does n
 No scheduler is wired in the inspected application/Compose files. This is neither an
 automatic 30-day policy nor the historical HMAC proposal's 35-day policy.
 
+## Model B EXT-10 local follow-up
+
+The 2026-10-17 seller-reward task explicitly permits a “hash or minimal key” for one eligible
+wallet/partner/period. The local implementation treats that as a narrow exception for Model B;
+the zero-identifier baseline above still applies outside this feature. No production migration,
+activation or new live-data collection is implied. Review acceptance of the exception before enabling it.
+
+- Only an exact-offer, proof-v2, seller-confirmed, non-self `REDEEMED` checkout at a configured,
+  verified post-activation pilot may store `RewardEvent.rewardDedupKey` and `rewardPeriod`.
+  A dedicated secret derives an independent HMAC key and rotation tag per chain/vault/partner/UTC
+  month. No raw customer wallet, plain address hash, customer signature or balance is persisted.
+- One eligible checkout stores one scoped pseudonym; duplicate checkouts store only the period and
+  a duplicate outcome. The same wallet has unrelated HMACs in different months and partners. These
+  values remain pseudonymous personal data, especially if the secret or request context is available.
+  They must not be described as erased identity, anonymous data or customer history.
+- Keys never enter API DTOs, seller session CSVs, aggregate exports or proposal ledgers. The export
+  contains counts and reconciliation commitments only; small partner/month totals can still reveal
+  business activity. The backend secret is dedicated protected configuration and never signer material.
+- The additive migration leaves existing event fields null. Missing configuration, key changes within
+  an already populated month and legacy events without dedup evidence fail closed for settlement.
+  Historical customer data cannot be reconstructed or backfilled.
+- Existing retention protects all reward events, so this prerequisite adds **no automatic deletion**.
+  Do not remove keys while checkouts or reconciliation for that month remain admissible; doing so
+  could award the wallet again. A reviewed post-settlement retention and key-destruction procedure,
+  including SQLite journals/backups, remains an activation item. No retention job runs in this task.
+
 ## 4. Proposed minimization and retention design
 
 ### Keep the customer boundary; reduce other linkage
@@ -219,8 +250,9 @@ automatic 30-day policy nor the historical HMAC proposal's 35-day policy.
 1. Keep customer wallet, recovered identity, signature, signed text, actual balances and
    verification block confined to proof request processing. Never add a persistent raw
    address, address hash/HMAC, customer nullifier, payment hash or cross-checkout ID as
-   a substitute. A deterministic address hash is pseudonymization, not deletion; an HMAC
-   exception would still change the owner boundary. **[OWNER DECISION] [PRIVACY REVIEW]**
+   a substitute outside the narrowly scoped [EXT-10 follow-up](#model-b-ext-10-local-follow-up).
+   A deterministic address hash is pseudonymization, not deletion; the HMAC exception changes
+   the owner boundary and needs acceptance before activation. **[OWNER DECISION] [PRIVACY REVIEW]**
 2. Keep hashing random pass secrets: their high-entropy control token is a different
    object from a wallet identifier. Shorten the lifetime of the stored hash after the
    checkout closes. Do not truncate a control hash, nonce, signature or wallet used for

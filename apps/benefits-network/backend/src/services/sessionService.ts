@@ -7,6 +7,7 @@ import { consumeSellerAuthorizationChallenge } from './sellerAuthorizationChalle
 import { safeProductPrice } from './productPrice';
 import { snapshotLockSource, type LockSource, type VerifiedLockSource } from './lockSource';
 import { containsSignedTextControlCharacter } from '../lib/textGuards';
+import { modelBRewardDecision } from './modelBDedup';
 
 const prisma = new PrismaClient();
 
@@ -21,11 +22,8 @@ type SessionStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED' | 'REDEEMED
 // immutable checkout terms; only the outcome (status, lock source, self-redemption flag) is stored.
 export const CHECKOUT_PROOF_VERSION = 2;
 export const CHECKOUT_PROOF_VERSION_LABEL = 'ifr-benefits/checkout-proof/2';
-// Non-payable outbox status: a seller-confirmed checkout whose reward needs a policy that does not
-// exist under owner decision B (no per-customer dedup). No queue transitions it.
-export const REWARD_BLOCKED_POLICY = 'BLOCKED_POLICY';
-export const REWARD_BLOCKED_POLICY_REASON =
-  'Customer-privacy policy gap: per-customer reward dedup is not available without customer data (T-231b); not payable';
+// Non-payable outbox status: no verified pilot or no configured EXT-10 dedup. No queue transitions it.
+export { REWARD_BLOCKED_POLICY, REWARD_BLOCKED_POLICY_REASON } from './modelBDedup';
 
 /** The signature does not recover to the wallet the customer claimed in the same request. */
 export class CustomerProofMismatchError extends Error {
@@ -850,8 +848,7 @@ async function commitCheckoutRedemption(
     });
 
     const rewardLink = await tx.sellerRewardLink.findUnique({ where: { businessId: session.businessId } });
-    // Fail closed: only a VERIFIED link with a bound partnerId creates an outbox row, and under
-    // owner decision B that row is non-payable (no accepted reward rule without customer dedup).
+    // Only a verified pilot, exact-offer proof and EXT-10 dedup can produce a payable candidate.
     if (rewardLink?.status === 'VERIFIED' && rewardLink.partnerId) {
       if (selfRedemption) {
         await tx.auditLog.create({
@@ -862,15 +859,14 @@ async function commitCheckoutRedemption(
           },
         });
       } else {
-        await tx.$executeRaw`
-          INSERT OR IGNORE INTO "RewardEvent" (
-            "id", "businessId", "sessionId", "partnerId", "chainId", "status", "reason",
-            "createdAt", "updatedAt"
-          ) VALUES (
-            ${crypto.randomUUID()}, ${session.businessId}, ${sessionId}, ${rewardLink.partnerId},
-            ${config.CHAIN_ID}, ${REWARD_BLOCKED_POLICY}, ${REWARD_BLOCKED_POLICY_REASON}, ${now}, ${now}
-          )
-        `;
+        const decision = await modelBRewardDecision(tx, {
+          businessId: session.businessId, partnerId: rewardLink.partnerId, wallet: claimedWallet,
+          now, proofVersion: CHECKOUT_PROOF_VERSION, snapshotVersion: session.benefitSnapshotVersion,
+        });
+        await tx.rewardEvent.create({ data: {
+          businessId: session.businessId, sessionId, partnerId: rewardLink.partnerId.toLowerCase(),
+          chainId: config.CHAIN_ID, ...decision, createdAt: now,
+        } });
       }
     }
     return { expired: false as const, selfRedemption, redeemedAt: now };

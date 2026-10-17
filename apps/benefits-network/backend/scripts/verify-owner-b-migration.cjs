@@ -75,7 +75,8 @@ const KNOWN_COLUMNS = {
   CheckoutOperator: ['id', 'businessId', 'walletAddress', 'label', 'active', 'expiresAt', 'createdAt', 'updatedAt'],
   CustomerPass: ['id', 'controlHash', 'status', 'expiresAt', 'boundAt', 'cancelledAt', 'createdAt', 'updatedAt'],
   Product: ['id', 'businessId', 'name', 'category', 'description', 'active', 'createdAt', 'updatedAt', 'basePriceMinor', 'currency'],
-  RewardEvent: ['id', 'businessId', 'sessionId', 'partnerId', 'chainId', 'status', 'reason', 'txHash', 'createdAt', 'updatedAt'],
+  // EXT-10 local prerequisite: these are scoped pseudonyms, never allowed raw-address locations.
+  RewardEvent: ['id', 'businessId', 'sessionId', 'partnerId', 'chainId', 'status', 'reason', 'txHash', 'createdAt', 'updatedAt', 'rewardPeriod', 'rewardDedupKey'],
   SellerAuthorizationChallenge: ['nonce', 'action', 'businessId', 'scope', 'expiresAt', 'consumedAt', 'createdAt'],
   SellerRewardLink: ['id', 'businessId', 'status', 'partnerId', 'builderWallet', 'requestedAt', 'verifiedAt', 'lastCheckedAt',
     'verificationBlock', 'governanceReference', 'reason', 'createdAt', 'updatedAt', 'rewardWallet', 'rewardWalletConfirmedAt'],
