@@ -153,9 +153,9 @@ not the diagnostic-only agent:
    bash scripts/ops/benefits-backend-volume-ownership.sh plan
    ```
 
-   The tool resolves `inferno_benefits_data` through Docker and verifies it is the named volume
+   The tool resolves the actual volume name from the container mount through Docker and verifies it is the named volume
    mounted at `/data` by the `benefits-backend` service (`inferno-benefits-backend`). The example
-   Compose file calls its volume `benefits-data`; the live name is `inferno_benefits_data`.
+   Compose file calls its volume `benefits-data`; the name must be discovered at runtime, not inferred from that key.
    It prints every entry's numeric owner and mode, counts by uid, SQLite filenames, free disk,
    backend state, and the exact apply steps. Check that the existing modes allow uid 1000 to
    write the database and traverse/write `/data`; the tool preserves modes. Other attached

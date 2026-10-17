@@ -3,7 +3,6 @@
 set -euo pipefail
 
 MODE="${1:-}"
-VOLUME=inferno_benefits_data
 CONTAINER=inferno-benefits-backend
 BACKUP_DIR=/opt/inferno/backups
 STOPPED=0
@@ -37,6 +36,11 @@ if [[ "$MODE" == apply ]]; then
   done
 fi
 
+# Resolve the actual volume name from the existing /data mount; Compose keys and
+# project prefixes are not Docker volume names. Never guess or create a volume.
+MOUNT="$(docker inspect --format '{{range .Mounts}}{{if eq .Destination "/data"}}{{.Type}}|{{.Name}}|{{.Source}}{{end}}{{end}}' "$CONTAINER")" || die 78 "Cannot inspect backend /data mount."
+IFS='|' read -r MOUNT_TYPE VOLUME MOUNT_SOURCE <<< "$MOUNT"
+[[ "$MOUNT_TYPE" == volume && "$VOLUME" =~ ^[a-zA-Z0-9][a-zA-Z0-9_.-]*$ ]] || die 78 "Backend /data must be a named volume."
 # Inspect only selected fields: never dump container config, environment, or file contents.
 DISCOVERED="$(docker volume inspect --format '{{.Mountpoint}}' "$VOLUME")" || die 78 "Cannot inspect $VOLUME."
 VOLUME_PATH="${BENEFITS_VOLUME_PATH:-$DISCOVERED}"

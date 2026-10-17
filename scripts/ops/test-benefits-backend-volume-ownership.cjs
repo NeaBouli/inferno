@@ -28,7 +28,7 @@ if (command === 'docker') {
   else if (args[0] === 'ps') console.log(process.env.BAD_CONSUMER ? 'other-service' : 'inferno-benefits-backend');
   else if (args[0] === 'inspect') {
     const format = args[2];
-    if (format.includes('.Mounts')) console.log(process.env.BAD_MOUNT ? 'bind||/other' : 'volume|inferno_benefits_data|' + volume);
+    if (format.includes('.Mounts')) console.log(process.env.BAD_MOUNT ? 'bind||/other' : 'volume|' + (process.env.TEST_VOLUME_NAME || 'inferno_benefits_data') + '|' + volume);
     else if (format.includes('.Config.Labels')) console.log('benefits-backend');
     else if (format === '{{.State.Status}}') console.log(state.running ? 'running' : 'exited');
     else throw Error('unexpected inspect format');
@@ -269,4 +269,11 @@ test('test path overrides require an explicit test-mode guard', t => {
   const f = fixture(t);
   assert.equal(f.run('apply', { BENEFITS_OWNERSHIP_TEST_MODE: '' }).status, 64);
   assert.deepEqual(f.calls(), []);
+});
+
+test('resolves a non-default Docker volume name from the container mount', t => {
+  const f = fixture(t);
+  const result = f.run('plan', { TEST_VOLUME_NAME: 'custom-project_benefits-data' });
+  assert.equal(result.status, 0, result.stderr);
+  assert.ok(f.calls().some(c => c[1] === 'volume' && c.at(-1) === 'custom-project_benefits-data'));
 });

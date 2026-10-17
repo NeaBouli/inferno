@@ -66,6 +66,12 @@ on:
       - 'scripts/test-deploy-compose-service.sh'
       - 'scripts/test-deploy-benefits-network.sh'
       - 'scripts/test-deploy-benefits-capacity.sh'
+      - 'docs/BENEFITS_MIGRATION_TEMPLATE.md'
+      - 'docs/BENEFITS_MIGRATION_MODEL_B_PERIOD_DEDUP.md'
+      - 'scripts/ops/benefits-migration-template.sh'
+      - 'scripts/ops/test-benefits-migration-template.cjs'
+      - 'scripts/ops/benefits-migration-model-b-period-dedup.sh'
+      - 'scripts/ops/test-benefits-migration-model-b-period-dedup.cjs'
       - 'scripts/ops/benefits-backend-volume-ownership.sh'
       - 'scripts/ops/test-benefits-backend-volume-ownership.cjs'
       - 'scripts/deploy-gate-lib.sh'
@@ -143,6 +149,12 @@ on:
       - 'scripts/test-deploy-compose-service.sh'
       - 'scripts/test-deploy-benefits-network.sh'
       - 'scripts/test-deploy-benefits-capacity.sh'
+      - 'docs/BENEFITS_MIGRATION_TEMPLATE.md'
+      - 'docs/BENEFITS_MIGRATION_MODEL_B_PERIOD_DEDUP.md'
+      - 'scripts/ops/benefits-migration-template.sh'
+      - 'scripts/ops/test-benefits-migration-template.cjs'
+      - 'scripts/ops/benefits-migration-model-b-period-dedup.sh'
+      - 'scripts/ops/test-benefits-migration-model-b-period-dedup.cjs'
       - 'scripts/ops/benefits-backend-volume-ownership.sh'
       - 'scripts/ops/test-benefits-backend-volume-ownership.cjs'
       - 'scripts/deploy-gate-lib.sh'
@@ -340,6 +352,11 @@ jobs:
 
       - name: Check release guards (Web3 site, compose services, Benefits exact-SHA deploys)
         run: npm run test:release-guards
+
+      - name: Check Benefits migration template and Model B cutover fixtures
+        run: |
+          npm run test:benefits-migration-template
+          npm run test:benefits-migration-model-b
 
       - name: Check browser Ethers 6 baseline
         run: npm run test:browser-ethers6
