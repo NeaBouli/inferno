@@ -2,7 +2,14 @@
   "name": "IFR Benefits Network Device Wallet Acceptance Checklist",
   "target": "https://shop.ifrunit.tech",
   "status": "open",
-  "lastUpdated": "2026-10-06",
+  "lastUpdated": "2026-10-17",
+  "automatedWalletParity": {
+    "audit": "JUL-11",
+    "command": "npm run test:wallet-parity",
+    "documentation": "docs/qa/WALLET_PARITY.md",
+    "physicalEvidence": false,
+    "remainingManualCoverage": "Use the pending matrix rows below and docs/runbooks/BENEFITS_DEVICE_WALLET_TEST_RUNBOOK.md for real wallet apps, QR pairing approval, deep links and mobile OS handoff on physical iOS/iPadOS and Android devices. Automated browser parity never changes a physical-device status."
+  },
   "rules": {
     "noSecrets": true,
     "recordOnlyTestIds": true,

@@ -10,7 +10,7 @@ as access requirements for premium content.
 ```bash
 cp .env.example .env
 # Configure .env
-npm install
+npm ci
 npm run dev
 # -> http://localhost:3005
 ```
@@ -19,6 +19,10 @@ npm run dev
 ```bash
 docker-compose up -d
 ```
+
+This Compose file is for local development. Production preparation, required
+configuration, the membership release blocker and owner decisions are documented
+in [CREATOR_GATEWAY_DEPLOY.md](../../docs/CREATOR_GATEWAY_DEPLOY.md).
 
 ## API Endpoints
 - GET /health — Status

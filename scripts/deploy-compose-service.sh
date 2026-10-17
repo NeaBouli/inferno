@@ -15,7 +15,7 @@
 # recovery of a real failing service release is not yet verified, so watch the result
 # and use `rollback <stamp>` explicitly. Unset DEPLOY_MODE keeps the direct path below.
 #
-# <service>: telegram-bot | points-backend | ai-copilot
+# <service>: telegram-bot | points-backend | ai-copilot | creator-gateway
 #
 # Direct path (no DEPLOY_MODE) deploy: capacity floor (never prunes) -> new backup dir with a source tar and the
 # current image id -> rollback image tag -> rsync of the git-archived app dir
@@ -48,8 +48,15 @@ case "$SERVICE" in
   telegram-bot)   APP_DIR="apps/telegram/telegram-bot" ;;
   points-backend) APP_DIR="apps/points-backend" ;;
   ai-copilot)     APP_DIR="apps/ai-copilot" ;;
-  *) die "usage: $0 <telegram-bot|points-backend|ai-copilot> <plan|deploy|verify|rollback>" ;;
+  creator-gateway) APP_DIR="apps/creator-gateway" ;;
+  *) die "usage: $0 <telegram-bot|points-backend|ai-copilot|creator-gateway> <plan|deploy|verify|rollback>" ;;
 esac
+# Proposed hostname only; the first rollout requires owner approval and host
+# gate onboarding. See docs/CREATOR_GATEWAY_DEPLOY.md before any host action.
+CREATOR_GATEWAY_HOST="${CREATOR_GATEWAY_HOST:-creator-api.ifrunit.tech}"
+if [[ "$SERVICE" == creator-gateway ]]; then
+  [[ "$CREATOR_GATEWAY_HOST" =~ ^[a-z0-9][a-z0-9.-]*\.[a-z]{2,}$ && "$CREATOR_GATEWAY_HOST" != *..* ]] || die "CREATOR_GATEWAY_HOST must be a plain DNS hostname"
+fi
 SRC="$REMOTE_ROOT/$SERVICE"
 CONTAINER="inferno-$SERVICE"
 IMAGE="inferno-$SERVICE"
@@ -135,9 +142,11 @@ wait_healthy() {
   "
 }
 
-check_code() { # check_code <expected> <url>
+check_code() { # check_code <expected> <url> [method]
   local actual
-  actual="$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 "$2?release=$RANDOM" 2>/dev/null)" || actual="unreachable"
+  local curl_args=(-sS -o /dev/null -w '%{http_code}' --max-time 15)
+  if [[ -n "${3:-}" ]]; then curl_args+=(-X "$3"); fi
+  actual="$(curl "${curl_args[@]}" "$2?release=$RANDOM" 2>/dev/null)" || actual="unreachable"
   if [[ "$actual" == "$1" ]]; then echo "ok    $1 $2"; return 0; fi
   echo "FAIL  $2 returned $actual (expected $1)"
   return 1
@@ -148,6 +157,13 @@ verify_public() {
   case "$SERVICE" in
     points-backend) check_code 200 https://points-api.ifrunit.tech/health || failures=$((failures + 1)) ;;
     ai-copilot)     check_code 200 https://copilot-api.ifrunit.tech/api/health || failures=$((failures + 1)) ;;
+    creator-gateway)
+      check_code 200 "https://$CREATOR_GATEWAY_HOST/health" || failures=$((failures + 1))
+      check_code 200 "https://$CREATOR_GATEWAY_HOST/auth/siwe/nonce" || failures=$((failures + 1))
+      check_code 404 "https://$CREATOR_GATEWAY_HOST/auth/wallet" POST || failures=$((failures + 1))
+      check_code 401 "https://$CREATOR_GATEWAY_HOST/access/check" || failures=$((failures + 1))
+      check_code 400 "https://$CREATOR_GATEWAY_HOST/auth/google/callback" || failures=$((failures + 1))
+      ;;
     telegram-bot)
       check_code 404 https://verify-api.ifrunit.tech/ || failures=$((failures + 1))
       # CWA-34: the identity-leaking status route must be gone.

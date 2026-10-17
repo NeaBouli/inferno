@@ -253,7 +253,19 @@ describe('CWA-42/CWA-30: fail-closed configuration', () => {
   });
 
   test('NODE_ENV=production enables isProduction (Secure OAuth cookie)', () => {
-    const restore = withPatchedEnv({ NODE_ENV: 'production' });
+    const restore = withPatchedEnv({
+      NODE_ENV: 'production',
+      CHAIN_ID: '1',
+      IFRLOCK_ADDRESS: '0x1234567890123456789012345678901234567890',
+      RPC_URL: 'https://rpc.example.invalid',
+      ALLOWED_ORIGINS: 'https://creator.example.invalid',
+      SIWE_DOMAIN: 'creator.example.invalid',
+      SIWE_URI: 'https://creator.example.invalid',
+      GOOGLE_CLIENT_ID: 'fixture-client',
+      GOOGLE_CLIENT_SECRET: 'fixture-secret',
+      GOOGLE_REDIRECT_URI: 'https://creator.example.invalid/auth/google/callback',
+      YOUTUBE_CHANNEL_ID: 'fixture-channel',
+    });
     try {
       const cfg = loadConfig();
       expect(cfg.isProduction).toBe(true);

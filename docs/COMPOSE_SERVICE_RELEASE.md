@@ -14,6 +14,14 @@ operator-run: the Fleet diagnosis identity has no Docker and no write access to 
 | `telegram-bot` | `apps/telegram/telegram-bot` | `/opt/inferno/telegram-bot` | `verify-api.ifrunit.tech/` 404 **and** `/api/verify/status/1` 404 (CWA-34) |
 | `points-backend` | `apps/points-backend` | `/opt/inferno/points-backend` | `points-api.ifrunit.tech/health` 200 |
 | `ai-copilot` | `apps/ai-copilot` | `/opt/inferno/ai-copilot` | `copilot-api.ifrunit.tech/api/health` 200 |
+| `creator-gateway` (prepared, not deployed) | `apps/creator-gateway` | proposed `/opt/inferno/creator-gateway` | proposed `creator-api.ifrunit.tech`: `/health` 200, `/auth/siwe/nonce` 200, `POST /auth/wallet` 404, `/access/check` 401, `/auth/google/callback` 400 |
+
+Creator Gateway is a prepared client target, not an existing production service.
+See [its first-release runbook](CREATOR_GATEWAY_DEPLOY.md) for owner decisions,
+Google membership blockers, host gate onboarding and the separate bootstrap
+procedure. The normal direct path requires a genuine prior image/source baseline
+and intentionally refuses a first bootstrap. `CREATOR_GATEWAY_HOST` overrides
+the proposed hostname for public checks after owner approval.
 
 ## What a release changes
 
