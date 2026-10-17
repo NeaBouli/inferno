@@ -49,7 +49,8 @@ refuse() { say "status=STOP reason=$1" >&2; exit 2; }
 docker_cmd() {
   local seconds=$1
   shift
-  timeout --foreground --kill-after=5 "$seconds" docker "$@"
+  # All calls are noninteractive; supervise CLI plugin descendants as well.
+  timeout --kill-after=5 "$seconds" docker "$@"
 }
 compose() {
   local seconds=30
@@ -92,8 +93,14 @@ print("|".join([v["Type"], v.get("Name", ""), v["Source"]]))
 
 # Read Compose privately, never print environment/config JSON. Build via Compose
 # exactly as the deploy helper does, retaining ALL configured frontend build args.
-compose_model() {
-  compose config --format json | python3 -I -B -c '
+compose_model() (
+  local model
+  model=$(mktemp "${TMPDIR:-/tmp}/benefits-model-b-compose.XXXXXXXX")
+  trap 'rm -f -- "$model"' EXIT
+  # Complete the bounded producer first: inherited plugin stdout must never
+  # keep a live parser waiting for EOF. umask 077 protects resolved env values.
+  compose config --format json >"$model" || exit "$?"
+  python3 -I -B -c '
 import json, pathlib, posixpath, sys
 m=json.load(sys.stdin); source=pathlib.Path(sys.argv[1]); mode=sys.argv[2]
 assert m["volumes"]["benefits-data"]["name"] == sys.argv[3]
@@ -163,8 +170,8 @@ if mode == "images":
         tag=m["services"][name].get("image") or m["name"] + "-" + name
         assert tag and not any(c.isspace() for c in tag)
         print(tag)
-' "$SOURCE_DIR" "$1" "$volume_name" "$runtime_mounts" "$volume_path"
-}
+' "$SOURCE_DIR" "$1" "$volume_name" "$runtime_mounts" "$volume_path" <"$model"
+)
 
 check_artifacts() {
   python3 -I -B - "$REPO" "$EXPECTED_SHA" "$PREVIOUS_SHA" "$MIGRATION_ID" "$SQL_SHA256" "$SOURCE_DIR" <<'PYARTIFACT'

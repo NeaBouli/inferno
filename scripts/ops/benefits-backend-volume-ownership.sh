@@ -11,7 +11,7 @@ die() { echo "ERROR: $2" >&2; exit "$1"; }
 docker_cmd() {
   local seconds=30
   [[ "$1" != stop ]] || seconds=90
-  timeout --foreground --kill-after=5 "$seconds" docker "$@"
+  timeout --kill-after=5 "$seconds" docker "$@"
 }
 on_exit() {
   local status=$?

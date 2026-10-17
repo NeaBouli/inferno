@@ -90,9 +90,9 @@ export MIGRATION_FRONTEND_SERVICE=benefits-frontend
 export MIGRATION_BACKEND_CONTAINER=inferno-benefits-backend
 export MIGRATION_FRONTEND_CONTAINER=inferno-benefits-frontend
 # Resolve Docker's actual volume name and host mountpoint. Never guess from the key.
-benefits_volume=$(timeout --foreground --kill-after=5 30 docker inspect --format '{{range .Mounts}}{{if eq .Destination "/data"}}{{if eq .Type "volume"}}{{.Name}}{{end}}{{end}}{{end}}' inferno-benefits-backend) || exit 1
+benefits_volume=$(timeout --kill-after=5 30 docker inspect --format '{{range .Mounts}}{{if eq .Destination "/data"}}{{if eq .Type "volume"}}{{.Name}}{{end}}{{end}}{{end}}' inferno-benefits-backend) || exit 1
 test -n "$benefits_volume" || exit 1
-benefits_mount=$(timeout --foreground --kill-after=5 30 docker volume inspect --format '{{.Mountpoint}}' "$benefits_volume") || exit 1
+benefits_mount=$(timeout --kill-after=5 30 docker volume inspect --format '{{.Mountpoint}}' "$benefits_volume") || exit 1
 test -d "$benefits_mount" || exit 1
 export MIGRATION_DB_FILE="$benefits_mount/benefits.db"
 unset benefits_volume benefits_mount
@@ -167,11 +167,16 @@ It reuses the ownership tool to set the resolved volume to uid/gid 1000, retaini
 ownership backups under `/opt/inferno/backups`. It does not restart the old image
 between chown and migration. The named one-off uses the immutable new backend ID,
 `--network none`, uid/gid 1000 and a 300-second wait. Every Docker/Compose invocation
-has a GNU `timeout --foreground --kill-after=5` deadline: 30 seconds for metadata,
+has a GNU `timeout --kill-after=5` process-group deadline: 30 seconds for metadata,
 create/start/inspect/kill/removal and absence checks; 90 seconds for Compose stop/up
 and the ownership helper's Docker stop; 900 seconds for image builds. The ownership
 helper's Docker inspections and failure/exit-handler calls use the same bounded
-policy. These are client deadlines, not proof that daemon-side work has stopped.
+policy. All calls are noninteractive and require no TTY; `--foreground` must not be
+used because it excludes CLI plugin descendants from timeout signals. Resolved
+Compose JSON is captured to a private temporary file by the bounded command before
+parsing, and that file is removed on success or failure. No live Docker/Compose
+output is piped into a parser. These are client deadlines, not proof that
+daemon-side work has stopped.
 The one-off name is persisted before create; cleanup attempts kill, force-removal
 and an absence check, including when inspection after wait times out. It requires
 exited/0 and proves removal before WAL checkpoint and all

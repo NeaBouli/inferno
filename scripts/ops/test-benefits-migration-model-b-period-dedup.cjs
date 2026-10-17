@@ -22,7 +22,7 @@ function command(name, args, options = {}) {
 }
 
 const shim = String.raw`#!/usr/bin/env python3
-import hashlib, json, os, pathlib, signal, sqlite3, sys, time
+import hashlib, json, os, pathlib, signal, sqlite3, subprocess, sys, time
 cmd=pathlib.Path(sys.argv[0]).name; a=sys.argv[1:]; e=os.environ
 state_path=pathlib.Path(e['TEST_STATE']); s=json.loads(state_path.read_text())
 def save(): state_path.write_text(json.dumps(s))
@@ -102,7 +102,22 @@ if cmd == 'docker':
             if e.get('COMPOSE_SUBPATH'): backend['volumes'][0]['volume']={'subpath':e['COMPOSE_SUBPATH']}
             if e.get('COMPOSE_TMPFS'): backend['tmpfs']=['/data/cache']
             frontend={'build':{'context':e['MIGRATION_SOURCE_DIR']+'/frontend','args':{'NEXT_PUBLIC_CHAIN_ID':'11155111' if e.get('BAD_CHAIN') else '1','BENEFITS_API_INTERNAL_URL':'http://benefits-backend:3001'}},'image':'fixture-frontend:latest'}
-            print(json.dumps({'name':'fixture','services':{'benefits-backend':backend,'benefits-frontend':frontend},'volumes':{'benefits-data':{'name':'custom-project_benefits-data'}}}))
+            model=json.dumps({'name':'fixture','services':{'benefits-backend':backend,'benefits-frontend':frontend},'volumes':{'benefits-data':{'name':'custom-project_benefits-data'}}})
+            if e.get('STALL_COMPOSE_PLUGIN') and not s['running']:
+                # Like a Docker CLI plugin: inherit stdout, emit a valid model,
+                # then stall despite TERM. The CLI parent also waits indefinitely.
+                subprocess.Popen([sys.executable,'-I','-B','-c','''
+import json, os, signal, stat, sys, time
+def log(value):
+    with open(os.environ['TEST_LOG'],'a') as f: f.write(json.dumps(value)+'\\n')
+signal.signal(signal.SIGTERM, lambda *_: log(['compose-plugin-term']))
+output=os.fstat(1)
+log(['compose-plugin-start',os.getpid(),time.monotonic(),stat.S_ISREG(output.st_mode),stat.S_IMODE(output.st_mode)])
+print(sys.argv[1],flush=True)
+while True: time.sleep(60)
+''',model])
+                stall()
+            print(model)
         elif action == 'ps':
             if '--all' in a: print('id-inferno-'+a[-1])
             elif s['running']: print('running')
@@ -154,26 +169,34 @@ else: raise Exception('unknown shim')
 const timeoutShim = String.raw`#!/usr/bin/env python3
 import json, os, signal, subprocess, sys, time
 a=sys.argv[1:]
-assert a[:2] == ['--foreground','--kill-after=5']
-seconds=float(a[2]); command=a[3:]; grace=5
 with open(os.environ['TEST_LOG'],'a') as f: f.write(json.dumps(['timeout',*a])+'\n')
+foreground=a[0] == '--foreground'
+if foreground: a=a[1:]
+assert a[0] == '--kill-after=5'
+seconds=float(a[1]); command=a[2:]; grace=5
 if command[0] == 'docker':
     text=' '.join(command)
     shortened=((os.environ.get('STALL_INSPECT') or os.environ.get('STALL_INSPECT_OUTPUT')) and command[1] == 'inspect' and '.State.ExitCode' in text
         or os.environ.get('STALL_FAILURE_STOP') and command[1] == 'compose' and 'stop' in command
         or os.environ.get('STALL_REMOVE') and command[1] == 'rm'
-        or os.environ.get('STALL_OWNERSHIP_INSPECT') and command[1] == 'inspect' and '.Config.Labels' in text)
+        or os.environ.get('STALL_OWNERSHIP_INSPECT') and command[1] == 'inspect' and '.Config.Labels' in text
+        or os.environ.get('STALL_COMPOSE_PLUGIN') and command[1] == 'compose' and 'config' in command)
     if shortened: seconds=1; grace=0.1
 started=time.monotonic()
-p=subprocess.Popen(command, start_new_session=True)
+# GNU foreground mode signals only the monitored parent. Default mode creates a
+# process group and signals its descendants too; do not strengthen foreground.
+p=subprocess.Popen(command, start_new_session=not foreground)
+def send(sig):
+    if foreground: p.send_signal(sig)
+    else: os.killpg(p.pid, sig)
 try:
     rc=p.wait(timeout=seconds)
 except subprocess.TimeoutExpired:
     with open(os.environ['TEST_LOG'],'a') as f: f.write(json.dumps(['timeout-expired',*command])+'\n')
-    os.killpg(p.pid, signal.SIGTERM)
+    send(signal.SIGTERM)
     try: p.wait(timeout=grace)
     except subprocess.TimeoutExpired:
-        os.killpg(p.pid, signal.SIGKILL); p.wait()
+        send(signal.SIGKILL); p.wait()
     with open(os.environ['TEST_LOG'],'a') as f: f.write(json.dumps(['timeout-elapsed',str(time.monotonic()-started),*command])+'\n')
     sys.exit(124)
 sys.exit(128-rc if rc < 0 else rc)
@@ -181,7 +204,16 @@ sys.exit(128-rc if rc < 0 else rc)
 
 function fixture(t, variant = '') {
   const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'benefits-model-b-test-')));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  t.after(() => {
+    // Foreground-semantics probes deliberately leave a plugin child alive.
+    const log = path.join(root, 'calls.jsonl');
+    if (fs.existsSync(log)) for (const call of fs.readFileSync(log, 'utf8').trim().split('\n').filter(Boolean).map(JSON.parse)) {
+      if (call[0] === 'compose-plugin-start') {
+        try { process.kill(call[1], 'SIGKILL'); } catch (error) { if (error.code !== 'ESRCH') throw error; }
+      }
+    }
+    fs.rmSync(root, { recursive: true, force: true });
+  });
   const dirs = Object.fromEntries(['repo', 'tools', 'runtime', 'backups', 'bin', 'volume', 'tmp'].map(k => [k, path.join(root, k + ' with spaces')]));
   for (const d of Object.values(dirs)) fs.mkdirSync(d, { mode: 0o700 });
   const { repo, tools, runtime, backups, bin, volume } = dirs;
@@ -244,7 +276,7 @@ c.commit(); c.close()`, db, oldSql]);
     run(mode, extra = {}, seconds = 180) {
       // A process-group deadline also bounds a regression that bypasses the
       // production timeout wrapper. Assert below that this outer guard never fires.
-      const r = spawnSync(path.join(bin, 'timeout'), ['--foreground', '--kill-after=5', String(seconds), 'bash', path.join(tools, filename), mode],
+      const r = spawnSync(path.join(bin, 'timeout'), ['--kill-after=5', String(seconds), 'bash', path.join(tools, filename), mode],
         { env: { ...env, ...extra }, encoding: 'utf8', timeout: (seconds + 10) * 1000 });
       assert.equal(r.error, undefined);
       assert.ok(!fs.readFileSync(log, 'utf8').includes('["timeout-expired", "bash"'), 'outer fixture deadline expired');
@@ -257,12 +289,30 @@ const hash = file => createHash('sha256').update(fs.readFileSync(file)).digest('
 const isDocker = (c, action) => c[0] === 'docker' && c[1] === action;
 function assertBoundedDocker(calls) {
   const actual = calls.filter(c => c[0] === 'docker').map(JSON.stringify).sort();
-  const bounded = calls.filter(c => c[0] === 'timeout' && c[4] === 'docker').map(c => {
-    assert.ok(['30', '90', '300', '900'].includes(c[3]), 'unexpected Docker deadline');
-    return JSON.stringify(c.slice(4));
+  const bounded = calls.filter(c => c[0] === 'timeout' && c[3] === 'docker').map(c => {
+    assert.equal(c[1], '--kill-after=5', 'noninteractive Docker must supervise its process group');
+    assert.ok(['30', '90', '300', '900'].includes(c[2]), 'unexpected Docker deadline');
+    return JSON.stringify(c.slice(3));
   }).sort();
   assert.deepEqual(actual, bounded, 'every Docker/Compose call must have a deadline, including ownership and cleanup');
 }
+
+test('foreground timeout double signals only the CLI parent, leaving the plugin alive', t => {
+  const f = fixture(t), state = f.state();
+  state.running = false; fs.writeFileSync(f.env.TEST_STATE, JSON.stringify(state));
+  // A file prevents this deliberate foreground leak from blocking the test's
+  // stdout pipe. Fixture cleanup kills the surviving child before removing files.
+  const output = fs.openSync(path.join(f.tmp, 'compose.json'), 'wx', 0o600);
+  try {
+    const r = spawnSync(path.join(f.bin, 'timeout'), ['--foreground', '--kill-after=5', '30', 'docker', 'compose', 'config', '--format', 'json'],
+      { env: { ...f.env, STALL_COMPOSE_PLUGIN: '1' }, stdio: ['ignore', output, 'ignore'], timeout: 5000 });
+    assert.equal(r.error, undefined); assert.equal(r.status, 124);
+    const calls = f.calls(), child = calls.find(c => c[0] === 'compose-plugin-start');
+    assert.ok(child, 'plugin child must have inherited stdout');
+    assert.ok(!calls.some(c => c[0] === 'compose-plugin-term'), 'foreground must not signal descendants');
+    assert.doesNotThrow(() => process.kill(child[1], 0), 'foreground must leave the child alive');
+  } finally { fs.closeSync(output); }
+});
 
 test('plan validates hooks, exact migration set and volume without mutations', t => {
   const f = fixture(t), before = hash(f.db), release = fs.readFileSync(path.join(f.runtime, 'RELEASE_SHA'), 'utf8');
@@ -348,6 +398,7 @@ for (const [label, extra] of [
   ['inspector and failure stop', { STALL_INSPECT: '1', STALL_FAILURE_STOP: '1' }],
   ['failure stop after application restart', { BAD_UID: '1', STALL_FAILURE_STOP: '1' }],
   ['ownership dependency inspector', { STALL_OWNERSHIP_INSPECT: '1' }],
+  ['Compose plugin during stopped-service model check', { STALL_COMPOSE_PLUGIN: '1' }],
 ]) test(`stalled ${label} exits bounded, fails closed and retains the lock`, t => {
   const f = fixture(t), r = f.run('apply', extra);
   assert.notEqual(r.status, 0);
@@ -372,6 +423,16 @@ for (const [label, extra] of [
   if (extra.STALL_FAILURE_STOP) {
     assert.ok(calls.some(c => c[0] === 'timeout-expired' && c.includes('compose') && c.includes('stop')));
     assert.match(r.stderr, /stop_failed_operator_must_isolate_all_writers/);
+  }
+  if (extra.STALL_COMPOSE_PLUGIN) {
+    const child = calls.find(c => c[0] === 'compose-plugin-start');
+    assert.ok(child); assert.equal(child[3], true, 'Compose stdout must be a regular file, never a live parser pipe');
+    assert.equal(child[4], 0o600, 'resolved Compose output must remain private');
+    assert.ok(calls.some(c => c[0] === 'compose-plugin-term'), 'the timeout must signal the plugin descendant');
+    const finished = Number(command('python3', ['-I', '-B', '-c', 'import time; print(time.monotonic())']));
+    assert.ok(finished - child[2] < 5, 'parser or inherited stdout blocked completion after the client deadline');
+    assert.match(r.stderr, /phase=migrate/);
+    assert.ok(!calls.some(c => c.includes('up') || isDocker(c, 'create') || c[0] === 'chown'));
   }
   assertBoundedDocker(calls);
 });
