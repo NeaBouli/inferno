@@ -6,7 +6,7 @@ Offizieller Community-Bot für [Inferno ($IFR)](https://ifrunit.tech).
 
 - **Node.js 18** + **Telegraf v4**
 - **ethers.js v5** (IFR Token: 9 Decimals)
-- **AI Copilot** für /ask
+- **AI answer (Telegram /ask)**
 - **Railway** (auto-deploy via GitHub main)
 
 ## Setup (lokal)
@@ -30,7 +30,7 @@ node src/index.js
 | `/bootstrap` | Bootstrap-Info | Nein |
 | `/partner` | Partner-Ökosystem | Nein |
 | `/roadmap` | Projekt-Roadmap | Nein |
-| `/ask <frage>` | KI-Frage (Copilot) | Nein |
+| `/ask <frage>` | AI answer (Telegram /ask) | Nein |
 | `/admin` | Admin-Status (Whitelist) | Nein |
 
 ## ABIs
@@ -136,8 +136,8 @@ ausgegeben.
 ## Verifikation nach Deploy
 
 ```bash
-# Railway Health
-curl https://ifr-ai-copilot-production.up.railway.app/health
+# Data API Health
+curl https://copilot-api.ifrunit.tech/api/health
 
 # Bot testen
 # Telegram: /start, /burns, /lock 0x6b36687b0cd4386fb14cf565B67D7862110Fed67
