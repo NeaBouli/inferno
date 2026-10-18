@@ -139,7 +139,7 @@ async function deployFixture(tokenName = "LendingVaultV2TokenMock", reverse = fa
   return { owner, lender, borrower, payer, receiver, stranger, nextOwner, otherLender, token, weth, factory, pair, oracle, vault, configuration, deploy, evidence, calldata, queued, configure, resume, ready, fund, borrow, request, invariant };
 }
 
-describe("LendingVaultV2 DRAFT", function () {
+describe("LendingVaultV2 release candidate", function () {
   let f;
   beforeEach(async () => { f = await deployFixture(); });
 

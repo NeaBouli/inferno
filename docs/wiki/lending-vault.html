@@ -798,7 +798,14 @@
       <p class="subtitle">
         Self-service IFR lending offers on Ethereum Mainnet
       </p>
-      <p data-lending-status><strong>Status:</strong> Retired (V1) since 3 October 2026: borrowing stays disabled by Governance decision (no activation is planned or authorized) and no V2 is planned yet. Lenders can still withdraw their unlent offers with <code>withdrawOffer</code>; these IFR are not lost. A V2 would follow only after a reviewed price source shared with the CommitmentVault price path (decision register Lane 1).</p>
+
+      <aside class="callout" data-v2-release aria-label="V2 release candidate status">
+        <p><strong>V2 - ready, not yet activated</strong></p>
+        <p>The LendingVaultV2 consumer release candidate is built and tested, but not deployed on mainnet. Activation requires a Governance vote and Treasury Safe signers. External audit is pending funding, deferred until the token has a stable price and funding is available; these candidates are not externally audited.</p>
+        <p>Lending activation still requires the shared production oracle adapter and liquidity/manipulation evidence. Borrowing caps remain zero until those gates pass.</p>
+      </aside>
+
+      <p data-lending-status><strong>Status:</strong> Retired (V1) since 3 October 2026: borrowing stays disabled by Governance decision (no activation is planned or authorized). Lenders can still withdraw their unlent offers with <code>withdrawOffer</code>; these IFR are not lost. The V2 release candidate is described above; its activation still requires a reviewed price source shared with the CommitmentVault price path (decision register Lane 1).</p>
 
       <!-- ======================================== -->
       <!-- 1. Die Idee -->
@@ -813,7 +820,7 @@
 
       <div class="callout-green">
         <p>
-          <strong>Current Mainnet state:</strong> V1 retired by owner decision (3 October 2026): borrowing stays disabled (<code>ifrPriceWei = 0</code>, no activation planned or authorized) and lenders are withdrawing their offers; those IFR are not lost. No V2 is planned until a reviewed price source exists. Lenders can withdraw the currently available, unlent part of an offer; V1 has 0 loans, so no IFR is lent out.
+          <strong>Current Mainnet state:</strong> V1 retired by owner decision (3 October 2026): borrowing stays disabled (<code>ifrPriceWei = 0</code>, no activation planned or authorized) and lenders are withdrawing their offers; those IFR are not lost. V2 activation requires a reviewed price source. Lenders can withdraw the currently available, unlent part of an offer; V1 has 0 loans, so no IFR is lent out.
         </p>
       </div>
 
@@ -1075,7 +1082,7 @@
       <!-- Retired Status Banner -->
       <div class="lv-widget" id="lv-retired-notice" role="note" style="background:rgba(185,28,28,0.06);border-color:rgba(185,28,28,0.35);border-left:4px solid #b91c1c;">
         <div style="font-size:0.78rem;font-weight:700;color:#b91c1c;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;">Retired &mdash; LendingVault V1</div>
-        <p style="font-size:0.9rem;margin:0 0 6px;">V1 retired by owner decision (3 October 2026): borrowing stays disabled (<code>ifrPriceWei = 0</code>, no activation planned or authorized) and lenders are withdrawing their offers; those IFR are not lost. No V2 is planned until a reviewed price source exists.</p>
+        <p style="font-size:0.9rem;margin:0 0 6px;">V1 retired by owner decision (3 October 2026): borrowing stays disabled (<code>ifrPriceWei = 0</code>, no activation planned or authorized) and lenders are withdrawing their offers; those IFR are not lost. V2 activation requires a reviewed price source.</p>
         <p style="color:var(--muted);font-size:0.88rem;margin:0;">This page no longer creates or increases offers. Existing lenders connect the lender wallet and use <strong>Withdraw Available IFR</strong> below.</p>
       </div>
 
@@ -1194,7 +1201,7 @@
       <div id="lv-borrower-tab" class="lv-tab-content">
         <div class="lv-widget">
           <h3>Borrow IFR &mdash; disabled</h3>
-          <p class="lv-retired-note" role="note" id="lv-borrow-retired-note"><strong>Retired.</strong> LendingVault V1 is retired: borrowing stays disabled regardless of the on-chain price (<code>ifrPriceWei = 0</code>, no activation planned or authorized). No V2 is planned until a reviewed price source exists.</p>
+          <p class="lv-retired-note" role="note" id="lv-borrow-retired-note"><strong>Retired.</strong> LendingVault V1 is retired: borrowing stays disabled regardless of the on-chain price (<code>ifrPriceWei = 0</code>, no activation planned or authorized). V2 activation requires a reviewed price source.</p>
 
           <!-- V1 retired: the borrow form is hidden and the borrow handler refuses before any wallet call. -->
           <div class="lv-hidden" aria-hidden="true">

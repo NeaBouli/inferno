@@ -1,30 +1,41 @@
-# Governance V2 draft implementation notes
+# Governance V2 implementation notes
 
-Status: local source-only DRAFT, 18 October 2026. This implements the contract
-behavior of [GOVERNANCE_V2_SPEC.md](GOVERNANCE_V2_SPEC.md), with the authority
-boundaries in [GUARDIAN_SAFE_PLAN.md](GUARDIAN_SAFE_PLAN.md),
+**Status:** Release candidate - ready, not activated. Ratified 2026-10-18.
+Built and tested locally; not deployed as this release candidate and not externally
+audited. Activation requires a Governance vote and Treasury Safe signer approval.
+Existing deployed versions and custody remain unchanged.
+
+## Remaining before activation
+
+- Governance proposal for the exact release, wiring and activation scope.
+- Treasury Safe signer approval; independently verify owner/guardian identities and thresholds.
+- Reviewed constructor arguments, build hashes and the applicable evidence gates below.
+- External audit: pending funding, deferred until the token has a stable price and
+  funding is available. Disclose this deferral in the proposal; never claim audited.
+
+Follow [V2_ACTIVATION_RUNBOOK.md](../V2_ACTIVATION_RUNBOOK.md). Source readiness is
+not activation authorization or evidence of a live deployment.
+
+Authority boundaries remain defined in [GUARDIAN_SAFE_PLAN.md](GUARDIAN_SAFE_PLAN.md),
 [GOVERNANCE_MIGRATION_PLAN.md](../GOVERNANCE_MIGRATION_PLAN.md) and
-[CONTRACT_STANDARDS.md](../CONTRACT_STANDARDS.md). It does not establish live
-roles, approve numeric policy, execute a migration or close an audit finding.
-The current task authorizes local code and tests beyond the earlier planning-only
-permission recorded in those documents.
+[CONTRACT_STANDARDS.md](../CONTRACT_STANDARDS.md).
 
 Implementation: [GovernanceV2.sol](../../contracts/governance/GovernanceV2.sol).
 Tests: [GovernanceV2.test.js](../../test/GovernanceV2.test.js). The additional
 [MockGovernanceV2Target.sol](../../contracts/mocks/MockGovernanceV2Target.sol)
 provides controlled return/revert/storage probes. Existing production contracts,
-interfaces, dependency versions, build configuration and broadcast scripts are
-unchanged. Existing `MockReentrantToken`, `MockFeeOnTransferToken`,
+interfaces and dependency versions are unchanged. Release tooling is documented
+in the activation runbook. Existing `MockReentrantToken`, `MockFeeOnTransferToken`,
 `MockFalseReturnToken` and `InfernoToken` are reused without modification.
 
 ## Contract decisions and ABI
 
 Constructor: `GovernanceV2(address initialOwner, address initialGuardian,
-uint256 initialDelay)`. The deployer gains no implicit authority. The draft uses
-the specification's recommended constants: `MIN_DELAY = 172800`,
+uint256 initialDelay)`. The deployer gains no implicit authority. The release candidate uses
+the specification's ratified constants: `MIN_DELAY = 172800`,
 `MAX_DELAY = 2592000`, `GRACE_PERIOD = 604800`, all in seconds. Initial delay is
 explicit and validated within the same inclusive bounds as `setDelay`; use the
-recommended floor for a future ratified initial configuration.
+ratified 48-hour default unless a different bounded delay is explicitly approved.
 
 Proposal IDs start at zero and are local to this controller. Their complete
 identity is `(chainId, controller, id)`. The operation hash is:
@@ -177,7 +188,7 @@ Raw CALL semantics cannot interpret arbitrary return bytes as an ERC-20 boolean:
 a `false` return is a successful EVM CALL and therefore completes the operation.
 This behavior is explicitly tested and requires target-level semantics review.
 Future asset-moving target contracts must use SafeERC20/balance-delta accounting
-as required by the standards; this draft adds no special token execution path.
+as required by the standards; this release candidate adds no special token execution path.
 
 ## Requirements deliberately left to later approval and rehearsal
 
@@ -189,7 +200,7 @@ protocol features or claims satisfied by the local unit suite:
 | Treasury Safe owner and separate exactly 2-of-3 Guardian Safe | Explicit role arguments and address separation only | Approved Safe singleton/proxy identity, public signer consent/independence, exact owners/threshold, modules/guard/fallback handler, fresh block-bound code hashes |
 | Guardian signer authentication/replay and cancellation operations | `cancel` checks the calling Safe address only | Actual Safe 1-signature rejection, 2-signature success, outsider failure, nonce/chain replay tests, monitoring ownership and response drill |
 | No cancel Safe pause/burn/admin/custody power elsewhere | G2 provides only the documented cancellation privilege | Guardian plan's eight legacy-role rows must be freshly read; do not reassign any vault/pause/burn roles to C |
-| Ratify numeric floor/ceiling/grace and initial delay | Recommended constants and bounded constructor in draft | Council numeric decision, exact reviewed build and constructor arguments |
+| Ratified numeric floor/ceiling/grace and initial delay | Constants match owner ratification | Exact reviewed build and constructor arguments |
 | Ten movable legacy control roles | No migration actions; local IFR legacy T1 integration only | Pinned deployed-bytecode rehearsals for BuilderRegistry, CommitmentVault V1/V2, LendingVault V1, PartnerVault, BuybackVault V1, BuybackController, BurnReserve, LiquidityReserve, InfernoToken; per-row positive/negative and unchanged-state checks |
 | Preserve custody and locks; disabled LendingVault/price paths | No existing production file changes | Recorded balances, tranches, fees, receiver/exemptions, lock parameters, disabled-price/readiness assertions at pinned blocks |
 | G1 root handoff and FeeRouter fixed pointer | G2 can queue exact generic calls; IDs/hashes are controller-scoped | Council T1 exception/bridge decision; deployed G1 immediate `onlyOwner setOwner` evidence; drained G1 queue; nested G2/G1 timelocks, separate IDs, legacy cancellation, partial migration and reverse-handoff tests |
@@ -197,7 +208,7 @@ protocol features or claims satisfied by the local unit suite:
 | IFRLock, Vesting, BootstrapVaultV3 remain outside owner migration | No changes/calls to them | Explicit unchanged custody/guardian/permanently retained LP evidence in full migration rehearsal |
 | Build provenance JUL-21 | Existing compiler config, lockfile and local build-info available | Reviewed source commit, exact compiler/dependency digests/settings, ABI/storage layout, initcode/runtime/constructor metadata, independent review, verification matches and deployment receipts |
 | Fresh authoritative live state | No network or live transactions used | Canonical block/hash, code/role/queue/balance inventory and discrepancy resolution |
-| Safe creation, deployment, funding/exemption, activation and publication | No broadcast scripts or live changes | Each remains a separate action-specific approval; preserve new-vault 60-day activation and separate Controller replacement scope |
+| Safe creation, deployment, funding/exemption, activation and publication | Guarded deployment script; no live changes | Each remains a separate action-specific approval; preserve new-vault 60-day activation and separate Controller replacement scope |
 | Mainnet-fork and Sepolia acceptance, exact-head CI and independent review | Local Hardhat tests only | Network-authorized pinned deployed-bytecode fork, actual Safe-quorum Sepolia rehearsal, review artifacts, CI and later per-step final receipts |
 
 The repository G1 source has a timelocked `setOwner` fix; the specification says
@@ -205,12 +216,12 @@ deployed G1 uses immediate `onlyOwner`. Testing current source as if it were the
 pinned deployed bridge would give misleading evidence. No such substitution is
 made here, and no legacy `acceptOwnership` or FeeRouter setter is invented.
 
-## Open questions and conservative draft choices
+## Ratified interpretations and operational requirements
 
-1. **Unratified timing recommendations.** The draft uses exactly the proposed
-   48-hour floor, 30-day ceiling and seven-day grace period. This is testable
-   draft behavior, not numeric policy approval. A later ratification change
-   requires a new reviewed build; these constants have no setter.
+1. **Ratified timing.** The 48-hour floor, 30-day ceiling and seven-day
+   grace period match the owner decision. Changing an immutable constant
+   requires a newly reviewed release. Re-submissions reference expired proposals
+   in the off-chain dossier, with a fresh ID and full delay; see the specification.
 2. **Safe verification.** The specification explicitly rejects code length as
    proof of Safe identity. No generic constructor inspection or hardcoded live
    addresses are invented. Approved identities, signer sets and quorum must be
@@ -253,23 +264,16 @@ made here, and no legacy `acceptOwnership` or FeeRouter setter is invented.
 
 ## Audit gate impact and local verification
 
-Do not add this draft to production audit scope/counts. In particular,
-`audit/mythril-config.json` still explicitly lists 19 production contracts;
-`scripts/test-mythril.cjs` also compares discovery to that list.
-`scripts/test-slither-baseline.cjs` asserts 23 non-mock Solidity files.
-Discovery now sees the draft as one additional concrete contract/file, so those
-scope/count self-tests fail until a separately approved draft-scope policy is
-made. No baseline, count, discovery logic or audit gate has been altered.
-The mock remains excluded by the existing `/mocks/` discovery rule. Neither
-Slither nor Mythril engine analysis is claimed by these self-tests.
-
-See the local delivery report at
-`.fleet/reports/governance-v2-20261018.md` for exact commands, observed results,
-the sandbox compiler-cache workaround and outstanding release evidence.
+The current analyzer configuration includes all three release candidates:
+Mythril enumerates 22 concrete contracts and Slither discovers 26 non-mock
+Solidity files. The checked-in Slither baseline contains six reviewed signals.
+Run `npm run test:mythril` and `npm run test:slither-baseline` for configuration
+consistency; these are not engine analysis or an external audit. The release
+changes no executable Solidity logic and does not expand suppressions.
 
 ## Owner ratification (2026-10-18)
 
-The owner accepted the conservative draft behavior for every open question above:
+The owner ratified the conservative behavior for every interpretation above:
 
 - Timing: 48-hour minimum delay, 30-day maximum, 7-day grace period, immutable. An
   expired proposal can always be re-submitted as a new proposal that references the
@@ -282,5 +286,6 @@ The owner accepted the conservative draft behavior for every open question above
   resume. Guardian censorship is handled operationally (trusted, reachable guardian
   members, monitoring, re-proposal).
 
-This ratifies draft policy only; deployment still requires an audit and a separate
-owner/Council approval.
+This ratifies release-candidate policy. Deployment/activation requires separate
+Governance and Treasury Safe approval. External audit is deferred pending funding
+and a stable token price; no audited claim is made.

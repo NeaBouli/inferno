@@ -5,9 +5,10 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {Ownable2Step} from "@openzeppelin/contracts/access/Ownable2Step.sol";
 import {ReentrancyGuard} from "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 
-/// @title GovernanceV2 (DRAFT)
+/// @title GovernanceV2 (release candidate)
 /// @notice Replacement zero-value timelock with permissionless execution and an independent cancel guardian.
-/// @dev Source-only draft of GOVERNANCE_V2_SPEC.md. Numeric recommendations still require ratification.
+/// @dev Release candidate, ratified 2026-10-18; not deployed; not externally audited;
+///      activation only via Governance + Treasury Safe. See GOVERNANCE_V2_SPEC.md.
 ///      Targets are trusted only for the exact queued CALL; there is no delegatecall, ETH funding API,
 ///      token accounting, upgrade mechanism or emergency bypass. Safe identity must be verified off-chain.
 contract GovernanceV2 is Ownable2Step, ReentrancyGuard {
