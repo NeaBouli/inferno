@@ -201,3 +201,9 @@ See the local-only report at `.fleet/reports/lendingvault-v2-20261018.md`
 for exact commands, results, sandbox cache workaround, complete-suite outcome and
 local evidence. No benefits surface changed, so the benefits release preflight
 and frontend visual gate are outside this contract-only task.
+
+## Owner ratification (2026-10-18)
+
+The owner accepted every conservative interpretation and open-question default listed
+above as draft policy. This ratifies draft behavior only; activation still requires an
+audit, the documented evidence gates and a separate owner/Council approval.

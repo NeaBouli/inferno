@@ -266,3 +266,21 @@ Slither nor Mythril engine analysis is claimed by these self-tests.
 See the local delivery report at
 `.fleet/reports/governance-v2-20261018.md` for exact commands, observed results,
 the sandbox compiler-cache workaround and outstanding release evidence.
+
+## Owner ratification (2026-10-18)
+
+The owner accepted the conservative draft behavior for every open question above:
+
+- Timing: 48-hour minimum delay, 30-day maximum, 7-day grace period, immutable. An
+  expired proposal can always be re-submitted as a new proposal that references the
+  expired one; no revival of the expired ID.
+- Owner (Treasury Safe), guardian (separate cancel-only 2-of-3 Safe), signer sets and
+  thresholds are fixed and verified only in the deployment acceptance gate.
+- A pending ownership nomination does not expire; the current owner stays until
+  acceptance, delayed replacement or delayed cancellation.
+- No emergency owner, guardian-replacement shortcut, deadline extension, uncancel or
+  resume. Guardian censorship is handled operationally (trusted, reachable guardian
+  members, monitoring, re-proposal).
+
+This ratifies draft policy only; deployment still requires an audit and a separate
+owner/Council approval.

@@ -250,3 +250,9 @@ existing candidate tests do not prove the new price requirements.
 See the local delivery report at
 `.fleet/reports/commitmentvault-v2-20261018.md` for exact verification commands,
 results and the sandbox-only compiler-cache workaround.
+
+## Owner ratification (2026-10-18)
+
+The owner accepted every conservative interpretation and open-question default listed
+above as draft policy. This ratifies draft behavior only; activation still requires an
+audit, the documented evidence gates and a separate owner/Council approval.
