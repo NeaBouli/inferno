@@ -1,0 +1,105 @@
+/* Applied only after enhancement, so the original page stays open without JS. */
+section.landing-collapsible {
+  padding-top: 14px !important;
+  padding-bottom: 14px !important;
+  scroll-margin-top: 150px;
+}
+
+.landing-collapse-heading {
+  position: relative;
+  min-width: 0;
+  min-height: 52px;
+  padding: 22px 64px 22px 24px;
+  background: var(--surface, var(--bg-card));
+  border: 1px solid var(--line, var(--border));
+  border-radius: var(--radius);
+  color: var(--ink, var(--text));
+  text-align: left;
+}
+
+section.landing-collapsible > .landing-collapse-heading {
+  max-width: 1152px;
+  margin: 0 auto;
+  width: calc(100% - 48px);
+}
+
+.landing-collapse-heading .section-label { margin-bottom: 8px; }
+.landing-collapse-heading h2 {
+  margin: 0 !important;
+  color: var(--ink, var(--text)) !important;
+  font-size: clamp(24px, 3vw, 36px) !important;
+  line-height: 1.2;
+  text-align: left !important;
+  overflow-wrap: anywhere;
+}
+
+.landing-collapse-toggle {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  min-height: 44px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+  border-radius: inherit;
+  color: var(--accent);
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.landing-collapse-toggle:hover { background: var(--accent-dim); }
+.landing-collapse-toggle:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 3px;
+}
+.landing-collapse-chevron {
+  position: absolute;
+  top: calc(50% - 7px);
+  right: 26px;
+  width: 12px;
+  height: 12px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+}
+.landing-collapse-toggle[aria-expanded="true"] .landing-collapse-chevron {
+  top: calc(50% - 1px);
+  transform: rotate(225deg);
+}
+.landing-collapse-panel { min-width: 0; margin-top: 24px; }
+section.landing-collapsible > .landing-collapse-panel { padding-bottom: 24px; }
+#contracts .contract-row { flex-wrap: wrap; gap: 8px; }
+#contracts .contract-row > div,
+#contracts .contract-row .landing-collapse-panel > div { min-width: 0; flex-wrap: wrap; }
+.landing-collapse-panel[hidden] { display: none !important; }
+.landing-collapse-panel [id] { scroll-margin-top: 150px; }
+
+.landing-address-collapse {
+  display: block !important;
+  min-width: 0;
+}
+.landing-address-collapse > .landing-collapse-heading {
+  padding: 12px 42px 12px 0;
+  background: transparent;
+  border: 0;
+  border-radius: 4px;
+  font-size: 13px;
+}
+.landing-address-collapse > .landing-collapse-heading > div {
+  flex-wrap: wrap;
+  justify-content: flex-start !important;
+  gap: 8px;
+  margin: 0 !important;
+  overflow-wrap: anywhere;
+}
+.landing-address-collapse .landing-collapse-chevron { right: 12px; }
+.landing-address-collapse > .landing-collapse-panel {
+  margin-top: 8px;
+  overflow-wrap: anywhere;
+}
+
+@media print {
+  .landing-collapse-panel[hidden] { display: block !important; }
+  .landing-collapse-toggle { display: none; }
+  .reveal { opacity: 1 !important; transform: none !important; }
+  #faq .lp-faq-a { max-height: none !important; overflow: visible; }
+}

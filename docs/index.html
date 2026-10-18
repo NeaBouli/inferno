@@ -1435,6 +1435,9 @@
 <script src="assets/ifr-state.js"></script>
   <link rel="stylesheet" href="assets/redesign-skin.css?v=20261017-retirement">
   <link rel="stylesheet" href="assets/landing-header-template.css?v=20261006-t279">
+  <link rel="stylesheet" href="assets/landing-collapse.css?v=20261018-1">
+  <script defer src="assets/landing-collapse.js?v=20261018-1"></script>
+  <noscript><style>.reveal { opacity: 1; transform: none; }</style></noscript>
 </head>
 <body id="top">
 
@@ -2182,9 +2185,9 @@ render();
 
       <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(min(300px,100%),1fr));gap:12px;">
 
-        <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
+        <div data-landing-address style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:13px;font-weight:600;">&#x1F4B0; LP Reserve Safe</span>
+            <span data-landing-address-title style="font-size:13px;font-weight:600;">&#x1F4B0; LP Reserve Safe</span>
             <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(59,130,246,0.15);color:#1d4ed8;">Gnosis Multisig &#x1F512;</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
@@ -2195,9 +2198,9 @@ render();
           <div style="font-size:10px;color:#666;margin-top:2px;">400.6M IFR LP Reserve. Governance-controlled LP expansion reserve; not used for the Bootstrap LP. Ex-Deployer, transferred 18.03.2026.</div>
         </div>
 
-        <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
+        <div data-landing-address style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:13px;font-weight:600;">&#x1F3DB;&#xFE0F; Treasury Safe</span>
+            <span data-landing-address-title style="font-size:13px;font-weight:600;">&#x1F3DB;&#xFE0F; Treasury Safe</span>
             <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(155,89,182,0.15);color:#7e22ce;">Gnosis Multisig &#x1F512;</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
@@ -2208,9 +2211,9 @@ render();
           <div style="font-size:10px;color:#666;margin-top:2px;">Protocol treasury. Funded Bootstrap with 144.75M IFR plus a 5.25M IFR top-up. Holds the 734,545.07 IFR recovered from FeeRouterV1 on 07.10.2026 (CWA-02), unallocated. No deployed mechanism automatically refills this Safe.</div>
         </div>
 
-        <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
+        <div data-landing-address style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:13px;font-weight:600;">&#x1F465; Community Safe</span>
+            <span data-landing-address-title style="font-size:13px;font-weight:600;">&#x1F465; Community Safe</span>
             <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(26,188,156,0.15);color:#115e59;">Gnosis Multisig &#x1F512;</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
@@ -2221,9 +2224,9 @@ render();
           <div style="font-size:10px;color:#666;margin-top:2px;">50M &rarr; Bootstrap. 7.9M = Community Operations Reserve.</div>
         </div>
 
-        <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
+        <div data-landing-address style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:13px;font-weight:600;">&#x23F3; Team Vesting Contract</span>
+            <span data-landing-address-title style="font-size:13px;font-weight:600;">&#x23F3; Team Vesting Contract</span>
             <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(192,57,43,0.15);color:#b91c1c;">Locked &#x1F512;</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
@@ -2241,9 +2244,9 @@ render();
           </div>
         </div>
 
-        <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
+        <div data-landing-address style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:13px;font-weight:600;">&#x1F4A7; Liquidity Reserve</span>
+            <span data-landing-address-title style="font-size:13px;font-weight:600;">&#x1F4A7; Liquidity Reserve</span>
             <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(146,43,33,0.15);color:#922B21;">Staged Governance</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
@@ -2254,9 +2257,9 @@ render();
           <div style="font-size:10px;color:#666;margin-top:2px;">Initial lock ended. 200M held; 50M staged cap per 90 days; 0 withdrawn.</div>
         </div>
 
-        <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
+        <div data-landing-address style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:13px;font-weight:600;">&#x1F3D7;&#xFE0F; Builder Vault</span>
+            <span data-landing-address-title style="font-size:13px;font-weight:600;">&#x1F3D7;&#xFE0F; Builder Vault</span>
             <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(69,123,157,0.15);color:#1d4ed8;">Rewards inactive</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
@@ -2268,9 +2271,9 @@ render();
           <div style="font-size:9px;color:#555;margin-top:4px;">&#x1F512; 40M IFR, no refill &mdash; paid out only for verified partner checkouts</div>
         </div>
 
-        <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
+        <div data-landing-address style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:13px;font-weight:600;">&#x1F680; Bootstrap Vault V3</span>
+            <span data-landing-address-title style="font-size:13px;font-weight:600;">&#x1F680; Bootstrap Vault V3</span>
             <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(107,114,128,0.2);color:#4b5563;">&#x2705; FINALIZED &mdash; 05.06.2026</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
@@ -2329,9 +2332,9 @@ render();
           <div style="font-size:10px;color:#666;margin-top:2px;"><span data-live-key="lending-offer-count">0</span> live offers. <span data-live-key="card-lending-lent">loading&hellip;</span> lent. Borrower transactions require <span data-live-key="lending-price-status">price check</span>.</div>
         </div>
 
-        <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
+        <div data-landing-address style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:13px;font-weight:600;">&#x1F525; Burn Reserve</span>
+            <span data-landing-address-title style="font-size:13px;font-weight:600;">&#x1F525; Burn Reserve</span>
             <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(255,69,0,0.15);color:#b3300b;">Buyback &amp; Burn</span>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
@@ -2358,54 +2361,54 @@ render();
           <div style="font-size:10px;color:#666;margin-top:4px;">Deflationary ERC-20. 2.5% burn + 1% pool fee per transfer. 9 decimals. No mint function.</div>
         </div>
 
-        <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
+        <div data-landing-address style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:13px;font-weight:600;">&#x1F3DB;&#xFE0F; Governance</span>
+            <span data-landing-address-title style="font-size:13px;font-weight:600;">&#x1F3DB;&#xFE0F; Governance</span>
             <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(251,191,36,0.15);color:#92400e;">Timelock</span>
           </div>
           <a href="https://etherscan.io/address/0xc43d48E7FDA576C5022d0670B652A622E8caD041" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#6F655A;text-decoration:none;">0xc43d48E7...E8caD041</a>
           <div style="font-size:10px;color:#666;margin-top:4px;">48h timelock for proposals. Owner: TreasurySafe 3-of-5 (can transfer ownership directly, CWA-25). Guardian: TreasurySafe 3-of-5 (cancel only, since 2026-10-03).</div>
         </div>
 
-        <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
+        <div data-landing-address style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:13px;font-weight:600;">&#x1F512; IFRLock</span>
+            <span data-landing-address-title style="font-size:13px;font-weight:600;">&#x1F512; IFRLock</span>
             <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(34,197,94,0.15);color:#166534;">Lock-to-Access</span>
           </div>
           <a href="https://etherscan.io/address/0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#6F655A;text-decoration:none;">0x769928aB...3954Eb</a>
           <div style="font-size:10px;color:#666;margin-top:4px;">Lock IFR tokens to unlock premium access. isLocked(wallet, minAmount) &rarr; stateless verification.</div>
         </div>
 
-        <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
+        <div data-landing-address style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:13px;font-weight:600;">&#x1F504; FeeRouter V1</span>
+            <span data-landing-address-title style="font-size:13px;font-weight:600;">&#x1F504; FeeRouter V1</span>
             <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(251,191,36,0.15);color:#92400e;">Fee Splitter</span>
           </div>
           <a href="https://etherscan.io/address/0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#6F655A;text-decoration:none;">0x4807B77B...580C60a</a>
           <div style="font-size:10px;color:#666;margin-top:4px;">Swap fee router: its ETH protocol fee goes to BuybackController. Received the 1% IFR pool fee until Proposal #21 (05.10.2026). The 734,545.07 IFR held by FeeRouterV1 were recovered to the Treasury Safe by the governed CWA-02 batch (07.10.2026); FeeRouterV1 holds 0 IFR and still has no IFR withdrawal function.</div>
         </div>
 
-        <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
+        <div data-landing-address style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:13px;font-weight:600;">&#x1F4DD; BuilderRegistry</span>
+            <span data-landing-address-title style="font-size:13px;font-weight:600;">&#x1F4DD; BuilderRegistry</span>
             <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(168,85,247,0.15);color:#7e22ce;">Registry</span>
           </div>
           <a href="https://etherscan.io/address/0xdfe6636DA47F8949330697e1dC5391267CEf0EE3" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#6F655A;text-decoration:none;">0xdfe6636D...CEf0EE3</a>
           <div style="font-size:10px;color:#666;margin-top:4px;">On-chain registry of approved Builders. Governance-controlled.</div>
         </div>
 
-        <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
+        <div data-landing-address style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:13px;font-weight:600;">&#x1F4A0; CommitmentVault</span>
+            <span data-landing-address-title style="font-size:13px;font-weight:600;">&#x1F4A0; CommitmentVault</span>
             <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(59,130,246,0.15);color:#1d4ed8;">Phase 3</span>
           </div>
           <a href="https://etherscan.io/address/0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#6F655A;text-decoration:none;">0x0719d9eb...C4F73d3</a>
           <div style="font-size:10px;color:#666;margin-top:4px;">Conditional IFR tranches: time, price, OR or AND. The owner can unlock while the condition is met; after a successful <code>markConditionMet</code>, anyone may complete the unlock after 30 days and tokens always return to the owner.</div>
         </div>
 
-        <div style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
+        <div data-landing-address style="background:#111113;border:1px solid #222225;border-radius:8px;padding:14px 16px;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <span style="font-size:13px;font-weight:600;">&#x1F4B3; LendingVault</span>
+            <span data-landing-address-title style="font-size:13px;font-weight:600;">&#x1F4B3; LendingVault</span>
             <span style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(59,130,246,0.15);color:#1d4ed8;">Phase 3</span>
           </div>
           <a href="https://etherscan.io/address/0x974305Ab0EC905172e697271C3d7d385194EB9DF" target="_blank" rel="noopener" style="font-size:11px;font-family:monospace;color:#6F655A;text-decoration:none;">0x974305Ab...94EB9DF</a>
@@ -3097,7 +3100,7 @@ if (isLocked) {
   <span id="dao-governance" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);"></span>
   <div class="container">
     <div class="reveal" style="text-align:center;margin-bottom:60px;">
-      <div style="display:inline-block;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.3);border-radius:20px;padding:6px 16px;font-size:0.8rem;color:#b3300b;font-weight:600;letter-spacing:0.05em;margin-bottom:16px;">PHASE 4 &mdash; DAO GOVERNANCE</div>
+      <div data-landing-label style="display:inline-block;background:rgba(249,115,22,0.1);border:1px solid rgba(249,115,22,0.3);border-radius:20px;padding:6px 16px;font-size:0.8rem;color:#b3300b;font-weight:600;letter-spacing:0.05em;margin-bottom:16px;">PHASE 4 &mdash; DAO GOVERNANCE</div>
       <h2 class="section-title">Two-Chamber Governance</h2>
       <p class="section-desc" style="max-width:600px;margin:0 auto;">Planned Phase 4 architecture, not a live ballot system. Voting weights and fees remain draft choices. Current execution stays with Safe and the Governance timelock.</p>
       <p><a href="wiki/governance.html#council-agenda">Current Council agenda</a> &middot; <a href="wiki/governance.html#council-privacy">Planned voting modes and privacy limits</a></p>
@@ -3225,120 +3228,120 @@ if (isLocked) {
           <button class="copy-btn" data-addr="0x77e99917Eca8539c62F509ED1193ac36580A6e7B" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
-      <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">LiquidityReserve</span></div>
+      <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">LiquidityReserve</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0xdc0309804803b3A105154f6073061E3185018f64</code>
           <button class="copy-btn" data-addr="0xdc0309804803b3A105154f6073061E3185018f64" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
-      <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">Vesting</span></div>
+      <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">Vesting</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271</code>
           <button class="copy-btn" data-addr="0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
-      <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">BuybackVault (legacy, dormant)</span></div>
+      <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">BuybackVault (legacy, dormant)</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x670D293e3D65f96171c10DdC8d88B96b0570F812</code>
           <button class="copy-btn" data-addr="0x670D293e3D65f96171c10DdC8d88B96b0570F812" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
-      <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">BurnReserve</span></div>
+      <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">BurnReserve</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0xaA1496133B6c274190A2113410B501C5802b6fCF</code>
           <button class="copy-btn" data-addr="0xaA1496133B6c274190A2113410B501C5802b6fCF" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
-      <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">Governance</span></div>
+      <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">Governance</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0xc43d48E7FDA576C5022d0670B652A622E8caD041</code>
           <button class="copy-btn" data-addr="0xc43d48E7FDA576C5022d0670B652A622E8caD041" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
-      <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">IFRLock</span></div>
+      <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">IFRLock</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb</code>
           <button class="copy-btn" data-addr="0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
-      <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">PartnerVault</span></div>
+      <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">PartnerVault</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D</code>
           <button class="copy-btn" data-addr="0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
-      <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">FeeRouterV1</span></div>
+      <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">FeeRouterV1</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a</code>
           <button class="copy-btn" data-addr="0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
-      <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">BootstrapVaultV3</span></div>
+      <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">BootstrapVaultV3</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141</code>
           <button class="copy-btn" data-addr="0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
-      <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">BuilderRegistry</span></div>
+      <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">BuilderRegistry</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0xdfe6636DA47F8949330697e1dC5391267CEf0EE3</code>
           <button class="copy-btn" data-addr="0xdfe6636DA47F8949330697e1dC5391267CEf0EE3" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
-      <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">CommitmentVault (V1, legacy)</span></div>
+      <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">CommitmentVault (V1, legacy)</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3</code>
           <button class="copy-btn" data-addr="0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
-      <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">LendingVault</span></div>
+      <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">LendingVault</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x974305Ab0EC905172e697271C3d7d385194EB9DF</code>
           <button class="copy-btn" data-addr="0x974305Ab0EC905172e697271C3d7d385194EB9DF" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
-      <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">BuybackController</span></div>
+      <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">BuybackController</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c</code>
           <button class="copy-btn" data-addr="0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
-      <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">CommitmentVault V2</span></div>
+      <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">CommitmentVault V2</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F</code>
           <button class="copy-btn" data-addr="0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
-      <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">Treasury Safe (Gnosis)</span></div>
+      <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">Treasury Safe (Gnosis)</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b</code>
           <button class="copy-btn" data-addr="0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
-      <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">Community Safe (Gnosis)</span></div>
+      <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">Community Safe (Gnosis)</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0xaC5687547B2B21d80F8fd345B51e608d476667C7</code>
           <button class="copy-btn" data-addr="0xaC5687547B2B21d80F8fd345B51e608d476667C7" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
-      <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">LP Reserve Safe (Gnosis)</span></div>
+      <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">LP Reserve Safe (Gnosis)</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x5D93E7919a71d725054e31017eCA86B026F86C04</code>
           <button class="copy-btn" data-addr="0x5D93E7919a71d725054e31017eCA86B026F86C04" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
@@ -3346,7 +3349,7 @@ if (isLocked) {
       </div>
       <div style="margin-top:12px;font-size:13px;color:var(--text-muted);border-top:1px solid var(--border);padding-top:10px;line-height:1.8;">
         <strong style="color:var(--text);">15 deployed contracts + 3 Gnosis Safes = 18 on-chain components</strong><br>
-        <span style="display:inline-block;background:rgba(34,197,94,0.15);color:#166534;font-size:11px;padding:1px 6px;border-radius:4px;margin-right:4px;">live</span> Uniswap V2 LP Pair &mdash; <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="color:#166534;word-break:break-all;">0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</a><br>
+        <div data-landing-address><span data-landing-address-title><span style="display:inline-block;background:rgba(34,197,94,0.15);color:#166534;font-size:11px;padding:1px 6px;border-radius:4px;margin-right:4px;">live</span> Uniswap V2 LP Pair</span> &mdash; <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="color:#166534;word-break:break-all;">0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</a></div>
         <span style="display:inline-block;background:rgba(107,114,128,0.2);color:#4b5563;font-size:11px;padding:1px 6px;border-radius:4px;margin-right:4px;">Phase 4</span> RatVoting.sol &mdash; Council Governance<br>
         <span style="display:inline-block;background:rgba(107,114,128,0.2);color:#4b5563;font-size:11px;padding:1px 6px;border-radius:4px;margin-right:4px;">Phase 4</span> ForumVoting.sol &mdash; Community Governance<br>
         <span style="display:inline-block;background:rgba(107,114,128,0.2);color:#4b5563;font-size:11px;padding:1px 6px;border-radius:4px;margin-right:4px;">Phase 4</span> IFRSpamProtection.sol &mdash; Proposal Spam Protection
