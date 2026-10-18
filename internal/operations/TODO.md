@@ -1,5 +1,5 @@
 # IFR Protocol — Developer TODO List
-> Last updated: 2026-09-06 | Branch: main
+> Last updated: 2026-10-18 | Branch: main
 
 ---
 
@@ -105,6 +105,19 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] Protocol Plan wiki page created (26 pages) ✅
 
 ## CURRENT WATCHLIST — verified 2026-09-06
+
+- [ ] LP Reserve Safe fee exemption (CWA-17) — updated 2026-10-18
+      Proposal text prepared and sent to the TreasurySafe signers. Not yet
+      submitted on-chain (Governance proposalCount still 24). Next: Safe 3-of-5
+      submits `propose`, 48-hour delay, then 3-of-5 `execute`; verify on-chain.
+- [ ] Sepolia Forum ballot FB-SEP-0001 closes 2026-10-19 10:00 UTC
+      Then `npm run forum:tally`, commit `forum-results/FB-SEP-0001.json` via PR,
+      release the Telegram bot through the gate.
+- [ ] V2 activation (GovernanceV2, LendingVaultV2, CommitmentVaultV2) — deferred
+      Release candidates ready and tested, not deployed. Activation only via
+      Governance vote + TreasurySafe signers (docs/V2_ACTIVATION_RUNBOOK.md).
+      External audit deferred until IFR has a stable exchange rate and the
+      signers approve a budget. Lending also needs the production oracle adapter.
 
 - [ ] LiquidityReserve post-lock governance decision
       Mainnet block 25918433: the initial timelock has ended.
@@ -261,6 +274,12 @@ On errors: fix immediately, commit with `seo:` prefix.
       exist; then add global liquidator discovery and alerting.
 
 ## RECENTLY COMPLETED
+
+- [x] V2 contracts ratified and marked release-ready — 2026-10-18 (#320, #321, this PR)
+      Owner accepted all 12 open-question defaults; wiki shows "V2 - ready, not yet activated".
+- [x] Benefits Model B period-dedup migration applied in production — 2026-10-18 (#315)
+- [x] AI Copilot web chat retired; chat-free data API live — 2026-10-17 (#313, #314, #316)
+      `POST /api/chat` returns 410; data routes unchanged; Telegram `/ask` kept.
 
 - [x] Governance proposals #18-#21 executed and documented — 2026-10-05 (PR #197, T-258)
       #18 voucher signer (block 26124623), #19/#20 guardians to Treasury Safe (block 26124647),

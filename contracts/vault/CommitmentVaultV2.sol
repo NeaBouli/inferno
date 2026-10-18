@@ -16,10 +16,11 @@ interface ICommitmentFeeExemption {
     function feeExempt(address account) external view returns (bool exempt);
 }
 
-/// @title CommitmentVaultV2 (DRAFT, time-only)
+/// @title CommitmentVaultV2 (release candidate, time-only)
 /// @notice New opt-in time custody only; never repairs or accesses V1/deployed V2 custody.
-/// @dev The October 17 specification reserves prices for a separate PriceLockVault.
-///      Draft entry ceilings/durations require PL-C05/06 approval before deployment.
+/// @dev Release candidate, ratified 2026-10-18; not deployed; not externally audited;
+///      activation only via Governance + Treasury Safe. Entry bounds and receipt policy are ratified.
+///      The specification reserves prices for a separate PriceLockVault.
 ///      Governance must own this contract through its own public timelock. No proxy,
 ///      oracle, guardian, rescue, sweep, fee, or arbitrary-call authority exists.
 contract CommitmentVaultV2 is Ownable2Step, ReentrancyGuard {
@@ -29,11 +30,11 @@ contract CommitmentVaultV2 is Ownable2Step, ReentrancyGuard {
     uint256 public constant VERSION = 2;
     /// @notice IFR base units per full token; all accounting is integer-only.
     uint256 public constant IFR_UNIT = 1e9;
-    /// @notice Proposed minimum time commitment, in seconds (PL-C05).
+    /// @notice Ratified minimum time commitment, in seconds (PL-C05).
     uint256 public constant MIN_LOCK_DURATION = 1 days;
     /// @notice Maximum time commitment, in seconds; no administrator can extend it.
     uint256 public constant MAX_LOCK_DURATION = 1461 days;
-    /// @notice Proposed concurrent wallet limit; terminal release frees capacity.
+    /// @notice Ratified concurrent wallet limit; terminal release frees capacity.
     uint256 public constant MAX_ACTIVE_LOCKS = 50;
     /// @notice Maximum page/maintenance work per call, bounding loops independently of history.
     uint256 public constant MAX_BATCH = 50;
@@ -41,13 +42,13 @@ contract CommitmentVaultV2 is Ownable2Step, ReentrancyGuard {
     uint256 public constant CONFIGURATION_DELAY = 48 hours;
     /// @notice Exact rolling gross-entry interval, in seconds; releases never refund it.
     uint256 public constant ENTRY_WINDOW = 24 hours;
-    /// @notice Proposed maximum credited/requested IFR per lock, in base units (PL-C05).
+    /// @notice Ratified maximum credited/requested IFR per lock, in base units (PL-C05).
     uint256 public constant MAX_PER_LOCK = 100_000 * IFR_UNIT;
-    /// @notice Proposed maximum outstanding IFR per wallet, in base units (PL-C05).
+    /// @notice Ratified maximum outstanding IFR per wallet, in base units (PL-C05).
     uint256 public constant MAX_PER_WALLET = 250_000 * IFR_UNIT;
-    /// @notice Proposed maximum outstanding IFR globally, in base units (PL-C05).
+    /// @notice Ratified maximum outstanding IFR globally, in base units (PL-C05).
     uint256 public constant MAX_TOTAL = 1_000_000 * IFR_UNIT;
-    /// @notice Proposed maximum gross entries in any rolling day, in base units (PL-C05).
+    /// @notice Ratified maximum gross entries in any rolling day, in base units (PL-C05).
     uint256 public constant MAX_DAILY = 100_000 * IFR_UNIT;
 
     /// @notice Legacy numeric condition identifiers are accepted only to reject price requests explicitly.

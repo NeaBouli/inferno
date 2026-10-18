@@ -1,7 +1,20 @@
 # Governance V2 Specification
 
-**Status:** specification for Council review, 17 October 2026. No implementation,
-deployment, ownership transfer or activation is authorized by this document.
+**Status:** Release candidate - ready, not activated. Ratified 2026-10-18.
+Built and tested locally; not deployed as this release candidate and not externally
+audited. Activation requires a Governance vote and Treasury Safe signer approval.
+Existing deployed versions and custody remain unchanged.
+
+## Remaining before activation
+
+- Governance proposal for the exact release, wiring and activation scope.
+- Treasury Safe signer approval; independently verify owner/guardian identities and thresholds.
+- Reviewed constructor arguments, build hashes and the applicable evidence gates below.
+- External audit: pending funding, deferred until the token has a stable price and
+  funding is available. Disclose this deferral in the proposal; never claim audited.
+
+Follow [V2_ACTIVATION_RUNBOOK.md](../V2_ACTIVATION_RUNBOOK.md). Source readiness is
+not activation authorization or evidence of a live deployment.
 
 ## Authority, scope and evidence
 
@@ -9,10 +22,11 @@ Gio's decisions of 17 October 2026 authorize planning a Governance replacement a
 BuybackVault redeploy, require Ownable2Step-style ownership in every future
 contract, and select a separate cancel-only guardian Safe with a 2-of-3 threshold.
 Deployment and migration require later action-specific Council decisions.
-Numerical design recommendations below still need Council ratification.
+Numerical defaults were ratified by the owner on 18 October 2026; exact deployment
+identities, constructor arguments and migration actions still require approval.
 
 This is a replacement timelock, not a token-voting system. The Treasury Safe
-remains the proposed proposer/owner; Forum signals and Council decisions do not
+remains the ratified proposer/owner; Forum signals and Council decisions do not
 themselves execute transactions. No token migration, fee change, LendingVault
 activation, price-lock activation or BuybackController redeploy is included.
 
@@ -65,10 +79,10 @@ control path has moved; public descriptions must retain those exceptions.
 | Initial owner/proposer | Treasury Safe `0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b`, documented 3-of-5; verify actual owners, threshold and modules |
 | Guardian | New, separately deployed [Guardian Safe](GUARDIAN_SAFE_PLAN.md), exactly 2-of-3 |
 | Executor | Any account, including the Safe, an independent keeper or a user |
-| `MIN_DELAY` | Immutable 48 hours, recommended for ratification; never reducible by any role |
-| `MAX_DELAY` | Immutable 30 days, proposed retention of the existing ceiling |
-| Initial `delay` | 48 hours, subject to ratification and the hard floor |
-| `GRACE_PERIOD` | Immutable 7 days after ETA, recommendation requiring ratification |
+| `MIN_DELAY` | Immutable 48 hours, ratified 2026-10-18; never reducible by any role |
+| `MAX_DELAY` | Immutable 30 days, ratified retention of the existing ceiling |
+| Initial `delay` | 48 hours, ratified; subject to the hard floor |
+| `GRACE_PERIOD` | Immutable 7 days after ETA, ratified 2026-10-18 |
 
 Constructor validation must reject zero owner/guardian, invalid delay bounds and
 an owner equal to the guardian. The deployment acceptance check must establish
@@ -278,14 +292,24 @@ merely the existing [G1 tests](../../test/Governance.test.js).
   stale queue cancellation, partial migration, reverse handoffs and new-vault T2.
 - Rehearse approved equivalents on Sepolia with both Safe thresholds, then
   archive build inputs, receipts, timestamps, role reads and negative probes.
-- Obtain independent contract and migration review before any Council deployment
-  decision. A specification or source-only test does not close CWA-25/26 or JUL-23.
+- Obtain contract and migration review before any Council deployment
+  decision; external audit is deferred pending funding and must be disclosed.
+  A specification or source-only test does not close CWA-25/26 or JUL-23.
 
-## Council decisions still required
+## Ratified policy and remaining operational decisions
 
-Ratify the 48-hour floor, 30-day ceiling and seven-day grace period; approve the
+The 48-hour floor, 30-day ceiling and seven-day grace period are ratified. Approve the
 legacy T1 exceptions and FeeRouter bridge or a separately specified FeeRouter
 replacement; select guardian signers and a cancellation-censorship recovery
 policy; approve deployment identities, rehearsal evidence and each migration
 step. The [BuybackVault specification](BUYBACKVAULT_REDEPLOY_SPEC.md) has separate
 funding and activation decisions.
+
+## Expired-proposal re-submission policy
+
+An expired action may be submitted through `propose(target, data)` as a new ID
+with a fresh full delay and execution window. The proposal dossier must reference
+the expired `(chainId, controller, id)` and operation hash and explain the renewed
+review. This reference is off-chain policy, not an extra target-calldata field or
+a revival of the old ID. Existing lifecycle tests cover fresh IDs, timing and
+permanent expiry; no ABI or execution-semantics change is required.

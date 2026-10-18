@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { ethers } from "./helpers/hardhat.js";
 
-describe("CommitmentVaultV2 DRAFT (time-only specification boundary)", function () {
+describe("CommitmentVaultV2 release candidate (time-only specification boundary)", function () {
   const U = 10n ** 9n;
   const DAY = 86400n;
   const MAX_DURATION = 1461n * DAY;
@@ -71,17 +71,17 @@ describe("CommitmentVaultV2 DRAFT (time-only specification boundary)", function 
   });
 
   it("CV2-T01 constructs with the exact token/owner, disabled entries and zero ceilings", async function () {
-    const draft = await deployVault();
-    expect(await draft.ifrToken()).to.equal(token.target);
-    expect(await draft.owner()).to.equal(owner.address);
-    expect(await draft.pendingOwner()).to.equal(ethers.ZeroAddress);
-    expect(await draft.depositsEnabled()).to.equal(false);
-    expect(await draft.entryLimits()).to.deep.equal([0n, 0n, 0n, 0n]);
-    expect(await draft.pendingEntryLimits()).to.deep.equal([0n, 0n, 0n, 0n]);
-    expect(await draft.totalLocked()).to.equal(0n);
-    expect(await draft.configurationEta()).to.equal(0n);
-    expect(await draft.VERSION()).to.equal(2n);
-    expect(await draft.IFR_UNIT()).to.equal(U);
+    const candidate = await deployVault();
+    expect(await candidate.ifrToken()).to.equal(token.target);
+    expect(await candidate.owner()).to.equal(owner.address);
+    expect(await candidate.pendingOwner()).to.equal(ethers.ZeroAddress);
+    expect(await candidate.depositsEnabled()).to.equal(false);
+    expect(await candidate.entryLimits()).to.deep.equal([0n, 0n, 0n, 0n]);
+    expect(await candidate.pendingEntryLimits()).to.deep.equal([0n, 0n, 0n, 0n]);
+    expect(await candidate.totalLocked()).to.equal(0n);
+    expect(await candidate.configurationEta()).to.equal(0n);
+    expect(await candidate.VERSION()).to.equal(2n);
+    expect(await candidate.IFR_UNIT()).to.equal(U);
   });
 
   it("CV2-T02 rejects zero/EOA tokens and a zero initial owner", async function () {
@@ -343,10 +343,10 @@ describe("CommitmentVaultV2 DRAFT (time-only specification boundary)", function 
 
   it("CV2-T24 absent or reverting exemption metadata fails closed for activation and entry", async function () {
     const noGetter = await (await ethers.getContractFactory("MockInfernoToken")).deploy();
-    const draft = await deployVault(noGetter);
-    await draft.queueEntryConfiguration(DEFAULT_LIMITS);
-    await next(await draft.configurationEta());
-    await expect(draft.executeEntryConfiguration(1)).to.be.revertedWithCustomError(draft, "FeeExemptionRequired");
+    const candidate = await deployVault(noGetter);
+    await candidate.queueEntryConfiguration(DEFAULT_LIMITS);
+    await next(await candidate.configurationEta());
+    await expect(candidate.executeEntryConfiguration(1)).to.be.revertedWithCustomError(candidate, "FeeExemptionRequired");
     await useFaultToken();
     await token.setExemption(true, true);
     await expect(lock()).to.be.revertedWithCustomError(vault, "FeeExemptionRequired");

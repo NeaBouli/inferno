@@ -1,14 +1,25 @@
-# LendingVault V2 draft implementation notes
+# LendingVault V2 implementation notes
 
-Source-only draft, 18 October 2026, implementing the vault consumer and accounting
-surface of [LENDINGVAULT_V2_SPEC.md](LENDINGVAULT_V2_SPEC.md). The assignment authorizes
-local code and simulated-chain tests only. LV-C01 through LV-C09 remain OPEN.
-No deployment, network transaction, V1 activation, migration, Safe proposal,
-production address claim or broadcast script is included.
+**Status:** Release candidate - ready, not activated. Ratified 2026-10-18.
+Built and tested locally; not deployed as this release candidate and not externally
+audited. Activation requires a Governance vote and Treasury Safe signer approval.
+Existing deployed versions and custody remain unchanged.
 
-The vault is **not an activation-ready lending system**. The shared cumulative
+## Remaining before activation
+
+- Governance proposal for the exact release, wiring and activation scope.
+- Treasury Safe signer approval; independently verify owner/guardian identities and thresholds.
+- Reviewed constructor arguments, build hashes and the applicable evidence gates below.
+- External audit: pending funding, deferred until the token has a stable price and
+  funding is available. Disclose this deferral in the proposal; never claim audited.
+
+Follow [V2_ACTIVATION_RUNBOOK.md](../V2_ACTIVATION_RUNBOOK.md). Source readiness is
+not activation authorization or evidence of a live deployment.
+
+The vault consumer is a release candidate; **market-priced lending remains
+blocked before activation**. The shared cumulative
 TWAP adapter described in the specification does not exist in this repository.
-`ILendingV2Oracle` defines its draft boundary; the test adapter fabricates
+`ILendingV2Oracle` defines its ratified boundary; the test adapter fabricates
 responses and is explicitly unsuitable for deployment. Adapter implementation,
 independent review, fork evidence and economic research remain prerequisites.
 Existing `PriceLockVault` is not used as a lending price source: only its existing
@@ -28,7 +39,7 @@ pair/factory interfaces are reused.
 - [hardhat.config.js](../../hardhat.config.js): optimizer override only for the new
   vault and its test-helper source, solc 0.8.28, Cancun, 200 runs. Existing compiler
   settings and legacy artifact compilation remain unchanged. Unoptimized V2 was
-  32,921 runtime bytes; the final optimized draft is 21,799 bytes (EIP-170: 24,576).
+  32,921 runtime bytes; the final optimized candidate is 21,799 bytes (EIP-170: 24,576).
   Do not infer a deployment build or verification record from this local check.
 
 ## Requirement traceability
@@ -103,7 +114,7 @@ proved here. `GATE` means future evidence/authorization, not a passing test.
 | Monitoring, ownership alerts, pause runbook | Operations: GATE, no monitoring service requested/added | No operational evidence |
 | Pinned block+hash fork with real swaps, actual exemption governance route, V1 unchanged | Future fork: GATE, no network access/activation authorization | No fork, Sepolia or live-chain attestation claimed |
 | Independent security/oracle/economic review and LV-C01-C09 disposition | Review/owner/Council: GATE | This local implementation and self-review close none of these gates |
-| Separate production approval, exact-head CI, 48h Safe wiring and post-state evidence | Deployment: GATE; no deployment artifacts/scripts or transactions produced | Not performed or authorized |
+| Separate production approval, exact-head CI, 48h Safe wiring and post-state evidence | Deployment: GATE; guarded deployment script added; no transactions produced | Not performed or authorized |
 
 ## Roles and constraints
 
@@ -125,12 +136,12 @@ no subsequent external interaction occurs. ETH recipients are never called durin
 settlement. The WETH route is optional per claim, not an alternative price feed.
 There are no approvals to routers or discretionary admin recovery powers.
 
-## Conservative interpretations and unresolved questions
+## Ratified interpretations and remaining activation evidence
 
 1. **LV-C01 / LV-C06 — product payoff:** fixed ETH default is intentionally
-   non-recourse and can lose the lender IFR exposure. No source code proves
-   Council accepted that option. Proposed 25% buffer, seven-day grace and the
-   no-bounty rule are constants in this draft, not approved production terms.
+   non-recourse and can lose the lender IFR exposure. The owner ratified
+   the 25% buffer, seven-day grace and no-bounty constants on 18 October 2026.
+   Lender disclosure and the economic activation evidence remain required.
 2. **LV-C02 / LV-C03 — shared adapter:** `read(version)` must preserve historical
    versions and return valid only after complete version-specific warm-up.
    Coverage/depth fields summarize every relevant checkpoint and current reserves;
@@ -144,7 +155,8 @@ There are no approvals to routers or discretionary admin recovery powers.
    consumption; fast elapsed time is 30-60 minutes. Slow gap <=1h and fast gap
    <=30m are distinct fields. Both prices must independently satisfy absolute
    Council bounds. Deviation uses slow price as denominator and exact floor
-   comparison for the 20% limit. These stricter interpretations need review.
+   comparison for the 20% limit. These stricter interpretations are ratified;
+   adapter evidence remains required.
 4. **LV-C04 — economics:** `economicCap` is a final explicitly reviewed ceiling
    after applying the proposed 10x cost margin and accounting for external/shared
    product gains, not an estimate of attack cost. The contract cannot establish
@@ -156,7 +168,7 @@ There are no approvals to routers or discretionary admin recovery powers.
    admin adjustable LTV/bonus/grace exist. A changed payoff requires a new design,
    not retroactive mutation. Preserve V1's conservative self-borrow prohibition.
 6. **Quote limits:** spec gives a transaction deadline without a maximum horizon;
-   this draft conservatively limits it to one hour. `minReceived` must be positive;
+   this release candidate conservatively limits it to one hour. `minReceived` must be positive;
    the stronger pilot rule still requires exactly principal IFR. `maxCollateral`
    bounds both required collateral and actual msg.value. No overpayment refund is
    invented: accepted extra ETH is loan collateral and all surplus is credited.
@@ -172,26 +184,26 @@ There are no approvals to routers or discretionary admin recovery powers.
    accepted, but inheritance/timelock semantics cannot be proven by code length.
    Production requires reviewed Ownable2Step governance/guardian controllers and
    demonstrated contract acceptance. Existing repository `Governance` does not
-   automatically become a compliant new two-step controller. No such replacement
-   controller was commissioned by this vault-only task.
+   automatically become a compliant new two-step controller. The separately built
+   GovernanceV2 controller still requires deployment-specific
+   wiring and contract-acceptance rehearsal.
 9. **Ownership cancellation conflict:** standards reject zero nominees whereas the
-   spec permits zero only to cancel a pending transfer. The draft rejects zero in
+   spec permits zero only to cancel a pending transfer. The release candidate rejects zero in
    `transferOwnership` and provides explicit `cancelOwnershipTransfer`, preserving
    the incumbent. Renunciation is disabled even when temporarily empty.
 10. **Timelock lifetime:** spec gives a >=48h delay but no queue expiry. Exact action
     data is public, cancellable and one-use; events explicitly mark no time expiry
     (`expiresAt=0`). Requeueing restarts the delay. Any incident pause/configuration
     changes `pauseNonce` and invalidates old resumptions. Guardian cancellation of
-    governance actions is not granted. Decide queue expiry separately if required.
-11. **LV-C09 — build and verification:** scoped optimizer overrides are necessary
-    to fit EIP-170. The new test file is already included by `test:contracts`'s glob.
-    No deployment build/provenance approval is implied. Mythril's explicit 19-contract
-    list and Slither's existing 23-file expectation were deliberately not updated.
-    Their discovery/count consistency gates now see the draft as an extra contract
-    and will need a separately decided draft-exclusion/release policy; do not present
-    those gates as passing or extend the production audit baseline silently.
+    governance actions is not granted. The owner ratified this no-expiry queue
+    behavior; GovernanceV2 proposal expiry is a separate outer-controller rule.
+11. **LV-C09 — build and verification:** scoped optimizer overrides keep the
+    consumer within EIP-170. Mythril now explicitly includes 22 concrete
+    contracts; Slither discovers 26 non-mock Solidity files with six reviewed
+    baseline signals. Configuration self-tests do not establish engine-analysis
+    success or external audit coverage. No production provenance approval follows.
 12. **Future evidence:** all specification fork/economic/continuous-liquidity tests,
-    independent review, Council disposition, pinned real-chain manifest, Sepolia
+    review, pinned real-chain manifest, Sepolia
     full-window rehearsal, deployment/activation permission and operational checks
     remain open. A passing mock consumer test is not a substitute for those results.
 
@@ -199,11 +211,12 @@ There are no approvals to routers or discretionary admin recovery powers.
 
 See the local-only report at `.fleet/reports/lendingvault-v2-20261018.md`
 for exact commands, results, sandbox cache workaround, complete-suite outcome and
-local evidence. No benefits surface changed, so the benefits release preflight
-and frontend visual gate are outside this contract-only task.
+local evidence for the original implementation. The release preparation also
+adds a deployment dry-run and static wiki notices; Benefits runtime is unchanged.
 
 ## Owner ratification (2026-10-18)
 
-The owner accepted every conservative interpretation and open-question default listed
-above as draft policy. This ratifies draft behavior only; activation still requires an
-audit, the documented evidence gates and a separate owner/Council approval.
+The owner ratified every conservative interpretation and open-question default
+listed above. Activation still requires the applicable evidence gates and a separate
+Governance vote plus Treasury Safe signer approval. External audit is deferred
+pending funding and a stable token price; no audited claim is made.

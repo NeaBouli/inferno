@@ -1,16 +1,28 @@
 # LendingVault V2 Borrowing Specification
 
-**Status:** design draft, 17 October 2026; implementation and activation require
-separate decisions. Scope: CWA-01, CWA-08, JUL-03 and OPS-001.
+**Status:** Release candidate - ready, not activated. Ratified 2026-10-18.
+Built and tested locally; not deployed as this release candidate and not externally
+audited. Activation requires a Governance vote and Treasury Safe signer approval.
+Existing deployed versions and custody remain unchanged.
+
+## Remaining before activation
+
+- Governance proposal for the exact release, wiring and activation scope.
+- Treasury Safe signer approval; independently verify owner/guardian identities and thresholds.
+- Reviewed constructor arguments, build hashes and the applicable evidence gates below.
+- External audit: pending funding, deferred until the token has a stable price and
+  funding is available. Disclose this deferral in the proposal; never claim audited.
+
+Follow [V2_ACTIVATION_RUNBOOK.md](../V2_ACTIVATION_RUNBOOK.md). Source readiness is
+not activation authorization or evidence of a live deployment.
 
 ## Authority, scope and recommendation
 
-Gio's 17 October 2026 instruction authorizes these design drafts only. It
-reopens design work after the 3 October retirement decision in
+Gio's 18 October 2026 decision ratifies the implementation defaults and local
+release preparation, following the earlier design instruction in
 [decision-register lane 1](../GOVERNANCE_PRODUCT_DECISION_REGISTER.md#lane-1--lendingvault-oracleborrow-activation-and-overdue-loans).
-It does not authorize V1 activation, a new contract, deployment, funding or
-transactions. **Ownable2Step for every admin role is mandatory owner policy**,
-not an open Council choice.
+V1 remains retired. No deployment, funding or activation transaction is authorized.
+**Ownable2Step for every admin role is mandatory owner policy**.
 
 **Recommendation:** develop a separately deployed, capped, non-recourse term
 loan design using a bounded Uniswap V2 TWAP shared with the future price-lock
@@ -22,9 +34,9 @@ price, or silently fall back to a manual price. If a defensible oracle cannot
 be established, defer market-priced borrowing. A no-price fixed-ratio product
 would require its own explicit lender-risk approval (LV-C01).
 
-All numerical settings below are **proposed, Council decision OPEN**, unless
-identified as owner policy or an existing historical decision. They are inputs
-to a review, not safe production values established by this draft.
+The conservative numerical defaults are **ratified 2026-10-18** as implemented.
+They do not establish market safety: the production oracle adapter, economic
+evidence and exact deployment configuration remain activation prerequisites.
 
 ## Evidence and V1 boundary
 
@@ -73,7 +85,7 @@ availability assumption, not proof that a feed can never exist. Feed selection
 must follow [Chainlink's quality guidance](https://docs.chain.link/docs/selecting-data-feeds)
 and [consumer API](https://docs.chain.link/data-feeds/api-reference).
 
-For a manual alternative, the draft consumer limit is one hour from the
+For a manual alternative, the release candidate consumer limit is one hour from the
 **source** timestamp, a maximum 10% change from the last accepted quote, and
 Council-approved absolute price bounds (LV-C02). A quote whose source time
 predates a 48-hour queue would expire before execution. A delegated publisher
@@ -84,7 +96,7 @@ part of the recommended design.
 
 ## Shared TWAP contract and consumer validity
 
-This is a proposed interface contract, not deployed functionality. The
+This is the ratified adapter interface policy, not deployed functionality. The
 adapter returns price, observation start/end, latest observation time,
 configuration version, sampled depth/coverage and a validity reason. Reading
 must not refresh age. Observation recording is permissionless and has no
@@ -100,7 +112,7 @@ authority to write arbitrary prices.
 3. Include counterfactual accrual since the pair's last reserve update, as in
    [Uniswap's oracle library](https://github.com/Uniswap/v2-periphery/blob/master/contracts/libraries/UniswapV2OracleLibrary.sol).
    A quiet pair is not automatically stale if genuine observations continue.
-4. Proposed lending policy: seven-day slow window; boundary observations at
+4. Ratified lending policy: seven-day slow window; boundary observations at
    most one hour outside the desired window; newest checkpoint no older than
    one hour; no checkpoint gap above one hour across the window. Allocate a
    bounded buffer large enough for that coverage, not the existing candidate's
@@ -111,7 +123,7 @@ authority to write arbitrary prices.
    stored checkpoint used for coverage and at consumption. Both floors are
    mandatory for lending. Zero reserves, insufficient depth, missing coverage,
    pair reverts or out-of-range price make the result invalid.
-6. A proposed fast cumulative window of 30-60 actual elapsed minutes must
+6. The ratified fast cumulative window of 30-60 actual elapsed minutes must
    agree with the slow price within 20%; it needs its own retained endpoints
    and a recording cadence of at least every 30 minutes. It is a circuit
    breaker from the same market, not an independent source. Origination uses
@@ -125,8 +137,9 @@ authority to write arbitrary prices.
    with a governance-selected replacement. A failed old adapter leaves
    repayment and the contractual expiry route available.
 
-Items 4-6 and the shared-adapter architecture are OPEN (LV-C02/LV-C03 and
-PL-C02 in the companion draft). Even dense checkpoints do not prove minimum
+The policy in items 4-6 is ratified; implementation and evidence for the shared
+adapter remain open (LV-C02/LV-C03 and PL-C02 in the companion specification).
+Even dense checkpoints do not prove minimum
 liquidity between checkpoints: flash-added depth can satisfy samples. Test
 that attack and require an economic bound or independently verifiable depth
 commitment/second source; otherwise the activation gate fails. A seven-day
@@ -159,21 +172,21 @@ duration and arbitrage. It does not establish a safe IFR borrowing budget.
 Include external economic gains, including price-lock releases, in the
 shared-source attack model. A lock release has no universal ETH value cap.
 
-Proposed pilot caps (LV-C04), all on-chain and checked atomically:
+Ratified pilot ceilings (LV-C04), all on-chain and checked atomically:
 
-| Limit | Draft ceiling and accounting |
+| Limit | Ratified ceiling and accounting |
 | --- | --- |
 | Total outstanding principal | `100,000 * 10^9` IFR; also no more than 10% of current lending principal (`totalAvailable + totalLent`, excluding interest credits and donations). |
 | Per loan / borrower / offer | 10,000 / 20,000 / 25,000 IFR outstanding; borrower maximum two active loans. Address caps are not Sybil protection. |
 | Gross origination rate | 25,000 IFR per rolling 24 hours across all offers; repayment does not restore this budget. |
 | ETH exposure | Sum of each loan's immutable default ETH amount no greater than `min(0.5 ETH, 1% of validated WETH depth)`; do not mark this accounting down with a manipulated price. |
-| Economic ceiling | Maximum realizable attack gain must be below a reviewed lower-bound manipulation cost with a proposed 10x margin. If no defensible positive lower bound exists, cap is zero. |
+| Economic ceiling | Maximum realizable attack gain must be below a reviewed lower-bound manipulation cost with the ratified 10x margin. If no defensible positive lower bound exists, cap is zero. |
 
 Every applicable ceiling must pass. Caps initialize at zero. Principal exits
 outstanding totals only after terminal settlement; fresh loans still consume
 the gross-origination budget. Cap decreases never force a loan closed; cap
 increases and reactivation require the 48-hour governance path. The scenario's
-0.39 ETH depth fails the proposed 50 WETH prerequisite regardless of caps.
+0.39 ETH depth fails the ratified 50 WETH prerequisite regardless of caps.
 
 ## Loan terms, interest and LTV
 
@@ -219,10 +232,10 @@ term interest, not principal alone. Interest is IFR, never an ETH fee.
 | Mature / grace | Debt freezes at `Dmax` at `start + T`. Proposed grace: seven days. Repayment, top-up and valid price liquidation remain possible until `due + grace`; no renewal or admin extension. |
 | Expire / default | At or after `due + grace`, any caller settles without an oracle or an ETH receiver call. Write off outstanding IFR principal to a separate loss counter, reduce lent totals, and credit the lender the immutable default ETH amount (bounded by `C`); credit borrower all surplus. No invented IFR repayment or unreceived interest distribution. |
 
-At origination, proposed contractual default payment is
+At origination, the ratified contractual default payment is
 `E = min(C, ceil(V(Dmax, Pborrow) * 12,500 / 10,000))` (LV-C06). Store `E`;
 later top-ups do not increase it. At default the lender receives `E` and the
-borrower receives `C - E`; no expiry keeper bounty is proposed. Repayment is
+borrower receives `C - E`; no expiry keeper bounty is provided. Repayment is
 accepted only before `due + grace`; expiry is accepted from that exact
 timestamp, so transaction ordering cannot choose different boundary rules.
 Price liquidation is also unavailable from that boundary. All terminal
@@ -231,9 +244,10 @@ paths reject already settled loans.
 This fixed ETH default payment is an explicit non-recourse term, not a promise
 to restore IFR at its future market value. It avoids an outage trapping ETH,
 but gives the borrower an economic default option if IFR appreciates sharply.
-The lender may lose IFR exposure even with excess ETH collateral. Council
-must accept this payoff and its stress results (LV-C06), or keep activation
-blocked and revise the product. Do not conceal that tradeoff with an admin
+The lender may lose IFR exposure even with excess ETH collateral. The owner
+ratified this payoff (LV-C06); the activation proposal must disclose its stress
+results. Activation stays blocked until the economic evidence gates pass.
+Do not conceal that tradeoff with an admin
 price override or silently give the lender all borrower surplus.
 
 V1's pay-caller-without-IFR liquidation is excluded from V2. If nobody is
@@ -356,10 +370,12 @@ Future V2 suites must be added to the contract gate; a skipped fork suite or
 an idle-price fork proving TWAP equals spot does not satisfy manipulation
 analysis. Never broadcast fork impersonations or transactions to Mainnet.
 
-## Open Council decisions and activation gates
+## Ratified policy and activation gates
 
-Every row is **OPEN**. The 17 October design instruction and mandatory
-Ownable2Step standard do not close these decisions.
+The owner ratified the conservative implementation defaults for these design
+rows on 18 October 2026; see the implementation notes. Exact identities, oracle
+delivery, economic evidence and activation authorization remain open. Ratification
+does not claim that the shared production adapter has been implemented.
 
 | ID | Decision requiring a recorded outcome |
 | --- | --- |
@@ -375,7 +391,7 @@ Ownable2Step standard do not close these decisions.
 
 Activation requires all of the following, in order:
 
-1. Council disposition of LV-C01-LV-C09 and reconciliation with lane 2;
+1. Record the ratified defaults for LV-C01-LV-C09 and reconcile with lane 2;
    an approved immutable loan payoff and an exact, bounded parameter manifest.
 2. Implementation authorization, complete lifecycle/invariant/hostile-recipient
    tests and independent contract plus oracle/economic review, including

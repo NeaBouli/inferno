@@ -16,7 +16,7 @@ interface ILendingV2IFR is IERC20Metadata {
     function feeExempt(address account) external view returns (bool);
 }
 
-/// @notice Shared adapter DRAFT boundary. No conforming production adapter is supplied here.
+/// @notice Ratified shared adapter boundary. No conforming production adapter is supplied here.
 /// @dev An implementation must prove cumulative direction, counterfactual accrual, wrap,
 /// retention, all checkpoint depths and coverage; merely returning these fields is insufficient.
 interface ILendingV2Oracle {
@@ -53,9 +53,10 @@ interface ILendingV2WETH is IERC20Metadata {
     function deposit() external payable;
 }
 
-/// @title LendingVaultV2
-/// @notice SOURCE-ONLY DRAFT of LENDINGVAULT_V2_SPEC.md (17 October 2026).
-/// @dev Proposed Council values below are not production approval. Starts paused with zero caps.
+/// @title LendingVaultV2 (release candidate)
+/// @notice Release candidate of LENDINGVAULT_V2_SPEC.md; starts paused with zero caps.
+/// @dev Release candidate, ratified 2026-10-18; not deployed; not externally audited;
+/// activation only via Governance + Treasury Safe. Constants match the ratified defaults.
 /// No production shared oracle, deployment, migration, sweep, manual price or upgrade path is supplied.
 /// Trust: owner must be an approved two-step governance controller; guardian must be a two-step
 /// controller; canonical factory/WETH and a reviewed immutable-version adapter must match a manifest.
@@ -68,23 +69,23 @@ contract LendingVaultV2 is Ownable2Step, ReentrancyGuard {
     uint256 public constant BPS = 10_000;
     /// @notice Mandatory minimum governance delay, seconds.
     uint256 public constant GOVERNANCE_DELAY = 48 hours;
-    /// @notice Proposed term lower bound, seconds.
+    /// @notice Ratified term lower bound, seconds.
     uint256 public constant MIN_TERM = 30 days;
-    /// @notice Proposed term upper bound, seconds.
+    /// @notice Ratified term upper bound, seconds.
     uint256 public constant MAX_TERM = 90 days;
-    /// @notice Proposed oracle-independent grace period, seconds.
+    /// @notice Ratified oracle-independent grace period, seconds.
     uint256 public constant GRACE = 7 days;
-    /// @notice Proposed maximum fixed interest per 30 days, bps.
+    /// @notice Ratified maximum fixed interest per 30 days, bps.
     uint256 public constant MAX_RATE_BPS = 200;
-    /// @notice Proposed initial debt-inclusive LTV, bps; equality passes.
+    /// @notice Ratified initial debt-inclusive LTV, bps; equality passes.
     uint256 public constant INITIAL_LTV_BPS = 3_000;
-    /// @notice Proposed warning threshold, bps; equality warns.
+    /// @notice Ratified warning threshold, bps; equality warns.
     uint256 public constant WARNING_LTV_BPS = 4_000;
-    /// @notice Proposed full-liquidation threshold, bps; equality liquidates.
+    /// @notice Ratified full-liquidation threshold, bps; equality liquidates.
     uint256 public constant LIQUIDATION_LTV_BPS = 5_000;
-    /// @notice Proposed liquidation bonus, bps of current debt value.
+    /// @notice Ratified liquidation bonus, bps of current debt value.
     uint256 public constant BONUS_BPS = 500;
-    /// @notice Proposed default payment multiplier, bps of maximum debt value at origination.
+    /// @notice Ratified default payment multiplier, bps of maximum debt value at origination.
     uint256 public constant DEFAULT_BPS = 12_500;
 
     struct Configuration {

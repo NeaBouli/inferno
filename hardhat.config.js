@@ -80,7 +80,7 @@ export default defineConfig({
       { version: "0.8.20", settings: { evmVersion: "paris" } },
       { version: "0.8.28", settings: { evmVersion: "cancun" } },
     ],
-    // Source-only V2 draft: keep its bytecode within EIP-170 without changing legacy builds.
+    // V2 release candidate: keep its bytecode within EIP-170 without changing legacy builds.
     overrides: {
       "contracts/vault/LendingVaultV2.sol": {
         version: "0.8.28",

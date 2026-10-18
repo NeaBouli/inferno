@@ -7,7 +7,7 @@ const GRACE = 7n * 86400n;
 const S = { Unset: 0n, Pending: 1n, Ready: 2n, Executed: 3n, Cancelled: 4n, Expired: 5n };
 const abi = ethers.AbiCoder.defaultAbiCoder();
 
-describe("GovernanceV2 DRAFT", function () {
+describe("GovernanceV2 release candidate", function () {
   let deployer, owner, guardian, user, candidate, other, replacementGuardian, pool;
   let gov, target, factory;
 

@@ -1,7 +1,20 @@
-# CommitmentVaultV2 draft implementation notes
+# CommitmentVaultV2 implementation notes
 
-Date: 18 October 2026. **Local draft only. No deployment, activation, broadcast,
-funding, compensation or change to an existing production contract.**
+**Status:** Release candidate - ready, not activated. Ratified 2026-10-18.
+Built and tested locally; not deployed as this release candidate and not externally
+audited. Activation requires a Governance vote and Treasury Safe signer approval.
+Existing deployed versions and custody remain unchanged.
+
+## Remaining before activation
+
+- Governance proposal for the exact release, wiring and activation scope.
+- Treasury Safe signer approval; independently verify owner/guardian identities and thresholds.
+- Reviewed constructor arguments, build hashes and the applicable evidence gates below.
+- External audit: pending funding, deferred until the token has a stable price and
+  funding is available. Disclose this deferral in the proposal; never claim audited.
+
+Follow [V2_ACTIVATION_RUNBOOK.md](../V2_ACTIVATION_RUNBOOK.md). Source readiness is
+not activation authorization or evidence of a live deployment.
 
 ## Scope and interpretation
 
@@ -13,17 +26,15 @@ records Option B as the chosen option; its earlier Option A example is not an
 instruction to reactivate price enums in CommitmentVaultV2.
 
 Accordingly, [CommitmentVaultV2.sol](../../contracts/vault/CommitmentVaultV2.sol)
-implements a new, bounded **time-only draft**. It does not implement the price
+implements a new, bounded **time-only release candidate**. It does not implement the price
 successor described elsewhere in the specification. In particular, no stub
 oracle, permissive readiness flag, discretionary price setter or placeholder
 incident predicate has been introduced. The full price-successor acceptance
-plan remains outstanding. If the task name intended that successor rather
-than this time-only contract, PL-C01 must reconcile the requested name/scope.
+plan remains outstanding. The owner ratified this time-only scope on 18 October 2026.
 
-The proposed conservative entry ceilings, one-day minimum, 50 concurrent locks,
-exact-receipt policy and permissionless deadline return are represented as draft
-behavior for testing, **not decisions closing PL-C05/06**. Applying the price
-product's proposed bounds to this time-only fallback also needs confirmation.
+The conservative entry ceilings, one-day minimum, 50 concurrent locks,
+exact-receipt policy and permissionless deadline return are **ratified defaults**
+for this time-only release candidate (PL-C05/06).
 The contract starts with entry disabled and all four entry caps zero.
 
 ## Implementation and compatibility
@@ -74,7 +85,7 @@ The contract starts with entry disabled and all four entry caps zero.
   A local test uses the existing Governance contract to prove queued contract
   acceptance. That fixture does not certify that legacy Governance meets the
   new successor standards or approve it as the production principal.
-- No dependencies, compiler configuration, existing contracts, scripts,
+- No dependencies, compiler settings, existing contract logic,
   production addresses, UI/eligibility routing or analyzer baselines changed.
   Test-only wrappers reuse the existing taxed and reentrant mocks; their
   unrestricted fault switches are fixtures, not production admin roles.
@@ -98,7 +109,7 @@ existing candidate tests do not prove the new price requirements.
 | Reject unsupported independent TIME_OR_PRICE rather than reinterpret | `lock` rejects every non-TIME_ONLY enum | CV2-T05.2 |
 | Price targets positive, bounded, wei/full IFR; no bps conversion | No price input accepted; multiplier must be zero | CV2-T05.1–3, CV2-T06; actual target validation deferred |
 | Nonzero custody amounts | `lock`, `InvalidAmount` | CV2-T17 |
-| Proposed one-day minimum / 1461-day maximum | `MIN_LOCK_DURATION`, `MAX_LOCK_DURATION`, `lock` | CV2-T18 past/now/minimum-minus-one/minimum/maximum/maximum-plus-one |
+| Ratified one-day minimum / 1461-day maximum | `MIN_LOCK_DURATION`, `MAX_LOCK_DURATION`, `lock` | CV2-T18 past/now/minimum-minus-one/minimum/maximum/maximum-plus-one |
 | At most 50 concurrent locks; terminal slots freed | `activeLockCount`, `MAX_ACTIVE_LOCKS`, `unlock` | CV2-T40 |
 | Store original depositor, credited amount, time and terminal state | `Tranche`, `lock`, `unlock` | CV2-T16, CV2-T20, CV2-T40, CV2-T45 |
 | Immutable adapter/policy versions and user choice for new source | No price source or source replacement exists; successor deferred | CV2-T04; adapter-version tests outstanding |
@@ -146,7 +157,7 @@ existing candidate tests do not prove the new price requirements.
 | Versioned lock, release, pause and ownership events | `Locked`, `Unlocked`, configuration/pause/cancel events, inherited ownership events | CV2-T07–T08, CV2-T11–T12, CV2-T15–T16, CV2-T20, CV2-T25 |
 | Price evidence/release reason/rescue lifecycle events | Only TIME_ONLY deadline release exists; no price/rescue event is fabricated | CV2-T04; successor versioned reasons/evidence deferred |
 | No proxy/arbitrary-call emergency escape | No such method/role | CV2-T04 |
-| Proposed 100k/250k/1M/100k rolling-24h entry ceilings | Constants, `queueEntryConfiguration`, `lock`, exact entry history | CV2-T09, CV2-T33–T36 |
+| Ratified 100k/250k/1M/100k rolling-24h entry ceilings | Constants, `queueEntryConfiguration`, `lock`, exact entry history | CV2-T09, CV2-T33–T36 |
 | Global/gross caps resist wallet/call splitting | Shared `totalLocked`, `unprunedEntryAmount` and entry history | CV2-T35–T37 |
 | Release frees outstanding capacity, never refunds gross-entry spend | `unlock` changes only liability/count, not entry queue | CV2-T35, CV2-T40–T41, CV2-T46 |
 | Inventory/migrate only new opt-in locks, no V1 transfer/approval reuse | `lock` uses caller's approval to this address only | CV2-T31, CV2-T47; live inventory deferred |
@@ -164,7 +175,7 @@ existing candidate tests do not prove the new price requirements.
 | Invariant 10: nine-decimal integer amounts, no ambiguous multiplier | Constructor, `IFR_UNIT`, bigint tests, zero multiplier requirement | CV2-T03, CV2-T06, CV2-T16, CV2-T25–T27 |
 | Future token-order/factory/wrap/stale/gap/manipulation tests | No adapter/pair in this scope | Deferred successor/fork acceptance plan, never counted as passing |
 | Future rescue/guardian/staging/pinned-fork tests | No such roles/powers and no network used | Deferred; no skipped fork test claimed as evidence |
-| Gate order PL-C01–07, review, full-window staging, evidence and separate authorization | Draft cannot establish these operational milestones | All remain open; no rollout scripts created |
+| Gate order PL-C01–07, review, full-window staging, evidence and separate authorization | Source tests cannot establish operational milestones | Ratified time-only policy; deployment dry-run added, activation evidence remains open |
 | Fresh authoritative source/bytecode/owner/exemption/block/hash evidence | Constructor checks local metadata only, not chain identity/provenance | Deferred; no fresh mainnet assertions |
 
 ## Revert and standard coverage
@@ -200,9 +211,9 @@ existing candidate tests do not prove the new price requirements.
 | NatSpec on new public/external methods, constructor, events and security fields | Contract/interface declarations; inherited OpenZeppelin role getters | Source review; compile |
 | No new dependency/configuration/production-source changes | New files only | Working-tree review |
 
-## Open questions and operational blockers
+## Ratified interpretations and operational requirements
 
-1. **PL-C01 / naming:** confirm this time-only `CommitmentVaultV2` deliverable
+1. **PL-C01 / naming:** the owner selected this time-only `CommitmentVaultV2` deliverable
    versus a separately named price successor. The latter is not implemented.
    The already deployed V2 is not replaced and gains no new functions.
 2. **PL-C02:** the shared price adapter interface, source/policy versions,
@@ -214,35 +225,31 @@ existing candidate tests do not prove the new price requirements.
    opt-in, windows, rolling/epoch budgets and cancellation need a separately
    scoped implementation if approved.
 4. **PL-C04:** only the initial nonzero owner and its two-step successor are
-   production roles. Guardian installation/resumption policy is unresolved.
+   production roles. No guardian is installed in the ratified time-only scope.
    Production owner identity and its 48-hour public timelock must be verified
    separately; this constructor does not certify a supplied address as the
    approved controller. No deployer-only bypass exists.
-5. **PL-C05:** confirm applying proposed one-day/four-year durations, 50 active
-   locks, the four entry ceilings and permissionless return to time-only
-   custody. The supplied specification leaves those additions open. Zero
-   initial caps and the disabled initial flag prevent accidental entry.
+5. **PL-C05:** one-day/1461-day durations, 50 active locks, the four entry
+   ceilings and permissionless depositor-only return are ratified for time-only
+   custody. Zero initial caps and the disabled initial flag prevent accidental entry.
 6. **PL-C06:** strict incoming exact receipt is the conservative pilot rule;
    merely crediting a short receipt would contradict it. Exits accept a lower
-   taxed net receipt without gross-up or requiring renewed exemption. Confirm
-   the final policy and disclosures before allowing deposits.
+   taxed net receipt without gross-up or requiring renewed exemption. This policy
+   is ratified; provide the final disclosures before allowing deposits.
 7. **PL-C07 / compatibility:** the old marking/30-day relayer path and unbounded
-   `getTranches` ABI are deliberately absent from this draft. The requested
+   `getTranches` ABI are deliberately absent from this release candidate. The requested
    filename is not permission to route any UI, SDK, Benefits or legacy address
    to it. Legacy inventory and fresh chain evidence remain future work.
 8. **Entry operations:** bounded exact rolling accounting can require separate
-   pruning calls after more than 50 historical entries expire. Confirm this
-   maintenance interface/UX. It cannot prevent deadline exits. Queue expiry
-   was not specified for ordinary entry configuration, so no expiry duration
+   pruning calls after more than 50 historical entries expire. This maintenance
+   interface is ratified; rehearse its UX before activation. It cannot prevent
+   deadline exits. Queue expiry was not specified for ordinary entry configuration, so no expiry duration
    has been invented: it persists until execution, cancellation, replacement,
    pause or accepted ownership handover.
-9. **Production analyzer discovery:** `audit/mythril-config.json` and its tests
-   enumerate 19 production contracts; Slither tests assert 23 Solidity files.
-   Their discovery includes this new draft under `contracts/vault`, so scope
-   checks now see 20/24 and fail. Per task instruction, neither count nor
-   analyzer configuration was changed and the draft was not added to either
-   approved production scope. This must be resolved separately before a
-   production CI/merge decision. No Slither/Mythril security analysis was run.
+9. **Analyzer configuration:** Mythril includes 22 concrete contracts and
+   Slither discovers 26 non-mock Solidity files, including all three release
+   candidates. Six reviewed Slither signals remain baselined. Their configuration
+   self-tests are not engine analysis or an external audit; no suppression is added.
 10. **Release evidence:** no pinned fork, Sepolia, live metadata, full-window
     price rehearsal, independent review or economic audit was performed.
     Deterministic time-only tests do not satisfy the successor activation gates.
@@ -253,6 +260,7 @@ results and the sandbox-only compiler-cache workaround.
 
 ## Owner ratification (2026-10-18)
 
-The owner accepted every conservative interpretation and open-question default listed
-above as draft policy. This ratifies draft behavior only; activation still requires an
-audit, the documented evidence gates and a separate owner/Council approval.
+The owner ratified every conservative interpretation and open-question default
+listed above. Activation still requires the applicable evidence gates and a separate
+Governance vote plus Treasury Safe signer approval. External audit is deferred
+pending funding and a stable token price; no audited claim is made.
