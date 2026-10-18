@@ -4,6 +4,7 @@
 // All network access is intercepted: RPC and copilot-api answers below are
 // explicit test fixtures used to verify the mapping, never current chain facts.
 const { test, expect } = require("@playwright/test");
+const { expandLandingSections } = require("./helpers/landing-collapse");
 const { ethers } = require("ethers");
 
 const RPC_URL = "https://ethereum-rpc.publicnode.com/";
@@ -75,6 +76,7 @@ async function answerProxy(page) {
 
 async function openTransparency(page) {
   await page.goto("/");
+  await expandLandingSections(page, "onchain-transparency");
   const section = page.locator("#onchain-transparency");
   await section.scrollIntoViewIfNeeded();
   return section;
@@ -123,6 +125,35 @@ test("cards render live fixture reads with precise labels and last-updated time"
     await expect(card(page, key).locator("[data-transparency-status]")).toHaveText(/^Live — updated \d{2}:\d{2}:\d{2}$/);
     await expect(card(page, key)).toHaveAttribute("aria-busy", "false");
   }
+});
+
+test("hidden transparency widgets refresh and show the latest fixture after expansion", async ({ page }) => {
+  await page.clock.install();
+  await blockNetwork(page);
+  await answerProxy(page);
+  let calls = LIVE_FIXTURE;
+  await page.route(RPC_URL, route => answerRpc(calls)(route));
+  await page.goto("/");
+  const toggle = page.locator("#onchain-transparency > .landing-collapse-heading > button");
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  // The always-open flow starts the shared live reads while transparency stays collapsed.
+  await page.locator("#token-flow").scrollIntoViewIfNeeded();
+  await expect(card(page, "commitment")).toHaveAttribute("data-state", "live");
+  await expect(card(page, "commitment")).toBeHidden();
+  await expect(card(page, "commitment").locator("[data-transparency-value]")).toHaveText("21.534M IFR");
+  calls = fixtureCalls({
+    allocation: 150_000_000n * 10n ** 9n,
+    vested: 0n,
+    released: 0n,
+    schedule: [1772670647n, 31536000n, 126144000n],
+    totalLocked: CV01_LOST_RAW + 10_000_000n * 10n ** 9n,
+  });
+  await page.clock.fastForward(61000);
+  await expect(card(page, "commitment").locator("[data-transparency-value]")).toHaveText("10.000M IFR");
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await expandLandingSections(page, "onchain-transparency");
+  await expect(card(page, "commitment")).toBeVisible();
+  await expect(card(page, "commitment").locator("[data-transparency-value]")).toHaveText("10.000M IFR");
 });
 
 test("bigint formatting never rounds up through Number", async ({ page }) => {

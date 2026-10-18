@@ -3,6 +3,7 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import assert from 'node:assert/strict';
+import { expandLandingSections } from '../tests/browser/helpers/landing-collapse.js';
 const root = path.resolve('docs');
 const server = createServer(async (req, res) => {
   const file = path.resolve(root, '.' + new URL(req.url, 'http://localhost').pathname);
@@ -159,6 +160,7 @@ try {
       }` }));
     await page.goto(`http://127.0.0.1:${server.address().port}/index.html`);
     const ref = page.locator('#trade-impact');
+    await expandLandingSections(page, 'about');
     const live = () => page.waitForFunction(() => document.querySelector('#trade-impact').dataset.state === 'live');
     const closed = async label => {
       await page.waitForFunction(() => document.querySelector('#trade-impact').dataset.state === 'unavailable');
@@ -295,6 +297,7 @@ try {
     // Landing reference over the same public RPC: reserves and Chainlink ETH/USD from one block.
     const landingLive = await browser.newPage();
     await landingLive.goto(`http://127.0.0.1:${server.address().port}/index.html`);
+    await expandLandingSections(landingLive, 'about');
     await landingLive.waitForFunction(() => document.querySelector('#trade-impact').dataset.state === 'live', undefined, { timeout: 25000 });
     assert.match(await landingLive.locator('#trade-impact [data-ceiling-usd]').textContent(), /^≈ \$[\d,]+\.\d{2}$/);
     console.log('PASS live landing trade-impact', await landingLive.locator('#trade-impact [data-ceiling-eth]').textContent(), await landingLive.locator('#trade-impact [data-ceiling-usd]').textContent(), await landingLive.locator('#trade-impact [data-reference-block]').textContent());

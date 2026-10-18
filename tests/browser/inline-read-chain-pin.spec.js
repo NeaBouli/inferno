@@ -4,6 +4,7 @@
 // receive a data request, and no live value may render from it. All RPC answers below are
 // explicit fixtures, never current chain facts; every other external request is aborted.
 const { test, expect } = require("@playwright/test");
+const { expandLandingSections } = require("./helpers/landing-collapse");
 const { ethers } = require("ethers");
 
 test.describe.configure({ timeout: 90000 });
@@ -81,6 +82,7 @@ test.describe("wrong-chain endpoint (0x5) yields no data reads and no live value
   test("landing CommitmentVault reader", async ({ page }) => {
     const methods = await mockRpc(page, "0x5");
     await page.goto("/");
+    await expandLandingSections(page, "onchain-transparency");
     await card(page, "commitment").scrollIntoViewIfNeeded();
     await expectNoDataReads(page, methods);
     await expect(card(page, "commitment")).toHaveAttribute("data-state", "unavailable", { timeout: 30000 });
@@ -146,6 +148,7 @@ test.describe("Mainnet endpoint (0x1) renders the live fixture state", () => {
   test("landing CommitmentVault reader", async ({ page }) => {
     await mockRpc(page, "0x1");
     await page.goto("/");
+    await expandLandingSections(page, "onchain-transparency");
     await card(page, "commitment").scrollIntoViewIfNeeded();
     // T-262 D2: the card shows totalLocked() minus CV-01 (47.952M - 26.418M).
     await expect(card(page, "commitment").locator("[data-transparency-value]")).toHaveText("21.534M IFR", { timeout: 30000 });

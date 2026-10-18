@@ -6,6 +6,7 @@
 // - The Dante quote carries a DOCS button to the Wiki start page.
 // All network access is intercepted: the RPC and copilot-api answers are test fixtures, not chain facts.
 const { test, expect } = require("@playwright/test");
+const { expandLandingSections, expandLandingAddresses } = require("./helpers/landing-collapse");
 const { ethers } = require("ethers");
 
 test.describe.configure({ timeout: 60000 });
@@ -104,6 +105,7 @@ async function answerProxy(page, balanceOverrides = {}) {
 
 async function openLegend(page) {
   await page.goto("/");
+  await expandLandingSections(page, "tokenomics");
   await page.locator("#live-distribution").scrollIntoViewIfNeeded();
   return page.locator("#dist-legend");
 }
@@ -122,6 +124,7 @@ test("legend: an empty BurnReserve after executed buybacks shows the live histor
   await expect(legend.locator('[data-dist-cat="buyback"]')).toHaveCount(0);
   await expect(legend).not.toContainText("Buyback Vault");
   await expect(page.locator('[data-live-key="card-buyback"]')).toHaveCount(0);
+  await expandLandingAddresses(page, '[data-live-key="card-burnres"]');
   await expect(page.locator('[data-live-key="card-burnres"]')).toHaveText("0 IFR held · buybacks executed: 3 · burned via reserve: 1.5M IFR");
   await expect(page.locator('#token-flow [data-live-key="flow-burnres"]')).toHaveText("0 IFR · 3 buybacks");
 });
@@ -274,6 +277,7 @@ for (const width of [375, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await blockNetwork(page);
     await page.goto("/");
+    await expandLandingSections(page, "about");
     const button = page.locator(".dante-quote a[data-docs-button]");
     await button.scrollIntoViewIfNeeded();
     await expect(button).toBeVisible();

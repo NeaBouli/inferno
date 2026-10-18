@@ -5,6 +5,7 @@
 // that still adds it may change the figure, and it never renders 0 or "Unavailable". All network access is
 // intercepted; values are fixtures pinned to Mainnet block 26151369 where stated.
 const { test, expect } = require("@playwright/test");
+const { expandLandingSections, expandLandingAddresses } = require("./helpers/landing-collapse");
 
 const PROXY = "https://copilot-api.ifrunit.tech";
 test.describe.configure({ timeout: 60000 });
@@ -26,6 +27,7 @@ const lostCard = (page) => page.locator("[data-lost-ifr]");
 // Live reads start only once the transparency section is visible.
 async function openTransparency(page) {
   await page.goto("/");
+  await expandLandingSections(page, "tokenomics", "onchain-transparency");
   await page.locator("#onchain-transparency").scrollIntoViewIfNeeded();
 }
 async function expectCv01Only(page) {
@@ -43,6 +45,7 @@ async function expectCv01Only(page) {
 test("static markup shows CV-01 as the only permanently lost IFR, labelled as not burned", async ({ page }) => {
   await blockNetwork(page);
   await page.goto("/");
+  await expandLandingSections(page, "tokenomics", "onchain-transparency");
   const card = lostCard(page);
   await expect(card).toContainText("Permanently Lost IFR");
   await expect(card).toContainText("not burned");
@@ -83,6 +86,7 @@ for (const [width, height] of [[1440, 1000], [1180, 820], [820, 1180], [390, 844
     await page.setViewportSize({ width, height });
     await blockNetwork(page);
     await page.goto("/");
+    await expandLandingSections(page, "tokenomics", "onchain-transparency");
     await page.evaluate(() => document.fonts.ready);
     const fit = await page.evaluate(() => {
       const card = document.querySelector("[data-lost-ifr]").getBoundingClientRect();
@@ -149,6 +153,7 @@ test("distribution shows a black dead segment, splits CommitmentVault without do
   await blockNetwork(page);
   await answerProxyFull(page);
   await page.goto("/");
+  await expandLandingSections(page, "tokenomics", "onchain-transparency");
   await page.locator("#live-distribution").scrollIntoViewIfNeeded();
   const dead = page.locator('[data-dist-cat="dead"]');
   await expect(dead).toBeVisible({ timeout: 20000 });
@@ -169,6 +174,7 @@ test("distribution shows a black dead segment, splits CommitmentVault without do
 test("live supply never renders 0 when the supply read fails", async ({ page }) => {
   await blockNetwork(page);
   await page.goto("/");
+  await expandLandingSections(page, "tokenomics", "onchain-transparency");
   await page.locator("#live-distribution").scrollIntoViewIfNeeded();
   await expect(page.locator(".live-updated-at").first()).toHaveText("Connection failed", { timeout: 20000 });
   // Never a zero figure under either the current or a former label.
@@ -181,6 +187,7 @@ test("a slice smaller than the segment gap does not paint the whole ring", async
   await blockNetwork(page);
   await answerProxyFull(page); // CommitmentVault time tranches are only ~0.14% of genesis
   await page.goto("/");
+  await expandLandingSections(page, "tokenomics", "onchain-transparency");
   await page.locator("#live-distribution").scrollIntoViewIfNeeded();
   await expect(page.locator('[data-dist-cat="dead"]')).toBeVisible({ timeout: 20000 });
   const amberShare = await page.evaluate(() => {
@@ -199,6 +206,7 @@ test("segments sum to genesis; circulating remainder is neutral and distinct fro
   await blockNetwork(page);
   await answerProxyFull(page);
   await page.goto("/");
+  await expandLandingSections(page, "tokenomics", "onchain-transparency");
   await page.locator("#live-distribution").scrollIntoViewIfNeeded();
   await expect(page.locator('[data-dist-cat="rest"]')).toBeVisible({ timeout: 20000 });
   const values = await page.$$eval("[data-dist-cat]", (els) => els.map((e) => Number(e.getAttribute("data-dist-value"))));
@@ -212,6 +220,7 @@ test("mobile: the distribution donut with the dead segment stays visible", async
   await blockNetwork(page);
   await answerProxyFull(page);
   await page.goto("/");
+  await expandLandingSections(page, "tokenomics", "onchain-transparency");
   await page.locator("#live-distribution").scrollIntoViewIfNeeded();
   await expect(page.locator('[data-dist-cat="dead"]')).toBeVisible({ timeout: 20000 });
   await expect(page.locator("#dist-donut")).toBeVisible();
@@ -225,6 +234,7 @@ for (const [width, height] of [[375, 812], [390, 844], [1440, 1000]]) {
     await blockNetwork(page);
     await answerProxyFull(page);
     await page.goto("/");
+    await expandLandingSections(page, "tokenomics", "onchain-transparency");
     await page.locator("#live-distribution").scrollIntoViewIfNeeded();
     const label = page.locator("#donut-live-supply");
     await expect(label).toHaveText("Not classified as permanently lost 970.2M", { timeout: 20000 });
@@ -272,6 +282,7 @@ test("unavailable balances render N/A, not 0, and the chart shows a partially un
   delete partial.PartnerVault; // missing entry
   await answerProxyWith(page, SUPPLY_26151369, partial, { incomplete: true, unavailable: ["Vesting", "LendingVault"] });
   await page.goto("/");
+  await expandLandingSections(page, "tokenomics", "onchain-transparency");
   await page.locator("#live-distribution").scrollIntoViewIfNeeded();
   const rest = page.locator('[data-dist-cat="rest"]');
   await expect(rest).toHaveAttribute("data-dist-state", "unavailable", { timeout: 20000 });
@@ -284,6 +295,7 @@ test("unavailable balances render N/A, not 0, and the chart shows a partially un
   }
   await expect(page.locator('[data-live-key="protocol-locked"]').first()).toHaveText("N/A");
   await expect(page.locator('[data-live-key="lending-available-stat"]').first()).toHaveText("N/A");
+  await expandLandingAddresses(page, '[data-live-key="card-vesting"]');
   await expect(page.locator('[data-live-key="card-vesting"]').first()).not.toHaveText(/^0/);
   await expect(page.locator(".live-status").first()).toContainText("Partially live");
   // Dead segment and live supply still use the exact values that are available (CV-01 only).
@@ -303,6 +315,7 @@ for (const [label, feeRouter] of [["missing FeeRouterV1", null], ["non-zero FeeR
       permanentlyLostRaw: "27153013068435700", liveSupplyRaw: "969507358572995405",
     }), balances);
     await page.goto("/");
+    await expandLandingSections(page, "tokenomics", "onchain-transparency");
     await page.locator("#live-distribution").scrollIntoViewIfNeeded();
     await expect(page.locator('[data-dist-cat="dead"]')).toBeVisible({ timeout: 20000 });
     expect(Number(await page.locator('[data-dist-cat="dead"]').getAttribute("data-dist-value"))).toBeCloseTo(26418467.99, 2);
@@ -347,6 +360,7 @@ for (const [label, delayMs] of [["completes after the live refresh", 2500], ["co
     await answerProxyWith(page, SUPPLY_26151369, balances);
     await answerCommitmentVaultRpc(page, delayMs);
     await page.goto("/");
+    await expandLandingSections(page, "tokenomics", "onchain-transparency");
     await page.locator("#onchain-transparency").scrollIntoViewIfNeeded();
     await expect(page.locator(".live-updated-at").first()).toContainText("Updated", { timeout: 60000 });
     // The CommitmentVault read has completed once its transparency card is live.
