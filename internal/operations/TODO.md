@@ -1,5 +1,5 @@
 # IFR Protocol — Developer TODO List
-> Last updated: 2026-10-18 | Branch: main
+> Last updated: 2026-09-06 | Branch: main
 
 ---
 
