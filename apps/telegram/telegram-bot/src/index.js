@@ -30,6 +30,8 @@ const {
 } = require('./services/verificationStore');
 const { claimNonce } = require('./services/nonceStore');
 const { determineTier } = require('./services/onChainReader');
+const { sendToGroup } = require('./services/topicRouter');
+const { buildPrivilegedLinkNotice } = require('./services/privilegedLinkNotice');
 
 // Handlers
 const { onNewMember, onVerifyCallback } = require('./handlers/verification');
@@ -304,6 +306,25 @@ verifyApp.post('/api/verify', verifyApiLimiter, async (req, res) => {
       );
     } catch (e) {
       logger.warn({ err: e.message }, 'Verify: Telegram DM failed');
+    }
+
+    if (tier === 'signer' || tier === 'council') {
+      try {
+        const chatId = process.env.TELEGRAM_GROUP_ID;
+        if (!chatId) {
+          logger.warn('Verify: privileged-link notice skipped; TELEGRAM_GROUP_ID not set');
+        } else {
+          await sendToGroup(
+            bot.telegram, chatId, 'coredev',
+            buildPrivilegedLinkNotice({ ...nonceData, tier, wallet: recovered }),
+            {}, process.env, { fallbackToGeneral: false }
+          );
+        }
+      } catch (e) {
+        // Never log the raw error: it may contain the request, wallet or bot token.
+        const code = Number.isInteger(e?.response?.error_code) ? e.response.error_code : null;
+        logger.warn({ err: { code } }, 'Verify: privileged-link notice failed');
+      }
     }
 
     res.json({ success: true, wallet: recovered, tier, access: topicAccess });

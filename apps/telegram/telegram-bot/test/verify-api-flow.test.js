@@ -45,6 +45,7 @@ async function boot(t, extraEnv = {}) {
       ...process.env,
       BOT_TOKEN: 'fixture-token',
       NODE_ENV: 'test',
+      TELEGRAM_GROUP_ID: '-100999',
       WALLET_MAP_PATH: path.join(tempDir, 'wallet-map.json'),
       ...extraEnv,
     },
@@ -54,6 +55,18 @@ async function boot(t, extraEnv = {}) {
   let childErr = '';
   child.stderr.on('data', (d) => { childErr += d; });
 
+  // Register cleanup before readiness: sandbox listener failures also need it.
+  t.after(() => new Promise((resolve) => {
+    const done = () => {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+      resolve();
+    };
+    if (child.exitCode !== null || child.signalCode !== null) return done();
+    const timer = setTimeout(() => { try { child.kill('SIGKILL'); } catch {} }, 3000);
+    child.once('exit', () => { clearTimeout(timer); done(); });
+    try { child.disconnect(); } catch { child.kill('SIGKILL'); }
+  }));
+
   const ready = new Promise((resolve, reject) => {
     child.once('message', (msg) => {
       if (msg && msg.type === 'ready') resolve(msg);
@@ -62,16 +75,6 @@ async function boot(t, extraEnv = {}) {
     child.once('exit', (code) => reject(new Error(`child exited (${code}): ${childErr}`)));
   });
   const { port } = await ready;
-
-  t.after(() => new Promise((resolve) => {
-    const done = () => {
-      fs.rmSync(tempDir, { recursive: true, force: true });
-      resolve();
-    };
-    const timer = setTimeout(() => { try { child.kill('SIGKILL'); } catch {} }, 3000);
-    child.once('exit', () => { clearTimeout(timer); done(); });
-    try { child.disconnect(); } catch { child.kill('SIGKILL'); }
-  }));
 
   return { child, port };
 }
@@ -84,6 +87,118 @@ async function postVerify(port, body, headers = {}) {
   });
   return { status: res.status, json: await res.json() };
 }
+
+// Exercise the real POST handler with valid signatures, without a socket or
+// external services. Existing HTTP/middleware tests below retain their server.
+async function privilegedFixture(t, { tier = 'signer', username = 'fixture', ...env } = {}) {
+  const { child } = await boot(t, { VERIFY_FLOW_IN_MEMORY: '1', ...env });
+  const userId = '123456789';
+  await rpc(child, { type: 'setTier', wallet: walletA.address, tier });
+  const { nonce } = await rpc(child, { type: 'makeNonce', userId, username });
+  const body = { nonce, signature: await walletA.signMessage(nonce), wallet: walletA.address };
+  return { child, body, userId };
+}
+
+for (const tier of ['signer', 'council', 'voter', 'builder', 'community']) {
+  test(`privileged-link notice: ${tier} verification posts only when privileged`, async (t) => {
+    const { child, body, userId } = await privilegedFixture(t, { tier });
+    const result = await rpc(child, { type: 'verifyInMemory', body });
+    assert.equal(result.status, 200);
+    assert.equal(result.json.success, true);
+    assert.equal(result.json.tier, tier);
+    assert.equal((await rpc(child, { type: 'isVerified', userId })).value, true);
+
+    const { telegram } = await rpc(child, { type: 'botCalls' });
+    assert.equal(telegram[0][0], userId, 'DM comes first');
+    const notices = telegram.filter(([chatId]) => chatId === '-100999');
+    const privileged = tier === 'signer' || tier === 'council';
+    assert.equal(notices.length, privileged ? 1 : 0);
+    assert.equal(telegram.length, privileged ? 2 : 1);
+    if (privileged) {
+      const [, text, options] = notices[0];
+      assert.match(text, /^🔐 Privileged access linked\n/);
+      assert.ok(text.includes(`Tier: ${tier === 'signer' ? 'Signer' : 'Council'}`));
+      assert.ok(text.includes(`Wallet: ${walletA.address.slice(0, 6)}...${walletA.address.slice(-4)}`));
+      assert.ok(text.includes(`Telegram: fixture (id ${userId})`));
+      assert.ok(!text.includes(walletA.address));
+      assert.deepEqual(options, { message_thread_id: 58 });
+    }
+    const replay = await rpc(child, { type: 'verifyInMemory', body });
+    assert.equal(replay.status, 400);
+    assert.equal((await rpc(child, { type: 'botCalls' })).telegram.length, telegram.length);
+  });
+}
+
+test('privileged-link notice: rejected Core Dev topic never attempts General and keeps success', async (t) => {
+  const { child, body, userId } = await privilegedFixture(t);
+  await rpc(child, { type: 'telegramFailure', failure: {
+    chatId: '-100999', response: { error_code: 400, description: 'Bad Request: TOPIC_CLOSED' },
+  } });
+  const result = await rpc(child, { type: 'verifyInMemory', body });
+  assert.equal(result.status, 200);
+  assert.equal(result.json.success, true);
+  assert.equal((await rpc(child, { type: 'isVerified', userId })).value, true);
+  const { telegram, warnings } = await rpc(child, { type: 'botCalls' });
+  assert.deepEqual(telegram.map(([chatId, , opts]) => [chatId, opts.message_thread_id]), [
+    [userId, undefined], ['-100999', 58],
+  ]);
+  assert.ok(warnings.some(([, msg]) => msg === 'Verify: privileged-link notice failed'));
+});
+
+for (const failureType of ['transport', 'server']) {
+  test(`privileged-link notice: ${failureType} failure preserves success and logs no request data`, async (t) => {
+    const { child, body, userId } = await privilegedFixture(t, { tier: 'council' });
+    await rpc(child, { type: 'telegramFailure', failure: {
+      chatId: '-100999',
+      message: `request to https://api.telegram.org/botSECRET/sendMessage failed: ${walletA.address}`,
+      response: failureType === 'server' ? { error_code: 500, description: `failure for ${walletA.address}` } : undefined,
+    } });
+    const result = await rpc(child, { type: 'verifyInMemory', body });
+    assert.equal(result.status, 200);
+    assert.equal(result.json.success, true);
+    assert.equal((await rpc(child, { type: 'isVerified', userId })).value, true);
+    const { telegram, warnings } = await rpc(child, { type: 'botCalls' });
+    assert.equal(telegram.length, 2, 'DM and one failed notice only');
+    assert.ok(warnings.some(([obj, msg]) => msg === 'Verify: privileged-link notice failed'
+      && obj.err.code === (failureType === 'server' ? 500 : null)));
+    const logged = JSON.stringify(warnings);
+    assert.ok(!logged.includes(walletA.address));
+    assert.ok(!logged.includes('SECRET'));
+  });
+}
+
+test('privileged-link notice: missing group skips sending and keeps success', async (t) => {
+  const { child, body, userId } = await privilegedFixture(t, { TELEGRAM_GROUP_ID: undefined });
+  const result = await rpc(child, { type: 'verifyInMemory', body });
+  assert.equal(result.status, 200);
+  assert.equal(result.json.success, true);
+  const { telegram, warnings } = await rpc(child, { type: 'botCalls' });
+  assert.deepEqual(telegram.map(([chatId]) => chatId), [userId]);
+  assert.ok(warnings.some(([msg]) => msg === 'Verify: privileged-link notice skipped; TELEGRAM_GROUP_ID not set'));
+});
+
+test('privileged-link notice: failed DM still sends verbatim plain text to Core Dev', async (t) => {
+  const username = 'team_[member]*`name`';
+  const { child, body, userId } = await privilegedFixture(t, { username });
+  await rpc(child, { type: 'telegramFailure', failure: { chatId: userId } });
+  const result = await rpc(child, { type: 'verifyInMemory', body });
+  assert.equal(result.status, 200);
+  assert.equal(result.json.success, true);
+  const { telegram } = await rpc(child, { type: 'botCalls' });
+  assert.equal(telegram.length, 2);
+  const [chatId, text, opts] = telegram[1];
+  assert.equal(chatId, '-100999');
+  assert.ok(text.includes(`Telegram: ${username} (id ${userId})`));
+  assert.deepEqual(opts, { message_thread_id: 58 }, 'no parse_mode');
+});
+
+test('privileged-link notice: auto-restore and tier recheck send nothing', async (t) => {
+  const { child } = await boot(t, { VERIFY_FLOW_IN_MEMORY: '1' });
+  await rpc(child, { type: 'bindUser', userId: '123456789', wallet: walletA.address, tier: 'community' });
+  await rpc(child, { type: 'setTier', wallet: walletA.address, tier: 'signer' });
+  await rpc(child, { type: 'refreshTiers' });
+  assert.deepEqual((await rpc(child, { type: 'botCalls' })).telegram, []);
+});
 
 test('protected-topic gate is registered before command handlers (CWA-40)', async (t) => {
   const { child } = await boot(t);

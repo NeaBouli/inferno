@@ -158,15 +158,18 @@ function safeError(err) {
 /**
  * Send a bot-initiated message to the community group, routed by category.
  * If the target topic rejects the post (deleted/closed), retry once in
- * General and log it. There is no further fallback into the forum's first
- * thread (Main): if General also fails, the error propagates to the caller.
+ * General and log it, unless fallbackToGeneral is explicitly false. There is
+ * no further fallback into the forum's first thread (Main): if General also
+ * fails, the error propagates to the caller.
  * Other errors propagate unchanged, so nothing is posted twice.
  */
-async function sendToGroup(telegram, chatId, category, text, extra = {}, env = process.env) {
+async function sendToGroup(telegram, chatId, category, text, extra = {}, env = process.env, { fallbackToGeneral = true } = {}) {
   const targetThread = resolveTopicId(category, env);
   const attempts = [targetThread];
-  const generalThread = resolveTopicId(DEFAULT_CATEGORY, env);
-  if (generalThread !== targetThread) attempts.push(generalThread);
+  if (fallbackToGeneral) {
+    const generalThread = resolveTopicId(DEFAULT_CATEGORY, env);
+    if (generalThread !== targetThread) attempts.push(generalThread);
+  }
 
   for (let i = 0; ; i++) {
     const thread = attempts[i];

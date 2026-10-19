@@ -49,11 +49,27 @@ const express = require(require.resolve('express', { paths: [botRoot] }));
 const telegraf = require(require.resolve('telegraf', { paths: [botRoot] }));
 const store = require(path.join(botRoot, 'src/services/verificationStore'));
 const nonceStore = require(path.join(botRoot, 'src/services/nonceStore'));
+const logger = require(path.join(botRoot, 'src/services/logger'));
+const warnings = [];
+logger.warn = (...args) => warnings.push(args);
 
 // ── Recording stub bot ───────────────────────────────────────────────────────
 const registrations = [];
+const telegramCalls = [];
+let telegramFailure;
 
 const bot = {
+  telegram: {
+    async sendMessage(...args) {
+      telegramCalls.push(args);
+      if (telegramFailure && String(args[0]) === String(telegramFailure.chatId)) {
+        const err = new Error(telegramFailure.message || 'fixture: Telegram send failed');
+        err.response = telegramFailure.response;
+        throw err;
+      }
+      return { message_id: telegramCalls.length };
+    },
+  },
   use: (mw) => registrations.push({ kind: 'use', mw }),
   on: (event, mw) => registrations.push({ kind: 'on', event, mw }),
   command: (name, ...mws) => registrations.push({ kind: 'command', name, mws }),
@@ -92,9 +108,22 @@ Module._load = function load(request, parent, isMain) {
   return originalLoad.call(this, request, parent, isMain);
 };
 
+// Capture the real handler for notice tests that need no localhost listener.
+// Middleware/HTTP tests continue to use the normal loopback server below.
+let verifyHandler;
+const originalPost = express.application.post;
+express.application.post = function post(route, ...handlers) {
+  if (route === '/api/verify') verifyHandler = handlers[handlers.length - 1];
+  return originalPost.call(this, route, ...handlers);
+};
+
 // ── Bind the verify API to an ephemeral loopback port and report it ─────────
 const originalListen = express.application.listen;
 express.application.listen = function listen(_port, callback) {
+  if (process.env.VERIFY_FLOW_IN_MEMORY === '1') {
+    process.nextTick(() => process.send({ type: 'ready' }));
+    return;
+  }
   const server = originalListen.call(this, 0, '127.0.0.1', callback);
   server.once('listening', () => process.send({ type: 'ready', port: server.address().port }));
   server.once('error', (err) => process.send({ type: 'error', error: err.message }));
@@ -168,7 +197,24 @@ process.on('message', (msg) => {
       failNextTier = true;
       process.send({ type: 'ack', id: msg.id });
     } else if (msg.type === 'makeNonce') {
-      process.send({ type: 'nonce', id: msg.id, nonce: nonceStore.createNonce(msg.userId, 'fixture') });
+      process.send({ type: 'nonce', id: msg.id, nonce: nonceStore.createNonce(msg.userId, msg.username ?? 'fixture') });
+    } else if (msg.type === 'verifyInMemory') {
+      let status = 200;
+      let json;
+      await verifyHandler({ body: msg.body }, {
+        status(value) { status = value; return this; },
+        json(value) { json = value; },
+      });
+      process.send({ type: 'verifyResult', id: msg.id, status, json });
+    } else if (msg.type === 'telegramFailure') {
+      telegramFailure = msg.failure;
+      process.send({ type: 'ack', id: msg.id });
+    } else if (msg.type === 'botCalls') {
+      process.send({ type: 'botCalls', id: msg.id, telegram: telegramCalls, warnings });
+    } else if (msg.type === 'refreshTiers') {
+      await store.autoRestoreAll();
+      await store.recheckAllTiers();
+      process.send({ type: 'ack', id: msg.id });
     } else if (msg.type === 'bindUser') {
       store.setVerified(msg.userId, msg.wallet, msg.tier);
       process.send({ type: 'ack', id: msg.id });
