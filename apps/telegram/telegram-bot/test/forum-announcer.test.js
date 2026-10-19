@@ -326,7 +326,7 @@ test('invalid data paths, journal symlinks and checkpoint intervals fail closed'
   assert.equal(fs.readFileSync(target, 'utf8'), 'untouched');
 });
 
-test('index starts and imports the forum announcer only with FORUM_ENABLED exactly 1', () => {
+test('index starts and imports the forum announcer only with FORUM_ENABLED exactly 1', async () => {
   for (const enabled of [undefined, '0', 'true', '1']) {
     const callbacks = [];
     const started = [];
@@ -347,9 +347,10 @@ test('index starts and imports the forum announcer only with FORUM_ENABLED exact
       },
       process: { env: { BOT_TOKEN: 'fixture-token', FORUM_ENABLED: enabled }, once() {} },
       setTimeout: (callback) => callbacks.push(callback),
+      setInterval: () => ({ unref() {} }),
     });
     callbacks.shift()();
-    callbacks.shift()();
+    await callbacks.shift()();
     assert.equal(imports, enabled === '1' ? 1 : 0);
     assert.deepEqual(started, enabled === '1' ? [stub] : []);
   }

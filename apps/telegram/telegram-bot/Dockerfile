@@ -20,6 +20,9 @@ RUN addgroup -g 1001 -S ifr && \
 # FORUM_DATA_DIR mount point: a fresh named volume inherits this owner and mode.
 RUN mkdir -p /data/forum && chown ifr:ifr /data/forum && chmod 700 /data/forum
 
+# WALLET_MAP_PATH mount point: persist mappings in a separate named volume.
+RUN mkdir -p /data/verify && chown ifr:ifr /data/verify && chmod 700 /data/verify
+
 USER ifr
 
 HEALTHCHECK --interval=60s --timeout=5s --start-period=20s --retries=3 \

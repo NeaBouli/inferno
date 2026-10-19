@@ -7,14 +7,14 @@
 // Vote (23) is the bot-only Forum/ballot announcement topic: no human writes there
 // (owner decision 2026-10-11, decision register Lane 8).
 //
-// Persistence: wallet mappings saved to WALLET_MAP_PATH (default /tmp/ifr_wallet_map.json)
-// On restart: known mappings are re-verified on-chain in the background
+// Persistence: wallet mappings saved to WALLET_MAP_PATH (default /data/verify/wallet-map.json)
+// Known mappings are re-verified on-chain at startup and periodically thereafter
 // Nonce lifecycle (single-use codes for /verify): services/nonceStore.js
 
 const fs = require('fs');
 const path = require('path');
 
-const WALLET_MAP_PATH = process.env.WALLET_MAP_PATH || '/tmp/ifr_wallet_map.json';
+const WALLET_MAP_PATH = process.env.WALLET_MAP_PATH || '/data/verify/wallet-map.json';
 
 const TOPIC_ACCESS = {
   58: 'council',  // Core Dev — Safe signers + Council-authorized
@@ -55,7 +55,7 @@ function saveWalletMap() {
     fs.writeFileSync(WALLET_MAP_PATH, JSON.stringify(data), { encoding: 'utf8', mode: 0o600 });
     // writeFileSync mode only applies on creation — tighten pre-existing files too (CWA-44)
     fs.chmodSync(WALLET_MAP_PATH, 0o600);
-  } catch (e) { /* /tmp may be unavailable — ignore */ }
+  } catch (e) { /* Persistence path may be unavailable — ignore */ }
 }
 
 function loadWalletMap() {
@@ -99,6 +99,45 @@ async function autoRestoreAll() {
     }
   }
   console.log(`[Verify] Auto-restored ${restored}/${walletMap.size} users`);
+}
+
+// ── Periodic tier refresh, including recovery after failed lookups ──
+let tierRecheckRunning = false;
+async function recheckAllTiers() {
+  if (tierRecheckRunning) return;
+  tierRecheckRunning = true;
+  try {
+    const { determineTier } = require('./onChainReader');
+    // Every verified user has a mapping. Include map-only users so transient
+    // startup/recheck failures can recover without requiring a new signature.
+    for (const [userId, entry] of [...walletMap.entries()]) {
+      if (walletMap.get(userId) !== entry) continue;
+      const user = verifiedUsers.get(userId);
+      try {
+        const tier = await determineTier(entry.wallet);
+        // An unverify/rebind or on-demand restore during the lookup wins.
+        if (walletMap.get(userId) !== entry || verifiedUsers.get(userId) !== user) continue;
+        if (!user || user.tier !== tier) {
+          console.log(`[Verify] Tier changed for ${userId}: ${user?.tier || 'unverified'} -> ${tier}`);
+        }
+        if (user) {
+          user.tier = tier;
+        } else {
+          verifiedUsers.set(userId, {
+            wallet: entry.wallet.toLowerCase(), tier,
+            verifiedAt: Date.now(), autoRestored: true
+          });
+        }
+      } catch (e) {
+        if (walletMap.get(userId) !== entry || verifiedUsers.get(userId) !== user) continue;
+        // Fail closed, retaining the mapping for the next successful lookup.
+        verifiedUsers.delete(userId);
+        console.error(`[Verify] Tier recheck failed for ${userId} (${user?.tier || 'unverified'} -> unverified):`, e.message);
+      }
+    }
+  } finally {
+    tierRecheckRunning = false;
+  }
 }
 
 // ── On-demand re-verify for a single user ───────────────
@@ -201,6 +240,6 @@ function hasTopicAccess(userId, topicId) {
 module.exports = {
   setVerified, unverify, isVerified, getUser, getWallet, getTierForUser,
   hasTopicAccess, tierHasTopicAccess, getTier, isBotOnlyTopic, councilWhitelist,
-  autoRestoreAll, reverifyFromMap,
+  autoRestoreAll, recheckAllTiers, reverifyFromMap,
   TOPIC_ACCESS, builderWhitelist
 };
