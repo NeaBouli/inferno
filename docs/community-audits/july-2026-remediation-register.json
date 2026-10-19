@@ -176,7 +176,7 @@
       "title": "Wallet-critical browser dependencies",
       "sourceSection": "4.5",
       "status": "partially_remediated",
-      "currentAssessment": "Ethers v6 is pinned and self-hosted. On the local integration branch (merge and release still pending) the WalletConnect provider is also bundled as a pinned, reproducibly built same-origin artifact instead of a runtime CDN import; the finding stays partially remediated until that integrated build is merged, released and connector parity is re-verified.",
+      "currentAssessment": "Ethers v6 and the WalletConnect provider are pinned, self-hosted same-origin artifacts (no runtime CDN import); the WalletConnect bundle was merged in #131 and is served live with the asset integrity check passing on every release. The finding stays partially remediated until connector parity is re-verified on real browsers and devices (physical wallet matrix 1/10, external review IFR-DEV-09).",
       "remainingAction": "Verify WalletConnect connector parity across supported browsers and devices on the integrated build.",
       "verification": "Asset integrity check, no-runtime-CDN assertion and full wallet/browser regression matrix.",
       "evidence": [
