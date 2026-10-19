@@ -1,0 +1,58 @@
+{
+  "schema": "forum-tally-v1",
+  "ballotId": "FB-SEP-0001",
+  "chainId": 11155111,
+  "snapshot": {
+    "height": 11929131,
+    "blockHash": "0x19027668fe3127b6d3a2187429542b2532a71e4432495d95b808886fa84ad93c"
+  },
+  "manifestHash": "0xc4a8aea57c4315dec3d08e868527b5961bbd5135ae62bf711922ff6605ea5965",
+  "chainHead": "0xc58519c31157573b43dd6a60c84deb34e0c1c232c25d7841ea6ad14b21dc8397",
+  "proposalHash": "0xd727b9e1db761ed44f2375da8a0ee1aee5861d8864c2bbeead16cb1ed0e5afb1",
+  "voteSetHash": "0x334f8b55948955bb76f7f1ce59b1a89d326f21b3f988f282f82374352893dbbe",
+  "totals": {
+    "yes": "1000000000000",
+    "no": "500000000000",
+    "abstain": "250000000000",
+    "participating": "1750000000000",
+    "totalLocked": "1750000000000"
+  },
+  "quorum": {
+    "numerator": 10,
+    "denominator": 100,
+    "basis": "total-locked-at-snapshot",
+    "comparison": "gte",
+    "passed": true
+  },
+  "threshold": {
+    "numerator": 50,
+    "denominator": 100,
+    "basis": "yes-of-yes-plus-no",
+    "comparison": "gt",
+    "passed": true
+  },
+  "counted": [
+    {
+      "wallet": "0xd1038F5d6eA9118bf869e5726DB5980Fd6444B71",
+      "choice": "yes",
+      "weight": "1000000000000",
+      "receiptOrder": 1
+    },
+    {
+      "wallet": "0xe3f17472307f0558DA206C44997782dbD3b73C31",
+      "choice": "no",
+      "weight": "500000000000",
+      "receiptOrder": 2
+    },
+    {
+      "wallet": "0xefD1a8aAa8858777f100cfbFC4d1362AF7C4081E",
+      "choice": "abstain",
+      "weight": "250000000000",
+      "receiptOrder": 3
+    }
+  ],
+  "rejected": [],
+  "zeroWeight": [],
+  "outcome": "passed",
+  "advisory": true
+}
