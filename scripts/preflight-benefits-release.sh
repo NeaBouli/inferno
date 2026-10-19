@@ -63,6 +63,7 @@ run "device checklist fail-closed tests" node scripts/test-benefits-device-check
 run "device acceptance report" node scripts/report-benefits-device-checklist.js
 run "documentation consistency" node scripts/test-benefits-doc-consistency.cjs
 run "Node 22 runtime contract" node scripts/test-benefits-node-runtime.cjs
+run "service base image digests" node scripts/test-service-base-digests.cjs
 run "service worker contract" node scripts/test-benefits-service-worker.js
 run "wallet asset provider contract" node scripts/test-benefits-wallet-asset-provider.mjs
 run "read-only deploy capacity harness" bash scripts/test-deploy-benefits-capacity.sh
