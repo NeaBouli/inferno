@@ -68,6 +68,8 @@ verification and topic access while retaining the wallet binding, so a later
 successful refresh or on-demand re-verification can restore the current tier.
 The protected-topic gate also checks the live tier on each message.
 
+Successful signer/council wallet verification posts a plain-text link notice in Core Dev (`TELEGRAM_GROUP_ID`), never falling back to General; automatic restores and tier rechecks send no notice.
+
 ## Forum topic routing (T-286 / T-286b)
 
 Bot-initiated posts to the community group go through
@@ -94,7 +96,7 @@ proven from the code alone:
   the value). This includes another category's confirmed ID, for example
   `TELEGRAM_COUNCIL_TOPIC_ID=11`.
 - Thread 1 (Main) is never used for non-announcement posts.
-- If Telegram rejects the topic (400 thread not found / closed / deleted /
+- By default, if Telegram rejects the topic (400 thread not found / closed / deleted /
   invalid), the post is retried once in General; there is no fallback into
   Main. Other errors are not retried.
 - Replies to user commands stay in the thread the command was sent in.

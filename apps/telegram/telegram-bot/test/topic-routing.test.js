@@ -234,6 +234,22 @@ test('deleted/closed topic falls back to General', async () => {
   assert.deepEqual(telegram.sent.map((s) => s.opts.message_thread_id), [11, 5]);
 });
 
+test('disabling General fallback attempts only Core Dev on every topic rejection', async () => {
+  for (const description of [
+    'Bad Request: message thread not found', 'Bad Request: TOPIC_CLOSED',
+    'Bad Request: TOPIC_DELETED', 'Bad Request: TOPIC_ID_INVALID',
+  ]) {
+    const err = telegramError(description);
+    const telegram = fakeTelegram({ failWith: err });
+    await assert.rejects(
+      sendToGroup(telegram, '-100999', 'coredev', 'private notice', {}, {}, { fallbackToGeneral: false }),
+      (actual) => actual === err
+    );
+    assert.deepEqual(telegram.sent.map((s) => s.opts.message_thread_id), [58]);
+    assert.deepEqual(telegram.sent[0].opts, { message_thread_id: 58 });
+  }
+});
+
 test('if General also rejects, the error propagates — no dump into Main', async () => {
   const telegram = fakeTelegram({ failThreads: [21, 5] });
   await assert.rejects(sendToGroup(telegram, '-100999', 'council', 'proposal', {}, {}), /thread not found/);
