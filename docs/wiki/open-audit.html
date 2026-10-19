@@ -747,9 +747,12 @@
         <div style="color:#6F655A;font-size:0.85rem;margin-bottom:10px">Repository, contracts, applications, public content and AI-readiness &middot; Dated, reproducible evidence &middot; Not a professional certification</div>
         <p style="color:#c9d1d9;font-size:0.9rem;margin:0 0 12px">
           The complete series is public with report hashes and a consolidated PDF. Publication is
-          not remediation. At the 5 October 2026 checkpoint, <strong>56 findings are fixed and
+          not remediation. At the 20 October 2026 checkpoint, <strong>57 findings are fixed and
           verified</strong>; 8 require Governance or owner action, 2 are accepted or monitored,
-          5 remain directly actionable and 11 are informational.
+          5 remain open and 10 are informational. The 5 open items (CWA-28/29/30/41/42) are fixed
+          in code and tests; they close when the Creator Gateway, which has no production service
+          today, is first deployed and live-verified. Governance-gated items such as the dormant
+          lending and CommitmentVault price paths stay disabled until the V2 contracts are activated.
         </p>
         <p style="color:#6F655A;font-size:0.9rem;margin:0 0 14px">
           The corrected aggregate is 0 Critical, 3 High, 29 Medium, 34 Low and 16 Informational.
@@ -763,7 +766,43 @@
         </div>
       </div>
 
-      <h2>5. Independent Audit Status</h2>
+      <h2>5. External Project Review A&ndash;I &mdash; 11 October 2026</h2>
+      <div style="border:1px solid #6b5a2e;border-left:4px solid #d29922;border-radius:12px;padding:24px;margin-bottom:16px;background:#111113">
+        <h3 style="margin:0 0 4px;font-size:1rem">IFR-DEV-00&hellip;IFR-DEV-16 &middot; Developer handover from an external review</h3>
+        <div style="color:#6F655A;font-size:0.85rem;margin-bottom:10px">Audit base <code>f1753ce5</code> &middot; Received privately by the owner &middot; Report not published &middot; Not a professional certification</div>
+        <p style="color:#c9d1d9;font-size:0.9rem;margin:0 0 12px">
+          The review produced a prioritised task list for the project developer. The report itself
+          was shared privately and is not published; this table records how each task was handled.
+          Status as of 20 October 2026: <strong>11 done or closed</strong>, 2 in place or fixed in
+          code pending a later deployment, 1 partly done and 3 open owner, Council or tester actions.
+        </p>
+        <div style="overflow-x:auto">
+          <table>
+            <thead><tr><th>Task</th><th>Topic</th><th>Status</th><th>Evidence / next step</th></tr></thead>
+            <tbody>
+            <tr><td>DEV-00</td><td>Source and deployment inventory, release matrix</td><td><strong>Done</strong></td><td>Release matrix in DEPLOYMENTS.md</td></tr>
+            <tr><td>DEV-01</td><td>Vault monitor: IFRLock, V2 fee policy, RPC authenticity</td><td><strong>Done</strong></td><td>Chain ID and pinned block hash checks</td></tr>
+            <tr><td>DEV-02</td><td>Independent on-chain truth report (two RPC providers)</td><td><strong>Done</strong></td><td>16 Oct 2026, 20/20 checks passed</td></tr>
+            <tr><td>DEV-03</td><td>Bytecode, governance rights, merge protection</td><td><strong>Partly done</strong></td><td>Required CI checks enforced on main; admin enforcement is an owner setting; Governance fix needs V2</td></tr>
+            <tr><td>DEV-04</td><td>Benefits frontend/backend secret isolation</td><td><strong>Done</strong></td><td>Live since 12 Oct 2026</td></tr>
+            <tr><td>DEV-05</td><td>Owner-B migration and old backups</td><td><strong>Done</strong></td><td>Migration 17 Oct; old backups deleted 18 and 20 Oct</td></tr>
+            <tr><td>DEV-06</td><td>Non-root containers, defense in depth</td><td><strong>Done</strong></td><td>All services non-root, one digest-pinned Node base</td></tr>
+            <tr><td>DEV-07</td><td>Exact-SHA deploys, schema cutover without bypass</td><td><strong>Done</strong></td><td>Gate-only releases; reviewed migration template</td></tr>
+            <tr><td>DEV-08</td><td>Tokenomics, treasury and reward status consolidated</td><td><strong>Done</strong></td><td>Docs-truth checks in CI</td></tr>
+            <tr><td>DEV-09</td><td>Physical wallet and checkout acceptance</td><td><strong>Open</strong></td><td>1 of 10 real devices; testers needed</td></tr>
+            <tr><td>DEV-10</td><td>Model-B redemption de-duplication policy</td><td><strong>Open</strong></td><td>Owner decision before real customers</td></tr>
+            <tr><td>DEV-11</td><td>CommitmentVault V1 loss position and CV-01 path</td><td><strong>Open</strong></td><td>Council vote pending</td></tr>
+            <tr><td>DEV-12</td><td>Forum voting advisory only</td><td><strong>Done</strong></td><td>Sepolia test ballot passed 19 Oct; no Mainnet ballot</td></tr>
+            <tr><td>DEV-13</td><td>Copilot untrusted input and cost gates</td><td><strong>Closed</strong></td><td>Web chat retired 17 Oct 2026</td></tr>
+            <tr><td>DEV-14</td><td>Creator Gateway auth fixes before first deploy</td><td><strong>Fixed in code</strong></td><td>Live acceptance at first deployment (CWA-28/29/30/41/42)</td></tr>
+            <tr><td>DEV-15</td><td>Do not activate immature price/lending functions</td><td><strong>In place</strong></td><td>Disabled; V2 contracts ready but not activated</td></tr>
+            <tr><td>DEV-16</td><td>Evidence matrix and final report</td><td><strong>This section</strong></td><td>With the CWA and July registers</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <h2>6. Independent Audit Status</h2>
       <div style="border:1px dashed #222225;border-radius:12px;padding:24px;color:#6F655A;font-size:0.9rem;margin-bottom:24px">
         <strong>Professional Third-Party Audit</strong> (Code4rena / Sherlock / Cyfrin)<br>
         Not completed yet. It remains required before any claim of independent professional certification and before activating higher-risk lending functionality.<br><br>
