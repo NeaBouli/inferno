@@ -362,6 +362,7 @@ setTimeout(() => {
     scheduleBootstrapAnnouncements(bot);
     startBootstrapListener(bot);
     await autoRestoreAll().catch(err => logger.error({ err: err.message }, 'Auto-restore failed'));
+    require('./services/pinnedGuide').ensurePinnedGuide(bot.telegram);
     const configuredInterval = process.env.TIER_RECHECK_INTERVAL_MS;
     if (configuredInterval !== '0') {
       const defaultInterval = 30 * 60 * 1000;

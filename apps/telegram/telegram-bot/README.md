@@ -70,6 +70,8 @@ The protected-topic gate also checks the live tier on each message.
 
 Successful signer/council wallet verification posts a plain-text link notice in Core Dev (`TELEGRAM_GROUP_ID`), never falling back to General; automatic restores and tier rechecks send no notice.
 
+On startup the bot posts the wallet-verification guide in General once and pins it silently. A marker in the persistent data dir (`PINNED_GUIDES_PATH`, default `/data/verify/pinned-guides.json`) prevents reposts; without a writable marker dir nothing is posted.
+
 ## Forum topic routing (T-286 / T-286b)
 
 Bot-initiated posts to the community group go through
