@@ -53,6 +53,21 @@ Der Bot nutzt die ABIs aus `/abi/` im Root-Repo:
 
 Siehe `.env.example` für alle Variablen.
 
+## Wallet persistence and tier refresh (CWA-44)
+
+Wallet bindings default to `/data/verify/wallet-map.json`; override
+`WALLET_MAP_PATH` for a different writable location (including local development).
+Mount `/data/verify` as a persistent volume in Docker. The image creates it with
+owner `ifr:ifr` and mode `0700`; wallet-map files use mode `0600`.
+
+After the initial on-chain restore, verified tiers are refreshed every 30 minutes.
+`TIER_RECHECK_INTERVAL_MS` sets the interval in milliseconds, with a 5-minute
+minimum. Only the exact value `0` disables periodic refresh; invalid or overflowing
+delays use the default. Overlapping runs are skipped. Failed tier lookups remove
+verification and topic access while retaining the wallet binding, so a later
+successful refresh or on-demand re-verification can restore the current tier.
+The protected-topic gate also checks the live tier on each message.
+
 ## Forum topic routing (T-286 / T-286b)
 
 Bot-initiated posts to the community group go through

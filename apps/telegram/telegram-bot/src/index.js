@@ -26,7 +26,7 @@ const express  = require('express');
 const { ethers } = require('ethers');
 const {
   setVerified, getWallet, isVerified: isUserVerified,
-  tierHasTopicAccess, isBotOnlyTopic, autoRestoreAll, reverifyFromMap
+  tierHasTopicAccess, isBotOnlyTopic, autoRestoreAll, recheckAllTiers, reverifyFromMap
 } = require('./services/verificationStore');
 const { claimNonce } = require('./services/nonceStore');
 const { determineTier } = require('./services/onChainReader');
@@ -329,7 +329,7 @@ setTimeout(() => {
   });
 
   // Allow ~3s for an immediate 409 to surface before initialising services
-  setTimeout(() => {
+  setTimeout(async () => {
     logger.info({ env: process.env.NODE_ENV }, '🔥 IFR Telegram Bot polling started');
     scheduleDailyReport(bot);
     scheduleDailyWelcome(bot);
@@ -340,7 +340,18 @@ setTimeout(() => {
     }
     scheduleBootstrapAnnouncements(bot);
     startBootstrapListener(bot);
-    autoRestoreAll().catch(err => logger.error({ err: err.message }, 'Auto-restore failed'));
+    await autoRestoreAll().catch(err => logger.error({ err: err.message }, 'Auto-restore failed'));
+    const configuredInterval = process.env.TIER_RECHECK_INTERVAL_MS;
+    if (configuredInterval !== '0') {
+      const defaultInterval = 30 * 60 * 1000;
+      const parsedInterval = Number(configuredInterval || defaultInterval);
+      // Invalid/overflowing delays must not become Node's 1ms timer fallback.
+      const interval = Number.isFinite(parsedInterval) && parsedInterval <= 2 ** 31 - 1
+        ? Math.max(5 * 60 * 1000, parsedInterval) : defaultInterval;
+      setInterval(() => recheckAllTiers().catch(err =>
+        logger.error({ err: err.message }, 'Tier recheck failed')
+      ), interval).unref();
+    }
   }, 3000);
 }, 8000);
 
