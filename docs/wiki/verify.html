@@ -253,6 +253,9 @@
         </div>
         <button id="sign-btn" onclick="signVerification()" disabled style="background:#f97316;color:white;border:none;padding:14px 32px;border-radius:8px;font-weight:700;font-size:1rem;cursor:pointer;opacity:0.5;">&#x270D;&#xFE0F; Sign &amp; Verify</button>
         <div id="sign-status" style="color:#6b7280;font-size:0.8rem;margin-top:8px;"></div>
+        <div class="callout callout-yellow" id="verify-own-code-warning" style="margin-top:16px;">
+          <p><strong>Only sign a code you requested yourself.</strong> The code belongs to the Telegram account that sent <code>/verify</code>. If you sign someone else&rsquo;s code, <em>their</em> account receives your access, and your wallet can no longer be linked to your own account until they send <code>/unverify</code>. Never sign a code that someone sends you &mdash; not even if the message appears to come from the team or &ldquo;support&rdquo;.</p>
+        </div>
       </div>
 
       <div id="verify-result" style="display:none;margin-top:24px;"></div>
@@ -283,6 +286,8 @@
 
       <div class="callout-green callout">
         <p><strong>Security:</strong> Signing a message does NOT send a transaction or cost gas. Your private key never leaves MetaMask.</p>
+        <p>Check the wallet prompt before you confirm: it must show a <strong>message</strong> containing only your <code>IFR-&hellip;</code> code. If it shows an amount, a gas fee or an &ldquo;Approve&rdquo; request, reject it &mdash; that is not this page. Nobody from the project will ever ask for your seed phrase or private key.</p>
+        <p>Signer access follows the Treasury Safe owners on-chain and is re-checked every 30 minutes. Each wallet can be linked to one Telegram account; use <code>/unverify</code> in the private bot chat to release it.</p>
       </div>
 
       <h2>Topic Access Matrix</h2>
