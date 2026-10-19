@@ -1,4 +1,4 @@
-FROM node:22-alpine AS builder
+FROM node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402 AS builder
 WORKDIR /app
 RUN apk add --no-cache python3 make g++
 COPY package.json package-lock.json ./
@@ -6,7 +6,7 @@ RUN npm ci
 COPY . .
 RUN DATABASE_URL=file:./build.db npx prisma generate && npx tsc && npm prune --omit=dev
 
-FROM node:22-alpine AS runner
+FROM node:22-alpine@sha256:0a7108bf6c7bf5de370ffb1a3ed6be93d405b43ff159f681a8d18c0e2bc2e402 AS runner
 WORKDIR /app
 RUN apk add --no-cache dumb-init
 COPY --from=builder /app/node_modules ./node_modules
