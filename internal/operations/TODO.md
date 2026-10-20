@@ -106,13 +106,12 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 ## CURRENT WATCHLIST — verified 2026-09-06
 
-- [ ] LP Reserve Safe fee exemption (CWA-17) — updated 2026-10-18
-      Proposal text prepared and sent to the TreasurySafe signers. Not yet
-      submitted on-chain (Governance proposalCount still 24). Next: Safe 3-of-5
-      submits `propose`, 48-hour delay, then 3-of-5 `execute`; verify on-chain.
-- [ ] Sepolia Forum ballot FB-SEP-0001 closes 2026-10-19 10:00 UTC
-      Then `npm run forum:tally`, commit `forum-results/FB-SEP-0001.json` via PR,
-      release the Telegram bot through the gate.
+- [x] LP Reserve Safe fee exemption (CWA-17) — done 2026-10-20
+      Governance proposal #24 executed by the TreasurySafe 3-of-5 (block 26236254);
+      `InfernoToken.feeExempt(LP Reserve Safe) = true` verified on-chain.
+- [x] Sepolia Forum ballot FB-SEP-0001 — done 2026-10-19
+      Tally passed (advisory), `forum-results/FB-SEP-0001.json` merged (#324),
+      Telegram bot released and the result post confirmed.
 - [ ] V2 activation (GovernanceV2, LendingVaultV2, CommitmentVaultV2) — deferred
       Release candidates ready and tested, not deployed. Activation only via
       Governance vote + TreasurySafe signers (docs/V2_ACTIVATION_RUNBOOK.md).
