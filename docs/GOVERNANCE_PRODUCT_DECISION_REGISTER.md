@@ -150,6 +150,11 @@ remains the only place where agenda items and vote outcomes are published.
   exact-content verification of the queued proposal (`scripts/pool-fee-receiver-proposal.cjs
   --execute`, T-242); fork proof at exactly block 26119897 in
   `test/fork/PoolFeeReceiverFork.test.js`. Runbook: `docs/POOL_FEE_RECEIVER.md`.
+- **Decided and executed (20 October 2026, CWA-17):** the LP Reserve Safe is fee exempt, so
+  liquidity operations from it pay no transfer fee. Governance proposal #24 (`InfernoToken.setFeeExempt(LP Reserve Safe, true)`) was
+  proposed by the Treasury Safe on 18 October 2026 (block 26221805) and executed by the Treasury
+  Safe 3-of-5 after the 48-hour timelock on 20 October 2026, 20:41:59 UTC (block 26236254;
+  transactions in `docs/DEPLOYMENTS.md`). Read-only check: `feeExempt(LP Reserve Safe) = true`.
 
 ## Lane 4 — PartnerVault/BuilderRegistry rewards and pilot-partner gate
 
