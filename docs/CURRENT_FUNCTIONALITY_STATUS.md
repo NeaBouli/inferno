@@ -40,6 +40,9 @@ LiquidityReserve row was refreshed at block `25918433`:
 
 ## Repository Applications
 
+The [data-flow and privacy inventory](DATA_FLOWS_AND_PRIVACY.md) documents RPC,
+WalletConnect, Telegram and backend persistence from the checked-in code.
+
 | Application/package | Status |
 |---|---|
 | Web3 static PWA (`docs/web3`) | Public Mainnet interface; automated wallet/write-path tests pass. |
