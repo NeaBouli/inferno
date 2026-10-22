@@ -52,6 +52,27 @@ unchanged report describe the dated audit assessment, not current remediation
 status. Every later status change must carry integrated evidence and pass the
 register's CI guard.
 
+### JUL-21 compiler provenance follow-up — 22 October 2026
+
+`npm run test:compiler-provenance` compares `hardhat.config.js` compiler
+versions and optimizer enabled/runs settings with Mainnet deployment records.
+The checked-in `deployments/mainnet.json` has no compiler/optimizer metadata
+for any of its 15 contracts; there is no `docs/contracts` JSON metadata
+directory. The script therefore prints an `UNKNOWN` row for each contract
+and explicitly states that provenance is **not verified**. Missing evidence
+does not produce a fabricated match or change JUL-21's monitored disposition.
+Recorded mismatches or malformed metadata fail the check; missing metadata
+alone returns success with the explicit coverage gap.
+
+For future records, preserve the deployment-era standard JSON compiler input
+and metadata, then add `compiler.version` and `compiler.settings` (including
+optimizer settings) to the matching deployment entry. Current local build
+artifacts and Solidity pragma ranges are not deployment evidence. The script
+selects source overrides or the highest root-pragma-compatible configured
+compiler; it does not compile dependency graphs, verify compiler binary hashes
+or compare deployed bytecode. It runs offline without importing Hardhat or
+loading `.env`. No production or explorer state was queried for this follow-up.
+
 ### Editorial status note — 28 July 2026
 
 The report is a dated snapshot. Several findings were useful and have already

@@ -7,6 +7,7 @@
     "test:contracts": "hardhat test test/*.test.js test/library/*.test.js",
     "test:contracts:all": "npm run test:contracts && node test/builder/GeneratorEngine.test.js && node test/sdk/sdk.test.js",
     "test:hardhat-config": "node scripts/test-hardhat-network-config.cjs",
+    "test:compiler-provenance": "node scripts/check-compiler-provenance.cjs",
     "test:sepolia-forum-testenv": "node --test test/sepolia-forum-testenv.test.cjs test/sepolia-forum-vote.test.cjs",
     "test:hardhat-runtime": "hardhat run scripts/test-hardhat-runtime.js",
     "test:dependency-advisories": "node scripts/check-root-advisory-baseline.cjs",
