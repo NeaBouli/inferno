@@ -70,14 +70,11 @@ export async function getPublicCustomerPass(passId: string) {
 
 export async function getControlledCustomerPass(passId: string, authorization?: string) {
   const pass = await requireCustomerPassControl(passId, authorization);
+  // CWA-43: polling derives expiry from the snapshot; only POST paths persist it.
   if (pass.status === 'OPEN' && pass.expiresAt <= new Date()) {
-    await prisma.customerPass.updateMany({
-      where: { id: pass.id, status: 'OPEN' },
-      data: { status: 'EXPIRED' },
-    });
     return { status: 'EXPIRED', expiresAt: pass.expiresAt, checkout: null };
   }
-  if (await expireBoundCustomerPass(pass)) {
+  if (isBoundCustomerPassExpired(pass)) {
     return {
       status: 'EXPIRED',
       expiresAt: pass.session?.expiresAt ?? pass.expiresAt,
@@ -266,14 +263,17 @@ export async function cancelCustomerPass(passId: string, authorization?: string)
   return { status: 'CANCELLED' };
 }
 
-async function expireBoundCustomerPass(pass: Awaited<ReturnType<typeof requireCustomerPassControl>>) {
-  if (
-    pass.status !== 'BOUND' || !pass.session ||
-    !(
+function isBoundCustomerPassExpired(pass: Awaited<ReturnType<typeof requireCustomerPassControl>>) {
+  return Boolean(
+    pass.status === 'BOUND' && pass.session && (
       pass.session.status === 'EXPIRED' ||
       (['PENDING', 'APPROVED'].includes(pass.session.status) && pass.session.expiresAt <= new Date())
     )
-  ) return false;
+  );
+}
+
+async function expireBoundCustomerPass(pass: Awaited<ReturnType<typeof requireCustomerPassControl>>) {
+  if (!isBoundCustomerPassExpired(pass)) return false;
 
   await prisma.$transaction(async (tx) => {
     await tx.$executeRaw`
