@@ -145,8 +145,8 @@ Stand: 07.04.2026 | Konsolidiert (Claude + Core Dev)
 - [x] ✅ Wiki Sidebar Navigation neu geordnet — 6 Sektionen (17.03.2026, Commit: 1ca41f5f)
 - [x] ✅ Token Flow SVG korrigiert (16.03.2026)
 - [x] ✅ Paragraph.xyz Blog-Link im Footer (17.03.2026, Commit: 2eb00870)
-- [ ] Create animated token GIF (fuer CoinGecko/CMC)
-- [ ] Uniswap Link aktivieren — NUR wenn LP live
+- [x] Create animated token GIF (fuer CoinGecko/CMC) — closed 2026-10-22: obsolete; explicitly not planned (internal/operations/TODO.md, Known Bugs / Frontend).
+- [x] Uniswap Link aktivieren — NUR wenn LP live — closed 2026-10-22: Buy IFR button already activated after LP launch (internal/operations/TODO.md, Frontend; docs/index.html).
 
 ## MITTEL — Documentation (Session 16-17.03.2026)
 
@@ -165,7 +165,7 @@ Stand: 07.04.2026 | Konsolidiert (Claude + Core Dev)
 - [x] ✅ AUDIT_REPORT_20260316.md erstellt
 - [x] ✅ ifr_icon_32.svg erstellt + auf GitHub (17.03.2026)
 - [x] ✅ robots.txt AI Bots erlaubt
-- [ ] 🔒 npm audit: 34 Vulnerabilities — fix nach LP-Launch (Breaking Changes)
+- [x] 🔒 npm audit: 34 Vulnerabilities — fix nach LP-Launch (Breaking Changes) — closed 2026-10-22: legacy dependency backlog resolved; root audit recorded as 0 (internal/operations/TODO.md, Residual dependency audit findings); later dashboard/wallet advisories fixed in #333.
 
 ## MITTEL — 400M LP Reserve Security (on-chain verifiziert 17.03.2026)
 
@@ -239,7 +239,7 @@ Stand: 07.04.2026 | Konsolidiert (Claude + Core Dev)
 3. Creator Rewards / SDK (Phase 3)
 4. DAO Upgrade (Phase 4)
 5. Bug Bounty Programm (Phase 5)
-6. ⏳ Animated Token GIF (256x256px, transparent BG, <500KB)
+6. ~~Animated Token GIF (256x256px, transparent BG, <500KB)~~ — closed 2026-10-22: explicitly not planned (internal/operations/TODO.md, Frontend).
 
 ---
 
