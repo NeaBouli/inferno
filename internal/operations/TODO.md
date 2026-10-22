@@ -738,9 +738,10 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] ✅ WalletConnect Phase 3: Uniswap link active after LP live
 
 ### Documentation
-- [ ] Plan B documentation with exact decision timestamp
-- [ ] Update handover document for Core Developer
-- [ ] Project Continuity section (Landing + README + Wiki)
+- [x] Plan B documentation with exact decision timestamp — done 2026-10-23: docs/CORE_DEVELOPER_HANDOVER.md (decision date 2026-03-08; exact decision time-of-day not retained; documentation commit 75994bb6 dated 2026-03-10 09:20:40 +02:00)
+- [x] Update handover document for Core Developer — done 2026-10-23: docs/CORE_DEVELOPER_HANDOVER.md
+- [x] Project Continuity section (README + Wiki) — done 2026-10-23: README.md; docs/wiki/multisig.html#project-continuity
+- [ ] Project Continuity section (Landing; remaining part of the original item)
 
 ### Railway → Hetzner Migration
 - [x] ✅ Telegram-Bot: Railway → Hetzner (09.06.2026) — läuft auf 135.181.254.229
@@ -782,7 +783,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] Replace non-blocking Markdown lint with pinned baseline regression gate (3,482 historical findings / 2,174 fingerprints; tracked files only)
 - [x] Set up Slither CI gate (21 production sources; fail-closed High baseline; PR #77 and Main CI green)
 - [x] Set up Mythril CI gate (17 concrete production contracts; bounded weekly/manual gate; PR #77 and Main CI green)
-- [ ] Coverage badge in README
+- [x] Coverage badge in README — done 2026-10-23: docs/COVERAGE_REPORT.md; .github/workflows/contracts.yml reviewed — no reproducible coverage baseline; badge deferred (05.03.2026 report is a historical subset, not a current CI coverage artifact)
 - [ ] Recruit 2-3 repo maintainers
 
 ---
@@ -1033,10 +1034,9 @@ On errors: fix immediately, commit with `seo:` prefix.
       Goal: not just burn — but cashflow
       Formula: Value = Utility + Cashflow
 
-- [ ] 🔵 Flywheel Documentation (Wiki)
-      New page: ecosystem-flywheel.html
-      More builders use SDK → more IFR locked → supply drops
-      → price rises → more builders come → FLYWHEEL
+- [x] 🔵 Flywheel Documentation (Wiki) — done 2026-10-23: docs/wiki/flywheel.html
+      Documents implemented fees/burns/locks, dormant buyback and planned activation separately.
+      Locks reduce freely transferable balances, not total supply; no price or adoption outcome is promised.
 
 - [ ] 🔵 Bug bounty program
 - [ ] 🔵 Professional audit (third-party: Code4rena / Sherlock / Cyfrin)

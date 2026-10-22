@@ -378,6 +378,28 @@ Inferno Protocol is developed by a pseudonymous team in the open-source DeFi tra
 - Public audit: [security.html](https://ifrunit.tech/wiki/security.html)
 - Contact: GitHub Issues or Telegram @IFR_token
 
+## Project continuity
+
+Treasury, Community and LP Reserve Safes are documented as 3-of-5 with the same
+five signers. This tolerates up to two unavailable signers while three can
+still act; it does not guarantee continuity if a signing quorum is lost.
+Governed parameter changes use the public 48-hour timelock. Deployed Governance
+ownership transfer and guardian rotation are disclosed untimelocked exceptions.
+
+Public code, ABIs, documentation and lockfiles let a new maintainer reproduce
+checks and prepare releases from an exact reviewed commit. Start with the
+[Core Developer Handover](docs/CORE_DEVELOPER_HANDOVER.md), verify the dated
+deployment and decision records, then use the scoped release gates with
+separate authorization for hosting or signer changes.
+
+If the core team is unavailable, deployed contracts remain on Ethereum and
+users can use the operations their contracts permit, subject to existing
+pauses and lock conditions. Maintainers can continue the public code and
+documentation; hosted apps and APIs still need operators. Privileged actions
+require the existing Safe quorum. Public source code does not grant Safe
+control, and no automatic successor or hosting failover is documented.
+See the matching [Wiki continuity section](https://ifrunit.tech/wiki/multisig.html#project-continuity).
+
 ## Integrated Builder Products
 
 | Project | Category | Integration |
