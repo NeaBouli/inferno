@@ -53,7 +53,8 @@ function criticalFinding() {
 }
 
 const contracts = discoverContracts();
-assert.equal(contracts.length, 26, "all current production Solidity files must be analyzed");
+assert.equal(contracts.length, 27, "all current production Solidity files must be analyzed");
+assert.ok(contracts.includes("contracts/FeeRouterV2.sol"));
 assert.ok(contracts.includes("contracts/governance/GovernanceV2.sol"));
 assert.ok(contracts.includes("contracts/vault/CommitmentVaultV2.sol"));
 assert.ok(contracts.includes("contracts/vault/LendingVaultV2.sol"));
