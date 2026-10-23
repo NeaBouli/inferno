@@ -61,8 +61,14 @@ A future vault version should measure actual token balance changes on inflow
 instead of assuming the requested transfer amount was received. Balance-diff
 accounting protects internal solvency when interacting with fee-on-transfer
 tokens. It does not by itself protect users from a fee on outgoing transfers,
-so V2 must also check the required exemption at runtime and fail closed before
-affected deposit, withdrawal, offer, loan, repayment, lock, or unlock flows.
+so V2 must check the required exemption at runtime and fail closed on new exposure
+(deposits, offer funding, borrowing and locks). Under the owner-ratified policy
+of 18 October 2026 ([PL-C06](specs/COMMITMENTVAULT_V2_PRICE_LOCKS_SPEC_IMPLEMENTATION_NOTES.md#owner-ratification-2026-10-18),
+[LV-C07](specs/LENDINGVAULT_V2_SPEC.md#interest-and-protocol-fee-handling)),
+existing exits and settlement remain callable after exemption revocation; users
+bear the disclosed transfer tax, without a treasury gross-up. Repayment and
+liquidation require measured receipt covering the full debt from an explicitly
+bounded gross transfer. See the local [JUL-07 evidence](community-audits/JUL-07-V2-SOLVENCY-EVIDENCE.md).
 
 Any V2 requires a separate design review, migration plan, tests, audit, and
 governance-approved deployment. The deployed V1 contracts are non-upgradeable;
