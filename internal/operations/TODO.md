@@ -126,7 +126,7 @@ On errors: fix immediately, commit with `seo:` prefix.
       Availability is not an automatic LP addition. Before any use, document
       the amount, proportional ETH source, price/slippage impact and execution
       plan, then use the normal proposal plus 48-hour timelock path.
-- [ ] Council exchange-participation agenda (no date; discussion only)
+- [x] Council exchange-participation agenda (no date; discussion only) — closed 2026-10-22: historical IFR-incentive options below superseded by EX-01 (2026-10-04); no project-pool IFR incentives (docs/GOVERNANCE_PRODUCT_DECISION_REGISTER.md, Lane 5). EX-02 remains separate and open.
       Decide separately whether verified exchanges may receive any IFR,
       whether a 500k PartnerVault integration pilot or a returnable 2M-per-
       exchange / 5M-aggregate LiquidityReserve pilot is acceptable, and which
@@ -283,7 +283,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] Governance proposals #18-#21 executed and documented — 2026-10-05 (PR #197, T-258)
       #18 voucher signer (block 26124623), #19/#20 guardians to Treasury Safe (block 26124647),
       #21 pool-fee receiver to BuybackController (block 26124660). CWA-02/06/09 fixed and verified.
-      Lost IFR as of block 26124660: 27,153,013.068435700 IFR (read live; direct transfers possible).
+      Historical pre-recovery lost-IFR snapshot at block 26124660: 27,153,013.068435700 IFR; superseded by CWA-02 recovery on 2026-10-07. Permanently lost IFR is CV-01 only: 26,418,467.994338353 IFR (docs/wiki/transparency.html#lost-ifr; #254/#256).
 - [ ] Owner confirmation for the former voucher signer key (CWA-06 runbook step 6)
       Based on the reviewed backend configuration, no Safe-owner key rotation is required by this voucher-signer change.
       Owner confirmation that the key was not otherwise exposed remains pending. Owner follow-up outside the repository;
@@ -390,7 +390,7 @@ On errors: fix immediately, commit with `seo:` prefix.
       wallet-core.js v1.2 — MetaMask connect with all bug fixes:
       30s timeout, accountsChanged re-creates provider/signer,
       listener guard, clean disconnect, mobile deep-link 2s delay
-      Note: WC v2 QR needs bundler — planned Phase 2 build setup
+      Note: WC v2 QR bundle delivered in #131; real-device connector parity remains open (JUL-11).
 - [x] ChatGPT External Audit published (04.04.2026)
       security.html + faq.html (3 new entries) + AUDIT_CHATGPT_19032026.md on GitHub
 - [x] ✅ Grok (xAI) Audit published (07.04.2026)
@@ -530,7 +530,7 @@ On errors: fix immediately, commit with `seo:` prefix.
       analog SecureCall in den Produkt-Repos tracken/umsetzen.
       Status 08.07.2026: bleibt bewusst extern; dieses Repo hält nur IFR protocol/source-of-truth docs.
 
-- [ ] 🟡 Mehr Contributors für Bootstrap
+- [x] 🟡 Mehr Contributors für Bootstrap — closed 2026-10-22: obsolete; Bootstrap ended and finalized on 2026-06-05 (README.md; docs/wiki/fair-launch.html).
       Ziel: mehr ETH = höheres P0
       Kanäle: Reddit/Farcaster/Telegram
 
@@ -707,7 +707,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] ✅ Ali Copilot Bootstrap ENDED update (06.06.2026) — Issue #35
       ifr-knowledge.ts: phase/currentState/startDate updated, lpToken/finaliseTx/uniswapLink added, ETHRaised→0.030, Proposal #15 added
       system-prompts.ts: bootstrapBlock ENDED details, old live wording removed
-- [ ] Ali Phase 2: WalletConnect → wallet-specific responses (after LP live)
+- [x] Ali Phase 2: WalletConnect → wallet-specific responses (after LP live) — closed 2026-10-22: obsolete; web chat retired in #313/#316; POST /api/chat returns 410 (apps/data-api/server/index.ts).
 
 ---
 
@@ -726,7 +726,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] X/Twitter announcement text prepared ✅ (in BOOTSTRAP_ANNOUNCEMENT.md)
 - [x] ✅ Etherscan Token Profile live (17.03.2026)
       Logo + Links bestätigt via Support-Mail
-- [ ] Final review bootstrap page
+- [x] Final review bootstrap page — closed 2026-10-22: historical review already recorded as done on 2026-03-16 (TODO.md, Bootstrap Announcements).
 - [ ] Communicate Bootstrap V4 on bootstrap.html: "V4 governance voting planned for Phase 3"
 
 ### Frontend
@@ -734,13 +734,14 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] ✅ `Buy IFR` → Uniswap button activated after LP live
 - [x] ✅ IFR Price Widget + Railway /api/ifr/price endpoint (04.04.2026)
       Migrated to Hetzner API. Landing page price stat card uses live API/TWAP feed after LP.
-- [ ] WalletConnect Phase 2: `isLocked(wallet,1000e9)` check → Copilot gate (after LP)
+- [x] WalletConnect Phase 2: `isLocked(wallet,1000e9)` check → Copilot gate (after LP) — closed 2026-10-22: obsolete; web chat retired in #313; POST /api/chat returns 410 (apps/data-api/server/index.ts).
 - [x] ✅ WalletConnect Phase 3: Uniswap link active after LP live
 
 ### Documentation
-- [ ] Plan B documentation with exact decision timestamp
-- [ ] Update handover document for Core Developer
-- [ ] Project Continuity section (Landing + README + Wiki)
+- [x] Plan B documentation with exact decision timestamp — done 2026-10-23: docs/CORE_DEVELOPER_HANDOVER.md (decision date 2026-03-08; exact decision time-of-day not retained; documentation commit 75994bb6 dated 2026-03-10 09:20:40 +02:00)
+- [x] Update handover document for Core Developer — done 2026-10-23: docs/CORE_DEVELOPER_HANDOVER.md
+- [x] Project Continuity section (README + Wiki) — done 2026-10-23: README.md; docs/wiki/multisig.html#project-continuity
+- [ ] Project Continuity section (Landing; remaining part of the original item)
 
 ### Railway → Hetzner Migration
 - [x] ✅ Telegram-Bot: Railway → Hetzner (09.06.2026) — läuft auf 135.181.254.229
@@ -782,7 +783,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] Replace non-blocking Markdown lint with pinned baseline regression gate (3,482 historical findings / 2,174 fingerprints; tracked files only)
 - [x] Set up Slither CI gate (21 production sources; fail-closed High baseline; PR #77 and Main CI green)
 - [x] Set up Mythril CI gate (17 concrete production contracts; bounded weekly/manual gate; PR #77 and Main CI green)
-- [ ] Coverage badge in README
+- [x] Coverage badge in README — done 2026-10-23: docs/COVERAGE_REPORT.md; .github/workflows/contracts.yml reviewed — no reproducible coverage baseline; badge deferred (05.03.2026 report is a historical subset, not a current CI coverage artifact)
 - [ ] Recruit 2-3 repo maintainers
 
 ---
@@ -871,7 +872,7 @@ On errors: fix immediately, commit with `seo:` prefix.
       _showDesktopOnlyModal(): Desktop-only Modal im Inferno Design
       connect() + autoReconnect() blockieren auf Mobile/Tablet
       Greift automatisch auf allen 34 HTML-Seiten — kein HTML-Edit nötig
-- [ ] 🔵 WalletConnect v2 QR (needs webpack/vite build setup)
+- [x] 🔵 WalletConnect v2 QR (needs webpack/vite build setup) — closed 2026-10-22: pinned same-origin provider bundle delivered in #131 (docs/assets/wallet-core.js); JUL-11 keeps real-device parity open.
 
 ### Telegram Bot
 - [x] `voteAnnouncement.js` — Governance proposal announcements + executable reminder + verify.html link (12 tests)
@@ -919,8 +920,8 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] CoinMarketCap listing request submitted — ticket `1390230`
       Canonical current status and no-duplicate rule: see `DEFERRED / LATER`.
       Submission/evidence pack: docs/COINMARKETCAP_SUBMISSION.md
-- [ ] Activate AI Copilot gate (≥1,000 IFR locked)
-- [ ] Telegram wallet whitelist via WalletConnect
+- [x] Activate AI Copilot gate (≥1,000 IFR locked) — closed 2026-10-22: obsolete; web chat retired in #313; POST /api/chat returns 410 (apps/data-api/server/index.ts).
+- [x] Telegram wallet whitelist via WalletConnect — closed 2026-10-22: /verify links wallets to signer/Council/builder topic access (apps/telegram/telegram-bot/src/services/verificationStore.js; #276/#326). Final protected-topic acceptance remains separate.
 - [x] LiqRes initial lock expiry verified after 01.09.2026
       All 200M IFR remains held and 0 IFR has been withdrawn. The existing
       limit is 50M IFR per 90 days; do not propose a 200M one-period cap as an
@@ -1033,10 +1034,9 @@ On errors: fix immediately, commit with `seo:` prefix.
       Goal: not just burn — but cashflow
       Formula: Value = Utility + Cashflow
 
-- [ ] 🔵 Flywheel Documentation (Wiki)
-      New page: ecosystem-flywheel.html
-      More builders use SDK → more IFR locked → supply drops
-      → price rises → more builders come → FLYWHEEL
+- [x] 🔵 Flywheel Documentation (Wiki) — done 2026-10-23: docs/wiki/flywheel.html
+      Documents implemented fees/burns/locks, dormant buyback and planned activation separately.
+      Locks reduce freely transferable balances, not total supply; no price or adoption outcome is promised.
 
 - [ ] 🔵 Bug bounty program
 - [ ] 🔵 Professional audit (third-party: Code4rena / Sherlock / Cyfrin)
@@ -1107,5 +1107,5 @@ Hetzner API endpoints already live: stats, offers, loans/:addr, health/:id, lend
 
 - Local implementation: Wiki shell and navigation, first-step landing wizard, FAQs, README, sitemap/LLM index and Copilot knowledge/RAG. Transactions remain external on Uniswap V2; no connector changes or automatic LP rewards.
 - Verification: integer quote and fail-closed tests, responsive navigation/wizard browser tests, six-mode Copilot context checks and documentation/build gates. Final evidence is recorded in the local Bridge.
-- [ ] Publish the scoped liquidity candidate through PR/exact-head CI after approval; preserve unrelated local readiness work and private follow-up drafts.
-- [ ] Deploy approved documentation and Copilot artifacts, then verify live navigation, fresh calculator data and chat guidance. No direct LP execution is authorized by this item.
+- [x] Publish the scoped liquidity candidate through PR/exact-head CI after approval; preserve unrelated local readiness work and private follow-up drafts. — closed 2026-10-22: guide and reserve gauge merged in #84; navigation and calculator documented in README.md.
+- [ ] Verify deployment of the approved documentation, live navigation and fresh calculator data; Copilot web chat and chat guidance were retired in #313. No direct LP execution is authorized by this item.

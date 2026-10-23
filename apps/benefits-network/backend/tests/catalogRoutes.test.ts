@@ -1562,28 +1562,45 @@ describe('Seller catalog routes', () => {
     }
   });
 
-  it('rate limits public checkout status polling and never writes on read', async () => {
+  it.each([
+    { storedStatus: 'PENDING', ttlMs: -1000, reportedStatus: 'EXPIRED', client: 90 },
+    { storedStatus: 'APPROVED', ttlMs: -1000, reportedStatus: 'EXPIRED', client: 91 },
+    { storedStatus: 'PENDING', ttlMs: 60_000, reportedStatus: 'PENDING', client: 92 },
+    { storedStatus: 'APPROVED', ttlMs: 60_000, reportedStatus: 'APPROVED', client: 93 },
+    { storedStatus: 'REDEEMED', ttlMs: -1000, reportedStatus: 'REDEEMED', client: 94 },
+    { storedStatus: 'REJECTED', ttlMs: -1000, reportedStatus: 'REJECTED', client: 95 },
+    { storedStatus: 'EXPIRED', ttlMs: -1000, reportedStatus: 'EXPIRED', client: 96 },
+  ])('polls $storedStatus (TTL $ttlMs) as $reportedStatus without writes', async ({
+    storedStatus, ttlMs, reportedStatus, client,
+  }) => {
     const session = await createSession(businessId);
     await prisma.session.update({
       where: { id: session.sessionId },
-      data: { expiresAt: new Date(Date.now() - 1000) },
+      data: { status: storedStatus, expiresAt: new Date(Date.now() + ttlMs) },
     });
     const before = await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } });
-    const auditBefore = await prisma.auditLog.count({ where: { sessionId: session.sessionId } });
-    const headers = { 'x-forwarded-for': '203.0.113.83' };
+    const auditBefore = await prisma.auditLog.findMany({
+      where: { sessionId: session.sessionId }, orderBy: { id: 'asc' },
+    });
+    const headers = { 'x-forwarded-for': `203.0.113.${client}` };
 
     const first = await fetch(`${baseUrl()}/api/sessions/${session.sessionId}`, { headers });
     expect(first.status).toBe(200);
     expect(first.headers.get('ratelimit-limit')).toBe('7200');
     expect(first.headers.get('ratelimit-remaining')).toBe('7199');
-    expect(await first.json()).toMatchObject({ status: 'EXPIRED', reason: 'Session expired.' });
+    expect(await first.json()).toMatchObject({
+      status: reportedStatus,
+      ...(reportedStatus === 'EXPIRED' ? { reason: 'Session expired.' } : {}),
+    });
     const second = await fetch(`${baseUrl()}/api/sessions/${session.sessionId}`, { headers });
     expect(second.headers.get('ratelimit-remaining')).toBe('7198');
+    expect(await second.json()).toMatchObject({ status: reportedStatus });
 
     const after = await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } });
-    expect(after.status).toBe('PENDING');
-    expect(after.updatedAt.getTime()).toBe(before.updatedAt.getTime());
-    expect(await prisma.auditLog.count({ where: { sessionId: session.sessionId } })).toBe(auditBefore);
+    expect(after).toEqual(before);
+    expect(await prisma.auditLog.findMany({
+      where: { sessionId: session.sessionId }, orderBy: { id: 'asc' },
+    })).toEqual(auditBefore);
   });
 
   it('does not let a session-ID holder without wallet authority burn attest attempts', async () => {

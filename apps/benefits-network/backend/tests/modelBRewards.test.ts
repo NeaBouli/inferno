@@ -16,6 +16,11 @@ import { config } from '../src/config';
 import { prisma, attest, buildChallengeMessage, createSessionSnapshot } from '../src/services/sessionService';
 import { modelBDedupKey, modelBRewardDecision } from '../src/services/modelBDedup';
 import { getModelBPolicy } from '../src/services/modelBPolicy';
+import {
+  bindCustomerPass, confirmCustomerPass, createCustomerPass,
+  getControlledCustomerPass, getCustomerPassChallenge,
+} from '../src/services/customerPassService';
+import { issueSellerAuthorizationChallenge } from '../src/services/sellerAuthorizationChallenge';
 import { buildSettlementExport, parseSettlementPeriod, CUSTOMER_DEDUP_POLICY_GAP } from '../src/services/modelBSettlement';
 import { loadSettlementRecords } from '../src/services/modelBSettlementData';
 
@@ -58,6 +63,49 @@ beforeEach(async () => {
     commitmentAmount: null, verifiedLockSource: 'ifrlock', verificationBlock: 123 });
 });
 afterAll(() => prisma.$disconnect());
+
+test.each(['PENDING', 'APPROVED'])('an expired %s bound pass that is only polled never holds a wallet/partner reward or blocks a replacement checkout', async (status) => {
+  const openPass = async () => {
+    const pass = await createCustomerPass();
+    const scope = `${pass.passId}:${ruleId}`;
+    const nonce = await issueSellerAuthorizationChallenge(prisma, { action: 'passes:bind', businessId,
+      scope, expiresAt: new Date(Date.now() + 60_000) });
+    const session = await bindCustomerPass({ passId: pass.passId, businessId, benefitRuleId: ruleId,
+      sellerWallet: owner.address, nonce, scope });
+    return { ...pass, sessionId: session.sessionId };
+  };
+  const old = await openPass();
+  const authorization = `Bearer ${old.controlToken}`;
+  await getCustomerPassChallenge(old.passId, customer.address, authorization);
+  const expiresAt = new Date(Date.now() - 1000);
+  await prisma.session.update({ where: { id: old.sessionId }, data: { status, expiresAt } });
+  await prisma.customerPass.update({ where: { id: old.passId }, data: { expiresAt } });
+  const passBefore = await prisma.customerPass.findUniqueOrThrow({ where: { id: old.passId } });
+  const sessionBefore = await prisma.session.findUniqueOrThrow({ where: { id: old.sessionId } });
+  const auditBefore = await prisma.auditLog.findMany({ where: { sessionId: old.sessionId }, orderBy: { id: 'asc' } });
+  expect(passBefore.status).toBe('BOUND');
+
+  // After expiry the old pass is only read; no POST or cleanup persists its EXPIRED transition.
+  for (let poll = 0; poll < 2; poll += 1) {
+    expect(await getControlledCustomerPass(old.passId, authorization))
+      .toMatchObject({ status: 'EXPIRED', checkout: { status: 'EXPIRED' } });
+  }
+  expect(await prisma.rewardEvent.count({ where: { partnerId } })).toBe(0);
+
+  const next = await openPass();
+  expect(next.passId).not.toBe(old.passId);
+  const nextAuthorization = `Bearer ${next.controlToken}`;
+  const message = await getCustomerPassChallenge(next.passId, customer.address, nextAuthorization);
+  expect(await confirmCustomerPass(next.passId, customer.address, await customer.signMessage(message), nextAuthorization))
+    .toMatchObject({ status: 'REDEEMED', wallet: customer.address });
+  expect(await prisma.rewardEvent.findMany({ where: { partnerId } })).toEqual([
+    expect.objectContaining({ sessionId: next.sessionId, businessId, status: 'SETTLEMENT_PENDING',
+      rewardDedupKey: expect.stringMatching(/^[\w-]{22}\.[\w-]{43}$/) }),
+  ]);
+  expect(await prisma.customerPass.findUniqueOrThrow({ where: { id: old.passId } })).toEqual(passBefore);
+  expect(await prisma.session.findUniqueOrThrow({ where: { id: old.sessionId } })).toEqual(sessionBefore);
+  expect(await prisma.auditLog.findMany({ where: { sessionId: old.sessionId }, orderBy: { id: 'asc' } })).toEqual(auditBefore);
+});
 
 test('verified exact-offer checkout creates one eligible event; a repeat wallet still redeems without another reward', async () => {
   const first = await open(); const second = await open();

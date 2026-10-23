@@ -389,22 +389,65 @@ describe('customer-presented checkout passes', () => {
     expect((await bindPass(otherSeller, otherBusinessId, otherRuleId, created.body.passId)).status).toBe(409);
   });
 
-  it('expires a bound pass and linked session consistently across control endpoints', async () => {
+  it('reports an expired unbound pass without writing until a mutation', async () => {
+    const created = await createPass();
+    await prisma.customerPass.update({
+      where: { id: created.body.passId }, data: { expiresAt: new Date(Date.now() - 1000) },
+    });
+    const before = await prisma.customerPass.findUniqueOrThrow({ where: { id: created.body.passId } });
+    const headers = { authorization: `Bearer ${created.body.controlToken}` };
+    for (let poll = 0; poll < 2; poll += 1) {
+      const response = await fetch(`${baseUrl()}/api/passes/${created.body.passId}/control`, { headers });
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual({ status: 'EXPIRED', expiresAt: before.expiresAt.toISOString(), checkout: null });
+    }
+    expect(await prisma.customerPass.findUniqueOrThrow({ where: { id: created.body.passId } })).toEqual(before);
+    const cancelled = await fetch(`${baseUrl()}/api/passes/${created.body.passId}/cancel`, { method: 'POST', headers });
+    expect(cancelled.status).toBe(409);
+    expect((await prisma.customerPass.findUniqueOrThrow({ where: { id: created.body.passId } })).status).toBe('EXPIRED');
+  });
+
+  it.each(['PENDING', 'APPROVED', 'EXPIRED'])('reports an expired %s bound checkout without writing until a mutation', async (status) => {
     const created = await createPass();
     const bound = await bindPass(seller, businessId, ruleId, created.body.passId);
     const { sessionId } = await bound.json() as { sessionId: string };
     await prisma.session.update({
       where: { id: sessionId },
-      data: { expiresAt: new Date(Date.now() - 1000) },
+      data: { status, expiresAt: new Date(Date.now() - 1000) },
     });
+    const sessionBefore = await prisma.session.findUniqueOrThrow({ where: { id: sessionId } });
+    const passBefore = await prisma.customerPass.findUniqueOrThrow({ where: { id: created.body.passId } });
+    const auditBefore = await prisma.auditLog.findMany({ where: { sessionId }, orderBy: { id: 'asc' } });
     const headers = { authorization: `Bearer ${created.body.controlToken}` };
-    const controlled = await fetch(`${baseUrl()}/api/passes/${created.body.passId}/control`, { headers });
-    expect(controlled.status).toBe(200);
-    expect(await controlled.json()).toMatchObject({ status: 'EXPIRED', checkout: { status: 'EXPIRED' } });
+    for (let poll = 0; poll < 2; poll += 1) {
+      const controlled = await fetch(`${baseUrl()}/api/passes/${created.body.passId}/control`, { headers });
+      expect(controlled.status).toBe(200);
+      expect(await controlled.json()).toMatchObject({ status: 'EXPIRED', checkout: { status: 'EXPIRED' } });
+    }
+    expect(await prisma.customerPass.findUniqueOrThrow({ where: { id: created.body.passId } })).toEqual(passBefore);
+    expect(await prisma.session.findUniqueOrThrow({ where: { id: sessionId } })).toEqual(sessionBefore);
+    expect(await prisma.auditLog.findMany({ where: { sessionId }, orderBy: { id: 'asc' } })).toEqual(auditBefore);
+    // The existing POST challenge persists expiry and still refuses an expired checkout.
+    expect((await passChallenge(created.body.passId, created.body.controlToken, customer.address)).status).toBe(409);
     expect((await prisma.customerPass.findUniqueOrThrow({ where: { id: created.body.passId } })).status).toBe('EXPIRED');
     expect((await prisma.session.findUniqueOrThrow({ where: { id: sessionId } })).status).toBe('EXPIRED');
-    expect((await passChallenge(created.body.passId, created.body.controlToken, customer.address)).status).toBe(409);
     expect((await fetch(`${baseUrl()}/api/passes/${created.body.passId}/cancel`, { method: 'POST', headers })).status).toBe(409);
+  });
+
+  it.each(['REDEEMED', 'REJECTED'])('preserves a terminal %s checkout when polling after TTL', async (status) => {
+    const created = await createPass();
+    const bound = await bindPass(seller, businessId, ruleId, created.body.passId);
+    const { sessionId } = await bound.json() as { sessionId: string };
+    await prisma.session.update({ where: { id: sessionId }, data: { status, expiresAt: new Date(Date.now() - 1000) } });
+    const before = await prisma.session.findUniqueOrThrow({ where: { id: sessionId } });
+    const passBefore = await prisma.customerPass.findUniqueOrThrow({ where: { id: created.body.passId } });
+    const response = await fetch(`${baseUrl()}/api/passes/${created.body.passId}/control`, {
+      headers: { authorization: `Bearer ${created.body.controlToken}` },
+    });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ status: 'BOUND', checkout: { status } });
+    expect(await prisma.session.findUniqueOrThrow({ where: { id: sessionId } })).toEqual(before);
+    expect(await prisma.customerPass.findUniqueOrThrow({ where: { id: created.body.passId } })).toEqual(passBefore);
   });
 
   it('never reports cancellation while leaving the checkout redeemed under a confirm race', async () => {

@@ -611,8 +611,10 @@
     .alloc-row-fill {
       height: 100%;
       border-radius: 3px;
-      width: 0;
-      transition: width 1.2s ease;
+      width: 100%;
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 1.2s ease;
     }
 
     .fair-launch-badge {
@@ -1060,7 +1062,7 @@
     }
 
     /* === IFR ANIMATED BANNER === */
-    .ifr-banner-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
+    .ifr-banner-canvas{contain:layout paint;position:absolute;inset:0;width:100%;height:100%;pointer-events:none;}
     #ifr-c-parts{z-index:2;}
     #ifr-c-shock{z-index:7;}
     #ifr-c-title{z-index:9;}
@@ -1083,7 +1085,7 @@
     @keyframes ifr-ambient-shock{0%{opacity:1.0;transform:translate(-50%,-50%) scale(1);}20%{opacity:1.0;transform:translate(-50%,-50%) scale(1.35);}100%{opacity:0.7;transform:translate(-50%,-50%) scale(1);}}
     .ifr-bstar{position:absolute;border-radius:50%;background:#fff;animation:ifr-btwinkle var(--dur) ease-in-out infinite alternate;animation-delay:var(--del);}
     @keyframes ifr-btwinkle{from{opacity:var(--a0);}to{opacity:var(--a1);}}
-    .ifr-stars-container{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;}
+    .ifr-stars-container{contain:layout paint;position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden;}
     /* === END IFR ANIMATED BANNER === */
 
     /* === IFR HERO ENHANCEMENTS — Desktop only, static layers === */
@@ -1433,10 +1435,10 @@
 <script type="module" src="/assets/liquidity-gauge.mjs?v=impact2"></script>
 <script src="assets/wallet-core.js?v=20261010-pr261-notice"></script>
 <script src="assets/ifr-state.js"></script>
-  <link rel="stylesheet" href="assets/redesign-skin.css?v=20261017-retirement">
-  <link rel="stylesheet" href="assets/landing-header-template.css?v=20261006-t279">
-  <link rel="stylesheet" href="assets/landing-collapse.css?v=20261018-1">
-  <script defer src="assets/landing-collapse.js?v=20261018-1"></script>
+  <link rel="stylesheet" href="assets/redesign-skin.css?v=20261017-retirement&amp;perf=20261023">
+  <link rel="stylesheet" href="assets/landing-header-template.css?v=20261023-b5">
+  <link rel="stylesheet" href="assets/landing-collapse.css?v=20261023-b5">
+  <script defer src="assets/landing-collapse.js?v=20261023-b5"></script>
   <noscript><style>.reveal { opacity: 1; transform: none; }</style></noscript>
 </head>
 <body id="top">
@@ -1447,7 +1449,7 @@
 <nav>
   <div class="nav-inner">
     <a class="nav-brand" href="#top">
-      <img src="assets/ifr_icon_256.png" alt="Inferno">
+      <img src="assets/ifr_icon_256.png" alt="Inferno" width="30" height="30" decoding="async">
       <span class="wm">IFR PROTOCOL</span><span class="tk">$IFRp</span>
     </a>
     <ul class="nav-links">
@@ -1605,7 +1607,7 @@
   <div class="hero-mobile-banner">
     <picture>
       <source srcset="assets/IFR_BannerMobile.webp" type="image/webp">
-      <img src="assets/IFR_BannerMobile.png" alt="Inferno Protocol" loading="lazy" decoding="async">
+      <img src="assets/IFR_BannerMobile.png" alt="Inferno Protocol" width="1536" height="1024" loading="lazy" decoding="async">
     </picture>
   </div>
   <!-- IFR ANIMATED BANNER START -->
@@ -1694,10 +1696,10 @@
     <div class="coin-container">
       <div class="coin">
         <div class="coin-face">
-          <img src="assets/ifr_icon_256_mirrored.png" alt="Inferno Logo">
+          <img src="assets/ifr_icon_256_mirrored.png" alt="Inferno Logo" width="256" height="256" loading="lazy" decoding="async">
         </div>
         <div class="coin-back">
-          <img src="assets/ifr_icon_256.png" alt="IFR Token">
+          <img src="assets/ifr_icon_256.png" alt="IFR Token" width="256" height="256" loading="lazy" decoding="async">
         </div>
       </div>
       <div class="coin-shadow"></div>
@@ -1975,7 +1977,7 @@ h+='<div class="wz-option-arrow" aria-hidden="true">&rarr;</div>'+close;
 }
 document.getElementById("wz-box").innerHTML='<div style="background:#fff8ef;border:1px solid #e4d8c7;border-radius:14px;padding:24px;box-shadow:0 14px 34px rgba(85,65,42,0.12)"><h3 style="font-size:1.15rem;font-weight:700;margin-bottom:4px;color:#211c17">'+s.q+'</h3><p style="color:#6f675d;font-size:0.85rem;margin-bottom:18px">'+s.sub+'</p>'+h+'</div>';
 }
-window.wzGo=function(k){hist.push(cur);cur=k;render();document.getElementById("wizard").scrollIntoView({behavior:"smooth",block:"start"})};
+window.wzGo=function(k){hist.push(cur);cur=k;render();document.getElementById("wizard").scrollIntoView({behavior:window.matchMedia("(prefers-reduced-motion: reduce)").matches?"instant":"smooth",block:"start"})};
 window.wzBack=function(){if(hist.length>0){cur=hist.pop();render()}};
 window.wzReset=function(){hist=[];cur="start";render()};
 render();
@@ -2037,7 +2039,7 @@ render();
   <div class="container">
     <div class="reveal">
       <p class="section-label">Tokenomics</p>
-      <img src="assets/ifr_icon_256.png" alt="IFR Token" class="token-symbol">
+      <img src="assets/ifr_icon_256.png" alt="IFR Token" class="token-symbol" width="80" height="80" loading="lazy" decoding="async">
       <h2 class="section-title">Designed to be deflationary by default</h2>
       <p class="section-desc">Every standard transfer between non-exempt addresses burns tokens permanently. The supply only goes down. No inflation, no minting after launch.</p>
     </div>
@@ -3222,7 +3224,7 @@ if (isLocked) {
     </div>
     <div class="reveal" style="max-width:720px;margin:40px auto 0;display:flex;flex-direction:column;gap:8px;">
       <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">InfernoToken</span></div>
+        <div><img src="assets/ifr_icon_64.png" alt="IFR" width="20" height="20" loading="lazy" decoding="async" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">InfernoToken</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x77e99917Eca8539c62F509ED1193ac36580A6e7B</code>
           <button onclick="lpAddIFRToken()" title="Add IFR to MetaMask" style="background:#e9ded0;border:1px solid #d4c3ae;border-radius:4px;padding:4px 8px;cursor:pointer;color:#2f241d;font-size:12px;font-weight:700;">MetaMask</button>
@@ -3230,119 +3232,119 @@ if (isLocked) {
         </div>
       </div>
       <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">LiquidityReserve</span></div>
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" width="20" height="20" loading="lazy" decoding="async" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">LiquidityReserve</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0xdc0309804803b3A105154f6073061E3185018f64</code>
           <button class="copy-btn" data-addr="0xdc0309804803b3A105154f6073061E3185018f64" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
       <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">Vesting</span></div>
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" width="20" height="20" loading="lazy" decoding="async" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">Vesting</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271</code>
           <button class="copy-btn" data-addr="0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
       <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">BuybackVault (legacy, dormant)</span></div>
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" width="20" height="20" loading="lazy" decoding="async" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">BuybackVault (legacy, dormant)</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x670D293e3D65f96171c10DdC8d88B96b0570F812</code>
           <button class="copy-btn" data-addr="0x670D293e3D65f96171c10DdC8d88B96b0570F812" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
       <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">BurnReserve</span></div>
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" width="20" height="20" loading="lazy" decoding="async" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">BurnReserve</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0xaA1496133B6c274190A2113410B501C5802b6fCF</code>
           <button class="copy-btn" data-addr="0xaA1496133B6c274190A2113410B501C5802b6fCF" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
       <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">Governance</span></div>
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" width="20" height="20" loading="lazy" decoding="async" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">Governance</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0xc43d48E7FDA576C5022d0670B652A622E8caD041</code>
           <button class="copy-btn" data-addr="0xc43d48E7FDA576C5022d0670B652A622E8caD041" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
       <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">IFRLock</span></div>
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" width="20" height="20" loading="lazy" decoding="async" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">IFRLock</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb</code>
           <button class="copy-btn" data-addr="0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
       <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">PartnerVault</span></div>
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" width="20" height="20" loading="lazy" decoding="async" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">PartnerVault</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D</code>
           <button class="copy-btn" data-addr="0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
       <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">FeeRouterV1</span></div>
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" width="20" height="20" loading="lazy" decoding="async" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">FeeRouterV1</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a</code>
           <button class="copy-btn" data-addr="0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
       <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">BootstrapVaultV3</span></div>
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" width="20" height="20" loading="lazy" decoding="async" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">BootstrapVaultV3</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141</code>
           <button class="copy-btn" data-addr="0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
       <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">BuilderRegistry</span></div>
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" width="20" height="20" loading="lazy" decoding="async" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">BuilderRegistry</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0xdfe6636DA47F8949330697e1dC5391267CEf0EE3</code>
           <button class="copy-btn" data-addr="0xdfe6636DA47F8949330697e1dC5391267CEf0EE3" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
       <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">CommitmentVault (V1, legacy)</span></div>
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" width="20" height="20" loading="lazy" decoding="async" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">CommitmentVault (V1, legacy)</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3</code>
           <button class="copy-btn" data-addr="0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
       <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">LendingVault</span></div>
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" width="20" height="20" loading="lazy" decoding="async" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">LendingVault</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x974305Ab0EC905172e697271C3d7d385194EB9DF</code>
           <button class="copy-btn" data-addr="0x974305Ab0EC905172e697271C3d7d385194EB9DF" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
       <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">BuybackController</span></div>
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" width="20" height="20" loading="lazy" decoding="async" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">BuybackController</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c</code>
           <button class="copy-btn" data-addr="0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
       <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">CommitmentVault V2</span></div>
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" width="20" height="20" loading="lazy" decoding="async" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">CommitmentVault V2</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F</code>
           <button class="copy-btn" data-addr="0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
       <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">Treasury Safe (Gnosis)</span></div>
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" width="20" height="20" loading="lazy" decoding="async" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">Treasury Safe (Gnosis)</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b</code>
           <button class="copy-btn" data-addr="0x5ad6193eD6E1e31ed10977E73e3B609AcBfEcE3b" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
       <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">Community Safe (Gnosis)</span></div>
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" width="20" height="20" loading="lazy" decoding="async" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">Community Safe (Gnosis)</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0xaC5687547B2B21d80F8fd345B51e608d476667C7</code>
           <button class="copy-btn" data-addr="0xaC5687547B2B21d80F8fd345B51e608d476667C7" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
         </div>
       </div>
       <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
-        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" loading="lazy" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">LP Reserve Safe (Gnosis)</span></div>
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" width="20" height="20" loading="lazy" decoding="async" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">LP Reserve Safe (Gnosis)</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
           <code style="font-size:12px;color:var(--accent);word-break:break-all;">0x5D93E7919a71d725054e31017eCA86B026F86C04</code>
           <button class="copy-btn" data-addr="0x5D93E7919a71d725054e31017eCA86B026F86C04" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
@@ -3424,7 +3426,7 @@ if (isLocked) {
       });
       scrollTicking = true;
     }
-  });
+  }, { passive: true });
 
   // Scroll reveal
   const reveals = document.querySelectorAll('.reveal');
@@ -3433,7 +3435,7 @@ if (isLocked) {
       if (entry.isIntersecting) {
         entry.target.classList.add('visible');
         entry.target.querySelectorAll('.alloc-row-fill').forEach(bar => {
-          bar.style.width = bar.dataset.width + '%';
+          bar.style.transform = 'scaleX(' + Number(bar.dataset.width) / 100 + ')';
         });
       }
     });
@@ -3442,15 +3444,16 @@ if (isLocked) {
   reveals.forEach(el => observer.observe(el));
 
   function revealRestoredViewport() {
-    reveals.forEach(el => {
+    // Read every rectangle before changing classes or transforms.
+    const nearViewport = [...reveals].filter(el => {
       const rect = el.getBoundingClientRect();
-      const nearViewport = rect.top < window.innerHeight * 1.25 && rect.bottom > -window.innerHeight * 0.5;
-      if (nearViewport) {
-        el.classList.add('visible');
-        el.querySelectorAll('.alloc-row-fill').forEach(bar => {
-          bar.style.width = bar.dataset.width + '%';
-        });
-      }
+      return rect.top < window.innerHeight * 1.25 && rect.bottom > -window.innerHeight * 0.5;
+    });
+    nearViewport.forEach(el => {
+      el.classList.add('visible');
+      el.querySelectorAll('.alloc-row-fill').forEach(bar => {
+        bar.style.transform = 'scaleX(' + Number(bar.dataset.width) / 100 + ')';
+      });
     });
   }
 
@@ -3723,7 +3726,22 @@ if (isLocked) {
     setLive('flow-vesting',    fmtFlow(d.vesting, ' IFR locked'));
   }
 
+  var donutCanvas = document.getElementById('dist-donut');
+  var donutVisible = !('IntersectionObserver' in window);
+  var pendingDonutData = null;
+  if (donutCanvas && 'IntersectionObserver' in window) {
+    new IntersectionObserver(function(entries) {
+      donutVisible = entries[entries.length - 1].isIntersecting;
+      if (donutVisible && pendingDonutData) drawDonut(donutCanvas, pendingDonutData);
+    }).observe(donutCanvas);
+  }
+  document.addEventListener('visibilitychange', function() {
+    if (donutCanvas && !document.hidden && donutVisible && pendingDonutData) drawDonut(donutCanvas, pendingDonutData);
+  });
+
   function drawDonut(canvas, data) {
+    pendingDonutData = data;
+    if (!donutVisible || document.hidden) return;
     var ctx = canvas.getContext('2d');
     var w = canvas.width; var h = canvas.height;
     var cx = w / 2; var cy = h / 2;
@@ -4304,7 +4322,44 @@ if (isLocked) {
 <script>
 (function(){
 'use strict';
-const hero=document.getElementById('ifr-bstars').parentElement;
+const hero = document.getElementById('ifr-bstars').parentElement;
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+const compactBanner = window.matchMedia('(max-width: 1024px)');
+let bannerVisible = false, bannerController = null;
+function syncBanner() {
+  const active = bannerVisible && !document.hidden && !reducedMotion.matches &&
+    !compactBanner.matches && hero.getClientRects().length > 0;
+  if (active) {
+    if (!bannerController) bannerController = createBanner();
+    bannerController.start();
+  } else if (bannerController) {
+    bannerController.stop();
+  }
+}
+if ('IntersectionObserver' in window) {
+  new IntersectionObserver(entries => {
+    bannerVisible = entries[entries.length - 1].isIntersecting;
+    syncBanner();
+  }).observe(hero);
+} else {
+  const updateVisibility = () => {
+    const rect = hero.getBoundingClientRect();
+    bannerVisible = rect.bottom > 0 && rect.top < window.innerHeight;
+    syncBanner();
+  };
+  let pending = false;
+  window.addEventListener('scroll', () => {
+    if (pending) return;
+    pending = true;
+    requestAnimationFrame(() => { pending = false; updateVisibility(); });
+  }, { passive: true });
+  window.addEventListener('resize', updateVisibility);
+  requestAnimationFrame(updateVisibility);
+}
+document.addEventListener('visibilitychange', syncBanner);
+reducedMotion.addEventListener('change', syncBanner);
+compactBanner.addEventListener('change', syncBanner);
+function createBanner() {
 const cParts=document.getElementById('ifr-c-parts');
 const cShock=document.getElementById('ifr-c-shock');
 const cTitle=document.getElementById('ifr-c-title');
@@ -4318,7 +4373,7 @@ function resize(){W=hero.offsetWidth||1500;H=hero.offsetHeight||560;[cParts,cSho
 const BHX=120,BHY=120,HORIZON=76;
 const starsEl=document.getElementById('ifr-bstars');
 for(let i=0;i<130;i++){const s=document.createElement('div');s.className='ifr-bstar';const sz=0.4+Math.random()*1.8;s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--dur:${5+Math.random()*9}s;--del:${-Math.random()*12}s;--a0:${0.03+Math.random()*0.12};--a1:${0.2+Math.random()*0.5};`;starsEl.appendChild(s);}
-function pulseBH(intensity){bhVoid.classList.remove('ifr-pulse');bhAmb.classList.remove('ifr-pulse');void bhVoid.offsetWidth;void bhAmb.offsetWidth;if(intensity>0.4){bhVoid.classList.add('ifr-pulse');bhAmb.classList.add('ifr-pulse');setTimeout(()=>{bhVoid.classList.remove('ifr-pulse');bhAmb.classList.remove('ifr-pulse');},1200);}}
+function pulseBH(intensity){bhVoid.classList.remove('ifr-pulse');bhAmb.classList.remove('ifr-pulse');void bhVoid.offsetWidth;void bhAmb.offsetWidth;if(intensity>0.4){bhVoid.classList.add('ifr-pulse');bhAmb.classList.add('ifr-pulse');scheduleEffect(()=>{bhVoid.classList.remove('ifr-pulse');bhAmb.classList.remove('ifr-pulse');},1200);}}
 const TITLE='INFERNO',IFR_IDX=[0,2,4],FONT_SIZE=82,FONT=`900 ${FONT_SIZE}px Orbitron, monospace`,LETTER_SPACING=8;
 let charPos=[],titleBaseY=0;
 const ifrFire=[{alpha:0,target:0,timer:0,hue:8},{alpha:0,target:0,timer:0,hue:6},{alpha:0,target:0,timer:0,hue:10}];
@@ -4334,15 +4389,45 @@ let pressure=0.45,pressureVel=0.0002+Math.random()*0.0003,lastShockT=0;
 const shockwaves=[];
 let letterDists=null;
 function computeLetterDists(){if(!charPos.length)return;letterDists=IFR_IDX.map(i=>{const cp=charPos[i];return Math.hypot(cp.x+cp.w/2-BHX,cp.y-FONT_SIZE/2-BHY);});}
-function spawnShock(intensity){const sw=new Shockwave(intensity);shockwaves.push(sw);pulseBH(intensity);if(Math.random()<0.38&&intensity>0.45){const delay=900+Math.random()*2200;setTimeout(()=>{shockwaves.push(new Shockwave(intensity*(0.25+Math.random()*0.4)));},delay);}}
+function spawnShock(intensity){const sw=new Shockwave(intensity);shockwaves.push(sw);pulseBH(intensity);if(Math.random()<0.38&&intensity>0.45){const delay=900+Math.random()*2200;scheduleEffect(()=>{shockwaves.push(new Shockwave(intensity*(0.25+Math.random()*0.4)));},delay);}}
 function igniteLetter(idx,intensity){if(idx<0||idx>=ifrFire.length)return;const st=ifrFire[idx];st.target=0.60+intensity*0.35+Math.random()*0.06;st.timer=120+Math.floor(intensity*110+Math.random()*70);st.hue=4+Math.random()*12;}
-function loop(now){ctxP.clearRect(0,0,W,H);ctxS.clearRect(0,0,W,H);synapses.forEach(s=>{s.update();s.draw(ctxP);});pressureVel+=(Math.random()-0.48)*0.00007;pressureVel=Math.max(0.00005,Math.min(0.0012,pressureVel));pressure+=pressureVel;if(Math.random()<0.0007)pressure+=0.06+Math.random()*0.28;const threshold=0.58+Math.random()*0.42;if(pressure>threshold&&now-lastShockT>2800){spawnShock(Math.min(pressure,1.4));pressure=Math.random()*0.12;pressureVel=0.0001+Math.random()*0.0002;lastShockT=now;if(!letterDists)computeLetterDists();}for(let i=shockwaves.length-1;i>=0;i--){const sw=shockwaves[i];sw.update();sw.draw(ctxS);synapses.forEach(s=>{const d=Math.hypot(s.x-BHX,s.y-BHY);if(Math.abs(sw.r-d)<22)s.flash(0.3+sw.intensity*0.5+Math.random()*0.2);});if(letterDists){letterDists.forEach((dist,idx)=>{if(!sw.letterTriggered[idx]&&sw.r>=dist-35){sw.letterTriggered[idx]=true;const delay=idx*(55+Math.random()*110);setTimeout(()=>igniteLetter(idx,sw.intensity),delay);}});}if(sw.isDone())shockwaves.splice(i,1);}ifrFire.forEach(st=>{if(st.timer>0){st.alpha+=(st.target-st.alpha)*0.030;st.alpha+=(Math.random()-0.5)*0.010;st.alpha=Math.max(0,Math.min(st.alpha,1));st.timer--;}else{st.alpha*=0.987;if(st.alpha<0.006)st.alpha=0;}});if(spotX>1.5){if(Math.random()<0.0004)spotSpeed=-0.00032;}else if(spotX<-0.5){spotX=1.8;spotSpeed=0;}else{if(Math.abs(spotSpeed)<0.0001)spotSpeed=-0.00032;}spotX+=spotSpeed;drawTitle();if(heroVisible)requestAnimationFrame(loop);else loopRunning=false;}
-window.addEventListener('resize',resize);
-// Only animate while the hero is on screen; off-screen frames starve the rest of the page (T-158f).
-let heroVisible=true,loopRunning=false,loopReady=false;
-function startLoop(){if(loopReady&&heroVisible&&!loopRunning){loopRunning=true;requestAnimationFrame(loop);}}
-new IntersectionObserver(entries=>{heroVisible=entries[entries.length-1].isIntersecting;startLoop();}).observe(hero);
-document.fonts.ready.then(()=>{resize();setTimeout(()=>{pressure=1.3;lastShockT=0;},3500);setTimeout(()=>{spotSpeed=-0.00032;},5000);loopReady=true;startLoop();});
+function loop(now){frame=null;if(!running)return;if(resizePending){resize();resizePending=false;}ctxP.clearRect(0,0,W,H);ctxS.clearRect(0,0,W,H);synapses.forEach(s=>{s.update();s.draw(ctxP);});pressureVel+=(Math.random()-0.48)*0.00007;pressureVel=Math.max(0.00005,Math.min(0.0012,pressureVel));pressure+=pressureVel;if(Math.random()<0.0007)pressure+=0.06+Math.random()*0.28;const threshold=0.58+Math.random()*0.42;if(pressure>threshold&&now-lastShockT>2800){spawnShock(Math.min(pressure,1.4));pressure=Math.random()*0.12;pressureVel=0.0001+Math.random()*0.0002;lastShockT=now;if(!letterDists)computeLetterDists();}for(let i=shockwaves.length-1;i>=0;i--){const sw=shockwaves[i];sw.update();sw.draw(ctxS);synapses.forEach(s=>{const d=Math.hypot(s.x-BHX,s.y-BHY);if(Math.abs(sw.r-d)<22)s.flash(0.3+sw.intensity*0.5+Math.random()*0.2);});if(letterDists){letterDists.forEach((dist,idx)=>{if(!sw.letterTriggered[idx]&&sw.r>=dist-35){sw.letterTriggered[idx]=true;const delay=idx*(55+Math.random()*110);scheduleEffect(()=>igniteLetter(idx,sw.intensity),delay);}});}if(sw.isDone())shockwaves.splice(i,1);}ifrFire.forEach(st=>{if(st.timer>0){st.alpha+=(st.target-st.alpha)*0.030;st.alpha+=(Math.random()-0.5)*0.010;st.alpha=Math.max(0,Math.min(st.alpha,1));st.timer--;}else{st.alpha*=0.987;if(st.alpha<0.006)st.alpha=0;}});if(spotX>1.5){if(Math.random()<0.0004)spotSpeed=-0.00032;}else if(spotX<-0.5){spotX=1.8;spotSpeed=0;}else{if(Math.abs(spotSpeed)<0.0001)spotSpeed=-0.00032;}spotX+=spotSpeed;drawTitle();frame=requestAnimationFrame(loop);}
+let frame = null, requested = false, running = false, ready = false;
+let resizePending = true, introStarted = false;
+const effectTimers = new Set();
+function scheduleEffect(callback, delay) {
+  const timer = setTimeout(() => {
+    effectTimers.delete(timer);
+    if (running) callback();
+  }, delay);
+  effectTimers.add(timer);
+}
+function start() {
+  requested = true;
+  if (!ready || running) return;
+  running = true;
+  if (resizePending) { resize(); resizePending = false; }
+  if (!introStarted) {
+    introStarted = true;
+    scheduleEffect(() => { pressure = 1.3; lastShockT = 0; }, 3500);
+    scheduleEffect(() => { spotSpeed = -0.00032; }, 5000);
+  }
+  frame = requestAnimationFrame(loop);
+}
+function stop() {
+  requested = false;
+  running = false;
+  cancelAnimationFrame(frame);
+  frame = null;
+  effectTimers.forEach(clearTimeout);
+  effectTimers.clear();
+  bhVoid.classList.remove('ifr-pulse');
+  bhAmb.classList.remove('ifr-pulse');
+}
+window.addEventListener('resize', () => { resizePending = true; });
+document.fonts.ready.then(() => { ready = true; if (requested) start(); });
+return { start, stop };
+}
 })();
 </script>
 

@@ -1,4 +1,15 @@
 /* Applied only after enhancement, so the original page stays open without JS. */
+.landing-motion-paused,
+.landing-motion-paused::before,
+.landing-motion-paused::after,
+.landing-motion-paused *,
+.landing-motion-paused *::before,
+.landing-motion-paused *::after,
+.template-hero .hero-web3-btn.landing-motion-paused,
+.template-hero .hero-web3-btn.landing-motion-paused::before {
+  animation-play-state: paused !important;
+}
+
 section.landing-collapsible {
   padding-top: 14px !important;
   padding-bottom: 14px !important;
