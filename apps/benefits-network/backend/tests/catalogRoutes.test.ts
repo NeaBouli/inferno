@@ -49,6 +49,9 @@ import {
 } from '../src/services/sessionService';
 import { config as backendConfig } from '../src/config';
 import { server } from '../src/index';
+import { createReadOnlyDatabaseAssertion } from './helpers/readOnlyDatabase';
+
+const expectNoDatabaseWrites = createReadOnlyDatabaseAssertion(prisma);
 
 function baseUrl() {
   const address = server.address();
@@ -1584,7 +1587,8 @@ describe('Seller catalog routes', () => {
     });
     const headers = { 'x-forwarded-for': `203.0.113.${client}` };
 
-    const first = await fetch(`${baseUrl()}/api/sessions/${session.sessionId}`, { headers });
+    const first = await expectNoDatabaseWrites(() =>
+      fetch(`${baseUrl()}/api/sessions/${session.sessionId}`, { headers }));
     expect(first.status).toBe(200);
     expect(first.headers.get('ratelimit-limit')).toBe('7200');
     expect(first.headers.get('ratelimit-remaining')).toBe('7199');
@@ -1592,7 +1596,8 @@ describe('Seller catalog routes', () => {
       status: reportedStatus,
       ...(reportedStatus === 'EXPIRED' ? { reason: 'Session expired.' } : {}),
     });
-    const second = await fetch(`${baseUrl()}/api/sessions/${session.sessionId}`, { headers });
+    const second = await expectNoDatabaseWrites(() =>
+      fetch(`${baseUrl()}/api/sessions/${session.sessionId}`, { headers }));
     expect(second.headers.get('ratelimit-remaining')).toBe('7198');
     expect(await second.json()).toMatchObject({ status: reportedStatus });
 
@@ -1601,6 +1606,49 @@ describe('Seller catalog routes', () => {
     expect(await prisma.auditLog.findMany({
       where: { sessionId: session.sessionId }, orderBy: { id: 'asc' },
     })).toEqual(auditBefore);
+  });
+
+  it('keeps missing-session and retired challenge GETs free of database writes', async () => {
+    const session = await createSession(businessId);
+    const before = await prisma.session.update({
+      where: { id: session.sessionId }, data: { expiresAt: new Date(Date.now() - 1000) },
+    });
+    const auditBefore = await prisma.auditLog.findMany({ where: { sessionId: session.sessionId } });
+    const missing = await expectNoDatabaseWrites(() =>
+      fetch(`${baseUrl()}/api/sessions/missing-session`));
+    expect(missing.status).toBe(404);
+    expect(await missing.json()).toEqual({ error: 'Session not found' });
+
+    const retired = await expectNoDatabaseWrites(() =>
+      fetch(`${baseUrl()}/api/sessions/${session.sessionId}/challenge`));
+    expect(retired.status).toBe(410);
+    expect(await retired.json()).toEqual({
+      error: 'Request the checkout proof with POST and { walletAddress } in the JSON body.',
+    });
+    expect(await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } })).toEqual(before);
+    expect(await prisma.auditLog.findMany({ where: { sessionId: session.sessionId } })).toEqual(auditBefore);
+  });
+
+  it('can redeem a polled session and poll the completed checkout without writes', async () => {
+    const session = await createSession(businessId);
+    await confirmByOwner(session.sessionId);
+    const pending = await expectNoDatabaseWrites(() =>
+      fetch(`${baseUrl()}/api/sessions/${session.sessionId}`));
+    expect(pending.status).toBe(200);
+    expect(await pending.json()).toMatchObject({ status: 'PENDING', redeemedAt: null });
+
+    mockCheckLock.mockResolvedValue({ eligible: true, lockedAmount: '5000.0' });
+    await expect(proveAsCustomer(session.sessionId)).resolves.toMatchObject({ status: 'REDEEMED' });
+    const redeemed = await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } });
+    const auditBefore = await prisma.auditLog.findMany({ where: { sessionId: session.sessionId } });
+    const response = await expectNoDatabaseWrites(() =>
+      fetch(`${baseUrl()}/api/sessions/${session.sessionId}`));
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({
+      status: 'REDEEMED', reason: null, redeemedAt: redeemed.redeemedAt?.toISOString(),
+    });
+    expect(await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } })).toEqual(redeemed);
+    expect(await prisma.auditLog.findMany({ where: { sessionId: session.sessionId } })).toEqual(auditBefore);
   });
 
   it('does not let a session-ID holder without wallet authority burn attest attempts', async () => {

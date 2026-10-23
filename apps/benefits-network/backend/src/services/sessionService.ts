@@ -877,8 +877,8 @@ async function commitCheckoutRedemption(
 
 /**
  * Get session status (for merchant polling). Read-only: a stale open session is
- * reported as EXPIRED here, while the persisted transition happens only in the
- * conditional attest/redeem state transitions (CWA-43).
+ * reported as EXPIRED here. Checkout mutations persist the transition when
+ * needed (CWA-43).
  */
 export async function getSession(sessionId: string) {
   const session = await prisma.session.findUnique({
@@ -890,7 +890,7 @@ export async function getSession(sessionId: string) {
 
   if (
     (session.status === 'PENDING' || session.status === 'APPROVED') &&
-    new Date() > session.expiresAt
+    Date.now() >= session.expiresAt.getTime()
   ) {
     return { ...session, status: 'EXPIRED', benefit };
   }

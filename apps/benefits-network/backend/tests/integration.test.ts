@@ -45,6 +45,7 @@ import {
   buildChallengeMessage,
   attest,
   CustomerLimitNotHostedError,
+  getSession,
   prisma,
 } from '../src/services/sessionService';
 import { assertSellerBusinessCreationLimit, assertSellerBusinessLimit } from '../src/services/sellerLimits';
@@ -52,6 +53,9 @@ import {
   buildSellerBusinessTotalLimitError,
   getSellerBusinessLimitConfigIssue,
 } from '../src/services/sellerLimitPolicy';
+import { createReadOnlyDatabaseAssertion } from './helpers/readOnlyDatabase';
+
+const expectNoDatabaseWrites = createReadOnlyDatabaseAssertion(prisma);
 
 // ── Test Setup ──────────────────────────────────────────────────────
 
@@ -111,6 +115,37 @@ beforeEach(() => {
   mockRecoverSigner.mockReset();
   mockRecoverSigner.mockImplementation((message: string, signature: string) =>
     ethers.verifyMessage(message, signature));
+});
+
+describe('Read-only session status', () => {
+  it.each(['PENDING', 'APPROVED'])('derives expiry for %s at the TTL boundary without persisting it', async (status) => {
+    const session = await createSession(testBusinessId);
+    const before = await prisma.session.update({
+      where: { id: session.sessionId },
+      data: { status, expiresAt: new Date(Date.now() + 60_000) },
+    });
+    const auditsBefore = await prisma.auditLog.findMany({ where: { sessionId: session.sessionId } });
+    // Fake only the clock; Prisma's asynchronous I/O keeps its real timers.
+    jest.useFakeTimers({
+      doNotFake: [
+        'nextTick', 'queueMicrotask', 'setImmediate', 'clearImmediate',
+        'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval', 'hrtime', 'performance',
+      ],
+    });
+    try {
+      for (const [offset, expectedStatus] of [[-1, status], [0, 'EXPIRED'], [1, 'EXPIRED']] as const) {
+        jest.setSystemTime(before.expiresAt.getTime() + offset);
+        expect(await expectNoDatabaseWrites(() => getSession(session.sessionId))).toMatchObject({
+          ...before, status: expectedStatus,
+          benefit: { discountPercent: 15, requiredLockIFR: 5000, tierLabel: 'Silver' },
+        });
+      }
+    } finally {
+      jest.useRealTimers();
+    }
+    expect(await prisma.session.findUniqueOrThrow({ where: { id: session.sessionId } })).toEqual(before);
+    expect(await prisma.auditLog.findMany({ where: { sessionId: session.sessionId } })).toEqual(auditsBefore);
+  });
 });
 
 // ── E2E: Lock → Verify → Redeem Flow ─────────────────────────────
