@@ -1,6 +1,7 @@
-import { createHash } from 'node:crypto';
+import { createHash, createHmac } from 'node:crypto';
 import type { Prisma } from '@prisma/client';
 import type { Request } from 'express';
+import { config } from '../config';
 
 type AdminAuditTarget = {
   type?: string;
@@ -11,6 +12,11 @@ function digest(value: string) {
   return createHash('sha256').update(value).digest('hex');
 }
 
+/**
+ * New client digests use a dedicated server-side HMAC key; the fixed role digest is unchanged.
+ * Existing rows retain their legacy unkeyed digests. Key rotation affects only new rows and
+ * breaks client correlation across keys; it does not anonymize or rewrite historical rows.
+ */
 export function adminAuditData(
   request: Request,
   action: string,
@@ -25,7 +31,8 @@ export function adminAuditData(
     targetType: target.type ?? null,
     targetId: target.id ?? null,
     actorDigest: digest('admin-actor:primary'),
-    clientDigest: digest(`admin-client:${request.ip || 'unknown'}`),
+    clientDigest: createHmac('sha256', config.ADMIN_AUDIT_HMAC_KEY)
+      .update(`admin-client:${request.ip || 'unknown'}`).digest('hex'),
     statusCode,
   };
 }

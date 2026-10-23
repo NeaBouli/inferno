@@ -8,7 +8,7 @@ const { Duplex } = require('node:stream');
 const ts = require('typescript');
 const nativeRequire = createRequire(path.join(__dirname, '../server/index.ts'));
 
-function loadApp() {
+function loadApp(options = {}) {
   const modules = new Map();
   function load(file) {
     if (modules.has(file)) return modules.get(file).exports;
@@ -23,6 +23,7 @@ function loadApp() {
     }).outputText;
     const requireModule = (specifier) => {
       if (specifier === 'dotenv/config') return {};
+      if (options.modules && Object.hasOwn(options.modules, specifier)) return options.modules[specifier];
       if (specifier.startsWith('.')) {
         return load(path.resolve(path.dirname(file), specifier.replace(/\.js$/, '.ts')));
       }
@@ -30,10 +31,10 @@ function loadApp() {
     };
     vm.runInNewContext(code, {
       module, exports: module.exports, require: requireModule, Buffer, URL,
-      console: { log() {}, error() {}, warn() {} },
-      process: { env: { NODE_ENV: 'test', BOOTSTRAP_VOTES: 'e30=' } },
+      console: options.console || { log() {}, error() {}, warn() {} },
+      process: { env: { NODE_ENV: 'test', BOOTSTRAP_VOTES: 'e30=', ...options.env } },
       setTimeout, clearTimeout, setInterval() { throw new Error('unexpected background job'); },
-      fetch() { throw new Error('unexpected external request'); }, AbortController,
+      fetch: options.fetch || (() => { throw new Error('unexpected external request'); }), AbortController,
     }, { filename: file });
     return module.exports;
   }

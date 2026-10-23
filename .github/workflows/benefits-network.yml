@@ -163,6 +163,7 @@ jobs:
             -e IFRLOCK_ADDRESS=0x0000000000000000000000000000000000000001 \
             -e COMMITMENT_VAULT_ADDRESS=0x0000000000000000000000000000000000000003 \
             -e ADMIN_SECRET=ci-admin-secret-0123456789abcdef0123456789 \
+            -e ADMIN_AUDIT_HMAC_KEY=ci-audit-hmac-key-0123456789abcdef0123456789 \
             inferno-benefits-backend:ci)"
           cleanup() { docker rm -f "$container" >/dev/null 2>&1 || true; }
           trap cleanup EXIT

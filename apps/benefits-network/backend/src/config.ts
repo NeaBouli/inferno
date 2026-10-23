@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import dotenv from 'dotenv';
+import { randomBytes } from 'node:crypto';
 import { getRateLimitTopologyIssues } from './services/rateLimitTopology';
 import { getAdminSecretPolicyIssue } from './services/adminSecretPolicy';
 import { getSellerBusinessLimitConfigIssue } from './services/sellerLimitPolicy';
@@ -40,6 +41,10 @@ const envSchema = z.object({
   // Dedicated random 32-byte hex key, never a signer/admin key. Missing/invalid => rewards blocked.
   MODEL_B_DEDUP_SECRET: z.string().optional(),
   ADMIN_SECRET: z.string(),
+  ADMIN_AUDIT_HMAC_KEY: z.preprocess(
+    (value) => typeof value === 'string' && value.trim() === '' ? undefined : value,
+    z.string().trim().min(32).optional()
+  ),
   DATABASE_URL: z.string().default('file:./dev.db'),
   PORT: z.coerce.number().int().positive().default(3001),
   MAX_ACTIVE_SELLER_BUSINESSES_PER_WALLET: z.coerce.number().int().min(1).max(50).default(5),
@@ -48,6 +53,13 @@ const envSchema = z.object({
   RATE_LIMIT_REDIS_URL: optionalUrl,
   BACKEND_REPLICA_COUNT: z.coerce.number().int().min(1).max(100).default(1),
 }).superRefine((env, context) => {
+  if (env.NODE_ENV === 'production' && !env.ADMIN_AUDIT_HMAC_KEY) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['ADMIN_AUDIT_HMAC_KEY'],
+      message: 'ADMIN_AUDIT_HMAC_KEY is required in production',
+    });
+  }
   for (const issue of getSellerAuthConfigIssues({
     nodeEnv: env.NODE_ENV,
     rawChainId: process.env.CHAIN_ID,
@@ -101,6 +113,8 @@ if (!parsed.success) {
 
 export const config = {
   ...parsed.data,
+  // Outside production only: an ephemeral key avoids an unkeyed or public default digest.
+  ADMIN_AUDIT_HMAC_KEY: parsed.data.ADMIN_AUDIT_HMAC_KEY ?? randomBytes(32).toString('hex'),
   // Development default only; production refuses to start without an explicit value.
   SELLER_AUTH_DOMAIN: parsed.data.SELLER_AUTH_DOMAIN ?? 'localhost',
 };

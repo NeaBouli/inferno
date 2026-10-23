@@ -16,7 +16,8 @@
     "start": "tsx server/index.ts",
     "typecheck": "tsc --noEmit",
     "build": "npm run typecheck",
-    "test:security-headers": "node scripts/test-security-headers.cjs",
+    "test:security-headers": "node scripts/test-security-headers.cjs && npm run test:wallet-privacy",
+    "test:wallet-privacy": "node scripts/test-wallet-privacy.cjs",
     "test": "npm run test:dependencies && npm run test:health-shape && npm run test:lending-loans && npm run test:balance-integrity && npm run test:rpc-failover && npm run test:cors-origins && npm run test:request-guard && npm run test:builder-score && npm run test:security-headers && npm run test:retirement",
     "test:retirement": "node scripts/test-api-retirement.cjs"
   },
