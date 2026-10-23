@@ -83,15 +83,26 @@
   window.addEventListener('hashchange', () => revealHash(location.hash));
   const initialHash = location.hash;
   revealHash(initialHash);
-  // Live data and images above the target can shift layout after the first scroll. Re-align on
-  // layout changes for a few seconds, but stop as soon as the visitor scrolls or navigates.
-  if (initialHash && 'ResizeObserver' in window) {
-    let userMoved = false;
-    const stop = () => { userMoved = true; observer.disconnect(); };
-    const observer = new ResizeObserver(() => {
-      if (!userMoved && location.hash === initialHash) revealHash(initialHash);
-    });
-    observer.observe(document.body);
+  // Live data, images and transitions above the target can shift it after the first scroll, even
+  // without changing the page height. Watch the target itself for a few seconds and re-align it
+  // once the smooth scroll has settled; stop as soon as the visitor scrolls or navigates.
+  let initialTarget = null;
+  try { initialTarget = initialHash && document.getElementById(decodeURIComponent(initialHash.slice(1))); } catch { /* invalid hash */ }
+  if (initialTarget) {
+    let stopped = false;
+    let lastScrollY = window.scrollY;
+    const stop = () => { stopped = true; };
+    const settle = () => {
+      if (stopped || location.hash !== initialHash) return;
+      const scrolling = window.scrollY !== lastScrollY;
+      lastScrollY = window.scrollY;
+      const offset = parseFloat(getComputedStyle(initialTarget).scrollMarginTop) || 0;
+      const drift = initialTarget.getBoundingClientRect().top - offset;
+      const atEnd = drift > 0 && window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 1;
+      if (!scrolling && Math.abs(drift) > 1 && !atEnd) initialTarget.scrollIntoView({ block: 'start', behavior: 'instant' });
+      requestAnimationFrame(settle);
+    };
+    requestAnimationFrame(settle);
     ['wheel', 'touchstart', 'keydown', 'mousedown'].forEach(type => window.addEventListener(type, stop, { once: true, passive: true }));
     window.addEventListener('hashchange', stop, { once: true });
     setTimeout(stop, 5000);
