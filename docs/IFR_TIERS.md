@@ -50,11 +50,11 @@ test fixtures and historical audit/change records do not define current policy.
 
 ## Conflicts and owner decisions
 
-- **Shop starter drift (resolved here):** Welcome/Member/Premium/Event previously used
+- **Shop starter drift (T-231; closed; #301, commit `9aac1409`):** Welcome/Member/Premium/Event previously used
   500 / 1,000 / 5,000 / 10,000 and labels Welcome/Member/Premium/Event pass. New drafts
   now use B/S/G/P from the published preset. Discount percentages and other template
   choices remain partner defaults; editing and saving a custom threshold is allowed.
-- **Wizard policy (resolved 2026-10-17):** the owner decided to align `docs/wizard/lock.html`
+- **Wizard policy (closed 2026-10-17; #306, commit `c1b4e2d2`):** the owner decided to align `docs/wizard/lock.html`
   with the Benefits preset. It previously advertised Basic/Premium/Pro at 500 / 2,000 / 10,000
   with voting, fee and feature promises; it now shows Bronze/Silver/Gold/Platinum, locks in
   IFRLock, states that partners define benefits, and makes no fee, support or governance-right
@@ -64,8 +64,8 @@ test fixtures and historical audit/change records do not define current policy.
   The current data API policy, SDK README and verification spec describe the B/S/G/P default (the policy cites the owner decision
   of 2026-10-03). The historical audit evidence is preserved; it is not current policy.
 - All inventoried current copies of the published four-tier preset agree. Legacy SDK
-  APIs, Builder defaults and Telegram roles remain separate policies. This task does
-  not select new protocol thresholds or resolve the wizard's product promises.
+  APIs, Builder defaults and Telegram roles remain separate policies. The former
+  wizard product promises were removed in #306; partners define the actual benefits.
 
 ## Keeping copies consistent
 
