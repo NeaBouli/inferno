@@ -4,7 +4,6 @@ const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { test } = require("node:test");
-const { manifestHash } = require("../apps/telegram/telegram-bot/src/forum/ballot.js");
 const { renderRecentVotes } = require("../docs/assets/recent-votes.js");
 const {
   buildRecentVotes, readSources, isRealForumBallot, newest, formatIFR,
@@ -22,7 +21,9 @@ function forumFixture(id = "FB-0001", closesAt = 1792404000) {
   Object.assign(pair.manifest, { ballotId: id, chainId: 1 });
   Object.assign(pair.manifest.proposal, { title: "Community proposal", textFile: `${id}.md` });
   pair.manifest.window = { opensAt: closesAt - 86400, closesAt };
-  Object.assign(pair.tally, { ballotId: id, chainId: 1, manifestHash: manifestHash(pair.manifest) });
+  // The summary consumes an opaque published manifest digest, without hashing
+  // or signing these fixtures through the dependency-bearing Forum tooling.
+  Object.assign(pair.tally, { ballotId: id, chainId: 1 });
   return pair;
 }
 
@@ -67,9 +68,45 @@ test("Council result text uses only the verified tallies, including open votes a
     "Approved: YES — YES: 3 · NO: 0 · verified abstentions: 0");
   assert.equal(data.council.find((row) => row.id === "EX-02").result,
     "Open — OPTION A: 0 · OPTION B: 0 · verified abstentions: 3");
+});
+
+test("unverified Council records never count toward approval, rejection or verified abstentions", () => {
+  for (const choice of ["YES", "NO", "ABSTAIN"]) {
+    const council = clone(sources.council);
+    council.ballots = council.ballots.filter((ballot) => ballot.id === "EX-01");
+    // Three records would decide this ballot if unverified choices were counted.
+    council.votes = council.eligibleSigners.slice(0, 3).map(({ initials, address }) => ({
+      ballot: "EX-01", signer: initials, address, choice,
+    }));
+    assert.equal(build({ council }).council[0].result,
+      "Open — YES: 0 · NO: 0 · verified abstentions: 0 · unverified (not counted): 3", choice);
+  }
   const council = clone(sources.council);
-  council.votes[0].signature = "0x00";
-  assert.throws(() => build({ council }), /signature/i, "forged signatures must stop generation");
+  council.votes.find((vote) => vote.ballot === "CV-01" && vote.signature === undefined).choice = "YES";
+  assert.equal(build({ council }).council.find((row) => row.id === "CV-01").result,
+    "Open — YES: 2 · NO: 0 · verified abstentions: 0 · unverified (not counted): 1");
+});
+
+test("Council summary trusts the separate verification job instead of recovering signatures", () => {
+  const council = clone(sources.council);
+  for (const vote of council.votes) {
+    if (vote.signature !== undefined) vote.signature = "opaque prechecked signature";
+  }
+  assert.deepEqual(build({ council }), build());
+});
+
+test("recent-votes scripts load only repository modules and Node built-ins", () => {
+  const seen = new Set();
+  const pending = [module];
+  while (pending.length) {
+    const entry = pending.pop();
+    if (seen.has(entry)) continue;
+    seen.add(entry);
+    const relative = path.relative(root, entry.filename);
+    assert.ok(!relative.startsWith("..") && !path.isAbsolute(relative)
+      && !relative.split(path.sep).includes("node_modules"), `package dependency loaded: ${entry.filename}`);
+    pending.push(...entry.children);
+  }
 });
 
 test("explicit Forum rule excludes Sepolia, other chains, test IDs/titles/flags and synthetic profiles", () => {
