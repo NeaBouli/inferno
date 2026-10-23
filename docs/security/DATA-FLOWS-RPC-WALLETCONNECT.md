@@ -288,6 +288,46 @@ cancel, errors and visibility changes with a local request-capture fixture,
 checking that no address, signature, pairing URI or sensitive URL reaches
 analytics. Actual successful requests and vendor retention remain unverified.
 
+**Partial mitigation, 2026-10-24 — P1 remains OPEN (LIMITATION):** The evidence
+above and F08 describe the original 2026-10-23 review state and are retained as
+historical evidence. Both docs initializers now pass `telemetryEnabled: false`:
+[classic wallet](../assets/wallet-core.js) and [Web3 wallet](../web3-wallet-core.js).
+This configures only the Core optional event queue/submission opt-out. QR policy,
+connection/session lifecycle and fixed metadata are unchanged. The bundle,
+dependencies, Benefits configuration and security headers are unchanged.
+
+This is not a complete SDK analytics opt-out. The pinned AppKit converter does
+not forward an analytics opt-out from `qrModalOptions`. AppKit still permits
+`INITIALIZE`, `CONNECT_SUCCESS` and `SOCIAL_LOGIN_SUCCESS` independently of its
+analytics flag and can send full page URLs and connection addresses to Pulse
+`/batch`. Its separate, default-enabled `/e` error channel can send the full URL,
+error message and stack without checking that flag. Core's INIT method also
+lacks a telemetry flag guard; no call to that method was found in the inspected
+bundle, so an automatic INIT transmission is not established here.
+
+The dependency-free [init-options regression](../../scripts/test-wallet-core-telemetry.cjs)
+captures the actual app-owned init objects with local mocks for connect and
+session recovery, checks QR/fixed metadata and exclusion of synthetic sensitive
+canaries, and rejects removal of either Core opt-out. It does not execute the
+SDK or capture its traffic: the SDK can read page context independently of
+those options. Full SDK/network capture, successful delivery, vendor retention
+and complete analytics suppression remain **NOT VERIFIED**. P1 is not closed;
+there is no zero-telemetry promise. Benefits' deferred connector must remain.
+
+**Release/cache gate remains open:** This is a local source mitigation, not a
+deployment. The [landing page](../index.html) and FAQ still request
+`assets/wallet-core.js?v=20261010-pr261-notice`; other wiki consumers use an older
+query version or no version. Their effective hosting/browser cache freshness
+was not verified. The [Web3 page](../web3/index.html) and
+[service-worker precache](../web3-sw.js) still use
+`/web3-wallet-core.js?v=20261004-rpc-fallback-v6`. The unchanged worker uses
+`ifr-web3-v23` and cache-first subresource responses. Its `updateViaCache: "none"`
+registration does not refresh that cached runtime when the worker is unchanged.
+HTML, script query versions and worker caches are deliberately outside this
+patch. Before rollout, align versioning/precache and invalidate stale caches;
+verify the runtime actually served to both fresh and previously controlled
+clients. Existing deployed users cannot be assumed to receive this opt-out.
+
 ### P2 — Medium: customer reward pseudonyms and seller checkout records have no end-of-life
 
 **Evidence:** `RewardEvent.rewardDedupKey` is derived from a customer wallet and

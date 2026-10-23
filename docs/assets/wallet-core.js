@@ -158,6 +158,7 @@ window.IFRWallet = (function() {
           projectId: WC_PROJECT_ID,
           chains: [CHAIN_ID],
           showQrModal: true,
+          telemetryEnabled: false,
           rpcMap: { 1: RPC_URL },
           metadata: {
             name: "Inferno Protocol ($IFR)",

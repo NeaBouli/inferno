@@ -322,6 +322,7 @@ window.IFRWallet = (function() {
           methods: ["eth_sendTransaction", "personal_sign"],
           events: ["chainChanged", "accountsChanged", "disconnect"],
           showQrModal: !_isMobileOrTablet(),
+          telemetryEnabled: false,
           rpcMap: { 1: RPC_URL },
           metadata: {
             name: "Inferno Protocol",
