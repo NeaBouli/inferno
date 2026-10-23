@@ -39,6 +39,12 @@ on:
       - 'scripts/verify-council-votes.cjs'
       - 'scripts/test-council-votes.cjs'
       - 'scripts/build-council-votes-page.cjs'
+      - 'scripts/build-recent-votes.cjs'
+      - 'scripts/test-recent-votes.cjs'
+      - 'docs/data/recent-votes.json'
+      - 'apps/telegram/telegram-bot/forum-results/*.json'
+      - 'apps/telegram/telegram-bot/forum-ballots/*.json'
+      - 'apps/telegram/telegram-bot/src/forum/ballot.js'
       - 'scripts/test-ifr-benefits-widget.cjs'
       - 'apps/benefits-network/frontend/src/components/WalletStatus.tsx'
       - 'deployments/mainnet.json'
@@ -126,6 +132,12 @@ on:
       - 'scripts/verify-council-votes.cjs'
       - 'scripts/test-council-votes.cjs'
       - 'scripts/build-council-votes-page.cjs'
+      - 'scripts/build-recent-votes.cjs'
+      - 'scripts/test-recent-votes.cjs'
+      - 'docs/data/recent-votes.json'
+      - 'apps/telegram/telegram-bot/forum-results/*.json'
+      - 'apps/telegram/telegram-bot/forum-ballots/*.json'
+      - 'apps/telegram/telegram-bot/src/forum/ballot.js'
       - 'scripts/test-ifr-benefits-widget.cjs'
       - 'apps/benefits-network/frontend/src/components/WalletStatus.tsx'
       - 'deployments/mainnet.json'
@@ -318,6 +330,9 @@ jobs:
 
       - name: Check July community-audit remediation status
         run: npm run test:july-audit-register
+
+      - name: Check recent vote summaries and no-JS fallback
+        run: npm run test:recent-votes
 
       - name: Check Mainnet compiler provenance (JUL-21)
         run: npm run test:compiler-provenance

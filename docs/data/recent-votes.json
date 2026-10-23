@@ -1,0 +1,33 @@
+{
+  "generatedFrom": [
+    "apps/telegram/telegram-bot/forum-ballots/FB-SEP-0001.json",
+    "apps/telegram/telegram-bot/forum-results/FB-SEP-0001.json",
+    "docs/data/council-votes.json"
+  ],
+  "council": [
+    {
+      "id": "CV-01",
+      "title": "CommitmentVault V1 compensation (urgent)",
+      "result": "Open — YES: 2 · NO: 0 · verified abstentions: 0 · unverified (not counted): 1",
+      "date": "2026-10-03",
+      "evidenceUrl": "/wiki/council-votes.html#cv-01"
+    },
+    {
+      "id": "EX-01",
+      "title": "No IFR incentives for exchanges",
+      "result": "Approved: YES — YES: 3 · NO: 0 · verified abstentions: 0",
+      "date": "2026-10-03",
+      "evidenceUrl": "/wiki/council-votes.html#ex-01"
+    },
+    {
+      "id": "EX-02",
+      "title": "Governance role of exchanges",
+      "result": "Open — OPTION A: 0 · OPTION B: 0 · verified abstentions: 3",
+      "date": "2026-10-03",
+      "evidenceUrl": "/wiki/council-votes.html#ex-02"
+    }
+  ],
+  "forum": [],
+  "olderCouncilUrl": "/wiki/council-votes.html",
+  "olderForumUrl": "https://github.com/NeaBouli/inferno/tree/main/apps/telegram/telegram-bot/forum-results"
+}
