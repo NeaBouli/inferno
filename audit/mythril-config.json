@@ -42,6 +42,7 @@
     { "source": "contracts/token/InfernoToken.sol", "contract": "InfernoToken" },
     { "source": "contracts/vault/CommitmentVault.sol", "contract": "CommitmentVault" },
     { "source": "contracts/vault/CommitmentVaultV2.sol", "contract": "CommitmentVaultV2" },
+    { "source": "contracts/vault/CommitmentVaultV3.sol", "contract": "CommitmentVaultV3" },
     { "source": "contracts/vault/PriceLockVault.sol", "contract": "PriceLockVault" },
     { "source": "contracts/view/IFRTierView.sol", "contract": "IFRTierView" },
     { "source": "contracts/vault/LendingVault.sol", "contract": "LendingVault" },
