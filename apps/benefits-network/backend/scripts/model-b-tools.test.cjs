@@ -158,6 +158,32 @@ test('EUR 250 lifetime cap, allocation cap and reservations across periods canno
   assert.equal(huge.output.meta.unlockAmount, '6666666666666666666');
 });
 
+test('reloads a nonempty on-disk ledger and preserves reservations and the lifetime budget', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'model-b-ledger-reload-'));
+  try {
+    const stateFile = path.join(dir, 'ledger.json');
+    reserveProposal({ report: report('2026-08', 499), snapshot: snapshot(), stateFile, price: '0.01', now });
+    const before = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
+    const firstKey = `${partnerId}:2026-08`;
+    assert.equal(Object.keys(before.periods).length, 1);
+    assert.equal(before.periods[firstKey].eurMinorCharged, '24950');
+
+    const options = { report: report('2026-09', 4), snapshot: snapshot('2026-09'), stateFile, price: '0.02', now };
+    const second = reserveProposal(options);
+    assert.equal(second.settleableCount, '1');
+    assert.equal(second.uncoveredCount, '3');
+    assert.equal(second.eurMinorCharged, '50');
+    assert.equal(second.capped, true);
+    const persisted = fs.readFileSync(stateFile, 'utf8');
+    const reloaded = JSON.parse(persisted);
+    assert.deepEqual(reloaded.periods[firstKey], before.periods[firstKey]);
+    assert.equal(Object.keys(reloaded.periods).length, 2);
+    assert.equal(reloaded.periods[`${partnerId}:2026-09`].eurMinorCharged, '50');
+    assert.throws(() => reserveProposal(options), /already reserved/);
+    assert.equal(fs.readFileSync(stateFile, 'utf8'), persisted);
+  } finally { fs.rmSync(dir, { recursive: true, force: true }); }
+});
+
 test('rejects duplicates, changed checksums, incomplete reconciliation, malformed prices and unbound/on-chain-used snapshots', () => {
   const first = prepareProposal(report(), snapshot(), null, '0.01', now);
   assert.throws(() => prepareProposal(report(), snapshot(), first.ledger, '0.01', now), /already reserved/);
