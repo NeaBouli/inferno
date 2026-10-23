@@ -5,6 +5,8 @@ Stand: 07.04.2026 | Konsolidiert (Claude + Core Dev)
 > Verbindlich sind `internal/operations/TODO.md` und die lokale `BRIDGE.md`; historische Eintraege unten
 > bleiben nur als Audit-/Planungsarchiv erhalten.
 
+Ali Phase 2 status (Telegram item 10 below): **closed as superseded** by web-chat retirement (#313/#316); `POST /api/chat` returns 410 (`apps/data-api/server/index.ts`).
+
 ---
 
 ## KRITISCH — Governance Proposals Execute
