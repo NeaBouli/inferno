@@ -53,11 +53,11 @@ const envSchema = z.object({
   RATE_LIMIT_REDIS_URL: optionalUrl,
   BACKEND_REPLICA_COUNT: z.coerce.number().int().min(1).max(100).default(1),
 }).superRefine((env, context) => {
-  if (env.NODE_ENV === 'production' && !env.ADMIN_AUDIT_HMAC_KEY) {
+  if (!['development', 'test'].includes(env.NODE_ENV ?? '') && !env.ADMIN_AUDIT_HMAC_KEY) {
     context.addIssue({
       code: z.ZodIssueCode.custom,
       path: ['ADMIN_AUDIT_HMAC_KEY'],
-      message: 'ADMIN_AUDIT_HMAC_KEY is required in production',
+      message: 'ADMIN_AUDIT_HMAC_KEY is required outside explicit development/test mode',
     });
   }
   for (const issue of getSellerAuthConfigIssues({
@@ -113,7 +113,7 @@ if (!parsed.success) {
 
 export const config = {
   ...parsed.data,
-  // Outside production only: an ephemeral key avoids an unkeyed or public default digest.
+  // Explicit development/test only: never use an unkeyed or public default digest.
   ADMIN_AUDIT_HMAC_KEY: parsed.data.ADMIN_AUDIT_HMAC_KEY ?? randomBytes(32).toString('hex'),
   // Development default only; production refuses to start without an explicit value.
   SELLER_AUTH_DOMAIN: parsed.data.SELLER_AUTH_DOMAIN ?? 'localhost',

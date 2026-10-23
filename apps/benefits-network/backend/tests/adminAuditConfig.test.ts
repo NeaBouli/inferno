@@ -35,8 +35,16 @@ test('production accepts a separate audit key without exposing it', () => {
   expect(console.error).not.toHaveBeenCalled();
 });
 
-test('non-production uses an ephemeral key when no key is configured', () => {
-  process.env.NODE_ENV = 'development';
+test.each([undefined, '', 'prodution', 'staging'])('unknown/non-development mode %p refuses a missing audit key', (mode) => {
+  if (mode === undefined) delete process.env.NODE_ENV;
+  else process.env.NODE_ENV = mode;
+  expect(loadConfig).toThrow('startup refused');
+  expect(process.exit).toHaveBeenCalledWith(1);
+  expect(JSON.stringify(jest.mocked(console.error).mock.calls)).toContain('ADMIN_AUDIT_HMAC_KEY');
+});
+
+test.each(['development', 'test'])('explicit %s uses an ephemeral key when no key is configured', (mode) => {
+  process.env.NODE_ENV = mode;
   const first = loadConfig().ADMIN_AUDIT_HMAC_KEY;
   expect(first).toMatch(/^[a-f0-9]{64}$/);
   expect(loadConfig().ADMIN_AUDIT_HMAC_KEY).not.toBe(first);

@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+export NODE_ENV="${NODE_ENV:-test}"
 export CHAIN_ID="${CHAIN_ID:-11155111}"
 export RPC_URL="${RPC_URL:-https://mock-rpc.example.com}"
 export IFR_TOKEN_ADDRESS="${IFR_TOKEN_ADDRESS:-0x0000000000000000000000000000000000000002}"
