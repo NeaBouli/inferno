@@ -5,6 +5,7 @@
   <url><loc>https://ifrunit.tech/wiki/</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
   <url><loc>https://ifrunit.tech/wiki/contracts.html</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://ifrunit.tech/wiki/tokenomics.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://ifrunit.tech/wiki/flywheel.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://ifrunit.tech/wiki/protocol-plan.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://ifrunit.tech/wiki/lock-mechanism.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://ifrunit.tech/wiki/governance.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
