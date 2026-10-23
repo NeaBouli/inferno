@@ -55,7 +55,7 @@ contract MockCommitmentV2Token is MockFeeOnTransferToken {
     /// @param to Recipient.
     /// @param amount Gross base-unit transfer.
     /// @return success Whether transfer succeeded.
-    function transferFrom(address from, address to, uint256 amount) public override returns (bool success) {
+    function transferFrom(address from, address to, uint256 amount) public virtual override returns (bool success) {
         if (_transferFromFault == 1) return false;
         if (_transferFromFault == 2) revert MockTransferRejected();
         return super.transferFrom(from, to, amount);

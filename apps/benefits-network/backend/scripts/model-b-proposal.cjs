@@ -35,7 +35,7 @@ const reservationSchema = z.object({
 }).strict();
 const ledgerSchema = z.object({
   schemaVersion: z.literal(1), chainId: count, partnerVault: address, pilotPartnerId: id,
-  periods: z.record(reservationSchema),
+  periods: z.record(z.string(), reservationSchema),
 }).strict();
 
 function priceUnits(value) {
