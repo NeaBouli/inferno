@@ -31,6 +31,7 @@
     { "source": "contracts/burnreserve/BurnReserve.sol", "contract": "BurnReserve" },
     { "source": "contracts/buyback/BuybackController.sol", "contract": "BuybackController" },
     { "source": "contracts/buyback/BuybackVault.sol", "contract": "BuybackVault" },
+    { "source": "contracts/buyback/BuybackVaultV2.sol", "contract": "BuybackVaultV2" },
     { "source": "contracts/governance/Governance.sol", "contract": "Governance" },
     { "source": "contracts/governance/GovernanceV2.sol", "contract": "GovernanceV2" },
     { "source": "contracts/library/IFRBuilderVault.sol", "contract": "IFRBuilderVault" },
