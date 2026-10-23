@@ -66,7 +66,7 @@ test('export CLI reads an actual migrated SQLite DB without changing it and feed
     const before = hash();
     const countsFile = path.join(dir, 'counts.json');
     fs.writeFileSync(countsFile, JSON.stringify({ [partnerId]: 1 }));
-    const env = { ...process.env, DATABASE_URL: `file:${dbFile}`, CHAIN_ID: '11155111',
+    const env = { ...process.env, NODE_ENV: 'test', DATABASE_URL: `file:${dbFile}`, CHAIN_ID: '11155111',
       RPC_URL: 'https://rpc.example.test', IFR_TOKEN_ADDRESS: `0x${'55'.repeat(20)}`,
       IFRLOCK_ADDRESS: `0x${'66'.repeat(20)}`, COMMITMENT_VAULT_ADDRESS: `0x${'77'.repeat(20)}`,
       PARTNER_VAULT_ADDRESS: vault, ADMIN_SECRET: 'synthetic-test-secret-0123456789abcdef0123456789',
@@ -85,7 +85,7 @@ test('export CLI reads an actual migrated SQLite DB without changing it and feed
     const exportFile = path.join(dir, 'export.json'); const snapshotFile = path.join(dir, 'snapshot.json');
     fs.writeFileSync(exportFile, exported.stdout); fs.writeFileSync(snapshotFile, JSON.stringify(snapshot()));
     const proposed = spawnSync(process.execPath, [path.join(__dirname, 'model-b-proposal.cjs'), '--export', exportFile,
-      '--vault-state', snapshotFile, '--state', path.join(dir, 'ledger.json'), '--price-eur-per-ifr', '0.003'], { encoding: 'utf8' });
+      '--vault-state', snapshotFile, '--state', path.join(dir, 'ledger.json'), '--price-eur-per-ifr', '0.003'], { env, encoding: 'utf8' });
     assert.equal(proposed.status, 0, proposed.stderr);
     assert.equal(JSON.parse(proposed.stdout).meta.unlockAmount, '166666666666');
   } finally { await db.$disconnect(); fs.rmSync(dir, { recursive: true, force: true }); }
@@ -225,7 +225,7 @@ test('ledger writes atomically, survives a new process, locks concurrent access 
     const snapshotFile = path.join(dir, 'snapshot.json');
     fs.writeFileSync(exportFile, JSON.stringify(report())); fs.writeFileSync(snapshotFile, JSON.stringify(snapshot()));
     const result = spawnSync(process.execPath, [path.join(__dirname, 'model-b-proposal.cjs'), '--export', exportFile,
-      '--vault-state', snapshotFile, '--state', stateFile, '--price-eur-per-ifr', '0.01'], { encoding: 'utf8' });
+      '--vault-state', snapshotFile, '--state', stateFile, '--price-eur-per-ifr', '0.01'], { env: { ...process.env, NODE_ENV: 'test' }, encoding: 'utf8' });
     assert.equal(result.status, 1);
     assert.equal(result.stdout, '');
     assert.match(result.stderr, /proposal refused/);

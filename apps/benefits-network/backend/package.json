@@ -12,6 +12,7 @@
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
     "test": "DATABASE_URL=file:./test.db node scripts/reset-test-db.cjs && DATABASE_URL=file:./test.db jest --runInBand --forceExit --detectOpenHandles",
+    "test:model-b-tools": "node --test scripts/model-b-tools.test.cjs",
     "test:ethers-v6-lifecycle": "DATABASE_URL=file:./test.db jest tests/ethersV6Services.test.ts --runInBand --detectOpenHandles",
     "test:rate-limit-startup": "node scripts/test-rate-limit-startup.cjs",
     "test:migration-upgrade": "node scripts/verify-populated-migration-upgrade.cjs && node scripts/verify-owner-b-migration.cjs",

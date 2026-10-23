@@ -56,40 +56,42 @@ describe('request validation', () => {
     expect(json).not.toHaveBeenCalled();
   });
 
-  // GHSA-mrhx-c7xc-m3w5: four elements are enough to detect parsing before the size check.
-  it.each([
-    ['valid elements', ['a', 'b', 'c', 'd']],
-    ['invalid elements', [null, {}, [], 42]],
-  ])('rejects an oversized array of %s before processing its elements', (_label, items) => {
-    const inspectElement = jest.fn((value: unknown) => value);
-    const schema = z.object({ items: z.array(z.preprocess(inspectElement, z.string())).max(1) });
-    const { res, status, json } = response();
-    const next = jest.fn();
+  describe.each(['max', 'length'] as const)('%s(1) array size checks', (constraint) => {
+    // GHSA-mrhx-c7xc-m3w5: four elements are enough to detect parsing before the size check.
+    it.each([
+      ['valid elements', ['a', 'b', 'c', 'd']],
+      ['invalid elements', [null, {}, [], 42]],
+    ])('rejects an oversized array of %s before processing its elements', (_label, items) => {
+      const inspectElement = jest.fn((value: unknown) => value);
+      const schema = z.object({ items: z.array(z.preprocess(inspectElement, z.string()))[constraint](1) });
+      const { res, status, json } = response();
+      const next = jest.fn();
 
-    validate(schema)(request({ items }), res, next);
+      validate(schema)(request({ items }), res, next);
 
-    expect(status).toHaveBeenCalledWith(400);
-    expect(json).toHaveBeenCalledWith({
-      error: 'Validation failed',
-      details: [{ path: 'items', message: expect.any(String) }],
+      expect(status).toHaveBeenCalledWith(400);
+      expect(json).toHaveBeenCalledWith({
+        error: 'Validation failed',
+        details: [{ path: 'items', message: expect.any(String) }],
+      });
+      expect(inspectElement).not.toHaveBeenCalled();
+      expect(next).not.toHaveBeenCalled();
     });
-    expect(inspectElement).not.toHaveBeenCalled();
-    expect(next).not.toHaveBeenCalled();
-  });
 
-  it('processes a legitimate array at its size limit exactly once', () => {
-    const inspectElement = jest.fn((value: unknown) => value);
-    const schema = z.object({ items: z.array(z.preprocess(inspectElement, z.string())).max(1) });
-    const req = request({ items: ['Coffee'] });
-    const { res, status, json } = response();
-    const next = jest.fn();
+    it('processes a legitimate array at its size limit exactly once', () => {
+      const inspectElement = jest.fn((value: unknown) => value);
+      const schema = z.object({ items: z.array(z.preprocess(inspectElement, z.string()))[constraint](1) });
+      const req = request({ items: ['Coffee'] });
+      const { res, status, json } = response();
+      const next = jest.fn();
 
-    validate(schema)(req, res, next);
+      validate(schema)(req, res, next);
 
-    expect(inspectElement).toHaveBeenCalledTimes(1);
-    expect(req.body).toEqual({ items: ['Coffee'] });
-    expect(next).toHaveBeenCalledWith();
-    expect(status).not.toHaveBeenCalled();
-    expect(json).not.toHaveBeenCalled();
+      expect(inspectElement).toHaveBeenCalledTimes(1);
+      expect(req.body).toEqual({ items: ['Coffee'] });
+      expect(next).toHaveBeenCalledWith();
+      expect(status).not.toHaveBeenCalled();
+      expect(json).not.toHaveBeenCalled();
+    });
   });
 });
