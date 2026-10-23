@@ -58,11 +58,11 @@ const sellerSteps = [
   },
   {
     title: 'Review recent customer checks',
-    body: 'Load owner-only session history in pages of 50 to see QR status, masked verified wallet, locked amount and rejection reason, or create a browser-local masked full CSV export.',
+    body: 'Load owner-only checkout history in pages of 50 to see offer terms, status, timestamps, proof outcome and lock source, or create a browser-local CSV export of those merchant records. Merchant checkout records do not expose the customer wallet, signature or measured balance.',
   },
   {
-    title: 'Redeem only after APPROVED',
-    body: 'The customer signs the QR challenge, the backend checks IFRLock on-chain, and the seller wallet signs the one-time redeem action.',
+    title: 'Apply the benefit after REDEEMED',
+    body: 'The customer signs the exact checkout proof. The backend verifies the signature, fresh on-chain eligibility and seller authorization, then redeems the checkout atomically. There is no separate seller redeem action. Apply the benefit only after REDEEMED; a rejected or failed proof leaves the checkout open.',
   },
 ];
 

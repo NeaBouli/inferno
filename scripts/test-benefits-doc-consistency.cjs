@@ -80,6 +80,15 @@ assert.ok(content.architecture.includes('Implemented and live'), 'architecture m
 assert.ok(content.wikiOnboarding.includes('opaque short-lived'), 'Wiki must explain opaque customer pass privacy');
 assert.ok(content.wikiFaq.includes('REDEEMED or REJECTED'), 'FAQ must use backend status terms');
 assert.ok(!content.wikiFaq.includes('APPROVED'), 'FAQ must not use the retired APPROVED checkout status');
+function assertGuideCheckoutBoundary(copy) {
+  assert.ok(!/masked verified wallet|locked amount and rejection reason|seller wallet signs the one-time redeem action|Redeem only after APPROVED/i.test(copy), 'Guide must not restore retired seller data or redemption steps');
+  assert.ok(copy.includes('There is no separate seller redeem action'), 'Guide must explain atomic customer-proof redemption');
+  assert.ok(copy.includes('Merchant checkout records do not expose the customer wallet, signature or measured balance'), 'Guide must state the seller-view field boundary');
+}
+assertGuideCheckoutBoundary(content.frontendGuide);
+for (const stale of ['masked verified wallet', 'locked amount and rejection reason', 'seller wallet signs the one-time redeem action', 'Redeem only after APPROVED']) {
+  assert.throws(() => assertGuideCheckoutBoundary(`${content.frontendGuide} ${stale}`), { name: 'AssertionError' });
+}
 assert.ok(content.master.includes('minimum IFR locked in IFRLock'), 'master architecture must use the deployed eligibility source');
 
 
