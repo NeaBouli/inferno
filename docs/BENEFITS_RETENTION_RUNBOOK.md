@@ -23,10 +23,13 @@ Protected data:
 The `CustomerPassChallenge`, `CustomerHistoryChallenge` and
 `CustomerHistoryAccess` tables were removed with storage-free customer sessions
 (see `docs/BENEFITS_CUSTOMER_PRIVACY_MIGRATION.md`), so the tool no longer
-reports or prunes them. The protected records hold no customer wallet; they
-support single-use replay defence, merchant checkout records, reward
-reconciliation, and auditability. This tool is not a
-data-subject deletion workflow and does not establish a legal retention period.
+reports or prunes them. Protected checkout records exclude raw customer wallets but retain
+checkout IDs, shop/offer terms, times, outcomes, seller attribution and pass/reward linkage.
+Conditional Model B reward events can retain a wallet-derived `rewardDedupKey` HMAC scoped to
+chain/vault/partner/UTC month and `rewardPeriod`. These are pseudonymous records, not anonymous
+aggregates. Their scope and checkout/pass expiry do not delete them: retention period not yet
+defined. They support replay defence, merchant records, reward reconciliation and auditability.
+This tool is not a data-subject deletion workflow and does not establish a legal retention period.
 
 ## Preview
 

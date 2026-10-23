@@ -31,7 +31,7 @@ const customerSteps = [
   },
   {
     title: 'Review My benefits on this device',
-    body: 'My benefits lists the checkout receipts saved in this browser and can re-verify your signature locally. The server keeps no customer wallet or history, so clearing browser data or switching devices loses this list.',
+    body: 'My benefits lists the checkout receipts saved in this browser and can re-verify your signature locally. Server receipt-history retrieval is retired, so clearing browser data or switching devices loses this list. The backend retains merchant checkout records and can retain conditional Model B wallet-derived reward pseudonyms; retention period not yet defined. See Privacy & data for the full boundary.',
   },
 ];
 
@@ -74,7 +74,7 @@ const developerItems = [
   ['QR session', 'Request a one-time Action: sessions:create message bound to owner/operator, business and rule; sign it, then POST /api/sessions with x-ifr-nonce.'],
   ['Customer pass', 'POST /api/passes with an empty body creates an opaque pass; seller signs passes:bind scoped to pass and rule; the customer fetches the proof text with its wallet (POST /api/passes/:id/challenge) and confirms with walletAddress + signature (POST /api/passes/:id/confirm), which redeems once.'],
   ['Customer proof', 'POST /api/sessions/:id/challenge with { walletAddress } returns the proof text; POST /api/attest with sessionId, walletAddress and signature redeems once after a fresh on-chain check.'],
-  ['Customer history', 'Device-local only. The server keeps no customer history; /api/customer/history endpoints return 410.'],
+  ['Customer history', 'Receipts are device-local; /api/customer/history endpoints return 410. Merchant checkout records and conditional scoped reward HMACs remain separate backend records; retention period not yet defined.'],
   ['Redeem', 'No separate seller call. The customer proof redeems atomically; POST /api/sessions/:id/redeem returns 410.'],
   ['Seller rewards', 'Rewards are off by default. rewards:apply, rewards:disable and rewards:reward-wallet each use a fresh business-bound nonce; confirming a separate payout wallet also requires that wallet to sign its own one-time proof for the same business and scope.'],
 ];

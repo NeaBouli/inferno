@@ -124,19 +124,25 @@ address with a seller, benefit rule, exact lock amount or detailed rejection rea
 
 **Mitigation:**
 
-- The backend stores no customer wallet address, hash or fingerprint of it, signature or signed text,
-  lock/balance amounts, block numbers, payment transaction hashes or customer history
-- The wallet is used only within the proof request (signature check, fresh eligibility read,
-  self-redemption check); audit events carry no customer wallet, amount or block
+- Ordinary checkout records exclude raw customer wallet addresses, signatures, signed text,
+  measured lock/balance amounts, customer verification blocks and customer payment transaction hashes
+- The raw wallet is processed within the proof request (signature check, fresh eligibility read,
+  self-redemption check); session audit events carry no raw customer wallet, amount or block
+- Conditional Model B rewards can retain `rewardDedupKey`, a wallet-derived HMAC scoped to
+  chain/vault/partner/UTC month, plus `rewardPeriod`, when a verified pilot and its dedicated
+  deduplication key are configured. This conditional path does not establish pilot activation
 - Customer history is device-local (signed receipts in the browser); server history routes return 410
 
-**Known boundaries:** Merchant checkout records (random checkout ID, shop, offer terms, status,
-timestamps, lock source, self-redemption flag, opening seller wallet) and seller-side audit events
-remain, so checkouts are not anonymous; timing, offer details, what the seller sees at the counter
+**Known boundaries:** Merchant checkout records retain random checkout IDs, shop, offer terms,
+status, timestamps, lock source, self-redemption flags, opening seller wallets and pass/reward links;
+seller-side audit events also remain. Checkouts and reward pseudonyms are not anonymous;
+retention period not yet defined. Checkout expiry does not delete these records.
+Timing, offer details, what the seller sees at the counter
 and public chain data can still be linked. The RPC provider receives the address in the eligibility
-`eth_call`, and reverse-proxy or platform access logs are outside this backend. The storage-free
-migration and `VACUUM` ran in production on 11 October 2026; data created before it remains only in
-pre-migration backups until their clean-up (`docs/BENEFITS_CUSTOMER_PRIVACY_MIGRATION.md`).
+`eth_call`, and reverse-proxy or platform access logs are outside this backend. The customer-privacy
+migration of 11 October 2026 removed legacy raw customer fields and server receipt-history tables.
+Older databases, journals, backups and exports may still retain legacy data; their deletion has not
+been established by the current source (`docs/BENEFITS_CUSTOMER_PRIVACY_MIGRATION.md`).
 
 ## 8. Catalog Tampering / Mutable Checkout Terms
 

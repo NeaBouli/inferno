@@ -276,9 +276,11 @@ Do not record private keys, seed phrases or personal wallet data in the checklis
 Customer QR pages also write a local browser history entry; after a checkout proof it
 keeps a signed receipt (proof text and signature). The home page shows this as `Recent
 customer proofs` so a customer can reopen the proof on the same device. This device-local
-history is the only customer history (the backend keeps none); it excludes private keys,
-seed phrases and full wallet inventories, is not a server-side evidence record and does not
-replace the device checklist. Receipt verification on the device binds the proof to this
+receipt list has no server retrieval service; the backend separately retains merchant checkout
+records and can retain conditional Model B reward pseudonyms. Those backend records have no
+automatic deletion; retention period not yet defined. Local receipts exclude private keys, seed
+phrases and full wallet inventories, are not server-side evidence and do not replace the device
+checklist. Receipt verification on the device binds the proof to this
 deployment's audience (page host) and chain and requires a 32-byte nonce; its duplicate check
 is local only (the bounded 12-item device history), not global replay prevention. Single
 redemption is enforced by the backend.

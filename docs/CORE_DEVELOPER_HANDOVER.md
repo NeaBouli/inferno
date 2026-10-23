@@ -71,9 +71,11 @@ For data paths, read [Points → voucher → FeeRouter](E2E_FLOW.md) as a techni
 flow whose FeeRouter voucher redemption path remains dormant (CWA-18), and
 [Benefits data inventory](BENEFITS_PWA_AND_DATA_MINIMIZATION.md) with the
 [accepted owner-B privacy migration](BENEFITS_CUSTOMER_PRIVACY_MIGRATION.md).
-The Benefits backend no longer stores customer wallets/history; seller data,
-Points wallet linkage, third-party exposure and off-chain availability still
-need their documented controls. No standalone `DATA_FLOWS.md` exists at this
+Ordinary Benefits checkout persistence excludes raw customer wallets/signatures; server receipt
+history is retired. Merchant checkout records and seller audits remain, and conditional Model B
+rewards can retain partner/month-scoped wallet HMACs linked to checkouts (not anonymity). Their
+retention period is not yet defined. Seller data, Points wallet linkage, third-party exposure
+and off-chain availability still need their documented controls. No standalone `DATA_FLOWS.md` exists at this
 checkpoint; these are the retained flow/data references.
 
 ## Governance, Safes and continuity

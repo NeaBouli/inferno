@@ -64,9 +64,9 @@ Recommendation: offer at least Bronze (lowest barrier for customers).
 The compatible seller-issued QR flow remains available. It is also short-lived and the checkout is
 only redeemed by the customer's signed proof. A failed or ineligible proof leaves the checkout open.
 
-IFR does not enforce per-customer redemption limits, because the backend stores no customer
-identity. Rules with a non-zero daily or monthly limit are refused; a business that needs such
-limits enforces them in its own systems.
+IFR does not enforce per-customer checkout redemption limits. Rules with a non-zero daily or
+monthly limit are refused; a business that needs such limits enforces them in its own systems.
+Conditional Model B deduplication limits rewards per wallet/partner/month, not checkout use.
 
 ### What Cashier Staff Does NOT Need
 
@@ -112,13 +112,18 @@ Yes — each business independently configures tier and discount.
 
 **What customer data is processed?**
 The short-lived pass QR contains no wallet, lock amount, signature, control token, rule, or
-internal session ID. The customer's wallet address is checked within the proof request (signature,
-fresh IFRLock read, self-redemption check) and is not stored: the backend keeps no customer wallet
-address, hash of it, signature, lock or balance amount, or customer history. It does keep a
-merchant checkout record (random checkout ID, shop, offer terms, status, timestamps, lock source,
-self-redemption flag and the seller wallet that opened it) plus seller-side audit events, so
-checkouts are not anonymous. This data-minimizing design is not a legal compliance guarantee; each
-operator remains responsible for its applicable privacy and retention obligations.
+internal session ID. The ordinary checkout checks the raw customer wallet and signature within
+the proof request (signature, fresh eligibility read, self-redemption check) without writing the raw
+address, signature, signed text, measured lock/balance amounts or customer verification block.
+There is no server receipt-history retrieval service. Merchant checkout records retain IDs/nonces,
+shop/rule and offer terms, status, timestamps, proof outcome/source, self-redemption flag, seller
+wallet/role/operator and any pass/reward linkage, plus session audit events. Conditional Model B
+rewards can additionally retain `rewardPeriod` and `rewardDedupKey`, a wallet-derived HMAC scoped
+to chain/vault/partner/UTC month. This is pseudonymous, not anonymous data. Sessions, session audits,
+reward events and linked passes are protected from the manual pruning tool; retention period not
+yet defined. Seller authorization also uses wallet/signature headers and seller-wallet rate-limit
+keys in memory or Redis. This design is not a legal compliance guarantee; each operator remains
+responsible for its applicable privacy and retention obligations.
 
 ---
 *As of: July 2026 | Version 2.0*

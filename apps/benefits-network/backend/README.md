@@ -135,11 +135,15 @@ checkout ID, nonce, expiry and the offer terms plus a terms digest. The backend 
 audience from a request Host header. A signature over an older, foreign-domain or altered text
 recovers a different signer and is refused (403) without changing the checkout.
 
-The backend stores no customer wallet address, hash or fingerprint of it, signature or signed text,
-lock/balance amounts, block numbers, payment transaction hashes or customer history. It keeps the
-merchant checkout record (random checkout ID, shop, offer terms, status, timestamps, lock source,
-self-redemption flag, the seller wallet that opened it) and seller-side audit events, so checkouts
-are not anonymous.
+Ordinary checkout records exclude raw customer wallet addresses, signatures, signed text,
+measured lock/balance amounts, customer verification blocks and customer payment transaction hashes.
+Server receipt-history retrieval is retired. Merchant checkout records retain random checkout IDs,
+shop and offer terms, status, timestamps, lock source, self-redemption flags, opening seller wallets,
+pass/reward links and seller-side audit events. Conditional Model B rewards can retain
+`rewardDedupKey`, a wallet-derived HMAC scoped to chain/vault/partner/UTC month, plus `rewardPeriod`,
+when a verified pilot and its dedicated deduplication key are configured. This conditional path does
+not establish pilot activation. These records are pseudonymous, not anonymous; retention period
+not yet defined. Checkout expiry does not delete these records.
 
 ## Customer Benefits History
 
@@ -307,8 +311,8 @@ required before horizontal scaling.
 
 ## Per-customer redemption limits (not IFR-hosted)
 
-Because the backend stores no customer wallet or identity, IFR does not enforce
-per-customer redemption limits. Rule create/update with a non-zero
+IFR does not enforce per-customer checkout redemption limits. The conditional Model B reward
+HMAC prevents duplicate rewards within its scope, not another checkout. Rule create/update with a non-zero
 `dailyRedemptionLimit` or `monthlyRedemptionLimit` returns 400. Opening a
 checkout (`POST /api/sessions` or pass bind) for a legacy rule that still carries
 a non-zero limit returns 409 with guidance, so no limit is silently dropped. A

@@ -14,8 +14,8 @@ const browserItems = [
     body: 'The app stores a small set of localStorage keys whose names start with ifr.shop. : your preferred role, the last seller business ID you used, recent checkout session references and your customer receipts. These stay in this browser and are never sent as analytics.',
   },
   {
-    title: 'Customer receipts (your only checkout history)',
-    body: 'After a successful checkout proof, this browser keeps a receipt: the exact text you signed (which contains your full wallet address, the shop, the checkout and its terms) and your signature, so you can re-verify it on this device. The shop server keeps no customer history. Clearing browser data or changing device loses these receipts for good.',
+    title: 'Device-local customer receipts',
+    body: 'After a successful checkout proof, this browser keeps the exact text you signed (including your full wallet address, the shop, the checkout and its terms) and your signature, so you can re-verify it on this device. It keeps up to 12 receipts without time-based deletion. There is no server receipt-history retrieval service; merchant checkout records and conditional reward pseudonyms are separate backend records. Clearing browser data or changing device loses these local receipts.',
   },
   {
     title: 'Active pass control token',
@@ -29,20 +29,24 @@ const browserItems = [
 
 const backendItems = [
   {
-    title: 'No customer wallet address, fingerprint or history',
-    body: 'Your wallet address is sent with the checkout proof, checked in that single request (signature, on-chain eligibility, whether it belongs to the seller) and then dropped. The backend stores no customer wallet address, no hash or fingerprint of it, no copy of your signature or signed text, no lock or balance amounts, no block numbers and no payment transaction hashes, and it keeps no customer history.',
+    title: 'No customer wallet address in checkout records',
+    body: 'The ordinary checkout processes your raw wallet address and signature within the proof request to check signature, on-chain eligibility and seller-controlled-wallet status. The checkout service does not write the raw customer address, signature, signed text, measured lock or balance amounts, customer verification block or customer payment transaction hash to its records. The conditional Model B reward path can retain a wallet-derived pseudonym as described below. Seller and operator wallet addresses are stored for account and checkout authorization.',
+  },
+  {
+    title: 'Conditional Model B reward pseudonyms',
+    body: 'When a verified Model B pilot and its dedicated deduplication key are configured, a reward-eligible checkout can store rewardDedupKey, a keyed HMAC scoped to chain, vault, partner and UTC month, plus rewardPeriod in RewardEvent. This prevents a second reward for the same wallet, partner and month; it does not prevent another checkout. The key is linked to a checkout and is pseudonymous, not anonymous: a holder of the secret can recompute it for candidate wallets. Its scope does not cause automatic deletion. Retention period not yet defined. This describes the implemented conditional path, not a claim that a pilot is active.',
   },
   {
     title: 'Merchant checkout records do exist',
-    body: 'For each checkout the backend keeps a merchant session record: a fresh random checkout ID, the shop, the offer terms, status, timestamps, which lock source qualified, and whether the proof came from a seller-controlled wallet. It also keeps the seller wallet that opened the checkout and seller-side audit events. These records let one checkout be redeemed exactly once; they are not anonymous, and timing or offer details may still be linkable with other information.',
+    body: 'For each checkout the backend keeps a merchant session record: a fresh random checkout ID and nonce, the shop and rule, snapshotted offer terms, status, timestamps, proof version and attempt count, qualifying lock source and seller-controlled-wallet flag, plus any customer-pass link. It keeps the opening seller wallet, role and operator reference, seller-side audit events and any reward-event linkage and outcome. These records let one checkout be redeemed exactly once; they are not anonymous, and timing, offer details or reward pseudonyms may be linkable with other information. Retention period not yet defined.',
   },
   {
     title: 'Hashed control tokens',
-    body: 'Customer checkout passes are created without any wallet. Their control tokens are stored only as hashes.',
+    body: 'Customer checkout passes are created without any wallet. The backend stores a SHA-256 hash of the random control token, the pass ID, status and lifecycle timestamps; a bound pass is linked to its checkout. Expiry ends validity but does not delete the record. Linked passes are protected from the current pruning tool; retention period not yet defined.',
   },
   {
     title: 'Limits are up to the shop',
-    body: 'Because no customer identity is stored, IFR does not enforce per-customer redemption limits. A shop that wants such limits must enforce them in its own systems.',
+    body: 'IFR does not enforce per-customer checkout redemption limits; nonzero daily or monthly rule limits are refused. Conditional Model B reward deduplication limits rewards for a partner and month, not checkout use. A shop that wants checkout limits must enforce them in its own systems.',
   },
 ];
 
@@ -64,7 +68,7 @@ const thirdPartyItems = [
   },
   {
     title: 'Network logs and rate limits',
-    body: 'Hosting and proxy infrastructure may log IP addresses and request paths. Rate limiting uses short-lived counters keyed by IP address or pass ID, never by wallet address. Wallet addresses and signatures travel only in request bodies, never in URLs.',
+    body: 'Hosting and proxy infrastructure may log IP addresses and request paths. Public rate limits use IP or IPv6-prefix counters and pass-ID/authorization-digest counters. Authenticated seller limits also use the full normalized seller wallet in memory or Redis. Redis seller counters expire after a one-hour window; memory entries may remain until reuse, capacity cleanup or process exit. Customer proofs send wallet addresses and signatures in JSON bodies; seller authorization also supports x-ifr-* headers, including x-ifr-signature. These are not URL fields in the current client flows. Retention period not yet defined for infrastructure logs, Redis persistence and backups.',
   },
   {
     title: 'Coinbase Wallet and WalletConnect',
@@ -129,7 +133,7 @@ export default function PrivacyPage() {
             <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-200/80">Your browser</p>
             <h2 className="mt-2 text-3xl font-black text-white">What stays on this device</h2>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-stone-300">
-              Everything below lives only in this browser. You can inspect and clear the app&apos;s own keys and caches here. Clearing them does not affect backend records or on-chain data, does not touch wallet-provider storage or any other site&apos;s data, and does not disconnect your wallet.
+              The copies below live in this browser. You can inspect and clear the app&apos;s own keys and caches here. Clearing them does not affect backend records or on-chain data, does not touch wallet-provider storage or any other site&apos;s data, and does not disconnect your wallet.
             </p>
             <div className="mt-5 grid gap-3">
               {browserItems.map((item) => (
@@ -170,7 +174,7 @@ export default function PrivacyPage() {
             <p className="text-xs font-black uppercase tracking-[0.18em] text-green-100/80">Seller history</p>
             <h2 className="mt-2 text-3xl font-black text-white">Sellers see checkout outcomes, not your wallet.</h2>
             <p className="mt-4 max-w-3xl text-sm leading-7 text-stone-300">
-              Seller session history shows the status of each checkout, whether a customer proof was verified, the qualifying lock source and whether the proof came from a seller-controlled wallet. It contains no customer wallet address, because the backend does not keep one. This is not anonymity: a seller who sees you at the counter, the time of a checkout or public on-chain data can still connect information, and anything you sign on-chain is public.
+              Seller session history shows the status of each checkout, whether a customer proof was verified, the qualifying lock source and whether the proof came from a seller-controlled wallet. It contains no raw customer wallet address. Backend merchant checkout records and conditional scoped reward HMACs still retain linkable information. This is not anonymity: a seller who sees you at the counter, the time of a checkout or public on-chain data can still connect information, and anything you sign on-chain is public.
             </p>
           </section>
 
@@ -178,7 +182,7 @@ export default function PrivacyPage() {
             <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-200/80">Open items</p>
             <h2 className="mt-2 text-3xl font-black text-white">What is not decided yet</h2>
             <p className="mt-4 max-w-3xl text-sm leading-7 text-stone-300">
-              The backend has a manual operator tool for counting and removing expired, unlinked authorization artifacts after an approved cutoff. It does not automatically delete checkout sessions, session audit records, reward records or passes linked to sessions. The customer-privacy upgrade was applied on 11 October 2026: current records no longer contain customer wallet addresses or customer history. Backups created before the upgrade still contain such data until they are deleted after a short acceptance window. The long-term server-side retention, deletion and support policy is not finalized. This page therefore makes no promise that backend records can be deleted on request, and it does not claim compliance with GDPR or any other specific legal framework. There is no dedicated privacy support channel at this time. When a final policy exists, this page will be updated to match it.
+              The backend has a manual operator tool for counting and removing old admin audit rows and expired, unlinked authorization artifacts after an approved cutoff. It does not automatically delete checkout sessions, session audit records, reward records or passes linked to sessions. Seller/profile/operator and reward-link records also have no complete erasure path. Admin audit rows include an IP-derived digest, which is not anonymous. The customer-privacy migration of 11 October 2026 removed legacy raw customer fields and server receipt-history tables; it does not exclude the later conditional Model B reward pseudonym. Older databases, journals, backups and exports may retain legacy customer data. Their deletion has not been established by the current source; retention period not yet defined. The long-term server-side retention, deletion and support policy is not finalized. This page therefore makes no promise that backend records can be deleted on request, and it does not claim compliance with GDPR or any other specific legal framework. There is no dedicated privacy support channel at this time. When a final policy exists, this page will be updated to match it.
             </p>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-stone-300">
               What you can always do today: clear this browser&apos;s local app data with the controls above, disconnect your wallet in your wallet app, and simply stop using the service. On-chain transactions you have already signed remain public on Ethereum and cannot be altered or removed by anyone.

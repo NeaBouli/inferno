@@ -2246,7 +2246,9 @@ console.<span class="function">log</span>(<span class="string">"Reserve1:"</span
 
             <p>
                 On-chain registry for verified IFR builders and integration partners.
-                Registration and removal controlled exclusively by <strong>Governance (Timelock)</strong>.
+                The current owner controls registration, removal, metadata updates and inherited ownership changes.
+                Governance is the recorded owner in the 14 September 2026 audit snapshot; its proposal delay applies only while it owns the registry.
+                The reviewed source and ABI have no proxy or code-upgrade path: code changes require a new deployment and migration.
                 Used by the Telegram Bot for topic access control and for PartnerVault pilot-partner eligibility (rewards not active).
             </p>
 
@@ -2259,18 +2261,28 @@ console.<span class="function">log</span>(<span class="string">"Reserve1:"</span
                     <tbody>
                         <tr>
                             <td><code>registerBuilder(wallet, name, url, category)</code></td>
-                            <td>Governance</td>
+                            <td>Owner</td>
                             <td>Register a new builder with metadata</td>
                         </tr>
                         <tr>
                             <td><code>removeBuilder(wallet)</code></td>
-                            <td>Governance</td>
-                            <td>Deactivate a builder</td>
+                            <td>Owner</td>
+                            <td>Deactivate a builder; retain metadata and list entries</td>
                         </tr>
                         <tr>
                             <td><code>updateBuilder(wallet, name, url, category)</code></td>
-                            <td>Governance</td>
+                            <td>Owner</td>
                             <td>Update builder metadata</td>
+                        </tr>
+                        <tr>
+                            <td><code>transferOwnership(newOwner)</code></td>
+                            <td>Owner</td>
+                            <td>Immediately transfer all five owner rights to any nonzero address; no acceptance step or registry delay</td>
+                        </tr>
+                        <tr>
+                            <td><code>renounceOwnership()</code></td>
+                            <td>Owner</td>
+                            <td>Set owner to zero, permanently disabling owner mutations; records remain readable</td>
                         </tr>
                         <tr>
                             <td><code>isBuilder(wallet)</code></td>
@@ -2280,7 +2292,12 @@ console.<span class="function">log</span>(<span class="string">"Reserve1:"</span
                         <tr>
                             <td><code>getActiveBuilders()</code></td>
                             <td>Public</td>
-                            <td>Get all active builder addresses</td>
+                            <td>Get active list entries; removal and re-registration can produce duplicate addresses</td>
+                        </tr>
+                        <tr>
+                            <td><code>getBuilderCount()</code></td>
+                            <td>Public</td>
+                            <td>Count registration entries, including removed and repeated wallets; not unique builders</td>
                         </tr>
                         <tr>
                             <td><code>getBuilderInfo(wallet)</code></td>
