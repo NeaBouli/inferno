@@ -107,23 +107,4 @@
     window.addEventListener('hashchange', stop, { once: true });
     setTimeout(stop, 5000);
   }
-
-  // Keep decorative animation work scoped to visible elements, including disclosures.
-  if ('IntersectionObserver' in window) {
-    const decorations = document.querySelectorAll('.hero-web3-btn, .coin-container, .ifr-stars-container, .ifr-bh-wrap, .live-dot, .gauge-live i, [style*="animation:"]');
-    const visible = new Set();
-    const update = element => element.classList.toggle('landing-motion-paused', document.hidden || !visible.has(element));
-    const observer = new IntersectionObserver(entries => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) visible.add(entry.target);
-        else visible.delete(entry.target);
-        update(entry.target);
-      });
-    });
-    decorations.forEach(element => {
-      update(element);
-      observer.observe(element);
-    });
-    document.addEventListener('visibilitychange', () => decorations.forEach(update));
-  }
 })();
