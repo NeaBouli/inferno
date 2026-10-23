@@ -25,6 +25,7 @@
   "contracts": [
     { "source": "contracts/BuilderRegistry.sol", "contract": "BuilderRegistry" },
     { "source": "contracts/FeeRouterV1.sol", "contract": "FeeRouterV1" },
+    { "source": "contracts/FeeRouterV2.sol", "contract": "FeeRouterV2" },
     { "source": "contracts/bootstrap/BootstrapVault.sol", "contract": "BootstrapVault" },
     { "source": "contracts/bootstrap/BootstrapVaultV2.sol", "contract": "BootstrapVaultV2" },
     { "source": "contracts/bootstrap/BootstrapVaultV3.sol", "contract": "BootstrapVaultV3" },

@@ -554,6 +554,13 @@
   <link rel="stylesheet" href="../assets/redesign-skin.css?v=20261017-retirement&amp;perf=20261023">
   <link rel="stylesheet" href="../assets/governance-navigation.css">
   <script src="../assets/governance-navigation.js" defer></script>
+  <style>
+    #recent-votes { min-width: 0; overflow-wrap: anywhere; margin-bottom: 32px; }
+    #recent-votes .recent-votes-list { list-style: none; padding: 0; }
+    #recent-votes .recent-vote { padding: 16px 20px; margin-bottom: 12px; }
+    #recent-votes .recent-vote p { margin: 0 0 8px; }
+  </style>
+  <script type="module" src="../assets/recent-votes.js?v=20261023"></script>
 </head>
 <body>
 
@@ -685,6 +692,7 @@
       <section class="governance-overview" data-rag-summary aria-label="Governance status">
         <p><strong>Live:</strong> Safe-controlled Governance and timelock execution. <strong>Council ballots:</strong> EX-01 approved on 4 October 2026 (no IFR incentives for exchanges); EX-02 and CV-01 open; signed votes on <a href="council-votes.html">Council Votes</a>. <strong>Planned:</strong> Council web voting and the Phase 4 DAO.</p>
         <nav class="governance-jumps" aria-label="Governance sections">
+          <a href="#recent-votes">Recent votes</a>
           <a href="#council-agenda">Current Council agenda</a>
           <a href="#governance-procedure">Proposal procedure</a>
           <a href="#mainnet-record">Mainnet record</a>
@@ -695,6 +703,46 @@
         <p>The Council portal is not live. An agenda discussion is not a vote, a funding allocation or permission to execute a transaction. Open decisions and their gates are tracked in the <a href="https://github.com/NeaBouli/inferno/blob/main/docs/GOVERNANCE_PRODUCT_DECISION_REGISTER.md" target="_blank" rel="noopener">decision register</a>.</p>
         <p id="ifr-dip-01"><strong>IFR-DIP-01 completion boundary (10 October 2026):</strong> Council voting readiness and Forum completion remain open. Forum signal is <strong>ADVISORY</strong> until binding authority is resolved. Council readiness, Forum signal and authorized Safe action are separate stages; a signal is not ballot approval, a funding allocation or permission to execute a Safe transaction.</p>
         <p>On-chain proposals progress from Pending to Executable after the timelock, then Executed; the guardian can cancel an eligible proposal, making it Cancelled. Proposed voting weights are one vote per eligible Council member and eligible locked-IFR weight for the Forum, subject to ratification. Open and secret voting modes require independent security and privacy review. Network anonymity is not guaranteed. Full procedure, historical records and privacy requirements: <a href="https://ifrunit.tech/wiki/governance.html">https://ifrunit.tech/wiki/governance.html</a>.</p>
+      </section>
+
+      <section id="recent-votes" aria-labelledby="recent-votes-heading">
+        <h2 id="recent-votes-heading">Recent votes</h2>
+        <p>The five newest Council ballots and closed public Forum tallies, when available. Council dates show when ballots opened; Forum dates show when voting closed. Council counts use locally verified signatures over the published ballot texts. Approval and Safe execution are separate.</p>
+        <div id="recent-votes-content" data-state="static">
+      <!-- recent-votes:start -->
+<section aria-labelledby="recent-council-heading">
+<h3 id="recent-council-heading">Council</h3>
+<ul class="recent-votes-list">
+  <li class="phase-card recent-vote" data-vote-id="CV-01">
+    <p><strong>CV-01 — CommitmentVault V1 compensation (urgent)</strong></p>
+    <p>Open — YES: 2 · NO: 0 · verified abstentions: 0 · unverified (not counted): 1</p>
+    <p>Opened: <time datetime="2026-10-03">2026-10-03</time></p>
+    <div class="wiki-actions"><a class="btn btn-secondary" href="/wiki/council-votes.html#cv-01">Evidence for CV-01</a></div>
+  </li>
+  <li class="phase-card recent-vote" data-vote-id="EX-01">
+    <p><strong>EX-01 — No IFR incentives for exchanges</strong></p>
+    <p>Approved: YES — YES: 3 · NO: 0 · verified abstentions: 0</p>
+    <p>Opened: <time datetime="2026-10-03">2026-10-03</time></p>
+    <div class="wiki-actions"><a class="btn btn-secondary" href="/wiki/council-votes.html#ex-01">Evidence for EX-01</a></div>
+  </li>
+  <li class="phase-card recent-vote" data-vote-id="EX-02">
+    <p><strong>EX-02 — Governance role of exchanges</strong></p>
+    <p>Open — OPTION A: 0 · OPTION B: 0 · verified abstentions: 3</p>
+    <p>Opened: <time datetime="2026-10-03">2026-10-03</time></p>
+    <div class="wiki-actions"><a class="btn btn-secondary" href="/wiki/council-votes.html#ex-02">Evidence for EX-02</a></div>
+  </li>
+</ul>
+<div class="wiki-actions"><a class="btn btn-secondary" href="/wiki/council-votes.html">All council votes</a></div>
+</section>
+<section aria-labelledby="recent-forum-heading">
+<h3 id="recent-forum-heading">Forum</h3>
+<p>Forum tallies are advisory; the Council decides. Test ballots are excluded.</p>
+<p>No public forum ballot has closed yet</p>
+<div class="wiki-actions"><a class="btn btn-secondary" href="/wiki/dao-governance.html#forum-vote-steps">Forum voting guide</a>
+<a class="btn btn-secondary" href="https://github.com/NeaBouli/inferno/tree/main/apps/telegram/telegram-bot/forum-results">All Forum tally files (including tests)</a></div>
+</section>
+      <!-- recent-votes:end -->
+        </div>
       </section>
 
       <details class="governance-section" id="governance-procedure">
