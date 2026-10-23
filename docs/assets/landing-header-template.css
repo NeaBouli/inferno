@@ -537,10 +537,11 @@ nav #connect {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
+@media (prefers-reduced-motion: reduce), (max-width: 640px) {
   .template-hero .hero-web3-btn,
   .template-hero .hero-web3-btn::before {
     animation: none !important;
+    transition: none !important;
   }
 }
 
