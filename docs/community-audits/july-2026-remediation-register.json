@@ -332,10 +332,14 @@
       "status": "documented_accepted_or_monitored",
       "currentAssessment": "The mixed 0.8.20/0.8.28 compiler configuration and verified analysis toolchain are explicitly documented and pinned; floating deployment provenance remains monitored through the larger CWA register.",
       "remainingAction": "Preserve compiler/build metadata for every future deployment and reconcile any bytecode-era drift before redeployment.",
-      "verification": "Pinned build, bytecode/source comparison and deployment record review.",
+      "verification": "Offline Sourcify v2 evidence fetched 2026-10-23 covers all 15 Mainnet contracts: creation/runtime exact_match for every contract; 14 builds use solc 0.8.20/paris and CommitmentVaultV2 uses 0.8.28/cancun, all optimizer off/200. npm run test:compiler-provenance checks fixtures and reports 14 informational config DRIFT, 1 MATCH, 0 UNKNOWN; fresh project-source SHA-256 comparison finds 9 identical and 6 differing files. Full bytecode reproduction still requires historical sources, dependencies and complete build inputs; see JUL-21-COMPILER-PROVENANCE-EVIDENCE.md.",
       "evidence": [
         {"path": "hardhat.config.js", "marker": "version: \"0.8.28\""},
-        {"path": "README.md", "marker": "solc 0.8.28"}
+        {"path": "README.md", "marker": "solc 0.8.28"},
+        {"path": "audit/compiler-provenance-mainnet.json", "marker": "sourcify v2, fetched 2026-10-23"},
+        {"path": "docs/community-audits/JUL-21-COMPILER-PROVENANCE-EVIDENCE.md", "marker": "## Source comparison conclusion"},
+        {"path": "scripts/check-compiler-provenance.cjs", "marker": "would NOT reproduce deployed bytecode"},
+        {"path": "scripts/test-compiler-provenance.cjs", "marker": "offline CLI exit codes verified"}
       ]
     },
     {

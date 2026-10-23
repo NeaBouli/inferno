@@ -52,26 +52,26 @@ unchanged report describe the dated audit assessment, not current remediation
 status. Every later status change must carry integrated evidence and pass the
 register's CI guard.
 
-### JUL-21 compiler provenance follow-up — 22 October 2026
+### JUL-21 compiler provenance follow-up — 23 October 2026
 
-`npm run test:compiler-provenance` compares `hardhat.config.js` compiler
-versions and optimizer enabled/runs settings with Mainnet deployment records.
-The checked-in `deployments/mainnet.json` has no compiler/optimizer metadata
-for any of its 15 contracts; there is no `docs/contracts` JSON metadata
-directory. The script therefore prints an `UNKNOWN` row for each contract
-and explicitly states that provenance is **not verified**. Missing evidence
-does not produce a fabricated match or change JUL-21's monitored disposition.
-Recorded mismatches or malformed metadata fail the check; missing metadata
-alone returns success with the explicit coverage gap.
+The [compiler provenance evidence](JUL-21-COMPILER-PROVENANCE-EVIDENCE.md) records
+Sourcify v2 metadata fetched by Claude on 2026-10-23 for all 15 Mainnet contracts.
+All report creation/runtime `exact_match`: 14 used solc 0.8.20/paris and
+CommitmentVaultV2 used 0.8.28/cancun, all with optimizer off/200. Project-source
+SHA-256 comparisons find nine identical and six differing files against the
+current repository. JUL-21's monitored disposition is unchanged.
 
-For future records, preserve the deployment-era standard JSON compiler input
-and metadata, then add `compiler.version` and `compiler.settings` (including
-optimizer settings) to the matching deployment entry. Current local build
-artifacts and Solidity pragma ranges are not deployment evidence. The script
-selects source overrides or the highest root-pragma-compatible configured
-compiler; it does not compile dependency graphs, verify compiler binary hashes
-or compare deployed bytecode. It runs offline without importing Hardhat or
-loading `.env`. No production or explorer state was queried for this follow-up.
+`npm run test:compiler-provenance` runs fixture regressions and compares
+`hardhat.config.js` against `audit/compiler-provenance-mainnet.json`, including
+compiler version, optimizer enabled/runs, EVM target and fresh source hashes.
+The current config produces 14 informational `DRIFT` rows and one `MATCH`;
+a redeploy from that config would not reproduce the 14 historical builds.
+Missing records produce `UNKNOWN` and fail; malformed data also fails.
+Current local build artifacts and Solidity pragma ranges are not deployment
+evidence. Preserve complete standard JSON build inputs for future deployments.
+The check runs offline without importing Hardhat or loading `.env`; it does
+not compile dependency graphs, verify compiler binaries or compare deployed
+bytecode. No network access was used to derive this follow-up from the cache.
 
 ### Editorial status note — 28 July 2026
 

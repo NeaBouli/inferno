@@ -4,6 +4,7 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
+const crypto = require("node:crypto");
 const root = path.resolve(__dirname, "..");
 
 // Inspect the local config offline, without loading Hardhat, dotenv, plugins or credentials.
@@ -33,6 +34,7 @@ function compareVersions(left, right) {
 
 function configuredCompiler(directory, solidity, source) {
   if (solidity.overrides?.[source]) return solidity.overrides[source];
+  if (!fs.existsSync(path.join(directory, source))) return null;
   const text = fs.readFileSync(path.join(directory, source), "utf8");
   const pragma = /pragma\s+solidity\s+(\^?\d+\.\d+\.\d+)\s*;/.exec(text)?.[1];
   // Fail instead of guessing if future sources introduce a different range syntax.
@@ -53,6 +55,9 @@ function configuredCompiler(directory, solidity, source) {
 }
 
 function optimizer(settings) {
+  if (settings.optimizer !== undefined && !isObject(settings.optimizer)) {
+    throw new Error("Invalid optimizer settings");
+  }
   const enabled = settings.optimizer?.enabled ?? false;
   const runs = settings.optimizer?.runs ?? 200;
   if (typeof enabled !== "boolean" || !Number.isSafeInteger(runs) || runs < 0) {
@@ -61,61 +66,147 @@ function optimizer(settings) {
   return `${enabled ? "on" : "off"}/${runs}`;
 }
 
+function isObject(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function projectPath(source) {
+  if (typeof source !== "string" || !source.startsWith("contracts/") ||
+      source.includes("\\") || source.split("/").some((part) => ["", ".", ".."].includes(part))) {
+    throw new Error(`Invalid project source path: ${source}`);
+  }
+  return source;
+}
+
+function readProvenance(directory) {
+  const file = path.join(directory, "audit/compiler-provenance-mainnet.json");
+  const data = JSON.parse(fs.readFileSync(file, "utf8"));
+  if (data.schemaVersion !== 1 || data.chainId !== 1 || !Array.isArray(data.contracts)) {
+    throw new Error("Invalid Mainnet compiler provenance schema");
+  }
+  const records = new Map();
+  for (const record of data.contracts) {
+    if (!isObject(record) || typeof record.name !== "string" || !record.name ||
+        records.has(record.name) || !/^0x[0-9a-fA-F]{40}$/.test(record.address) ||
+        typeof record.source !== "string" || !record.source.trim() ||
+        !isObject(record.optimizer) || typeof record.optimizer.enabled !== "boolean" ||
+        !Number.isSafeInteger(record.optimizer.runs) || record.optimizer.runs < 0 ||
+        typeof record.evmVersion !== "string" || !/^[a-z][a-z0-9]*$/.test(record.evmVersion) ||
+        (record.viaIR !== undefined && typeof record.viaIR !== "boolean") ||
+        !["exact_match", "match", null].includes(record.creationMatch) ||
+        !["exact_match", "match", null].includes(record.runtimeMatch) ||
+        !isObject(record.sourceHashes) || !Object.keys(record.sourceHashes).length) {
+      throw new Error(`Malformed compiler provenance record: ${record?.name ?? "unknown"}`);
+    }
+    versionParts(record.compilerVersion);
+    const qualified = /^(.+):([A-Za-z_$][\w$]*)$/.exec(record.fullyQualifiedName);
+    if (!qualified) throw new Error(`Invalid fullyQualifiedName: ${record.name}`);
+    const source = projectPath(qualified[1].replace(/^project\//, ""));
+    if (!Object.hasOwn(record.sourceHashes, source)) {
+      throw new Error(`Missing root source hash: ${record.name}`);
+    }
+    for (const [file, entry] of Object.entries(record.sourceHashes)) {
+      projectPath(file);
+      if (!isObject(entry) || !/^[0-9a-f]{64}$/.test(entry.sha256) ||
+          ![true, false, "missing"].includes(entry.repoMatch) ||
+          ![file, `project/${file}`].includes(entry.sourcePath)) {
+        throw new Error(`Invalid source hash: ${record.name}: ${file}`);
+      }
+    }
+    records.set(record.name, record);
+  }
+  return records;
+}
+
+function sourceComparison(directory, record) {
+  return Object.entries(record.sourceHashes).map(([file, entry]) => {
+    const absolute = path.join(directory, file);
+    // repoMatch is the evidence snapshot; always compare the current working tree afresh.
+    const repoMatch = fs.existsSync(absolute)
+      ? crypto.createHash("sha256").update(fs.readFileSync(absolute)).digest("hex") === entry.sha256
+      : "missing";
+    return { file, repoMatch };
+  });
+}
+
 function checkProvenance(directory = root) {
   const solidity = readCompilerConfig(directory);
   const manifestPath = path.join(directory, "deployments/mainnet.json");
   const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  if (!isObject(manifest)) throw new Error("Invalid Mainnet deployment manifest");
+  const records = readProvenance(directory);
   const rows = [];
-  let mismatches = 0;
+  const sources = {};
+  const missingRecords = [];
+  let drift = 0;
   let unknown = 0;
   for (const [name, deployment] of Object.entries(manifest)) {
     if (name.startsWith("_")) continue;
-    if (deployment.network !== "mainnet" || !deployment.source) {
+    if (!isObject(deployment) || deployment.network !== "mainnet" ||
+        !/^0x[0-9a-fA-F]{40}$/.test(deployment.address)) {
       throw new Error(`Incomplete Mainnet deployment entry: ${name}`);
     }
+    projectPath(deployment.source);
     const current = configuredCompiler(directory, solidity, deployment.source);
-    const currentOptimizer = optimizer(current.settings ?? {});
-    // Optional future record: compiler: { version, settings: { optimizer: { enabled, runs } } }.
-    // Only deployment-era records count; local artifacts and pragma ranges are not provenance.
-    const recorded = deployment.compiler;
+    if (current) versionParts(current.version);
+    const currentOptimizer = current ? optimizer(current.settings ?? {}) : "unknown";
+    const currentEvm = current?.settings?.evmVersion ?? "unknown";
+    if (typeof currentEvm !== "string") throw new Error(`Invalid configured EVM version: ${name}`);
+    const recorded = records.get(name);
     let status = "UNKNOWN";
     let recordedVersion = "unknown";
     let recordedOptimizer = "unknown";
+    let recordedEvm = "unknown";
+    let sourceDrift = "unknown";
     if (recorded) {
-      if (typeof recorded.version !== "string" || !recorded.settings ||
-          typeof recorded.settings !== "object" || Array.isArray(recorded.settings)) {
-        throw new Error(`Incomplete recorded compiler metadata: ${name}`);
+      if (recorded.address.toLowerCase() !== deployment.address.toLowerCase() ||
+          recorded.fullyQualifiedName.split(":")[0].replace(/^project\//, "") !== deployment.source) {
+        throw new Error(`Provenance identity differs from Mainnet manifest: ${name}`);
       }
-      recordedVersion = recorded.version;
-      recordedOptimizer = optimizer(recorded.settings);
-      const matches = compareVersions(current.version, recorded.version) === 0 &&
-        currentOptimizer === recordedOptimizer;
-      status = matches ? "MATCH" : "MISMATCH";
-      if (!matches) mismatches += 1;
+      recordedVersion = recorded.compilerVersion;
+      recordedOptimizer = optimizer(recorded);
+      recordedEvm = recorded.evmVersion;
+      sources[name] = sourceComparison(directory, recorded);
+      sourceDrift = `${sources[name].filter((entry) => entry.repoMatch !== true).length}/${sources[name].length}`;
+      if (current && currentEvm !== "unknown") {
+        const matches = compareVersions(current.version, recordedVersion) === 0 &&
+          (!current.version.includes("+") || !recordedVersion.includes("+") ||
+            current.version.replace(/^v/, "") === recordedVersion.replace(/^v/, "")) &&
+          currentOptimizer === recordedOptimizer && currentEvm === recordedEvm;
+        status = matches ? "MATCH" : "DRIFT";
+        if (!matches) drift += 1;
+      }
     } else {
-      unknown += 1;
+      missingRecords.push(name);
     }
-    rows.push({ contract: name, configured: current.version, optimizer: currentOptimizer,
-      recorded: recordedVersion, recordedOptimizer, status });
+    if (status === "UNKNOWN") unknown += 1;
+    rows.push({ contract: name, configured: current?.version ?? "unknown", optimizer: currentOptimizer,
+      evm: currentEvm, recorded: recordedVersion, recordedOptimizer, recordedEvm, status, sourceDrift });
   }
   if (!rows.length) throw new Error("No Mainnet contracts found in deployments/mainnet.json");
-  return { rows, mismatches, unknown };
+  return { rows, drift, unknown, missingRecords, sources };
 }
 
-function main() {
-  const { rows, mismatches, unknown } = checkProvenance();
+function main(directory = root) {
+  const { rows, drift, unknown, missingRecords, sources } = checkProvenance(directory);
   console.table(rows);
   console.log("[compiler-provenance] optimizer columns: enabled/runs (solc defaults: off/200).");
+  console.log("[compiler-provenance] sourceDrift: differing or missing project files / recorded project files (fresh SHA-256 comparison; snapshot repoMatch is not trusted).");
   console.log("[compiler-provenance] Config selection uses source overrides or the highest root-pragma-compatible compiler; no compilation, dependency-pragma or bytecode verification.");
+  console.log("[compiler-provenance] MATCH compares compiler version, optimizer enabled/runs and explicit evmVersion only; it does not certify bytecode reproducibility.");
   if (unknown) {
-    console.log(`[compiler-provenance] UNKNOWN: ${unknown}/${rows.length} Mainnet contracts have no recorded compiler/optimizer metadata in deployments/mainnet.json. Provenance is NOT verified.`);
-    console.log("[compiler-provenance] Preserve deployment-era solc input/metadata and record compiler.version plus compiler.settings before claiming a match; see docs/community-audits/README.md (JUL-21).");
+    console.log(`[compiler-provenance] UNKNOWN: ${unknown}/${rows.length} Mainnet contracts lack provenance or a selectable current compiler with explicit evmVersion.`);
   }
-  if (mismatches) {
-    console.error(`[compiler-provenance] FAIL: ${mismatches} recorded build settings differ from hardhat.config.js.`);
+  if (drift) {
+    console.log(`[compiler-provenance] DRIFT: ${drift}/${rows.length} deployed builds differ from hardhat.config.js (informational; expected for historical deployments). A redeploy from current config would NOT reproduce deployed bytecode for these contracts.`);
+  }
+  const files = Object.values(sources).flat();
+  console.log(`[compiler-provenance] source drift: ${files.filter((entry) => entry.repoMatch !== true).length}/${files.length} project file comparisons differ or are missing.`);
+  if (missingRecords.length) {
+    console.error(`[compiler-provenance] FAIL: missing provenance record(s) in audit/compiler-provenance-mainnet.json: ${missingRecords.join(", ")}`);
     process.exitCode = 1;
-  } else if (!unknown) {
-    console.log("[compiler-provenance] PASS: all recorded compiler versions and optimizer settings match.");
+  } else {
+    console.log(`[compiler-provenance] PASS: ${rows.length}/${rows.length} Mainnet provenance records present; ${rows.length - drift - unknown} MATCH, ${drift} DRIFT, ${unknown} UNKNOWN.`);
   }
 }
 
@@ -126,4 +217,4 @@ if (require.main === module) {
   }
 }
 
-module.exports = { checkProvenance };
+module.exports = { checkProvenance, main };

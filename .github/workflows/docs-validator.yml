@@ -8,6 +8,9 @@ on:
       - 'infra/web3/**'
       - '**/*.md'
       - 'audit/markdownlint-baseline.json'
+      - 'audit/compiler-provenance-mainnet.json'
+      - 'scripts/*compiler-provenance*'
+      - 'hardhat.config.js'
       - 'internal/operations/TODO.md'
       - 'internal/operations/TODO.html'
       - 'reports/*.md'
@@ -92,6 +95,9 @@ on:
       - 'infra/web3/**'
       - '**/*.md'
       - 'audit/markdownlint-baseline.json'
+      - 'audit/compiler-provenance-mainnet.json'
+      - 'scripts/*compiler-provenance*'
+      - 'hardhat.config.js'
       - 'internal/operations/TODO.md'
       - 'internal/operations/TODO.html'
       - 'reports/*.md'
@@ -312,6 +318,9 @@ jobs:
 
       - name: Check July community-audit remediation status
         run: npm run test:july-audit-register
+
+      - name: Check Mainnet compiler provenance (JUL-21)
+        run: npm run test:compiler-provenance
 
 
       - name: Check Wiki head integrity
