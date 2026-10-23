@@ -32,6 +32,12 @@
       "rationale": "execute() is nonReentrant (ReentrancyGuard, T-190) and the cooldown timestamp and execution counter are updated before external calls; a nested execute() from the router reverts (tested). The configured router remains an external trust boundary."
     },
     {
+      "fingerprint": "504723a071c2e59b9f391ec751fabfbd3de1254c776e7477c6890eb0c2623892",
+      "subject": "BuybackVaultV2._swap(uint256,uint256,uint256) reentrancy-balance",
+      "classification": "Constrained signal / guarded receipt checks",
+      "rationale": "The private _swap is called only by nonReentrant executeBuyback; all state-changing external entry points, including configuration, oracle, ownership and ETH receipt paths, share the same ReentrancyGuard. The trusted router and IFR token are immutable, constructor-validated identities; independently reviewed non-proxy implementations remain a deployment trust boundary. The before/after balance delta measures only this vault's own net IFR received during the fee-on-transfer swap, excludes pre-existing IFR and enforces minReceived before distribution. Budget, cooldown and execution count are updated before the router call, and callbacks cannot change the configuration read after it. BuybackV2 tests cover privileged router/token callbacks, pre-existing IFR, fee-on-transfer receipts/distribution and atomic rollback on short output."
+    },
+    {
       "fingerprint": "bc20adfd1f10e0a20b01482a1a09ba901e09e82121fcad89ca287e54d1263efe",
       "subject": "LendingVault.liquidate(uint256) arbitrary-send-eth",
       "classification": "By-design destination",

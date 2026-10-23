@@ -53,7 +53,8 @@ function criticalFinding() {
 }
 
 const contracts = discoverContracts();
-assert.equal(contracts.length, 27, "all current production Solidity files must be analyzed");
+assert.equal(contracts.length, 28, "all current production Solidity files must be analyzed");
+assert.ok(contracts.includes("contracts/buyback/BuybackVaultV2.sol"));
 assert.ok(contracts.includes("contracts/FeeRouterV2.sol"));
 assert.ok(contracts.includes("contracts/governance/GovernanceV2.sol"));
 assert.ok(contracts.includes("contracts/vault/CommitmentVaultV2.sol"));
@@ -67,8 +68,8 @@ assert.equal(contracts.some((contract) => contract.includes("/mocks/")), false);
 assert.equal(baseline.schemaVersion, 1);
 assert.equal(baseline.tool.slither, "0.11.5");
 assert.equal(baseline.tool.solc, "0.8.28");
-assert.equal(baseline.findings.length, 6, "every reviewed source High signal must be explicit");
-assert.equal(new Set(baseline.findings.map((entry) => entry.fingerprint)).size, 6);
+assert.equal(baseline.findings.length, 7, "every reviewed source High signal must be explicit");
+assert.equal(new Set(baseline.findings.map((entry) => entry.fingerprint)).size, 7);
 for (const entry of baseline.findings) {
   assert.match(entry.fingerprint, /^[a-f0-9]{64}$/);
   assert.ok(entry.subject);
