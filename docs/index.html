@@ -165,7 +165,7 @@
       font-size: 15px;
       font-weight: 600;
       text-decoration: none;
-      transition: all 0.2s;
+      transition: transform 0.2s, opacity 0.2s, background-color 0.2s, border-color 0.2s, color 0.2s;
       cursor: pointer;
       border: none;
     }
@@ -181,7 +181,7 @@
       border: 1.5px solid rgba(100, 60, 255, 0.7);
       color: rgba(140, 100, 255, 0.95);
       box-shadow: 0 0 14px rgba(80, 0, 255, 0.35), inset 0 0 8px rgba(100, 60, 255, 0.15);
-      transition: all 0.25s ease;
+      transition: transform 0.25s ease, opacity 0.25s ease, background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
     }
     .btn-secondary:hover { background: rgba(60, 0, 255, 0.32); border-color: rgba(120, 80, 255, 0.95); color: rgba(180, 140, 255, 1.0); box-shadow: 0 0 22px rgba(80, 0, 255, 0.6), inset 0 0 12px rgba(100, 60, 255, 0.25); }
 
@@ -263,7 +263,7 @@
       border: 1.5px solid rgba(255, 100, 20, 0.7);
       color: rgba(255, 120, 40, 0.95);
       box-shadow: 0 0 14px rgba(255, 80, 0, 0.35), inset 0 0 8px rgba(255, 100, 20, 0.15);
-      transition: all 0.25s ease;
+      transition: transform 0.25s ease, opacity 0.25s ease, background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
     }
     .btn-github:hover { background: rgba(255, 80, 0, 0.35); border-color: rgba(255, 120, 40, 0.95); color: rgba(255, 160, 80, 1.0); box-shadow: 0 0 22px rgba(255, 80, 0, 0.6), inset 0 0 12px rgba(255, 100, 20, 0.25); }
 
@@ -569,14 +569,13 @@
     }
 
     @keyframes pulse-dot {
-      0%   { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
-      70%  { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+      0%, 100% { opacity: 1; transform: scale(1); }
+      70% { opacity: 0.5; transform: scale(0.85); }
     }
 
     @keyframes pulse-green {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(4,120,87,0); border-color: rgba(4,120,87,0.55); }
-      50% { box-shadow: 0 0 18px 4px rgba(4,120,87,0.20); border-color: rgba(4,120,87,0.9); }
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.8; }
     }
 
     .live-updated-at { color: #065f46 !important; }
@@ -892,7 +891,8 @@
     .lp-faq-a {
       max-height: 0;
       overflow: hidden;
-      transition: max-height 0.3s ease;
+      opacity: 0;
+      transition: opacity 0.3s ease;
     }
     .lp-faq-a-inner {
       overflow-wrap: anywhere; /* long addresses must wrap instead of widening the grid track (T-262 D3) */
@@ -904,7 +904,7 @@
       padding-top: 12px;
     }
     .lp-faq-a-inner a { color: #ff6600; text-decoration: none; }
-    .lp-faq-item.open .lp-faq-a { max-height: 300px; }
+    .lp-faq-item.open .lp-faq-a { max-height: 300px; opacity: 1; }
 
     /* ── PARTNER STEPS ───────────────────────────────── */
 
@@ -1278,8 +1278,16 @@
     /* Accessibility: reduce motion */
     @media (prefers-reduced-motion: reduce) {
       canvas:not(#dist-donut) { display: none !important; } /* the distribution donut is static data, not motion */
-      *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+      html { scroll-behavior: auto !important; }
+      *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
     }
+    /* SMIL particles start only after visibility and motion preferences allow them. */
+    [data-flow-particle] { display: none; }
+    [data-flow-motion="running"] [data-flow-particle] { display: inline; }
+    .flow-pulse { transform-box: fill-box; transform-origin: center; animation: flow-pulse 3s ease-in-out infinite; animation-play-state: paused; }
+    [data-flow-motion="running"] .flow-pulse { animation-play-state: running; }
+    @keyframes flow-pulse { 0%, 100% { transform: scale(.946); } 50% { transform: scale(1.054); } }
+    @media (prefers-reduced-motion: reduce) { [data-flow-particle] { display: none !important; } }
     /* Keep each contract name clear of its address on narrow screens (T-258). */
     .contract-row { flex-wrap: wrap; gap: 8px 12px; }
     .contract-row > div:last-child { min-width: 0; max-width: 100%; }
@@ -1435,10 +1443,11 @@
 <script type="module" src="/assets/liquidity-gauge.mjs?v=impact2"></script>
 <script src="assets/wallet-core.js?v=20261010-pr261-notice"></script>
 <script src="assets/ifr-state.js"></script>
-  <link rel="stylesheet" href="assets/redesign-skin.css?v=20261017-retirement&amp;perf=20261023">
-  <link rel="stylesheet" href="assets/landing-header-template.css?v=20261023-b5">
-  <link rel="stylesheet" href="assets/landing-collapse.css?v=20261023-b5">
-  <script defer src="assets/landing-collapse.js?v=20261023-b6"></script>
+  <link rel="stylesheet" href="assets/redesign-skin.css?v=20261023-p1">
+  <script defer src="assets/page-motion.js?v=20261023-p1"></script>
+  <link rel="stylesheet" href="assets/landing-header-template.css?v=20261023-p1">
+  <link rel="stylesheet" href="assets/landing-collapse.css?v=20261023-p1">
+  <script defer src="assets/landing-collapse.js?v=20261023-p1"></script>
   <noscript><style>.reveal { opacity: 1; transform: none; }</style></noscript>
 </head>
 <body id="top">
@@ -2440,7 +2449,7 @@ render();
     </div>
     <div class="token-flow-panel" style="max-width:900px;margin:0 auto;background:rgba(13,17,23,0.8);border:1px solid #1e2730;border-radius:20px;padding:20px;overflow:hidden;">
       <div class="token-flow-svg-wrap">
-      <svg viewBox="0 0 800 540" style="width:100%;height:auto;" xmlns="http://www.w3.org/2000/svg">
+      <svg data-flow-motion="paused" viewBox="0 0 800 540" style="width:100%;height:auto;" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <filter id="glow"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
         </defs>
@@ -2479,9 +2488,7 @@ render();
         <!-- IFR Token Center -->
         <g filter="url(#glow)">
           <circle cx="400" cy="260" r="42" fill="#0d1117" stroke="#f97316" stroke-width="2"/>
-          <circle cx="400" cy="260" r="37" fill="rgba(249,115,22,0.1)">
-            <animate attributeName="r" values="35;39;35" dur="3s" repeatCount="indefinite"/>
-          </circle>
+          <circle class="flow-pulse" cx="400" cy="260" r="37" fill="rgba(249,115,22,0.1)"/>
           <text x="400" y="256" text-anchor="middle" fill="#f97316" font-size="14" font-weight="bold">IFR</text>
           <text x="400" y="272" text-anchor="middle" fill="#9ca3af" font-size="9" data-live-key="supply-flow">loading&hellip;</text>
         </g>
@@ -2561,16 +2568,16 @@ render();
              until poolFeeReceiver() / feeCollector() are read live and equal BuybackController (fail closed). -->
         <!-- IFR → BuybackController: 1% pool fee (orange) -->
         <g data-flow-route="pool" visibility="hidden">
-          <circle r="4" fill="#f97316" opacity="0.9"><animateMotion dur="2s" repeatCount="indefinite" path="M400,302 L400,338"/></circle>
-          <circle r="4" fill="#f97316" opacity="0.6"><animateMotion dur="2s" begin="0.7s" repeatCount="indefinite" path="M400,302 L400,338"/></circle>
+          <circle data-flow-particle r="4" fill="#f97316" opacity="0.9"><animateMotion dur="2s" repeatCount="indefinite" path="M400,302 L400,338" begin="indefinite"/></circle>
+          <circle data-flow-particle r="4" fill="#f97316" opacity="0.6"><animateMotion dur="2s" data-motion-delay="0.7" repeatCount="indefinite" path="M400,302 L400,338" begin="indefinite"/></circle>
         </g>
         <!-- FeeRouterV1 → BuybackController: ETH swap protocol fee (yellow) -->
         <g data-flow-route="eth" visibility="hidden">
-          <circle r="3" fill="#fbbf24" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M400,440 L400,380"/></circle>
+          <circle data-flow-particle r="3" fill="#fbbf24" opacity="0.8"><animateMotion dur="3s" repeatCount="indefinite" path="M400,440 L400,380" begin="indefinite"/></circle>
         </g>
         <!-- BuybackController → BurnReserve (red) and → Uniswap LP (blue), after a permissionless execute() -->
-        <circle r="3" fill="#ef4444" opacity="0.7"><animateMotion dur="3s" repeatCount="indefinite" path="M350,380 L250,420"/></circle>
-        <circle r="3" fill="#60a5fa" opacity="0.7"><animateMotion dur="3s" begin="1.5s" repeatCount="indefinite" path="M460,352 L495,343"/></circle>
+        <circle data-flow-particle r="3" fill="#ef4444" opacity="0.7"><animateMotion dur="3s" repeatCount="indefinite" path="M350,380 L250,420" begin="indefinite"/></circle>
+        <circle data-flow-particle r="3" fill="#60a5fa" opacity="0.7"><animateMotion dur="3s" data-motion-delay="1.5" repeatCount="indefinite" path="M460,352 L495,343" begin="indefinite"/></circle>
         <!-- IFRLock Contract -->
         <line x1="442" y1="260" x2="640" y2="252" stroke="#1e2730" stroke-width="1.5"/>
         <line x1="705" y1="274" x2="705" y2="328" stroke="#1e2730" stroke-width="1.5"/>
@@ -2584,10 +2591,10 @@ render();
         <text x="705" y="362" text-anchor="middle" fill="#6b7280" font-size="9">Locks IFR &rarr; Access</text>
 
         <!-- User → IFRLock (green locking) -->
-        <circle r="3" fill="#22c55e" opacity="0.9"><animateMotion dur="2.5s" repeatCount="indefinite" path="M705,350 L705,274"/></circle>
-        <circle r="3" fill="#22c55e" opacity="0.5"><animateMotion dur="2.5s" begin="1.2s" repeatCount="indefinite" path="M705,350 L705,274"/></circle>
+        <circle data-flow-particle r="3" fill="#22c55e" opacity="0.9"><animateMotion dur="2.5s" repeatCount="indefinite" path="M705,350 L705,274" begin="indefinite"/></circle>
+        <circle data-flow-particle r="3" fill="#22c55e" opacity="0.5"><animateMotion dur="2.5s" data-motion-delay="1.2" repeatCount="indefinite" path="M705,350 L705,274" begin="indefinite"/></circle>
         <!-- IFR → IFRLock (orange) -->
-        <circle r="3" fill="#f97316" opacity="0.7"><animateMotion dur="3s" repeatCount="indefinite" path="M442,260 L640,252"/></circle>
+        <circle data-flow-particle r="3" fill="#f97316" opacity="0.7"><animateMotion dur="3s" repeatCount="indefinite" path="M442,260 L640,252" begin="indefinite"/></circle>
 
         <!-- CommitmentVault (time tranches) -->
         <line x1="705" y1="370" x2="705" y2="408" stroke="#3b82f6" stroke-width="1" stroke-dasharray="4,3"/>
@@ -2595,7 +2602,7 @@ render();
         <text x="710" y="426" text-anchor="middle" fill="#3b82f6" font-size="10" font-weight="bold">CommitmentVault</text>
         <text x="710" y="442" text-anchor="middle" fill="#6b7280" font-size="8" data-live-key="commitment-flow">loading&hellip;</text>
         <!-- Animated: User → CommitmentVault -->
-        <circle r="2.5" fill="#3b82f6" opacity="0.7"><animateMotion dur="3s" repeatCount="indefinite" path="M705,370 L705,408"/></circle>
+        <circle data-flow-particle r="2.5" fill="#3b82f6" opacity="0.7"><animateMotion dur="3s" repeatCount="indefinite" path="M705,370 L705,408" begin="indefinite"/></circle>
 
         <!-- LendingVault V1 (retired: lender offers withdrawable, no borrowing) -->
         <line x1="660" y1="450" x2="620" y2="464" stroke="#3b82f6" stroke-width="1" stroke-dasharray="4,3"/>
@@ -3428,35 +3435,51 @@ if (isLocked) {
     }
   }, { passive: true });
 
-  // Scroll reveal
+  // Reveal once. Reduced motion exposes the final state without scroll animation.
   const reveals = document.querySelectorAll('.reveal');
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible');
-        entry.target.querySelectorAll('.alloc-row-fill').forEach(bar => {
-          bar.style.transform = 'scaleX(' + Number(bar.dataset.width) / 100 + ')';
-        });
-      }
+  const revealMotion = typeof window.matchMedia === 'function'
+    ? window.matchMedia('(prefers-reduced-motion: reduce)') : { matches: false };
+  const revealElement = el => {
+    el.classList.add('visible');
+    el.querySelectorAll('.alloc-row-fill').forEach(bar => {
+      bar.style.transform = 'scaleX(' + Number(bar.dataset.width) / 100 + ')';
     });
-  }, { threshold: 0.15 });
+  };
+  const observer = typeof window.IntersectionObserver === 'function' ? new window.IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting || document.hidden) return;
+      revealElement(entry.target);
+      observer.unobserve(entry.target);
+    });
+  }, { threshold: 0.15 }) : null;
 
-  reveals.forEach(el => observer.observe(el));
-
+  function syncReveals() {
+    if (revealMotion.matches || !observer) {
+      if (observer) observer.disconnect();
+      reveals.forEach(revealElement);
+    } else {
+      reveals.forEach(el => {
+        if (!el.classList.contains('visible')) observer.observe(el);
+      });
+    }
+  }
   function revealRestoredViewport() {
+    if (document.hidden) return;
     // Read every rectangle before changing classes or transforms.
     const nearViewport = [...reveals].filter(el => {
       const rect = el.getBoundingClientRect();
       return rect.top < window.innerHeight * 1.25 && rect.bottom > -window.innerHeight * 0.5;
     });
     nearViewport.forEach(el => {
-      el.classList.add('visible');
-      el.querySelectorAll('.alloc-row-fill').forEach(bar => {
-        bar.style.transform = 'scaleX(' + Number(bar.dataset.width) / 100 + ')';
-      });
+      revealElement(el);
+      if (observer) observer.unobserve(el);
     });
   }
-
+  syncReveals();
+  revealMotion.addEventListener?.('change', syncReveals);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) { syncReveals(); revealRestoredViewport(); }
+  });
   requestAnimationFrame(revealRestoredViewport);
   window.addEventListener('pageshow', revealRestoredViewport);
   window.addEventListener('load', revealRestoredViewport);
@@ -3727,10 +3750,10 @@ if (isLocked) {
   }
 
   var donutCanvas = document.getElementById('dist-donut');
-  var donutVisible = !('IntersectionObserver' in window);
+  var donutVisible = typeof window.IntersectionObserver !== 'function';
   var pendingDonutData = null;
-  if (donutCanvas && 'IntersectionObserver' in window) {
-    new IntersectionObserver(function(entries) {
+  if (donutCanvas && typeof window.IntersectionObserver === 'function') {
+    new window.IntersectionObserver(function(entries) {
       donutVisible = entries[entries.length - 1].isIntersecting;
       if (donutVisible && pendingDonutData) drawDonut(donutCanvas, pendingDonutData);
     }).observe(donutCanvas);
@@ -4323,8 +4346,12 @@ if (isLocked) {
 (function(){
 'use strict';
 const hero = document.getElementById('ifr-bstars').parentElement;
-const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
-const compactBanner = window.matchMedia('(max-width: 1024px)');
+const mediaQuery = query => typeof window.matchMedia === 'function'
+  ? window.matchMedia(query) : { matches: false };
+const reducedMotion = mediaQuery('(prefers-reduced-motion: reduce)');
+const compactBanner = mediaQuery('(max-width: 1024px)');
+const limitedBanner = typeof navigator !== 'undefined' &&
+  (navigator.hardwareConcurrency <= 4 || navigator.deviceMemory <= 4);
 let bannerVisible = false, bannerController = null;
 function syncBanner() {
   const active = bannerVisible && !document.hidden && !reducedMotion.matches &&
@@ -4336,8 +4363,8 @@ function syncBanner() {
     bannerController.stop();
   }
 }
-if ('IntersectionObserver' in window) {
-  new IntersectionObserver(entries => {
+if (typeof window.IntersectionObserver === 'function') {
+  new window.IntersectionObserver(entries => {
     bannerVisible = entries[entries.length - 1].isIntersecting;
     syncBanner();
   }).observe(hero);
@@ -4357,8 +4384,8 @@ if ('IntersectionObserver' in window) {
   requestAnimationFrame(updateVisibility);
 }
 document.addEventListener('visibilitychange', syncBanner);
-reducedMotion.addEventListener('change', syncBanner);
-compactBanner.addEventListener('change', syncBanner);
+reducedMotion.addEventListener?.('change', syncBanner);
+compactBanner.addEventListener?.('change', syncBanner);
 function createBanner() {
 const cParts=document.getElementById('ifr-c-parts');
 const cShock=document.getElementById('ifr-c-shock');
@@ -4372,8 +4399,8 @@ let W=1500,H=560;
 function resize(){W=hero.offsetWidth||1500;H=hero.offsetHeight||560;[cParts,cShock,cTitle].forEach(c=>{c.width=W;c.height=H;});buildTitle();computeLetterDists();}
 const BHX=120,BHY=120,HORIZON=76;
 const starsEl=document.getElementById('ifr-bstars');
-for(let i=0;i<130;i++){const s=document.createElement('div');s.className='ifr-bstar';const sz=0.4+Math.random()*1.8;s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--dur:${5+Math.random()*9}s;--del:${-Math.random()*12}s;--a0:${0.03+Math.random()*0.12};--a1:${0.2+Math.random()*0.5};`;starsEl.appendChild(s);}
-function pulseBH(intensity){bhVoid.classList.remove('ifr-pulse');bhAmb.classList.remove('ifr-pulse');void bhVoid.offsetWidth;void bhAmb.offsetWidth;if(intensity>0.4){bhVoid.classList.add('ifr-pulse');bhAmb.classList.add('ifr-pulse');scheduleEffect(()=>{bhVoid.classList.remove('ifr-pulse');bhAmb.classList.remove('ifr-pulse');},1200);}}
+for(let i=0;i<(limitedBanner?40:130);i++){const s=document.createElement('div');s.className='ifr-bstar';const sz=0.4+Math.random()*1.8;s.style.cssText=`width:${sz}px;height:${sz}px;left:${Math.random()*100}%;top:${Math.random()*100}%;--dur:${5+Math.random()*9}s;--del:${-Math.random()*12}s;--a0:${0.03+Math.random()*0.12};--a1:${0.2+Math.random()*0.5};`;starsEl.appendChild(s);}
+function pulseBH(intensity){bhVoid.classList.remove('ifr-pulse');bhAmb.classList.remove('ifr-pulse');if(intensity>0.4){bhVoid.classList.add('ifr-pulse');bhAmb.classList.add('ifr-pulse');scheduleEffect(()=>{bhVoid.classList.remove('ifr-pulse');bhAmb.classList.remove('ifr-pulse');},1200);}}
 const TITLE='INFERNO',IFR_IDX=[0,2,4],FONT_SIZE=82,FONT=`900 ${FONT_SIZE}px Orbitron, monospace`,LETTER_SPACING=8;
 let charPos=[],titleBaseY=0;
 const ifrFire=[{alpha:0,target:0,timer:0,hue:8},{alpha:0,target:0,timer:0,hue:6},{alpha:0,target:0,timer:0,hue:10}];
@@ -4382,17 +4409,19 @@ function buildTitle(){ctxT.font=FONT;ctxT.textBaseline='alphabetic';let totalW=0
 function drawTrigram(c,cp,color,solid){var padL=10;var padR=18;var ew=cp.w-padL-padR;var yBot=cp.y-6;var yMid=cp.y-30;var yTop=cp.y-54;var bg=ew*0.42;var hW=(ew-bg)/2;var outerW=10;var innerW=6;var bgColor='rgba(0,0,0,0.92)';function hline(x1,x2,y){c.beginPath();c.moveTo(x1,y);c.lineTo(x2,y);c.lineWidth=outerW;c.strokeStyle=color;c.stroke();if(!solid){c.beginPath();c.moveTo(x1,y);c.lineTo(x2,y);c.lineWidth=innerW;c.strokeStyle=bgColor;c.stroke();}}c.save();c.lineCap='square';hline(cp.x+padL,cp.x+padL+ew,yTop);hline(cp.x+padL,cp.x+padL+hW,yMid);hline(cp.x+padL+hW+bg,cp.x+padL+ew,yMid);hline(cp.x+padL,cp.x+padL+ew,yBot);c.restore();}
 function drawTitle(){ctxT.clearRect(0,0,W,H);if(!charPos.length)return;ctxT.font=FONT;ctxT.textBaseline='alphabetic';for(let i=0;i<TITLE.length;i++){const ch=TITLE[i];const cp=charPos[i];const cx=cp.x+cp.w/2;ctxT.save();ctxT.strokeStyle='rgba(130,148,158,0.30)';ctxT.lineWidth=1.5;if(i===3){drawTrigram(ctxT,cp,'rgba(130,148,158,0.30)');}else{ctxT.strokeText(ch,cp.x,cp.y);}ctxT.restore();const spotPx=W*spotX;const dist=Math.abs(cx-spotPx);const spotW=W*0.26;if(dist<spotW){const t=Math.pow(1-dist/spotW,1.5)*0.70;const g=ctxT.createLinearGradient(0,cp.y-FONT_SIZE,0,cp.y+8);g.addColorStop(0,`rgba(200,225,220,${t*0.45})`);g.addColorStop(0.45,`rgba(178,210,202,${t*0.88})`);g.addColorStop(0.75,`rgba(155,198,190,${t})`);g.addColorStop(1,`rgba(110,155,148,${t*0.38})`);ctxT.save();ctxT.fillStyle=g;if(i===3){ctxT.save();ctxT.shadowBlur=18*t;ctxT.shadowColor='rgba(178,210,202,0.6)';drawTrigram(ctxT,cp,g,true);ctxT.restore();}else{ctxT.fillText(ch,cp.x,cp.y);}ctxT.restore();}const fi=IFR_IDX.indexOf(i);if(fi>=0){const st=ifrFire[fi];if(st.alpha>0.006){const g2=ctxT.createLinearGradient(0,cp.y-FONT_SIZE,0,cp.y+6);g2.addColorStop(0,`hsla(${st.hue+18},100%,64%,${st.alpha*0.55})`);g2.addColorStop(0.3,`hsla(${st.hue+8},100%,54%,${st.alpha*0.95})`);g2.addColorStop(0.65,`hsla(${st.hue},100%,43%,${st.alpha})`);g2.addColorStop(1,`hsla(${st.hue-4},90%,31%,${st.alpha*0.50})`);ctxT.save();ctxT.shadowColor=`hsla(${st.hue+5},100%,48%,${st.alpha*0.65})`;ctxT.shadowBlur=16*st.alpha;ctxT.fillStyle=g2;ctxT.fillText(ch,cp.x,cp.y);ctxT.restore();}}}}
 class Synapse{constructor(){this.reset(true);}reset(initial){const ang=Math.random()*Math.PI*2;const d=240+Math.random()*540;this.x=BHX+Math.cos(ang)*d;this.y=BHY+Math.sin(ang)*d;if(this.x<W*0.20){this.x=W*0.28+Math.random()*W*0.72;this.y=Math.random()*H;}this.sx=this.x;this.sy=this.y;this.baseA=0.10+Math.random()*0.38;this.alpha=this.baseA;this.r=1.0+Math.random()*1.4;this.spd=0.014+Math.random()*0.022;this.wob=(Math.random()-0.5)*0.001;this.wAng=Math.random()*Math.PI*2;this.flashing=false;this.flashAmt=0;this.flashTimer=0;this.prog=initial?Math.random():0;}flash(amount){if(this.flashTimer<=0){this.flashAmt=amount;this.flashTimer=8+Math.floor(Math.random()*12);}}update(){this.prog+=this.spd*0.003;this.wAng+=this.wob;const tx=BHX+Math.sin(this.wAng)*14;const ty=BHY+Math.cos(this.wAng)*9;this.x=this.sx+(tx-this.sx)*this.prog;this.y=this.sy+(ty-this.sy)*this.prog;const d=Math.hypot(this.x-BHX,this.y-BHY);if(d<112&&!this.flashing){this.flashing=true;this.flash(0.5+Math.random()*0.5);}if(this.flashTimer>0){this.alpha=this.baseA+this.flashAmt;this.flashTimer--;}else{this.flashing=false;if(this.alpha>this.baseA)this.alpha=this.baseA;}if(d<HORIZON+4)this.reset(false);}draw(c){if(!isFinite(this.x)||!isFinite(this.y))return;const g=c.createRadialGradient(this.x,this.y,0,this.x,this.y,this.r*3.5);g.addColorStop(0,`rgba(0,232,185,${this.alpha})`);g.addColorStop(0.5,`rgba(0,208,165,${this.alpha*0.4})`);g.addColorStop(1,'rgba(0,185,148,0)');c.beginPath();c.arc(this.x,this.y,this.r*3.5,0,Math.PI*2);c.fillStyle=g;c.fill();c.beginPath();c.arc(this.x,this.y,this.r,0,Math.PI*2);c.fillStyle=`rgba(0,245,198,${Math.min(this.alpha*1.3,1)})`;c.fill();}}
-const synapses=Array.from({length:38},()=>new Synapse());
+const synapses=Array.from({length:limitedBanner?12:38},()=>new Synapse());
+const ringSegments=limitedBanner?120:360;
 function noiseRing(seed,n){const a=[];for(let i=0;i<n;i++){const ang=(i/n)*Math.PI*2;a.push(Math.sin(ang*3+seed*1.1)*0.22+Math.sin(ang*7+seed*2.3)*0.13+Math.sin(ang*11+seed*0.9)*0.07+Math.sin(ang*17+seed*3.4)*0.05+Math.sin(ang*2+seed*1.7)*0.09);}return a;}
-class Shockwave{constructor(intensity){this.intensity=Math.max(0.1,Math.min(1.5,intensity||0.5));this.r=HORIZON;this.maxR=850+Math.random()*600+this.intensity*350;this.spd=(0.16+Math.random()*0.32)*(0.5+this.intensity*0.9);this.alpha=0;this.maxAlpha=0.22+this.intensity*0.30;this.fadeIn=true;this.hue=4+Math.random()*22;const seed=Math.random()*200;const nL=2+Math.floor(Math.random()*3);this.layers=Array.from({length:nL},(_,i)=>({offset:(Math.random()-0.5)*28,noise:noiseRing(seed+i*41,360),blur:8+Math.random()*24,aMul:0.35+Math.random()*0.65,wMul:0.5+Math.random()*1.1,frag:Math.random()<0.45,fragSeed:Math.random()*100}));this.letterTriggered=[];this.bhTriggered=false;}update(){this.r+=this.spd;if(this.fadeIn){this.alpha+=0.015*this.intensity;if(this.alpha>=this.maxAlpha){this.alpha=this.maxAlpha;this.fadeIn=false;}}else{const life=Math.max(0,1-this.r/this.maxR);this.alpha=this.maxAlpha*Math.pow(life,1.15);}}draw(c){if(this.alpha<0.003)return;const life=Math.max(0,1-this.r/this.maxR);this.layers.forEach(layer=>{const la=this.alpha*layer.aMul;if(la<0.003)return;c.save();c.filter=`blur(${(layer.blur*life+1.5).toFixed(1)}px)`;c.beginPath();const N=360;let penUp=true;for(let i=0;i<=N;i++){const idx=i%N;const ang=(idx/N)*Math.PI*2;if(layer.frag){const fv=Math.sin(ang*4.7+layer.fragSeed)*0.5+0.5;if(fv<0.3){penUp=true;continue;}}const nv=layer.noise[idx];const spread=(14+38*life)*layer.wMul;const r=this.r+layer.offset+nv*spread;const x=BHX+Math.cos(ang)*r;const y=BHY+Math.sin(ang)*r;if(penUp){c.moveTo(x,y);penUp=false;}else c.lineTo(x,y);}const inner=Math.max(1,this.r-25);const outer=Math.max(inner+2,this.r+55);const g=c.createRadialGradient(BHX,BHY,inner,BHX,BHY,outer);g.addColorStop(0,`hsla(${this.hue},100%,50%,0)`);g.addColorStop(0.28,`hsla(${this.hue},100%,54%,${la*0.28})`);g.addColorStop(0.58,`hsla(${this.hue+10},100%,60%,${la})`);g.addColorStop(0.78,`hsla(${this.hue+18},90%,62%,${la*0.5})`);g.addColorStop(1,`hsla(${this.hue},100%,50%,0)`);c.strokeStyle=g;c.lineWidth=(2+6*life)*layer.wMul*this.intensity;c.stroke();c.restore();});}isDone(){return this.r>=this.maxR||this.alpha<0.002;}}
+class Shockwave{constructor(intensity){this.intensity=Math.max(0.1,Math.min(1.5,intensity||0.5));this.r=HORIZON;this.maxR=850+Math.random()*600+this.intensity*350;this.spd=(0.16+Math.random()*0.32)*(0.5+this.intensity*0.9);this.alpha=0;this.maxAlpha=0.22+this.intensity*0.30;this.fadeIn=true;this.hue=4+Math.random()*22;const seed=Math.random()*200;const nL=limitedBanner?1:2+Math.floor(Math.random()*3);this.layers=Array.from({length:nL},(_,i)=>({offset:(Math.random()-0.5)*28,noise:noiseRing(seed+i*41,ringSegments),blur:8+Math.random()*24,aMul:0.35+Math.random()*0.65,wMul:0.5+Math.random()*1.1,frag:Math.random()<0.45,fragSeed:Math.random()*100}));this.letterTriggered=[];this.bhTriggered=false;}update(){this.r+=this.spd;if(this.fadeIn){this.alpha+=0.015*this.intensity;if(this.alpha>=this.maxAlpha){this.alpha=this.maxAlpha;this.fadeIn=false;}}else{const life=Math.max(0,1-this.r/this.maxR);this.alpha=this.maxAlpha*Math.pow(life,1.15);}}draw(c){if(this.alpha<0.003)return;const life=Math.max(0,1-this.r/this.maxR);this.layers.forEach(layer=>{const la=this.alpha*layer.aMul;if(la<0.003)return;c.save();if(!limitedBanner)c.filter=`blur(${(layer.blur*life+1.5).toFixed(1)}px)`;c.beginPath();const N=ringSegments;let penUp=true;for(let i=0;i<=N;i++){const idx=i%N;const ang=(idx/N)*Math.PI*2;if(layer.frag){const fv=Math.sin(ang*4.7+layer.fragSeed)*0.5+0.5;if(fv<0.3){penUp=true;continue;}}const nv=layer.noise[idx];const spread=(14+38*life)*layer.wMul;const r=this.r+layer.offset+nv*spread;const x=BHX+Math.cos(ang)*r;const y=BHY+Math.sin(ang)*r;if(penUp){c.moveTo(x,y);penUp=false;}else c.lineTo(x,y);}const inner=Math.max(1,this.r-25);const outer=Math.max(inner+2,this.r+55);const g=c.createRadialGradient(BHX,BHY,inner,BHX,BHY,outer);g.addColorStop(0,`hsla(${this.hue},100%,50%,0)`);g.addColorStop(0.28,`hsla(${this.hue},100%,54%,${la*0.28})`);g.addColorStop(0.58,`hsla(${this.hue+10},100%,60%,${la})`);g.addColorStop(0.78,`hsla(${this.hue+18},90%,62%,${la*0.5})`);g.addColorStop(1,`hsla(${this.hue},100%,50%,0)`);c.strokeStyle=g;c.lineWidth=(2+6*life)*layer.wMul*this.intensity;c.stroke();c.restore();});}isDone(){return this.r>=this.maxR||this.alpha<0.002;}}
 let pressure=0.45,pressureVel=0.0002+Math.random()*0.0003,lastShockT=0;
 const shockwaves=[];
 let letterDists=null;
 function computeLetterDists(){if(!charPos.length)return;letterDists=IFR_IDX.map(i=>{const cp=charPos[i];return Math.hypot(cp.x+cp.w/2-BHX,cp.y-FONT_SIZE/2-BHY);});}
 function spawnShock(intensity){const sw=new Shockwave(intensity);shockwaves.push(sw);pulseBH(intensity);if(Math.random()<0.38&&intensity>0.45){const delay=900+Math.random()*2200;scheduleEffect(()=>{shockwaves.push(new Shockwave(intensity*(0.25+Math.random()*0.4)));},delay);}}
 function igniteLetter(idx,intensity){if(idx<0||idx>=ifrFire.length)return;const st=ifrFire[idx];st.target=0.60+intensity*0.35+Math.random()*0.06;st.timer=120+Math.floor(intensity*110+Math.random()*70);st.hue=4+Math.random()*12;}
-function loop(now){frame=null;if(!running)return;if(resizePending){resize();resizePending=false;}ctxP.clearRect(0,0,W,H);ctxS.clearRect(0,0,W,H);synapses.forEach(s=>{s.update();s.draw(ctxP);});pressureVel+=(Math.random()-0.48)*0.00007;pressureVel=Math.max(0.00005,Math.min(0.0012,pressureVel));pressure+=pressureVel;if(Math.random()<0.0007)pressure+=0.06+Math.random()*0.28;const threshold=0.58+Math.random()*0.42;if(pressure>threshold&&now-lastShockT>2800){spawnShock(Math.min(pressure,1.4));pressure=Math.random()*0.12;pressureVel=0.0001+Math.random()*0.0002;lastShockT=now;if(!letterDists)computeLetterDists();}for(let i=shockwaves.length-1;i>=0;i--){const sw=shockwaves[i];sw.update();sw.draw(ctxS);synapses.forEach(s=>{const d=Math.hypot(s.x-BHX,s.y-BHY);if(Math.abs(sw.r-d)<22)s.flash(0.3+sw.intensity*0.5+Math.random()*0.2);});if(letterDists){letterDists.forEach((dist,idx)=>{if(!sw.letterTriggered[idx]&&sw.r>=dist-35){sw.letterTriggered[idx]=true;const delay=idx*(55+Math.random()*110);scheduleEffect(()=>igniteLetter(idx,sw.intensity),delay);}});}if(sw.isDone())shockwaves.splice(i,1);}ifrFire.forEach(st=>{if(st.timer>0){st.alpha+=(st.target-st.alpha)*0.030;st.alpha+=(Math.random()-0.5)*0.010;st.alpha=Math.max(0,Math.min(st.alpha,1));st.timer--;}else{st.alpha*=0.987;if(st.alpha<0.006)st.alpha=0;}});if(spotX>1.5){if(Math.random()<0.0004)spotSpeed=-0.00032;}else if(spotX<-0.5){spotX=1.8;spotSpeed=0;}else{if(Math.abs(spotSpeed)<0.0001)spotSpeed=-0.00032;}spotX+=spotSpeed;drawTitle();frame=requestAnimationFrame(loop);}
+function loop(now){frame=null;if(!running)return;if(limitedBanner&&now-lastFrameAt<1000/30){frame=requestAnimationFrame(loop);return;}lastFrameAt=now;if(resizePending){resize();resizePending=false;}ctxP.clearRect(0,0,W,H);ctxS.clearRect(0,0,W,H);synapses.forEach(s=>{s.update();s.draw(ctxP);});pressureVel+=(Math.random()-0.48)*0.00007;pressureVel=Math.max(0.00005,Math.min(0.0012,pressureVel));pressure+=pressureVel;if(Math.random()<0.0007)pressure+=0.06+Math.random()*0.28;const threshold=0.58+Math.random()*0.42;if(pressure>threshold&&now-lastShockT>2800){spawnShock(Math.min(pressure,1.4));pressure=Math.random()*0.12;pressureVel=0.0001+Math.random()*0.0002;lastShockT=now;if(!letterDists)computeLetterDists();}for(let i=shockwaves.length-1;i>=0;i--){const sw=shockwaves[i];sw.update();sw.draw(ctxS);synapses.forEach(s=>{const d=Math.hypot(s.x-BHX,s.y-BHY);if(Math.abs(sw.r-d)<22)s.flash(0.3+sw.intensity*0.5+Math.random()*0.2);});if(letterDists){letterDists.forEach((dist,idx)=>{if(!sw.letterTriggered[idx]&&sw.r>=dist-35){sw.letterTriggered[idx]=true;const delay=idx*(55+Math.random()*110);scheduleEffect(()=>igniteLetter(idx,sw.intensity),delay);}});}if(sw.isDone())shockwaves.splice(i,1);}ifrFire.forEach(st=>{if(st.timer>0){st.alpha+=(st.target-st.alpha)*0.030;st.alpha+=(Math.random()-0.5)*0.010;st.alpha=Math.max(0,Math.min(st.alpha,1));st.timer--;}else{st.alpha*=0.987;if(st.alpha<0.006)st.alpha=0;}});if(spotX>1.5){if(Math.random()<0.0004)spotSpeed=-0.00032;}else if(spotX<-0.5){spotX=1.8;spotSpeed=0;}else{if(Math.abs(spotSpeed)<0.0001)spotSpeed=-0.00032;}spotX+=spotSpeed;drawTitle();frame=requestAnimationFrame(loop);}
 let frame = null, requested = false, running = false, ready = false;
+let lastFrameAt = 0;
 let resizePending = true, introStarted = false;
 const effectTimers = new Set();
 function scheduleEffect(callback, delay) {
@@ -4428,6 +4457,59 @@ window.addEventListener('resize', () => { resizePending = true; });
 document.fonts.ready.then(() => { ready = true; if (requested) start(); });
 return { start, stop };
 }
+})();
+</script>
+
+<script>
+// Token-flow SMIL and CSS share one visibility and preference lifecycle.
+(() => {
+  const svg = document.querySelector('svg[data-flow-motion]');
+  if (!svg || typeof svg.pauseAnimations !== 'function') return;
+  const mediaQuery = query => typeof window.matchMedia === 'function'
+    ? window.matchMedia(query) : { matches: false };
+  const reduced = mediaQuery('(prefers-reduced-motion: reduce)');
+  const compact = mediaQuery('(max-width: 1024px)');
+  const limitedHardware = typeof navigator !== 'undefined' &&
+    (navigator.hardwareConcurrency <= 4 || navigator.deviceMemory <= 4);
+  let visible = false, started = false;
+  function sync() {
+    const active = visible && !document.hidden && !reduced.matches && !compact.matches && !limitedHardware;
+    svg.dataset.flowMotion = active ? 'running' : 'paused';
+    if (!active) { svg.pauseAnimations(); return; }
+    svg.unpauseAnimations();
+    if (!started) {
+      started = true;
+      svg.querySelectorAll('animateMotion').forEach(animation => {
+        animation.beginElementAt(Number(animation.dataset.motionDelay || 0));
+      });
+    }
+  }
+  if (typeof window.IntersectionObserver === 'function') {
+    new window.IntersectionObserver(entries => {
+      visible = entries[entries.length - 1].isIntersecting;
+      sync();
+    }).observe(svg);
+  } else {
+    let pending = false;
+    const update = () => {
+      pending = false;
+      const rect = svg.getBoundingClientRect();
+      visible = rect.bottom > 0 && rect.top < window.innerHeight;
+      sync();
+    };
+    const schedule = () => {
+      if (pending) return;
+      pending = true;
+      requestAnimationFrame(update);
+    };
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    schedule();
+  }
+  document.addEventListener('visibilitychange', sync);
+  reduced.addEventListener?.('change', sync);
+  compact.addEventListener?.('change', sync);
+  sync();
 })();
 </script>
 

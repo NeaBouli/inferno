@@ -11,6 +11,31 @@
   .reveal { opacity: 1 !important; transform: none !important; }
 }
 
+/* Pause decorations outside the viewport and all CSS motion in background tabs. */
+.site-motion-paused,
+.site-motion-paused::before,
+.site-motion-paused::after,
+.site-motion-paused *,
+.site-motion-paused *::before,
+.site-motion-paused *::after,
+html.site-motion-hidden *,
+html.site-motion-hidden *::before,
+html.site-motion-hidden *::after,
+.template-hero .hero-web3-btn.site-motion-paused,
+.template-hero .hero-web3-btn.site-motion-paused::before,
+html.site-motion-hidden .template-hero .hero-web3-btn,
+html.site-motion-hidden .template-hero .hero-web3-btn::before {
+  animation-play-state: paused !important;
+}
+
+/* Keep status colors and controls visible while avoiding continuous decoration. */
+html.site-motion-limited .coin-container *,
+html.site-motion-limited .ifr-bstar,
+html.site-motion-limited .template-hero .hero-web3-btn,
+html.site-motion-limited .template-hero .hero-web3-btn::before {
+  animation: none !important;
+}
+
 /* Inferno 2026 visual skin.
    This file intentionally overrides only presentation. Existing page content,
    scripts, IDs, anchors, and data remain in the source pages. */
