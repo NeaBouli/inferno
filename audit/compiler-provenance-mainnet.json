@@ -1,0 +1,321 @@
+{
+  "schemaVersion": 1,
+  "chainId": 1,
+  "contracts": [
+    {
+      "name": "InfernoToken",
+      "address": "0x77e99917Eca8539c62F509ED1193ac36580A6e7B",
+      "fullyQualifiedName": "contracts/token/InfernoToken.sol:InfernoToken",
+      "compilerVersion": "0.8.20+commit.a1b79de6",
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
+      "evmVersion": "paris",
+      "creationMatch": "exact_match",
+      "runtimeMatch": "exact_match",
+      "source": "sourcify v2, fetched 2026-10-23",
+      "sourceHashes": {
+        "contracts/token/InfernoToken.sol": {
+          "sourcePath": "contracts/token/InfernoToken.sol",
+          "sha256": "c7741ee685111f893773f56bc0c73b5d4d738d93df3f3b8c6a396cb185dd91c1",
+          "repoMatch": true
+        }
+      }
+    },
+    {
+      "name": "Governance",
+      "address": "0xc43d48E7FDA576C5022d0670B652A622E8caD041",
+      "fullyQualifiedName": "contracts/governance/Governance.sol:Governance",
+      "compilerVersion": "0.8.20+commit.a1b79de6",
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
+      "evmVersion": "paris",
+      "creationMatch": "exact_match",
+      "runtimeMatch": "exact_match",
+      "source": "sourcify v2, fetched 2026-10-23",
+      "sourceHashes": {
+        "contracts/governance/Governance.sol": {
+          "sourcePath": "contracts/governance/Governance.sol",
+          "sha256": "e394aeb057ee4145dbf70f3a097d2acb32ceb0a4bf8330366e36fe14ecd51fa5",
+          "repoMatch": false
+        }
+      }
+    },
+    {
+      "name": "IFRLock",
+      "address": "0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb",
+      "fullyQualifiedName": "contracts/lock/IFRLock.sol:IFRLock",
+      "compilerVersion": "0.8.20+commit.a1b79de6",
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
+      "evmVersion": "paris",
+      "creationMatch": "exact_match",
+      "runtimeMatch": "exact_match",
+      "source": "sourcify v2, fetched 2026-10-23",
+      "sourceHashes": {
+        "contracts/lock/IFRLock.sol": {
+          "sourcePath": "contracts/lock/IFRLock.sol",
+          "sha256": "82ae641b4cb4fc29c703fe22f5d59789027b6b321bc13103efd435662559d26f",
+          "repoMatch": true
+        }
+      }
+    },
+    {
+      "name": "BurnReserve",
+      "address": "0xaA1496133B6c274190A2113410B501C5802b6fCF",
+      "fullyQualifiedName": "contracts/burnreserve/BurnReserve.sol:BurnReserve",
+      "compilerVersion": "0.8.20+commit.a1b79de6",
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
+      "evmVersion": "paris",
+      "creationMatch": "exact_match",
+      "runtimeMatch": "exact_match",
+      "source": "sourcify v2, fetched 2026-10-23",
+      "sourceHashes": {
+        "contracts/burnreserve/BurnReserve.sol": {
+          "sourcePath": "contracts/burnreserve/BurnReserve.sol",
+          "sha256": "14dd54ba9969ab64b7215d4808df578d398472f2ac43cf9cd1e90b4442be8aff",
+          "repoMatch": true
+        }
+      }
+    },
+    {
+      "name": "BuybackVault",
+      "address": "0x670D293e3D65f96171c10DdC8d88B96b0570F812",
+      "fullyQualifiedName": "contracts/buyback/BuybackVault.sol:BuybackVault",
+      "compilerVersion": "0.8.20+commit.a1b79de6",
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
+      "evmVersion": "paris",
+      "creationMatch": "exact_match",
+      "runtimeMatch": "exact_match",
+      "source": "sourcify v2, fetched 2026-10-23",
+      "sourceHashes": {
+        "contracts/buyback/BuybackVault.sol": {
+          "sourcePath": "contracts/buyback/BuybackVault.sol",
+          "sha256": "6070c8f710ccd1baac5658f91fd96fa6d75f6963518d4d489b1c42af750c5e61",
+          "repoMatch": false
+        }
+      }
+    },
+    {
+      "name": "PartnerVault",
+      "address": "0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D",
+      "fullyQualifiedName": "contracts/partner/PartnerVault.sol:PartnerVault",
+      "compilerVersion": "0.8.20+commit.a1b79de6",
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
+      "evmVersion": "paris",
+      "creationMatch": "exact_match",
+      "runtimeMatch": "exact_match",
+      "source": "sourcify v2, fetched 2026-10-23",
+      "sourceHashes": {
+        "contracts/partner/PartnerVault.sol": {
+          "sourcePath": "contracts/partner/PartnerVault.sol",
+          "sha256": "38a27255c023858545ff8039d336e93a7679b1d7edb0fca2bf62f48a5d4d7d24",
+          "repoMatch": true
+        }
+      }
+    },
+    {
+      "name": "FeeRouterV1",
+      "address": "0x4807B77B2E25cD055DA42B09BA4d0aF9e580C60a",
+      "fullyQualifiedName": "contracts/FeeRouterV1.sol:FeeRouterV1",
+      "compilerVersion": "0.8.20+commit.a1b79de6",
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
+      "evmVersion": "paris",
+      "creationMatch": "exact_match",
+      "runtimeMatch": "exact_match",
+      "source": "sourcify v2, fetched 2026-10-23",
+      "sourceHashes": {
+        "contracts/FeeRouterV1.sol": {
+          "sourcePath": "contracts/FeeRouterV1.sol",
+          "sha256": "6c10e00ea4b82f41ea57c1535200169dc32f9eab6f9d1576c42d4629e5eaf396",
+          "repoMatch": true
+        }
+      }
+    },
+    {
+      "name": "Vesting",
+      "address": "0x2694Bc84e8D5251E9E4Ecd4B2Ae3f866d6106271",
+      "fullyQualifiedName": "contracts/vesting/Vesting.sol:Vesting",
+      "compilerVersion": "0.8.20+commit.a1b79de6",
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
+      "evmVersion": "paris",
+      "creationMatch": "exact_match",
+      "runtimeMatch": "exact_match",
+      "source": "sourcify v2, fetched 2026-10-23",
+      "sourceHashes": {
+        "contracts/vesting/Vesting.sol": {
+          "sourcePath": "contracts/vesting/Vesting.sol",
+          "sha256": "8c1edcbaeaeef28908395ddc1c3c3ec19d0736d45902c54d856a89874434cc80",
+          "repoMatch": true
+        }
+      }
+    },
+    {
+      "name": "LiquidityReserve",
+      "address": "0xdc0309804803b3A105154f6073061E3185018f64",
+      "fullyQualifiedName": "contracts/liquidity/LiquidityReserve.sol:LiquidityReserve",
+      "compilerVersion": "0.8.20+commit.a1b79de6",
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
+      "evmVersion": "paris",
+      "creationMatch": "exact_match",
+      "runtimeMatch": "exact_match",
+      "source": "sourcify v2, fetched 2026-10-23",
+      "sourceHashes": {
+        "contracts/liquidity/LiquidityReserve.sol": {
+          "sourcePath": "contracts/liquidity/LiquidityReserve.sol",
+          "sha256": "372e5c1026b7383447c4234fbb96deab58f81d8abadd36273599aafbeb0800de",
+          "repoMatch": true
+        }
+      }
+    },
+    {
+      "name": "BootstrapVaultV3",
+      "address": "0xf72565C4cDB9575c9D3aEE6B9AE3fDBd7F56e141",
+      "fullyQualifiedName": "contracts/bootstrap/BootstrapVaultV3.sol:BootstrapVaultV3",
+      "compilerVersion": "0.8.20+commit.a1b79de6",
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
+      "evmVersion": "paris",
+      "creationMatch": "exact_match",
+      "runtimeMatch": "exact_match",
+      "source": "sourcify v2, fetched 2026-10-23",
+      "sourceHashes": {
+        "contracts/bootstrap/BootstrapVaultV3.sol": {
+          "sourcePath": "contracts/bootstrap/BootstrapVaultV3.sol",
+          "sha256": "ab4449c7109014132feae9e4ff4828f35c72fd8dbf425fb2887a15ed56484ac3",
+          "repoMatch": false
+        }
+      }
+    },
+    {
+      "name": "CommitmentVault",
+      "address": "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3",
+      "fullyQualifiedName": "contracts/vault/CommitmentVault.sol:CommitmentVault",
+      "compilerVersion": "0.8.20+commit.a1b79de6",
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
+      "evmVersion": "paris",
+      "creationMatch": "exact_match",
+      "runtimeMatch": "exact_match",
+      "source": "sourcify v2, fetched 2026-10-23",
+      "sourceHashes": {
+        "contracts/vault/CommitmentVault.sol": {
+          "sourcePath": "contracts/vault/CommitmentVault.sol",
+          "sha256": "77e3c264da6c4568747b9750428520187120031c65aefac6289d73dfb27469f5",
+          "repoMatch": false
+        }
+      }
+    },
+    {
+      "name": "LendingVault",
+      "address": "0x974305Ab0EC905172e697271C3d7d385194EB9DF",
+      "fullyQualifiedName": "contracts/vault/LendingVault.sol:LendingVault",
+      "compilerVersion": "0.8.20+commit.a1b79de6",
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
+      "evmVersion": "paris",
+      "creationMatch": "exact_match",
+      "runtimeMatch": "exact_match",
+      "source": "sourcify v2, fetched 2026-10-23",
+      "sourceHashes": {
+        "contracts/vault/LendingVault.sol": {
+          "sourcePath": "contracts/vault/LendingVault.sol",
+          "sha256": "19ca4b2a65f51cbc5798c9ca51e2d494591d25507e1317a48e3261bcc12ac43f",
+          "repoMatch": false
+        }
+      }
+    },
+    {
+      "name": "BuilderRegistry",
+      "address": "0xdfe6636DA47F8949330697e1dC5391267CEf0EE3",
+      "fullyQualifiedName": "contracts/BuilderRegistry.sol:BuilderRegistry",
+      "compilerVersion": "0.8.20+commit.a1b79de6",
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
+      "evmVersion": "paris",
+      "creationMatch": "exact_match",
+      "runtimeMatch": "exact_match",
+      "source": "sourcify v2, fetched 2026-10-23",
+      "sourceHashes": {
+        "contracts/BuilderRegistry.sol": {
+          "sourcePath": "contracts/BuilderRegistry.sol",
+          "sha256": "c827253ea9feea41a395a2c65e73a587ae00a66b4c1f447398a4e45e3510a540",
+          "repoMatch": true
+        }
+      }
+    },
+    {
+      "name": "BuybackController",
+      "address": "0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c",
+      "fullyQualifiedName": "contracts/buyback/BuybackController.sol:BuybackController",
+      "compilerVersion": "0.8.20+commit.a1b79de6",
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
+      "evmVersion": "paris",
+      "creationMatch": "exact_match",
+      "runtimeMatch": "exact_match",
+      "source": "sourcify v2, fetched 2026-10-23",
+      "sourceHashes": {
+        "contracts/buyback/BuybackController.sol": {
+          "sourcePath": "contracts/buyback/BuybackController.sol",
+          "sha256": "e60a27961fe19deee50d5f402f6820dbbc29a75fe6d54bc75c5e34853a9cdabd",
+          "repoMatch": false
+        }
+      }
+    },
+    {
+      "name": "CommitmentVaultV2",
+      "address": "0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F",
+      "fullyQualifiedName": "project/contracts/vault/CommitmentVault.sol:CommitmentVault",
+      "compilerVersion": "0.8.28+commit.7893614a",
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
+      "evmVersion": "cancun",
+      "creationMatch": "exact_match",
+      "runtimeMatch": "exact_match",
+      "source": "sourcify v2, fetched 2026-10-23",
+      "sourceHashes": {
+        "contracts/vault/CommitmentVault.sol": {
+          "sourcePath": "project/contracts/vault/CommitmentVault.sol",
+          "sha256": "39b7b5423e2f156ed1ecb0440d5dc879e9e2b628ce3059efba04cf947a08e8d2",
+          "repoMatch": true
+        }
+      }
+    }
+  ]
+}
