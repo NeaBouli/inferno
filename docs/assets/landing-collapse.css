@@ -1,15 +1,4 @@
 /* Applied only after enhancement, so the original page stays open without JS. */
-.landing-motion-paused,
-.landing-motion-paused::before,
-.landing-motion-paused::after,
-.landing-motion-paused *,
-.landing-motion-paused *::before,
-.landing-motion-paused *::after,
-.template-hero .hero-web3-btn.landing-motion-paused,
-.template-hero .hero-web3-btn.landing-motion-paused::before {
-  animation-play-state: paused !important;
-}
-
 section.landing-collapsible {
   padding-top: 14px !important;
   padding-bottom: 14px !important;
@@ -112,5 +101,5 @@ section.landing-collapsible > .landing-collapse-panel { padding-bottom: 24px; }
   .landing-collapse-panel[hidden] { display: block !important; }
   .landing-collapse-toggle { display: none; }
   .reveal { opacity: 1 !important; transform: none !important; }
-  #faq .lp-faq-a { max-height: none !important; overflow: visible; }
+  #faq .lp-faq-a { max-height: none !important; overflow: visible; opacity: 1; }
 }
