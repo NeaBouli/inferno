@@ -123,10 +123,12 @@
       "status": "partially_remediated",
       "currentAssessment": "Mainnet exemptions and balance coverage are monitored fail-closed, with negative regression tests. Deployed V1 still depends on the exemptions; balance-diff accounting is a V2 requirement.",
       "remainingAction": "Keep invariant monitoring active and implement runtime exemption checks plus balance-diff accounting in a separately reviewed V2.",
-      "verification": "Scheduled chain monitor, negative exemption tests and future V2 deposit/withdraw lifecycle tests.",
+      "verification": "Scheduled chain monitor, negative exemption tests and future V2 deposit/withdraw lifecycle tests. Local [JUL-07-V2-SOLVENCY-EVIDENCE.md](JUL-07-V2-SOLVENCY-EVIDENCE.md) and [test/VaultV2.jul07.test.js](../../test/VaultV2.jul07.test.js) confirm Commitment/Lending V2 exact-receipt entry guards and liquid claim coverage in tested sequences, user-borne exit/settlement tax after revocation, and BootstrapVaultV2's missing runtime exemption guard/net disclosure.",
       "evidence": [
         {"path": "docs/VAULT_FEE_EXEMPT_HARDENING.md", "marker": "Monitoring and negative tests implemented; V2 hardening remains future work"},
-        {"path": "scripts/test-vault-invariants.cjs", "marker": "feeExempt"}
+        {"path": "scripts/test-vault-invariants.cjs", "marker": "feeExempt"},
+        {"path": "docs/community-audits/JUL-07-V2-SOLVENCY-EVIDENCE.md", "marker": "FINDING JUL07-V2-01"},
+        {"path": "test/VaultV2.jul07.test.js", "marker": "JUL-07: local simulated chain only"}
       ]
     },
     {
