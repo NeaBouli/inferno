@@ -7,11 +7,13 @@ on:
       - 'apps/creator-gateway/**'
       - '.github/workflows/creator-gateway.yml'
       - 'scripts/check-dev-advisory-exceptions.cjs'
+      - 'scripts/test-body-parser-compression.cjs'
   pull_request:
     paths:
       - 'apps/creator-gateway/**'
       - '.github/workflows/creator-gateway.yml'
       - 'scripts/check-dev-advisory-exceptions.cjs'
+      - 'scripts/test-body-parser-compression.cjs'
 
 permissions:
   contents: read
@@ -30,6 +32,8 @@ jobs:
           cache: 'npm'
           cache-dependency-path: apps/creator-gateway/package-lock.json
       - run: npm ci
+      - name: Body-parser compression lifecycle regression
+        run: node ../../scripts/test-body-parser-compression.cjs creator-gateway
       - name: npm audit (production clean; reviewed dev-only exceptions)
         run: node ../../scripts/check-dev-advisory-exceptions.cjs
       - run: npm run test:dependencies

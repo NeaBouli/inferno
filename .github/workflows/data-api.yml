@@ -8,12 +8,14 @@ on:
       - 'apps/data-api/**'
       - '.github/workflows/data-api.yml'
       - 'scripts/check-dev-advisory-exceptions.cjs'
+      - 'scripts/test-body-parser-compression.cjs'
   pull_request:
     branches: [main, master]
     paths:
       - 'apps/data-api/**'
       - '.github/workflows/data-api.yml'
       - 'scripts/check-dev-advisory-exceptions.cjs'
+      - 'scripts/test-body-parser-compression.cjs'
 
 permissions:
   contents: read
@@ -32,6 +34,8 @@ jobs:
           cache: 'npm'
           cache-dependency-path: apps/data-api/package-lock.json
       - run: npm ci
+      - name: Body-parser compression lifecycle regression
+        run: node ../../scripts/test-body-parser-compression.cjs data-api
       - run: npm run test:dependencies
       - run: npm run test:health-shape
       - run: npm run test:cors-origins

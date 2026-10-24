@@ -55,6 +55,7 @@ on:
       - 'package-lock.json'
       - '.github/workflows/benefits-network.yml'
       - 'scripts/check-dev-advisory-exceptions.cjs'
+      - 'scripts/test-body-parser-compression.cjs'
   pull_request:
     paths:
       - 'apps/benefits-network/**'
@@ -108,6 +109,7 @@ on:
       - 'package-lock.json'
       - '.github/workflows/benefits-network.yml'
       - 'scripts/check-dev-advisory-exceptions.cjs'
+      - 'scripts/test-body-parser-compression.cjs'
 
 permissions:
   contents: read
@@ -139,6 +141,8 @@ jobs:
           cache: 'npm'
           cache-dependency-path: apps/benefits-network/backend/package-lock.json
       - run: npm ci
+      - name: Body-parser compression lifecycle regression
+        run: node ../../../scripts/test-body-parser-compression.cjs benefits
       - name: npm audit (production clean; reviewed dev-only exceptions)
         run: node ../../../scripts/check-dev-advisory-exceptions.cjs
       - run: npx prisma generate
