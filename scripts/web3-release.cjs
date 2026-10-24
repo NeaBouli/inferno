@@ -26,6 +26,7 @@ const HEADERS_CONF = path.join(root, 'infra', 'web3', 'web3-security-headers.con
 const REQUIRED_FILES = [
   'web3/index.html',
   'web3-wallet-core.js',
+  'assets/wallet-telemetry-guard.js',
   'web3-sw.js',
   'web3-manifest.webmanifest',
   'assets/vendor/ethers-6.17.0.umd.min.js',

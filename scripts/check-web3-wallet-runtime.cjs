@@ -23,6 +23,8 @@ const ARTIFACT_REL = "docs/assets/vendor/walletconnect-ethereum-provider-2.25.0.
 const ARTIFACT = path.join(root, ARTIFACT_REL);
 const HISTORICAL_ARTIFACT = path.join(root, "docs/assets/vendor/walletconnect-ethereum-provider-2.17.3.esm.js");
 const ARTIFACT_SRC = "/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js";
+const CORE_VERSION = "20261024-pulse-guard";
+const GUARD_SRC = `/assets/wallet-telemetry-guard.js?v=${CORE_VERSION}`;
 const EXPECTED_SHA256 = "77843c24c6c5aa5b4f743af3f2dd3a9d94e16b15bb8c5ff1bba58db2b14cd63e";
 const HISTORICAL_SHA256 = "30273eb8eb78e88e29ecdb73606fa3e41e66a646a2b33f5c864014a065c709fc";
 
@@ -72,11 +74,41 @@ for (const rel of ["docs/web3-wallet-core.js", "docs/assets/wallet-core.js"]) {
   const source = fs.readFileSync(path.join(root, rel), "utf8");
   assert.ok(source.includes(ARTIFACT_SRC), `${rel} must load ${ARTIFACT_SRC}`);
   assert.ok(source.includes("await import(WC_PROVIDER_URL)"), `${rel} must keep the lazy same-origin import()`);
+  assert.ok(source.includes(`var WC_TELEMETRY_GUARD_URL = "${GUARD_SRC}";`), `${rel} must use the shared versioned guard`);
+  const guardImport = source.indexOf("await import(WC_TELEMETRY_GUARD_URL)");
+  const install = source.indexOf("guard.installWalletConnectTelemetryGuard();");
+  const providerImport = source.indexOf("await import(WC_PROVIDER_URL)");
+  assert.ok(guardImport > 0 && install > guardImport && providerImport > install, `${rel} must install the guard before evaluating the SDK`);
+  assert.ok(source.includes("telemetryEnabled: false"), `${rel} must retain the Core telemetry opt-out`);
 }
+assert.ok(fs.existsSync(path.join(DOCS, GUARD_SRC.split("?")[0])), "shared telemetry guard must be published");
+
+// Every real HTML consumer must expire its old core, including unversioned wiki URLs.
+const consumers = [];
+for (const file of filesBelow(DOCS).filter(file => file.endsWith(".html"))) {
+  const source = fs.readFileSync(file, "utf8");
+  for (const [, url] of source.matchAll(/<script\b[^>]*\bsrc=["']([^"']+)["']/gi)) {
+    if (!/(?:^|\/)(?:web3-)?wallet-core\.js(?:[?#]|$)/.test(url)) continue;
+    const rel = path.relative(DOCS, file);
+    const expected = rel === "web3/index.html" ? `/web3-wallet-core.js?v=${CORE_VERSION}` :
+      (rel === "index.html" ? "assets/" : "../assets/") + `wallet-core.js?v=${CORE_VERSION}`;
+    assert.equal(url, expected, `${rel} must use the current wallet core`);
+    consumers.push(rel);
+  }
+}
+assert.equal(consumers.length, 40, "expected landing, Web3 and all 38 wiki core consumers");
+assert.equal(new Set(consumers).size, 40, "wallet core must be loaded exactly once per consumer");
+assert.equal(consumers.filter(file => file.startsWith("wiki/")).length, 38);
+assert.ok(consumers.includes("index.html") && consumers.includes("web3/index.html"));
 
 // ── Service worker precaches the artifact ────────────────────────────
 const serviceWorker = fs.readFileSync(path.join(DOCS, "web3-sw.js"), "utf8");
 assert.ok(serviceWorker.includes(`"${ARTIFACT_SRC}"`), "web3-sw.js precache must include the WalletConnect artifact");
+assert.ok(serviceWorker.includes('const CACHE_NAME = "ifr-web3-v24"'), "guard release must bump the service-worker cache to v24");
+assert.ok(serviceWorker.includes(`"/web3-wallet-core.js?v=${CORE_VERSION}"`), "precache must use the HTML's core URL");
+assert.ok(serviceWorker.includes(`"${GUARD_SRC}"`), "precache must use the loaders' guard URL");
+const { REQUIRED_FILES } = require("./web3-release.cjs");
+assert.ok(REQUIRED_FILES.includes("assets/wallet-telemetry-guard.js"), "release manifest must hash the shared guard");
 
 // ── Reproducible build inputs ────────────────────────────────────────
 for (const rel of ["package.json", "package-lock.json", "build.mjs", "entry.mjs", "shims.mjs", "README.md"]) {
@@ -96,4 +128,4 @@ for (const dependency of ["decode-uri-component", "lodash", "@stablelib/ed25519"
 const esbuildEntry = lock.packages && lock.packages["node_modules/esbuild"];
 assert.ok(esbuildEntry && esbuildEntry.version, "vendor lockfile must pin esbuild");
 
-console.log("[web3-wallet-runtime-test] PASS (artifact integrity, no remote imports, precache, build inputs)");
+console.log("[web3-wallet-runtime-test] PASS (artifact integrity, no remote imports, pre-import guard, 40 core consumers, precache/manifest, build inputs)");

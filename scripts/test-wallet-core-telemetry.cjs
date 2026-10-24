@@ -1,9 +1,11 @@
 #!/usr/bin/env node
-// Captures app-owned init options, not SDK telemetry or network behavior.
+// Executes both actual loaders and the shared guard, replacing only ESM loading
+// and the SDK with local fixtures. Not real-SDK/network privacy verification.
 const assert = require("node:assert/strict");
 const fs = require("node:fs");
 const path = require("node:path");
 const vm = require("node:vm");
+const { loadGuard, guardUrl } = require("./test-wallet-telemetry-guard.cjs");
 
 const root = path.resolve(__dirname, "..");
 const artifact = "/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js";
@@ -37,10 +39,11 @@ const targets = [
   }
 ];
 
-async function checkInit(source, target, mobile, restore) {
+async function checkInit(source, target, mobile, restore, failure = "") {
   const label = target.file + (mobile ? " mobile" : " desktop") + (restore ? " restore" : " connect");
   const captures = [];
   const imports = [];
+  let guard;
   const storage = new Map(restore ? [[target.sessionKey, address]] : []);
   let enables = 0;
   const provider = {
@@ -54,6 +57,7 @@ async function checkInit(source, target, mobile, restore) {
       return this.accounts;
     },
     async request({ method }) {
+      if (method === "eth_requestAccounts") return this.accounts;
       assert.equal(method, "eth_chainId", label + ": unexpected wallet request");
       return "0x1";
     },
@@ -72,7 +76,14 @@ async function checkInit(source, target, mobile, restore) {
     },
     location: { href: currentUrl },
     innerWidth: mobile ? 768 : 1440,
-    document: { addEventListener() {}, createElement: unexpected },
+    URL, Request, Response,
+    document: {
+      baseURI: currentUrl,
+      addEventListener() {},
+      createElement: failure ? () => ({ style: {}, appendChild() {}, addEventListener() {} }) : unexpected,
+      body: { appendChild() {} },
+      getElementById: () => ({ addEventListener() {} })
+    },
     localStorage: {
       getItem: (key) => storage.get(key) ?? null,
       setItem: (key, value) => storage.set(key, value),
@@ -93,26 +104,78 @@ async function checkInit(source, target, mobile, restore) {
     },
     async __loadWalletConnectModule(url) {
       imports.push(url);
+      if (url === guardUrl) {
+        if (failure === "guard-import") throw new Error("synthetic guard import failure");
+        return guard || (guard = loadGuard(sandbox));
+      }
       assert.equal(url, artifact, label + ": provider import must stay same-origin and pinned");
+      assert.notEqual(sandbox.fetch, unexpected, label + ": guard must install before provider evaluation");
+      assert.notEqual(sandbox.navigator.sendBeacon, unexpected, label + ": Beacon guard must precede provider evaluation");
+      await probe();
+      if (failure === "provider-import") throw new Error("synthetic provider import failure");
       return { EthereumProvider: { async init(options) {
         captures.push(JSON.parse(JSON.stringify(options)));
+        await probe();
+        if (failure === "init") throw new Error("synthetic init failure");
         return provider;
       } } };
     }
   };
   sandbox.window = sandbox;
+  async function probe() {
+    // Synthetic late/error canaries; the native fixture must never see them.
+    assert.deepEqual(await (await sandbox.fetch("https://pulse.walletconnect.org/e?synthetic=1", {
+      method: "POST", body: currentUrl
+    })).json(), {}, label + ": Pulse response must be usable by SDK .json()");
+    assert.equal(sandbox.navigator.sendBeacon("https://pulse.walletconnect.org/batch?synthetic=1", currentUrl), true);
+  }
+  if (failure === "fetch-install") Object.defineProperty(sandbox, "fetch", { value: unexpected, writable: false });
+  if (failure === "beacon-install") Object.defineProperty(sandbox.navigator, "sendBeacon", { value: unexpected, writable: false });
   // Replace only the import boundary; execute the actual initializer and its options.
-  const importCall = "await import(WC_PROVIDER_URL)";
-  assert.equal(source.split(importCall).length, 2, label + ": expected one provider import boundary");
-  vm.runInNewContext(source.replace(importCall, "await __loadWalletConnectModule(WC_PROVIDER_URL)"), sandbox,
+  let executable = source;
+  for (const name of ["WC_TELEMETRY_GUARD_URL", "WC_PROVIDER_URL"]) {
+    const importCall = "await import(" + name + ")";
+    assert.equal(source.split(importCall).length, 2, label + ": expected one " + name + " import boundary");
+    executable = executable.replace(importCall, "await __loadWalletConnectModule(" + name + ")");
+  }
+  vm.createContext(sandbox);
+  vm.runInContext(executable, sandbox,
     { filename: target.file, timeout: 1000 });
   assert.equal(imports.length, 0, label + ": provider must remain lazy");
+  assert.equal(sandbox.fetch, unexpected, label + ": guard must remain lazy for injected wallets");
   const api = sandbox.IFRWallet;
+  if (failure === "injected") {
+    sandbox.ethereum = provider;
+    assert.equal(await api.connect(), address, label + ": injected connection must remain available");
+    assert.deepEqual(imports, [], label + ": injected-only flow must not import guard or SDK");
+    assert.equal(sandbox.fetch, unexpected);
+    assert.equal(sandbox.navigator.sendBeacon, unexpected);
+    api.disconnect();
+    return;
+  }
+  if (failure) {
+    const connect = target.sessionKey === "ifr_wallet_connected" ? () => api.connect() : () => api.connectWalletConnect();
+    await assert.rejects(connect, /NO_METAMASK|NO_WALLETCONNECT/, label + ": WalletConnect must fail closed");
+    const installed = ["provider-import", "init"].includes(failure);
+    assert.deepEqual(imports, installed ? [guardUrl, artifact] : [guardUrl], label + ": failed guard must prevent SDK import");
+    assert.equal(captures.length, failure === "init" ? 1 : 0, label + ": failed import must prevent SDK init");
+    assert.equal(enables, 0, label + ": failures must not pair");
+    if (installed) await probe(); // Remains installed even after SDK evaluation/init throws.
+    const fetch = sandbox.fetch;
+    const beacon = sandbox.navigator.sendBeacon;
+    sandbox.ethereum = provider;
+    assert.equal(await api.connect(), address, label + ": guard failure must not break injected wallets");
+    assert.equal(sandbox.fetch, fetch);
+    assert.equal(sandbox.navigator.sendBeacon, beacon);
+    api.disconnect();
+    if (installed) await probe();
+    return;
+  }
   const result = await (restore ? api.autoReconnect() : mobile ? api.connectWalletConnect() : api.connect());
   assert.equal(result, restore ? true : address, label + ": mock wallet flow must complete");
   assert.equal(api.getAddress(), address, label + ": selected account must be retained");
   assert.equal(enables, restore ? 0 : 1, label + ": restore must not request a new pairing");
-  assert.deepEqual(imports, [artifact], label + ": expected one provider import");
+  assert.deepEqual(imports, [guardUrl, artifact], label + ": guard must load before pinned provider");
   assert.equal(captures.length, 1, label + ": expected one actual init call");
   const options = captures[0];
   assert.equal(options.telemetryEnabled, false, target.file + ": Core optional telemetry must be disabled");
@@ -127,6 +190,13 @@ async function checkInit(source, target, mobile, restore) {
     "private-checkout-canary", "private-capability-canary"]) {
     assert.ok(!serialized.includes(canary), label + ": sensitive canary must not enter init options");
   }
+  const fetch = sandbox.fetch;
+  const beacon = sandbox.navigator.sendBeacon;
+  api.disconnect();
+  await probe(); // Disconnect must not remove the document-persistent boundary.
+  guard.installWalletConnectTelemetryGuard();
+  assert.equal(sandbox.fetch, fetch);
+  assert.equal(sandbox.navigator.sendBeacon, beacon);
 }
 
 async function checkSources(sources) {
@@ -140,6 +210,11 @@ async function checkSources(sources) {
 async function main() {
   const sources = Object.fromEntries(targets.map(({ file }) => [file, fs.readFileSync(path.join(root, file), "utf8")]));
   await checkSources(sources);
+  for (const target of targets) {
+    for (const failure of ["injected", "guard-import", "fetch-install", "beacon-install", "provider-import", "init"]) {
+      await checkInit(sources[target.file], target, false, false, failure);
+    }
+  }
   // In-memory mutations never rewrite the worktree or create temporary files.
   for (const { file } of targets) {
     const optout = /\btelemetryEnabled:\s*false,?/g;
@@ -149,7 +224,19 @@ async function main() {
       error.code === "ERR_ASSERTION" && error.message.startsWith(file + ": Core optional telemetry must be disabled"),
     file + ": removing its opt-out must fail the runtime check");
   }
-  console.log("[wallet-core-telemetry] PASS: 6 actual init captures; 2 opt-out removals rejected (local mocks only, not SDK/network verification)");
+  for (const { file } of targets) {
+    const install = "guard.installWalletConnectTelemetryGuard();";
+    for (const mutation of [
+      sources[file].replace(install, ""),
+      sources[file].replace(install, "").replace("var mod = await import(WC_PROVIDER_URL);",
+        "var mod = await import(WC_PROVIDER_URL); " + install)
+    ]) {
+      assert.notEqual(mutation, sources[file]);
+      await assert.rejects(() => checkSources({ ...sources, [file]: mutation }),
+        undefined, file + ": missing/late guard must fail");
+    }
+  }
+  console.log("[wallet-core-telemetry] PASS: 6 actual init captures; 10 failure/injected-recovery + 2 injected-only cases; 6 mutations rejected (local fixtures, not real-SDK verification)");
 }
 
 main().catch((error) => {

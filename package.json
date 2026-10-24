@@ -91,7 +91,7 @@
     "test:benefits-migration-model-b": "node scripts/ops/test-benefits-migration-model-b-period-dedup.cjs",
     "test:release-guards": "bash scripts/test-deploy-release-guards.sh && bash scripts/test-deploy-compose-service.sh && bash scripts/test-deploy-benefits-network.sh && bash scripts/test-deploy-benefits-capacity.sh && bash scripts/test-deploy-gate-client.sh && node scripts/ops/test-benefits-backend-volume-ownership.cjs",
     "test:web3-headers": "node scripts/test-web3-headers.cjs && node scripts/test-security-headers.cjs",
-    "test:web3-wallet-runtime": "node scripts/check-web3-wallet-runtime.cjs && node scripts/test-ifr-state-unavailable.cjs && node scripts/test-wallet-core-telemetry.cjs",
+    "test:web3-wallet-runtime": "node scripts/check-web3-wallet-runtime.cjs && node scripts/test-ifr-state-unavailable.cjs && node scripts/test-wallet-telemetry-guard.cjs && node scripts/test-wallet-core-telemetry.cjs",
     "test:wallet-connect": "playwright test tests/browser/wallet-connect.spec.js",
     "test:wallet-parity": "node scripts/test-wallet-parity.mjs",
     "test:web3-write": "playwright test tests/browser/web3-write.spec.js",
