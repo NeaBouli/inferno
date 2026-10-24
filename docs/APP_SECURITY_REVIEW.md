@@ -416,8 +416,10 @@ opening seller's authority re-checked in the same database transaction.
 **Description:** `GET /api/sessions/:id` exposes `recoveredAddress`. Needed for QR-flow polling.
 
 **Current state:** resolved. Public session status no longer returns a customer
-address, and since storage-free customer sessions the backend stores no customer
-wallet address at all (`recoveredAddress` column removed).
+address; the raw customer `recoveredAddress` column was removed. This does not imply absence of
+customer-derived data: conditional Model B rewards can retain partner/month-scoped wallet HMACs
+linked to checkout records. Those records are pseudonymous and their retention period is not yet
+defined; see [current data flows](DATA_FLOWS_AND_PRIVACY.md).
 
 ---
 

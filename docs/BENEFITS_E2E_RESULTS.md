@@ -3,10 +3,12 @@
 ## Historical Test Date: 2026-02-26 (v2)
 
 This section is retained as historical Sepolia evidence; its `APPROVED` status and
-`recoveredAddress` field belong to the retired flow. The current backend stores no customer wallet,
-and the customer's checkout proof redeems a checkout once (`PENDING` -> `REDEEMED`, no `APPROVED`
-step). It has backend route/race coverage, and a deterministic browser contract test covers customer
-pass creation, seller binding and exact-offer confirmation. Current commands and external device
+`recoveredAddress` field belong to the retired flow. Ordinary checkout records exclude raw customer
+wallets/signatures, but merchant records remain and conditional Model B rewards can retain scoped
+wallet-derived HMACs; retention period not yet defined. The customer's checkout proof redeems a
+checkout once (`PENDING` -> `REDEEMED`, no `APPROVED` step). It has backend route/race coverage, and a
+deterministic browser contract test covers customer pass creation, seller binding and exact-offer
+confirmation. Current commands and external device
 gates are maintained in `docs/BENEFITS_NETWORK_TEST.md`.
 
 ## Local Test

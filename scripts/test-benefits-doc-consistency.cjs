@@ -81,6 +81,50 @@ assert.ok(content.architecture.includes('Implemented and live'), 'architecture m
 assert.ok(content.wikiOnboarding.includes('opaque short-lived'), 'Wiki must explain opaque customer pass privacy');
 assert.ok(content.wikiFaq.includes('REDEEMED or REJECTED'), 'FAQ must use backend status terms');
 assert.ok(!content.wikiFaq.includes('APPROVED'), 'FAQ must not use the retired APPROVED checkout status');
+function assertGuideCheckoutBoundary(copy) {
+  assert.ok(!/masked verified wallet|locked amount and rejection reason|seller wallet signs the one-time redeem action|Redeem only after APPROVED/i.test(copy), 'Guide must not restore retired seller data or redemption steps');
+  assert.ok(copy.includes('There is no separate seller redeem action'), 'Guide must explain atomic customer-proof redemption');
+  assert.ok(copy.includes('Merchant checkout records do not expose the customer wallet, signature or measured balance'), 'Guide must state the seller-view field boundary');
+}
+assertGuideCheckoutBoundary(content.frontendGuide);
+for (const stale of ['masked verified wallet', 'locked amount and rejection reason', 'seller wallet signs the one-time redeem action', 'Redeem only after APPROVED']) {
+  assert.throws(() => assertGuideCheckoutBoundary(`${content.frontendGuide} ${stale}`), { name: 'AssertionError' });
+}
+const guideSignatureCopyCases = [
+  {
+    label: 'Guide intro',
+    paragraph: /<p\b[^>]*>\s*(This is the operating guide[^<]*)<\/p>/,
+    expected: 'This is the operating guide for the current shop app: customer-presented checkout passes, compatible seller QR proofs, wallet-owned seller profiles, rule-based discounts and atomic redemption when the exact customer checkout proof is accepted.',
+    stale: 'This is the operating guide for the current shop app: customer-presented checkout passes, compatible seller QR proofs, wallet-owned seller profiles, rule-based discounts and seller-signed redemption.',
+  },
+  {
+    label: 'Guide customer signatures',
+    paragraph: /<strong\b[^>]*>Customer signatures<\/strong>\s*<p\b[^>]*>([^<]*)<\/p>/,
+    expected: 'Exact-offer confirmation or compatible seller-QR proof redeems the checkout atomically without moving tokens; pass creation needs no wallet signature, and My benefits re-verifies saved receipt signatures locally without server authorization.',
+    stale: 'Pass creation, exact-offer confirmation, compatible seller-QR proof or read-only My benefits authorization; none moves tokens.',
+  },
+  {
+    label: 'Guide seller signatures',
+    paragraph: /<strong\b[^>]*>Seller signatures<\/strong>\s*<p\b[^>]*>([^<]*)<\/p>/,
+    expected: 'Short-lived server-issued messages for profile, rules, session history, checkout creation or pass binding and reward opt-in or opt-out actions.',
+    stale: 'Short-lived server-issued messages for profile, rules, session history, redeem and reward opt-in or opt-out actions.',
+  },
+];
+function assertGuideSignatureCopy(copy, { label, paragraph, expected }) {
+  const actual = copy.match(paragraph)?.[1]?.replace(/\s+/g, ' ').trim();
+  assert.equal(actual, expected, `${label} must match current customer-proof redemption and device-local receipts`);
+}
+for (const fixture of guideSignatureCopyCases) {
+  assertGuideSignatureCopy(content.frontendGuide, fixture);
+  const staleCopy = content.frontendGuide.replace(fixture.expected, fixture.stale);
+  assert.notEqual(staleCopy, content.frontendGuide, `${fixture.label}: negative control must restore the stale sentence`);
+  assert.throws(() => assertGuideSignatureCopy(staleCopy, fixture), {
+    name: 'AssertionError',
+    code: 'ERR_ASSERTION',
+    actual: fixture.stale,
+    expected: fixture.expected,
+  });
+}
 assert.ok(content.master.includes('minimum IFR locked in IFRLock'), 'master architecture must use the deployed eligibility source');
 
 
@@ -208,10 +252,10 @@ assert.ok(
 assert.ok(
   content.frontendPrivacy.includes('not a finalized legal policy') &&
     content.frontendPrivacy.includes('retention, deletion and support policy is not finalized') &&
-    content.frontendPrivacy.includes('No customer wallet address') &&
+    content.frontendPrivacy.includes('No customer wallet address in checkout records') &&
     content.frontendPrivacy.includes('Merchant checkout records do exist') &&
     content.frontendPrivacy.includes('This is not anonymity'),
-  'Shop privacy route must preserve the evidence-only policy, the storage-free customer boundary and the no-anonymity boundary'
+  'Shop privacy route must preserve the evidence-only policy, raw checkout-field boundary and no-anonymity boundary'
 );
 assert.ok(
   content.frontendSupport.includes('Nothing here connects a wallet') &&
@@ -256,21 +300,48 @@ assert.ok(
     content.sellerRoutes.includes("res.set('Cache-Control', 'private, no-store, max-age=0')"),
   'seller history and reward responses must carry no customer wallet data and stay private no-store'
 );
+function privacyProse(copy) {
+  return copy.replace(/<[^>]*>/g, ' ').replace(/[`*]/g, '').replace(/\s+/g, ' ');
+}
+
+const storedDataRequirements = [
+  ['raw customer fields excluded or removed', /excludes? raw customer wallet addresses|without writing the raw address|does not write the raw customer address|removed (?:legacy raw customer fields|raw customer-wallet fields)/i],
+  ['server receipt-history retrieval retired', /no server receipt-history retrieval service|server receipt-history retrieval (?:is|remains) retired|removed [^.]*server receipt-history (?:tables|retrieval)|server history routes return 410/i],
+  ['merchant checkout records retained', /merchant checkout records?(?: and seller(?:-side)? audits)? (?:retain|remain|do exist)|keeps (?:a |the )?merchant checkout record/i],
+  ['conditional Model B reward pseudonyms', /conditional Model B rewards can (?:additionally )?retain|when a verified Model B pilot and its dedicated deduplication key are configured[^.]*can store/i],
+  ['scoped wallet HMAC', /HMACs?[^.]*scoped|scoped[^.]*HMACs?/i],
+  ['undefined retention period', /retention period not yet defined/i],
+];
+const falseStorageClaims = [
+  /(?:backend|server) (?:stores?|keeps?) no customer (?:wallet|history)/i,
+  /(?:merchant )?checkout records (?:are (?:never|not) (?:stored|retained)|(?:are )?(?:automatically )?deleted (?:on|at|after) expiry)/i,
+  /(?:no|never (?:stores?|keeps?|retains?)) (?:a |any )?(?:wallet-derived |scoped )?(?:HMACs?|reward pseudonyms?)/i,
+];
+function assertStoredDataBoundary(copy, label) {
+  const prose = privacyProse(copy);
+  for (const [requirement, pattern] of storedDataRequirements) {
+    assert.ok(pattern.test(prose), `${label}: missing ${requirement}`);
+  }
+  for (const pattern of falseStorageClaims) {
+    assert.ok(!pattern.test(prose), `${label}: false blanket storage claim: ${pattern}`);
+  }
+}
+function assertDetailedStoredDataBoundary(copy, label) {
+  assertStoredDataBoundary(copy, label);
+  const prose = privacyProse(copy);
+  assert.ok(/chain(?:\/|, )vault(?:\/|, )partner(?:\/| and )(?:UTC )?month/i.test(prose), `${label}: reward HMAC must be scoped to chain, vault, partner and month`);
+  assert.ok(/UTC (?:month|YYYY-MM)/i.test(prose), `${label}: reward period must use UTC`);
+  assert.ok(/not anonymous|not anonymity/i.test(prose), `${label}: merchant records and reward pseudonyms are not anonymity`);
+}
 for (const [key, label] of [
   ['onboarding', 'canonical onboarding'],
   ['architecture', 'shop architecture'],
   ['master', 'master architecture'],
   ['backendReadme', 'backend README'],
   ['threatModel', 'threat model'],
+  ['frontendPrivacy', 'Shop privacy route'],
 ]) {
-  assert.ok(
-    /(stores?|keeps) no customer wallet/i.test(content[key]),
-    `${label} must state that the backend stores no customer wallet`
-  );
-  assert.ok(
-    /not anonymous|not anonymity/i.test(content[key]),
-    `${label} must state that merchant checkout records mean this is not anonymity`
-  );
+  assertDetailedStoredDataBoundary(content[key], label);
 }
 // F2: source consistency does not certify activation of the unchanged production backend.
 const publicReadme = fs.readFileSync(path.join(root, 'README.md'), 'utf8');
@@ -306,14 +377,44 @@ for (const [label, copy] of privacyReleaseCopy) {
 function assertPublicPrivacyBoundary(copy, label) {
   assert.equal(typeof copy, 'string', `${label}: public privacy copy missing`);
   assert.ok(LIVE_DATE.test(copy), `${label}: public privacy copy must name the 11 October 2026 migration`);
-  assert.ok(/backend stores no customer wallet address or customer history/i.test(copy), `${label}: storage-free statement missing`);
+  assertStoredDataBoundary(copy, label);
   assert.ok(!/await a separately reviewed backend migration|has not yet adopted storage-free|post-migration flow|After migration/i.test(copy), `${label}: stale pending wording`);
   assert.ok(!/\b(?:Owner-B|HOLD)\b/i.test(copy), `${label}: public privacy copy must use public English`);
 }
 for (const [label, copy] of publicPrivacyCopy) {
   assertPublicPrivacyBoundary(copy, label);
+  if (label !== 'Landing My benefits') assertDetailedStoredDataBoundary(copy, label);
   assert.throws(() => assertPublicPrivacyBoundary(copy.replace(/11 October 2026/g, 'soon'), label), { name: 'AssertionError' });
   assert.throws(() => assertPublicPrivacyBoundary(`Privacy changes await a separately reviewed backend migration. ${copy}`, label), { name: 'AssertionError' });
+  assert.throws(() => assertPublicPrivacyBoundary(copy.replace(/retention period not yet defined/gi, ''), label), { name: 'AssertionError' });
+  for (const falseClaim of [
+    'The backend stores no customer wallet address or customer history.',
+    'The server keeps no customer history.',
+    'Merchant checkout records are automatically deleted after expiry.',
+    'The backend never retains any wallet-derived HMAC.',
+  ]) {
+    assert.throws(() => assertPublicPrivacyBoundary(`${copy} ${falseClaim}`, label), { name: 'AssertionError' });
+  }
+}
+const accuratePrivacyFixture = 'The 11 October 2026 migration removed legacy raw customer fields and server receipt-history tables. Merchant checkout records remain. Conditional Model B rewards can retain a wallet-derived HMAC scoped to chain/vault/partner/UTC month. These are pseudonymous, not anonymous records. Retention period not yet defined.';
+assertPublicPrivacyBoundary(accuratePrivacyFixture, 'precise privacy fixture');
+assertDetailedStoredDataBoundary(accuratePrivacyFixture, 'precise privacy fixture');
+for (const [before, after] of [
+  ['removed legacy raw customer fields', 'changed customer fields'],
+  ['and server receipt-history tables', ''],
+  ['Merchant checkout records remain.', ''],
+  ['Conditional Model B rewards can retain', 'Model B rewards always retain'],
+  ['a wallet-derived HMAC scoped to chain/vault/partner/UTC month', 'a reward key'],
+  ['Retention period not yet defined.', ''],
+]) {
+  assert.throws(() => assertPublicPrivacyBoundary(accuratePrivacyFixture.replace(before, after), 'missing storage boundary'), { name: 'AssertionError' });
+}
+for (const [before, after] of [
+  ['chain/vault/partner/UTC month', 'partner/month'],
+  ['UTC month', 'local month'],
+  ['not anonymous', 'anonymous'],
+]) {
+  assert.throws(() => assertDetailedStoredDataBoundary(accuratePrivacyFixture.replace(before, after), 'missing detailed boundary'), { name: 'AssertionError' });
 }
 for (const copy of [
   'The server keeps no customer history.',
