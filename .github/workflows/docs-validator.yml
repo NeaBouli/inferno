@@ -63,6 +63,7 @@ on:
       - 'scripts/test-wallet-core-rpc.cjs'
       - 'scripts/test-wallet-core-telemetry.cjs'
       - 'scripts/test-wallet-telemetry-guard.cjs'
+      - 'scripts/test-wallet-telemetry-integration.cjs'
       - 'scripts/test-web3-headers.cjs'
       - 'scripts/test-security-headers.cjs'
       - 'apps/benefits-network/frontend/next.config.js'
@@ -157,6 +158,7 @@ on:
       - 'scripts/test-wallet-core-rpc.cjs'
       - 'scripts/test-wallet-core-telemetry.cjs'
       - 'scripts/test-wallet-telemetry-guard.cjs'
+      - 'scripts/test-wallet-telemetry-integration.cjs'
       - 'scripts/test-web3-headers.cjs'
       - 'scripts/test-security-headers.cjs'
       - 'apps/benefits-network/frontend/next.config.js'
@@ -410,6 +412,10 @@ jobs:
 
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
+
+      - name: Verify real SDK Pulse guard and guard-removal mutation
+        timeout-minutes: 3
+        run: npm run test:wallet-telemetry-integration
 
       - name: Run landing/wiki wallet suite
         run: npm run test:wallet-connect

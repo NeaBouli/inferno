@@ -94,6 +94,7 @@
     "test:web3-wallet-runtime": "node scripts/check-web3-wallet-runtime.cjs && node scripts/test-ifr-state-unavailable.cjs && node scripts/test-wallet-telemetry-guard.cjs && node scripts/test-wallet-core-telemetry.cjs",
     "test:wallet-connect": "playwright test tests/browser/wallet-connect.spec.js",
     "test:wallet-parity": "node scripts/test-wallet-parity.mjs",
+    "test:wallet-telemetry-integration": "node scripts/test-wallet-telemetry-integration.cjs",
     "test:web3-write": "playwright test tests/browser/web3-write.spec.js",
     "post:x": "node scripts/post-x.js",
     "post:x:dry": "X_DRY_RUN=true node scripts/post-x.js docs/social/x-geckoterminal-thread.md",
