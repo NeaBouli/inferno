@@ -114,7 +114,7 @@ export default function GuidePage() {
               Customer proof and seller checkout, without ceremony.
             </h1>
             <p className="mt-6 max-w-3xl text-lg leading-8 text-stone-300">
-              This is the operating guide for the current shop app: customer-presented checkout passes, compatible seller QR proofs, wallet-owned seller profiles, rule-based discounts and seller-signed redemption.
+              This is the operating guide for the current shop app: customer-presented checkout passes, compatible seller QR proofs, wallet-owned seller profiles, rule-based discounts and atomic redemption when the exact customer checkout proof is accepted.
             </p>
           </div>
           <div className="mt-8 flex flex-wrap gap-3">
@@ -199,11 +199,11 @@ export default function GuidePage() {
               </div>
               <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                 <strong className="text-white">Customer signatures</strong>
-                <p className="mt-1">Pass creation, exact-offer confirmation, compatible seller-QR proof or read-only My benefits authorization; none moves tokens.</p>
+                <p className="mt-1">Exact-offer confirmation or compatible seller-QR proof redeems the checkout atomically without moving tokens; pass creation needs no wallet signature, and My benefits re-verifies saved receipt signatures locally without server authorization.</p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                 <strong className="text-white">Seller signatures</strong>
-                <p className="mt-1">Short-lived server-issued messages for profile, rules, session history, redeem and reward opt-in or opt-out actions.</p>
+                <p className="mt-1">Short-lived server-issued messages for profile, rules, session history, checkout creation or pass binding and reward opt-in or opt-out actions.</p>
               </div>
             </div>
           </div>

@@ -89,6 +89,41 @@ assertGuideCheckoutBoundary(content.frontendGuide);
 for (const stale of ['masked verified wallet', 'locked amount and rejection reason', 'seller wallet signs the one-time redeem action', 'Redeem only after APPROVED']) {
   assert.throws(() => assertGuideCheckoutBoundary(`${content.frontendGuide} ${stale}`), { name: 'AssertionError' });
 }
+const guideSignatureCopyCases = [
+  {
+    label: 'Guide intro',
+    paragraph: /<p\b[^>]*>\s*(This is the operating guide[^<]*)<\/p>/,
+    expected: 'This is the operating guide for the current shop app: customer-presented checkout passes, compatible seller QR proofs, wallet-owned seller profiles, rule-based discounts and atomic redemption when the exact customer checkout proof is accepted.',
+    stale: 'This is the operating guide for the current shop app: customer-presented checkout passes, compatible seller QR proofs, wallet-owned seller profiles, rule-based discounts and seller-signed redemption.',
+  },
+  {
+    label: 'Guide customer signatures',
+    paragraph: /<strong\b[^>]*>Customer signatures<\/strong>\s*<p\b[^>]*>([^<]*)<\/p>/,
+    expected: 'Exact-offer confirmation or compatible seller-QR proof redeems the checkout atomically without moving tokens; pass creation needs no wallet signature, and My benefits re-verifies saved receipt signatures locally without server authorization.',
+    stale: 'Pass creation, exact-offer confirmation, compatible seller-QR proof or read-only My benefits authorization; none moves tokens.',
+  },
+  {
+    label: 'Guide seller signatures',
+    paragraph: /<strong\b[^>]*>Seller signatures<\/strong>\s*<p\b[^>]*>([^<]*)<\/p>/,
+    expected: 'Short-lived server-issued messages for profile, rules, session history, checkout creation or pass binding and reward opt-in or opt-out actions.',
+    stale: 'Short-lived server-issued messages for profile, rules, session history, redeem and reward opt-in or opt-out actions.',
+  },
+];
+function assertGuideSignatureCopy(copy, { label, paragraph, expected }) {
+  const actual = copy.match(paragraph)?.[1]?.replace(/\s+/g, ' ').trim();
+  assert.equal(actual, expected, `${label} must match current customer-proof redemption and device-local receipts`);
+}
+for (const fixture of guideSignatureCopyCases) {
+  assertGuideSignatureCopy(content.frontendGuide, fixture);
+  const staleCopy = content.frontendGuide.replace(fixture.expected, fixture.stale);
+  assert.notEqual(staleCopy, content.frontendGuide, `${fixture.label}: negative control must restore the stale sentence`);
+  assert.throws(() => assertGuideSignatureCopy(staleCopy, fixture), {
+    name: 'AssertionError',
+    code: 'ERR_ASSERTION',
+    actual: fixture.stale,
+    expected: fixture.expected,
+  });
+}
 assert.ok(content.master.includes('minimum IFR locked in IFRLock'), 'master architecture must use the deployed eligibility source');
 
 
