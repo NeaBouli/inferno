@@ -9,7 +9,7 @@ const expectedVersions = {
   'body-parser': '2.4.0',
   'deepmerge-ts': '8.0.2',
   esbuild: '0.28.1',
-  'fast-uri': '3.1.8',
+  'fast-uri': '3.1.9',
   mysql2: '3.23.1',
   'path-to-regexp': '8.4.0',
   qs: '6.16.1',
