@@ -59,6 +59,14 @@ assert.deepEqual(await listAvailableWalletConnectors([unavailableInjected, coinb
 assert.deepEqual(await listAvailableWalletConnectors([metamask, coinbase]), [metamask, coinbase]);
 assert.deepEqual(await listAvailableWalletConnectors([unavailablePhantom, coinbase]), [coinbase]);
 assert.deepEqual(await listAvailableWalletConnectors([trustUniversal, coinbase]), [trustUniversal, coinbase]);
+const dormantUniversal = (id) => ({
+  id, name: id, type: id,
+  getProvider() { assert.fail('wallet availability must not activate a universal SDK'); },
+});
+assert.deepEqual(
+  (await listAvailableWalletConnectors([unavailableInjected, dormantUniversal('coinbaseWalletSDK'), dormantUniversal('walletConnect')])).map(({ id }) => id),
+  ['coinbaseWalletSDK', 'walletConnect'],
+);
 assert.deepEqual(
   await listAvailableWalletConnectors([
     genericSharedProvider,
