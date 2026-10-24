@@ -77,13 +77,21 @@ const suffixSerialized = fastUri.serialize(
 );
 assert.equal(suffixSerialized, 'javascript%3Aalert(1)', 'suffix output must escape the first-segment colon');
 assert.equal(fastUri.parse(suffixSerialized).scheme, undefined, 'suffix output must not reparse as a scheme');
-for (const trigger of ['javascript:alert(1)', 'data:text/html,x']) {
-  assert.throws(
-    () => fastUri.normalize(trigger, { reference: 'suffix' }),
-    /URI port is malformed\./,
-    `suffix normalization must fail closed for ${trigger}`,
-  );
+// normalize() parses a suffix reference in the context of options.scheme and
+// never emits that scheme token; the first-segment colon is percent-escaped so
+// the output reparses as a scheme-less path (upstream
+// test/reserved-path-normalization.test.js lines 115-136).
+const suffixOptions = { reference: 'suffix', scheme: 'x' };
+for (const [trigger, escaped] of [
+  ['javascript:alert(1)', 'javascript%3Aalert(1)'],
+  ['data:text/html,x', 'data%3Atext/html,x'],
+]) {
+  const suffixNormalized = fastUri.normalize(trigger, suffixOptions);
+  assert.equal(suffixNormalized, escaped, `suffix normalization must escape the first-segment colon of ${trigger}`);
+  assert.equal(fastUri.parse(suffixNormalized).scheme, undefined, `default parse of "${suffixNormalized}" must not yield a scheme`);
 }
+assert.equal(fastUri.normalize('path/to/file', suffixOptions), 'path/to/file', 'plain path unchanged');
+assert.equal(fastUri.normalize('a/b:c', suffixOptions), 'a/b:c', 'colon in a later segment stays literal');
 
 // Controls: ordinary absolute, relative and percent-escaped URIs keep their
 // valid semantics, including valid //host references, query/fragment data and
