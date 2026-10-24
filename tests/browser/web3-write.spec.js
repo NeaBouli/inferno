@@ -1706,6 +1706,93 @@ test("Web3 app shell reloads from the service-worker cache while offline", async
   await context.close();
 });
 
+test("Web3 v24 replaces a seeded v23 cache and loads the current core and Pulse guard offline", async ({ browser }) => {
+  const context = await newRoutedContext(browser, { serviceWorkers: "allow" });
+  const coreUrl = "/web3-wallet-core.js?v=20261024-pulse-guard";
+  const guardUrl = "/assets/wallet-telemetry-guard.js?v=20261024-pulse-guard";
+  const oldCoreUrl = "/web3-wallet-core.js?v=20261004-rpc-fallback-v6";
+  const hash = (bytes) => createHash("sha256").update(bytes).digest("hex");
+  const expectedCore = hash(readFileSync("docs/web3-wallet-core.js"));
+  const expectedGuard = hash(readFileSync("docs/assets/wallet-telemetry-guard.js"));
+  let pulseRequests = 0;
+  try {
+    // Only actual public docs may reach loopback. No upstream HTTP or WS.
+    await context.route("**/*", async (route) => {
+      const url = new URL(route.request().url());
+      if (["localhost", "127.0.0.1"].includes(url.hostname) && url.port === "8787") return route.fallback();
+      if (url.origin === "https://pulse.walletconnect.org") pulseRequests++;
+      return route.abort("blockedbyclient");
+    });
+    await context.routeWebSocket("**/*", (socket) => socket.close());
+    const page = await context.newPage();
+    await page.goto("/", { waitUntil: "domcontentloaded" });
+    expect(await page.evaluate(async () => (await navigator.serviceWorker.getRegistrations()).length)).toBe(0);
+    expect(await page.evaluate(() => caches.keys())).toEqual([]);
+    await page.evaluate(async (oldUrl) => {
+      const cache = await caches.open("ifr-web3-v23");
+      await cache.put(oldUrl, new Response("window.__staleWalletCore = true;", { headers: { "Content-Type": "text/javascript" } }));
+      await cache.put("/synthetic-stale-cache-sentinel", new Response("synthetic-public-canary"));
+    }, oldCoreUrl);
+    expect(await page.evaluate(async (oldUrl) => {
+      const cache = await caches.open("ifr-web3-v23");
+      return Boolean(await cache.match(oldUrl)) && Boolean(await cache.match("/synthetic-stale-cache-sentinel"));
+    }, oldCoreUrl)).toBe(true);
+
+    await page.goto("/web3/", { waitUntil: "networkidle" });
+    await page.evaluate(() => navigator.serviceWorker.ready);
+    await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
+    // As in the existing offline-shell test, prime the controlled navigation
+    // fallback: installation itself precaches the landing document at "/".
+    await page.reload({ waitUntil: "networkidle" });
+    await expect.poll(() => page.evaluate(() => caches.keys())).toEqual(["ifr-web3-v24"]);
+    const cached = await page.evaluate(async ({ coreUrl, guardUrl, oldCoreUrl }) => {
+      const cache = await caches.open("ifr-web3-v24");
+      const digest = async (url) => {
+        const response = await cache.match(url, { ignoreSearch: false });
+        if (!response || !response.ok) return null;
+        const bytes = await response.arrayBuffer();
+        return Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)), (byte) => byte.toString(16).padStart(2, "0")).join("");
+      };
+      return { core: await digest(coreUrl), guard: await digest(guardUrl),
+        old: Boolean(await caches.match(oldCoreUrl)), sentinel: Boolean(await caches.match("/synthetic-stale-cache-sentinel")) };
+    }, { coreUrl, guardUrl, oldCoreUrl });
+    expect(cached).toEqual({ core: expectedCore, guard: expectedGuard, old: false, sentinel: false });
+    await expect(page.locator(`script[src="${coreUrl}"]`)).toHaveCount(1);
+    expect(await page.evaluate(() => window.__staleWalletCore === true)).toBe(false);
+
+    await context.setOffline(true);
+    const [loadedCore] = await Promise.all([
+      page.waitForResponse((response) => new URL(response.url()).pathname === "/web3-wallet-core.js"),
+      page.reload({ waitUntil: "domcontentloaded" }),
+    ]);
+    await expect(page.locator("h1")).toContainText("Lock IFR");
+    expect(loadedCore.fromServiceWorker()).toBe(true);
+    expect(new URL(loadedCore.url()).pathname + new URL(loadedCore.url()).search).toBe(coreUrl);
+    expect(hash(await loadedCore.body())).toBe(expectedCore);
+    expect(await page.evaluate(() => typeof window.IFRWallet?.listWallets)).toBe("function");
+    await expect(page.locator(`script[src="${coreUrl}"]`)).toHaveCount(1);
+    expect(await page.evaluate(() => window.__staleWalletCore === true)).toBe(false);
+
+    const [loadedGuard, blocked] = await Promise.all([
+      page.waitForResponse((response) => new URL(response.url()).pathname === "/assets/wallet-telemetry-guard.js"),
+      page.evaluate(async (url) => {
+        const guard = await import(url);
+        guard.installWalletConnectTelemetryGuard();
+        const response = await fetch("https://pulse.walletconnect.org/e?synthetic=public-canary", { method: "POST", body: "synthetic-public-canary" });
+        return { status: response.status, body: await response.text(),
+          beacon: navigator.sendBeacon("https://pulse.walletconnect.org/batch", "synthetic-public-canary") };
+      }, guardUrl),
+    ]);
+    expect(loadedGuard.fromServiceWorker()).toBe(true);
+    expect(new URL(loadedGuard.url()).pathname + new URL(loadedGuard.url()).search).toBe(guardUrl);
+    expect(hash(await loadedGuard.body())).toBe(expectedGuard);
+    expect(blocked).toEqual({ status: 200, body: "{}", beacon: true });
+    expect(pulseRequests).toBe(0);
+  } finally {
+    await context.close();
+  }
+});
+
 /* ──────────────────────────────────────────────────────────
    T-121 header regression: the single-row nav band above
    980px let .nav-links shrink (min-width: 0) and paint its
