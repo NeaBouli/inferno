@@ -50,3 +50,26 @@ Already integrated in `apps/telegram/telegram-bot/src/services/onChainReader.js`
 - `isRegistered(address) → bool`
 - `getBuilder(address) → (string, string, uint256)`
 - `builderCount() → uint256`
+
+### Registry administration and enumeration
+
+The ownership line above records the Mainnet Governance/TreasurySafe arrangement in the
+14 September 2026 audit snapshot; it is not a fresh ownership read. The constructor accepts any
+nonzero owner address without checking Governance identity.
+
+The source and committed ABI expose five owner-only mutations: `registerBuilder`,
+`removeBuilder`, `updateBuilder`, inherited `transferOwnership` and `renounceOwnership`.
+Governance can administer records while it owns the registry, but cannot upgrade its code.
+There is no proxy or upgrade entry point; a code change requires a new deployment and migration.
+The Governance proposal delay applies only while Governance remains owner. The registry itself
+has no delay: ownership transfer is single-step to any nonzero address; renunciation sets owner
+to zero and permanently disables administration without deleting records.
+
+Removal retains metadata and list entries. Re-registration appends the wallet again, so the
+`/api/builders/count` result and `getBuilderCount()` count registration entries, not unique wallets,
+and `getActiveBuilders()` can return duplicates. Consumers should deduplicate lists and use
+`isBuilder(wallet)` for membership.
+
+The ABI names listed in the earlier checklist above are obsolete. The current ABI exposes
+`isBuilder(address)`, `getBuilderInfo(address)` (name, URL, category, registration time, active flag)
+and `getBuilderCount()`; it has no `isRegistered`, `getBuilder` or `builderCount` function.

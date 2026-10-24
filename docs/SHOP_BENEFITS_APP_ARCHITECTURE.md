@@ -68,8 +68,9 @@ The app has two roles:
     verify locally what they signed.
   - Home shows the local section `Recent proofs on this device` for reopening checkout proofs.
   - Stored data is local-only and excludes private keys, seed phrases and full wallet inventories.
-  - There is no server-side customer history: `/api/customer/history*` returns 410 and losing the
-    browser data loses the history.
+  - There is no server receipt-history retrieval service: `/api/customer/history*` returns 410
+    and losing browser data loses the local receipts. Merchant checkout records and conditional
+    Model B reward pseudonyms remain separate backend records.
 - Help surface:
 
 ## UX Requirements
@@ -294,9 +295,15 @@ those remain production configuration and physical-wallet acceptance gates.
     explanation and selective browser-data controls. Seller session responses expose no customer
     wallet data, only whether a customer proof was verified, the lock source and a self-redemption
     flag; reward status exposes only an event count. Both use `private, no-store`. The backend
-    stores no customer wallet address or derivative; it checks the address only within the proof
-    request. Merchant checkout records and seller audit events remain, so this is not anonymity. The page explicitly leaves long-term
-    server retention, deletion handling, legal review and a dedicated support channel open.
+    excludes raw customer wallet addresses and signatures from ordinary checkout persistence.
+    Conditional Model B rewards can retain a wallet-derived HMAC `rewardDedupKey` scoped to
+    chain/vault/partner/UTC month plus `rewardPeriod`; this is a pseudonym, not anonymity.
+    Merchant checkout records retain offer terms, timing, outcomes, seller attribution and
+    pass/reward links; session audits remain. Authenticated seller limits use full seller-wallet
+    keys in memory/Redis, and seller signatures may travel in headers as well as bodies.
+    Sessions, session audits, reward events and linked passes are protected from pruning;
+    retention period not yet defined. Deletion handling, legal review and a dedicated support
+    channel remain open.
     A repository-local phase-one operator tool now reports and, only with an exact manual
     confirmation, prunes old admin audit rows plus expired unlinked auth artifacts in bounded
     batches. It cannot prune Sessions, session AuditLogs, RewardEvents or linked passes and

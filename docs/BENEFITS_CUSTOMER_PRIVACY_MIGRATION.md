@@ -2,19 +2,25 @@
 
 Status: **applied in production on 11 October 2026** (Benefits release 262a2dcc): copy rehearsal
 PASS, then backup, `prisma migrate deploy`, VACUUM and address scan PASS before traffic resumed.
-The pre-migration backup is root-only on the host and is deleted after the owner's acceptance
-window; the backup clean-up below still applies to it and to older backups.
+The recorded pre-migration backup is root-only on the host. Deletion after the owner's acceptance
+window is an operator requirement, not an automatic expiry or verified deletion; retention period
+not yet defined. The backup clean-up below still applies to it and to older backups.
 
 Migration: `apps/benefits-network/backend/prisma/migrations/20261006120000_owner_b_customer_session_privacy`
 (owner decision B, T-231b, "storage-free customer sessions").
 
 ## What changes
 
-After the migration the backend stores no customer wallet address, no hash or fingerprint of it,
-no signature or signed text, no lock or balance amounts, no block numbers, no payment transaction
-hashes and no customer history. It still keeps merchant checkout records (random checkout ID,
-shop, offer terms, status, timestamps, lock source, self-redemption flag, the seller wallet that
-opened the checkout) and seller-side audit events. This is not anonymity.
+The migration removes legacy raw customer-wallet, measured lock/balance and customer
+verification-block fields and the server receipt-history tables. Ordinary checkout processing
+does not write those raw proof values, signatures, signed text or customer payment transaction hashes.
+Merchant checkout records still retain IDs/nonces, shop/rule, snapshotted terms, status, timestamps,
+proof outcome/source, self-redemption flag, seller wallet/role/operator, any pass/reward linkage
+and session audits. The later conditional Model B path can retain `rewardPeriod` and a
+wallet-derived `rewardDedupKey` HMAC scoped to chain/vault/partner/UTC month; the migration is not
+a promise of no customer-derived identifiers. This is pseudonymous, not anonymous data. Sessions,
+session audits, reward events and linked passes are protected from the manual pruning tool;
+retention period not yet defined. See [current data flows](DATA_FLOWS_AND_PRIVACY.md).
 
 ### Removed customer data
 

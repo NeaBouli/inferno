@@ -236,8 +236,8 @@ The deployed seller rule model configures:
 - discount percent;
 - fixed benefit text;
 - minimum IFR locked in IFRLock;
-- daily/monthly redemption limits must be `0`: IFR stores no customer identity and does not
-  enforce per-customer limits (non-zero values are refused; merchants enforce limits themselves);
+- daily/monthly checkout redemption limits must be `0`: non-zero values are refused and merchants
+  enforce checkout limits themselves; conditional Model B reward deduplication is separate;
 - redemption TTL;
 - staff notes.
 
@@ -443,11 +443,19 @@ id
 sellerId
 partnerId
 sessionId (unique, one event per checkout; no customer wallet or amount)
-status: BLOCKED_POLICY (all new events under storage-free customer sessions) | pending | ...
+status: BLOCKED_POLICY | SETTLEMENT_PENDING | SKIPPED_DUPLICATE | ...
 reason
+rewardPeriod optional (UTC YYYY-MM)
+rewardDedupKey optional (wallet-derived HMAC scoped to chain/vault/partner/month)
+txHash optional (settlement link, not a customer payment proof)
 createdAt
 updatedAt
 ```
+
+Conditional Model B pilot/configuration checks gate reward pseudonyms and `SETTLEMENT_PENDING`;
+this schema does not establish production activation. Reward keys are pseudonymous, not anonymous.
+All reward events, checkout sessions, session audits and linked passes are protected from pruning;
+retention period not yet defined. See [Model B](../PARTNER_REWARDS_MODEL_B.md).
 
 ## 7. API Surface
 
@@ -539,8 +547,11 @@ Critical rules:
 - Seller staff can scan and open checkouts through owner-managed checkout wallets but cannot change owner wallet, profile, rule, history, delegation or reward settings.
 - Reward writes to PartnerVault only after seller is governance-approved.
 - Admin actions must be audited.
-- PII should be avoided. The backend stores no customer wallet address, derivative or customer
-  history; it keeps merchant checkout records and seller-side audit events (not anonymity).
+- Avoid personal data in free text. Ordinary checkout persistence excludes raw customer wallet
+  addresses, signatures and measured holdings. Conditional Model B rewards can retain a scoped
+  wallet-derived HMAC and UTC month; merchant checkout records and seller-side audits retain
+  timing, outcomes, offer terms, seller attribution and pass/reward links. This is not anonymity;
+  retention period not yet defined. Server receipt-history retrieval remains retired.
 
 Replay protection:
 

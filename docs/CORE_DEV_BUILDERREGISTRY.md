@@ -27,15 +27,21 @@ BuilderRegistry is Ownable
   - registerBuilder(wallet, name, url, category) → onlyOwner
   - removeBuilder(wallet) → onlyOwner
   - updateBuilder(wallet, name, url, category) → onlyOwner
+  - transferOwnership(newOwner) → onlyOwner, immediate single-step transfer to any nonzero address
+  - renounceOwnership() → onlyOwner, permanently disables administration
   - isBuilder(address) → bool (view)
   - getBuilderInfo(address) → BuilderInfo (view)
-  - getActiveBuilders() → address[] (view)
-  - getBuilderCount() → uint256 (view)
+  - getActiveBuilders() → address[] (view; duplicates after removal and re-registration)
+  - getBuilderCount() → uint256 (view; registration entries, not unique wallets)
 
 Categories: "creator" | "integration" | "tooling" | "dao"
 ```
 
-Constructor nimmt `governance_` als Parameter → wird Owner (Governance Timelock).
+The constructor accepts any nonzero `governance_` as owner; it does not verify Governance identity.
+All five mutations use the current owner. The Governance delay applies only while Governance
+owns the registry; a transfer can remove that protection. Removal retains metadata and list
+entries. The source and ABI have no proxy or upgrade path: changing code requires a new
+deployment and migration, not a Governance upgrade call.
 
 ---
 

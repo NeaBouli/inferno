@@ -294,7 +294,7 @@ for (const stale of [
 ]) assert.throws(() => assertCurrentPublicClaims(stale, "negative fixture"), { name: "AssertionError" });
 for (const accurate of [
   "No names or emails required; public wallet addresses are processed as pseudonymous identifiers.",
-  "The Benefits backend stores no customer wallet addresses, but processes them to check eligibility.",
+  "Ordinary Benefits checkout records exclude raw customer wallet addresses; the backend processes them to check eligibility. Merchant checkout records remain, and conditional Model B rewards can retain scoped wallet-derived HMACs and a UTC month. Retention period not yet defined.",
   "BuybackVault is dormant; no active buyback/burn flywheel is fed by the IFR pool fee.",
   "LendingVault V1 creation/increase and new borrowing are permanently retired in official interfaces.",
 ]) assertCurrentPublicClaims(accurate, "positive fixture");
