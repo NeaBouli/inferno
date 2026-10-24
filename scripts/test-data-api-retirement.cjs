@@ -29,7 +29,7 @@ for (const file of ['infra/web3/web3-security-headers.conf', 'apps/benefits-netw
 }
 assert.match(read('apps/benefits-network/frontend/public/sw.js'), /CACHE_NAME = 'ifr-benefits-v26'/);
 assert.doesNotMatch(read('apps/benefits-network/frontend/public/sw.js'), /copilot-avatar/);
-assert.match(read('docs/web3-sw.js'), /CACHE_NAME = "ifr-web3-v23"/);
+assert.match(read('docs/web3-sw.js'), /CACHE_NAME = "ifr-web3-v24"/);
 for (const file of pages.filter(file => read(file).includes('redesign-skin.css'))) {
   assert.ok(read(file).includes('redesign-skin.css?v=20261023-p1'), `${file}: versioned skin required`);
   assert.ok(read(file).includes('page-motion.js?v=20261023-p1'), `${file}: matching motion asset required`);

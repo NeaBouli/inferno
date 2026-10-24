@@ -64,6 +64,7 @@ window.IFRWallet = (function() {
   // infra/web3/walletconnect-provider; SHA-256 gated in CI). Same-origin ESM,
   // no runtime third-party code fetch (CWA-47).
   var WC_PROVIDER_URL = "/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js";
+  var WC_TELEMETRY_GUARD_URL = "/assets/wallet-telemetry-guard.js?v=20261024-pulse-guard";
 
   var _provider = null;        // ethers Web3Provider (for ifr-state.js compat)
   var _signer = null;
@@ -303,6 +304,8 @@ window.IFRWallet = (function() {
 
     var loading = _wcLoading = (async function() {
       try {
+        var guard = await import(WC_TELEMETRY_GUARD_URL);
+        guard.installWalletConnectTelemetryGuard();
         // dynamic import() of the self-hosted pinned artifact — same origin,
         // works in all modern browsers.
         // Internally imports @walletconnect/modal for QR display.
@@ -322,6 +325,7 @@ window.IFRWallet = (function() {
           methods: ["eth_sendTransaction", "personal_sign"],
           events: ["chainChanged", "accountsChanged", "disconnect"],
           showQrModal: !_isMobileOrTablet(),
+          telemetryEnabled: false,
           rpcMap: { 1: RPC_URL },
           metadata: {
             name: "Inferno Protocol",

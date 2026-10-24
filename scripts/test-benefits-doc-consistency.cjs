@@ -4,6 +4,7 @@ const path = require('node:path');
 const { execFileSync } = require('node:child_process');
 
 execFileSync(process.execPath, [path.join(__dirname, 'test-ifr-tiers.cjs')], { stdio: 'inherit' });
+execFileSync(process.execPath, [path.join(__dirname, 'sync-wallet-telemetry-guard.cjs')], { stdio: 'inherit' });
 
 const root = path.resolve(__dirname, '..');
 const files = {

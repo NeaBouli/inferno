@@ -98,6 +98,15 @@ function walletAndRpcUrls(source) {
     .test(new URL(url).hostname));
 }
 
+function operationalWalletAndRpcUrls(file, source) {
+  const destinations = walletAndRpcUrls(source);
+  if (file !== 'apps/benefits-network/frontend/src/lib/wallet-telemetry-guard.mjs') return destinations;
+  // The exact mirrored guard names Pulse only to deny it, not as an allowed
+  // network dependency. Never exempt Pulse in another module or widen the CSP.
+  assert.equal(source, read('docs/assets/wallet-telemetry-guard.js'), 'telemetry guard mirror must match');
+  return destinations.filter((url) => new URL(url).origin !== 'https://pulse.walletconnect.org');
+}
+
 async function nextHeaders(env = {}) {
   // Evaluate the actual CommonJS config with deterministic public build inputs.
   const context = { module: { exports: {} }, process: { env }, URL,
@@ -146,8 +155,15 @@ async function main() {
   checkConnections(benefits, urls(wagmi).filter((url) => new URL(url).hostname !== 'shop.ifrunit.tech'));
   checkConnections(benefits, walletUrls);
   for (const file of sourceFiles('apps/benefits-network/frontend/src')) {
-    checkConnections(benefits, walletAndRpcUrls(read(file)));
+    checkConnections(benefits, operationalWalletAndRpcUrls(file, read(file)));
   }
+  assert.throws(() => checkConnections(benefits,
+    operationalWalletAndRpcUrls('ordinary.ts', 'fetch("https://pulse.walletconnect.org/batch")')),
+  /connect-src must allow https:\/\/pulse\.walletconnect\.org/, 'ordinary Pulse traffic must remain forbidden');
+  assert.throws(() => operationalWalletAndRpcUrls(
+    'apps/benefits-network/frontend/src/lib/wallet-telemetry-guard.mjs',
+    read('docs/assets/wallet-telemetry-guard.js') + '\nfetch("https://rpc.example.invalid")'),
+  /telemetry guard mirror must match/, 'modified guard cannot inherit the blocked-origin exception');
   // Coinbase 4.3.6 core/constants.js and WalletLinkWebSocket.js: HTTPS API
   // becomes WSS for its relay. keys.coinbase.com is a popup, not an iframe.
   checkConnections(benefits, ['https://www.walletlink.org', 'wss://www.walletlink.org',
