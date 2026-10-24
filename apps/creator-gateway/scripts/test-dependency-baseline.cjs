@@ -11,7 +11,7 @@ assert.equal(manifest.devDependencies.tsx, '^4.23.1');
 
 const expectedVersions = {
   'node_modules/express': '4.22.2',
-  'node_modules/body-parser': '1.20.6',
+  'node_modules/body-parser': '1.20.9',
   'node_modules/qs': '6.16.0',
   'node_modules/path-to-regexp': '0.1.13',
   'node_modules/form-data': '4.0.6',

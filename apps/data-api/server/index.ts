@@ -12,6 +12,7 @@ import { LENDING_LOAN_ABI, serializeLendingLoan, type SerializedLendingLoan } fr
 import { ethCall, getRpcProvider, rpcHealth } from "./rpc.js";
 import { balanceEntry, explorerBalanceEntry, finalizeBalances, lostSupply, parseAddressParam, requireBaseUnits, IFRLOCK_UNLOCKED_TOPIC, sumUnlockedLogs, unavailableEntry, type BalanceEntry } from "./balance-integrity.js";
 import { Semaphore, SingleFlightCache, SlidingWindowLimiter, TRUSTED_PROXY_HOPS, ipRateLimit, positiveIntEnv } from "./request-guard.js";
+import { safeLookupError, walletLookupNoStore } from "./wallet-privacy.js";
 
 const app = express();
 app.disable("x-powered-by");
@@ -20,6 +21,7 @@ app.use((_req, res, next) => {
   next();
 });
 app.set("trust proxy", TRUSTED_PROXY_HOPS);
+app.use(walletLookupNoStore);
 app.use(cors({ origin: resolveAllowedOrigins() }));
 // Retired clients receive a stable tombstone even for obsolete/malformed chat payloads.
 app.post("/api/chat", (_req, res) => {
@@ -508,7 +510,7 @@ async function fetchLockEventsPage(page: number, limit: number, type: string, q:
 
 // GET /api/locks/events — paged lock/lending event feed for Transparency page
 app.get("/api/locks/events", feedLimiter, async (req, res) => {
-  res.set("Cache-Control", "public, max-age=30");
+  if (!res.hasHeader("Cache-Control")) res.set("Cache-Control", "public, max-age=30");
   try {
     const page = Math.max(1, Math.min(parseInt(String(req.query.page || "1"), 10) || 1, 100));
     const limit = Math.max(1, Math.min(parseInt(String(req.query.limit || "5"), 10) || 5, 20));
@@ -530,7 +532,7 @@ app.get("/api/locks/events", feedLimiter, async (req, res) => {
       timestamp: new Date().toISOString(),
     });
   } catch (err) {
-    console.error("Lock events error:", err);
+    console.error("Lock events error:", safeLookupError(err));
     res.status(502).json({ error: "Failed to fetch lock events" });
   }
 });
@@ -730,7 +732,7 @@ if (BUILDER_REGISTRY_ADDR) {
       const isBuilder = result !== "0x" && result !== "0x0000000000000000000000000000000000000000000000000000000000000000";
       res.json({ address: addr, isBuilder });
     } catch (e: unknown) {
-      console.error("[BuilderRegistry] check failed:", e instanceof Error ? e.message : e);
+      console.error("[BuilderRegistry] check failed:", safeLookupError(e));
       res.status(502).json({ error: "Builder registry unavailable" });
     }
   });
@@ -925,7 +927,7 @@ app.get("/api/commitment/tranches/:address", async (req, res) => {
       p0ETH: p0Val ? ethersLib.formatEther(p0Val) : null,
     });
   } catch (err) {
-    console.error("CV tranches error:", err);
+    console.error("CV tranches error:", safeLookupError(err));
     res.status(502).json({ error: "Failed to fetch tranches" });
   }
 });
@@ -959,7 +961,7 @@ app.get("/api/commitment/status/:address", async (req, res) => {
       tierName: tier.name,
     });
   } catch (err) {
-    console.error("CV status error:", err);
+    console.error("CV status error:", safeLookupError(err));
     res.status(502).json({ error: "Failed to fetch status" });
   }
 });
@@ -1054,7 +1056,7 @@ app.get("/api/lending/loans/:address", async (req, res) => {
 
     res.json({ wallet: addr, activeLoans: myLoans });
   } catch (err) {
-    console.error("Lending loans error:", err);
+    console.error("Lending loans error:", safeLookupError(err));
     res.status(502).json({ error: "Failed to fetch loans" });
   }
 });
@@ -1102,7 +1104,7 @@ app.get("/api/lending/health/:loanId", async (req, res) => {
       liquidationThreshold: "120%",
     });
   } catch (err) {
-    console.error("Lending health error:", err);
+    console.error("Lending health error:", safeLookupError(err));
     res.status(502).json({ error: "Failed to fetch loan health" });
   }
 });
@@ -1153,7 +1155,7 @@ app.get("/api/lending/lender/:address", async (req, res) => {
       active: offer.active,
     });
   } catch (err) {
-    console.error("Lending lender error:", err);
+    console.error("Lending lender error:", safeLookupError(err));
     res.status(502).json({ error: "Failed to fetch lender data" });
   }
 });
@@ -1284,7 +1286,7 @@ console.log("[Builder] POST /api/builder/generate active");
 
 // GET /api/ifr/check — lightweight access check for SDK / REST clients
 app.get("/api/ifr/check", async (req, res) => {
-  res.set("Cache-Control", "public, max-age=30");
+  res.set("Cache-Control", "private, no-store");
   try {
     const wallet = req.query.wallet as string;
     const requiredParam = typeof req.query.required === "string" ? req.query.required : "1000";
@@ -1330,7 +1332,7 @@ app.get("/api/ifr/check", async (req, res) => {
       tierBasis: "locked",
     });
   } catch (err) {
-    console.error("IFR check error:", err);
+    console.error("IFR check error:", safeLookupError(err));
     res.status(502).json({ error: "Failed to check access" });
   }
 });

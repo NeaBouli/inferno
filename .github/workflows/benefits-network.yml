@@ -55,6 +55,7 @@ on:
       - 'package-lock.json'
       - '.github/workflows/benefits-network.yml'
       - 'scripts/check-dev-advisory-exceptions.cjs'
+      - 'scripts/test-body-parser-compression.cjs'
   pull_request:
     paths:
       - 'apps/benefits-network/**'
@@ -108,6 +109,7 @@ on:
       - 'package-lock.json'
       - '.github/workflows/benefits-network.yml'
       - 'scripts/check-dev-advisory-exceptions.cjs'
+      - 'scripts/test-body-parser-compression.cjs'
 
 permissions:
   contents: read
@@ -139,6 +141,8 @@ jobs:
           cache: 'npm'
           cache-dependency-path: apps/benefits-network/backend/package-lock.json
       - run: npm ci
+      - name: Body-parser compression lifecycle regression
+        run: node ../../../scripts/test-body-parser-compression.cjs benefits
       - name: npm audit (production clean; reviewed dev-only exceptions)
         run: node ../../../scripts/check-dev-advisory-exceptions.cjs
       - run: npx prisma generate
@@ -146,6 +150,7 @@ jobs:
       - run: npx tsc --noEmit
       - run: npm run test:migration-upgrade
       - run: npm test
+      - run: npm run test:model-b-tools
       - run: npm run test:ethers-v6-lifecycle
       - run: npm run build
       - run: npm run test:rate-limit-startup
@@ -163,6 +168,7 @@ jobs:
             -e IFRLOCK_ADDRESS=0x0000000000000000000000000000000000000001 \
             -e COMMITMENT_VAULT_ADDRESS=0x0000000000000000000000000000000000000003 \
             -e ADMIN_SECRET=ci-admin-secret-0123456789abcdef0123456789 \
+            -e ADMIN_AUDIT_HMAC_KEY=ci-audit-hmac-key-0123456789abcdef0123456789 \
             inferno-benefits-backend:ci)"
           cleanup() { docker rm -f "$container" >/dev/null 2>&1 || true; }
           trap cleanup EXIT

@@ -92,6 +92,7 @@ async function configureRuntime() {
     IFR_TOKEN_ADDRESS: '0x0000000000000000000000000000000000000002',
     COMMITMENT_VAULT_ADDRESS: '0x0000000000000000000000000000000000000003',
     ADMIN_SECRET: adminSecret,
+    ADMIN_AUDIT_HMAC_KEY: 'fullstack-test-audit-key-0123456789abcdef0123456789',
     DATABASE_URL: databaseUrl,
     PORT: String(backendPort),
     ALLOWED_ORIGINS: frontendOrigin,

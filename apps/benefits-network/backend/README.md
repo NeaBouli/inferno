@@ -8,7 +8,7 @@ Verification backend for the IFR Benefits Network. Enables any business to verif
 npm install
 cp .env.example .env   # edit with your values
 npx prisma generate && npx prisma migrate dev
-npm run dev            # http://localhost:3001
+NODE_ENV=development npm run dev   # http://localhost:3001; development only
 ```
 
 ## Environment Variables
@@ -24,6 +24,7 @@ npm run dev            # http://localhost:3001
 | `BUILDER_REGISTRY_ADDRESS` | Optional BuilderRegistry address for read-only M4 verification | unset |
 | `REWARD_CALLER_ADDRESS` | Optional public caller address checked with `authorizedCaller`; never a private key | unset |
 | `ADMIN_SECRET` | Bearer token for `/api/admin/*`; minimum 32 characters and no documented placeholder | required |
+| `ADMIN_AUDIT_HMAC_KEY` | Dedicated random server-only key for admin client-IP HMACs; at least 32 characters, separate from credentials, signer and reward keys | required except explicit `development`/`test`; ephemeral per process only in those modes |
 | `DATABASE_URL` | Prisma database URL | `file:./dev.db` |
 | `PORT` | Server port | `3001` |
 | `MAX_ACTIVE_SELLER_BUSINESSES_PER_WALLET` | Anti-spam cap for active wallet-owned seller profiles | `5` |
@@ -38,6 +39,22 @@ Redis rate-limit store, and set `BACKEND_REPLICA_COUNT` to the real replica coun
 closed if multiple replicas are declared with SQLite or process-local limits. Redis is connected
 and pinged before the HTTP listener starts, and `/ready` becomes unavailable if the shared store
 is not ready.
+
+### Admin Audit Key Rollout Prerequisite
+
+Before releasing the keyed admin-audit change, Gio or an approved operator must provision
+`ADMIN_AUDIT_HMAC_KEY` in the production backend environment through the authorized secret
+management process. Do not put the value in a PR, shell transcript, Bridge entry or frontend
+configuration. This change does not create or install the production key.
+
+Production startup fails closed if the key is missing, blank or shorter than 32 characters.
+The audit-key guard also requires a key when `NODE_ENV` is unset or unrecognized; only explicit
+`development` and `test` modes permit the ephemeral fallback. Never select those modes in production.
+Do not recreate the backend until the prerequisite is confirmed; after the separately gated
+release, verify readiness without printing environment values. Keep the previous release and
+its rollback stamp available. No database migration or historical digest rewrite is included.
+Existing unkeyed IP digests remain in old audit rows and backups; a new key affects only new
+rows. Key rotation changes future correlation and is not deletion or anonymization.
 
 ## API Endpoints
 
