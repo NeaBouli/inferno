@@ -13,6 +13,7 @@ on:
       - 'scripts/ops/points-voucher-impact.py'
       - 'scripts/ops/test_points_voucher_impact.py'
       - '.github/workflows/points-backend.yml'
+      - 'scripts/test-body-parser-compression.cjs'
   pull_request:
     paths:
       - 'apps/points-backend/**'
@@ -25,6 +26,7 @@ on:
       - 'scripts/ops/points-voucher-impact.py'
       - 'scripts/ops/test_points_voucher_impact.py'
       - '.github/workflows/points-backend.yml'
+      - 'scripts/test-body-parser-compression.cjs'
 
 permissions:
   contents: read
@@ -62,6 +64,8 @@ jobs:
           PYTHONDONTWRITEBYTECODE=1 python3 scripts/ops/test_points_issuance_pause.py
           PYTHONDONTWRITEBYTECODE=1 python3 scripts/ops/test_points_voucher_impact.py
       - run: npm ci
+      - name: Body-parser compression lifecycle regression
+        run: node ../../scripts/test-body-parser-compression.cjs points-backend
       - run: npm run test:dependencies
       - run: npx prisma generate
       - run: npx tsc --noEmit
