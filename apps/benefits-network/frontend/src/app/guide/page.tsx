@@ -31,7 +31,7 @@ const customerSteps = [
   },
   {
     title: 'Review My benefits on this device',
-    body: 'My benefits lists the checkout receipts saved in this browser and can re-verify your signature locally. The server keeps no customer wallet or history, so clearing browser data or switching devices loses this list.',
+    body: 'My benefits lists the checkout receipts saved in this browser and can re-verify your signature locally. Server receipt-history retrieval is retired, so clearing browser data or switching devices loses this list. The backend retains merchant checkout records and can retain conditional Model B wallet-derived reward pseudonyms; retention period not yet defined. See Privacy & data for the full boundary.',
   },
 ];
 
@@ -58,11 +58,11 @@ const sellerSteps = [
   },
   {
     title: 'Review recent customer checks',
-    body: 'Load owner-only session history in pages of 50 to see QR status, masked verified wallet, locked amount and rejection reason, or create a browser-local masked full CSV export.',
+    body: 'Load owner-only checkout history in pages of 50 to see offer terms, status, timestamps, proof outcome and lock source, or create a browser-local CSV export of those merchant records. Merchant checkout records do not expose the customer wallet, signature or measured balance.',
   },
   {
-    title: 'Redeem only after APPROVED',
-    body: 'The customer signs the QR challenge, the backend checks IFRLock on-chain, and the seller wallet signs the one-time redeem action.',
+    title: 'Apply the benefit after REDEEMED',
+    body: 'The customer signs the exact checkout proof. The backend verifies the signature, fresh on-chain eligibility and seller authorization, then redeems the checkout atomically. There is no separate seller redeem action. Apply the benefit only after REDEEMED; a rejected or failed proof leaves the checkout open.',
   },
 ];
 
@@ -74,7 +74,7 @@ const developerItems = [
   ['QR session', 'Request a one-time Action: sessions:create message bound to owner/operator, business and rule; sign it, then POST /api/sessions with x-ifr-nonce.'],
   ['Customer pass', 'POST /api/passes with an empty body creates an opaque pass; seller signs passes:bind scoped to pass and rule; the customer fetches the proof text with its wallet (POST /api/passes/:id/challenge) and confirms with walletAddress + signature (POST /api/passes/:id/confirm), which redeems once.'],
   ['Customer proof', 'POST /api/sessions/:id/challenge with { walletAddress } returns the proof text; POST /api/attest with sessionId, walletAddress and signature redeems once after a fresh on-chain check.'],
-  ['Customer history', 'Device-local only. The server keeps no customer history; /api/customer/history endpoints return 410.'],
+  ['Customer history', 'Receipts are device-local; /api/customer/history endpoints return 410. Merchant checkout records and conditional scoped reward HMACs remain separate backend records; retention period not yet defined.'],
   ['Redeem', 'No separate seller call. The customer proof redeems atomically; POST /api/sessions/:id/redeem returns 410.'],
   ['Seller rewards', 'Rewards are off by default. rewards:apply, rewards:disable and rewards:reward-wallet each use a fresh business-bound nonce; confirming a separate payout wallet also requires that wallet to sign its own one-time proof for the same business and scope.'],
 ];
@@ -114,7 +114,7 @@ export default function GuidePage() {
               Customer proof and seller checkout, without ceremony.
             </h1>
             <p className="mt-6 max-w-3xl text-lg leading-8 text-stone-300">
-              This is the operating guide for the current shop app: customer-presented checkout passes, compatible seller QR proofs, wallet-owned seller profiles, rule-based discounts and seller-signed redemption.
+              This is the operating guide for the current shop app: customer-presented checkout passes, compatible seller QR proofs, wallet-owned seller profiles, rule-based discounts and atomic redemption when the exact customer checkout proof is accepted.
             </p>
           </div>
           <div className="mt-8 flex flex-wrap gap-3">
@@ -199,11 +199,11 @@ export default function GuidePage() {
               </div>
               <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                 <strong className="text-white">Customer signatures</strong>
-                <p className="mt-1">Pass creation, exact-offer confirmation, compatible seller-QR proof or read-only My benefits authorization; none moves tokens.</p>
+                <p className="mt-1">Exact-offer confirmation or compatible seller-QR proof redeems the checkout atomically without moving tokens; pass creation needs no wallet signature, and My benefits re-verifies saved receipt signatures locally without server authorization.</p>
               </div>
               <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
                 <strong className="text-white">Seller signatures</strong>
-                <p className="mt-1">Short-lived server-issued messages for profile, rules, session history, redeem and reward opt-in or opt-out actions.</p>
+                <p className="mt-1">Short-lived server-issued messages for profile, rules, session history, checkout creation or pass binding and reward opt-in or opt-out actions.</p>
               </div>
             </div>
           </div>
