@@ -215,3 +215,20 @@ Helper -> Zod : safeParse
 Zod --> Helper : issues (path/message preserved)
 Helper --> Validation : validation errors
 @enduml
+
+@startuml benefits_zod_compat_path
+participant "Frontend lockgraph" as L
+participant "CDP / Reown schemas" as S
+L -> S : resolve exact Zod4.6.7 candidate
+@enduml
+
+@startuml benefits_wallet_step_wrap_path
+participant Home
+participant WalletStatus
+participant "Step detail paragraph" as P
+participant "Scoped wallet CSS" as C
+Home -> WalletStatus : render customer wallet
+WalletStatus -> P : transactionSteps[].detail
+P -> C : match existing wallet step-grid selector
+C -> P : wrap long identifier within paragraph
+@enduml

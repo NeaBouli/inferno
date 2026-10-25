@@ -1111,3 +1111,54 @@ The candidate includes the exact root pins, reviewed Undici lock leaf,
 guarded compiled-helper adapter and its focused CI gate. Normal installation,
 runtime controls, the full suite and strict audit are verified by the parent;
 GitHub exact-head checks and review remain separate acceptance evidence.
+
+## 16. Benefits frontend Zod compatibility candidate
+
+### Purpose and boundary
+
+The Benefits app exposes wallet connection through `src/app/providers.tsx`
+and `src/lib/wagmi.ts`. Its production graph includes Reown/CDP validation
+schemas originally pinned to Zod3. The candidate changes the frontend dependency
+graph and adds an offline schema regression control. A separately verified
+wallet-step text-wrap correction is recorded below; wallet lifecycle
+implementation remains unchanged.
+
+### Trace and modules
+
+1. `src/app/providers.tsx` consumes `src/lib/wagmi.ts`, which configures
+   Coinbase and conditional WalletConnect connectors.
+2. The lockgraph supplies their transitive CDP/Reown schema dependencies;
+   entry-to-schema reachability in the final browser bundle remains unproven.
+3. Schema regression -> actual installed CDP policy validator, synthetic input.
+
+Status: planned candidate. Typecheck/build, strict production/full audits,
+independent review and responsive visual evidence are required before acceptance.
+The offline schema probe is not full SDK compatibility or W02 lifecycle proof.
+No fourth W02 attempt, deployment or source/privacy release is included.
+
+Diagram sources: `map.puml`, `main-path.puml`.
+
+### Verified wallet-step render boundary (2026-10-25)
+
+Module: Benefits disconnected customer wallet presentation.
+Render hop: `src/app/page.tsx::Home` ->
+`src/components/WalletStatus.tsx::WalletStatus.transactionSteps` -> the direct
+detail paragraph in the existing `sm:grid-cols-4` step grid ->
+`src/app/globals.css` scoped wallet-step text wrapping.
+
+Observed symptom: the `IFRLock.lock(amount)` text range extends 5.109375 px
+and 19.859375 px past its paragraph at viewport widths 1440 and 1180.
+Parent screenshot inspection confirmed overflow from the lock-step card into
+the adjacent gap. Cause: the long identifier has no suitable wrap opportunity
+inside the narrow grid cell. The correction adds only `overflow-wrap: anywhere`
+to the existing step-detail paragraph selector; wording, headings and events
+remain unchanged. The existing selector avoids a WalletStatus markup change.
+
+The H1's separate vertical glyph-range overhang is diagnostic only when no
+paint-clipping ancestor exists and measured previous/next visible content
+bounds prove no overlap. Horizontal overflow and actual clipping remain strict.
+
+Acceptance: the same production build and four-viewports/eight-screenshots
+gate must show the step text within its own container, with source/build hashes,
+asset identity/cache, touch and keyboard-focus evidence. No connected wallet,
+SDK lifecycle, W02, deployment or release qualification is included.

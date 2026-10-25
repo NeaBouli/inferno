@@ -272,3 +272,15 @@ Adapter --> Helper : hash-pinned compiled patch (fail-closed __proto__ + issues 
 Helper --> Validation : validateUserConfigZodType
 Validation --> Zod : safeParse / issues
 @enduml
+
+@startuml benefits_zod_compat_candidate
+[Frontend Zod override candidate] --> [CDP / Reown schemas] : locked4.6.7
+[Wagmi config] --> [Coinbase / WalletConnect connectors] : configuration
+[Coinbase / WalletConnect connectors] ..> [CDP / Reown schemas] : lockgraph dependency
+@enduml
+
+@startuml benefits_wallet_step_wrap
+[Home] --> [WalletStatus transactionSteps] : render disconnected wallet
+[WalletStatus transactionSteps] --> [Step detail paragraph] : step.detail
+[Step detail paragraph] --> [Scoped wallet CSS] : overflow-wrap anywhere
+@enduml
