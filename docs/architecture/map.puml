@@ -237,3 +237,24 @@ Burn --> Snap : setTransparencyMetric / failTransparencyMetric
 Rpc --> Snap : setTransparencyMetric / failTransparencyMetric
 Shell --> Skin : redesign-skin.css
 @enduml
+
+@startmindmap
+* Root dependency maintenance
+** Ajv schema resolution
+*** fast-uri 3.1.9
+** Mocha worker options
+*** serialize-javascript 7.1.3
+@endmindmap
+
+@startuml
+title Root dependency advisory gates
+component "root overrides" as Overrides
+component "fast-uri 3.1.9" as FastUri
+component "serialize-javascript 7.1.3" as SerJs
+component "ajv 8.18.0" as Ajv
+component "mocha 12.0.3" as Mocha
+Overrides --> FastUri : pin GHSA-wjr9-j795-jxcr
+Overrides --> SerJs : pin GHSA-m5mm-p8h7-m29v
+Ajv --> FastUri : uri.js / resolve.js schema refs
+Mocha --> SerJs : buffered-worker-pool serializeOptions
+@enduml

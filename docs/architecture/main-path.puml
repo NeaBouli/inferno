@@ -185,3 +185,16 @@ else RPC failed
   Rpc -> Snap : failTransparencyMetric('commitment' | 'vesting')
 end
 @enduml
+
+@startuml
+title Root dependency advisory resolution
+participant "root overrides" as Overrides
+participant "ajv 8.18.0" as Ajv
+participant "fast-uri 3.1.9" as FastUri
+participant "mocha 12.0.3" as Mocha
+participant "serialize-javascript 7.1.3" as SerJs
+Overrides -> FastUri : override pin
+Ajv -> FastUri : parse/resolve local $id/$ref (no network loader)
+Overrides -> SerJs : override pin
+Mocha -> SerJs : serializeOptions unsafe:true ignoreFunction:true
+@enduml

@@ -994,3 +994,69 @@ Done in this diff: manifest identity/maskable/screenshots, iOS meta, SW
 release v24, version-pin sync in the three contract tests. Untouched by
 design: wallet flow, eligibility, backend, privacy/local-data surfaces and
 the install-card component itself.
+
+## 15. Root dependency advisory trace (fast-uri, serialize-javascript)
+
+### 15.1 Purpose
+
+Advisory-matched dependency maintenance at the root overrides: fast-uri
+3.1.8 -> 3.1.9 (GHSA-wjr9-j795-jxcr, malformed URI host silently rewritten)
+and serialize-javascript 7.0.5 -> 7.1.3 (GHSA-m5mm-p8h7-m29v, spoofed
+function toString emits a bare `</script`). No first-party exploit
+reachability was established; this is preventive dependency hygiene.
+
+### 15.2 Trace
+
+1. `package.json::overrides.fast-uri` 3.1.9 -> `node_modules/fast-uri`
+   (leaf, no dependencies) <- `ajv@8.18.0` requires `fast-uri ^3.0.1` ->
+   `ajv/dist/runtime/uri.js` + `ajv/dist/compile/resolve.js`
+   (schema-reference parsing; normal $id/$ref resolution preserved).
+2. `package.json::overrides.serialize-javascript` 7.1.3 ->
+   `node_modules/serialize-javascript` (leaf, no dependencies) <-
+   `mocha@12.0.3` requires `serialize-javascript ^7.1.1` ->
+   `mocha/lib/nodejs/buffered-worker-pool.cjs::serializeOptions`
+   (`unsafe: true, ignoreFunction: true`); Mocha parallel workers preserved.
+
+### 15.3 Modules
+
+| Modul | Eine Aufgabe | Einstieg | Stand |
+| --- | --- | --- | --- |
+| fast-uri override pin | patched URI host validation for Ajv schema refs | `package.json::overrides.fast-uri`, `package-lock.json` record 3.1.9 | built |
+| serialize-javascript override pin | serializer dependency for Mocha worker-option transport | `package.json::overrides.serialize-javascript`, `package-lock.json` record 7.1.3 | built |
+| dependency regression controls | malformed URI hosts, package-level serializer escape, worker options and local schema refs | `test/mocha-serializer-compat.test.cjs` | built |
+
+### 15.4 Wiring
+
+- Both targets are leaf packages (no own dependencies); the root override is
+  the single hop that moves every consumer onto the patched release.
+- Zod stays at ^3.23.8: hardhat 3.21.0 and hardhat-zod-utils 3.0.8 still
+  require it, so the root audit remains WAIT_UPSTREAM by design.
+
+### 15.5 Gaps
+
+- Root audit needs a supported parent chain with advisory-free Zod versions;
+  no Zod major override, downgrade or fork was attempted.
+- The package-level HTML escaping regression is tested separately from Mocha's
+  actual worker path, which disables function serialization and HTML escaping.
+- Advisory reachability into first-party code is not claimed; the change is
+  matched to the advisories, not to an observed exploit path.
+
+### 15.6 Diagrams
+
+- `docs/architecture/map.puml` — appended block "Root dependency advisory gates".
+- `docs/architecture/main-path.puml` — appended block "Root dependency advisory resolution".
+
+```mermaid
+mindmap
+  root((Root dependency maintenance))
+    Ajv schema resolution
+      fast-uri 3.1.9
+    Mocha worker options
+      serialize-javascript 7.1.3
+```
+
+### 15.7 Next step
+
+Done in this diff: the two override pins, lock records, baseline expectation
+strings and regression controls. Verification (install, probes, CI) stays
+with the parent task; no claim of a fixed vulnerability or green audit here.
