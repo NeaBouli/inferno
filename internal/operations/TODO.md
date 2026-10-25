@@ -1,6 +1,6 @@
 # IFR Protocol — Developer TODO List
 > Last updated: 2026-09-06 | Branch: main
-
+>
 > **Publication note (2026-10-25):** This repository copy is sanitized. Concrete
 > connection details (host aliases and IPs, local machine paths, signer identities,
 > registrar notes) are operator-specific and live in the private operations record.
