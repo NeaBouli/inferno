@@ -288,6 +288,59 @@ cancel, errors and visibility changes with a local request-capture fixture,
 checking that no address, signature, pairing URI or sensitive URL reaches
 analytics. Actual successful requests and vendor retention remain unverified.
 
+**Candidate follow-up, 2026-10-24 — P1 remains OPEN (LIMITATION):** The evidence
+above and F08 describe the original 2026-10-23 review state and are retained as
+historical evidence. The earlier Core-only mitigation is superseded in this
+candidate, not in an established production release. Both docs initializers
+retain `telemetryEnabled: false` and install the same
+[Pulse transport guard](../assets/wallet-telemetry-guard.js) before importing the
+pinned SDK. It suppresses `fetch` and `navigator.sendBeacon` only to the exact
+HTTPS origin `https://pulse.walletconnect.org`, including `/batch` and `/e`.
+It reads only the destination, not request bodies, and does not record payloads.
+Other destinations retain their original transport arguments, receiver, return
+values and errors. The guard is not removed after cancel/disconnect, covering
+delayed flushes. Guard installation failure refuses WalletConnect initialization;
+injected wallet access is not disabled. This is not protection against arbitrary
+same-origin code replacing the transports after activation.
+
+Benefits uses a byte-identical
+[self-contained mirror](../../apps/benefits-network/frontend/src/lib/wallet-telemetry-guard.mjs),
+checked by [the consistency gate](../../scripts/sync-wallet-telemetry-guard.cjs).
+Its deferred connector runs the guard only for an activated WalletConnect path,
+before the base provider can evaluate the SDK, including cached-provider access.
+Injected/Coinbase selection and SDK dormancy remain unchanged. Fixture tests
+exercise actual Wagmi connect/reconnect/disconnect actions, installation failures,
+marker preservation and connector type inference; these are not a real Benefits
+SDK network capture.
+
+The [init-options regression](../../scripts/test-wallet-core-telemetry.cjs)
+checks the actual docs init objects and failure/recovery boundaries. The separate
+[real pinned-SDK fixture](../../scripts/test-wallet-telemetry-integration.cjs)
+executes the unchanged 2.25.0 artifact against local HTTP/WebSocket responders:
+QR open/cancel/retry, a synthetic SDK error, two real flush intervals and
+visibility/pagehide. Guarded native Pulse fetch/beacon counts are zero; removing
+the guard exposes the SDK's `INITIALIZE` batch and synthetic error via both
+transports. No real session is approved or transaction signed. This composition
+does not certify a successful encrypted session, the different Benefits SDK
+version, or every browser/transport/realm.
+
+All 40 docs wallet-script consumers now use `20261024-pulse-guard`; Web3's
+[worker](../web3-sw.js) is `ifr-web3-v24` and precaches the matching core and guard.
+The browser regression seeds a v23 cache, verifies its removal and exact v24
+asset hashes, then loads the shell/core/guard offline after a controlled online
+reload. It does not start with an active v23 worker, and immediate offline use
+after first installation is not established. Previously controlled-client
+upgrade and production served-byte checks therefore remain release gates.
+
+The vendor artifact, dependencies, QR policy and security headers are unchanged.
+This is a narrow known-egress boundary, not removal of internal SDK collection
+or a general network firewall: alternate hosts/transports, saved native methods,
+other realms and wallet-side traffic are outside it. RPC, relay, wallet catalog,
+verification and font services still receive their documented data. Real
+Benefits lifecycle capture, production/cache verification, complete analytics
+suppression and third-party retention remain **NOT VERIFIED**. No zero-telemetry,
+anonymity or deployed-remediation promise is made.
+
 ### P2 — Medium: customer reward pseudonyms and seller checkout records have no end-of-life
 
 **Evidence:** `RewardEvent.rewardDedupKey` is derived from a customer wallet and

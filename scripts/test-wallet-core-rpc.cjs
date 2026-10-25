@@ -21,12 +21,12 @@ const TARGETS = {
   landing: {
     core: path.join(root, "docs", "assets", "wallet-core.js"),
     page: path.join(root, "docs", "index.html"),
-    cacheBust: /assets\/wallet-core\.js\?v=20261010-pr261-notice"/
+    cacheBust: /assets\/wallet-core\.js\?v=20261024-pulse-guard"/
   },
   web3: {
     core: path.join(root, "docs", "web3-wallet-core.js"),
     page: path.join(root, "docs", "web3", "index.html"),
-    cacheBust: /\/web3-wallet-core\.js\?v=20261004-rpc-fallback-v6"/
+    cacheBust: /\/web3-wallet-core\.js\?v=20261024-pulse-guard"/
   }
 };
 const corePath = process.env.WALLET_CORE_PATH || TARGETS[TARGET].core;
@@ -62,13 +62,13 @@ assert.ok(
 );
 if (TARGET === "landing") {
   const faq = fs.readFileSync(path.join(root, "docs", "wiki", "faq.html"), "utf8");
-  const faqCacheBust = /\.\.\/assets\/wallet-core\.js\?v=20261010-pr261-notice"/;
+  const faqCacheBust = /\.\.\/assets\/wallet-core\.js\?v=20261024-pulse-guard"/;
   assert.ok(faqCacheBust.test(faq), "FAQ must cache-bust its wallet core for the RPC notice");
   // Reject obsolete and unversioned page mutations, not just a missing asset reference.
-  for (const oldSuffix of ["?v=20261004-read-provider", ""]) {
-    assert.ok(!TARGETS.landing.cacheBust.test(landing.replace("wallet-core.js?v=20261010-pr261-notice", "wallet-core.js" + oldSuffix)),
+  for (const oldSuffix of ["?v=20261010-pr261-notice", "?v=20261004-read-provider", ""]) {
+    assert.ok(!TARGETS.landing.cacheBust.test(landing.replace("wallet-core.js?v=20261024-pulse-guard", "wallet-core.js" + oldSuffix)),
       "landing must reject the obsolete or unversioned wallet core URL");
-    assert.ok(!faqCacheBust.test(faq.replace("wallet-core.js?v=20261010-pr261-notice", "wallet-core.js" + oldSuffix)),
+    assert.ok(!faqCacheBust.test(faq.replace("wallet-core.js?v=20261024-pulse-guard", "wallet-core.js" + oldSuffix)),
       "FAQ must reject the obsolete or unversioned wallet core URL");
   }
 }

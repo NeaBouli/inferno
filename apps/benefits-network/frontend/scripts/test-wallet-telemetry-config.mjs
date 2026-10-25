@@ -226,4 +226,5 @@ const settle = () => new Promise((resolve) => setTimeout(resolve, 20));
   assert.deepEqual(log, [], `SDK loaded after the session was gone: ${log.join(', ')}`);
 }
 
+await import('./test-wallet-telemetry-activation.mjs');
 console.log('[wallet-telemetry-config] PASS');
