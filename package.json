@@ -41,6 +41,7 @@
     "test:benefits-proof-context": "node scripts/test-benefits-proof-context.cjs",
     "check:benefits-proof-context": "node scripts/check-benefits-proof-context.cjs",
     "test:benefits-node-runtime": "node scripts/test-benefits-node-runtime.cjs",
+    "test:benefits-deploy-selection": "node scripts/test-benefits-deploy-selection.cjs",
     "test:service-base-digests": "node scripts/test-service-base-digests.cjs",
     "test:wiki-heads": "node scripts/test-wiki-head-integrity.cjs",
     "test:forum-ballot-page": "node scripts/test-forum-ballot-page.cjs",

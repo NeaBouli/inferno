@@ -49,7 +49,8 @@ usage() {
 
 case "$MODE" in
   frontend) SERVICES="benefits-frontend" ;;
-  backend|all) SERVICES="benefits-backend benefits-frontend" ;;   # backend first: the frontend proxies its API
+  backend) SERVICES="benefits-backend" ;;
+  all) SERVICES="benefits-backend benefits-frontend" ;;   # backend first: the frontend proxies its API
   status|capacity|verify|rollback|env-vault-v2|env-restore) SERVICES="" ;;
   *) usage ;;
 esac

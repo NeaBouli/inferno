@@ -75,10 +75,22 @@ refusal; nothing on the host changes before step 7:
 8. Content-only sync (`rsync -rl --checksum --delete`, no `-a/-t/-p/-o/-g`, as in #199) and
    `RELEASE_SHA`.
 9. `docker compose --env-file .env.benefits up -d --build --no-deps` for only the Benefits
-   services of the mode (`frontend`: frontend; `backend`/`all`: backend, then frontend), each
+   services of the mode (`frontend`: frontend only; `backend`: backend only;
+   `all`: backend, then frontend), each
    followed by a bounded health wait (`healthy` only).
 10. Exactly one backend, then public checks: `https://shop.ifrunit.tech/`, `/api/health` and
     `/api/ready` must return `200`.
+
+The selected mode controls running-image checks, backup image tags and container
+build/recreation. Source sync and the source/env backup still cover the shared
+Benefits tree; a shared `RELEASE_SHA` is not proof that both runtime images changed.
+Backend-only mode does not rebuild or recreate the frontend. Confirm current mount
+topology and backend/frontend API compatibility in the exact release preflight;
+this selection alone is not a guarantee about live bind-mounted files or recovery.
+
+`npm run test:benefits-deploy-selection` executes only the extracted inert mode
+selection, including an old-backend-both mutation. It does not run SSH, Docker,
+uploads or rollback, and is not a substitute for a separately admitted restore test.
 
 Any failure in steps 8-10 restores automatically: source (content-only), `.env.benefits`
 (`cat` into the root-owned file, so inode, owner and mode stay), the rollback image tags and
