@@ -18,11 +18,9 @@ shared server volume can sit at only a few GB free. During Docker builds the
 free space can briefly fall below `0.5 GB`. Deploys therefore require `4 GB` free and never
 prune shared Docker caches (T-265).
 
-The Benefits Network containers are not the main disk consumers:
-
-- `inferno-benefits-backend` image: about `91 MB`
-- `inferno_benefits_data` volume: about `78 KB`
-- Docker build cache: varies by host; inspect before any cleanup
+Measure current application images, data and Docker build cache on the operator
+host before attributing disk use. Resolve the data volume from the backend's
+actual `/data` mount; do not infer a host volume name or size from this template.
 
 ## Safe Read-Only Checks
 

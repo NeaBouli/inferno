@@ -119,7 +119,11 @@ function isReservedIpv4(ip) {
   if (a === 172 && b >= 16 && b <= 31) return true; // RFC 1918
   if (a === 192 && b === 168) return true; // RFC 1918
   if (a === 100 && b >= 64 && b <= 127) return true; // CGNAT
-  if (a === 192 && b === 0) return true; // IETF protocol assignments + TEST-NET-1
+  // https://www.iana.org/assignments/iana-ipv4-special-registry
+  // The protocol /24 has globally reachable anycast exceptions; TEST-NET-1
+  // is the separate documentation /24. No other 192.0.* range is excluded.
+  if (a === 192 && b === 0 && p[2] === 0) return p[3] !== 9 && p[3] !== 10;
+  if (a === 192 && b === 0 && p[2] === 2) return true;
   if (a === 198 && (b === 18 || b === 19)) return true; // benchmarking
   if (a === 198 && b === 51 && p[2] === 100) return true; // TEST-NET-2
   if (a === 203 && b === 0 && p[2] === 113) return true; // TEST-NET-3
@@ -206,7 +210,7 @@ function main() {
     failed = true;
   }
   for (const f of findings) {
-    console.error(`${f.file}:${f.line}: ${f.cls}: ${f.text}`);
+    console.error(`${f.file}:${f.line}: ${f.cls} (matched value suppressed)`);
     failed = true;
   }
   for (const entry of stale) {

@@ -39,7 +39,8 @@ and source baseline and does not edit the host Compose definition.
 See [retirement, checks and rollback](COPILOT_CHAT_RETIREMENT.md). The helper keeps
 `ai-copilot` for rollback/inspection only; it rejects new plans and deployments
 for that name. Host gate allowlists and required checks need a separate cutover.
-The host assumptions below describe the template any operator deployment follows.
+The generalized historical example below describes the old service layout. It is
+not evidence of the current runtime; verify the operator layout before using it.
 
 ## What a release changes
 
@@ -142,7 +143,7 @@ unverified and use `rollback <stamp>` explicitly; the tool prints the backup sta
 (`YYYYMMDDTHHMMSSZ`), and `backups` lists the available stamps. Gate mode stays unused until the
 v2 installation and its authorization/restore behaviour are accepted.
 
-## Host assumptions (template)
+## Historical host assumptions (2026-09-30, generalized paths)
 
 - Compose project `inferno`, run as `cd $REMOTE_ROOT && docker compose ...`; build contexts
   `./<service>`; containers `inferno-<service>`; images `inferno-<service>:latest`.

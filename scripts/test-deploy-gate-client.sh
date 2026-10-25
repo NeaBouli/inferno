@@ -133,6 +133,21 @@ BENEFITS="$REPO/scripts/deploy-benefits-network.sh"
 STAMP=20261005T101010Z
 VAULT=0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F
 
+# Missing gate configuration refuses a real host action before ssh.
+run 64 env -u DEPLOY_GATE_HOST -u DEPLOY_GATE_SSH_CONFIG bash "$COMPOSE" points-backend status
+assert_out "DEPLOY_GATE_HOST is required"
+refute_log "ssh "
+refute_log "gate "
+run 64 env -u DEPLOY_GATE_SSH_CONFIG bash "$COMPOSE" points-backend status
+assert_out "DEPLOY_GATE_SSH_CONFIG is required"
+refute_log "ssh "
+refute_log "gate "
+# Public HTTP verification does not require a gate connection.
+run 0 env -u DEPLOY_GATE_HOST -u DEPLOY_GATE_SSH_CONFIG bash "$COMPOSE" points-backend verify
+assert_out "public checks pass"
+refute_log "ssh "
+refute_log "gate "
+
 # --- compose service ------------------------------------------------------------
 run 0 env EXPECTED_SHA="$SHA" bash "$COMPOSE" creator-gateway plan
 CREATOR_TSHA="$(sha256 "$GATE_DIR/service-plan.tar")"
@@ -237,6 +252,10 @@ assert_out "verified: https://web3.ifrunit.tech serves $SHA"
 refute_log "direct ssh"
 
 # The verify reads what the gate serves: a docroot that drifted after the deploy fails it.
+run 0 env -u DEPLOY_GATE_HOST -u DEPLOY_GATE_SSH_CONFIG EXPECTED_SHA="$SHA" bash "$WEB3" verify
+assert_out "serves $SHA"
+refute_log "ssh "
+refute_log "gate "
 echo drift > "$GATE_DIR/html/sitemap.xml"
 run 1 env EXPECTED_SHA="$SHA" bash "$WEB3" verify
 assert_out "FAIL  /sitemap.xml"

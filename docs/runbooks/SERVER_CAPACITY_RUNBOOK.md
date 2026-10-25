@@ -7,12 +7,9 @@ live in the private operations record, not in this public runbook.
 
 ## Finding Pattern
 
-The Benefits Network images are not the main source of disk pressure. After the
-backend image hygiene work, the active Benefits images are small relative to a
-shared-host footprint:
-
-- `inferno-benefits-backend`: about 95 MB image payload measured by Docker inspect
-- `inferno-benefits-frontend`: about 56 MB image payload measured by Docker inspect
+Measure current Benefits images, application data and Docker build cache before
+attributing disk pressure. This template does not establish their current sizes
+or which workload is the largest consumer on an operator's host.
 
 On a shared host, large third-party image families and volumes (AI models, forums,
 analytics databases, other applications) usually dominate the footprint. Treat
@@ -92,7 +89,7 @@ Before touching volumes, verify:
 ## Standing Recommendations
 
 1. Keep using `scripts/deploy-benefits-network.sh` for Shop deploys.
-2. Treat Benefits as optimized enough; further savings there are small.
+2. Attribute current disk use before deciding which application needs image or data cleanup.
 3. Keep a server-wide image retention policy for non-Inferno projects before deleting anything.
 4. Investigate large third-party images and anonymous volumes with their owning projects before any cleanup.
 5. Add more disk or move heavyweight services if the host remains shared.

@@ -73,7 +73,8 @@ ssh-Zielalias und `<deploy-root>` für das Bereitstellungsverzeichnis auf dem Ho
 
 ### 1. Dockerfile prüfen
 
-Das aktuelle Multi-Stage-Dockerfile in `apps/points-backend/Dockerfile` baut so:
+The historical multi-stage example below illustrates the packaging. The reviewed
+`apps/points-backend/Dockerfile` is authoritative; do not replace it from this example.
 
 ```dockerfile
 FROM node:22-alpine AS builder

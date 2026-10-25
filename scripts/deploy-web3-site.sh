@@ -196,7 +196,8 @@ esac
 # public URL only, and the gate path above carries its own scoped configuration. The
 # operator-supplied values are interpolated into remote shell strings, so they are
 # required (no live defaults) and allow-listed here, before any ssh/rsync action.
-if [[ "$MODE" != "verify" ]]; then
+case "$MODE" in
+  plan|deploy|rollback)
   for var in SSH_HOST REMOTE_ROOT; do
     [[ -n "${!var}" ]] || die "$var is required (no default shipped): set it to the operator connection/deployment layout per docs/WEB3_SITE_RELEASE.md"
   done
@@ -205,7 +206,10 @@ if [[ "$MODE" != "verify" ]]; then
   done
   [[ "$SSH_HOST" =~ ^[A-Za-z0-9] ]] || die "SSH_HOST must start with a letter or digit (ssh would read '-' as an option)"
   [[ "$MIN_FREE_MB" =~ ^[0-9]+$ ]] || die "MIN_FREE_MB must be an integer"
-fi
+    ;;
+  verify) ;;
+  *) die "unknown mode $MODE (plan|deploy|verify|rollback)" ;;
+esac
 
 case "$MODE" in
   plan)

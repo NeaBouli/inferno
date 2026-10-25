@@ -16,10 +16,6 @@ GATE_MAX_UPLOAD_BYTES=$((512 * 1024 * 1024))   # the tool refuses larger uploads
 
 gate_die() { echo "ERROR: $*" >&2; exit 64; }
 
-[[ -n "$DEPLOY_GATE_HOST" ]] || gate_die "DEPLOY_GATE_HOST is required (no default shipped): set it to the operator's deploy-gate ssh alias"
-[[ -n "$DEPLOY_GATE_SSH_CONFIG" ]] || gate_die "DEPLOY_GATE_SSH_CONFIG is required (no default shipped): set it to the operator's ssh config for the gate"
-[[ "$DEPLOY_GATE_HOST" =~ ^[A-Za-z0-9][A-Za-z0-9._@-]*$ ]] || gate_die "DEPLOY_GATE_HOST must be a plain ssh alias"
-
 # gate <subcommand> [args...]. The forced command splits on whitespace and allows at
 # most 6 words of [A-Za-z0-9._:=@+-]{1,128}; refuse locally what it would deny.
 gate() {
@@ -28,6 +24,11 @@ gate() {
   for a in "$@"; do
     [[ "$a" =~ ^[A-Za-z0-9._:=@+-]{1,128}$ ]] || gate_die "gate argument '$a' is outside [A-Za-z0-9._:=@+-]{1,128}"
   done
+  # Local staging/public verification can source this helper without a gate.
+  # Require the connection only at the boundary that actually invokes ssh.
+  [[ -n "$DEPLOY_GATE_HOST" ]] || gate_die "DEPLOY_GATE_HOST is required (no default shipped): set it to the operator's deploy-gate ssh alias"
+  [[ -n "$DEPLOY_GATE_SSH_CONFIG" ]] || gate_die "DEPLOY_GATE_SSH_CONFIG is required (no default shipped): set it to the operator's ssh config for the gate"
+  [[ "$DEPLOY_GATE_HOST" =~ ^[A-Za-z0-9][A-Za-z0-9._@-]*$ ]] || gate_die "DEPLOY_GATE_HOST must be a plain ssh alias"
   ssh -F "$DEPLOY_GATE_SSH_CONFIG" "$DEPLOY_GATE_HOST" "$@"
 }
 
