@@ -1,14 +1,20 @@
 # Benefits Network Capacity Runbook
 
-Last evidence snapshot: 2026-07-16, from `LIMIT=20 scripts/audit-docker-capacity.sh`.
+This runbook is the public capacity/backup/restore contract for `shop.ifrunit.tech`
+deploy safety. Concrete connection details (ssh alias, deployment root, volume
+mount) and any dated host inventory are operator-specific and live in the private
+operations record. It does not authorize deleting production volumes, active
+images, databases or service data.
 
-This runbook is for `shop.ifrunit.tech` deploy safety. It does not authorize deleting
-production volumes, active images, databases or service data.
+Commands below use placeholders: `<operator-ssh-alias>` for `SSH_HOST`,
+`<deploy-root>` for `REMOTE_ROOT` and `<capacity-volume>` for `REMOTE_VOLUME`. The
+deploy helper ships no defaults and requires them on every mode that touches the
+host; `verify` is public HTTP only.
 
 ## Why This Exists
 
-`shop.ifrunit.tech` frontend deploys have repeatedly completed successfully, but the
-server volume has stayed around `3.5 GB` free / `96%` used. During Docker builds the
+`shop.ifrunit.tech` frontend deploys have repeatedly completed successfully, but a
+shared server volume can sit at only a few GB free. During Docker builds the
 free space can briefly fall below `0.5 GB`. Deploys therefore require `4 GB` free and never
 prune shared Docker caches (T-265).
 
@@ -16,14 +22,15 @@ The Benefits Network containers are not the main disk consumers:
 
 - `inferno-benefits-backend` image: about `91 MB`
 - `inferno_benefits_data` volume: about `78 KB`
-- Build cache (2026-07-16 snapshot): about `757 MB`
+- Docker build cache: varies by host; inspect before any cleanup
 
 ## Safe Read-Only Checks
 
 Capacity-only guardrail check:
 
 ```bash
-scripts/deploy-benefits-network.sh capacity
+SSH_HOST=<operator-ssh-alias> REMOTE_ROOT=<deploy-root> REMOTE_VOLUME=<capacity-volume> \
+  scripts/deploy-benefits-network.sh capacity
 ```
 
 This mode is strictly read-only: it reports the guardrail result, compose status and Docker
@@ -32,13 +39,13 @@ disk usage but never invokes a prune command, even when capacity is below a thre
 Detailed Docker inventory:
 
 ```bash
-LIMIT=20 scripts/audit-docker-capacity.sh
+LIMIT=20 SSH_HOST=<operator-ssh-alias> REMOTE_VOLUME=<capacity-volume> scripts/audit-docker-capacity.sh
 ```
 
 The detailed inventory is read-only. It reports active image owners by container name and
 lists the containers and mount destinations attached to the largest Docker volumes. Use
-that ownership view before deciding whether a volume belongs to Benefits, Parlay,
-Plausible, Ekklesia/Ollama or another service.
+that ownership view before deciding whether a volume belongs to Benefits or to another,
+independently owned project on the shared host.
 
 Benefits live smoke after any operational work:
 
@@ -57,7 +64,8 @@ refusal; nothing on the host changes before step 7:
 
 1. Exact release: `EXPECTED_SHA=<full sha>` equals `HEAD`, the tree is clean, and nothing
    ignored or index-hidden would be uploaded (exit 64/65).
-2. Production env names in `/opt/inferno/.env.benefits` (see below; exit 78).
+2. Production env names in the compose env file (derived as `$REMOTE_ROOT/.env.benefits`;
+   see below; exit 78).
 3. **No schema migration:** the release's `backend/prisma/migrations` must equal the host's
    file for file and byte for byte (exit 78). The backend runs `prisma migrate deploy` on
    start and an image retag cannot undo a schema change, so a migration needs its own
@@ -67,7 +75,7 @@ refusal; nothing on the host changes before step 7:
 5. Exactly one backend replica (exit 78).
 6. The container `inferno-<service>` runs for every service of the mode (nothing to roll
    back to otherwise; exit 78).
-7. Backup in `/opt/inferno/backups/benefits-network-<UTC>/` (a new directory, never reused):
+7. Backup in `$REMOTE_ROOT/backups/benefits-network-<UTC>/` (a new directory, never reused):
    `source.tgz` (the live tree without excludes), `env.benefits` (byte copy, mode `600`),
    `image-id-<service>`, `services`, and the tags `inferno-<service>:rollback-<UTC>`. The tag
    is set on the image ID the running container uses (`docker inspect -f '{{.Image}}'`), never
@@ -102,13 +110,13 @@ that errors fails the restore like a mismatch. A verified restore exits `1` ("ro
 ..."); an unverifiable one exits `70` with the manual command:
 
 ```bash
-scripts/deploy-benefits-network.sh rollback /opt/inferno/backups/benefits-network-<UTC>
+scripts/deploy-benefits-network.sh rollback $REMOTE_ROOT/backups/benefits-network-<UTC>
 ```
 
 `verify` runs only the public checks. `capacity` and `status` stay read-only.
 
-Before any upload or build, deploy modes also check the production settings in
-`/opt/inferno/.env.benefits`. The backend refuses to start without these settings:
+Before any upload or build, deploy modes also check the production settings in the compose
+env file (`$REMOTE_ROOT/.env.benefits`). The backend refuses to start without these settings:
 
 - `SELLER_AUTH_DOMAIN`, `CHAIN_ID`, `RPC_URL`;
 - `IFR_TOKEN_ADDRESS`, `IFRLOCK_ADDRESS`, `COMMITMENT_VAULT_ADDRESS`;
@@ -124,9 +132,10 @@ while the host file dated from August, which broke the shop API until the settin
 scripts/deploy-benefits-network.sh env-vault-v2 0x<40 hex>
 ```
 
-Edits only `COMMITMENT_VAULT_V2_ADDRESS` in `/opt/inferno/.env.benefits`: the address must match
-`^0x[0-9a-fA-F]{40}$` and not be zero; more than one key line refuses (exit 78). The file is
-backed up first to `/opt/inferno/backups/benefits-env-<UTC>/env.benefits` (mode `600`); the
+Edits only `COMMITMENT_VAULT_V2_ADDRESS` in the compose env file (`$REMOTE_ROOT/.env.benefits`):
+the address must match `^0x[0-9a-fA-F]{40}$` and not be zero; more than one key line refuses
+(exit 78). The file is backed up first to `$REMOTE_ROOT/backups/benefits-env-<UTC>/env.benefits`
+(mode `600`); the
 candidate must equal the backup except for that one line (replaced, or appended when absent);
 the write is content-only and the written bytes, inode, mode and owner are verified, with an
 automatic verified restore on mismatch (exit 1; 70 if the restore fails). No env value is
@@ -135,7 +144,7 @@ reviewed `backend` deploy. The backend refuses a V2 address equal to `COMMITMENT
 which that deploy's health check catches and rolls back. Undo:
 
 ```bash
-scripts/deploy-benefits-network.sh env-restore /opt/inferno/backups/benefits-env-<UTC>
+scripts/deploy-benefits-network.sh env-restore $REMOTE_ROOT/backups/benefits-env-<UTC>
 ```
 
 Tests: `npm run test:release-guards` (`scripts/test-deploy-benefits-network.sh` models the host
@@ -143,7 +152,9 @@ and covers each failure path, the never-prune rule and the single-key env edit).
 
 With `DEPLOY_MODE=gate` the deploy modes run through the scoped deploy gate (inferno-deploy
 v2), which applies the same floor and single-backend asserts on the host. Gate mode never
-prunes (the Docker daemon is shared with other projects) and refuses a set `ALLOW_PRUNE`. See [gate mode](COMPOSE_SERVICE_RELEASE.md#gate-mode).
+prunes (the Docker daemon is shared with other projects) and refuses a set `ALLOW_PRUNE`. The
+gate connection is operator-supplied (`DEPLOY_GATE_HOST`, `DEPLOY_GATE_SSH_CONFIG`). See
+[gate mode](COMPOSE_SERVICE_RELEASE.md#gate-mode).
 
 ## Non-root Backend (one-time volume ownership)
 
@@ -157,12 +168,13 @@ concurrent deployment, backup writer, or other host operation against this volum
 
 Use this order; run host commands from a reviewed checkout containing the tool. The normal
 Benefits app upload does not ship `scripts/ops/`. Host commands are for the root operator,
-not the diagnostic-only agent:
+not the diagnostic-only agent. The tool requires the operator backup directory as
+`BACKUP_DIR` (no default; it must stay outside the data volume):
 
 1. **Plan (on the Docker host, read-only):**
 
    ```bash
-   bash scripts/ops/benefits-backend-volume-ownership.sh plan
+   BACKUP_DIR=<host-backup-dir> bash scripts/ops/benefits-backend-volume-ownership.sh plan
    ```
 
    The tool resolves the actual volume name from the container mount through Docker and verifies it is the named volume
@@ -177,14 +189,14 @@ not the diagnostic-only agent:
 2. **Apply (on the Docker host, root only):**
 
    ```bash
-   bash scripts/ops/benefits-backend-volume-ownership.sh apply
+   BACKUP_DIR=<host-backup-dir> bash scripts/ops/benefits-backend-volume-ownership.sh apply
    ```
 
    Before stopping anything, it creates a private tar and verified SHA-256 sidecar in
-   `/opt/inferno/backups/benefits-data-<UTC>-prestop.tar{,.sha256}`. This live tar proves backup
+   `$BACKUP_DIR/benefits-data-<UTC>-prestop.tar{,.sha256}`. This live tar proves backup
    capability; **do not use it as a consistent SQLite restore point**. It then stops only
    `inferno-benefits-backend` and creates the authoritative, stopped-backend backup
-   `/opt/inferno/backups/benefits-data-<UTC>.tar{,.sha256}`. Only after both backups succeed does
+   `$BACKUP_DIR/benefits-data-<UTC>.tar{,.sha256}`. Only after both backups succeed does
    it recursively change the mountpoint and contents to `1000:1000`, restore any permission
    bits cleared by `chown`, and verify every owner and mode. It never deletes or overwrites
    backups and never restarts or releases. A repeated apply with all owners already correct
@@ -234,42 +246,26 @@ Local tests: `node scripts/ops/test-benefits-backend-volume-ownership.cjs` (also
 shims for Docker, root identity and ownership metadata; no production access is required.
 `BENEFITS_VOLUME_PATH` and `BENEFITS_BACKUP_DIR` overrides require
 `BENEFITS_OWNERSHIP_TEST_MODE=1` and are for that harness only. Production uses Docker's
-inspected mountpoint and the fixed `/opt/inferno/backups` directory.
+inspected mountpoint and the operator-supplied `BACKUP_DIR`.
 
-## Current Largest Consumers
+## Reading the Capacity Audit
 
-Largest active images from the latest audit:
-
-| Size | Active containers | Image | Container names |
-|---:|---:|---|---|
-| 3.51 GB | 1 | `ollama/ollama:latest` | `ekklesia-ollama` |
-| 1.43 GB | 1 | `parlay-backend:latest` | `parlay-backend` |
-| 1.24 GB | 1 | `local_discourse/app` | `app` |
-| 339 MB | 1 | `neo4j:5-community` | `parlay-neo4j` |
-| 253 MB | 1 | `clickhouse/clickhouse-server:23.3.7.5-alpine` | `plausible-events` |
-
-Largest local volumes from the latest audit:
-
-| Size | Active refs | Volume | Attached containers / mountpoints |
-|---:|---:|---|---|
-| 3.129 GB | 1 | `plausible_plausible-events` | `plausible-events` -> `/var/lib/clickhouse` |
-| 2.019 GB | 1 | `volumes_ekklesia_ollama` | `ekklesia-ollama` -> `/root/.ollama` |
-| 1.245 GB | 1 | anonymous volume `ad8d889d...` | `plausible-events` -> `/var/log/clickhouse-server` |
-| 561 MB | 1 | `parlay_parlay_neo4j_data` | `parlay-neo4j` -> `/data` |
-| 212 MB | 1 | `parlay_parlay_chroma_data` | `parlay-chroma` -> `/chroma/chroma` |
-
-The latest audit also reported one unhealthy container:
-
-- `parlay-celery-beat`
+On a shared host, large third-party image families and volumes (AI models, forums,
+analytics databases, other applications) usually dominate the footprint; the Benefits
+images and volume are small by comparison. Read the audit's ownership view (which
+containers use an image, which containers and mount destinations attach to a volume)
+and treat every non-Benefits entry as owned by another project. Anonymous or
+unattributed volumes must be inspected and attributed before any action; an unhealthy
+third-party container is the owning project's operational issue, not a Benefits one.
 
 ## Safe Decision Path
 
-1. Keep using `scripts/deploy-benefits-network.sh capacity` for read-only capacity checks.
+1. Keep using the read-only `capacity` mode (with the required env) for capacity checks.
 2. Use `scripts/deploy-benefits-network.sh frontend` only when the deploy floor is met, from a
    clean checkout of the reviewed release commit with `EXPECTED_SHA=<full sha>` set; the script
    refuses other trees, including ignored or assume-unchanged files it would upload (e.g.
    `.env.development.local`, `coverage/`). Below the floor it refuses (exit 75) and never prunes.
-3. Before backend/all deploys, run `scripts/deploy-benefits-network.sh capacity`.
+3. Before backend/all deploys, run the `capacity` mode.
 4. If free space remains below the `4096M` deploy floor, inspect owners of large images/volumes.
 5. Confirm whether non-Benefits services can be stopped, migrated, archived or resized.
 6. Only after explicit approval, perform any destructive action such as volume removal,
@@ -277,23 +273,21 @@ The latest audit also reported one unhealthy container:
 7. After any approved capacity change, run:
 
 ```bash
-scripts/deploy-benefits-network.sh capacity
+SSH_HOST=<operator-ssh-alias> REMOTE_ROOT=<deploy-root> REMOTE_VOLUME=<capacity-volume> \
+  scripts/deploy-benefits-network.sh capacity
 npm run smoke:benefits
 ```
 
 ## Do Not Do Without Explicit Approval
 
 - Do not run `docker system prune --volumes`.
-- Do not delete `plausible_*`, `parlay_*`, `volumes_ekklesia_*`, database, analytics,
-  AI model or anonymous volumes without owner confirmation.
+- Do not delete third-party, database, analytics, AI-model or anonymous volumes without
+  owner confirmation.
 - Do not stop unrelated production services just to free disk for a Benefits deploy.
 - Do not add a prune step to the release path; capacity below the floor is a refusal.
 
-## Open Ops Work
+## Standing Ops Questions (owner decisions, tracked privately)
 
-- Decide whether the server volume should be expanded.
-- Decide ownership and retention policy for `plausible_plausible-events`.
-- Decide whether `volumes_ekklesia_ollama` and `ollama/ollama:latest` belong on this
-  production host.
-- Investigate `parlay-celery-beat` unhealthy status in the Parlay project context.
-- Identify the anonymous `1.245 GB` active volume before any cleanup action.
+- Whether the server volume should be expanded.
+- Ownership and retention policy for large third-party volumes and images on the shared host.
+- Whether heavyweight third-party services belong on the same production host.

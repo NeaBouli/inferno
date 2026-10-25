@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Benefits Network release helper for shop.ifrunit.tech (v1 path: plain ssh shell on
-# the host; via ~/agent-fleet/bin/deploy-shim with SSH_HOST=hetzner-deploy or as owner).
+# the host over the operator-supplied SSH_HOST connection; no host defaults are shipped).
 #
 #   scripts/deploy-benefits-network.sh status | capacity          # read-only
 #   EXPECTED_SHA=<sha> scripts/deploy-benefits-network.sh frontend|backend|all
@@ -21,21 +21,26 @@
 # or erroring check exits 70. Runbook: docs/BENEFITS_CAPACITY_RUNBOOK.md
 #
 # Transfers are content-only (T-255/#199): no -t/-a/-g/-o/-p. The v1 deploy user may
-# write under /opt/inferno but may not set times, owner, group or mode on root-owned
+# write under $REMOTE_ROOT but may not set times, owner, group or mode on root-owned
 # inodes. Env writes use `cat >` so the root-owned file keeps inode, owner and mode.
 set -euo pipefail
 
 MODE="${1:-frontend}"
 ARG="${2:-}"
-SSH_HOST="${SSH_HOST:-hetzner}"
-REMOTE_ROOT="${REMOTE_ROOT:-/opt/inferno}"
+# No live defaults: the operator supplies the ssh alias, the deployment root and the
+# capacity volume (see docs/BENEFITS_CAPACITY_RUNBOOK.md). They are required on every
+# mode that touches the host, before any ssh/scp/rsync action; verify (public HTTP
+# only) and the gate path (its own scoped configuration) do not need them.
+SSH_HOST="${SSH_HOST:-}"
+REMOTE_ROOT="${REMOTE_ROOT:-}"
 LOCAL_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LOCAL_APP="$LOCAL_ROOT/apps/benefits-network/"
 APP_NAME=benefits-network
 SRC="$REMOTE_ROOT/$APP_NAME"
 REMOTE_APP="$SRC/"
-REMOTE_VOLUME="${REMOTE_VOLUME:-/mnt/HC_Volume_106164848}"
-REMOTE_COMPOSE_ENV_FILE="${REMOTE_COMPOSE_ENV_FILE:-$REMOTE_ROOT/.env.benefits}"
+REMOTE_VOLUME="${REMOTE_VOLUME:-}"
+# Derived from the explicit REMOTE_ROOT; set REMOTE_COMPOSE_ENV_FILE to override.
+REMOTE_COMPOSE_ENV_FILE="${REMOTE_COMPOSE_ENV_FILE:-}"
 HEALTH_ATTEMPTS="${HEALTH_ATTEMPTS:-36}"
 HEALTH_INTERVAL="${HEALTH_INTERVAL:-5}"
 PUBLIC_BASE="https://shop.ifrunit.tech"
@@ -57,22 +62,42 @@ esac
 
 # Values below are interpolated into ssh arguments and remote shell strings; allow
 # a plain host alias (no leading '-': ssh would read it as an option) and absolute paths only.
-if [[ ! "$SSH_HOST" =~ ^[A-Za-z0-9][A-Za-z0-9._@-]*$ ]]; then
-  echo "SSH_HOST must match ^[A-Za-z0-9][A-Za-z0-9._@-]*\$." >&2
-  exit 64
+# They are required and validated only on direct modes that touch the host: verify is
+# public HTTP only, and the gate path carries its own scoped configuration.
+needs_remote_config=1
+if [[ "$MODE" == "verify" ]]; then
+  needs_remote_config=0
 fi
-for var in REMOTE_ROOT REMOTE_VOLUME REMOTE_COMPOSE_ENV_FILE; do
-  if [[ ! "${!var}" =~ ^/[A-Za-z0-9._/@-]+$ ]]; then
-    echo "$var must be an absolute path of characters [A-Za-z0-9._/@-]." >&2
+case "${DEPLOY_MODE:-}" in
+  ''|ssh) ;;
+  *) needs_remote_config=0 ;;
+esac
+if (( needs_remote_config )); then
+  for var in SSH_HOST REMOTE_ROOT REMOTE_VOLUME; do
+    if [[ -z "${!var}" ]]; then
+      echo "$var is required (no default shipped): set it to the operator connection/deployment layout per docs/BENEFITS_CAPACITY_RUNBOOK.md." >&2
+      exit 64
+    fi
+  done
+  # Derived relative default under the explicit operator root; override if the env file lives elsewhere.
+  REMOTE_COMPOSE_ENV_FILE="${REMOTE_COMPOSE_ENV_FILE:-$REMOTE_ROOT/.env.benefits}"
+  if [[ ! "$SSH_HOST" =~ ^[A-Za-z0-9][A-Za-z0-9._@-]*$ ]]; then
+    echo "SSH_HOST must match ^[A-Za-z0-9][A-Za-z0-9._@-]*\$." >&2
     exit 64
   fi
-done
-for var in HEALTH_ATTEMPTS HEALTH_INTERVAL; do
-  if [[ ! "${!var}" =~ ^[0-9]+$ ]]; then
-    echo "$var must be an integer." >&2
-    exit 64
-  fi
-done
+  for var in REMOTE_ROOT REMOTE_VOLUME REMOTE_COMPOSE_ENV_FILE; do
+    if [[ ! "${!var}" =~ ^/[A-Za-z0-9._/@-]+$ ]]; then
+      echo "$var must be an absolute path of characters [A-Za-z0-9._/@-]." >&2
+      exit 64
+    fi
+  done
+  for var in HEALTH_ATTEMPTS HEALTH_INTERVAL; do
+    if [[ ! "${!var}" =~ ^[0-9]+$ ]]; then
+      echo "$var must be an integer." >&2
+      exit 64
+    fi
+  done
+fi
 
 # DEPLOY_MODE=gate: the same release through the scoped host gate (inferno-deploy v2).
 # The upload is git archive <EXPECTED_SHA>:apps/benefits-network, so ignored or edited

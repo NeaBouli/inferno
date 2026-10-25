@@ -10,7 +10,7 @@ Earlier `HANDOVER_*.md` files are historical session notes, not current runbooks
 - [Current functionality](CURRENT_FUNCTIONALITY_STATUS.md): implemented,
   operational and pending capabilities; dated test and device evidence.
 - [Deployments](DEPLOYMENTS.md): canonical Mainnet inventory, public addresses,
-  ownership, executed proposals and dated off-chain runtime matrix.
+  ownership and executed proposals.
 - [Architecture map](architecture/MAP.md): scoped security and runtime traces,
   not a complete map of every application. Section 11 maps the Landing/Wiki
   render path: page shell to shared navigation and `redesign-skin.css`.
@@ -45,15 +45,15 @@ mechanics from dormant buyback and planned ecosystem activation.
 
 ### Applications, hosts and release paths
 
-The production runtime is on the Hetzner host under `/opt/inferno`, except
-GitHub Pages. These are the repository's recorded routes, not a new health
+The production runtime is on a shared Docker host under an operator deployment
+root, except GitHub Pages. These are the repository's recorded routes, not a new health
 check. The host Compose definition is operator-managed and is not the root
 development `docker-compose.yml` in this repository.
 
 | Surface/service | Source | Host and release path |
 | --- | --- | --- |
 | Landing/Wiki | `docs/`, including `docs/wiki/` | `ifrunit.tech`, GitHub Pages from `main`/`docs`; a merge publishes this surface. |
-| Web3 PWA | `docs/web3/`, shared wallet/state assets | `web3.ifrunit.tech`, nginx copy at `/opt/inferno/web3-site/html`; `scripts/deploy-web3-site.sh` in gate mode. A Pages merge does not refresh it. |
+| Web3 PWA | `docs/web3/`, shared wallet/state assets | `web3.ifrunit.tech`, nginx copy at `$REMOTE_ROOT/web3-site/html`; `scripts/deploy-web3-site.sh` in gate mode. A Pages merge does not refresh it. |
 | Benefits frontend/backend | `apps/benefits-network/` | `shop.ifrunit.tech` and `/api`; Next.js frontend, Express/TypeScript/Prisma/SQLite backend; `scripts/deploy-benefits-network.sh` in gate mode. |
 | Telegram/verification | `apps/telegram/telegram-bot/` | `verify-api.ifrunit.tech`; `scripts/deploy-compose-service.sh telegram-bot` in gate mode. |
 | Points backend | `apps/points-backend/` | `points-api.ifrunit.tech`; `scripts/deploy-compose-service.sh points-backend` in gate mode. |
@@ -180,7 +180,8 @@ and [retention](BENEFITS_RETENTION_RUNBOOK.md) for target-specific constraints.
   `test/fork/`, the CWA register and its linked reports. Pin observations to
   their date/block; do not publish a guessed live value.
 - Release evidence: archived commit, tar checksum, `RELEASE_SHA` or Web3
-  `web3-release.json`, image IDs, gate output, `/opt/inferno/backups/` stamps,
+  `web3-release.json`, image IDs, gate output, backup stamps under the deployment
+  root's `backups/`,
   health/smoke results and inspected screenshots. Keep secret/data backups
   outside public docs; retain only redacted evidence references here.
 - Benefits privacy/device evidence: [privacy migration](BENEFITS_CUSTOMER_PRIVACY_MIGRATION.md)

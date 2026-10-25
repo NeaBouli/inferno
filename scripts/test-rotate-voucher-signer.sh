@@ -68,7 +68,7 @@ JS
 NODE_PATH="$repo/node_modules" node "$work/proxy.cjs" "$work" "$FORK_RPC" & proxy_pid=$!
 for _ in $(seq 1 50); do [ -s "$work/proxy-port" ] && break; sleep 0.1; done
 proxy="http://127.0.0.1:$(cat "$work/proxy-port")"
-export PATH="$bin:$PATH" REMOTE_ROOT="$host" MAINNET_RPC="$proxy" HEALTH_URL="$proxy/health" HEALTH_INTERVAL=0
+export PATH="$bin:$PATH" SSH_HOST=rotate-test-host REMOTE_ROOT="$host" MAINNET_RPC="$proxy" HEALTH_URL="$proxy/health" HEALTH_INTERVAL=0
 S="$repo/scripts/ops/rotate-voucher-signer.sh"
 BACKUP="$host/.env.points-backend.voucher-rotation.bak"; MARKER="$host/.voucher-signer-last-backup"; LOCK="$host/.voucher-signer-activate.lock"
 env_untouched() {

@@ -2,18 +2,22 @@
 # Client side of the scoped deploy gate (inferno-deploy v2, T-257), sourced by
 # deploy-compose-service.sh, deploy-web3-site.sh and deploy-benefits-network.sh
 # when DEPLOY_MODE=gate. Every host action is one call
-#   ssh -F ~/.fleet-ssh/config hetzner-deploy <subcommand> <args...>
+#   ssh -F "$DEPLOY_GATE_SSH_CONFIG" "$DEPLOY_GATE_HOST" <subcommand> <args...>
 # whose forced command only runs the reviewed root tool: no remote shell, docker
 # or rsync from this side. Uploads are a tar on stdin; the tool checks its SHA-256
 # before it changes anything. Secrets are never passed. Runbook:
 # docs/COMPOSE_SERVICE_RELEASE.md#gate-mode
 
-DEPLOY_GATE_HOST="${DEPLOY_GATE_HOST:-hetzner-deploy}"
-DEPLOY_GATE_SSH_CONFIG="${DEPLOY_GATE_SSH_CONFIG:-$HOME/.fleet-ssh/config}"
+# No live defaults: the operator names the deploy-gate ssh alias and the ssh config
+# file to use. Both stay fail closed: missing or malformed config exits before any ssh.
+DEPLOY_GATE_HOST="${DEPLOY_GATE_HOST:-}"
+DEPLOY_GATE_SSH_CONFIG="${DEPLOY_GATE_SSH_CONFIG:-}"
 GATE_MAX_UPLOAD_BYTES=$((512 * 1024 * 1024))   # the tool refuses larger uploads
 
 gate_die() { echo "ERROR: $*" >&2; exit 64; }
 
+[[ -n "$DEPLOY_GATE_HOST" ]] || gate_die "DEPLOY_GATE_HOST is required (no default shipped): set it to the operator's deploy-gate ssh alias"
+[[ -n "$DEPLOY_GATE_SSH_CONFIG" ]] || gate_die "DEPLOY_GATE_SSH_CONFIG is required (no default shipped): set it to the operator's ssh config for the gate"
 [[ "$DEPLOY_GATE_HOST" =~ ^[A-Za-z0-9][A-Za-z0-9._@-]*$ ]] || gate_die "DEPLOY_GATE_HOST must be a plain ssh alias"
 
 # gate <subcommand> [args...]. The forced command splits on whitespace and allows at

@@ -4,7 +4,9 @@ set -euo pipefail
 
 MODE="${1:-}"
 CONTAINER=inferno-benefits-backend
-BACKUP_DIR=/opt/inferno/backups
+# Operator-supplied backup directory on the host (no live default shipped); the
+# test-mode injection below overrides it for the fixture harness.
+BACKUP_DIR="${BACKUP_DIR:-}"
 STOPPED=0
 
 die() { echo "ERROR: $2" >&2; exit "$1"; }
@@ -31,6 +33,7 @@ if [[ -n "${BENEFITS_VOLUME_PATH+x}${BENEFITS_BACKUP_DIR+x}" ]]; then
   BACKUP_DIR="$BENEFITS_BACKUP_DIR"
   echo "TEST MODE: injected volume and backup paths; use only with Docker/ownership shims."
 fi
+[[ -n "$BACKUP_DIR" ]] || die 64 "BACKUP_DIR is required (no default shipped): set it to the operator backup directory on the host (must stay outside the data volume)."
 for tool in docker timeout find stat sort uniq df; do
   command -v "$tool" >/dev/null || die 69 "Missing required tool: $tool (Linux host required)."
 done

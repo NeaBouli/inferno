@@ -9,7 +9,8 @@
 #   scripts/deploy-compose-service.sh <service> rollback <backup dir>       # operator only
 #
 # DEPLOY_MODE=gate routes plan/deploy/rollback through the scoped host gate
-# (ssh -F ~/.fleet-ssh/config hetzner-deploy ...) and adds status|health|logs|backups;
+# (ssh over the operator-supplied gate connection: DEPLOY_GATE_HOST +
+# DEPLOY_GATE_SSH_CONFIG, see scripts/deploy-gate-lib.sh) and adds status|health|logs|backups;
 # rollback then takes the backup stamp. In gate mode backup, health wait and failure
 # handling are done by the installed host tool within its accepted guarantees; its
 # recovery of a real failing service release is not yet verified, so watch the result
@@ -25,7 +26,7 @@
 # non-zero. Runbook: docs/COMPOSE_SERVICE_RELEASE.md
 #
 # Transfers are content-only (T-255): no -t/-a/-g/-o/-p. The v1 deploy user may
-# write under /opt/inferno (ACL) but may not set times, owner, group or mode on
+# write under $REMOTE_ROOT (ACL) but may not set times, owner, group or mode on
 # root-owned inodes, so metadata flags made rsync exit 23. Changed files are
 # rewritten (new inode owned by the deployer, mode kept), unchanged ones are left
 # alone (--checksum). Every rsync error still fails the run and rolls back.
@@ -33,9 +34,13 @@ set -euo pipefail
 
 SERVICE="${1:-}"
 MODE="${2:-plan}"
-SSH_HOST="${SSH_HOST:-hetzner}"
-REMOTE_ROOT="${REMOTE_ROOT:-/opt/inferno}"
-REMOTE_VOLUME="${REMOTE_VOLUME:-/mnt/HC_Volume_106164848}"
+# No live defaults: the operator supplies the ssh alias, the deployment root and the
+# capacity volume (see docs/COMPOSE_SERVICE_RELEASE.md). They are required on every
+# direct mode that touches the host, before any ssh/rsync action; verify (public HTTP
+# only) and the gate path (its own scoped configuration) do not need them.
+SSH_HOST="${SSH_HOST:-}"
+REMOTE_ROOT="${REMOTE_ROOT:-}"
+REMOTE_VOLUME="${REMOTE_VOLUME:-}"
 HEALTH_ATTEMPTS="${HEALTH_ATTEMPTS:-36}"
 HEALTH_INTERVAL="${HEALTH_INTERVAL:-5}"
 MIN_FREE_MB=4096   # fixed floor: a rebuild below 4 GB free has failed before; never prune here
@@ -65,14 +70,6 @@ fi
 SRC="$REMOTE_ROOT/$SERVICE"
 CONTAINER="inferno-$SERVICE"
 IMAGE="inferno-$SERVICE"
-
-# Values below are interpolated into remote shell strings; allow plain names/paths only.
-for var in SSH_HOST REMOTE_ROOT REMOTE_VOLUME; do
-  [[ "${!var}" =~ ^[A-Za-z0-9._/@-]+$ ]] || die "$var contains characters outside [A-Za-z0-9._/@-]"
-done
-for var in HEALTH_ATTEMPTS HEALTH_INTERVAL; do
-  [[ "${!var}" =~ ^[0-9]+$ ]] || die "$var must be an integer"
-done
 
 # Remote-only files that a release must never ship, overwrite or delete. Env and
 # SQLite files match at any depth; runtime dirs only at the service root, so nested
@@ -294,6 +291,22 @@ case "${DEPLOY_MODE:-}" in
     ;;
   *) die "DEPLOY_MODE must be unset (direct ssh) or gate" ;;
 esac
+
+# plan/deploy/rollback act on the host over ssh; verify is public HTTP only, and the
+# gate path above carries its own scoped configuration. The operator-supplied values
+# are interpolated into remote shell strings, so they are required (no live defaults)
+# and allow-listed here, before any ssh/rsync action.
+if [[ "$MODE" != "verify" ]]; then
+  for var in SSH_HOST REMOTE_ROOT REMOTE_VOLUME; do
+    [[ -n "${!var}" ]] || die "$var is required (no default shipped): set it to the operator connection/deployment layout per docs/COMPOSE_SERVICE_RELEASE.md"
+  done
+  for var in SSH_HOST REMOTE_ROOT REMOTE_VOLUME; do
+    [[ "${!var}" =~ ^[A-Za-z0-9._/@-]+$ ]] || die "$var contains characters outside [A-Za-z0-9._/@-]"
+  done
+  for var in HEALTH_ATTEMPTS HEALTH_INTERVAL; do
+    [[ "${!var}" =~ ^[0-9]+$ ]] || die "$var must be an integer"
+  done
+fi
 
 case "$MODE" in
   plan)

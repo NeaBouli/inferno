@@ -14,8 +14,9 @@
 # Operator only (needs the host operator SSH key; the read-only agent key cannot do this).
 set -euo pipefail
 
-HOST="${SSH_HOST:-hetzner}"
-ROOT="${REMOTE_ROOT:-/opt/inferno}"
+# No live defaults: the operator supplies the ssh alias and the deployment root.
+HOST="${SSH_HOST:-}"
+ROOT="${REMOTE_ROOT:-}"
 ENV_FILE=".env.points-backend"
 NEXT=".voucher-signer-next.key"
 BACKUP="$ENV_FILE.voucher-rotation.bak"   # the original env file; holds the old signer key until cleanup
@@ -93,6 +94,15 @@ PY
 remote_active_address() {
   ssh "$HOST" "cd '$ROOT' && docker compose exec -T points-backend node -e 'const k=process.env.VOUCHER_SIGNER_PRIVATE_KEY; console.log(k ? new (require(\"ethers\").Wallet)(k).address : \"none\")'" | lower
 }
+
+# Validate the mode first (usage meaning preserved), then require the operator
+# connection; all three modes act on the host, so missing config fails before any ssh.
+case "${1:-}" in
+  prepare|status|activate) ;;
+  *) die "usage: $0 prepare|status|activate" ;;
+esac
+[ -n "$HOST" ] || die "SSH_HOST is required (no default shipped): set it to the operator ssh alias"
+[ -n "$ROOT" ] || die "REMOTE_ROOT is required (no default shipped): set it to the operator deployment root"
 
 case "${1:-}" in
   prepare)
