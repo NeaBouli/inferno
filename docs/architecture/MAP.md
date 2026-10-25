@@ -1162,3 +1162,29 @@ Acceptance: the same production build and four-viewports/eight-screenshots
 gate must show the step text within its own container, with source/build hashes,
 asset identity/cache, touch and keyboard-focus evidence. No connected wallet,
 SDK lifecycle, W02, deployment or release qualification is included.
+
+## Benefits Direct-Client Service Selection - 2026-10-25
+
+Purpose: select only the explicitly requested Benefits runtime in the existing
+project release client, without changing deployment authority or transport.
+
+Trace: `scripts/deploy-benefits-network.sh::MODE case` -> `SERVICES` ->
+`require_running_images` and backup service/image list -> `release` build/up/health
+loop -> backup-scoped `restore` service list. The existing Deploy/Ops module and
+diagrams remain; this refines one local selection edge, not a new release path.
+
+| Module | Responsibility | State |
+| --- | --- | --- |
+| Mode selection | frontend only, backend only, or ordered backend plus frontend for all | Built; source regression tested |
+| Existing release/backup | Use selected services for image checks/tags and recreation | Unchanged |
+| Existing restore | Restore the services recorded by that backup | Unchanged; no new live recovery proof |
+
+The legacy combined backend/all branch selected both images. Splitting that
+branch aligns the repository client with the separately corrected host gate.
+The inert selection test uses actual extracted source and rejects the old
+backend-both mutation; it never invokes SSH, Docker, upload or restore.
+
+Shared source/env backup and source sync remain broader than image recreation.
+`RELEASE_SHA` therefore does not establish frontend image replacement; bind mounts
+and API compatibility still require exact-release preflight. No new mode, flag,
+retry, migration, key operation, privilege or global Fleet workflow change.

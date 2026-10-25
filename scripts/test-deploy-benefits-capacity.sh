@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-TMP_DIR="$(mktemp -d)"
+TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/benefits-capacity.XXXXXXXX")"
 trap 'rm -rf "$TMP_DIR"' EXIT
 
 SSH_LOG="$TMP_DIR/ssh.log"

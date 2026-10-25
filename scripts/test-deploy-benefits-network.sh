@@ -7,7 +7,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-TMP="$(mktemp -d)"
+TMP="$(mktemp -d "${TMPDIR:-/tmp}/benefits-release.XXXXXXXX")"
 trap 'rm -rf "$TMP"' EXIT
 FAKES="$TMP/bin"
 LOG="$TMP/calls.log"
@@ -374,12 +374,49 @@ assert_out "inferno-benefits-frontend not healthy: unhealthy"
 assert_rolled_back benefits-frontend
 [[ "$(line_of "curl ")" -gt "$(line_of "up -d --no-build")" ]] || fail "public checks ran on the unhealthy release"
 
-# --- backend mode: a bad frontend after a good backend restores both -------------------
+# --- backend mode never builds, tags or restores the frontend -------------------------
 : > "$LOG"
-BAD_BUILD=benefits-frontend D 1 "$C" backend
+BAD_BUILD=1 D 1 "$C" backend
+assert_log "up -d --build --no-deps benefits-backend"
+assert_rolled_back benefits-backend
+refute_log "build --no-deps benefits-frontend"
+refute_log "docker image tag sha256:old-benefits-frontend"
+refute_log "--no-build --no-deps benefits-backend benefits-frontend"
+refute_log "--no-deps benefits-frontend"
+[[ "$(running benefits-frontend)" == "sha256:old-benefits-frontend" ]] || fail "backend rollback changed frontend"
+[[ "$(cat "$(last_backup)/services")" == "benefits-backend" ]] || fail "backend backup includes another service"
+
+: > "$LOG"
+BAD_BUILD=benefits-frontend D 0 "$C" backend
+assert_out "released: benefits-backend $SHA"
+refute_log "build --no-deps benefits-frontend"
+refute_log "docker image tag sha256:old-benefits-frontend"
+[[ "$(running benefits-frontend)" == "sha256:old-benefits-frontend" ]] || fail "backend release changed frontend"
+: > "$LOG"
+run 0 "$C" rollback "/opt/inferno/backups/$(basename "$(last_backup)")"
+assert_rolled_back benefits-backend
+refute_log "--no-build --no-deps benefits-backend benefits-frontend"
+refute_log "--no-deps benefits-frontend"
+
+# --- all mode: a bad frontend after a good backend restores both -----------------------
+: > "$LOG"
+BAD_BUILD=benefits-frontend D 1 "$C" all
 assert_log "up -d --build --no-deps benefits-backend"
 [[ "$(line_of "up -d --build --no-deps benefits-backend")" -lt "$(line_of "up -d --build --no-deps benefits-frontend")" ]] || fail "frontend built before backend"
 assert_log "up -d --no-build --no-deps benefits-backend benefits-frontend"
+assert_rolled_back benefits-backend benefits-frontend
+
+# --- all mode: healthy builds release both in order and restore both ------------------
+: > "$LOG"
+D 0 "$C" all
+assert_out "released: benefits-backend benefits-frontend $SHA"
+[[ "$(line_of "up -d --build --no-deps benefits-backend")" -lt "$(line_of "up -d --build --no-deps benefits-frontend")" ]] || fail "frontend built before backend"
+for svc in benefits-backend benefits-frontend; do
+  [[ "$(running "$svc")" == "sha256:new-$SHA" ]] || fail "all did not release $svc"
+done
+[[ "$(cat "$(last_backup)/services")" == $'benefits-backend\nbenefits-frontend' ]] || fail "all backup service list wrong"
+: > "$LOG"
+run 0 "$C" rollback "/opt/inferno/backups/$(basename "$(last_backup)")"
 assert_rolled_back benefits-backend benefits-frontend
 
 # --- healthy containers but public check fails: restore, public 200 verified -----------

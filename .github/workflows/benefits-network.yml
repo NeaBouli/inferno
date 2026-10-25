@@ -46,6 +46,8 @@ on:
       - 'apps/telegram/telegram-bot/Dockerfile'
       - 'scripts/test-benefits-frontend-env-isolation.cjs'
       - 'scripts/test-deploy-benefits-capacity.sh'
+      - 'scripts/deploy-benefits-network.sh'
+      - 'scripts/test-benefits-deploy-selection.cjs'
       - 'scripts/report-benefits-device-checklist.js'
       - 'scripts/record-benefits-device-evidence.js'
       - 'scripts/test-benefits-device-checklist.js'
@@ -100,6 +102,8 @@ on:
       - 'apps/telegram/telegram-bot/Dockerfile'
       - 'scripts/test-benefits-frontend-env-isolation.cjs'
       - 'scripts/test-deploy-benefits-capacity.sh'
+      - 'scripts/deploy-benefits-network.sh'
+      - 'scripts/test-benefits-deploy-selection.cjs'
       - 'scripts/report-benefits-device-checklist.js'
       - 'scripts/record-benefits-device-evidence.js'
       - 'scripts/test-benefits-device-checklist.js'
@@ -239,6 +243,8 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: '22'
+      - name: Benefits deploy mode selection regression
+        run: npm run test:benefits-deploy-selection
       - run: npm run preflight:benefits -- --static
 
   test-customer-pass-ui:
