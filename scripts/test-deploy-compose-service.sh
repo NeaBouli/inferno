@@ -237,7 +237,7 @@ refute_log "curl "
 
 # --- env values that reach remote shell strings are allow-listed --------------------
 set +e
-OUT="$(PATH="$FAKES:$PATH" LOG="$LOG" SSH_HOST="x; touch $TMP/injected" EXPECTED_SHA="$SHA" "$C" points-backend plan 2>&1)"
+OUT="$(PATH="$FAKES:$PATH" LOG="$LOG" SSH_HOST="x; touch $TMP/injected" REMOTE_ROOT=/opt/inferno REMOTE_VOLUME=/mnt/fixture-volume EXPECTED_SHA="$SHA" "$C" points-backend plan 2>&1)"
 [[ $? == 1 ]] || fail "SSH_HOST injection not refused"
 set -e
 assert_out "SSH_HOST contains characters"
