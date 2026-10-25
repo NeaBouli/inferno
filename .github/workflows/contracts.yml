@@ -45,6 +45,9 @@ jobs:
       - name: Verify deterministic Hardhat network selection
         run: npm run test:hardhat-config
 
+      - name: Verify guarded Zod4 runtime compatibility
+        run: npm run test:hardhat-zod4-compat
+
       - name: Verify Hardhat 3 script runtime
         run: npm run test:hardhat-runtime
 

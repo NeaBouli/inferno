@@ -995,7 +995,7 @@ release v24, version-pin sync in the three contract tests. Untouched by
 design: wallet flow, eligibility, backend, privacy/local-data surfaces and
 the install-card component itself.
 
-## 15. Root dependency advisory trace (fast-uri, serialize-javascript)
+## 15. Root dependency advisory trace and bounded Zod4 runtime
 
 ### 15.1 Purpose
 
@@ -1004,6 +1004,16 @@ Advisory-matched dependency maintenance at the root overrides: fast-uri
 and serialize-javascript 7.0.5 -> 7.1.3 (GHSA-m5mm-p8h7-m29v, spoofed
 function toString emits a bare `</script`). No first-party exploit
 reachability was established; this is preventive dependency hygiene.
+
+The root overrides now also pin zod 4.6.7 for every dependent, and a
+project-owned root postinstall adapter bounds the only observed Zod3-only
+compiled consumer: the installed `@nomicfoundation/hardhat-zod-utils@3.0.5`
+helper used by Hardhat 3.20.0 config validation. This is a repository-local
+compiled-JS compatibility boundary, not an upstream Zod4 or TypeScript
+support claim.
+
+The lock also carries the separately reviewed PR366 Undici 7.30.1 leaf.
+Its direct consumers are installed hardhat-utils copies requiring ^7.29.0.
 
 ### 15.2 Trace
 
@@ -1016,6 +1026,23 @@ reachability was established; this is preventive dependency hygiene.
    `mocha@12.0.3` requires `serialize-javascript ^7.1.1` ->
    `mocha/lib/nodejs/buffered-worker-pool.cjs::serializeOptions`
    (`unsafe: true, ignoreFunction: true`); Mocha parallel workers preserved.
+3. `package.json::overrides.zod` 4.6.7 -> `node_modules/zod@4.6.7` (single
+   hoisted copy) <- every root dependent, including `hardhat@3.20.0` and
+   `@nomicfoundation/hardhat-zod-utils@3.0.5`.
+4. `package.json::scripts.postinstall` ->
+   `scripts/apply-hardhat-zod4-compat.cjs` (verifies helper version 3.0.5 and
+   zod version 4.6.7, then the compiled file SHA-256, accepting the exact
+   original or the exact patched bytes; any other version/hash is rejected
+   and nothing is written) ->
+   `node_modules/@nomicfoundation/hardhat-zod-utils/dist/src/index.js`
+   (bounded patch: `error.errors` -> `error.issues`,
+   `z.never({errorMap})` -> `z.never({message})`, and a fail-closed rejection
+   of own enumerable `__proto__` keys anywhere in the input before
+   `safeParse`).
+5. `hardhat.config.js` ->
+   `hardhat/dist/src/internal/builtin-plugins/network-manager/type-validation.js::validateNetworkUserConfig`
+   -> patched helper `validateUserConfigZodType` -> zod 4.6.7 `safeParse` ->
+   Hardhat validation errors with preserved path/message.
 
 ### 15.3 Modules
 
@@ -1023,19 +1050,39 @@ reachability was established; this is preventive dependency hygiene.
 | --- | --- | --- | --- |
 | fast-uri override pin | patched URI host validation for Ajv schema refs | `package.json::overrides.fast-uri`, `package-lock.json` record 3.1.9 | built |
 | serialize-javascript override pin | serializer dependency for Mocha worker-option transport | `package.json::overrides.serialize-javascript`, `package-lock.json` record 7.1.3 | built |
+| zod override pin | single zod 4.6.7 for every root dependent | `package.json::overrides.zod`, `package-lock.json` record 4.6.7 | built |
+| root zod4 compat adapter | verified, idempotent compiled patch of the installed hardhat-zod-utils helper | `scripts/apply-hardhat-zod4-compat.cjs` | built |
+| zod4 compat regression gate | installed network validator valid/invalid/`__proto__`/nested-`__proto__`/chainId cases plus adapter idempotence and rejection fixtures | `test/hardhat-zod4-compat.test.cjs` | built |
 | dependency regression controls | malformed URI hosts, package-level serializer escape, worker options and local schema refs | `test/mocha-serializer-compat.test.cjs` | built |
 
 ### 15.4 Wiring
 
-- Both targets are leaf packages (no own dependencies); the root override is
-  the single hop that moves every consumer onto the patched release.
-- Zod stays at ^3.23.8: hardhat 3.21.0 and hardhat-zod-utils 3.0.8 still
-  require it, so the root audit remains WAIT_UPSTREAM by design.
+- fast-uri and serialize-javascript are leaf packages (no own dependencies);
+  the root override is the single hop that moves every consumer onto the
+  patched release.
+- The planned boundary is exactly the hop `package.json` -> root postinstall
+  adapter -> installed hardhat-zod-utils helper -> Hardhat validation. The
+  adapter patches only the compiled `dist/src/index.js` of the installed
+  helper and is scoped to the JavaScript runtime: no TypeScript declaration
+  or upstream Zod4 support is claimed, and `zod/v3` routing is not used.
 
 ### 15.5 Gaps
 
-- Root audit needs a supported parent chain with advisory-free Zod versions;
-  no Zod major override, downgrade or fork was attempted.
+- Upstream hardhat-zod-utils 3.0.5 still ships Zod3-only public source and
+  declarations; the adapter covers the compiled JS runtime only, so the root
+  posture is a project-owned compatibility adapter, not supported upstream
+  Zod4 or TypeScript compatibility.
+- Own string-keyed `__proto__` configuration keys are intentionally unsupported
+  and rejected fail-closed with a path error; Zod4 would otherwise skip those
+  record entries silently.
+- Config objects must be plain objects or arrays with data properties.
+  All own string properties, including non-enumerable fields, are inspected.
+  Accessors and custom prototypes are rejected without invoking getters;
+  function-valued plugin hooks remain opaque. Symlinked install roots are
+  rejected. Production-only installs without the Hardhat graph are skipped.
+- Chain IDs follow an intentional safe-integer contract: Zod4 `.int()`
+  rejects values above 2**53-1 that Zod3 accepted (project chains: 31337,
+  11155111, 1).
 - The package-level HTML escaping regression is tested separately from Mocha's
   actual worker path, which disables function serialization and HTML escaping.
 - Advisory reachability into first-party code is not claimed; the change is
@@ -1043,8 +1090,8 @@ reachability was established; this is preventive dependency hygiene.
 
 ### 15.6 Diagrams
 
-- `docs/architecture/map.puml` — appended block "Root dependency advisory gates".
-- `docs/architecture/main-path.puml` — appended block "Root dependency advisory resolution".
+- `docs/architecture/map.puml` — appended blocks "Root dependency advisory gates" and "Root Zod4 compatibility adapter hop".
+- `docs/architecture/main-path.puml` — appended blocks "Root dependency advisory resolution" and "Root Zod4 compat adapter main path".
 
 ```mermaid
 mindmap
@@ -1053,10 +1100,14 @@ mindmap
       fast-uri 3.1.9
     Mocha worker options
       serialize-javascript 7.1.3
+    Zod validation
+      zod 4.6.7 override
+      postinstall helper adapter
 ```
 
 ### 15.7 Next step
 
-Done in this diff: the two override pins, lock records, baseline expectation
-strings and regression controls. Verification (install, probes, CI) stays
-with the parent task; no claim of a fixed vulnerability or green audit here.
+The candidate includes the exact root pins, reviewed Undici lock leaf,
+guarded compiled-helper adapter and its focused CI gate. Normal installation,
+runtime controls, the full suite and strict audit are verified by the parent;
+GitHub exact-head checks and review remain separate acceptance evidence.

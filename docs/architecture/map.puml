@@ -258,3 +258,17 @@ Overrides --> SerJs : pin GHSA-m5mm-p8h7-m29v
 Ajv --> FastUri : uri.js / resolve.js schema refs
 Mocha --> SerJs : buffered-worker-pool serializeOptions
 @enduml
+
+@startuml
+title Root Zod4 compatibility adapter hop
+component "package.json" as Manifest
+component "postinstall adapter" as Adapter
+component "hardhat-zod-utils 3.0.5 dist" as Helper
+component "zod 4.6.7" as Zod
+component "hardhat 3.20.0 network validation" as Validation
+Manifest --> Adapter : scripts.postinstall
+Manifest --> Zod : overrides.zod 4.6.7
+Adapter --> Helper : hash-pinned compiled patch (fail-closed __proto__ + issues API)
+Helper --> Validation : validateUserConfigZodType
+Validation --> Zod : safeParse / issues
+@enduml
