@@ -757,9 +757,16 @@ module or page.
    a reviewed commit; hosted apps and APIs still need operators; existing
    Governance and Safe controls keep governing privileged actions, and
    public source availability grants no signing authority or Safe control.
-3. The section sits outside the `landing-collapse.js` auto-collapse
-   selection (`main > section`), so it stays open and readable with and
-   without JavaScript; no CSS, JS, navigation or test changes.
+3. The section is a regular `main > section` child, so the existing
+   `docs/assets/landing-collapse.js` disclosure enhancement applies
+   unchanged: with JavaScript it renders default closed as a visible
+   heading with a toggle and opens on click, keyboard or deep link; without
+   JavaScript the static heading, copy and Wiki policy link stay readable.
+   The policy link reuses the existing `btn btn-secondary` classes; no CSS,
+   JS, navigation or asset changes. One mechanical existing-test update:
+   the landing-collapse spec's complete collapsed-ID list gained the new
+   section id, and its exact panel-count expectation tracks the one added
+   disclosure; no assertion was weakened or added.
 
 | Module | Responsibility | Entry | State |
 | --- | --- | --- | --- |
