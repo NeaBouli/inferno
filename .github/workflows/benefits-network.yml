@@ -206,11 +206,13 @@ jobs:
       - run: npm run test:proof-link
       - run: npm run test:discoverability
       - run: npm run test:wallet-selection
+      - run: npm run test:zod-compat
       - run: node ../../../scripts/test-benefits-doc-consistency.cjs
       - name: Receipt context release check (audience/chain must match the frontend)
         run: node ../../../scripts/test-benefits-proof-context.cjs
       - run: npm run typecheck
       - run: npm run build
+      - run: npm run test:zod-compat -- --bundle
       - run: node ../../../scripts/test-benefits-bundle-budget.cjs
       - name: Build and verify Node 22 frontend image
         run: |
@@ -297,6 +299,7 @@ jobs:
           set -euo pipefail
           npm run test:benefits-wallet-telemetry-gate
           npm run build --prefix apps/benefits-network/frontend
+          npm run test:zod-compat --prefix apps/benefits-network/frontend -- --bundle
           (cd apps/benefits-network/frontend && BENEFITS_API_INTERNAL_URL=http://127.0.0.1:9 npx next start --port 3100 >/tmp/benefits-telemetry-next.log 2>&1) &
           server_pid="$!"
           cleanup() {
