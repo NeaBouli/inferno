@@ -27,7 +27,7 @@ assert.equal(packageJson.engines?.node, ">=22.13.0");
 assert.equal(packageJson.dependencies?.ethers, "6.17.0");
 assert.equal(packageJson.devDependencies?.hardhat, "3.20.0");
 assert.equal(packageJson.devDependencies?.["@nomicfoundation/hardhat-verify"], "3.1.3");
-assert.equal(packageJson.overrides?.["serialize-javascript"], "7.0.5");
+assert.equal(packageJson.overrides?.["serialize-javascript"], "7.1.3");
 assert.equal(packageJson.devDependencies?.chai, "6.3.0");
 assert.equal(packageJson.devDependencies?.mocha, "12.0.3");
 assert.equal(
@@ -43,7 +43,7 @@ assert.equal(packageLock.packages?.["node_modules/adm-zip"]?.version, "0.6.1");
 assert.equal(packageLock.packages?.["node_modules/js-yaml"]?.version, "5.4.2");
 assert.equal(
   packageLock.packages?.["node_modules/serialize-javascript"]?.version,
-  "7.0.5"
+  "7.1.3"
 );
 assert.equal(
   packageLock.packages?.["node_modules/serve-handler/node_modules/brace-expansion"]

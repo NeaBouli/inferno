@@ -296,6 +296,10 @@ textarea {
   color: #fff !important;
 }
 
+#customer-wallet .sm\:grid-cols-4 > div > p {
+  overflow-wrap: anywhere;
+}
+
 .shop-footer {
   margin-top: 32px;
   border-top: 1px solid var(--shop-border);

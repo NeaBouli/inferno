@@ -185,3 +185,50 @@ else RPC failed
   Rpc -> Snap : failTransparencyMetric('commitment' | 'vesting')
 end
 @enduml
+
+@startuml
+title Root dependency advisory resolution
+participant "root overrides" as Overrides
+participant "ajv 8.18.0" as Ajv
+participant "fast-uri 3.1.9" as FastUri
+participant "mocha 12.0.3" as Mocha
+participant "serialize-javascript 7.1.3" as SerJs
+Overrides -> FastUri : override pin
+Ajv -> FastUri : parse/resolve local $id/$ref (no network loader)
+Overrides -> SerJs : override pin
+Mocha -> SerJs : serializeOptions unsafe:true ignoreFunction:true
+@enduml
+
+@startuml
+title Root Zod4 compat adapter main path
+participant "package.json" as Manifest
+participant "apply-hardhat-zod4-compat.cjs" as Adapter
+participant "hardhat-zod-utils@3.0.5 dist/src/index.js" as Helper
+participant "zod 4.6.7" as Zod
+participant "hardhat network type-validation" as Validation
+Manifest -> Adapter : postinstall
+Adapter -> Adapter : verify versions + SHA-256 (original OR patched, else reject without write)
+Adapter -> Helper : bounded compiled patch (2 API changes + fail-closed __proto__ guard)
+Validation -> Helper : validateUserConfigZodType(config, schema)
+Helper -> Helper : reject own enumerable __proto__ before safeParse
+Helper -> Zod : safeParse
+Zod --> Helper : issues (path/message preserved)
+Helper --> Validation : validation errors
+@enduml
+
+@startuml benefits_zod_compat_path
+participant "Frontend lockgraph" as L
+participant "CDP / Reown schemas" as S
+L -> S : resolve exact Zod4.6.7 candidate
+@enduml
+
+@startuml benefits_wallet_step_wrap_path
+participant Home
+participant WalletStatus
+participant "Step detail paragraph" as P
+participant "Scoped wallet CSS" as C
+Home -> WalletStatus : render customer wallet
+WalletStatus -> P : transactionSteps[].detail
+P -> C : match existing wallet step-grid selector
+C -> P : wrap long identifier within paragraph
+@enduml
