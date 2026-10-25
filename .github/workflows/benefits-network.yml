@@ -23,6 +23,7 @@ on:
       - 'scripts/test-benefits-csp.js'
       - 'scripts/test-benefits-wallet-telemetry.js'
       - 'scripts/test-benefits-wallet-telemetry-gate.js'
+      - 'scripts/test-benefits-walletconnect-runtime.cjs'
       - 'scripts/test-benefits-wallet-label-fit.js'
       - 'scripts/test-benefits-fullstack-e2e.js'
       - 'scripts/test-benefits-bundle-budget.cjs'
@@ -79,6 +80,7 @@ on:
       - 'scripts/test-benefits-csp.js'
       - 'scripts/test-benefits-wallet-telemetry.js'
       - 'scripts/test-benefits-wallet-telemetry-gate.js'
+      - 'scripts/test-benefits-walletconnect-runtime.cjs'
       - 'scripts/test-benefits-wallet-label-fit.js'
       - 'scripts/test-benefits-fullstack-e2e.js'
       - 'scripts/test-benefits-bundle-budget.cjs'
@@ -259,6 +261,8 @@ jobs:
       - run: npm ci --prefix apps/benefits-network/frontend
       - run: npm ci --prefix apps/benefits-network/backend
       - run: npx playwright install --with-deps chromium
+      - name: WalletConnect guarded SDK runtime contract
+        run: npm run test:benefits-walletconnect-runtime
       - run: npm run test:benefits-money
       - run: npm run test:benefits-pass-ui
       - run: npm run test:benefits-discovery-ui
