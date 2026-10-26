@@ -1314,3 +1314,23 @@ the job supplies no deployment credentials, production SSH or on-chain action.
 Push/pull-request triggers and the other three jobs are unchanged; automatic
 events skip the two manual steps. There remain four explicit Node 22 runtimes.
 Adding this runner path is not a completed Full result or a release approval.
+
+## Operations publication-boundary CI verification - 2026-10-26
+
+Module: public operations documentation and client configuration. This verifies
+the existing web3/Compose release and Benefits direct-client selection surfaces;
+it does not run their operational commands or change deployment authority.
+
+Trace: the 34 tracked surfaces in `scripts/test-publication-boundary.cjs` ->
+`package.json::test:publication-boundary` -> Docs Validator `validate-structure`,
+immediately after the existing public content-trust check. The unchanged checker
+detects personal home paths, non-reserved IPv4 literals and connection-scoped
+shell defaults, with explicit fixture exceptions and stale-allowlist rejection.
+Diagnostics retain file/line/class and suppress matched values.
+
+Existing Markdown/HTML and shell trigger coverage is retained. Both push and
+pull-request filters additionally watch the checker and the previously uncovered
+capacity audit, signer-rotation client and signer-rotation fixture paths. The
+existing Node/Git runner and permissions suffice; no dependency, credential,
+cache, artifact, workflow or runner is added. This structural publication gate
+is not a credential/history scan, deployment test or release approval.

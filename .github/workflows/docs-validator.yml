@@ -85,6 +85,10 @@ on:
       - 'scripts/ops/test-benefits-backend-volume-ownership.cjs'
       - 'scripts/deploy-gate-lib.sh'
       - 'scripts/test-deploy-gate-client.sh'
+      - 'scripts/audit-docker-capacity.sh'
+      - 'scripts/ops/rotate-voucher-signer.sh'
+      - 'scripts/test-rotate-voucher-signer.sh'
+      - 'scripts/test-publication-boundary.cjs'
       - 'scripts/test-ifr-state-unavailable.cjs'
       - 'scripts/test-security-reporting-config.cjs'
       - 'scripts/check-browser-ethers6.cjs'
@@ -177,6 +181,10 @@ on:
       - 'scripts/ops/test-benefits-backend-volume-ownership.cjs'
       - 'scripts/deploy-gate-lib.sh'
       - 'scripts/test-deploy-gate-client.sh'
+      - 'scripts/audit-docker-capacity.sh'
+      - 'scripts/ops/rotate-voucher-signer.sh'
+      - 'scripts/test-rotate-voucher-signer.sh'
+      - 'scripts/test-publication-boundary.cjs'
       - 'scripts/test-ifr-state-unavailable.cjs'
       - 'scripts/test-security-reporting-config.cjs'
       - 'scripts/check-browser-ethers6.cjs'
@@ -297,6 +305,9 @@ jobs:
 
       - name: Check public content trust
         run: npm run test:content-trust
+
+      - name: Check publication boundary
+        run: npm run test:publication-boundary
 
       - name: Check builder page generator output
         run: npm run test:builder-page
