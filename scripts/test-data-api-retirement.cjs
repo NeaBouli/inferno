@@ -31,7 +31,8 @@ assert.match(read('apps/benefits-network/frontend/public/sw.js'), /CACHE_NAME = 
 assert.doesNotMatch(read('apps/benefits-network/frontend/public/sw.js'), /copilot-avatar/);
 assert.match(read('docs/web3-sw.js'), /CACHE_NAME = "ifr-web3-v23"/);
 for (const file of pages.filter(file => read(file).includes('redesign-skin.css'))) {
-  assert.ok(read(file).includes('redesign-skin.css?v=20261023-p1'), `${file}: versioned skin required`);
+  const skinVersion = file === 'docs/wiki/multisig.html' ? '20261026-continuity-anchor' : '20261023-p1';
+  assert.ok(read(file).includes(`redesign-skin.css?v=${skinVersion}`), `${file}: versioned skin required`);
   assert.ok(read(file).includes('page-motion.js?v=20261023-p1'), `${file}: matching motion asset required`);
 }
 console.log(`[data-api-retirement] PASS ${pages.length} pages, runtime modules, CSP frames, deleted assets and cache revision`);
