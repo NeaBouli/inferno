@@ -109,10 +109,17 @@ async function verifyHttpSurface() {
   assert(manifest.name === 'IFR Benefits Network', 'manifest name mismatch');
   assert(manifest.display === 'standalone', 'manifest display must be standalone');
   assert(manifest.start_url === '/', 'manifest start_url must be /');
-  assert(Array.isArray(manifest.icons) && manifest.icons.length >= 2, 'manifest must expose PWA icons');
-  assert(manifest.icons[0].src === '/icons/ifr-token-192-v11.png', 'manifest 192 icon mismatch');
-  assert(manifest.icons[1].src === '/icons/ifr-token-512-v11.png', 'manifest 512 icon mismatch');
-  assert(manifest.icons.every((icon) => icon.purpose === 'any'), 'official icons must not claim maskable safe-zone support');
+  const expectedIcons = [
+    { src: '/icons/ifr-token-192-v11.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+    { src: '/icons/ifr-token-512-v11.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+    { src: '/icons/ifr-token-512-maskable-v1.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+  ];
+  assert(Array.isArray(manifest.icons) && manifest.icons.length === expectedIcons.length, 'manifest must expose exactly the canonical PWA icons');
+  for (const [index, expected] of expectedIcons.entries()) {
+    for (const [key, value] of Object.entries(expected)) {
+      assert(manifest.icons[index]?.[key] === value, `manifest icon ${index} ${key} mismatch`);
+    }
+  }
   log('PWA manifest OK');
 
   await expectSha256('/icons/ifr-icon-32-v2.png', 'cd4f5ca2b84ee3c188c1a9940e51febd966b0796fe078a4489b413b680ff54e8');
@@ -130,7 +137,7 @@ async function verifyHttpSurface() {
   await expectSha256('/icons/icon-512.png', '6f029513ff76f3482418da9792e6f9f3545f0cc18b88740fe1f61db50fbe87f1');
   await fetchOk('/favicon.ico', 'image/x-icon');
   const serviceWorker = await fetchOk('/sw.js', 'javascript');
-  assert((await serviceWorker.text()).includes("ifr-benefits-v25"), 'service worker cache version mismatch');
+  assert((await serviceWorker.text()).includes("ifr-benefits-v26"), 'service worker cache version mismatch');
   log('PWA assets OK');
 
   // Issues one expiring, wallet-free read challenge; never signs or consumes it.
