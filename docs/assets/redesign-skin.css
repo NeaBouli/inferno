@@ -485,6 +485,11 @@ main.main > h2#project-continuity {
   scroll-margin-top: 80px;
 }
 
+/* Keep this fragment navigation immediate while web fonts settle. */
+html:has(main.main > h2#project-continuity:target) {
+  scroll-behavior: auto;
+}
+
 #wiki-wallet-bar * {
   color: inherit;
 }
