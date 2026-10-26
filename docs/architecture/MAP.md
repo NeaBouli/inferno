@@ -1288,3 +1288,29 @@ This proof excludes Next/React UI, wallet approvals, encrypted/valid sessions,
 `CONNECT_SUCCESS`, real restore/disconnect, physical devices, signing,
 transactions, live wallets and production. It is a bounded source/runtime
 qualification, not deployment or whole-wallet acceptance.
+
+## Benefits manual full-preflight CI path - 2026-10-26
+
+Module: Benefits release verification. Trace: existing `workflow_dispatch` ->
+`.github/workflows/benefits-network.yml::test-release-evidence-static` ->
+`package.json::preflight:benefits` -> `scripts/preflight-benefits-release.sh --full`
+-> the unchanged 52-step SDK, frontend, backend and browser fixture sequence.
+
+The existing job retains its static steps and Node 22 setup on the standard
+`ubuntu-latest` runner, with existing action pins and inherited `contents: read`.
+Checkout credentials are not persisted; automatic package-manager caching is
+disabled. Two additional steps run only on the existing manual dispatch event:
+install prerequisites, then execute the full wrapper. Root, SDK, frontend and
+backend dependencies use their existing locks through `npm ci`; SQLite CLI and
+the locked Playwright Chromium/OS libraries support local fixture execution.
+No persistent cache or artifact upload is added.
+
+The exact command is `npm run preflight:benefits -- --full`, with a 90-minute step
+budget. The wrapper retains its clean-tree, SDK-dist, audit and all other checks.
+Migration fixtures use local disposable SQLite data, capacity uses a fake SSH
+transport, and browser/fullstack fixtures use local servers and mock wallets/RPC.
+Package/audit/browser installation may access their normal public registries;
+the job supplies no deployment credentials, production SSH or on-chain action.
+Push/pull-request triggers and the other three jobs are unchanged; automatic
+events skip the two manual steps. There remain four explicit Node 22 runtimes.
+Adding this runner path is not a completed Full result or a release approval.
