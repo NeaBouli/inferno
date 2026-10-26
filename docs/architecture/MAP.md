@@ -1023,6 +1023,11 @@ cache name plus registration query in lockstep.
    deletes only stale `ifr-benefits-*` caches.
 5. `src/app/page.tsx::PwaInstallCard` — Daten: `beforeinstallprompt` /
    platform detection → install CTA and per-platform steps.
+6. `public/sw.js` + `public/manifest.json` →
+   `scripts/smoke-benefits-network.js::verifyHttpSurface` →
+   `npm run smoke:benefits` — Daten: exact v26 cache marker and the canonical 192/512
+   `any` icons plus the separate generated 512 maskable icon; mandatory
+   post-operation/release smoke in the capacity and device-wallet runbooks.
 
 ### 14.3 Module
 
@@ -1043,6 +1048,11 @@ cache name plus registration query in lockstep.
   icons stay byte-identical to the token-list assets (sha256-pinned).
 - Manifest screenshots are real captures of the home route (narrow 780x1688,
   wide 2880x1620) stored under `public/screenshots/`.
+- The live HTTP smoke pins v26 and all three icon entries by path, size,
+  type and purpose. `test-benefits-service-worker.js` runs the actual HTTP
+  verifier against a loopback-only fixture serving the repository's PWA
+  sources/assets: current contracts pass; stale workers, invalid/missing/
+  extra icons, bad nonce, unsigned success and framing-policy drift fail.
 
 ### 14.5 Widerspruch und Lücken
 
@@ -1056,10 +1066,11 @@ cache name plus registration query in lockstep.
 
 ### 14.7 Nächster Schritt
 
-Done in this diff: manifest identity/maskable/screenshots, iOS meta, SW
-release v24, version-pin sync in the three contract tests. Untouched by
-design: wallet flow, eligibility, backend, privacy/local-data surfaces and
-the install-card component itself.
+Current bounded update: the live smoke checks the admitted v26 worker and
+the exact three-icon manifest through the existing service-worker contract
+test's loopback fixture. Service-worker/registration code, PWA assets,
+wallet flow, eligibility, backend, privacy/local-data surfaces and the
+install-card component stay unchanged.
 
 ## 15. Root dependency advisory trace and bounded Zod4 runtime
 

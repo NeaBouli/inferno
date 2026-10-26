@@ -3,6 +3,7 @@
 const assert = require('assert');
 const crypto = require('crypto');
 const fs = require('fs');
+const http = require('http');
 const path = require('path');
 const vm = require('vm');
 
@@ -261,8 +262,98 @@ function assertOfflineFallbackTypography(offline) {
   assert(rootSpacing, 'offline fallback root must set letter-spacing: 0 for all text');
 }
 
+async function assertLiveSmokePwaContract() {
+  const smoke = fs.readFileSync(path.join(repoRoot, 'scripts', 'smoke-benefits-network.js'), 'utf8');
+  const start = smoke.indexOf('const baseUrl =');
+  const end = smoke.indexOf('async function expectText(page, text)');
+  assert(start >= 0 && end > start, 'smoke HTTP verifier boundaries must exist');
+  // Run the real HTTP verifier and helpers without importing browser/wallet dependencies or main().
+  const httpVerifier = `${smoke.slice(start, end)}\nverifyHttpSurface();`;
+  const manifest = JSON.parse(fs.readFileSync(path.join(publicRoot, 'manifest.json'), 'utf8'));
+  let fixture;
+  const headers = {
+    'x-content-type-options': 'nosniff',
+    'x-frame-options': 'DENY',
+    'referrer-policy': 'no-referrer',
+    'permissions-policy': 'camera=(self)',
+    'strict-transport-security': 'max-age=63072000',
+    'content-security-policy': "base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'",
+    'content-security-policy-report-only': "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'self'; worker-src 'self'; frame-src 'self'; manifest-src 'self'",
+  };
+  const server = http.createServer((request, response) => {
+    const url = new URL(request.url, 'http://127.0.0.1');
+    for (const [key, value] of Object.entries({ ...headers, ...fixture.headers, 'content-type': 'application/json' })) response.setHeader(key, value);
+    const json = (value) => response.end(JSON.stringify(value));
+    if (request.method === 'HEAD') return response.end();
+    if (url.pathname === '/api/health') return json({ status: 'ok', chainId: 1 });
+    if (url.pathname === '/api/ready') return json({ status: 'ready', database: 'ok', chainId: 1 });
+    if (url.pathname === '/api/businesses') return json({ offers: [], categories: [], serviceAreas: [], pagination: { limit: 1, total: 0 } });
+    if (url.pathname === '/manifest.json') return json(fixture.manifest);
+    if (url.pathname === '/sw.js') {
+      response.writeHead(200, { 'content-type': 'application/javascript' });
+      return response.end(fixture.worker);
+    }
+    if (url.pathname.startsWith('/icons/') || url.pathname === '/favicon.ico') {
+      const asset = path.join(publicRoot, url.pathname.slice(1));
+      if (!fs.existsSync(asset)) {
+        response.writeHead(404);
+        return response.end();
+      }
+      response.writeHead(200, { 'content-type': url.pathname.endsWith('.ico') ? 'image/x-icon' : 'image/png' });
+      return response.end(fs.readFileSync(asset));
+    }
+    if (url.pathname === '/api/seller/auth-message') {
+      const host = request.headers.host;
+      return json({ domain: host, chainId: 1, nonce: fixture.nonce, timestamp: '2030-01-01T00:00:00Z', expiresAt: '2030-01-01T00:05:00Z',
+        message: `IFR Benefits Network - Seller Authorization\nDomain: ${host}\nChain ID: 1\nOnly sign this message inside ${host}.` });
+    }
+    if (url.pathname === '/api/sessions' && request.method === 'POST') {
+      response.writeHead(fixture.unsignedStatus);
+      return json({ error: 'synthetic unsigned request' });
+    }
+    response.writeHead(404);
+    return response.end();
+  });
+  await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const origin = `http://127.0.0.1:${server.address().port}`;
+  const verify = async (overrides = {}) => {
+    fixture = { manifest, worker: source, nonce: '1'.repeat(64), unsignedStatus: 401, headers: {}, ...overrides };
+    await vm.runInNewContext(httpVerifier, {
+      Buffer, URL, createHash: crypto.createHash,
+      process: { env: { BENEFITS_BASE_URL: origin, NEXT_PUBLIC_CHAIN_ID: '1' } },
+      console: { log() {} },
+      fetch: (url, options) => {
+        assert.strictEqual(new URL(url).origin, origin, 'HTTP fixture must never contact another origin');
+        return fetch(url, options);
+      },
+    }, { filename: 'benefits-smoke-http-fixture.js' });
+  };
+  try {
+    await verify();
+    await assert.rejects(verify({ worker: source.replace('ifr-benefits-v26', 'ifr-benefits-v25') }), /service worker cache version mismatch/);
+    for (const [key, value] of Object.entries({ src: '/icons/incorrect.png', sizes: '192x192', type: 'image/jpeg', purpose: 'any' })) {
+      const invalid = structuredClone(manifest);
+      invalid.icons[2][key] = value;
+      await assert.rejects(verify({ manifest: invalid }), new RegExp(`manifest icon 2 ${key} mismatch`));
+    }
+    const missing = structuredClone(manifest);
+    missing.icons.shift();
+    await assert.rejects(verify({ manifest: missing }), /exactly the canonical PWA icons/);
+    const extra = structuredClone(manifest);
+    extra.icons.push({ ...manifest.icons[0], purpose: 'maskable' });
+    await assert.rejects(verify({ manifest: extra }), /exactly the canonical PWA icons/);
+    await assert.rejects(verify({ nonce: 'invalid' }), /seller auth nonce missing/);
+    await assert.rejects(verify({ unsignedStatus: 200 }), /unsigned session creation returned HTTP 200/);
+    await assert.rejects(verify({ headers: { 'x-frame-options': 'SAMEORIGIN' } }), /Shop x-frame-options must be DENY/);
+  } finally {
+    server.closeAllConnections();
+    await new Promise((resolve) => server.close(resolve));
+  }
+}
+
 async function main() {
   const registrationScript = extractRegistrationScript();
+  await assertLiveSmokePwaContract();
 
   assert(listeners.has('fetch'), 'service worker must register a fetch handler');
   assert(source.includes("const CACHE_NAME = 'ifr-benefits-v26'"), 'service worker cache version must be v26');
