@@ -2,7 +2,7 @@ const { test, expect } = require('@playwright/test');
 const { expandLandingSections } = require('./helpers/landing-collapse');
 
 const COLLAPSED = ['about', 'how', 'tokenomics', 'ecosystem', 'partners', 'architecture', 'trust',
-  'onchain-transparency', 'faq', 'phase3', 'governance'];
+  'onchain-transparency', 'faq', 'phase3', 'governance', 'project-continuity'];
 const OPEN = ['hero', 'wizard', 'token-flow', 'roadmap', 'contracts'];
 const MAIN = '0x77e99917Eca8539c62F509ED1193ac36580A6e7B';
 const normalize = (text) => text.replace(/\s+/g, ' ').trim();
@@ -128,7 +128,7 @@ test('nav click, hashchange and repeated same-hash in-page links expand and scro
 
 test('print exposes every section and address panel without changing screen state', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('.landing-collapse-panel')).toHaveCount(43);
+  await expect(page.locator('.landing-collapse-panel')).toHaveCount(44);
   await page.emulateMedia({ media: 'print' });
   for (const panel of await page.locator('.landing-collapse-panel').all()) await expect(panel).toBeVisible();
   await page.emulateMedia({ media: 'screen' });
