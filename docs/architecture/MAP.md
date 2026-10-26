@@ -782,23 +782,31 @@ wallet, backend, CI, diagrams and navigation stay untouched.
 
 Module: existing Wiki continuity policy. Hop: the Landing policy link or a native
 fragment URL -> `docs/wiki/multisig.html::h2#project-continuity` ->
-`docs/assets/redesign-skin.css::main.main > h2#project-continuity` -> visible
-heading below the existing sticky `#wiki-wallet-bar`.
+`docs/assets/redesign-skin.css` -> visible heading below the existing sticky
+`#wiki-wallet-bar`.
 
-The stable mobile observation placed the heading near viewport y=0 beneath the
-59px bar. The target previously had no scroll margin. A native 80px scroll margin
-now provides clearance; no JavaScript scrolling or header/layout rule changes.
-The shared asset is loaded by 39 Wiki pages and the Landing, while this selector
-matches only the Multisig policy heading. The target page alone bumps its existing
-CSS-link version to `20261026-continuity-anchor`; policy text and controls remain.
+The target retains its native 80px scroll margin. Root scroll behavior becomes
+`auto` only while `main.main > h2#project-continuity:target` matches. This avoids
+the covered target reproduced with downloaded fonts and smooth fragment scrolling;
+no JavaScript scrolling, font policy or header/layout rule changes. The shared
+asset is loaded by 39 Wiki pages and the Landing, while these selectors activate
+only for the Multisig policy heading/fragment. That page alone bumps its existing
+CSS-link version to `20261026-continuity-anchor-v2`; policy text remains intact.
+The owning retirement gate expects this exact revision only for that page.
 
-The owning `tests/browser/wiki-shell.spec.js` covers direct hash and actual policy
-link navigation at 390x844, 375x812, 1440x1000, 1180x820 and 820x1180 after fonts
-and scroll settle: at least 8px below the bar, full unobstructed text, no overflow,
-and existing focus/touch behavior. Its existing neighboring Wiki-shell cases
-remain regression controls. Diagrams stay unchanged. Source qualification and a
-Draft PR do not establish live publication; the release owner verifies the new
-CSS URL/bytes and target visibility after deployment.
+The existing `tests/browser/wiki-shell.spec.js` covers hash and actual policy-link
+navigation at 390x844, 375x812, 1440x1000, 1180x820 and 820x1180 with external
+fonts blocked. A separate controlled font-enabled browser experiment reproduced
+four mobile failures with smooth scrolling and four passes with the scoped auto
+rule, using equal font CSS/binary hashsets. The font-blocked original control pair
+passed, identifying the earlier coverage gap. The trace brackets multiple font
+and layout transitions; it does not identify one unique font-swap instant.
+
+Acceptance remains at least 8px below the bar after fonts and scroll settle,
+full unobstructed text, no overflow, and existing focus/touch behavior. Source
+qualification and a Draft PR do not establish live publication; the release
+owner verifies the new CSS URL/bytes and target visibility, including desktop,
+after deployment. Diagrams remain unchanged.
 
 ## 12. Queued guardian batch binding trace
 
