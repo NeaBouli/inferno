@@ -742,6 +742,42 @@ not a claim of intrinsic contract disablement. The existing Benefits row names
 Model B's per-period Governance `recordMilestone` path and no activated pilot,
 not an authorized-caller reward path. No new measurement or runtime change.
 
+### 11.9 Project-continuity visibility addendum (2026-10-25)
+
+Scope: GH-369; base `a6ba2e28c3c6714240b105dbd4ca947b9d46bc09`. One static
+copy hop on the existing public-documentation path; no new runtime feature,
+module or page.
+
+1. `docs/index.html::#project-continuity` (new short static section between
+   the closed Governance disclosure and Contract Info) ->
+   `docs/wiki/multisig.html::#project-continuity` (existing detailed
+   policy) -> existing public `docs/CORE_DEVELOPER_HANDOVER.md`.
+2. The section restates only the published policy: public code,
+   documentation and handover let new maintainers continue development from
+   a reviewed commit; hosted apps and APIs still need operators; existing
+   Governance and Safe controls keep governing privileged actions, and
+   public source availability grants no signing authority or Safe control.
+3. The section is a regular `main > section` child, so the existing
+   `docs/assets/landing-collapse.js` disclosure enhancement applies
+   unchanged: with JavaScript it renders default closed as a visible
+   heading with a toggle and opens on click, keyboard or deep link; without
+   JavaScript the static heading, copy and Wiki policy link stay readable.
+   The policy link reuses the existing `btn btn-secondary` classes; no CSS,
+   JS, navigation or asset changes. One mechanical existing-test update:
+   the landing-collapse spec's complete collapsed-ID list gained the new
+   section id, and its exact panel-count expectation tracks the one added
+   disclosure; no assertion was weakened or added.
+
+| Module | Responsibility | Entry | State |
+| --- | --- | --- | --- |
+| landing continuity copy | static policy summary + Wiki policy link | `docs/index.html::#project-continuity` | built |
+| wiki continuity policy | detailed current policy + handover link | `docs/wiki/multisig.html::#project-continuity` | built (existing) |
+
+Gap closed: the Landing had no visible pointer to the existing continuity
+policy; the Wiki section and handover were already public. Diagrams remain
+the section-11 files above; this addendum adds no runtime path. Contracts,
+wallet, backend, CI, diagrams and navigation stay untouched.
+
 ## 12. Queued guardian batch binding trace
 
 Scope: task T-242 (PR #168). One path only: the CWA-09 step-2 execute batch
