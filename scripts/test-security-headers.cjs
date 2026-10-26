@@ -93,7 +93,15 @@ function sourceFiles(directory) {
   });
 }
 
-function walletAndRpcUrls(source) {
+const telemetryGuardFile = 'apps/benefits-network/frontend/src/lib/wallet-telemetry-guard.mjs';
+function walletAndRpcUrls(source, file) {
+  if (file === telemetryGuardFile) {
+    // Omit only the reviewed deny comparison from static URL extraction.
+    // An actual Pulse transport literal elsewhere in this same file still fails.
+    const denyComparison = 'new scope.URL(url, scope.document.baseURI).origin === "https://pulse.walletconnect.org"';
+    assert.equal(source.split(denyComparison).length, 2, 'review the exact Pulse deny comparison after guard changes');
+    source = source.replace(denyComparison, 'false');
+  }
   return urls(source).filter((url) => /(?:walletconnect|web3modal|reown|publicnode|drpc|1rpc|alchemy|infura|ankr|(?:^|[.-])rpc[.-])/i
     .test(new URL(url).hostname));
 }
@@ -146,8 +154,19 @@ async function main() {
   checkConnections(benefits, urls(wagmi).filter((url) => new URL(url).hostname !== 'shop.ifrunit.tech'));
   checkConnections(benefits, walletUrls);
   for (const file of sourceFiles('apps/benefits-network/frontend/src')) {
-    checkConnections(benefits, walletAndRpcUrls(read(file)));
+    checkConnections(benefits, walletAndRpcUrls(read(file), file));
   }
+  // Keep operational Pulse calls forbidden, even inside the deny-rule module.
+  const pulseCall = 'fetch("https://pulse.walletconnect.org/e")';
+  assert.throws(() => checkConnections(benefits, walletAndRpcUrls(pulseCall,
+    'apps/benefits-network/frontend/src/other.ts')),
+  /connect-src must allow https:\/\/pulse\.walletconnect\.org/);
+  assert.throws(() => checkConnections(benefits, walletAndRpcUrls(
+    read(telemetryGuardFile) + '\n' + pulseCall, telemetryGuardFile)),
+  /connect-src must allow https:\/\/pulse\.walletconnect\.org/);
+  assert.throws(() => checkConnections(benefits, walletAndRpcUrls(
+    read(telemetryGuardFile) + '\nfetch("https://unreviewed.walletconnect.org")', telemetryGuardFile)),
+  /connect-src must allow https:\/\/unreviewed\.walletconnect\.org/);
   // Coinbase 4.3.6 core/constants.js and WalletLinkWebSocket.js: HTTPS API
   // becomes WSS for its relay. keys.coinbase.com is a popup, not an iframe.
   checkConnections(benefits, ['https://www.walletlink.org', 'wss://www.walletlink.org',
