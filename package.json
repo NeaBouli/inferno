@@ -52,6 +52,7 @@
     "test:sitemap-anchors": "node scripts/check-sitemap-anchors.cjs && node scripts/test-sitemap-anchors.cjs",
     "build:sitemap": "node scripts/check-sitemap-anchors.cjs --write",
     "test:content-trust": "node scripts/test-content-trust.cjs",
+    "test:publication-boundary": "node scripts/test-publication-boundary.cjs",
     "test:builder-page": "node scripts/test-builder-page-generator.cjs",
     "test:cex-fee-policy": "node scripts/test-cex-fee-policy.cjs",
     "test:status-baseline": "node scripts/test-status-baseline.cjs",
