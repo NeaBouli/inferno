@@ -128,3 +128,108 @@ for (const [width, height] of [[320, 740], [375, 812], [390, 844]]) {
     expect(layout.docOverflow, "document has no horizontal overflow").toBeLessThanOrEqual(0);
   });
 }
+
+// Native fragment placement must account for the existing sticky Wiki wallet bar.
+async function settledContinuityGeometry(page) {
+  await page.waitForLoadState("load", { timeout: 10000 });
+  await page.evaluate(() => Promise.race([
+    document.fonts.ready,
+    new Promise((resolve) => setTimeout(resolve, 5000)),
+  ]));
+  const started = Date.now();
+  let previous;
+  let stableSince;
+  while (Date.now() - started < 10000) {
+    const state = await page.locator("h2#project-continuity").evaluate((heading) => {
+      const r = heading.getBoundingClientRect();
+      return [scrollY, r.top, r.height, document.documentElement.scrollHeight,
+        document.fonts.status === "loaded", document.readyState === "complete"];
+    });
+    const same = previous && state.slice(0, 4).every((value, i) => Math.abs(Number(value) - Number(previous[i])) <= 0.5);
+    if (same && state[4] && state[5]) stableSince ??= Date.now();
+    else stableSince = undefined;
+    if (Date.now() - started >= 2000 && stableSince && Date.now() - stableSince >= 1200) break;
+    previous = state;
+    await page.waitForTimeout(200);
+  }
+  expect(stableSince && Date.now() - stableSince >= 1200, "native fragment scroll settles within the bound").toBeTruthy();
+  return page.locator("h2#project-continuity").evaluate((heading) => {
+    const rect = (element) => {
+      const r = element.getBoundingClientRect();
+      return { left: r.left, right: r.right, top: r.top, bottom: r.bottom, width: r.width, height: r.height };
+    };
+    const h = rect(heading);
+    const bar = rect(document.querySelector("#wiki-wallet-bar"));
+    const range = document.createRange();
+    range.selectNodeContents(heading);
+    const lines = [...range.getClientRects()].filter((r) => r.width && r.height);
+    const unobstructed = lines.every((r) => [0.2, 0.5, 0.8].every((part) => {
+      const x = r.left + r.width * part;
+      const y = (r.top + r.bottom) / 2;
+      if (x < 0 || x >= innerWidth || y < 0 || y >= innerHeight) return false;
+      const hit = document.elementFromPoint(x, y);
+      return hit === heading || heading.contains(hit);
+    }));
+    return {
+      heading: h, bar, gap: h.top - bar.bottom, scrollY, width: innerWidth, height: innerHeight,
+      fontsLoaded: document.fonts.status === "loaded", readyComplete: document.readyState === "complete",
+      docOverflow: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      textFits: lines.every((r) => r.left >= h.left - 0.5 && r.right <= h.right + 0.5),
+      unobstructed,
+    };
+  });
+}
+
+for (const [width, height] of [[390, 844], [375, 812], [1440, 1000], [1180, 820], [820, 1180]]) {
+  test.describe("continuity target " + width + "x" + height, () => {
+    test.use({ viewport: { width, height }, hasTouch: width <= 820 });
+    for (const navigation of ["hash", "policy-link"]) {
+      test("wiki continuity anchor " + navigation + " " + width + "x" + height, async ({ page }, testInfo) => {
+        await blockNetwork(page);
+        await page.routeWebSocket("**/*", (socket) => socket.close());
+        if (navigation === "hash") {
+          await page.goto("/wiki/multisig.html#project-continuity", { waitUntil: "domcontentloaded" });
+        } else {
+          await page.goto("/#project-continuity");
+          await expect(page.locator('#project-continuity > .landing-collapse-heading > button')).toHaveAttribute("aria-expanded", "true");
+          const link = page.locator('#project-continuity a[href="wiki/multisig.html#project-continuity"]');
+          await page.keyboard.press("Tab");
+          await link.focus();
+          const control = await link.evaluate((element) => {
+            const r = element.getBoundingClientRect(), style = getComputedStyle(element);
+            return { width: r.width, height: r.height, focused: document.activeElement === element,
+              focusVisible: element.matches(":focus-visible"), outline: style.outlineStyle, outlineWidth: parseFloat(style.outlineWidth) };
+          });
+          expect(control.width).toBeGreaterThanOrEqual(44);
+          expect(control.height).toBeGreaterThanOrEqual(44);
+          expect(control.focused && control.focusVisible && control.outline !== "none" && control.outlineWidth > 0).toBe(true);
+          if (width <= 390) await link.tap();
+          else await link.click();
+        }
+        await expect(page).toHaveURL(/\/wiki\/multisig(?:\.html)?#project-continuity$/);
+        await expect(page.locator("h2#project-continuity")).toHaveText("Project continuity");
+        const geometry = await settledContinuityGeometry(page);
+        await testInfo.attach("continuity-geometry", { body: Buffer.from(JSON.stringify({ navigation, ...geometry })), contentType: "application/json" });
+        if (navigation === "policy-link") {
+          await page.screenshot({ path: testInfo.outputPath("continuity-target-" + width + "x" + height + ".png"), animations: "disabled" });
+        }
+        expect(geometry.fontsLoaded && geometry.readyComplete).toBe(true);
+        expect(geometry.gap, "continuity heading clears sticky header by at least 8px").toBeGreaterThanOrEqual(8);
+        expect(geometry.heading.bottom).toBeLessThanOrEqual(height);
+        expect(geometry.heading.left).toBeGreaterThanOrEqual(0);
+        expect(geometry.heading.right).toBeLessThanOrEqual(width);
+        expect(geometry.docOverflow).toBeLessThanOrEqual(1);
+        expect(geometry.textFits && geometry.unobstructed).toBe(true);
+        const handover = page.getByRole("link", { name: "Core Developer Handover", exact: true });
+        await expect(handover).toHaveAttribute("href", "https://github.com/NeaBouli/inferno/blob/main/docs/CORE_DEVELOPER_HANDOVER.md");
+        await page.keyboard.press("Tab");
+        await handover.focus();
+        await expect(handover).toBeFocused();
+        expect(await handover.evaluate((element) => {
+          const s = getComputedStyle(element);
+          return element.matches(":focus-visible") && s.outlineStyle !== "none" && parseFloat(s.outlineWidth) > 0;
+        })).toBe(true);
+      });
+    }
+  });
+}
