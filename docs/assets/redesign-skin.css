@@ -480,6 +480,11 @@ button[style*="#ff4500"] {
   box-shadow: 0 8px 20px rgba(33, 28, 23, .05);
 }
 
+/* The native policy fragment must clear the sticky Wiki wallet bar. */
+main.main > h2#project-continuity {
+  scroll-margin-top: 80px;
+}
+
 #wiki-wallet-bar * {
   color: inherit;
 }
