@@ -33,6 +33,7 @@
     "test:benefits-csp": "node scripts/test-benefits-csp.js",
     "test:benefits-wallet-telemetry": "node scripts/test-benefits-wallet-telemetry.js",
     "test:benefits-wallet-telemetry-gate": "node scripts/test-benefits-wallet-telemetry-gate.js",
+    "test:benefits-walletconnect-runtime": "node scripts/test-benefits-walletconnect-runtime.cjs",
     "test:benefits-wallet-label-fit": "node scripts/test-benefits-wallet-label-fit.js",
     "test:benefits-support": "node scripts/test-benefits-support-ui.js",
     "test:benefits-fullstack": "node scripts/test-benefits-fullstack-e2e.js",
