@@ -71,7 +71,74 @@ Use that command only with a deliberately prepared test wallet. Never paste the 
 | Desktop Chrome + MetaMask | `shop.ifrunit.tech` | Seller profile, permanent `/s` URL, pass binding, compatible seller QR and checkout-opening signature work; disconnect and reload-reconnect behave per Test Case 2. |
 | Desktop Chrome + Coinbase Wallet extension | `shop.ifrunit.tech` | Wallet entry works or provides a clear fallback. |
 
-WalletConnect modal support remains gated by `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`. Until that production value is set, success criteria are injected wallet support plus clear mobile wallet-browser fallback. Do not treat a successful wallet-app launch as a successful wallet connection; the injected provider, Ethereum Mainnet, signature and transaction steps must still be tested inside the opened wallet browser.
+WalletConnect modal support remains gated by `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID`: the value is a build-time configuration gate, so for any build where that production value is not set, success criteria are injected wallet support plus clear mobile wallet-browser fallback. The production modal and wallet catalog were recorded live on 2026-08-06; that configuration state was not re-verified during the 2026-10-26 metadata preparation and must be re-observed against the admitted release before physical acceptance. Do not treat a successful wallet-app launch as a successful wallet connection; the injected provider, Ethereum Mainnet, signature and transaction steps must still be tested inside the opened wallet browser.
+
+## Acceptance Readiness (Metadata Preparation 2026-10-26)
+
+This section is documentation preparation only. It changes no matrix status, appends no
+evidence and performs no acceptance action; physical closure remains governed by the
+Completion Gate below.
+
+### Source Binding
+
+- Documentation source baseline: `main` at `97bcef89a1a6b90a12d9f6a0af0ae1e37c422757`.
+- Qualified candidate: PR [#372](https://github.com/NeaBouli/inferno/pull/372), head
+  `ecc45342c37e5b15b9e19fa72698e82fadafbcdd`; all five PR workflows were
+  successful at this preparation checkpoint. CI success does not imply deployment.
+- Candidate qualification scope: synthetic pinned-SDK composition with a fixture-only
+  `navigator.onLine` override and guarded Pulse-zero plus mutation/QR/relay/lifecycle/timer
+  controls. This does not establish physical-device or live-release acceptance, approved
+  or encrypted sessions, `CONNECT_SUCCESS`, signing, transactions, or real restore/disconnect.
+- The retained `android-chrome-pwa` physical PASS (2026-08-08, Galaxy Tab S4 Android 10 /
+  Chrome 150) remains historical evidence for that row only; it does not certify the
+  currently deployed bytes.
+
+### Row Readiness
+
+| Checklist ID | Status | Available evidence | Known missing inputs | Next actor |
+| --- | --- | --- | --- | --- |
+| `ios-safari-pwa` | pending | none | tester, iOS/iPadOS + Safari versions, admitted release, test window | WAIT_TESTER |
+| `ios-metamask-customer-proof` | pending | none | tester, iOS + MetaMask versions, admitted release, eligible test wallet | WAIT_TESTER |
+| `ios-coinbase-customer-proof` | pending | none | tester, iOS + Coinbase Wallet versions, admitted release | WAIT_TESTER |
+| `android-chrome-pwa` | pass | physical-device PASS 2026-08-08 (historical; current-release match unknown) | tester, current Android + Chrome versions and admitted release for revalidation | WAIT_TESTER for revalidation; retained PASS unchanged |
+| `android-metamask-customer-proof` | pending | none | tester, Android + MetaMask versions, admitted release, eligible test wallet | WAIT_TESTER |
+| `android-trust-customer-proof` | pending | none | tester, Android + Trust Wallet versions, admitted release | WAIT_TESTER |
+| `android-okx-customer-proof` | pending | none | tester, Android + OKX Wallet versions, admitted release | WAIT_TESTER |
+| `phantom-evm-fallback` | pending | none | tester, device + Phantom versions, admitted release | WAIT_TESTER |
+| `desktop-metamask-seller` | pending | none | tester, desktop Chrome + MetaMask versions, admitted release | WAIT_TESTER |
+| `proof-redeemed-eligible-wallet` | pending | none | tester(s) for customer/seller roles, admitted release, prepared eligible locked customer wallet plus seller wallet | WAIT_TESTER |
+
+Tester names, device/OS/browser/wallet versions and the admitted live release/commit are
+currently unknown or unassigned.
+
+### Required Future Tester Packet
+
+Before any physical acceptance run, the assigned tester must receive, outside chat:
+
+1. Tester assignment plus exact device, OS, browser and wallet-app versions per row.
+2. The admitted exact release/source (public commit or PR head) and the agreed test window.
+3. For cases that use wallets, confirmation of availability and test authority for the
+   relevant customer/seller roles. The eligible-proof row requires a prepared eligible
+   locked test wallet; PWA install/copy/share-only cases need no wallet.
+4. Instruction to record each redacted physical observation through the existing recorder
+   (`npm run qa:benefits-record`); a matrix PASS is accepted only with
+   `--source physical-device` per the existing gate.
+
+Never record keys, seed phrases, funds, real account data, or QR/URI/topic/payload contents
+in evidence notes, screenshots, logs or chat.
+
+### Preparation Acceptance vs Physical Closure
+
+- This preparation is accepted when the checklist validates and this runbook maps every
+  matrix row; it requires no merge, deployment or device action.
+- Physical closure gates are unchanged: at least one iOS/iPadOS wallet-browser customer
+  proof pass, at least one Android wallet-browser customer proof pass, at least one desktop
+  injected seller wallet pass, a readable rejected/ineligible customer proof, and the
+  primary `/p` pass bound to an exact seller offer, redeemed once (`REDEEMED`) by the proof
+  of an eligible locked test wallet and blocked on replay.
+- Real acceptance of the new wallet candidate additionally requires PR #372 integration and
+  an authorized frontend release. PR #370 is no technical prerequisite; PR #371 matters
+  only for its selected release-client path.
 
 ## Test Cases
 
@@ -265,7 +332,8 @@ evidence may document failures or blockers, but cannot close a physical row.
 ## Known Blockers
 
 - The production WalletConnect modal and wallet catalog are live as of 2026-08-06;
-  physical QR pairing, connection and signature evidence is still required.
+  physical QR pairing, connection and signature evidence is still required. That
+  configuration state was not re-verified during the 2026-10-26 metadata preparation.
 - Physical customer-proof -> REDEEMED evidence requires an eligible locked customer wallet;
   the local state machine is automated, while its on-chain eligibility read remains mocked.
 - Production capacity must still be checked read-only immediately before every deploy; keep the 4-GB hard deploy floor and never rely on an earlier free-space snapshot.
