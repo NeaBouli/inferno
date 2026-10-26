@@ -50,6 +50,7 @@
     <a href="wiki/roadmap.html" class="back" rel="nofollow">&larr; Roadmap</a>
     <h1>IFR Protocol &mdash; Developer TODO List</h1>
     <div class="subtitle">Last updated: 2026-09-06 &middot; Branch: main</div>
+    <div class="subtitle">Publication note (2026-10-25): this repository copy is sanitized. Concrete connection details (host aliases and IPs, local machine paths, signer identities, registrar notes) are operator-specific and live in the private operations record. Product, task and status content is unchanged; dated entries describe past states.</div>
 
     <!-- ═══ CURRENT WATCHLIST ═══ -->
     <h2><span class="priority-badge p-critical">WATCH</span> Current Watchlist &mdash; verified 2026-09-06</h2>
@@ -198,7 +199,7 @@
     <ul>
       <li><div class="cb cb-done">&#x2713;</div>Protected topics tested (17.03)</li>
       <li><div class="cb cb-done">&#x2713;</div>Persistent verification &mdash; <code>f30dc3ce</code> (17.03)</li>
-      <li><div class="cb cb-done">&#x2713;</div>SIGNER_WALLETS + VERIFY_PORT in Railway</li>
+      <li><div class="cb cb-done">&#x2713;</div>SIGNER_WALLETS + VERIFY_PORT im damaligen Hosting</li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; Ali Copilot: Bootstrap status &ldquo;NOW ACTIVE&rdquo; (16.04.2026) &mdash; ifr-knowledge.ts, system-prompts.ts, server/index.ts &mdash; dead &ldquo;NOT YET ACTIVE&rdquo; branch entfernt</li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; Ali Copilot: Bootstrap ENDED update (06.06.2026) &mdash; Issue #35 &mdash; lpToken, finaliseTx, ETHRaised=0.030, Proposal #15, Uniswap link, old live wording removed from prompts</li>
       <li><div class="cb cb-done">&#x2713;</div>Ali Phase 2: wallet-specific answers &mdash; closed as superseded by web-chat retirement (#313/#316); POST /api/chat returns 410 (apps/data-api/server/index.ts).</li>
@@ -208,7 +209,7 @@
       <li><div class="cb cb-done">&#x2713;</div>NEXUS GR &mdash; <a href="https://github.com/NeaBouli/inferno/issues/13" target="_blank">Issue #13</a> (19.03)</li>
       <li><div class="cb cb-done">&#x2713;</div>BuilderRegistry API prepared: <code>/api/builders/check</code> + <code>/api/builders/count</code> (auto-aktiv nach env var)</li>
       <li><div class="cb cb-done">&#x2713;</div>BuilderRegistry deployed Mainnet: <a href="https://etherscan.io/address/0xdfe6636DA47F8949330697e1dC5391267CEf0EE3#code" target="_blank"><code>0xdfe6...0EE3</code></a> (20.03.2026)</li>
-      <li><div class="cb cb-done">&#x2713;</div>&#x2705; <code>BUILDER_REGISTRY_ADDR</code> in Railway gesetzt + API selectors fixed (20.03.2026)</li>
+      <li><div class="cb cb-done">&#x2713;</div>&#x2705; <code>BUILDER_REGISTRY_ADDR</code> im damaligen Hosting gesetzt + API selectors fixed (20.03.2026)</li>
     </ul>
 
     <!-- ═══ POST-BOOTSTRAP CHECKLISTE ═══ -->
@@ -219,7 +220,7 @@
         LP Token: <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener">0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</a></span></li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; <strong>Proposals #11+#12: feeExempt(CV+LV)</strong> &mdash; EXECUTED 06.04.2026<br>
         <span style="color:#22c55e;font-size:0.82rem;">Both vaults fully operational. Verified on-chain.</span></li>
-      <li><div class="cb cb-done">&#x2713;</div>&#x2705; Railway: COMMITMENT_VAULT_ADDR + LENDING_VAULT_ADDR gesetzt (04.04.2026)</li>
+      <li><div class="cb cb-done">&#x2713;</div>&#x2705; Hosting: COMMITMENT_VAULT_ADDR + LENDING_VAULT_ADDR gesetzt (04.04.2026)</li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; <strong>Proposal #15: setFeeExempt(LP Token, true)</strong> &mdash; <a href="https://github.com/NeaBouli/inferno/issues/33" target="_blank">Issue #33</a><br>
         <span style="color:#22c55e;font-size:0.82rem;">&#x2705; EXECUTED 08.06.2026 &mdash; LP Token feeExempt = TRUE<br>
         TX: 0xd5a3bc95&hellip; &middot; LP Token: 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</span></li>
@@ -275,7 +276,7 @@
       <li><div class="cb"></div>&#x1F7E1; <strong>inferno-redesign.html Review</strong><br>
         <span style="color:#6b7280;font-size:0.82rem;">
         <a href="https://github.com/NeaBouli/inferno/issues/31" target="_blank">GitHub Issue #31</a> &mdash; NICHT deployen ohne Review + Abnahme!<br>
-        Lokal: /Users/gio/Desktop/repos/inferno/inferno-redesign.html</span></li>
+        Lokale Datei im Operator-Checkout (privater Operations-Record)</span></li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; Bootstrap safety plan documented &mdash; bootstrap.html + faq.html + Ali + TODO (03.04.2026)</li>
     </ul>
 
@@ -316,21 +317,21 @@
     <ul>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; CommitmentVault UI &mdash; WalletConnect + tranche configurator + dashboard (04.04.2026)</li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; LendingVault UI &mdash; Lender + Borrower + Market tabs + loan calculator (04.04.2026)</li>
-      <li><div class="cb cb-done">&#x2713;</div>&#x2705; P2P Lending Market &mdash; <code>lending-market.html</code> + Railway endpoints (04.04.2026)</li>
+      <li><div class="cb cb-done">&#x2713;</div>&#x2705; P2P Lending Market &mdash; <code>lending-market.html</code> + Hosting-API endpoints (04.04.2026)</li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; Collateral Health Monitor in Web3 Borrow panel (wallet loan badges); global liquidation dashboard is deferred until borrowing is active</li>
     </ul>
 
-    <h3>Railway &rarr; Hetzner Migration</h3>
+    <h3>Hosting-Migration (Providerwechsel 06/2026, historisch)</h3>
     <ul>
-      <li><div class="cb cb-done">&#x2713;</div>&#x2705; Telegram Bot: Railway &rarr; Hetzner (09.06.2026) &mdash; <code>inferno-telegram-bot</code> healthy</li>
-      <li><div class="cb cb-done">&#x2713;</div>&#x2705; AI Copilot: Railway &rarr; Hetzner (09.06.2026) &mdash; <code>copilot-api.ifrunit.tech</code> HTTPS live</li>
-      <li><div class="cb cb-done">&#x2713;</div>&#x2705; Railway <code>ifr-ai-copilot</code> Service gestoppt (10.06.2026)</li>
-      <li><div class="cb cb-done">&#x2713;</div>&#x2705; Alle Railway-URLs in docs/ ersetzt &rarr; <code>copilot-api.ifrunit.tech</code></li>
-      <li><div class="cb cb-done">&#x2713;</div>&#x2705; DNS: <code>verify-api.ifrunit.tech</code> &rarr; 135.181.254.229 (Papaki) + SSL</li>
+      <li><div class="cb cb-done">&#x2713;</div>&#x2705; Telegram Bot auf das aktuelle Hosting migriert (09.06.2026) &mdash; <code>inferno-telegram-bot</code> healthy</li>
+      <li><div class="cb cb-done">&#x2713;</div>&#x2705; AI Copilot auf das aktuelle Hosting migriert (09.06.2026) &mdash; <code>copilot-api.ifrunit.tech</code> HTTPS live</li>
+      <li><div class="cb cb-done">&#x2713;</div>&#x2705; Alter Hosting-Dienst <code>ifr-ai-copilot</code> gestoppt (10.06.2026)</li>
+      <li><div class="cb cb-done">&#x2713;</div>&#x2705; Alle alten Hosting-URLs in docs/ ersetzt &rarr; <code>copilot-api.ifrunit.tech</code></li>
+      <li><div class="cb cb-done">&#x2713;</div>&#x2705; DNS: <code>verify-api.ifrunit.tech</code> auf die Server-IP gesetzt (beim Registrar) + SSL</li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; points-backend Migration &rarr; <code>points-api.ifrunit.tech</code> (SQLite, Dockerfile + Prisma engine fix, SSL)</li>
     </ul>
 
-    <h3>Hetzner Extensions (ehem. Railway)</h3>
+    <h3>Hosting-API Extensions (ehem. altes Hosting)</h3>
     <ul>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; Lending Endpoints &mdash; stats, offers, loans/:address, health/:loanId, lender/:address (07.04.2026)</li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; CommitmentVault Endpoints &mdash; tranches/:address, status/:address, p0, leaderboard (07.04.2026)</li>
@@ -399,10 +400,10 @@
       <li><div class="cb cb-done">&#x2713;</div>Bootstrap Stats Race Condition fix</li>
       <li><div class="cb cb-done">&#x2713;</div>Recent Votes Bug fix</li>
       <li><div class="cb cb-done">&#x2713;</div>Bootstrap Voting UX &mdash; 3-state buttons</li>
-      <li><div class="cb cb-done">&#x2713;</div>Bootstrap Voting: Railway API &mdash; <code>POST/GET /api/bootstrap/vote(s)</code></li>
-      <li><div class="cb cb-done">&#x2713;</div>Bootstrap votes persist to file (Railway restart safe)</li>
+      <li><div class="cb cb-done">&#x2713;</div>Bootstrap Voting: damalige Hosting-API &mdash; <code>POST/GET /api/bootstrap/vote(s)</code></li>
+      <li><div class="cb cb-done">&#x2713;</div>Bootstrap votes persist to file (restart-safe auf dem damaligen Hosting)</li>
       <li><div class="cb cb-done">&#x2713;</div>Auto-resubmit &#x2192; Promise.all &#x2192; fetchPublicVotes &mdash; <code>679bf4a7</code></li>
-      <li><div class="cb cb-done">&#x2713;</div>Railway vote endpoints verified live (on-chain verification OK)</li>
+      <li><div class="cb cb-done">&#x2713;</div>Vote endpoints live verifiziert (historisches Hosting; on-chain verification OK)</li>
       <li><div class="cb cb-done">&#x2713;</div>Bootstrap Contribution Listener Bot</li>
       <li><div class="cb cb-done">&#x2713;</div><code>wallet-guide.html</code> &mdash; 27th wiki page</li>
       <li><div class="cb cb-done">&#x2713;</div>Wiki Sidebar reorder &mdash; 6 sections &mdash; <code>1ca41f5f</code></li>
@@ -427,7 +428,7 @@
         <span style="color:#6b7280;font-size:0.8rem;">_isMobileOrTablet(): Smartphones + Tablets (inkl. iPadOS 13+). _showDesktopOnlyModal(): Desktop-only Modal. connect() + autoReconnect() blockieren auf Mobile. Greift auf allen 34 HTML-Seiten automatisch.</span></li>
       <li><div class="cb cb-done">&#x2713;</div>WalletConnect v2 QR build &mdash; closed: same-origin provider bundle integrated in #131 (docs/assets/wallet-core.js); real-device parity remains open (JUL-11).</li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; IFR Price Widget + <code>/api/ifr/price</code> endpoint (04.04.2026)<br>
-        <span style="color:#6b7280;font-size:0.8rem;">Landing page: live API/TWAP feed after LP live, served through Hetzner API</span></li>
+        <span style="color:#6b7280;font-size:0.8rem;">Landing page: live API/TWAP feed after LP live, served through the Hosting-API</span></li>
       <li><div class="cb cb-done">&#x2713;</div>WalletConnect Phase 2: 1,000-IFR Copilot gate &mdash; closed as superseded by web-chat retirement (#313); POST /api/chat returns 410 (apps/data-api/server/index.ts).</li>
       <li><div class="cb"></div>Uniswap link (after LP)</li>
     </ul>
@@ -448,8 +449,8 @@
       <li><div class="cb cb-done">&#x2713;</div>AUDIT_REPORT_20260316.md</li>
       <li><div class="cb cb-done">&#x2713;</div>ifr_icon_32.svg + robots.txt AI bots</li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; .env security verified (04.04.2026) &mdash; gitignore + never committed + .env.example updated</li>
-      <li><div class="cb cb-done">&#x2713;</div>&#x2705; DEPLOYER_PRIVATE_KEY in .env &mdash; Bewusste Entscheidung: behalten bis Projektabschluss (07.04.2026)<br>
-        <span style="color:#6b7280;font-size:0.8rem;">Deployer hat keine Governance-Rechte mehr. Key f&uuml;r Sepolia-Deploys + Testnet-Scripts. Nie committed (.gitignore), kein Risiko.</span></li>
+      <li><div class="cb cb-done">&#x2713;</div>&#x2705; Lokale Deployer-Key-Aufbewahrung &mdash; damalige Entscheidung (07.04.2026)<br>
+        <span style="color:#6b7280;font-size:0.8rem;">Deployer hat keine Governance-Rechte mehr. Key wurde f&uuml;r Sepolia-Deploys + Testnet-Scripts ben&ouml;tigt. Nie committed (.gitignore); Details der Aufbewahrung: privater Operations-Record.</span></li>
       <li><div class="cb cb-done">&#x2713;</div>&#x2705; ChatGPT External Audit published (04.04.2026) &mdash; security.html + faq.html + AUDIT_CHATGPT_19032026.md</li>
         <li><div class="cb"></div>&#x1F512; Root dependency modernization &mdash; Waffle/Ganache critical path removed; Hardhat 2 / Ethers 5 migration and remaining non-critical advisories continue as a separate compatibility project</li>
     </ul>

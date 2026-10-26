@@ -8,7 +8,8 @@
 #   scripts/deploy-web3-site.sh rollback <remote backup dir>        # operator only
 #
 # DEPLOY_MODE=gate routes plan/deploy/rollback through the scoped host gate
-# (ssh -F ~/.fleet-ssh/config hetzner-deploy ...) and adds status|health|backups;
+# (ssh over the operator-supplied gate connection: DEPLOY_GATE_HOST +
+# DEPLOY_GATE_SSH_CONFIG, see scripts/deploy-gate-lib.sh) and adds status|health|backups;
 # rollback then takes the backup stamp. Unset DEPLOY_MODE keeps the direct path below.
 #
 # deploy: exact-SHA docroot (git archive, never the working tree, including
@@ -18,16 +19,20 @@
 # are never touched. Runbook: docs/WEB3_SITE_RELEASE.md
 #
 # Transfers are content-only (T-255): no -t/-a/-g/-o/-p. The v1 deploy user may
-# write under /opt/inferno (ACL) but may not set times, owner, group or mode on
+# write under $REMOTE_ROOT (ACL) but may not set times, owner, group or mode on
 # root-owned inodes, so metadata flags made rsync exit 23. Changed files are
 # rewritten (new inode owned by the deployer, mode kept), unchanged ones are left
 # alone (--checksum). Every rsync error still fails the run.
 set -euo pipefail
 
 MODE="${1:-plan}"
-SSH_HOST="${SSH_HOST:-hetzner}"
-REMOTE_ROOT="${REMOTE_ROOT:-/opt/inferno}"
-SITE="$REMOTE_ROOT/web3-site"
+# No live defaults: the operator supplies the ssh alias and the deployment root (see
+# docs/WEB3_SITE_RELEASE.md). They are required on every direct mode that touches the
+# host, before any ssh/rsync action; verify (local staging + public HTTP only) and the
+# gate path (its own scoped configuration) do not need them.
+SSH_HOST="${SSH_HOST:-}"
+REMOTE_ROOT="${REMOTE_ROOT:-}"
+SITE="$REMOTE_ROOT/web3-site"   # derived under the explicit operator root
 HEADERS=".nginx/web3-security-headers.conf"
 CONTAINER="${CONTAINER:-inferno-web3-site}"
 PUBLIC_URL="${PUBLIC_URL:-https://web3.ifrunit.tech}"
@@ -39,12 +44,9 @@ HELPER="$ROOT/scripts/web3-release.cjs"
 remote() { ssh "$SSH_HOST" "$@"; }
 die() { echo "ERROR: $*" >&2; exit 1; }
 
-# Values below are interpolated into remote shell strings; allow plain names/paths only.
-for var in SSH_HOST REMOTE_ROOT CONTAINER; do
-  [[ "${!var}" =~ ^[A-Za-z0-9._/@-]+$ ]] || die "$var contains characters outside [A-Za-z0-9._/@-]"
-done
-[[ "$SSH_HOST" =~ ^[A-Za-z0-9] ]] || die "SSH_HOST must start with a letter or digit (ssh would read '-' as an option)"
-[[ "$MIN_FREE_MB" =~ ^[0-9]+$ ]] || die "MIN_FREE_MB must be an integer"
+# verify (and every gate mode) reaches only the public URL, so it is validated here;
+# the host-connection values are required and allow-listed on the remote modes below,
+# before any ssh/rsync action.
 [[ "$PUBLIC_URL" =~ ^https://[A-Za-z0-9.-]+$ ]] || die "PUBLIC_URL must be https://<host>"
 
 require_sha() {
@@ -188,6 +190,25 @@ case "${DEPLOY_MODE:-}" in
     exit 0
     ;;
   *) die "DEPLOY_MODE must be unset (direct ssh) or gate" ;;
+esac
+
+# plan/deploy/rollback act on the host over ssh; verify stages locally and checks the
+# public URL only, and the gate path above carries its own scoped configuration. The
+# operator-supplied values are interpolated into remote shell strings, so they are
+# required (no live defaults) and allow-listed here, before any ssh/rsync action.
+case "$MODE" in
+  plan|deploy|rollback)
+  for var in SSH_HOST REMOTE_ROOT; do
+    [[ -n "${!var}" ]] || die "$var is required (no default shipped): set it to the operator connection/deployment layout per docs/WEB3_SITE_RELEASE.md"
+  done
+  for var in SSH_HOST REMOTE_ROOT CONTAINER; do
+    [[ "${!var}" =~ ^[A-Za-z0-9._/@-]+$ ]] || die "$var contains characters outside [A-Za-z0-9._/@-]"
+  done
+  [[ "$SSH_HOST" =~ ^[A-Za-z0-9] ]] || die "SSH_HOST must start with a letter or digit (ssh would read '-' as an option)"
+  [[ "$MIN_FREE_MB" =~ ^[0-9]+$ ]] || die "MIN_FREE_MB must be an integer"
+    ;;
+  verify) ;;
+  *) die "unknown mode $MODE (plan|deploy|verify|rollback)" ;;
 esac
 
 case "$MODE" in

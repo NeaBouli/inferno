@@ -14,8 +14,9 @@ FAKES="$TMP/bin"
 LOG="$TMP/calls.log"
 GATE_DIR="$TMP/gate"
 FAKE_HOME="$TMP/home"
-CFG="$FAKE_HOME/.fleet-ssh/config"
-mkdir -p "$FAKES" "$GATE_DIR" "$FAKE_HOME/.fleet-ssh"
+GATE_HOST="gate-test-host"                 # neutral fixture alias, not a live gate name
+CFG="$FAKE_HOME/gate-ssh/config"           # neutral fixture ssh config path
+mkdir -p "$FAKES" "$GATE_DIR" "$FAKE_HOME/gate-ssh"
 : > "$LOG"
 
 # Clone the current commit and overlay the scripts under test, so the exact-SHA guards
@@ -111,7 +112,7 @@ run() { # run <expected-exit> <cmd...>
   local expected="$1"; shift
   : > "$LOG"
   set +e
-  OUT="$(PATH="$FAKES:$PATH" HOME="$FAKE_HOME" LOG="$LOG" GATE_DIR="$GATE_DIR" DEPLOY_MODE="${DEPLOY_MODE-gate}" "$@" 2>&1)"
+  OUT="$(PATH="$FAKES:$PATH" HOME="$FAKE_HOME" LOG="$LOG" GATE_DIR="$GATE_DIR" DEPLOY_MODE="${DEPLOY_MODE-gate}" DEPLOY_GATE_HOST="$GATE_HOST" DEPLOY_GATE_SSH_CONFIG="$CFG" "$@" 2>&1)"
   local status=$?
   set -e
   if [[ "$status" != "$expected" ]]; then
@@ -120,17 +121,32 @@ run() { # run <expected-exit> <cmd...>
     exit 1
   fi
 }
-run_any() { : > "$LOG"; set +e; OUT="$(PATH="$FAKES:$PATH" HOME="$FAKE_HOME" LOG="$LOG" GATE_DIR="$GATE_DIR" DEPLOY_MODE="${DEPLOY_MODE-gate}" "$@" 2>&1)"; set -e; }
+run_any() { : > "$LOG"; set +e; OUT="$(PATH="$FAKES:$PATH" HOME="$FAKE_HOME" LOG="$LOG" GATE_DIR="$GATE_DIR" DEPLOY_MODE="${DEPLOY_MODE-gate}" DEPLOY_GATE_HOST="$GATE_HOST" DEPLOY_GATE_SSH_CONFIG="$CFG" "$@" 2>&1)"; set -e; }
 assert_log() { grep -Fq -- "$1" "$LOG" || { echo "FAIL: log lacks: $1" >&2; cat "$LOG" >&2; exit 1; }; }
 refute_log() { if grep -Fq -- "$1" "$LOG"; then echo "FAIL: log has: $1" >&2; cat "$LOG" >&2; exit 1; fi; }
 assert_out() { grep -Fq -- "$1" <<< "$OUT" || { echo "FAIL: output lacks: $1" >&2; echo "$OUT" >&2; exit 1; }; }
-gate_line() { printf 'gate cfg=%s host=hetzner-deploy args=%s' "$CFG" "$1"; }
+gate_line() { printf 'gate cfg=%s host=%s args=%s' "$CFG" "$GATE_HOST" "$1"; }
 
 COMPOSE="$REPO/scripts/deploy-compose-service.sh"
 WEB3="$REPO/scripts/deploy-web3-site.sh"
 BENEFITS="$REPO/scripts/deploy-benefits-network.sh"
 STAMP=20261005T101010Z
 VAULT=0x8efae0C85ad6d44C731cAEDA1cBC275904Fc7c8F
+
+# Missing gate configuration refuses a real host action before ssh.
+run 64 env -u DEPLOY_GATE_HOST -u DEPLOY_GATE_SSH_CONFIG bash "$COMPOSE" points-backend status
+assert_out "DEPLOY_GATE_HOST is required"
+refute_log "ssh "
+refute_log "gate "
+run 64 env -u DEPLOY_GATE_SSH_CONFIG bash "$COMPOSE" points-backend status
+assert_out "DEPLOY_GATE_SSH_CONFIG is required"
+refute_log "ssh "
+refute_log "gate "
+# Public HTTP verification does not require a gate connection.
+run 0 env -u DEPLOY_GATE_HOST -u DEPLOY_GATE_SSH_CONFIG bash "$COMPOSE" points-backend verify
+assert_out "public checks pass"
+refute_log "ssh "
+refute_log "gate "
 
 # --- compose service ------------------------------------------------------------
 run 0 env EXPECTED_SHA="$SHA" bash "$COMPOSE" creator-gateway plan
@@ -184,7 +200,7 @@ assert_out "working tree is dirty"
 refute_log "gate "
 git -C "$REPO" checkout -q -- apps/points-backend/README.md
 
-run 0 bash "$COMPOSE" points-backend rollback "/opt/inferno/backups/points-backend-$STAMP"
+run 0 bash "$COMPOSE" points-backend rollback "/ops/backups/points-backend-$STAMP"
 assert_log "$(gate_line "service-rollback points-backend $STAMP") stdin=-"
 run 0 bash "$COMPOSE" telegram-bot rollback "$STAMP"
 assert_log "args=service-rollback telegram-bot $STAMP"
@@ -236,12 +252,16 @@ assert_out "verified: https://web3.ifrunit.tech serves $SHA"
 refute_log "direct ssh"
 
 # The verify reads what the gate serves: a docroot that drifted after the deploy fails it.
+run 0 env -u DEPLOY_GATE_HOST -u DEPLOY_GATE_SSH_CONFIG EXPECTED_SHA="$SHA" bash "$WEB3" verify
+assert_out "serves $SHA"
+refute_log "ssh "
+refute_log "gate "
 echo drift > "$GATE_DIR/html/sitemap.xml"
 run 1 env EXPECTED_SHA="$SHA" bash "$WEB3" verify
 assert_out "FAIL  /sitemap.xml"
 refute_log "gate "
 
-run 0 bash "$WEB3" rollback "/opt/inferno/backups/web3-site-$STAMP"
+run 0 bash "$WEB3" rollback "/ops/backups/web3-site-$STAMP"
 assert_log "$(gate_line "web3-rollback $STAMP") stdin=-"
 run 64 bash "$WEB3" rollback
 refute_log "gate "
@@ -305,12 +325,12 @@ run 64 bash "$BENEFITS" env-vault-v2 "0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3
 refute_log "gate "
 refute_log "gate "
 # Without DEPLOY_MODE these modes use the direct path (#206), never the gate.
-DEPLOY_MODE='' run_any bash "$BENEFITS" env-vault-v2 "$VAULT"
+DEPLOY_MODE='' run_any env SSH_HOST=direct-test-host REMOTE_ROOT=/fixture REMOTE_VOLUME=/fixture-vol bash "$BENEFITS" env-vault-v2 "$VAULT"
 refute_log "gate cfg="
 # Benefits rollback / env-restore map to the whitelisted gate commands, stamp-validated.
 run 0 bash "$BENEFITS" rollback "$STAMP"
 assert_log "$(gate_line "benefits-rollback $STAMP") stdin=-"
-run 0 bash "$BENEFITS" rollback "/opt/inferno/backups/benefits-$STAMP"
+run 0 bash "$BENEFITS" rollback "/ops/backups/benefits-$STAMP"
 assert_log "$(gate_line "benefits-rollback $STAMP") stdin=-"
 run 0 bash "$BENEFITS" env-restore "$STAMP"
 assert_log "$(gate_line "benefits-env-restore $STAMP") stdin=-"
@@ -319,13 +339,13 @@ refute_log "gate "
 run 64 bash "$BENEFITS" env-restore ""
 refute_log "gate "
 # Without DEPLOY_MODE these modes use the direct path (#206), never the gate.
-DEPLOY_MODE='' run_any bash "$BENEFITS" rollback "$STAMP"
+DEPLOY_MODE='' run_any env SSH_HOST=direct-test-host REMOTE_ROOT=/fixture REMOTE_VOLUME=/fixture-vol bash "$BENEFITS" rollback "$STAMP"
 refute_log "gate cfg="
 # Without DEPLOY_MODE these modes use the direct path (#206), never the gate.
-DEPLOY_MODE='' run_any bash "$BENEFITS" env-restore "$STAMP"
+DEPLOY_MODE='' run_any env SSH_HOST=direct-test-host REMOTE_ROOT=/fixture REMOTE_VOLUME=/fixture-vol bash "$BENEFITS" env-restore "$STAMP"
 refute_log "gate cfg="
 # Default mode is unchanged: status still uses the direct ssh path.
-DEPLOY_MODE='' run 0 env SSH_HOST=direct-test-host bash "$BENEFITS" status
+DEPLOY_MODE='' run 0 env SSH_HOST=direct-test-host REMOTE_ROOT=/fixture REMOTE_VOLUME=/fixture-vol bash "$BENEFITS" status
 assert_log "direct ssh direct-test-host"
 refute_log "gate "
 

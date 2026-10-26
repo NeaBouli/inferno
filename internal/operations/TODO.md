@@ -1,5 +1,11 @@
 # IFR Protocol — Developer TODO List
 > Last updated: 2026-09-06 | Branch: main
+>
+> **Publication note (2026-10-25):** This repository copy is sanitized. Concrete
+> connection details (host aliases and IPs, local machine paths, signer identities,
+> registrar notes) are operator-specific and live in the private operations record.
+> Product, task and status content is unchanged; dated entries describe past states,
+> not necessarily the current runtime.
 
 ---
 
@@ -371,10 +377,10 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] Builder Vault lock mechanism documented for all users (19.03.2026): index, tokenomics, wallet-guide, faq, security, fair-launch ✅
 - [x] Multisig 2-of-4 references removed — all Safes already 3-of-5 since 15.03.2026 ✅
 - [x] Ali Copilot facts updated: supply, component count, governance proposals, multisig (19.03.2026) ✅
-- [x] SEO: llms.txt created + preconnect Railway (19.03.2026) ✅
+- [x] SEO: llms.txt created + preconnect zum damaligen API-Hosting (19.03.2026) ✅
 - [x] Landing Page performance: defer scripts + fetch timeout 8s (19.03.2026) ✅
 - [x] Wiki index: all 27 pages now have cards (was 16/27) (19.03.2026) ✅
-- [x] FeeRouterV1 tracking verified: Railway + Landing Page + SVG all correct (19.03.2026) ✅
+- [x] FeeRouterV1 tracking verified: Hosting-API + Landing Page + SVG all correct (19.03.2026) ✅
 - [x] Token Visualisierung: SVG + Kacheln verified correct (19.03.2026) ✅
 - [x] ~~Animated Token GIF~~ — gestrichen (not planned) ✅
 - [x] ✅ .env security verified (04.04.2026)
@@ -382,10 +388,10 @@ On errors: fix immediately, commit with `seo:` prefix.
       .env never committed to git ✅
       No real keys in git history ✅
       .env.example updated with all current variables ✅
-- [x] ✅ DEPLOYER_PRIVATE_KEY in .env — Bewusste Entscheidung: behalten bis Projektabschluss (07.04.2026)
+- [x] ✅ Lokale Deployer-Key-Aufbewahrung — damalige Entscheidung (07.04.2026)
       Deployer hat keine Governance-Rechte mehr (seit 20.03.2026)
-      Key wird für Sepolia-Deploys + Testnet-Scripts benötigt
-      Nie committed (.gitignore ✅), kein Sicherheitsrisiko
+      Key wurde für Sepolia-Deploys + Testnet-Scripts benötigt
+      Nie committed (.gitignore ✅); Details der Aufbewahrung: privater Operations-Record
 - [x] ✅ WalletConnect Phase 1 stable (04.04.2026)
       wallet-core.js v1.2 — MetaMask connect with all bug fixes:
       30s timeout, accountsChanged re-creates provider/signer,
@@ -413,8 +419,8 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 ### Bot & Infrastructure
 - [x] `voteAnnouncement.js` — Bot announces Governance Proposals + verify.html link + 24h reminder ✅
-- [x] `SIGNER_WALLETS` gesetzt in Railway (alle 5 Signers: G.M./M.G./A.M./Y.K./A.P.) ✅ 16.03.2026
-- [x] `VERIFY_PORT=3001` gesetzt in Railway ✅ 16.03.2026
+- [x] `SIGNER_WALLETS` im damaligen Hosting gesetzt (alle 5 Signers) ✅ 16.03.2026
+- [x] `VERIFY_PORT=3001` im damaligen Hosting gesetzt ✅ 16.03.2026
 
 ### Builder Applications
 - [x] NEXUS GR — GitHub Issue #13 (19.03.2026) ✅
@@ -427,8 +433,8 @@ On errors: fix immediately, commit with `seo:` prefix.
       Mainnet: `0xdfe6636DA47F8949330697e1dC5391267CEf0EE3`
       Owner: Governance (0xc43d...D041) → TreasurySafe 3-of-5
       Etherscan verified
-- [x] ✅ `BUILDER_REGISTRY_ADDR` in Railway gesetzt (20.03.2026)
-      Services: ifr-ai-copilot + inferno (telegram-bot backend)
+- [x] ✅ `BUILDER_REGISTRY_ADDR` im damaligen Hosting gesetzt (20.03.2026)
+      Services: damalige API- und Bot-Dienste
       Mainnet: `0xdfe6636DA47F8949330697e1dC5391267CEf0EE3`
       API Endpoints aktiv: /api/builders/count + /api/builders/check/:address
       Fix: function selectors corrected (isBuilder 0xb6b6b475, getBuilderCount 0xe54a01f9)
@@ -446,9 +452,9 @@ On errors: fix immediately, commit with `seo:` prefix.
       Submitted: 04.04.2026 via TreasurySafe 3-of-5
       Executed: 06.04.2026 via TreasurySafe 3-of-5
       Verified on-chain: feeExempt(CV) = true, feeExempt(LV) = true
-- [x] ✅ Railway: COMMITMENT_VAULT_ADDR gesetzt (04.04.2026)
+- [x] ✅ Hosting: COMMITMENT_VAULT_ADDR gesetzt (04.04.2026)
       0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3
-- [x] ✅ Railway: LENDING_VAULT_ADDR gesetzt (04.04.2026)
+- [x] ✅ Hosting: LENDING_VAULT_ADDR gesetzt (04.04.2026)
       0x974305Ab0EC905172e697271C3d7d385194EB9DF
 - [x] ✅ Proposal #15: setFeeExempt(LP Token, true)
       GitHub Issue: https://github.com/NeaBouli/inferno/issues/33
@@ -537,7 +543,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [ ] 🟡 inferno-redesign.html Review
       GitHub Issue: https://github.com/NeaBouli/inferno/issues/31
       NICHT deployen ohne Review + Abnahme!
-      Lokal unter: /Users/gio/Desktop/repos/inferno/inferno-redesign.html
+      Lokale Datei im Operator-Checkout (privater Operations-Record); nicht Teil dieses Repos.
 
 - [x] ✅ Bootstrap safety plan documented
       bootstrap.html + faq.html + Ali + TODO
@@ -560,7 +566,7 @@ On errors: fix immediately, commit with `seo:` prefix.
       IFR lending against ETH collateral (200% initial, margin call 150%, liquidation 120%)
       Interest rate: dynamic (0% util=2%, 100%=25%)
       Uniswap TWAP price oracle (24h average)
-      Railway cron job (every 4h) for liquidation checks
+      Cron-Job auf dem damaligen Hosting (every 4h) for liquidation checks
 - [x] ✅ Deploy BuybackController (14.04.2026)
       Mainnet: `0x1e0547D50005A4Af66AbD5e6915ebfAA2d711F7c` — Verified
       Sepolia: `0xaA1496133B6c274190A2113410B501C5802b6fCF` — Verified
@@ -632,7 +638,7 @@ On errors: fix immediately, commit with `seo:` prefix.
       Remaining deferred item: global liquidation/liquidator dashboard and
       Telegram alert UX.
 
-### Phase 3 — Railway Extensions
+### Phase 3 — API/Hosting Extensions
 - [x] ✅ Lending Endpoints (07.04.2026)
       GET /api/lending/stats — market overview
       GET /api/lending/offers — all lender offers
@@ -652,7 +658,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] ✅ "Buy IFR" button on landing page — live
       Uniswap link with pre-filled token address
 - [x] ✅ Live IFR price on landing page
-      Uniswap TWAP → Hetzner API GET /api/ifr/price → Landing Page
+      Uniswap TWAP → Hosting-API GET /api/ifr/price → Landing Page
 
 ### Phase 4 — Mobile App (IFR Wallet)
 - [ ] 🔵 App Concept + Design
@@ -682,10 +688,10 @@ On errors: fix immediately, commit with `seo:` prefix.
 ## THIS WEEK
 
 ### Multisig
-- [x] A.M. als 3. Signer hinzugefügt ✅
-- [x] Y.K. als 4. Signer hinzugefügt ✅
+- [x] 3. Signer hinzugefügt ✅
+- [x] 4. Signer hinzugefügt ✅
 - [x] Threshold auf 2-of-4 gesetzt ✅ (14.03.2026)
-- [x] 5. Signer Psaltin (A.P.) hinzugefügt (beide Safes) ✅ (15.03.2026)
+- [x] 5. Signer hinzugefügt (beide Safes) ✅ (15.03.2026)
 - [x] Threshold auf 2-of-5 gesetzt ✅ (15.03.2026)
 - [x] Threshold auf 3-of-5 gesetzt ✅ (15.03.2026)
 - [x] ✅ Transfer Governance → GnosisSafe ownership
@@ -715,7 +721,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 
 ### Bootstrap (ENDED 05.06.2026 — IFR live on Uniswap V2)
 - [x] Announcement texts fertig — `docs/BOOTSTRAP_ANNOUNCEMENT.md` ✅
-- [x] ✅ POST: Telegram @IFRtoken Channel + Community (08.06.2026) — 3 Posts gesendet (msg_ids: 42, 43, 154)
+- [x] ✅ POST: Telegram @IFRtoken Channel + Community (08.06.2026) — 3 Posts gesendet
 - [ ] 📢 POST: X Thread @IFRtoken (Text #2, 4 Tweets)
 - [ ] 📢 POST: Reddit r/ethfinance (Text #3)
 - [ ] 📢 POST: Reddit r/CryptoMoonShots (Text #4)
@@ -732,8 +738,8 @@ On errors: fix immediately, commit with `seo:` prefix.
 ### Frontend
 - ~~Create animated token GIF~~ — not planned
 - [x] ✅ `Buy IFR` → Uniswap button activated after LP live
-- [x] ✅ IFR Price Widget + Railway /api/ifr/price endpoint (04.04.2026)
-      Migrated to Hetzner API. Landing page price stat card uses live API/TWAP feed after LP.
+- [x] ✅ IFR Price Widget + Hosting-API /api/ifr/price endpoint (04.04.2026)
+      Später auf die aktuelle Hosting-API migriert. Landing page price stat card uses live API/TWAP feed after LP.
 - [x] WalletConnect Phase 2: `isLocked(wallet,1000e9)` check → Copilot gate (after LP) — closed 2026-10-22: obsolete; web chat retired in #313; POST /api/chat returns 410 (apps/data-api/server/index.ts).
 - [x] ✅ WalletConnect Phase 3: Uniswap link active after LP live
 
@@ -743,19 +749,19 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [x] Project Continuity section (README + Wiki) — done 2026-10-23: README.md; docs/wiki/multisig.html#project-continuity
 - [ ] Project Continuity section (Landing; remaining part of the original item)
 
-### Railway → Hetzner Migration
-- [x] ✅ Telegram-Bot: Railway → Hetzner (09.06.2026) — läuft auf 135.181.254.229
-- [x] ✅ Ali Copilot (ai-copilot): Railway → Hetzner (09.06.2026) — `copilot-api.ifrunit.tech`
-      DNS: A-Record `copilot-api.ifrunit.tech` → 135.181.254.229 ✅
-- [x] ✅ Railway `ifr-ai-copilot` Service gestoppt (10.06.2026) — Hetzner ist aktiv
-- [x] ✅ points-backend Migration → Hetzner
+### Hosting-Migration (Providerwechsel 06/2026, historisch)
+- [x] ✅ Telegram-Bot auf das aktuelle Hosting migriert (09.06.2026)
+- [x] ✅ Ali Copilot (ai-copilot) auf das aktuelle Hosting migriert (09.06.2026) — `copilot-api.ifrunit.tech`
+      DNS: A-Record `copilot-api.ifrunit.tech` auf die Server-IP gesetzt ✅
+- [x] ✅ Alter Hosting-Dienst `ifr-ai-copilot` gestoppt (10.06.2026) — aktuelles Hosting ist aktiv
+- [x] ✅ points-backend Migration auf das aktuelle Hosting
       SQLite, Dockerfile-Fix, Prisma engine path, Traefik + SSL ✅
       URL: `points-api.ifrunit.tech`
-- [x] ✅ DNS: A-Record `verify-api.ifrunit.tech` → `135.181.254.229` gesetzt (Papaki)
-      Telegram-Bot Verify-API auf Hetzner, Traefik-Route + SSL ✅
-- [x] ✅ DNS: A-Record `points-api.ifrunit.tech` → `135.181.254.229`
+- [x] ✅ DNS: A-Record `verify-api.ifrunit.tech` auf die Server-IP gesetzt (beim Registrar)
+      Telegram-Bot Verify-API, Traefik-Route + SSL ✅
+- [x] ✅ DNS: A-Record `points-api.ifrunit.tech` auf die Server-IP gesetzt
 
-### Railway (Alt — vor Migration)
+### Altes Hosting (vor der Migration)
 - [x] ✅ FeeRouterV1 tracking verified (nach Proposal #6)
 - [x] ✅ BuybackVault + BurnReserve: tracking aktiv
 - [x] ✅ Pool Fee Receiver: FeeRouterV1 gesetzt
@@ -802,7 +808,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 - [ ] Live-Anzeige: Anzahl verifizierter Wallets (keine öffentlichen Adressen)
   - Aufschlüsselung nach Topic: General / Vote+Council / Dev&Builder / Core Team
   - Nur Statistik/Anzahl — kein Datenschutz-Problem
-  - Backend-Endpoint: /api/verify/stats (Railway)
+  - Backend-Endpoint: /api/verify/stats (Hosting-API)
 
 ### Governance Section — Letzte Abstimmungen (on-chain live)
 - [ ] The Council (Der Rat): letzte 5 Abstimmungen
@@ -884,7 +890,7 @@ On errors: fix immediately, commit with `seo:` prefix.
 ### Ali Copilot
 - [x] Automatic bootstrap date check (NOT YET ACTIVE → ACTIVE → ENDED)
 - [x] Wiki pages auto-fetch every 60 min
-- [x] ✅ Hetzner auto-deploy active (09.06.2026) — `copilot-api.ifrunit.tech`, 24 wiki docs, healthy
+- [x] ✅ Auto-Deploy auf dem aktuellen Hosting aktiv (09.06.2026) — `copilot-api.ifrunit.tech`, 24 wiki docs, healthy
 
 ### DAO Governance
 - [x] Two-chamber visual on landing page
@@ -1089,7 +1095,7 @@ Strategic goal: "IFR = Stripe for Web3 Access — Web3 SaaS Standard"
       Data: direct LendingVault reads + /api/lending/stats + /api/lending/offers fallback
 
 Technical: WalletConnect v2 + ethers.js v6, ABI: abi/LendingVault.json
-Hetzner API endpoints already live: stats, offers, loans/:addr, health/:id, lender/:addr
+Hosting-API endpoints already live: stats, offers, loans/:addr, health/:id, lender/:addr
 
 ### Interactive Onboarding Wizard
 - [x] ✅ Onboarding Wizard (07.04.2026)

@@ -26,6 +26,7 @@ OUTPUT="$({
   PATH="$TMP_DIR:$PATH" \
   SSH_LOG="$SSH_LOG" \
   SSH_HOST="capacity-test" \
+  REMOTE_ROOT="/opt/inferno" \
   REMOTE_VOLUME="/test-volume" \
   "$ROOT/scripts/deploy-benefits-network.sh" capacity
 } 2>&1)"
@@ -48,6 +49,7 @@ UNSAFE_OUTPUT="$({
   PATH="$TMP_DIR:$PATH" \
   SSH_LOG="$SSH_LOG" \
   SSH_HOST="capacity-test" \
+  REMOTE_ROOT="/opt/inferno" \
   REMOTE_VOLUME="/test-volume" \
   BACKEND_COUNT="2" \
   "$ROOT/scripts/deploy-benefits-network.sh" capacity

@@ -218,7 +218,8 @@ run() { # run <expected-exit> <cmd...>
   local expected="$1"; shift
   set +e
   OUT="$(PATH="$FAKES:$PATH" LOG="$LOG" REMOTE="$REMOTE" REAL_RSYNC="$REAL_RSYNC" REAL_FIND="$REAL_FIND" REAL_READLINK="$REAL_READLINK" DOCKER_STATE="$DOCKER_STATE" \
-    SSH_HOST=benefits-test-host HEALTH_INTERVAL="${HEALTH_INTERVAL:-0}" HEALTH_ATTEMPTS="${HEALTH_ATTEMPTS:-3}" "$@" 2>&1)"
+    SSH_HOST=benefits-test-host REMOTE_ROOT="${REMOTE_ROOT:-/opt/inferno}" REMOTE_VOLUME="${REMOTE_VOLUME:-/mnt/fixture-volume}" \
+    HEALTH_INTERVAL="${HEALTH_INTERVAL:-0}" HEALTH_ATTEMPTS="${HEALTH_ATTEMPTS:-3}" "$@" 2>&1)"
   local status=$?
   set -e
   cat "$LOG" >> "$ALL_LOG"

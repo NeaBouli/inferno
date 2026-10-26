@@ -64,7 +64,7 @@ as before; legacy infrastructure naming is not a requirement to run Railway.
    and desktop layouts, absence of chat requests/frames, wallet and checkout flows,
    retained data fetches, and Benefits service-worker revision **v26**, Web3 revision **v23**, and versioned static CSS. The old
    server can continue supplying data while these clients roll out.
-3. Prepare `/opt/inferno/data-api` from the reviewed release, then switch the host
+3. Prepare the `data-api` source directory under the operator deployment root from the reviewed release, then switch the host
    Compose service from `ai-copilot` to `data-api` on the **same router, hostname,
    network and port 3003**. Preserve the archive volume/data and required non-AI
    configuration. Remove the web service's model credential from the new service's

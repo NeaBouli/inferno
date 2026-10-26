@@ -1,9 +1,19 @@
 #!/usr/bin/env bash
+# Read-only capacity audit of the shared Docker host over the operator-supplied
+# ssh connection. Never prunes, never writes. No live defaults: SSH_HOST and
+# REMOTE_VOLUME are required before any ssh action.
 set -euo pipefail
 
-SSH_HOST="${SSH_HOST:-hetzner}"
-REMOTE_VOLUME="${REMOTE_VOLUME:-/mnt/HC_Volume_106164848}"
+SSH_HOST="${SSH_HOST:-}"
+REMOTE_VOLUME="${REMOTE_VOLUME:-}"
 LIMIT="${LIMIT:-12}"
+
+for var in SSH_HOST REMOTE_VOLUME; do
+  if [[ -z "${!var}" ]]; then
+    echo "$var is required (no default shipped): set it to the operator ssh alias / audited volume (see docs/runbooks/SERVER_CAPACITY_RUNBOOK.md)." >&2
+    exit 64
+  fi
+done
 
 remote() {
   ssh "$SSH_HOST" "$@"

@@ -1,4 +1,4 @@
-# points-backend Migration → Hetzner
+# points-backend Migration / Self-Hosting Template
 
 ## Was ist points-backend?
 
@@ -65,12 +65,16 @@ CAPTCHA_SECRET=<Cloudflare Turnstile Secret — optional, ohne=deaktiviert>
 `VOUCHER_SIGNER_PRIVATE_KEY` muss außerhalb von Git als eigener Least-Privilege-Key
 bereitgestellt werden. Niemals einen Deployer- oder Safe-Owner-Key wiederverwenden.
 
-## Hetzner Setup Steps
+## Host Setup (Template)
 
-### 1. Dockerfile fixen (Railway-Version ist broken)
+Die konkreten Verbindungsdaten (ssh-Alias, Verzeichnisse, Server-IP) stehen im
+privaten Operations-Record. Unten steht `<operator-alias>` für den eigenen
+ssh-Zielalias und `<deploy-root>` für das Bereitstellungsverzeichnis auf dem Host.
 
-Das bestehende `apps/points-backend/Dockerfile` funktioniert nicht korrekt
-(`npm ci --only=production` installiert kein `tsc`). Neues Dockerfile erstellen:
+### 1. Dockerfile prüfen
+
+The historical multi-stage example below illustrates the packaging. The reviewed
+`apps/points-backend/Dockerfile` is authoritative; do not replace it from this example.
 
 ```dockerfile
 FROM node:22-alpine AS builder
@@ -93,18 +97,18 @@ ENTRYPOINT ["dumb-init", "--"]
 CMD ["sh", "-c", "npx prisma migrate deploy && node dist/src/index.js"]
 ```
 
-### 2. Hetzner Verzeichnis anlegen
+### 2. Verzeichnis auf dem Host anlegen
 
 ```bash
-ssh hetzner "mkdir -p /opt/inferno/points-backend"
+ssh <operator-alias> "mkdir -p <deploy-root>/points-backend"
 rsync -az --exclude='node_modules' --exclude='dist' \
-  apps/points-backend/ hetzner:/opt/inferno/points-backend/
+  apps/points-backend/ <operator-alias>:<deploy-root>/points-backend/
 ```
 
 ### 3. .env.points-backend erstellen
 
 ```bash
-ssh hetzner "cat > /opt/inferno/.env.points-backend << 'EOF'
+ssh <operator-alias> "cat > <deploy-root>/.env.points-backend << 'EOF'
 DATABASE_URL=file:/data/production.db
 NODE_ENV=production
 JWT_SECRET=$(openssl rand -hex 32)
@@ -122,7 +126,7 @@ EOF"
 
 ### 4. docker-compose.yml erweitern
 
-Service `points-backend` in `/opt/inferno/docker-compose.yml` hinzufügen:
+Service `points-backend` in `<deploy-root>/docker-compose.yml` hinzufügen:
 
 ```yaml
 points-backend:
@@ -151,12 +155,12 @@ Volume hinzufügen: `points-data: { name: inferno_points_data }`
 ### 5. DNS setzen
 
 ```
-A  points-api  135.181.254.229  TTL 300
+A  points-api  <server-ipv4>  TTL 300
 ```
 
 ### 6. ai-copilot POINTS_BACKEND_URL aktualisieren
 
-In `/opt/inferno/.env.ai-copilot`:
+In `<deploy-root>/.env.ai-copilot`:
 ```
 POINTS_BACKEND_URL=http://inferno-points-backend:3004
 ```
@@ -165,18 +169,18 @@ POINTS_BACKEND_URL=http://inferno-points-backend:3004
 ### 7. Deploy
 
 ```bash
-ssh hetzner "cd /opt/inferno && docker compose build points-backend && docker compose up -d points-backend"
+ssh <operator-alias> "cd <deploy-root> && docker compose build points-backend && docker compose up -d points-backend"
 ```
 
-## Status
+## Status (historischer Migrationsverlauf)
 
 - [x] Code analysiert — SQLite, kein separater DB-Server nötig
 - [x] Dockerfile-Fix: multi-stage build + PRISMA_QUERY_ENGINE_LIBRARY
 - [x] VOUCHER_SIGNER_PRIVATE_KEY: neues EOA generiert
 - [x] Dockerfile in `apps/points-backend/Dockerfile` ersetzt
-- [x] Source auf Hetzner synchronisiert
+- [x] Source auf den Host synchronisiert
 - [x] .env.points-backend erstellt
 - [x] docker-compose.yml erweitert
 - [x] Container deployed + healthy ✅ (2026-06-10)
-- [x] DNS: `points-api.ifrunit.tech` → `135.181.254.229` ✅ (10.06.2026)
+- [x] DNS: `points-api.ifrunit.tech` auf die Server-IP gesetzt ✅ (10.06.2026)
 - [x] ai-copilot POINTS_BACKEND_URL → `http://inferno-points-backend:3004` ✅
