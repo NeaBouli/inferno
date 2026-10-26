@@ -152,7 +152,8 @@ chmod +x "$FAKES"/*
 run() { # run <expected-exit> <cmd...>
   local expected="$1"; shift
   set +e
-  OUT="$(PATH="$FAKES:$PATH" LOG="$LOG" REMOTE="$REMOTE" REAL_RSYNC="$REAL_RSYNC" SSH_HOST="${SSH_HOST:-web3-test-host}" "$@" 2>&1)"
+  OUT="$(PATH="$FAKES:$PATH" LOG="$LOG" REMOTE="$REMOTE" REAL_RSYNC="$REAL_RSYNC" \
+    SSH_HOST="${SSH_HOST:-web3-test-host}" REMOTE_ROOT="${REMOTE_ROOT:-/opt/inferno}" REMOTE_VOLUME="${REMOTE_VOLUME:-/mnt/fixture-volume}" "$@" 2>&1)"
   local status=$?
   set -e
   if [[ "$status" != "$expected" ]]; then

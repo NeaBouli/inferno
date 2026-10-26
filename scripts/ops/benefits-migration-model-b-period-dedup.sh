@@ -32,7 +32,9 @@ readonly TARGET_RELEASE=3842f8ae4237ede7eadfc66c2887e3410026145b
 readonly PREVIOUS_RELEASE=5468f561f98c2250eb210ace1bb42dc442bd5fc8
 readonly MIGRATION_ID=20261017120000_model_b_period_dedup
 readonly SQL_SHA256=dcc7e7a0fe9ec9ebfc6b015b4f1c99b4ad0d1dcaf5437e963fe9250e35c83c28
-SOURCE_DIR=${MIGRATION_SOURCE_DIR:-/opt/inferno/benefits-network}
+# Operator-supplied runtime source tree on the host (no live default shipped); an
+# empty value fails the ABSOLUTE_PATH_REQUIRED refusal below before any action.
+SOURCE_DIR=${MIGRATION_SOURCE_DIR:-}
 FRONTEND_URL=${MIGRATION_FRONTEND_URL:-https://shop.ifrunit.tech/}
 COMPOSE_DIR=$(dirname "$COMPOSE_FILE")
 scratch=
@@ -285,7 +287,7 @@ migration_hook() {
       check_artifacts
       resolve_volume
       compose_model check
-      bash "$script_dir/benefits-backend-volume-ownership.sh" plan
+      BACKUP_DIR="$BACKUP_ROOT" bash "$script_dir/benefits-backend-volume-ownership.sh" plan
       ;;
     prepare)
       resolve_volume
@@ -312,7 +314,7 @@ migration_hook() {
     migrate)
       resolve_volume
       compose_model check
-      bash "$script_dir/benefits-backend-volume-ownership.sh" apply
+      BACKUP_DIR="$BACKUP_ROOT" bash "$script_dir/benefits-backend-volume-ownership.sh" apply
       run_migration "$(head -n 1 "$backup/candidate-images")" "type=volume,src=$volume_name,dst=/data" \
         "benefits-model-b-migrate-$(basename "$backup" | tr '[:upper:]' '[:lower:]')"
       ;;

@@ -3,7 +3,7 @@
 > **Erstellt:** 22.02.2026 | **Aktualisiert:** 05.03.2026
 > **Zweck:** Nahtlose Weiterarbeit in einem neuen Chat ohne Vorwissen
 > **Sprache des Entwicklers:** Deutsch (Code & Docs auf Englisch)
-> **Lokaler Projektpfath:** `/Users/gio/Desktop/Inferno`
+> **Lokaler Projektpfad:** operator-lokal (im privaten Operations-Record)
 > **GitHub:** https://github.com/NeaBouli/inferno
 > **Live-Seite:** https://neabouli.github.io/inferno/
 > **Wiki:** https://neabouli.github.io/inferno/wiki/

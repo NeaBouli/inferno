@@ -23,6 +23,7 @@ on:
       - 'scripts/test-benefits-csp.js'
       - 'scripts/test-benefits-wallet-telemetry.js'
       - 'scripts/test-benefits-wallet-telemetry-gate.js'
+      - 'scripts/test-benefits-walletconnect-runtime.cjs'
       - 'scripts/test-benefits-wallet-label-fit.js'
       - 'scripts/test-benefits-fullstack-e2e.js'
       - 'scripts/test-benefits-bundle-budget.cjs'
@@ -79,6 +80,7 @@ on:
       - 'scripts/test-benefits-csp.js'
       - 'scripts/test-benefits-wallet-telemetry.js'
       - 'scripts/test-benefits-wallet-telemetry-gate.js'
+      - 'scripts/test-benefits-walletconnect-runtime.cjs'
       - 'scripts/test-benefits-wallet-label-fit.js'
       - 'scripts/test-benefits-fullstack-e2e.js'
       - 'scripts/test-benefits-bundle-budget.cjs'
@@ -240,12 +242,29 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: '22'
+          package-manager-cache: false
       - name: Benefits deploy mode selection regression
         run: npm run test:benefits-deploy-selection
       - run: npm run preflight:benefits -- --static
+      - name: Install full preflight prerequisites
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        run: |
+          sudo apt-get update
+          sudo apt-get install --yes --no-install-recommends sqlite3
+          npm ci
+          npm ci --prefix apps/sdk
+          npm ci --prefix apps/benefits-network/frontend
+          npm ci --prefix apps/benefits-network/backend
+          npx --no-install playwright install --with-deps chromium
+      - name: Run complete Benefits release preflight
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        timeout-minutes: 90
+        run: npm run preflight:benefits -- --full
 
   test-customer-pass-ui:
     runs-on: ubuntu-latest
@@ -259,6 +278,8 @@ jobs:
       - run: npm ci --prefix apps/benefits-network/frontend
       - run: npm ci --prefix apps/benefits-network/backend
       - run: npx playwright install --with-deps chromium
+      - name: WalletConnect guarded SDK runtime contract
+        run: npm run test:benefits-walletconnect-runtime
       - run: npm run test:benefits-money
       - run: npm run test:benefits-pass-ui
       - run: npm run test:benefits-discovery-ui

@@ -1,20 +1,22 @@
 # Compose Service Release (telegram-bot, points-backend, data-api)
 
 The Telegram verify bot, the Points backend and the protocol Data API run as services of the compose
-project `inferno` on the production host (`/opt/inferno/docker-compose.yml`, not in this repo).
-Their build contexts `/opt/inferno/<service>/` are plain copies of the repo app dirs. A merge to
-`main` does **not** update them. On 2026-09-30 the removed Telegram route
-`https://verify-api.ifrunit.tech/api/verify/status/1` still returned 200 (CWA-34).
+project `inferno` on the production host (compose file under the operator deployment root
+`$REMOTE_ROOT`, not in this repo). Their build contexts `$REMOTE_ROOT/<service>/` are plain copies
+of the repo app dirs. A merge to `main` does **not** update them. On 2026-09-30 the removed
+Telegram route `https://verify-api.ifrunit.tech/api/verify/status/1` still returned 200 (CWA-34).
 
 `scripts/deploy-compose-service.sh` releases exactly one reviewed commit of one service. It is
-operator-run: the Fleet diagnosis identity has no Docker and no write access to `/opt/inferno`.
+operator-run: a read-only diagnosis identity has no Docker and no write access to the deployment
+root. The script ships no host defaults: set `SSH_HOST`, `REMOTE_ROOT` and `REMOTE_VOLUME` to the
+operator connection and layout (paths below use `$REMOTE_ROOT`).
 
 | Service | Repo dir | Host source dir | Public check |
 | --- | --- | --- | --- |
-| `telegram-bot` | `apps/telegram/telegram-bot` | `/opt/inferno/telegram-bot` | `verify-api.ifrunit.tech/` 404 **and** `/api/verify/status/1` 404 (CWA-34) |
-| `points-backend` | `apps/points-backend` | `/opt/inferno/points-backend` | `points-api.ifrunit.tech/health` 200 |
-| `data-api` | `apps/data-api` | `/opt/inferno/data-api` | `copilot-api.ifrunit.tech/api/health` 200 |
-| `creator-gateway` (prepared, not deployed) | `apps/creator-gateway` | proposed `/opt/inferno/creator-gateway` | proposed `creator-api.ifrunit.tech`: `/health` 200, `/auth/siwe/nonce` 200, `POST /auth/wallet` 404, `/access/check` 401, `/auth/google/callback` 400 |
+| `telegram-bot` | `apps/telegram/telegram-bot` | `$REMOTE_ROOT/telegram-bot` | `verify-api.ifrunit.tech/` 404 **and** `/api/verify/status/1` 404 (CWA-34) |
+| `points-backend` | `apps/points-backend` | `$REMOTE_ROOT/points-backend` | `points-api.ifrunit.tech/health` 200 |
+| `data-api` | `apps/data-api` | `$REMOTE_ROOT/data-api` | `copilot-api.ifrunit.tech/api/health` 200 |
+| `creator-gateway` (prepared, not deployed) | `apps/creator-gateway` | proposed `$REMOTE_ROOT/creator-gateway` | proposed `creator-api.ifrunit.tech`: `/health` 200, `/auth/siwe/nonce` 200, `POST /auth/wallet` 404, `/access/check` 401, `/auth/google/callback` 400 |
 
 Creator Gateway is a prepared client target, not an existing production service.
 See [its first-release runbook](CREATOR_GATEWAY_DEPLOY.md) for owner decisions,
@@ -37,20 +39,21 @@ and source baseline and does not edit the host Compose definition.
 See [retirement, checks and rollback](COPILOT_CHAT_RETIREMENT.md). The helper keeps
 `ai-copilot` for rollback/inspection only; it rejects new plans and deployments
 for that name. Host gate allowlists and required checks need a separate cutover.
-The dated host assumptions below describe the old service and are historical.
+The generalized historical example below describes the old service layout. It is
+not evidence of the current runtime; verify the operator layout before using it.
 
 ## What a release changes
 
 | Target | Change | Not changed |
 | --- | --- | --- |
-| `/opt/inferno/<service>/` | app dir of the release commit (`git archive`, never the working tree) plus `RELEASE_SHA`; rsync `--delete` | `.env*` and `*.db*` at any depth and the root `node_modules/`, `dist/`, `data/` are excluded and never deleted (no `--delete-excluded`); nested dirs such as `src/data/` ship |
+| `$REMOTE_ROOT/<service>/` | app dir of the release commit (`git archive`, never the working tree) plus `RELEASE_SHA`; rsync `--delete` | `.env*` and `*.db*` at any depth and the root `node_modules/`, `dist/`, `data/` are excluded and never deleted (no `--delete-excluded`); nested dirs such as `src/data/` ship |
 | image `inferno-<service>` | current `latest` tagged `rollback-<UTC>`, then `docker compose up -d --build --no-deps <service>` | no other service, no volume, no env file, no prune |
-| `/opt/inferno/backups/<service>-<UTC>/` | new, never reused: `source.tgz` (same excludes) and `image-id` | earlier backups |
+| `$REMOTE_ROOT/backups/<service>-<UTC>/` | new, never reused: `source.tgz` (same excludes) and `image-id` | earlier backups |
 
 `deploy` refuses a dirty tree, a different `HEAD`, a short or unknown SHA, a missing source dir
 or compose file, a missing `inferno-<service>:latest` image (nothing to roll back to) and less
-than **4096 MB** free on `/mnt/HC_Volume_106164848`. The floor is fixed. The script never prunes;
-free space by hand (see `docs/BENEFITS_CAPACITY_RUNBOOK.md`) and rerun.
+than **4096 MB** free on the configured capacity volume (`REMOTE_VOLUME`). The floor is fixed. The
+script never prunes; free space by hand (see `docs/BENEFITS_CAPACITY_RUNBOOK.md`) and rerun.
 
 After the backup, any failure — rsync, build, the container not reaching `healthy` within
 `HEALTH_ATTEMPTS` x `HEALTH_INTERVAL` seconds (default 36 x 5), or a public check — triggers the
@@ -59,7 +62,7 @@ automatic rollback: the source dir is restored from `source.tgz`, `rollback-<UTC
 again. The script then exits non-zero.
 
 Transfers are content-only (`rsync -rl --checksum`, never `-t`/`-a`/`-g`/`-o`/`-p`, T-255). The
-v1 deploy user writes under `/opt/inferno` through an ACL but may not set times, owner, group or
+v1 deploy user writes under `$REMOTE_ROOT` through an ACL but may not set times, owner, group or
 mode on root-owned inodes; metadata flags made rsync exit 23 on 2026-10-05. Changed files are
 rewritten as new inodes owned by the deployer with their previous mode; unchanged files are left
 alone. No right is widened, and every rsync error still fails the run and rolls back.
@@ -69,18 +72,19 @@ alone. No right is widened, and every rsync error still fails the run and rolls 
 ```bash
 git fetch origin && git checkout --detach <release-sha>   # clean checkout, nothing uncommitted
 export EXPECTED_SHA=<release-sha>                          # full 40 characters
+export SSH_HOST=<operator-ssh-alias> REMOTE_ROOT=<deploy-root> REMOTE_VOLUME=<capacity-volume>   # required, no defaults
 scripts/deploy-compose-service.sh telegram-bot plan       # read-only: state, free space, rsync dry run
 scripts/deploy-compose-service.sh telegram-bot deploy     # backup -> sync -> build -> healthy -> public checks
 scripts/deploy-compose-service.sh telegram-bot verify     # public HTTP only; safe from any machine
 ```
 
-`SSH_HOST` defaults to the operator alias `hetzner`. `plan` prints the container state, free
+`verify` needs no host connection. `plan` prints the container state, free
 space, the live `RELEASE_SHA` and the itemized file changes, and warns when `deploy` would refuse.
 
 ## Rollback
 
 ```bash
-scripts/deploy-compose-service.sh <service> rollback /opt/inferno/backups/<service>-<UTC>
+scripts/deploy-compose-service.sh <service> rollback $REMOTE_ROOT/backups/<service>-<UTC>
 ```
 
 Restores the source dir from the backup (content-only), retags `rollback-<UTC>` as `latest` and
@@ -108,11 +112,11 @@ scripts can run through it instead of raw ssh, docker and rsync. The switch is o
 export DEPLOY_MODE=gate    # unset = the direct ssh path described above
 ```
 
-Every host action is then one `ssh -F ~/.fleet-ssh/config hetzner-deploy <subcommand> ...` call
-(override the alias with `DEPLOY_GATE_HOST`). The forced command only runs whitelisted
-subcommands of the reviewed root tool; the upload is a tar on stdin whose SHA-256 the tool checks
-before it changes anything, and only regular files and directories are accepted. No secret is
-ever passed.
+Every host action is then one `ssh -F "$DEPLOY_GATE_SSH_CONFIG" "$DEPLOY_GATE_HOST" <subcommand> ...`
+call (both operator-supplied; the client ships no alias or config-path defaults). The forced command
+only runs whitelisted subcommands of the reviewed root tool; the upload is a tar on stdin whose
+SHA-256 the tool checks before it changes anything, and only regular files and directories are
+accepted. No secret is ever passed.
 
 | Script and mode | Gate call |
 | --- | --- |
@@ -139,11 +143,11 @@ unverified and use `rollback <stamp>` explicitly; the tool prints the backup sta
 (`YYYYMMDDTHHMMSSZ`), and `backups` lists the available stamps. Gate mode stays unused until the
 v2 installation and its authorization/restore behaviour are accepted.
 
-## Host assumptions (read-only, 2026-09-30)
+## Historical host assumptions (2026-09-30, generalized paths)
 
-- Compose project `inferno`, run as `cd /opt/inferno && docker compose ...`; build contexts
+- Compose project `inferno`, run as `cd $REMOTE_ROOT && docker compose ...`; build contexts
   `./<service>`; containers `inferno-<service>`; images `inferno-<service>:latest`.
-- Env files live outside the source dirs (`/opt/inferno/.env.production`, `.env.points-backend`,
+- Env files live outside the source dirs (`$REMOTE_ROOT/.env.production`, `.env.points-backend`,
   `.env.ai-copilot`); data lives in the named volumes `points-data` and `copilot-data`.
 - All three Dockerfiles define `HEALTHCHECK`; only `healthy` counts as success.
 - GNU `tar`, `rsync` and `df -BM` are available on the host.
@@ -151,7 +155,7 @@ v2 installation and its authorization/restore behaviour are accepted.
 ## Tests
 
 `npm run test:release-guards` also runs `scripts/test-deploy-compose-service.sh` against a
-temporary copy of the host layout (remote commands really run there; docker, df and curl are
+temporary copy of a modelled host layout (remote commands really run there; docker, df and curl are
 fakes with file-backed image and container state): SHA/checkout guards, env allow-list, plan
 leaves the host byte-identical, capacity refusal without prune, backup before the first write,
 excludes protect env/SQLite/data files, failed health, sync or build roll back automatically, a

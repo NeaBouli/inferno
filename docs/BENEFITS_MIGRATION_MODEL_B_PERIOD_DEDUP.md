@@ -30,11 +30,13 @@ Docker Compose v2 with JSON config output, Python 3 with SQLite, rsync, curl and
 coreutils (`timeout`, `stat`, `sha256sum`), tar, find and flock. No env file is sourced
 and no secret, row, proof, wallet address or raw migration output may be copied to logs.
 
-Prepare two clean, reviewed Git checkouts using the approved host transfer process:
+Prepare two clean, reviewed Git checkouts using the approved host transfer process
+(`<deploy-root>` is the operator deployment root on the host; the concrete layout is
+operator-specific and tracked privately):
 
-- `/opt/inferno/release-checkouts/3842f8ae4237ede7eadfc66c2887e3410026145b`:
+- `<deploy-root>/release-checkouts/3842f8ae4237ede7eadfc66c2887e3410026145b`:
   app repository at exactly the target SHA, with the previous commit available locally.
-- `/opt/inferno/migration-tools`: the separately reviewed tooling commit containing
+- `<deploy-root>/migration-tools`: the separately reviewed tooling commit containing
   `scripts/ops/benefits-migration-model-b-period-dedup.sh` and the updated
   `benefits-backend-volume-ownership.sh`. Record that commit and both script digests.
 
@@ -45,7 +47,7 @@ the tools must be tracked. The script never fetches or commits. It archives the 
 app commit, not the tooling checkout or working tree. Do not weaken cleanliness checks
 to execute the uncommitted development copy.
 
-The running source must be `/opt/inferno/benefits-network`, with `RELEASE_SHA` equal to
+The running source must be `<deploy-root>/benefits-network`, with `RELEASE_SHA` equal to
 the previous release and every migration byte equal to that release. Compose must
 resolve build contexts to its `backend` and `frontend` subdirectories, volume key
 `benefits-data` to the mounted Docker volume, backend `DATABASE_URL` to
@@ -70,17 +72,18 @@ frontend configuration or guessed image tag is used. Missing/mismatched argument
 refuse before writes. Check receipt audience/chain configuration under the existing
 release process without displaying backend env values.
 
-Create private backup directories and export every migration setting:
+Create private backup directories and export every migration setting (replace the
+`<...>` layout placeholders with the operator layout; keep the pinned release IDs):
 
 ```bash
-install -d -m 0700 /root/benefits-migration-backups /opt/inferno/backups
-export MIGRATION_REPO=/opt/inferno/release-checkouts/3842f8ae4237ede7eadfc66c2887e3410026145b
+install -d -m 0700 <private-backup-root> <deploy-root>/backups
+export MIGRATION_REPO=<deploy-root>/release-checkouts/3842f8ae4237ede7eadfc66c2887e3410026145b
 export MIGRATION_EXPECTED_SHA=3842f8ae4237ede7eadfc66c2887e3410026145b
 export MIGRATION_PREVIOUS_SHA=5468f561f98c2250eb210ace1bb42dc442bd5fc8
-export MIGRATION_SOURCE_DIR=/opt/inferno/benefits-network
-export MIGRATION_BACKUP_ROOT=/root/benefits-migration-backups
-export MIGRATION_COMPOSE_FILE=/opt/inferno/docker-compose.yml
-export MIGRATION_ENV_FILE=/opt/inferno/.env.benefits
+export MIGRATION_SOURCE_DIR=<deploy-root>/benefits-network
+export MIGRATION_BACKUP_ROOT=<private-backup-root>
+export MIGRATION_COMPOSE_FILE=<deploy-root>/docker-compose.yml
+export MIGRATION_ENV_FILE=<deploy-root>/.env.benefits
 export MIGRATION_HEALTH_URL=https://shop.ifrunit.tech/api/health
 export MIGRATION_READY_URL=https://shop.ifrunit.tech/api/ready
 export MIGRATION_FRONTEND_URL=https://shop.ifrunit.tech/
@@ -96,7 +99,7 @@ benefits_mount=$(timeout --kill-after=5 30 docker volume inspect --format '{{.Mo
 test -d "$benefits_mount" || exit 1
 export MIGRATION_DB_FILE="$benefits_mount/benefits.db"
 unset benefits_volume benefits_mount
-cd /opt/inferno/migration-tools
+cd <deploy-root>/migration-tools
 ```
 
 The script independently rechecks both complete mount sets, mountpoint, Compose
@@ -163,8 +166,9 @@ backup. If backup-before-any-stop becomes a release requirement, prepare a separ
 reviewed, verified pre-stop SQLite backup through SQLite's backup API and retain the
 final stopped backup as well; never substitute a raw live-file copy.
 
-It reuses the ownership tool to set the resolved volume to uid/gid 1000, retaining its verified
-ownership backups under `/opt/inferno/backups`. It does not restart the old image
+It reuses the ownership tool to set the resolved volume to uid/gid 1000, passing the
+migration backup root as the tool's `BACKUP_DIR` so its verified ownership backups stay
+with this attempt's artifacts. It does not restart the old image
 between chown and migration. The named one-off uses the immutable new backend ID,
 `--network none`, uid/gid 1000 and a 300-second wait. Every Docker/Compose invocation
 has a GNU `timeout --kill-after=5` process-group deadline: 30 seconds for metadata,
@@ -217,7 +221,7 @@ Follow its `RESTORE.txt` together with these release-specific steps:
    the same filesystem. Require the backup SHA-256 and read-only `integrity_check=ok`.
    Verify the saved before-counts and absence of the new migration record.
 4. Extract `runtime-source.tgz` to an isolated directory, then restore its contents to
-   `/opt/inferno/benefits-network` with the same content-only rsync/exclusions as apply.
+   `<deploy-root>/benefits-network` with the same content-only rsync/exclusions as apply.
    Preserve excluded host-only files. Require `RELEASE_SHA` to equal
    `5468f561f98c2250eb210ace1bb42dc442bd5fc8`. `previous-source.tgz` also contains
    the committed previous repository source (`apps/benefits-network` layout), for

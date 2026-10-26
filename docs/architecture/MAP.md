@@ -1254,3 +1254,63 @@ Shared source/env backup and source sync remain broader than image recreation.
 `RELEASE_SHA` therefore does not establish frontend image replacement; bind mounts
 and API compatibility still require exact-release preflight. No new mode, flag,
 retry, migration, key operation, privilege or global Fleet workflow change.
+
+## Benefits WalletConnect Pulse guard and runtime contract - 2026-10-26
+
+Module: Benefits app-owned deferred WalletConnect provider and optional Pulse
+telemetry boundary. The existing Coinbase and injected-wallet paths are unchanged.
+
+Trace: `src/app/providers.tsx` -> `src/lib/wagmi.ts::wagmiConfig` ->
+`src/lib/deferredWalletConnector.mjs::getProvider` -> activated connector ->
+`preGetProvider` -> `src/lib/wallet-telemetry-guard.mjs` -> real provider creation.
+The hook runs before SDK initialization. The document-scoped guard matches only
+`https://pulse.walletconnect.org` for the app realm's `fetch` and `sendBeacon`;
+other destinations and WebSocket relay traffic retain their native transports.
+A missing or replaced guard fails this WalletConnect provider path closed.
+
+`scripts/test-benefits-walletconnect-runtime.cjs` compiles the actual configuration,
+deferred connector and pinned SDK composition. Playwright terminates HTTP and WS
+in local synthetic fixtures. QR proposals (`wc_proposeSession`) are counted
+separately from real Core IRN subscribe/publish positive controls. Refusal,
+unknown/malformed requests, QR cancellation/retry, missing-session marker cleanup,
+three lifecycle events and six real 10500-ms samples remain explicit controls.
+Guarded cases require zero Pulse transport calls; guard-removed mutation cases
+must detect telemetry. Output contains only fixed numeric/boolean aggregates.
+
+The fixture explicitly initializes `navigator.onLine` and asserts its native,
+applied and observed booleans before every case. This platform metadata override
+supports OS-network-none validation; it does not replace the SDK or relay proof.
+The isolated nine-case qualification passed with both compiler error counts zero.
+The owning command is `npm run test:benefits-walletconnect-runtime`; Benefits CI
+runs it after the existing dependency and Chromium installations.
+
+This proof excludes Next/React UI, wallet approvals, encrypted/valid sessions,
+`CONNECT_SUCCESS`, real restore/disconnect, physical devices, signing,
+transactions, live wallets and production. It is a bounded source/runtime
+qualification, not deployment or whole-wallet acceptance.
+
+## Benefits manual full-preflight CI path - 2026-10-26
+
+Module: Benefits release verification. Trace: existing `workflow_dispatch` ->
+`.github/workflows/benefits-network.yml::test-release-evidence-static` ->
+`package.json::preflight:benefits` -> `scripts/preflight-benefits-release.sh --full`
+-> the unchanged 52-step SDK, frontend, backend and browser fixture sequence.
+
+The existing job retains its static steps and Node 22 setup on the standard
+`ubuntu-latest` runner, with existing action pins and inherited `contents: read`.
+Checkout credentials are not persisted; automatic package-manager caching is
+disabled. Two additional steps run only on the existing manual dispatch event:
+install prerequisites, then execute the full wrapper. Root, SDK, frontend and
+backend dependencies use their existing locks through `npm ci`; SQLite CLI and
+the locked Playwright Chromium/OS libraries support local fixture execution.
+No persistent cache or artifact upload is added.
+
+The exact command is `npm run preflight:benefits -- --full`, with a 90-minute step
+budget. The wrapper retains its clean-tree, SDK-dist, audit and all other checks.
+Migration fixtures use local disposable SQLite data, capacity uses a fake SSH
+transport, and browser/fullstack fixtures use local servers and mock wallets/RPC.
+Package/audit/browser installation may access their normal public registries;
+the job supplies no deployment credentials, production SSH or on-chain action.
+Push/pull-request triggers and the other three jobs are unchanged; automatic
+events skip the two manual steps. There remain four explicit Node 22 runtimes.
+Adding this runner path is not a completed Full result or a release approval.

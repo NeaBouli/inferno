@@ -5,6 +5,7 @@ import { injected } from 'wagmi/connectors/injected';
 import { walletConnect } from 'wagmi/connectors/walletConnect';
 import { deferUntilChosen } from '@/lib/deferredWalletConnector.mjs';
 import { normalizeWalletConnectProjectId } from '@/lib/walletConnectProjectId.mjs';
+import { installWalletConnectTelemetryGuard } from '@/lib/wallet-telemetry-guard.mjs';
 
 const chainId = Number(process.env.NEXT_PUBLIC_CHAIN_ID || 1);
 const chains = chainId === 1 ? [mainnet] as const : [sepolia] as const;
@@ -46,7 +47,7 @@ const connectors = [
           url: 'https://shop.ifrunit.tech',
           icons: ['https://shop.ifrunit.tech/icons/ifr-token-256-v11.png'],
         },
-      }))]
+      }), { preGetProvider: installWalletConnectTelemetryGuard })]
     : []),
 ];
 

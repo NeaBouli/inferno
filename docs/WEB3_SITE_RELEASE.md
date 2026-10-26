@@ -5,24 +5,26 @@ does **not** update it (GitHub Pages only serves `ifrunit.tech`). Without a rele
 drifts: on 2026-09-30 it still served the 12 September build (vendored ethers/WalletConnect 404,
 CSP allowing `esm.sh`, Pages sitemap with foreign-host URLs, service worker `ifr-web3-v15`).
 
-`scripts/deploy-web3-site.sh` releases exactly one reviewed commit. It is operator-run: the Fleet
-diagnosis identity has no write access to `/opt/inferno` and no Docker.
+`scripts/deploy-web3-site.sh` releases exactly one reviewed commit. It is operator-run: a
+read-only diagnosis identity has no write access to the deployment root and no Docker. The
+script ships no host defaults: set `SSH_HOST` and `REMOTE_ROOT` to the operator connection and
+deployment root (paths below use `$REMOTE_ROOT`, which the script derives its site root from).
 
 ## What a release changes
 
 | Target | Change | Not changed |
 | --- | --- | --- |
-| `/opt/inferno/web3-site/html/` | full `docs/` tree of the release commit (`git archive`, never the working tree), plus `infra/web3/robots.txt` + `infra/web3/sitemap.xml` at the web root, `infra/web3/web3-security-headers.conf` as `.nginx/web3-security-headers.conf`, and `web3-release.json` (`{"sha": …}`) | no deletions unless `DELETE=1` |
+| `$REMOTE_ROOT/web3-site/html/` | full `docs/` tree of the release commit (`git archive`, never the working tree), plus `infra/web3/robots.txt` + `infra/web3/sitemap.xml` at the web root, `infra/web3/web3-security-headers.conf` as `.nginx/web3-security-headers.conf`, and `web3-release.json` (`{"sha": …}`) | no deletions unless `DELETE=1` |
 | `inferno-web3-site` | `nginx -t`, then `nginx -s reload` | no recreate, no other container, no volume, env or secret |
-| `/opt/inferno/web3-site/nginx.conf` | nothing | the host config already includes `/usr/share/nginx/html/.nginx/web3-security-headers.conf` (dot paths are not served); `deploy` stops if that include is missing |
+| `$REMOTE_ROOT/web3-site/nginx.conf` | nothing | the host config already includes `/usr/share/nginx/html/.nginx/web3-security-headers.conf` (dot paths are not served); `deploy` stops if that include is missing |
 
-A new backup directory `/opt/inferno/backups/web3-site-<UTC>/` (never reused) receives a tar of
+A new backup directory `$REMOTE_ROOT/backups/web3-site-<UTC>/` (never reused) receives a tar of
 `html/` and a copy of `nginx.conf` before anything changes. A failed sync stops before nginx is
 touched. If `nginx -t` fails, the previous headers file is restored from the backup and nginx is
 not reloaded.
 
 Transfers are content-only (`rsync -rl --checksum`, never `-t`/`-a`/`-g`/`-o`/`-p`, T-255). The
-v1 deploy user writes under `/opt/inferno` through an ACL but may not set times, owner, group or
+v1 deploy user writes under `$REMOTE_ROOT` through an ACL but may not set times, owner, group or
 mode on root-owned inodes; metadata flags made the 2026-10-05 release exit 23. Changed files are
 rewritten as new inodes owned by the deployer with their previous mode, unchanged files are left
 alone, and `--chmod` makes new files world-readable for nginx. No right is widened, and every
@@ -33,12 +35,13 @@ rsync error still fails the run.
 ```bash
 git fetch origin && git checkout --detach <release-sha>   # clean checkout, nothing uncommitted
 export EXPECTED_SHA=<release-sha>                          # full 40 characters
+export SSH_HOST=<operator-ssh-alias> REMOTE_ROOT=<deploy-root>   # required, no defaults
 scripts/deploy-web3-site.sh plan      # read-only: remote checks, rsync dry run, headers diff
 scripts/deploy-web3-site.sh deploy    # backup -> sync -> nginx -t -> reload -> verify
 scripts/deploy-web3-site.sh verify    # public HTTP only; safe to repeat from any machine
 ```
 
-`SSH_HOST` defaults to the operator alias `hetzner`. `deploy` refuses a dirty tree, a different
+`verify` needs no host connection. `deploy` refuses a dirty tree, a different
 `HEAD`, a failing `test:web3-headers` or `test:web3-wallet-runtime` gate, a stopped container or
 less than 1 GB free.
 
@@ -53,7 +56,7 @@ WalletConnect cancel check from T-156.
 ## Rollback
 
 ```bash
-scripts/deploy-web3-site.sh rollback /opt/inferno/backups/web3-site-<UTC>
+scripts/deploy-web3-site.sh rollback $REMOTE_ROOT/backups/web3-site-<UTC>
 ```
 
 Restores `html/` (content-only rsync `--delete` from the archive, including the headers file) and
@@ -75,13 +78,14 @@ accepted.
 
 With `DEPLOY_MODE=gate` the same modes run through the scoped deploy gate (inferno-deploy v2):
 the staged docroot goes up as a tar with `.nginx/web3-security-headers.conf` at its root, and
-`rollback` takes the backup stamp. Mapping and details: [Compose Service Release, gate
+`rollback` takes the backup stamp. The gate connection is operator-supplied (`DEPLOY_GATE_HOST`,
+`DEPLOY_GATE_SSH_CONFIG`). Mapping and details: [Compose Service Release, gate
 mode](COMPOSE_SERVICE_RELEASE.md#gate-mode).
 
 ## Tests
 
 `npm run test:release-guards` runs `scripts/test-deploy-release-guards.sh` against a temporary
-copy of the host layout (remote commands really run there; only docker, df and curl are fakes):
+copy of a modelled host layout (remote commands really run there; only docker, df and curl are fakes):
 plan leaves the host byte-identical, a missing include or failed sync stops before any nginx
 action, failed `nginx -t` restores the headers, deploy ships docroot + anchors + headers without
 touching `nginx.conf`, verify fails on a tampered file or CSP, rollback restores the docroot

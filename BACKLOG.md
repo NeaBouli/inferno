@@ -12,7 +12,7 @@
       Rest: 8 transitive Low-Funde (0 moderate/high/critical); kein Force-Fix.
 
 ## 🟡 Nächste Session
-- [ ] .env cleanup (DEPLOYER_PRIVATE_KEY Konsistenz prüfen)
+- [ ] Lokale Deployer-Key-Hygiene abschließen (Details im privaten Operations-Record)
 - [ ] CoinGecko / CoinMarketCap Listing vorbereiten
 - [ ] Professional Security Audit beauftragen
 

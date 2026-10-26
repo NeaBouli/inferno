@@ -1,10 +1,13 @@
 # Restart Snapshot — 2026-06-14 02:25 PDT
 
+_Historical operator snapshot; local machine paths are generalized, and the
+operator-specific records live privately. On-chain data is publicly verifiable._
+
 ## Purpose
 This file preserves the current IFR / Inferno project state before restarting the Mac.
 
 ## Last Known Git State
-- Repository: `/Users/gio/Desktop/repos/inferno`
+- Repository: local operator checkout (path in the private operations record)
 - Branch: `main`
 - Last pushed commit known from previous completed task:
   - `7cd356cb6e0652d5b5c1cb4e25a9ab9dcf5deffe`
@@ -26,14 +29,12 @@ This file preserves the current IFR / Inferno project state before restarting th
   - `docs/RESTART_SNAPSHOT_2026-06-14.md`
 
 ## Local Backup Archive
-- Archive created before restart:
-  - `/Users/gio/Desktop/repos/_backups/inferno-restart-2026-06-14-0225.tar.gz`
+- Archive created before restart in the operator's local backup area (path in the
+  private operations record; the archive is not part of this repository).
 - Archive size:
   - `337M` via `du -sh`
-- Archive SHA-256:
+- Archive SHA-256 (recorded for integrity evidence):
   - `b8f8a2b4d370d4529af465d8a39f8175973c6485640288e0c622a90cd763b622`
-- Checksum file:
-  - `/Users/gio/Desktop/repos/_backups/inferno-restart-2026-06-14-0225.tar.gz.sha256`
 - Repo directory size:
   - `805M` via `du -sh`
 
@@ -101,7 +102,7 @@ grep -rn "accepting contributions\|Bootstrap.*LIVE\|Pre-Launch\|contribute.*ETH.
 ```
 
 ## Next Steps After Restart
-1. Re-open `/Users/gio/Desktop/repos/inferno`.
+1. Re-open the local operator checkout.
 2. Run:
    ```bash
    git status --short --branch

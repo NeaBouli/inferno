@@ -64,7 +64,7 @@ Ali Phase 2 status (Telegram item 10 below): **closed as superseded** by web-cha
 6. ✅ Full language switch to English (7 files)
 7. ✅ Final test protected topics DONE (17.03.2026)
 8. ✅ Persistent verification across restarts (17.03.2026, Commit: f30dc3ce)
-9. ✅ SIGNER_WALLETS + VERIFY_PORT=3001 in Railway (16.03.2026)
+9. ✅ SIGNER_WALLETS + VERIFY_PORT=3001 im damaligen Hosting gesetzt (16.03.2026)
 10. Ali Phase 2: WalletConnect → wallet-specific answers (after LP live)
 
 ---
@@ -126,16 +126,16 @@ Ali Phase 2 status (Telegram item 10 below): **closed as superseded** by web-cha
 - [x] ✅ Bootstrap Stats Race Condition gefixt (16.03.2026)
 - [x] ✅ Recent Votes Bug gefixt (16.03.2026)
 - [x] ✅ Bootstrap Voting UX — public stats + 3-state buttons (16.03.2026)
-- [x] ✅ Bootstrap Voting: Public stats via Railway API (17.03.2026)
+- [x] ✅ Bootstrap Voting: Public stats via die damalige Hosting-API (17.03.2026)
       POST /api/bootstrap/vote + GET /api/bootstrap/votes
       On-chain contribution verification via Etherscan eth_call
-- [x] ✅ Bootstrap votes persistent via Railway GraphQL API (17.03.2026)
+- [x] ✅ Bootstrap votes persistent via die damalige Hosting-GraphQL-API (17.03.2026)
       BOOTSTRAP_VOTES env var (base64) — survives deploys + restarts
-      Fallback: /tmp/ifr_bootstrap_votes.json
-- [x] ✅ Railway GraphQL fix — projectId added (17.03.2026)
+      Fallback: lokale Temp-Datei
+- [x] ✅ Hosting-GraphQL fix — projectId added (17.03.2026)
 - [x] ✅ Debug panel removed (17.03.2026)
-- [x] ✅ Bootstrap votes: localStorage re-submit to Railway on page load (17.03.2026)
-- [x] ✅ Railway vote endpoints verified live (17.03.2026)
+- [x] ✅ Bootstrap votes: localStorage re-submit zum damaligen Hosting on page load (17.03.2026)
+- [x] ✅ Vote-Endpoints live verifiziert (historisches Hosting, 17.03.2026)
       GET /api/bootstrap/votes → 200 OK
       POST /api/bootstrap/vote → 403 correct (deployer has 0 contribution)
       On-chain verification working — only actual contributors can vote
@@ -184,7 +184,7 @@ Ali Phase 2 status (Telegram item 10 below): **closed as superseded** by web-cha
       Landing, Tokenomics, Transparency, Wallet-Guide, Roadmap,
       Governance, Security, Fair-Launch, Protocol-Plan, One-Pager,
       Multisig, Mainnet-Checklist — 13 Dateien aktualisiert
-- [x] ✅ Railway: LP Reserve Safe added to balances endpoint (18.03.2026)
+- [x] ✅ Hosting: LP Reserve Safe added to balances endpoint (18.03.2026)
       LPReserveSafe: 0x5D93... (400.6M IFR verified on-chain)
 
 - [ ] 🟡 Phase 2 LP via Governance Proposal
@@ -223,7 +223,7 @@ Ali Phase 2 status (Telegram item 10 below): **closed as superseded** by web-cha
 6. CHANGELOG.md: Plan B dokumentieren
 7. Wiki-Inkonsistenzen fixen (Test-Counts, Roadmap Phasen, Adressen)
 8. Vesting-Zeitplan Dokument erstellen (intern)
-9. Transparency Page: Railway `burned` vs `burnBalance` Fix
+9. Transparency Page: Hosting-API `burned` vs `burnBalance` Fix
 
 ## NIEDRIG — Audits & Tests
 

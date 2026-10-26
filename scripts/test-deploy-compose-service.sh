@@ -174,7 +174,8 @@ run() { # run <expected-exit> <cmd...>
   local expected="$1"; shift
   set +e
   OUT="$(PATH="$FAKES:$PATH" LOG="$LOG" REMOTE="$REMOTE" REAL_RSYNC="$REAL_RSYNC" DOCKER_STATE="$DOCKER_STATE" \
-    SSH_HOST=compose-test-host HEALTH_INTERVAL="${HEALTH_INTERVAL:-0}" HEALTH_ATTEMPTS="${HEALTH_ATTEMPTS:-3}" "$@" 2>&1)"
+    SSH_HOST=compose-test-host REMOTE_ROOT="${REMOTE_ROOT:-/opt/inferno}" REMOTE_VOLUME="${REMOTE_VOLUME:-/mnt/fixture-volume}" \
+    HEALTH_INTERVAL="${HEALTH_INTERVAL:-0}" HEALTH_ATTEMPTS="${HEALTH_ATTEMPTS:-3}" "$@" 2>&1)"
   local status=$?
   set -e
   if [[ "$status" != "$expected" ]]; then
@@ -236,7 +237,7 @@ refute_log "curl "
 
 # --- env values that reach remote shell strings are allow-listed --------------------
 set +e
-OUT="$(PATH="$FAKES:$PATH" LOG="$LOG" SSH_HOST="x; touch $TMP/injected" EXPECTED_SHA="$SHA" "$C" points-backend plan 2>&1)"
+OUT="$(PATH="$FAKES:$PATH" LOG="$LOG" SSH_HOST="x; touch $TMP/injected" REMOTE_ROOT=/opt/inferno REMOTE_VOLUME=/mnt/fixture-volume EXPECTED_SHA="$SHA" "$C" points-backend plan 2>&1)"
 [[ $? == 1 ]] || fail "SSH_HOST injection not refused"
 set -e
 assert_out "SSH_HOST contains characters"

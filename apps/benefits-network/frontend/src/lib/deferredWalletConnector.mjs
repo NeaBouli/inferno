@@ -24,9 +24,10 @@ export const SDK_SESSION_STORAGE_KEY = 'deferredSdkConnectorId';
 /**
  * @template {(config: any) => any} T
  * @param {T} connectorFn wagmi CreateConnectorFn (e.g. coinbaseWallet(...))
+ * @param {{ preGetProvider?: () => void }} [options]
  * @returns {T}
  */
-export function deferUntilChosen(connectorFn) {
+export function deferUntilChosen(connectorFn, { preGetProvider } = {}) {
   const deferred = (config) => {
     const base = connectorFn(config);
     let chosen = false;
@@ -86,6 +87,8 @@ export function deferUntilChosen(connectorFn) {
       },
       async getProvider(parameters) {
         if (!(await activated())) return undefined;
+        // Check even cached providers; the guard must precede SDK evaluation.
+        preGetProvider?.();
         const provider = await base.getProvider.call(this, parameters);
         if (provider) initialized = true;
         return provider;
