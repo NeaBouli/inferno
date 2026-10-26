@@ -2,7 +2,7 @@
   "name": "IFR Benefits Network Device Wallet Acceptance Checklist",
   "target": "https://shop.ifrunit.tech",
   "status": "open",
-  "lastUpdated": "2026-10-17",
+  "lastUpdated": "2026-10-26",
   "automatedWalletParity": {
     "audit": "JUL-11",
     "command": "npm run test:wallet-parity",
@@ -17,9 +17,9 @@
     "physicalPassRequiresDeviceEvidence": true
   },
   "knownBlockers": [
-    "The production WalletConnect modal and wallet catalog are live; physical QR pairing, connection and signature evidence is still required.",
-    "Physical customer-proof -> REDEEMED evidence still requires an eligible locked customer wallet; the local state-machine flow is automated, but its on-chain eligibility read is mocked.",
-    "Automated and emulated results support code verification but never satisfy a physical-device matrix PASS.",
+    "The production WalletConnect modal and wallet catalog were recorded live on 2026-08-06; that configuration state was not re-verified during the 2026-10-26 metadata preparation and must be re-observed against the admitted release at acceptance time. Physical QR pairing, connection and signature evidence is still required.",
+    "Physical customer-proof -> REDEEMED evidence still requires an eligible locked customer wallet; the local state-machine flow is automated, but its on-chain eligibility read is mocked. Tester assignment and eligible test-wallet availability/authority are currently unknown (WAIT_TESTER).",
+    "Automated and emulated results support code verification but never satisfy a physical-device matrix PASS. The qualified PR #372 candidate (https://github.com/NeaBouli/inferno/pull/372, head ecc45342c37e5b15b9e19fa72698e82fadafbcdd, five PR workflows successful at this preparation checkpoint) is a synthetic pinned-SDK composition with a fixture-only navigator.onLine override and guarded Pulse-zero plus mutation/QR/relay/lifecycle/timer controls: it is not physical wallet/device, live-release, approved or encrypted sessions, CONNECT_SUCCESS, signing, transaction, real restore or disconnect acceptance, and CI success does not imply deployment.",
     "Production capacity must be checked read-only immediately before every deploy; do not rely on a previously recorded free-space value."
   ],
   "matrix": [
