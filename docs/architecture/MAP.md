@@ -752,6 +752,9 @@ Guide/Support already describe eligible proof redemption and gas-bearing lock
 actions separately; this copy reconciliation does not change that app payload.
 Source guards, scoped responsive proof and per-target publication verification
 apply to changed surfaces; no contract or application behavior is changed.
+The existing Lending Wiki status banner also lets its flex text shrink and wrap
+the full public contract address; a narrow-viewport geometry regression checks
+address containment and zero main/document overflow without hiding content.
 
 ### 11.9 Project-continuity visibility addendum (2026-10-25)
 
