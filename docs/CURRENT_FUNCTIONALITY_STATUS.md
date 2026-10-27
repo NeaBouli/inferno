@@ -1,12 +1,17 @@
 # Current Functionality Status
 
-**Verified:** 6 September 2026
+**Software status reviewed:** 27 October 2026
 **Repository baseline:** current release branch
+**Reviewed source:** `adba357786ad17803d48a7b5509b472b51bc0098`
 **Network:** Ethereum Mainnet
 
 This document is the canonical boundary between implemented, operational and
 still-pending functionality. Historical test counts and roadmap snapshots do
 not override this status.
+
+This review updates software delivery and acceptance status. Chain figures
+retain their original verification blocks and dates; no new chain inventory
+or professional audit is implied by the software date.
 
 **Audit remediation checkpoint:** 20 October 2026. The seven CWA reports are
 published, but publication is not remediation. The authoritative
@@ -22,9 +27,11 @@ published, but publication is not remediation. The authoritative
 | [Landing](https://ifrunit.tech/) | Public protocol overview, live/read-only status, Uniswap handoff, token import and the established minimal injected-wallet flow. | The landing intentionally does not provide the broad connector set or all protocol writes. Those belong to Web3. |
 | [Wiki](https://ifrunit.tech/wiki/) | Technical documentation, Mainnet reads and focused wallet interactions on the relevant contract pages. | Documentation pages are not a substitute for governance activation. Official interfaces permanently retire LendingVault V1 creation/increase and new borrowing under owner policy (#209/#211), regardless of price; underlying contract functions are not removed. Full-available lender withdrawal and existing-loan repayment/top-up remain available. Price-conditioned CommitmentVault locks remain unavailable while their Mainnet price input is unset. |
 | [Web3](https://web3.ifrunit.tech/) | Injected-wallet and WalletConnect selection, connector identity, disconnect, IFR balance, token import, IFRLock lock/unlock, CommitmentVault tranche management, LendingVault full-available lender withdrawal, existing-loan repayment/top-up and live lending reads. | Official interfaces permanently retire LendingVault V1 creation/increase and new borrowing under owner policy (#209/#211), regardless of price (accepted frontend release `50af`). Underlying contract functions are not removed. The retained contract-input snapshot `LendingVault.ifrPriceWei = 0` is separate from permanent interface retirement. CommitmentVault price-only, time-or-price and time-and-price locks are disabled because `priceOracle` is the zero address. TIME_ONLY locks remain available. |
-| [IFR Benefits](https://shop.ifrunit.tech/) | Installable customer/seller PWA, external-wallet connection, seller profiles and catalogs, benefit rules, customer passes, QR scan/manual entry, proof approval, one-time redemption and guarded seller-reward configuration. | Owner-B (#238) is live: the customer-privacy migration was applied in production on 11 October 2026 (Benefits release 262a2dcc); ordinary checkout records exclude raw customer wallet addresses/signatures and server receipt-history retrieval is retired. Merchant checkout records and seller audits remain; conditional Model B code can retain scoped wallet-derived reward HMACs and UTC reward months. Retention period not yet defined for protected checkout/reward records or older backups; deletion requires operator action and is not established by source. Production uses external self-custody wallets. The embedded-wallet package is a prototype only. Automated release gates pass, but the physical device/wallet acceptance matrix is 1/10 and remains an explicit release follow-up. PartnerVault Model B rewards require registration, allocation and per-period Governance `recordMilestone`, not an authorized-caller path; no pilot partner is activated. Profile creation alone does not activate rewards. |
+| [IFR Benefits](https://shop.ifrunit.tech/) | Operator-run customer/seller PWA with self-custody external wallets, seller profiles and catalogs, benefit rules, customer passes, QR scan/manual entry, exact-offer customer proofs, one-time redemption and guarded seller-reward configuration. | Owner-B (#238) is live: the customer-privacy migration was applied in production on 11 October 2026 (Benefits release 262a2dcc); ordinary checkout records exclude raw customer wallet addresses/signatures and server receipt-history retrieval is retired. Merchant checkout records and seller audits remain; conditional Model B code can retain scoped wallet-derived reward HMACs and UTC reward months. Retention period not yet defined for protected checkout/reward records or older backups; deletion requires operator action and is not established by source. Production uses external self-custody wallets. The embedded-wallet package is a prototype only. Automated release gates pass, but the physical device/wallet acceptance matrix is 1/10 and remains an explicit release follow-up. PartnerVault Model B rewards require registration, allocation and per-period Governance `recordMilestone`, not an authorized-caller path; no pilot partner is activated. Profile creation alone does not activate rewards. |
 
 ## Mainnet Capability Snapshot
+
+**Verified:** 6 September 2026
 
 Base read-only verification at Ethereum block `25812380`; the
 LiquidityReserve row was refreshed at block `25918433`:
@@ -37,6 +44,12 @@ LiquidityReserve row was refreshed at block `25918433`:
 | CommitmentVault | `47,952,476.871794375 IFR` locked; `priceOracle = 0x0` | TIME_ONLY commitments are operational. Price-conditioned commitments fail closed. |
 | LendingVault | 3 offers; `52,155,440.952845656 IFR` available; `0 IFR` lent; `ifrPriceWei = 0` | Dated contract-input snapshot, not a fresh measurement or intrinsic contract disablement. Official interfaces permanently retire V1 creation/increase and new borrowing regardless of price; full-available withdrawal and existing-loan repayment/top-up remain available. |
 | BuilderRegistry | 0 registered and 0 active builders | Builder and PartnerVault reward activation remains governance work; public Benefits seller profiles are not automatically on-chain builders. |
+
+The existing TIME_ONLY CommitmentVault V2 is deployed, with its dated
+identity and fee-exemption evidence in the [deployment register](DEPLOYMENTS.md).
+It is separate from the new 18 October 2026 CommitmentVaultV2 source release
+candidate, which is not deployed or externally audited. Price-conditioned
+locks and replacement-contract activation remain separately gated.
 
 ## Repository Applications
 
@@ -74,6 +87,22 @@ evidence of the respective deploy.
 
 Creator Gateway, the dashboards, the SDK and the embedded-wallet prototype are
 not deployment units in this inventory.
+
+## Software Delivery Checkpoint — 27 October 2026
+
+- The current Benefits frontend release is deployed. The hosted full release
+  preflight and automated application/browser gates have passed; see the
+  [integrated release](https://github.com/NeaBouli/inferno/pull/375) and
+  [public CI records](https://github.com/NeaBouli/inferno/actions).
+- Self-custody wallet connection is available. The physical checklist remains
+  `1/10` passed and `9` pending; an isolated connection observation does not
+  complete customer proof, seller redemption or replay acceptance.
+- Points is an operator-run, SQLite-backed loyalty service, not a decentralized
+  token. Benefits combines central checkout/redemption state with on-chain
+  eligibility reads; merchant records and retention decisions remain relevant.
+- Live contract versions remain separate from unactivated replacement source
+  candidates. Independent professional audits and governance activation are
+  still pending where specified below.
 
 ## Verification Evidence
 
@@ -114,7 +143,9 @@ production monitoring or an independent professional third-party audit.
 ## Open Activation And Acceptance Work
 
 1. Complete the remaining Benefits iOS, Android and desktop wallet/device
-   evidence, including an eligible APPROVED-to-REDEEMED path and replay block.
+   evidence, including an eligible customer proof that atomically moves the
+   checkout from PENDING to REDEEMED, readable rejection and replay blocking.
+   ERC-20 token approval/lock transactions are separate from checkout states.
 2. Keep official-interface LendingVault V1 creation/increase and new borrowing
    permanently retired under owner policy (#209/#211), regardless of price.
    Full-available lender withdrawal and existing-loan repayment/top-up remain;
@@ -126,5 +157,6 @@ production monitoring or an independent professional third-party audit.
    governance-controlled BuilderRegistry and PartnerVault process.
 5. Publish later `ifr-sdk` versions only through the separate npm release gate
    (0.4.1 is published with provenance). The #238 customer-privacy cutover was
-   completed on 11 October 2026; delete the pre-migration backup after the acceptance window.
+   completed on 11 October 2026. Define retention and backup-deletion policy
+   before any separate operator-owned deletion; source does not prove deletion.
 6. Complete the independent professional third-party audit.

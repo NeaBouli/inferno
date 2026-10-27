@@ -10,7 +10,7 @@
 
 **Contract:** [`0x77e99917Eca8539c62F509ED1193ac36580A6e7B`](https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B#code) | **Network:** Ethereum Mainnet | **Bootstrap:** FINALIZED ✅ June 5, 2026 | **LP Token:** [`0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0`](https://etherscan.io/address/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0)
 
-**[18 documented on-chain components](docs/DEPLOYMENTS.md#canonical-mainnet-component-count-18)** (15 deployed protocol contracts + 3 Gnosis Safes) | **Full internal audits** | **Public automated test evidence** | **Independent professional third-party audit pending**
+**[18 documented on-chain components](docs/DEPLOYMENTS.md#canonical-mainnet-component-count-18)** (15 deployed protocol contracts + 3 Gnosis Safes) | **Internal review records** | **Public automated test evidence** | **Independent professional third-party audit pending**
 
 ### Quick Links
 
@@ -32,13 +32,24 @@
 
 ---
 
+## Software status — 27 October 2026
+
+The Mainnet core and public applications are delivered; the complete roadmap
+remains open. The current Benefits frontend release and automated release
+gates are complete. Physical customer-proof, seller, rejection and replay
+acceptance remains pending. Replacement-contract candidates require their
+separate audit and activation gates. See the
+[current functionality status](docs/CURRENT_FUNCTIONALITY_STATUS.md) for the
+delivered software and remaining acceptance boundaries. Dated chain figures
+below retain their original verification dates.
+
 ## What is Inferno?
 
 Inferno (IFR) is a deflationary ERC-20 utility token on Ethereum. Every standard transfer between non-exempt addresses burns 2.5% permanently, reducing total supply over time. Users lock IFR tokens on-chain to activate builder-product access without a recurring subscription; access remains active while each product's required IFR stays locked and that integration remains available.
 
 **Community Fair Launch Model** — No presale or VC funding; the disclosed 15% team allocation is vested.
 
-> Inferno Protocol is fully open source and community-owned. No single entity controls the protocol. All contracts are verified on Ethereum Mainnet and protected by Gnosis Safe multisig. Protocol parameter changes go through Governance proposals with a 48-hour timelock. The deployed Governance contract's ownership itself can be transferred directly by its owner, the Treasury Safe (3-of-5), without that delay (tracked as CWA-25). The protocol lives on-chain — permanently.
+> Inferno Protocol is open source and community-driven. Privileged actions remain subject to the documented Governance, Safe and guardian roles; hosted applications and APIs require operators. Deployed contract source is verified on Ethereum Mainnet. Protocol parameter changes go through Governance proposals with a 48-hour timelock. The deployed Governance contract's ownership itself can be transferred directly by its owner, the Treasury Safe (3-of-5), without that delay (tracked as CWA-25). The protocol lives on-chain — permanently.
 
 ## Token Economics
 
@@ -224,13 +235,15 @@ Token dashboard for monitoring balances, transfers, lock management, and contrac
 
 ### Benefits Network
 
-The IFR Benefits Network lets any business verify on-chain IFR lock status to grant discounts and premium access. QR-based flow — no accounts, no subscriptions.
+The IFR Benefits Network lets businesses verify on-chain IFR lock status to grant discounts and premium access. Customers use self-custody wallets; the operator-run backend stores merchant checkout and redemption state.
 
 **Privacy release:** owner-B (#238) is live: the customer-privacy migration was applied in production on 11 October 2026 (Benefits release 262a2dcc).
-The backend no longer stores customer wallet addresses or customer history; the
-legacy redeem and customer-history endpoints answer 410. Backups made before the
-migration still contain such data until they are deleted after the acceptance
-window. See the [migration runbook](docs/BENEFITS_CUSTOMER_PRIVACY_MIGRATION.md).
+Ordinary checkout records exclude raw customer wallet addresses/signatures,
+and server customer-history retrieval is retired. Merchant checkout records
+and seller audits remain; conditional Model B rewards can retain scoped
+wallet-derived HMACs and reward months. Retention and backup deletion still
+require a defined policy and operator action. See the
+[migration runbook](docs/BENEFITS_CUSTOMER_PRIVACY_MIGRATION.md).
 
 **Routes:** `/` (role chooser and wallet/seller workspace) · `/b/:businessIdOrSlug` (seller console) · `/s/:businessIdOrSlug` (public catalog) · `/p/:passId` (customer pass) · `/r/:sessionId` (customer verification) · `/scan` (QR/manual entry) · `/guide` · `/support` · `/privacy`
 
@@ -266,7 +279,8 @@ See [retirement and cutover](docs/COPILOT_CHAT_RETIREMENT.md) for the source spl
 
 SIWE authentication, points tracking, and EIP-712 signed voucher issuance for protocol fee discounts.
 
-**IFR Points are not a token** — no transfer value, no monetary promise. Points only reduce the protocol fee on a single swap (via EIP-712 discount voucher).
+**IFR Points are not a token** — centrally stored SQLite-backed loyalty points,
+with no transfer value or monetary promise. Points only reduce the protocol fee on a single swap (via EIP-712 discount voucher).
 
 **Endpoints:** `/auth/siwe/*` (SIWE auth) · `/points/*` (events + balance) · `/voucher/issue` (EIP-712 voucher)
 
