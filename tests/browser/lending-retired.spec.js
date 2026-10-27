@@ -146,11 +146,13 @@ test("Lending Wiki status banner keeps the full contract address inside a narrow
   await page.evaluate(() => document.fonts.ready);
   const address = page.locator(".coming-soon-banner .text code");
   await expect(address).toHaveText(ethers.getAddress(LV));
+  await expect(address).toBeVisible();
   const layout = await address.evaluate((code) => {
     const banner = code.closest(".coming-soon-banner").getBoundingClientRect();
     const main = document.querySelector("main");
+    const rects = [...code.getClientRects()];
     return {
-      addressContained: [...code.getClientRects()].every((r) => r.left >= banner.left && r.right <= banner.right),
+      addressContained: rects.length > 0 && rects.every((r) => r.width > 0 && r.height > 0 && r.left >= banner.left && r.right <= banner.right),
       mainOverflow: Math.max(0, main.scrollWidth - main.clientWidth),
       documentOverflow: Math.max(0, document.documentElement.scrollWidth - innerWidth),
     };
