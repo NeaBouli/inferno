@@ -1,11 +1,12 @@
 # IFR Project Status Report
 
-**Current engineering baseline:** 2 October 2026
+**Current engineering baseline:** 27 October 2026
+**Reviewed software source:** `adba357786ad17803d48a7b5509b472b51bc0098`
 **Branch:** `main`
 **Model:** Community Fair Launch (CFLM) -- no presale
 **Ticker:** $IFR
 **Status:** Mainnet live; bootstrap finalized; current repository verification
-uses full internal audits plus public automated test evidence. Independent
+uses internal review records plus public automated test evidence. Independent
 professional third-party audit remains pending.
 
 ---
@@ -22,7 +23,7 @@ governance-gated contract path is active.
 - Root is ESM with explicit CommonJS boundaries for legacy scripts and
   standalone test packages. Waffle, Ganache and `solidity-coverage` are no
   longer active root dependencies; native Hardhat 3 coverage is used.
-- Current repository verification: contracts `700/700` (CI run `37998031908`,
+- Current repository verification retains dated evidence: contracts `700/700` (CI run `37998031908`,
   9 October 2026, source `d095ff4b73ea78466b3aa45ff10e7621f5d2eb57`;
   693 + 7 FeeRouter parity tests; serializer selfcheck excluded), Generator Engine
   `30/30`, IFR SDK legacy suite `36/36`.
@@ -31,7 +32,9 @@ governance-gated contract path is active.
   implied by the Contract CI result. The complete Benefits preflight passed.
 - Benefits physical device/wallet acceptance remains `1/10` passed and `9`
   pending; this is not represented as complete production acceptance.
-- Mainnet borrowing remains disabled with `LendingVault.ifrPriceWei = 0`.
+- Official interfaces permanently retire V1 new lending and borrowing,
+  regardless of price. `LendingVault.ifrPriceWei = 0` is a retained input
+  snapshot; existing full-available withdrawal, repayment and top-up remain.
   CommitmentVault price conditions cannot be met with a zero oracle. The Web3
   UI offers only TIME_ONLY commitments, which remain operational, but the
   deployed V1 still accepts price-conditioned tranches by direct call (CWA-03,
@@ -40,15 +43,26 @@ governance-gated contract path is active.
   all 200M IFR remained held, 0 IFR had been withdrawn and the current contract
   cap allowed 50M IFR per 90 days. No reserve proposal was pending and no LP
   addition occurred automatically.
-- Root `npm audit`: 0 vulnerabilities. `@nomicfoundation/hardhat-verify`
-  3.1.2 removed the Elliptic chain (#151), and the advisory gate now requires a
-  clean root audit.
-- Benefits frontend: Next.js `15.5.21`, Wagmi `3.7.x`, Node 22. Benefits
+- Retained root audit evidence (2 October baseline): `npm audit` reported
+  0 vulnerabilities. This scoped historical result is not whole-repository
+  clearance or a fresh dependency scan. Current lockfile checks remain in CI.
+- Benefits frontend: Next.js `15.5.28`, Wagmi `3.7.x`, Node 22. Benefits
   backend and every active application manifest that depends on Ethers use
   Ethers 6.
 - Current operational work and exact evidence are tracked in
   `internal/operations/TODO.md`, `docs/DEPENDENCY_UPGRADES.md` and the local
   append-only `BRIDGE.md`.
+
+## Software Delivery Checkpoint — 27 October 2026
+
+The current Benefits frontend release and hosted full release preflight are
+complete. Public automated checks are retained in the
+[CI records](https://github.com/NeaBouli/inferno/actions). Full physical
+customer-proof, seller, readable-rejection and replay acceptance remains open.
+Points and Benefits retain operator-run backend state; wallets remain
+self-custodial. Existing live TIME_ONLY CommitmentVault V2 is distinct from the
+unactivated 18 October replacement candidate. Chain, audit and test counts
+above retain their own evidence dates; the software date does not refresh them.
 
 ## Historical Snapshot — 5 March 2026
 

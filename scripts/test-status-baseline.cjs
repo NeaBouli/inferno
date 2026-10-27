@@ -52,7 +52,7 @@ assert.equal(
 );
 
 const currentBaseline = [
-  "**Current engineering baseline:** 2 October 2026",
+  "**Current engineering baseline:** 27 October 2026",
   "Current repository verification",
   "Hardhat `3.20.0`",
   "contracts `700/700`",
@@ -62,7 +62,10 @@ const currentBaseline = [
   "T-274 browser evidence (6 October 2026, `eead5086`)",
   "Web3 write-path tests `85/85`",
   "No new browser run",
-  "Root `npm audit`: 0 vulnerabilities",
+  "Retained root audit evidence (2 October baseline)",
+  "not whole-repository",
+  "Next.js `15.5.28`",
+  "## Software Delivery Checkpoint — 27 October 2026",
   "Benefits physical device/wallet acceptance remains `1/10`",
   "LendingVault.ifrPriceWei = 0",
   "## Historical Snapshot — 5 March 2026",
@@ -267,9 +270,10 @@ requireText("docs/wiki/index.html", [
 ]);
 requireText("docs/index.html", ["Complete wiki with 36 pages"]);
 requireText("docs/wiki/roadmap.html", [
-  "Contributor buys, CommitmentVault locks and LendingVault offers are verified for C1/C2/C3",
+  "Dated C1/C2/C3 evidence",
+  "historical figures, not a fresh balance read",
   "52,155,440.952845656 IFR",
-  "V1 borrowing remains intentionally disabled",
+  "Official interfaces permanently retire V1 new lending and borrowing",
 ]);
 requireText("docs/wiki/bootstrap.html", [
   "Historical snapshot 16.06.2026",
@@ -284,12 +288,17 @@ requireText("docs/wiki/reputation.html", [
   "rejected in early September for insufficient organic attention",
   "Follow-up ticket 1453378 remains in free review",
 ]);
-requireText("docs/llms.txt", [
-  "Three contributor offers provide 52,155,440.952845656 IFR",
-  "V1 borrowing is intentionally disabled with ifrPriceWei = 0",
+const llms = requireText("docs/llms.txt", [
+  "dated contributor snapshot records three offers with 52,155,440.952845656 IFR",
+  "retained ifrPriceWei = 0 snapshot is separate from permanent V1 interface retirement",
+  "new TIME_ONLY locks route to the deployed V2 below",
+  "Forum voting (proposed, implementation paused",
+  "threshold alone does not establish signer independence",
   "Zerion lists the canonical IFR token",
   "Rainbow resolves the exact Ethereum contract",
 ]);
+assert.ok(!llms.includes("no V2 is planned yet"), "llms must distinguish the separate unactivated V2 candidate");
+assert.ok(!llms.includes("5 independent signers"), "Safe threshold must not imply signer independence");
 requireText("docs/CONTRIBUTOR_RUNBOOK.md", [
   "Current completion status 30.07.2026",
   "Next: done",
