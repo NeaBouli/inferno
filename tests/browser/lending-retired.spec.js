@@ -139,6 +139,27 @@ async function forceClick(page, id) {
 }
 const withdrawIface = new ethers.Interface(["function withdrawOffer(uint256 amount)"]);
 
+test("Lending Wiki status banner keeps the full contract address inside a narrow viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await mockRpc(page);
+  await page.goto("/wiki/lending-vault.html");
+  await page.evaluate(() => document.fonts.ready);
+  const address = page.locator(".coming-soon-banner .text code");
+  await expect(address).toHaveText(ethers.getAddress(LV));
+  await expect(address).toBeVisible();
+  const layout = await address.evaluate((code) => {
+    const banner = code.closest(".coming-soon-banner").getBoundingClientRect();
+    const main = document.querySelector("main");
+    const rects = [...code.getClientRects()];
+    return {
+      addressContained: rects.length > 0 && rects.every((r) => r.width > 0 && r.height > 0 && r.left >= banner.left && r.right <= banner.right),
+      mainOverflow: Math.max(0, main.scrollWidth - main.clientWidth),
+      documentOverflow: Math.max(0, document.documentElement.scrollWidth - innerWidth),
+    };
+  });
+  expect(layout).toEqual({ addressContained: true, mainOverflow: 0, documentOverflow: 0 });
+});
+
 test.describe("LendingVault V1 retired: wiki write paths", () => {
   test("borrow stays disabled with a non-zero ifrPriceWei, also after the handler and a market refresh", async ({ page }) => {
     await page.clock.install();

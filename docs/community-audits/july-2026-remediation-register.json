@@ -97,8 +97,8 @@
       "remainingAction": "Continue dated, source-labeled live-state reporting and never convert snapshots into evergreen adoption claims.",
       "verification": "Block-pinned chain reads, current status tests and stale-data behavior on live surfaces.",
       "evidence": [
-        {"path": "docs/wiki/roadmap.html", "marker": "three offers provide 52,155,440.952845656 IFR"},
-        {"path": "docs/llms.txt", "marker": "Three contributor offers provide 52,155,440.952845656 IFR"}
+        {"path": "docs/wiki/roadmap.html", "marker": "three LendingVault offers with 52,155,440.952845656 IFR available and 0 IFR lent; these are historical figures"},
+        {"path": "docs/llms.txt", "marker": "dated contributor snapshot records three offers with 52,155,440.952845656 IFR available and 0 IFR lent"}
       ]
     },
     {

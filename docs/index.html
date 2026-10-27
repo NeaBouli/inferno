@@ -1316,7 +1316,7 @@
       "applicationCategory": "FinanceApplication",
       "operatingSystem": "Ethereum Mainnet",
       "url": "https://ifrunit.tech",
-      "description": "Deflationary ERC-20 token with lock-to-access utility, live CommitmentVault locks, LendingVault lender offers, lending market data",
+      "description": "Deflationary ERC-20 token with lock-to-access utility, live TIME_ONLY CommitmentVault locks, retired LendingVault exit and repayment paths",
       "offers": {
         "@type": "Offer",
         "price": "0",
@@ -1373,7 +1373,7 @@
       "@id": "https://ifrunit.tech/#token",
       "name": "Inferno Token",
       "alternateName": "IFR / $IFRp social",
-      "description": "Deflationary ERC-20 utility token on Ethereum Mainnet. 1 billion genesis supply (9 decimals), with a 3.5% standard non-exempt transfer fee split: 2.5% burned and 1% routed as IFR pool fee. Live CommitmentVault locks and LendingVault market flows are available from the official website.",
+      "description": "Deflationary ERC-20 utility token on Ethereum Mainnet. 1 billion genesis supply (9 decimals), with a 3.5% standard non-exempt transfer fee split: 2.5% burned and 1% routed as IFR pool fee. TIME_ONLY CommitmentVault locks and legacy LendingVault withdrawal/repayment paths are available from the official website; new V1 lending and borrowing are retired.",
       "url": "https://ifrunit.tech",
       "provider": {
         "@id": "https://ifrunit.tech/#organization"
@@ -1427,7 +1427,7 @@
         {
           "@type": "PropertyValue",
           "name": "LendingVault",
-          "value": "Retired (V1): borrowing disabled by Governance decision (no activation planned or authorized), no V2 planned yet; lenders can withdraw unlent offers"
+          "value": "V1 new lending and borrowing permanently retired; existing withdrawal, repayment and top-up remain. The separate V2 candidate is not activated"
         },
         {
           "@type": "PropertyValue",
@@ -2917,12 +2917,12 @@ if (isLocked) {
       <div style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:28px 24px;text-align:center;">
         <div style="font-size:32px;font-weight:700;color:#ff6a00;"><span data-live-key="lending-available-stat">loading&hellip;</span></div>
         <div style="color:#aaa;margin-top:8px;">LendingVault (retired V1)</div>
-        <div style="color:#666;font-size:13px;margin-top:4px;">Withdrawable lender offers; borrowing disabled by Governance decision (no activation planned or authorized), no V2 planned yet</div>
+        <div style="color:#666;font-size:13px;margin-top:4px;">V1 new lending and borrowing are permanently retired. Existing exits remain; the separate LendingVault V2 candidate is not activated.</div>
       </div>
       <div style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:28px 24px;text-align:center;">
         <div style="font-size:32px;font-weight:700;color:#ff6a00;">Governance</div>
         <div style="color:#aaa;margin-top:8px;">Contract Owner</div>
-        <div style="color:#666;font-size:13px;margin-top:4px;">48h timelock, no deployer control</div>
+        <div style="color:#666;font-size:13px;margin-top:4px;">48h for queued proposals; owner/guardian exceptions</div>
       </div>
       <div style="background:#1a1a2e;border:1px solid #333;border-radius:12px;padding:28px 24px;text-align:center;">
         <div style="font-size:32px;font-weight:700;color:#ff6a00;">CI</div>
@@ -3219,7 +3219,7 @@ if (isLocked) {
       <p class="section-label">Open Source</p>
       <h2 class="section-title">Project Continuity</h2>
       <p class="section-desc" style="margin:0 auto 28px;max-width:640px;">
-        Published code, documentation and the public handover let new maintainers continue development from a reviewed commit. Hosted apps and APIs still require operators. Privileged actions remain governed by the existing Governance and Safe controls &mdash; public source availability grants no signing authority or Safe control.
+        Published code, documentation and the public handover let new maintainers continue development from a reviewed commit. Hosted apps and APIs still require operators; Points and Benefits retain central backend state while wallets remain self-custodial. Privileged actions remain governed by the existing Governance and Safe controls &mdash; public source availability grants no signing authority or Safe control. See the <a href="CURRENT_FUNCTIONALITY_STATUS.md">current software and acceptance status</a>: automated release gates are complete; the full physical device/wallet matrix remains pending.
       </p>
       <p style="margin:0;">
         <a class="btn btn-secondary" href="wiki/multisig.html#project-continuity">Read the continuity policy &rarr;</a>

@@ -3,7 +3,7 @@
   "tool": "markdownlint-cli@0.49.1",
   "disabledRules": ["MD013","MD033","MD041","MD024","MD036","MD040"],
   "filesScanned": 253,
-  "baselineIssues": 3606,
+  "baselineIssues": 3605,
   "fingerprints": [
     [".github/ISSUE_TEMPLATE/bug_report.md","MD022","Expected: 1; Actual: 0; Below","## Bug Description","6e754bfe0c2fac07",1],
     [".github/ISSUE_TEMPLATE/bug_report.md","MD022","Expected: 1; Actual: 0; Below","## Logs / Screenshots","cddf1466b8ac7bbd",1],
@@ -2072,7 +2072,6 @@
     ["internal/operations/TODO.md","MD034","","https://github.com/NeaBouli/in...","826f26ef7906a9ad",1],
     ["internal/operations/TODO.md","MD034","","https://github.com/NeaBouli/in...","90131e176e144fdb",1],
     ["internal/operations/TODO.md","MD034","","https://github.com/Uniswap/def...","534d3f60aef4d3ea",1],
-    ["README.md","MD001","Expected: h2; Actual: h3","","0d35cd94f8ee8812",1],
     ["README.md","MD022","Expected: 1; Actual: 0; Below","### Ecosystem Tests — 57","510b1bad4933f293",1],
     ["README.md","MD032","","- All contracts open source + ...","7e8e6cd7f793f598",1],
     ["README.md","MD034","","http://localhost:3004","450b75dcead29fe1",1],

@@ -119,10 +119,13 @@ with their audit, testnet and on-chain authorization gates, are tracked in the
 - [ ] Vault V2 hardening: combine balance-diff inflow accounting with runtime
       exemption guards that fail closed. This requires separate design review,
       migration planning, tests, audit and governance-approved deployment.
-- [ ] Developer SDK publication + complete documentation (local `ifr-sdk` v0.2.0 is
-      implemented and its tarball is installed with locked `npm ci` and consumer-tested for
-      CommonJS, ESM named-import interoperability and TypeScript on Node.js 20/22;
-      license/ownership approval, npm release, wagmi and Python support remain)
+- [x] Developer SDK publication: `ifr-sdk` **0.4.1** was published with
+      provenance through Trusted Publishing on 10 October 2026; later versions
+      retain the separate npm release gate. Source/integration checks are complete
+      for the delivered JavaScript/TypeScript scope.
+- [ ] Additional SDK language/integration coverage beyond the published release,
+      including separately scoped Python support; publication does not complete
+      every proposed integration or future documentation task
 - [ ] Bug bounty program (Immunefi)
 - [ ] FeeRouter adapter ecosystem (DEX aggregators)
 - [ ] Mobile-optimized dashboard

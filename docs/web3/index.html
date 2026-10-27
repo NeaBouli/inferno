@@ -1756,7 +1756,7 @@
           <ul class="detail-list" data-audience-list>
             <li>Check wallet, IFR balance, and lock state.</li>
             <li>Buy IFR on the live Uniswap V2 pool.</li>
-            <li>Use IFRLock for simple access or CommitmentVault for tranches; LendingVault V1 is retired (withdraw only).</li>
+            <li>Use IFRLock for simple access or CommitmentVault for time tranches; LendingVault V1 new business is retired, while available-offer withdrawal and existing-loan repayment/top-up remain.</li>
           </ul>
         </div>
       </div>
@@ -2073,7 +2073,7 @@
         <div>
           <h2 id="lending-title">Withdraw offer</h2>
           <p>Withdraw unlent IFR from your LendingVault offer directly here. New offers and offer increases are closed. Withdrawing the full available amount closes the offer only when none of its IFR is still lent out.</p>
-          <p class="protocol-note" data-lending-retired>V1 retired by owner decision (3 October 2026): borrowing stays disabled (<code>ifrPriceWei = 0</code>, no activation planned or authorized) and lenders are withdrawing their offers; those IFR are not lost. No V2 is planned until a reviewed price source exists.</p>
+          <p class="protocol-note" data-lending-retired>New LendingVault V1 offers, increases and borrowing are permanently retired in this interface (owner decision, 3 October 2026), regardless of price. Full-available withdrawals and existing-loan repayment/top-up remain; the contract functions are unchanged. A separate LendingVault V2 release candidate was ratified on 18 October 2026 and built/tested locally. It is not deployed, active or externally audited.</p>
         </div>
         <button class="protocol-close" type="button" aria-label="Close lending panel" data-lending-close>&times;</button>
       </header>
@@ -2182,7 +2182,7 @@
       <p class="protocol-status" data-borrow-status>Connect a wallet to load borrowable offers.</p>
       <div class="offer-list" data-borrow-offers></div>
       <div class="loan-list" data-borrow-loans></div>
-      <p class="protocol-note">V1 retired by owner decision (3 October 2026): borrowing stays disabled (<code>ifrPriceWei = 0</code>, no activation planned or authorized) and lenders are withdrawing their offers; those IFR are not lost. No V2 is planned until a reviewed price source exists. Offers can still be viewed, but borrow transactions remain disabled by the contract.</p>
+      <p class="protocol-note">New LendingVault V1 offers, increases and borrowing are permanently retired in this interface (owner decision, 3 October 2026), regardless of price. Full-available withdrawals and existing-loan repayment/top-up remain; the contract functions are unchanged. A separate LendingVault V2 release candidate was ratified on 18 October 2026 and built/tested locally. It is not deployed, active or externally audited.</p>
     </div>
   </div>
 
@@ -2195,7 +2195,7 @@
           items: [
             "Use the access terminal for wallet, IFR balance, lock state, and token import.",
             "Buy IFR on Uniswap or track the live pool without leaving the user flow.",
-            "Use IFRLock for simple access or CommitmentVault for time tranches; LendingVault V1 is retired and only offer withdrawal remains."
+            "Use IFRLock for simple access or CommitmentVault for time tranches; LendingVault V1 new business is retired, while available-offer withdrawal and existing-loan repayment/top-up remain."
           ],
           actions: [
             { label: "Access lock", kind: "button", variant: "btn-primary", data: "data-open-access-lock" },
