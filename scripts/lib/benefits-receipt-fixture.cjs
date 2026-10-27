@@ -44,4 +44,59 @@ function receiptProof(item, { wallet, ruleId = 'rule-fixture', audience, chainId
   return { version: 'ifr-benefits/checkout-proof/2', termsDigest, message };
 }
 
-module.exports = { receiptProof };
+// Shared by the original live smoke and the offline verifier regression.
+async function customerHistoryReceiptFixtures({ wallet: receiptWallet, audience, chainId, signMessage }) {
+  const validItem = {
+    sessionId: 'customer-benefit-redeemed',
+    businessId: 'smoke-seller-coffee',
+    sellerName: 'IFR Coffee House',
+    status: 'REDEEMED',
+    discountPercent: 15,
+    requiredLockIFR: 1000,
+    minIFRHeld: 250,
+    lockSource: 'commitment_time_only',
+    ruleLabel: 'Premium coffee',
+    productName: 'Reserve espresso',
+    basePriceMinor: null,
+    currency: null,
+    expiresAt: '2026-07-19T09:10:00.000Z',
+    redeemedAt: '2026-07-19T09:05:00.000Z',
+    walletLabel: `${receiptWallet.slice(0, 6)}...${receiptWallet.slice(-4)}`,
+    savedAt: '2026-07-19T09:05:30.000Z',
+  };
+  const tamperedItem = {
+    ...validItem,
+    sessionId: 'customer-benefit-older',
+    businessId: 'smoke-seller-older',
+    sellerName: 'Older IFR Studio',
+    discountPercent: 10,
+    requiredLockIFR: 2500,
+    minIFRHeld: 0,
+    lockSource: 'ifrlock',
+    ruleLabel: 'Studio access',
+    productName: 'Member session',
+    expiresAt: '2026-07-18T09:10:00.000Z',
+    redeemedAt: '2026-07-18T09:05:00.000Z',
+    savedAt: '2026-07-18T09:05:30.000Z',
+  };
+  const validProof = receiptProof(validItem, { wallet: receiptWallet, audience, chainId });
+  const tamperedProof = receiptProof(tamperedItem, { wallet: receiptWallet, audience, chainId });
+  return [
+    { ...validItem, proof: { ...validProof, signature: await signMessage(validProof.message) } },
+    // Sign this distinct checkout, then edit only its stored nonce. The signature
+    // must mismatch without replaying the valid receipt's signature or nonce.
+    {
+      ...tamperedItem,
+      proof: {
+        ...tamperedProof,
+        message: tamperedProof.message.replace(
+          /^Nonce: [0-9a-f]{64}$/m,
+          `Nonce: ${createHash('sha256').update(`tampered:${tamperedItem.sessionId}`).digest('hex')}`
+        ),
+        signature: await signMessage(tamperedProof.message),
+      },
+    },
+  ];
+}
+
+module.exports = { receiptProof, customerHistoryReceiptFixtures };

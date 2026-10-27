@@ -273,6 +273,56 @@ const { privateKeyToAccount } = require('viem/accounts');
   ]));
   assert.strictEqual(readCustomerProofHistory()[0].proof, null, 'Malformed stored proofs are dropped.');
 
+  // Exercise the exact live-smoke pair through storage normalization and the real verifier.
+  const { receiptProof, customerHistoryReceiptFixtures } = require(
+    path.join(__dirname, '../../../../scripts/lib/benefits-receipt-fixture.cjs')
+  );
+  const smokeCustomer = privateKeyToAccount(`0x${'42'.repeat(32)}`);
+  const smokeContext = { expectedAudience: 'shop.example.test', expectedChainId: 1 };
+  const smokePair = await customerHistoryReceiptFixtures({
+    wallet: smokeCustomer.address,
+    audience: smokeContext.expectedAudience,
+    chainId: smokeContext.expectedChainId,
+    signMessage: (text) => smokeCustomer.signMessage({ message: text }),
+  });
+  window.localStorage.setItem('ifr.shop.customerProofHistory.v1', JSON.stringify(smokePair));
+  const smokeReceipts = readCustomerProofHistory();
+  assert.strictEqual(smokeReceipts.length, 2);
+  const [smokeValid, smokeTampered] = smokeReceipts;
+  const smokeCheck = (item, extra = {}) => verifyCustomerProofReceipt(
+    item, verifier, { ...smokeContext, receipts: smokeReceipts, ...extra }
+  );
+  const smokeVerified = await smokeCheck(smokeValid);
+  assert.strictEqual(smokeVerified.ok, true, smokeVerified.reason);
+  assert.strictEqual(smokeVerified.wallet, smokeCustomer.address);
+  assert.strictEqual(smokeVerified.signed.audience, smokeContext.expectedAudience);
+  assert.strictEqual(smokeVerified.signed.chainId, smokeContext.expectedChainId);
+  assert.strictEqual(smokeVerified.signed.session, smokeValid.sessionId);
+  assert.notStrictEqual(smokeValid.proof.signature, smokeTampered.proof.signature);
+  const smokeInvalid = await smokeCheck(smokeTampered);
+  assert.strictEqual(smokeInvalid.ok, false);
+  assert.strictEqual(smokeInvalid.reason, 'The signature does not match the wallet in the signed text.');
+  // The negative fixture was independently signed, then only its stored nonce was edited.
+  const intactTamperedProof = receiptProof(smokeTampered, {
+    wallet: smokeCustomer.address, audience: smokeContext.expectedAudience, chainId: smokeContext.expectedChainId,
+  });
+  assert.strictEqual(
+    (await recover(intactTamperedProof.message, smokeTampered.proof.signature)).toLowerCase(),
+    smokeCustomer.address.toLowerCase()
+  );
+  assert.notStrictEqual(smokeTampered.proof.message, intactTamperedProof.message);
+  assert.strictEqual(
+    smokeTampered.proof.message.replace(/^Nonce: .*$/m, 'Nonce: <normalized>'),
+    intactTamperedProof.message.replace(/^Nonce: .*$/m, 'Nonce: <normalized>')
+  );
+  assert.strictEqual(smokeTampered.proof.termsDigest, intactTamperedProof.termsDigest);
+  const smokeDuplicate = { ...smokeTampered, proof: { ...smokeTampered.proof, signature: smokeValid.proof.signature } };
+  const smokeDuplicateResult = await smokeCheck(smokeValid, { receipts: [smokeValid, smokeDuplicate] });
+  assert.strictEqual(smokeDuplicateResult.ok, false);
+  assert.strictEqual(smokeDuplicateResult.reason, 'Duplicate receipt: this checkout appears more than once on this device.');
+  assert.strictEqual((await smokeCheck(smokeValid, { expectedAudience: 'other.example.test' })).ok, false);
+  assert.strictEqual((await smokeCheck(smokeValid, { expectedChainId: 11155111 })).ok, false);
+
   console.log('[customer-history-wallet-test] PASS');
 })().catch((error) => {
   console.error(error);

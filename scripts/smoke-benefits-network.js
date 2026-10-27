@@ -518,7 +518,7 @@ async function addEligibilityWallet(context, { rpcError = false } = {}) {
   }, { shouldFail: rpcError });
 }
 
-const { receiptProof } = require('./lib/benefits-receipt-fixture.cjs');
+const { customerHistoryReceiptFixtures } = require('./lib/benefits-receipt-fixture.cjs');
 
 // Owner decision B (T-231b): customer history is device-local only. The server keeps no
 // customer-linked history (/api/customer/history* answers 410); receipts carry the exact signed
@@ -531,46 +531,12 @@ async function verifyCustomerWalletHistory() {
   // Deterministic throwaway test key (no funds, smoke-only) so the receipt has a real EIP-191 signature.
   const receiptSigner = new ethersUtils.Wallet(`0x${'42'.repeat(32)}`);
   const receiptWallet = receiptSigner.address;
-  const validItem = {
-    sessionId: 'customer-benefit-redeemed',
-    businessId: 'smoke-seller-coffee',
-    sellerName: 'IFR Coffee House',
-    status: 'REDEEMED',
-    discountPercent: 15,
-    requiredLockIFR: 1000,
-    minIFRHeld: 250,
-    lockSource: 'commitment_time_only',
-    ruleLabel: 'Premium coffee',
-    productName: 'Reserve espresso',
-    basePriceMinor: null,
-    currency: null,
-    expiresAt: '2026-07-19T09:10:00.000Z',
-    redeemedAt: '2026-07-19T09:05:00.000Z',
-    walletLabel: `${receiptWallet.slice(0, 6)}...${receiptWallet.slice(-4)}`,
-    savedAt: '2026-07-19T09:05:30.000Z',
-  };
-  const tamperedItem = {
-    ...validItem,
-    sessionId: 'customer-benefit-older',
-    businessId: 'smoke-seller-older',
-    sellerName: 'Older IFR Studio',
-    discountPercent: 10,
-    requiredLockIFR: 2500,
-    minIFRHeld: 0,
-    lockSource: 'ifrlock',
-    ruleLabel: 'Studio access',
-    productName: 'Member session',
-    expiresAt: '2026-07-18T09:10:00.000Z',
-    redeemedAt: '2026-07-18T09:05:00.000Z',
-    savedAt: '2026-07-18T09:05:30.000Z',
-  };
-  const validProof = receiptProof(validItem, { wallet: receiptWallet, audience: new URL(baseUrl).host, chainId: Number(process.env.NEXT_PUBLIC_CHAIN_ID || 1) });
-  const tamperedProof = receiptProof(tamperedItem, { wallet: receiptWallet, audience: new URL(baseUrl).host, chainId: Number(process.env.NEXT_PUBLIC_CHAIN_ID || 1) });
-  const receipts = [
-    { ...validItem, proof: { ...validProof, signature: await receiptSigner.signMessage(validProof.message) } },
-    // Signature over a different text: device verification must fail closed.
-    { ...tamperedItem, proof: { ...tamperedProof, signature: await receiptSigner.signMessage(validProof.message) } },
-  ];
+  const receipts = await customerHistoryReceiptFixtures({
+    wallet: receiptWallet,
+    audience: new URL(baseUrl).host,
+    chainId: Number(process.env.NEXT_PUBLIC_CHAIN_ID || 1),
+    signMessage: (message) => receiptSigner.signMessage(message),
+  });
   await context.addInitScript((items) => {
     if (!window.sessionStorage.getItem('ifr.smoke.receiptsSeeded')) {
       window.localStorage.setItem('ifr.shop.customerProofHistory.v1', JSON.stringify(items));
