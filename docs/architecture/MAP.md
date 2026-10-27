@@ -1028,6 +1028,10 @@ cache name plus registration query in lockstep.
    `npm run smoke:benefits` — Daten: exact v26 cache marker and the canonical 192/512
    `any` icons plus the separate generated 512 maskable icon; mandatory
    post-operation/release smoke in the capacity and device-wallet runbooks.
+7. `smoke-benefits-network.js::verifyCustomerWalletHistory` →
+   `WalletConnectControl` — the connected fixture must show its exact shortened
+   account and a visible `Disconnect` button inside the same wallet control.
+   The current UI renders the address without the former `Connected:` prefix.
 
 ### 14.3 Module
 
@@ -1068,7 +1072,10 @@ cache name plus registration query in lockstep.
 
 Current bounded update: the live smoke checks the admitted v26 worker and
 the exact three-icon manifest through the existing service-worker contract
-test's loopback fixture. Service-worker/registration code, PWA assets,
+test's loopback fixture. Its device-local receipt check also requires the
+current wallet control's exact fixture address and connected-only disconnect
+action; receipt verification, tampering/privacy checks and timeouts stay intact.
+Service-worker/registration code, PWA assets,
 wallet flow, eligibility, backend, privacy/local-data surfaces and the
 install-card component stay unchanged.
 

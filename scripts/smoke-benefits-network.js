@@ -592,7 +592,9 @@ async function verifyCustomerWalletHistory() {
   try {
     await gotoAppPage(page, '/');
     await connectEligibilityWallet(page);
-    await expectText(page, 'Connected: 0x2222...2222');
+    const walletControl = page.locator('[data-wallet-connect-control]').first();
+    await walletControl.getByText('0x2222...2222', { exact: true }).waitFor({ timeout: timeoutMs });
+    await walletControl.getByRole('button', { name: 'Disconnect', exact: true }).waitFor({ timeout: timeoutMs });
     const history = page.getByRole('heading', { name: 'My benefits', exact: true }).locator('xpath=ancestor::section[1]');
     await history.getByTestId('device-history-notice').waitFor({ timeout: timeoutMs });
     await expectText(page, 'Stored only on this device');
