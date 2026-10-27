@@ -1168,8 +1168,10 @@ test("CommitmentVault time-only writes preserve IFR base units; retired LendingV
   await expect(page.getByRole("button", { name: /create offer|increase offer/i })).toHaveCount(0);
   await page.locator("[data-open-lending]").first().click();
   await expect(page.locator("#lending-title")).toHaveText("Withdraw offer");
-  await expect(page.locator("[data-lending-retired]")).toContainText("V1 retired by owner decision (3 October 2026)");
-  await expect(page.locator("[data-lending-retired]")).toContainText("those IFR are not lost");
+  await expect(page.locator("[data-lending-retired]")).toContainText("permanently retired in this interface (owner decision, 3 October 2026), regardless of price");
+  await expect(page.locator("[data-lending-retired]")).toContainText("Full-available withdrawals and existing-loan repayment/top-up remain");
+  await expect(page.locator("[data-lending-retired]")).toContainText("the contract functions are unchanged");
+  await expect(page.locator("[data-lending-retired]")).toContainText("It is not deployed, active or externally audited");
   await expect(page.locator("[data-lending-deposit]")).toBeHidden();
   await expect(page.locator("[data-lending-mode]")).toHaveValue("Offer #0 active");
 
