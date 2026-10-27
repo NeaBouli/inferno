@@ -755,7 +755,7 @@ async function verifyRuleTemplateAuthorization() {
   const historyRequests = [];
   const downloads = [];
   let historyRequestCount = 0;
-  let rejectNextHistoryRequest = false;
+  let rejectHistoryRequestAt = null;
   let publishedOffer = null;
   let publishedRule = null;
 
@@ -928,8 +928,8 @@ async function verifyRuleTemplateAuthorization() {
         snapshot: url.searchParams.get('snapshot'),
       });
       if (historyRequestCount > 1) await new Promise((resolve) => setTimeout(resolve, 300));
-      if (rejectNextHistoryRequest) {
-        rejectNextHistoryRequest = false;
+      if (historyRequestCount === rejectHistoryRequestAt) {
+        rejectHistoryRequestAt = null;
         await route.fulfill({
           status: 401,
           contentType: 'application/json',
@@ -1229,13 +1229,13 @@ async function verifyRuleTemplateAuthorization() {
     assert(download.suggestedFilename().startsWith('ifr-benefits-smoke-template-seller-history-'), 'CSV filename is not seller-scoped');
     await expectText(page, 'Downloaded 3 sessions (no customer wallet data is stored).');
 
-    // A rejected one-time read must abort without a file or an automatic retry.
+    // Reject page two after one page was collected: no partial file or automatic retry.
     const readsBeforeRejection = historyRequestCount;
     const downloadsBeforeRejection = downloads.length;
-    rejectNextHistoryRequest = true;
+    rejectHistoryRequestAt = readsBeforeRejection + 2;
     await page.getByRole('button', { name: 'Download full CSV', exact: true }).click();
     await expectText(page, 'Seller authorization expired');
-    assert(historyRequestCount === readsBeforeRejection + 1, 'a rejected export read was automatically retried');
+    assert(historyRequestCount === readsBeforeRejection + 2, 'a rejected export read was automatically retried');
     assert(downloads.length === downloadsBeforeRejection, 'a rejected export read created a download');
 
     // Only a new explicit user action may obtain fresh authorization and recover.
