@@ -1032,6 +1032,16 @@ cache name plus registration query in lockstep.
    `WalletConnectControl` — the connected fixture must show its exact shortened
    account and a visible `Disconnect` button inside the same wallet control.
    The current UI renders the address without the former `Connected:` prefix.
+8. `scripts/lib/benefits-receipt-fixture.cjs::customerHistoryReceiptFixtures` →
+   live smoke and `frontend/scripts/test-customer-history-wallet.cjs` →
+   `customerHistory.ts::verifyCustomerProofReceipt` — independently signed
+   checkouts, then a stored-nonce-only negative fixture; the real offline
+   verifier must accept the valid receipt and reject tampering and duplicates.
+9. Seller history smoke → `SellerRuleBuilder::downloadSessionCsv` → one fresh
+   signed read per page → local CSV Blob/download. A separate rejected read
+   must create no file and perform no automatic retry; an explicit new user
+   action obtains fresh authorization. Empty-device checks use the current
+   receipt copy together with an empty record list.
 
 ### 14.3 Module
 
@@ -1075,6 +1085,13 @@ the exact three-icon manifest through the existing service-worker contract
 test's loopback fixture. Its device-local receipt check also requires the
 current wallet control's exact fixture address and connected-only disconnect
 action; receipt verification, tampering/privacy checks and timeouts stay intact.
+The shared receipt pair is also checked through actual storage normalization and
+the offline verifier, including customer, audience, chain and signed-message
+consistency. Distinct checkout signatures keep the negative fixture from
+invalidating the valid receipt through duplicate detection.
+Full CSV pagination and an expired-authorization rejection are separate smoke
+cases, preserving the one-time-per-page read contract and all CSV/privacy
+assertions. No implicit authorization replay or product retry is introduced.
 Service-worker/registration code, PWA assets,
 wallet flow, eligibility, backend, privacy/local-data surfaces and the
 install-card component stay unchanged.

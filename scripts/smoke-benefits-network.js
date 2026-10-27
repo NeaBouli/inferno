@@ -518,7 +518,7 @@ async function addEligibilityWallet(context, { rpcError = false } = {}) {
   }, { shouldFail: rpcError });
 }
 
-const { receiptProof } = require('./lib/benefits-receipt-fixture.cjs');
+const { customerHistoryReceiptFixtures } = require('./lib/benefits-receipt-fixture.cjs');
 
 // Owner decision B (T-231b): customer history is device-local only. The server keeps no
 // customer-linked history (/api/customer/history* answers 410); receipts carry the exact signed
@@ -531,46 +531,12 @@ async function verifyCustomerWalletHistory() {
   // Deterministic throwaway test key (no funds, smoke-only) so the receipt has a real EIP-191 signature.
   const receiptSigner = new ethersUtils.Wallet(`0x${'42'.repeat(32)}`);
   const receiptWallet = receiptSigner.address;
-  const validItem = {
-    sessionId: 'customer-benefit-redeemed',
-    businessId: 'smoke-seller-coffee',
-    sellerName: 'IFR Coffee House',
-    status: 'REDEEMED',
-    discountPercent: 15,
-    requiredLockIFR: 1000,
-    minIFRHeld: 250,
-    lockSource: 'commitment_time_only',
-    ruleLabel: 'Premium coffee',
-    productName: 'Reserve espresso',
-    basePriceMinor: null,
-    currency: null,
-    expiresAt: '2026-07-19T09:10:00.000Z',
-    redeemedAt: '2026-07-19T09:05:00.000Z',
-    walletLabel: `${receiptWallet.slice(0, 6)}...${receiptWallet.slice(-4)}`,
-    savedAt: '2026-07-19T09:05:30.000Z',
-  };
-  const tamperedItem = {
-    ...validItem,
-    sessionId: 'customer-benefit-older',
-    businessId: 'smoke-seller-older',
-    sellerName: 'Older IFR Studio',
-    discountPercent: 10,
-    requiredLockIFR: 2500,
-    minIFRHeld: 0,
-    lockSource: 'ifrlock',
-    ruleLabel: 'Studio access',
-    productName: 'Member session',
-    expiresAt: '2026-07-18T09:10:00.000Z',
-    redeemedAt: '2026-07-18T09:05:00.000Z',
-    savedAt: '2026-07-18T09:05:30.000Z',
-  };
-  const validProof = receiptProof(validItem, { wallet: receiptWallet, audience: new URL(baseUrl).host, chainId: Number(process.env.NEXT_PUBLIC_CHAIN_ID || 1) });
-  const tamperedProof = receiptProof(tamperedItem, { wallet: receiptWallet, audience: new URL(baseUrl).host, chainId: Number(process.env.NEXT_PUBLIC_CHAIN_ID || 1) });
-  const receipts = [
-    { ...validItem, proof: { ...validProof, signature: await receiptSigner.signMessage(validProof.message) } },
-    // Signature over a different text: device verification must fail closed.
-    { ...tamperedItem, proof: { ...tamperedProof, signature: await receiptSigner.signMessage(validProof.message) } },
-  ];
+  const receipts = await customerHistoryReceiptFixtures({
+    wallet: receiptWallet,
+    audience: new URL(baseUrl).host,
+    chainId: Number(process.env.NEXT_PUBLIC_CHAIN_ID || 1),
+    signMessage: (message) => receiptSigner.signMessage(message),
+  });
   await context.addInitScript((items) => {
     if (!window.sessionStorage.getItem('ifr.smoke.receiptsSeeded')) {
       window.localStorage.setItem('ifr.shop.customerProofHistory.v1', JSON.stringify(items));
@@ -786,7 +752,10 @@ async function verifyRuleTemplateAuthorization() {
   const mutatingRequests = [];
   const challengeRequests = [];
   const publicVerificationRequests = [];
+  const historyRequests = [];
+  const downloads = [];
   let historyRequestCount = 0;
+  let rejectHistoryRequestAt = null;
   let publishedOffer = null;
   let publishedRule = null;
 
@@ -828,6 +797,7 @@ async function verifyRuleTemplateAuthorization() {
   }, { walletAddress: sellerWallet });
 
   const page = await context.newPage();
+  page.on('download', (download) => downloads.push(download));
   await page.route('**/api/businesses?**', async (route) => {
     const requestUrl = new URL(route.request().url());
     const requestedBusinessId = requestUrl.searchParams.get('businessId');
@@ -878,9 +848,9 @@ async function verifyRuleTemplateAuthorization() {
       const action = url.searchParams.get('action') || '';
       const targetBusinessId = url.searchParams.get('businessId') || '';
       const scope = url.searchParams.get('scope');
-      challengeRequests.push({ action, businessId: targetBusinessId, scope });
       const timestamp = String(Date.now());
-      const nonce = `nonce-${action}`;
+      const nonce = createHash('sha256').update(`smoke-seller:${action}:${challengeRequests.length}`).digest('hex');
+      challengeRequests.push({ action, businessId: targetBusinessId, scope, nonce });
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -952,8 +922,14 @@ async function verifyRuleTemplateAuthorization() {
     }
     if (url.pathname === `/api/seller/businesses/${businessId}/sessions` && method === 'GET') {
       historyRequestCount += 1;
+      historyRequests.push({
+        nonce: request.headers()['x-ifr-nonce'],
+        cursor: url.searchParams.get('cursor'),
+        snapshot: url.searchParams.get('snapshot'),
+      });
       if (historyRequestCount > 1) await new Promise((resolve) => setTimeout(resolve, 300));
-      if (historyRequestCount === 4) {
+      if (historyRequestCount === rejectHistoryRequestAt) {
+        rejectHistoryRequestAt = null;
         await route.fulfill({
           status: 401,
           contentType: 'application/json',
@@ -1180,7 +1156,13 @@ async function verifyRuleTemplateAuthorization() {
     assert(saved.headers['x-ifr-wallet'] === sellerWallet, 'signed Save is missing the seller wallet header');
     assert(Boolean(saved.headers['x-ifr-signature']), 'signed Save is missing the seller signature header');
     assert(Boolean(saved.headers['x-ifr-timestamp']), 'signed Save is missing the seller timestamp header');
-    assert(saved.headers['x-ifr-nonce'] === 'nonce-rules:create', 'signed Save is missing the resource-bound nonce');
+    assert(
+      challengeRequests.some((challenge) => (
+        challenge.action === 'rules:create' && challenge.businessId === businessId &&
+        challenge.scope === businessId && challenge.nonce === saved.headers['x-ifr-nonce']
+      )),
+      'signed Save is missing the resource-bound nonce'
+    );
     assert(
       challengeRequests.some((challenge) => (
         challenge.action === 'rules:create' && challenge.businessId === businessId && challenge.scope === businessId
@@ -1246,9 +1228,33 @@ async function verifyRuleTemplateAuthorization() {
     assert(!/signature|nonce|admin secret|\/r\//i.test(csv), 'CSV contains forbidden authorization or proof-link data');
     assert(download.suggestedFilename().startsWith('ifr-benefits-smoke-template-seller-history-'), 'CSV filename is not seller-scoped');
     await expectText(page, 'Downloaded 3 sessions (no customer wallet data is stored).');
+
+    // Reject page two after one page was collected: no partial file or automatic retry.
+    const readsBeforeRejection = historyRequestCount;
+    const downloadsBeforeRejection = downloads.length;
+    rejectHistoryRequestAt = readsBeforeRejection + 2;
+    await page.getByRole('button', { name: 'Download full CSV', exact: true }).click();
+    await expectText(page, 'Seller authorization expired');
+    assert(historyRequestCount === readsBeforeRejection + 2, 'a rejected export read was automatically retried');
+    assert(downloads.length === downloadsBeforeRejection, 'a rejected export read created a download');
+
+    // Only a new explicit user action may obtain fresh authorization and recover.
+    const recoveryDownloadPromise = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Download full CSV', exact: true }).click();
+    const recoveryDownload = await recoveryDownloadPromise;
+    const recoveryPath = await recoveryDownload.path();
+    assert(recoveryPath, 'fresh-authorized CSV recovery download is unavailable');
+    assert(fs.readFileSync(recoveryPath, 'utf8') === csv, 'fresh-authorized CSV recovery changed the exported contents');
+    await expectText(page, 'Downloaded 3 sessions (no customer wallet data is stored).');
+    const historyNonces = historyRequests.map((request) => request.nonce);
     assert(
-      challengeRequests.filter((challenge) => challenge.action === 'sessions:list').length >= 4,
-      'full history export did not refresh an expired read authorization'
+      historyNonces.length >= 4 &&
+      historyNonces.every((nonce) => /^[0-9a-f]{64}$/.test(nonce || '')) &&
+      new Set(historyNonces).size === historyNonces.length &&
+      historyNonces.every((nonce) => challengeRequests.some((challenge) => (
+        challenge.action === 'sessions:list' && challenge.businessId === businessId && challenge.nonce === nonce
+      ))),
+      'each history page and explicit recovery must use a fresh one-time read authorization'
     );
     assert(mutatingRequests.length === 1, 'downloading history must remain local and read-only');
     if (shouldScreenshot) {
@@ -1565,7 +1571,9 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Sellers define each real rule and may use different thresholds.');
     await expectText(page, 'Unlock all');
     await expectText(page, 'My benefits');
-    await expectText(page, 'No customer proofs saved on this device yet');
+    const deviceHistory = page.getByTestId('device-history');
+    await deviceHistory.getByText('No receipts on this device yet.', { exact: false }).waitFor({ timeout: timeoutMs });
+    assert(await deviceHistory.getByTestId('device-receipt').count() === 0, 'a fresh device must not contain receipts');
     await expectText(page, 'Customer checkout pass');
     await expectText(page, 'Show your QR. Approve the exact offer.');
     await expectText(page, 'Connect wallet first');
