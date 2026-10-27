@@ -715,7 +715,9 @@ public-documentation node only; no service behavior or release activation.
    Recovery copy -> historical sink versus recovered, unallocated Treasury
    custody -> `test-cwa-content-coherence.cjs`. FAQ proposals and the
    IFR-DIP-01 advisory boundary -> `test-docs-truth.cjs`.
-5. Changed Wiki HTML -> `scripts/build-wiki-rag.js::main` -> generated
+5. Changed Wiki HTML -> maintained page copy and existing Wiki/nav/link guards.
+   No tracked `scripts/build-wiki-rag.js` or current automatic Wiki-RAG
+   generator exists; do not infer a generated index refresh from a copy edit.
 
 | Module | Responsibility | Entry | State |
 | --- | --- | --- | --- |
@@ -726,7 +728,7 @@ public-documentation node only; no service behavior or release activation.
 Cause: current-copy hops retained stale counts or promoted merged source/design
 intent to operational guarantees. Fix only these hops and focused in-script
 fixtures. Diagrams remain the section-11 files above; this addendum does not
-change the live-metrics or Wiki-shell runtime path. Parent owns generator,
+change the live-metrics or Wiki-shell runtime path. Parent owns
 offline guard execution and responsive visual proof. Privacy activation,
 SDK publication, contracts, historical evidence, Bridges and Fleet plans stay
 untouched.
@@ -741,6 +743,15 @@ remain. Contract functions and the dated `ifrPriceWei = 0` input snapshot are
 not a claim of intrinsic contract disablement. The existing Benefits row names
 Model B's per-period Governance `recordMilestone` path and no activated pilot,
 not an authorized-caller reward path. No new measurement or runtime change.
+
+Documentation consistency addendum (2026-10-27): canonical functionality status
+and README -> Landing/Wiki maintained copy, plus the existing Web3 index render
+hop. Keep software review dates separate from dated chain evidence; distinguish
+deployed CommitmentVaultV2 from the later, undeployed release candidate. Benefits
+Guide/Support already describe eligible proof redemption and gas-bearing lock
+actions separately; this copy reconciliation does not change that app payload.
+Source guards, scoped responsive proof and per-target publication verification
+apply to changed surfaces; no contract or application behavior is changed.
 
 ### 11.9 Project-continuity visibility addendum (2026-10-25)
 
