@@ -12,7 +12,7 @@
 
 **[18 documented on-chain components](docs/DEPLOYMENTS.md#canonical-mainnet-component-count-18)** (15 deployed protocol contracts + 3 Gnosis Safes) | **Internal review records** | **Public automated test evidence** | **Independent professional third-party audit pending**
 
-### Quick Links
+## Quick Links
 
 | Resource | Link |
 |---|---|
