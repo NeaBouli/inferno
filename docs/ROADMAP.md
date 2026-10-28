@@ -105,6 +105,11 @@ with their audit, testnet and on-chain authorization gates, are tracked in the
       Master architecture: `docs/ifrp-commerce-app/MASTER_ARCHITECTURE.md`
       Scope: customer wallet, ETH/IFR swap, IFR locking, QR proof, seller scanner, seller discount rules, and verified seller rewards through PartnerVault after governance approval.
       Current implementation: the live PWA includes seller profile/rule/history flows, customer IFRLock and proof flows, POS helper, owner-managed checkout operators and product catalog. The deployed M4 foundation adds applications, live governance linkage checks, an atomic reward outbox and read-only vesting status; no Mainnet seller/partner or reward caller is active. Remaining scope includes governance activation/submission, embedded-wallet decision and real-device acceptance.
+- [x] Single-seller catalog search, category filters, entry counts and reset
+      implemented in source on 28 October 2026 ([#390](https://github.com/NeaBouli/inferno/issues/390))
+  - Uses the loaded public catalog and preserves attached offers, prices,
+    eligibility requirements and exact-offer links. The issue tracks qualification
+    and deployment evidence; advanced discovery, sorting and inventory remain open.
 - [ ] Guarded buyback automation (BuybackVault activation after 60 days)
 - [x] Vault V1 fee-exemption defense in depth: automated four-hour invariant
       monitoring and negative regression tests cover CommitmentVault and
