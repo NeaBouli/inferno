@@ -110,6 +110,10 @@ with their audit, testnet and on-chain authorization gates, are tracked in the
   - Uses the loaded public catalog and preserves attached offers, prices,
     eligibility requirements and exact-offer links. The issue tracks qualification
     and deployment evidence; advanced discovery, sorting and inventory remain open.
+- [x] Recoverable public offer paging implemented in source on 29 October 2026
+      ([#392](https://github.com/NeaBouli/inferno/issues/392))
+  - User-operated return to page 1 preserves filters after catalog changes.
+    The issue tracks qualification/deployment; advanced sorting and inventory remain open.
 - [ ] Guarded buyback automation (BuybackVault activation after 60 days)
 - [x] Vault V1 fee-exemption defense in depth: automated four-hour invariant
       monitoring and negative regression tests cover CommitmentVault and

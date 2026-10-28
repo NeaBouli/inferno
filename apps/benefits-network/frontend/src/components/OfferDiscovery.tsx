@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { BusinessLogo } from '@/components/BusinessLogo';
 import { EligibilityLiveSummary, OfferEligibility, useIfrLockEligibility } from '@/components/OfferEligibility';
 import { discoverOffers, type PublicOffer } from '@/lib/api';
@@ -30,6 +30,8 @@ export function OfferDiscovery({ mode, onOpenSellerTools }: OfferDiscoveryProps)
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [reloadKey, setReloadKey] = useState(0);
+  const resultStatusRef = useRef<HTMLParagraphElement>(null);
+  const focusAfterRecovery = useRef(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -65,25 +67,43 @@ export function OfferDiscovery({ mode, onOpenSellerTools }: OfferDiscoveryProps)
     };
   }, [query, category, serviceArea, page, reloadKey]);
 
+  useEffect(() => {
+    if (!loading && focusAfterRecovery.current) {
+      resultStatusRef.current?.focus();
+      focusAfterRecovery.current = false;
+    }
+  }, [loading]);
+
+  function returnToFirstPage() {
+    focusAfterRecovery.current = true;
+    setLoading(true);
+    if (page === 1) setReloadKey((current) => current + 1);
+    else setPage(1);
+  }
+
   function updateQuery(value: string) {
+    focusAfterRecovery.current = false;
     setLoading(true);
     setQuery(value);
     setPage(1);
   }
 
   function updateCategory(value: string) {
+    focusAfterRecovery.current = false;
     setLoading(true);
     setCategory(value);
     setPage(1);
   }
 
   function updateServiceArea(value: string) {
+    focusAfterRecovery.current = false;
     setLoading(true);
     setServiceArea(value);
     setPage(1);
   }
 
   function clearFilters() {
+    focusAfterRecovery.current = false;
     setLoading(true);
     setQuery('');
     setCategory('');
@@ -92,6 +112,8 @@ export function OfferDiscovery({ mode, onOpenSellerTools }: OfferDiscoveryProps)
   }
 
   const hasActiveFilters = Boolean(query.trim() || category || serviceArea);
+  const lastPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
+  const unavailablePage = !loading && !error && total > 0 && (offers.length === 0 || page > lastPage);
 
   return (
     <section id="offers" className="mx-auto w-full max-w-7xl scroll-mt-28 px-5 pb-12">
@@ -105,7 +127,7 @@ export function OfferDiscovery({ mode, onOpenSellerTools }: OfferDiscoveryProps)
               Browse active seller offers by category and availability, then open the seller catalog for checkout details.
             </p>
           </div>
-          <p role="status" aria-live="polite" className="font-mono text-sm text-stone-400">{loading ? 'Loading...' : `${total} active offer${total === 1 ? '' : 's'}`}</p>
+          <p ref={resultStatusRef} data-discovery-result-status role="status" aria-live="polite" tabIndex={-1} className="font-mono text-sm text-stone-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#51281d]">{loading ? 'Loading...' : error ? 'Offers unavailable' : `${total} active offer${total === 1 ? '' : 's'}`}</p>
         </div>
 
         <div className="mt-6 grid gap-3 md:grid-cols-[minmax(0,1fr)_14rem_14rem]">
@@ -117,7 +139,7 @@ export function OfferDiscovery({ mode, onOpenSellerTools }: OfferDiscoveryProps)
               maxLength={80}
               onChange={(event) => updateQuery(event.target.value)}
               placeholder="Seller, product or benefit"
-              className="min-w-0 rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm font-medium normal-case tracking-[0] text-white outline-none transition placeholder:text-stone-500 focus:border-orange-300"
+              className="h-12 min-w-0 rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm font-medium normal-case tracking-[0] text-white outline-none transition placeholder:text-stone-500 focus:border-orange-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#51281d]"
             />
           </label>
           <label className="grid gap-2 text-xs font-black uppercase tracking-[0.14em] text-stone-300">
@@ -125,7 +147,7 @@ export function OfferDiscovery({ mode, onOpenSellerTools }: OfferDiscoveryProps)
             <select
               value={category}
               onChange={(event) => updateCategory(event.target.value)}
-              className="min-w-0 rounded-2xl border border-white/10 bg-[#160f0b] px-4 py-3 text-sm font-medium normal-case tracking-[0] text-white outline-none transition focus:border-orange-300"
+              className="h-12 min-w-0 rounded-2xl border border-white/10 bg-[#160f0b] px-4 py-3 text-sm font-medium normal-case tracking-[0] text-white outline-none transition focus:border-orange-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#51281d]"
             >
               <option value="">All categories</option>
               {categories.map((item) => <option key={item} value={item}>{item}</option>)}
@@ -136,7 +158,7 @@ export function OfferDiscovery({ mode, onOpenSellerTools }: OfferDiscoveryProps)
             <select
               value={serviceArea}
               onChange={(event) => updateServiceArea(event.target.value)}
-              className="min-w-0 rounded-2xl border border-white/10 bg-[#160f0b] px-4 py-3 text-sm font-medium normal-case tracking-[0] text-white outline-none transition focus:border-orange-300"
+              className="h-12 min-w-0 rounded-2xl border border-white/10 bg-[#160f0b] px-4 py-3 text-sm font-medium normal-case tracking-[0] text-white outline-none transition focus:border-orange-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#51281d]"
             >
               <option value="">All areas</option>
               {serviceAreas.map((item) => <option key={item} value={item}>{item}</option>)}
@@ -147,11 +169,23 @@ export function OfferDiscovery({ mode, onOpenSellerTools }: OfferDiscoveryProps)
         {error ? (
           <div role="alert" className="mt-6 border-l-2 border-red-400 pl-4 text-sm text-red-100">
             <p>{error}</p>
-            <button type="button" onClick={() => setReloadKey((current) => current + 1)} className="mt-2 font-black uppercase tracking-[0.12em]">Try again</button>
+            <button type="button" onClick={() => setReloadKey((current) => current + 1)} className="mt-2 h-12 px-4 py-3 font-black uppercase tracking-[0.12em] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#51281d]">Try again</button>
           </div>
         ) : null}
 
-        {!loading && !error && offers.length === 0 && hasActiveFilters ? (
+        {unavailablePage ? (
+          <div data-discovery-recovery role="status" aria-live="polite" className="mt-8 border-l-2 border-orange-300 pl-5">
+            <h3 className="text-xl font-black text-white">{page > 1 ? 'This page is no longer available' : 'Offers could not be shown on this page'}</h3>
+            <p className="mt-2 text-sm leading-6 text-stone-300">
+              Return to the first page to reload the current offers. Your search, category and area will stay selected.
+            </p>
+            <button type="button" onClick={returnToFirstPage} className="mt-4 h-12 rounded-full border border-orange-200/40 px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-orange-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#51281d]">
+              Return to first page
+            </button>
+          </div>
+        ) : null}
+
+        {!loading && !error && offers.length === 0 && total === 0 && hasActiveFilters ? (
           <div role="status" className="mt-8 border-l-2 border-orange-300 pl-5">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-200/80">Search result</p>
             <h3 className="mt-2 text-xl font-black text-white">No offers match these filters</h3>
@@ -159,14 +193,14 @@ export function OfferDiscovery({ mode, onOpenSellerTools }: OfferDiscoveryProps)
             <button
               type="button"
               onClick={clearFilters}
-              className="mt-4 rounded-full border border-orange-200/40 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-orange-50 transition hover:bg-orange-200/10"
+              className="mt-4 h-12 rounded-full border border-orange-200/40 px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-orange-50 transition hover:bg-orange-200/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#51281d]"
             >
               Clear filters
             </button>
           </div>
         ) : null}
 
-        {!loading && !error && offers.length === 0 && !hasActiveFilters ? (
+        {!loading && !error && offers.length === 0 && total === 0 && !hasActiveFilters ? (
           <div role="status" className="mt-8 border-y border-orange-200/25 py-7">
             <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end">
               <div>
@@ -180,7 +214,7 @@ export function OfferDiscovery({ mode, onOpenSellerTools }: OfferDiscoveryProps)
                 <button
                   type="button"
                   onClick={onOpenSellerTools}
-                  className="rounded-full bg-orange-300 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/35 transition hover:-translate-y-0.5 hover:bg-orange-200"
+                  className="h-12 rounded-full bg-orange-300 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-950 shadow-xl shadow-orange-950/35 transition hover:-translate-y-0.5 hover:bg-orange-200"
                 >
                   {mode === 'seller' ? 'Continue seller setup' : 'Become a seller'}
                 </button>
@@ -198,8 +232,8 @@ export function OfferDiscovery({ mode, onOpenSellerTools }: OfferDiscoveryProps)
         ) : null}
 
         <div className="mt-7 grid gap-4 md:grid-cols-2">
-          {offers.map((offer) => (
-            <article key={offer.id} className="rounded-3xl border border-white/10 bg-black/20 p-5">
+          {(!loading && !error && !unavailablePage ? offers : []).map((offer) => (
+            <article key={offer.id} className="min-w-0 break-words rounded-3xl border border-white/10 bg-black/20 p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex min-w-0 gap-3">
                   <BusinessLogo name={offer.business.name} logoUrl={offer.business.logoUrl} />
@@ -261,12 +295,12 @@ export function OfferDiscovery({ mode, onOpenSellerTools }: OfferDiscoveryProps)
           ))}
         </div>
 
-        {total > PAGE_SIZE ? (
-          <div className="mt-7 flex items-center justify-between gap-3 border-t border-white/10 pt-5">
-            <button type="button" disabled={page === 1 || loading} onClick={() => setPage((current) => Math.max(1, current - 1))} className="rounded-full border border-white/15 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-stone-100 disabled:opacity-35">Previous</button>
-            <span className="font-mono text-xs text-stone-400">Page {page}</span>
-            <button type="button" disabled={!hasNext || loading} onClick={() => setPage((current) => current + 1)} className="rounded-full border border-white/15 px-4 py-2 text-xs font-black uppercase tracking-[0.12em] text-stone-100 disabled:opacity-35">Next</button>
-          </div>
+        {!unavailablePage && offers.length > 0 && total > PAGE_SIZE ? (
+          <nav aria-label="Offer pages" className="mt-7 flex items-center justify-between gap-3 border-t border-white/10 pt-5">
+            <button type="button" disabled={page === 1 || loading} onClick={() => setPage((current) => Math.max(1, current - 1))} className="h-12 rounded-full border border-white/15 px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-stone-100 disabled:opacity-35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#51281d]">Previous</button>
+            <span className="font-mono text-xs text-stone-400">{loading ? `Loading page ${page}...` : `Page ${page} of ${lastPage}`}</span>
+            <button type="button" disabled={!hasNext || page >= lastPage || loading} onClick={() => setPage((current) => current + 1)} className="h-12 rounded-full border border-white/15 px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-stone-100 disabled:opacity-35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#51281d]">Next</button>
+          </nav>
         ) : null}
       </div>
     </section>

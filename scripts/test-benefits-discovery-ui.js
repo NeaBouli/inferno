@@ -460,6 +460,186 @@ async function verifySellerCatalogFilters(browser) {
   console.log('[seller-catalog-search] PASS - product/rule/description search, combined categories, entry counts, reset, exact bindings and five responsive viewports');
 }
 
+async function verifyOfferDiscoveryRecovery(browser) {
+  const evidenceDir = process.env.BENEFITS_DISCOVERY_RECOVERY_EVIDENCE_DIR;
+  const viewports = [{ width: 1440, height: 1000 }, { width: 1180, height: 820 },
+    { width: 820, height: 1180 }, { width: 390, height: 844 }, { width: 320, height: 844 }];
+  const fixtures = Array.from({ length: 17 }, (_, index) => ({ ...offer,
+    id: `discovery-recovery-${index + 1}`, label: `Member benefit ${index + 1}`,
+    productName: `Member item ${String(index + 1).padStart(2, '0')} ${index === 0 ? 'Neighbourhood'.repeat(5) : 'coffee'}`,
+    product: { ...offer.product, id: `recovery-product-${index + 1}`, description: `Recovery fixture ${'Extraordinary'.repeat(4)}` },
+  }));
+  const metrics = [], requestEvidence = [];
+  if (evidenceDir) fs.mkdirSync(path.join(evidenceDir, 'screenshots'), { recursive: true });
+  for (const viewport of viewports) {
+    const context = await browser.newContext({ viewport, deviceScaleFactor: 1, serviceWorkers: 'block',
+      isMobile: viewport.width <= 390, hasTouch: viewport.width <= 390 });
+    let size = 17, failure = false, inconsistent = false, holdRecovery = false, releaseLate;
+    const lateGate = new Promise(resolve => { releaseLate = resolve; });
+    const requests = [], errors = [];
+    await context.route('**/api/**', async route => {
+      const request = route.request(), url = new URL(request.url());
+      assert.equal(request.method(), 'GET', 'discovery recovery fixture must never mutate data');
+      if (url.pathname === '/api/businesses') {
+        const page = Number(url.searchParams.get('page') || 1), query = url.searchParams.get('query') || '';
+        const snapshot = { page, query, category: url.searchParams.get('category') || '',
+          serviceArea: url.searchParams.get('serviceArea') || '', size, failure, inconsistent, held: holdRecovery };
+        requests.push(snapshot);
+        const total = query === 'no-match' ? 0 : query === 'current' ? 1 : size;
+        const selected = query === 'current' ? [fixtures[16]] : fixtures.slice(0, size);
+        const items = inconsistent || total === 0 ? [] : selected.slice((page - 1) * 8, page * 8);
+        if (snapshot.held) await lateGate;
+        if (snapshot.failure) return route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'Discovery fixture temporarily unavailable' }) });
+        return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
+          offers: items, categories: ['Coffee'], serviceAreas: ['Online'],
+          pagination: { page, limit: 8, total, totalPages: total === 0 ? 0 : Math.ceil(total / 8), hasNext: page * 8 < total },
+        }) });
+      }
+      if (url.pathname === '/api/ready') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'ready', chainId: 1, database: 'ok', rateLimitStore: 'ok' }) });
+      return route.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ error: 'Unknown recovery fixture route' }) });
+    });
+    await context.route('https://assets.example.com/ifr-seller-logo.png', route => route.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64') }));
+    const page = await context.newPage(); page.setDefaultNavigationTimeout(NAVIGATION_TIMEOUT_MS);
+    page.on('pageerror', error => errors.push(error.message));
+    const root = page.locator('#offers'), search = root.locator('input[type="search"]');
+    const category = root.locator('select').nth(0), area = root.locator('select').nth(1);
+    const next = root.getByRole('button', { name: 'Next', exact: true });
+    const previous = root.getByRole('button', { name: 'Previous', exact: true });
+    const recovery = root.getByRole('button', { name: 'Return to first page', exact: true });
+    const launch = root.getByText('The first public seller offers are still being prepared.', { exact: true });
+    const noMatch = root.getByText('No offers match these filters', { exact: true });
+    const ids = () => root.locator('article a[href*="offer="]').evaluateAll(nodes => nodes.map(n => new URL(n.href).searchParams.get('offer')));
+    const waitCount = value => root.getByText(`${value} active offer${value === 1 ? '' : 's'}`, { exact: true }).waitFor();
+    const waitRequests = async count => {
+      const deadline = Date.now() + 5000;
+      while (requests.length < count && Date.now() < deadline) await page.waitForTimeout(25);
+      assert.equal(requests.length, count, 'only the expected discovery request is made');
+    };
+    const activate = async locator => viewport.width <= 390 ? locator.tap() : locator.click();
+    const returnFirst = async expectedTotal => {
+      const before = requests.length;
+      await activate(recovery); await waitCount(expectedTotal);
+      await page.waitForFunction(() => !document.querySelector('#offers [data-discovery-recovery]'));
+      assert.equal(requests.length, before + 1, 'one user recovery action makes exactly one request');
+      assert.equal(requests.at(-1).page, 1);
+      await page.waitForFunction(() => document.querySelector('#offers [data-discovery-result-status]') === document.activeElement);
+      assert.equal(await root.locator('[data-discovery-result-status]').evaluate(n => n === document.activeElement), true, 'recovery returns keyboard focus to its result status');
+    };
+    const capture = async state => {
+      const layout = await root.evaluate(section => {
+        const rgb = value => value.match(/[\d.]+/g)?.map(Number) || [0, 0, 0, 0];
+        const over = (fg, bg) => fg.slice(0, 3).map((n, i) => n * (fg[3] ?? 1) + bg[i] * (1 - (fg[3] ?? 1)));
+        const background = node => {
+          const ancestors = []; for (let p = node; p; p = p.parentElement) ancestors.unshift(p);
+          return ancestors.reduce((bg, p) => over(rgb(getComputedStyle(p).backgroundColor), bg), [255, 255, 255]);
+        };
+        const luminance = values => values.map(n => n / 255).map(n => n <= 0.04045 ? n / 12.92 : ((n + 0.055) / 1.055) ** 2.4).reduce((sum, n, i) => sum + n * [0.2126, 0.7152, 0.0722][i], 0);
+        const contrast = (fg, bg) => { const a = luminance(over(fg, bg)), b = luminance(bg); return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05); };
+        const controls = [...section.querySelectorAll('input,select,button')].filter(n => n.getBoundingClientRect().width).map(n => {
+          const r = n.getBoundingClientRect(), s = getComputedStyle(n), bg = background(n);
+          return { name: n.textContent.trim() || n.getAttribute('type'), x: r.x, y: r.y, width: r.width, height: r.height,
+            padding: [s.paddingTop, s.paddingRight, s.paddingBottom, s.paddingLeft].map(parseFloat),
+            disabled: n.disabled, contrast: contrast(rgb(s.color), bg), focusVisible: n.matches(':focus-visible'),
+            outlineWidth: parseFloat(s.outlineWidth), focusContrast: contrast(rgb(s.outlineColor), bg) };
+        });
+        const overlaps = [];
+        for (let i = 0; i < controls.length; i++) for (let j = i + 1; j < controls.length; j++) {
+          const a = controls[i], b = controls[j];
+          if (Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x) > 1 && Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y) > 1) overlaps.push([a.name, b.name]);
+        }
+        const clipped = [];
+        for (const n of section.querySelectorAll('h2,h3,p,a,span')) {
+          const r = n.getBoundingClientRect(); if (!r.width || !r.height || n.closest('.sr-only,[aria-hidden="true"]')) continue;
+          const range = document.createRange(); range.selectNodeContents(n);
+          if ([...range.getClientRects()].some(line => line.left < r.left - 1 || line.right > r.right + 1 || line.top < r.top - 1 || line.bottom > r.bottom + 1)) clipped.push(n.textContent.slice(0, 60));
+        }
+        return { viewport: { width: innerWidth, height: innerHeight }, scrollWidth: document.documentElement.scrollWidth,
+          controls, overlaps, clipped, outsideCards: [...section.querySelectorAll('article')].filter(n => n.scrollWidth > n.clientWidth + 1 || n.getBoundingClientRect().right > innerWidth + 1).length };
+      });
+      metrics.push({ state, ...layout, discoveryRequests: requests.length });
+      assert.ok(layout.scrollWidth <= viewport.width, `${state}: document must fit`);
+      assert.deepEqual(layout.overlaps, [], `${state}: controls must not overlap`);
+      assert.deepEqual(layout.clipped, [], `${state}: text must fit`);
+      assert.equal(layout.outsideCards, 0);
+      for (const control of layout.controls) {
+        assert.ok(control.width >= 44 && control.height >= 48, `${state}: touch target ${control.name}`);
+        assert.ok(control.padding.every(n => n >= 12), `${state}: control padding`);
+        if (!control.disabled) assert.ok(control.contrast >= 4.5, `${state}: control contrast`);
+      }
+      if (state === 'unavailable-9') {
+        const button = layout.controls.find(n => n.name === 'Return to first page');
+        assert.ok(button.focusVisible && button.outlineWidth >= 2 && button.focusContrast >= 3, 'recovery has a visible contrasting keyboard outline');
+      }
+      if (evidenceDir) {
+        // Keep the sticky site header at document top, outside this section's document-coordinate capture.
+        await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+        const clip = await root.boundingBox(); assert.ok(clip);
+        await page.screenshot({ path: path.join(evidenceDir, 'screenshots', `${viewport.width}x${viewport.height}-${state}.png`), fullPage: true, clip });
+      }
+    };
+    try {
+      await page.goto(`${origin}/#offers`, { waitUntil: 'domcontentloaded' }); await waitCount(17);
+      assert.deepEqual(await ids(), fixtures.slice(0, 8).map(n => n.id));
+      await activate(next); await page.waitForFunction(() => document.querySelector('#offers article a[href*="offer="]')?.getAttribute('href').includes('discovery-recovery-9'));
+      size = 9; await activate(next); await waitCount(9);
+      // This is deliberately the first new correctness assertion: baseline renders the false network-launch message here.
+      assert.equal(await launch.count(), 0, 'a positive catalog total must not be called an empty network');
+      assert.equal(await noMatch.count(), 0);
+      await recovery.waitFor(); await recovery.focus(); await page.keyboard.press('Tab'); await page.keyboard.press('Shift+Tab');
+      await capture('unavailable-9');
+      await returnFirst(9); assert.deepEqual(await ids(), fixtures.slice(0, 8).map(n => n.id));
+
+      size = 17; await search.fill('member'); await waitCount(17);
+      assert.equal(await previous.isDisabled(), true); await capture('page-1');
+      await root.getByText('Reference price: EUR 19.99', { exact: true }).first().waitFor();
+      await root.getByText('1,000 IFR in active TIME_ONLY commitments', { exact: false }).first().waitFor();
+      assert.deepEqual(await root.locator('article a[href*="offer="]').evaluateAll(nodes => nodes.map(n => n.getAttribute('href'))), fixtures.slice(0, 8).map(n => `/?seller=${offer.business.slug}&offer=${n.id}#customer-pass`));
+      await activate(next); await page.waitForFunction(() => document.querySelector('#offers article a[href*="offer="]')?.getAttribute('href').includes('discovery-recovery-9')); await capture('page-2');
+      await activate(next); await page.waitForFunction(() => document.querySelector('#offers article a[href*="offer="]')?.getAttribute('href').includes('discovery-recovery-17'));
+      assert.equal(await next.isDisabled(), true); assert.deepEqual(await ids(), [fixtures[16].id]); await capture('page-3');
+      await activate(previous); await page.waitForFunction(() => document.querySelector('#offers article a[href*="offer="]')?.getAttribute('href').includes('discovery-recovery-9'));
+      size = 8; await activate(next); await waitCount(8); await recovery.waitFor();
+      assert.equal(await noMatch.count(), 0); assert.equal(await launch.count(), 0); await capture('unavailable-8');
+      await returnFirst(8); assert.deepEqual(await ids(), fixtures.slice(0, 8).map(n => n.id)); await capture('recovered-8');
+
+      size = 17; await search.fill('  member  '); await category.selectOption('Coffee'); await area.selectOption('Online'); await waitCount(17);
+      await activate(next); await page.waitForFunction(() => document.querySelector('#offers article a[href*="offer="]')?.getAttribute('href').includes('discovery-recovery-9'));
+      size = 9; await activate(next); await waitCount(9); await recovery.waitFor(); await capture('filtered-unavailable-9');
+      await returnFirst(9);
+      assert.equal(await search.inputValue(), '  member  '); assert.equal(await category.inputValue(), 'Coffee'); assert.equal(await area.inputValue(), 'Online');
+      assert.deepEqual({ query: requests.at(-1).query, category: requests.at(-1).category, serviceArea: requests.at(-1).serviceArea }, { query: 'member', category: 'Coffee', serviceArea: 'Online' });
+      await search.fill('no-match'); await waitCount(0); await noMatch.waitFor(); assert.equal(await recovery.count(), 0); await capture('filtered-zero');
+      size = 17; await activate(root.getByRole('button', { name: 'Clear filters', exact: true })); await waitCount(17);
+      await activate(next); await page.waitForFunction(() => document.querySelector('#offers article a[href*="offer="]')?.getAttribute('href').includes('discovery-recovery-9'));
+      size = 0; await activate(next); await waitCount(0); await launch.waitFor();
+      assert.equal(await noMatch.count(), 0); await capture('network-empty');
+      failure = true; await search.fill('error'); await root.getByText('Discovery fixture temporarily unavailable', { exact: true }).waitFor();
+      assert.equal(await launch.count(), 0); assert.equal(await noMatch.count(), 0); assert.equal(await recovery.count(), 0); await capture('load-error');
+
+      failure = false; size = 9; inconsistent = true; await activate(root.getByRole('button', { name: 'Try again', exact: true })); await recovery.waitFor();
+      const stableRequests = requests.length; await page.waitForTimeout(600);
+      assert.equal(requests.length, stableRequests, 'inconsistent first-page response must not auto-retry');
+      inconsistent = false; holdRecovery = true;
+      const beforeLate = requests.length;
+      const lateResponse = page.waitForResponse(response => new URL(response.url()).pathname === '/api/businesses' && new URL(response.url()).searchParams.get('query') === 'error');
+      await activate(recovery); await waitRequests(beforeLate + 1);
+      holdRecovery = false;
+      await search.fill('current'); await waitCount(1); assert.deepEqual(await ids(), [fixtures[16].id]);
+      assert.equal(await search.evaluate(n => n === document.activeElement), true, 'a newer filter action cancels recovery focus');
+      releaseLate(); await (await lateResponse).finished(); await page.waitForTimeout(350);
+      assert.deepEqual(await ids(), [fixtures[16].id], 'late recovery response cannot restore old offers');
+      assert.equal(await search.evaluate(n => n === document.activeElement), true, 'late recovery cannot steal input focus');
+      assert.equal(requests.length, beforeLate + 2, 'one recovery click plus one newer filter make two requests; late response adds none');
+      assert.equal(await recovery.count(), 0); assert.equal(await launch.count(), 0); await waitCount(1);
+      assert.deepEqual(errors, []);
+    } finally {
+      releaseLate(); await context.close(); requestEvidence.push({ viewport, requests });
+      if (evidenceDir) fs.writeFileSync(path.join(evidenceDir, 'discovery-recovery-metrics.json'), JSON.stringify({ fixtureOnly: true, viewports, metrics, requestEvidence }, null, 2));
+    }
+  }
+  console.log('[offer-discovery-recovery] PASS - paging, user recovery, retained filters, bounded requests, stale response and five responsive viewports');
+}
+
 async function run() {
   const serverOutput = [];
   const server = spawn(
@@ -479,6 +659,7 @@ async function run() {
     await waitForServer(server);
     browser = await chromium.launch({ headless: true });
     await verifySellerCatalogFilters(browser);
+    await verifyOfferDiscoveryRecovery(browser);
     const context = await browser.newContext({ serviceWorkers: 'block' });
     let networkEmpty = false;
 

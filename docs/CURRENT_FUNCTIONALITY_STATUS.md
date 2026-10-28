@@ -80,6 +80,16 @@ The issue above tracks qualification and deployment evidence for this source
 checkpoint. Advanced catalog discovery, sorting and inventory remain roadmap work;
 physical-device and wallet acceptance remain separate open follow-ups.
 
+### Offer discovery source checkpoint — 29 October 2026
+
+Implemented in source for [#392](https://github.com/NeaBouli/inferno/issues/392):
+public offer browsing distinguishes an unavailable results page from an empty
+network, zero matching filters and API failure. A user action returns to page 1
+with the current search, category and area retained. Recovery is never automatic;
+the existing exact offer/price/eligibility bindings remain. The issue tracks
+qualification and deployment evidence. Physical-device and wallet acceptance,
+advanced search/sorting, inventory and governance activation remain separate work.
+
 ## Deployed Application Inventory
 
 The "four" public surfaces in the table above (Landing, Wiki, Web3, IFR
