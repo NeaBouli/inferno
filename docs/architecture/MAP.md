@@ -1445,3 +1445,20 @@ flowchart LR
   Backend --> Gate[Production zero + full dev/via + interval]
   Gateway --> Gate
 ```
+
+## Public seller catalog search and categories — 2026-10-28
+
+Module: existing `SellerCatalogClient.tsx` public catalog. Hop: its existing
+`useEffect` -> `api::getBusinessProducts/getBusinessRules` -> existing public GET
+products/rules -> local category/entry filtering -> unchanged offer cards.
+Data: loaded product names/descriptions, attached/general rule labels and original
+product categories. Search/category state is transient; category values distinguish
+product categories from the existing general-offer group. Matching product entries
+keep all their original rules. Count/reset preserve entry ordering and exact
+price, lock eligibility and seller/rule selection bindings. No backend, request,
+storage, telemetry or dependency path is added.
+
+`test-benefits-discovery-ui.js` extends the existing public-catalog handoff suite
+with mixed fixtures, combined filters, count/reset/state isolation, exact bindings
+and responsive computed layout/screenshot evidence. Root owns production release
+and post-deploy visual/asset verification.

@@ -3,6 +3,7 @@
 const assert = require('node:assert/strict');
 const { spawn } = require('node:child_process');
 const path = require('node:path');
+const fs = require('node:fs');
 const { chromium, devices } = require('playwright');
 
 const root = path.resolve(__dirname, '..');
@@ -214,6 +215,251 @@ async function waitForLocation(page, pathname, hash = '') {
   );
 }
 
+async function verifySellerCatalogFilters(browser) {
+  const stamp = '2026-10-28T00:00:00.000Z';
+  const business = { ...offer.business, id: 'catalog-filter-seller', slug: 'catalog-filter-fixture',
+    name: 'Independent neighbourhood market and member services', categories: ['Coffee', 'Services', 'General offers'] };
+  const rule = (id, label, productId, productName, extra = {}) => ({
+    id, label, businessId: business.id, productId, productName, category: productId ? 'Coffee' : 'Membership',
+    discountPercent: 10, requiredLockIFR: 1000, minIFRHeld: 0, lockSource: 'ifrlock',
+    dailyRedemptionLimit: 0, monthlyRedemptionLimit: 0, ttlSeconds: 90, active: true,
+    createdAt: stamp, updatedAt: stamp, ...extra,
+  });
+  const coffeeName = `Artisan coffee collection ${'Neighbourhood'.repeat(5)}`;
+  const coffeeRules = [
+    rule('catalog-rule-standard', 'Morning member benefit', 'catalog-product-coffee', coffeeName),
+    rule('catalog-rule-loyalty', 'Time-only LOYALTY reward', 'catalog-product-coffee', coffeeName,
+      { discountPercent: 20, requiredLockIFR: 25000, minIFRHeld: 500, lockSource: 'commitment_time_only' }),
+    rule('catalog-rule-either', `Flexible benefit ${'Extraordinary'.repeat(5)}`, 'catalog-product-coffee', coffeeName,
+      { discountPercent: 15, lockSource: 'either' }),
+  ];
+  const serviceRule = rule('catalog-rule-service', 'Wellness member benefit', 'catalog-product-service', 'Restorative wellness session');
+  const generalRules = [
+    rule('catalog-rule-community', 'Weekly community bonus', null, 'Community membership'),
+    rule('catalog-rule-welcome', 'Weekend welcome offer', null, 'General welcome benefit'),
+  ];
+  const product = (id, name, category, description, benefitRules, price = '1999', currency = 'EUR') => ({
+    id, name, category, description, benefitRules, businessId: business.id,
+    basePriceMinor: price, currency, active: true, createdAt: stamp, updatedAt: stamp,
+  });
+  const products = [
+    product('catalog-product-coffee', coffeeName, 'Coffee', 'Roasted hazelnut notes and a reusable presentation box.', coffeeRules),
+    product('catalog-product-service', 'Restorative wellness session', 'Services', 'A quiet zone for recovery and rest.', [serviceRule]),
+    product('catalog-product-cup', 'Reusable member cup', 'General offers', 'A listed item without an attached discount.', [], '900719925474099313', 'USD'),
+  ];
+  const rules = [...coffeeRules, serviceRule, ...generalRules];
+  const viewports = [
+    { width: 1440, height: 1000 }, { width: 1180, height: 820 }, { width: 820, height: 1180 },
+    { width: 390, height: 844 }, { width: 320, height: 844 },
+  ];
+  const evidenceDir = process.env.BENEFITS_CATALOG_EVIDENCE_DIR;
+  const metrics = [];
+  if (evidenceDir) fs.mkdirSync(path.join(evidenceDir, 'screenshots'), { recursive: true });
+
+  for (const viewport of viewports) {
+    const context = await browser.newContext({ viewport, deviceScaleFactor: 1,
+      isMobile: viewport.width <= 390, hasTouch: viewport.width <= 390, serviceWorkers: 'block' });
+    let mode = viewport.width === 1440 ? 'loading' : 'ready';
+    let releaseLoading;
+    const loadingGate = new Promise(resolve => { releaseLoading = resolve; });
+    const catalogRequests = [];
+    const pageErrors = [];
+    await context.route('**/api/**', async route => {
+      const request = route.request();
+      const url = new URL(request.url());
+      assert.equal(request.method(), 'GET', 'public catalog fixture must never mutate data');
+      const isProducts = url.pathname === `/api/businesses/${business.slug}/products`;
+      const isRules = url.pathname === `/api/businesses/${business.slug}/rules`;
+      if (isProducts || isRules) {
+        catalogRequests.push(url.pathname);
+        if (mode === 'loading') await loadingGate;
+        if (mode === 'error') return route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'Catalog fixture temporarily unavailable' }) });
+        return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(isProducts
+          ? { business, products: mode === 'empty' ? [] : products }
+          : { rules: mode === 'empty' ? [] : rules }) });
+      }
+      if (url.pathname === `/api/businesses/${business.slug}`) return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(business) });
+      if (url.pathname === '/api/businesses') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(discoveryResponse([])) });
+      if (url.pathname === '/api/ready') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'ready', chainId: 1, database: 'ok', rateLimitStore: 'ok' }) });
+      throw new Error(`Unexpected catalog fixture request ${url.pathname}`);
+    });
+    await context.route('https://assets.example.com/ifr-seller-logo.png', route => route.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64') }));
+    const page = await context.newPage();
+    page.setDefaultNavigationTimeout(NAVIGATION_TIMEOUT_MS);
+    page.on('pageerror', error => pageErrors.push(error.message));
+    const url = `${origin}/s/${business.slug}`;
+    const entries = () => page.locator('[data-catalog-entry]').evaluateAll(nodes => nodes.map(node => node.getAttribute('data-catalog-entry')));
+    const search = page.getByRole('searchbox', { name: 'Search this catalog', exact: true });
+    const category = page.getByLabel('Category', { exact: true });
+    const reset = page.getByRole('button', { name: 'Reset filters', exact: true });
+    const resetFilters = async () => {
+      if (await reset.isEnabled()) {
+        if (viewport.width <= 390) await reset.tap(); else await reset.click();
+      }
+      await page.waitForFunction(() => document.querySelector('[data-catalog-result-count]')?.textContent?.trim() === 'Showing 5 of 5 catalog entries.');
+    };
+    const capture = async state => {
+      const contrastRatio = (foreground, background) => {
+        const fg = foreground.match(/[\d.]+/g).map(Number);
+        let bg = background.match(/[\d.]+/g).map(Number);
+        if (bg.length > 3 && bg[3] === 0) bg = [245, 241, 232];
+        const alpha = fg.length > 3 ? fg[3] : 1;
+        const luminance = rgb => rgb.slice(0, 3).map(value => value / 255).map(value => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4).reduce((sum, value, index) => sum + value * [0.2126, 0.7152, 0.0722][index], 0);
+        const a = luminance(fg.slice(0, 3).map((value, index) => value * alpha + bg[index] * (1 - alpha)));
+        const b = luminance(bg);
+        return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+      };
+      const layout = await page.evaluate(() => {
+        const filters = document.querySelector('[data-catalog-filters]');
+        const cards = [...document.querySelectorAll('[data-catalog-entry]')];
+        const targets = filters ? [...filters.querySelectorAll('input,select,button')] : [];
+        const boxes = targets.map(node => {
+          const r = node.getBoundingClientRect(); const s = getComputedStyle(node);
+          return { id: node.id || node.textContent.trim(), x: r.x, y: r.y, width: r.width, height: r.height,
+            padding: [s.paddingTop, s.paddingRight, s.paddingBottom, s.paddingLeft].map(parseFloat),
+            color: s.color, background: s.backgroundColor, disabled: node.disabled };
+        });
+        const overlaps = [];
+        for (let i = 0; i < boxes.length; i++) for (let j = i + 1; j < boxes.length; j++) {
+          const a = boxes[i], b = boxes[j];
+          if (Math.min(a.x + a.width, b.x + b.width) - Math.max(a.x, b.x) > 1 && Math.min(a.y + a.height, b.y + b.height) - Math.max(a.y, b.y) > 1) overlaps.push([a.id, b.id]);
+        }
+        const clippedText = [];
+        for (const node of document.querySelectorAll('#catalog-results h2,#catalog-results p,#catalog-results a,[data-catalog-filters] h2,[data-catalog-filters] p')) {
+          const b = node.getBoundingClientRect(); if (!b.width || !b.height) continue;
+          const range = document.createRange(); range.selectNodeContents(node);
+          for (const line of range.getClientRects()) if (line.left < b.left - 1 || line.right > b.right + 1 || line.top < b.top - 1 || line.bottom > b.bottom + 1) {
+            clippedText.push(node.textContent.slice(0, 60)); break;
+          }
+        }
+        const outsideCards = cards.filter(node => {
+          const b = node.getBoundingClientRect(); return b.left < -1 || b.right > innerWidth + 1 || node.scrollWidth > node.clientWidth + 1;
+        }).map(node => node.getAttribute('data-catalog-entry'));
+        const input = document.querySelector('#catalog-search');
+        const style = input ? getComputedStyle(input) : null;
+        return { viewport: { width: innerWidth, height: innerHeight }, scrollWidth: document.documentElement.scrollWidth,
+          controls: boxes, overlaps, clippedText, outsideCards, entryCount: cards.length,
+          focus: input ? { visible: input.matches(':focus-visible'), outlineWidth: style.outlineWidth, outlineColor: style.outlineColor } : null };
+      });
+      metrics.push({ state, ...layout, catalogRequests: catalogRequests.length });
+      assert.ok(layout.scrollWidth <= viewport.width, `${state} must not cause document overflow at ${viewport.width}`);
+      assert.deepEqual(layout.overlaps, [], `${state}: controls must not overlap`);
+      assert.deepEqual(layout.clippedText, [], `${state}: catalog text must wrap inside its own box`);
+      assert.deepEqual(layout.outsideCards, [], `${state}: cards must fit without hidden horizontal content`);
+      for (const control of layout.controls) {
+        assert.ok(control.width >= 44 && control.height >= 48, `${control.id}: minimum touch target at ${viewport.width}`);
+        assert.ok(control.padding.every(value => value >= 12), `${control.id}: internal padding must remain on all sides`);
+      }
+      if (state === 'rule-match') {
+        const input = layout.controls.find(control => control.id === 'catalog-search');
+        assert.ok(parseFloat(layout.focus.outlineWidth) >= 2, 'keyboard focus outline must be measurable');
+        assert.ok(contrastRatio(layout.focus.outlineColor, input.background) >= 3, 'keyboard focus must contrast with the field');
+      }
+      for (const control of layout.controls.filter(control => !control.disabled)) {
+        assert.ok(contrastRatio(control.color, control.background) >= 4.5, `${control.id}: readable control text contrast`);
+      }
+      if (evidenceDir) {
+        await page.evaluate(full => {
+          const target = document.querySelector('[data-catalog-filters]') || document.querySelector('#catalog-results');
+          const header = document.querySelector('.shop-header');
+          const top = full ? 0 : Math.max(0, target.getBoundingClientRect().top + scrollY - header.getBoundingClientRect().height - 16);
+          window.scrollTo({ top, behavior: 'instant' });
+        }, state === 'all');
+        await page.screenshot({ path: path.join(evidenceDir, 'screenshots', `${viewport.width}x${viewport.height}-${state}.png`), fullPage: state === 'all' });
+      }
+    };
+    try {
+      await page.goto(url, { waitUntil: 'domcontentloaded' });
+      if (mode === 'loading') {
+        await page.getByText('Loading active catalog...', { exact: true }).waitFor();
+        assert.equal(await page.getByText('No public offers yet', { exact: true }).count(), 0);
+        assert.equal(await search.count(), 0, 'loading must not expose stale filters');
+        await capture('loading'); mode = 'ready'; releaseLoading();
+      }
+      await page.getByText('Showing 5 of 5 catalog entries.', { exact: true }).waitFor();
+      assert.equal(await page.getByRole('link', { name: 'Use this offer', exact: true }).count(), 6, 'entry count must not count child offer rules');
+      const originalOrder = await entries();
+      assert.deepEqual(originalOrder, [...products.map(p => p.id), ...generalRules.map(r => r.id)]);
+      assert.deepEqual(await category.locator('option').allTextContents(), ['All categories', 'Coffee', 'Services', 'General offers', 'General offers only']);
+      const originalLinks = await page.locator('#catalog-results a[href*="offer="]').evaluateAll(nodes => nodes.map(node => node.getAttribute('href')));
+      assert.deepEqual(originalLinks, rules.map(rule => `/?seller=${business.slug}&offer=${rule.id}#customer-pass`));
+      await page.getByText('Reference price: USD 9,007,199,254,740,993.13', { exact: true }).waitFor();
+      await capture('all');
+      const requestsBeforeFiltering = catalogRequests.length;
+      assert.equal(requestsBeforeFiltering, 2);
+      await search.fill('  lOyAlTy  ');
+      await page.getByText('Showing 1 of 5 catalog entries.', { exact: true }).waitFor();
+      assert.deepEqual(await entries(), [products[0].id]);
+      assert.equal(await page.locator('[data-catalog-rule]').count(), 3, 'matching one rule must retain every original product offer');
+      await page.getByText('Reference price: EUR 19.99', { exact: true }).waitFor();
+      await page.getByText('Verify at least 25,000 IFR in active TIME_ONLY commitments and 500 IFR held at checkout.', { exact: true }).waitFor();
+      assert.equal(await page.getByText('Connect wallet to check', { exact: true }).count(), 3, 'filter must preserve existing eligibility state for all original rules');
+      await page.keyboard.press('Tab'); await page.keyboard.press('Shift+Tab');
+      assert.equal(await search.evaluate(node => node.matches(':focus-visible')), true, 'keyboard focus must remain visible');
+      await capture('rule-match');
+      await category.selectOption('category:Services');
+      await page.getByRole('heading', { name: 'No matching catalog entries', exact: true }).waitFor();
+      await page.getByText('Showing 0 of 5 catalog entries.', { exact: true }).waitFor();
+      assert.equal(await page.getByText('No public offers yet', { exact: true }).count(), 0, 'no-match is not initial empty catalog');
+      await capture('no-match');
+      await resetFilters();
+      await search.fill('  HAZELNUT  ');
+      await page.getByText('Showing 1 of 5 catalog entries.', { exact: true }).waitFor();
+      assert.deepEqual(await entries(), [products[0].id], 'description search must be trimmed and case-insensitive');
+      await search.fill('WELLNESS'); await category.selectOption('category:Services');
+      await page.getByText('Showing 1 of 5 catalog entries.', { exact: true }).waitFor();
+      assert.deepEqual(await entries(), [products[1].id], 'product-name search combines with category');
+      await resetFilters(); await category.selectOption('category:General offers');
+      await page.getByText('Showing 1 of 5 catalog entries.', { exact: true }).waitFor();
+      assert.deepEqual(await entries(), [products[2].id], 'literal product category must not collide with general-offer group');
+      await resetFilters(); await category.selectOption('general');
+      await page.getByText('Showing 2 of 5 catalog entries.', { exact: true }).waitFor();
+      assert.deepEqual(await entries(), generalRules.map(r => r.id));
+      await capture('general-offers');
+      await search.fill('  COMMUNITY  ');
+      await page.getByText('Showing 1 of 5 catalog entries.', { exact: true }).waitFor();
+      assert.deepEqual(await entries(), [generalRules[0].id], 'general offer searches its own label');
+      const marker = 'CATALOG-QUERY-NOT-PERSISTED-390'; await search.fill(marker);
+      await page.getByText('Showing 0 of 5 catalog entries.', { exact: true }).waitFor();
+      assert.equal(await page.evaluate(value => JSON.stringify({ ...localStorage, ...sessionStorage }).includes(value), marker), false, 'search state must not be persisted');
+      await resetFilters();
+      assert.deepEqual(await entries(), originalOrder, 'reset restores original entry ordering');
+      assert.deepEqual(await page.locator('#catalog-results a[href*="offer="]').evaluateAll(nodes => nodes.map(node => node.getAttribute('href'))), originalLinks, 'reset preserves exact seller/rule bindings');
+      assert.equal(new URL(page.url()).search, '', 'local filters must not change the shared seller URL');
+      assert.equal(catalogRequests.length, requestsBeforeFiltering, 'keystrokes, category and reset make no catalog requests');
+      await search.fill('not-restored-after-reload'); await category.selectOption('general');
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await page.getByText('Showing 5 of 5 catalog entries.', { exact: true }).waitFor();
+      assert.equal(await search.inputValue(), ''); assert.equal(await category.inputValue(), 'all');
+      mode = 'empty'; await page.reload({ waitUntil: 'domcontentloaded' });
+      await page.getByRole('heading', { name: 'No public offers yet', exact: true }).waitFor();
+      assert.equal(await search.count(), 0); assert.equal(await page.getByRole('heading', { name: 'No matching catalog entries', exact: true }).count(), 0);
+      await capture('empty');
+      mode = 'error'; await page.reload({ waitUntil: 'domcontentloaded' });
+      await page.getByText('Catalog fixture temporarily unavailable', { exact: true }).waitFor();
+      assert.equal(await search.count(), 0); assert.equal(await page.getByText('No public offers yet', { exact: true }).count(), 0);
+      await capture('load-error');
+      if (viewport.width === 390) {
+        mode = 'ready'; await page.reload({ waitUntil: 'domcontentloaded' });
+        await search.fill('loyalty');
+        await page.getByText('Showing 1 of 5 catalog entries.', { exact: true }).waitFor();
+        await page.locator('[data-catalog-rule="catalog-rule-loyalty"]').getByRole('link', { name: 'Use this offer', exact: true }).tap();
+        await waitForLocation(page, '/', '#customer-pass');
+        assert.equal(new URL(page.url()).searchParams.get('seller'), business.slug);
+        assert.equal(new URL(page.url()).searchParams.get('offer'), coffeeRules[1].id);
+        await page.locator('#customer-pass').getByText('Selected public offer', { exact: true }).waitFor();
+        await page.locator('#customer-pass').getByText('20% benefit · 25,000 IFR lock in active TIME_ONLY commitments · 500 IFR held', { exact: true }).waitFor();
+      }
+      assert.deepEqual(pageErrors, []);
+    } finally {
+      releaseLoading();
+      await context.close();
+      if (evidenceDir) fs.writeFileSync(path.join(evidenceDir, 'catalog-layout-metrics.json'), JSON.stringify({ fixtureOnly: true, viewports, metrics }, null, 2));
+    }
+  }
+  console.log('[seller-catalog-search] PASS - product/rule/description search, combined categories, entry counts, reset, exact bindings and five responsive viewports');
+}
+
 async function run() {
   const serverOutput = [];
   const server = spawn(
@@ -232,6 +478,7 @@ async function run() {
   try {
     await waitForServer(server);
     browser = await chromium.launch({ headless: true });
+    await verifySellerCatalogFilters(browser);
     const context = await browser.newContext({ serviceWorkers: 'block' });
     let networkEmpty = false;
 

@@ -24,6 +24,8 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [shareStatus, setShareStatus] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
 
   useEffect(() => {
     const controller = new AbortController();
@@ -32,6 +34,8 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
     setBusiness(null);
     setProducts([]);
     setStandaloneRules([]);
+    setSearchQuery('');
+    setSelectedCategory('all');
     Promise.all([
       getBusinessProducts(businessId, controller.signal),
       getBusinessRules(businessId, controller.signal),
@@ -59,6 +63,27 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
     }
     return Array.from(grouped.entries());
   }, [products]);
+  const filteredCatalog = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    const matchingCategories = categories.flatMap(([category, categoryProducts]) => {
+      if (selectedCategory !== 'all' && selectedCategory !== `category:${category}`) return [];
+      const matchingProducts = categoryProducts.filter((product) => (
+        [product.name, product.description || '', ...product.benefitRules.map((rule) => rule.label)]
+          .some((text) => text.toLowerCase().includes(query))
+      ));
+      return matchingProducts.length ? [[category, matchingProducts] as const] : [];
+    });
+    const matchingRules = selectedCategory === 'all' || selectedCategory === 'general'
+      ? standaloneRules.filter((rule) => rule.label.toLowerCase().includes(query))
+      : [];
+    return {
+      categories: matchingCategories,
+      rules: matchingRules,
+      count: matchingCategories.reduce((count, [, items]) => count + items.length, 0) + matchingRules.length,
+    };
+  }, [categories, standaloneRules, searchQuery, selectedCategory]);
+  const totalEntries = products.length + standaloneRules.length;
+  const hasFilters = searchQuery.length > 0 || selectedCategory !== 'all';
   const publicReference = business ? businessPublicReference(business) : businessId;
 
   async function shareCatalog() {
@@ -149,6 +174,57 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
           </div>
         </section>
 
+        {!loading && !error && totalEntries > 0 ? (
+          <section aria-labelledby="catalog-filters-heading" className="border-b border-white/10 py-6" data-catalog-filters>
+            <h2 id="catalog-filters-heading" className="text-xl font-black text-white">Find an offer</h2>
+            <p id="catalog-search-help" className="mt-2 text-sm leading-6 text-stone-300">
+              Search product names, descriptions and offer labels. Matching products keep all their offers.
+            </p>
+            <div role="search" aria-label="Seller catalog filters" className="mt-4 grid items-end gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,14rem)_auto]">
+              <div className="min-w-0">
+                <label className="block text-sm font-bold text-stone-200" htmlFor="catalog-search">Search this catalog</label>
+                <input
+                  id="catalog-search"
+                  type="search"
+                  autoComplete="off"
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  aria-describedby="catalog-search-help"
+                  aria-controls="catalog-results"
+                  className="mt-2 min-h-12 w-full min-w-0 rounded-lg border border-white/15 px-4 py-3 font-normal focus-visible:outline-[#8f3519]"
+                />
+              </div>
+              <div className="min-w-0">
+                <label className="block text-sm font-bold text-stone-200" htmlFor="catalog-category">Category</label>
+                <select
+                  id="catalog-category"
+                  value={selectedCategory}
+                  onChange={(event) => setSelectedCategory(event.target.value)}
+                  aria-controls="catalog-results"
+                  className="mt-2 min-h-12 w-full min-w-0 rounded-lg border border-white/15 px-4 py-3 font-normal focus-visible:outline-[#8f3519]"
+                >
+                  <option value="all">All categories</option>
+                  {categories.map(([category]) => (
+                    <option key={category} value={`category:${category}`}>{category}</option>
+                  ))}
+                  {standaloneRules.length > 0 ? <option value="general">General offers only</option> : null}
+                </select>
+              </div>
+              <button
+                type="button"
+                disabled={!hasFilters}
+                onClick={() => { setSearchQuery(''); setSelectedCategory('all'); }}
+                className="min-h-12 rounded-full border border-orange-200/40 px-5 py-3 text-sm font-black text-orange-50 disabled:opacity-50 focus-visible:outline-[#8f3519]"
+              >
+                Reset filters
+              </button>
+            </div>
+            <p className="mt-3 text-sm text-stone-300" role="status" aria-live="polite" aria-atomic="true" data-catalog-result-count>
+              Showing {filteredCatalog.count} of {totalEntries} catalog {totalEntries === 1 ? 'entry' : 'entries'}.
+            </p>
+          </section>
+        ) : null}
+
         {loading ? <p className="py-12 text-stone-300">Loading active catalog...</p> : null}
         {error ? <p className="my-8 border-l-2 border-red-400 pl-4 text-red-100">{error}</p> : null}
         {!loading && !error && categories.length === 0 && standaloneRules.length === 0 ? (
@@ -158,27 +234,34 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
           </section>
         ) : null}
 
+        <div id="catalog-results">
+        {!loading && !error && totalEntries > 0 && filteredCatalog.count === 0 ? (
+          <section className="py-12">
+            <h2 className="text-2xl font-black text-white">No matching catalog entries</h2>
+            <p className="mt-2 text-stone-300">Try another search or choose All categories. You can also reset the filters above.</p>
+          </section>
+        ) : null}
         <div className="divide-y divide-white/10">
-          {categories.map(([category, categoryProducts]) => (
+          {filteredCatalog.categories.map(([category, categoryProducts]) => (
             <section key={category} className="py-8">
-              <p className="text-xs font-black uppercase tracking-[0.18em] text-green-100/80">{category}</p>
+              <p className="break-words text-xs font-black uppercase tracking-[0.18em] text-green-100/80">{category}</p>
               <div className="mt-4 grid gap-5 md:grid-cols-2">
                 {categoryProducts.map((product) => (
-                  <article key={product.id} className="border-l-2 border-orange-200/40 bg-white/[0.03] p-5">
-                    <h2 className="text-2xl font-black text-white">{product.name}</h2>
-                    {product.description ? <p className="mt-2 text-sm leading-6 text-stone-300">{product.description}</p> : null}
+                  <article key={product.id} data-catalog-entry={product.id} className="min-w-0 border-l-2 border-orange-200/40 bg-white/[0.03] p-5">
+                    <h2 className="break-words text-2xl font-black text-white">{product.name}</h2>
+                    {product.description ? <p className="mt-2 break-words text-sm leading-6 text-stone-300">{product.description}</p> : null}
                     {formatProductPrice(product.basePriceMinor, product.currency) ? (
-                      <p className="mt-3 text-sm font-black text-orange-100">
+                      <p className="mt-3 break-words text-sm font-black text-orange-100">
                         Reference price: {formatProductPrice(product.basePriceMinor, product.currency)}
                       </p>
                     ) : null}
                     {product.benefitRules.length > 0 ? (
                       <div className="mt-5 grid gap-3">
                         {product.benefitRules.map((rule) => (
-                          <div key={rule.id} className="border-t border-white/10 pt-3">
+                          <div key={rule.id} data-catalog-rule={rule.id} className="min-w-0 border-t border-white/10 pt-3">
                             <div className="flex flex-wrap items-baseline justify-between gap-2">
                               <p className="font-black text-orange-100">{rule.discountPercent}% benefit</p>
-                              <p className="text-xs font-bold uppercase tracking-[0.12em] text-stone-400">{rule.label}</p>
+                              <p className="min-w-0 break-words text-xs font-bold uppercase tracking-[0.12em] text-stone-400">{rule.label}</p>
                             </div>
                             <p className="mt-1 text-sm text-stone-300">
                               Verify at least {rule.requiredLockIFR.toLocaleString('en-US')} IFR {lockSourceRequirement(rule.lockSource)}
@@ -208,15 +291,15 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
           ))}
         </div>
 
-        {standaloneRules.length > 0 ? (
+        {filteredCatalog.rules.length > 0 ? (
           <section className="border-t border-white/10 py-8">
             <p className="text-xs font-black uppercase tracking-[0.18em] text-green-100/80">Other member benefits</p>
             <div className="mt-4 grid gap-5 md:grid-cols-2">
-              {standaloneRules.map((rule) => (
-                <article key={rule.id} className="border-l-2 border-orange-200/40 bg-white/[0.03] p-5">
+              {filteredCatalog.rules.map((rule) => (
+                <article key={rule.id} data-catalog-entry={rule.id} className="min-w-0 border-l-2 border-orange-200/40 bg-white/[0.03] p-5">
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
-                    <h2 className="text-2xl font-black text-white">{rule.productName}</h2>
-                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-stone-400">{rule.label}</p>
+                    <h2 className="min-w-0 break-words text-2xl font-black text-white">{rule.productName}</h2>
+                    <p className="min-w-0 break-words text-xs font-bold uppercase tracking-[0.12em] text-stone-400">{rule.label}</p>
                   </div>
                   <p className="mt-2 text-sm font-black text-orange-100">{rule.discountPercent}% benefit</p>
                   <p className="mt-1 text-sm text-stone-300">
@@ -242,6 +325,7 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
             </div>
           </section>
         ) : null}
+        </div>
 
         <section className="mt-8 flex flex-wrap gap-3 border-t border-white/10 pt-6">
           <Link href="/#customer-wallet" className="inline-flex min-h-11 items-center rounded-full bg-green-300 px-5 py-3 text-xs font-black uppercase tracking-[0.14em] text-stone-950">Check or lock IFR</Link>
