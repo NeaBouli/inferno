@@ -1407,3 +1407,13 @@ flowchart LR
   Zero --> Scope[Canonical backend + exact graph/source pins]
   Scope --> Bound[Reviewed interval and exact advisory]
 ```
+
+## Creator Gateway parser dependency maintenance — 2026-10-28
+
+Module: existing Creator Gateway HTTP and Google API clients. Hops:
+`src/app.ts::express.json` -> Express -> body-parser/qs; OAuth Google client ->
+googleapis-common -> qs. The supported same-major Express patch and normal parent
+dependency ranges replace the old qs override. Existing dependency-baseline,
+compression, types, build and authentication tests qualify this graph; no handler,
+OAuth/session contract, workflow or shared advisory policy changes here.
+The backend-only reviewed development disposition does not cover Creator Gateway.

@@ -54,8 +54,8 @@ Community contributions are voluntary and credited in the audit docs.
 Community auditors who submit valid findings will be credited here.
 
 | Auditor | Finding | Severity | Status |
-|---------|---------|----------|--------|
-| — | — | — | — |
+| ------- | ------- | -------- | ------ |
+| —       | —       | —        | —      |
 
 ## Scoped development-advisory dispositions
 
