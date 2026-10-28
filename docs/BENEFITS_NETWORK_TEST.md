@@ -2,22 +2,32 @@
 
 ## Versioned dependency-audit acceptance
 
-Full52 uses `benefits-full52-policy-v2-reviewed-dev-20261028`. Only backend stage31
-changes acceptance: the production audit has zero advisories, while the complete
-fresh development audit is evaluated by the same fail-closed checker used in CI.
-The other51 ordered commands, fixtures, guards and timeouts remain unchanged.
-This is a new acceptance version, not an unchanged original raw-audit Full52 pass.
+Full52 uses `benefits-full52-policy-v3-reviewed-app-contexts-20261028`.
+The production audit has zero advisories, while the complete fresh development
+report passes the same fail-closed checker used by application CI. The backend stage31
+command remains the shared checker; the other51 ordered commands,
+fixtures, guards and timeouts are unchanged.
 
-The open, unpatched `GHSA-gcqx-w48m-w2h4` has one temporary disposition for the
-pinned Benefits backend Jest configuration path through **2026-11-03 UTC inclusive**.
-The checker binds the canonical app path/package, seven exact development nodes
-and package/lock/Jest-config/Dockerfile hashes. Missing context, changed pins,
-production placement, unknown advisories, incomplete audits or expiry fail.
-No other app or arbitrary Jest configuration inherits this disposition. Re-check
-upstream immediately for an available fix or changed input/CI boundary; expiry
-has no automatic renewal, and unchanged advisory ranges do not detect every fix.
+Version2 (`benefits-full52-policy-v2-reviewed-dev-20261028`) passed the hosted
+Full52 on source `b396c3c24a5f57a2733b56b1facf8bb4380ef161` only. Version3 adds a
+separately reviewed Creator Gateway context to the shared checker. That earlier
+result does not qualify this new version or source. The original raw backend
+audit failure remains evidence; neither version is an unchanged original
+raw-audit Full52 pass.
+
+The valid, open, unpatched `GHSA-gcqx-w48m-w2h4` has two separate temporary
+configuration-path dispositions through **2026-11-03 UTC inclusive**: Benefits
+backend binds seven development nodes/four source hashes; Creator Gateway binds
+six development nodes/six source hashes, including its test setup and CI workflow.
+Each requires its actual canonical app path and package identity. Contexts cannot
+authorize each other's graph. Missing context, changed pins/config/workflow,
+production placement, unknown advisories, incomplete coverage or expiry fail.
+Other applications and arbitrary Jest configurations inherit no allowance.
+
+Re-check upstream immediately for a fix or changed test input/CI privileges.
+Expiry has no automatic renewal; stable advisory ranges do not detect every fix.
 The checker logs the actual evaluated full/production JSON bodies with byte counts
-and SHA-256 hashes. Preserve those and the earlier raw-audit failure in run evidence.
+and SHA-256 hashes. Preserve those and earlier failed results in run evidence.
 
 ## Runtime Contract
 

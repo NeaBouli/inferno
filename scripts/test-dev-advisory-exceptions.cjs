@@ -7,7 +7,7 @@ const { spawnSync } = require("node:child_process");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
-const { evaluate, AUDIT_ARGS, auditEnv, assertDevCovered, createAuditContext, EXCEPTIONS, POLICY_VERSION } = require("./check-dev-advisory-exceptions.cjs");
+const { evaluate, AUDIT_ARGS, auditEnv, assertDevCovered, createAuditContext, EXCEPTIONS, POLICY_VERSION, SCOPED_DISPOSITIONS } = require("./check-dev-advisory-exceptions.cjs");
 
 const ID = "GHSA-vfj7-8cjw-p6xm";
 const TODAY = "2026-10-03";
@@ -197,7 +197,7 @@ console.log("[dev-advisory-exceptions-test] PASS - full audit forces dev, produc
     assert.throws(() => evaluate(value), pattern, label); checked++;
   };
   try {
-    assert.match(POLICY_VERSION, /^benefits-full52-policy-v2-reviewed-dev-20261028$/);
+    assert.match(POLICY_VERSION, /^benefits-full52-policy-v3-reviewed-app-contexts-20261028$/);
     assert.deepEqual(evaluate(scopedInput()), [id]); checked++;
     assert.deepEqual(evaluate({ ...scopedInput(), today: "2026-11-03" }), [id]); checked++;
     rejects(x => delete x.context, /verified canonical context/, "missing context");
@@ -235,5 +235,81 @@ console.log("[dev-advisory-exceptions-test] PASS - full audit forces dev, produc
       assert.throws(() => createAuditContext(app, fixture), /escapes checkout/, "source symlink cannot leave checkout"); checked++;
     } finally { fs.rmSync(outside, { force: true }); }
     console.log(`[dev-advisory-scoped self-test] PASS ${checked} scope/version/pin/coverage/expiry controls; fixture audits only`);
+  } finally { fs.rmSync(fixture, { recursive: true, force: true }); }
+}
+
+// Two reviewed consumers share an advisory id, never an application/context allowance.
+{
+  const id = 'GHSA-gcqx-w48m-w2h4';
+  const creator = 'apps/creator-gateway';
+  const backend = 'apps/benefits-network/backend';
+  const root = path.resolve(__dirname, '..');
+  const fixture = fs.mkdtempSync(path.join(os.tmpdir(), 'dev-advisory-apps-'));
+  const originals = {};
+  for (const records of Object.values(SCOPED_DISPOSITIONS)) {
+    for (const file of Object.keys(records[id].scope.sourceSha256)) {
+      const bytes = fs.readFileSync(path.join(root, file)); originals[file] = bytes;
+      fs.mkdirSync(path.dirname(path.join(fixture, file)), { recursive: true });
+      fs.writeFileSync(path.join(fixture, file), bytes);
+    }
+  }
+  function appInput(app) {
+    const record = SCOPED_DISPOSITIONS[app][id];
+    const vulns = Object.fromEntries(Object.keys(record.scope.exactDevNodeVersions).map(node => {
+      const name = node.slice('node_modules/'.length);
+      const via = name === 'deepmerge'
+        ? [{ name, range: record.range, url: `https://github.com/advisories/${id}` }]
+        : [name === 'jest-config' ? 'deepmerge' : 'jest-config'];
+      return [name, { name, severity: 'low', via, nodes: [node] }];
+    }));
+    const full = report(vulns); full.metadata.dependencies = { dev: 359 };
+    return { prod: report({}), full, lock: JSON.parse(originals[`${app}/package-lock.json`]),
+      context: createAuditContext(path.join(fixture, app), fixture), today: '2026-10-28' };
+  }
+  let checks = 0;
+  const rejects = (change, pattern, label) => {
+    const value = appInput(creator); change(value);
+    assert.throws(() => evaluate(value), pattern, label); checks++;
+  };
+  try {
+    assert.equal(POLICY_VERSION, 'benefits-full52-policy-v3-reviewed-app-contexts-20261028');
+    assert.deepEqual(evaluate(appInput(creator)), [id]); checks++;
+    assert.deepEqual(evaluate(appInput(backend)), [id]); checks++;
+    assert.equal(Object.keys(SCOPED_DISPOSITIONS[creator][id].scope.exactDevNodeVersions).length, 6);
+    assert.equal(Object.keys(EXCEPTIONS[id].scope.exactDevNodeVersions).length, 7);
+    assert.equal(SCOPED_DISPOSITIONS[backend][id], EXCEPTIONS[id], 'same accepted backend record object');
+    rejects(x => { x.context = appInput(backend).context; }, /lock root|source|application/, 'backend context cannot authorize Creator graph');
+    const cross = appInput(backend); cross.context = appInput(creator).context;
+    assert.throws(() => evaluate(cross), /lock root|source|application/, 'Creator context cannot authorize backend graph'); checks++;
+    rejects(x => { delete x.context; }, /verified canonical context/, 'Creator needs actual context');
+    rejects(x => { x.context = { ...x.context }; }, /verified canonical context/, 'scope labels cannot forge Creator context');
+    const other = path.join(fixture, 'apps/other-app'); fs.mkdirSync(other, { recursive: true });
+    rejects(x => { x.context = createAuditContext(other, fixture); }, /application context/, 'other apps inherit no disposition');
+    rejects(x => { x.lock.name = 'other'; }, /lock root package/, 'wrong root package');
+    for (const node of Object.keys(SCOPED_DISPOSITIONS[creator][id].scope.exactDevNodeVersions)) {
+      rejects(x => { x.lock.packages[node].version = '0.0.0'; }, /lock|version/, `version change: ${node}`);
+      rejects(x => { x.lock.packages[node].dev = false; }, /lock|development/, `non-dev node: ${node}`);
+    }
+    rejects(x => { x.prod = report({ deepmerge: x.full.vulnerabilities.deepmerge }); }, /production dependencies/, 'production is always zero');
+    rejects(x => { x.full.vulnerabilities.deepmerge.via[0].url = 'https://github.com/advisories/GHSA-aaaa-bbbb-cccc'; }, /not an accepted exception/, 'unknown root');
+    rejects(x => { x.full.vulnerabilities.deepmerge.via[0].name = 'other'; }, /accepted only for deepmerge/, 'wrong advisory package');
+    rejects(x => { x.full.vulnerabilities.deepmerge.via[0].range = '<4.3.2'; }, /range is now/, 'changed advisory range');
+    rejects(x => { delete x.full.metadata.dependencies; }, /did not cover dev/, 'missing full dev coverage');
+    rejects(x => { x.full.metadata.dependencies.dev = 0; }, /did not cover dev/, 'zero full dev coverage');
+    rejects(x => { delete x.full.vulnerabilities['ts-jest']; x.full.metadata.vulnerabilities = counts(x.full.vulnerabilities); }, /incomplete reviewed/, 'missing reviewed node');
+    rejects(x => { x.full.vulnerabilities['jest-util'] = { name: 'jest-util', severity: 'low', via: ['deepmerge'], nodes: ['node_modules/jest-util'] }; x.full.metadata.vulnerabilities = counts(x.full.vulnerabilities); }, /unreviewed affected/, 'unreviewed additional node');
+    rejects(x => { x.today = '2026-11-04'; }, /expired/, 'Creator expiry');
+    rejects(x => { x.today = '2026-10-27'; }, /premature/, 'Creator review not yet effective');
+    assert.deepEqual(evaluate({ ...appInput(creator), today: '2026-11-03' }), [id]); checks++;
+    for (const file of Object.keys(SCOPED_DISPOSITIONS[creator][id].scope.sourceSha256)) {
+      fs.appendFileSync(path.join(fixture, file), '\n');
+      assert.throws(() => evaluate(appInput(creator)), /source pin mismatch/, `changed Creator source/config/workflow: ${file}`); checks++;
+      fs.writeFileSync(path.join(fixture, file), originals[file]);
+    }
+    const pkgFile = `${creator}/package.json`; const pkg = JSON.parse(originals[pkgFile]); pkg.name = 'other-app';
+    fs.writeFileSync(path.join(fixture, pkgFile), JSON.stringify(pkg));
+    assert.throws(() => evaluate(appInput(creator)), /application context/, 'actual Creator package identity'); checks++;
+    fs.writeFileSync(path.join(fixture, pkgFile), originals[pkgFile]);
+    console.log(`[dev-advisory-app-contexts self-test] PASS ${checks} both-consumer isolation/pin/version/prod/coverage/expiry controls; fixtures only`);
   } finally { fs.rmSync(fixture, { recursive: true, force: true }); }
 }

@@ -61,11 +61,17 @@ Community auditors who submit valid findings will be credited here.
 
 Production audits permit no advisories. The complete development audit remains
 mandatory, with strict report, via-chain and development-node validation. Policy
-`benefits-full52-policy-v2-reviewed-dev-20261028` temporarily permits the open,
-unpatched `GHSA-gcqx-w48m-w2h4` only for the reviewed Benefits backend Jest-config
-path. Canonical app/package identity, seven versions and four source hashes are
-bound in `scripts/check-dev-advisory-exceptions.cjs`. The disposition expires after
-2026-11-03 UTC; changed context, pins, range, package, unknown findings or production
-placement fail closed. It is not a dependency fix or a global exception. Re-review
-immediately when a fix or a changed test-input/CI-privilege boundary appears.
-No automatic renewal or complete patched-version detection is provided.
+`benefits-full52-policy-v3-reviewed-app-contexts-20261028` temporarily permits the
+valid, open, unpatched `GHSA-gcqx-w48m-w2h4` only in two independently scoped
+configuration paths: Benefits backend (seven nodes/four source hashes) and Creator
+Gateway (six nodes/six source hashes, including test setup and CI workflow).
+The existing backend record is unchanged. Canonical app/package identity, exact
+versions and source hashes are bound in `scripts/check-dev-advisory-exceptions.cjs`;
+contexts cannot authorize each other's graph or another application.
+
+Both expire after 2026-11-03 UTC. Changed context, config/workflow pins, versions,
+range/package, unknown findings, incomplete development coverage or production
+placement fail closed. These are temporary dispositions, not dependency fixes or
+global exceptions. Re-review immediately when a fix or changed test-input/CI
+privilege boundary appears. No automatic renewal or complete patched-version
+detection is provided.

@@ -15,7 +15,7 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { createHash } = require("node:crypto");
 
-const POLICY_VERSION = "benefits-full52-policy-v2-reviewed-dev-20261028";
+const POLICY_VERSION = "benefits-full52-policy-v3-reviewed-app-contexts-20261028";
 const verifiedContexts = new WeakMap();
 
 const EXCEPTIONS = {
@@ -51,6 +51,38 @@ const EXCEPTIONS = {
   },
 };
 
+// Independent canonical application records; the accepted Benefits record above is unchanged.
+const CREATOR_DEEPMERGE_DISPOSITION = {
+  "package": "deepmerge",
+  "range": ">=4.2.0 <=4.3.1",
+  "reviewedOn": "2026-10-28",
+  "reviewBy": "2026-11-03",
+  "scope": {
+    "repoRelativeApp": "apps/creator-gateway",
+    "rootPackageName": "ifr-creator-gateway",
+    "exactDevNodeVersions": {
+      "node_modules/@jest/core": "30.2.0",
+      "node_modules/deepmerge": "4.3.1",
+      "node_modules/jest": "30.2.0",
+      "node_modules/jest-cli": "30.2.0",
+      "node_modules/jest-config": "30.2.0",
+      "node_modules/ts-jest": "29.4.6"
+    },
+    "sourceSha256": {
+      "apps/creator-gateway/package.json": "5111bc18c39df8c7d68bfda5398da925eda90055579d4e60a4729e5efcc5bef1",
+      "apps/creator-gateway/package-lock.json": "a88511eddf516c90a41044c8acb67006d3198b3d78f107953b72f61679ac593c",
+      "apps/creator-gateway/jest.config.js": "3e12c2469c618beb167ddee68fbab573373ec4a941a682e52f44d068f05ddc43",
+      "apps/creator-gateway/jest.setup.cjs": "4e221d759566cdf815a79bdd97a6e29cbb7314bb9e3c6a3401256465770f1bb1",
+      "apps/creator-gateway/Dockerfile": "ec72900c154776ef9cdea54187c367645c66f0d22a9719ae72c0c25219a086fd",
+      ".github/workflows/creator-gateway.yml": "6f71203b4fefc013f6b762fee8de28a90f0eaf2cfddd0261b2dcdef9530bf8a1"
+    }
+  }
+};
+const SCOPED_DISPOSITIONS = {
+  "apps/benefits-network/backend": { "GHSA-gcqx-w48m-w2h4": EXCEPTIONS["GHSA-gcqx-w48m-w2h4"] },
+  "apps/creator-gateway": { "GHSA-gcqx-w48m-w2h4": CREATOR_DEEPMERGE_DISPOSITION },
+};
+
 const SEVERITIES = ["info", "low", "moderate", "high", "critical"];
 const isObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
 
@@ -62,8 +94,9 @@ function createAuditContext(appDir, root = path.resolve(__dirname, "..")) {
   const relative = path.relative(canonicalRoot, canonicalApp).split(path.sep).join("/");
   const context = { repoRelativeApp: relative, rootPackageName: null, sourceSha256: {} };
   let lockSemanticSha256 = null;
-  if (relative === "apps/benefits-network/backend") {
-    for (const file of Object.keys(EXCEPTIONS["GHSA-gcqx-w48m-w2h4"].scope.sourceSha256)) {
+  const scope = SCOPED_DISPOSITIONS[relative]?.["GHSA-gcqx-w48m-w2h4"]?.scope;
+  if (scope) {
+    for (const file of Object.keys(scope.sourceSha256)) {
       const resolved = fs.realpathSync(path.join(canonicalRoot, file));
       if (path.relative(canonicalRoot, resolved).startsWith("..") || path.isAbsolute(path.relative(canonicalRoot, resolved))) {
         throw new Error(`reviewed source escapes checkout: ${file}`);
@@ -146,6 +179,7 @@ function evaluate({ prod, full, lock, today, context, exceptions = EXCEPTIONS })
 
   const used = new Set();
   const scopedNodes = new Map();
+  const exceptionFor = (id) => (exceptions === EXCEPTIONS && SCOPED_DISPOSITIONS[context?.repoRelativeApp]?.[id]) || exceptions[id];
   const rootsOf = (name, seen = new Set()) => {
     if (seen.has(name)) return new Set();
     seen.add(name);
@@ -160,7 +194,7 @@ function evaluate({ prod, full, lock, today, context, exceptions = EXCEPTIONS })
       }
       if (!isObject(via)) throw new Error(`${name}: malformed via entry`);
       const id = String(via.url || "").split("/").pop();
-      const exception = exceptions[id];
+      const exception = exceptionFor(id);
       if (!/^GHSA-[0-9a-z]{4}-[0-9a-z]{4}-[0-9a-z]{4}$/.test(id) || !exception) {
         throw new Error(`${name}: advisory ${id || via.title || "unknown"} is not an accepted exception`);
       }
@@ -185,7 +219,7 @@ function evaluate({ prod, full, lock, today, context, exceptions = EXCEPTIONS })
       const entry = lock.packages[node];
       if (!entry || !(entry.dev === true || entry.devOptional === true)) throw new Error(`${name} at ${node} is not development-only`);
       for (const id of roots) {
-        const expected = exceptions[id].scope?.exactDevNodeVersions;
+        const expected = exceptionFor(id).scope?.exactDevNodeVersions;
         if (!expected) continue;
         if (!Object.hasOwn(expected, node) || node !== `node_modules/${name}`) {
           throw new Error(`${id}: unreviewed affected node/package: ${name} at ${node}`);
@@ -195,7 +229,7 @@ function evaluate({ prod, full, lock, today, context, exceptions = EXCEPTIONS })
     }
   }
   for (const [id, nodes] of scopedNodes) {
-    const expected = Object.keys(exceptions[id].scope.exactDevNodeVersions);
+    const expected = Object.keys(exceptionFor(id).scope.exactDevNodeVersions);
     if (nodes.size !== expected.length || expected.some((node) => !nodes.has(node))) {
       throw new Error(`${id}: incomplete reviewed advisory node coverage`);
     }
@@ -249,7 +283,7 @@ function runAudit(appDir, extra, label) {
   }
 }
 
-module.exports = { evaluate, validateReport, EXCEPTIONS, AUDIT_ARGS, auditEnv, assertDevCovered, createAuditContext, POLICY_VERSION };
+module.exports = { evaluate, validateReport, EXCEPTIONS, AUDIT_ARGS, auditEnv, assertDevCovered, createAuditContext, POLICY_VERSION, SCOPED_DISPOSITIONS };
 
 if (require.main === module) {
   const appDir = process.cwd();
