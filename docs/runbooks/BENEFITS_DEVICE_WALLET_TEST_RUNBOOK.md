@@ -56,6 +56,69 @@ CUSTOMER_PRIVATE_KEY=... MUTATE=true node scripts/seller-wallet-smoke.js
 
 Use that command only with a deliberately prepared test wallet. Never paste the key into chat, Bridge, Git, screenshots or logs.
 
+## Current Test Preparation — 28 October 2026
+
+The repository checkpoint for this preparation is Main
+`a3ca75d73c8facbcb88d1cd0e84bf8b9ae15be45`. The wallet work from PR #372 was
+integrated through [PR #375](https://github.com/NeaBouli/inferno/pull/375).
+The [current functionality status](../CURRENT_FUNCTIONALITY_STATUS.md)
+records the deployed frontend and accepted automated release gates. These software
+records do not close any physical matrix row or replace a fresh tester observation.
+The 26 October metadata section below is retained as a historical preparation record.
+
+### Read-only Prerequisites
+
+Print and validate the existing matrix without recording a result:
+
+```bash
+npm run qa:benefits-devices
+npm run qa:benefits-report
+```
+
+At the agreed physical test window, make one bounded public prerequisite pass:
+
+```bash
+curl --fail --silent --show-error --max-time 15 https://shop.ifrunit.tech/api/health
+curl --fail --silent --show-error --max-time 15 https://shop.ifrunit.tech/api/ready
+curl --fail --silent --show-error --max-time 15 'https://shop.ifrunit.tech/api/businesses?page=1&limit=1'
+```
+
+HTTP 200 health/readiness and a returned public offer establish only those
+prerequisites. An empty `offers` array means that this request supplied no offer to
+select; it does not prove a product defect, seller control or customer eligibility.
+Do not create a fictitious merchant, lower a rule threshold, enumerate unrelated
+catalogs or retry in a loop to manufacture a passing preparation result.
+
+The operator must identify a controlled seller and exact active offer, or prepare
+one through the normal seller-wallet UI using agreed test terms. Retain only the
+chosen public business/rule reference, `lockSource`, `requiredLockIFR` and optional
+`minIFRHeld`; keep numeric strings exact rather than rounding them through
+JavaScript `number`. Confirm the authorized customer/seller testers and their
+device/browser/wallet versions separately. A public catalog cannot establish any
+of those control or eligibility facts.
+
+### Existing-Lock Proof and Gas Boundary
+
+For an already eligible locked customer wallet, the primary `/p` route uses pass
+creation, seller message authorization, an exact-offer customer message signature,
+fresh eligibility reads and atomic database redemption. That route contains no
+on-chain transaction and requires no new customer gas payment. The general wallet
+panel's `gas-needed` status is not the exact seller-rule eligibility decision.
+
+The customer must still meet the selected offer's positive lock threshold,
+accepted lock source and optional held-IFR threshold. Do not replace those reads
+with mocks for physical acceptance. Creating or increasing a lock, Approve, Lock
+and Unlock are separate gas-bearing actions; they are outside this zero-gas proof
+run and must not be started automatically.
+
+With those prerequisites confirmed, perform the existing customer-pass, seller
+binding and exact-offer confirmation cases below on Android/customer and
+desktop/seller, including a readable rejection and one-time redemption/replay
+refusal. Repeat the customer-proof case on iOS/iPadOS. The five physical outcomes
+in the Completion Gate remain mandatory; this sequence does not close the other
+matrix rows. Record PASS only after the row's required capabilities were observed
+on a physical device, using the existing recorder and redaction rules below.
+
 ## Device Matrix
 
 | Device | Browser / Wallet Surface | Expected Result |
@@ -136,9 +199,11 @@ in evidence notes, screenshots, logs or chat.
   injected seller wallet pass, a readable rejected/ineligible customer proof, and the
   primary `/p` pass bound to an exact seller offer, redeemed once (`REDEEMED`) by the proof
   of an eligible locked test wallet and blocked on replay.
-- Real acceptance of the new wallet candidate additionally requires PR #372 integration and
-  an authorized frontend release. PR #370 is no technical prerequisite; PR #371 matters
-  only for its selected release-client path.
+- At this 26 October preparation checkpoint, real acceptance of the wallet candidate
+  additionally required PR #372 integration and an authorized frontend release.
+  The current preparation section above records the later software checkpoint;
+  PR #370 was no technical prerequisite, and PR #371 mattered only for its selected
+  release-client path. No physical result follows from those integrations.
 
 ## Test Cases
 
