@@ -336,7 +336,18 @@ signature or customer wallet.
 Seller owners can create, edit and archive products/services, then bind rules to active
 catalog items. `tests/catalogRoutes.test.ts` covers owner authorization, cross-business
 binding rejection, public active-only reads, archive behavior and immutable session terms.
-The public customer catalog is available at `/s/{businessId}`. Run
+The public customer catalog is available at `/s/{businessId}`. Search is trimmed and
+case-insensitive across product names/descriptions and offer labels; category selection
+combines with search. General offers have a separate choice. Counts describe catalog
+entries, and matching products retain every attached offer with its original price,
+lock requirements and exact selection link. Reset restores the original order. Filters
+are transient and do not request new data or persist the search.
+
+The existing `test:benefits-discovery-ui` suite covers mixed products/general offers,
+multiple rules, exact-price/link/eligibility preservation, category-name collisions,
+loading/empty/error/no-match, reset/reload and five responsive viewports. Set
+`BENEFITS_CATALOG_EVIDENCE_DIR` to retain fixture screenshots and computed layout metrics.
+Run
 `npm run test:migration-upgrade` to verify a populated prior database keeps its business,
 rule, session and audit rows while adding the catalog, snapshot and reward-ledger schema.
 

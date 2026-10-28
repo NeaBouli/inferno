@@ -67,6 +67,19 @@ WalletConnect, Telegram and backend persistence from the checked-in code.
 | Creator Gateway | Implemented repository service; the repository holds no production deployment record, so availability must not be inferred from source presence alone. |
 | Admin console and investor web placeholders | Not implemented applications. |
 
+### Seller catalog source checkpoint — 28 October 2026
+
+Implemented in repository source for [#390](https://github.com/NeaBouli/inferno/issues/390):
+the public seller catalog supports client-side search over product names,
+descriptions and offer labels, combined category filters, catalog-entry counts
+and reset. Matching products retain all attached offers; prices, eligibility
+requirements and exact-offer links keep their existing bindings. Filters use
+the loaded catalog for one seller and are not persisted.
+
+The issue above tracks qualification and deployment evidence for this source
+checkpoint. Advanced catalog discovery, sorting and inventory remain roadmap work;
+physical-device and wallet acceptance remain separate open follow-ups.
+
 ## Deployed Application Inventory
 
 The "four" public surfaces in the table above (Landing, Wiki, Web3, IFR
