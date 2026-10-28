@@ -6,13 +6,14 @@ const appRoot = path.resolve(__dirname, '..');
 const manifest = JSON.parse(fs.readFileSync(path.join(appRoot, 'package.json'), 'utf8'));
 const lockfile = JSON.parse(fs.readFileSync(path.join(appRoot, 'package-lock.json'), 'utf8'));
 
-assert.equal(manifest.dependencies.express, '^4.22.2');
+assert.equal(manifest.dependencies.express, '4.22.3');
+assert.equal(Object.hasOwn(manifest.overrides, 'qs'), false, 'qs must resolve through supported parent ranges');
 assert.equal(manifest.devDependencies.tsx, '^4.23.1');
 
 const expectedVersions = {
-  'node_modules/express': '4.22.2',
+  'node_modules/express': '4.22.3',
   'node_modules/body-parser': '1.20.9',
-  'node_modules/qs': '6.16.0',
+  'node_modules/qs': '6.16.2',
   'node_modules/path-to-regexp': '0.1.13',
   'node_modules/form-data': '4.0.6',
   // js-yaml 4 (argparse 2) drops the unpatched dev-only sprintf-js chain (GHSA-hp3w-g68c-fv3c).

@@ -1383,3 +1383,65 @@ capacity audit, signer-rotation client and signer-rotation fixture paths. The
 existing Node/Git runner and permissions suffice; no dependency, credential,
 cache, artifact, workflow or runner is added. This structural publication gate
 is not a credential/history scan, deployment test or release approval.
+
+## Benefits backend reviewed development-audit policy — 2026-10-28
+
+Module: existing advisory checker and Full52 runner. Hop: `preflight-benefits-release.sh`
+backend stage31 -> backend cwd -> `check-dev-advisory-exceptions.cjs::runAudit` ->
+`evaluate` -> canonical `createAuditContext` and scoped seven-node/source-pin validation.
+Data: complete fresh production/full audit JSON, exact backend package/lock/Jest-config/
+Dockerfile bytes, canonical app/package, review interval and advisory via graph.
+
+Policy `benefits-full52-policy-v2-reviewed-dev-20261028` requires production0 and full
+development coverage. It temporarily accepts one unpatched deepmerge development path
+through2026-11-03, with no global exception or automatic renewal. Raw evaluated audit
+bytes/hashes remain in logs. This changes backend audit-stage acceptance explicitly;
+the original raw failure stays historical, and the other51 commands/guards/timeouts
+are protected by a normalized prior-wrapper digest in the existing documentation test.
+Normal CI and genuine versioned Full52 qualification remain required before release.
+
+```mermaid
+flowchart LR
+  Full52[Full52 backend stage31] --> Audits[Fresh production and full audit JSON]
+  Audits --> Zero[Production zero / complete via and dev coverage]
+  Zero --> Scope[Canonical backend + exact graph/source pins]
+  Scope --> Bound[Reviewed interval and exact advisory]
+```
+
+## Creator Gateway parser dependency maintenance — 2026-10-28
+
+Module: existing Creator Gateway HTTP and Google API clients. Hops:
+`src/app.ts::express.json` -> Express -> body-parser/qs; OAuth Google client ->
+googleapis-common -> qs. The supported same-major Express patch and normal parent
+dependency ranges replace the old qs override. Existing dependency-baseline,
+compression, types, build and authentication tests qualify this graph; no handler,
+OAuth/session contract, workflow or shared advisory policy changes here.
+The backend-only reviewed development disposition does not cover Creator Gateway.
+
+## Canonical application development-audit contexts — 2026-10-28
+
+Module: existing shared advisory checker. Hop: native application audit ->
+`createAuditContext` -> canonical `SCOPED_DISPOSITIONS` record -> complete
+production/full reports -> `evaluate` source/version/dev/via/interval validation.
+The same GHSA has separate Benefits backend and Creator Gateway records. The
+accepted backend record remains unchanged; Creator binds its own six nodes and
+six source hashes, including setup and CI workflow. Other apps or exchanged
+contexts receive no inherited allowance.
+
+Policy `benefits-full52-policy-v3-reviewed-app-contexts-20261028` preserves
+production zero and full development/via coverage. Backend stage31 still calls
+the same checker; all other51 commands/fixtures/guards/timeouts remain bound to
+the original wrapper digest. Version2's b396 hosted Full52 result is limited to
+that source/version; the new version requires its own exact-source qualification.
+Both temporary dispositions expire after 2026-11-03 UTC with no automatic renewal.
+Actual audit bodies/byte counts/hashes remain in logs. The advisory stays unpatched.
+
+```mermaid
+flowchart LR
+  Benefits[Benefits backend / Full52 stage31] --> Context[Canonical app and package]
+  Creator[Creator Gateway CI] --> Context
+  Context --> Backend[Existing backend record: 7 nodes / 4 pins]
+  Context --> Gateway[Creator record: 6 nodes / 6 pins]
+  Backend --> Gate[Production zero + full dev/via + interval]
+  Gateway --> Gate
+```

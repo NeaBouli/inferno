@@ -14,7 +14,7 @@
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "ethers": "6.17.0",
-    "express": "^4.22.2",
+    "express": "4.22.3",
     "express-rate-limit": "^7.1.5",
     "googleapis": "173.0.0",
     "jsonwebtoken": "^9.0.2",
@@ -36,7 +36,6 @@
   "overrides": {
     "@istanbuljs/load-nyc-config": {
       "js-yaml": "4.3.2"
-    },
-    "qs": "6.16.0"
+    }
   }
 }

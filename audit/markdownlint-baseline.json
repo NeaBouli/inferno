@@ -3,7 +3,7 @@
   "tool": "markdownlint-cli@0.49.1",
   "disabledRules": ["MD013","MD033","MD041","MD024","MD036","MD040"],
   "filesScanned": 253,
-  "baselineIssues": 3605,
+  "baselineIssues": 3601,
   "fingerprints": [
     [".github/ISSUE_TEMPLATE/bug_report.md","MD022","Expected: 1; Actual: 0; Below","## Bug Description","6e754bfe0c2fac07",1],
     [".github/ISSUE_TEMPLATE/bug_report.md","MD022","Expected: 1; Actual: 0; Below","## Logs / Screenshots","cddf1466b8ac7bbd",1],
@@ -2099,7 +2099,6 @@
     ["SECURITY.md","MD022","Expected: 1; Actual: 0; Below","### Out of Scope","d4f47d0afdf44146",1],
     ["SECURITY.md","MD032","","- Testnet-only issues without ...","0a55c71a556f0e07",1],
     ["SECURITY.md","MD034","","https://github.com/NeaBouli/in...","a559220cba638a61",1],
-    ["SECURITY.md","MD060","Table pipe does not align with header for style \"aligned\"","","5e8b30a493339b3e",4],
     ["SKYWALKER.md","MD001","Expected: h3; Actual: h4","","2905cb7f01083854",1],
     ["SKYWALKER.md","MD022","Expected: 1; Actual: 0; Below","#### 3-Layer Lock-Architektur","320761121dfc09a2",1],
     ["SKYWALKER.md","MD022","Expected: 1; Actual: 0; Below","#### 9 Decimals statt 18","0989b7887efe6f81",1],
