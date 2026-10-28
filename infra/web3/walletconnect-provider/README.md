@@ -42,12 +42,22 @@ trailing-whitespace, missing-banner or syntax invariant violation.
 
 ## Known advisories
 
-`npm audit` reports zero known vulnerabilities for the pinned
-`@walletconnect/ethereum-provider@2.25.0` build graph. This upgrade removes the
-former `lodash`, `decode-uri-component`, `@stablelib/ed25519` and `elliptic`
-paths from the provider lockfile. Dependencies remain build inputs; the browser
-executes only the committed same-origin artifact with its recorded SHA-256.
-Future provider upgrades still require the complete wallet regression gate.
+As of 28 October 2026, [GHSA-mrhx-c7xc-m3w5](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5)
+affects `zod <4.6.6`. The pinned build graph includes `zod@3.22.4` through
+`@reown/appkit-wallet` and `zod@3.25.76` through optional
+`@coinbase/cdp-sdk`. The current upstream releases checked on that date do not
+provide a supported dependency graph using patched Zod.
+
+An unchanged, exact-lock rebuild reproduces the artifact SHA-256 in the
+provenance table. An esbuild metafile with identical build options and a
+byte-identical output comparison shows no emitted Zod code in this exact
+provider artifact: the AppKit auth-frame schema path is tree-shaken, and the
+optional CDP Zod copy is absent from the module graph. This evidence is scoped
+to the committed artifact; the dependency advisory remains open.
+
+Re-evaluate module inclusion whenever the provider, AppKit, build inputs or
+build options change. A supported upstream graph must adopt patched Zod;
+future provider upgrades still require the complete wallet regression gate.
 
 ## Updating the artifact
 

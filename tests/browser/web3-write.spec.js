@@ -1507,6 +1507,10 @@ test("retired LendingVault blocks new borrowing even when ifrPriceWei > 0 (T-273
   });
   await page.goto("/web3/?action=borrow", { waitUntil: "domcontentloaded" });
   await selectInjectedWallet(page);
+  // Choosing the wallet returns before its asynchronous state load completes.
+  await expect(page.locator("[data-wallet-state]").first()).toContainText("Connected", { timeout: 10_000 });
+  // The initial "Load offers" placeholder is also one option; wait for the seeded offer.
+  await expect(page.locator('[data-borrow-offer] option[value="0"]')).toHaveText("Offer #0 - 1,000 IFR - 0x4444...4444");
   await expect(page.locator("[data-borrow-offer] option")).toHaveCount(1);
   await expect(page.locator("[data-borrow-price]")).toHaveText("Disabled");
   await expect(page.locator("[data-borrow-submit]")).toBeHidden();
