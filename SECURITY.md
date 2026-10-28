@@ -56,3 +56,16 @@ Community auditors who submit valid findings will be credited here.
 | Auditor | Finding | Severity | Status |
 |---------|---------|----------|--------|
 | — | — | — | — |
+
+## Scoped development-advisory dispositions
+
+Production audits permit no advisories. The complete development audit remains
+mandatory, with strict report, via-chain and development-node validation. Policy
+`benefits-full52-policy-v2-reviewed-dev-20261028` temporarily permits the open,
+unpatched `GHSA-gcqx-w48m-w2h4` only for the reviewed Benefits backend Jest-config
+path. Canonical app/package identity, seven versions and four source hashes are
+bound in `scripts/check-dev-advisory-exceptions.cjs`. The disposition expires after
+2026-11-03 UTC; changed context, pins, range, package, unknown findings or production
+placement fail closed. It is not a dependency fix or a global exception. Re-review
+immediately when a fix or a changed test-input/CI-privilege boundary appears.
+No automatic renewal or complete patched-version detection is provided.

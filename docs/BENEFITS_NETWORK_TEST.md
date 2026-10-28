@@ -1,5 +1,24 @@
 # Benefits Network — Test Guide
 
+## Versioned dependency-audit acceptance
+
+Full52 uses `benefits-full52-policy-v2-reviewed-dev-20261028`. Only backend stage31
+changes acceptance: the production audit has zero advisories, while the complete
+fresh development audit is evaluated by the same fail-closed checker used in CI.
+The other51 ordered commands, fixtures, guards and timeouts remain unchanged.
+This is a new acceptance version, not an unchanged original raw-audit Full52 pass.
+
+The open, unpatched `GHSA-gcqx-w48m-w2h4` has one temporary disposition for the
+pinned Benefits backend Jest configuration path through **2026-11-03 UTC inclusive**.
+The checker binds the canonical app path/package, seven exact development nodes
+and package/lock/Jest-config/Dockerfile hashes. Missing context, changed pins,
+production placement, unknown advisories, incomplete audits or expiry fail.
+No other app or arbitrary Jest configuration inherits this disposition. Re-check
+upstream immediately for an available fix or changed input/CI boundary; expiry
+has no automatic renewal, and unchanged advisory ranges do not detect every fix.
+The checker logs the actual evaluated full/production JSON bodies with byte counts
+and SHA-256 hashes. Preserve those and the earlier raw-audit failure in run evidence.
+
 ## Runtime Contract
 
 Benefits frontend, backend, CI and production containers use Node.js 22.x. Verify the shared

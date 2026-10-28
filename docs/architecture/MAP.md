@@ -1383,3 +1383,27 @@ capacity audit, signer-rotation client and signer-rotation fixture paths. The
 existing Node/Git runner and permissions suffice; no dependency, credential,
 cache, artifact, workflow or runner is added. This structural publication gate
 is not a credential/history scan, deployment test or release approval.
+
+## Benefits backend reviewed development-audit policy — 2026-10-28
+
+Module: existing advisory checker and Full52 runner. Hop: `preflight-benefits-release.sh`
+backend stage31 -> backend cwd -> `check-dev-advisory-exceptions.cjs::runAudit` ->
+`evaluate` -> canonical `createAuditContext` and scoped seven-node/source-pin validation.
+Data: complete fresh production/full audit JSON, exact backend package/lock/Jest-config/
+Dockerfile bytes, canonical app/package, review interval and advisory via graph.
+
+Policy `benefits-full52-policy-v2-reviewed-dev-20261028` requires production0 and full
+development coverage. It temporarily accepts one unpatched deepmerge development path
+through2026-11-03, with no global exception or automatic renewal. Raw evaluated audit
+bytes/hashes remain in logs. This changes backend audit-stage acceptance explicitly;
+the original raw failure stays historical, and the other51 commands/guards/timeouts
+are protected by a normalized prior-wrapper digest in the existing documentation test.
+Normal CI and genuine versioned Full52 qualification remain required before release.
+
+```mermaid
+flowchart LR
+  Full52[Full52 backend stage31] --> Audits[Fresh production and full audit JSON]
+  Audits --> Zero[Production zero / complete via and dev coverage]
+  Zero --> Scope[Canonical backend + exact graph/source pins]
+  Scope --> Bound[Reviewed interval and exact advisory]
+```

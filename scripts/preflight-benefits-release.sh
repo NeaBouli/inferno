@@ -6,6 +6,7 @@ FRONTEND="$ROOT/apps/benefits-network/frontend"
 BACKEND="$ROOT/apps/benefits-network/backend"
 SDK="$ROOT/apps/sdk"
 MODE="${1:---full}"
+ACCEPTANCE_POLICY="benefits-full52-policy-v2-reviewed-dev-20261028"
 REQUIRE_CLEAN="${BENEFITS_PREFLIGHT_REQUIRE_CLEAN:-1}"
 SERVER_PID=""
 SERVER_LOG=""
@@ -56,6 +57,8 @@ printf '[benefits-preflight] mode=%s head=%s ahead=%s\n' \
   "${MODE#--}" \
   "$(git rev-parse --short=8 HEAD)" \
   "$(git rev-list --count origin/main..HEAD 2>/dev/null || printf 'unknown')"
+
+printf '[benefits-preflight] acceptance=%s\n' "$ACCEPTANCE_POLICY"
 
 run "git diff check" git diff --check
 run "device checklist schema and capability coverage" node scripts/validate-benefits-device-checklist.js
@@ -109,7 +112,7 @@ run "frontend TypeScript" npm --prefix "$FRONTEND" run typecheck
 run "frontend production build" npm --prefix "$FRONTEND" run build
 run "frontend bundle budget" node scripts/test-benefits-bundle-budget.cjs
 
-run "backend dependency audit" npm --prefix "$BACKEND" audit --audit-level=low
+run "backend dependency audit" bash -c 'cd "$1" && exec node "$2"' _ "$BACKEND" "$ROOT/scripts/check-dev-advisory-exceptions.cjs"
 run "backend Prisma client" npm --prefix "$BACKEND" run prisma:generate
 (umask 077; : > "$PREFLIGHT_DB_PATH")
 run "backend migration deploy" env "DATABASE_URL=file:./$PREFLIGHT_DB_NAME" npm --prefix "$BACKEND" run prisma:deploy
@@ -167,4 +170,4 @@ run "WCAG desktop/tablet/mobile gate" env BENEFITS_BASE_URL=http://127.0.0.1:300
 run "route recovery browser gate" env BENEFITS_BASE_URL=http://127.0.0.1:3000 npm run test:benefits-recovery
 run "CSP compatibility gate" env BENEFITS_BASE_URL=http://127.0.0.1:3000 npm run test:benefits-csp
 
-printf '\n[benefits-preflight] PASS full local release preflight\n'
+printf '\n[benefits-preflight] PASS full local release preflight acceptance=%s\n' "$ACCEPTANCE_POLICY"
