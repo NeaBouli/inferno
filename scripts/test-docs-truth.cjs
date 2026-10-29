@@ -71,6 +71,11 @@ assert.ok(landing.includes('<span class="k">On-chain components</span><span clas
 const start = landing.indexOf('<h2 class="section-title">Contract Addresses</h2>');
 const end = landing.indexOf("15 deployed contracts + 3 Gnosis Safes = 18 on-chain components", start);
 assert.ok(start > 0 && end > start, "landing contract address section not found");
+// Authority is contract-specific: the register includes Governance, Safe and deployer roles.
+const contractSummary = landing.slice(start, landing.indexOf("</p>", start));
+assert.ok(!/\ball contracts\b[\s\S]*\bowned by (?:the )?Governance\b/i.test(contractSummary), "landing must not claim universal Governance ownership");
+assert.ok(contractSummary.includes('href="https://github.com/NeaBouli/inferno/blob/main/docs/DEPLOYMENTS.md#ownership-status-post-transfer"'), "landing authority summary must link to the rendered deployment register");
+assert.ok(deployments.includes("### Ownership Status (Post-Transfer)"), "deployment register ownership link target must exist");
 const rows = landing.slice(start, end).match(/class="contract-row"/g) || [];
 assert.equal(rows.length, 18, "landing contract address list must render 15 contracts + 3 Safes");
 // Rows are siblings, not nested: each row segment carries exactly one copy button and closes before the next row.
