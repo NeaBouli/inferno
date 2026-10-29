@@ -1,12 +1,16 @@
+import { afterAll, beforeEach, expect, test, vi } from 'vitest';
 import { ethers } from 'ethers';
 import { PrismaClient } from '@prisma/client';
 
-const mockEligibility = jest.fn();
-jest.mock('../src/services/ifrLockService', () => ({
-  checkBenefitEligibility: (...args: unknown[]) => mockEligibility(...args),
-  recoverSigner: (message: string, signature: string) => require('ethers').verifyMessage(message, signature),
-}));
-jest.mock('../src/config', () => ({ config: {
+const mockEligibility = vi.hoisted(() => vi.fn());
+vi.mock('../src/services/ifrLockService', async () => {
+  const actual = await vi.importActual<typeof import('ethers')>('ethers');
+  return {
+    checkBenefitEligibility: (...args: unknown[]) => mockEligibility(...args),
+    recoverSigner: (message: string, signature: string) => actual.verifyMessage(message, signature),
+  };
+});
+vi.mock('../src/config', () => ({ config: {
   CHAIN_ID: 11155111, SELLER_AUTH_DOMAIN: 'shop.example.test',
   PARTNER_VAULT_ADDRESS: `0x${'11'.repeat(20)}`, MODEL_B_SETTLEMENT_ENABLED: 'true',
   MODEL_B_PILOT_POLICY_JSON: '', MODEL_B_DEDUP_SECRET: 'ab'.repeat(32), REWARD_CALLER_ADDRESS: undefined,

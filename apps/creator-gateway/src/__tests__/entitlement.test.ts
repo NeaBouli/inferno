@@ -1,16 +1,17 @@
+import { beforeEach, describe, expect, test, vi, type Mock } from 'vitest';
 import { checkEntitlement, EntitlementConfig } from '../services/entitlement';
 import { lockChecker } from '../services/lock-checker';
 import { youtubeChecker } from '../services/youtube-checker';
 
-jest.mock('../services/lock-checker', () => ({
-  lockChecker: { isLocked: jest.fn() },
+vi.mock('../services/lock-checker', () => ({
+  lockChecker: { isLocked: vi.fn() },
 }));
-jest.mock('../services/youtube-checker', () => ({
-  youtubeChecker: { isMember: jest.fn() },
+vi.mock('../services/youtube-checker', () => ({
+  youtubeChecker: { isMember: vi.fn() },
 }));
 
-const mockLock = lockChecker.isLocked as jest.Mock;
-const mockYT = youtubeChecker.isMember as jest.Mock;
+const mockLock = lockChecker.isLocked as Mock;
+const mockYT = youtubeChecker.isMember as Mock;
 
 describe('checkEntitlement — OR logic', () => {
   const config: EntitlementConfig = {
@@ -21,7 +22,7 @@ describe('checkEntitlement — OR logic', () => {
     ],
   };
 
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => vi.clearAllMocks());
 
   test('granted if YouTube member only', async () => {
     mockYT.mockResolvedValue(true);
@@ -65,7 +66,7 @@ describe('checkEntitlement — AND logic', () => {
     ],
   };
 
-  beforeEach(() => jest.clearAllMocks());
+  beforeEach(() => vi.clearAllMocks());
 
   test('granted only if both satisfied', async () => {
     mockYT.mockResolvedValue(true);

@@ -1,3 +1,4 @@
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, test, vi, type MockInstance } from 'vitest';
 /**
  * T-231b / owner decision B: storage-free customer sessions.
  *
@@ -11,21 +12,21 @@ import { createHash } from 'crypto';
 import { ethers } from 'ethers';
 import * as authenticatedRateLimiter from '../src/services/authenticatedRateLimiter';
 
-jest.setTimeout(30_000);
+vi.setConfig({ testTimeout: 30_000, hookTimeout: 30_000 });
 
-const mockEligibility = jest.fn();
+const mockEligibility = vi.hoisted(() => vi.fn());
 
-jest.mock('../src/services/ifrLockService', () => {
-  const actual = jest.requireActual('ethers');
+vi.mock('../src/services/ifrLockService', async () => {
+  const actual = await vi.importActual<typeof import('ethers')>('ethers');
   return {
-    checkLock: jest.fn(),
+    checkLock: vi.fn(),
     checkBenefitEligibility: (...args: unknown[]) => mockEligibility(...args),
     recoverSigner: (message: string, signature: string) => actual.verifyMessage(message, signature),
-    initProvider: jest.fn(),
+    initProvider: vi.fn(),
   };
 });
 
-jest.mock('../src/config', () => ({
+vi.mock('../src/config', () => ({
   config: {
     CHAIN_ID: 11155111,
     SELLER_AUTH_DOMAIN: 'shop.example.test',
@@ -134,20 +135,20 @@ const customer = ethers.Wallet.createRandom();
 const other = ethers.Wallet.createRandom();
 let businessId: string;
 let otherBusinessId: string;
-let limiterSpy: jest.SpyInstance;
+let limiterSpy: MockInstance;
 const logLines: string[] = [];
-const consoleSpies: jest.SpyInstance[] = [];
+const consoleSpies: MockInstance[] = [];
 
 beforeAll(() => {
   for (const method of ['log', 'info', 'warn', 'error', 'debug'] as const) {
-    consoleSpies.push(jest.spyOn(console, method).mockImplementation((...args: unknown[]) => {
+    consoleSpies.push(vi.spyOn(console, method).mockImplementation((...args: unknown[]) => {
       logLines.push(args.map((arg) => (arg instanceof Error ? `${arg.message} ${arg.stack}` : typeof arg === 'string' ? arg : JSON.stringify(arg))).join(' '));
     }));
   }
 });
 
 beforeEach(async () => {
-  limiterSpy = jest.spyOn(authenticatedRateLimiter, 'assertSellerWalletActionAllowed').mockResolvedValue(undefined);
+  limiterSpy = vi.spyOn(authenticatedRateLimiter, 'assertSellerWalletActionAllowed').mockResolvedValue(undefined);
   mockEligibility.mockReset();
   mockEligibility.mockResolvedValue(eligible());
   await resetDb();
@@ -301,14 +302,10 @@ describe('atomic single-use redemption', () => {
     const signature = await customer.signMessage(await challengeFor(body.sessionId, customer.address));
     expect((await postProof(body.sessionId, customer.address, signature)).status).toBe(200);
 
-    let restartedAttest: typeof import('../src/services/sessionService').attest | undefined;
-    let restartedPrisma: typeof prisma | undefined;
-    jest.isolateModules(() => {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const restarted = require('../src/services/sessionService') as typeof import('../src/services/sessionService');
-      restartedAttest = restarted.attest;
-      restartedPrisma = restarted.prisma;
-    });
+    vi.resetModules();
+    const restarted = await import('../src/services/sessionService');
+    const restartedAttest = restarted.attest;
+    const restartedPrisma = restarted.prisma;
     expect(restartedPrisma).not.toBe(prisma);
     await expect(restartedAttest!(body.sessionId, customer.address, signature)).rejects.toThrow(/REDEEMED|already redeemed/);
     await restartedPrisma!.$disconnect();

@@ -1,8 +1,9 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import express from 'express';
 import type { Server } from 'node:http';
 import rateLimit from 'express-rate-limit';
 
-jest.mock('../src/config', () => ({
+vi.mock('../src/config', () => ({
   config: {
     RATE_LIMIT_STORE: 'redis',
     RATE_LIMIT_REDIS_URL: process.env.TEST_REDIS_URL,

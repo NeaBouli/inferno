@@ -1,4 +1,5 @@
-jest.mock('../src/config', () => ({
+import { describe, expect, it, vi } from 'vitest';
+vi.mock('../src/config', () => ({
   config: {
     RATE_LIMIT_STORE: 'memory',
   },
@@ -79,7 +80,7 @@ describe('Authenticated seller wallet limiter', () => {
   });
 
   it('uses one atomic Redis counter per normalized recovered-wallet key', async () => {
-    const sendCommand = jest.fn()
+    const sendCommand = vi.fn()
       .mockResolvedValueOnce([1, 5_000])
       .mockResolvedValueOnce([2, 4_200]);
     const limiter = new RedisFixedWindowKeyLimiter({
@@ -111,7 +112,7 @@ describe('Authenticated seller wallet limiter', () => {
       windowMs: 5_000,
       max: 1,
       prefix: 'test:',
-      sendCommand: jest.fn().mockRejectedValue(new Error('connection lost')),
+      sendCommand: vi.fn().mockRejectedValue(new Error('connection lost')),
     });
     await expect(failedStore.consume('seller:wallet-a')).rejects.toBeInstanceOf(
       RateLimitStoreUnavailableError
@@ -121,7 +122,7 @@ describe('Authenticated seller wallet limiter', () => {
       windowMs: 5_000,
       max: 1,
       prefix: 'test:',
-      sendCommand: jest.fn().mockResolvedValue(['invalid']),
+      sendCommand: vi.fn().mockResolvedValue(['invalid']),
     });
     await expect(invalidReply.consume('seller:wallet-a')).rejects.toBeInstanceOf(
       RateLimitStoreUnavailableError

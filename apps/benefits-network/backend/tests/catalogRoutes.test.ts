@@ -1,12 +1,13 @@
+import { afterAll, beforeEach, describe, expect, it, test, vi } from 'vitest';
 import { ethers } from 'ethers';
 
 type TestWallet = ReturnType<typeof ethers.Wallet.createRandom>;
 
-const mockCheckLock = jest.fn();
-const mockCheckBenefitEligibility = jest.fn();
-const mockRecoverSigner = jest.fn();
+const mockCheckLock = vi.hoisted(() => vi.fn());
+const mockCheckBenefitEligibility = vi.hoisted(() => vi.fn());
+const mockRecoverSigner = vi.hoisted(() => vi.fn());
 
-jest.mock('../src/services/ifrLockService', () => ({
+vi.mock('../src/services/ifrLockService', () => ({
   checkLock: (...args: unknown[]) => mockCheckLock(...args),
   checkBenefitEligibility: async (...args: unknown[]) => {
     const result = await mockCheckBenefitEligibility(...args);
@@ -23,10 +24,10 @@ jest.mock('../src/services/ifrLockService', () => ({
     };
   },
   recoverSigner: (...args: unknown[]) => mockRecoverSigner(...args),
-  initProvider: jest.fn(),
+  initProvider: vi.fn(),
 }));
 
-jest.mock('../src/config', () => ({
+vi.mock('../src/config', () => ({
   config: {
     CHAIN_ID: 11155111,
     SELLER_AUTH_DOMAIN: 'shop.example.test',
@@ -167,7 +168,7 @@ describe('Seller catalog routes', () => {
   let otherBusinessId: string;
 
   beforeEach(async () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     mockRecoverSigner.mockReset();
     mockRecoverSigner.mockImplementation((message: string, signature: string) =>
       ethers.verifyMessage(message, signature));

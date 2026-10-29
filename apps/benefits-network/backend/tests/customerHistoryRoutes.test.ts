@@ -1,12 +1,13 @@
+import { afterAll, describe, expect, it, test, vi } from 'vitest';
 import { ethers } from 'ethers';
 
-jest.mock('../src/services/ifrLockService', () => ({
-  checkLock: jest.fn(),
-  recoverSigner: jest.fn(),
-  initProvider: jest.fn(),
+vi.mock('../src/services/ifrLockService', () => ({
+  checkLock: vi.fn(),
+  recoverSigner: vi.fn(),
+  initProvider: vi.fn(),
 }));
 
-jest.mock('../src/config', () => ({
+vi.mock('../src/config', () => ({
   config: {
     CHAIN_ID: 11155111,
     SELLER_AUTH_DOMAIN: 'shop.example.test',

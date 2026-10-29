@@ -512,9 +512,9 @@ console.log('[benefits-doc-consistency] PASS');
   const { createHash } = require('node:crypto');
   const { POLICY_VERSION } = require('./check-dev-advisory-exceptions.cjs');
   const source = fs.readFileSync(path.join(root, 'scripts/preflight-benefits-release.sh'), 'utf8');
-  const allowedChanges = [["ACCEPTANCE_POLICY=\"benefits-full52-policy-v3-reviewed-app-contexts-20261028\"\n", ""], ["printf '[benefits-preflight] acceptance=%s\\n' \"$ACCEPTANCE_POLICY\"\n\n", ""], ["run \"backend dependency audit\" bash -c 'cd \"$1\" && exec node \"$2\"' _ \"$BACKEND\" \"$ROOT/scripts/check-dev-advisory-exceptions.cjs\"", "run \"backend dependency audit\" npm --prefix \"$BACKEND\" audit --audit-level=low"], ["printf '\\n[benefits-preflight] PASS full local release preflight acceptance=%s\\n' \"$ACCEPTANCE_POLICY\"", "printf '\\n[benefits-preflight] PASS full local release preflight\\n'"]];
+  const allowedChanges = [["ACCEPTANCE_POLICY=\"benefits-full52-policy-v4-supported-test-runners-20261029\"\n", ""], ["printf '[benefits-preflight] acceptance=%s\\n' \"$ACCEPTANCE_POLICY\"\n\n", ""], ["run \"backend dependency audit\" bash -c 'cd \"$1\" && exec node \"$2\"' _ \"$BACKEND\" \"$ROOT/scripts/check-dev-advisory-exceptions.cjs\"", "run \"backend dependency audit\" npm --prefix \"$BACKEND\" audit --audit-level=low"], ["printf '\\n[benefits-preflight] PASS full local release preflight acceptance=%s\\n' \"$ACCEPTANCE_POLICY\"", "printf '\\n[benefits-preflight] PASS full local release preflight\\n'"]];
   function assertPreflightPolicy(copy) {
-    assert.equal(POLICY_VERSION, "benefits-full52-policy-v3-reviewed-app-contexts-20261028");
+    assert.equal(POLICY_VERSION, "benefits-full52-policy-v4-supported-test-runners-20261029");
     let prior = copy;
     for (const [current, original] of allowedChanges) {
       assert.equal(prior.split(current).length - 1, 1, 'missing/duplicate reviewed preflight policy delta');
@@ -523,7 +523,7 @@ console.log('[benefits-doc-consistency] PASS');
     assert.equal(createHash('sha256').update(prior).digest('hex'), "bfead42b8ee9e9887f194703ad7becd1f63b43b25b0fbff0281ef27e78d8f39f",
       'unreviewed preflight change: remaining51 commands/guards/fixtures/timeouts must be preserved');
     assert.match(copy, /run "frontend dependency audit" npm --prefix "\$FRONTEND" audit --audit-level=low/);
-    for (const text of [POLICY_VERSION, 'backend stage31', 'production audit has zero advisories', '2026-11-03']) {
+    for (const text of [POLICY_VERSION, 'backend stage31', 'production audit has zero advisories', 'deepmerge dispositions are removed', '2026-11-03']) {
       assert.ok(content.testGuide.includes(text), `test guide missing versioned audit policy: ${text}`);
     }
   }

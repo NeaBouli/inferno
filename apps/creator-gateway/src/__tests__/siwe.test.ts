@@ -1,3 +1,4 @@
+import { describe, expect, test, vi, type Mock } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import { ethers } from 'ethers';
@@ -7,13 +8,13 @@ import authRouter from '../routes/auth';
 import { CONFIG } from '../config';
 
 // Mock googleapis to prevent real OAuth calls
-jest.mock('googleapis', () => ({
+vi.mock('googleapis', () => ({
   google: {
     auth: {
-      OAuth2: jest.fn().mockImplementation(() => ({
-        generateAuthUrl: jest.fn().mockReturnValue('https://accounts.google.com/oauth'),
-        getToken: jest.fn().mockResolvedValue({ tokens: { access_token: 'mock' } }),
-      })),
+      OAuth2: vi.fn().mockImplementation(function () { return {
+        generateAuthUrl: vi.fn().mockReturnValue('https://accounts.google.com/oauth'),
+        getToken: vi.fn().mockResolvedValue({ tokens: { access_token: 'mock' } }),
+      }; }),
     },
   },
 }));

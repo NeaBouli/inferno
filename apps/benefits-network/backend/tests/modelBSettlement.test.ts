@@ -1,15 +1,16 @@
+import { afterAll, beforeEach, describe, expect, it, test, vi } from 'vitest';
 import fs from 'node:fs';
 import path from 'node:path';
 import { ethers } from 'ethers';
 
 type TestWallet = ReturnType<typeof ethers.Wallet.createRandom>;
 
-const mockGetRewardOnChainStatus = jest.fn();
-const mockIsWalletAlreadyRewarded = jest.fn();
-const mockGetModelBVaultState = jest.fn();
+const mockGetRewardOnChainStatus = vi.hoisted(() => vi.fn());
+const mockIsWalletAlreadyRewarded = vi.hoisted(() => vi.fn());
+const mockGetModelBVaultState = vi.hoisted(() => vi.fn());
 
-jest.mock('../src/services/rewardService', () => {
-  const actual = jest.requireActual('../src/services/rewardService');
+vi.mock('../src/services/rewardService', async () => {
+  const actual = await vi.importActual<typeof import('../src/services/rewardService')>('../src/services/rewardService');
   return {
     ...actual,
     getRewardOnChainStatus: (...args: unknown[]) => mockGetRewardOnChainStatus(...args),
@@ -18,15 +19,15 @@ jest.mock('../src/services/rewardService', () => {
   };
 });
 
-const mockEligibility = jest.fn();
+const mockEligibility = vi.hoisted(() => vi.fn());
 
-jest.mock('../src/services/ifrLockService', () => {
-  const actual = jest.requireActual('ethers');
+vi.mock('../src/services/ifrLockService', async () => {
+  const actual = await vi.importActual<typeof import('ethers')>('ethers');
   return {
-    checkLock: jest.fn(),
+    checkLock: vi.fn(),
     checkBenefitEligibility: (...args: unknown[]) => mockEligibility(...args),
     recoverSigner: (message: string, signature: string) => actual.verifyMessage(message, signature),
-    initProvider: jest.fn(),
+    initProvider: vi.fn(),
   };
 });
 
@@ -35,7 +36,7 @@ const PARTNER_VAULT = '0xc6eb7714bCb035ebc2D4d9ba7B3762ef7B9d4F7D';
 const GOVERNANCE = '0xc43d48E7FDA576C5022d0670B652A622E8caD041';
 const PAIR = '0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0';
 
-jest.mock('../src/config', () => ({
+vi.mock('../src/config', () => ({
   config: {
     CHAIN_ID: 1,
     SELLER_AUTH_DOMAIN: 'shop.example.test',
@@ -295,7 +296,7 @@ describe('Model B verified-redemption settlement (T-275)', () => {
   }
 
   beforeEach(async () => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     await prisma.rewardEvent.deleteMany();
     await prisma.sellerRewardLink.deleteMany();
     await prisma.auditLog.deleteMany();

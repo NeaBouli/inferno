@@ -1,24 +1,25 @@
+import { afterAll, beforeEach, describe, expect, it, test, vi } from 'vitest';
 import { createHash } from 'node:crypto';
 
-jest.setTimeout(15_000);
+vi.setConfig({ testTimeout: 15_000, hookTimeout: 15_000 });
 
-jest.mock('../src/services/ifrLockService', () => ({
-  checkLock: jest.fn(),
-  checkBenefitEligibility: jest.fn(),
-  recoverSigner: jest.fn(),
-  initProvider: jest.fn(),
+vi.mock('../src/services/ifrLockService', () => ({
+  checkLock: vi.fn(),
+  checkBenefitEligibility: vi.fn(),
+  recoverSigner: vi.fn(),
+  initProvider: vi.fn(),
 }));
 
-const mockGetRewardOnChainStatus = jest.fn();
+const mockGetRewardOnChainStatus = vi.hoisted(() => vi.fn());
 
-jest.mock('../src/services/rewardService', () => ({
-  ...jest.requireActual('../src/services/rewardService'),
+vi.mock('../src/services/rewardService', async () => ({
+  ...await vi.importActual<typeof import('../src/services/rewardService')>('../src/services/rewardService'),
   getRewardOnChainStatus: (...args: unknown[]) => mockGetRewardOnChainStatus(...args),
 }));
 
 const TEST_ADMIN_SECRET = 'test-admin-secret-0123456789abcdef0123456789';
 
-jest.mock('../src/config', () => ({
+vi.mock('../src/config', () => ({
   config: {
     CHAIN_ID: 11155111,
     SELLER_AUTH_DOMAIN: 'shop.example.test',

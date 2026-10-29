@@ -1,3 +1,4 @@
+import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 // Deliberately synthetic fixtures. No external endpoint is contacted.
 const production = {
   NODE_ENV: 'production',
@@ -18,14 +19,13 @@ const savedEnv = process.env;
 beforeEach(() => { process.env = { ...production }; });
 afterEach(() => { process.env = savedEnv; });
 
-function loadConfig() {
-  let config: typeof import('../config').CONFIG | undefined;
-  jest.isolateModules(() => { config = require('../config').CONFIG; });
-  return config!;
+async function loadConfig() {
+  vi.resetModules();
+  return (await import('../config')).CONFIG;
 }
 
-test('accepts explicit production settings and exact origin allowlist', () => {
-  const cfg = loadConfig();
+test('accepts explicit production settings and exact origin allowlist', async () => {
+  const cfg = await loadConfig();
   expect(cfg.chainId).toBe(1);
   expect(cfg.isProduction).toBe(true);
   expect(cfg.allowedOrigins).toEqual(['https://creator.example.invalid', 'https://client.example.invalid']);
@@ -35,11 +35,11 @@ test.each([
   'JWT_SECRET', 'SIWE_DOMAIN', 'SIWE_URI', 'RPC_URL', 'CHAIN_ID', 'IFRLOCK_ADDRESS',
   'ALLOWED_ORIGINS', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET', 'GOOGLE_REDIRECT_URI',
   'YOUTUBE_CHANNEL_ID',
-])('production requires %s without fallback', (name) => {
+])('production requires %s without fallback', async (name) => {
   delete process.env[name];
-  expect(loadConfig).toThrow(name);
+  await expect(loadConfig()).rejects.toThrow(name);
   process.env[name] = '   ';
-  expect(loadConfig).toThrow(name);
+  await expect(loadConfig()).rejects.toThrow(name);
 });
 
 test.each([
@@ -60,15 +60,15 @@ test.each([
   ['GOOGLE_REDIRECT_URI', 'https://api.example.invalid/auth/google/callback?state=fixture'],
   ['PORT', '3005garbage'], ['PORT', '0'], ['PORT', '65536'],
   ['MIN_LOCK_IFR', '0'], ['MIN_LOCK_IFR', '0.0000000001'], ['MIN_LOCK_IFR', '1e3'],
-])('rejects invalid %s configuration', (name, value) => {
+])('rejects invalid %s configuration', async (name, value) => {
   process.env[name] = value;
-  expect(loadConfig).toThrow(name);
+  await expect(loadConfig()).rejects.toThrow(name);
 });
 
-test('configuration failures do not disclose supplied URLs or credentials', () => {
+test('configuration failures do not disclose supplied URLs or credentials', async () => {
   process.env.RPC_URL = 'https://fixture-user:SENTINEL-SECRET@rpc.example.invalid';
   try {
-    loadConfig();
+    await loadConfig();
     throw new Error('expected failure');
   } catch (error) {
     expect((error as Error).message).toContain('RPC_URL');
@@ -77,7 +77,7 @@ test('configuration failures do not disclose supplied URLs or credentials', () =
   }
 });
 
-test('token thresholds retain all nine decimals as a string', () => {
+test('token thresholds retain all nine decimals as a string', async () => {
   process.env.MIN_LOCK_IFR = '9007199254740993.000000001';
-  expect(loadConfig().minLockIFR).toBe(process.env.MIN_LOCK_IFR);
+  expect((await loadConfig()).minLockIFR).toBe(process.env.MIN_LOCK_IFR);
 });

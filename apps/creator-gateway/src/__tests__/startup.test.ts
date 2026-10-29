@@ -1,8 +1,9 @@
+import { afterAll, beforeEach, expect, test, vi, type MockedFunction } from 'vitest';
 import { verifyRpcChain } from '../startup';
 
 const rpcUrl = 'https://rpc.example.invalid/SENTINEL-PROVIDER-KEY';
 const savedFetch = global.fetch;
-const mockFetch = jest.fn() as jest.MockedFunction<typeof fetch>;
+const mockFetch = vi.fn() as MockedFunction<typeof fetch>;
 beforeEach(() => { global.fetch = mockFetch; mockFetch.mockReset(); });
 afterAll(() => { global.fetch = savedFetch; });
 

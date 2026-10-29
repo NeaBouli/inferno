@@ -1,4 +1,5 @@
-jest.mock('../src/services/sessionService', () => ({ prisma: {} }));
+import { describe, expect, it, vi } from 'vitest';
+vi.mock('../src/services/sessionService', () => ({ prisma: {} }));
 
 import {
   assertCanonicalBusinessSlug,

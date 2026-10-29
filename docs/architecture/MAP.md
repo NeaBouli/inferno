@@ -1386,6 +1386,8 @@ is not a credential/history scan, deployment test or release approval.
 
 ## Benefits backend reviewed development-audit policy — 2026-10-28
 
+Historical version2 boundary; superseded by the supported-runner transition below.
+
 Module: existing advisory checker and Full52 runner. Hop: `preflight-benefits-release.sh`
 backend stage31 -> backend cwd -> `check-dev-advisory-exceptions.cjs::runAudit` ->
 `evaluate` -> canonical `createAuditContext` and scoped seven-node/source-pin validation.
@@ -1420,6 +1422,8 @@ The backend-only reviewed development disposition does not cover Creator Gateway
 
 ## Canonical application development-audit contexts — 2026-10-28
 
+Historical version3 boundary; both deepmerge contexts are removed by version4 below.
+
 Module: existing shared advisory checker. Hop: native application audit ->
 `createAuditContext` -> canonical `SCOPED_DISPOSITIONS` record -> complete
 production/full reports -> `evaluate` source/version/dev/via/interval validation.
@@ -1445,6 +1449,26 @@ flowchart LR
   Backend --> Gate[Production zero + full dev/via + interval]
   Gateway --> Gate
 ```
+
+## Supported application test runners and audit graph removal — 2026-10-29
+
+Module: Benefits backend and Creator Gateway owning test toolchains. Hop:
+`npm test` -> explicit test TypeScript check -> Vitest5/Vite8 -> existing app test
+files; Backend retains SQLite reset/serial files and an isolated module registry.
+Mock factories use actual ES module exports and awaited fresh imports for config
+and restart checks. Production handlers, dependency nodes and APIs are unchanged.
+
+Audit hop: existing application CI / Full52 backend stage31 -> complete fresh
+full+production audit JSON -> strict report/via/development-node validation.
+Policy `benefits-full52-policy-v4-supported-test-runners-20261029` removes both
+obsolete deepmerge dispositions and legacy source-context readers after removing
+the owning Jest graphs. The upstream advisory remains open and unpatched. The
+separate braces rule and deadline are unchanged; no new exception is added.
+
+Version2/3 source-bound results remain historical and do not qualify version4.
+Only the preflight acceptance version changes at the wrapper level; its other51
+ordered commands/guards/timeouts retain the normalized original digest. Normal
+application CI and exact-source version4 Full52 remain release gates.
 
 ## Public seller catalog search and categories — 2026-10-28
 

@@ -1,17 +1,18 @@
+import { afterAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Request, RequestHandler, Response, Router } from 'express';
 import { ethers } from 'ethers';
 
-const mockEligibility = jest.fn();
+const mockEligibility = vi.hoisted(() => vi.fn());
 
-jest.mock('../src/services/ifrLockService', () => {
-  const actual = jest.requireActual('ethers');
+vi.mock('../src/services/ifrLockService', async () => {
+  const actual = await vi.importActual<typeof import('ethers')>('ethers');
   return {
     checkBenefitEligibility: (...args: unknown[]) => mockEligibility(...args),
     recoverSigner: (message: string, signature: string) => actual.verifyMessage(message, signature),
   };
 });
 
-jest.mock('../src/config', () => ({
+vi.mock('../src/config', () => ({
   config: {
     CHAIN_ID: 11155111,
     SELLER_AUTH_DOMAIN: 'shop.example.test',
@@ -47,11 +48,11 @@ let businessId: string;
 
 async function readOnlyGet(handler: RequestHandler, sessionId: string, expectedStatus = 200) {
   const response = {
-    set: jest.fn().mockReturnThis(),
-    status: jest.fn().mockReturnThis(),
-    json: jest.fn().mockReturnThis(),
+    set: vi.fn().mockReturnThis(),
+    status: vi.fn().mockReturnThis(),
+    json: vi.fn().mockReturnThis(),
   };
-  const next = jest.fn();
+  const next = vi.fn();
   await expectNoDatabaseWrites(async () => {
     await handler({ params: { id: sessionId } } as unknown as Request, response as unknown as Response, next);
   });
@@ -146,7 +147,7 @@ describe('CWA-43: public session GETs are read-only', () => {
         where: { id: sessionId },
         data: { status, expiresAt: new Date(Date.now() + 60_000) },
       });
-      const clock = jest.spyOn(Date, 'now').mockReturnValue(before.expiresAt.getTime());
+      const clock = vi.spyOn(Date, 'now').mockReturnValue(before.expiresAt.getTime());
       try {
         const body = await readOnlyGet(statusGet, sessionId);
         expect(body.status).toBe('EXPIRED');

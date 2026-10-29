@@ -1,3 +1,4 @@
+import { afterAll, beforeAll, describe, expect, it, test, vi } from 'vitest';
 /**
  * Hop B (PR #238): seller/admin texts that reach the customer-signed checkout proof must not contain
  * C0 (U+0000-U+001F), DEL (U+007F), C1 (U+0080-U+009F), U+2028 or U+2029. Every write path rejects
@@ -5,14 +6,14 @@
  */
 import { ethers } from 'ethers';
 
-jest.mock('../src/services/ifrLockService', () => ({
-  checkLock: jest.fn(),
-  checkBenefitEligibility: jest.fn(),
-  recoverSigner: jest.fn(),
-  initProvider: jest.fn(),
+vi.mock('../src/services/ifrLockService', () => ({
+  checkLock: vi.fn(),
+  checkBenefitEligibility: vi.fn(),
+  recoverSigner: vi.fn(),
+  initProvider: vi.fn(),
 }));
 
-jest.mock('../src/config', () => ({
+vi.mock('../src/config', () => ({
   config: {
     CHAIN_ID: 11155111,
     SELLER_AUTH_DOMAIN: 'shop.example.test',
@@ -28,8 +29,8 @@ jest.mock('../src/config', () => ({
 }));
 
 // The request volume of this matrix exceeds the production per-IP limits; limits are not under test.
-jest.mock('../src/middleware/rateLimiter', () => {
-  const actual = jest.requireActual('../src/middleware/rateLimiter');
+vi.mock('../src/middleware/rateLimiter', async () => {
+  const actual = await vi.importActual<typeof import('../src/middleware/rateLimiter')>('../src/middleware/rateLimiter');
   return {
     ...actual,
     adminRateLimiter: actual.createAdminRateLimiter({ max: 100_000 }),

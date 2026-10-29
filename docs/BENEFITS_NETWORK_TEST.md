@@ -2,32 +2,32 @@
 
 ## Versioned dependency-audit acceptance
 
-Full52 uses `benefits-full52-policy-v3-reviewed-app-contexts-20261028`.
+Full52 uses `benefits-full52-policy-v4-supported-test-runners-20261029`.
 The production audit has zero advisories, while the complete fresh development
 report passes the same fail-closed checker used by application CI. The backend stage31
-command remains the shared checker; the other51 ordered commands,
-fixtures, guards and timeouts are unchanged.
+command remains the shared checker; the other51 ordered top-level commands,
+environments, guards and timeouts are unchanged.
 
-Version2 (`benefits-full52-policy-v2-reviewed-dev-20261028`) passed the hosted
-Full52 on source `b396c3c24a5f57a2733b56b1facf8bb4380ef161` only. Version3 adds a
-separately reviewed Creator Gateway context to the shared checker. That earlier
-result does not qualify this new version or source. The original raw backend
-audit failure remains evidence; neither version is an unchanged original
-raw-audit Full52 pass.
+Version4 replaces the owning Backend/Creator Jest/ts-jest test chains with Vitest
+and Vite. Both deepmerge dispositions are removed; the valid, open, unpatched
+`GHSA-gcqx-w48m-w2h4` receives no allowance. The separate braces rule remains
+unchanged through **2026-11-03 UTC inclusive**, with no automatic renewal.
+Production placement, unknown advisories and incomplete coverage still fail.
+This is graph removal, not an upstream deepmerge patch or repository-wide clearance.
 
-The valid, open, unpatched `GHSA-gcqx-w48m-w2h4` has two separate temporary
-configuration-path dispositions through **2026-11-03 UTC inclusive**: Benefits
-backend binds seven development nodes/four source hashes; Creator Gateway binds
-six development nodes/six source hashes, including its test setup and CI workflow.
-Each requires its actual canonical app path and package identity. Contexts cannot
-authorize each other's graph. Missing context, changed pins/config/workflow,
-production placement, unknown advisories, incomplete coverage or expiry fail.
-Other applications and arbitrary Jest configurations inherit no allowance.
+Earlier version2/3 hosted results qualify only those exact sources and acceptance
+versions. Preserve their raw failures and successful receipts; neither is evidence
+of version4 qualification. Each final source must pass its genuine versioned
+Full52 and application CI before release. The checker logs the actual evaluated
+full/production JSON bodies with byte counts and SHA-256 hashes.
 
-Re-check upstream immediately for a fix or changed test input/CI privileges.
-Expiry has no automatic renewal; stable advisory ranges do not detect every fix.
-The checker logs the actual evaluated full/production JSON bodies with byte counts
-and SHA-256 hashes. Preserve those and earlier failed results in run evidence.
+Both applications explicitly typecheck their tests before the runtime test suite.
+Backend test files remain serial against the existing reset SQLite fixture, with
+isolated module state, the original per-file time limits and open-handle diagnostics.
+Configuration-reload tests use awaited fresh imports; fixture setup must not reseed
+missing configuration inside those imports. No Jest compatibility alias is used.
+The runtime application source, production dependency graph and public API are
+outside this test-runner migration.
 
 ## Runtime Contract
 
@@ -231,8 +231,10 @@ tranches do not qualify, source token mismatches and malformed/oversized tranche
 and a Commitment-only rule does not depend on an IFRLock read. It also covers reward contract tuple
 decoding, the actual RPC chain ID, zero-beneficiary fail-closed behavior and read-only wallet-reward
 checks. The fixture never submits a transaction or contacts Mainnet.
-CI also runs `npm run test:ethers-v6-lifecycle` without Jest's `--forceExit`, including an RPC
+CI also runs `npm run test:ethers-v6-lifecycle` with natural runner shutdown and open-handle
+diagnostics, including an RPC
 rejection followed by a successful read to cover provider cleanup on error and success paths.
+This standalone entry runs `test:typecheck` before Vitest, preserving test diagnostics outside CI.
 
 ## Read-only Live Smoke
 
@@ -391,7 +393,7 @@ create/rule/session/proof path checks.
 
 ## Backend Route Tests
 
-Backend Jest tests include service-level and HTTP-route coverage:
+Backend Vitest tests include service-level and HTTP-route coverage:
 
 ```bash
 cd apps/benefits-network/backend

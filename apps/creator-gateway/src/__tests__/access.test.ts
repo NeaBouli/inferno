@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, test, vi, type Mock, type MockedFunction } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import jwt from 'jsonwebtoken';
@@ -6,13 +7,13 @@ import { CONFIG } from '../config';
 import { createYouTubeSession } from '../services/session-store';
 
 // Mock entitlement service
-jest.mock('../services/entitlement', () => ({
-  checkEntitlement: jest.fn(),
+vi.mock('../services/entitlement', () => ({
+  checkEntitlement: vi.fn(),
   DEFAULT_ENTITLEMENT: { logic: 'OR', conditions: [] },
 }));
 
 import { checkEntitlement } from '../services/entitlement';
-const mockCheckEntitlement = checkEntitlement as jest.MockedFunction<typeof checkEntitlement>;
+const mockCheckEntitlement = checkEntitlement as MockedFunction<typeof checkEntitlement>;
 
 const app = express();
 app.use(express.json());
@@ -24,7 +25,7 @@ function makeToken(payload: Record<string, any>): string {
 
 describe('Access Routes', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('GET /access/check without token returns 401', async () => {

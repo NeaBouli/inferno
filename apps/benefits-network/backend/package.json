@@ -11,9 +11,9 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "typecheck": "tsc --noEmit",
-    "test": "DATABASE_URL=file:./test.db node scripts/reset-test-db.cjs && DATABASE_URL=file:./test.db jest --runInBand --forceExit --detectOpenHandles",
+    "test": "npm run test:typecheck && DATABASE_URL=file:./test.db node scripts/reset-test-db.cjs && DATABASE_URL=file:./test.db vitest run",
     "test:model-b-tools": "node --test scripts/model-b-tools.test.cjs",
-    "test:ethers-v6-lifecycle": "DATABASE_URL=file:./test.db jest tests/ethersV6Services.test.ts --runInBand --detectOpenHandles",
+    "test:ethers-v6-lifecycle": "npm run test:typecheck && DATABASE_URL=file:./test.db vitest run tests/ethersV6Services.test.ts",
     "test:rate-limit-startup": "node scripts/test-rate-limit-startup.cjs",
     "test:migration-upgrade": "node scripts/verify-populated-migration-upgrade.cjs && node scripts/verify-owner-b-migration.cjs",
     "retention:report": "npm run build --silent && node dist/retentionCli.js report",
@@ -21,7 +21,8 @@
     "smoke:http": "bash scripts/ci-http-smoke.sh",
     "prisma:generate": "prisma generate",
     "prisma:deploy": "prisma migrate deploy",
-    "prisma:migrate": "prisma migrate dev"
+    "prisma:migrate": "prisma migrate dev",
+    "test:typecheck": "tsc --noEmit -p tsconfig.test.json"
   },
   "dependencies": {
     "@prisma/client": "^5.10.0",
@@ -38,12 +39,11 @@
   "devDependencies": {
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
-    "@types/jest": "^29.5.12",
     "@types/node": "^22.0.0",
-    "jest": "^29.7.0",
-    "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "vite": "8.3.5",
+    "vitest": "5.0.5"
   },
   "overrides": {
     "@istanbuljs/load-nyc-config": {

@@ -1,8 +1,9 @@
+import { afterEach, expect, test, vi } from 'vitest';
 import { createHash, createHmac } from 'node:crypto';
 import type { Prisma } from '@prisma/client';
 import type { Request } from 'express';
 
-jest.mock('../src/config', () => ({ config: {
+vi.mock('../src/config', () => ({ config: {
   ADMIN_AUDIT_HMAC_KEY: 'test-audit-hmac-key-0123456789abcdef',
 } }));
 
@@ -42,7 +43,7 @@ test('key rotation changes only the new client digest, preserving the role marke
 });
 
 test('records the HMAC in the existing transaction without rewriting old rows', async () => {
-  const create = jest.fn().mockResolvedValue({ id: 'new-audit' });
+  const create = vi.fn().mockResolvedValue({ id: 'new-audit' });
   const transaction = { adminAuditLog: { create } } as unknown as Prisma.TransactionClient;
   await expect(recordAdminAudit(transaction, request('203.0.113.7'), 'business:create', 201))
     .resolves.toEqual({ id: 'new-audit' });

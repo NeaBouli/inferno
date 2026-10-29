@@ -1,3 +1,4 @@
+import { expect } from 'vitest';
 import type { Prisma, PrismaClient } from '@prisma/client';
 
 const READ_ACTIONS = new Set([
