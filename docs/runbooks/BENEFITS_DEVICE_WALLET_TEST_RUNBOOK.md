@@ -2,6 +2,8 @@
 
 Purpose: prove that `shop.ifrunit.tech` works on real customer and seller devices, not only in automated desktop/iPad browser emulation.
 
+For controlled owner-wallet setup and retirement, use the [Controlled Shop Acceptance guide](BENEFITS_CONTROLLED_SHOP_ACCEPTANCE.md).
+
 This runbook is intentionally operational. Do not record private keys, seed phrases, full personal wallet inventories or screenshots containing sensitive balances.
 
 ## Scope
