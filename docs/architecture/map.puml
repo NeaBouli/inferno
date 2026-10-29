@@ -71,6 +71,25 @@ package "rate limit" {
 [src/index.js message guard] --> [services/onChainReader.js] : determineTier (live)
 @enduml
 
+@startuml creator_default_entitlement
+title Creator default entitlement configuration
+component "config/index.ts\nCONFIG.minLockIFR" as CreatorConfig
+component "entitlement.ts\nDEFAULT_ENTITLEMENT" as CreatorPolicy
+component "access.ts\nGET /access/check" as CreatorAccess
+component "entitlement.ts\ncheckEntitlement" as CreatorCheck
+component "lock-checker.ts\nisLocked" as CreatorLock
+component "IFRLock contract" as CreatorContract
+CreatorConfig --> CreatorPolicy : validated decimal string; default 1000
+CreatorPolicy --> CreatorAccess : shared startup policy
+CreatorAccess --> CreatorCheck : authenticated wallet + stored YouTube session
+CreatorCheck --> CreatorLock : IFR condition threshold string
+CreatorLock --> CreatorContract : parseUnits(value, 9) bigint
+note right of CreatorCheck
+  OR / YouTube behavior unchanged.
+  Explicit policies retain their own thresholds and logic.
+end note
+@enduml
+
 @startmindmap
 * S4 vault hardening
 ** commitment custody gate

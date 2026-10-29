@@ -1,3 +1,4 @@
+import { CONFIG } from '../config';
 import { lockChecker } from './lock-checker';
 import { youtubeChecker } from './youtube-checker';
 
@@ -13,7 +14,7 @@ export const DEFAULT_ENTITLEMENT: EntitlementConfig = {
   logic: 'OR',
   conditions: [
     { type: 'youtube_member' },
-    { type: 'ifr_lock', minIFR: '1000' },
+    { type: 'ifr_lock', minIFR: CONFIG.minLockIFR },
   ],
 };
 

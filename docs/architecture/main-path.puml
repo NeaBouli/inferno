@@ -232,3 +232,24 @@ WalletStatus -> P : transactionSteps[].detail
 P -> C : match existing wallet step-grid selector
 C -> P : wrap long identifier within paragraph
 @enduml
+@startuml creator_default_entitlement
+title Creator authenticated default-policy threshold
+actor Client
+participant "authMiddleware" as Auth
+participant "GET /access/check" as Access
+participant "DEFAULT_ENTITLEMENT\nCONFIG.minLockIFR at startup" as Policy
+participant "checkEntitlement" as Entitlement
+participant "LockChecker" as Lock
+participant "IFRLock contract" as Contract
+Client -> Auth : bearer JWT
+Auth -> Access : verified wallet / session ID
+Access -> Policy : default OR conditions
+Policy --> Access : configured IFR threshold string (default 1000)
+Access -> Entitlement : wallet, stored YouTube token, default policy
+Entitlement -> Lock : isLocked(wallet, threshold string)
+Lock -> Contract : isLocked(wallet, parseUnits(threshold, 9))
+Contract --> Lock : boolean
+Lock --> Entitlement : lock result
+Entitlement --> Access : OR result + successful condition reasons
+Access --> Client : granted / reasons
+@enduml

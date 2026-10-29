@@ -95,6 +95,12 @@ Creator Gateway login trace (`apps/creator-gateway`):
    `src/services/entitlement.ts::checkEntitlement`
    (`services/lock-checker.ts` on-chain, `services/youtube-checker.ts` with the
    server-held token) — Daten: JWT claims → granted/reasons
+   Default-policy configuration hop: `src/config/index.ts::CONFIG.minLockIFR`
+   (positive decimal string, at most nine places; default `1000`) →
+   `services/entitlement.ts::DEFAULT_ENTITLEMENT` IFR condition →
+   `lock-checker.ts::isLocked` → `ethers.parseUnits(value, 9)` → contract
+   `isLocked(wallet, bigint)`. The HTTP route uses this startup-configured OR
+   policy; explicit `checkEntitlement` policies keep their own thresholds/logic.
 
 Benefits seller authorization/session trace (`apps/benefits-network/backend`):
 
