@@ -232,9 +232,9 @@ Pass criteria:
 2. Confirm Wallet entry appears.
 3. Connect wallet in a wallet browser or extension.
 4. Confirm wallet address appears shortened.
-5. Confirm Checkout readiness reflects connected wallet, IFR balance, ETH gas and lock status.
+5. Confirm `Wallet balances and IFRLock tools` shows the connected wallet and separate balances. Its `IFRLock example overview` is not an exact-offer eligibility decision; the selected offer's lock source and thresholds decide checkout eligibility.
 6. Connect once on a non-production EVM chain and confirm the panel shows `Switch to Ethereum Mainnet`, performs no IFR/IFRLock reads, and keeps Approve/Lock/Unlock disabled until the wallet confirms the switch.
-7. With a wallet that reports exactly `0 ETH`, confirm `Get ETH for gas` takes priority, the official `https://ethereum.org/get-eth/` guide opens without a wallet request, and Approve/Lock/Unlock stay disabled.
+7. With a wallet that reports exactly `0 ETH`, confirm the ETH guidance and `Get ETH for gas` action are scoped to optional on-chain tools. The official `https://ethereum.org/get-eth/` guide must open without a wallet request, and Approve/Lock/Unlock stay disabled. An already eligible wallet can sign an off-chain checkout proof without spending ETH; the exact offer's conditions still apply.
 8. With ETH available, use `Approve IFR`, `Lock IFR` and `Unlock all` inside the Shop wallet panel; confirm balances and transaction feedback refresh without leaving `shop.ifrunit.tech`.
 9. Tap `Buy IFR` and confirm it opens the configured Uniswap path.
 10. Reload the page and confirm the connected wallet session is restored without a new signature prompt.
