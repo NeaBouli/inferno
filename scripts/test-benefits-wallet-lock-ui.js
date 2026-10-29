@@ -224,6 +224,7 @@ async function verifyCustomerWalletAnchor(page, onVerified = async () => {}) {
       await page.goto(destination.href, { waitUntil: 'domcontentloaded' });
       await page.reload({ waitUntil: 'domcontentloaded' });
       await page.locator('#customer-wallet').getByRole('heading', { name: 'Wallet balances and IFRLock tools', exact: true }).waitFor();
+      await page.locator('#customer-wallet').locator('[data-wallet-connect-control][data-wallet-connectors-ready="true"]').waitFor({ timeout: 10_000 });
       const deepLink = await settledGeometry();
       assertClear(deepLink, 'fresh deep link');
       const universalRule = await page.evaluate(() => {
