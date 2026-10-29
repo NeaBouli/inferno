@@ -102,15 +102,17 @@ no Sepolia or OAuth credential fallback.
 | `GOOGLE_CLIENT_SECRET` | Required | Corresponding server-side OAuth secret. |
 | `GOOGLE_REDIRECT_URI` | Required | Exact HTTPS callback URI ending in `/auth/google/callback`, without query or fragment. |
 | `YOUTUBE_CHANNEL_ID` | Required | Intended creator channel identifier; currently metadata, not an enforced membership filter. |
-| `MIN_LOCK_IFR` | Optional | Positive decimal token threshold with at most nine fractional digits, parsed with integer arithmetic. See the fixed entitlement policy below. |
+| `MIN_LOCK_IFR` | Optional | Positive decimal token threshold with at most nine fractional digits, parsed with integer arithmetic. Defaults to `1000` in the default entitlement policy below. |
 | `CREATOR_GATEWAY_HOST` | Operator/release setting | Approved public DNS hostname for Compose interpolation and release verification; not an application credential. |
 
 Production requires `CHAIN_ID=1` and an explicit address pair; development
 retains the consistent Sepolia pair when both are absent. HTTPS origins must be
-canonical origins without trailing slashes. `/access/check` currently uses the
-source-defined OR policy and a fixed 1000 IFR lock threshold in
-`src/services/entitlement.ts`; changing `MIN_LOCK_IFR` alone does not change that
-policy. IFR accounting retains nine decimals without JavaScript number rounding.
+canonical origins without trailing slashes. `/access/check` uses the source-defined
+OR policy in `src/services/entitlement.ts`: YouTube membership or an IFR lock meeting
+`MIN_LOCK_IFR` (default `1000`). The validated setting is captured at startup;
+changing it requires restarting the gateway. Explicit policies passed to
+`checkEntitlement` retain their own logic and thresholds. IFR accounting retains
+nine decimals without JavaScript number rounding.
 
 Only one process/replica is supported: SIWE nonces, OAuth states, YouTube sessions
 and rate limits are in memory. Restart or rollback discards them. Users must
