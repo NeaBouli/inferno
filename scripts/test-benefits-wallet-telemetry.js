@@ -39,7 +39,7 @@ function parseObserveMs(raw) {
 // Route expectations for the Benefits app. Synthetic slugs have no backing
 // record, so the working app shows its explicit unavailable state there.
 const BENEFITS_ROUTES = [
-  { path: '/', headings: [/Locked IFR\. Benefits at checkout\./, /Access status/], walletControl: true },
+  { path: '/', headings: [/Locked IFR\. Benefits at checkout\./, /^Wallet balances and IFRLock tools$/], walletControl: true },
   { path: '/?mode=seller', headings: [/Locked IFR\. Benefits at checkout\./, /Benefit rule manager/] },
   { path: '/guide', headings: [/Customer proof and seller checkout/] },
   { path: '/b/telemetry-check', headings: [/Business console/, /Seller profile unavailable|not found/i] },
