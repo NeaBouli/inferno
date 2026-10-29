@@ -313,10 +313,10 @@ export function WalletStatus() {
               : 'Needed for transactions',
     },
     {
-      label: 'Freely held IFR',
+      label: 'Free IFR or example lock',
       status: wrongChain
         ? 'Blocked'
-        : readCheckStatus || (hasIFR || hasCustomerLock ? 'Ready' : 'Not held'),
+        : readCheckStatus || (hasIFR || hasCustomerLock ? 'Detected' : 'Not detected'),
     },
     {
       label: `Example: ${MIN_CUSTOMER_LOCK.toLocaleString('en-US')} IFRLock`,
