@@ -347,6 +347,20 @@ The existing `test:benefits-discovery-ui` suite covers mixed products/general of
 multiple rules, exact-price/link/eligibility preservation, category-name collisions,
 loading/empty/error/no-match, reset/reload and five responsive viewports. Set
 `BENEFITS_CATALOG_EVIDENCE_DIR` to retain fixture screenshots and computed layout metrics.
+The same suite also covers public discovery across three pages of 17 offers and
+catalog changes to 9, 8 and 0 offers. An unavailable page has a user-operated
+return to page 1 that preserves the search, category and area. Positive totals
+with no page results never imply an empty network or zero matching filters.
+Request-count controls reject automatic recovery/retry loops and ensure a late
+obsolete response cannot replace current offers. Set
+`BENEFITS_DISCOVERY_RECOVERY_EVIDENCE_DIR` to retain its five-viewport fixture
+screenshots, computed touch/focus/contrast/layout checks and request sequences.
+Recovery preserves a later focus-only choice within or outside discovery without
+another fetch; an undisturbed recovery still focuses its result status. Facet
+fixtures cover empty API lists and removal of only the selected value: retained
+selections stay visible once, other returned options remain and clear resets both
+the visible selects and request filters.
+These controlled browser inputs do not establish real merchant or wallet acceptance.
 Run
 `npm run test:migration-upgrade` to verify a populated prior database keeps its business,
 rule, session and audit rows while adding the catalog, snapshot and reward-ledger schema.

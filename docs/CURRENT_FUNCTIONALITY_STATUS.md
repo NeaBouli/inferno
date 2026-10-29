@@ -12,6 +12,8 @@ not override this status.
 This review updates software delivery and acceptance status. Chain figures
 retain their original verification blocks and dates; no new chain inventory
 or professional audit is implied by the software date.
+The reviewed source above applies to the 27 October baseline. Later dated source
+checkpoints identify their implementation and qualification references separately.
 
 **Audit remediation checkpoint:** 20 October 2026. The seven CWA reports are
 published, but publication is not remediation. The authoritative
@@ -79,6 +81,23 @@ the loaded catalog for one seller and are not persisted.
 The issue above tracks qualification and deployment evidence for this source
 checkpoint. Advanced catalog discovery, sorting and inventory remain roadmap work;
 physical-device and wallet acceptance remain separate open follow-ups.
+
+### Offer discovery source checkpoint — 29 October 2026
+
+Initial implementation source: [`d5e625898da5b7fd05795dedd8ab3b2821920523`](https://github.com/NeaBouli/inferno/commit/d5e625898da5b7fd05795dedd8ab3b2821920523).
+The subsequent focus/facet corrections and final source qualification are tracked
+in [PR #393](https://github.com/NeaBouli/inferno/pull/393); the 27 October reviewed
+source does not contain this checkpoint.
+
+Implemented in source for [#392](https://github.com/NeaBouli/inferno/issues/392):
+public offer browsing distinguishes an unavailable results page from an empty
+network, zero matching filters and API failure. A user action returns to page 1
+with the current search, category and area retained and visibly selected even if
+the available facets change or become empty. A focus-only move to another control
+during recovery is respected when the response arrives. Recovery is never automatic;
+the existing exact offer/price/eligibility bindings remain. The issue tracks
+qualification and deployment evidence. Physical-device and wallet acceptance,
+advanced search/sorting, inventory and governance activation remain separate work.
 
 ## Deployed Application Inventory
 

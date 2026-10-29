@@ -1462,3 +1462,28 @@ storage, telemetry or dependency path is added.
 with mixed fixtures, combined filters, count/reset/state isolation, exact bindings
 and responsive computed layout/screenshot evidence. Root owns production release
 and post-deploy visual/asset verification.
+
+## Public offer discovery page recovery — 2026-10-29
+
+Module: existing `OfferDiscovery.tsx`. Hop: local page/filter state ->
+`api::discoverOffers` -> existing `GET /api/businesses` -> result/count/paging
+render. A positive total with an empty or unavailable page gets explicit recovery,
+separate from zero matching offers, the empty network and request failure. The
+user returns to page 1 with the existing search/category/area retained; an
+inconsistent first-page result can be reloaded only by the same user action.
+There is no automatic corrective fetch, retry or polling loop. Existing cancelled
+response protection and exact price/eligibility/seller/rule bindings remain.
+Pending or unavailable results do not expose stale offer cards. Recovery returns
+keyboard focus to the live result status unless the user moves focus elsewhere
+while it is pending. A document `focusin` cancels that pending focus request
+without changing filters or requesting data. Rendered facet options retain the
+selected category/area once alongside the latest API facets, including empty
+facets; clearing filters removes those retained selections.
+
+`test-benefits-discovery-ui.js::verifyOfferDiscoveryRecovery` extends the existing
+browser suite with 17-offer paging, controlled 9/8/0-offer changes, one-request
+user recovery, filter preservation, inconsistent metadata and late-response
+isolation. Focus-only moves within/outside discovery, empty facets and removal of
+only the selected facet have explicit regression coverage. Responsive computed
+layout/screenshots cover the discovery states.
+No backend, API, schema, wallet, dependency, persistence or retention path changes.
