@@ -178,7 +178,7 @@ export function WalletStatus() {
   const recommendedAction: RecommendedAction = !isConnected
     ? {
         label: 'Connect wallet',
-        detail: 'Start with the wallet that holds ETH and IFR.',
+        detail: 'Connect to read balances and inspect optional on-chain actions.',
         disabledReason: '',
       }
     : !hasContracts
@@ -225,9 +225,9 @@ export function WalletStatus() {
             : ethKnownEmpty
               ? {
                   label: CHAIN_ID === 1 ? 'Get ETH for gas' : 'Get test ETH for gas',
-                  detail: `Ethereum transactions need ETH for network fees. Add ETH to this same wallet on ${
+                  detail: `These on-chain tools need ETH for network fees. To use them, add ETH to this same wallet on ${
                     CHAIN_ID === 1 ? 'Ethereum Mainnet' : `chain ${CHAIN_ID}`
-                  }, then return and refresh.`,
+                  }, then return and refresh. Off-chain checkout signatures do not spend ETH.`,
                   disabledReason: CHAIN_ID === 1
                     ? ''
                     : 'Use the faucet supplied by the test operator. Never send real funds to a test network.',
@@ -266,16 +266,16 @@ export function WalletStatus() {
           : contractReadsFailed
             ? 'Check wallet status'
             : hasCustomerLock
-              ? 'Ready for checkout'
+              ? 'Example IFRLock threshold met'
         : ethBalanceChecking
           ? 'Checking ETH balance'
           : ethKnownEmpty
-            ? 'Get ETH for gas'
+            ? 'ETH needed for on-chain actions'
             : ethBalanceFailed
               ? 'Check ETH balance'
               : hasIFR
-                ? 'Lock IFR'
-                : 'Get IFR';
+                ? 'IFRLock tools available'
+                : 'IFRLock overview';
   const statusText = !isConnected
     ? 'Connect a wallet to read IFR balance, ETH gas and locked access.'
     : wrongChain
@@ -287,21 +287,21 @@ export function WalletStatus() {
           : contractReadsFailed
             ? 'IFR contract data is unavailable. Retry before any transaction.'
             : hasCustomerLock
-              ? `Eligible for typical ${MIN_CUSTOMER_LOCK.toLocaleString('en-US')} IFR customer rules. Some sellers may require a higher tier.`
+              ? `This wallet reaches the ${MIN_CUSTOMER_LOCK.toLocaleString('en-US')} IFR example in IFRLock. Each offer sets its own lock source, threshold and freely held IFR requirement. Final eligibility is verified at checkout.`
         : ethBalanceChecking
           ? 'Confirming ETH network-fee readiness before enabling wallet transactions.'
           : ethKnownEmpty
-            ? 'This wallet needs ETH for Ethereum network fees before it can swap, approve or lock IFR.'
+            ? 'ETH pays for on-chain swap, approve, lock and unlock transactions. This gas balance does not decide whether an existing lock meets the selected offer.'
             : ethBalanceFailed
               ? 'The app could not confirm the ETH balance. Retry the check before starting a transaction.'
               : hasIFR
-                ? 'You hold IFR, but it is not locked for access yet. Lock IFR before scanning seller QR codes.'
-                : 'No IFR detected in this wallet. Buy IFR first, then lock it for benefits.';
+                ? 'Freely held IFR is available for the on-chain tools. Review the selected offer before deciding whether a new IFRLock is needed.'
+                : 'No freely held IFR was detected here. A selected offer may accept an existing TIME_ONLY CommitmentVault lock; review its conditions before acquiring or locking tokens.';
   const checklist = [
     { label: 'Wallet connected', status: isConnected ? 'Ready' : 'Needed' },
     { label: CHAIN_ID === 1 ? 'Ethereum Mainnet' : `Chain ${CHAIN_ID}`, status: chainReady ? 'Ready' : 'Needed' },
     {
-      label: 'ETH for gas',
+      label: 'ETH for on-chain actions',
       status: wrongChain
         ? 'Blocked'
         : ethBalanceChecking
@@ -310,19 +310,19 @@ export function WalletStatus() {
             ? 'Check failed'
             : hasEth
               ? 'Ready'
-              : 'Needed',
+              : 'Needed for transactions',
     },
     {
-      label: 'IFR in wallet',
+      label: 'Free IFR or example lock',
       status: wrongChain
         ? 'Blocked'
-        : readCheckStatus || (hasIFR || hasCustomerLock ? 'Ready' : 'Needed'),
+        : readCheckStatus || (hasIFR || hasCustomerLock ? 'Detected' : 'Not detected'),
     },
     {
-      label: `${MIN_CUSTOMER_LOCK.toLocaleString('en-US')}+ IFR locked`,
+      label: `Example: ${MIN_CUSTOMER_LOCK.toLocaleString('en-US')} IFRLock`,
       status: wrongChain
         ? 'Blocked'
-        : readCheckStatus || (hasCustomerLock ? 'Ready' : 'Needed'),
+        : readCheckStatus || (hasCustomerLock ? 'Ready' : 'Below example'),
     },
   ];
   const transactionSteps = [
@@ -345,8 +345,8 @@ export function WalletStatus() {
       active: canPayGas && amountValid && hasEnoughIFR && hasEnoughAllowance,
     },
     {
-      label: 'Ready',
-      detail: 'Use seller QR proofs and redeem benefits once.',
+      label: 'Example lock',
+      detail: 'The example lock does not establish selected-offer eligibility.',
       done: hasCustomerLock,
       active: hasCustomerLock,
     },
@@ -624,7 +624,7 @@ export function WalletStatus() {
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-orange-200/80">
             Customer wallet
           </p>
-          <h2 className="mt-1 text-2xl font-black text-white">Access status</h2>
+          <h2 className="mt-1 text-2xl font-black text-white">Wallet balances and IFRLock tools</h2>
         </div>
         <WalletConnectControl />
       </div>
@@ -673,7 +673,7 @@ export function WalletStatus() {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-200/80">
-              Checkout readiness
+              IFRLock example overview
             </p>
             <h3 className="mt-1 text-xl font-black text-white">{statusLabel}</h3>
             <p className="mt-2 max-w-xl text-sm leading-6 text-stone-300">{statusText}</p>
@@ -683,6 +683,10 @@ export function WalletStatus() {
             <p className="mt-1 text-lg font-black text-orange-100">{tier?.label || 'None'}</p>
           </div>
         </div>
+
+        <p className="mt-3 text-sm leading-6 text-stone-300">
+          Checkout depends on the selected offer. A new 1,000 IFRLock and ETH funding are not universal prerequisites. An already eligible wallet can sign an off-chain checkout proof without spending ETH.
+        </p>
 
         <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
           {checklist.map((item) => (
@@ -702,10 +706,10 @@ export function WalletStatus() {
 
         {ethKnownEmpty ? (
           <div role="status" className="mt-3 rounded-2xl border border-green-200/25 bg-green-200/[0.08] p-4 text-sm leading-6 text-green-50">
-            <p className="font-black">ETH is required only for Ethereum network fees.</p>
+            <p className="font-black">Signing an off-chain checkout proof does not spend ETH.</p>
             <p className="mt-1 text-stone-300">
               {CHAIN_ID === 1
-                ? 'Use the official, provider-neutral Ethereum guide, fund this same wallet, and never share your recovery phrase. IFR Benefits does not sell or custody ETH; third-party availability and fees vary by region.'
+                ? 'If you choose an on-chain transaction, use the official, provider-neutral Ethereum guide for this same wallet. Never share your recovery phrase. IFR Benefits does not sell or custody ETH; third-party availability and fees vary by region.'
                 : `Use test ETH from the faucet supplied by the chain ${CHAIN_ID} test operator. Never send real funds to a test network or share your recovery phrase.`}
             </p>
             {CHAIN_ID === 1 ? (
@@ -779,7 +783,7 @@ export function WalletStatus() {
           </div>
           <div className="mt-4 rounded-2xl border border-orange-200/20 bg-[linear-gradient(145deg,rgba(251,146,60,0.18),rgba(0,0,0,0.22))] p-4">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-200/80">
-              Recommended next step
+              Next step for on-chain tools
             </p>
             <div className="mt-3 grid gap-3 md:grid-cols-[1fr_auto] md:items-center">
               <div>

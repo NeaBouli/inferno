@@ -13,6 +13,7 @@ const origin = `http://127.0.0.1:${port}`;
 const wallet = '0x3333333333333333333333333333333333333333';
 const token = '0x77e99917Eca8539c62F509ED1193ac36580A6e7B';
 const lock = '0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb';
+const commitment = '0x0719d9eb28dF7f5e63F91fAc4Bbb2d579C4F73d3';
 const decimals = 9n;
 const unit = 10n ** decimals;
 const amount = 1000n * unit;
@@ -28,6 +29,9 @@ const selectors = {
   lock: ethers.id('lock(uint256)').slice(0, 10),
   unlock: ethers.id('unlock()').slice(0, 10),
   getEthBalance: ethers.id('getEthBalance(address)').slice(0, 10),
+  token: ethers.id('token()').slice(0, 10),
+  ifrToken: ethers.id('ifrToken()').slice(0, 10),
+  getTranches: ethers.id('getTranches(address)').slice(0, 10),
 };
 const multicallAddress = '0xca11bde05977b3631167028862be2a173976ca11';
 const multicall = new ethers.Interface([
@@ -47,6 +51,8 @@ function callResult(state, target, data) {
   const normalizedTarget = String(target).toLowerCase();
   const selector = String(data).slice(0, 10).toLowerCase();
   state.readCalls.push({ target: normalizedTarget, selector });
+  if ((normalizedTarget === lock.toLowerCase() && selector === selectors.token) || (normalizedTarget === commitment.toLowerCase() && selector === selectors.ifrToken)) return coder.encode(['address'], [token]);
+  if (normalizedTarget === commitment.toLowerCase() && selector === selectors.getTranches) return coder.encode(['tuple(uint256,uint8,uint256,uint256,bool,uint256)[]'], [state.commitment > 0n ? [[state.commitment, 0, 0, 1_000, false, 0]] : []]);
   if (normalizedTarget === token.toLowerCase() && selector === selectors.balanceOf) return encodeUint(state.ifr);
   if (normalizedTarget === token.toLowerCase() && selector === selectors.allowance) return encodeUint(state.allowance);
   if (normalizedTarget === lock.toLowerCase() && selector === selectors.lockedBalance) return encodeUint(state.locked);
@@ -147,10 +153,93 @@ async function waitForServer(child) {
   throw new Error('Timed out waiting for Benefits frontend');
 }
 
+async function verifyWalletGuidance(page, state, { scenario, connected = true, captureDirectory = '', viewports = [] } = {}) {
+  const panel = page.locator('#customer-wallet');
+  await panel.getByRole('heading', { name: 'Wallet balances and IFRLock tools', exact: true }).waitFor();
+  await panel.getByText('IFRLock example overview', { exact: true }).waitFor();
+  await panel.getByText('Checkout depends on the selected offer.', { exact: false }).waitFor();
+  assert.equal(await panel.getByText('Ready for checkout', { exact: true }).count(), 0, 'a generic IFRLock balance must not claim exact-offer checkout eligibility');
+  assert.equal(await panel.getByText('Checkout readiness', { exact: true }).count(), 0, 'the generic tools must not masquerade as an exact checkout gate');
+  assert.equal(await panel.getByText('Lock IFR before scanning seller QR codes.', { exact: false }).count(), 0, 'IFRLock must not be a universal prerequisite for other accepted sources');
+  assert.equal(await panel.getByText('Use seller QR proofs and redeem benefits once.', { exact: true }).count(), 0, 'the example transaction path must not promise exact-offer redemption');
+  if (connected && state.locked >= amount) {
+    await panel.getByText('Example IFRLock threshold met', { exact: true }).waitFor();
+  }
+  if (connected && state.ifr === 0n && state.locked >= amount) {
+    const balance = panel.getByText('IFR balance', { exact: true }).locator('..');
+    await balance.getByText('0.000 IFR', { exact: true }).waitFor();
+    const holding = panel.getByText('Free IFR or example lock', { exact: true }).locator('..');
+    await holding.getByText('Detected', { exact: true }).waitFor();
+  }
+  if (connected && state.eth === 0n) {
+    for (const name of ['Approve', 'Lock IFR', 'Unlock all']) {
+      assert.equal(await panel.getByRole('button', { name, exact: true }).isEnabled(), false, `${name} must still require native gas`);
+    }
+    await panel.getByText('Signing an off-chain checkout proof does not spend ETH', { exact: false }).waitFor();
+    assert.equal(state.transactions.length, 0, 'gasless guidance must not request a transaction');
+  }
+  if (state.guidanceOffer) {
+    const offer = page.locator('article').filter({ hasText: 'Guidance fixture offer' });
+    await offer.waitFor();
+    if (state.guidanceOffer.eligible) {
+      await offer.getByText('Eligible with this wallet', { exact: true }).waitFor();
+    } else {
+      await offer.getByText('Lock 4,000 more IFR', { exact: true }).waitFor();
+      assert.equal(await offer.getByText('Eligible with this wallet', { exact: true }).count(), 0, 'meeting the generic example must not make a higher-threshold offer eligible');
+    }
+  }
+  const captures = [];
+  for (const viewport of viewports) {
+    await page.setViewportSize(viewport);
+    await panel.scrollIntoViewIfNeeded();
+    const metrics = await panel.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      const controls = Array.from(element.querySelectorAll('button, a[href], input')).filter(node => {
+        const box = node.getBoundingClientRect();
+        const style = getComputedStyle(node);
+        return box.width > 0 && box.height > 0 && style.visibility !== 'hidden' && style.display !== 'none';
+      }).map(node => { const box = node.getBoundingClientRect(); return { text: (node.innerText || node.getAttribute('aria-label') || node.tagName).trim(), x: box.left, y: box.top, right: box.right, bottom: box.bottom, width: box.width, height: box.height, disabled: Boolean(node.disabled) }; });
+      const clipped = Array.from(element.querySelectorAll('h2, h3, p, label, button, a, input')).filter(node => {
+        const box = node.getBoundingClientRect();
+        return box.width > 0 && box.height > 0 && (box.left < rect.left - 1 || box.right > rect.right + 1 || node.scrollWidth > node.clientWidth + 1);
+      }).map(node => ({ tag: node.tagName, text: (node.innerText || '').slice(0, 100), width: node.clientWidth, scrollWidth: node.scrollWidth }));
+      const style = getComputedStyle(element);
+      return { width: rect.width, height: rect.height, pageWidth: document.documentElement.clientWidth, pageScrollWidth: document.documentElement.scrollWidth, padding: [style.paddingTop, style.paddingRight, style.paddingBottom, style.paddingLeft].map(Number.parseFloat), controls, clipped };
+    });
+    assert.ok(metrics.pageScrollWidth <= metrics.pageWidth + 1, 'wallet guidance must not create horizontal page overflow');
+    assert.deepEqual(metrics.clipped, [], 'wallet guidance text and controls must remain inside their panel without clipping');
+    assert.ok(metrics.padding.every(value => value >= 16), 'wallet panel must keep its internal inset on every edge');
+    assert.ok(metrics.controls.every(control => control.width >= 44 && control.height >= 44), 'all wallet controls must retain44px touch targets');
+    for (let a = 0; a < metrics.controls.length; a += 1) {
+      for (let b = a + 1; b < metrics.controls.length; b += 1) {
+        const first = metrics.controls[a]; const second = metrics.controls[b];
+        const overlapX = Math.min(first.right, second.right) - Math.max(first.x, second.x);
+        const overlapY = Math.min(first.bottom, second.bottom) - Math.max(first.y, second.y);
+        assert.ok(overlapX <= 1 || overlapY <= 1, 'wallet controls must not overlap');
+      }
+    }
+    const focus = panel.locator('button:not([disabled]), a[href], input:not([disabled])').first();
+    await focus.focus();
+    assert.equal(await focus.evaluate(element => element === document.activeElement), true, 'keyboard focus remains usable');
+    await page.keyboard.press('Tab');
+    assert.equal(await panel.evaluate(element => element.contains(document.activeElement)), true, 'keyboard traversal must reach another wallet control');
+    if (captureDirectory) {
+      const fs = require('node:fs');
+      fs.mkdirSync(captureDirectory, { recursive: true });
+      const screenshot = path.join(captureDirectory, `${scenario}-${viewport.width}x${viewport.height}.png`);
+      await panel.screenshot({ path: screenshot, animations: 'disabled' });
+      captures.push({ scenario, viewport, screenshot, metrics });
+    }
+  }
+  return captures;
+}
+
 async function run() {
   const state = {
     ifr: 10_000n * unit,
     locked: 0n,
+    commitment: 0n,
+    guidanceOffer: null,
     allowance: 0n,
     eth: zeroEthOnly ? 0n : 10n ** 18n,
     transactions: [],
@@ -285,7 +374,17 @@ async function run() {
         return route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify({ offers: [], categories: [], serviceAreas: [], pagination: { page: 1, limit: 8, total: 0, totalPages: 0, hasNext: false } }),
+          body: JSON.stringify({
+            offers: state.guidanceOffer ? [{
+              id: 'guidance-rule', label: 'Guidance fixture offer', category: 'Fixture', productName: 'Fixture item',
+              discountPercent: 10, requiredLockIFR: state.guidanceOffer.requiredLockIFR, minIFRHeld: 0,
+              lockSource: state.guidanceOffer.lockSource, dailyRedemptionLimit: 0, monthlyRedemptionLimit: 0,
+              business: { id: 'guidance-business', slug: 'guidance-fixture', name: 'Guidance fixture seller', description: null, website: null, logoUrl: null, serviceArea: null, categories: ['Fixture'] },
+              product: null,
+            }] : [],
+            categories: state.guidanceOffer ? ['Fixture'] : [], serviceAreas: [],
+            pagination: { page: 1, limit: 8, total: state.guidanceOffer ? 1 : 0, totalPages: state.guidanceOffer ? 1 : 0, hasNext: false },
+          }),
         });
       }
       return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'ok', chainId: 1 }) });
@@ -301,6 +400,7 @@ async function run() {
         ids: element.getAttribute('data-wallet-connector-ids'),
       })))}`);
     });
+    await verifyWalletGuidance(page, state, { scenario: 'disconnected', connected: false });
     const connectButton = walletPanel.locator('[data-wallet-action="connect"]');
     if (await connectButton.isVisible()) {
       assert.equal(
@@ -425,7 +525,20 @@ async function run() {
         'zero-ETH state must come from Multicall3.getEthBalance'
       );
       assert.deepEqual(pageErrors, []);
-      console.log('[benefits-wallet-lock-ui] PASS - zero-ETH recovery is provider-neutral and transaction-free');
+      await verifyWalletGuidance(page, state, { scenario: 'zero-unlocked' });
+      for (const fixture of [
+        { scenario: 'zero-locked-higher-rule', locked: amount, commitment: 0n, ifr: 0n, requiredLockIFR: 5000, lockSource: 'ifrlock', eligible: false },
+        { scenario: 'zero-lower-rule', locked: 500n * unit, commitment: 0n, ifr: 9500n * unit, requiredLockIFR: 500, lockSource: 'ifrlock', eligible: true },
+        { scenario: 'zero-commitment-rule', locked: 0n, commitment: 2500n * unit, ifr: 0n, requiredLockIFR: 2500, lockSource: 'commitment_time_only', eligible: true },
+      ]) {
+        Object.assign(state, { locked: fixture.locked, commitment: fixture.commitment, ifr: fixture.ifr, guidanceOffer: fixture });
+        await page.reload({ waitUntil: 'domcontentloaded' });
+        await walletPanel.getByRole('button', { name: 'Disconnect', exact: true }).waitFor({ timeout: 10_000 });
+        await verifyWalletGuidance(page, state, { scenario: fixture.scenario });
+      }
+      assert.equal(state.transactions.length, 0, 'all exact-offer zero-ETH previews must remain transaction-free');
+      assert.deepEqual(pageErrors, []);
+      console.log('[benefits-wallet-lock-ui] PASS - zero-ETH recovery and exact-offer guidance are provider-neutral and transaction-free');
       return;
     }
     if (readFailureOnly) {
@@ -469,7 +582,7 @@ async function run() {
     await walletPanel.getByRole('button', { name: 'Lock 1,000 IFR', exact: true }).click();
     await walletPanel.getByText('Lock confirmed. Wallet status is refreshing.', { exact: true }).waitFor({ timeout: 15_000 });
     await walletPanel.getByText('9,000.000 IFR', { exact: true }).first().waitFor();
-    await walletPanel.getByText('Ready for checkout', { exact: true }).waitFor();
+    await verifyWalletGuidance(page, state, { scenario: 'funded-locked' });
     const currentTier = walletPanel.getByText('Example tier guide', { exact: true }).locator('xpath=..');
     await currentTier.getByText('Bronze', { exact: true }).waitFor();
     const unlock = walletPanel.getByRole('button', { name: 'Unlock all', exact: true });
