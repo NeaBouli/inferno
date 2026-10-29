@@ -117,7 +117,7 @@
     "test:data-api-retirement": "node scripts/test-data-api-retirement.cjs"
   },
   "devDependencies": {
-    "@nomicfoundation/hardhat-ethers": "4.2.0",
+    "@nomicfoundation/hardhat-ethers": "4.2.1",
     "@nomicfoundation/hardhat-ethers-chai-matchers": "3.0.13",
     "@nomicfoundation/hardhat-mocha": "4.0.1",
     "@nomicfoundation/hardhat-verify": "3.1.3",
