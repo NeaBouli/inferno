@@ -345,8 +345,8 @@ export function WalletStatus() {
       active: canPayGas && amountValid && hasEnoughIFR && hasEnoughAllowance,
     },
     {
-      label: 'Ready',
-      detail: 'Use seller QR proofs and redeem benefits once.',
+      label: 'Example lock',
+      detail: 'The example lock does not establish selected-offer eligibility.',
       done: hasCustomerLock,
       active: hasCustomerLock,
     },
