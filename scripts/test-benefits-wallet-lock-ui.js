@@ -164,6 +164,12 @@ async function verifyWalletGuidance(page, state, { scenario, connected = true, c
   if (connected && state.locked >= amount) {
     await panel.getByText('Example IFRLock threshold met', { exact: true }).waitFor();
   }
+  if (connected && state.ifr === 0n && state.locked >= amount) {
+    const balance = panel.getByText('IFR balance', { exact: true }).locator('..');
+    await balance.getByText('0.000 IFR', { exact: true }).waitFor();
+    const holding = panel.getByText('Free IFR or example lock', { exact: true }).locator('..');
+    await holding.getByText('Detected', { exact: true }).waitFor();
+  }
   if (connected && state.eth === 0n) {
     for (const name of ['Approve', 'Lock IFR', 'Unlock all']) {
       assert.equal(await panel.getByRole('button', { name, exact: true }).isEnabled(), false, `${name} must still require native gas`);
@@ -520,7 +526,7 @@ async function run() {
       assert.deepEqual(pageErrors, []);
       await verifyWalletGuidance(page, state, { scenario: 'zero-unlocked' });
       for (const fixture of [
-        { scenario: 'zero-locked-higher-rule', locked: amount, commitment: 0n, ifr: 9000n * unit, requiredLockIFR: 5000, lockSource: 'ifrlock', eligible: false },
+        { scenario: 'zero-locked-higher-rule', locked: amount, commitment: 0n, ifr: 0n, requiredLockIFR: 5000, lockSource: 'ifrlock', eligible: false },
         { scenario: 'zero-lower-rule', locked: 500n * unit, commitment: 0n, ifr: 9500n * unit, requiredLockIFR: 500, lockSource: 'ifrlock', eligible: true },
         { scenario: 'zero-commitment-rule', locked: 0n, commitment: 2500n * unit, ifr: 0n, requiredLockIFR: 2500, lockSource: 'commitment_time_only', eligible: true },
       ]) {
