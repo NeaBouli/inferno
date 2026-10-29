@@ -355,6 +355,11 @@ Request-count controls reject automatic recovery/retry loops and ensure a late
 obsolete response cannot replace current offers. Set
 `BENEFITS_DISCOVERY_RECOVERY_EVIDENCE_DIR` to retain its five-viewport fixture
 screenshots, computed touch/focus/contrast/layout checks and request sequences.
+Recovery preserves a later focus-only choice within or outside discovery without
+another fetch; an undisturbed recovery still focuses its result status. Facet
+fixtures cover empty API lists and removal of only the selected value: retained
+selections stay visible once, other returned options remain and clear resets both
+the visible selects and request filters.
 These controlled browser inputs do not establish real merchant or wallet acceptance.
 Run
 `npm run test:migration-upgrade` to verify a populated prior database keeps its business,

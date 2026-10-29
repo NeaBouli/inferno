@@ -474,8 +474,8 @@ async function verifyOfferDiscoveryRecovery(browser) {
   for (const viewport of viewports) {
     const context = await browser.newContext({ viewport, deviceScaleFactor: 1, serviceWorkers: 'block',
       isMobile: viewport.width <= 390, hasTouch: viewport.width <= 390 });
-    let size = 17, failure = false, inconsistent = false, holdRecovery = false, releaseLate;
-    const lateGate = new Promise(resolve => { releaseLate = resolve; });
+    let size = 17, failure = false, inconsistent = false, holdRecovery = false, releaseLate, facetMode = 'normal';
+    let lateGate = new Promise(resolve => { releaseLate = resolve; });
     const requests = [], errors = [];
     await context.route('**/api/**', async route => {
       const request = route.request(), url = new URL(request.url());
@@ -483,15 +483,17 @@ async function verifyOfferDiscoveryRecovery(browser) {
       if (url.pathname === '/api/businesses') {
         const page = Number(url.searchParams.get('page') || 1), query = url.searchParams.get('query') || '';
         const snapshot = { page, query, category: url.searchParams.get('category') || '',
-          serviceArea: url.searchParams.get('serviceArea') || '', size, failure, inconsistent, held: holdRecovery };
+          serviceArea: url.searchParams.get('serviceArea') || '', size, failure, inconsistent, held: holdRecovery, facetMode };
         requests.push(snapshot);
-        const total = query === 'no-match' ? 0 : query === 'current' ? 1 : size;
+        const total = query === 'no-match' || (facetMode === 'removed' && snapshot.category === 'Coffee') ? 0 : query === 'current' ? 1 : size;
         const selected = query === 'current' ? [fixtures[16]] : fixtures.slice(0, size);
         const items = inconsistent || total === 0 ? [] : selected.slice((page - 1) * 8, page * 8);
+        const categories = size === 0 ? [] : facetMode === 'removed' ? ['Services'] : ['Coffee'];
+        const serviceAreas = size === 0 ? [] : facetMode === 'removed' ? ['Local'] : ['Online'];
         if (snapshot.held) await lateGate;
         if (snapshot.failure) return route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'Discovery fixture temporarily unavailable' }) });
         return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
-          offers: items, categories: ['Coffee'], serviceAreas: ['Online'],
+          offers: items, categories, serviceAreas,
           pagination: { page, limit: 8, total, totalPages: total === 0 ? 0 : Math.ceil(total / 8), hasNext: page * 8 < total },
         }) });
       }
@@ -573,7 +575,9 @@ async function verifyOfferDiscoveryRecovery(browser) {
       if (evidenceDir) {
         // Keep the sticky site header at document top, outside this section's document-coordinate capture.
         await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
-        const clip = await root.boundingBox(); assert.ok(clip);
+        const clip = await root.evaluate(section => { const r = section.getBoundingClientRect();
+          return { x: r.left + scrollX, y: r.top + scrollY, width: r.width, height: r.height }; }); assert.ok(clip);
+        metrics.at(-1).documentClip = clip;
         await page.screenshot({ path: path.join(evidenceDir, 'screenshots', `${viewport.width}x${viewport.height}-${state}.png`), fullPage: true, clip });
       }
     };
@@ -631,13 +635,57 @@ async function verifyOfferDiscoveryRecovery(browser) {
       assert.equal(await search.evaluate(n => n === document.activeElement), true, 'late recovery cannot steal input focus');
       assert.equal(requests.length, beforeLate + 2, 'one recovery click plus one newer filter make two requests; late response adds none');
       assert.equal(await recovery.count(), 0); assert.equal(await launch.count(), 0); await waitCount(1);
+
+      // A focus-only move does not change the filter or make a new request.
+      for (const targetName of ['search', 'outside']) {
+        inconsistent = true; await search.fill(`focus-${targetName}`); await recovery.waitFor();
+        inconsistent = false; holdRecovery = true;
+        lateGate = new Promise(resolve => { releaseLate = resolve; });
+        const beforeFocus = requests.length;
+        await activate(recovery); await waitRequests(beforeFocus + 1);
+        const target = targetName === 'search' ? search : page.locator('header a[href="/#customer-wallet"]');
+        await target.focus(); assert.equal(await target.evaluate(n => n === document.activeElement), true);
+        holdRecovery = false; releaseLate(); await waitCount(9); await page.waitForTimeout(350);
+        assert.equal(await target.evaluate(n => n === document.activeElement), true, 'a focus-only move during recovery must not be replaced by result focus');
+        assert.equal(await search.inputValue(), `focus-${targetName}`, 'focus-only movement does not edit the search');
+        assert.equal(requests.length, beforeFocus + 1, 'one recovery click and a focus-only move make exactly one request');
+        await capture(`focus-${targetName}-preserved`);
+      }
+
+      await category.selectOption('Coffee'); await area.selectOption('Online'); await search.fill('facet-selection'); await waitCount(9);
+      assert.deepEqual(await category.locator('option').allTextContents(), ['All categories', 'Coffee'], 'a selected value already in the facets is not duplicated');
+      assert.deepEqual(await area.locator('option').allTextContents(), ['All areas', 'Online'], 'a selected area already in the facets is not duplicated');
+      facetMode = 'removed'; await search.fill('missing-selected-facets'); await waitCount(0); await noMatch.waitFor();
+      assert.deepEqual(await category.locator('option').allTextContents(), ['All categories', 'Services', 'Coffee'], 'current facets and the missing selected category stay visible once');
+      assert.deepEqual(await area.locator('option').allTextContents(), ['All areas', 'Local', 'Online'], 'current facets and the missing selected area stay visible once');
+      assert.equal(await category.inputValue(), 'Coffee'); assert.equal(await area.inputValue(), 'Online');
+      assert.equal(await category.locator('option:checked').textContent(), 'Coffee'); assert.equal(await area.locator('option:checked').textContent(), 'Online');
+      await capture('missing-selected-facets');
+
+      size = 0; await search.fill('empty-selected-facets'); await waitCount(0); await noMatch.waitFor();
+      await page.waitForFunction(() => document.querySelector('#offers select option[value="Services"]') === null);
+      assert.deepEqual(await category.locator('option').allTextContents(), ['All categories', 'Coffee']);
+      assert.deepEqual(await area.locator('option').allTextContents(), ['All areas', 'Online']);
+      assert.equal(await category.inputValue(), 'Coffee'); assert.equal(await area.inputValue(), 'Online');
+      assert.equal(await category.locator('option:checked').textContent(), 'Coffee'); assert.equal(await area.locator('option:checked').textContent(), 'Online');
+      assert.deepEqual({ query: requests.at(-1).query, category: requests.at(-1).category, serviceArea: requests.at(-1).serviceArea },
+        { query: 'empty-selected-facets', category: 'Coffee', serviceArea: 'Online' }, 'empty backend facets must not disguise retained request filters');
+      await capture('empty-selected-facets');
+      const beforeClear = requests.length;
+      await activate(root.getByRole('button', { name: 'Clear filters', exact: true })); await launch.waitFor();
+      assert.equal(await search.inputValue(), ''); assert.equal(await category.inputValue(), ''); assert.equal(await area.inputValue(), '');
+      assert.deepEqual(await category.locator('option').allTextContents(), ['All categories']);
+      assert.deepEqual(await area.locator('option').allTextContents(), ['All areas']);
+      assert.deepEqual({ query: requests.at(-1).query, category: requests.at(-1).category, serviceArea: requests.at(-1).serviceArea },
+        { query: '', category: '', serviceArea: '' });
+      assert.equal(requests.length, beforeClear + 1, 'clear makes exactly one request and removes retained selections');
       assert.deepEqual(errors, []);
     } finally {
       releaseLate(); await context.close(); requestEvidence.push({ viewport, requests });
       if (evidenceDir) fs.writeFileSync(path.join(evidenceDir, 'discovery-recovery-metrics.json'), JSON.stringify({ fixtureOnly: true, viewports, metrics, requestEvidence }, null, 2));
     }
   }
-  console.log('[offer-discovery-recovery] PASS - paging, user recovery, retained filters, bounded requests, stale response and five responsive viewports');
+  console.log('[offer-discovery-recovery] PASS - paging, user recovery, retained filters/facets, focus-only moves, bounded requests, stale response and five responsive viewports');
 }
 
 async function run() {

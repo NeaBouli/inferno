@@ -68,6 +68,13 @@ export function OfferDiscovery({ mode, onOpenSellerTools }: OfferDiscoveryProps)
   }, [query, category, serviceArea, page, reloadKey]);
 
   useEffect(() => {
+    // Respect a later focus choice, including controls outside the discovery section.
+    const cancelRecoveryFocus = () => { focusAfterRecovery.current = false; };
+    document.addEventListener('focusin', cancelRecoveryFocus);
+    return () => document.removeEventListener('focusin', cancelRecoveryFocus);
+  }, []);
+
+  useEffect(() => {
     if (!loading && focusAfterRecovery.current) {
       resultStatusRef.current?.focus();
       focusAfterRecovery.current = false;
@@ -112,6 +119,8 @@ export function OfferDiscovery({ mode, onOpenSellerTools }: OfferDiscoveryProps)
   }
 
   const hasActiveFilters = Boolean(query.trim() || category || serviceArea);
+  const categoryOptions = [...new Set([...categories, ...(category ? [category] : [])])];
+  const serviceAreaOptions = [...new Set([...serviceAreas, ...(serviceArea ? [serviceArea] : [])])];
   const lastPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const unavailablePage = !loading && !error && total > 0 && (offers.length === 0 || page > lastPage);
 
@@ -150,7 +159,7 @@ export function OfferDiscovery({ mode, onOpenSellerTools }: OfferDiscoveryProps)
               className="h-12 min-w-0 rounded-2xl border border-white/10 bg-[#160f0b] px-4 py-3 text-sm font-medium normal-case tracking-[0] text-white outline-none transition focus:border-orange-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#51281d]"
             >
               <option value="">All categories</option>
-              {categories.map((item) => <option key={item} value={item}>{item}</option>)}
+              {categoryOptions.map((item) => <option key={item} value={item}>{item}</option>)}
             </select>
           </label>
           <label className="grid gap-2 text-xs font-black uppercase tracking-[0.14em] text-stone-300">
@@ -161,7 +170,7 @@ export function OfferDiscovery({ mode, onOpenSellerTools }: OfferDiscoveryProps)
               className="h-12 min-w-0 rounded-2xl border border-white/10 bg-[#160f0b] px-4 py-3 text-sm font-medium normal-case tracking-[0] text-white outline-none transition focus:border-orange-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#51281d]"
             >
               <option value="">All areas</option>
-              {serviceAreas.map((item) => <option key={item} value={item}>{item}</option>)}
+              {serviceAreaOptions.map((item) => <option key={item} value={item}>{item}</option>)}
             </select>
           </label>
         </div>
