@@ -161,6 +161,7 @@ async function verifyWalletGuidance(page, state, { scenario, connected = true, c
   assert.equal(await panel.getByText('Ready for checkout', { exact: true }).count(), 0, 'a generic IFRLock balance must not claim exact-offer checkout eligibility');
   assert.equal(await panel.getByText('Checkout readiness', { exact: true }).count(), 0, 'the generic tools must not masquerade as an exact checkout gate');
   assert.equal(await panel.getByText('Lock IFR before scanning seller QR codes.', { exact: false }).count(), 0, 'IFRLock must not be a universal prerequisite for other accepted sources');
+  assert.equal(await panel.getByText('Use seller QR proofs and redeem benefits once.', { exact: true }).count(), 0, 'the example transaction path must not promise exact-offer redemption');
   if (connected && state.locked >= amount) {
     await panel.getByText('Example IFRLock threshold met', { exact: true }).waitFor();
   }
