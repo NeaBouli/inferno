@@ -1,19 +1,20 @@
+import { afterAll, afterEach, beforeEach, describe, expect, it, test, vi, type MockInstance } from 'vitest';
 import { ethers } from 'ethers';
 
 type TestWallet = ReturnType<typeof ethers.Wallet.createRandom>;
 import * as authenticatedRateLimiter from '../src/services/authenticatedRateLimiter';
 
-jest.setTimeout(15_000);
+vi.setConfig({ testTimeout: 15_000, hookTimeout: 15_000 });
 
-const mockEligibility = jest.fn();
+const mockEligibility = vi.hoisted(() => vi.fn());
 
-jest.mock('../src/services/ifrLockService', () => {
-  const actual = jest.requireActual('ethers');
+vi.mock('../src/services/ifrLockService', async () => {
+  const actual = await vi.importActual<typeof import('ethers')>('ethers');
   return {
-    checkLock: jest.fn(),
+    checkLock: vi.fn(),
     checkBenefitEligibility: (...args: unknown[]) => mockEligibility(...args),
     recoverSigner: (message: string, signature: string) => actual.verifyMessage(message, signature),
-    initProvider: jest.fn(),
+    initProvider: vi.fn(),
   };
 });
 
@@ -32,7 +33,7 @@ function eligible() {
   };
 }
 
-jest.mock('../src/config', () => ({
+vi.mock('../src/config', () => ({
   config: {
     CHAIN_ID: 11155111,
     SELLER_AUTH_DOMAIN: 'shop.example.test',
@@ -227,7 +228,7 @@ describe('Redeem route authorization', () => {
   const otherSeller = ethers.Wallet.createRandom();
   const checkoutOperator = ethers.Wallet.createRandom();
   const customer = ethers.Wallet.createRandom();
-  let sellerWalletLimiterSpy: jest.SpyInstance;
+  let sellerWalletLimiterSpy: MockInstance;
   let businessId: string;
   let pendingSessionId: string;
 
@@ -245,7 +246,7 @@ describe('Redeem route authorization', () => {
   }
 
   beforeEach(async () => {
-    sellerWalletLimiterSpy = jest
+    sellerWalletLimiterSpy = vi
       .spyOn(authenticatedRateLimiter, 'assertSellerWalletActionAllowed')
       .mockResolvedValue(undefined);
     mockEligibility.mockReset();

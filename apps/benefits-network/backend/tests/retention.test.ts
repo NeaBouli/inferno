@@ -1,13 +1,14 @@
-jest.mock('../src/services/ifrLockService', () => ({
-  checkLock: jest.fn(),
-  checkBenefitEligibility: jest.fn(),
-  recoverSigner: jest.fn(),
-  initProvider: jest.fn(),
+import { afterAll, beforeEach, describe, expect, it, test, vi } from 'vitest';
+vi.mock('../src/services/ifrLockService', () => ({
+  checkLock: vi.fn(),
+  checkBenefitEligibility: vi.fn(),
+  recoverSigner: vi.fn(),
+  initProvider: vi.fn(),
 }));
 
 const TEST_ADMIN_SECRET = 'test-admin-secret-0123456789abcdef0123456789';
 
-jest.mock('../src/config', () => ({
+vi.mock('../src/config', () => ({
   config: {
     CHAIN_ID: 11155111,
     SELLER_AUTH_DOMAIN: 'shop.example.test',

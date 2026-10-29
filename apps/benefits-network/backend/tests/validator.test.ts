@@ -1,3 +1,4 @@
+import { describe, expect, it, vi } from 'vitest';
 import type { Request, Response } from 'express';
 import { z } from 'zod';
 import { validate } from '../src/middleware/validator';
@@ -7,8 +8,8 @@ function request(body: unknown) {
 }
 
 function response() {
-  const status = jest.fn().mockReturnThis();
-  const json = jest.fn();
+  const status = vi.fn().mockReturnThis();
+  const json = vi.fn();
   return { res: { status, json } as unknown as Response, status, json };
 }
 
@@ -16,7 +17,7 @@ describe('request validation', () => {
   it('returns 400 with issue paths for an invalid request without calling the handler', () => {
     const schema = z.object({ customer: z.object({ walletAddress: z.string() }) }).strict();
     const { res, status, json } = response();
-    const next = jest.fn();
+    const next = vi.fn();
 
     validate(schema)(request({ customer: { walletAddress: 42 } }), res, next);
 
@@ -32,7 +33,7 @@ describe('request validation', () => {
     const schema = z.object({ name: z.string().trim().min(1) });
     const req = request({ name: ' Coffee ', ignored: true });
     const { res, status, json } = response();
-    const next = jest.fn();
+    const next = vi.fn();
 
     validate(schema)(req, res, next);
 
@@ -47,7 +48,7 @@ describe('request validation', () => {
     const failure = new Error('Unexpected transform failure');
     const schema = z.string().transform(() => { throw failure; });
     const { res, status, json } = response();
-    const next = jest.fn();
+    const next = vi.fn();
 
     validate(schema)(request('Coffee'), res, next);
 
@@ -62,10 +63,10 @@ describe('request validation', () => {
       ['valid elements', ['a', 'b', 'c', 'd']],
       ['invalid elements', [null, {}, [], 42]],
     ])('rejects an oversized array of %s before processing its elements', (_label, items) => {
-      const inspectElement = jest.fn((value: unknown) => value);
+      const inspectElement = vi.fn((value: unknown) => value);
       const schema = z.object({ items: z.array(z.preprocess(inspectElement, z.string()))[constraint](1) });
       const { res, status, json } = response();
-      const next = jest.fn();
+      const next = vi.fn();
 
       validate(schema)(request({ items }), res, next);
 
@@ -79,11 +80,11 @@ describe('request validation', () => {
     });
 
     it('processes a legitimate array at its size limit exactly once', () => {
-      const inspectElement = jest.fn((value: unknown) => value);
+      const inspectElement = vi.fn((value: unknown) => value);
       const schema = z.object({ items: z.array(z.preprocess(inspectElement, z.string()))[constraint](1) });
       const req = request({ items: ['Coffee'] });
       const { res, status, json } = response();
-      const next = jest.fn();
+      const next = vi.fn();
 
       validate(schema)(req, res, next);
 

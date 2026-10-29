@@ -1,3 +1,4 @@
+import { describe, expect, it, test, vi } from 'vitest';
 /**
  * Contract test for the Model B price-evidence tool output (T-290) against the REAL
  * settlement schema and validator. The fixture is produced byte-identically by
@@ -9,7 +10,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 // config.ts validates process.env and exits at import time; mock it like modelBSettlement.test.ts.
-jest.mock('../src/config', () => ({
+vi.mock('../src/config', () => ({
   config: {
     CHAIN_ID: 1,
     SELLER_AUTH_DOMAIN: 'shop.example.test',

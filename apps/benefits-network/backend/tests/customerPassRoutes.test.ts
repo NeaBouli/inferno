@@ -1,12 +1,13 @@
+import { afterAll, afterEach, beforeEach, describe, expect, it, test, vi, type MockInstance } from 'vitest';
 import { ethers } from 'ethers';
 
 type TestWallet = ReturnType<typeof ethers.Wallet.createRandom>;
 import * as authenticatedRateLimiter from '../src/services/authenticatedRateLimiter';
 
-const mockCheckLock = jest.fn();
-const mockRecoverSigner = jest.fn();
+const mockCheckLock = vi.hoisted(() => vi.fn());
+const mockRecoverSigner = vi.hoisted(() => vi.fn());
 
-jest.mock('../src/services/ifrLockService', () => ({
+vi.mock('../src/services/ifrLockService', () => ({
   // Real EIP-191 recovery by default (set in beforeEach); tests may override it.
   checkLock: (...args: unknown[]) => mockCheckLock(...args),
   checkBenefitEligibility: async (...args: unknown[]) => {
@@ -24,10 +25,10 @@ jest.mock('../src/services/ifrLockService', () => ({
     };
   },
   recoverSigner: (...args: unknown[]) => mockRecoverSigner(...args),
-  initProvider: jest.fn(),
+  initProvider: vi.fn(),
 }));
 
-jest.mock('../src/config', () => ({
+vi.mock('../src/config', () => ({
   config: {
     CHAIN_ID: 11155111,
     SELLER_AUTH_DOMAIN: 'shop.example.test',
@@ -122,10 +123,10 @@ describe('customer-presented checkout passes', () => {
   let ruleId: string;
   let otherBusinessId: string;
   let otherRuleId: string;
-  let limiterSpy: jest.SpyInstance;
+  let limiterSpy: MockInstance;
 
   beforeEach(async () => {
-    limiterSpy = jest.spyOn(authenticatedRateLimiter, 'assertSellerWalletActionAllowed')
+    limiterSpy = vi.spyOn(authenticatedRateLimiter, 'assertSellerWalletActionAllowed')
       .mockResolvedValue(undefined);
     mockCheckLock.mockReset();
     mockRecoverSigner.mockReset();

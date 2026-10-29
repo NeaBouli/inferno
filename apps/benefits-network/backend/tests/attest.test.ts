@@ -1,13 +1,14 @@
+import { afterAll, beforeAll, beforeEach, describe, expect, it, test, vi } from 'vitest';
 import { ethers } from 'ethers';
 import { PrismaClient } from '@prisma/client';
 
 // ── Mock ifrLockService BEFORE importing sessionService ────────────
 
-const mockCheckLock = jest.fn();
-const mockCheckBenefitEligibility = jest.fn();
-const mockRecoverSigner = jest.fn();
+const mockCheckLock = vi.hoisted(() => vi.fn());
+const mockCheckBenefitEligibility = vi.hoisted(() => vi.fn());
+const mockRecoverSigner = vi.hoisted(() => vi.fn());
 
-jest.mock('../src/services/ifrLockService', () => ({
+vi.mock('../src/services/ifrLockService', () => ({
   checkLock: (...args: unknown[]) => mockCheckLock(...args),
   checkBenefitEligibility: async (...args: unknown[]) => {
     const result = await mockCheckBenefitEligibility(...args);
@@ -24,10 +25,10 @@ jest.mock('../src/services/ifrLockService', () => ({
     };
   },
   recoverSigner: (...args: unknown[]) => mockRecoverSigner(...args),
-  initProvider: jest.fn(),
+  initProvider: vi.fn(),
 }));
 
-jest.mock('../src/config', () => ({
+vi.mock('../src/config', () => ({
   config: {
     CHAIN_ID: 11155111,
     SELLER_AUTH_DOMAIN: 'shop.example.test',
@@ -116,7 +117,7 @@ afterAll(async () => {
 });
 
 beforeEach(() => {
-  jest.clearAllMocks();
+  vi.clearAllMocks();
   mockRecoverSigner.mockReset();
   mockCheckBenefitEligibility.mockReset();
   mockCheckLock.mockReset();
@@ -412,7 +413,7 @@ describe('Lock Threshold', () => {
       proofVersion: null,
     });
 
-    jest.clearAllMocks();
+    vi.clearAllMocks();
     const sufficient = await createConfirmedSession(testBusinessId, rule.id);
     mockRecoverSigner.mockReturnValue(TEST_WALLET);
     mockCheckBenefitEligibility.mockResolvedValue({
