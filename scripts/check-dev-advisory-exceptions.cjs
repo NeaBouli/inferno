@@ -15,130 +15,17 @@ const fs = require("node:fs");
 const path = require("node:path");
 const { createHash } = require("node:crypto");
 
-const POLICY_VERSION = "benefits-full52-policy-v3-reviewed-app-contexts-20261028";
-const verifiedContexts = new WeakMap();
+const POLICY_VERSION = "benefits-full52-policy-v4-supported-test-runners-20261029";
 
 const EXCEPTIONS = {
   // braces <= 3.0.3: stack exhaustion on deeply nested brace patterns. No patched release exists
   // (2026-10-03). Reached only through test/build tooling (jest, micromatch, chokidar); application
   // code never expands untrusted brace patterns.
   "GHSA-vfj7-8cjw-p6xm": { package: "braces", range: "<=3.0.3", reviewBy: "2026-11-03" },
-  // Temporary backend-only disposition; not a vulnerability fix or global exception.
-  "GHSA-gcqx-w48m-w2h4": {
-    "package": "deepmerge",
-    "range": ">=4.2.0 <=4.3.1",
-    "reviewedOn": "2026-10-28",
-    "reviewBy": "2026-11-03",
-    "scope": {
-      "repoRelativeApp": "apps/benefits-network/backend",
-      "rootPackageName": "ifr-benefits-network-backend",
-      "exactDevNodeVersions": {
-        "node_modules/@jest/core": "29.7.0",
-        "node_modules/create-jest": "29.7.0",
-        "node_modules/deepmerge": "4.3.1",
-        "node_modules/jest": "29.7.0",
-        "node_modules/jest-cli": "29.7.0",
-        "node_modules/jest-config": "29.7.0",
-        "node_modules/ts-jest": "29.4.11"
-      },
-      "sourceSha256": {
-        "apps/benefits-network/backend/package.json": "70f25c46de6cb7791bfc63e36be75dea08a0848a70b8155a3cda23dea1207b24",
-        "apps/benefits-network/backend/package-lock.json": "309f47e197d2c5f4bd24400666fbe8c106438032f47e11837c8f6dab25bd3091",
-        "apps/benefits-network/backend/jest.config.js": "171bcc553276995dbede6b66b386595c4445371ea814f4dc9ec98e198e1a02b2",
-        "apps/benefits-network/backend/Dockerfile": "6ae5b5650303dbe3cfc6cfe552c2fda0ccb09b50f71e4e887ab5860fade44e83"
-      }
-    }
-  },
-};
-
-// Independent canonical application records; the accepted Benefits record above is unchanged.
-const CREATOR_DEEPMERGE_DISPOSITION = {
-  "package": "deepmerge",
-  "range": ">=4.2.0 <=4.3.1",
-  "reviewedOn": "2026-10-28",
-  "reviewBy": "2026-11-03",
-  "scope": {
-    "repoRelativeApp": "apps/creator-gateway",
-    "rootPackageName": "ifr-creator-gateway",
-    "exactDevNodeVersions": {
-      "node_modules/@jest/core": "30.2.0",
-      "node_modules/deepmerge": "4.3.1",
-      "node_modules/jest": "30.2.0",
-      "node_modules/jest-cli": "30.2.0",
-      "node_modules/jest-config": "30.2.0",
-      "node_modules/ts-jest": "29.4.6"
-    },
-    "sourceSha256": {
-      "apps/creator-gateway/package.json": "5111bc18c39df8c7d68bfda5398da925eda90055579d4e60a4729e5efcc5bef1",
-      "apps/creator-gateway/package-lock.json": "a88511eddf516c90a41044c8acb67006d3198b3d78f107953b72f61679ac593c",
-      "apps/creator-gateway/jest.config.js": "3e12c2469c618beb167ddee68fbab573373ec4a941a682e52f44d068f05ddc43",
-      "apps/creator-gateway/jest.setup.cjs": "4e221d759566cdf815a79bdd97a6e29cbb7314bb9e3c6a3401256465770f1bb1",
-      "apps/creator-gateway/Dockerfile": "ec72900c154776ef9cdea54187c367645c66f0d22a9719ae72c0c25219a086fd",
-      ".github/workflows/creator-gateway.yml": "6f71203b4fefc013f6b762fee8de28a90f0eaf2cfddd0261b2dcdef9530bf8a1"
-    }
-  }
-};
-const SCOPED_DISPOSITIONS = {
-  "apps/benefits-network/backend": { "GHSA-gcqx-w48m-w2h4": EXCEPTIONS["GHSA-gcqx-w48m-w2h4"] },
-  "apps/creator-gateway": { "GHSA-gcqx-w48m-w2h4": CREATOR_DEEPMERGE_DISPOSITION },
 };
 
 const SEVERITIES = ["info", "low", "moderate", "high", "critical"];
 const isObject = (value) => value !== null && typeof value === "object" && !Array.isArray(value);
-
-// Build context from actual canonical paths and file bytes, never a caller-provided scope label.
-// The optional root supports isolated filesystem selftests; the CLI always uses this checkout root.
-function createAuditContext(appDir, root = path.resolve(__dirname, "..")) {
-  const canonicalRoot = fs.realpathSync(root);
-  const canonicalApp = fs.realpathSync(appDir);
-  const relative = path.relative(canonicalRoot, canonicalApp).split(path.sep).join("/");
-  const context = { repoRelativeApp: relative, rootPackageName: null, sourceSha256: {} };
-  let lockSemanticSha256 = null;
-  const scope = SCOPED_DISPOSITIONS[relative]?.["GHSA-gcqx-w48m-w2h4"]?.scope;
-  if (scope) {
-    for (const file of Object.keys(scope.sourceSha256)) {
-      const resolved = fs.realpathSync(path.join(canonicalRoot, file));
-      if (path.relative(canonicalRoot, resolved).startsWith("..") || path.isAbsolute(path.relative(canonicalRoot, resolved))) {
-        throw new Error(`reviewed source escapes checkout: ${file}`);
-      }
-      const bytes = fs.readFileSync(resolved);
-      if (file.endsWith("/package.json")) context.rootPackageName = JSON.parse(bytes.toString("utf8")).name;
-      context.sourceSha256[file] = createHash("sha256").update(bytes).digest("hex");
-      if (file.endsWith("/package-lock.json")) {
-        lockSemanticSha256 = createHash("sha256").update(JSON.stringify(JSON.parse(bytes.toString("utf8")))).digest("hex");
-      }
-    }
-  }
-  Object.freeze(context.sourceSha256);
-  Object.freeze(context);
-  verifiedContexts.set(context, { lockSemanticSha256 });
-  return context;
-}
-
-function checkScopedDisposition(id, exception, context, lock, full, today) {
-  if (!context || !verifiedContexts.has(context)) throw new Error(`${id}: missing verified canonical context`);
-  const scope = exception.scope;
-  if (context.repoRelativeApp !== scope.repoRelativeApp || context.rootPackageName !== scope.rootPackageName) {
-    throw new Error(`${id}: wrong reviewed application context`);
-  }
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(today) || today < exception.reviewedOn) throw new Error(`${id}: invalid or premature review date`);
-  if (lock.name !== scope.rootPackageName || lock.packages[""]?.name !== scope.rootPackageName) {
-    throw new Error(`${id}: wrong lock root package`);
-  }
-  if (createHash("sha256").update(JSON.stringify(lock)).digest("hex") !== verifiedContexts.get(context).lockSemanticSha256) {
-    throw new Error(`${id}: audited lock does not match verified source snapshot`);
-  }
-  for (const [file, digest] of Object.entries(scope.sourceSha256)) {
-    if (context.sourceSha256[file] !== digest) throw new Error(`${id}: reviewed source pin mismatch: ${file}`);
-  }
-  for (const [node, version] of Object.entries(scope.exactDevNodeVersions)) {
-    const entry = lock.packages[node];
-    if (!entry || entry.version !== version || !(entry.dev === true || entry.devOptional === true)) {
-      throw new Error(`${id}: reviewed development node/version mismatch: ${node}`);
-    }
-  }
-  assertDevCovered(full, lock);
-}
 
 // Validates one `npm audit --json` report; returns its vulnerability map. Throws on anything incomplete.
 function validateReport(report, label) {
@@ -169,7 +56,7 @@ function validateReport(report, label) {
 }
 
 // Pure decision: returns the accepted advisory ids used; throws with the first reason to fail.
-function evaluate({ prod, full, lock, today, context, exceptions = EXCEPTIONS }) {
+function evaluate({ prod, full, lock, today, exceptions = EXCEPTIONS }) {
   const prodVulns = validateReport(prod, "production audit");
   if (Object.keys(prodVulns).length !== 0) {
     throw new Error(`production dependencies have advisories: ${Object.keys(prodVulns).join(", ")}`);
@@ -178,8 +65,7 @@ function evaluate({ prod, full, lock, today, context, exceptions = EXCEPTIONS })
   if (!isObject(lock) || !isObject(lock.packages)) throw new Error("package-lock.json has no packages map");
 
   const used = new Set();
-  const scopedNodes = new Map();
-  const exceptionFor = (id) => (exceptions === EXCEPTIONS && SCOPED_DISPOSITIONS[context?.repoRelativeApp]?.[id]) || exceptions[id];
+  const exceptionFor = (id) => exceptions[id];
   const rootsOf = (name, seen = new Set()) => {
     if (seen.has(name)) return new Set();
     seen.add(name);
@@ -201,10 +87,6 @@ function evaluate({ prod, full, lock, today, context, exceptions = EXCEPTIONS })
       if (exception.package !== via.name) throw new Error(`${name}: ${id} reported for ${via.name}, accepted only for ${exception.package}`);
       if (via.range !== exception.range) throw new Error(`${id} range is now ${via.range}: a patched release exists, upgrade ${via.name}`);
       if (today > exception.reviewBy) throw new Error(`${id} exception expired on ${exception.reviewBy}; review it`);
-      if (exception.scope) {
-        checkScopedDisposition(id, exception, context, lock, full, today);
-        if (!scopedNodes.has(id)) scopedNodes.set(id, new Set());
-      }
       roots.add(id);
     }
     return roots;
@@ -218,20 +100,6 @@ function evaluate({ prod, full, lock, today, context, exceptions = EXCEPTIONS })
     for (const node of vuln.nodes) {
       const entry = lock.packages[node];
       if (!entry || !(entry.dev === true || entry.devOptional === true)) throw new Error(`${name} at ${node} is not development-only`);
-      for (const id of roots) {
-        const expected = exceptionFor(id).scope?.exactDevNodeVersions;
-        if (!expected) continue;
-        if (!Object.hasOwn(expected, node) || node !== `node_modules/${name}`) {
-          throw new Error(`${id}: unreviewed affected node/package: ${name} at ${node}`);
-        }
-        scopedNodes.get(id).add(node);
-      }
-    }
-  }
-  for (const [id, nodes] of scopedNodes) {
-    const expected = Object.keys(exceptionFor(id).scope.exactDevNodeVersions);
-    if (nodes.size !== expected.length || expected.some((node) => !nodes.has(node))) {
-      throw new Error(`${id}: incomplete reviewed advisory node coverage`);
     }
   }
   return [...used];
@@ -283,7 +151,7 @@ function runAudit(appDir, extra, label) {
   }
 }
 
-module.exports = { evaluate, validateReport, EXCEPTIONS, AUDIT_ARGS, auditEnv, assertDevCovered, createAuditContext, POLICY_VERSION, SCOPED_DISPOSITIONS };
+module.exports = { evaluate, validateReport, EXCEPTIONS, AUDIT_ARGS, auditEnv, assertDevCovered, POLICY_VERSION };
 
 if (require.main === module) {
   const appDir = process.cwd();
@@ -298,7 +166,6 @@ if (require.main === module) {
       full,
       lock,
       today: new Date().toISOString().slice(0, 10),
-      context: createAuditContext(appDir),
     });
     console.log(`[dev-advisory-exceptions] PASS (${where}) - policy=${POLICY_VERSION}; production audit clean; dev exceptions used: ${used.join(", ") || "none needed"}`);
   } catch (error) {

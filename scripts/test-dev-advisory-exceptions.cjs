@@ -7,7 +7,7 @@ const { spawnSync } = require("node:child_process");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
-const { evaluate, AUDIT_ARGS, auditEnv, assertDevCovered, createAuditContext, EXCEPTIONS, POLICY_VERSION, SCOPED_DISPOSITIONS } = require("./check-dev-advisory-exceptions.cjs");
+const { evaluate, AUDIT_ARGS, auditEnv, assertDevCovered, EXCEPTIONS, POLICY_VERSION } = require("./check-dev-advisory-exceptions.cjs");
 
 const ID = "GHSA-vfj7-8cjw-p6xm";
 const TODAY = "2026-10-03";
@@ -166,150 +166,60 @@ assert.equal(AUDIT_ARGS.prod[0], "--omit=dev", "production audit must omit dev d
 }
 console.log("[dev-advisory-exceptions-test] PASS - full audit forces dev, production audit stays prod-only under .npmrc/env config, dev coverage asserted");
 
-// Reviewed backend disposition: deterministic fixtures, never release-audit substitutes.
-{
-  const id = "GHSA-gcqx-w48m-w2h4";
-  const record = EXCEPTIONS[id];
-  const root = path.resolve(__dirname, "..");
-  const fixture = fs.mkdtempSync(path.join(os.tmpdir(), "dev-advisory-scope-"));
-  const app = path.join(fixture, record.scope.repoRelativeApp);
-  const originals = {};
-  for (const file of Object.keys(record.scope.sourceSha256)) {
-    const bytes = fs.readFileSync(path.join(root, file)); originals[file] = bytes;
-    fs.mkdirSync(path.dirname(path.join(fixture, file)), { recursive: true });
-    fs.writeFileSync(path.join(fixture, file), bytes);
-  }
-  const parents = {
-    "@jest/core": ["jest-config"], "create-jest": ["jest-config"],
-    deepmerge: [{ name: "deepmerge", url: `https://github.com/advisories/${id}`, range: record.range }],
-    jest: ["@jest/core", "jest-cli"], "jest-cli": ["@jest/core", "create-jest", "jest-config"],
-    "jest-config": ["deepmerge"], "ts-jest": ["jest"],
-  };
-  const full = () => ({ ...report(Object.fromEntries(Object.entries(structuredClone(parents)).map(([name, via]) =>
-    [name, { name, severity: "low", via, nodes: [`node_modules/${name}`] }]))),
-    metadata: { vulnerabilities: { info: 0, low: 7, moderate: 0, high: 0, critical: 0, total: 7 }, dependencies: { dev: 303 } } });
-  const scopedInput = () => ({ prod: report({}), full: full(),
-    lock: JSON.parse(originals[`${record.scope.repoRelativeApp}/package-lock.json`]),
-    context: createAuditContext(app, fixture), today: "2026-10-28" });
-  let checked = 0;
-  const rejects = (change, pattern, label) => {
-    const value = scopedInput(); change(value);
-    assert.throws(() => evaluate(value), pattern, label); checked++;
-  };
-  try {
-    assert.match(POLICY_VERSION, /^benefits-full52-policy-v3-reviewed-app-contexts-20261028$/);
-    assert.deepEqual(evaluate(scopedInput()), [id]); checked++;
-    assert.deepEqual(evaluate({ ...scopedInput(), today: "2026-11-03" }), [id]); checked++;
-    rejects(x => delete x.context, /verified canonical context/, "missing context");
-    rejects(x => { x.context = { ...x.context }; }, /verified canonical context/, "caller-supplied labels cannot forge verified context");
-    rejects(x => { x.context = createAuditContext(fixture, fixture); }, /application context/, "wrong app path");
-    rejects(x => { x.lock.name = "other"; }, /lock root package/, "wrong lock package");
-    rejects(x => { x.lock.packages["node_modules/deepmerge"].version = "4.3.2"; }, /lock|version/, "changed lock/version");
-    rejects(x => { x.lock.packages["node_modules/deepmerge"].dev = false; }, /lock|development/, "non-dev node");
-    rejects(x => { x.prod = report({ deepmerge: full().vulnerabilities.deepmerge }); }, /production dependencies/, "production never exempt");
-    rejects(x => { x.full.vulnerabilities.deepmerge.via[0].url = "https://github.com/advisories/GHSA-aaaa-bbbb-cccc"; }, /not an accepted exception/, "unknown advisory");
-    rejects(x => { x.full.vulnerabilities.deepmerge.via[0].name = "other"; }, /accepted only for deepmerge/, "changed package");
-    rejects(x => { x.full.vulnerabilities.deepmerge.via[0].range = "<4.3.2"; }, /range is now/, "changed range");
-    rejects(x => { x.full.metadata.dependencies.dev = 0; }, /did not cover dev/, "omitted dev audit");
-    rejects(x => { delete x.full.metadata.dependencies; }, /did not cover dev/, "missing dev coverage");
-    rejects(x => { const v = x.full.vulnerabilities; delete v["ts-jest"]; x.full.metadata.vulnerabilities = counts(v); }, /incomplete reviewed/, "missing reviewed advisory node");
-    rejects(x => { x.full.vulnerabilities["jest-util"] = { name: "jest-util", severity: "low", via: ["deepmerge"], nodes: ["node_modules/jest-util"] }; x.full.metadata.vulnerabilities = counts(x.full.vulnerabilities); }, /unreviewed affected/, "additional affected node");
-    rejects(x => { x.today = "2026-11-04"; }, /expired/, "expiry");
-    rejects(x => { x.today = "2026-10-27"; }, /premature/, "not effective before review");
-    rejects(x => { x.today = "invalid"; }, /expired|invalid/, "invalid date");
-    for (const file of Object.keys(record.scope.sourceSha256)) {
-      fs.appendFileSync(path.join(fixture, file), "\n");
-      assert.throws(() => evaluate(scopedInput()), /source pin mismatch/, `changed reviewed bytes: ${file}`); checked++;
-      fs.writeFileSync(path.join(fixture, file), originals[file]);
-    }
-    const packageFile = `${record.scope.repoRelativeApp}/package.json`;
-    const pkg = JSON.parse(originals[packageFile]); pkg.name = "another-backend";
-    fs.writeFileSync(path.join(fixture, packageFile), JSON.stringify(pkg));
-    assert.throws(() => evaluate(scopedInput()), /application context/, "wrong package name"); checked++;
-    fs.writeFileSync(path.join(fixture, packageFile), originals[packageFile]);
-    const docker = `${record.scope.repoRelativeApp}/Dockerfile`;
-    const outside = path.join(os.tmpdir(), `dev-advisory-outside-${process.pid}`);
-    fs.writeFileSync(outside, originals[docker]); fs.unlinkSync(path.join(fixture, docker));
-    try {
-      fs.symlinkSync(outside, path.join(fixture, docker));
-      assert.throws(() => createAuditContext(app, fixture), /escapes checkout/, "source symlink cannot leave checkout"); checked++;
-    } finally { fs.rmSync(outside, { force: true }); }
-    console.log(`[dev-advisory-scoped self-test] PASS ${checked} scope/version/pin/coverage/expiry controls; fixture audits only`);
-  } finally { fs.rmSync(fixture, { recursive: true, force: true }); }
-}
-
-// Two reviewed consumers share an advisory id, never an application/context allowance.
+// The supported runner migration removes both deepmerge dispositions. These are
+// deliberately historical fixture graphs, never substitutes for real app audits.
 {
   const id = 'GHSA-gcqx-w48m-w2h4';
-  const creator = 'apps/creator-gateway';
-  const backend = 'apps/benefits-network/backend';
-  const root = path.resolve(__dirname, '..');
-  const fixture = fs.mkdtempSync(path.join(os.tmpdir(), 'dev-advisory-apps-'));
-  const originals = {};
-  for (const records of Object.values(SCOPED_DISPOSITIONS)) {
-    for (const file of Object.keys(records[id].scope.sourceSha256)) {
-      const bytes = fs.readFileSync(path.join(root, file)); originals[file] = bytes;
-      fs.mkdirSync(path.dirname(path.join(fixture, file)), { recursive: true });
-      fs.writeFileSync(path.join(fixture, file), bytes);
-    }
-  }
-  function appInput(app) {
-    const record = SCOPED_DISPOSITIONS[app][id];
-    const vulns = Object.fromEntries(Object.keys(record.scope.exactDevNodeVersions).map(node => {
-      const name = node.slice('node_modules/'.length);
-      const via = name === 'deepmerge'
-        ? [{ name, range: record.range, url: `https://github.com/advisories/${id}` }]
-        : [name === 'jest-config' ? 'deepmerge' : 'jest-config'];
-      return [name, { name, severity: 'low', via, nodes: [node] }];
-    }));
-    const full = report(vulns); full.metadata.dependencies = { dev: 359 };
-    return { prod: report({}), full, lock: JSON.parse(originals[`${app}/package-lock.json`]),
-      context: createAuditContext(path.join(fixture, app), fixture), today: '2026-10-28' };
-  }
-  let checks = 0;
-  const rejects = (change, pattern, label) => {
-    const value = appInput(creator); change(value);
-    assert.throws(() => evaluate(value), pattern, label); checks++;
+  const apps = {
+    'apps/benefits-network/backend': {
+      '@jest/core': '29.7.0', 'create-jest': '29.7.0', deepmerge: '4.3.1',
+      jest: '29.7.0', 'jest-cli': '29.7.0', 'jest-config': '29.7.0', 'ts-jest': '29.4.11',
+    },
+    'apps/creator-gateway': {
+      '@jest/core': '30.2.0', deepmerge: '4.3.1', jest: '30.2.0',
+      'jest-cli': '30.2.0', 'jest-config': '30.2.0', 'ts-jest': '29.4.6',
+    },
   };
-  try {
-    assert.equal(POLICY_VERSION, 'benefits-full52-policy-v3-reviewed-app-contexts-20261028');
-    assert.deepEqual(evaluate(appInput(creator)), [id]); checks++;
-    assert.deepEqual(evaluate(appInput(backend)), [id]); checks++;
-    assert.equal(Object.keys(SCOPED_DISPOSITIONS[creator][id].scope.exactDevNodeVersions).length, 6);
-    assert.equal(Object.keys(EXCEPTIONS[id].scope.exactDevNodeVersions).length, 7);
-    assert.equal(SCOPED_DISPOSITIONS[backend][id], EXCEPTIONS[id], 'same accepted backend record object');
-    rejects(x => { x.context = appInput(backend).context; }, /lock root|source|application/, 'backend context cannot authorize Creator graph');
-    const cross = appInput(backend); cross.context = appInput(creator).context;
-    assert.throws(() => evaluate(cross), /lock root|source|application/, 'Creator context cannot authorize backend graph'); checks++;
-    rejects(x => { delete x.context; }, /verified canonical context/, 'Creator needs actual context');
-    rejects(x => { x.context = { ...x.context }; }, /verified canonical context/, 'scope labels cannot forge Creator context');
-    const other = path.join(fixture, 'apps/other-app'); fs.mkdirSync(other, { recursive: true });
-    rejects(x => { x.context = createAuditContext(other, fixture); }, /application context/, 'other apps inherit no disposition');
-    rejects(x => { x.lock.name = 'other'; }, /lock root package/, 'wrong root package');
-    for (const node of Object.keys(SCOPED_DISPOSITIONS[creator][id].scope.exactDevNodeVersions)) {
-      rejects(x => { x.lock.packages[node].version = '0.0.0'; }, /lock|version/, `version change: ${node}`);
-      rejects(x => { x.lock.packages[node].dev = false; }, /lock|development/, `non-dev node: ${node}`);
+  assert.equal(POLICY_VERSION, 'benefits-full52-policy-v4-supported-test-runners-20261029');
+  assert.equal(Object.hasOwn(EXCEPTIONS, id), false, 'the former development allowance must stay removed');
+  let checks = 2;
+  for (const [app, versions] of Object.entries(apps)) {
+    const lock = JSON.parse(fs.readFileSync(path.join(__dirname, '..', app, 'package-lock.json'), 'utf8'));
+    assert.equal(Object.keys(lock.packages).some(node => node === 'node_modules/deepmerge' || node.endsWith('/node_modules/deepmerge')), false);
+    assert.deepEqual(evaluate({ prod: report({}), full: report({}), lock, today: '2026-11-04' }), [], 'clean graph needs no expired context reader');
+    checks += 2;
+    const legacyLock = structuredClone(lock);
+    const vulns = {};
+    for (const [name, version] of Object.entries(versions)) {
+      legacyLock.packages[`node_modules/${name}`] = { version, dev: true };
+      vulns[name] = { name, severity: 'low', nodes: [`node_modules/${name}`], via: name === 'deepmerge'
+        ? [{ name, range: '>=4.2.0 <=4.3.1', url: `https://github.com/advisories/${id}` }]
+        : [name === 'jest-config' ? 'deepmerge' : 'jest-config'] };
     }
-    rejects(x => { x.prod = report({ deepmerge: x.full.vulnerabilities.deepmerge }); }, /production dependencies/, 'production is always zero');
-    rejects(x => { x.full.vulnerabilities.deepmerge.via[0].url = 'https://github.com/advisories/GHSA-aaaa-bbbb-cccc'; }, /not an accepted exception/, 'unknown root');
-    rejects(x => { x.full.vulnerabilities.deepmerge.via[0].name = 'other'; }, /accepted only for deepmerge/, 'wrong advisory package');
-    rejects(x => { x.full.vulnerabilities.deepmerge.via[0].range = '<4.3.2'; }, /range is now/, 'changed advisory range');
-    rejects(x => { delete x.full.metadata.dependencies; }, /did not cover dev/, 'missing full dev coverage');
-    rejects(x => { x.full.metadata.dependencies.dev = 0; }, /did not cover dev/, 'zero full dev coverage');
-    rejects(x => { delete x.full.vulnerabilities['ts-jest']; x.full.metadata.vulnerabilities = counts(x.full.vulnerabilities); }, /incomplete reviewed/, 'missing reviewed node');
-    rejects(x => { x.full.vulnerabilities['jest-util'] = { name: 'jest-util', severity: 'low', via: ['deepmerge'], nodes: ['node_modules/jest-util'] }; x.full.metadata.vulnerabilities = counts(x.full.vulnerabilities); }, /unreviewed affected/, 'unreviewed additional node');
-    rejects(x => { x.today = '2026-11-04'; }, /expired/, 'Creator expiry');
-    rejects(x => { x.today = '2026-10-27'; }, /premature/, 'Creator review not yet effective');
-    assert.deepEqual(evaluate({ ...appInput(creator), today: '2026-11-03' }), [id]); checks++;
-    for (const file of Object.keys(SCOPED_DISPOSITIONS[creator][id].scope.sourceSha256)) {
-      fs.appendFileSync(path.join(fixture, file), '\n');
-      assert.throws(() => evaluate(appInput(creator)), /source pin mismatch/, `changed Creator source/config/workflow: ${file}`); checks++;
-      fs.writeFileSync(path.join(fixture, file), originals[file]);
+    const full = report(vulns); full.metadata.dependencies = { dev: Object.keys(versions).length };
+    const legacy = () => ({ prod: report({}), full: structuredClone(full), lock: structuredClone(legacyLock), today: '2026-10-29' });
+    const reject = (change, pattern, label) => {
+      const value = legacy(); change(value);
+      assert.throws(() => evaluate(value), pattern, `${app}: ${label}`); checks++;
+    };
+    reject(() => {}, /not an accepted exception/, 'formerly accepted graph is rejected');
+    for (const today of ['2026-10-27', '2026-11-03', '2026-11-04']) {
+      reject(x => { x.today = today; }, /not an accepted exception/, 'no historical or renewed date allowance');
     }
-    const pkgFile = `${creator}/package.json`; const pkg = JSON.parse(originals[pkgFile]); pkg.name = 'other-app';
-    fs.writeFileSync(path.join(fixture, pkgFile), JSON.stringify(pkg));
-    assert.throws(() => evaluate(appInput(creator)), /application context/, 'actual Creator package identity'); checks++;
-    fs.writeFileSync(path.join(fixture, pkgFile), originals[pkgFile]);
-    console.log(`[dev-advisory-app-contexts self-test] PASS ${checks} both-consumer isolation/pin/version/prod/coverage/expiry controls; fixtures only`);
-  } finally { fs.rmSync(fixture, { recursive: true, force: true }); }
+    for (const repoRelativeApp of Object.keys(apps).concat('apps/other-app')) {
+      reject(x => { x.context = { repoRelativeApp, rootPackageName: lock.name }; }, /not an accepted exception/, 'caller context cannot restore a removed allowance');
+    }
+    reject(x => { x.prod = report({ deepmerge: x.full.vulnerabilities.deepmerge }); }, /production dependencies/, 'production stays zero');
+    reject(x => { x.full.vulnerabilities.deepmerge.via[0].url = 'https://github.com/advisories/GHSA-aaaa-bbbb-cccc'; }, /not an accepted exception/, 'unknown advisory');
+    reject(x => { x.full.vulnerabilities.deepmerge.via[0].range = '<4.3.2'; }, /not an accepted exception/, 'changed advisory range');
+    reject(x => { x.lock.packages['node_modules/deepmerge'].dev = false; }, /not an accepted exception/, 'production-marked legacy node cannot restore allowance');
+    reject(x => { x.lock.packages['node_modules/deepmerge'].version = '4.3.2'; }, /not an accepted exception/, 'changed legacy version cannot restore allowance');
+    for (const dependencies of [undefined, { dev: 0 }]) {
+      const omitted = structuredClone(full);
+      if (dependencies) omitted.metadata.dependencies = dependencies;
+      else delete omitted.metadata.dependencies;
+      assert.throws(() => assertDevCovered(omitted, legacyLock), /did not cover dev/); checks++;
+    }
+  }
+  console.log(`[dev-advisory-removed-contexts self-test] PASS ${checks} clean/legacy/prod/unknown/date/context/coverage controls; fixtures only`);
 }

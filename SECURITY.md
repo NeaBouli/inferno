@@ -57,21 +57,23 @@ Community auditors who submit valid findings will be credited here.
 | ------- | ------- | -------- | ------ |
 | —       | —       | —        | —      |
 
-## Scoped development-advisory dispositions
+## Development-dependency audit policy
 
-Production audits permit no advisories. The complete development audit remains
-mandatory, with strict report, via-chain and development-node validation. Policy
-`benefits-full52-policy-v3-reviewed-app-contexts-20261028` temporarily permits the
-valid, open, unpatched `GHSA-gcqx-w48m-w2h4` only in two independently scoped
-configuration paths: Benefits backend (seven nodes/four source hashes) and Creator
-Gateway (six nodes/six source hashes, including test setup and CI workflow).
-The existing backend record is unchanged. Canonical app/package identity, exact
-versions and source hashes are bound in `scripts/check-dev-advisory-exceptions.cjs`;
-contexts cannot authorize each other's graph or another application.
+Production audits permit no advisories. Policy
+`benefits-full52-policy-v4-supported-test-runners-20261029` retains mandatory
+complete fresh production/development audits, strict report validation, complete
+via-chain coverage and development-only node checks.
 
-Both expire after 2026-11-03 UTC. Changed context, config/workflow pins, versions,
-range/package, unknown findings, incomplete development coverage or production
-placement fail closed. These are temporary dispositions, not dependency fixes or
-global exceptions. Re-review immediately when a fix or changed test-input/CI
-privilege boundary appears. No automatic renewal or complete patched-version
-detection is provided.
+Benefits backend and Creator Gateway use the supported Vitest test runner instead
+of the Jest/ts-jest development chains. Their deepmerge dispositions are removed;
+`GHSA-gcqx-w48m-w2h4` is no longer accepted for either application or another
+claimed context. The upstream advisory remains valid and unpatched; removing its
+consumer graph is not a claim that deepmerge itself is fixed. Earlier version2/3
+results and raw failures apply only to their original sources and policies.
+
+The separate existing braces disposition and its range remain unchanged through
+2026-11-03 UTC inclusive. It is not a deepmerge allowance or an automatic renewal.
+Unknown findings, incomplete reports/development coverage, changed advisory range,
+production placement and expired remaining exceptions fail closed. Stable ranges
+do not establish that no upstream fix is available; recheck affected upstreams.
+The checker preserves the actual evaluated full/production JSON bodies and hashes.
