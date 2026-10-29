@@ -300,6 +300,10 @@ textarea {
   overflow-wrap: anywhere;
 }
 
+#customer-wallet {
+  scroll-margin-top: 9rem;
+}
+
 .shop-footer {
   margin-top: 32px;
   border-top: 1px solid var(--shop-border);

@@ -1527,3 +1527,20 @@ retain prior assertions and add lower/higher-threshold and CommitmentVault cases
 responsive visual evidence is scoped to this panel, not the old discovery matrix.
 The existing wallet telemetry gate expects the exact new panel heading while
 retaining its route, SDK-host, telemetry and minimum observation-time checks.
+
+## Customer wallet anchor below the sticky header — 2026-10-29
+
+Module: existing Benefits homepage customer workspace and AppShell navigation.
+Hop: initial `#customer-wallet` deep link or header `Lock IFR` action -> Home's
+existing anchor scroll -> the loading or loaded `#customer-wallet` section ->
+viewport below `.shop-header`. The target lacked the neighboring anchors' scroll
+margin, so the unchanged top-alignment scroll could hide its heading beneath the
+sticky header. A scoped ID rule adds the existing 9rem convention to both states.
+Role resolution, two-frame/700ms scrolling, smooth/reduced-motion behavior,
+header layout and wallet reads/signatures/transactions remain unchanged.
+
+`test-benefits-wallet-lock-ui.js::verifyCustomerWalletAnchor` separately checks
+fresh deep links and the actual header link at the four standard viewports after
+fonts and native scrolling settle. It verifies heading/header separation, full
+heading visibility, hit testing, overflow and the shared loading-target CSS rule.
+The previous generic-guidance helper and all five wallet modes remain intact.

@@ -153,6 +153,109 @@ async function waitForServer(child) {
   throw new Error('Timed out waiting for Benefits frontend');
 }
 
+async function verifyCustomerWalletAnchor(page, onVerified = async () => {}) {
+  const originalViewport = page.viewportSize();
+  const destination = new URL(page.url());
+  destination.hash = 'customer-wallet';
+  const fallback = require('node:fs').readFileSync(path.join(frontend, 'src', 'app', 'page.tsx'), 'utf8');
+  assert.match(fallback, /<section\s+id="customer-wallet"\s+role="status"/, 'the loading fallback must retain the same wallet anchor');
+
+  async function settledGeometry() {
+    await page.evaluate(() => document.fonts.ready);
+    // Home retries its anchor scroll after 700ms; observe that behavior unchanged.
+    await page.waitForTimeout(700);
+    return page.evaluate(() => new Promise((resolve, reject) => {
+      const started = performance.now();
+      let previous = '';
+      let stableFrames = 0;
+      const sample = () => {
+        const panel = document.getElementById('customer-wallet');
+        const heading = panel?.querySelector('h2');
+        const header = document.querySelector('header.shop-header');
+        if (!panel || !heading || !header) return reject(new Error('Missing wallet anchor, heading or header'));
+        const box = (element) => {
+          const rect = element.getBoundingClientRect();
+          return { x: rect.x, y: rect.y, right: rect.right, bottom: rect.bottom, width: rect.width, height: rect.height };
+        };
+        const geometry = { panel: box(panel), heading: box(heading), header: box(header), scrollX, scrollY };
+        const current = JSON.stringify(geometry);
+        stableFrames = current === previous && document.fonts.status === 'loaded' ? stableFrames + 1 : 0;
+        previous = current;
+        if (stableFrames >= 12) {
+          const hit = document.elementFromPoint(
+            geometry.heading.x + geometry.heading.width / 2,
+            geometry.heading.y + geometry.heading.height / 2
+          );
+          return resolve({
+            ...geometry,
+            hash: location.hash,
+            fontsStatus: document.fonts.status,
+            scrollMarginTop: getComputedStyle(panel).scrollMarginTop,
+            headingHit: hit === heading || heading.contains(hit),
+            viewport: { width: innerWidth, height: innerHeight },
+            pageScrollWidth: document.documentElement.scrollWidth,
+          });
+        }
+        if (performance.now() - started > 5000) return reject(new Error('Wallet anchor scroll did not settle'));
+        requestAnimationFrame(sample);
+      };
+      requestAnimationFrame(sample);
+    }));
+  }
+
+  function assertClear(geometry, entry) {
+    assert.equal(geometry.hash, '#customer-wallet', `${entry}: actual wallet anchor must be selected`);
+    assert.ok(geometry.heading.y >= geometry.header.bottom, `${entry}: the whole wallet heading must remain below the sticky header`);
+    assert.ok(geometry.heading.x >= 0 && geometry.heading.right <= geometry.viewport.width, `${entry}: heading must fit horizontally`);
+    assert.ok(geometry.heading.bottom <= geometry.viewport.height, `${entry}: heading must fit vertically`);
+    assert.equal(geometry.headingHit, true, `${entry}: hit testing must reach the wallet heading`);
+    assert.ok(geometry.pageScrollWidth <= geometry.viewport.width, `${entry}: anchor navigation must not overflow horizontally`);
+  }
+
+  const results = [];
+  try {
+    for (const viewport of [
+      { width: 1440, height: 1000 },
+      { width: 1180, height: 820 },
+      { width: 820, height: 1180 },
+      { width: 390, height: 844 },
+    ]) {
+      await page.setViewportSize(viewport);
+      await page.goto(destination.href, { waitUntil: 'domcontentloaded' });
+      await page.locator('#customer-wallet').getByRole('heading', { name: 'Wallet balances and IFRLock tools', exact: true }).waitFor();
+      const deepLink = await settledGeometry();
+      assertClear(deepLink, 'fresh deep link');
+      const universalRule = await page.evaluate(() => {
+        const visit = (rules) => Array.from(rules).some((rule) =>
+          (rule.selectorText === '#customer-wallet' && rule.style.scrollMarginTop === '9rem') ||
+          (rule.cssRules && visit(rule.cssRules))
+        );
+        return Array.from(document.styleSheets).some((sheet) => {
+          try { return visit(sheet.cssRules); } catch { return false; }
+        });
+      });
+      assert.equal(universalRule, true, 'the shared ID rule must cover both the loaded wallet and its loading fallback');
+      await page.evaluate(() => {
+        history.replaceState(history.state, '', location.pathname + location.search);
+        window.scrollTo({ left: 0, top: 0, behavior: 'instant' });
+      });
+      const link = page.locator('header.shop-header a[href="/#customer-wallet"]');
+      const linkBox = await link.boundingBox();
+      assert.ok(linkBox && linkBox.width >= 44 && linkBox.height >= 44, 'the actual wallet anchor must retain a 44px touch target');
+      await link.click();
+      await page.waitForFunction(() => location.hash === '#customer-wallet');
+      const headerLink = await settledGeometry();
+      assertClear(headerLink, 'header Lock IFR link');
+      const result = { viewport, deepLink, headerLink, loadingFallbackRule: universalRule };
+      results.push(result);
+      await onVerified(result);
+    }
+  } finally {
+    if (originalViewport) await page.setViewportSize(originalViewport);
+  }
+  return results;
+}
+
 async function verifyWalletGuidance(page, state, { scenario, connected = true, captureDirectory = '', viewports = [] } = {}) {
   const panel = page.locator('#customer-wallet');
   await panel.getByRole('heading', { name: 'Wallet balances and IFRLock tools', exact: true }).waitFor();
@@ -400,6 +503,9 @@ async function run() {
         ids: element.getAttribute('data-wallet-connector-ids'),
       })))}`);
     });
+    if (!zeroEthOnly && !wrongChainOnly && !readFailureOnly && !reconnectOnly) {
+      await verifyCustomerWalletAnchor(page);
+    }
     await verifyWalletGuidance(page, state, { scenario: 'disconnected', connected: false });
     const connectButton = walletPanel.locator('[data-wallet-action="connect"]');
     if (await connectButton.isVisible()) {
