@@ -1564,7 +1564,7 @@ async function verifyPage(contextOptions, label) {
     await expectText(page, 'Lock transaction path');
     await expectText(page, 'IFR amount to lock');
     await expectText(page, 'Allowance');
-    await expectText(page, 'Recommended next step');
+    await expectText(page, 'Next step for on-chain tools');
     await expectText(page, 'Example lock amounts');
     await expectText(page, 'Silver / 2,500 IFR');
     await expectText(page, 'Platinum / 10,000 IFR');
