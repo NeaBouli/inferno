@@ -234,6 +234,7 @@ checks. The fixture never submits a transaction or contacts Mainnet.
 CI also runs `npm run test:ethers-v6-lifecycle` with natural runner shutdown and open-handle
 diagnostics, including an RPC
 rejection followed by a successful read to cover provider cleanup on error and success paths.
+This standalone entry runs `test:typecheck` before Vitest, preserving test diagnostics outside CI.
 
 ## Read-only Live Smoke
 

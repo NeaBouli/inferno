@@ -13,7 +13,7 @@
     "typecheck": "tsc --noEmit",
     "test": "npm run test:typecheck && DATABASE_URL=file:./test.db node scripts/reset-test-db.cjs && DATABASE_URL=file:./test.db vitest run",
     "test:model-b-tools": "node --test scripts/model-b-tools.test.cjs",
-    "test:ethers-v6-lifecycle": "DATABASE_URL=file:./test.db vitest run tests/ethersV6Services.test.ts",
+    "test:ethers-v6-lifecycle": "npm run test:typecheck && DATABASE_URL=file:./test.db vitest run tests/ethersV6Services.test.ts",
     "test:rate-limit-startup": "node scripts/test-rate-limit-startup.cjs",
     "test:migration-upgrade": "node scripts/verify-populated-migration-upgrade.cjs && node scripts/verify-owner-b-migration.cjs",
     "retention:report": "npm run build --silent && node dist/retentionCli.js report",
