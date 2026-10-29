@@ -1559,7 +1559,7 @@ async function verifyPage(contextOptions, label) {
       await verifyMobileWalletLaunches(page);
     }
     await expectNoHorizontalOverflow(page, `${label} home`);
-    await expectText(page, 'Checkout readiness');
+    await expectText(page, 'IFRLock example overview');
     await expectText(page, 'Example tier guide');
     await expectText(page, 'Lock transaction path');
     await expectText(page, 'IFR amount to lock');
@@ -1753,7 +1753,7 @@ async function verifyPage(contextOptions, label) {
     await gotoAppPage(page, '/b/smoke-missing-business');
     await expectText(page, 'Seller scanner');
     await expectText(page, 'Business console');
-    await expectText(page, 'Checkout readiness');
+    await expectText(page, 'IFRLock example overview');
     await expectText(page, 'Customer-presented QR');
     await expectText(page, 'Scan customer QR');
     await expectText(page, 'Bind selected rule');

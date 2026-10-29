@@ -1511,3 +1511,17 @@ isolation. Focus-only moves within/outside discovery, empty facets and removal o
 only the selected facet have explicit regression coverage. Responsive computed
 layout/screenshots cover the discovery states.
 No backend, API, schema, wallet, dependency, persistence or retention path changes.
+
+## Generic IFRLock guidance versus exact checkout eligibility — 2026-10-29
+
+Module: Benefits homepage customer workspace -> `WalletStatus.tsx` generic balance
+and IFRLock transaction tools. Its1000IFR threshold is an example, not a universal
+checkout requirement. The panel states that exact offers can use different lock
+sources/thresholds/held balances and that off-chain checkout signatures spend no
+ETH. ETH funding remains scoped to optional on-chain transactions.
+
+The adjacent `CustomerCheckoutPass` and `OfferEligibility` keep their existing
+wallet/offer/source/signature checks. All read, `canPayGas`, approval/lock/unlock
+predicates and transaction behavior are preserved. Existing wallet UI fixtures
+retain prior assertions and add lower/higher-threshold and CommitmentVault cases;
+responsive visual evidence is scoped to this panel, not the old discovery matrix.
