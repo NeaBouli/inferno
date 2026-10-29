@@ -1,31 +1,32 @@
+import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
 import { YouTubeChecker } from '../services/youtube-checker';
 
+const { mockList } = vi.hoisted(() => ({ mockList: vi.fn() }));
+
 // Mock googleapis
-jest.mock('googleapis', () => {
-  const mockList = jest.fn();
+vi.mock('googleapis', () => {
   return {
     google: {
       youtube: () => ({
         members: { list: mockList },
       }),
       auth: {
-        OAuth2: jest.fn().mockImplementation(() => ({
-          setCredentials: jest.fn(),
-        })),
+        OAuth2: vi.fn().mockImplementation(function () { return {
+          setCredentials: vi.fn(),
+        }; }),
       },
     },
     __mockList: mockList,
   };
 });
 
-const { __mockList: mockList } = require('googleapis');
 
 describe('YouTubeChecker', () => {
   let checker: YouTubeChecker;
 
   beforeEach(() => {
     checker = new YouTubeChecker();
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('returns true when user is a channel member', async () => {

@@ -1,3 +1,4 @@
+import { beforeEach, describe, expect, test, vi } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import jwt from 'jsonwebtoken';
@@ -11,29 +12,31 @@ const VICTIM = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
 // A user who proves their own wallet via the canonical SIWE flow.
 const OWNER = '0x1234567890123456789012345678901234567890';
 
-const mockIsLocked = jest.fn().mockResolvedValue(true);
-const mockIsMember = jest.fn().mockResolvedValue(false);
+const { mockIsLocked, mockIsMember } = vi.hoisted(() => ({
+  mockIsLocked: vi.fn().mockResolvedValue(true),
+  mockIsMember: vi.fn().mockResolvedValue(false),
+}));
 
-jest.mock('../services/lock-checker', () => ({
+vi.mock('../services/lock-checker', () => ({
   lockChecker: { isLocked: (...args: unknown[]) => mockIsLocked(...args) },
 }));
 
-jest.mock('../services/youtube-checker', () => ({
+vi.mock('../services/youtube-checker', () => ({
   youtubeChecker: { isMember: (...args: unknown[]) => mockIsMember(...args) },
 }));
 
-jest.mock('googleapis', () => ({
+vi.mock('googleapis', () => ({
   google: {
     auth: {
-      OAuth2: jest.fn().mockImplementation(() => ({
-        generateAuthUrl: jest.fn(
+      OAuth2: vi.fn().mockImplementation(function () { return {
+        generateAuthUrl: vi.fn(
           (opts: { state?: string }) =>
             `https://accounts.google.com/oauth?state=${encodeURIComponent(opts.state ?? '')}`
         ),
-        getToken: jest.fn().mockResolvedValue({
+        getToken: vi.fn().mockResolvedValue({
           tokens: { access_token: 'mock-yt-token' },
         }),
-      })),
+      }; }),
     },
   },
 }));
@@ -68,7 +71,7 @@ async function completeGoogleFlow(bearer?: string): Promise<string> {
 
 describe('wallet provenance: a Google login cannot spend a victim lock', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   test('GET /auth/google?wallet=<victim> is rejected and starts no flow', async () => {

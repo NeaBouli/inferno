@@ -1,3 +1,4 @@
+import { describe, expect, test, vi } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import jwt from 'jsonwebtoken';
@@ -6,30 +7,30 @@ import { authMiddleware } from '../middleware/auth';
 import { CONFIG } from '../config';
 import { LockChecker } from '../services/lock-checker';
 
-jest.mock('googleapis', () => ({
+vi.mock('googleapis', () => ({
   google: {
     auth: {
-      OAuth2: jest.fn().mockImplementation(() => ({
-        generateAuthUrl: jest.fn().mockReturnValue('https://accounts.google.com/oauth'),
-        getToken: jest.fn().mockResolvedValue({
+      OAuth2: vi.fn().mockImplementation(function () { return {
+        generateAuthUrl: vi.fn().mockReturnValue('https://accounts.google.com/oauth'),
+        getToken: vi.fn().mockResolvedValue({
           tokens: { access_token: 'mock-yt-token' },
         }),
-      })),
+      }; }),
     },
   },
 }));
 
-jest.mock('ethers', () => {
-  const actual = jest.requireActual('ethers');
+vi.mock('ethers', async () => {
+  const actual = await vi.importActual<typeof import('ethers')>('ethers');
   return {
     ...actual,
     ethers: {
       ...actual.ethers,
-      JsonRpcProvider: jest.fn().mockImplementation(() => ({})),
-      Contract: jest.fn().mockImplementation(() => ({
-        isLocked: jest.fn(),
-        lockedBalance: jest.fn(),
-      })),
+      JsonRpcProvider: vi.fn().mockImplementation(function () { return {}; }),
+      Contract: vi.fn().mockImplementation(function () { return {
+        isLocked: vi.fn(),
+        lockedBalance: vi.fn(),
+      }; }),
     },
   };
 });
@@ -52,9 +53,9 @@ describe('Security Fixes', () => {
 
     test('lockedBalance returns formatted value on success', async () => {
       const checker = new LockChecker();
-      const { parseUnits } = jest.requireActual('ethers');
+      const { parseUnits } = await vi.importActual<typeof import('ethers')>('ethers');
       const mockBalance = parseUnits('5000', 9);
-      (checker as any).contract.lockedBalance = jest.fn().mockResolvedValue(mockBalance);
+      (checker as any).contract.lockedBalance = vi.fn().mockResolvedValue(mockBalance);
       const result = await checker.lockedBalance('0x1234567890123456789012345678901234567890');
       expect(result).toBe('5000.0');
     });
@@ -157,79 +158,71 @@ describe('CWA-42/CWA-30: fail-closed configuration', () => {
     };
   }
 
-  function loadConfig(): typeof CONFIG {
-    let loaded: typeof CONFIG | undefined;
-    jest.isolateModules(() => {
-      loaded = require('../config').CONFIG;
-    });
-    return loaded as typeof CONFIG;
+  async function loadConfig(): Promise<typeof CONFIG> {
+    vi.resetModules();
+    return (await import('../config')).CONFIG;
   }
 
-  test('missing JWT_SECRET aborts startup (no dev fallback secret)', () => {
+  test('missing JWT_SECRET aborts startup (no dev fallback secret)', async () => {
     const restore = withPatchedEnv({ JWT_SECRET: undefined });
     try {
-      jest.isolateModules(() => {
-        expect(() => require('../config')).toThrow(/JWT_SECRET/);
-      });
+      vi.resetModules();
+      await expect(import('../config')).rejects.toThrow(/JWT_SECRET/);
     } finally {
       restore();
     }
   });
 
-  test('missing SIWE_DOMAIN aborts startup (no permissive fallback)', () => {
+  test('missing SIWE_DOMAIN aborts startup (no permissive fallback)', async () => {
     const restore = withPatchedEnv({ SIWE_DOMAIN: undefined });
     try {
-      jest.isolateModules(() => {
-        expect(() => require('../config')).toThrow(/SIWE_DOMAIN/);
-      });
+      vi.resetModules();
+      await expect(import('../config')).rejects.toThrow(/SIWE_DOMAIN/);
     } finally {
       restore();
     }
   });
 
-  test('missing SIWE_URI aborts startup (no permissive fallback)', () => {
+  test('missing SIWE_URI aborts startup (no permissive fallback)', async () => {
     const restore = withPatchedEnv({ SIWE_URI: undefined });
     try {
-      jest.isolateModules(() => {
-        expect(() => require('../config')).toThrow(/SIWE_URI/);
-      });
+      vi.resetModules();
+      await expect(import('../config')).rejects.toThrow(/SIWE_URI/);
     } finally {
       restore();
     }
   });
 
-  test('CHAIN_ID without IFRLOCK_ADDRESS aborts startup (no mixed-network default)', () => {
+  test('CHAIN_ID without IFRLOCK_ADDRESS aborts startup (no mixed-network default)', async () => {
     const restore = withPatchedEnv({ CHAIN_ID: '1', IFRLOCK_ADDRESS: undefined });
     try {
-      jest.isolateModules(() => {
-        expect(() => require('../config')).toThrow(/together/);
-      });
+      vi.resetModules();
+      await expect(import('../config')).rejects.toThrow(/together/);
     } finally {
       restore();
     }
   });
 
-  test('IFRLOCK_ADDRESS without CHAIN_ID aborts startup (no mixed-network default)', () => {
+  test('IFRLOCK_ADDRESS without CHAIN_ID aborts startup (no mixed-network default)', async () => {
     const restore = withPatchedEnv({
       CHAIN_ID: undefined,
       IFRLOCK_ADDRESS: '0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb',
     });
     try {
-      jest.isolateModules(() => {
-        expect(() => require('../config')).toThrow(/together/);
-      });
+      vi.resetModules();
+      await expect(import('../config')).rejects.toThrow(/together/);
     } finally {
       restore();
     }
   });
 
-  test('explicit CHAIN_ID + IFRLOCK_ADDRESS pair is honored', () => {
+  test('explicit CHAIN_ID + IFRLOCK_ADDRESS pair is honored', async () => {
     const restore = withPatchedEnv({
       CHAIN_ID: '1',
       IFRLOCK_ADDRESS: '0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb',
     });
     try {
-      const cfg = loadConfig();
+      const cfg = await loadConfig();
       expect(cfg.chainId).toBe(1);
       expect(cfg.ifrLockAddress).toBe('0x769928aBDfc949D0718d8766a1C2d7dBb63954Eb');
     } finally {
@@ -237,10 +230,10 @@ describe('CWA-42/CWA-30: fail-closed configuration', () => {
     }
   });
 
-  test('default network is one consistent Sepolia pair', () => {
+  test('default network is one consistent Sepolia pair', async () => {
     const restore = withPatchedEnv({ CHAIN_ID: undefined, IFRLOCK_ADDRESS: undefined });
     try {
-      const cfg = loadConfig();
+      const cfg = await loadConfig();
       expect(cfg.chainId).toBe(11155111);
       expect(cfg.ifrLockAddress).toBe('0x0Cab0A9440643128540222acC6eF5028736675d3');
     } finally {
@@ -252,7 +245,7 @@ describe('CWA-42/CWA-30: fail-closed configuration', () => {
     expect(CONFIG.isProduction).toBe(false);
   });
 
-  test('NODE_ENV=production enables isProduction (Secure OAuth cookie)', () => {
+  test('NODE_ENV=production enables isProduction (Secure OAuth cookie)', async () => {
     const restore = withPatchedEnv({
       NODE_ENV: 'production',
       CHAIN_ID: '1',
@@ -267,7 +260,7 @@ describe('CWA-42/CWA-30: fail-closed configuration', () => {
       YOUTUBE_CHANNEL_ID: 'fixture-channel',
     });
     try {
-      const cfg = loadConfig();
+      const cfg = await loadConfig();
       expect(cfg.isProduction).toBe(true);
     } finally {
       restore();

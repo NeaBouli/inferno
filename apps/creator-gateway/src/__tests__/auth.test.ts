@@ -1,21 +1,22 @@
+import { describe, expect, test, vi } from 'vitest';
 import request from 'supertest';
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import authRouter from '../routes/auth';
 import { CONFIG } from '../config';
 
-jest.mock('googleapis', () => ({
+vi.mock('googleapis', () => ({
   google: {
     auth: {
-      OAuth2: jest.fn().mockImplementation(() => ({
-        generateAuthUrl: jest.fn(
+      OAuth2: vi.fn().mockImplementation(function () { return {
+        generateAuthUrl: vi.fn(
           (opts: { state?: string }) =>
             `https://accounts.google.com/oauth?state=${encodeURIComponent(opts.state ?? '')}`
         ),
-        getToken: jest.fn().mockResolvedValue({
+        getToken: vi.fn().mockResolvedValue({
           tokens: { access_token: 'mock-yt-token', refresh_token: 'mock-yt-refresh' },
         }),
-      })),
+      }; }),
     },
   },
 }));
@@ -213,7 +214,7 @@ describe('Google OAuth flow', () => {
 
   test('expired state is rejected', async () => {
     const { state, cookie } = await startGoogleFlow();
-    const spy = jest.spyOn(Date, 'now').mockReturnValue(Date.now() + 11 * 60 * 1000);
+    const spy = vi.spyOn(Date, 'now').mockReturnValue(Date.now() + 11 * 60 * 1000);
     try {
       const res = await callback(state, cookie);
       expect(res.status).toBe(400);

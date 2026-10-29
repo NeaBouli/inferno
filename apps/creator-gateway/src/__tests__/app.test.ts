@@ -1,11 +1,12 @@
+import { expect, test, vi } from 'vitest';
 import request from 'supertest';
 import { app } from '../app';
 
-jest.mock('../config', () => ({ CONFIG: {
+vi.mock('../config', () => ({ CONFIG: {
   isProduction: true, allowedOrigins: ['https://client.example.invalid'],
 } }));
-jest.mock('../routes/auth', () => require('express').Router());
-jest.mock('../routes/access', () => require('express').Router());
+vi.mock('../routes/auth', async () => ({ default: (await import('express')).Router() }));
+vi.mock('../routes/access', async () => ({ default: (await import('express')).Router() }));
 
 test('health is minimal, uncached, and still works after the public budget is exhausted', async () => {
   for (let i = 0; i < 60; i++) await request(app).get('/not-found');
