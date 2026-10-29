@@ -147,6 +147,20 @@ test.each([
   expect(membersList).toHaveBeenCalledTimes(1);
 });
 
+test.each([{ nextPageToken: 'another-page' }, { pageInfo: { totalResults: 2 } }])(
+  'full authenticated path denies ambiguous result metadata despite exact IDs (%j)', async (metadata) => {
+    membersList.mockResolvedValue({ data: { ...metadata, items: [
+      { snippet: { creatorChannelId: CREATOR, memberDetails: { channelId: VISITOR_A } } },
+    ] } });
+    const { app } = await loadApp();
+    const token = await login(app);
+    const response = await request(app).get('/access/check').set('Authorization', `Bearer ${token}`);
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({ granted: false, reasons: [], hasYouTubeAuth: true });
+    expect(membersList).toHaveBeenCalledTimes(1);
+  }
+);
+
 test.each([undefined, '', '   '])('full authenticated path denies missing creator authority (%s)', async (credential) => {
   if (credential === undefined) delete process.env.YOUTUBE_CREATOR_REFRESH_TOKEN;
   else process.env.YOUTUBE_CREATOR_REFRESH_TOKEN = credential;

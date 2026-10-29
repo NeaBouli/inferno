@@ -57,6 +57,27 @@ test('only the configured creator client queries the supported filtered membersh
 });
 
 test.each([
+  { pageInfo: { totalResults: 1 } },
+  { nextPageToken: '', prevPageToken: null, pageInfo: { totalResults: 1 } },
+])('consistent single-result metadata preserves exact membership proof (%j)', async (metadata) => {
+  memberList.mockResolvedValue({ data: { ...metadata, items: [exact] } });
+  expect(await (await checker()).isMember(VISITOR, CREATOR)).toBe(true);
+  expect(memberList).toHaveBeenCalledTimes(1);
+});
+
+test.each([
+  { nextPageToken: 'another-page' }, { prevPageToken: 'previous-page' },
+  { nextPageToken: 0 }, { prevPageToken: false },
+  { pageInfo: { totalResults: 2 } }, { pageInfo: { totalResults: 0 } },
+  { pageInfo: { totalResults: '1' } }, { pageInfo: { totalResults: null } },
+  { pageInfo: { totalResults: 1.5 } },
+])('pagination or contradictory/malformed totals deny even an exact member (%j)', async (metadata) => {
+  memberList.mockResolvedValue({ data: { ...metadata, items: [exact] } });
+  expect(await (await checker()).isMember(VISITOR, CREATOR)).toBe(false);
+  expect(memberList).toHaveBeenCalledTimes(1);
+});
+
+test.each([
   { name: 'YOUTUBE_CREATOR_REFRESH_TOKEN', value: undefined },
   { name: 'YOUTUBE_CREATOR_REFRESH_TOKEN', value: '' },
   { name: 'YOUTUBE_CREATOR_REFRESH_TOKEN', value: '   ' },

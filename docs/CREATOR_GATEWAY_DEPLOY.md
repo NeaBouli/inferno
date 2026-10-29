@@ -160,6 +160,9 @@ setting is blank/unconfigured by default. The visitor's tokens are never
 authority for [`members.list`](https://developers.google.com/youtube/v3/docs/members/list).
 The checker uses `mode: 'all_current'`, `part: ['snippet']`,
 `filterByMemberChannelId: <verified visitor channel ID>` and `maxResults: 1`.
+One returned page item alone is insufficient: nonempty pagination tokens or a
+supplied `pageInfo.totalResults` other than numeric `1` deny membership. Absent
+pagination/count metadata is allowed; the checker never fetches another page.
 It grants only when the returned member resource has both
 `snippet.creatorChannelId === YOUTUBE_CHANNEL_ID` and
 `snippet.memberDetails.channelId === <verified visitor channel ID>`.
