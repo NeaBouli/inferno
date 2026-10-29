@@ -73,20 +73,36 @@ package "rate limit" {
 
 @startuml creator_default_entitlement
 title Creator default entitlement configuration
-component "config/index.ts\nCONFIG.minLockIFR" as CreatorConfig
+component "config/index.ts\nIFR threshold / creator channel\nserver-only creator credential" as CreatorConfig
 component "entitlement.ts\nDEFAULT_ENTITLEMENT" as CreatorPolicy
 component "access.ts\nGET /access/check" as CreatorAccess
 component "entitlement.ts\ncheckEntitlement" as CreatorCheck
 component "lock-checker.ts\nisLocked" as CreatorLock
 component "IFRLock contract" as CreatorContract
+component "auth.ts callback\nfresh viewer OAuth client" as CreatorCallback
+component "Google channels.list(mine=true)" as VisitorIdentity
+component "session-store.ts\nvisitor tokens + verified channel ID" as CreatorSession
+component "youtube-checker.ts\nisMember(visitor ID, creator ID)" as MembershipCheck
+component "separate creator OAuth client" as CreatorOAuth
+component "Google members.list" as MembersAPI
 CreatorConfig --> CreatorPolicy : validated decimal string; default 1000
 CreatorPolicy --> CreatorAccess : shared startup policy
-CreatorAccess --> CreatorCheck : authenticated wallet + stored YouTube session
+CreatorAccess --> CreatorCheck : authenticated wallet + stored visitor ID
 CreatorCheck --> CreatorLock : IFR condition threshold string
 CreatorLock --> CreatorContract : parseUnits(value, 9) bigint
+CreatorCallback --> VisitorIdentity : readonly viewer authority; exactly one channel
+VisitorIdentity --> CreatorSession : atomically store tokens + provider ID
+CreatorSession --> CreatorAccess : sid lookup; one-hour TTL
+CreatorConfig --> CreatorPolicy : youtube_member.channelId
+CreatorCheck --> MembershipCheck : verified visitor ID + policy creator
+CreatorConfig --> CreatorOAuth : optional creator refresh credential
+MembershipCheck --> CreatorOAuth : configured creator only
+CreatorOAuth --> MembersAPI : all_current; visitor ID filter; maxResults 1
+MembersAPI --> MembershipCheck : exact creatorChannelId + memberDetails.channelId
 note right of CreatorCheck
-  OR / YouTube behavior unchanged.
+  OR / AND logic and IFR arithmetic retained.
   Explicit policies retain their own thresholds and logic.
+  Missing creator/session/policy proof denies membership.
 end note
 @enduml
 

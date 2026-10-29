@@ -79,9 +79,12 @@ Creator Gateway login trace (`apps/creator-gateway`):
    initiator-cookie check + `src/services/session-store.ts::claimOAuthState`
    (single-use, expiry-checked, verifier hash must match — missing-cookie,
    cross-session, replay and expired attempts all fail),
-   `oauth2Client.getToken` and `src/services/session-store.ts::createYouTubeSession`
-   → `issueJwt` — Daten: state → stored wallet; Google tokens → server-side
-   session (1h TTL); JWT carries only `{ walletAddress?, sid }`
+   fresh per-flow viewer OAuth client `getToken` / `setCredentials` →
+   `channels.list({ part: ['id'], mine: true })` → exactly one unambiguous
+   provider channel ID → `src/services/session-store.ts::createYouTubeSession`
+   → `issueJwt` — data: state → stored wallet; visitor tokens + channel ID →
+   atomic server-side session (1h TTL); JWT carries only `{ walletAddress?, sid }`.
+   Missing/malformed/ambiguous visitor identity creates no session.
 3. browser → `src/routes/auth.ts::GET /auth/siwe/nonce` →
    `src/services/session-store.ts::createSiweNonce` — Daten: → hex nonce
    (single-use, 10-min TTL)
@@ -94,13 +97,21 @@ Creator Gateway login trace (`apps/creator-gateway`):
    `src/services/session-store.ts::getYouTubeSession` +
    `src/services/entitlement.ts::checkEntitlement`
    (`services/lock-checker.ts` on-chain, `services/youtube-checker.ts` with the
-   server-held token) — Daten: JWT claims → granted/reasons
+   server-derived visitor channel ID and policy creator channel) — data: JWT sid
+   → session identity → granted/reasons; token-only/expired sessions cannot qualify.
    Default-policy configuration hop: `src/config/index.ts::CONFIG.minLockIFR`
    (positive decimal string, at most nine places; default `1000`) →
    `services/entitlement.ts::DEFAULT_ENTITLEMENT` IFR condition →
    `lock-checker.ts::isLocked` → `ethers.parseUnits(value, 9)` → contract
    `isLocked(wallet, bigint)`. The HTTP route uses this startup-configured OR
    policy; explicit `checkEntitlement` policies keep their own thresholds/logic.
+   Membership configuration hop: `CONFIG.youtubeChannelId` → default
+   `youtube_member.channelId`; missing/mismatched policy channels deny.
+   `CONFIG.youtubeCreatorRefreshToken` → separate creator OAuth client →
+   `members.list` (`all_current`, visitor ID filter, maximum one result) → exact
+   response creator/member ID match. Missing creator authority or provider
+   errors deny without using viewer tokens as creator authority. OAuth/API
+   requests use library timeouts; real eligibility/allowlisting remains external.
 
 Benefits seller authorization/session trace (`apps/benefits-network/backend`):
 

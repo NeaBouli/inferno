@@ -101,7 +101,8 @@ no Sepolia or OAuth credential fallback.
 | `GOOGLE_CLIENT_ID` | Required | Server-side Web application OAuth client identifier. |
 | `GOOGLE_CLIENT_SECRET` | Required | Corresponding server-side OAuth secret. |
 | `GOOGLE_REDIRECT_URI` | Required | Exact HTTPS callback URI ending in `/auth/google/callback`, without query or fragment. |
-| `YOUTUBE_CHANNEL_ID` | Required | Intended creator channel identifier; currently metadata, not an enforced membership filter. |
+| `YOUTUBE_CHANNEL_ID` | Required | Exact creator channel identifier. The policy and returned member resource must both match it; creator ownership/API access require separate verification. |
+| `YOUTUBE_CREATOR_REFRESH_TOKEN` | Optional, server-only | Refresh token for the eligible creator owner with the `youtube.channel-memberships.creator` grant, issued for this application's OAuth client. Empty/whitespace disables the YouTube branch without a membership API request. Never supply a visitor token here. |
 | `MIN_LOCK_IFR` | Optional | Positive decimal token threshold with at most nine fractional digits, parsed with integer arithmetic. Defaults to `1000` in the default entitlement policy below. |
 | `CREATOR_GATEWAY_HOST` | Operator/release setting | Approved public DNS hostname for Compose interpolation and release verification; not an application credential. |
 
@@ -138,27 +139,58 @@ requirements follow Google's
 [production OAuth guidance](https://developers.google.com/identity/protocols/oauth2/production-readiness/policy-compliance)
 and [web-server flow](https://developers.google.com/identity/protocols/oauth2/web-server).
 
-**Unresolved release blocker:** the reviewed code currently requests only
-`https://www.googleapis.com/auth/youtube.readonly`, whereas
-[`members.list`](https://developers.google.com/youtube/v3/docs/members/list)
-requires `https://www.googleapis.com/auth/youtube.channel-memberships.creator`,
-channel-owner authorization and access for a memberships-enabled creator.
-Google also documents `all_current`/`updates` modes; the checker sends
-`listMembers`. It treats any returned member as success, without binding the
-member to the signed-in user or configured `YOUTUBE_CHANNEL_ID`.
+### Membership identity and creator authorization
 
-Consequently, setting up the OAuth client or adding a scope in the Console
-cannot establish the promised visitor membership check. Do not broaden the
-runtime scope as a deployment workaround. A separately reviewed design must
-establish channel-owner credentials, member identity/channel binding and the
-required API access, or explicitly remove that branch from the product. Until
-then, Google API errors return false and the IFR-lock branch can independently
-grant access through the OR policy. Do not advertise working YouTube membership
-or approve a full membership launch from a green liveness response.
+The visitor login keeps only `https://www.googleapis.com/auth/youtube.readonly`.
+Each callback uses its own OAuth client to exchange tokens and call
+[`channels.list`](https://developers.google.com/youtube/v3/docs/channels/list)
+with `part: ['id']` and `mine: true`. It accepts exactly one channel resource ID
+(`UC` plus 22 URL-safe characters), without another page or a contradictory
+total count. Missing, malformed or ambiguous identity fails the login without
+creating a YouTube session. Query/body IDs, Google account subject and email do
+not establish channel identity. Tokens and the verified visitor channel ID are
+stored together in the one-hour server session; the JWT carries only sid,
+optional SIWE-proven wallet and standard timing claims. On upgrade, existing
+token-only sessions must complete the new Google login again before they can
+qualify for membership.
+
+Membership uses a separate OAuth client with the optional server-only
+`YOUTUBE_CREATOR_REFRESH_TOKEN` and the application's client ID/secret. This
+setting is blank/unconfigured by default. The visitor's tokens are never
+authority for [`members.list`](https://developers.google.com/youtube/v3/docs/members/list).
+The checker uses `mode: 'all_current'`, `part: ['snippet']`,
+`filterByMemberChannelId: <verified visitor channel ID>` and `maxResults: 1`.
+It grants only when the returned member resource has both
+`snippet.creatorChannelId === YOUTUBE_CHANNEL_ID` and
+`snippet.memberDetails.channelId === <verified visitor channel ID>`.
+Unavailable or unrelated identities, empty/malformed responses and provider,
+permission, revocation, quota or timeout failures deny membership. Ordinary
+channel subscriptions are not paid membership proof and are never a fallback.
+OAuth transport and API requests have five-second request timeouts; YouTube
+data requests disable retries and do not follow pagination.
+
+Custom `youtube_member` policy conditions must now include the configured
+creator's `channelId`; only that configured creator is supported. A missing or
+different policy channel denies that condition before provider access. Explicit
+AND policies still require every condition; the default OR policy can
+independently grant through the configured IFR lock when membership is
+unavailable or unconfigured. Provider tokens, creator credentials and raw
+provider error/request objects must never enter responses or logs.
+
+**Remaining operator/release prerequisites:** Google's
+[`member` resource documentation](https://developers.google.com/youtube/v3/docs/members)
+restricts this API to eligible creators with a dedicated YouTube Partner Manager
+and channel-level allowlisting. A memberships-enabled channel, creator-owner
+authorization with `youtube.channel-memberships.creator`, a properly issued
+server refresh token, refresh/revocation handling and controlled real member /
+nonmember acceptance must be verified separately. Adding a Console scope or
+ordinary visitor consent cannot create this access. No real account, credential
+or provider API acceptance is established by the synthetic tests. Do not
+advertise working live membership or approve a launch from green liveness.
 
 ## First release prerequisites and procedure
 
-1. Resolve the membership blocker and owner decisions above. Choose one full
+1. Complete the membership operator/provider acceptance above. Choose one full
    reviewed 40-character release SHA, require green Creator Gateway CI and
    release-guard CI for that exact SHA, and review the final image/Compose diff.
 2. An authorized operator must obtain read-only capacity and routing evidence,

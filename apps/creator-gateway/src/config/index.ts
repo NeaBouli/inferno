@@ -117,6 +117,8 @@ export const CONFIG = {
     redirectUri: googleRedirectUri,
   },
   youtubeChannelId: setting('YOUTUBE_CHANNEL_ID'),
+  // Optional, server-only creator authority; viewer OAuth never supplies it.
+  youtubeCreatorRefreshToken: (process.env.YOUTUBE_CREATOR_REFRESH_TOKEN ?? '').trim(),
   minLockIFR,
   decimals: 9,
 };

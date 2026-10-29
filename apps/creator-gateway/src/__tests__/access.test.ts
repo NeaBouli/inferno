@@ -75,7 +75,8 @@ describe('Access Routes', () => {
       granted: true,
       reasons: ['YouTube Member'],
     });
-    const sid = createYouTubeSession({ accessToken: 'yt-token-123' });
+    const channelId = 'UCVVVVVVVVVVVVVVVVVVVVVV';
+    const sid = createYouTubeSession({ accessToken: 'yt-token-123', channelId });
     const token = makeToken({ walletAddress: '0xABCD', sid });
     const res = await request(app)
       .get('/access/check')
@@ -85,7 +86,7 @@ describe('Access Routes', () => {
     expect(res.body.walletAddress).toBe('0xABCD');
     expect(mockCheckEntitlement).toHaveBeenCalledWith(
       '0xABCD',
-      'yt-token-123',
+      channelId,
       expect.anything()
     );
     // CWA-41: provider token must not leak into the response

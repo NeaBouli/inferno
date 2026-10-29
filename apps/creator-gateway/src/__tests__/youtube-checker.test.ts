@@ -1,86 +1,110 @@
-import { beforeEach, describe, expect, it, vi, type Mock } from 'vitest';
-import { YouTubeChecker } from '../services/youtube-checker';
+import { afterEach, beforeEach, expect, test, vi, type Mock } from 'vitest';
 
-const { mockList } = vi.hoisted(() => ({ mockList: vi.fn() }));
-
-// Mock googleapis
-vi.mock('googleapis', () => {
-  return {
-    google: {
-      youtube: () => ({
-        members: { list: mockList },
+const { memberList, clients } = vi.hoisted(() => ({
+  memberList: vi.fn(),
+  clients: [] as Array<{ options: unknown; setCredentials: Mock }>,
+}));
+vi.mock('googleapis', () => ({
+  google: {
+    youtube: () => ({ members: { list: memberList } }),
+    auth: {
+      OAuth2: vi.fn(function (options: unknown) {
+        const client = { options, setCredentials: vi.fn() };
+        clients.push(client);
+        return client;
       }),
-      auth: {
-        OAuth2: vi.fn().mockImplementation(function () { return {
-          setCredentials: vi.fn(),
-        }; }),
-      },
     },
-    __mockList: mockList,
+  },
+}));
+
+const CREATOR = `UC${'C'.repeat(22)}`;
+const VISITOR = `UC${'V'.repeat(22)}`;
+const OTHER = `UC${'X'.repeat(22)}`;
+const savedEnv = process.env;
+beforeEach(() => {
+  process.env = {
+    NODE_ENV: 'test', JWT_SECRET: 'synthetic-youtube-checker-jwt-at-least-32-bytes',
+    SIWE_DOMAIN: 'localhost', SIWE_URI: 'http://localhost:3005',
+    GOOGLE_CLIENT_ID: 'synthetic-app-client', GOOGLE_CLIENT_SECRET: 'synthetic-app-secret',
+    YOUTUBE_CHANNEL_ID: CREATOR, YOUTUBE_CREATOR_REFRESH_TOKEN: 'synthetic-creator-refresh',
   };
+  vi.resetModules();
+  memberList.mockReset();
+  clients.length = 0;
+});
+afterEach(() => { process.env = savedEnv; vi.restoreAllMocks(); });
+
+async function checker() {
+  return (await import('../services/youtube-checker')).youtubeChecker;
+}
+const exact = { snippet: { creatorChannelId: CREATOR, memberDetails: { channelId: VISITOR } } };
+
+test('only the configured creator client queries the supported filtered membership API', async () => {
+  memberList.mockResolvedValue({ data: { items: [exact] } });
+  expect(await (await checker()).isMember(VISITOR, CREATOR)).toBe(true);
+  expect(clients).toHaveLength(1);
+  expect(clients[0].options).toEqual({
+    clientId: 'synthetic-app-client', clientSecret: 'synthetic-app-secret',
+    transporterOptions: { timeout: 5_000 },
+  });
+  expect(clients[0].setCredentials).toHaveBeenCalledExactlyOnceWith({
+    refresh_token: 'synthetic-creator-refresh',
+  });
+  expect(memberList).toHaveBeenCalledExactlyOnceWith({
+    auth: clients[0], part: ['snippet'], mode: 'all_current',
+    filterByMemberChannelId: VISITOR, maxResults: 1,
+  }, { timeout: 5_000, retry: false });
 });
 
-
-describe('YouTubeChecker', () => {
-  let checker: YouTubeChecker;
-
-  beforeEach(() => {
-    checker = new YouTubeChecker();
-    vi.clearAllMocks();
-  });
-
-  it('returns true when user is a channel member', async () => {
-    mockList.mockResolvedValueOnce({
-      data: { items: [{ snippet: { channelId: 'test' } }] },
-    });
-
-    const result = await checker.isMember('valid-token');
-    expect(result).toBe(true);
-    expect(mockList).toHaveBeenCalledWith(
-      expect.objectContaining({
-        part: ['snippet'],
-        mode: 'listMembers',
-        maxResults: 1,
-      })
-    );
-  });
-
-  it('returns false when user is not a channel member', async () => {
-    mockList.mockResolvedValueOnce({
-      data: { items: [] },
-    });
-
-    const result = await checker.isMember('valid-token-no-membership');
-    expect(result).toBe(false);
-  });
-
-  it('returns false when items is undefined', async () => {
-    mockList.mockResolvedValueOnce({
-      data: {},
-    });
-
-    const result = await checker.isMember('valid-token-no-items');
-    expect(result).toBe(false);
-  });
-
-  it('returns false on API error (fail-closed)', async () => {
-    mockList.mockRejectedValueOnce(new Error('API quota exceeded'));
-
-    const result = await checker.isMember('bad-token');
-    expect(result).toBe(false);
-  });
-
-  it('returns false on network error (fail-closed)', async () => {
-    mockList.mockRejectedValueOnce(new Error('ECONNREFUSED'));
-
-    const result = await checker.isMember('network-fail-token');
-    expect(result).toBe(false);
-  });
-
-  it('returns false on invalid token (fail-closed)', async () => {
-    mockList.mockRejectedValueOnce(new Error('Invalid Credentials'));
-
-    const result = await checker.isMember('expired-token');
-    expect(result).toBe(false);
-  });
+test.each([
+  { name: 'YOUTUBE_CREATOR_REFRESH_TOKEN', value: undefined },
+  { name: 'YOUTUBE_CREATOR_REFRESH_TOKEN', value: '' },
+  { name: 'YOUTUBE_CREATOR_REFRESH_TOKEN', value: '   ' },
+  { name: 'GOOGLE_CLIENT_ID', value: '' },
+  { name: 'GOOGLE_CLIENT_SECRET', value: '' },
+  { name: 'YOUTUBE_CHANNEL_ID', value: '' },
+])('missing creator configuration denies before provider access ($name=$value)', async ({ name, value }) => {
+  if (value === undefined) delete process.env[name];
+  else process.env[name] = value;
+  expect(await (await checker()).isMember(VISITOR, CREATOR)).toBe(false);
+  expect(clients).toHaveLength(0);
+  expect(memberList).not.toHaveBeenCalled();
 });
+
+test.each([
+  [VISITOR, OTHER], [VISITOR, ''], ['', CREATOR], ['not-a-channel', CREATOR],
+  [` ${VISITOR}`, CREATOR], [VISITOR, 'not-a-channel'],
+])('invalid visitor/policy channel denies before provider access (%s,%s)', async (visitor, creator) => {
+  expect(await (await checker()).isMember(visitor, creator)).toBe(false);
+  expect(clients).toHaveLength(0);
+  expect(memberList).not.toHaveBeenCalled();
+});
+
+test.each([
+  undefined, null, {}, { items: null }, { items: {} }, { items: [] },
+  { items: [null] }, { items: [{}] }, { items: [{ snippet: {} }] },
+  { items: [{ snippet: { channelId: VISITOR } }] },
+  { items: [{ snippet: { creatorChannelId: CREATOR } }] },
+  { items: [{ snippet: { creatorChannelId: CREATOR, memberDetails: {} } }] },
+  { items: [{ snippet: { creatorChannelId: OTHER, memberDetails: { channelId: VISITOR } } }] },
+  { items: [{ snippet: { creatorChannelId: CREATOR, memberDetails: { channelId: OTHER } } }] },
+  { items: [exact, exact] },
+])('malformed, unavailable or unrelated member proof fails closed (%j)', async (data) => {
+  memberList.mockResolvedValue({ data });
+  expect(await (await checker()).isMember(VISITOR, CREATOR)).toBe(false);
+  expect(memberList).toHaveBeenCalledTimes(1);
+});
+
+test.each(['quotaExceeded', 'channelMembershipsNotEnabled', 'invalid_grant', 'revoked', 'ETIMEDOUT', 'ECONNREFUSED'])(
+  'provider failure denies without disclosing raw request/credential data (%s)', async (message) => {
+    const error = Object.assign(new Error(message), {
+      config: { headers: { authorization: 'Bearer SYNTHETIC-SECRET-SENTINEL' } },
+    });
+    const errorLog = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const warnLog = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    memberList.mockRejectedValue(error);
+    expect(await (await checker()).isMember(VISITOR, CREATOR)).toBe(false);
+    expect(errorLog).not.toHaveBeenCalled();
+    expect(warnLog).not.toHaveBeenCalled();
+  }
+);
