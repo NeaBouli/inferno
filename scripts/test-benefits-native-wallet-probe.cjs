@@ -2,10 +2,13 @@
 'use strict';
 
 const assert = require('node:assert/strict');
+const fs = require('node:fs');
 const path = require('node:path');
+const { createRequire } = require('node:module');
 const { pathToFileURL } = require('node:url');
 
 const modulePath = path.join(__dirname, '..', 'apps/benefits-network/frontend/src/lib/nativeWalletProbe.mjs');
+const requireFrontend = createRequire(path.join(__dirname, '..', 'apps/benefits-network/frontend/package.json'));
 
 function deferred() {
   let resolve;
@@ -275,6 +278,48 @@ async function main() {
     assert.equal(isOrdinaryWalletBusy(client, config), false);
   });
 
+  await check('real QueryClient exact pending key independently gates and releases', async () => {
+    // This is required in the default test. Missing frontend dependencies fail;
+    // local offline qualification may use ordinary CommonJS NODE_PATH lookup.
+    const { QueryClient, MutationObserver } = requireFrontend('@tanstack/query-core');
+    const lock = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'apps/benefits-network/frontend/package-lock.json'), 'utf8'));
+    assert.equal(requireFrontend('@tanstack/query-core/package.json').version, lock.packages['node_modules/@tanstack/query-core'].version);
+    const client = new QueryClient();
+    const config = { state: { status: 'disconnected' } };
+    const otherResult = deferred();
+    const connectResult = deferred();
+    const other = new MutationObserver(client, {
+      mutationKey: ['connect', 'other'], mutationFn: () => otherResult.promise,
+    });
+    const connect = new MutationObserver(client, {
+      mutationKey: ['connect'], mutationFn: () => connectResult.promise,
+    });
+    let otherRun;
+    let connectRun;
+    try {
+      otherRun = other.mutate();
+      assert.equal(client.isMutating({ mutationKey: ['connect', 'other'], exact: true }), 1);
+      assert.equal(isOrdinaryWalletBusy(client, config), false);
+      connectRun = connect.mutate();
+      assert.equal(config.state.status, 'disconnected');
+      assert.equal(client.isMutating({ mutationKey: ['connect'], exact: true }), 1);
+      assert.equal(isOrdinaryWalletBusy(client, config), true);
+      connectResult.resolve();
+      await connectRun;
+      assert.equal(config.state.status, 'disconnected');
+      assert.equal(client.isMutating({ mutationKey: ['connect', 'other'], exact: true }), 1);
+      assert.equal(isOrdinaryWalletBusy(client, config), false);
+    } finally {
+      connectResult.resolve();
+      otherResult.resolve();
+      await Promise.allSettled([connectRun, otherRun].filter(Boolean));
+      connect.reset();
+      other.reset();
+      client.clear();
+    }
+    assert.equal(client.getMutationCache().getAll().length, 0);
+  });
+
   await check('results reveal only shape and array length', async () => {
     let itemReads = 0;
     const sentinel = 'SYNTHETIC_PRIVATE_SENTINEL_https://invalid.example/0xABC';
@@ -354,7 +399,7 @@ async function main() {
     assert.ok(Number.isFinite(snapshot.current.elapsedMs));
   });
 
-  process.stdout.write(`${JSON.stringify({ passed, failed: 0, realSharedQueryClientIntegration: 'NOT_RUN', mountedUiAndHydrationBaseline: 'NOT_RUN', realProviderOrDevice: 'NOT_RUN' })}\n`);
+  process.stdout.write(`${JSON.stringify({ passed, failed: 0, realSharedQueryClientIntegration: 'PASS_EXACT_KEY_DISCONNECTED_CONFIG', mountedUiAndHydrationBaseline: 'NOT_RUN', realProviderOrDevice: 'NOT_RUN' })}\n`);
 }
 
 main().catch(() => {
