@@ -1,0 +1,14 @@
+@startuml dashboard_owned_packaging
+participant Operator
+participant "repack.py" as Recipe
+participant "Pinned upstream tarball" as Original
+participant "Owned tarball + provenance" as Artifact
+Operator -> Recipe : build / upstream bytes
+Recipe -> Original : verify exact SHA512 / SHA1; bounded data read
+Original --> Recipe : regular-file payload
+Recipe -> Recipe : change only name/version/CSS value
+Recipe -> Artifact : deterministic gzip/tar + complete payload hashes
+Operator -> Recipe : verify
+Recipe -> Artifact : compare complete expected bytes and invariants
+Artifact --> Operator : artifact qualification only; app integration open
+@enduml

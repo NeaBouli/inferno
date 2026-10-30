@@ -1,0 +1,14 @@
+@startuml dashboard_owned_distribution
+component "Dashboard active UI/config" as Dashboard
+component "Original RainbowKit2.2.11 tarball" as Upstream
+component "repack.py
+SRI + exact metadata delta" as Recipe
+component "IFR-owned immutable tarball" as Owned
+component "CSS1.21.3" as CSS
+component "deepmerge-ts" as Merge
+Upstream --> Recipe : verified bytes; no target execution
+Recipe --> Owned : all payload preserved except 3 metadata values
+Dashboard ..> Owned : open normal local-tarball dependency
+Owned --> CSS : exact declared dependency
+CSS --> Merge : published replacement
+@enduml
