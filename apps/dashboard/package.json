@@ -7,10 +7,14 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test:dependencies": "node scripts/test-dependencies.mjs"
+    "test:dependencies": "node scripts/test-dependencies.mjs",
+    "test:owned-rainbowkit": "node scripts/test-owned-rainbowkit.mjs",
+    "test:wallet-contracts": "node scripts/test-wallet-contracts.mjs",
+    "test:compat-preview": "node scripts/test-compat-preview.mjs",
+    "preview:compat": "node scripts/serve-compat-preview.mjs"
   },
   "dependencies": {
-    "@rainbow-me/rainbowkit": "^2.2.10",
+    "@rainbow-me/rainbowkit": "file:vendor/rainbowkit-compat/ifr-rainbowkit-compat-2.2.11-ifr.1.tgz",
     "@tanstack/react-query": "^5.96.2",
     "ethers": "6.17.0",
     "react": "^18.3.1",
@@ -20,7 +24,7 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.4",
-    "vite": "^6.0.0"
+    "vite": "^6.4.5"
   },
   "overrides": {
     "axios": "1.20.0",
