@@ -277,3 +277,12 @@ Lock --> Entitlement : lock result
 Entitlement --> Access : OR result + successful condition reasons
 Access --> Client : granted / reasons
 @enduml
+
+@startuml dashboard_wallet_compat_path
+actor User
+User -> Dashboard : connect / account / chain
+Dashboard -> "Owned RainbowKit" : existing exports
+"Owned RainbowKit" -> Wagmi : existing connectors
+Wagmi -> Ethers : connectorClient / signer
+Ethers -> "Existing IFR contracts" : unchanged ABI / 9 handles
+@enduml
