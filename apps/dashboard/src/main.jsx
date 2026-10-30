@@ -9,18 +9,18 @@ import "@rainbow-me/rainbowkit/styles.css";
 import "./App.css";
 
 const queryClient = new QueryClient();
+const walletTheme = darkTheme({
+  accentColor: "#e74c3c",
+  accentColorForeground: "#000",
+  borderRadius: "medium",
+});
+walletTheme.colors.connectButtonTextError = "#000";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider
-          theme={darkTheme({
-            accentColor: "#e74c3c",
-            accentColorForeground: "#000",
-            borderRadius: "medium",
-          })}
-        >
+        <RainbowKitProvider theme={walletTheme}>
           <App />
         </RainbowKitProvider>
       </QueryClientProvider>

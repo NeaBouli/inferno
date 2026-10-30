@@ -130,6 +130,13 @@ body {
   min-height: 44px;
 }
 
+[data-rk] [role="dialog"] a[href] {
+  display: inline-flex;
+  align-items: center;
+  min-width: 44px;
+  min-height: 44px;
+}
+
 .btn-send {
   width: 100%;
   padding: 12px;
@@ -251,6 +258,18 @@ body {
 
 .table tr.burn td { color: var(--accent); }
 .table tr.net td { color: var(--green); font-weight: 600; }
+
+@media (max-width: 600px) {
+  .contracts-table { table-layout: fixed; }
+  .contracts-table th, .contracts-table td {
+    padding: 8px 4px;
+    overflow-wrap: anywhere;
+  }
+  .contracts-table th:nth-child(1) { width: 8%; }
+  .contracts-table th:nth-child(2),
+  .contracts-table th:nth-child(3) { width: 34%; }
+  .contracts-table th:nth-child(4) { width: 24%; }
+}
 
 /* ── Contract Links ───────────────────────────────────── */
 .address-link {

@@ -29,7 +29,7 @@ const viewports = [
   { width: 820, height: 1180 }, { width: 390, height: 844 },
 ];
 
-function measurements() {
+function measurements(expectedViewport) {
   const visible = (element) => {
     const box = element.getBoundingClientRect();
     const style = getComputedStyle(element);
@@ -54,19 +54,31 @@ function measurements() {
   }).reduce((sum, value, i) => sum + value * [0.2126, 0.7152, 0.0722][i], 0);
   const dialog = [...document.querySelectorAll('[role="dialog"]')].find(visible);
   const scope = dialog || document.querySelector('.header-right');
-  const buttons = [...scope.querySelectorAll('button')].filter(visible).map((button) => {
+  const buttons = [...scope.querySelectorAll('button, a[href]')].filter(visible).map((button) => {
     const rect = button.getBoundingClientRect();
     const bg = background(button);
     const text = button.innerText.trim();
     const icon = button.querySelector('svg path, svg');
-    const style = getComputedStyle(button);
-    let color = rgb(text ? style.color : icon ? getComputedStyle(icon).fill : style.color);
-    color ||= rgb(style.color);
-    const fg = blend(color, bg);
-    const contrast = (Math.max(luminance(fg), luminance(bg)) + 0.05) /
-      (Math.min(luminance(fg), luminance(bg)) + 0.05);
+    const painted = [];
+    const walker = document.createTreeWalker(button, NodeFilter.SHOW_TEXT);
+    while (walker.nextNode()) {
+      if (walker.currentNode.textContent.trim()) {
+        const parent = walker.currentNode.parentElement;
+        if (visible(parent)) painted.push({ color: rgb(getComputedStyle(parent).color), bg: background(parent) });
+      }
+    }
+    if (!painted.length) painted.push({ color: rgb(icon ? getComputedStyle(icon).fill : getComputedStyle(button).color)
+      || rgb(getComputedStyle(button).color), bg });
+    const contrasts = painted.map(({ color, bg: actualBackground }) => {
+      const foreground = blend(color, actualBackground);
+      return { foreground, background: actualBackground,
+        ratio: (Math.max(luminance(foreground), luminance(actualBackground)) + 0.05) /
+          (Math.min(luminance(foreground), luminance(actualBackground)) + 0.05) };
+    });
+    const minimum = contrasts.reduce((left, right) => left.ratio < right.ratio ? left : right);
     return { label: text || button.getAttribute('aria-label') || 'icon',
-      rect: rect.toJSON(), contrast, foreground: fg, background: bg,
+      tag: button.tagName, rect: rect.toJSON(), contrast: minimum.ratio,
+      foreground: minimum.foreground, background: minimum.background, paintedContrasts: contrasts,
       minimumContrast: text ? 4.5 : 3, disabled: button.disabled };
   });
   const overlaps = [];
@@ -80,7 +92,7 @@ function measurements() {
     }
   }
   const textOutside = [];
-  for (const element of [...scope.querySelectorAll('button'),
+  for (const element of [...scope.querySelectorAll('button, a[href]'),
     ...(!dialog ? document.querySelectorAll('.header h1, .token-grid .stat-value') : [])].filter(visible)) {
     const box = element.getBoundingClientRect();
     const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
@@ -100,8 +112,11 @@ function measurements() {
   const fixture = window.__IFR_DASHBOARD_FIXTURE__;
   return { width: innerWidth, height: innerHeight, dpr: devicePixelRatio,
     documentHeight: Math.max(document.documentElement.scrollHeight, document.body.scrollHeight, innerHeight),
-    horizontalOverflow: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - innerWidth,
-    dialog: dialog?.getBoundingClientRect().toJSON() || null, buttons, overlaps, textOutside,
+    horizontalOverflow: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - expectedViewport.width,
+    visualViewport: { width: window.visualViewport.width, height: window.visualViewport.height,
+      scale: window.visualViewport.scale },
+    dialog: dialog?.querySelector('[role="document"]')?.getBoundingClientRect().toJSON() || null,
+    dialogBackdrop: dialog?.getBoundingClientRect().toJSON() || null, buttons, overlaps, textOutside,
     headerMainGap: main.top - header.bottom, fixture: fixture.snapshot(),
     fixtureOnlyProvider: fixture.syntheticOnly && window.ethereum.isMetaMask &&
       !Object.getOwnPropertyDescriptor(window, 'ethereum').writable &&
@@ -133,11 +148,14 @@ for (const viewport of viewports) {
     const hit = (locator) => viewport.width <= 820 ? locator.tap() : locator.click();
     const connect = () => page.locator('[data-testid="rk-connect-button"]');
     const account = () => page.locator('[data-testid="rk-account-button"]');
-    const chain = () => page.locator('[data-testid="rk-chain-button"]');
+    const chain = () => page.locator('[data-testid="rk-wrong-network-button"]');
     const capture = async (state) => {
       await page.evaluate(() => document.fonts.ready);
+      await page.waitForFunction(() => document.getAnimations().every((animation) =>
+        animation.effect?.getComputedTiming().iterations === Infinity || animation.playState !== 'running'),
+      undefined, { timeout: 3000 });
       await page.waitForTimeout(150);
-      const data = await page.evaluate(measurements);
+      const data = await page.evaluate(measurements, viewport);
       const file = `${viewport.width}x${viewport.height}-${state}.png`;
       const png = await page.screenshot({ path: path.join(evidence, file), fullPage: true,
         animations: 'disabled', scale: 'css' });
@@ -191,17 +209,17 @@ for (const viewport of viewports) {
     assert.equal(after.account, '0x1111111111111111111111111111111111111111');
     await capture('connected');
     await openAndClose(account(), 'account-modal');
-    await openAndClose(chain(), 'chain-modal');
     await hit(account()); await hit(page.getByRole('button', { name: 'Disconnect', exact: true }));
     await connect().waitFor(); await capture('disconnected-after-action');
     await hit(connect()); await hit(page.getByRole('button', { name: 'MetaMask', exact: true }));
     await account().waitFor(); await capture('reconnected');
     await page.evaluate(() => window.__IFR_DASHBOARD_FIXTURE__.setState('unsupported'));
-    await page.getByRole('button', { name: /Wrong network/i }).waitFor();
-    await capture('unsupported');
-    await hit(page.getByRole('button', { name: /Wrong network/i }));
-    await hit(page.getByRole('dialog').getByRole('button', { name: /Sepolia/ }));
     await chain().waitFor();
+    await capture('unsupported');
+    await openAndClose(chain(), 'chain-modal');
+    await hit(chain());
+    await hit(page.getByRole('dialog').getByRole('button', { name: /Sepolia/ }));
+    await chain().waitFor({ state: 'hidden' }); await account().waitFor();
     for (const state of ['long', 'owner', 'loading', 'error']) {
       await page.goto(origin + '/?fixture=' + state, { waitUntil: 'domcontentloaded' });
       await connect().or(account()).first().waitFor();
