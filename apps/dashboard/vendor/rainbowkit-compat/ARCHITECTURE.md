@@ -12,14 +12,15 @@ upstream-supported RainbowKit release or an accepted remediation.
 
 ## 2. Trace
 
-1. App/Provider/config imports -> Dashboard manifest/lock -> published
-   RainbowKit 2.2.11: currently built.
-2. Proposed replacement owner -> deterministic repack.py -> immutable
+1. Preserved RainbowKit 2.2.11 payload -> existing App/Provider/config and
+   wallet/contract interfaces: source-built and covered by offline checks.
+2. Upstream archive -> deterministic repack.py -> immutable
    IFR-owned distribution -> exact CSS 1.21.3 -> deepmerge-ts: adopted by Root
    and shown to Gio before the first diff; artifact qualification passed.
 3. Dashboard normal local-tarball dependency and existing import identities ->
    owned distribution: normal npm key/name semantics proved in an isolated
-   fixture; the actual application installation and compatibility remain open.
+   fixture and the actual installed graph. Local payload, peer, contract,
+   dependency and build checks pass; visual and provider acceptance are separate.
 
 ## 3. Modules
 
@@ -27,7 +28,7 @@ upstream-supported RainbowKit release or an accepted remediation.
 | --- | --- | --- | --- |
 | Dashboard | Wallet UI | src/main.jsx | Built |
 | Owned package | Data repack | repack.py | Qualified |
-| Integration | npm graph | package.json | In progress |
+| Integration | npm graph | package.json | Offline PASS |
 
 ## 4. Wiring
 
@@ -37,15 +38,20 @@ new connector, override or resolver hook is introduced.
 
 ## 5. Gaps
 
-Artifact qualification does not prove npm local-file name/import resolution, a
-patched dependency graph, UI behavior or alert closure. Other Zod contexts
-remain open. Root controls the coordinated install GO and final integration.
-The common architecture maps remain Root-owned.
+Artifact qualification alone does not prove integration or alert closure.
+The actual install now verifies normal import resolution, all 971 package
+files and modes, singleton peers, no deepmerge at any installed or locked
+copy, decoder 0.5.1, Vite 6.4.5 and the nine-contract signer/read-only path.
+Local build and fixture safety checks pass. Full and production audits retain
+the existing Zod advisory; this is not a clean Dashboard claim. Responsive
+visual acceptance, independent review, hosted CI and release acceptance remain
+separate gates. The common maps and final integration remain Root-owned.
 
 ## 6. Diagrams
 
-Scoped map.puml and main-path.puml describe packaging and the open integration
-hop. No rendering claim is made unless a renderer is actually used.
+Scoped map.puml and main-path.puml describe packaging, normal dependency
+integration and the separate preview gate. No rendering claim is made unless
+a renderer is actually used.
 
 ## 7. Next unit
 
@@ -66,9 +72,13 @@ mindmap
     Owned distribution
       built: repack.py integrity and metadata boundary
       built: immutable tarball with unchanged runtime payload
-    Open integration
-      normal local-tarball import resolution
-      dependency graph and responsive wallet acceptance
+    Offline integration proved
+      normal local-tarball import resolution and peers
+      installed payload graph and nine-contract path
+      production build and synthetic fixture safety
+    Separate acceptance
+      responsive wallet and keyboard behavior
+      provider device hosted CI and release gates
 ```
 
 ## Phase2 admitted graph and render contract
@@ -77,16 +87,16 @@ Root admitted the ordinary local-file-key proof and coordinated Dashboard
 install after the artifact checkpoint. The zero-dependency fixture proved
 npm10.9.7 retains the explicit owned internal package name while all four
 existing RainbowKit import/export paths resolve normally. No custom resolver
-or source import change is needed at this stage. Actual installed package
-resolution still requires qualification.
+or source import change is needed. The actual installed package/export paths
+and peer instance identities also pass their owning qualification checks.
 
 New alerts493/494 add two mapped edges: Dashboard dev Vite6.4.4 -> normal
 same-major6.4.5, and retained query-string9.5.1 -> normal declared
 decode-uri-component^0.5.0 -> patched0.5.1. Existing four overrides stay
 byte-identical; the prior SDK exact query-string7.1.3 mismatch is a retained
 limitation, not a newly supported SDK graph. No SDK/parent major is
-introduced. All nine current repository alert contexts remain in the evidence
-baseline.
+introduced. The starting nine-context repository alert inventory is retained
+in the evidence; this unit does not change the other contexts' decisions.
 
 Render hop remains RainbowKit CSS dependency -> shipped
 RainbowKitProvider/darkTheme/ConnectButton -> unchanged Dashboard app.

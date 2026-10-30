@@ -3,6 +3,10 @@ participant Operator
 participant "repack.py" as Recipe
 participant "Pinned upstream tarball" as Original
 participant "Owned tarball + provenance" as Artifact
+participant "Dashboard npm graph" as Graph
+participant "Offline qualification" as Checks
+participant "Loopback synthetic preview" as Preview
+participant "Browser peer" as Browser
 Operator -> Recipe : build / upstream bytes
 Recipe -> Original : verify exact SHA512 / SHA1; bounded data read
 Original --> Recipe : regular-file payload
@@ -10,5 +14,17 @@ Recipe -> Recipe : change only name/version/CSS value
 Recipe -> Artifact : deterministic gzip/tar + complete payload hashes
 Operator -> Recipe : verify
 Recipe -> Artifact : compare complete expected bytes and invariants
-Artifact --> Operator : artifact qualification only; app integration open
+Artifact --> Operator : artifact qualification checkpoint
+Operator -> Graph : ordinary file-key dependency; normal lock/install
+Graph -> Artifact : existing imports; explicit owned identity
+Graph -> Checks : all971 payloads/modes; peers; all package copies
+Checks -> Checks : dependency floors; adapter/nine-contract path; build
+Checks --> Operator : offline PASS; retained Zod audit finding
+Graph -> Preview : unchanged dist; test-only bootstrap
+Browser -> Preview : responsive/modal/keyboard/state qualification
+Preview --> Browser : synthetic reads; signing/broadcast/outbound denied
+note over Browser
+  Visual review, hosted CI and release are separate gates.
+  No real provider/device/pairing acceptance is inferred.
+end note
 @enduml

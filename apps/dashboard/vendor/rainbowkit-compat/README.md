@@ -41,9 +41,11 @@ The artifact checkpoint passed independently before Dashboard integration.
 The normal dependency uses this local tarball with the existing import key
 and explicit owned internal identity/provenance. An isolated npm 10.9.7
 fixture proved ordinary file-key placement and all four exported paths.
-The application manifest and generated lock now select this candidate;
-actual installation, graph, build and behavior still require qualification.
-Application imports and runtime implementation are unchanged.
+The application manifest and generated lock select this candidate. The actual
+installation, normal export placement, peer identities, all 971 installed
+payloads/modes, dependency graph, nine-contract path, fixture safety and local
+build pass their owning checks. Application imports and runtime implementation
+are unchanged. Visual and release acceptance remain separate gates.
 
 The generated lock also selects Vite 6.4.5 through its normal same-major
 range and decode-uri-component 0.5.1 through query-string 9.5.1's existing
@@ -69,11 +71,15 @@ query for disconnected, connected, unsupported, owner, loading, error or long
 data; wallet connection still goes through the actual UI and connector. No
 WalletConnect relay/pairing, real provider, chain or device acceptance follows.
 
-Actual absence of deepmerge, dependency/audit status, unchanged Zod contexts,
-active wallet/mobile/ConnectorClient/nine-contract behavior and existing
-responsive/modal/keyboard/state checks require separate execution and review.
-No alert491 closure, clean Dashboard, wallet signature, transaction, provider
-account action or production-readiness claim follows from payload equality.
+Deepmerge is absent from every installed and locked package copy; decoder
+0.5.1 and Vite 6.4.5 are selected normally. Fresh full and production audits
+retain the existing Zod advisory and its dependent wallet graph. No new
+override, waived threshold or clean-audit claim is introduced.
+
+Responsive/modal/keyboard/state acceptance, independent review, hosted CI,
+real provider/device testing and release acceptance remain separate evidence.
+No alert closure, wallet signature, transaction, provider account action or
+production-readiness claim follows from payload equality or offline checks.
 
 The task boundary is in ARCHITECTURE.md and the scoped PlantUML sources.
 Common project architecture maps and integration remain Root-owned.
