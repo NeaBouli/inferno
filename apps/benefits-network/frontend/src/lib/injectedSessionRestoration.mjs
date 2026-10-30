@@ -59,8 +59,21 @@ export function startInjectedSessionRestoration(config, { reconnect, watchConnec
 
   function attachProviderListeners(provider, connector, epoch) {
     removeProviderListeners();
+    let eventSequence = 0;
     const connectionIsCurrent = () => !cancelled && epoch === generation &&
       config.state.status === 'connected' && config.state.current === connector.uid;
+    const eventIsCurrent = (sequence) => sequence === eventSequence && connectionIsCurrent();
+    const disconnectCurrent = () => {
+      cancel();
+      connector.emitter.emit('disconnect');
+    };
+    const verifyEventProvider = async (sequence) => {
+      if (!eventIsCurrent(sequence)) return false;
+      const currentProvider = await connector.getProvider();
+      if (!eventIsCurrent(sequence)) return false;
+      if (currentProvider !== provider) { disconnectCurrent(); return false; }
+      return true;
+    };
     const invalidatePending = () => {
       if (startup && !cancelled) {
         // An account change invalidates an in-flight startup response. Retry
@@ -76,29 +89,36 @@ export function startInjectedSessionRestoration(config, { reconnect, watchConnec
       return false;
     };
     const accountsChanged = async () => {
+      const sequence = ++eventSequence;
       if (invalidatePending()) return;
-      if (!connectionIsCurrent()) return;
       try {
+        if (!await verifyEventProvider(sequence)) return;
         const accounts = await connector.getAccounts();
-        if (!connectionIsCurrent()) return;
-        if (!accounts.length) connector.emitter.emit('disconnect');
+        if (!await verifyEventProvider(sequence)) return;
+        if (!accounts.length) disconnectCurrent();
         else connector.emitter.emit('change', { accounts });
       } catch {
-        if (connectionIsCurrent()) connector.emitter.emit('disconnect');
+        if (eventIsCurrent(sequence)) disconnectCurrent();
       }
     };
-    const chainChanged = (chain) => {
+    const chainChanged = async (chain) => {
+      const sequence = ++eventSequence;
       if (invalidatePending()) return;
-      if (connectionIsCurrent()) connector.emitter.emit('change', { chainId: Number(chain) });
+      try {
+        if (await verifyEventProvider(sequence)) connector.emitter.emit('change', { chainId: Number(chain) });
+      } catch {
+        if (eventIsCurrent(sequence)) disconnectCurrent();
+      }
     };
     const disconnected = () => {
+      eventSequence += 1;
       // Cancel a passive response even if the connection has not committed yet.
-      cancel();
-      connector.emitter.emit('disconnect');
+      disconnectCurrent();
     };
     const entries = [['accountsChanged', accountsChanged], ['chainChanged', chainChanged], ['disconnect', disconnected]];
     for (const [event, listener] of entries) provider.on(event, listener);
     removeProviderListeners = () => {
+      eventSequence += 1;
       for (const [event, listener] of entries) provider.removeListener(event, listener);
       removeProviderListeners = () => {};
     };

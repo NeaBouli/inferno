@@ -160,6 +160,12 @@ async function waitForServer(child) {
 // handled or rejected before navigation; no real wallet/provider is loaded.
 async function runInjectedRestorationControls() {
   const { pathToFileURL } = require('node:url');
+  const fs = require('node:fs');
+  const { createHash } = require('node:crypto');
+  const helperPath = path.join(frontend, 'src/lib/injectedSessionRestoration.mjs');
+  const corePath = path.join(frontend, 'node_modules/wagmi/node_modules/@wagmi/core/dist/esm/actions/reconnect.js');
+  const sourceHashes = Object.fromEntries([helperPath, __filename, corePath].map((file) =>
+    [file, createHash('sha256').update(fs.readFileSync(file)).digest('hex')]));
   const { startInjectedSessionRestoration, cancelInjectedSessionRestoration } = await import(
     pathToFileURL(path.join(frontend, 'src/lib/injectedSessionRestoration.mjs')).href);
   // This exact installed action has no transitive imports. Exercise real pinned
@@ -174,6 +180,7 @@ async function runInjectedRestorationControls() {
     assert.fail('restoration control did not settle');
   };
   const results = [];
+  const onlyControl = process.env.BENEFITS_WALLET_RESTORATION_CONTROL;
   function fixture({ marker = 'io.metamask', shim = false, denied = false, ready = true, available = true } = {}) {
     const methods = [];
     const storage = new Map([['recentConnectorId', marker], ['io.metamask.disconnected', shim], ['injected.connected', true]]);
@@ -185,13 +192,14 @@ async function runInjectedRestorationControls() {
     let account = wallet;
     let holdMethod;
     let release;
+    const accountResponses = [];
     const provider = {
       on: (event, listener) => listeners.set(event, new Set([...(listeners.get(event) || []), listener])),
       removeListener: (event, listener) => listeners.get(event)?.delete(listener),
       async request({ method }) {
         methods.push(method);
         if (method === holdMethod) await new Promise((resolve) => { release = resolve; });
-        if (method === 'eth_accounts') return accountReady ? [account] : [];
+        if (method === 'eth_accounts') return accountResponses.length ? accountResponses.shift() : accountReady ? [account] : [];
         if (method === 'eth_chainId') return '0x1';
         throw new Error('Prompting/mutating method reached synthetic control');
       },
@@ -200,7 +208,7 @@ async function runInjectedRestorationControls() {
     const emitter = {
       on: (event, listener) => emitterListeners.set(event, new Set([...(emitterListeners.get(event) || []), listener])),
       off: (event, listener) => emitterListeners.get(event)?.delete(listener),
-      emit: (event, value) => { for (const listener of emitterListeners.get(event) || []) listener(value); },
+      emit: (event, value) => { for (const listener of emitterListeners.get(event) || []) listener({ uid: 'synthetic-metamask', ...value }); },
     };
     let currentProvider = provider;
     const connector = { id: 'io.metamask', uid: 'synthetic-metamask', name: 'MetaMask', type: 'injected', emitter,
@@ -222,7 +230,13 @@ async function runInjectedRestorationControls() {
       },
       storage: { getItem: async (key) => { if (denied) throw new Error('Synthetic storage denied'); return storage.get(key); } },
       subscribe(selector, listener) { const entry = { selector, listener }; watchers.add(entry); return () => watchers.delete(entry); },
-      _internal: { events: { connect() {}, change() {}, disconnect() {
+      _internal: { events: { connect() {}, change(data) {
+        const connection = state.connections.get(data.uid);
+        if (!connection) return;
+        config.setState({ ...state, connections: new Map(state.connections).set(data.uid, {
+          ...connection, accounts: data.accounts ?? connection.accounts, chainId: data.chainId ?? connection.chainId,
+        }) });
+      }, disconnect() {
         config.setState({ ...state, status: 'disconnected', current: null, connections: new Map() });
       } } },
     };
@@ -233,7 +247,8 @@ async function runInjectedRestorationControls() {
       ready: (value) => { accountReady = value; },
       account: (value) => { account = value; },
       expose: () => { config.connectors = [connector]; connectorChanged(); browser.dispatchEvent(new Event('ethereum#initialized')); },
-      emit: (event) => { for (const listener of [...(listeners.get(event) || [])]) listener(); },
+      emit: (event, value) => { for (const listener of [...(listeners.get(event) || [])]) listener(value); },
+      queueAccounts: (...responses) => { accountResponses.push(...responses); },
       hold: (method) => { holdMethod = method; },
       pending: () => Boolean(release),
       release: () => { holdMethod = undefined; release?.(); release = undefined; },
@@ -242,6 +257,7 @@ async function runInjectedRestorationControls() {
     };
   }
   const check = async (name, options, run) => {
+    if (onlyControl && !name.startsWith(onlyControl)) return;
     const f = fixture(options);
     try {
       await run(f);
@@ -327,12 +343,56 @@ async function runInjectedRestorationControls() {
         'the invalidated response must be followed by a new passive authorization');
     });
   }
-  const fs = require('node:fs');
+  for (const outcome of ['accounts', 'empty', 'error']) {
+    await check(`post-restore-out-of-order-${outcome}`, {}, async (f) => {
+      await until(() => f.config.state.status === 'connected');
+      let older;
+      let rejectOlder;
+      let newer;
+      f.queueAccounts(new Promise((resolve, reject) => { older = resolve; rejectOlder = reject; }),
+        new Promise((resolve) => { newer = resolve; }));
+      const before = f.methods.length;
+      f.emit('accountsChanged'); await until(() => f.methods.length > before);
+      f.emit('accountsChanged'); await until(() => f.methods.length > before + 1);
+      newer(['0x4444444444444444444444444444444444444444']);
+      await until(() => f.config.state.connections.get(f.connector.uid)?.accounts[0] === '0x4444444444444444444444444444444444444444');
+      if (outcome === 'error') rejectOlder(new Error('Older synthetic read failed'));
+      else older(outcome === 'empty' ? [] : ['0x5555555555555555555555555555555555555555']);
+      await tick();
+      assert.equal(f.config.state.status, 'connected', 'an older empty/error result must not disconnect the newer account');
+      assert.deepEqual(f.config.state.connections.get(f.connector.uid)?.accounts,
+        ['0x4444444444444444444444444444444444444444'], 'a stale account response must not overwrite the newer live account');
+    });
+  }
+  await check('post-restore-chain-event-invalidates-pending-account', {}, async (f) => {
+    await until(() => f.config.state.status === 'connected');
+    let older;
+    f.queueAccounts(new Promise((resolve) => { older = resolve; }));
+    const before = f.methods.length; f.emit('accountsChanged'); await until(() => f.methods.length > before);
+    f.emit('chainChanged', '0x2');
+    await until(() => f.config.state.connections.get(f.connector.uid)?.chainId === 2);
+    older(['0x5555555555555555555555555555555555555555']); await tick();
+    assert.deepEqual(f.config.state.connections.get(f.connector.uid)?.accounts, [wallet]);
+  });
+  await check('post-restore-provider-swap-invalidates-pending-account', {}, async (f) => {
+    await until(() => f.config.state.status === 'connected');
+    f.hold('eth_accounts'); f.emit('accountsChanged'); await until(f.pending);
+    f.replaceProvider(); f.release(); await until(() => f.config.state.status === 'disconnected');
+    assert.equal(f.config.state.connections.size, 0, 'a replaced provider must not keep cached account authority');
+  });
+  await check('post-restore-explicit-cancel-invalidates-pending-account', {}, async (f) => {
+    await until(() => f.config.state.status === 'connected');
+    f.hold('eth_accounts'); f.emit('accountsChanged'); await until(f.pending); f.cancel();
+    f.config.setState({ ...f.config.state, status: 'disconnected', current: null, connections: new Map() });
+    const count = f.methods.length; f.release(); f.emit('accountsChanged'); await tick(300);
+    assert.equal(f.config.state.status, 'disconnected'); assert.equal(f.methods.length, count);
+  });
   const receiptPath = process.env.BENEFITS_WALLET_RESTORATION_RECEIPT;
   assert.ok(receiptPath && path.isAbsolute(receiptPath), 'an owned absolute receipt path is required');
+  assert.ok(results.length, 'restoration control selection must match a known case');
   fs.writeFileSync(receiptPath, `${JSON.stringify({ case: 'helper-controls', result: 'PASS',
     scope: 'actual helper + actual pinned Core reconnect; synthetic provider/config; not React/browser/build acceptance',
-    controls: results }, null, 2)}\n`, { flag: 'wx', mode: 0o600 });
+    sourceHashes, controls: results }, null, 2)}\n`, { flag: 'wx', mode: 0o600 });
   console.log(`[benefits-wallet-lock-ui] PASS - ${results.length} bounded injected restoration controls`);
 }
 
