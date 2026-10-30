@@ -102,6 +102,7 @@
     if (url.origin === window.location.origin) return nativeFetch(input, init);
     let body = init.body;
     if (body === undefined && input instanceof Request) body = await input.clone().text();
+    else if (body !== undefined && typeof body !== 'string') body = await new Response(body).text();
     let parsed;
     try { parsed = JSON.parse(body); } catch { /* Non-RPC traffic is denied below. */ }
     const calls = Array.isArray(parsed) ? parsed : [parsed];

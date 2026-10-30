@@ -11,7 +11,7 @@ window.fetch = async (url, options) => {
 };
 const navigator = {};
 const source = await readFile(new URL('./compat-wallet-fixture.js', import.meta.url), 'utf8');
-vm.runInNewContext(source, { window, navigator, URL, Request, CustomEvent, console });
+vm.runInNewContext(source, { window, navigator, URL, Request, Response, CustomEvent, console });
 const fixture = window.__IFR_DASHBOARD_FIXTURE__;
 const wallet = window.ethereum;
 assert.equal(fixture.syntheticOnly, true);
@@ -37,6 +37,13 @@ await wallet.request({ method: 'wallet_revokePermissions' });
 assert.equal((await wallet.request({ method: 'eth_accounts' })).length, 0);
 await window.fetch('https://rpc.example.invalid', { method: 'POST',
   body: JSON.stringify({ jsonrpc: '2.0', id: 1, method: 'eth_call', params: [] }) });
+assert.ok(calls.at(-1).url.startsWith('/__compat__/rpc?fixture='));
+const binaryBody = new TextEncoder().encode(JSON.stringify({
+  jsonrpc: '2.0', id: 2, method: 'eth_getBalance', params: [],
+}));
+await window.fetch('https://rpc.example.invalid', { method: 'POST', body: binaryBody });
+assert.ok(calls.at(-1).url.startsWith('/__compat__/rpc?fixture='));
+await window.fetch(new Request('https://rpc.example.invalid', { method: 'POST', body: binaryBody }));
 assert.ok(calls.at(-1).url.startsWith('/__compat__/rpc?fixture='));
 await assert.rejects(window.fetch('https://relay.example.invalid/analytics'), /Synthetic fixture denies/);
 assert.throws(() => new window.WebSocket('wss://relay.example.invalid'), /Synthetic fixture denies/);
