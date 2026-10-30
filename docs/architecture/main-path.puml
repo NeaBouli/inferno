@@ -205,7 +205,7 @@ participant "package.json" as Manifest
 participant "apply-hardhat-zod4-compat.cjs" as Adapter
 participant "hardhat-zod-utils@3.0.5 dist/src/index.js" as Helper
 participant "zod 4.6.7" as Zod
-participant "hardhat network type-validation" as Validation
+participant "hardhat 3.21.1 network type-validation" as Validation
 Manifest -> Adapter : postinstall
 Adapter -> Adapter : verify versions + SHA-256 (original OR patched, else reject without write)
 Adapter -> Helper : bounded compiled patch (2 API changes + fail-closed __proto__ guard)
