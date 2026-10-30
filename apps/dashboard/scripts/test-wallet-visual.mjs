@@ -184,9 +184,14 @@ for (const viewport of viewports) {
     const openAndClose = async (opener, state) => {
       await opener.focus(); await hit(opener);
       const modal = page.getByRole('dialog'); await modal.waitFor();
-      for (let i = 0; i < 6; i += 1) {
+      const focusableCount = await modal.locator('button, a[href], [tabindex="0"]').count();
+      for (let i = 0; i < focusableCount + 2; i += 1) {
         await page.keyboard.press('Tab');
         assert.ok(await modal.evaluate((element) => element.contains(document.activeElement)), 'Modal must retain keyboard focus');
+      }
+      for (let i = 0; i < 2; i += 1) {
+        await page.keyboard.press('Shift+Tab');
+        assert.ok(await modal.evaluate((element) => element.contains(document.activeElement)), 'Modal must retain reverse keyboard focus');
       }
       await capture(state);
       await page.keyboard.press('Escape'); await modal.waitFor({ state: 'hidden' });
