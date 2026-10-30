@@ -11,7 +11,7 @@ router.get('/check', authMiddleware, async (req, res) => {
   const session = getYouTubeSession(auth.sid);
   const result = await checkEntitlement(
     auth.walletAddress,
-    session?.accessToken,
+    session?.channelId,
     DEFAULT_ENTITLEMENT
   );
   res.json({

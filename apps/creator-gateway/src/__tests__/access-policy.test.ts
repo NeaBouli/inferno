@@ -33,6 +33,7 @@ beforeEach(() => {
     JWT_SECRET: 'access-policy-synthetic-jwt-fixture-at-least-32-bytes',
     SIWE_DOMAIN: 'localhost',
     SIWE_URI: 'http://localhost:3005',
+    YOUTUBE_CHANNEL_ID: 'UCCCCCCCCCCCCCCCCCCCCCCC',
   };
   vi.resetModules();
   contractIsLocked.mockReset();
@@ -90,17 +91,20 @@ test.each([
 test('explicit AND policy retains its threshold and does not mutate the configured default', async () => {
   const { app, token, checkEntitlement, DEFAULT_ENTITLEMENT } = await loadPolicy('25.123456789');
   const custom: EntitlementConfig = {
-    logic: 'AND', conditions: [{ type: 'youtube_member' }, { type: 'ifr_lock', minIFR: '5000' }],
+    logic: 'AND', conditions: [
+      { type: 'youtube_member', channelId: 'UCCCCCCCCCCCCCCCCCCCCCCC' },
+      { type: 'ifr_lock', minIFR: '5000' },
+    ],
   };
   const originalDefault = JSON.stringify(DEFAULT_ENTITLEMENT);
   const originalCustom = JSON.stringify(custom);
   contractIsLocked.mockResolvedValue(true);
   youtubeIsMember.mockResolvedValueOnce(false).mockResolvedValueOnce(true);
 
-  expect(await checkEntitlement(walletAddress, 'synthetic-provider-token', custom)).toEqual({
+  expect(await checkEntitlement(walletAddress, 'UCVVVVVVVVVVVVVVVVVVVVVV', custom)).toEqual({
     granted: false, reasons: ['IFR Lock >= 5000 IFR'],
   });
-  expect(await checkEntitlement(walletAddress, 'synthetic-provider-token', custom)).toEqual({
+  expect(await checkEntitlement(walletAddress, 'UCVVVVVVVVVVVVVVVVVVVVVV', custom)).toEqual({
     granted: true, reasons: ['YouTube Member', 'IFR Lock >= 5000 IFR'],
   });
   expect(contractIsLocked).toHaveBeenNthCalledWith(1, walletAddress, 5000000000000n);
@@ -117,7 +121,9 @@ test('explicit AND policy retains its threshold and does not mutate the configur
 test('configured default keeps YouTube OR access when the lock condition is false', async () => {
   const { app, token } = await loadPolicy('25.123456789');
   const { createYouTubeSession } = await import('../services/session-store');
-  const sid = createYouTubeSession({ accessToken: 'synthetic-provider-token' });
+  const sid = createYouTubeSession({
+    accessToken: 'synthetic-provider-token', channelId: 'UCVVVVVVVVVVVVVVVVVVVVVV',
+  });
   contractIsLocked.mockResolvedValue(false);
   youtubeIsMember.mockResolvedValue(true);
 
@@ -127,7 +133,7 @@ test('configured default keeps YouTube OR access when the lock condition is fals
   expect(response.body).toEqual({
     granted: true, reasons: ['YouTube Member'], walletAddress, hasYouTubeAuth: true,
   });
-  expect(youtubeIsMember).toHaveBeenCalledWith('synthetic-provider-token');
+  expect(youtubeIsMember).toHaveBeenCalledWith('UCVVVVVVVVVVVVVVVVVVVVVV', 'UCCCCCCCCCCCCCCCCCCCCCCC');
   expect(contractIsLocked).toHaveBeenCalledWith(walletAddress, 25123456789n);
 });
 
