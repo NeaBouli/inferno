@@ -60,10 +60,18 @@ function measurements(expectedViewport) {
     const text = button.innerText.trim();
     const icon = button.querySelector('svg path, svg');
     const painted = [];
+    const decorativeText = [];
     const walker = document.createTreeWalker(button, NodeFilter.SHOW_TEXT);
     while (walker.nextNode()) {
       if (walker.currentNode.textContent.trim()) {
         const parent = walker.currentNode.parentElement;
+        const value = walker.currentNode.textContent.trim();
+        if (button.getAttribute('data-testid') === 'rk-account-button' &&
+            parent.closest('[aria-hidden="true"]') && !/[\p{L}\p{N}]/u.test(value) && /0x[\da-f]/i.test(text)) {
+          decorativeText.push({ value, ariaHidden: true, redundantWithVisibleAccountLabel: true,
+            cssTextColorDoesNotMeasureMulticolorEmojiRaster: true });
+          continue;
+        }
         if (visible(parent)) painted.push({ color: rgb(getComputedStyle(parent).color), bg: background(parent) });
       }
     }
@@ -79,6 +87,7 @@ function measurements(expectedViewport) {
     return { label: text || button.getAttribute('aria-label') || 'icon',
       tag: button.tagName, rect: rect.toJSON(), contrast: minimum.ratio,
       foreground: minimum.foreground, background: minimum.background, paintedContrasts: contrasts,
+      decorativeText,
       minimumContrast: text ? 4.5 : 3, disabled: button.disabled };
   });
   const overlaps = [];
@@ -214,7 +223,7 @@ for (const viewport of viewports) {
     assert.equal(after.account, '0x1111111111111111111111111111111111111111');
     await capture('connected');
     await openAndClose(account(), 'account-modal');
-    await hit(account()); await hit(page.getByRole('button', { name: 'Disconnect', exact: true }));
+    await hit(account()); await hit(page.getByTestId('rk-disconnect-button'));
     await connect().waitFor(); await capture('disconnected-after-action');
     await hit(connect()); await hit(page.getByRole('button', { name: 'MetaMask', exact: true }));
     await account().waitFor(); await capture('reconnected');
