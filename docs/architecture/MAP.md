@@ -1575,3 +1575,41 @@ Render hop: `/guide` -> padded hero card -> H1 text ranges. The Guide-only
 the existing 48px base and 72px medium-screen scale continue above that bound.
 The release assertions cover 320px, 360px and 361px, loaded stylesheet identity
 and all heading text within the card padding, without clipping or hidden text.
+
+
+## Native wallet response checks (issue415)
+
+Status: implemented in source with independent source/consent review accepted.
+Build, browser and real-device qualification remain separate. Ordinary wallet
+connection sources remain identical to the restored 683ecea baseline; this is a
+separate explicit support path.
+
+```mermaid
+flowchart LR
+  Support["Support page: existing"] --> Probe["/support/wallet-rpc NativeWalletProbe"]
+  Probe --> Registry["Existing Wagmi useConnectors registry"]
+  Registry --> Provider["Selected native connector getProvider"]
+  Probe --> Controller["nativeWalletProbe.mjs RAM controller"]
+  Controller --> Provider
+  Provider --> Native["Same native provider.request; fixed explicit method"]
+  Native --> Snapshot["Only method, status, timing and shape/count metadata"]
+```
+
+The two permission methods additionally read the shared pending-connect mutation
+and connecting/reconnecting config state immediately before dispatch. One probe
+request remains pending until its real settlement, including across SPA remounts.
+A soft waiting timer and navigation never claim to cancel a native request.
+No new probe RPC runs on mount or selection. Existing global hydration is unchanged.
+
+Mapped files: `src/app/support/wallet-rpc/page.tsx`,
+`src/lib/nativeWalletProbe.mjs`, `src/lib/nativeWalletProbe.d.mts`, one link in
+`src/app/support/page.tsx` (all under the Benefits frontend), and the focused
+`scripts/test-benefits-native-wallet-probe.cjs`. No raw request/response, address,
+URL, error text, persistence, telemetry, provider replacement or vendor patch.
+These direct probes do not prove the earlier Wagmi awaited stage or wallet acceptance.
+
+The client route uses `isOrdinaryWalletBusy` with the existing shared QueryClient
+and config, and the module singleton `nativeWalletProbe` from
+`createNativeWalletProbe` owns the finite request lane. Only explicit method
+buttons call `start`; the original `WalletConnectControl::connectWallet` and
+its provider lifecycle remain identical to the restored 683ecea baseline.

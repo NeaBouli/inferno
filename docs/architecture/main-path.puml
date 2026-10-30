@@ -286,3 +286,25 @@ Browser -> Guide: viewport width
 Guide -> Heading: 40px through 360px, existing scale above
 Heading --> Guide: text fits the padded card
 @enduml
+
+@startuml benefits_native_wallet_probe_flow_415
+actor User
+participant NativeWalletProbe as Page
+participant "nativeWalletProbe singleton" as Probe
+participant "QueryClient and config" as Guard
+participant "Selected native connector" as Connector
+participant "Same native provider" as Provider
+User -> Page : select native wallet and explicit fixed method
+Page -> Probe : start with selection/lifecycle guards
+Probe -> Connector : getProvider once
+Connector --> Probe : native object
+Probe -> Guard : recheck active-method pending state
+alt mounted selection remains current and permitted
+  Probe -> Provider : fixed request with original receiver
+  note over Probe : 12s soft wait never cancels/releases pending lane
+  Provider --> Probe : actual result/error settlement
+  Probe --> Page : fixed metadata only; no account authority
+else owner/selection/busy guard refuses
+  Probe --> Page : request not sent
+end
+@enduml

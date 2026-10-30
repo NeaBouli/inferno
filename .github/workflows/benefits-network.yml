@@ -40,6 +40,7 @@ on:
       - 'scripts/test-benefits-service-worker.js'
       - 'scripts/test-benefits-support-ui.js'
       - 'scripts/test-benefits-wallet-asset-provider.mjs'
+      - 'scripts/test-benefits-native-wallet-probe.cjs'
       - 'scripts/test-benefits-node-runtime.cjs'
       - 'scripts/test-service-base-digests.cjs'
       - 'apps/data-api/Dockerfile'
@@ -97,6 +98,7 @@ on:
       - 'scripts/test-benefits-service-worker.js'
       - 'scripts/test-benefits-support-ui.js'
       - 'scripts/test-benefits-wallet-asset-provider.mjs'
+      - 'scripts/test-benefits-native-wallet-probe.cjs'
       - 'scripts/test-benefits-node-runtime.cjs'
       - 'scripts/test-service-base-digests.cjs'
       - 'apps/data-api/Dockerfile'
@@ -208,6 +210,8 @@ jobs:
       - run: npm run test:proof-link
       - run: npm run test:discoverability
       - run: npm run test:wallet-selection
+      - name: Native wallet response metadata and lifecycle controls
+        run: node ../../../scripts/test-benefits-native-wallet-probe.cjs
       - run: npm run test:zod-compat
       - run: node ../../../scripts/test-benefits-doc-consistency.cjs
       - name: Receipt context release check (audience/chain must match the frontend)
