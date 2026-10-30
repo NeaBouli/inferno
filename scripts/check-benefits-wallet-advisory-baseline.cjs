@@ -93,8 +93,8 @@ if (require.main === module) {
   );
   assert.equal(
     lock.packages?.["node_modules/decode-uri-component"]?.version,
-    "0.5.0",
-    "decode-uri-component must stay on the patched 0.5.0 release",
+    "0.5.1",
+    "decode-uri-component must stay on the patched 0.5.1 release",
   );
 
   const audit = spawnSync("npm", ["audit", "--json"], {
