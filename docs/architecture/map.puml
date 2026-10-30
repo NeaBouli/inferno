@@ -300,7 +300,7 @@ component "package.json" as Manifest
 component "postinstall adapter" as Adapter
 component "hardhat-zod-utils 3.0.5 dist" as Helper
 component "zod 4.6.7" as Zod
-component "hardhat 3.20.0 network validation" as Validation
+component "hardhat 3.21.1 network validation" as Validation
 Manifest --> Adapter : scripts.postinstall
 Manifest --> Zod : overrides.zod 4.6.7
 Adapter --> Helper : hash-pinned compiled patch (fail-closed __proto__ + issues API)
