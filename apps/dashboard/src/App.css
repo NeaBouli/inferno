@@ -51,14 +51,17 @@ body {
 /* ── Header ───────────────────────────────────────────── */
 .header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  gap: 12px;
   padding: 16px 0;
   border-bottom: 1px solid var(--border);
 }
 
 .header-left {
   display: flex;
+  min-width: 0;
   align-items: center;
   gap: 12px;
 }
@@ -77,6 +80,8 @@ body {
 
 .header-right {
   display: flex;
+  flex-wrap: wrap;
+  max-width: 100%;
   align-items: center;
   gap: 10px;
 }
@@ -115,6 +120,15 @@ body {
 .btn-wallet.connected { border-color: var(--green); color: var(--green); }
 
 .btn-small { padding: 4px 10px; font-size: 0.75rem; }
+
+/* Preserve the wallet UI while making its app and portal controls touchable. */
+.btn,
+.btn-send,
+.header-right button,
+[data-rk] [role="dialog"] button {
+  min-width: 44px;
+  min-height: 44px;
+}
 
 .btn-send {
   width: 100%;
