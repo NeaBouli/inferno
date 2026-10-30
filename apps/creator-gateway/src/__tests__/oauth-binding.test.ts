@@ -36,8 +36,12 @@ vi.mock('googleapis', () => ({
         getToken: vi.fn().mockResolvedValue({
           tokens: { access_token: 'mock-yt-token' },
         }),
+        setCredentials: vi.fn(),
       }; }),
     },
+    youtube: () => ({
+      channels: { list: vi.fn().mockResolvedValue({ data: { items: [{ id: 'UCVVVVVVVVVVVVVVVVVVVVVV' }] } }) },
+    }),
   },
 }));
 

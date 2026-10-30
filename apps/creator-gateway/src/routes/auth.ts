@@ -115,15 +115,39 @@ router.get('/google/callback', async (req, res) => {
   }
 
   try {
-    const { tokens } = await oauth2Client.getToken(code);
-    if (!tokens.access_token) {
+    // A callback client belongs to this flow only. Never overwrite another
+    // visitor's credentials or use viewer authority for creator membership APIs.
+    const viewerClient = new google.auth.OAuth2({
+      clientId: CONFIG.google.clientId,
+      clientSecret: CONFIG.google.clientSecret,
+      redirectUri: CONFIG.google.redirectUri,
+      transporterOptions: { timeout: 5_000 },
+    });
+    const { tokens } = await viewerClient.getToken(code);
+    if (typeof tokens.access_token !== 'string' || !tokens.access_token.trim()) {
+      res.status(502).json({ error: 'OAuth failed' });
+      return;
+    }
+    viewerClient.setCredentials(tokens);
+    const { data } = await google.youtube('v3').channels.list(
+      { auth: viewerClient, part: ['id'], mine: true },
+      { timeout: 5_000, retry: false }
+    );
+    const channels = data.items;
+    const channelId = Array.isArray(channels) && channels.length === 1 ? channels[0]?.id : undefined;
+    if (typeof channelId !== 'string' || !/^UC[A-Za-z0-9_-]{22}$/.test(channelId) ||
+        (data.nextPageToken != null && data.nextPageToken !== '') ||
+        (data.prevPageToken != null && data.prevPageToken !== '') ||
+        (data.pageInfo?.totalResults !== undefined && data.pageInfo.totalResults !== 1)) {
       res.status(502).json({ error: 'OAuth failed' });
       return;
     }
     // Provider tokens stay server-side; the client JWT carries only minimal claims.
+    // Create the session atomically only after the visitor channel is proven.
     const sid = createYouTubeSession({
       accessToken: tokens.access_token,
       refreshToken: tokens.refresh_token ?? undefined,
+      channelId,
     });
     const token = issueJwt({ walletAddress: oauthState.walletAddress, sid });
     res.json({ token, expiresIn: `${CONFIG.jwtExpiryHours}h` });

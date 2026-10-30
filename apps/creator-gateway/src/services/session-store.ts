@@ -60,6 +60,8 @@ export interface OAuthState {
 export interface YouTubeSession {
   accessToken: string;
   refreshToken?: string;
+  /** Provider-derived visitor identity. Legacy token-only sessions must relogin. */
+  channelId?: string;
 }
 
 export const OAUTH_STATE_TTL_MS = 10 * 60 * 1000;

@@ -81,3 +81,15 @@ test('token thresholds retain all nine decimals as a string', async () => {
   process.env.MIN_LOCK_IFR = '9007199254740993.000000001';
   expect((await loadConfig()).minLockIFR).toBe(process.env.MIN_LOCK_IFR);
 });
+
+test.each([undefined, '', '   '])('creator credential is optional and blank means unconfigured (%s)', async (value) => {
+  if (value !== undefined) process.env.YOUTUBE_CREATOR_REFRESH_TOKEN = value;
+  expect((await loadConfig()).youtubeCreatorRefreshToken).toBe('');
+});
+
+test('creator refresh credential is parsed separately from viewer configuration', async () => {
+  process.env.YOUTUBE_CREATOR_REFRESH_TOKEN = ' synthetic-creator-refresh-fixture ';
+  const config = await loadConfig();
+  expect(config.youtubeCreatorRefreshToken).toBe('synthetic-creator-refresh-fixture');
+  expect(config.google.clientId).toBe(production.GOOGLE_CLIENT_ID);
+});

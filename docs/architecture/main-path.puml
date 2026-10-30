@@ -232,3 +232,48 @@ WalletStatus -> P : transactionSteps[].detail
 P -> C : match existing wallet step-grid selector
 C -> P : wrap long identifier within paragraph
 @enduml
+@startuml creator_default_entitlement
+title Creator visitor identity, creator membership and IFR policy
+actor Client
+participant "auth.ts callback\nstate/cookie gate" as Callback
+participant "fresh viewer OAuth client" as ViewerOAuth
+participant "Google channels API" as IdentityAPI
+participant "server session store" as Sessions
+participant "authMiddleware" as Auth
+participant "GET /access/check" as Access
+participant "DEFAULT_ENTITLEMENT\nCONFIG.minLockIFR at startup" as Policy
+participant "checkEntitlement" as Entitlement
+participant "LockChecker" as Lock
+participant "IFRLock contract" as Contract
+participant "YouTubeChecker" as Membership
+participant "separate creator OAuth client" as CreatorOAuth
+participant "Google members API" as MembersAPI
+Client -> Callback : code + one-use state + matching cookie
+Callback -> ViewerOAuth : getToken(code) / setCredentials(tokens)
+ViewerOAuth -> IdentityAPI : channels.list(id, mine=true); readonly viewer scope
+IdentityAPI --> Callback : exactly one unambiguous provider channel ID
+Callback -> Sessions : tokens + verified visitor ID (one-hour TTL)
+Callback --> Client : JWT sid / optional proven wallet / timing claims only
+Client -> Auth : bearer JWT
+Auth -> Access : verified wallet / session ID
+Access -> Sessions : getYouTubeSession(sid)
+Sessions --> Access : verified visitor ID, or none if legacy/expired
+Access -> Policy : default OR conditions
+Policy --> Access : creator channel + IFR threshold string (default 1000)
+Access -> Entitlement : wallet, stored visitor ID, default policy
+Entitlement -> Membership : verified visitor ID + policy creator channel
+alt creator credential configured and policy channel matches
+  Membership -> CreatorOAuth : set creator refresh credential
+  CreatorOAuth -> MembersAPI : all_current / filterByMemberChannelId / maxResults 1
+  MembersAPI --> Membership : creatorChannelId + memberDetails.channelId
+  Membership --> Entitlement : true only when both IDs match exactly
+else missing/invalid configuration or identity
+  Membership --> Entitlement : false; no membership API request
+end
+Entitlement -> Lock : isLocked(wallet, threshold string)
+Lock -> Contract : isLocked(wallet, parseUnits(threshold, 9))
+Contract --> Lock : boolean
+Lock --> Entitlement : lock result
+Entitlement --> Access : OR result + successful condition reasons
+Access --> Client : granted / reasons
+@enduml

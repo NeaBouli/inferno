@@ -16,8 +16,12 @@ vi.mock('googleapis', () => ({
         getToken: vi.fn().mockResolvedValue({
           tokens: { access_token: 'mock-yt-token', refresh_token: 'mock-yt-refresh' },
         }),
+        setCredentials: vi.fn(),
       }; }),
     },
+    youtube: () => ({
+      channels: { list: vi.fn().mockResolvedValue({ data: { items: [{ id: 'UCVVVVVVVVVVVVVVVVVVVVVV' }] } }) },
+    }),
   },
 }));
 
@@ -129,6 +133,7 @@ describe('Google OAuth flow', () => {
     expect(typeof decoded.sid).toBe('string');
     expect(decoded.youtubeAccessToken).toBeUndefined();
     expect(decoded.refreshToken).toBeUndefined();
+    expect(Object.keys(decoded).sort()).toEqual(['exp', 'iat', 'sid', 'walletAddress']);
   });
 
   test('wallet-less flow: Google JWT carries only the YouTube session', async () => {
