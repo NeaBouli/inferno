@@ -1576,7 +1576,6 @@ the existing 48px base and 72px medium-screen scale continue above that bound.
 The release assertions cover 320px, 360px and 361px, loaded stylesheet identity
 and all heading text within the card padding, without clipping or hidden text.
 
-
 ## Native wallet response checks (issue415)
 
 Status: implemented in source with independent source/consent review accepted.
