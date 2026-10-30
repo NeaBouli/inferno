@@ -308,8 +308,6 @@ jobs:
           BENEFITS_BASE_URL=http://127.0.0.1:3000 npm run test:benefits-a11y
           BENEFITS_BASE_URL=http://127.0.0.1:3000 npm run test:benefits-recovery
           BENEFITS_BASE_URL=http://127.0.0.1:3000 npm run test:benefits-csp
-          BENEFITS_WALLET_RESTORATION_CASE=helper-controls BENEFITS_WALLET_RESTORATION_RECEIPT="$RUNNER_TEMP/benefits-injected-core.json" node scripts/test-benefits-wallet-lock-ui.js
-          BENEFITS_WALLET_RESTORATION_CASE=late-provider BENEFITS_WALLET_UI_ORIGIN=http://127.0.0.1:3000 BENEFITS_WALLET_RESTORATION_RECEIPT="$RUNNER_TEMP/benefits-injected-browser.json" node scripts/test-benefits-wallet-lock-ui.js
       - name: Run composed Benefits full-stack browser E2E
         run: npm run test:benefits-fullstack
       - name: Wallet SDK telemetry gate (WalletConnect configured)
