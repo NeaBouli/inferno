@@ -122,6 +122,16 @@ export function startInjectedSessionRestoration(config, { reconnect, watchConnec
       if (!provider || typeof provider.on !== 'function' || typeof provider.removeListener !== 'function') return;
       attempts += 1;
       attachProviderListeners(provider, connector, epoch);
+      const assertProvider = async () => {
+        await assertIntent(epoch);
+        try {
+          if (await connector.getProvider() !== provider) throw new Error('Injected provider identity changed');
+        } catch (error) {
+          cancel();
+          throw error;
+        }
+        await assertIntent(epoch);
+      };
       // Keep the original UID/emitter and explicit actions. The native injected
       // connect writes consent shims after async RPCs; this passive adapter must
       // never erase a new Disconnect decision while a response is pending.
@@ -129,20 +139,20 @@ export function startInjectedSessionRestoration(config, { reconnect, watchConnec
         ...connector,
         async isAuthorized() {
           try {
-            await assertIntent(epoch);
+            await assertProvider();
             const authorized = await connector.isAuthorized();
-            await assertIntent(epoch);
+            await assertProvider();
             return authorized;
           } catch { return false; }
         },
         async connect(parameters) {
           if (!parameters?.isReconnecting) throw new Error('Startup restoration must remain passive');
-          await assertIntent(epoch);
+          await assertProvider();
           const accounts = await connector.getAccounts();
-          await assertIntent(epoch);
+          await assertProvider();
           if (!accounts.length) throw new Error('No live authorized account');
           const chainId = await connector.getChainId();
-          await assertIntent(epoch);
+          await assertProvider();
           return { accounts, chainId };
         },
       };

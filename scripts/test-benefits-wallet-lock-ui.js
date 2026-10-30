@@ -202,8 +202,9 @@ async function runInjectedRestorationControls() {
       off: (event, listener) => emitterListeners.get(event)?.delete(listener),
       emit: (event, value) => { for (const listener of emitterListeners.get(event) || []) listener(value); },
     };
+    let currentProvider = provider;
     const connector = { id: 'io.metamask', uid: 'synthetic-metamask', name: 'MetaMask', type: 'injected', emitter,
-      getProvider: async () => provider,
+      getProvider: async () => currentProvider,
       getAccounts: () => provider.request({ method: 'eth_accounts' }),
       getChainId: async () => Number(await provider.request({ method: 'eth_chainId' })),
       isAuthorized: async () => (await provider.request({ method: 'eth_accounts' })).length > 0,
@@ -237,6 +238,7 @@ async function runInjectedRestorationControls() {
       pending: () => Boolean(release),
       release: () => { holdMethod = undefined; release?.(); release = undefined; },
       cancel: () => cancelInjectedSessionRestoration(config),
+      replaceProvider: () => { currentProvider = { ...provider }; },
     };
   }
   const check = async (name, options, run) => {
@@ -308,6 +310,12 @@ async function runInjectedRestorationControls() {
   await check('changed-intent-does-not-fall-across-wallets', {}, async (f) => {
     f.hold('eth_accounts'); await until(f.pending); f.storage.set('recentConnectorId', 'other-wallet');
     f.release(); await tick(300); assert.equal(f.config.state.status, 'disconnected');
+  });
+  await check('same-id-new-provider-does-not-inherit-consent', {}, async (f) => {
+    f.hold('eth_accounts'); await until(f.pending); f.replaceProvider();
+    f.release(); await tick(300); assert.equal(f.config.state.status, 'disconnected');
+    const count = f.methods.length; f.expose(); await tick(300);
+    assert.equal(f.methods.length, count, 'a changed provider must not inherit the pending consent');
   });
   for (const event of ['accountsChanged', 'chainChanged']) {
     await check(`${event}-invalidates-pending-generation`, {}, async (f) => {
@@ -490,6 +498,25 @@ async function runInjectedRestorationFixture() {
     assert.ok(restored.methods.includes('eth_accounts'), 'restoration must verify a fresh passive account');
     assert.ok(restored.methods.includes('eth_chainId'), 'restoration must verify the live chain');
     receipt.stages.push({ stage: 'restored-after-late-provider', ...restored });
+    await disconnect.click();
+    await panel.locator('[data-wallet-action="connect"]').waitFor();
+    await page.waitForTimeout(200);
+    const readsAfterDisconnect = state.readCalls.length;
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await control.waitFor({ timeout: 15_000 });
+    await panel.locator('[data-wallet-action="connect"]').waitFor();
+    await page.evaluate(() => window.__ifrM1.expose());
+    await page.waitForFunction(() => [...document.querySelectorAll('[data-wallet-connector-ids]')]
+      .some((element) => element.getAttribute('data-wallet-connector-ids').includes('io.metamask')));
+    await page.waitForTimeout(1500);
+    assert.equal(await disconnect.count(), 0, 'an explicit Disconnect must survive reload and late discovery');
+    const disconnected = await page.evaluate(() => window.__ifrM1.snapshot());
+    assert.deepEqual(disconnected.methods, [], 'disconnected reload must not even read passive accounts');
+    assert.equal(state.readCalls.length, readsAfterDisconnect, 'disconnected reload must not read IFR/IFRLock');
+    receipt.stages.push({ stage: 'explicit-disconnect-reload-stays-disconnected', ...disconnected });
+    await panel.locator('[data-wallet-action="connect"]').click();
+    await disconnect.waitFor({ timeout: 10_000 });
+    receipt.stages.push({ stage: 'explicit-reconnect', ...(await page.evaluate(() => window.__ifrM1.snapshot())) });
     assert.deepEqual(pageErrors, []);
     assert.equal(state.transactions.length, 0);
     receipt.result = 'PASS';
