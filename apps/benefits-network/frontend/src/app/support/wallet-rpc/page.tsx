@@ -35,13 +35,11 @@ export default function NativeWalletProbe() {
   const { status } = useAccount();
   const connectPending = useIsMutating({ mutationKey: ['connect'], exact: true }) > 0;
   const ordinaryBusy = connectPending || status === 'connecting' || status === 'reconnecting';
-  const candidates = connectors.filter(isEligibleNativeConnector);
+  const candidates = connectors.filter((candidate) => isEligibleNativeConnector(candidate));
   const [chosen, setChosen] = useState<(typeof connectors)[number]>();
   const selected = chosen && candidates.includes(chosen) ? chosen : undefined;
   const selectionRef = useRef(selected);
-  const connectorsRef = useRef(connectors);
   selectionRef.current = selected;
-  connectorsRef.current = connectors;
   const ownerRef = useRef({ mounted: false });
   useEffect(() => {
     const owner = { mounted: true };
@@ -59,7 +57,7 @@ export default function NativeWalletProbe() {
     void nativeWalletProbe.start({
       method, connector: target,
       isCurrent: () => owner.mounted && ownerRef.current === owner &&
-        selectionRef.current === target && connectorsRef.current.includes(target),
+        selectionRef.current === target && isEligibleNativeConnector(target, config.connectors),
       isOrdinaryPending: () => isOrdinaryWalletBusy(queryClient, config),
     });
   }
@@ -131,7 +129,7 @@ export default function NativeWalletProbe() {
             Existing wallet activity may continue independently of these checks.
           </p>
           <details className="mt-4 min-w-0 rounded-xl border border-white/10 p-3 text-xs text-stone-300">
-            <summary className="cursor-pointer font-bold text-stone-100">Technical details</summary>
+            <summary className="min-h-[44px] cursor-pointer font-bold text-stone-100">Technical details</summary>
             {snapshot.current ? (
               <p className="mt-3 [overflow-wrap:anywhere]">
                 Current method: <code>{snapshot.current.method}</code>; state: {snapshot.current.state}; elapsed: {snapshot.current.elapsedMs} ms.

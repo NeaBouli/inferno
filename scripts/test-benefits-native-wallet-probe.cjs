@@ -164,6 +164,25 @@ async function main() {
     assert.equal(f.probe.getSnapshot().current.state, 'not_sent');
   });
 
+  await check('live registry removal or replacement defeats stale render refs', async () => {
+    for (const change of ['removed', 'replaced']) {
+      const provider = deferred();
+      const f = fixture(createNativeWalletProbe);
+      const connector = { ...f.connector, uid: 'synthetic-same-id', getProvider: () => provider.promise };
+      const renderedRegistry = [connector];
+      let liveRegistry = [connector];
+      const first = f.start('eth_accounts', {
+        connector,
+        isCurrent: () => renderedRegistry.includes(connector) && isEligibleNativeConnector(connector, liveRegistry),
+      });
+      liveRegistry = change === 'removed' ? [] : [{ ...connector }];
+      provider.resolve(f.provider);
+      await first;
+      assert.equal(f.requests.length, 0);
+      assert.equal(f.probe.getSnapshot().current.state, 'not_sent');
+    }
+  });
+
   await check('provider lookup preserves receiver and sanitizes its failures', async () => {
     const f = fixture(createNativeWalletProbe);
     let receiver;

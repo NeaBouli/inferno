@@ -35,7 +35,10 @@ export type NativeWalletProbeController = Readonly<{
   }): Promise<void>;
 }>;
 export const PROBE_METHODS: readonly Readonly<{ method: ProbeMethod; label: string; interactive: boolean }>[];
-export function isEligibleNativeConnector(connector: NativeProbeConnector | undefined): boolean;
+export function isEligibleNativeConnector(
+  connector: NativeProbeConnector | undefined,
+  liveRegistry?: readonly NativeProbeConnector[],
+): boolean;
 export function isOrdinaryWalletBusy(
   queryClient: { isMutating(filter: { mutationKey: string[]; exact: boolean }): number },
   config: { state: { status: string } },

@@ -9,9 +9,10 @@ export const PROBE_METHODS = Object.freeze([
   { method: 'eth_requestAccounts', label: 'Request accounts from MetaMask', interactive: true },
 ].map(Object.freeze));
 
-export function isEligibleNativeConnector(connector) {
+export function isEligibleNativeConnector(connector, liveRegistry) {
   return Boolean(connector && connector.type === 'injected' &&
-    NATIVE_IDS.has(connector.id) && typeof connector.getProvider === 'function');
+    NATIVE_IDS.has(connector.id) && typeof connector.getProvider === 'function' &&
+    (liveRegistry === undefined || (Array.isArray(liveRegistry) && liveRegistry.includes(connector))));
 }
 
 export function isOrdinaryWalletBusy(queryClient, config) {
