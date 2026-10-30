@@ -319,3 +319,10 @@ Validation --> Zod : safeParse / issues
 [WalletStatus transactionSteps] --> [Step detail paragraph] : step.detail
 [Step detail paragraph] --> [Scoped wallet CSS] : overflow-wrap anywhere
 @enduml
+
+@startuml dashboard_wallet_compat
+[Dashboard] --> [Owned RainbowKit] : normal local package
+[Owned RainbowKit] --> [CSS 1.21.3]
+[CSS 1.21.3] --> [deepmerge-ts]
+[Dashboard] ..> [Zod contexts] : retained upstream gates
+@enduml

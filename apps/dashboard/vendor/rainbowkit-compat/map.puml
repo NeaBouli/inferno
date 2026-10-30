@@ -1,0 +1,28 @@
+@startuml dashboard_owned_distribution
+component "Dashboard active UI/config" as Dashboard
+component "Original RainbowKit2.2.11 tarball" as Upstream
+component "repack.py
+SRI + exact metadata delta" as Recipe
+component "IFR-owned immutable tarball" as Owned
+component "CSS1.21.3" as CSS
+component "deepmerge-ts" as Merge
+component "modern-ahocorasick3.3.0" as Aho
+component "Retained query-string9.5.1" as Query
+component "decode-uri-component0.5.1" as Decoder
+component "Vite6.4.5" as Vite
+component "Test-only loopback preview" as Preview
+Upstream --> Recipe : verified bytes; no target execution
+Recipe --> Owned : all payload preserved except 3 metadata values
+Dashboard --> Owned : normal file-key imports; local graph/build PASS
+Owned --> CSS : exact declared dependency
+CSS --> Merge : published replacement
+CSS --> Aho : normal published dependency
+Dashboard --> Query : existing override unchanged
+Query --> Decoder : normal ^0.5.0 range
+Dashboard ..> Vite : normal same-major dev dependency
+Dashboard ..> Preview : synthetic ABI/wallet; no outbound provider
+note bottom of Preview
+  FVA/review/CI/release are separate gates.
+  Zod and existing provider boundaries remain open.
+end note
+@enduml

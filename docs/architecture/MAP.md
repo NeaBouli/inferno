@@ -1567,3 +1567,15 @@ fresh deep links and the actual header link at the four standard viewports after
 fonts and native scrolling settle. It verifies heading/header separation, full
 heading visibility, hit testing, overflow and the shared loading-target CSS rule.
 The previous generic-guidance helper and all five wallet modes remain intact.
+
+## Dashboard wallet compatibility — 2026-10-30
+
+Module: existing Dashboard wallet controls and Wagmi/Ethers adapters.
+Hop: Dashboard -> owned RainbowKit distribution -> CSS1.21.3 -> deepmerge-ts.
+The ordinary local package preserves imports, exports, peers and shipped payloads.
+Nine contract handles and connector-client/signer boundaries remain unchanged.
+Known Zod findings and real wallet/device acceptance remain separate gates.
+See the scoped [Dashboard map][dashboard-compat] for provenance and test traces.
+
+[dashboard-compat]:
+  ../../apps/dashboard/vendor/rainbowkit-compat/ARCHITECTURE.md

@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "registry_version_url": "https://registry.npmjs.org/@rainbow-me%2Frainbowkit/2.2.11",
+  "name": "@rainbow-me/rainbowkit",
+  "version": "2.2.11",
+  "tarball": "https://registry.npmjs.org/@rainbow-me/rainbowkit/-/rainbowkit-2.2.11.tgz",
+  "integrity": "sha512-FHPsRHMBpuHHhuyKktAR13O9agmsUUunDnVEP4hG1dSZ2JojXLUSWyLG28VbGIJakHYylkNguiLFnqM/BM8ERA==",
+  "sha1": "717265fcae250d3a6dfdf59177a1c9b828e038d7",
+  "sha256": "57b9440555521157bcf5c69044b15cf8eb6c1ae72fe6511c7516c64d1ef16d9e",
+  "license": "MIT",
+  "git_tag": "@rainbow-me/rainbowkit@2.2.11",
+  "signature_verification": false,
+  "no_upstream_package_code_execution": true
+}

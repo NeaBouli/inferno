@@ -1,0 +1,80 @@
+{
+  "schemaVersion": 1,
+  "status": "OWNED_COMPATIBILITY_CANDIDATE_NOT_RELEASED",
+  "upstream": {
+    "name": "@rainbow-me/rainbowkit",
+    "version": "2.2.11",
+    "tarball": "https://registry.npmjs.org/@rainbow-me/rainbowkit/-/rainbowkit-2.2.11.tgz",
+    "integrity": "sha512-FHPsRHMBpuHHhuyKktAR13O9agmsUUunDnVEP4hG1dSZ2JojXLUSWyLG28VbGIJakHYylkNguiLFnqM/BM8ERA==",
+    "sha1": "717265fcae250d3a6dfdf59177a1c9b828e038d7",
+    "sha256": "57b9440555521157bcf5c69044b15cf8eb6c1ae72fe6511c7516c64d1ef16d9e",
+    "license": "MIT",
+    "license_sha256": "5095037afa1ba03be36e04305c01ec9ee600e14377738a026482b1a888c4e365",
+    "publisher_signature_verified": false
+  },
+  "owned": {
+    "name": "@ifr/rainbowkit-compat",
+    "version": "2.2.11-ifr.1",
+    "artifact": "ifr-rainbowkit-compat-2.2.11-ifr.1.tgz",
+    "sha256": "d4cc9432fa6db22217759641a555dd75ad73ddde4129b9a98d5862b744b7096e",
+    "integrity": "sha512-bTrNfO33g8bcIhQS1ajG/xwVeuxt6BAB82SvCIwLz0spvoggL+8y8+Ou1ASceEcjQt9Myv5jlGnm3vzqdL34cw==",
+    "registry_publication": false,
+    "upstream_supported_release": false
+  },
+  "allowed_metadata_delta": {
+    "name": [
+      "@rainbow-me/rainbowkit",
+      "@ifr/rainbowkit-compat"
+    ],
+    "version": [
+      "2.2.11",
+      "2.2.11-ifr.1"
+    ],
+    "dependencies.@vanilla-extract/css": [
+      "1.20.1",
+      "1.21.3"
+    ]
+  },
+  "preserved_metadata": {
+    "exports": {
+      ".": "./dist/index.js",
+      "./styles.css": "./dist/index.css",
+      "./wallets": "./dist/wallets/walletConnectors/index.js",
+      "./components": "./dist/components/index.js"
+    },
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "type": "module",
+    "peerDependencies": {
+      "@tanstack/react-query": ">=5.0.0",
+      "react": ">=18",
+      "react-dom": ">=18",
+      "viem": "2.x",
+      "wagmi": "^2.9.0"
+    },
+    "scripts": {
+      "build": "node build.js",
+      "build:watch": "node build.js --watch",
+      "dev": "pnpm build:watch & pnpm typegen:watch",
+      "prebuild": "pnpm typegen",
+      "typecheck": "pnpm tsc --noEmit",
+      "typegen": "tsc --emitDeclarationOnly -p tsconfig.types.json || true",
+      "typegen:watch": "tsc --emitDeclarationOnly -p tsconfig.types.json --watch"
+    }
+  },
+  "invariants": {
+    "files": 971,
+    "identical_non_metadata_files": 970,
+    "all_modes_and_other_package_json_bytes_preserved": true,
+    "runtime_code_executed": false,
+    "dependency_or_import_resolution_verified": false,
+    "dashboard_compatibility_verified": false
+  },
+  "recipe": {
+    "file": "repack.py",
+    "sha256": "fc9c91cef57785f66960e3588f6b4853a270f4a7fe83d1c7dc0c6feb2c2050c5",
+    "format": "sorted PAX tar, zero uid/gid/mtime, empty owner names, gzip9/mtime0",
+    "python": "3.14.7",
+    "zlib_runtime": "1.2.12"
+  }
+}
