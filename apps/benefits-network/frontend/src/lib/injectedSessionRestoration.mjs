@@ -88,28 +88,26 @@ export function startInjectedSessionRestoration(config, { reconnect, watchConnec
       }
       return false;
     };
-    const accountsChanged = async () => {
+    // Either event may supersede the other. Commit a fresh coherent pair so
+    // discarding an older event cannot leave its other field stale.
+    const refreshLiveConnection = async () => {
       const sequence = ++eventSequence;
       if (invalidatePending()) return;
       try {
         if (!await verifyEventProvider(sequence)) return;
         const accounts = await connector.getAccounts();
         if (!await verifyEventProvider(sequence)) return;
-        if (!accounts.length) disconnectCurrent();
-        else connector.emitter.emit('change', { accounts });
+        if (!accounts.length) { disconnectCurrent(); return; }
+        const chainId = await connector.getChainId();
+        if (!await verifyEventProvider(sequence)) return;
+        if (!Number.isSafeInteger(chainId) || chainId <= 0) throw new Error('Invalid live chain');
+        connector.emitter.emit('change', { accounts, chainId });
       } catch {
         if (eventIsCurrent(sequence)) disconnectCurrent();
       }
     };
-    const chainChanged = async (chain) => {
-      const sequence = ++eventSequence;
-      if (invalidatePending()) return;
-      try {
-        if (await verifyEventProvider(sequence)) connector.emitter.emit('change', { chainId: Number(chain) });
-      } catch {
-        if (eventIsCurrent(sequence)) disconnectCurrent();
-      }
-    };
+    const accountsChanged = refreshLiveConnection;
+    const chainChanged = refreshLiveConnection;
     const disconnected = () => {
       eventSequence += 1;
       // Cancel a passive response even if the connection has not committed yet.

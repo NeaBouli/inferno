@@ -190,6 +190,7 @@ async function runInjectedRestorationControls() {
     let state = { status: 'disconnected', current: null, connections: new Map(), chainId: 1 };
     let accountReady = ready;
     let account = wallet;
+    let currentChainId = '0x1';
     let holdMethod;
     let release;
     const accountResponses = [];
@@ -200,7 +201,7 @@ async function runInjectedRestorationControls() {
         methods.push(method);
         if (method === holdMethod) await new Promise((resolve) => { release = resolve; });
         if (method === 'eth_accounts') return accountResponses.length ? accountResponses.shift() : accountReady ? [account] : [];
-        if (method === 'eth_chainId') return '0x1';
+        if (method === 'eth_chainId') return currentChainId;
         throw new Error('Prompting/mutating method reached synthetic control');
       },
     };
@@ -246,6 +247,7 @@ async function runInjectedRestorationControls() {
     return { config, storage, methods, stop, browser, provider, connector,
       ready: (value) => { accountReady = value; },
       account: (value) => { account = value; },
+      chain: (value) => { currentChainId = value; },
       expose: () => { config.connectors = [connector]; connectorChanged(); browser.dispatchEvent(new Event('ethereum#initialized')); },
       emit: (event, value) => { for (const listener of [...(listeners.get(event) || [])]) listener(value); },
       queueAccounts: (...responses) => { accountResponses.push(...responses); },
@@ -369,7 +371,7 @@ async function runInjectedRestorationControls() {
     let older;
     f.queueAccounts(new Promise((resolve) => { older = resolve; }));
     const before = f.methods.length; f.emit('accountsChanged'); await until(() => f.methods.length > before);
-    f.emit('chainChanged', '0x2');
+    f.chain('0x2'); f.emit('chainChanged', '0x2');
     await until(() => f.config.state.connections.get(f.connector.uid)?.chainId === 2);
     older(['0x5555555555555555555555555555555555555555']); await tick();
     assert.deepEqual(f.config.state.connections.get(f.connector.uid)?.accounts, [wallet]);
@@ -387,6 +389,37 @@ async function runInjectedRestorationControls() {
     const count = f.methods.length; f.release(); f.emit('accountsChanged'); await tick(300);
     assert.equal(f.config.state.status, 'disconnected'); assert.equal(f.methods.length, count);
   });
+  for (const firstEvent of ['chainChanged', 'accountsChanged']) {
+    await check(`post-restore-cross-${firstEvent}-first`, {}, async (f) => {
+      await until(() => f.config.state.status === 'connected');
+      f.account('0x4444444444444444444444444444444444444444'); f.chain('0x2');
+      const secondEvent = firstEvent === 'chainChanged' ? 'accountsChanged' : 'chainChanged';
+      f.emit(firstEvent, '0x2'); f.emit(secondEvent, '0x2');
+      await until(() => firstEvent === 'chainChanged'
+        ? f.config.state.connections.get(f.connector.uid)?.accounts[0] === '0x4444444444444444444444444444444444444444'
+        : f.config.state.connections.get(f.connector.uid)?.chainId === 2);
+      const connection = f.config.state.connections.get(f.connector.uid);
+      assert.deepEqual({ accounts: connection.accounts, chainId: connection.chainId },
+        { accounts: ['0x4444444444444444444444444444444444444444'], chainId: 2 },
+        'the newest event must reconcile both live account and live chain');
+    });
+  }
+  for (const outcome of ['empty', 'error']) {
+    await check(`post-restore-current-${outcome}-disconnects-before-chain`, {}, async (f) => {
+      await until(() => f.config.state.status === 'connected');
+      let resolve;
+      let reject;
+      f.queueAccounts(new Promise((onResolve, onReject) => { resolve = onResolve; reject = onReject; }));
+      const before = f.methods.length;
+      const chainsBefore = f.methods.filter((method) => method === 'eth_chainId').length;
+      f.emit('accountsChanged'); await until(() => f.methods.length > before);
+      if (outcome === 'empty') resolve([]); else reject(new Error('Current synthetic account unavailable'));
+      await until(() => f.config.state.status === 'disconnected');
+      assert.equal(f.config.state.connections.size, 0);
+      assert.equal(f.methods.filter((method) => method === 'eth_chainId').length, chainsBefore,
+        'a current empty/failed account must disconnect without waiting for chain RPC');
+    });
+  }
   const receiptPath = process.env.BENEFITS_WALLET_RESTORATION_RECEIPT;
   assert.ok(receiptPath && path.isAbsolute(receiptPath), 'an owned absolute receipt path is required');
   assert.ok(results.length, 'restoration control selection must match a known case');
