@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { EventEmitter } from 'node:events';
 import { readFile } from 'node:fs/promises';
 import vm from 'node:vm';
 
@@ -58,7 +59,52 @@ assert.equal(discovered, 1);
 assert.ok(calls.every(({ url }) => url.startsWith('/__compat__/rpc')),
   'no fixture safety test may emit an external fetch');
 
+function listenerTrace(emitter) {
+  let count = 0;
+  const renew = () => {
+    count += 1;
+    assert.ok(count <= 4, 'one emission must not repeatedly re-enter a re-registered listener');
+    emitter.off('accountsChanged', renew);
+    emitter.on('accountsChanged', renew);
+  };
+  emitter.on('accountsChanged', renew);
+  emitter.emit(); const first = count;
+  emitter.emit(); const next = count;
+  emitter.off('accountsChanged', renew); emitter.emit();
+  const afterUnsubscribe = count;
+  const added = [];
+  const later = () => added.push('later');
+  let registered = false;
+  const initial = () => {
+    added.push('initial');
+    if (!registered) { emitter.on('accountsChanged', later); registered = true; }
+  };
+  emitter.on('accountsChanged', initial);
+  emitter.emit(); const addedFirst = [...added];
+  added.length = 0; emitter.emit(); const addedNext = [...added];
+  emitter.off('accountsChanged', initial); emitter.off('accountsChanged', later);
+  const removed = [];
+  const second = () => removed.push('second');
+  const removeSecond = () => { removed.push('first'); emitter.off('accountsChanged', second); };
+  emitter.on('accountsChanged', removeSecond); emitter.on('accountsChanged', second);
+  emitter.emit(); const removedFirst = [...removed];
+  removed.length = 0; emitter.emit(); const removedNext = [...removed];
+  emitter.off('accountsChanged', removeSecond); emitter.off('accountsChanged', second);
+  return { first, next, afterUnsubscribe, addedFirst, addedNext, removedFirst, removedNext };
+}
+const reference = new EventEmitter();
+const expectedTrace = listenerTrace({
+  on: (...args) => reference.on(...args), off: (...args) => reference.removeListener(...args),
+  emit: () => reference.emit('accountsChanged', ['0x1111111111111111111111111111111111111111']),
+});
+const actualTrace = listenerTrace({
+  on: (...args) => wallet.on(...args), off: (...args) => wallet.removeListener(...args),
+  emit: () => fixture.setState('connected'),
+});
+assert.deepEqual(actualTrace, expectedTrace, 'listener mutation must match snapshot emission');
+
 console.log(JSON.stringify({ result: 'PASS', syntheticWalletSafety: true,
   deniedSigningAndBroadcast: true, remoteSdkFetchBlocked: true,
   rpcRedirectsOnlyToLoopback: true, foreignProviderFiltered: true,
+  listenerSnapshotMatchesEventEmitter: true, listenerTrace: actualTrace,
   realProviderDeviceOrChainAcceptance: false }, null, 2));

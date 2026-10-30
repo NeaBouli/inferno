@@ -19,7 +19,7 @@
     return Object.assign(new Error('Synthetic fixture denies ' + method), { code });
   };
   const emit = (name, value) => {
-    for (const callback of listeners.get(name) || []) callback(value);
+    for (const callback of [...(listeners.get(name) || [])]) callback(value);
   };
   const provider = {
     isMetaMask: true,
