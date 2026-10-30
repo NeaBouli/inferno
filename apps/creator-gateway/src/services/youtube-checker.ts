@@ -32,7 +32,6 @@ export class YouTubeChecker {
       const items = response.data.items;
       return Array.isArray(items) && items.length === 1 &&
         (response.data.nextPageToken == null || response.data.nextPageToken === '') &&
-        (response.data.prevPageToken == null || response.data.prevPageToken === '') &&
         (response.data.pageInfo?.totalResults === undefined || response.data.pageInfo.totalResults === 1) &&
         items[0]?.snippet?.creatorChannelId === creatorChannelId &&
         items[0]?.snippet?.memberDetails?.channelId === visitorChannelId;

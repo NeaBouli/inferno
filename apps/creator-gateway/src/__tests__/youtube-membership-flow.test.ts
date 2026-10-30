@@ -2,7 +2,8 @@ import { afterEach, beforeEach, expect, test, vi, type Mock } from 'vitest';
 import express, { type Express } from 'express';
 import jwt from 'jsonwebtoken';
 import request from 'supertest';
-// Load the route's signature dependency during collection, outside HTTP case timing.
+// Preload both Ethers entry graphs during collection, outside HTTP case timing.
+import 'ethers';
 import 'siwe';
 
 interface ClientFixture {

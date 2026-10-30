@@ -58,7 +58,7 @@ test('only the configured creator client queries the supported filtered membersh
 
 test.each([
   { pageInfo: { totalResults: 1 } },
-  { nextPageToken: '', prevPageToken: null, pageInfo: { totalResults: 1 } },
+  { nextPageToken: '', pageInfo: { totalResults: 1 } },
 ])('consistent single-result metadata preserves exact membership proof (%j)', async (metadata) => {
   memberList.mockResolvedValue({ data: { ...metadata, items: [exact] } });
   expect(await (await checker()).isMember(VISITOR, CREATOR)).toBe(true);
@@ -66,8 +66,7 @@ test.each([
 });
 
 test.each([
-  { nextPageToken: 'another-page' }, { prevPageToken: 'previous-page' },
-  { nextPageToken: 0 }, { prevPageToken: false },
+  { nextPageToken: 'another-page' }, { nextPageToken: 0 },
   { pageInfo: { totalResults: 2 } }, { pageInfo: { totalResults: 0 } },
   { pageInfo: { totalResults: '1' } }, { pageInfo: { totalResults: null } },
   { pageInfo: { totalResults: 1.5 } },
