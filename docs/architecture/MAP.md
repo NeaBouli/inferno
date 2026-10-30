@@ -1567,3 +1567,22 @@ fresh deep links and the actual header link at the four standard viewports after
 fonts and native scrolling settle. It verifies heading/header separation, full
 heading visibility, hit testing, overflow and the shared loading-target CSS rule.
 The previous generic-guidance helper and all five wallet modes remain intact.
+
+## Benefits injected session restoration - 2026-10-30
+
+Module: provider root -> remembered injected connector -> passive startup restore
+-> live account and chain -> connected wallet reads. The app-owned
+`src/lib/injectedSessionRestoration.mjs` uses a finite startup window, disconnect
+shims and current provider identity. Explicit connect/disconnect cancels pending
+work. Account/chain events reconcile one guarded live pair; cached addresses do
+not grant authority and startup never requests permissions or signatures.
+The focused restoration modes in `scripts/test-benefits-wallet-lock-ui.js` run
+inside the existing `test-customer-pass-ui` server lifecycle in Benefits CI.
+
+## Benefits narrow Guide heading - 2026-10-30
+
+Render hop: `/guide` -> padded hero card -> H1 text ranges. The Guide-only
+`max-[360px]:text-[2.5rem]` utility reduces the heading to 40px through 360px;
+the existing 48px base and 72px medium-screen scale continue above that bound.
+The release assertions cover 320px, 360px and 361px, loaded stylesheet identity
+and all heading text within the card padding, without clipping or hidden text.

@@ -5,7 +5,8 @@ import { useChainId, useConnect, useDisconnect } from 'wagmi';
 import { BreakableWalletLabel } from '@/components/BreakableWalletLabel';
 import { useHydratedAccount } from '@/hooks/useHydratedAccount';
 import { getMobileWalletLaunches } from '@/lib/walletLaunch';
-import { hasWalletConnectProjectId, targetChain } from '@/lib/wagmi';
+import { hasWalletConnectProjectId, targetChain, wagmiConfig } from '@/lib/wagmi';
+import { cancelInjectedSessionRestoration } from '@/lib/injectedSessionRestoration.mjs';
 import { useAvailableWalletConnectors } from '@/hooks/useAvailableWalletConnectors';
 import {
   selectPrimaryAvailableWalletConnector,
@@ -98,6 +99,7 @@ export function WalletConnectControl() {
   }
 
   async function connectWallet(targetConnector: (typeof connectors)[number]) {
+    cancelInjectedSessionRestoration(wagmiConfig);
     const label = walletConnectorLabel(targetConnector);
     setConnectionStatus(walletConnectionPrompt(targetConnector));
     try {
@@ -326,7 +328,7 @@ export function WalletConnectControl() {
       {isConnected ? (
         <button
           type="button"
-          onClick={() => disconnect()}
+          onClick={() => { cancelInjectedSessionRestoration(wagmiConfig); disconnect(); }}
           className="rounded-2xl border border-white/15 px-5 py-3 text-sm font-black uppercase tracking-[0.14em] text-stone-100 transition hover:border-orange-200/60"
         >
           Disconnect

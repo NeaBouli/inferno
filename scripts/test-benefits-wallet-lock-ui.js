@@ -21,6 +21,7 @@ const zeroEthOnly = process.env.BENEFITS_WALLET_ZERO_ETH_ONLY === '1';
 const wrongChainOnly = process.env.BENEFITS_WALLET_WRONG_CHAIN_ONLY === '1';
 const readFailureOnly = process.env.BENEFITS_WALLET_READ_FAILURE_ONLY === '1';
 const reconnectOnly = process.env.BENEFITS_WALLET_RECONNECT_ONLY === '1';
+const restorationCase = process.env.BENEFITS_WALLET_RESTORATION_CASE;
 const selectors = {
   approve: ethers.id('approve(address,uint256)').slice(0, 10),
   balanceOf: ethers.id('balanceOf(address)').slice(0, 10),
@@ -151,6 +152,479 @@ async function waitForServer(child) {
     await new Promise((resolve) => setTimeout(resolve, 500));
   }
   throw new Error('Timed out waiting for Benefits frontend');
+}
+
+// Runs the real app in a fresh synthetic-only browser context. Unlike the normal
+// local-server fixture, this can bind the currently admitted public static build
+// without requiring another dependency install/build. Every nonstatic request is
+// handled or rejected before navigation; no real wallet/provider is loaded.
+async function runInjectedRestorationControls() {
+  const { pathToFileURL } = require('node:url');
+  const fs = require('node:fs');
+  const { createHash } = require('node:crypto');
+  const helperPath = path.join(frontend, 'src/lib/injectedSessionRestoration.mjs');
+  const corePath = path.join(frontend, 'node_modules/wagmi/node_modules/@wagmi/core/dist/esm/actions/reconnect.js');
+  const sourceHashes = Object.fromEntries([helperPath, __filename, corePath].map((file) =>
+    [file, createHash('sha256').update(fs.readFileSync(file)).digest('hex')]));
+  const { startInjectedSessionRestoration, cancelInjectedSessionRestoration } = await import(
+    pathToFileURL(path.join(frontend, 'src/lib/injectedSessionRestoration.mjs')).href);
+  // This exact installed action has no transitive imports. Exercise real pinned
+  // Core state commits, not a fake reconnect implementation or a complete npm install.
+  const { reconnect } = await import(pathToFileURL(path.join(frontend, 'node_modules/wagmi/node_modules/@wagmi/core/dist/esm/actions/reconnect.js')).href);
+  const tick = (ms = 20) => new Promise((resolve) => setTimeout(resolve, ms));
+  const until = async (predicate) => {
+    for (let count = 0; count < 100; count += 1) {
+      if (predicate()) return;
+      await tick();
+    }
+    assert.fail('restoration control did not settle');
+  };
+  const results = [];
+  const onlyControl = process.env.BENEFITS_WALLET_RESTORATION_CONTROL;
+  function fixture({ marker = 'io.metamask', shim = false, denied = false, ready = true, available = true } = {}) {
+    const methods = [];
+    const storage = new Map([['recentConnectorId', marker], ['io.metamask.disconnected', shim], ['injected.connected', true]]);
+    const watchers = new Set();
+    const listeners = new Map();
+    let connectorChanged = () => {};
+    let state = { status: 'disconnected', current: null, connections: new Map(), chainId: 1 };
+    let accountReady = ready;
+    let account = wallet;
+    let currentChainId = '0x1';
+    let holdMethod;
+    let release;
+    const accountResponses = [];
+    const provider = {
+      on: (event, listener) => listeners.set(event, new Set([...(listeners.get(event) || []), listener])),
+      removeListener: (event, listener) => listeners.get(event)?.delete(listener),
+      async request({ method }) {
+        methods.push(method);
+        if (method === holdMethod) await new Promise((resolve) => { release = resolve; });
+        if (method === 'eth_accounts') return accountResponses.length ? accountResponses.shift() : accountReady ? [account] : [];
+        if (method === 'eth_chainId') return currentChainId;
+        throw new Error('Prompting/mutating method reached synthetic control');
+      },
+    };
+    const emitterListeners = new Map();
+    const emitter = {
+      on: (event, listener) => emitterListeners.set(event, new Set([...(emitterListeners.get(event) || []), listener])),
+      off: (event, listener) => emitterListeners.get(event)?.delete(listener),
+      emit: (event, value) => { for (const listener of emitterListeners.get(event) || []) listener({ uid: 'synthetic-metamask', ...value }); },
+    };
+    let currentProvider = provider;
+    const connector = { id: 'io.metamask', uid: 'synthetic-metamask', name: 'MetaMask', type: 'injected', emitter,
+      getProvider: async () => currentProvider,
+      getAccounts: () => provider.request({ method: 'eth_accounts' }),
+      getChainId: async () => Number(await provider.request({ method: 'eth_chainId' })),
+      isAuthorized: async () => (await provider.request({ method: 'eth_accounts' })).length > 0,
+      connect: async () => { throw new Error('Native permission/consent-writing connect must not be used'); },
+    };
+    const config = {
+      connectors: available ? [connector] : [],
+      get state() { return state; },
+      setState(value) {
+        const previous = state;
+        state = typeof value === 'function' ? value(state) : value;
+        for (const { selector, listener } of watchers) {
+          if (selector(previous) !== selector(state)) listener(selector(state));
+        }
+      },
+      storage: { getItem: async (key) => { if (denied) throw new Error('Synthetic storage denied'); return storage.get(key); } },
+      subscribe(selector, listener) { const entry = { selector, listener }; watchers.add(entry); return () => watchers.delete(entry); },
+      _internal: { events: { connect() {}, change(data) {
+        const connection = state.connections.get(data.uid);
+        if (!connection) return;
+        config.setState({ ...state, connections: new Map(state.connections).set(data.uid, {
+          ...connection, accounts: data.accounts ?? connection.accounts, chainId: data.chainId ?? connection.chainId,
+        }) });
+      }, disconnect() {
+        config.setState({ ...state, status: 'disconnected', current: null, connections: new Map() });
+      } } },
+    };
+    const browser = new EventTarget();
+    const stop = startInjectedSessionRestoration(config, { reconnect, browser,
+      watchConnectors: (_config, { onChange }) => { connectorChanged = onChange; return () => { connectorChanged = () => {}; }; } });
+    return { config, storage, methods, stop, browser, provider, connector,
+      ready: (value) => { accountReady = value; },
+      account: (value) => { account = value; },
+      chain: (value) => { currentChainId = value; },
+      expose: () => { config.connectors = [connector]; connectorChanged(); browser.dispatchEvent(new Event('ethereum#initialized')); },
+      emit: (event, value) => { for (const listener of [...(listeners.get(event) || [])]) listener(value); },
+      queueAccounts: (...responses) => { accountResponses.push(...responses); },
+      hold: (method) => { holdMethod = method; },
+      pending: () => Boolean(release),
+      release: () => { holdMethod = undefined; release?.(); release = undefined; },
+      cancel: () => cancelInjectedSessionRestoration(config),
+      replaceProvider: () => { currentProvider = { ...provider }; },
+    };
+  }
+  const check = async (name, options, run) => {
+    if (onlyControl && !name.startsWith(onlyControl)) return;
+    const f = fixture(options);
+    try {
+      await run(f);
+      assert.equal(f.methods.some((method) => /requestAccounts|requestPermissions|sign|sendTransaction/i.test(method)), false);
+      results.push({ case: name, result: 'PASS', passiveAccountCalls: f.methods.filter((method) => method === 'eth_accounts').length });
+    } finally { f.stop(); f.release(); await tick(); }
+  };
+  await check('late-specific-identity', { available: false }, async (f) => {
+    await tick(); assert.equal(f.methods.length, 0);
+    f.expose(); await until(() => f.config.state.status === 'connected');
+    assert.equal(f.config.state.current, f.connector.uid);
+    assert.deepEqual(f.config.state.connections.get(f.connector.uid).accounts, [wallet]);
+    f.cancel(); f.config.setState({ ...f.config.state, status: 'disconnected', current: null, connections: new Map() });
+    f.storage.set('io.metamask.disconnected', true);
+    const count = f.methods.length; f.expose(); f.emit('accountsChanged'); await tick(300);
+    assert.equal(f.methods.length, count, 'no passive reads after explicit disconnect');
+    assert.equal(f.config.state.status, 'disconnected');
+  });
+  await check('empty-then-live-account', { ready: false }, async (f) => {
+    await until(() => f.methods.includes('eth_accounts'));
+    assert.equal(f.config.state.status, 'disconnected');
+    f.account('0x4444444444444444444444444444444444444444'); f.ready(true); f.expose();
+    await until(() => f.config.state.status === 'connected');
+    assert.deepEqual(f.config.state.connections.get(f.connector.uid).accounts, ['0x4444444444444444444444444444444444444444']);
+  });
+  for (const [name, options] of [['missing-intent', { marker: null }],
+    ['disconnected-specific-with-generic-alias-marker', { shim: true }],
+    ['storage-denied', { denied: true }]]) {
+    await check(name, options, async (f) => { await tick(300); f.expose(); await tick();
+      assert.equal(f.methods.length, 0); assert.equal(f.config.state.status, 'disconnected'); });
+  }
+  await check('permission-stays-empty', { ready: false }, async (f) => {
+    // Exercise the real finite startup deadline rather than merely clearing it
+    // at test cleanup: readiness events after the window must do nothing.
+    await tick(10_200); assert.equal(f.config.state.status, 'disconnected');
+    assert.equal(f.methods.includes('eth_chainId'), false);
+    assert.ok(f.methods.length <= 8, 'the startup retry budget must be finite');
+    const count = f.methods.length; f.ready(true); f.expose(); await tick(300);
+    assert.equal(f.methods.length, count, 'a completed startup window must not reactivate');
+    assert.equal(f.config.state.status, 'disconnected');
+  });
+  await check('sdk-intent-does-not-activate-injected-or-sdk', { marker: 'walletConnect' }, async (f) => {
+    f.config.connectors.push({ id: 'walletConnect', type: 'walletConnect',
+      getProvider: async () => assert.fail('an SDK must remain dormant') });
+    await tick(300); assert.equal(f.methods.length, 0); assert.equal(f.config.state.status, 'disconnected');
+  });
+  for (const method of ['eth_accounts', 'eth_chainId']) {
+    await check(`disconnect-during-pending-${method}`, {}, async (f) => {
+      f.hold(method); await until(f.pending); f.cancel(); f.storage.set('io.metamask.disconnected', true);
+      f.config.setState({ ...f.config.state, status: 'disconnected', current: null, connections: new Map() });
+      f.release(); await tick(300);
+      assert.equal(f.config.state.status, 'disconnected');
+      assert.equal(f.storage.get('io.metamask.disconnected'), true, 'restore must never erase the disconnect shim');
+    });
+  }
+  await check('new-explicit-connect-wins-pending-response', {}, async (f) => {
+    f.hold('eth_accounts'); await until(f.pending); f.cancel();
+    f.storage.set('recentConnectorId', 'other-wallet');
+    f.config.setState({ ...f.config.state, status: 'connected', current: 'explicit-other-wallet', connections: new Map() });
+    f.release(); await tick(300); assert.equal(f.config.state.current, 'explicit-other-wallet');
+  });
+  await check('wallet-disconnect-cancels-pending-response', {}, async (f) => {
+    f.hold('eth_accounts'); await until(f.pending); f.emit('disconnect'); f.release(); await tick(300);
+    assert.equal(f.config.state.status, 'disconnected');
+  });
+  await check('changed-intent-does-not-fall-across-wallets', {}, async (f) => {
+    f.hold('eth_accounts'); await until(f.pending); f.storage.set('recentConnectorId', 'other-wallet');
+    f.release(); await tick(300); assert.equal(f.config.state.status, 'disconnected');
+  });
+  await check('same-id-new-provider-does-not-inherit-consent', {}, async (f) => {
+    f.hold('eth_accounts'); await until(f.pending); f.replaceProvider();
+    f.release(); await tick(300); assert.equal(f.config.state.status, 'disconnected');
+    const count = f.methods.length; f.expose(); await tick(300);
+    assert.equal(f.methods.length, count, 'a changed provider must not inherit the pending consent');
+  });
+  for (const event of ['accountsChanged', 'chainChanged']) {
+    await check(`${event}-invalidates-pending-generation`, {}, async (f) => {
+      f.hold('eth_accounts'); await until(f.pending); f.emit(event);
+      f.account('0x4444444444444444444444444444444444444444'); f.release();
+      await until(() => f.config.state.status === 'connected');
+      assert.deepEqual(f.config.state.connections.get(f.connector.uid).accounts, ['0x4444444444444444444444444444444444444444']);
+      assert.ok(f.methods.filter((method) => method === 'eth_accounts').length >= 3,
+        'the invalidated response must be followed by a new passive authorization');
+    });
+  }
+  for (const outcome of ['accounts', 'empty', 'error']) {
+    await check(`post-restore-out-of-order-${outcome}`, {}, async (f) => {
+      await until(() => f.config.state.status === 'connected');
+      let older;
+      let rejectOlder;
+      let newer;
+      f.queueAccounts(new Promise((resolve, reject) => { older = resolve; rejectOlder = reject; }),
+        new Promise((resolve) => { newer = resolve; }));
+      const before = f.methods.length;
+      f.emit('accountsChanged'); await until(() => f.methods.length > before);
+      f.emit('accountsChanged'); await until(() => f.methods.length > before + 1);
+      newer(['0x4444444444444444444444444444444444444444']);
+      await until(() => f.config.state.connections.get(f.connector.uid)?.accounts[0] === '0x4444444444444444444444444444444444444444');
+      if (outcome === 'error') rejectOlder(new Error('Older synthetic read failed'));
+      else older(outcome === 'empty' ? [] : ['0x5555555555555555555555555555555555555555']);
+      await tick();
+      assert.equal(f.config.state.status, 'connected', 'an older empty/error result must not disconnect the newer account');
+      assert.deepEqual(f.config.state.connections.get(f.connector.uid)?.accounts,
+        ['0x4444444444444444444444444444444444444444'], 'a stale account response must not overwrite the newer live account');
+    });
+  }
+  await check('post-restore-chain-event-invalidates-pending-account', {}, async (f) => {
+    await until(() => f.config.state.status === 'connected');
+    let older;
+    f.queueAccounts(new Promise((resolve) => { older = resolve; }));
+    const before = f.methods.length; f.emit('accountsChanged'); await until(() => f.methods.length > before);
+    f.chain('0x2'); f.emit('chainChanged', '0x2');
+    await until(() => f.config.state.connections.get(f.connector.uid)?.chainId === 2);
+    older(['0x5555555555555555555555555555555555555555']); await tick();
+    assert.deepEqual(f.config.state.connections.get(f.connector.uid)?.accounts, [wallet]);
+  });
+  await check('post-restore-provider-swap-invalidates-pending-account', {}, async (f) => {
+    await until(() => f.config.state.status === 'connected');
+    f.hold('eth_accounts'); f.emit('accountsChanged'); await until(f.pending);
+    f.replaceProvider(); f.release(); await until(() => f.config.state.status === 'disconnected');
+    assert.equal(f.config.state.connections.size, 0, 'a replaced provider must not keep cached account authority');
+  });
+  await check('post-restore-explicit-cancel-invalidates-pending-account', {}, async (f) => {
+    await until(() => f.config.state.status === 'connected');
+    f.hold('eth_accounts'); f.emit('accountsChanged'); await until(f.pending); f.cancel();
+    f.config.setState({ ...f.config.state, status: 'disconnected', current: null, connections: new Map() });
+    const count = f.methods.length; f.release(); f.emit('accountsChanged'); await tick(300);
+    assert.equal(f.config.state.status, 'disconnected'); assert.equal(f.methods.length, count);
+  });
+  for (const firstEvent of ['chainChanged', 'accountsChanged']) {
+    await check(`post-restore-cross-${firstEvent}-first`, {}, async (f) => {
+      await until(() => f.config.state.status === 'connected');
+      f.account('0x4444444444444444444444444444444444444444'); f.chain('0x2');
+      const secondEvent = firstEvent === 'chainChanged' ? 'accountsChanged' : 'chainChanged';
+      f.emit(firstEvent, '0x2'); f.emit(secondEvent, '0x2');
+      await until(() => firstEvent === 'chainChanged'
+        ? f.config.state.connections.get(f.connector.uid)?.accounts[0] === '0x4444444444444444444444444444444444444444'
+        : f.config.state.connections.get(f.connector.uid)?.chainId === 2);
+      const connection = f.config.state.connections.get(f.connector.uid);
+      assert.deepEqual({ accounts: connection.accounts, chainId: connection.chainId },
+        { accounts: ['0x4444444444444444444444444444444444444444'], chainId: 2 },
+        'the newest event must reconcile both live account and live chain');
+    });
+  }
+  for (const outcome of ['empty', 'error']) {
+    await check(`post-restore-current-${outcome}-disconnects-before-chain`, {}, async (f) => {
+      await until(() => f.config.state.status === 'connected');
+      let resolve;
+      let reject;
+      f.queueAccounts(new Promise((onResolve, onReject) => { resolve = onResolve; reject = onReject; }));
+      const before = f.methods.length;
+      const chainsBefore = f.methods.filter((method) => method === 'eth_chainId').length;
+      f.emit('accountsChanged'); await until(() => f.methods.length > before);
+      if (outcome === 'empty') resolve([]); else reject(new Error('Current synthetic account unavailable'));
+      await until(() => f.config.state.status === 'disconnected');
+      assert.equal(f.config.state.connections.size, 0);
+      assert.equal(f.methods.filter((method) => method === 'eth_chainId').length, chainsBefore,
+        'a current empty/failed account must disconnect without waiting for chain RPC');
+    });
+  }
+  const receiptPath = process.env.BENEFITS_WALLET_RESTORATION_RECEIPT;
+  assert.ok(receiptPath && path.isAbsolute(receiptPath), 'an owned absolute receipt path is required');
+  assert.ok(results.length, 'restoration control selection must match a known case');
+  fs.writeFileSync(receiptPath, `${JSON.stringify({ case: 'helper-controls', result: 'PASS',
+    scope: 'actual helper + actual pinned Core reconnect; synthetic provider/config; not React/browser/build acceptance',
+    sourceHashes, controls: results }, null, 2)}\n`, { flag: 'wx', mode: 0o600 });
+  console.log(`[benefits-wallet-lock-ui] PASS - ${results.length} bounded injected restoration controls`);
+}
+
+async function runInjectedRestorationFixture() {
+  if (restorationCase === 'helper-controls') return runInjectedRestorationControls();
+  const fs = require('node:fs');
+  const crypto = require('node:crypto');
+  assert.equal(restorationCase, 'late-provider', 'unknown restoration fixture case');
+  const target = new URL(process.env.BENEFITS_WALLET_UI_ORIGIN || origin);
+  assert.ok(
+    (target.origin === 'https://shop.ifrunit.tech' ||
+      (target.protocol === 'http:' && target.hostname === '127.0.0.1')) &&
+    target.pathname === '/' && !target.search && !target.hash && !target.username && !target.password,
+    'fixture target must be the admitted Shop origin or an explicitly served loopback build'
+  );
+  const receiptPath = process.env.BENEFITS_WALLET_RESTORATION_RECEIPT;
+  assert.ok(receiptPath && path.isAbsolute(receiptPath), 'an owned absolute receipt path is required');
+  const receipt = {
+    case: restorationCase, origin: target.origin, startedUtc: new Date().toISOString(),
+    appCommit: 'UNPROVEN_STATIC_BUILD', syntheticWalletOnly: true,
+    staticAssets: [], blockedRequests: [], websocketAttempts: 0, apiFixtures: 0,
+    rpcMethods: [], stages: [], result: 'INCOMPLETE',
+  };
+  const state = { ifr: 10_000n * unit, locked: 0n, commitment: 0n, allowance: 0n,
+    eth: 10n ** 18n, transactions: [], rpcCalls: [], readCalls: [] };
+  let staticBytes = 0;
+  let browser;
+  let page;
+  try {
+    browser = await chromium.launch({ headless: true,
+      ...(process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE
+        ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE } : {}) });
+    const context = await browser.newContext({ serviceWorkers: 'block', locale: 'en-US',
+      viewport: { width: 1440, height: 1000 }, deviceScaleFactor: 1 });
+    await context.routeWebSocket('**/*', (socket) => {
+      receipt.websocketAttempts += 1;
+      socket.close();
+    });
+    await context.route('**/*', async (route) => {
+      const request = route.request();
+      const url = new URL(request.url());
+      if (url.pathname.startsWith('/api/')) {
+        receipt.apiFixtures += 1;
+        return route.fulfill({ status: request.method() === 'GET' ? 200 : 403,
+          contentType: 'application/json', body: JSON.stringify(url.pathname === '/api/businesses'
+            ? { offers: [], categories: [], serviceAreas: [], pagination: {
+              page: 1, limit: 8, total: 0, totalPages: 0, hasNext: false } }
+            : { status: 'fixture-only', chainId: 1 }) });
+      }
+      if (request.method() === 'POST') {
+        let payload;
+        try { payload = request.postDataJSON(); } catch {}
+        const calls = Array.isArray(payload) ? payload : [payload];
+        if (calls.length && calls.every((call) => call && typeof call.method === 'string')) {
+          const respond = (call) => {
+            receipt.rpcMethods.push(call.method);
+            try { return { jsonrpc: '2.0', id: call.id, result: rpcResult(call, state) }; }
+            catch { return { jsonrpc: '2.0', id: call.id,
+              error: { code: -32601, message: 'Method unavailable in synthetic fixture' } }; }
+          };
+          return route.fulfill({ contentType: 'application/json',
+            body: JSON.stringify(Array.isArray(payload) ? calls.map(respond) : respond(payload)) });
+        }
+      }
+      const staticPath = url.pathname === '/' || url.pathname.startsWith('/_next/static/') ||
+        /^\/(?:icons\/[^/]+|favicon\.ico|manifest(?:\.webmanifest|\.json))$/.test(url.pathname);
+      if (request.method() === 'GET' && url.origin === target.origin && staticPath && !url.search) {
+        const headers = { ...request.headers() };
+        delete headers.cookie;
+        delete headers.authorization;
+        const response = await route.fetch({ headers, maxRedirects: 0 });
+        assert.equal(response.status(), 200, `static request did not return 200: ${url.pathname}`);
+        const body = await response.body();
+        staticBytes += body.length;
+        assert.ok(staticBytes <= 64 * 1024 * 1024, 'static fixture exceeded its finite byte limit');
+        receipt.staticAssets.push({ path: url.pathname, bytes: body.length,
+          sha256: crypto.createHash('sha256').update(body).digest('hex') });
+        const responseHeaders = { ...response.headers() };
+        delete responseHeaders['set-cookie'];
+        delete responseHeaders['content-encoding'];
+        delete responseHeaders['content-length'];
+        return route.fulfill({ response, headers: responseHeaders, body });
+      }
+      receipt.blockedRequests.push({ method: request.method(), origin: url.origin,
+        resourceType: request.resourceType() });
+      return route.abort('blockedbyclient');
+    });
+    await context.addInitScript(({ account }) => {
+      const visit = Number(sessionStorage.getItem('__ifrM1Visit') || 0) + 1;
+      sessionStorage.setItem('__ifrM1Visit', String(visit));
+      const methods = [];
+      const listeners = new Map();
+      const provider = {
+        isMetaMask: true,
+        request: async ({ method }) => {
+          methods.push(method);
+          if (method === 'wallet_requestPermissions' || method === 'eth_requestAccounts') {
+            sessionStorage.setItem('__ifrM1Permission', 'yes');
+            return method === 'eth_requestAccounts' ? [account] :
+              [{ parentCapability: 'eth_accounts', caveats: [{ type: 'restrictReturnedAccounts', value: [account] }] }];
+          }
+          if (method === 'eth_accounts') return sessionStorage.getItem('__ifrM1Permission') === 'yes' ? [account] : [];
+          if (method === 'eth_chainId') return '0x1';
+          if (method === 'net_version') return '1';
+          if (method === 'wallet_getCapabilities') return {};
+          throw new Error('Unsupported synthetic wallet method');
+        },
+        on: (event, listener) => listeners.set(event, [...(listeners.get(event) || []), listener]),
+        removeListener: (event, listener) => listeners.set(event,
+          (listeners.get(event) || []).filter((entry) => entry !== listener)),
+      };
+      const detail = Object.freeze({ provider, info: { uuid: 'be61c572-fce5-41a3-aee1-41c53437a59e',
+        rdns: 'io.metamask', name: 'MetaMask', icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg"/>' } });
+      let exposed = false;
+      const announce = () => window.dispatchEvent(new CustomEvent('eip6963:announceProvider', { detail }));
+      const expose = () => {
+        if (exposed) return;
+        exposed = true;
+        Object.defineProperty(window, 'ethereum', { configurable: true, value: provider });
+        window.addEventListener('eip6963:requestProvider', announce);
+        window.dispatchEvent(new Event('ethereum#initialized'));
+        announce();
+      };
+      Object.defineProperty(window, '__ifrM1', { value: { visit, methods, expose,
+        snapshot: () => ({ visit, exposed, methods: [...methods],
+          rememberedSpecificConnector: localStorage.getItem('wagmi.recentConnectorId') === '"io.metamask"',
+          genericConnectedMarker: Boolean(localStorage.getItem('wagmi.injected.connected')) }) } });
+      if (visit === 1) expose();
+    }, { account: wallet });
+    page = await context.newPage();
+    const pageErrors = [];
+    page.on('pageerror', (error) => pageErrors.push(error.name));
+    await page.goto(`${target.origin}/#customer-wallet`, { waitUntil: 'domcontentloaded' });
+    const panel = page.locator('#customer-wallet');
+    const control = panel.locator('[data-wallet-connect-control][data-wallet-connectors-ready="true"]');
+    const disconnect = panel.getByRole('button', { name: 'Disconnect', exact: true });
+    await control.waitFor({ timeout: 15_000 });
+    assert.match(await control.getAttribute('data-wallet-connector-ids'), /io\.metamask/);
+    await panel.locator('[data-wallet-action="connect"]').click();
+    await disconnect.waitFor({ timeout: 10_000 });
+    const connected = await page.evaluate(() => window.__ifrM1.snapshot());
+    assert.equal(connected.rememberedSpecificConnector, true, 'explicit connect must remember the specific connector');
+    assert.equal(connected.genericConnectedMarker, false, 'specific connect must not need a generic marker');
+    receipt.stages.push({ stage: 'explicit-specific-connect', ...connected });
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await control.waitFor({ timeout: 15_000 });
+    await panel.locator('[data-wallet-action="connect"]').waitFor();
+    assert.doesNotMatch(await control.getAttribute('data-wallet-connector-ids'), /io\.metamask/);
+    const before = await page.evaluate(() => window.__ifrM1.snapshot());
+    assert.equal(before.visit, 2, 'the fixture must reload the same browser tab');
+    assert.equal(before.exposed, false, 'provider must be absent during initial restoration');
+    assert.equal(before.rememberedSpecificConnector, true, 'synthetic selection intent must survive reload');
+    receipt.stages.push({ stage: 'settled-before-late-provider', ...before });
+    await page.evaluate(() => window.__ifrM1.expose());
+    await page.waitForFunction(() => [...document.querySelectorAll('[data-wallet-connector-ids]')]
+      .some((element) => element.getAttribute('data-wallet-connector-ids').includes('io.metamask')));
+    await disconnect.waitFor({ timeout: 10_000 }).catch(() => {
+      throw new Error('RESTORATION_LATE_PROVIDER: remembered EIP-6963 provider appeared after initial restore, but live connection did not recover');
+    });
+    const restored = await page.evaluate(() => window.__ifrM1.snapshot());
+    assert.equal(restored.methods.some((method) => /requestAccounts|requestPermissions|sign|sendTransaction/i.test(method)),
+      false, 'restoration must not request permission, sign or transact');
+    assert.ok(restored.methods.includes('eth_accounts'), 'restoration must verify a fresh passive account');
+    assert.ok(restored.methods.includes('eth_chainId'), 'restoration must verify the live chain');
+    receipt.stages.push({ stage: 'restored-after-late-provider', ...restored });
+    await disconnect.click();
+    await panel.locator('[data-wallet-action="connect"]').waitFor();
+    await page.waitForTimeout(200);
+    const readsAfterDisconnect = state.readCalls.length;
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await control.waitFor({ timeout: 15_000 });
+    await panel.locator('[data-wallet-action="connect"]').waitFor();
+    await page.evaluate(() => window.__ifrM1.expose());
+    await page.waitForFunction(() => [...document.querySelectorAll('[data-wallet-connector-ids]')]
+      .some((element) => element.getAttribute('data-wallet-connector-ids').includes('io.metamask')));
+    await page.waitForTimeout(1500);
+    assert.equal(await disconnect.count(), 0, 'an explicit Disconnect must survive reload and late discovery');
+    const disconnected = await page.evaluate(() => window.__ifrM1.snapshot());
+    assert.deepEqual(disconnected.methods, [], 'disconnected reload must not even read passive accounts');
+    assert.equal(state.readCalls.length, readsAfterDisconnect, 'disconnected reload must not read IFR/IFRLock');
+    receipt.stages.push({ stage: 'explicit-disconnect-reload-stays-disconnected', ...disconnected });
+    await panel.locator('[data-wallet-action="connect"]').click();
+    await disconnect.waitFor({ timeout: 10_000 });
+    receipt.stages.push({ stage: 'explicit-reconnect', ...(await page.evaluate(() => window.__ifrM1.snapshot())) });
+    assert.deepEqual(pageErrors, []);
+    assert.equal(state.transactions.length, 0);
+    receipt.result = 'PASS';
+    console.log('[benefits-wallet-lock-ui] PASS - late intended injected provider restores passively');
+  } catch (error) {
+    receipt.result = 'FAIL';
+    receipt.failure = error.message;
+    throw error;
+  } finally {
+    if (page) receipt.finalWalletState = await page.evaluate(() => window.__ifrM1?.snapshot()).catch(() => null);
+    receipt.contractReadCount = state.readCalls.length;
+    receipt.finishedUtc = new Date().toISOString();
+    fs.writeFileSync(receiptPath, `${JSON.stringify(receipt, null, 2)}\n`, { flag: 'wx', mode: 0o600 });
+    if (browser) await browser.close();
+  }
 }
 
 async function verifyCustomerWalletAnchor(page, onVerified = async () => {}) {
@@ -726,7 +1200,7 @@ async function run() {
   }
 }
 
-run().catch((error) => {
+(restorationCase ? runInjectedRestorationFixture() : run()).catch((error) => {
   console.error(error.stack || error);
   process.exitCode = 1;
 });

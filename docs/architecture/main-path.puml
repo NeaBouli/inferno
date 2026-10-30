@@ -277,3 +277,23 @@ Lock --> Entitlement : lock result
 Entitlement --> Access : OR result + successful condition reasons
 Access --> Client : granted / reasons
 @enduml
+
+@startuml benefits_injected_restoration_flow_20261030
+participant App
+participant Restore
+participant Wallet
+App -> Restore: remembered connector intent
+Restore -> Wallet: passive accounts and chain
+Wallet --> Restore: live pair
+Restore --> App: guarded connected state
+App -> Restore: explicit user intent cancels
+@enduml
+
+@startuml benefits_guide_narrow_heading_flow_20261030
+participant Browser
+participant Guide
+participant Heading
+Browser -> Guide: viewport width
+Guide -> Heading: 40px through 360px, existing scale above
+Heading --> Guide: text fits the padded card
+@enduml
