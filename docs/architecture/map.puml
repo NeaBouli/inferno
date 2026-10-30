@@ -319,3 +319,10 @@ Validation --> Zod : safeParse / issues
 [WalletStatus transactionSteps] --> [Step detail paragraph] : step.detail
 [Step detail paragraph] --> [Scoped wallet CSS] : overflow-wrap anywhere
 @enduml
+
+@startuml benefits_injected_restoration_20261030
+left to right direction
+[Provider root] --> [Finite startup restore]
+[Finite startup restore] --> [Remembered injected connector]
+[Remembered injected connector] --> [Guarded live account and chain]
+@enduml
