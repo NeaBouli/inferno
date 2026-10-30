@@ -789,7 +789,7 @@ export default function Home() {
             Locked IFR. Benefits at checkout.
           </h1>
           <p className="mt-4 max-w-2xl text-base leading-7 text-stone-300 sm:mt-6 sm:text-lg sm:leading-8">
-            Customers prove access without sending tokens. Present a short-lived customer QR, approve the exact seller offer, and let the seller redeem it once.
+            Customers prove access without sending tokens. Present a short-lived customer QR, review the exact seller offer, and sign the checkout proof to redeem it once.
           </p>
 
           <div id="choose-mode" className="mt-6 grid scroll-mt-36 grid-cols-2 gap-3 sm:mt-8" aria-label="Choose app mode">
