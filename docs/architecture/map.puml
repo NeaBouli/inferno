@@ -326,3 +326,9 @@ left to right direction
 [Finite startup restore] --> [Remembered injected connector]
 [Remembered injected connector] --> [Guarded live account and chain]
 @enduml
+
+@startuml benefits_guide_narrow_heading_20261030
+left to right direction
+[Guide hero card] --> [Width-specific H1 scale]
+[Width-specific H1 scale] --> [Text within card padding]
+@enduml

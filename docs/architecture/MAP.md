@@ -1578,3 +1578,11 @@ work. Account/chain events reconcile one guarded live pair; cached addresses do
 not grant authority and startup never requests permissions or signatures.
 The focused restoration modes in `scripts/test-benefits-wallet-lock-ui.js` run
 inside the existing `test-customer-pass-ui` server lifecycle in Benefits CI.
+
+## Benefits narrow Guide heading - 2026-10-30
+
+Render hop: `/guide` -> padded hero card -> H1 text ranges. The Guide-only
+`max-[360px]:text-[2.5rem]` utility reduces the heading to 40px through 360px;
+the existing 48px base and 72px medium-screen scale continue above that bound.
+The release assertions cover 320px, 360px and 361px, loaded stylesheet identity
+and all heading text within the card padding, without clipping or hidden text.
