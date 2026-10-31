@@ -88,6 +88,7 @@ function binding(root, kind) {
   }
   return {
     root,
+    kind,
     consumer_resolution: consumerResolution,
     package_sha256: digest(fs.readFileSync(path.join(root, "package.json"))),
     lock_sha256: digest(fs.readFileSync(path.join(root, "package-lock.json"))),
@@ -168,8 +169,10 @@ async function run(command, args, cwd, cap = 20000, env = {}, accepted = [0]) {
   clearTimeout(timer);
   if (result.timeout) {
     await terminate(record);
+    report.failed_process = { ...receipt(record, await record.closed), timeout: true };
     throw fault("CHILD_DEADLINE");
   }
+  if (result.spawnError || record.overflow || !accepted.includes(result.code)) report.failed_process = receipt(record, result);
   demand(!result.spawnError, "CHILD_SPAWN_FAILED");
   demand(!record.overflow, "CHILD_OUTPUT_LIMIT");
   demand(accepted.includes(result.code), "CHILD_EXIT_FAILED");
@@ -218,11 +221,14 @@ function identities(json) {
   }).sort((a, b) => JSON.stringify(a).localeCompare(JSON.stringify(b), "en"));
 }
 async function mochaCase(bound, scenario) {
+  report.active_installation = bound.kind;
+  report.active_operation = "mocha-discovery-dry-run";
   const bin = path.join(bound.packages.mocha.directory, "bin/mocha.js");
   const base = ["--no-config", "--no-package", "--no-color", "--reporter", "json", "--timeout", "2000", ...scenario.args];
   const dry = await run(process.execPath, [bin, ...base, "--dry-run"], work);
   const dryJSON = parseJSON(dry.stdout, "MOCHA_DRY_JSON");
   const dryIds = identities(dryJSON);
+  report.active_operation = "mocha-execution";
   const actual = await run(process.execPath, [bin, ...base, ...(scenario.parallel ? ["--parallel", "--jobs", "2"] : [])], work, 20000, { MATCHER_PARALLEL: scenario.parallel ? "1" : "0" });
   const actualJSON = parseJSON(actual.stdout, "MOCHA_RUN_JSON");
   const actualIds = identities(actualJSON);
@@ -286,6 +292,8 @@ function matcherProbe(root, fixture) {
   return { matching, internals, discovery };
 }
 async function probe(bound) {
+  report.active_installation = bound.kind;
+  report.active_operation = "glob-minimatch-consumer-probe";
   const code = `try { const result = (${matcherProbe.toString()})(process.argv[1], process.argv[2]); process.stdout.write(JSON.stringify(result)); } catch { process.exitCode = 1; }`;
   const child = await run(process.execPath, ["-e", code, bound.root, work], work);
   return { data: parseJSON(child.stdout, "MATCHER_PROBE_JSON"), process: child.receipt };
@@ -326,6 +334,8 @@ async function waitForWatch(record, log, count) {
   });
 }
 async function watchCase(bound) {
+  report.active_installation = bound.kind;
+  report.active_operation = "mocha-watch-ignore-rerun";
   put("watch/spec.test.cjs", watchSource());
   put("watch/ignored/noise.cjs", "// ignored initial file\n");
   put("watch/value.txt", "first");
@@ -352,6 +362,8 @@ async function watchCase(bound) {
   }
 }
 async function markdownCase(bound, wrapper, disabledRules) {
+  report.active_installation = bound.kind;
+  report.active_operation = "markdown-cli-fixture";
   const files = ["markdown/good.md", "markdown/bad.md", "markdown/space [one].md"];
   const cli = path.join(bound.packages["markdownlint-cli"].directory, "markdownlint.js");
   const child = await run(process.execPath, [cli, "--json", "--disable", ...disabledRules, "--", ...files], work, 25000, {}, [0, 1]);
@@ -429,6 +441,8 @@ async function main() {
   checks.push({ id: report.stage, status: "PASS", baseline: markdownBefore, candidate: markdownAfter, wrapper_sha256: digest(fs.readFileSync(wrapperPath)), repository_baseline_sha256: digest(originalBaseline), repository_baseline_regenerated: false });
   report.status = "PASS";
   delete report.stage;
+  delete report.active_installation;
+  delete report.active_operation;
 }
 
 for (const signal of ["SIGINT", "SIGTERM"]) {
