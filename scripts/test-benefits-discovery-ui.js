@@ -235,6 +235,49 @@ function catalogPublicPath(value) {
     && !decoded.split('/').some(part => part === '.' || part === '..'), 'catalog asset path must be canonical');
   return decoded;
 }
+const CATALOG_FAILURE_CODES = new Set(['CATALOG_WORK_DEADLINE', 'CATALOG_WEBSOCKET_FORBIDDEN', 'CATALOG_WEBSOCKET_CLOSE_FAILED',
+  'CATALOG_NETWORK_ADMISSION', 'CATALOG_ABORT_FAILED', 'CATALOG_FIXTURE_API', 'CATALOG_FIXTURE_LOGO', 'CATALOG_ASSET_IDENTITY']);
+const CATALOG_FAILURE_STAGES = new Set(['ADMISSION', 'CONTINUE', 'COUNT', 'MAP', 'STATUS', 'HEADER', 'BODY', 'BYTES', 'API', 'LOGO', 'WEBSOCKET', 'ABORT']);
+const CATALOG_RESOURCE_TYPES = new Set(['document', 'stylesheet', 'image', 'media', 'font', 'script', 'texttrack', 'xhr', 'fetch', 'eventsource', 'websocket', 'manifest', 'other']);
+const CATALOG_METHODS = new Set(['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'OTHER']);
+function catalogFailureSample(code, stage, request, targetOrigin, status) {
+  if (!CATALOG_FAILURE_CODES.has(code) || !CATALOG_FAILURE_STAGES.has(stage)) return null;
+  try {
+    const url = new URL(request.url()); const method = typeof request.method === 'function' ? request.method() : 'OTHER';
+    const type = typeof request.resourceType === 'function' ? request.resourceType() : 'other';
+    let publicPath = url.pathname; try { publicPath = catalogPublicPath(publicPath); } catch { /* Hash only. */ }
+    const sample = { code, stage, method: CATALOG_METHODS.has(method) ? method : 'OTHER', resourceType: CATALOG_RESOURCE_TYPES.has(type) ? type : 'other',
+      originClass: url.origin === targetOrigin ? 'TARGET' : ['http:', 'https:'].includes(url.protocol) ? 'OTHER_HTTP' : 'OTHER',
+      pathSha256: crypto.createHash('sha256').update(publicPath).digest('hex') };
+    if (Number.isInteger(status) && status >= 100 && status <= 599) sample.status = status;
+    return sample;
+  } catch { return null; }
+}
+function catalogCompletionCheckpoint(proof, sourceClosingEqual, buildClosingEqual) {
+  const elapsedMs = performance.now() - proof.started;
+  const count = value => Number.isSafeInteger(value) && value >= 0 ? value : null;
+  const histogram = Object.fromEntries([...CATALOG_FAILURE_CODES, 'UNKNOWN_FAILURE_CODE'].map(code => [code, 0]));
+  for (const code of proof.failures) histogram[CATALOG_FAILURE_CODES.has(code) ? code : 'UNKNOWN_FAILURE_CODE'] += 1;
+  const samples = (proof.failureSamples || []).slice(0, 16).flatMap(sample => {
+    if (!sample || !CATALOG_FAILURE_CODES.has(sample.code) || !CATALOG_FAILURE_STAGES.has(sample.stage)) return [];
+    const safe = { code: sample.code, stage: sample.stage, method: CATALOG_METHODS.has(sample.method) ? sample.method : 'OTHER',
+      resourceType: CATALOG_RESOURCE_TYPES.has(sample.resourceType) ? sample.resourceType : 'other',
+      originClass: ['TARGET', 'OTHER_HTTP', 'OTHER'].includes(sample.originClass) ? sample.originClass : 'OTHER',
+      pathSha256: /^[a-f0-9]{64}$/.test(sample.pathSha256) ? sample.pathSha256 : null };
+    if (Number.isInteger(sample.status) && sample.status >= 100 && sample.status <= 599) safe.status = sample.status;
+    return [safe];
+  });
+  const conditions = { notAborted: !proof.aborted, withinWorkBudget: elapsedMs <= 300000,
+    ownContextsClosed: proof.contexts.size === 0, noRecordedFailures: proof.failures.length === 0,
+    sourceClosingEqual: sourceClosingEqual === true, buildClosingEqual: buildClosingEqual === true };
+  return { schema: 'catalog-completion-checkpoint/v1', status: Object.values(conditions).every(Boolean) ? 'PRE_ASSERT_CHECKPOINT' : 'FAIL',
+    stage: 'BEFORE_COMPLETION_ASSERT', isAcceptance: false, elapsedMs: Number.isFinite(elapsedMs) && elapsedMs >= 0 ? elapsedMs : null, conditions,
+    counts: { failures: count(proof.failures.length), contexts: count(proof.contexts.size), pendingAssetJobs: count(proof.pending.size),
+      assetResponses: count(proof.responseCount), assetResponseBytes: count(proof.responseBytes), verifiedAssets: count(proof.assets.size),
+      images: count(proof.images.length), imageBytes: count(proof.imageBytes), omittedSamples: count(proof.failureSampleOmitted || 0) },
+    knownFailureCodeHistogram: histogram, samples, rawUrlsQueriesErrorsBodiesRetained: false, validationUnchanged: true };
+}
+
 async function prepareCatalogQualification(options, browser) {
   const qualificationStarted = performance.now();
   assert.equal(Number(process.versions.node.split('.')[0]), 22, 'catalog qualification requires Node22');
@@ -332,6 +375,16 @@ async function prepareCatalogQualification(options, browser) {
     binding: binding ? { releasedMain: binding.releasedMain, sourceCommit: binding.sourceCommit, frontendTree: binding.frontendTree, containerId: binding.containerId, imageId: binding.imageId,
       state: binding.state, observedUtc: binding.observedUtc, postSourceKind: binding.postSourceKind, buildReceiptSha256: binding.buildReceiptSha256, postSourceReceiptSha256: binding.postSourceReceiptSha256 } : null,
     bindingSha256: proof.bindingSha256, servedBuild: proof.opening });
+  proof.failureSamples = []; proof.failureSampleKeys = new Set(); proof.failureSampleOmitted = 0;
+  proof.sampleFailure = (code, stage, request, status) => {
+    try {
+      const sample = catalogFailureSample(code, stage, typeof request === 'function' ? request() : request, targetOrigin, typeof status === 'function' ? status() : status);
+      if (!sample) return;
+      const key = JSON.stringify(sample); if (proof.failureSampleKeys.has(key)) return;
+      if (proof.failureSamples.length >= 16) { proof.failureSampleOmitted += 1; return; }
+      proof.failureSampleKeys.add(key); proof.failureSamples.push(sample);
+    } catch { /* Metadata must not replace the existing validation outcome. */ }
+  };
   proof.admittedAssets = new Set();
   proof.admit = request => {
     const url = new URL(request.url());
@@ -340,22 +393,26 @@ async function prepareCatalogQualification(options, browser) {
     const appRoute = ['/', '/guide', '/support', '/privacy', '/s/catalog-filter-fixture', '/s/catalog-second-fixture'].includes(publicPath);
     if (!appRoute) { assetRecord(publicPath); proof.admittedAssets.add(publicPath); }
   };
-  proof.abort = async (route, code) => {
-    proof.failures.push(code);
-    try { await route.abort(); } catch { proof.failures.push('CATALOG_ABORT_FAILED'); }
+  proof.abort = async (route, code, stage = 'ABORT') => {
+    proof.failures.push(code); proof.sampleFailure(code, stage, () => route.request());
+    try { await route.abort(); }
+    catch { proof.failures.push('CATALOG_ABORT_FAILED'); proof.sampleFailure('CATALOG_ABORT_FAILED', 'ABORT', () => route.request()); }
   };
   proof.response = response => {
+    let failureStage = 'MAP';
     const job = (async () => {
       const url = new URL(response.url());
       if (url.origin !== targetOrigin) return; // The only external fixture logo is fulfilled locally by the owning fixture.
       if (!proof.admittedAssets.has(catalogPublicPath(url.pathname))) return;
-      assert.ok(++proof.responseCount <= 2048, 'catalog asset response count must be bounded');
-      const record = assetRecord(url.pathname); assert.equal(response.status(), 200, 'loaded catalog asset must be served successfully');
-      const length = response.headers()['content-length']; if (length !== undefined) assert.ok(Number(length) <= 16 * 1024 * 1024, 'loaded catalog asset header must be bounded');
-      const bytes = await response.body(); proof.responseBytes += bytes.length;
+      failureStage = 'COUNT'; assert.ok(++proof.responseCount <= 2048, 'catalog asset response count must be bounded');
+      failureStage = 'MAP'; const record = assetRecord(url.pathname);
+      failureStage = 'STATUS'; assert.equal(response.status(), 200, 'loaded catalog asset must be served successfully');
+      failureStage = 'HEADER'; const length = response.headers()['content-length']; if (length !== undefined) assert.ok(Number(length) <= 16 * 1024 * 1024, 'loaded catalog asset header must be bounded');
+      failureStage = 'BODY'; const bytes = await response.body(); proof.responseBytes += bytes.length;
+      failureStage = 'BYTES';
       assert.ok(bytes.length === record.bytes && digest(bytes) === record.sha256 && proof.responseBytes <= 256 * 1024 * 1024, 'loaded catalog asset bytes must match the bound artifact');
       proof.assets.set(record.path, { ...record, responses: (proof.assets.get(record.path)?.responses || 0) + 1 });
-    })().catch(() => { proof.failures.push('CATALOG_ASSET_IDENTITY'); });
+    })().catch(() => { proof.failures.push('CATALOG_ASSET_IDENTITY'); proof.sampleFailure('CATALOG_ASSET_IDENTITY', failureStage, () => response.request(), () => response.status()); });
     proof.pending.add(job); void job.finally(() => proof.pending.delete(job));
   };
   proof.flush = async () => { await Promise.all([...proof.pending]); };
@@ -364,6 +421,8 @@ async function prepareCatalogQualification(options, browser) {
     const closingSource = sourceSnapshot();
     assert.deepEqual(closingSource, source, 'catalog source Git/script/component/package/lock identity must remain unchanged');
     clearTimeout(proof.timer);
+    proof.write('catalog-completion-checkpoint.json', catalogCompletionCheckpoint(proof, true,
+      closing.sha256 === proof.opening.sha256 && closing.bytes === proof.opening.bytes));
     assert.ok(!proof.aborted && performance.now() - proof.started <= 300000 && proof.contexts.size === 0 && proof.failures.length === 0, 'catalog qualification/owned context cleanup must complete');
     assert.equal(proof.images.length, live ? 4 : 18, 'complete catalog screenshot matrix required');
     assert.ok(proof.assets.size > 0 && [...proof.assets.keys()].some(value => value.endsWith('.css'))
@@ -455,11 +514,14 @@ async function verifySellerCatalogFilters(browser, qualification = null) {
       context.on('response', proof.response);
       await context.routeWebSocket('**/*', async socket => {
         proof.failures.push('CATALOG_WEBSOCKET_FORBIDDEN');
-        try { await socket.close(); } catch { proof.failures.push('CATALOG_WEBSOCKET_CLOSE_FAILED'); }
+        const metadata = { url: () => socket.url(), method: () => 'GET', resourceType: () => 'websocket' };
+        proof.sampleFailure('CATALOG_WEBSOCKET_FORBIDDEN', 'WEBSOCKET', metadata);
+        try { await socket.close(); } catch { proof.failures.push('CATALOG_WEBSOCKET_CLOSE_FAILED'); proof.sampleFailure('CATALOG_WEBSOCKET_CLOSE_FAILED', 'WEBSOCKET', metadata); }
       });
       await context.route('**/*', async route => {
-        try { proof.admit(route.request()); await route.continue(); }
-        catch { await proof.abort(route, 'CATALOG_NETWORK_ADMISSION'); }
+        let stage = 'ADMISSION';
+        try { proof.admit(route.request()); stage = 'CONTINUE'; await route.continue(); }
+        catch { await proof.abort(route, 'CATALOG_NETWORK_ADMISSION', stage); }
       });
     }
     let mode = viewport.width === 1440 ? 'loading' : 'ready';
@@ -494,14 +556,14 @@ async function verifySellerCatalogFilters(browser, qualification = null) {
       throw new Error(`Unexpected catalog fixture request ${url.pathname}`);
       } catch (error) {
         if (!proof) throw error;
-        await proof.abort(route, 'CATALOG_FIXTURE_API');
+        await proof.abort(route, 'CATALOG_FIXTURE_API', 'API');
       }
     });
     await context.route('https://assets.example.com/ifr-seller-logo.png', async route => {
       try {
         assert.equal(route.request().method(), 'GET', 'synthetic catalog logo must not mutate data');
         await route.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64') });
-      } catch (error) { if (!proof) throw error; await proof.abort(route, 'CATALOG_FIXTURE_LOGO'); }
+      } catch (error) { if (!proof) throw error; await proof.abort(route, 'CATALOG_FIXTURE_LOGO', 'LOGO'); }
     });
     const page = await context.newPage();
     page.setDefaultNavigationTimeout(NAVIGATION_TIMEOUT_MS);
