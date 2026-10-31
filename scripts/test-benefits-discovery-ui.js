@@ -477,15 +477,15 @@ async function verifySellerCatalogFilters(browser, qualification = null) {
       if (isProducts || isRules) {
         catalogRequests.push(url.pathname);
         if (mode === 'loading') await loadingGate;
-        if (mode === 'error') return route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'Catalog fixture temporarily unavailable' }) });
-        return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(isProducts
+        if (mode === 'error') return await route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'Catalog fixture temporarily unavailable' }) });
+        return await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(isProducts
           ? { business: selectedBusiness, products: mode === 'empty' ? [] : selectedProducts }
           : { rules: mode === 'empty' ? [] : selectedRules }) });
       }
-      if (url.pathname === `/api/businesses/${secondBusiness.slug}`) return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(secondBusiness) });
-      if (url.pathname === `/api/businesses/${business.slug}`) return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(business) });
-      if (url.pathname === '/api/businesses') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(discoveryResponse([])) });
-      if (url.pathname === '/api/ready') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'ready', chainId: 1, database: 'ok', rateLimitStore: 'ok' }) });
+      if (url.pathname === `/api/businesses/${secondBusiness.slug}`) return await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(secondBusiness) });
+      if (url.pathname === `/api/businesses/${business.slug}`) return await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(business) });
+      if (url.pathname === '/api/businesses') return await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(discoveryResponse([])) });
+      if (url.pathname === '/api/ready') return await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'ready', chainId: 1, database: 'ok', rateLimitStore: 'ok' }) });
       throw new Error(`Unexpected catalog fixture request ${url.pathname}`);
       } catch (error) {
         if (!proof) throw error;
