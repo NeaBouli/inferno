@@ -14,6 +14,7 @@
     "test:hardhat-runtime": "hardhat run scripts/test-hardhat-runtime.js",
     "test:dependency-advisories": "node scripts/check-root-advisory-baseline.cjs",
     "test:root-toolchain-compat": "node scripts/test-root-toolchain-compat.cjs",
+    "test:root-toolchain-cleanup": "node --test scripts/test-root-toolchain-cleanup.test.cjs",
     "test:browser-ethers6": "node scripts/check-browser-ethers6.cjs",
     "test:mocha-serializer": "mocha --parallel --jobs 2 test/mocha-serializer-compat.test.cjs",
     "test:lending-price": "node scripts/prepare-lending-price-governance.js --self-test",
