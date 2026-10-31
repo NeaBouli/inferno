@@ -278,6 +278,45 @@ function catalogCompletionCheckpoint(proof, sourceClosingEqual, buildClosingEqua
     knownFailureCodeHistogram: histogram, samples, rawUrlsQueriesErrorsBodiesRetained: false, validationUnchanged: true };
 }
 
+function createCatalogContextDrain(context, isAborted) {
+  const requests = new Set(); const jobs = new Set(); const waiters = new Set();
+  const never = new Promise(() => {}); let revision = 0; let rejected = false; let rejection;
+  const wake = () => { revision += 1; for (const resume of waiters) resume(); };
+  context.on('request', request => { requests.add(request); wake(); });
+  const terminal = request => { requests.delete(request); wake(); };
+  context.on('requestfinished', terminal); context.on('requestfailed', terminal); context.on('close', wake);
+  const wait = async promise => {
+    let resume; const changed = new Promise(resolve => { resume = resolve; waiters.add(resolve); });
+    try { await Promise.race([promise, changed]); } finally { waiters.delete(resume); }
+  };
+  const drain = async () => {
+    for (;;) {
+      assert.ok(!isAborted(), 'catalog context drain stays inside the original work budget');
+      if (rejected) throw rejection;
+      const observed = revision;
+      await wait(Promise.all([...jobs]));
+      if (requests.size === 0 && jobs.size === 0 && revision === observed) {
+        // Let already queued protocol events register before the close handoff.
+        await wait(new Promise(resolve => setImmediate(resolve)));
+        if (requests.size === 0 && jobs.size === 0 && revision === observed) return;
+      } else if (jobs.size === 0 && requests.size > 0) await wait(never);
+    }
+  };
+  return {
+    wake,
+    track(job) {
+      jobs.add(job); wake();
+      void job.then(() => { jobs.delete(job); wake(); }, error => { rejected = true; rejection = error; jobs.delete(job); wake(); });
+      return job;
+    },
+    async close() {
+      do { await drain(); } while (requests.size || jobs.size);
+      await context.close();
+      await drain(); // Late close-time work is validated, never discarded.
+    },
+  };
+}
+
 async function prepareCatalogQualification(options, browser) {
   const qualificationStarted = performance.now();
   assert.equal(Number(process.versions.node.split('.')[0]), 22, 'catalog qualification requires Node22');
@@ -365,9 +404,12 @@ async function prepareCatalogQualification(options, browser) {
     return expectedManifest;
   };
   const proof = { live, origin: targetOrigin, directory, source, buildId, bindingSha256: binding ? digest(Buffer.from(JSON.stringify(binding))) : null,
-    failures: [], images: [], imageBytes: 0, assets: new Map(), pending: new Set(), contexts: new Set(), responseCount: 0, responseBytes: 0, started: qualificationStarted, aborted: false };
+    failures: [], images: [], imageBytes: 0, assets: new Map(), pending: new Set(), contexts: new Set(), contextDrains: new Map(), responseCount: 0, responseBytes: 0, started: qualificationStarted, aborted: false };
   proof.opening = await servedBuild();
-  proof.timer = setTimeout(() => { proof.aborted = true; proof.failures.push('CATALOG_WORK_DEADLINE'); for (const context of proof.contexts) void context.close().catch(() => {}); }, Math.max(1, 300000 - (performance.now() - qualificationStarted))); proof.timer.unref();
+  let wakeAbort; const workAborted = new Promise(resolve => { wakeAbort = resolve; });
+  proof.timer = setTimeout(() => { proof.aborted = true; proof.failures.push('CATALOG_WORK_DEADLINE'); wakeAbort();
+    for (const context of proof.contexts) { proof.contextDrains.get(context)?.wake(); void context.close().catch(() => {}); }
+  }, Math.max(1, 300000 - (performance.now() - qualificationStarted))); proof.timer.unref();
   proof.write = (name, value) => { const file = path.join(directory, name); fs.writeFileSync(file, JSON.stringify(value, null, 2) + '\n', { flag: 'wx', mode: 0o600 }); };
   proof.runtime = { node: process.version, playwright: require('playwright/package.json').version, browser: browser.version(), declaredExecutable: chromium.executablePath() };
   proof.write('catalog-opening.json', { schema: 'catalog-production-opening/v1', source, buildId, origin: targetOrigin,
@@ -398,7 +440,7 @@ async function prepareCatalogQualification(options, browser) {
     try { await route.abort(); }
     catch { proof.failures.push('CATALOG_ABORT_FAILED'); proof.sampleFailure('CATALOG_ABORT_FAILED', 'ABORT', () => route.request()); }
   };
-  proof.response = response => {
+  proof.response = (response, contextDrain = null) => {
     let failureStage = 'MAP';
     const job = (async () => {
       const url = new URL(response.url());
@@ -414,8 +456,15 @@ async function prepareCatalogQualification(options, browser) {
       proof.assets.set(record.path, { ...record, responses: (proof.assets.get(record.path)?.responses || 0) + 1 });
     })().catch(() => { proof.failures.push('CATALOG_ASSET_IDENTITY'); proof.sampleFailure('CATALOG_ASSET_IDENTITY', failureStage, () => response.request(), () => response.status()); });
     proof.pending.add(job); void job.finally(() => proof.pending.delete(job));
+    if (contextDrain) contextDrain.track(job);
   };
-  proof.flush = async () => { await Promise.all([...proof.pending]); };
+  proof.flush = async () => {
+    while (proof.pending.size) {
+      assert.ok(!proof.aborted, 'catalog asset drain stays inside the original work budget');
+      await Promise.race([Promise.all([...proof.pending]), workAborted]);
+    }
+    assert.ok(!proof.aborted, 'catalog asset drain stays inside the original work budget');
+  };
   proof.finish = async () => {
     await proof.flush(); const closing = await servedBuild();
     const closingSource = sourceSnapshot();
@@ -509,9 +558,10 @@ async function verifySellerCatalogFilters(browser, qualification = null) {
     assert.ok(!proof?.aborted, 'catalog work deadline must not start another context');
     const context = await browser.newContext({ viewport, deviceScaleFactor: 1,
       isMobile: viewport.width <= 390, hasTouch: viewport.width <= 390, serviceWorkers: 'block' });
+    const contextDrain = proof ? createCatalogContextDrain(context, () => proof.aborted) : null;
     if (proof) {
-      proof.contexts.add(context);
-      context.on('response', proof.response);
+      proof.contexts.add(context); proof.contextDrains.set(context, contextDrain);
+      context.on('response', response => proof.response(response, contextDrain));
       await context.routeWebSocket('**/*', async socket => {
         proof.failures.push('CATALOG_WEBSOCKET_FORBIDDEN');
         const metadata = { url: () => socket.url(), method: () => 'GET', resourceType: () => 'websocket' };
@@ -887,9 +937,8 @@ async function verifySellerCatalogFilters(browser, qualification = null) {
       assert.deepEqual(pageErrors, []);
     } finally {
       releaseLoading();
-      if (proof) await proof.flush();
-      await context.close();
-      if (proof) proof.contexts.delete(context);
+      if (contextDrain) await contextDrain.close(); else await context.close();
+      if (proof) { proof.contexts.delete(context); proof.contextDrains.delete(context); }
       if (evidenceDir) fs.writeFileSync(path.join(evidenceDir, 'catalog-layout-metrics.json'), JSON.stringify({ fixtureOnly: true, viewports: viewports.filter(value => !proof?.live || value.width === 1440 || value.width === 390), metrics }, null, 2), { mode: proof ? 0o600 : 0o644 });
     }
   }
