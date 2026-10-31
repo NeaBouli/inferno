@@ -59,7 +59,11 @@ A -> B : baseline/candidate roots (180s)
 B --> A : finite comparison receipt
 A -> C : baseline/candidate roots + same docs (180s)
 C --> A : HTTP contract receipt
-A -> Baseline : remove owned temporary prefix/cache only
+alt qualification PASS
+  A -> Baseline : remove owned temporary prefix/cache only
+else qualification non-PASS
+  A -> A : mark outcome uncleared / retain baseline
+end
 A --> CI : bound result / cleanup receipt
 note over CI,C
 No local execution or release acceptance.
