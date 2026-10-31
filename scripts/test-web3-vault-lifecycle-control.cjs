@@ -143,6 +143,7 @@ function verifyStreams(meta, root, complete) {
   return { status: "PASS", retainedBytes: retained, streams: 2, mode: "0600", complete, rawPublished: false, localRunnerOnly: true };
 }
 function checkRows(rows, count, uncertain) {
+  check(rows.every((row) => !row.failures), "CALLBACK_FAILURE_IS_NOT_EXPECTED_UNCERTAINTY");
   check(rows.length === 4 && count === (uncertain ? 1 : 4), "SELECTION_INVOKE_COUNT");
   if (uncertain) {
     check(rows[0].process.outcomeUncertain === true && rows.slice(1).every((row) =>
@@ -166,7 +167,8 @@ function pureControls() {
     ({ status: "SKIPPED_NOT_RUN", reason: "UNCERTAIN_PREVIOUS_OWNED_PROCESS", process: { started: false } }))];
   assert.doesNotThrow(() => checkRows(unknown, 1, true));
   assert.throws(() => checkRows(unknown, 2, true));
-  process.stdout.write(PREFIX + JSON.stringify({ scope: "PURE_CONTROLS_ONLY", status: "PASS", controls: 9, childStarted: false, browserStarted: false }) + "\n");
+  assert.throws(() => checkRows([{ ...unknown[0], failures: ["SELECTION_CONTROL_FAILURE"] }, ...unknown.slice(1)], 1, true));
+  process.stdout.write(PREFIX + JSON.stringify({ scope: "PURE_CONTROLS_ONLY", status: "PASS", controls: 10, childStarted: false, browserStarted: false }) + "\n");
 }
 async function main() {
   if (process.argv.length === 3 && process.argv[2] === "--self-test") return pureControls();
@@ -200,11 +202,13 @@ async function main() {
   for (const signal of ["SIGINT", "SIGTERM"]) process.once(signal, () => { void emergency("INTERRUPTED"); });
   try {
     for (const mode of ["ordinary", "stubborn"]) {
+      check(!finishing, "CONTROL_ALREADY_STOPPING");
       const root = path.join(output, mode); fs.mkdirSync(root, { mode: 0o700 });
       const fixtureFile = privateWrite(root, "fixture.cjs", source);
       check(sha(fs.readFileSync(fixtureFile)) === sha(source), "EXACT_FIXTURE_COPY");
       let calls = 0; const streamProof = [];
       const rows = await collectSelections(async (run) => {
+        check(!finishing, "CONTROL_ALREADY_STOPPING");
         calls++; check(/^[A-D]-[a-z-]+$/.test(run.id), "FIXED_RUN_ID");
         const identityRoot = path.join(root, "identity-" + run.id); fs.mkdirSync(identityRoot, { mode: 0o700 });
         const token = crypto.randomBytes(16).toString("hex"); records.push({ root: identityRoot, token, holder: mode === "stubborn" });
@@ -217,6 +221,7 @@ async function main() {
         streamProof.push(verifyStreams(result.meta, root, mode === "ordinary"));
         return { id: run.id, status: "FAIL", process: result.meta };
       });
+      check(streamProof.length === calls, "CALLBACK_STREAM_PROOFS_INCOMPLETE");
       checkRows(rows, calls, mode === "stubborn");
       cases.push({ case: mode, status: "PASS", childInvocations: calls, deliberateFailureRows: rows.filter((row) => row.status === "FAIL").length,
         skippedRows: rows.filter((row) => row.status === "SKIPPED_NOT_RUN").length,
