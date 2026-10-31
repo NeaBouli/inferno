@@ -32,6 +32,9 @@ assert.equal(packageJson.devDependencies?.dotenv, "^18.0.9");
 assert.equal(packageJson.overrides?.["serialize-javascript"], "7.1.3");
 assert.equal(packageJson.devDependencies?.chai, "6.3.0");
 assert.equal(packageJson.devDependencies?.mocha, "12.0.3");
+assert.equal(packageJson.devDependencies?.ajv, "8.18.0");
+assert.equal(packageJson.devDependencies?.["fast-uri"], "3.1.9");
+assert.equal(packageJson.overrides?.["fast-uri"], "3.1.9");
 assert.equal(
   packageJson.scripts?.["test:mocha-serializer"],
   "mocha --parallel --jobs 2 test/mocha-serializer-compat.test.cjs"
@@ -47,16 +50,39 @@ assert.equal(
 );
 assert.equal(packageLock.packages?.["node_modules/dotenv"]?.version, "18.0.9");
 assert.equal(packageLock.packages?.["node_modules/adm-zip"]?.version, "0.6.1");
+assert.equal(packageLock.packages?.["node_modules/ajv"]?.version, "8.18.0");
+assert.equal(packageLock.packages?.["node_modules/fast-uri"]?.version, "3.1.9");
 assert.equal(packageLock.packages?.["node_modules/js-yaml"]?.version, "5.4.2");
 assert.equal(
   packageLock.packages?.["node_modules/serialize-javascript"]?.version,
   "7.1.3"
 );
+assert.equal(packageJson.devDependencies?.["sirv-cli"], "3.0.1");
+assert.equal(packageJson.devDependencies?.serve, undefined);
+assert.equal(packageJson.overrides?.serve, undefined);
+assert.equal(packageLock.packages?.["node_modules/sirv-cli"]?.version, "3.0.1");
+assert.equal(packageLock.packages?.["node_modules/sirv-cli"]?.dev, true);
+assert.equal(packageLock.packages?.["node_modules/serve"], undefined);
+assert.equal(packageJson.overrides?.glob, "14.0.2");
+assert.equal(packageJson.overrides?.minimatch, "11.0.1");
+assert.equal(packageLock.packages?.["node_modules/glob"]?.version, "14.0.2");
+assert.equal(packageLock.packages?.["node_modules/minimatch"]?.version, "11.0.1");
+assert.equal(packageLock.packages?.["node_modules/mocha"]?.version, "12.0.3");
 assert.equal(
-  packageLock.packages?.["node_modules/serve-handler/node_modules/brace-expansion"]
-    ?.version,
-  "1.1.21"
+  packageLock.packages?.["node_modules/@nomicfoundation/hardhat-mocha"]?.peerDependencies?.mocha,
+  "^12.0.0"
 );
+const playwrightConfig = read("playwright.config.js");
+for (const marker of [
+  'globalSetup: "./scripts/test-docs-server-compat.cjs"',
+  './node_modules/.bin/sirv docs --host 127.0.0.1 --port 8787',
+  'env: { HOST: "127.0.0.1", PORT: "8787" }',
+  'baseURL: "http://localhost:8787"',
+  'reuseExistingServer: true',
+  'timeout: 10000',
+]) assert.ok(playwrightConfig.includes(marker), `docs server contract must retain ${marker}`);
+assert.ok(!playwrightConfig.includes("--single"), "docs server must not enable SPA fallback");
+assert.ok(!playwrightConfig.includes("--quiet"), "docs server must not hide startup port changes");
 
 // These dated reports retain their original toolchain, counts and run IDs.
 // Current package pins above must not rewrite the historical verification snapshot.

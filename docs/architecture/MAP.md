@@ -1576,6 +1576,98 @@ the existing 48px base and 72px medium-screen scale continue above that bound.
 The release assertions cover 320px, 360px and 361px, loaded stylesheet identity
 and all heading text within the card padding, without clipping or hidden text.
 
+## Root tooling compatibility qualification candidate — 2026-10-31
+
+### Purpose and boundary
+
+This isolated candidate extends the existing root dependency/tooling node in
+section15. Mocha12.0.3, its Hardhat peer contract and Markdownlint0.49.1 stay
+fixed. Project-owned overrides propose glob14.0.2/minimatch11.0.1 beyond those
+parents' declared major ranges; this is not an upstream-supported migration.
+The actively used docs test server migrates from serve14.2.6 to exact
+sirv-cli3.0.1. No application, contract or public product feature changes.
+The unchanged `test/mocha-serializer-compat.test.cjs` directly imports Ajv and
+fast-uri. Because serve previously supplied them only transitively, exact
+Ajv8.18.0 and fast-uri3.1.9 become explicit development test inputs when serve
+is removed; their existing assertions and fast-uri override stay unchanged.
+
+### Trace and modules
+
+1. Root `package.json`/`package-lock.json` -> the same Mocha/Markdownlint callers
+   -> candidate matcher overrides -> existing contract, serializer and Markdown
+   gates. The new matcher comparison node checks actual baseline/candidate
+   discovery, watch and compact Markdown behavior; runtime acceptance is open.
+2. `playwright.config.js::webServer` -> normal sirv CLI -> current `docs/` at
+   localhost8787 -> the same three browser commands. The new docs comparison
+   node checks HTTP bytes, navigation, MIME, HEAD,404 and confinement. Its
+   exported globalSetup validates expected docs identity after server setup,
+   including a reused listener; it must not kill or restart a borrowed server.
+3. Existing contracts CI -> `test-root-toolchain-compat.cjs` -> exact af16107a
+   package/lock identities in an owned temporary baseline -> bounded ignored-
+   script baseline install -> the two comparison nodes -> retained receipts and
+   own-only cleanup. The affected baseline is comparison data, not a clean graph.
+
+| Module | Responsibility | State |
+| --- | --- | --- |
+| Root dependency selection | Conditional matcher overrides and normal sirv migration | candidate; runtime open |
+| Matcher comparison | Actual Mocha/Markdown compatibility on shared controlled fixtures | new qualification node; integration/runtime open |
+| Docs-server comparison/identity | HTTP contract comparison and current8787 content identity | new qualification node; integration/runtime open |
+| CI baseline orchestrator | Frozen input verification, finite subprocesses, owned cleanup/receipts | new qualification node; runtime open |
+
+### Wiring, gaps and next step
+
+The orchestrator installs only in CI, with300seconds for baseline setup and
+180seconds for each comparison. It does not replace existing full candidate
+contract/tooling, Docs Markdown or three browser-suite gates. Local preparation
+does not execute an installer, server, browser or runtime harness.
+Only a fully successful qualification permits baseline disposal. Any overall
+non-PASS result with an allocated baseline marks descendant outcome uncleared
+and retains it, including a normal failed harness exit; direct-child close is
+not complete teardown proof. An expected missing baseline object that is
+successfully fetched and verified does not make the qualification fail.
+CI-only Node regression controls exercise this same caller/disposal rule using
+an exact byte copy, simulated child outcomes and real owned filesystem prefixes.
+They are not matcher/server qualification, never echo the copied caller's fake
+success receipts, and run separately after the real comparison step.
+
+Sirv3.0.1 normally uses get-port and can choose another port if8787 is occupied;
+it exposes no strict-port flag. Playwright's startup-output wait races endpoint
+availability; it is not an AND gate and is not presented as a strict-port fix.
+The supported endpoint remains localhost8787: explicit HOST/PORT, visible CLI
+logs and current expected-docs identity are required. A matching existing docs
+listener is legitimate under unchanged reuseExistingServer:true, including the
+narrow race where a newly spawned sirv chose another port. Tests must never
+follow that port or change baseURL; Playwright must tear down its own child.
+The standalone comparison rejects unexpected owned listener ports and checks
+fallback/identity/cleanup negatives. This documented development-test startup
+behavior is not a process-level never-fallback guarantee. No vendor patch,
+bespoke server, wrapper or new artifact-storage step is introduced; compact
+receipts on success/failure stay in the existing CI logs for Root to retain.
+
+No separate Markdown ADR is added: the existing Markdown gate retains its exact
+tracked-file count, rules and finding fingerprints. This section records the
+conditional decision without regenerating that baseline.
+
+Diagrams: `map.puml`, `main-path.puml`. Next step is exact-source CI comparison
+plus the unchanged owning suites; all release/provider/device/automation holds
+remain until their own gates pass.
+
+```mermaid
+mindmap
+  root((Existing root tooling))
+    Conditional matcher overrides
+      Mocha and Hardhat peer unchanged
+      Markdownlint unchanged
+      Matcher comparison runtime open
+      Existing Ajv and fast-uri regression inputs explicit
+    Normal sirv docs test server
+      Same localhost8787 browser commands
+      Docs comparison and identity runtime open
+    CI-only frozen baseline
+      Exact input hashes
+      Finite bounds and owned cleanup
+```
+
 ## Native wallet response checks (issue415)
 
 Status: implemented in source with independent source/consent review accepted.

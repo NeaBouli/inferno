@@ -27,6 +27,15 @@ jobs:
       - name: Install locked dependencies
         run: npm ci
 
+      - name: Compare root matcher and docs-server compatibility
+        timeout-minutes: 14
+        run: npm run test:root-toolchain-compat
+
+      - name: Verify simulated caller failure-retention controls
+        if: ${{ !cancelled() }}
+        timeout-minutes: 3
+        run: npm run test:root-toolchain-cleanup
+
       - name: Reject retired Waffle and Ganache runtime
         run: |
           retired="$(npm ls @nomiclabs/hardhat-waffle ethereum-waffle ganache --parseable --all 2>/dev/null || true)"
