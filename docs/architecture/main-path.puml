@@ -45,6 +45,29 @@ Cmd --> User : confirmation
 @enduml
 
 @startuml
+title Root tooling qualification candidate (runtime OPEN)
+participant "Existing contracts CI" as CI
+participant "CI-only baseline orchestrator" as A
+participant "Frozen af161 package/lock" as Frozen
+participant "Owned temporary baseline" as Baseline
+participant "Matcher comparison" as B
+participant "Docs HTTP comparison" as C
+CI -> A : installed candidate / one qualification run
+A -> Frozen : exact Git object + byte identities
+A -> Baseline : npm ci --ignore-scripts (300s)
+A -> B : baseline/candidate roots (180s)
+B --> A : finite comparison receipt
+A -> C : baseline/candidate roots + same docs (180s)
+C --> A : HTTP contract receipt
+A -> Baseline : remove owned temporary prefix/cache only
+A --> CI : bound result / cleanup receipt
+note over CI,C
+No local execution or release acceptance.
+Existing full candidate and owning browser/Markdown gates remain required.
+end note
+@enduml
+
+@startuml
 title S4 future-deployment vault hardening
 actor User
 participant "CommitmentVault.lock" as Lock

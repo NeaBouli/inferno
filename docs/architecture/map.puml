@@ -71,6 +71,42 @@ package "rate limit" {
 [src/index.js message guard] --> [services/onChainReader.js] : determineTier (live)
 @enduml
 
+@startmindmap
+* Root development tooling candidate
+** Existing section15 root dependency node
+*** Mocha12.0.3 / Hardhat peer unchanged
+*** Markdownlint0.49.1 unchanged
+*** Existing Ajv8.18.0 / fast-uri3.1.9 test inputs explicit
+*** Candidate glob14.0.2 / minimatch11.0.1 overrides
+*** Candidate normal sirv-cli3.0.1 docs server
+** New qualification nodes; runtime OPEN
+*** Matcher baseline/candidate comparison
+*** Docs HTTP comparison / reused-listener identity
+*** CI-only frozen baseline installer / owned cleanup
+** Existing owning gates unchanged
+*** Full contract and tooling suites
+*** Docs Markdown fingerprints and counts
+*** Three synthetic browser commands
+@endmindmap
+
+@startuml
+package "Existing root tooling" {
+  [Root package/lock candidate] as Pins
+  [Mocha / Hardhat / Markdownlint] as Callers
+  [Playwright docs webServer] as PW
+}
+package "New qualification nodes (runtime OPEN)" {
+  [CI frozen-baseline orchestrator] as Orchestrator
+  [Matcher comparison] as Matcher
+  [Docs HTTP comparison / identity] as Docs
+}
+Pins --> Callers : conditional compatibility overrides
+Pins --> PW : normal sirv migration
+Orchestrator --> Matcher : exact installed baseline/candidate roots
+Orchestrator --> Docs : same docs / owned fixture ports
+PW --> Docs : globalSetup expected8787 identity
+@enduml
+
 @startuml creator_default_entitlement
 title Creator default entitlement configuration
 component "config/index.ts\nIFR threshold / creator channel\nserver-only creator credential" as CreatorConfig

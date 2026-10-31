@@ -13,6 +13,7 @@
     "test:sepolia-forum-testenv": "node --test test/sepolia-forum-testenv.test.cjs test/sepolia-forum-vote.test.cjs",
     "test:hardhat-runtime": "hardhat run scripts/test-hardhat-runtime.js",
     "test:dependency-advisories": "node scripts/check-root-advisory-baseline.cjs",
+    "test:root-toolchain-compat": "node scripts/test-root-toolchain-compat.cjs",
     "test:browser-ethers6": "node scripts/check-browser-ethers6.cjs",
     "test:mocha-serializer": "mocha --parallel --jobs 2 test/mocha-serializer-compat.test.cjs",
     "test:lending-price": "node scripts/prepare-lending-price-governance.js --self-test",
@@ -122,13 +123,15 @@
     "@nomicfoundation/hardhat-mocha": "4.0.1",
     "@nomicfoundation/hardhat-verify": "3.1.4",
     "@playwright/test": "1.64.1",
+    "ajv": "8.18.0",
     "axe-core": "^4.14.0",
     "chai": "6.3.0",
     "dotenv": "^18.0.9",
+    "fast-uri": "3.1.9",
     "hardhat": "3.21.1",
     "markdownlint-cli": "0.49.1",
     "mocha": "12.0.3",
-    "serve": "^14.2.6"
+    "sirv-cli": "3.0.1"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.6.1",
@@ -138,6 +141,7 @@
     "diff": "8.0.3",
     "elliptic": "6.6.1",
     "fast-uri": "3.1.9",
+    "glob": "14.0.2",
     "markdownlint-cli": {
       "js-yaml": "5.4.2",
       "smol-toml": "1.9.0"
@@ -145,12 +149,10 @@
     "micromark-extension-math": {
       "katex": "0.18.2"
     },
+    "minimatch": "11.0.1",
     "serialize-javascript": "7.1.3",
     "handlebars": ">=4.7.9",
     "form-data": ">=4.0.0",
-    "serve": {
-      "compression": "1.8.2"
-    },
     "zod": "4.6.7"
   }
 }
