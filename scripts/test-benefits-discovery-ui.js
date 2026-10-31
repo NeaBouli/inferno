@@ -252,13 +252,16 @@ async function prepareCatalogQualification(options, browser) {
     assert.ok(stat.isFile() && !stat.isSymbolicLink() && stat.nlink === 1 && stat.size <= maximum, 'bounded regular catalog artifact required');
     return fs.readFileSync(file);
   };
-  const gitIds = execFileSync('git', ['-c', 'core.fsmonitor=false', '-C', root, 'rev-parse', 'HEAD', 'HEAD:apps/benefits-network/frontend'],
+  const sourceSnapshot = () => {
+    const gitIds = execFileSync('git', ['-c', 'core.fsmonitor=false', '-C', root, 'rev-parse', 'HEAD', 'HEAD:apps/benefits-network/frontend'],
     { encoding: 'utf8', timeout: 5000, maxBuffer: 4096 }).trim().split('\n');
   assert.ok(gitIds.length === 2 && gitIds.every(value => /^[a-f0-9]{40}$/.test(value)), 'catalog source Git identity required');
-  const source = { sourceCommit: gitIds[0], frontendTree: gitIds[1], scriptSha256: digest(fileBytes(__filename, 512 * 1024)),
+    return { sourceCommit: gitIds[0], frontendTree: gitIds[1], scriptSha256: digest(fileBytes(__filename, 512 * 1024)),
     componentSha256: digest(fileBytes(path.join(frontend, 'src/app/s/[businessId]/SellerCatalogClient.tsx'), 256 * 1024)),
     packageSha256: digest(fileBytes(path.join(frontend, 'package.json'), 128 * 1024)),
     lockSha256: digest(fileBytes(path.join(frontend, 'package-lock.json'), 4 * 1024 * 1024)) };
+  };
+  const source = sourceSnapshot();
   const expected = new Map(); let buildId; let binding = null;
   if (live) {
     binding = options.binding;
@@ -329,12 +332,23 @@ async function prepareCatalogQualification(options, browser) {
     binding: binding ? { releasedMain: binding.releasedMain, sourceCommit: binding.sourceCommit, frontendTree: binding.frontendTree, containerId: binding.containerId, imageId: binding.imageId,
       state: binding.state, observedUtc: binding.observedUtc, postSourceKind: binding.postSourceKind, buildReceiptSha256: binding.buildReceiptSha256, postSourceReceiptSha256: binding.postSourceReceiptSha256 } : null,
     bindingSha256: proof.bindingSha256, servedBuild: proof.opening });
+  proof.admittedAssets = new Set();
+  proof.admit = request => {
+    const url = new URL(request.url());
+    assert.ok(request.method() === 'GET' && url.origin === targetOrigin, 'catalog network is fixed-origin GET only');
+    const publicPath = catalogPublicPath(url.pathname);
+    const appRoute = ['/', '/guide', '/support', '/privacy', '/s/catalog-filter-fixture', '/s/catalog-second-fixture'].includes(publicPath);
+    if (!appRoute) { assetRecord(publicPath); proof.admittedAssets.add(publicPath); }
+  };
+  proof.abort = async (route, code) => {
+    proof.failures.push(code);
+    try { await route.abort(); } catch { proof.failures.push('CATALOG_ABORT_FAILED'); }
+  };
   proof.response = response => {
     const job = (async () => {
       const url = new URL(response.url());
       if (url.origin !== targetOrigin) return; // The only external fixture logo is fulfilled locally by the owning fixture.
-      const type = response.request().resourceType();
-      if (!url.pathname.startsWith('/_next/static/') && !['script', 'stylesheet', 'image', 'font', 'manifest'].includes(type)) return;
+      if (!proof.admittedAssets.has(catalogPublicPath(url.pathname))) return;
       assert.ok(++proof.responseCount <= 2048, 'catalog asset response count must be bounded');
       const record = assetRecord(url.pathname); assert.equal(response.status(), 200, 'loaded catalog asset must be served successfully');
       const length = response.headers()['content-length']; if (length !== undefined) assert.ok(Number(length) <= 16 * 1024 * 1024, 'loaded catalog asset header must be bounded');
@@ -346,13 +360,16 @@ async function prepareCatalogQualification(options, browser) {
   };
   proof.flush = async () => { await Promise.all([...proof.pending]); };
   proof.finish = async () => {
-    await proof.flush(); const closing = await servedBuild(); clearTimeout(proof.timer);
+    await proof.flush(); const closing = await servedBuild();
+    const closingSource = sourceSnapshot();
+    assert.deepEqual(closingSource, source, 'catalog source Git/script/component/package/lock identity must remain unchanged');
+    clearTimeout(proof.timer);
     assert.ok(!proof.aborted && performance.now() - proof.started <= 300000 && proof.contexts.size === 0 && proof.failures.length === 0, 'catalog qualification/owned context cleanup must complete');
     assert.equal(proof.images.length, live ? 4 : 18, 'complete catalog screenshot matrix required');
     assert.ok(proof.assets.size > 0 && [...proof.assets.keys()].some(value => value.endsWith('.css'))
       && [...proof.assets.keys()].some(value => value.includes('/app/s/') && value.endsWith('.js')), 'actual catalog route chunk and CSS identity required');
     const receipt = { schema: 'catalog-production-qualification/v1', status: 'PASS', scope: live ? 'root-live-critical' : 'loopback-production', source, buildId, origin: targetOrigin,
-      runtime: proof.runtime, bindingSha256: proof.bindingSha256, opening: proof.opening, closing, assets: [...proof.assets.values()], images: proof.images, imageBytes: proof.imageBytes,
+      runtime: proof.runtime, bindingSha256: proof.bindingSha256, opening: proof.opening, closing, closingSource, assets: [...proof.assets.values()], images: proof.images, imageBytes: proof.imageBytes,
       elapsedMs: performance.now() - proof.started, ownContextsClosed: true, rawBodiesRetained: false, sourceBuildJoinRequiresRootBuildReceipt: !live, invokerBrowserCleanup: 'REQUIRED_SEPARATELY', visualReviewByRoot: 'PENDING' };
     proof.write('catalog-production-result.json', receipt); return receipt;
   };
@@ -431,19 +448,13 @@ async function verifySellerCatalogFilters(browser, qualification = null) {
     if (proof) {
       proof.contexts.add(context);
       context.on('response', proof.response);
-      await context.routeWebSocket('**/*', async socket => { proof.failures.push('CATALOG_WEBSOCKET_FORBIDDEN'); await socket.close(); });
+      await context.routeWebSocket('**/*', async socket => {
+        proof.failures.push('CATALOG_WEBSOCKET_FORBIDDEN');
+        try { await socket.close(); } catch { proof.failures.push('CATALOG_WEBSOCKET_CLOSE_FAILED'); }
+      });
       await context.route('**/*', async route => {
-        const request = route.request(); const url = new URL(request.url());
-        const headers = request.headers();
-        const localPath = url.origin === catalogOrigin && !/[\\\0]/.test(url.pathname);
-        const nextAsset = url.pathname.startsWith('/_next/static/');
-        const publicAsset = ['script', 'stylesheet', 'image', 'font', 'manifest'].includes(request.resourceType());
-        const document = request.resourceType() === 'document' && ['/', '/guide', `/s/${business.slug}`, `/s/${secondBusiness.slug}`].includes(url.pathname);
-        const nextPrefetch = headers.rsc === '1' || headers['next-router-prefetch'] === '1';
-        if (request.method() !== 'GET' || !localPath || !(nextAsset || publicAsset || document || nextPrefetch)) {
-          proof.failures.push('CATALOG_UNEXPECTED_NETWORK'); return route.abort();
-        }
-        return route.continue();
+        try { proof.admit(route.request()); await route.continue(); }
+        catch { await proof.abort(route, 'CATALOG_NETWORK_ADMISSION'); }
       });
     }
     let mode = viewport.width === 1440 ? 'loading' : 'ready';
@@ -452,6 +463,7 @@ async function verifySellerCatalogFilters(browser, qualification = null) {
     const catalogRequests = [];
     const pageErrors = [];
     await context.route('**/api/**', async route => {
+      try {
       const request = route.request();
       const url = new URL(request.url());
       if (proof) assert.equal(url.origin, catalogOrigin, 'catalog fixture API stays on the fixed renderer origin');
@@ -475,10 +487,16 @@ async function verifySellerCatalogFilters(browser, qualification = null) {
       if (url.pathname === '/api/businesses') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(discoveryResponse([])) });
       if (url.pathname === '/api/ready') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'ready', chainId: 1, database: 'ok', rateLimitStore: 'ok' }) });
       throw new Error(`Unexpected catalog fixture request ${url.pathname}`);
+      } catch (error) {
+        if (!proof) throw error;
+        await proof.abort(route, 'CATALOG_FIXTURE_API');
+      }
     });
-    await context.route('https://assets.example.com/ifr-seller-logo.png', route => {
-      assert.equal(route.request().method(), 'GET', 'synthetic catalog logo must not mutate data');
-      return route.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64') });
+    await context.route('https://assets.example.com/ifr-seller-logo.png', async route => {
+      try {
+        assert.equal(route.request().method(), 'GET', 'synthetic catalog logo must not mutate data');
+        await route.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64') });
+      } catch (error) { if (!proof) throw error; await proof.abort(route, 'CATALOG_FIXTURE_LOGO'); }
     });
     const page = await context.newPage();
     page.setDefaultNavigationTimeout(NAVIGATION_TIMEOUT_MS);
@@ -736,6 +754,8 @@ async function verifySellerCatalogFilters(browser, qualification = null) {
       await expectOrdering(orderingOriginal);
       await currency.selectOption('USD'); await order.selectOption('name-desc'); await currency.selectOption('all');
       assert.equal(await order.inputValue(), 'name-desc', 'clearing currency preserves name order');
+      await expectOrdering([usdTie.id, ...invalidProducts.map(item => item.id).reverse(), usdHigh.id, usdLow.id, products[0].id, usdZero.id,
+        products[1].id, jpyLow.id, jpyHigh.id, eurHigh.id, eurLow.id, products[2].id]);
       await capture('name-order-all'); await resetOrdering();
       await currency.selectOption('USD'); await order.selectOption('price-desc'); await category.selectOption('category:Coffee'); await search.fill('equal');
       await expectOrdering([usdHigh.id, usdLow.id], []);
