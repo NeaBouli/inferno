@@ -270,8 +270,11 @@ async function routeReadRpc(target, results, options = {}) {
       return { jsonrpc: "2.0", id: item.id, result };
     };
     const observed = options.vaultDiagnostic
-      ? (Array.isArray(payload) ? payload : [payload]).map((item) =>
-        options.vaultDiagnostic.start("read-rpc", item.method, vaultCallCategory(item))) : [];
+      ? (Array.isArray(payload) ? payload : [payload]).flatMap((item) => {
+        const category = vaultCallCategory(item);
+        return item.method === "eth_call" && category === "rpc" ? []
+          : [options.vaultDiagnostic.start("read-rpc", item.method, category)];
+      }) : [];
     try {
       const body = Array.isArray(payload) ? payload.map(respond) : respond(payload);
       await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
