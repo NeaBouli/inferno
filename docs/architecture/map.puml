@@ -85,6 +85,23 @@ package "rate limit" {
 [src/index.js message guard] --> [services/onChainReader.js] : determineTier (live)
 @enduml
 
+@startmindmap benefits_public_catalog_ordering_419
+* Public seller catalog
+** SellerCatalogClient local render
+*** Search and category filtering
+*** Explicit reference-price currency
+*** Stable copied product ordering within categories
+*** Existing cards, attached rules and general rules
+@endmindmap
+
+@startuml benefits_public_catalog_ordering_components_419
+[SellerCatalogClient useEffect] --> [api getBusinessProducts / getBusinessRules] : existing public GETs
+[api getBusinessProducts / getBusinessRules] --> [Loaded product categories and general rules] : existing public DTOs
+[Loaded product categories and general rules] --> [Local product filtering and ordering] : transient four-control state
+[Local product filtering and ordering] --> [Existing offer cards] : stable groups; exact prices and seller/offer links
+[Loaded product categories and general rules] --> [Existing general-rule cards] : unchanged search/category behavior
+@enduml
+
 @startmindmap
 * Root development tooling candidate
 ** Existing section15 root dependency node

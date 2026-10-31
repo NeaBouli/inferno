@@ -1524,13 +1524,27 @@ application CI and exact-source version4 Full52 remain release gates.
 
 Module: existing `SellerCatalogClient.tsx` public catalog. Hop: its existing
 `useEffect` -> `api::getBusinessProducts/getBusinessRules` -> existing public GET
-products/rules -> local category/entry filtering -> unchanged offer cards.
+products/rules -> local category/entry filtering -> copied within-category
+product ordering -> unchanged offer cards.
 Data: loaded product names/descriptions, attached/general rule labels and original
 product categories. Search/category state is transient; category values distinguish
 product categories from the existing general-offer group. Matching product entries
 keep all their original rules. Count/reset preserve entry ordering and exact
 price, lock eligibility and seller/rule selection bindings. No backend, request,
 storage, telemetry or dependency path is added.
+
+Issue419 extends only that local render hop with transient reference-price
+currency and product-order state. Currency choices come from the whole loaded
+valid-priced catalog; explicit currency selection filters priced products of that
+code. Name ordering uses a fixed English case-insensitive collator, while price
+ordering uses guarded exact BigInt minor units only under an explicit currency.
+Original category order and equal-key source order remain stable in both
+directions. General rules, attached rules, counts and seller/offer links retain
+their existing semantics. Clearing currency resets only price ordering; reset,
+seller change and reload clear all four local controls. The existing toolbar
+owns the added native selects; no money/API/backend/global-style module changes.
+Source preparation is not runtime or responsive visual qualification; Root owns
+the combined exact-source build and affected-surface release gates.
 
 `test-benefits-discovery-ui.js` extends the existing public-catalog handoff suite
 with mixed fixtures, combined filters, count/reset/state isolation, exact bindings

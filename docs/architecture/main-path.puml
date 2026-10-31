@@ -22,6 +22,24 @@ No product source or live provider interaction added.
 end note
 @enduml
 
+@startuml benefits_public_catalog_ordering_flow_419
+actor Visitor
+participant SellerCatalogClient as Catalog
+participant "api public catalog GETs" as API
+participant "Local filtered product groups" as Groups
+participant "Existing offer cards" as Cards
+Visitor -> Catalog : open seller catalog
+Catalog -> API : existing products and rules requests
+API --> Catalog : product minor strings / currency and original rules
+Visitor -> Catalog : transient search/category/currency/order selection
+Catalog -> Groups : filter products; copy and stably order within each group
+note over Groups
+  Price order requires explicit currency and canonical minor strings.
+  General-rule search/category behavior stays separate.
+end note
+Groups -> Cards : preserve groups, attached rules and exact selection links
+@enduml
+
 @startuml
 title Verification/authorization trace (main path)
 actor User
