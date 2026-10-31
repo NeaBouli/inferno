@@ -139,61 +139,155 @@ function aggregate(rows) {
 }
 function timeRemaining(start, now, cap) { return Math.max(0, Math.min(cap, TOTAL_MS - (now - start))); }
 function signalOwn(owner, signal) {
-  if (!owners.has(owner) || owner.closed || !owner.child.pid || owner.child.exitCode !== null || owner.child.signalCode !== null) return;
+  if (!owners.has(owner) || owner.closed || !owner.child?.pid || owner.child.exitCode !== null || owner.child.signalCode !== null) return;
   try { process.kill(-owner.child.pid, signal); } catch (error) { if (error.code !== "ESRCH") owner.signalFailed = true; }
 }
-async function stopOwn(owner) {
-  if (owner.closed) return;
-  signalOwn(owner, "SIGTERM");
-  await Promise.race([owner.done, new Promise((resolve) => setTimeout(resolve, 500))]);
-  if (!owner.closed) signalOwn(owner, "SIGKILL");
-  await Promise.race([owner.done, new Promise((resolve) => setTimeout(resolve, 2000))]);
+async function waitForClose(owner, ms) {
+  let timer;
+  await Promise.race([owner.done, new Promise((resolve) => { timer = setTimeout(resolve, ms); })]);
+  clearTimeout(timer);
 }
-async function execute(run, output, started) {
+async function stopOwn(owner) {
+  if (!owner.child || owner.closed) return;
+  signalOwn(owner, "SIGTERM");
+  await waitForClose(owner, 500);
+  if (!owner.closed) { signalOwn(owner, "SIGKILL"); await waitForClose(owner, 2000); }
+  if (!owner.closed) {
+    // Detach only our local handles so an unproved child cannot hold this owner open.
+    // This is not a reap/descendant-absence claim; no further selection may start.
+    owner.accepting = false;
+    owner.child.stdout?.destroy(); owner.child.stderr?.destroy(); owner.child.unref();
+    owner.handlesDetached = true;
+  }
+}
+function retainCount(retained, incoming) { return Math.max(0, Math.min(incoming, MAX_OUTPUT - retained)); }
+function closeLogs(owner) {
+  owner.accepting = false;
+  for (const stream of ["stdout", "stderr"]) {
+    if (typeof owner.fds[stream] === "number") {
+      try { fs.closeSync(owner.fds[stream]); } catch { owner.retentionFailed = true; }
+      owner.fds[stream] = null;
+    }
+  }
+}
+function streamComplete(owner, meta, stream, bytes) {
+  return owner.closed && !meta.timedOut && !meta.outputLimited && !meta.spawnFailed && !meta.signal && !owner.pipeFailed && !owner.retentionFailed && owner.observed[stream] === bytes;
+}
+function finishLogs(owner, meta) {
+  closeLogs(owner);
+  const retained = {};
+  meta.rawStreams = {};
+  for (const stream of ["stdout", "stderr"]) {
+    try {
+      const stat = fs.lstatSync(owner.paths[stream]);
+      requireThat(stat.isFile() && !stat.isSymbolicLink() && stat.nlink === 1 && stat.size <= MAX_OUTPUT, "OWN_LOG_FILE");
+      retained[stream] = fs.readFileSync(owner.paths[stream]);
+      const complete = streamComplete(owner, meta, stream, retained[stream].length);
+      meta.rawStreams[stream] = { path: owner.paths[stream], mode: stat.mode & 0o777, retainedBytes: retained[stream].length, sha256: hash(retained[stream]), observedBytes: owner.observed[stream],
+        complete, prefixOnly: !complete, truncated: !complete, observedBytesDropped: Math.max(0, owner.observed[stream] - retained[stream].length), producerTotalBytesKnown: complete, localRunnerOnly: true };
+    } catch {
+      owner.retentionFailed = true; retained[stream] = Buffer.alloc(0);
+      meta.rawStreams[stream] = { path: owner.paths[stream], retainedBytes: null, sha256: null, observedBytes: owner.observed[stream], complete: false, prefixOnly: true, truncated: true, producerTotalBytesKnown: false, localRunnerOnly: true, readFailed: true };
+    }
+  }
+  meta.observedOutputBytes = owner.observed.stdout + owner.observed.stderr;
+  meta.retainedOutputBytes = retained.stdout.length + retained.stderr.length;
+  meta.localHandlesDetached = Boolean(owner.handlesDetached);
+  meta.childCloseObserved = owner.closed;
+  meta.retentionFailed = Boolean(owner.retentionFailed);
+  meta.retentionIncomplete = Object.values(meta.rawStreams).some((stream) => !stream.complete);
+  meta.pipeFailed = Boolean(owner.pipeFailed);
+  meta.outcomeUncertain = !owner.closed || meta.timedOut || meta.outputLimited || meta.spawnFailed || Boolean(meta.signal) || Boolean(owner.signalFailed) || meta.pipeFailed || meta.retentionFailed || meta.retentionIncomplete;
+  meta.rawOutputPublished = false; meta.artifactsRetained = true;
+  return retained.stdout.toString("utf8");
+}
+async function execute(run, output, started, testOnly = null) {
   const directory = path.join(output, run.id); fs.mkdirSync(directory, { mode: 0o700 });
+  const playwrightOutput = path.join(directory, "test-output"); fs.mkdirSync(playwrightOutput, { mode: 0o700 });
   const budget = timeRemaining(started, performance.now(), run.budget);
-  const meta = { exitCode: null, timedOut: false, outputLimited: false, spawnFailed: false, outcomeUncertain: false, budgetMs: budget, outputDirectory: directory };
-  if (interrupted || budget < 1000) return { stdout: "", meta: { ...meta, timedOut: true, outcomeUncertain: false } };
+  const meta = { exitCode: null, timedOut: false, outputLimited: false, spawnFailed: false, outcomeUncertain: false, budgetMs: budget, outputDirectory: directory, playwrightOutputDirectory: playwrightOutput };
+  if (interrupted || budget < (testOnly ? 1 : 1000)) return { stdout: "", meta: { ...meta, timedOut: true, outcomeUncertain: false } };
   const files = [...new Set(run.files)].map((file) => "tests/browser/" + file);
   const env = { ...process.env }; delete env[ENV_KEY]; if (run.observed) env[ENV_KEY] = "1";
   const cli = path.join(ROOT, "node_modules/@playwright/test/cli.js");
-  let owner;
+  const owner = { child: null, closed: false, accepting: true, observed: { stdout: 0, stderr: 0 }, retained: 0, fds: {}, paths: { stdout: path.join(directory, "child-stdout.raw"), stderr: path.join(directory, "child-stderr.raw") } };
+  owners.add(owner);
   try {
-    const child = spawn(process.execPath, [cli, "test", ...files, "--config", path.join(ROOT, "playwright.config.js"), "--workers=1", "--retries=0", "--reporter=json", "--grep", grep(run.titles), "--output", directory], { cwd: ROOT, env, detached: true, stdio: ["ignore", "pipe", "pipe"] });
-    owner = { child, closed: false, stdout: "", stderr: "", bytes: 0 }; owners.add(owner);
+    for (const stream of ["stdout", "stderr"]) {
+      owner.fds[stream] = fs.openSync(owner.paths[stream], fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL, 0o600);
+      fs.fchmodSync(owner.fds[stream], 0o600);
+    }
+    let args = [cli, "test", ...files, "--config", path.join(ROOT, "playwright.config.js"), "--workers=1", "--retries=0", "--reporter=json", "--grep", grep(run.titles), "--output", playwrightOutput];
+    if (testOnly) {
+      const resolvedFixture = fs.realpathSync(testOnly.nodeFixture);
+      const relative = path.relative(fs.realpathSync(output), resolvedFixture);
+      const stat = fs.lstatSync(testOnly.nodeFixture);
+      requireThat(path.isAbsolute(testOnly.nodeFixture) && relative && !relative.startsWith("..") && !path.isAbsolute(relative) && testOnly.nodeFixture.endsWith(".cjs") && stat.isFile() && !stat.isSymbolicLink() && stat.size <= 16 * 1024, "OWN_NODE_FIXTURE_REQUIRED");
+      requireThat(Array.isArray(testOnly.nodeArguments) && testOnly.nodeArguments.length <= 16 && testOnly.nodeArguments.every((arg) => typeof arg === "string" && arg.length <= 512), "NODE_FIXTURE_ARGUMENTS");
+      args = [resolvedFixture, ...testOnly.nodeArguments];
+      meta.executionKind = "OWN_NODE_LIFECYCLE_CONTROL";
+    }
+    const child = spawn(process.execPath, args, { cwd: ROOT, env, detached: true, stdio: ["ignore", "pipe", "pipe"] });
+    owner.child = child;
     owner.done = new Promise((resolve) => {
       child.once("error", () => { meta.spawnFailed = true; resolve(); });
       child.once("close", (code, signal) => { owner.closed = true; meta.exitCode = code; meta.signal = signal; resolve(); });
     });
     for (const stream of ["stdout", "stderr"]) {
-      child[stream].setEncoding("utf8"); child[stream].on("data", (chunk) => {
-        owner.bytes += Buffer.byteLength(chunk);
-        if (!outputWithinLimit(owner.bytes)) { meta.outputLimited = true; signalOwn(owner, "SIGTERM"); }
-        else owner[stream] += chunk;
+      child[stream].on("error", () => { owner.pipeFailed = true; signalOwn(owner, "SIGTERM"); });
+      child[stream].on("data", (chunk) => {
+        owner.observed[stream] += chunk.length;
+        if (!owner.accepting) return;
+        const keep = retainCount(owner.retained, chunk.length);
+        if (keep < chunk.length) { meta.outputLimited = true; signalOwn(owner, "SIGTERM"); }
+        let written = 0;
+        try {
+          while (written < keep) {
+            const size = fs.writeSync(owner.fds[stream], chunk, written, keep - written);
+            requireThat(size > 0, "OWN_LOG_WRITE"); written += size; owner.retained += size;
+          }
+        } catch { owner.retentionFailed = true; owner.accepting = false; signalOwn(owner, "SIGTERM"); }
       });
     }
     let timer;
     await Promise.race([owner.done, new Promise((resolve) => { timer = setTimeout(() => { meta.timedOut = true; resolve(); }, budget); })]); clearTimeout(timer);
     if (!owner.closed) await stopOwn(owner);
-    meta.outcomeUncertain = !owner.closed || meta.timedOut || meta.outputLimited || meta.signalFailed || Boolean(meta.signal);
-    meta.stdoutBytes = Buffer.byteLength(owner.stdout); meta.stderrBytes = Buffer.byteLength(owner.stderr);
-    meta.stdoutSha256 = hash(owner.stdout); meta.stderrSha256 = hash(owner.stderr);
-    meta.rawOutputPublished = false; meta.artifactsRetained = true;
-    const identity = path.join(directory, "docs-server-identity.json");
+    const stdout = finishLogs(owner, meta);
+    const identity = path.join(playwrightOutput, "docs-server-identity.json");
     try {
       const stat = fs.lstatSync(identity);
       requireThat(stat.isFile() && !stat.isSymbolicLink() && stat.nlink === 1 && stat.size <= 128 * 1024, "DOCS_IDENTITY_FILE");
       const bytes = fs.readFileSync(identity), value = JSON.parse(bytes);
       meta.docsIdentity = { valid: value.schema === 1 && value.status === "PASS" && value.origin === "http://localhost:8787" && Array.isArray(value.rows) && value.rows.length > 0, sha256: hash(bytes), rowCount: value.rows?.length || 0 };
     } catch { meta.docsIdentity = { valid: false }; }
-    return { stdout: owner.stdout, meta };
-  } catch { if (owner) await stopOwn(owner); return { stdout: "", meta: { ...meta, spawnFailed: true, outcomeUncertain: Boolean(owner && !owner.closed) } }; }
+    return { stdout, meta };
+  } catch {
+    if (owner.child) await stopOwn(owner);
+    else meta.spawnFailed = true;
+    return { stdout: finishLogs(owner, meta), meta };
+  }
+}
+async function collectSelections(invoke) {
+  const rows = [];
+  let blocked = false;
+  for (const run of RUNS) {
+    if (blocked) {
+      rows.push({ id: run.id, observed: Boolean(run.observed), status: "SKIPPED_NOT_RUN", reason: "UNCERTAIN_PREVIOUS_OWNED_PROCESS", process: { started: false, outcomeUncertain: false } });
+      continue;
+    }
+    let row;
+    try { row = await invoke(run); }
+    catch { row = { id: run.id, status: "FAIL", failures: ["SELECTION_CONTROL_FAILURE"], process: { outcomeUncertain: true } }; }
+    rows.push(row);
+    if (row.process?.outcomeUncertain) blocked = true;
+  }
+  return rows;
 }
 function fakeReport(run, statuses = run.titles.map(() => "passed")) {
   return { config: { workers: 1, projects: [{ retries: 0, timeout: 30000 }] }, suites: [{ specs: run.titles.map((title, i) => ({ title, file: run.files[i], line: 1,
     tests: [{ expectedStatus: "passed", results: [{ retry: 0, status: statuses[i], duration: 1, startTime: new Date(1000 + i).toISOString(), errors: [], stdout: [] }] }] })) }], stats: { unexpected: 0, flaky: 0, skipped: 0 }, errors: [] };
 }
-function selfTest() {
+async function selfTest() {
   let count = 0;
   const check = (value) => { count++; requireThat(value, "SELF_TEST_CONTROL_" + count); };
   const meta = { exitCode: 0, timedOut: false, outputLimited: false, spawnFailed: false, outcomeUncertain: false, docsIdentity: { valid: true } };
@@ -231,6 +325,22 @@ function selfTest() {
   check(aggregate(rows).status === "PASS" && aggregate(rows).comparison === "HISTORICAL_CAUSE_UNKNOWN_BOTH_PASS");
   rows[2].status = "FAIL"; check(aggregate(rows).status === "FAIL");
   rows[0].principalStatus = "failed"; rows[0].status = "FAIL"; check(aggregate(rows).comparison === "DIFFERENT_SELECTION_OUTCOMES_IMMEDIATE_CAUSE_UNKNOWN");
+  check(retainCount(MAX_OUTPUT - 2, 5) === 2 && retainCount(MAX_OUTPUT, 5) === 0);
+  check(retainCount(0, 7) === 7);
+  const sample = Buffer.from("original-output");
+  check(hash(sample.subarray(0, retainCount(MAX_OUTPUT - 8, sample.length))) === hash(Buffer.from("original")));
+  const ordinaryCalls = [];
+  const ordinary = await collectSelections(async (run) => { ordinaryCalls.push(run.id); return { id: run.id, status: "FAIL", process: { outcomeUncertain: false } }; });
+  check(ordinaryCalls.length === 4 && ordinary.length === 4 && ordinary.every((row) => row.status === "FAIL"));
+  const uncertainCalls = [];
+  const uncertain = await collectSelections(async (run) => { uncertainCalls.push(run.id); return { id: run.id, status: "FAIL", process: { outcomeUncertain: true } }; });
+  check(uncertainCalls.length === 1 && uncertain.slice(1).every((row) => row.status === "SKIPPED_NOT_RUN" && row.process.started === false));
+  check(aggregate(uncertain).status === "FAIL");
+  const completedOwner = { closed: true, observed: { stdout: 7 } };
+  check(streamComplete(completedOwner, {}, "stdout", 7));
+  check(!streamComplete({ ...completedOwner, closed: false }, {}, "stdout", 7));
+  check(!streamComplete(completedOwner, { outputLimited: true }, "stdout", 7));
+  check(!streamComplete(completedOwner, {}, "stdout", 6));
   process.stdout.write(JSON.stringify({ schema: "vault-isolation-self-test/v1", status: "PASS", controls: count, playwrightStarted: false, childStarted: false }) + "\n");
 }
 async function main() {
@@ -242,8 +352,8 @@ async function main() {
   requireThat(Number(process.versions.node.split(".")[0]) === 22, "NODE22_REQUIRED");
   const readPackage = (name) => JSON.parse(fs.readFileSync(path.join(ROOT, "node_modules", name, "package.json"), "utf8"));
   requireThat(readPackage("@playwright/test").version === "1.64.1" && readPackage("ethers").version === "6.17.0", "LOCKED_RUNTIME_REQUIRED");
-  const started = performance.now(), rows = [];
-  for (const run of RUNS) rows.push(analyze(run, await execute(run, output, started)));
+  const started = performance.now();
+  const rows = await collectSelections(async (run) => analyze(run, await execute(run, output, started)));
   const result = { schema: "vault-isolation/v1", ...aggregate(rows), source: { node: process.version,
     comparatorSha256: hash(fs.readFileSync(__filename)), specSha256: hash(fs.readFileSync(path.join(ROOT, "tests/browser/web3-write.spec.js"))),
     canonicalConfigSha256: hash(fs.readFileSync(path.join(ROOT, "playwright.config.js"))), docsWeb3Sha256: hash(fs.readFileSync(path.join(ROOT, "docs/web3/index.html"))), walletCoreSha256: hash(fs.readFileSync(path.join(ROOT, "docs/web3-wallet-core.js"))), timeoutsChanged: false },
@@ -252,5 +362,8 @@ async function main() {
   process.stdout.write("IFR_VAULT_ISOLATION " + JSON.stringify(result) + "\n");
   process.exitCode = result.status === "PASS" ? 0 : 1;
 }
-for (const signal of ["SIGINT", "SIGTERM"]) process.once(signal, () => { interrupted = true; for (const owner of owners) signalOwn(owner, "SIGTERM"); });
-main().catch((error) => { process.stdout.write("IFR_VAULT_ISOLATION " + JSON.stringify({ schema: "vault-isolation/v1", status: "FAIL", failureCode: error.safeCode || "CONTROL_FAILURE", issue382Closed: false, artifactsDeleted: false }) + "\n"); process.exitCode = 1; });
+module.exports = Object.freeze({ execute, collectSelections });
+if (require.main === module) {
+  for (const signal of ["SIGINT", "SIGTERM"]) process.once(signal, () => { interrupted = true; for (const owner of owners) signalOwn(owner, "SIGTERM"); });
+  main().catch((error) => { process.stdout.write("IFR_VAULT_ISOLATION " + JSON.stringify({ schema: "vault-isolation/v1", status: "FAIL", failureCode: error.safeCode || "CONTROL_FAILURE", issue382Closed: false, artifactsDeleted: false }) + "\n"); process.exitCode = 1; });
+}
