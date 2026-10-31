@@ -149,7 +149,32 @@ async function terminate(record) {
   await Promise.race([record.closed, new Promise((resolve) => setTimeout(resolve, 1500))]);
   demand(record.ended || !record.child.pid, "OWN_CHILD_NOT_REAPED");
 }
-function receipt(record, result) {
+function failureDiagnostic(record) {
+  // Project only fixed error categories and locations inside our explicit roots.
+  // Never retain an arbitrary message, environment value, URL, or stack trace.
+  let stderr = record.stderr.replace(/\u001b\[[0-?]*[ -/]*[@-~]/g, "");
+  for (const [root, label] of [[work, "<fixture>"], [report?.bindings?.baseline?.root, "<baseline>"], [report?.bindings?.candidate?.root, "<candidate>"]]) {
+    if (root) stderr = stderr.split(root).join(label);
+  }
+  const classes = ["Error", "TypeError", "SyntaxError", "ReferenceError", "RangeError", "AssertionError"];
+  const found = stderr.match(/\b(Error|TypeError|SyntaxError|ReferenceError|RangeError|AssertionError)(?: \[[A-Z_]+\])?:/);
+  const errorClass = found && classes.includes(found[1]) ? found[1] : "UNKNOWN";
+  const missing = /No test files found|Cannot find any files matching pattern/.test(stderr);
+  const codes = ["MODULE_NOT_FOUND", "ERR_MODULE_NOT_FOUND", "ERR_REQUIRE_ESM", "ERR_ASSERTION", "ENOENT", "EACCES"];
+  const errorTokens = new Set(stderr.split(/[^A-Z_]+/));
+  const code = codes.find((value) => errorTokens.has(value)) || null;
+  const ownedLocation = stderr.match(/<(?:fixture|baseline|candidate)>\/[A-Za-z0-9_@./ +\[\]-]+\.[cm]?js:\d+:\d+/);
+  return {
+    error_class: errorClass,
+    category: missing ? "NO_TEST_FILES" : code || "UNCLASSIFIED_CHILD_FAILURE",
+    stderr_prefix: missing ? "Error: No test files found: <owned fixture pattern>" : errorClass + ": <message omitted>",
+    stderr_prefix_kind: "FIXED_CATEGORY_TEMPLATE",
+    owned_location: ownedLocation ? ownedLocation[0].slice(0, 240) : null,
+    fixture_pattern: report?.active_fixture_pattern || null,
+    raw_message_retained: false,
+  };
+}
+function receipt(record, result, diagnostic = false) {
   return {
     exit: result.code,
     signal: result.signal,
@@ -157,6 +182,7 @@ function receipt(record, result) {
     stdout_sha256: digest(record.stdout),
     stderr_sha256: digest(record.stderr),
     output_limited: record.overflow,
+    ...(diagnostic ? { diagnostic: failureDiagnostic(record) } : {}),
   };
 }
 async function run(command, args, cwd, cap = 20000, env = {}, accepted = [0]) {
@@ -169,10 +195,10 @@ async function run(command, args, cwd, cap = 20000, env = {}, accepted = [0]) {
   clearTimeout(timer);
   if (result.timeout) {
     await terminate(record);
-    report.failed_process = { ...receipt(record, await record.closed), timeout: true };
+    report.failed_process = { ...receipt(record, await record.closed, true), timeout: true };
     throw fault("CHILD_DEADLINE");
   }
-  if (result.spawnError || record.overflow || !accepted.includes(result.code)) report.failed_process = receipt(record, result);
+  if (result.spawnError || record.overflow || !accepted.includes(result.code)) report.failed_process = receipt(record, result, true);
   demand(!result.spawnError, "CHILD_SPAWN_FAILED");
   demand(!record.overflow, "CHILD_OUTPUT_LIMIT");
   demand(accepted.includes(result.code), "CHILD_EXIT_FAILED");
@@ -222,6 +248,7 @@ function identities(json) {
 }
 async function mochaCase(bound, scenario) {
   report.active_installation = bound.kind;
+  report.active_fixture_pattern = scenario.args[0];
   report.active_operation = "mocha-discovery-dry-run";
   const bin = path.join(bound.packages.mocha.directory, "bin/mocha.js");
   const base = ["--no-config", "--no-package", "--no-color", "--reporter", "json", "--timeout", "2000", ...scenario.args];
@@ -263,6 +290,12 @@ function matcherProbe(root, fixture) {
     assert.equal(instance, expected);
     return { direct, instance };
   });
+  // Escaped-only patterns are non-magical; Mocha would append extensions.
+  const bracketMagic = [
+    glob.hasMagic("cases/brackets/literal[[]one].test.cjs", { windowsPathsNoEscape: true }),
+    glob.hasMagic("cases/brackets/literal[[]one]*.test.cjs", { windowsPathsNoEscape: true }),
+  ];
+  assert.deepEqual(bracketMagic, [false, true]);
   const patterns = ["watch/**/*.cjs", "cases/{basic,nested}/**/*.test.cjs", "cases\\basic\\*.test.cjs"];
   const internals = patterns.map((pattern) => {
     const value = new glob.Glob(pattern, { cwd: fixture, dot: true, magicalBraces: true, windowsPathsNoEscape: true });
@@ -289,11 +322,12 @@ function matcherProbe(root, fixture) {
     magic: glob.hasMagic(pattern, { windowsPathsNoEscape: true }),
     files: glob.sync(pattern, { cwd: fixture, nodir: true, windowsPathsNoEscape: true }).map((file) => file.split(path.sep).join("/")).sort(),
   }));
-  return { matching, internals, discovery };
+  return { matching, bracketMagic, internals, discovery };
 }
 async function probe(bound) {
   report.active_installation = bound.kind;
   report.active_operation = "glob-minimatch-consumer-probe";
+  delete report.active_fixture_pattern;
   const code = `try { const result = (${matcherProbe.toString()})(process.argv[1], process.argv[2]); process.stdout.write(JSON.stringify(result)); } catch { process.exitCode = 1; }`;
   const child = await run(process.execPath, ["-e", code, bound.root, work], work);
   return { data: parseJSON(child.stdout, "MATCHER_PROBE_JSON"), process: child.receipt };
@@ -336,6 +370,7 @@ async function waitForWatch(record, log, count) {
 async function watchCase(bound) {
   report.active_installation = bound.kind;
   report.active_operation = "mocha-watch-ignore-rerun";
+  delete report.active_fixture_pattern;
   put("watch/spec.test.cjs", watchSource());
   put("watch/ignored/noise.cjs", "// ignored initial file\n");
   put("watch/value.txt", "first");
@@ -343,6 +378,7 @@ async function watchCase(bound) {
   const log = path.join(work, "watch/events.ndjson");
   const bin = path.join(bound.packages.mocha.directory, "bin/mocha.js");
   const child = start(process.execPath, [bin, "--no-config", "--no-package", "--no-color", "--reporter", "dot", "--timeout", "2000", "--watch", "--watch-files", "watch/**/*.cjs", "--watch-ignore", "watch/ignored/**", "watch/spec.test.cjs"], work, { MATCHER_WATCH_LOG: log });
+  let failed = false;
   try {
     await waitForWatch(child, log, 1);
     same(watchEvents(log), [{ id: "watch-run", value: "first" }], "WATCH_INITIAL_IDENTITY");
@@ -357,13 +393,18 @@ async function watchCase(bound) {
     const events = watchEvents(log);
     same(events, [{ id: "watch-run", value: "first" }, { id: "watch-run", value: "second" }], "WATCH_RERUN_IDENTITY");
     return { events, ignored_change_reruns: 0, actual_change_reruns: 1 };
+  } catch (error) {
+    failed = true;
+    throw error;
   } finally {
     await terminate(child);
+    if (failed) report.failed_process = receipt(child, await child.closed, true);
   }
 }
 async function markdownCase(bound, wrapper, disabledRules) {
   report.active_installation = bound.kind;
   report.active_operation = "markdown-cli-fixture";
+  delete report.active_fixture_pattern;
   const files = ["markdown/good.md", "markdown/bad.md", "markdown/space [one].md"];
   const cli = path.join(bound.packages["markdownlint-cli"].directory, "markdownlint.js");
   const child = await run(process.execPath, [cli, "--json", "--disable", ...disabledRules, "--", ...files], work, 25000, {}, [0, 1]);
@@ -396,7 +437,7 @@ async function main() {
     { id: "ignore-rule", args: ["cases/**/*.test.cjs", "--ignore", "**/ignored.test.cjs"], ids: ["alpha", "beta", "space-name", "bracket-name"] },
     { id: "extension-fallback", args: ["cases/extensions/normal", "--extension", "js,cjs"], ids: ["extension-js", "extension-cjs"] },
     { id: "space-path", args: ["cases/space dir/space name.test.cjs"], ids: ["space-name"] },
-    { id: "literal-bracket-glob", args: ["cases/brackets/literal[[]one].test.cjs"], ids: ["bracket-name"] },
+    { id: "literal-bracket-glob", args: ["cases/brackets/literal[[]one]*.test.cjs"], ids: ["bracket-name"] },
     { id: "explicit-dot-path", args: ["cases/.hidden/*.test.cjs"], ids: ["hidden"] },
     { id: "windows-noescape-separator", args: ["cases\\basic\\*.test.cjs"], ids: ["alpha"] },
     { id: "symlink-file", args: ["links/alias.test.cjs"], ids: ["alpha"] },
@@ -443,6 +484,7 @@ async function main() {
   delete report.stage;
   delete report.active_installation;
   delete report.active_operation;
+  delete report.active_fixture_pattern;
 }
 
 for (const signal of ["SIGINT", "SIGTERM"]) {
