@@ -1,6 +1,13 @@
 name: Docs Validator
 
 on:
+  workflow_dispatch:
+    inputs:
+      vault_isolation_diagnostic:
+        description: 'Run the test-only issue 382 vault isolation comparison'
+        type: boolean
+        required: false
+        default: false
   push:
     branches: [main, master, develop, dev]
     paths:
@@ -95,6 +102,7 @@ on:
       - '.github/ISSUE_TEMPLATE/**'
       - 'tests/browser/**'
       - 'scripts/test-docs-server-compat.cjs'
+      - 'scripts/test-web3-vault-isolation.cjs'
       - 'playwright.config.js'
       - 'package.json'
       - 'package-lock.json'
@@ -192,6 +200,7 @@ on:
       - '.github/ISSUE_TEMPLATE/**'
       - 'tests/browser/**'
       - 'scripts/test-docs-server-compat.cjs'
+      - 'scripts/test-web3-vault-isolation.cjs'
       - 'playwright.config.js'
       - 'package.json'
       - 'package-lock.json'
@@ -431,6 +440,11 @@ jobs:
 
       - name: Run Web3 write-flow suite
         run: npm run test:web3-write
+
+      - name: Diagnose vault isolation (explicit opt-in only)
+        if: ${{ always() && github.event_name == 'workflow_dispatch' && inputs.vault_isolation_diagnostic }}
+        timeout-minutes: 8
+        run: node scripts/test-web3-vault-isolation.cjs --output "$RUNNER_TEMP/vault-isolation-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
 
       - name: Verify serverless IFR Benefits widget rules and published SRI
         run: node scripts/test-ifr-benefits-widget.cjs

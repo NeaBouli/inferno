@@ -1,3 +1,21 @@
+@startuml web3_vault_isolation_382
+actor "Existing CI opt-in" as CI382
+participant "test-web3-vault-isolation.cjs" as Q382
+participant "web3-write.spec.js helpers" as H382
+participant "Unchanged docs/web3 lockIFR" as D382
+CI382 -> Q382 : explicit diagnostic dispatch (default off)
+Q382 -> H382 : uninstrumented A/B + accountsChanged control
+H382 -> D382 : canonical fixture / original assertions and timeouts
+Q382 -> H382 : separate observed principal only
+H382 -> Q382 : bounded synthetic method/category/phase/timing
+note over Q382,D382
+approveTx.wait -> assertV2Open -> commitmentV2.lock
+Historical failure is post-approval; cause UNKNOWN.
+Observed timing cannot substitute for uninstrumented A/B.
+No product source or live provider interaction added.
+end note
+@enduml
+
 @startuml
 title Verification/authorization trace (main path)
 actor User

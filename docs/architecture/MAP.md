@@ -154,6 +154,23 @@ postcss-selector-parser, source-map-js) runs at build time on trusted CSS only.
 
 Web3 browser runtime trace (`docs/web3/index.html`, landing + wiki pages):
 
+Issue #382 diagnostic qualification (2026-10-31; test-only, runtime not yet run):
+`tests/browser/web3-write.spec.js::preparePage/newRoutedContext` →
+`docs/web3/index.html::lockIFR` → `approveTx.wait` → `assertV2Open` →
+`commitmentV2.lock`. The historical T-273 failure reached the post-approval
+lock-confirmation phase; its cause remains unknown. T-273 emits no
+`accountsChanged`; that regression remains a separate control.
+`scripts/test-web3-vault-isolation.cjs` qualifies unchanged canonical selections:
+principal alone, historical three predecessors plus principal in native order,
+and the separate accounts-change control. A fourth, explicitly observed principal
+run enables `INFERNO_VAULT_DIAGNOSTIC=1` in test helpers only. Bounded metadata
+records synthetic RPC method/category/timing and fixed UI phases, never arguments,
+results, accounts or transaction payloads. Observer callbacks can affect scheduling;
+their outcome cannot replace the uninstrumented comparison or prove a root cause.
+The existing Wallet Browser Suite accepts an opt-in dispatch input, defaults off,
+and keeps the original 30-second test / 15-second poll limits, one worker and zero
+retries. All existing required browser suites remain independent and unchanged.
+
 1. page `<script>` tags → `docs/web3-wallet-core.js` (`/web3/` dApp) or
    `docs/assets/wallet-core.js` (landing/wiki) `window.IFRWallet` — Daten: EIP-1193
    provider (injected or WalletConnect) → ethers BrowserProvider/Signer
@@ -212,6 +229,7 @@ Points voucher trace (`apps/points-backend`):
 | benefits session service | session status read, checkout-proof text, attest = single redemption | `apps/benefits-network/backend/src/services/sessionService.ts` | gebaut |
 | benefits public rate limits | per-IP limits for public reads and polling | `apps/benefits-network/backend/src/middleware/rateLimiter.ts` | gebaut |
 | web3 wallet core (dApp) | provider discovery, WalletConnect v2 session lifecycle, mainnet fail-closed connect | `docs/web3-wallet-core.js::IFRWallet` | gebaut |
+| Web3 vault isolation qualifier (test only) | compare unchanged T-273 selections and a separately labelled bounded observer run; retain independent failures without asserting a cause | `scripts/test-web3-vault-isolation.cjs` → `tests/browser/web3-write.spec.js::preparePage` | source preparation; runtime qualification pending |
 | wallet core (landing/wiki) | shared minimalist wallet connect, desktop-only policy | `docs/assets/wallet-core.js::IFRWallet` | gebaut |
 | walletconnect provider artifact | pinned, repository-owned, hash-gated WC provider bundle served same-origin | `docs/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js` | gebaut |
 | web3 site release | operator-run exact-SHA release of the `docs/` tree + infra/web3 anchors and CSP to the web3.ifrunit.tech nginx docroot, with backup, `nginx -t`, reload, public hash verify, rollback | `scripts/deploy-web3-site.sh` + `scripts/web3-release.cjs` | gebaut (not yet executed; runbook `docs/WEB3_SITE_RELEASE.md`) |
