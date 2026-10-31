@@ -248,6 +248,28 @@ async function verifySellerCatalogFilters(browser) {
     product('catalog-product-cup', 'Reusable member cup', 'General offers', 'A listed item without an attached discount.', [], '900719925474099313', 'USD'),
   ];
   const rules = [...coffeeRules, serviceRule, ...generalRules];
+  // Separate ordering fixtures keep every original search fixture/assertion intact.
+  const usdHigh = product('catalog-order-usd-high', 'Equal member item', 'Coffee', 'Exact upper neighbouring reference price.', [], '900719925474099314', 'USD');
+  const usdLow = product('catalog-order-usd-low', 'equal MEMBER item', 'Coffee', 'Exact lower neighbouring reference price.', [], '900719925474099313', 'USD');
+  const usdTie = product('catalog-order-usd-tie', 'Zulu member item', 'Coffee', 'Equal price preserves its source position.', [], '900719925474099313', 'USD');
+  const usdZero = product('catalog-order-usd-zero', 'Alpha zero item', 'Coffee', 'A genuine free reference price.', [], '0', 'USD');
+  const eurHigh = product('catalog-order-eur-high', 'Beta euro item', 'Services', 'Euro upper price.', [], '2000', 'EUR');
+  const eurLow = product('catalog-order-eur-low', 'Alpha euro item', 'Services', 'Euro lower price.', [], '1998', 'EUR');
+  const jpyHigh = product('catalog-order-jpy-high', 'Kyoto high item', 'Services', 'JPY has no fractional minor digits.', [], '1000', 'JPY');
+  const jpyLow = product('catalog-order-jpy-low', 'Kyoto low item', 'Services', 'JPY lower reference price.', [], '999', 'JPY');
+  const invalidPairs = [[null, null], [null, 'USD'], ['100', null], ['01', 'USD'],
+    ['-1', 'USD'], ['1e2', 'EUR'], ['1000000000000000000', 'JPY'], ['100', 'ZZZ']];
+  const invalidProducts = invalidPairs.map(([price, currency], index) => product(`catalog-order-invalid-${index}`,
+    `Unpriced defensive item ${index}`, 'Coffee', 'Invalid price/currency pairs must not become a zero price.', [], price, currency));
+  const orderingProducts = [...products, usdHigh, usdLow, usdTie, usdZero, eurHigh, eurLow, jpyHigh, jpyLow, ...invalidProducts];
+  const coffeeOrder = [products[0], usdHigh, usdLow, usdTie, usdZero, ...invalidProducts];
+  const servicesOrder = [products[1], eurHigh, eurLow, jpyHigh, jpyLow];
+  const orderingOriginal = [...coffeeOrder, ...servicesOrder, products[2]].map(item => item.id);
+  const orderingTotal = orderingProducts.length + generalRules.length;
+  const secondBusiness = { ...business, id: 'catalog-second-seller', slug: 'catalog-second-fixture', name: 'Second independent seller' };
+  const secondProducts = [{ ...usdZero, id: 'catalog-second-zero', businessId: secondBusiness.id },
+    { ...jpyLow, id: 'catalog-second-jpy', businessId: secondBusiness.id }];
+  const secondRules = [rule('catalog-second-general', 'Second seller member benefit', null, 'Second seller membership', { businessId: secondBusiness.id })];
   const viewports = [
     { width: 1440, height: 1000 }, { width: 1180, height: 820 }, { width: 820, height: 1180 },
     { width: 390, height: 844 }, { width: 320, height: 844 },
@@ -268,16 +290,21 @@ async function verifySellerCatalogFilters(browser) {
       const request = route.request();
       const url = new URL(request.url());
       assert.equal(request.method(), 'GET', 'public catalog fixture must never mutate data');
-      const isProducts = url.pathname === `/api/businesses/${business.slug}/products`;
-      const isRules = url.pathname === `/api/businesses/${business.slug}/rules`;
+      const second = url.pathname.startsWith(`/api/businesses/${secondBusiness.slug}/`);
+      const selectedBusiness = second ? secondBusiness : business;
+      const selectedProducts = second ? secondProducts : mode === 'ordering' ? orderingProducts : products;
+      const selectedRules = second ? secondRules : rules;
+      const isProducts = url.pathname === `/api/businesses/${selectedBusiness.slug}/products`;
+      const isRules = url.pathname === `/api/businesses/${selectedBusiness.slug}/rules`;
       if (isProducts || isRules) {
         catalogRequests.push(url.pathname);
         if (mode === 'loading') await loadingGate;
         if (mode === 'error') return route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'Catalog fixture temporarily unavailable' }) });
         return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(isProducts
-          ? { business, products: mode === 'empty' ? [] : products }
-          : { rules: mode === 'empty' ? [] : rules }) });
+          ? { business: selectedBusiness, products: mode === 'empty' ? [] : selectedProducts }
+          : { rules: mode === 'empty' ? [] : selectedRules }) });
       }
+      if (url.pathname === `/api/businesses/${secondBusiness.slug}`) return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(secondBusiness) });
       if (url.pathname === `/api/businesses/${business.slug}`) return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(business) });
       if (url.pathname === '/api/businesses') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(discoveryResponse([])) });
       if (url.pathname === '/api/ready') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'ready', chainId: 1, database: 'ok', rateLimitStore: 'ok' }) });
@@ -292,13 +319,15 @@ async function verifySellerCatalogFilters(browser) {
     const search = page.getByRole('searchbox', { name: 'Search this catalog', exact: true });
     const category = page.getByLabel('Category', { exact: true });
     const reset = page.getByRole('button', { name: 'Reset filters', exact: true });
+    const currency = page.getByLabel('Reference-price currency', { exact: true });
+    const order = page.getByLabel('Sort products within each category', { exact: true });
     const resetFilters = async () => {
       if (await reset.isEnabled()) {
         if (viewport.width <= 390) await reset.tap(); else await reset.click();
       }
       await page.waitForFunction(() => document.querySelector('[data-catalog-result-count]')?.textContent?.trim() === 'Showing 5 of 5 catalog entries.');
     };
-    const capture = async state => {
+    const capture = async (state, focusId = 'catalog-search') => {
       const contrastRatio = (foreground, background) => {
         const fg = foreground.match(/[\d.]+/g).map(Number);
         let bg = background.match(/[\d.]+/g).map(Number);
@@ -309,7 +338,7 @@ async function verifySellerCatalogFilters(browser) {
         const b = luminance(bg);
         return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
       };
-      const layout = await page.evaluate(() => {
+      const layout = await page.evaluate(focusId => {
         const filters = document.querySelector('[data-catalog-filters]');
         const cards = [...document.querySelectorAll('[data-catalog-entry]')];
         const targets = filters ? [...filters.querySelectorAll('input,select,button')] : [];
@@ -335,12 +364,12 @@ async function verifySellerCatalogFilters(browser) {
         const outsideCards = cards.filter(node => {
           const b = node.getBoundingClientRect(); return b.left < -1 || b.right > innerWidth + 1 || node.scrollWidth > node.clientWidth + 1;
         }).map(node => node.getAttribute('data-catalog-entry'));
-        const input = document.querySelector('#catalog-search');
+        const input = document.getElementById(focusId);
         const style = input ? getComputedStyle(input) : null;
         return { viewport: { width: innerWidth, height: innerHeight }, scrollWidth: document.documentElement.scrollWidth,
           controls: boxes, overlaps, clippedText, outsideCards, entryCount: cards.length,
           focus: input ? { visible: input.matches(':focus-visible'), outlineWidth: style.outlineWidth, outlineColor: style.outlineColor } : null };
-      });
+      }, focusId);
       metrics.push({ state, ...layout, catalogRequests: catalogRequests.length });
       assert.ok(layout.scrollWidth <= viewport.width, `${state} must not cause document overflow at ${viewport.width}`);
       assert.deepEqual(layout.overlaps, [], `${state}: controls must not overlap`);
@@ -354,6 +383,12 @@ async function verifySellerCatalogFilters(browser) {
         const input = layout.controls.find(control => control.id === 'catalog-search');
         assert.ok(parseFloat(layout.focus.outlineWidth) >= 2, 'keyboard focus outline must be measurable');
         assert.ok(contrastRatio(layout.focus.outlineColor, input.background) >= 3, 'keyboard focus must contrast with the field');
+      }
+      if (state === 'currency-focus' || state === 'order-focus') {
+        const control = layout.controls.find(control => control.id === focusId);
+        assert.ok(control && layout.focus.visible, 'new catalog select must retain visible keyboard focus');
+        assert.ok(parseFloat(layout.focus.outlineWidth) >= 2, 'new select focus outline must be measurable');
+        assert.ok(contrastRatio(layout.focus.outlineColor, control.background) >= 3, 'new select focus must contrast with its field');
       }
       for (const control of layout.controls.filter(control => !control.disabled)) {
         assert.ok(contrastRatio(control.color, control.background) >= 4.5, `${control.id}: readable control text contrast`);
@@ -427,6 +462,134 @@ async function verifySellerCatalogFilters(browser) {
       assert.deepEqual(await page.locator('#catalog-results a[href*="offer="]').evaluateAll(nodes => nodes.map(node => node.getAttribute('href'))), originalLinks, 'reset preserves exact seller/rule bindings');
       assert.equal(new URL(page.url()).search, '', 'local filters must not change the shared seller URL');
       assert.equal(catalogRequests.length, requestsBeforeFiltering, 'keystrokes, category and reset make no catalog requests');
+      // New reference-price/order controls: same owning fixture, no new runner mode.
+      await page.addInitScript(() => {
+      const effects = { storage: 0, history: 0, wallet: 0 };
+      Object.defineProperty(window, '__catalogOrderingEffects', { value: effects });
+      for (const method of ['setItem', 'removeItem', 'clear']) {
+        const original = Storage.prototype[method];
+        Storage.prototype[method] = function (...args) { effects.storage += 1; return Reflect.apply(original, this, args); };
+      }
+      for (const method of ['pushState', 'replaceState']) {
+        const original = history[method];
+        history[method] = function (...args) { effects.history += 1; return Reflect.apply(original, this, args); };
+      }
+      // Synthetic observation only; no real provider or wallet state is used.
+      Object.defineProperty(window, 'ethereum', { configurable: true, value: {
+        isMetaMask: true, on() {}, removeListener() {},
+        request: async () => { effects.wallet += 1; throw new Error('Catalog fixture does not authorize wallet requests'); },
+      } });
+    });
+      mode = 'ordering'; await page.reload({ waitUntil: 'domcontentloaded' });
+      const generalIds = generalRules.map(item => item.id);
+      const orderingEntries = [...orderingOriginal, ...generalIds];
+      const currencyValues = () => currency.locator('option').evaluateAll(nodes => nodes.map(node => node.value));
+      const checkBindings = async productIds => {
+        for (const id of productIds) {
+          const fixture = orderingProducts.find(item => item.id === id);
+          const card = page.locator(`[data-catalog-entry="${id}"]`);
+          assert.deepEqual(await card.locator('[data-catalog-rule]').evaluateAll(nodes => nodes.map(node => node.getAttribute('data-catalog-rule'))), fixture.benefitRules.map(item => item.id), `${id}: every original child rule stays attached`);
+          assert.deepEqual(await card.locator('a[href*="offer="]').evaluateAll(nodes => nodes.map(node => node.getAttribute('href'))), fixture.benefitRules.map(item => `/?seller=${business.slug}&offer=${item.id}#customer-pass`), `${id}: exact offer links stay attached`);
+        }
+      };
+      const expectOrdering = async (productIds, standalone = generalIds) => {
+        const expected = [...productIds, ...standalone];
+        await page.waitForFunction(expected => JSON.stringify([...document.querySelectorAll('[data-catalog-entry]')].map(node => node.getAttribute('data-catalog-entry'))) === JSON.stringify(expected), expected);
+        assert.deepEqual(await entries(), expected);
+        await page.getByText(`Showing ${expected.length} of ${orderingTotal} catalog entries.`, { exact: true }).waitFor();
+        await checkBindings(productIds);
+        for (const id of standalone) assert.equal(await page.locator(`[data-catalog-entry="${id}"] a[href*="offer="]`).getAttribute('href'), `/?seller=${business.slug}&offer=${id}#customer-pass`);
+      };
+      const resetOrdering = async () => {
+        if (await reset.isEnabled()) { if (viewport.width <= 390) await reset.tap(); else await reset.click(); }
+        assert.equal(await search.inputValue(), ''); assert.equal(await category.inputValue(), 'all');
+        assert.equal(await currency.inputValue(), 'all'); assert.equal(await order.inputValue(), 'original');
+        await expectOrdering(orderingOriginal);
+      };
+      await expectOrdering(orderingOriginal);
+      assert.deepEqual(await currencyValues(), ['all', 'USD', 'EUR', 'JPY'], 'options come from the entire valid priced catalog in allowlist order');
+      assert.deepEqual(await order.locator('option').evaluateAll(nodes => nodes.map(node => node.value)), ['original', 'name-asc', 'name-desc', 'price-asc', 'price-desc']);
+      for (const value of ['price-asc', 'price-desc']) assert.equal(await order.locator(`option[value="${value}"]`).isDisabled(), true, 'All currencies cannot enable price comparisons');
+      await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+      const effectsBefore = await page.evaluate(() => ({ ...window.__catalogOrderingEffects }));
+      const orderingRequests = catalogRequests.length; const orderingUrl = page.url();
+      // A forged disabled-option event must still never sort across currencies.
+      await order.evaluate(node => { node.value = 'price-asc'; node.dispatchEvent(new Event('change', { bubbles: true })); });
+      await expectOrdering(orderingOriginal); await resetOrdering();
+      if (viewport.width <= 390) { await currency.tap(); await page.keyboard.press('Escape'); }
+      await currency.selectOption('USD');
+      for (const value of ['price-asc', 'price-desc']) assert.equal(await order.locator(`option[value="${value}"]`).isDisabled(), false);
+      const usdOriginal = [usdHigh.id, usdLow.id, usdTie.id, usdZero.id, products[2].id];
+      await expectOrdering(usdOriginal);
+      assert.equal(await page.locator('[data-catalog-entry^="catalog-order-invalid-"]').count(), 0, 'null/malformed/unknown pairs never enter an explicit currency');
+      await page.locator(`[data-catalog-entry="${usdZero.id}"]`).getByText('Reference price: USD 0.00', { exact: true }).waitFor();
+      await page.locator(`[data-catalog-entry="${usdHigh.id}"]`).getByText('Reference price: USD 9,007,199,254,740,993.14', { exact: true }).waitFor();
+      await page.locator(`[data-catalog-entry="${usdLow.id}"]`).getByText('Reference price: USD 9,007,199,254,740,993.13', { exact: true }).waitFor();
+      await currency.focus(); await page.keyboard.press('Tab'); await page.keyboard.press('Shift+Tab');
+      assert.equal(await currency.evaluate(node => node.matches(':focus-visible')), true);
+      const currencyId = await currency.getAttribute('id'); assert.ok(currencyId);
+      await capture('currency-focus', currencyId);
+      if (viewport.width <= 390) { await order.tap(); await page.keyboard.press('Escape'); }
+      await order.selectOption('name-asc');
+      await expectOrdering([usdZero.id, usdHigh.id, usdLow.id, usdTie.id, products[2].id]);
+      await order.selectOption('name-desc');
+      await expectOrdering([usdTie.id, usdHigh.id, usdLow.id, usdZero.id, products[2].id]);
+      await order.selectOption('price-asc');
+      await expectOrdering([usdZero.id, usdLow.id, usdTie.id, usdHigh.id, products[2].id]);
+      await order.selectOption('price-desc');
+      await expectOrdering([usdHigh.id, usdLow.id, usdTie.id, usdZero.id, products[2].id]);
+      await order.focus(); await page.keyboard.press('Tab'); await page.keyboard.press('Shift+Tab');
+      assert.equal(await order.evaluate(node => node.matches(':focus-visible')), true, 'reordering retains focus on the active select');
+      const orderId = await order.getAttribute('id'); assert.ok(orderId);
+      await capture('order-focus', orderId);
+      await currency.selectOption('EUR'); assert.equal(await order.inputValue(), 'price-desc', 'explicit currency changes preserve direction');
+      await expectOrdering([products[0].id, eurHigh.id, products[1].id, eurLow.id]);
+      await order.selectOption('price-asc'); await expectOrdering([products[0].id, eurLow.id, products[1].id, eurHigh.id]);
+      await currency.selectOption('JPY'); assert.equal(await order.inputValue(), 'price-asc');
+      await expectOrdering([jpyLow.id, jpyHigh.id]);
+      await page.locator(`[data-catalog-entry="${jpyHigh.id}"]`).getByText('Reference price: JPY 1,000', { exact: true }).waitFor();
+      await page.locator(`[data-catalog-entry="${jpyLow.id}"]`).getByText('Reference price: JPY 999', { exact: true }).waitFor();
+      await order.selectOption('price-desc'); await expectOrdering([jpyHigh.id, jpyLow.id]);
+      await currency.selectOption('all'); assert.equal(await order.inputValue(), 'original', 'clearing currency resets price order only');
+      await expectOrdering(orderingOriginal);
+      await currency.selectOption('USD'); await order.selectOption('name-desc'); await currency.selectOption('all');
+      assert.equal(await order.inputValue(), 'name-desc', 'clearing currency preserves name order');
+      await capture('name-order-all'); await resetOrdering();
+      await currency.selectOption('USD'); await order.selectOption('price-desc'); await category.selectOption('category:Coffee'); await search.fill('equal');
+      await expectOrdering([usdHigh.id, usdLow.id], []);
+      await order.selectOption('price-asc'); await expectOrdering([usdLow.id, usdHigh.id], []);
+      assert.deepEqual(await currencyValues(), ['all', 'USD', 'EUR', 'JPY'], 'search/category must not narrow currency choices');
+      await capture('combined-order');
+      await search.fill('loyalty'); await currency.selectOption('EUR');
+      await expectOrdering([products[0].id], []);
+      assert.equal(await page.locator('[data-catalog-rule]').count(), 3, 'currency/search ordering preserves all child offer rules');
+      await resetOrdering(); await currency.selectOption('JPY'); await order.selectOption('price-desc'); await category.selectOption('general');
+      await expectOrdering([], generalIds);
+      await search.fill('community'); await expectOrdering([], [generalRules[0].id]);
+      await resetOrdering(); await currency.selectOption('USD'); await order.selectOption('price-asc'); await category.selectOption('category:General offers');
+      await expectOrdering([products[2].id], []);
+      await resetOrdering();
+      assert.equal(catalogRequests.length, orderingRequests, 'currency/order/search/category/reset add no catalog GETs');
+      assert.equal(page.url(), orderingUrl, 'all four transient controls leave the shared URL unchanged');
+      assert.deepEqual(await page.evaluate(() => ({ ...window.__catalogOrderingEffects })), effectsBefore, 'control changes must not write storage/history or invoke a wallet');
+      // All four controls also reset on a fresh load and a different seller URL.
+      await currency.selectOption('USD'); await order.selectOption('price-desc'); await category.selectOption('category:Coffee'); await search.fill('equal');
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      await page.getByText(`Showing ${orderingTotal} of ${orderingTotal} catalog entries.`, { exact: true }).waitFor();
+      assert.equal(await search.inputValue(), ''); assert.equal(await category.inputValue(), 'all');
+      assert.equal(await currency.inputValue(), 'all'); assert.equal(await order.inputValue(), 'original');
+      await expectOrdering(orderingOriginal);
+      await currency.selectOption('USD'); await order.selectOption('price-desc'); await category.selectOption('category:Coffee'); await search.fill('equal');
+      await page.goto(`${origin}/s/${secondBusiness.slug}`, { waitUntil: 'domcontentloaded' });
+      await page.getByText('Showing 3 of 3 catalog entries.', { exact: true }).waitFor();
+      assert.equal(await search.inputValue(), ''); assert.equal(await category.inputValue(), 'all');
+      assert.equal(await currency.inputValue(), 'all'); assert.equal(await order.inputValue(), 'original');
+      assert.deepEqual(await entries(), [...secondProducts.map(item => item.id), ...secondRules.map(item => item.id)]);
+      assert.deepEqual(await currencyValues(), ['all', 'USD', 'JPY'], 'seller change must derive only that seller currency choices');
+      assert.equal(await page.locator(`[data-catalog-entry="${secondRules[0].id}"] a[href*="offer="]`).getAttribute('href'), `/?seller=${secondBusiness.slug}&offer=${secondRules[0].id}#customer-pass`);
+      await capture('second-seller');
+      mode = 'ready'; await page.goto(url, { waitUntil: 'domcontentloaded' });
+      await page.getByText('Showing 5 of 5 catalog entries.', { exact: true }).waitFor();
       await search.fill('not-restored-after-reload'); await category.selectOption('general');
       await page.reload({ waitUntil: 'domcontentloaded' });
       await page.getByText('Showing 5 of 5 catalog entries.', { exact: true }).waitFor();
@@ -457,7 +620,7 @@ async function verifySellerCatalogFilters(browser) {
       if (evidenceDir) fs.writeFileSync(path.join(evidenceDir, 'catalog-layout-metrics.json'), JSON.stringify({ fixtureOnly: true, viewports, metrics }, null, 2));
     }
   }
-  console.log('[seller-catalog-search] PASS - product/rule/description search, combined categories, entry counts, reset, exact bindings and five responsive viewports');
+  console.log('[seller-catalog-search] PASS - search/categories, exact currency-safe within-group ordering, transient state, exact bindings and five responsive viewports');
 }
 
 async function verifyOfferDiscoveryRecovery(browser) {
