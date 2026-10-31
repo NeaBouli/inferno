@@ -433,6 +433,11 @@ async function verifySellerCatalogFilters(browser, qualification = null) {
   const secondProducts = [{ ...usdZero, id: 'catalog-second-zero', businessId: secondBusiness.id },
     { ...jpyLow, id: 'catalog-second-jpy', businessId: secondBusiness.id }];
   const secondRules = [rule('catalog-second-general', 'Second seller member benefit', null, 'Second seller membership', { businessId: secondBusiness.id })];
+  const combinedQueryMatches = orderingProducts.filter(item => item.category === 'Coffee' && item.currency === 'USD'
+    && typeof item.basePriceMinor === 'string' && /^(0|[1-9][0-9]{0,17})$/.test(item.basePriceMinor)
+    && [item.name, item.description || '', ...item.benefitRules.map(offer => offer.label)]
+      .some(text => text.toLowerCase().includes('equal')));
+  assert.deepEqual(combinedQueryMatches.map(item => item.id), [usdHigh.id, usdLow.id, usdTie.id], 'combined fixture query must retain name and description matches');
   const viewports = [
     { width: 1440, height: 1000 }, { width: 1180, height: 820 }, { width: 820, height: 1180 },
     { width: 390, height: 844 }, { width: 320, height: 844 },
@@ -758,8 +763,8 @@ async function verifySellerCatalogFilters(browser, qualification = null) {
         products[1].id, jpyLow.id, jpyHigh.id, eurHigh.id, eurLow.id, products[2].id]);
       await capture('name-order-all'); await resetOrdering();
       await currency.selectOption('USD'); await order.selectOption('price-desc'); await category.selectOption('category:Coffee'); await search.fill('equal');
-      await expectOrdering([usdHigh.id, usdLow.id], []);
-      await order.selectOption('price-asc'); await expectOrdering([usdLow.id, usdHigh.id], []);
+      await expectOrdering([usdHigh.id, usdLow.id, usdTie.id], []);
+      await order.selectOption('price-asc'); await expectOrdering([usdLow.id, usdTie.id, usdHigh.id], []);
       assert.deepEqual(await currencyValues(), ['all', 'USD', 'EUR', 'JPY'], 'search/category must not narrow currency choices');
       await order.focus(); await page.keyboard.press('Tab'); await page.keyboard.press('Shift+Tab');
       await capture('combined-order', orderId);
