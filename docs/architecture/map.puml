@@ -410,3 +410,16 @@ left to right direction
 [Selected native connector] --> [Same native provider] : original request receiver
 [Same native provider] --> [Fixed RAM snapshot] : shape/count/status/timing only
 @enduml
+
+@startmindmap catalog_production_qualification_419
+* Catalog-only production qualification
+** Root-owned loopback next-start renderer
+*** Current BUILD_ID and served artifact hashes
+** Same verifySellerCatalogFilters
+*** Closed synthetic GET fixtures; no wallet/provider
+*** Five DPR1 viewports; 18 bounded images
+** Import-only fixed deployed critical scope
+*** shop.ifrunit.tech; Root Main/CID/image/build/post-source binding
+*** Actual-CID asset map; 1440/390; four critical images
+** Root native execution and direct image review pending
+@endmindmap

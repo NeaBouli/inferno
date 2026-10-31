@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 const assert = require('node:assert/strict');
-const { spawn } = require('node:child_process');
+const { spawn, execFileSync } = require('node:child_process');
+const crypto = require('node:crypto');
 const path = require('node:path');
 const fs = require('node:fs');
 const { chromium, devices } = require('playwright');
@@ -11,6 +12,7 @@ const frontend = path.join(root, 'apps', 'benefits-network', 'frontend');
 const port = Number(process.env.BENEFITS_DISCOVERY_UI_PORT || 3212);
 const origin = `http://127.0.0.1:${port}`;
 const NAVIGATION_TIMEOUT_MS = 90_000;
+const catalogProductionOnly = process.argv.length === 3 && process.argv[2] === '--catalog-production-only';
 const sellerWallet = '0x1000000000000000000000000000000000000001';
 const sellerSignature = `0x${'11'.repeat(65)}`;
 const sellerAuthMessage = 'IFR Benefits Network deterministic seller UI authorization';
@@ -215,7 +217,151 @@ async function waitForLocation(page, pathname, hash = '') {
   );
 }
 
-async function verifySellerCatalogFilters(browser) {
+function catalogImagePlan(viewport, state, live) {
+  if (live) return state === 'all' || state === 'combined-order' ? { fullPage: state === 'all' } : null;
+  if (state === 'name-order-all') return { fullPage: true };
+  if (state === 'combined-order') return { fullPage: false };
+  if (state === 'all' && viewport.width !== 320) return { fullPage: true };
+  return viewport.width === 1440 && ['loading', 'empty', 'load-error', 'no-match'].includes(state) ? { fullPage: false } : null;
+}
+function catalogPngSize(bytes) {
+  assert.ok(bytes.length >= 24 && bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
+    && bytes.toString('ascii', 12, 16) === 'IHDR', 'catalog PNG header must be valid');
+  return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
+}
+function catalogPublicPath(value) {
+  const decoded = decodeURIComponent(value);
+  assert.ok(decoded.startsWith('/') && !/[\\\0%?#]/.test(decoded)
+    && !decoded.split('/').some(part => part === '.' || part === '..'), 'catalog asset path must be canonical');
+  return decoded;
+}
+async function prepareCatalogQualification(options, browser) {
+  const qualificationStarted = performance.now();
+  assert.equal(Number(process.versions.node.split('.')[0]), 22, 'catalog qualification requires Node22');
+  assert.equal(require('playwright/package.json').version, '1.64.1', 'catalog qualification uses the admitted Playwright');
+  assert.ok(chromium.executablePath().includes('chromium-1248'), 'catalog qualification uses the admitted Chromium revision');
+  assert.ok(options && Object.keys(options).every(key => ['scope', 'evidenceDir', 'binding'].includes(key)), 'closed catalog qualification input required');
+  const live = options.scope === 'root-live-critical';
+  assert.ok(live || (options.scope === 'loopback-production' && catalogProductionOnly), 'catalog qualification scope is closed');
+  assert.ok(path.isAbsolute(options.evidenceDir || '') && !fs.existsSync(options.evidenceDir), 'fresh absolute catalog evidence directory required');
+  const directory = path.resolve(options.evidenceDir); fs.mkdirSync(directory, { mode: 0o700 });
+  assert.equal(fs.realpathSync(directory), directory, 'catalog evidence path must not use symlinks');
+  const digest = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
+  const fileBytes = (file, maximum) => {
+    const stat = fs.lstatSync(file);
+    assert.ok(stat.isFile() && !stat.isSymbolicLink() && stat.nlink === 1 && stat.size <= maximum, 'bounded regular catalog artifact required');
+    return fs.readFileSync(file);
+  };
+  const gitIds = execFileSync('git', ['-c', 'core.fsmonitor=false', '-C', root, 'rev-parse', 'HEAD', 'HEAD:apps/benefits-network/frontend'],
+    { encoding: 'utf8', timeout: 5000, maxBuffer: 4096 }).trim().split('\n');
+  assert.ok(gitIds.length === 2 && gitIds.every(value => /^[a-f0-9]{40}$/.test(value)), 'catalog source Git identity required');
+  const source = { sourceCommit: gitIds[0], frontendTree: gitIds[1], scriptSha256: digest(fileBytes(__filename, 512 * 1024)),
+    componentSha256: digest(fileBytes(path.join(frontend, 'src/app/s/[businessId]/SellerCatalogClient.tsx'), 256 * 1024)),
+    packageSha256: digest(fileBytes(path.join(frontend, 'package.json'), 128 * 1024)),
+    lockSha256: digest(fileBytes(path.join(frontend, 'package-lock.json'), 4 * 1024 * 1024)) };
+  const expected = new Map(); let buildId; let binding = null;
+  if (live) {
+    binding = options.binding;
+    const bindingKeys = ['releasedMain', 'sourceCommit', 'frontendTree', 'containerId', 'imageId', 'state', 'observedUtc', 'buildId', 'assets', 'postSourceKind', 'buildReceiptSha256', 'postSourceReceiptSha256', 'postSource'];
+    assert.ok(binding && Object.keys(binding).length === bindingKeys.length && bindingKeys.every(key => Object.hasOwn(binding, key)), 'closed Root deployment binding required');
+    assert.ok(binding && binding.state?.status === 'running' && binding.state.health === 'healthy' && binding.state.stableThroughRead === true, 'Root stable healthy deployment binding required');
+    const age = Date.now() - Date.parse(binding.observedUtc);
+    assert.ok(Number.isFinite(age) && age >= 0 && age <= 300000, 'Root opening deployment proof must be fresh');
+    assert.ok(binding.postSourceKind === 'ROOT_SUPPLIED_VERIFIED_SOURCE'
+      && /^[a-f0-9]{64}$/.test(binding.buildReceiptSha256 || '') && /^[a-f0-9]{64}$/.test(binding.postSourceReceiptSha256 || ''), 'Root verified source/build receipt hashes required');
+    assert.ok(binding.releasedMain === source.sourceCommit && binding.sourceCommit === source.sourceCommit
+      && binding.frontendTree === source.frontendTree, 'Root released Main and local imported source must match');
+    assert.ok(/^[a-f0-9]{64}$/.test(binding.containerId || '') && /^sha256:[a-f0-9]{64}$/.test(binding.imageId || ''), 'Root actual CID/image required');
+    const post = binding.postSource;
+    const postKeys = ['sourceCommit', 'frontendTree', 'containerId', 'imageId', 'componentSha256', 'packageSha256', 'lockSha256'];
+    assert.ok(post && Object.keys(post).length === postKeys.length && postKeys.every(key => Object.hasOwn(post, key))
+      && post.sourceCommit === binding.sourceCommit && post.frontendTree === binding.frontendTree
+      && post.containerId === binding.containerId && post.imageId === binding.imageId
+      && ['componentSha256', 'packageSha256', 'lockSha256'].every(key => post[key] === source[key]), 'Root post-source frame must join exact deployment/source inputs');
+    assert.ok(Array.isArray(binding.assets) && binding.assets.length > 0 && binding.assets.length <= 4096, 'Root actual-CID asset map required');
+    for (const asset of binding.assets) {
+      const publicPath = catalogPublicPath(asset.path);
+      assert.ok(!expected.has(publicPath) && Number.isSafeInteger(asset.bytes) && asset.bytes >= 0 && asset.bytes <= 16 * 1024 * 1024 && /^[a-f0-9]{64}$/.test(asset.sha256), 'bounded unique actual-CID asset record required');
+      expected.set(publicPath, { bytes: asset.bytes, sha256: asset.sha256 });
+    }
+    buildId = binding.buildId;
+  } else {
+    assert.equal(options.binding, undefined, 'local production uses its own artifact, not a live binding');
+    buildId = fileBytes(path.join(frontend, '.next/BUILD_ID'), 512).toString('utf8').trim();
+  }
+  assert.ok(typeof buildId === 'string' && /^[A-Za-z0-9_-]{1,512}$/.test(buildId), 'production BUILD_ID required');
+  const targetOrigin = live ? 'https://shop.ifrunit.tech' : origin;
+  if (!live) assert.ok(Number.isInteger(port) && port >= 1024 && port <= 65535, 'fixed loopback port required');
+  const assetRecord = pathname => {
+    const publicPath = catalogPublicPath(pathname);
+    if (!expected.has(publicPath) && !live) {
+      const isNext = publicPath.startsWith('/_next/static/');
+      const base = path.join(frontend, isNext ? '.next/static' : 'public');
+      const relative = isNext ? publicPath.slice('/_next/static/'.length) : publicPath.slice(1);
+      const file = path.join(base, relative); const realBase = fs.realpathSync(base); const realFile = fs.realpathSync(file);
+      assert.ok(realFile.startsWith(realBase + path.sep), 'catalog asset must stay inside the current artifact');
+      const bytes = fileBytes(file, 16 * 1024 * 1024);
+      expected.set(publicPath, { bytes: bytes.length, sha256: digest(bytes) });
+    }
+    assert.ok(expected.has(publicPath), 'served catalog asset must exist in the bound artifact map');
+    return { path: publicPath, ...expected.get(publicPath) };
+  };
+  const manifestPath = `/_next/static/${buildId}/_buildManifest.js`;
+  const servedBuild = async () => {
+    const expectedManifest = assetRecord(manifestPath);
+    const response = await fetch(targetOrigin + manifestPath, { redirect: 'error', signal: AbortSignal.timeout(5000) });
+    assert.equal(response.status, 200, 'bound production build manifest must be served');
+    const declared = response.headers.get('content-length');
+    if (declared !== null) assert.ok(Number(declared) <= 16 * 1024 * 1024, 'production manifest response must be bounded');
+    const bytes = Buffer.from(await response.arrayBuffer());
+    assert.ok(bytes.length === expectedManifest.bytes && digest(bytes) === expectedManifest.sha256, 'served production BUILD_ID manifest must match bound artifact');
+    if (!live) assert.equal(fileBytes(path.join(frontend, '.next/BUILD_ID'), 512).toString('utf8').trim(), buildId, 'current production build must remain unchanged');
+    return expectedManifest;
+  };
+  const proof = { live, origin: targetOrigin, directory, source, buildId, bindingSha256: binding ? digest(Buffer.from(JSON.stringify(binding))) : null,
+    failures: [], images: [], imageBytes: 0, assets: new Map(), pending: new Set(), contexts: new Set(), responseCount: 0, responseBytes: 0, started: qualificationStarted, aborted: false };
+  proof.opening = await servedBuild();
+  proof.timer = setTimeout(() => { proof.aborted = true; proof.failures.push('CATALOG_WORK_DEADLINE'); for (const context of proof.contexts) void context.close().catch(() => {}); }, Math.max(1, 300000 - (performance.now() - qualificationStarted))); proof.timer.unref();
+  proof.write = (name, value) => { const file = path.join(directory, name); fs.writeFileSync(file, JSON.stringify(value, null, 2) + '\n', { flag: 'wx', mode: 0o600 }); };
+  proof.runtime = { node: process.version, playwright: require('playwright/package.json').version, browser: browser.version(), declaredExecutable: chromium.executablePath() };
+  proof.write('catalog-opening.json', { schema: 'catalog-production-opening/v1', source, buildId, origin: targetOrigin,
+    runtime: proof.runtime,
+    binding: binding ? { releasedMain: binding.releasedMain, sourceCommit: binding.sourceCommit, frontendTree: binding.frontendTree, containerId: binding.containerId, imageId: binding.imageId,
+      state: binding.state, observedUtc: binding.observedUtc, postSourceKind: binding.postSourceKind, buildReceiptSha256: binding.buildReceiptSha256, postSourceReceiptSha256: binding.postSourceReceiptSha256 } : null,
+    bindingSha256: proof.bindingSha256, servedBuild: proof.opening });
+  proof.response = response => {
+    const job = (async () => {
+      const url = new URL(response.url());
+      if (url.origin !== targetOrigin) return; // The only external fixture logo is fulfilled locally by the owning fixture.
+      const type = response.request().resourceType();
+      if (!url.pathname.startsWith('/_next/static/') && !['script', 'stylesheet', 'image', 'font', 'manifest'].includes(type)) return;
+      assert.ok(++proof.responseCount <= 2048, 'catalog asset response count must be bounded');
+      const record = assetRecord(url.pathname); assert.equal(response.status(), 200, 'loaded catalog asset must be served successfully');
+      const length = response.headers()['content-length']; if (length !== undefined) assert.ok(Number(length) <= 16 * 1024 * 1024, 'loaded catalog asset header must be bounded');
+      const bytes = await response.body(); proof.responseBytes += bytes.length;
+      assert.ok(bytes.length === record.bytes && digest(bytes) === record.sha256 && proof.responseBytes <= 256 * 1024 * 1024, 'loaded catalog asset bytes must match the bound artifact');
+      proof.assets.set(record.path, { ...record, responses: (proof.assets.get(record.path)?.responses || 0) + 1 });
+    })().catch(() => { proof.failures.push('CATALOG_ASSET_IDENTITY'); });
+    proof.pending.add(job); void job.finally(() => proof.pending.delete(job));
+  };
+  proof.flush = async () => { await Promise.all([...proof.pending]); };
+  proof.finish = async () => {
+    await proof.flush(); const closing = await servedBuild(); clearTimeout(proof.timer);
+    assert.ok(!proof.aborted && performance.now() - proof.started <= 300000 && proof.contexts.size === 0 && proof.failures.length === 0, 'catalog qualification/owned context cleanup must complete');
+    assert.equal(proof.images.length, live ? 4 : 18, 'complete catalog screenshot matrix required');
+    assert.ok(proof.assets.size > 0 && [...proof.assets.keys()].some(value => value.endsWith('.css'))
+      && [...proof.assets.keys()].some(value => value.includes('/app/s/') && value.endsWith('.js')), 'actual catalog route chunk and CSS identity required');
+    const receipt = { schema: 'catalog-production-qualification/v1', status: 'PASS', scope: live ? 'root-live-critical' : 'loopback-production', source, buildId, origin: targetOrigin,
+      runtime: proof.runtime, bindingSha256: proof.bindingSha256, opening: proof.opening, closing, assets: [...proof.assets.values()], images: proof.images, imageBytes: proof.imageBytes,
+      elapsedMs: performance.now() - proof.started, ownContextsClosed: true, rawBodiesRetained: false, sourceBuildJoinRequiresRootBuildReceipt: !live, invokerBrowserCleanup: 'REQUIRED_SEPARATELY', visualReviewByRoot: 'PENDING' };
+    proof.write('catalog-production-result.json', receipt); return receipt;
+  };
+  return proof;
+}
+
+async function verifySellerCatalogFilters(browser, qualification = null) {
+  const proof = qualification ? await prepareCatalogQualification(qualification, browser) : null;
+  const catalogOrigin = proof ? proof.origin : origin;
   const stamp = '2026-10-28T00:00:00.000Z';
   const business = { ...offer.business, id: 'catalog-filter-seller', slug: 'catalog-filter-fixture',
     name: 'Independent neighbourhood market and member services', categories: ['Coffee', 'Services', 'General offers'] };
@@ -274,13 +420,32 @@ async function verifySellerCatalogFilters(browser) {
     { width: 1440, height: 1000 }, { width: 1180, height: 820 }, { width: 820, height: 1180 },
     { width: 390, height: 844 }, { width: 320, height: 844 },
   ];
-  const evidenceDir = process.env.BENEFITS_CATALOG_EVIDENCE_DIR;
+  const evidenceDir = proof ? proof.directory : process.env.BENEFITS_CATALOG_EVIDENCE_DIR;
   const metrics = [];
   if (evidenceDir) fs.mkdirSync(path.join(evidenceDir, 'screenshots'), { recursive: true });
 
-  for (const viewport of viewports) {
+  for (const viewport of viewports.filter(value => !proof?.live || value.width === 1440 || value.width === 390)) {
+    assert.ok(!proof?.aborted, 'catalog work deadline must not start another context');
     const context = await browser.newContext({ viewport, deviceScaleFactor: 1,
       isMobile: viewport.width <= 390, hasTouch: viewport.width <= 390, serviceWorkers: 'block' });
+    if (proof) {
+      proof.contexts.add(context);
+      context.on('response', proof.response);
+      await context.routeWebSocket('**/*', async socket => { proof.failures.push('CATALOG_WEBSOCKET_FORBIDDEN'); await socket.close(); });
+      await context.route('**/*', async route => {
+        const request = route.request(); const url = new URL(request.url());
+        const headers = request.headers();
+        const localPath = url.origin === catalogOrigin && !/[\\\0]/.test(url.pathname);
+        const nextAsset = url.pathname.startsWith('/_next/static/');
+        const publicAsset = ['script', 'stylesheet', 'image', 'font', 'manifest'].includes(request.resourceType());
+        const document = request.resourceType() === 'document' && ['/', '/guide', `/s/${business.slug}`, `/s/${secondBusiness.slug}`].includes(url.pathname);
+        const nextPrefetch = headers.rsc === '1' || headers['next-router-prefetch'] === '1';
+        if (request.method() !== 'GET' || !localPath || !(nextAsset || publicAsset || document || nextPrefetch)) {
+          proof.failures.push('CATALOG_UNEXPECTED_NETWORK'); return route.abort();
+        }
+        return route.continue();
+      });
+    }
     let mode = viewport.width === 1440 ? 'loading' : 'ready';
     let releaseLoading;
     const loadingGate = new Promise(resolve => { releaseLoading = resolve; });
@@ -289,6 +454,7 @@ async function verifySellerCatalogFilters(browser) {
     await context.route('**/api/**', async route => {
       const request = route.request();
       const url = new URL(request.url());
+      if (proof) assert.equal(url.origin, catalogOrigin, 'catalog fixture API stays on the fixed renderer origin');
       assert.equal(request.method(), 'GET', 'public catalog fixture must never mutate data');
       const second = url.pathname.startsWith(`/api/businesses/${secondBusiness.slug}/`);
       const selectedBusiness = second ? secondBusiness : business;
@@ -310,11 +476,14 @@ async function verifySellerCatalogFilters(browser) {
       if (url.pathname === '/api/ready') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'ready', chainId: 1, database: 'ok', rateLimitStore: 'ok' }) });
       throw new Error(`Unexpected catalog fixture request ${url.pathname}`);
     });
-    await context.route('https://assets.example.com/ifr-seller-logo.png', route => route.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64') }));
+    await context.route('https://assets.example.com/ifr-seller-logo.png', route => {
+      assert.equal(route.request().method(), 'GET', 'synthetic catalog logo must not mutate data');
+      return route.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64') });
+    });
     const page = await context.newPage();
     page.setDefaultNavigationTimeout(NAVIGATION_TIMEOUT_MS);
     page.on('pageerror', error => pageErrors.push(error.message));
-    const url = `${origin}/s/${business.slug}`;
+    const url = `${catalogOrigin}/s/${business.slug}`;
     const entries = () => page.locator('[data-catalog-entry]').evaluateAll(nodes => nodes.map(node => node.getAttribute('data-catalog-entry')));
     const search = page.getByRole('searchbox', { name: 'Search this catalog', exact: true });
     const category = page.getByLabel('Category', { exact: true });
@@ -328,6 +497,7 @@ async function verifySellerCatalogFilters(browser) {
       await page.waitForFunction(() => document.querySelector('[data-catalog-result-count]')?.textContent?.trim() === 'Showing 5 of 5 catalog entries.');
     };
     const capture = async (state, focusId = 'catalog-search') => {
+      if (proof) await page.evaluate(async () => { await document.fonts.ready; await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))); });
       const contrastRatio = (foreground, background) => {
         const fg = foreground.match(/[\d.]+/g).map(Number);
         let bg = background.match(/[\d.]+/g).map(Number);
@@ -384,7 +554,7 @@ async function verifySellerCatalogFilters(browser) {
         assert.ok(parseFloat(layout.focus.outlineWidth) >= 2, 'keyboard focus outline must be measurable');
         assert.ok(contrastRatio(layout.focus.outlineColor, input.background) >= 3, 'keyboard focus must contrast with the field');
       }
-      if (state === 'currency-focus' || state === 'order-focus') {
+      if (state === 'currency-focus' || state === 'order-focus' || state === 'combined-order') {
         const control = layout.controls.find(control => control.id === focusId);
         assert.ok(control && layout.focus.visible, 'new catalog select must retain visible keyboard focus');
         assert.ok(parseFloat(layout.focus.outlineWidth) >= 2, 'new select focus outline must be measurable');
@@ -393,14 +563,30 @@ async function verifySellerCatalogFilters(browser) {
       for (const control of layout.controls.filter(control => !control.disabled)) {
         assert.ok(contrastRatio(control.color, control.background) >= 4.5, `${control.id}: readable control text contrast`);
       }
-      if (evidenceDir) {
+      const imagePlan = proof ? catalogImagePlan(viewport, state, proof.live) : { fullPage: state === 'all' };
+      if (evidenceDir && imagePlan) {
         await page.evaluate(full => {
           const target = document.querySelector('[data-catalog-filters]') || document.querySelector('#catalog-results');
           const header = document.querySelector('.shop-header');
           const top = full ? 0 : Math.max(0, target.getBoundingClientRect().top + scrollY - header.getBoundingClientRect().height - 16);
           window.scrollTo({ top, behavior: 'instant' });
-        }, state === 'all');
-        await page.screenshot({ path: path.join(evidenceDir, 'screenshots', `${viewport.width}x${viewport.height}-${state}.png`), fullPage: state === 'all' });
+        }, imagePlan.fullPage);
+        const coverage = proof ? await page.evaluate(() => ({ width: innerWidth, height: innerHeight, dpr: devicePixelRatio, scrollX, scrollY,
+          documentHeight: Math.max(document.documentElement.scrollHeight, document.body.scrollHeight), scale: visualViewport?.scale, zoom: getComputedStyle(document.documentElement).zoom })) : null;
+        const imagePath = path.join(evidenceDir, 'screenshots', `${viewport.width}x${viewport.height}-${state}.png`);
+        if (proof) assert.equal(fs.existsSync(imagePath), false, 'new catalog proof must not overwrite a capture');
+        await page.screenshot({ path: imagePath, fullPage: imagePlan.fullPage });
+        if (proof) {
+          fs.chmodSync(imagePath, 0o600); const bytes = fs.readFileSync(imagePath); const size = catalogPngSize(bytes);
+          assert.ok(bytes.length <= 4 * 1024 * 1024 && size.width * size.height <= 30 * 1000 * 1000, 'catalog PNG must meet byte/pixel budgets');
+          assert.ok(coverage.width === viewport.width && coverage.height === viewport.height && coverage.dpr === 1 && coverage.scale === 1 && ['1', 'normal'].includes(coverage.zoom), 'catalog proof must use the actual DPR1 viewport without zoom');
+          assert.equal(size.width, viewport.width);
+          assert.ok(Math.abs(size.height - (imagePlan.fullPage ? coverage.documentHeight : viewport.height)) <= 1, 'catalog PNG must cover its complete measured document/viewport');
+          if (imagePlan.fullPage) assert.ok(Math.abs(coverage.scrollY) <= 1 && Math.abs(coverage.scrollX) <= 1, 'full-page catalog capture starts at the top');
+          proof.imageBytes += bytes.length; assert.ok(proof.imageBytes <= 48 * 1024 * 1024, 'catalog image matrix must meet total byte budget');
+          proof.images.push({ file: path.relative(evidenceDir, imagePath), state, viewport, fullPage: imagePlan.fullPage, coverage, ...size, bytes: bytes.length,
+            sha256: crypto.createHash('sha256').update(bytes).digest('hex') });
+        }
       }
     };
     try {
@@ -464,22 +650,17 @@ async function verifySellerCatalogFilters(browser) {
       assert.equal(catalogRequests.length, requestsBeforeFiltering, 'keystrokes, category and reset make no catalog requests');
       // New reference-price/order controls: same owning fixture, no new runner mode.
       await page.addInitScript(() => {
-      const effects = { storage: 0, history: 0, wallet: 0 };
-      Object.defineProperty(window, '__catalogOrderingEffects', { value: effects });
-      for (const method of ['setItem', 'removeItem', 'clear']) {
-        const original = Storage.prototype[method];
-        Storage.prototype[method] = function (...args) { effects.storage += 1; return Reflect.apply(original, this, args); };
-      }
-      for (const method of ['pushState', 'replaceState']) {
-        const original = history[method];
-        history[method] = function (...args) { effects.history += 1; return Reflect.apply(original, this, args); };
-      }
-      // Synthetic observation only; no real provider or wallet state is used.
-      Object.defineProperty(window, 'ethereum', { configurable: true, value: {
-        isMetaMask: true, on() {}, removeListener() {},
-        request: async () => { effects.wallet += 1; throw new Error('Catalog fixture does not authorize wallet requests'); },
-      } });
-    });
+        const effects = { storage: 0, history: 0 };
+        Object.defineProperty(window, '__catalogOrderingEffects', { value: effects });
+        for (const method of ['setItem', 'removeItem', 'clear']) {
+          const original = Storage.prototype[method];
+          Storage.prototype[method] = function (...args) { effects.storage += 1; return Reflect.apply(original, this, args); };
+        }
+        for (const method of ['pushState', 'replaceState']) {
+          const original = history[method];
+          history[method] = function (...args) { effects.history += 1; return Reflect.apply(original, this, args); };
+        }
+      });
       mode = 'ordering'; await page.reload({ waitUntil: 'domcontentloaded' });
       const generalIds = generalRules.map(item => item.id);
       const orderingEntries = [...orderingOriginal, ...generalIds];
@@ -512,6 +693,7 @@ async function verifySellerCatalogFilters(browser) {
       for (const value of ['price-asc', 'price-desc']) assert.equal(await order.locator(`option[value="${value}"]`).isDisabled(), true, 'All currencies cannot enable price comparisons');
       await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
       const effectsBefore = await page.evaluate(() => ({ ...window.__catalogOrderingEffects }));
+      assert.equal(await page.evaluate(() => typeof window.ethereum), 'undefined', 'catalog qualification must not install a wallet provider');
       const orderingRequests = catalogRequests.length; const orderingUrl = page.url();
       // A forged disabled-option event must still never sort across currencies.
       await order.evaluate(node => { node.value = 'price-asc'; node.dispatchEvent(new Event('change', { bubbles: true })); });
@@ -559,7 +741,8 @@ async function verifySellerCatalogFilters(browser) {
       await expectOrdering([usdHigh.id, usdLow.id], []);
       await order.selectOption('price-asc'); await expectOrdering([usdLow.id, usdHigh.id], []);
       assert.deepEqual(await currencyValues(), ['all', 'USD', 'EUR', 'JPY'], 'search/category must not narrow currency choices');
-      await capture('combined-order');
+      await order.focus(); await page.keyboard.press('Tab'); await page.keyboard.press('Shift+Tab');
+      await capture('combined-order', orderId);
       await search.fill('loyalty'); await currency.selectOption('EUR');
       await expectOrdering([products[0].id], []);
       assert.equal(await page.locator('[data-catalog-rule]').count(), 3, 'currency/search ordering preserves all child offer rules');
@@ -571,7 +754,8 @@ async function verifySellerCatalogFilters(browser) {
       await resetOrdering();
       assert.equal(catalogRequests.length, orderingRequests, 'currency/order/search/category/reset add no catalog GETs');
       assert.equal(page.url(), orderingUrl, 'all four transient controls leave the shared URL unchanged');
-      assert.deepEqual(await page.evaluate(() => ({ ...window.__catalogOrderingEffects })), effectsBefore, 'control changes must not write storage/history or invoke a wallet');
+      assert.deepEqual(await page.evaluate(() => ({ ...window.__catalogOrderingEffects })), effectsBefore, 'control changes must not write storage/history');
+      assert.equal(await page.evaluate(() => typeof window.ethereum), 'undefined', 'catalog controls must not create a wallet provider');
       // All four controls also reset on a fresh load and a different seller URL.
       await currency.selectOption('USD'); await order.selectOption('price-desc'); await category.selectOption('category:Coffee'); await search.fill('equal');
       await page.reload({ waitUntil: 'domcontentloaded' });
@@ -580,7 +764,7 @@ async function verifySellerCatalogFilters(browser) {
       assert.equal(await currency.inputValue(), 'all'); assert.equal(await order.inputValue(), 'original');
       await expectOrdering(orderingOriginal);
       await currency.selectOption('USD'); await order.selectOption('price-desc'); await category.selectOption('category:Coffee'); await search.fill('equal');
-      await page.goto(`${origin}/s/${secondBusiness.slug}`, { waitUntil: 'domcontentloaded' });
+      await page.goto(`${catalogOrigin}/s/${secondBusiness.slug}`, { waitUntil: 'domcontentloaded' });
       await page.getByText('Showing 3 of 3 catalog entries.', { exact: true }).waitFor();
       assert.equal(await search.inputValue(), ''); assert.equal(await category.inputValue(), 'all');
       assert.equal(await currency.inputValue(), 'all'); assert.equal(await order.inputValue(), 'original');
@@ -616,11 +800,15 @@ async function verifySellerCatalogFilters(browser) {
       assert.deepEqual(pageErrors, []);
     } finally {
       releaseLoading();
+      if (proof) await proof.flush();
       await context.close();
-      if (evidenceDir) fs.writeFileSync(path.join(evidenceDir, 'catalog-layout-metrics.json'), JSON.stringify({ fixtureOnly: true, viewports, metrics }, null, 2));
+      if (proof) proof.contexts.delete(context);
+      if (evidenceDir) fs.writeFileSync(path.join(evidenceDir, 'catalog-layout-metrics.json'), JSON.stringify({ fixtureOnly: true, viewports: viewports.filter(value => !proof?.live || value.width === 1440 || value.width === 390), metrics }, null, 2), { mode: proof ? 0o600 : 0o644 });
     }
   }
-  console.log('[seller-catalog-search] PASS - search/categories, exact currency-safe within-group ordering, transient state, exact bindings and five responsive viewports');
+  const qualificationReceipt = proof ? await proof.finish() : null;
+  console.log('[seller-catalog-search] PASS - search/categories, exact currency-safe within-group ordering, transient state, exact bindings and responsive viewports');
+  return qualificationReceipt;
 }
 
 async function verifyOfferDiscoveryRecovery(browser) {
@@ -849,6 +1037,46 @@ async function verifyOfferDiscoveryRecovery(browser) {
     }
   }
   console.log('[offer-discovery-recovery] PASS - paging, user recovery, retained filters/facets, focus-only moves, bounded requests, stale response and five responsive viewports');
+}
+
+async function runCatalogProductionOnly() {
+  const evidenceDir = process.env.BENEFITS_CATALOG_EVIDENCE_DIR;
+  assert.ok(path.isAbsolute(evidenceDir || '') && !fs.existsSync(evidenceDir), 'fresh catalog evidence directory required before launch');
+  assert.ok(fs.existsSync(path.join(frontend, '.next/BUILD_ID')), 'production artifact required before launch');
+  let browser; let receipt; let failure = false; let closed = false;
+  const started = performance.now();
+  let workExpired = false;
+  const workDeadline = setTimeout(() => { workExpired = true; if (browser) void browser.close().catch(() => {}); }, 300000);
+  const deadline = setTimeout(() => {
+    process.stdout.write('BENEFITS_CATALOG_PRODUCTION {"status":"FAIL","failureCode":"OUTER_DEADLINE","ownedBrowserOutcome":"UNKNOWN"}\n');
+    process.exit(1);
+  }, 360000);
+  try {
+    browser = await chromium.launch({ headless: true, timeout: 30000 });
+    receipt = await verifySellerCatalogFilters(browser, { scope: 'loopback-production', evidenceDir });
+  } catch (error) {
+    failure = { kind: ['AssertionError', 'TimeoutError', 'Error'].includes(error?.name) ? error.name : 'OTHER',
+      messageSha256: crypto.createHash('sha256').update(typeof error?.message === 'string' ? error.message : '').digest('hex') };
+  }
+  finally {
+    clearTimeout(workDeadline);
+    if (browser) {
+      let timer;
+      closed = await Promise.race([browser.close().then(() => true, () => false),
+        new Promise(resolve => { timer = setTimeout(() => resolve(false), 60000); })]);
+      clearTimeout(timer);
+    }
+    clearTimeout(deadline);
+  }
+  const result = { schema: 'catalog-production-runner/v1', status: !failure && !workExpired && receipt && closed ? 'PASS' : 'FAIL',
+    scope: 'loopback-production', elapsedMs: performance.now() - started, fixtureReceipt: receipt ? 'catalog-production-result.json' : null,
+    failure: failure || null, workExpired,
+    ownedBrowserClose: closed ? 'PASS' : 'UNPROVEN', processOutcomeUnknown: Boolean(browser && !closed), images: receipt?.images.length || 0,
+    realWalletProviderAcceptance: false, visualReviewByRoot: 'PENDING' };
+  if (fs.existsSync(evidenceDir)) fs.writeFileSync(path.join(evidenceDir, 'catalog-production-runner.json'), JSON.stringify(result, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
+  process.stdout.write('BENEFITS_CATALOG_PRODUCTION ' + JSON.stringify(result) + '\n');
+  if (result.status !== 'PASS') process.exitCode = 1;
+  if (browser && !closed) process.exit(1); // Bounded failure; do not claim an unproved child cleanup.
 }
 
 async function run() {
@@ -1643,7 +1871,11 @@ async function run() {
   }
 }
 
-run().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+module.exports = Object.freeze({ verifySellerCatalogFilters });
+if (require.main === module) {
+  (catalogProductionOnly ? runCatalogProductionOnly() : run()).catch((error) => {
+    if (catalogProductionOnly) console.error('[catalog-production] FAIL - qualification control');
+    else console.error(error);
+    process.exitCode = 1;
+  });
+}

@@ -377,3 +377,22 @@ else owner/selection/busy guard refuses
   Probe --> Page : request not sent
 end
 @enduml
+
+@startuml catalog_production_qualification_419
+actor Root
+participant "Existing loopback next-start" as Renderer
+participant "Catalog-only test entry" as Mode
+participant "Same verifySellerCatalogFilters" as Catalog
+participant "Private evidence" as Evidence
+Root -> Renderer : own production build / preview admission
+Root -> Mode : explicit --catalog-production-only
+Mode -> Renderer : current-build manifest hash before
+Mode -> Catalog : closed fixtures / own fresh contexts
+Catalog -> Renderer : ordinary page and current static assets
+Catalog -> Evidence : 18 images / layout and loaded-asset hashes
+Mode -> Renderer : current-build manifest hash after
+Mode -> Evidence : source/build/runtime/cleanup receipt
+Root -> Catalog : import-only fixed live critical scope after release GO
+Catalog -> Evidence : actual-CID assets / 1440+390 / four images
+note over Root,Evidence : Native PASS and visual acceptance require execution and Root review.
+@enduml

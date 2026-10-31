@@ -1745,3 +1745,21 @@ and config, and the module singleton `nativeWalletProbe` from
 `createNativeWalletProbe` owns the finite request lane. Only explicit method
 buttons call `start`; the original `WalletConnectControl::connectWallet` and
 its provider lifecycle remain identical to the restored 683ecea baseline.
+
+## Catalog production qualification (issue419)
+
+Test-only hop adopted before implementation: Root-owned loopback `next start`
+renderer → `scripts/test-benefits-discovery-ui.js --catalog-production-only` →
+the same `verifySellerCatalogFilters` synthetic GET fixtures and layout assertions
+→ 18 bounded screenshots plus source/build/loaded-asset receipts. The normal
+default dev/full runner and the implemented catalog-ordering product hop stay
+separate and unchanged. The qualification mode starts no server or wallet/provider;
+it requires the current `.next/BUILD_ID`, explicit fresh evidence directory and
+current-build served asset hashes before/after. Five real DPR1 viewports retain
+the existing target, focus, contrast, clipping and filter/link checks. Root owns
+runtime admission and image review. Source preparation is not native acceptance.
+The same exported fixture also has one import-only `root-live-critical` scope:
+fixed `https://shop.ifrunit.tech`, explicit Root Main/CID/image/build/post-source
+binding and actual-CID asset hashes. It uses only 1440/390 and four critical
+images. It cannot accept an arbitrary origin or reuse Mac build assets as live
+proof. Root alone admits execution and joins opening/closing deployment evidence.
