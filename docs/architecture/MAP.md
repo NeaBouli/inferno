@@ -1625,6 +1625,10 @@ non-PASS result with an allocated baseline marks descendant outcome uncleared
 and retains it, including a normal failed harness exit; direct-child close is
 not complete teardown proof. An expected missing baseline object that is
 successfully fetched and verified does not make the qualification fail.
+CI-only Node regression controls exercise this same caller/disposal rule using
+an exact byte copy, simulated child outcomes and real owned filesystem prefixes.
+They are not matcher/server qualification, never echo the copied caller's fake
+success receipts, and run separately after the real comparison step.
 
 Sirv3.0.1 normally uses get-port and can choose another port if8787 is occupied;
 it exposes no strict-port flag. Playwright's startup-output wait races endpoint
