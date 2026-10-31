@@ -66,17 +66,21 @@ async function run(label, command, args, limit, allowFailure = false) {
     const finish = (code, signal, outcomeUnknown = false) => {
       if (settled) return;
       settled = true;
+      const unknown = outcomeUnknown || reason !== null;
       clearTimeout(timer);
       if (killTimer) clearTimeout(killTimer);
       if (closeTimer) clearTimeout(closeTimer);
       if (active?.child === child) active = null;
-      if (outcomeUnknown) processOutcomeUnknown = true;
-      resolve({ code, signal, reason, spawnFailed, outcomeUnknown,
+      if (unknown) processOutcomeUnknown = true;
+      resolve({ code, signal, reason, spawnFailed, outcomeUnknown: unknown,
         stdout: Buffer.concat(buffers.stdout), stderr: Buffer.concat(buffers.stderr) });
     };
     const stop = (code) => {
       if (reason) return;
       reason = code;
+      // Harnesses may own other detached groups. Direct-child close after a
+      // forced stop is not their teardown proof, so always retain the baseline.
+      processOutcomeUnknown = true;
       if (child.pid && child.exitCode === null && child.signalCode === null) {
         try { process.kill(-child.pid, "SIGTERM"); } catch {}
         killTimer = setTimeout(() => {
