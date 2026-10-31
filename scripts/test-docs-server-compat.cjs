@@ -29,6 +29,34 @@ function fixedError(error) {
   return error?.contractCode && /^[A-Z_]+$/.test(error.contractCode)
     ? error.contractCode : 'UNEXPECTED_FAILURE';
 }
+function childDiagnostic(owner) {
+  // Only our standard CLI child output, under the explicit secret-free env.
+  // Never inspect an arbitrary thrown error, process env or HTTP response here.
+  const substitutions = [
+    [owner.cli, '<CLI>'], [owner.docs, '<DOCS>'], [path.dirname(owner.docs), '<SCRATCH>'],
+    [owner.packageRoot, owner.packageName === 'serve' ? '<BASELINE>' : '<CANDIDATE>'],
+    [ROOT, '<SOURCE>'], [process.execPath, '<NODE>'], [os.tmpdir(), '<TMP>'],
+  ].sort((a, b) => b[0].length - a[0].length);
+  const normalize = (bytes) => {
+    let text = bytes.toString('utf8').replace(/\x1b\[[0-?]*[ -/]*[@-~]/g, '');
+    for (const [from, to] of substitutions) text = text.split(from).join(to);
+    return text.replace(/(?:file:\/\/)?\/(?:[^\s'"<>()[\]{}]+\/?)+/g, '<PATH>')
+      .replace(/[^\x20-\x7e\n\t]/g, '?').slice(0, 2048);
+  };
+  const stdoutPrefix = normalize(owner.stdoutPrefix), stderrPrefix = normalize(owner.stderrPrefix);
+  const combined = `${stderrPrefix}\n${stdoutPrefix}`;
+  const classification = /ERR_MODULE_NOT_FOUND|MODULE_NOT_FOUND|Cannot find (?:module|package)/.test(combined)
+    ? 'MODULE_NOT_FOUND' : /EADDRINUSE|address already in use/i.test(combined) ? 'PORT_IN_USE'
+      : /EACCES|EPERM|permission denied/i.test(combined) ? 'PERMISSION_DENIED'
+        : /SyntaxError/.test(combined) ? 'SYNTAX_ERROR'
+          : /unknown (?:option|argument)|unrecognized option/i.test(combined) ? 'INVALID_OPTIONS'
+            : owner.spawnErrorCode ? 'SPAWN_FAILURE' : owner.exitSignal ? 'CHILD_SIGNALED'
+              : Number.isInteger(owner.exitCode) && owner.exitCode !== 0 ? 'CHILD_NONZERO' : 'UNCLASSIFIED';
+  return { classification, exitCode: owner.exitCode ?? null, exitSignal: owner.exitSignal ?? null,
+    spawnErrorCode: owner.spawnErrorCode ?? null, stdoutPrefix, stderrPrefix,
+    stdoutPrefixTruncated: owner.stdoutBytes > owner.stdoutPrefix.length || stdoutPrefix.length === 2048,
+    stderrPrefixTruncated: owner.stderrBytes > owner.stderrPrefix.length || stderrPrefix.length === 2048 };
+}
 function regular(file) {
   const st = fs.lstatSync(file);
   check(st.isFile() && st.nlink === 1, 'REGULAR_FILE_REQUIRED');
@@ -146,7 +174,7 @@ function packageBin(root, name, version, command) {
   check(pkg.name === name && pkg.version === version, 'PACKAGE_IDENTITY');
   const bin = path.resolve(directory, typeof pkg.bin === 'string' ? pkg.bin : pkg.bin[command]);
   check(bin.startsWith(`${directory}${path.sep}`) && fs.realpathSync(bin) === bin, 'PACKAGE_BIN');
-  return { bin, name, version, manifestSha256: sha(manifest), binSha256: sha(regular(bin)) };
+  return { bin, name, version, diagnosticRoot: path.resolve(root), manifestSha256: sha(manifest), binSha256: sha(regular(bin)) };
 }
 function identity(pid) {
   try {
@@ -196,12 +224,27 @@ async function startServer(pkg, stage, marker, owners, deadline) {
     env: { PATH: path.dirname(process.execPath), NO_UPDATE_CHECK: '1', CI: '1',
       HOST: '127.0.0.1', PORT: String(port), FORCE_COLOR: '0', NO_COLOR: '1' },
     stdio: ['ignore', 'pipe', 'pipe'] });
-  const owner = { child, port, ticks: null, closed: false, stdoutBytes: 0, stderrBytes: 0 };
+  const owner = { child, port, ticks: null, closed: false, stdoutBytes: 0, stderrBytes: 0,
+    stdoutPrefix: Buffer.alloc(0), stderrPrefix: Buffer.alloc(0), cli: pkg.bin,
+    packageName: pkg.name, packageRoot: pkg.diagnosticRoot, docs: stage };
   owners.push(owner);
-  child.on('error', () => { owner.spawnError = true; });
-  child.on('close', () => { owner.closed = true; });
+  child.on('error', (error) => {
+    owner.spawnError = true;
+    owner.spawnErrorCode = ['ENOENT', 'EACCES', 'EAGAIN', 'ENOMEM', 'EMFILE', 'ENFILE'].includes(error.code)
+      ? error.code : 'OTHER';
+  });
+  child.on('close', (code, signal) => {
+    owner.closed = true;
+    owner.exitCode = Number.isInteger(code) ? code : null;
+    owner.exitSignal = signal ? (['SIGTERM', 'SIGKILL', 'SIGINT', 'SIGABRT', 'SIGSEGV'].includes(signal) ? signal : 'OTHER') : null;
+  });
   for (const [stream, key] of [[child.stdout, 'stdoutBytes'], [child.stderr, 'stderrBytes']]) {
-    stream.on('data', (chunk) => { owner[key] += chunk.length; });
+    stream.on('data', (chunk) => {
+      owner[key] += chunk.length;
+      const prefixKey = key === 'stdoutBytes' ? 'stdoutPrefix' : 'stderrPrefix';
+      const available = 4096 - owner[prefixKey].length;
+      if (available > 0) owner[prefixKey] = Buffer.concat([owner[prefixKey], chunk.subarray(0, available)]);
+    });
   }
   const id = identity(child.pid);
   check(id && id.group === child.pid, 'CHILD_GROUP');
@@ -369,7 +412,8 @@ async function cli() {
     if (performance.now() > hardDeadline) { receipt.status = 'FAIL'; receipt.failureCode ||= 'OUTER_DEADLINE'; }
     receipt.elapsedMs = Math.round(performance.now() - started);
     receipt.ownedProcesses = owners.map((owner) => ({ pid: owner.child.pid || null,
-      startTicks: owner.ticks, reaped: owner.closed, stdoutBytes: owner.stdoutBytes, stderrBytes: owner.stderrBytes }));
+      startTicks: owner.ticks, reaped: owner.closed, stdoutBytes: owner.stdoutBytes, stderrBytes: owner.stderrBytes,
+      ...(receipt.status === 'FAIL' ? { diagnostic: childDiagnostic(owner) } : {}) }));
     writeReceipt(receiptPath, receipt);
     // An uncertain cleanup is a failure with retained stage/identities, not an
     // indefinitely live controller. No foreign process is signalled here.
