@@ -421,6 +421,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Verify vault isolation comparator contracts
+        run: node scripts/test-web3-vault-isolation.cjs --self-test
+
       - name: Verify Council vote signatures and the public vote page
         run: npm run test:council-votes
       - name: Check read-only scripts refuse non-Mainnet RPC
@@ -442,7 +445,7 @@ jobs:
         run: npm run test:web3-write
 
       - name: Diagnose vault isolation (explicit opt-in only)
-        if: ${{ always() && github.event_name == 'workflow_dispatch' && inputs.vault_isolation_diagnostic }}
+        if: ${{ !cancelled() && github.event_name == 'workflow_dispatch' && inputs.vault_isolation_diagnostic }}
         timeout-minutes: 8
         run: node scripts/test-web3-vault-isolation.cjs --output "$RUNNER_TEMP/vault-isolation-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
 
