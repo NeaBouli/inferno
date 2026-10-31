@@ -69,6 +69,10 @@ export default function SupportPage() {
           <SupportDiagnostics />
         </div>
 
+        <Link href="/support/wallet-rpc" className="mt-6 block rounded-2xl border border-orange-200/20 p-5 text-sm font-bold leading-6 text-orange-100 hover:border-orange-200">
+          Separate wallet response checks — some checks open a MetaMask permission prompt.
+        </Link>
+
         <section className="mt-6 rounded-[2rem] border border-white/10 bg-white/[0.055] p-6 shadow-2xl shadow-black/25">
           <p className="text-xs font-black uppercase tracking-[0.18em] text-orange-200/80">Recovery</p>
           <h2 className="mt-2 text-3xl font-black text-white">Safe steps for common problems</h2>

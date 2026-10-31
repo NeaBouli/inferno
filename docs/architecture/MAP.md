@@ -1568,17 +1568,6 @@ fonts and native scrolling settle. It verifies heading/header separation, full
 heading visibility, hit testing, overflow and the shared loading-target CSS rule.
 The previous generic-guidance helper and all five wallet modes remain intact.
 
-## Benefits injected session restoration - 2026-10-30
-
-Module: provider root -> remembered injected connector -> passive startup restore
--> live account and chain -> connected wallet reads. The app-owned
-`src/lib/injectedSessionRestoration.mjs` uses a finite startup window, disconnect
-shims and current provider identity. Explicit connect/disconnect cancels pending
-work. Account/chain events reconcile one guarded live pair; cached addresses do
-not grant authority and startup never requests permissions or signatures.
-The focused restoration modes in `scripts/test-benefits-wallet-lock-ui.js` run
-inside the existing `test-customer-pass-ui` server lifecycle in Benefits CI.
-
 ## Benefits narrow Guide heading - 2026-10-30
 
 Render hop: `/guide` -> padded hero card -> H1 text ranges. The Guide-only
@@ -1586,3 +1575,40 @@ Render hop: `/guide` -> padded hero card -> H1 text ranges. The Guide-only
 the existing 48px base and 72px medium-screen scale continue above that bound.
 The release assertions cover 320px, 360px and 361px, loaded stylesheet identity
 and all heading text within the card padding, without clipping or hidden text.
+
+## Native wallet response checks (issue415)
+
+Status: implemented in source with independent source/consent review accepted.
+Build, browser and real-device qualification remain separate. Ordinary wallet
+connection sources remain identical to the restored 683ecea baseline; this is a
+separate explicit support path.
+
+```mermaid
+flowchart LR
+  Support["Support page: existing"] --> Probe["/support/wallet-rpc NativeWalletProbe"]
+  Probe --> Registry["Existing Wagmi useConnectors registry"]
+  Registry --> Provider["Selected native connector getProvider"]
+  Probe --> Controller["nativeWalletProbe.mjs RAM controller"]
+  Controller --> Provider
+  Provider --> Native["Same native provider.request; fixed explicit method"]
+  Native --> Snapshot["Only method, status, timing and shape/count metadata"]
+```
+
+The two permission methods additionally read the shared pending-connect mutation
+and connecting/reconnecting config state immediately before dispatch. One probe
+request remains pending until its real settlement, including across SPA remounts.
+A soft waiting timer and navigation never claim to cancel a native request.
+No new probe RPC runs on mount or selection. Existing global hydration is unchanged.
+
+Mapped files: `src/app/support/wallet-rpc/page.tsx`,
+`src/lib/nativeWalletProbe.mjs`, `src/lib/nativeWalletProbe.d.mts`, one link in
+`src/app/support/page.tsx` (all under the Benefits frontend), and the focused
+`scripts/test-benefits-native-wallet-probe.cjs`. No raw request/response, address,
+URL, error text, persistence, telemetry, provider replacement or vendor patch.
+These direct probes do not prove the earlier Wagmi awaited stage or wallet acceptance.
+
+The client route uses `isOrdinaryWalletBusy` with the existing shared QueryClient
+and config, and the module singleton `nativeWalletProbe` from
+`createNativeWalletProbe` owns the finite request lane. Only explicit method
+buttons call `start`; the original `WalletConnectControl::connectWallet` and
+its provider lifecycle remain identical to the restored 683ecea baseline.

@@ -320,15 +320,26 @@ Validation --> Zod : safeParse / issues
 [Step detail paragraph] --> [Scoped wallet CSS] : overflow-wrap anywhere
 @enduml
 
-@startuml benefits_injected_restoration_20261030
-left to right direction
-[Provider root] --> [Finite startup restore]
-[Finite startup restore] --> [Remembered injected connector]
-[Remembered injected connector] --> [Guarded live account and chain]
-@enduml
-
 @startuml benefits_guide_narrow_heading_20261030
 left to right direction
 [Guide hero card] --> [Width-specific H1 scale]
 [Width-specific H1 scale] --> [Text within card padding]
+@enduml
+
+@startmindmap benefits_native_wallet_probe_415
+* Explicit native wallet response checks
+** Support link
+*** /support/wallet-rpc NativeWalletProbe
+** nativeWalletProbe RAM controller
+*** Same selected native provider.request
+*** Fixed metadata projection only
+@endmindmap
+
+@startuml benefits_native_wallet_probe_components_415
+[Support] --> [NativeWalletProbe] : explicit link
+[NativeWalletProbe] --> [createNativeWalletProbe singleton] : explicit fixed method
+[NativeWalletProbe] ..> [Shared QueryClient and config] : read pending guard
+[createNativeWalletProbe singleton] --> [Selected native connector] : getProvider once
+[Selected native connector] --> [Same native provider] : original request receiver
+[Same native provider] --> [Fixed RAM snapshot] : shape/count/status/timing only
 @enduml
