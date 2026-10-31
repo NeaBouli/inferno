@@ -1620,6 +1620,11 @@ The orchestrator installs only in CI, with300seconds for baseline setup and
 180seconds for each comparison. It does not replace existing full candidate
 contract/tooling, Docs Markdown or three browser-suite gates. Local preparation
 does not execute an installer, server, browser or runtime harness.
+Only a fully successful qualification permits baseline disposal. Any overall
+non-PASS result with an allocated baseline marks descendant outcome uncleared
+and retains it, including a normal failed harness exit; direct-child close is
+not complete teardown proof. An expected missing baseline object that is
+successfully fetched and verified does not make the qualification fail.
 
 Sirv3.0.1 normally uses get-port and can choose another port if8787 is occupied;
 it exposes no strict-port flag. Playwright's startup-output wait races endpoint

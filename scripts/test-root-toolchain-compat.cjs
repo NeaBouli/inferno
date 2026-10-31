@@ -230,9 +230,14 @@ for (const signal of ["SIGTERM", "SIGINT"]) {
   let result;
   try { result = await main(); }
   catch (error) { result = { status: "FAIL", failureCode: error.failureCode || "QUALIFICATION_PRECONDITION_OR_CHECK_FAILED" }; }
+  if (interrupted) result.status = "FAIL";
+  // A normal failed harness may also leave detached descendants. Only complete
+  // qualification success permits baseline disposal; an allowed intermediate
+  // command failure that later succeeds does not poison that final result.
+  if (temporary && result.status !== "PASS") processOutcomeUnknown = true;
+  result.processOutcomeUncleared = processOutcomeUnknown;
   try { result.cleanup = cleanup(); }
   catch { result.status = "FAIL"; result.cleanup = { status: "FAIL", failureCode: "OWN_TEMP_CLEANUP_REFUSED" }; }
-  if (interrupted) result.status = "FAIL";
   result.interrupted = interrupted;
   result.steps = steps;
   result.source = source;
