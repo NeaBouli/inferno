@@ -43,6 +43,94 @@ const selectors = {
   lendingLoanCount: selector("getLoanCount()"),
 };
 
+// Issue #382: disabled for all canonical tests; the qualifier labels its observed run.
+// Metadata only. Browser and Node monotonic clocks are distinct clock domains.
+const VAULT_TRACE_PREFIX = "IFR_VAULT_DIAGNOSTIC ";
+const VAULT_TRACE_METHODS = new Set([
+  "eth_requestAccounts", "eth_accounts", "eth_chainId", "net_version",
+  "wallet_switchEthereumChain", "wallet_watchAsset", "eth_getBalance",
+  "eth_blockNumber", "eth_getCode", "eth_gasPrice", "eth_maxPriorityFeePerGas",
+  "eth_getTransactionCount", "eth_estimateGas", "eth_call", "eth_sendTransaction",
+  "eth_getTransactionReceipt", "eth_getTransactionByHash", "other",
+]);
+const VAULT_TRACE_CATEGORIES = new Set([
+  "rpc", "fee-exempt", "allowance", "balance", "approve", "commitment-lock-v2",
+  "access-lock", "access-unlock", "commitment-lock", "commitment-unlock-v1",
+  "commitment-unlock-v2", "lending-create", "lending-increase", "lending-withdraw",
+  "lending-borrow", "transaction", "lock-submit", "reading", "allowance-check",
+  "approval-request", "approval-wait", "lock-request", "lock-wait", "lock-confirmed",
+  "other-phase", "pageerror", "limit",
+]);
+
+function vaultErrorCode(error) {
+  try {
+    const descriptor = error && Object.getOwnPropertyDescriptor(error, "code");
+    return descriptor && "value" in descriptor && Number.isSafeInteger(descriptor.value)
+      ? descriptor.value : undefined;
+  } catch { return undefined; }
+}
+
+function vaultCallCategory(item) {
+  const data = item && item.params && item.params[0] && item.params[0].data;
+  const selectorValue = typeof data === "string" ? data.slice(0, 10).toLowerCase() : "";
+  if (selectorValue === selectors.feeExempt) return "fee-exempt";
+  if (selectorValue === selectors.allowance) return "allowance";
+  if (selectorValue === selectors.balanceOf) return "balance";
+  return "rpc";
+}
+
+function createVaultDiagnostic() {
+  if (process.env.INFERNO_VAULT_DIAGNOSTIC !== "1") return null;
+  let count = 0;
+  let nextId = 0;
+  let limited = false;
+  const write = (event) => {
+    try { process.stdout.write(VAULT_TRACE_PREFIX + JSON.stringify(event) + "\n"); }
+    catch { /* Missing trace evidence fails the qualifier, not the original wallet request. */ }
+  };
+  const emit = (event) => {
+    if (count >= 192) {
+      if (!limited) {
+        limited = true;
+        write({ schema: "vault-observer/v1", lane: "ui", clock: "node", id: 0,
+          edge: "limit", method: "other", category: "limit", atMs: performance.now(), status: "truncated" });
+      }
+      return;
+    }
+    if (!event || !["wallet", "read-rpc", "ui", "write-route"].includes(event.lane)
+      || !["node", "browser"].includes(event.clock) || !Number.isSafeInteger(event.id) || event.id < 0
+      || !["start", "end", "phase", "limit"].includes(event.edge)
+      || !VAULT_TRACE_METHODS.has(event.method) || !VAULT_TRACE_CATEGORIES.has(event.category)
+      || !Number.isFinite(event.atMs) || event.atMs < 0
+      || !["started", "fulfilled", "rejected", "observed", "truncated"].includes(event.status)) return;
+    const safe = { schema: "vault-observer/v1", lane: event.lane, clock: event.clock,
+      id: event.id, edge: event.edge, method: event.method, category: event.category,
+      atMs: event.atMs, status: event.status };
+    if (Number.isSafeInteger(event.code)) safe.code = event.code;
+    count += 1;
+    write(safe);
+  };
+  return {
+    start(lane, method, category = "rpc") {
+      const handle = { lane, clock: "node", id: ++nextId,
+        method: VAULT_TRACE_METHODS.has(method) ? method : "other", category };
+      emit({ ...handle, edge: "start", atMs: performance.now(), status: "started" });
+      return handle;
+    },
+    end(handle, status, error) {
+      emit({ ...handle, edge: "end", atMs: performance.now(), status, code: vaultErrorCode(error) });
+    },
+    phase(category) {
+      emit({ lane: "ui", clock: "node", id: ++nextId, edge: "phase", method: "other",
+        category, atMs: performance.now(), status: "observed" });
+    },
+    browser(text) {
+      if (!text.startsWith(VAULT_TRACE_PREFIX) || text.length > 1024) return;
+      try { emit(JSON.parse(text.slice(VAULT_TRACE_PREFIX.length))); } catch { /* No raw output. */ }
+    },
+  };
+}
+
 function uintResult(value) {
   return coder.encode(["uint256"], [value]);
 }
@@ -181,8 +269,20 @@ async function routeReadRpc(target, results, options = {}) {
       }
       return { jsonrpc: "2.0", id: item.id, result };
     };
-    const body = Array.isArray(payload) ? payload.map(respond) : respond(payload);
-    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
+    const observed = options.vaultDiagnostic
+      ? (Array.isArray(payload) ? payload : [payload]).flatMap((item) => {
+        const category = vaultCallCategory(item);
+        return item.method === "eth_call" && category === "rpc" ? []
+          : [options.vaultDiagnostic.start("read-rpc", item.method, category)];
+      }) : [];
+    try {
+      const body = Array.isArray(payload) ? payload.map(respond) : respond(payload);
+      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(body) });
+      for (const handle of observed) options.vaultDiagnostic.end(handle, "fulfilled");
+    } catch (error) {
+      for (const handle of observed) options.vaultDiagnostic.end(handle, "rejected", error);
+      throw error;
+    }
   };
   for (const pattern of READ_RPC_PATTERNS) await target.route(pattern, handler);
 }
@@ -205,7 +305,7 @@ function buildFeeExemptFlip(options) {
     : null;
 }
 
-async function installWallet(context, options = {}) {
+async function installWallet(context, options = {}, observe = false) {
   const chainId = options.chainId || "0x1";
   const rejectSwitch = options.rejectSwitch === true;
   const callResults = buildCallResults(options);
@@ -213,7 +313,7 @@ async function installWallet(context, options = {}) {
 
   const feeExemptFlip = buildFeeExemptFlip(options);
 
-  await context.addInitScript(({ account, initialChainId, shouldRejectSwitch, results, flip }) => {
+  await context.addInitScript(({ account, initialChainId, shouldRejectSwitch, results, flip, observe, observedSelectors }) => {
     let sendCount = 0;
     const listeners = new Map();
     const transactions = new Map();
@@ -333,36 +433,139 @@ async function installWallet(context, options = {}) {
         },
       },
     });
+    // BEGIN VAULT_DIAGNOSTIC_BROWSER: fixture-only observer; never awaited by the wallet.
+    if (observe) {
+      let count = 0;
+      let nextId = 0;
+      let limited = false;
+      const methods = new Set(["eth_requestAccounts", "eth_accounts", "eth_chainId", "net_version",
+        "wallet_switchEthereumChain", "wallet_watchAsset", "eth_getBalance", "eth_blockNumber",
+        "eth_getCode", "eth_gasPrice", "eth_maxPriorityFeePerGas", "eth_getTransactionCount",
+        "eth_estimateGas", "eth_call", "eth_sendTransaction", "eth_getTransactionReceipt",
+        "eth_getTransactionByHash"]);
+      const record = (event) => {
+        try {
+          if (count >= 192) {
+            if (!limited) {
+              limited = true;
+              console.log("IFR_VAULT_DIAGNOSTIC " + JSON.stringify({ schema: "vault-observer/v1",
+                lane: "ui", clock: "browser", id: 0, edge: "limit", method: "other",
+                category: "limit", atMs: performance.now(), status: "truncated" }));
+            }
+            return;
+          }
+          count += 1;
+          console.log("IFR_VAULT_DIAGNOSTIC " + JSON.stringify({ schema: "vault-observer/v1",
+            clock: "browser", atMs: performance.now(), ...event }));
+        } catch { /* Observation must not change the original request outcome. */ }
+      };
+      const end = (handle, status, error) => {
+        let code;
+        try {
+          const descriptor = error && Object.getOwnPropertyDescriptor(error, "code");
+          if (descriptor && "value" in descriptor && Number.isSafeInteger(descriptor.value)) code = descriptor.value;
+        } catch { /* No getter, raw error or error string is read. */ }
+        record({ ...handle, edge: "end", status, ...(code === undefined ? {} : { code }) });
+      };
+      const ownData = (value, key) => {
+        try {
+          const descriptor = value && Object.getOwnPropertyDescriptor(value, key);
+          return descriptor && "value" in descriptor ? descriptor.value : undefined;
+        } catch { return undefined; }
+      };
+      const original = window.ethereum.request;
+      window.ethereum.request = function (...args) {
+        const input = args[0];
+        const methodValue = ownData(input, "method");
+        const method = methods.has(methodValue) ? methodValue : "other";
+        const data = ownData(ownData(ownData(input, "params"), "0"), "data");
+        const callSelector = typeof data === "string" ? data.slice(0, 10).toLowerCase() : "";
+        const category = observedSelectors[callSelector] || "rpc";
+        const handle = { lane: "wallet", id: ++nextId, method, category };
+        record({ ...handle, edge: "start", status: "started" });
+        let result;
+        try { result = Reflect.apply(original, this, args); }
+        catch (error) { end(handle, "rejected", error); throw error; }
+        // Return the ORIGINAL Promise/value; added reactions affect only the labelled run.
+        if (result instanceof Promise) {
+          Promise.prototype.then.call(result,
+            () => end(handle, "fulfilled"), (error) => end(handle, "rejected", error));
+        } else end(handle, "fulfilled");
+        return result;
+      };
+      const phase = (category) => record({ lane: "ui", id: ++nextId, edge: "phase",
+        method: "other", category, status: "observed" });
+      const watch = () => {
+        const status = document.querySelector("[data-lock-status]");
+        if (!status) return;
+        let previous = "";
+        const read = () => {
+          const text = status.textContent || "";
+          const category = text === "Reading CommitmentVault..." ? "reading"
+            : text === "Checking token allowance..." ? "allowance-check"
+            : text === "Approve IFR in your wallet, then keep this page open." ? "approval-request"
+            : text === "Waiting for approval confirmation..." ? "approval-wait"
+            : text === "Confirm the CommitmentVault V2 lock transaction in your wallet." ? "lock-request"
+            : /^Waiting for tranche [0-9]+ confirmation\.\.\.$/.test(text) ? "lock-wait"
+            : text === "Lock confirmed." ? "lock-confirmed" : "other-phase";
+          if (category !== previous) { previous = category; phase(category); }
+        };
+        new MutationObserver(read).observe(status, { childList: true, subtree: true, characterData: true });
+        document.addEventListener("click", (event) => {
+          if (event.target instanceof Element && event.target.closest("[data-lock-submit]")) phase("lock-submit");
+        }, true);
+        read();
+      };
+      if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", watch, { once: true });
+      else watch();
+    }
+    // END VAULT_DIAGNOSTIC_BROWSER
   }, {
     account: ACCOUNT,
     initialChainId: chainId,
     shouldRejectSwitch: rejectSwitch,
     results: walletResults,
     flip: feeExemptFlip,
+    observe,
+    observedSelectors: {
+      [selectors.feeExempt]: "fee-exempt", [selectors.allowance]: "allowance",
+      [selectors.balanceOf]: "balance", [selectors.approve]: "approve",
+      [selectors.commitmentLock]: "commitment-lock",
+    },
   });
   return callResults;
 }
 
 async function preparePage(browser, options = {}) {
   const context = await newRoutedContext(browser, { serviceWorkers: "block", ...(options.contextOptions || {}) });
-  const readResults = await installWallet(context, options);
+  const vaultDiagnostic = createVaultDiagnostic();
+  const readResults = await installWallet(context, options, Boolean(vaultDiagnostic));
   const writes = [];
   await routeReadRpc(context, { ...readResults, ...(options.readResultsOverride || {}) }, {
     ...options,
     feeExemptFlip: buildFeeExemptFlip(options),
     sendCount: () => writes.length,
+    vaultDiagnostic,
   });
   const pageErrors = [];
   const page = await context.newPage();
   page.on("pageerror", (error) => pageErrors.push(error.message));
+  if (vaultDiagnostic) {
+    page.on("console", (message) => vaultDiagnostic.browser(message.text()));
+    page.on("pageerror", () => vaultDiagnostic.phase("pageerror"));
+  }
   await page.route("**/__web3_test_transaction", async (route) => {
+    const observed = vaultDiagnostic && vaultDiagnostic.start("write-route", "eth_sendTransaction", "transaction");
     try {
       const transaction = route.request().postDataJSON();
       const decoded = expectedWrite(transaction);
+      if (vaultDiagnostic) vaultDiagnostic.phase(decoded.action);
       const hash = `0x${String(writes.length + 1).padStart(64, "0")}`;
       writes.push({ ...decoded, to: transaction.to, data: transaction.data, hash });
       await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ hash }) });
+      if (vaultDiagnostic) vaultDiagnostic.end(observed, "fulfilled");
     } catch (error) {
+      if (vaultDiagnostic) vaultDiagnostic.end(observed, "rejected", error);
       await route.fulfill({ status: 400, contentType: "text/plain", body: error.stack || error.message });
     }
   });

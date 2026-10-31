@@ -1,3 +1,17 @@
+@startmindmap web3_vault_isolation_382
+* Existing Web3 dApp test qualification
+** web3 wallet core (dApp): unchanged
+*** lockIFR -> approveTx.wait -> assertV2Open -> commitmentV2.lock
+** Test-only vault isolation: runtime pending
+*** Canonical uninstrumented principal alone / historical selection
+*** Separate unchanged accountsChanged control
+*** Explicit observed principal: bounded metadata, scheduling caveat
+*** Existing Wallet Browser Suite opt-in; no product fix
+*** CI Node lifecycle control: same execute/abort loop, own fixtures only
+**** Closed exit1 continues; uncertain teardown skips remaining selections
+**** Token + PID/start/group cleanup; <=28s; no browser PASS
+@endmindmap
+
 @startmindmap
 * Telegram wallet verification and trust boundaries
 ** commands

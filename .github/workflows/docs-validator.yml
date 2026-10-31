@@ -1,6 +1,13 @@
 name: Docs Validator
 
 on:
+  workflow_dispatch:
+    inputs:
+      vault_isolation_diagnostic:
+        description: 'Run the test-only issue 382 vault isolation comparison'
+        type: boolean
+        required: false
+        default: false
   push:
     branches: [main, master, develop, dev]
     paths:
@@ -95,6 +102,8 @@ on:
       - '.github/ISSUE_TEMPLATE/**'
       - 'tests/browser/**'
       - 'scripts/test-docs-server-compat.cjs'
+      - 'scripts/test-web3-vault-isolation.cjs'
+      - 'scripts/test-web3-vault-lifecycle-control.cjs'
       - 'playwright.config.js'
       - 'package.json'
       - 'package-lock.json'
@@ -192,6 +201,8 @@ on:
       - '.github/ISSUE_TEMPLATE/**'
       - 'tests/browser/**'
       - 'scripts/test-docs-server-compat.cjs'
+      - 'scripts/test-web3-vault-isolation.cjs'
+      - 'scripts/test-web3-vault-lifecycle-control.cjs'
       - 'playwright.config.js'
       - 'package.json'
       - 'package-lock.json'
@@ -412,6 +423,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Verify vault isolation comparator contracts
+        run: node scripts/test-web3-vault-isolation.cjs --self-test
+
       - name: Verify Council vote signatures and the public vote page
         run: npm run test:council-votes
       - name: Check read-only scripts refuse non-Mainnet RPC
@@ -431,6 +445,17 @@ jobs:
 
       - name: Run Web3 write-flow suite
         run: npm run test:web3-write
+
+      - name: Verify vault comparator native lifecycle (explicit opt-in only)
+        id: vault_lifecycle_control
+        if: ${{ !cancelled() && github.event_name == 'workflow_dispatch' && inputs.vault_isolation_diagnostic }}
+        timeout-minutes: 1
+        run: node scripts/test-web3-vault-lifecycle-control.cjs --output "$RUNNER_TEMP/vault-lifecycle-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+
+      - name: Diagnose vault isolation (explicit opt-in only)
+        if: ${{ !cancelled() && github.event_name == 'workflow_dispatch' && inputs.vault_isolation_diagnostic && steps.vault_lifecycle_control.outcome == 'success' }}
+        timeout-minutes: 8
+        run: node scripts/test-web3-vault-isolation.cjs --output "$RUNNER_TEMP/vault-isolation-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
 
       - name: Verify serverless IFR Benefits widget rules and published SRI
         run: node scripts/test-ifr-benefits-widget.cjs
