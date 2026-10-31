@@ -170,6 +170,15 @@ their outcome cannot replace the uninstrumented comparison or prove a root cause
 The existing Wallet Browser Suite accepts an opt-in dispatch input, defaults off,
 and keeps the original 30-second test / 15-second poll limits, one worker and zero
 retries. All existing required browser suites remain independent and unchanged.
+The same qualifier's child-lifecycle boundary has a separate CI-only Node control
+(`scripts/test-web3-vault-lifecycle-control.cjs`): its imported, unchanged
+`execute/collectSelections` seam must continue after a normally closed exit 1,
+but stop remaining selections after uncertain teardown. An owned TERM-ignoring
+fixture and separately owned pipeholder exercise real shutdown/pipe fallback;
+the control cleans only token/PID/start/group-bound fixture processes and fails
+if their absence cannot be proved. Its private bounded streams are local-runner
+evidence. This control has a 28-second outer deadline and is not a browser or
+root-cause PASS. The opt-in browser comparison requires the control's success.
 
 1. page `<script>` tags → `docs/web3-wallet-core.js` (`/web3/` dApp) or
    `docs/assets/wallet-core.js` (landing/wiki) `window.IFRWallet` — Daten: EIP-1193

@@ -4,6 +4,12 @@ participant "test-web3-vault-isolation.cjs" as Q382
 participant "web3-write.spec.js helpers" as H382
 participant "Unchanged docs/web3 lockIFR" as D382
 CI382 -> Q382 : explicit diagnostic dispatch (default off)
+CI382 -> Q382 : Node-only shared lifecycle control first
+Q382 -> Q382 : closed exit1 continues; uncertain shutdown skips remainder
+note over CI382,Q382
+Own token/PID/start/group-bound fixtures only; <=28s.
+Browser comparison is gated on control success, not vice versa.
+end note
 Q382 -> H382 : uninstrumented A/B + accountsChanged control
 H382 -> D382 : canonical fixture / original assertions and timeouts
 Q382 -> H382 : separate observed principal only

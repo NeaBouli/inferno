@@ -7,6 +7,9 @@
 *** Separate unchanged accountsChanged control
 *** Explicit observed principal: bounded metadata, scheduling caveat
 *** Existing Wallet Browser Suite opt-in; no product fix
+*** CI Node lifecycle control: same execute/abort loop, own fixtures only
+**** Closed exit1 continues; uncertain teardown skips remaining selections
+**** Token + PID/start/group cleanup; <=28s; no browser PASS
 @endmindmap
 
 @startmindmap
