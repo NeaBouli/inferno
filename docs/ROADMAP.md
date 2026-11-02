@@ -112,10 +112,13 @@ with their audit, testnet and on-chain authorization gates, are tracked in the
     and deployment evidence; further discovery and inventory, and sorting beyond
     the bounded single-seller #419 controls, remain open.
 - [x] Single-seller catalog name and currency-safe reference-price ordering
-      qualified before merge ([#419](https://github.com/NeaBouli/inferno/issues/419))
+      released on 2 November 2026 ([#419](https://github.com/NeaBouli/inferno/issues/419))
   - Orders products within existing categories; exact price order requires an
     explicit currency, with no conversion. General offers and exact-offer
-    bindings are preserved. Deployment and post-deploy verification are pending.
+    bindings are preserved. Frontend `ba936d9` passed exact-source CI and all 52
+    preflight checks, five-viewport local qualification and deployed desktop/mobile
+    UI/asset verification. Synthetic-fixture acceptance closes this catalog scope;
+    real merchant, wallet/provider, physical-device and checkout acceptance remain separate.
 - [x] Recoverable public offer paging implemented in source on 29 October 2026
       ([#392](https://github.com/NeaBouli/inferno/issues/392))
   - User-operated return to page 1 preserves filters after catalog changes,

@@ -1,11 +1,15 @@
 # Changelog
 
-## [Unreleased] — 2026-11-02 — Currency-safe seller catalog ordering (#419)
+## [Released] — 2026-11-02 — Currency-safe seller catalog ordering (#419)
 
 ### Added
 
 - Public single-seller catalogs can order products by name or exact reference price within each category.
   Price ordering requires an explicit currency, with no conversion; filters, attached offers and exact-offer links are preserved.
+- Released in Benefits frontend `ba936d9`. Exact-source CI and all 52 release-preflight
+  checks passed; local qualification covered five viewports and 18 reviewed images.
+  The same catalog fixture passed deployed desktop/mobile checks with four reviewed images.
+  This closes #419; real merchant, wallet, provider, device and checkout acceptance remain separate.
 
 ## [Unreleased] — 2026-10-09 — Copilot supply API: only CV-01 counts as permanently lost (CWA-02)
 

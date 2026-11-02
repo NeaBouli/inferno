@@ -403,7 +403,11 @@ Mode -> Renderer : current-build manifest hash after
 Mode -> Evidence : source/build/runtime/cleanup receipt
 Root -> Catalog : import-only fixed live critical scope after release GO
 Catalog -> Evidence : actual-CID assets / 1440+390 / four images
-note over Root,Evidence : Native PASS and visual acceptance require execution and Root review.
+note over Root,Evidence
+  Accepted 2026-11-02: local five viewports / 18 reviewed images;
+  deployed 1440+390 / four reviewed images using the same fixture.
+  Merchant, wallet/provider, device and checkout acceptance remain separate.
+end note
 @enduml
 
 @startuml telegram_builder_leaf_maintenance
