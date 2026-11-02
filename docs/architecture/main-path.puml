@@ -317,6 +317,12 @@ participant "IFRLock contract" as Contract
 participant "YouTubeChecker" as Membership
 participant "separate creator OAuth client" as CreatorOAuth
 participant "Google members API" as MembersAPI
+note over ViewerOAuth, CreatorOAuth
+  creator_google_parent_497_498_qualification:
+  googleapis 178.1.1 -> common 9.3.1 / auth 11.3.2 -> Gaxios 8.3.2; Node >=22.
+  Normal graph removes the old traversal branch; real-module offline/privacy controls.
+  Existing viewer/creator authority and live-provider gates remain.
+end note
 Client -> Callback : code + one-use state + matching cookie
 Callback -> ViewerOAuth : getToken(code) / setCredentials(tokens)
 ViewerOAuth -> IdentityAPI : channels.list(id, mine=true); readonly viewer scope

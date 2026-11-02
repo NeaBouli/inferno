@@ -1470,6 +1470,17 @@ compression, types, build and authentication tests qualify this graph; no handle
 OAuth/session contract, workflow or shared advisory policy changes here.
 The backend-only reviewed development disposition does not cover Creator Gateway.
 
+Creator Google-parent qualification (`creator_google_parent_497_498_qualification`):
+existing viewer/creator OAuth clients -> googleapis 178.1.1 -> supported
+googleapis-common 9.3.1 / auth 11.3.2 -> Gaxios 8.3.2. The application runtime
+contract is Node >=22;
+the owning CI and Docker runtime already use Node 22. The normal resolved graph,
+real-module offline transport/privacy checks and unchanged Creator gates qualify
+this parent migration. The resolved graph removes every rimraf/glob/minimatch
+and brace-expansion copy. Local and hosted qualification remain separate from Google provider
+acceptance or production readiness. No authentication/session handler or
+IFR policy changes belong to this dependency-maintenance node.
+
 ## Canonical application development-audit contexts — 2026-10-28
 
 Historical version3 boundary; both deepmerge contexts are removed by version4 below.

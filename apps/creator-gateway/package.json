@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "IFR Creator Gateway \u2014 YouTube \u00d7 IFR Lock Bridge",
   "main": "src/index.ts",
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "node dist/index.js",
@@ -17,7 +20,7 @@
     "ethers": "6.17.0",
     "express": "4.22.3",
     "express-rate-limit": "^7.1.5",
-    "googleapis": "173.0.0",
+    "googleapis": "178.1.1",
     "jsonwebtoken": "^9.0.2",
     "siwe": "^3.0.0"
   },
