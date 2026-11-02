@@ -322,10 +322,12 @@ function createCatalogBodyOrdering(identity, getLifecycle) {
   const terminal = row => ({ kind: ['FINISHED', 'FAILED'].includes(row?.terminalKind) ? row.terminalKind : 'MISSING', atMs: row?.terminalAtMs ?? null });
   return {
     request: request => safe(() => { records.set(request, { number: ++number, requestMs: time(), responseMs: null, bodyMs: null,
-      requestEpoch: navigation.epoch, bodyEpoch: null, terminalKind: 'MISSING', terminalAtMs: null }); }),
+      requestEpoch: navigation.epoch, bodyEpoch: null, requestNavigation: Object.freeze({ ...navigation }), bodyNavigation: null,
+      bodyReturned: false, bodyReturnedMs: null, terminalKind: 'MISSING', terminalAtMs: null }); }),
     terminal: (request, kind) => safe(() => { const row = records.get(request); if (row) { row.terminalKind = kind; row.terminalAtMs = time(); } }),
     response: response => safe(() => { const row = records.get(response.request()); if (row) row.responseMs = time(); return row || null; }),
-    body: row => safe(() => { if (row) { row.bodyMs = time(); row.bodyEpoch = navigation.epoch; } }),
+    body: row => safe(() => { if (row) { row.bodyMs = time(); row.bodyEpoch = navigation.epoch; row.bodyNavigation = Object.freeze({ ...navigation }); } }),
+    returned: row => safe(() => { if (row) { row.bodyReturned = true; row.bodyReturnedMs = time(); } }),
     navigation: (site, phase) => safe(() => {
       if (!CATALOG_NAVIGATION_SITES.has(site)) return;
       if (phase === 'BEGIN') navigation = { epoch: navigation.epoch + 1, site, startMs: time(), endMs: null };
@@ -342,7 +344,8 @@ function createCatalogBodyOrdering(identity, getLifecycle) {
       const captured = Object.freeze({ contextOrdinal: [1, 2, 3, 4, 5].includes(identity.ordinal) ? identity.ordinal : null, requestOrdinal: count(row?.number),
         method: sample.method, resourceType: sample.resourceType, originClass: sample.originClass, pathSha256: sample.pathSha256,
         status: sample.status ?? null, stage: sample.stage, requestMs: row?.requestMs ?? null, responseMs: row?.responseMs ?? null,
-        bodyMs: row?.bodyMs ?? null, failureMs: time(), requestEpoch: row?.requestEpoch ?? null, bodyEpoch: row?.bodyEpoch ?? null,
+        bodyMs: row?.bodyMs ?? null, bodyReturned: row?.bodyReturned === true, bodyReturnedMs: row?.bodyReturnedMs ?? null,
+        requestNavigation: row?.requestNavigation ?? null, bodyNavigation: row?.bodyNavigation ?? null, failureMs: time(), requestEpoch: row?.requestEpoch ?? null, bodyEpoch: row?.bodyEpoch ?? null,
         navigation: Object.freeze({ ...navigation }), lifecyclePhase: ['PRE_CLOSE', 'CONTEXT_CLOSE', 'POST_CLOSE'].includes(lifecycle) ? lifecycle : 'UNKNOWN', terminal: Object.freeze(terminal(row)), closing: Object.freeze({ ...closing }) });
       collector.records.push({ captured, later: () => ({ terminal: terminal(row), closing: { ...closing } }) });
     }),
@@ -564,7 +567,9 @@ async function prepareCatalogQualification(options, browser) {
       failureStage = 'MAP'; const record = assetRecord(url.pathname);
       failureStage = 'STATUS'; assert.equal(response.status(), 200, 'loaded catalog asset must be served successfully');
       failureStage = 'HEADER'; const length = response.headers()['content-length']; if (length !== undefined) assert.ok(Number(length) <= 16 * 1024 * 1024, 'loaded catalog asset header must be bounded');
-      failureStage = 'BODY'; if (contextDrain) contextDrain.ordering.body(orderingRecord); const bytes = await response.body(); proof.responseBytes += bytes.length;
+      failureStage = 'BODY'; if (contextDrain) contextDrain.ordering.body(orderingRecord); const bytes = await response.body();
+      if (contextDrain) contextDrain.ordering.returned(orderingRecord);
+      proof.responseBytes += bytes.length;
       failureStage = 'BYTES';
       assert.ok(bytes.length === record.bytes && digest(bytes) === record.sha256 && proof.responseBytes <= 256 * 1024 * 1024, 'loaded catalog asset bytes must match the bound artifact');
       proof.assets.set(record.path, { ...record, responses: (proof.assets.get(record.path)?.responses || 0) + 1 });
