@@ -1782,3 +1782,8 @@ stamps plus fixed navigation/close marks join at most16 failed requests in one
 private16KiB/mode0600 receipt. Failure-time navigation/lifecycle values are frozen
 separately from later cleanup. This observer adds no wait, drain-before-navigation,
 request, timer or validation change; default execution remains unchanged.
+Qualification alone drains the same known request/body work before eight existing
+document replacements, before their NAV-BEGIN marker and coupled fixture-mode
+mutation. Initial load, loading release, SPA tap and no-proof execution stay
+unchanged. This is not atomic quiescence: later requests can still race navigation.
+No deadline, failure suppression, transport replacement or historical cause claim.

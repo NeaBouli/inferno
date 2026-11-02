@@ -396,6 +396,8 @@ Mode -> Evidence : outer300s private browser-keyed ready-proof handoff before or
 note over Mode,Evidence : Fixed OUTER/INNER_WORK_DEADLINE labels; inner flag/clocks unchanged.
 Catalog -> Evidence : bounded failed request/body ordering joined to fixed navigation/close stamps
 note over Catalog,Evidence : Failure-time state frozen separately from cleanup; no new waits or validation changes.
+Catalog -> Catalog : same private drain before eight document replacements / NAV-BEGIN / mode change
+note over Catalog : Known work only; initial/loading/SPA/default unchanged; no atomic-quiescence claim.
 note over Catalog,Evidence : Diagnostic only; observer failure cannot block original abort/wake/close.
 Mode -> Renderer : current-build manifest hash after
 Mode -> Evidence : source/build/runtime/cleanup receipt

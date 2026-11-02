@@ -391,6 +391,7 @@ function createCatalogContextDrain(context, isAborted, identity = {}) {
     }
   };
   return {
+    drain,
     ordering,
     wake,
     track(job, observation = null) {
@@ -924,6 +925,7 @@ async function verifySellerCatalogFilters(browser, qualification = null) {
           history[method] = function (...args) { effects.history += 1; return Reflect.apply(original, this, args); };
         }
       });
+      if (contextDrain) await contextDrain.drain();
       if (contextDrain) contextDrain.ordering.navigation('ORDERING', 'BEGIN');
       mode = 'ordering'; await page.reload({ waitUntil: 'domcontentloaded' });
       if (contextDrain) contextDrain.ordering.navigation('ORDERING', 'END');
@@ -1025,6 +1027,7 @@ async function verifySellerCatalogFilters(browser, qualification = null) {
       assert.equal(await page.evaluate(() => typeof window.ethereum), 'undefined', 'catalog controls must not create a wallet provider');
       // All four controls also reset on a fresh load and a different seller URL.
       await currency.selectOption('USD'); await order.selectOption('price-desc'); await category.selectOption('category:Coffee'); await search.fill('equal');
+      if (contextDrain) await contextDrain.drain();
       if (contextDrain) contextDrain.ordering.navigation('RESET4', 'BEGIN');
       await page.reload({ waitUntil: 'domcontentloaded' });
       if (contextDrain) contextDrain.ordering.navigation('RESET4', 'END');
@@ -1033,6 +1036,7 @@ async function verifySellerCatalogFilters(browser, qualification = null) {
       assert.equal(await currency.inputValue(), 'all'); assert.equal(await order.inputValue(), 'original');
       await expectOrdering(orderingOriginal);
       await currency.selectOption('USD'); await order.selectOption('price-desc'); await category.selectOption('category:Coffee'); await search.fill('equal');
+      if (contextDrain) await contextDrain.drain();
       if (contextDrain) contextDrain.ordering.navigation('SECOND_SELLER', 'BEGIN');
       await page.goto(`${catalogOrigin}/s/${secondBusiness.slug}`, { waitUntil: 'domcontentloaded' });
       if (contextDrain) contextDrain.ordering.navigation('SECOND_SELLER', 'END');
@@ -1043,22 +1047,26 @@ async function verifySellerCatalogFilters(browser, qualification = null) {
       assert.deepEqual(await currencyValues(), ['all', 'USD', 'JPY'], 'seller change must derive only that seller currency choices');
       assert.equal(await page.locator(`[data-catalog-entry="${secondRules[0].id}"] a[href*="offer="]`).getAttribute('href'), `/?seller=${secondBusiness.slug}&offer=${secondRules[0].id}#customer-pass`);
       await capture('second-seller');
+      if (contextDrain) await contextDrain.drain();
       if (contextDrain) contextDrain.ordering.navigation('RETURN_PRIMARY', 'BEGIN');
       mode = 'ready'; await page.goto(url, { waitUntil: 'domcontentloaded' });
       if (contextDrain) contextDrain.ordering.navigation('RETURN_PRIMARY', 'END');
       await page.getByText('Showing 5 of 5 catalog entries.', { exact: true }).waitFor();
       await search.fill('not-restored-after-reload'); await category.selectOption('general');
+      if (contextDrain) await contextDrain.drain();
       if (contextDrain) contextDrain.ordering.navigation('RESET2', 'BEGIN');
       await page.reload({ waitUntil: 'domcontentloaded' });
       if (contextDrain) contextDrain.ordering.navigation('RESET2', 'END');
       await page.getByText('Showing 5 of 5 catalog entries.', { exact: true }).waitFor();
       assert.equal(await search.inputValue(), ''); assert.equal(await category.inputValue(), 'all');
+      if (contextDrain) await contextDrain.drain();
       if (contextDrain) contextDrain.ordering.navigation('EMPTY', 'BEGIN');
       mode = 'empty'; await page.reload({ waitUntil: 'domcontentloaded' });
       if (contextDrain) contextDrain.ordering.navigation('EMPTY', 'END');
       await page.getByRole('heading', { name: 'No public offers yet', exact: true }).waitFor();
       assert.equal(await search.count(), 0); assert.equal(await page.getByRole('heading', { name: 'No matching catalog entries', exact: true }).count(), 0);
       await capture('empty');
+      if (contextDrain) await contextDrain.drain();
       if (contextDrain) contextDrain.ordering.navigation('ERROR', 'BEGIN');
       mode = 'error'; await page.reload({ waitUntil: 'domcontentloaded' });
       if (contextDrain) contextDrain.ordering.navigation('ERROR', 'END');
@@ -1066,6 +1074,7 @@ async function verifySellerCatalogFilters(browser, qualification = null) {
       assert.equal(await search.count(), 0); assert.equal(await page.getByText('No public offers yet', { exact: true }).count(), 0);
       await capture('load-error');
       if (viewport.width === 390) {
+        if (contextDrain) await contextDrain.drain();
         if (contextDrain) contextDrain.ordering.navigation('MOBILE_READY', 'BEGIN');
         mode = 'ready'; await page.reload({ waitUntil: 'domcontentloaded' });
         if (contextDrain) contextDrain.ordering.navigation('MOBILE_READY', 'END');

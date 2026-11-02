@@ -429,5 +429,8 @@ left to right direction
 *** Fixed outer/inner trigger labels; same clocks and identity-safe handoff cleanup
 *** Actual fixture request/body/terminal -> fixed navigation/close stamps -> at most16 failed ordering records
 *** Failure-time state separate from later cleanup; private16KiB receipt; no waits or oracle changes
+** Qualification known-work barrier before eight document replacements
+*** Same private drain before NAV-BEGIN/mode mutation; initial/loading/SPA/default unchanged
+*** Future requests remain possible; no atomic-quiescence or historical-cause claim
 ** Root native execution and direct image review pending
 @endmindmap
