@@ -1543,8 +1543,11 @@ directions. General rules, attached rules, counts and seller/offer links retain
 their existing semantics. Clearing currency resets only price ordering; reset,
 seller change and reload clear all four local controls. The existing toolbar
 owns the added native selects; no money/API/backend/global-style module changes.
-Source preparation is not runtime or responsive visual qualification; Root owns
-the combined exact-source build and affected-surface release gates.
+Released on 2026-11-02 in Benefits frontend `ba936d9`, with exact-source CI and
+all 52 preflight checks passing. The local production fixture passed across five
+viewports with 18 reviewed images; the same fixture passed deployed desktop/mobile
+qualification with four reviewed images. Issue419 is closed for this catalog hop.
+Real merchant, wallet/provider, physical-device and checkout acceptance remain separate.
 
 `test-benefits-discovery-ui.js` extends the existing public-catalog handoff suite
 with mixed fixtures, combined filters, count/reset/state isolation, exact bindings
@@ -1763,6 +1766,14 @@ fixed `https://shop.ifrunit.tech`, explicit Root Main/CID/image/build/post-sourc
 binding and actual-CID asset hashes. It uses only 1440/390 and four critical
 images. It cannot accept an arbitrary origin or reuse Mac build assets as live
 proof. Root alone admits execution and joins opening/closing deployment evidence.
+Qualification completed on 2026-11-02: local five-viewport/18-image acceptance and
+deployed 1440/390 four-image acceptance remain distinct. The live fixture passed
+in 36.13 seconds; 442 responses for 32 observed UI assets matched the actual runtime
+inventory of 179 assets (114 Next.js and 65 scoped public files). The five other
+service identities/mounts/resources, including the backend, and the environment
+stayed unchanged.
+These synthetic checks do not close real merchant, provider, wallet, device or
+checkout acceptance, or establish the historical cause tracked by issue382.
 The same qualification node has a private diagnostic observer: finally/releaseLoading
 → drain-entry counts → unchanged request/body drain; original 300s work abort
 → bounded active counts/phases/samples → unchanged abort/wake/close. At most five

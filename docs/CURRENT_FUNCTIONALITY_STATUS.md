@@ -83,9 +83,11 @@ checkpoint. Further catalog discovery, sorting beyond the bounded #419 controls
 below, and inventory remain roadmap work; physical-device and wallet acceptance
 remain separate open follow-ups.
 
-### Seller catalog ordering source checkpoint — 2 November 2026
+### Seller catalog ordering released — 2 November 2026
 
-Qualified before merge for [#419](https://github.com/NeaBouli/inferno/issues/419):
+Released in Benefits frontend
+[`ba936d9`](https://github.com/NeaBouli/inferno/commit/ba936d9a557aa9683ee9102300bbb5d02330763e)
+for [#419](https://github.com/NeaBouli/inferno/issues/419):
 the public single-seller catalog supports transient name ordering and exact
 reference-price ordering within each existing category. Price ordering requires
 an explicit currency; currency selection filters priced products of that code
@@ -93,7 +95,17 @@ without conversion or treating missing prices as zero. General offers, attached
 offers, eligibility requirements, counts and exact-offer links retain their
 existing behavior. Reset and seller changes clear the local controls.
 
-Production deployment and post-deploy UI/asset verification are pending.
+The release's exact-source CI and all 52 release-preflight checks passed. Local
+production qualification covered five viewports and 18 images reviewed by the
+release owner. The same catalog fixture passed deployed checks at desktop 1440
+and mobile 390 in 36.13 seconds, with four reviewed images. All 442 observed
+asset responses for 32 distinct UI assets matched the runtime inventory of 179
+assets: 114 Next.js assets and 65 explicitly scoped public files. The backend,
+environment and other deployed services remained unchanged.
+
+Issue #419 is closed. These checks use synthetic catalog fixtures; real merchant,
+provider, wallet, physical-device and checkout acceptance remain separate. The
+historical wallet-test cause tracked by #382 remains unknown and open.
 
 ### Offer discovery source checkpoint — 29 October 2026
 
