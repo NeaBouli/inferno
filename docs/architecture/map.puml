@@ -421,5 +421,9 @@ left to right direction
 ** Import-only fixed deployed critical scope
 *** shop.ifrunit.tech; Root Main/CID/image/build/post-source binding
 *** Actual-CID asset map; 1440/390; four critical images
+** Private request/body drain metadata (diagnostic only)
+*** Entry counts -> unchanged drain; original 300s abort -> bounded snapshot -> unchanged cleanup
+*** At most16 abort samples total; fixed metadata/path hashes; no raw request data
+*** Observer failures do not interrupt cleanup; no acceptance or cause claim
 ** Root native execution and direct image review pending
 @endmindmap

@@ -278,9 +278,40 @@ function catalogCompletionCheckpoint(proof, sourceClosingEqual, buildClosingEqua
     knownFailureCodeHistogram: histogram, samples, rawUrlsQueriesErrorsBodiesRetained: false, validationUnchanged: true };
 }
 
-function createCatalogContextDrain(context, isAborted) {
-  const requests = new Set(); const jobs = new Set(); const waiters = new Set();
-  const never = new Promise(() => {}); let revision = 0; let rejected = false; let rejection;
+function catalogDrainSample(phase, request, targetOrigin) {
+  if (!['REQUEST_PENDING', 'PRE_BODY_CHECK', 'BODY_READ', 'BYTE_VERIFY'].includes(phase)) return null;
+  // Reuse the closed metadata projection without recording a failure.
+  const sample = catalogFailureSample('CATALOG_ASSET_IDENTITY', 'BODY', request, targetOrigin);
+  return sample ? { phase, method: sample.method, resourceType: sample.resourceType,
+    originClass: sample.originClass, pathSha256: sample.pathSha256 } : null;
+}
+function catalogDrainCheckpoint(proof, event, context = null) {
+  try {
+    if (!['DRAIN_ENTRY', 'WORK_ABORT'].includes(event)) return false;
+    const contexts = context ? [context] : [...proof.contexts];
+    if (contexts.length > 5) return false;
+    let remaining = event === 'WORK_ABORT' ? 16 : 0;
+    const rows = contexts.map(owned => {
+      const row = proof.contextDrains.get(owned).snapshot(proof.origin, remaining);
+      remaining -= row.samples.length; return row;
+    });
+    const elapsedMs = performance.now() - proof.started;
+    const count = value => Number.isSafeInteger(value) && value >= 0 ? value : null;
+    const receipt = { schema: 'catalog-drain-observation/v1', isAcceptance: false, event,
+      scriptSha256: /^[a-f0-9]{64}$/.test(proof.source.scriptSha256) ? proof.source.scriptSha256 : null, elapsedMs: Number.isFinite(elapsedMs) && elapsedMs >= 0 ? elapsedMs : null,
+      activeContextCount: count(proof.contexts.size), globalPendingValidationJobCount: count(proof.pending.size), contexts: rows,
+      rawUrlsQueriesErrorsHeadersBodiesRetained: false };
+    if (Buffer.byteLength(JSON.stringify(receipt)) > 16 * 1024) return false;
+    const ordinal = rows[0]?.contextOrdinal;
+    if (event === 'DRAIN_ENTRY' && (!Number.isInteger(ordinal) || ordinal < 1 || ordinal > 5)) return false;
+    proof.write(event === 'DRAIN_ENTRY' ? `catalog-drain-entry-0${ordinal}.json` : 'catalog-drain-work-abort.json', receipt);
+    return true;
+  } catch { return false; } // Observation must never prevent the original abort/wake/close.
+}
+
+function createCatalogContextDrain(context, isAborted, identity = {}) {
+  const requests = new Set(); const jobs = new Set(); const waiters = new Set(); const observations = new Map();
+  const never = new Promise(() => {}); let revision = 0; let rejected = false; let rejection; let lifecyclePhase = 'PRE_CLOSE';
   const wake = () => { revision += 1; for (const resume of waiters) resume(); };
   context.on('request', request => { requests.add(request); wake(); });
   const terminal = request => { requests.delete(request); wake(); };
@@ -304,14 +335,40 @@ function createCatalogContextDrain(context, isAborted) {
   };
   return {
     wake,
-    track(job) {
-      jobs.add(job); wake();
-      void job.then(() => { jobs.delete(job); wake(); }, error => { rejected = true; rejection = error; jobs.delete(job); wake(); });
+    track(job, observation = null) {
+      jobs.add(job); if (observation) observations.set(job, observation); wake();
+      void job.then(() => { jobs.delete(job); observations.delete(job); wake(); }, error => { rejected = true; rejection = error; jobs.delete(job); observations.delete(job); wake(); });
       return job;
+    },
+    snapshot(targetOrigin, sampleLimit = 0) {
+      const count = value => Number.isSafeInteger(value) && value >= 0 ? value : null;
+      const limit = Number.isInteger(sampleLimit) ? Math.max(0, Math.min(16, sampleLimit)) : 0;
+      const samples = [], bodyPhases = { PRE_BODY_CHECK: 0, BODY_READ: 0, BYTE_VERIFY: 0, UNKNOWN: 0 };
+      let unavailableMetadataCount = 0;
+      const sample = (phase, request) => {
+        if (samples.length >= limit) return;
+        try {
+          const projected = catalogDrainSample(phase, typeof request === 'function' ? request() : request, targetOrigin);
+          if (projected) samples.push(projected); else unavailableMetadataCount += 1;
+        } catch { unavailableMetadataCount += 1; }
+      };
+      for (const job of jobs) {
+        try {
+          const observation = observations.get(job); const phase = observation?.phase();
+          if (['PRE_BODY_CHECK', 'BODY_READ', 'BYTE_VERIFY'].includes(phase)) {
+            bodyPhases[phase] += 1; sample(phase, () => observation.request());
+          } else { bodyPhases.UNKNOWN += 1; unavailableMetadataCount += 1; }
+        } catch { bodyPhases.UNKNOWN += 1; unavailableMetadataCount += 1; }
+      }
+      for (const request of requests) sample('REQUEST_PENDING', request);
+      let aborted = null; try { aborted = isAborted() === true; } catch { unavailableMetadataCount += 1; }
+      return { contextOrdinal: count(identity.ordinal), viewportWidth: [1440, 1180, 820, 390, 320].includes(identity.viewportWidth) ? identity.viewportWidth : null,
+        lifecyclePhase, aborted, revision: count(revision), pendingRequestCount: count(requests.size), pendingValidationJobCount: count(jobs.size),
+        bodyPhases, samples, omittedSampleCount: count(requests.size + jobs.size - samples.length), unavailableMetadataCount: count(unavailableMetadataCount) };
     },
     async close() {
       do { await drain(); } while (requests.size || jobs.size);
-      await context.close();
+      lifecyclePhase = 'CONTEXT_CLOSE'; await context.close(); lifecyclePhase = 'POST_CLOSE';
       await drain(); // Late close-time work is validated, never discarded.
     },
   };
@@ -407,7 +464,7 @@ async function prepareCatalogQualification(options, browser) {
     failures: [], images: [], imageBytes: 0, assets: new Map(), pending: new Set(), contexts: new Set(), contextDrains: new Map(), responseCount: 0, responseBytes: 0, started: qualificationStarted, aborted: false };
   proof.opening = await servedBuild();
   let wakeAbort; const workAborted = new Promise(resolve => { wakeAbort = resolve; });
-  proof.timer = setTimeout(() => { proof.aborted = true; proof.failures.push('CATALOG_WORK_DEADLINE'); wakeAbort();
+  proof.timer = setTimeout(() => { proof.aborted = true; proof.failures.push('CATALOG_WORK_DEADLINE'); catalogDrainCheckpoint(proof, 'WORK_ABORT'); wakeAbort();
     for (const context of proof.contexts) { proof.contextDrains.get(context)?.wake(); void context.close().catch(() => {}); }
   }, Math.max(1, 300000 - (performance.now() - qualificationStarted))); proof.timer.unref();
   proof.write = (name, value) => { const file = path.join(directory, name); fs.writeFileSync(file, JSON.stringify(value, null, 2) + '\n', { flag: 'wx', mode: 0o600 }); };
@@ -456,7 +513,8 @@ async function prepareCatalogQualification(options, browser) {
       proof.assets.set(record.path, { ...record, responses: (proof.assets.get(record.path)?.responses || 0) + 1 });
     })().catch(() => { proof.failures.push('CATALOG_ASSET_IDENTITY'); proof.sampleFailure('CATALOG_ASSET_IDENTITY', failureStage, () => response.request(), () => response.status()); });
     proof.pending.add(job); void job.finally(() => proof.pending.delete(job));
-    if (contextDrain) contextDrain.track(job);
+    if (contextDrain) contextDrain.track(job, { request: () => response.request(),
+      phase: () => failureStage === 'BODY' ? 'BODY_READ' : failureStage === 'BYTES' ? 'BYTE_VERIFY' : 'PRE_BODY_CHECK' });
   };
   proof.flush = async () => {
     while (proof.pending.size) {
@@ -558,7 +616,8 @@ async function verifySellerCatalogFilters(browser, qualification = null) {
     assert.ok(!proof?.aborted, 'catalog work deadline must not start another context');
     const context = await browser.newContext({ viewport, deviceScaleFactor: 1,
       isMobile: viewport.width <= 390, hasTouch: viewport.width <= 390, serviceWorkers: 'block' });
-    const contextDrain = proof ? createCatalogContextDrain(context, () => proof.aborted) : null;
+    const contextDrain = proof ? createCatalogContextDrain(context, () => proof.aborted,
+      { ordinal: viewports.findIndex(value => value.width === viewport.width) + 1, viewportWidth: viewport.width }) : null;
     if (proof) {
       proof.contexts.add(context); proof.contextDrains.set(context, contextDrain);
       context.on('response', response => proof.response(response, contextDrain));
@@ -937,7 +996,7 @@ async function verifySellerCatalogFilters(browser, qualification = null) {
       assert.deepEqual(pageErrors, []);
     } finally {
       releaseLoading();
-      if (contextDrain) await contextDrain.close(); else await context.close();
+      if (contextDrain) { catalogDrainCheckpoint(proof, 'DRAIN_ENTRY', context); await contextDrain.close(); } else await context.close();
       if (proof) { proof.contexts.delete(context); proof.contextDrains.delete(context); }
       if (evidenceDir) fs.writeFileSync(path.join(evidenceDir, 'catalog-layout-metrics.json'), JSON.stringify({ fixtureOnly: true, viewports: viewports.filter(value => !proof?.live || value.width === 1440 || value.width === 390), metrics }, null, 2), { mode: proof ? 0o600 : 0o644 });
     }

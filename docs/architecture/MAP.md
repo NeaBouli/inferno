@@ -1763,3 +1763,11 @@ fixed `https://shop.ifrunit.tech`, explicit Root Main/CID/image/build/post-sourc
 binding and actual-CID asset hashes. It uses only 1440/390 and four critical
 images. It cannot accept an arbitrary origin or reuse Mac build assets as live
 proof. Root alone admits execution and joins opening/closing deployment evidence.
+The same qualification node has a private diagnostic observer: finally/releaseLoading
+→ drain-entry counts → unchanged request/body drain; original 300s work abort
+→ bounded active counts/phases/samples → unchanged abort/wake/close. At most five
+entry records and one abort record (16KiB each, mode0600) retain only counts,
+fixed phases/method/type/origin classes and at most16 abort samples total with
+pathname hashes. BODY_READ/BYTE_VERIFY project existing stages only. Observer
+failures cannot interrupt abort cleanup. This is diagnostic evidence, not
+acceptance or a proven cause; default52, live export and 300s/60s bounds remain.
