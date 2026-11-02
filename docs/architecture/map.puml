@@ -434,3 +434,12 @@ left to right direction
 *** Future requests remain possible; no atomic-quiescence or historical-cause claim
 ** Root native execution and direct image review pending
 @endmindmap
+
+@startmindmap telegram_builder_leaf_maintenance
+* Telegram and Builder follow-redirects leaf maintenance
+** Existing Telegram commands/services -> Axios1.20.0 -> patched1.16.2
+*** Unit/import/compression/syntax/signature/audit; no real bot/API
+** Builder engine TS -> locked TypeScript5.9.3 -> own compiled engine
+*** Existing source/compile tests -> solc0.8.20 / OZ5.6.1 / docs parity
+*** solc declared leaf range unchanged; no deployed compiler/service claim
+@endmindmap

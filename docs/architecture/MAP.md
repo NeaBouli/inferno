@@ -1787,3 +1787,17 @@ document replacements, before their NAV-BEGIN marker and coupled fixture-mode
 mutation. Initial load, loading release, SPA tap and no-proof execution stay
 unchanged. This is not atomic quiescence: later requests can still race navigation.
 No deadline, failure suppression, transport replacement or historical cause claim.
+
+## Telegram HTTP leaf and Builder compile-harness maintenance (alerts500/502)
+
+The existing Telegram command/service boundary uses Axios1.20.0 in
+commands/price.js, services/onchain.js and services/skywalker.js. Its Node HTTP
+transport leaf follow-redirects moves1.16.1->1.16.2 within Axios^1.16.0, with
+commands/auth/API behavior unchanged. The separate Builder test-tool hop is
+engine/*.ts -> locked SDK TypeScript5.9.3 -> generated engine JS -> existing
+CodeGeneratorSource/CodeGeneratorCompile tests -> local pinned solc0.8.20 and
+OpenZeppelin5.6.1 / contracts/library / docs parity. Its follow-redirects leaf
+moves within solc^1.12.1; compiler/OZ/tmp pins stay unchanged. Qualification
+uses fresh own engine output, no bot/provider/RPC/deploy or SDK publication.
+Only these two lock records and this bounded map are maintained; held wallet,
+Dashboard, provider and Creator graphs remain separate.

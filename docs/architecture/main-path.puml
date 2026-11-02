@@ -405,3 +405,20 @@ Root -> Catalog : import-only fixed live critical scope after release GO
 Catalog -> Evidence : actual-CID assets / 1440+390 / four images
 note over Root,Evidence : Native PASS and visual acceptance require execution and Root review.
 @enduml
+
+@startuml telegram_builder_leaf_maintenance
+component "Existing Telegram command/service" as T
+component "Axios1.20.0" as A
+component "follow-redirects1.16.2" as F
+component "Builder engine TS" as B
+component "Locked TypeScript5.9.3 / own engine output" as C
+component "Existing CodeGenerator compile/parity gate" as G
+component "solc0.8.20 + OZ5.6.1" as S
+T --> A
+A --> F : existing ^1.16.0
+B --> C
+C --> G
+G --> S : local filesystem/compiler only
+S --> F : existing ^1.12.1
+note bottom : Lock-only maintenance; no bot/provider/RPC/deployment or SDK publish.
+@enduml
