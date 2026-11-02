@@ -79,7 +79,7 @@ assert.ok(trackedMarkdown.every((file) => file.endsWith(".md") && !file.includes
 
 for (const marker of [
   "runs-on: ubuntu-24.04",
-  "node-version: '22.22.0'",
+  "node-version: '22.22.2'",
   "run: npm ci --ignore-scripts",
   "run: npm run test:markdownlint-baseline",
   "run: npm run check:markdownlint",

@@ -1646,6 +1646,11 @@ fast-uri. Because serve previously supplied them only transitively, exact
 Ajv8.18.0 and fast-uri3.1.9 become explicit development test inputs when serve
 is removed; their existing assertions and fast-uri override stay unchanged.
 
+The existing Docs Markdown and Mythril root-dependency install steps select
+Node 22.22.2. Their locked markdownlint-cli 0.49.1 -> run-con 1.3.3 -> ini 7.0.0
+tooling requires at least 22.22.2 within Node 22. This aligns the CI runtime patch;
+package/lock files, Markdown baselines and bounded-analysis policy stay unchanged.
+
 ### Trace and modules
 
 1. Root `package.json`/`package-lock.json` -> the same Mocha/Markdownlint callers
