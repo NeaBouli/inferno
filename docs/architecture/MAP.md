@@ -1777,3 +1777,8 @@ INNER_WORK_DEADLINE metadata distinguishes the two clocks without setting the
 inner abort flag early. Missing/throwing observation cannot block close. Proof
 cleanup compares callback identity; runner cleanup touches only its own browser.
 No public seam, timer, delay, retry or qualification policy is added.
+The same node also records bounded actual-fixture body ordering: request/body/terminal
+stamps plus fixed navigation/close marks join at most16 failed requests in one
+private16KiB/mode0600 receipt. Failure-time navigation/lifecycle values are frozen
+separately from later cleanup. This observer adds no wait, drain-before-navigation,
+request, timer or validation change; default execution remains unchanged.

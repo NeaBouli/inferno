@@ -311,13 +311,65 @@ function catalogDrainCheckpoint(proof, event, context = null, trigger = null) {
   } catch { return false; } // Observation must never prevent the original abort/wake/close.
 }
 
+const CATALOG_NAVIGATION_SITES = new Set(['INITIAL', 'ORDERING', 'RESET4', 'SECOND_SELLER', 'RETURN_PRIMARY', 'RESET2', 'EMPTY', 'ERROR', 'MOBILE_READY', 'MOBILE_OFFER']);
+function createCatalogBodyOrdering(identity, getLifecycle) {
+  const records = new WeakMap(); let number = 0;
+  let navigation = { epoch: 0, site: null, startMs: null, endMs: null };
+  const closing = { startMs: null, endMs: null };
+  const safe = action => { try { return action(); } catch { return null; } };
+  const time = () => { const value = performance.now() - identity.started; return Number.isFinite(value) && value >= 0 ? value : null; };
+  const count = value => Number.isSafeInteger(value) && value >= 0 ? value : null;
+  const terminal = row => ({ kind: ['FINISHED', 'FAILED'].includes(row?.terminalKind) ? row.terminalKind : 'MISSING', atMs: row?.terminalAtMs ?? null });
+  return {
+    request: request => safe(() => { records.set(request, { number: ++number, requestMs: time(), responseMs: null, bodyMs: null,
+      requestEpoch: navigation.epoch, bodyEpoch: null, terminalKind: 'MISSING', terminalAtMs: null }); }),
+    terminal: (request, kind) => safe(() => { const row = records.get(request); if (row) { row.terminalKind = kind; row.terminalAtMs = time(); } }),
+    response: response => safe(() => { const row = records.get(response.request()); if (row) row.responseMs = time(); return row || null; }),
+    body: row => safe(() => { if (row) { row.bodyMs = time(); row.bodyEpoch = navigation.epoch; } }),
+    navigation: (site, phase) => safe(() => {
+      if (!CATALOG_NAVIGATION_SITES.has(site)) return;
+      if (phase === 'BEGIN') navigation = { epoch: navigation.epoch + 1, site, startMs: time(), endMs: null };
+      else if (phase === 'END' && navigation.site === site) navigation.endMs = time();
+    }),
+    close: phase => safe(() => { if (phase === 'BEGIN') closing.startMs = time(); else if (phase === 'END') closing.endMs = time(); }),
+    failure: (row, stage, response) => safe(() => {
+      const collector = identity.ordering; if (!collector) return;
+      collector.observed += 1;
+      if (collector.records.length >= 16) { collector.omitted += 1; return; }
+      const sample = catalogFailureSample('CATALOG_ASSET_IDENTITY', stage, response.request(), identity.origin, response.status());
+      if (!sample) { collector.omitted += 1; return; }
+      const lifecycle = getLifecycle();
+      const captured = Object.freeze({ contextOrdinal: [1, 2, 3, 4, 5].includes(identity.ordinal) ? identity.ordinal : null, requestOrdinal: count(row?.number),
+        method: sample.method, resourceType: sample.resourceType, originClass: sample.originClass, pathSha256: sample.pathSha256,
+        status: sample.status ?? null, stage: sample.stage, requestMs: row?.requestMs ?? null, responseMs: row?.responseMs ?? null,
+        bodyMs: row?.bodyMs ?? null, failureMs: time(), requestEpoch: row?.requestEpoch ?? null, bodyEpoch: row?.bodyEpoch ?? null,
+        navigation: Object.freeze({ ...navigation }), lifecyclePhase: ['PRE_CLOSE', 'CONTEXT_CLOSE', 'POST_CLOSE'].includes(lifecycle) ? lifecycle : 'UNKNOWN', terminal: Object.freeze(terminal(row)), closing: Object.freeze({ ...closing }) });
+      collector.records.push({ captured, later: () => ({ terminal: terminal(row), closing: { ...closing } }) });
+    }),
+  };
+}
+function catalogBodyOrderingCheckpoint(proof, point) {
+  try {
+    if (!['COMPLETION', 'WORK_ABORT'].includes(point)) return false;
+    const collector = proof.bodyOrdering;
+    const receipt = { schema: 'catalog-body-ordering/v1', isAcceptance: false, capturePoint: point, scriptSha256: /^[a-f0-9]{64}$/.test(proof.source.scriptSha256) ? proof.source.scriptSha256 : null,
+      observedFailures: collector.observed, omittedRecords: Math.max(collector.omitted, collector.observed - collector.records.length),
+      failures: collector.records.slice(0, 16).map(entry => ({ atFailure: entry.captured, laterObservation: entry.later() })),
+      rawUrlsQueriesHeadersBodiesErrorsRetained: false };
+    while (Buffer.byteLength(JSON.stringify(receipt, null, 2) + '\n') > 16 * 1024 && receipt.failures.length) { receipt.failures.pop(); receipt.omittedRecords += 1; }
+    if (Buffer.byteLength(JSON.stringify(receipt, null, 2) + '\n') > 16 * 1024) return false;
+    proof.write('catalog-body-ordering.json', receipt); return true;
+  } catch { return false; }
+}
+
 function createCatalogContextDrain(context, isAborted, identity = {}) {
   const requests = new Set(); const jobs = new Set(); const waiters = new Set(); const observations = new Map();
   const never = new Promise(() => {}); let revision = 0; let rejected = false; let rejection; let lifecyclePhase = 'PRE_CLOSE';
+  const ordering = createCatalogBodyOrdering(identity, () => lifecyclePhase);
   const wake = () => { revision += 1; for (const resume of waiters) resume(); };
-  context.on('request', request => { requests.add(request); wake(); });
-  const terminal = request => { requests.delete(request); wake(); };
-  context.on('requestfinished', terminal); context.on('requestfailed', terminal); context.on('close', wake);
+  context.on('request', request => { requests.add(request); wake(); ordering.request(request); });
+  const terminal = (request, kind) => { requests.delete(request); wake(); ordering.terminal(request, kind); };
+  context.on('requestfinished', request => terminal(request, 'FINISHED')); context.on('requestfailed', request => terminal(request, 'FAILED')); context.on('close', wake);
   const wait = async promise => {
     let resume; const changed = new Promise(resolve => { resume = resolve; waiters.add(resolve); });
     try { await Promise.race([promise, changed]); } finally { waiters.delete(resume); }
@@ -336,6 +388,7 @@ function createCatalogContextDrain(context, isAborted, identity = {}) {
     }
   };
   return {
+    ordering,
     wake,
     track(job, observation = null) {
       jobs.add(job); if (observation) observations.set(job, observation); wake();
@@ -370,7 +423,7 @@ function createCatalogContextDrain(context, isAborted, identity = {}) {
     },
     async close() {
       do { await drain(); } while (requests.size || jobs.size);
-      lifecyclePhase = 'CONTEXT_CLOSE'; await context.close(); lifecyclePhase = 'POST_CLOSE';
+      lifecyclePhase = 'CONTEXT_CLOSE'; ordering.close('BEGIN'); await context.close(); lifecyclePhase = 'POST_CLOSE'; ordering.close('END');
       await drain(); // Late close-time work is validated, never discarded.
     },
   };
@@ -463,11 +516,11 @@ async function prepareCatalogQualification(options, browser) {
     return expectedManifest;
   };
   const proof = { live, origin: targetOrigin, directory, source, buildId, bindingSha256: binding ? digest(Buffer.from(JSON.stringify(binding))) : null,
-    failures: [], images: [], imageBytes: 0, assets: new Map(), pending: new Set(), contexts: new Set(), contextDrains: new Map(), responseCount: 0, responseBytes: 0, started: qualificationStarted, aborted: false };
+    failures: [], bodyOrdering: { observed: 0, omitted: 0, records: [] }, images: [], imageBytes: 0, assets: new Map(), pending: new Set(), contexts: new Set(), contextDrains: new Map(), responseCount: 0, responseBytes: 0, started: qualificationStarted, aborted: false };
   proof.opening = await servedBuild();
-  const observeOuterWorkDeadline = () => catalogDrainCheckpoint(proof, 'WORK_ABORT', null, 'OUTER_WORK_DEADLINE');
+  const observeOuterWorkDeadline = () => { catalogBodyOrderingCheckpoint(proof, 'WORK_ABORT'); return catalogDrainCheckpoint(proof, 'WORK_ABORT', null, 'OUTER_WORK_DEADLINE'); };
   let wakeAbort; const workAborted = new Promise(resolve => { wakeAbort = resolve; });
-  proof.timer = setTimeout(() => { proof.aborted = true; proof.failures.push('CATALOG_WORK_DEADLINE'); catalogDrainCheckpoint(proof, 'WORK_ABORT', null, 'INNER_WORK_DEADLINE'); wakeAbort();
+  proof.timer = setTimeout(() => { proof.aborted = true; proof.failures.push('CATALOG_WORK_DEADLINE'); catalogBodyOrderingCheckpoint(proof, 'WORK_ABORT'); catalogDrainCheckpoint(proof, 'WORK_ABORT', null, 'INNER_WORK_DEADLINE'); wakeAbort();
     for (const context of proof.contexts) { proof.contextDrains.get(context)?.wake(); void context.close().catch(() => {}); }
   }, Math.max(1, 300000 - (performance.now() - qualificationStarted))); proof.timer.unref();
   proof.write = (name, value) => { const file = path.join(directory, name); fs.writeFileSync(file, JSON.stringify(value, null, 2) + '\n', { flag: 'wx', mode: 0o600 }); };
@@ -501,6 +554,7 @@ async function prepareCatalogQualification(options, browser) {
     catch { proof.failures.push('CATALOG_ABORT_FAILED'); proof.sampleFailure('CATALOG_ABORT_FAILED', 'ABORT', () => route.request()); }
   };
   proof.response = (response, contextDrain = null) => {
+    const orderingRecord = contextDrain ? contextDrain.ordering.response(response) : null;
     let failureStage = 'MAP';
     const job = (async () => {
       const url = new URL(response.url());
@@ -510,11 +564,12 @@ async function prepareCatalogQualification(options, browser) {
       failureStage = 'MAP'; const record = assetRecord(url.pathname);
       failureStage = 'STATUS'; assert.equal(response.status(), 200, 'loaded catalog asset must be served successfully');
       failureStage = 'HEADER'; const length = response.headers()['content-length']; if (length !== undefined) assert.ok(Number(length) <= 16 * 1024 * 1024, 'loaded catalog asset header must be bounded');
-      failureStage = 'BODY'; const bytes = await response.body(); proof.responseBytes += bytes.length;
+      failureStage = 'BODY'; if (contextDrain) contextDrain.ordering.body(orderingRecord); const bytes = await response.body(); proof.responseBytes += bytes.length;
       failureStage = 'BYTES';
       assert.ok(bytes.length === record.bytes && digest(bytes) === record.sha256 && proof.responseBytes <= 256 * 1024 * 1024, 'loaded catalog asset bytes must match the bound artifact');
       proof.assets.set(record.path, { ...record, responses: (proof.assets.get(record.path)?.responses || 0) + 1 });
-    })().catch(() => { proof.failures.push('CATALOG_ASSET_IDENTITY'); proof.sampleFailure('CATALOG_ASSET_IDENTITY', failureStage, () => response.request(), () => response.status()); });
+    })().catch(() => { proof.failures.push('CATALOG_ASSET_IDENTITY'); proof.sampleFailure('CATALOG_ASSET_IDENTITY', failureStage, () => response.request(), () => response.status());
+      if (contextDrain) contextDrain.ordering.failure(orderingRecord, failureStage, response); });
     proof.pending.add(job); void job.finally(() => proof.pending.delete(job));
     if (contextDrain) contextDrain.track(job, { request: () => response.request(),
       phase: () => failureStage === 'BODY' ? 'BODY_READ' : failureStage === 'BYTES' ? 'BYTE_VERIFY' : 'PRE_BODY_CHECK' });
@@ -532,6 +587,7 @@ async function prepareCatalogQualification(options, browser) {
     assert.deepEqual(closingSource, source, 'catalog source Git/script/component/package/lock identity must remain unchanged');
     clearTimeout(proof.timer);
     if (catalogWorkDeadlineObservers.get(browser) === observeOuterWorkDeadline) catalogWorkDeadlineObservers.delete(browser);
+    catalogBodyOrderingCheckpoint(proof, 'COMPLETION');
     proof.write('catalog-completion-checkpoint.json', catalogCompletionCheckpoint(proof, true,
       closing.sha256 === proof.opening.sha256 && closing.bytes === proof.opening.bytes));
     assert.ok(!proof.aborted && performance.now() - proof.started <= 300000 && proof.contexts.size === 0 && proof.failures.length === 0, 'catalog qualification/owned context cleanup must complete');
@@ -622,7 +678,8 @@ async function verifySellerCatalogFilters(browser, qualification = null) {
     const context = await browser.newContext({ viewport, deviceScaleFactor: 1,
       isMobile: viewport.width <= 390, hasTouch: viewport.width <= 390, serviceWorkers: 'block' });
     const contextDrain = proof ? createCatalogContextDrain(context, () => proof.aborted,
-      { ordinal: viewports.findIndex(value => value.width === viewport.width) + 1, viewportWidth: viewport.width }) : null;
+      { ordinal: viewports.findIndex(value => value.width === viewport.width) + 1, viewportWidth: viewport.width,
+        started: proof.started, origin: proof.origin, ordering: proof.bodyOrdering }) : null;
     if (proof) {
       proof.contexts.add(context); proof.contextDrains.set(context, contextDrain);
       context.on('response', response => proof.response(response, contextDrain));
@@ -789,7 +846,9 @@ async function verifySellerCatalogFilters(browser, qualification = null) {
       }
     };
     try {
+      if (contextDrain) contextDrain.ordering.navigation('INITIAL', 'BEGIN');
       await page.goto(url, { waitUntil: 'domcontentloaded' });
+      if (contextDrain) contextDrain.ordering.navigation('INITIAL', 'END');
       if (mode === 'loading') {
         await page.getByText('Loading active catalog...', { exact: true }).waitFor();
         assert.equal(await page.getByText('No public offers yet', { exact: true }).count(), 0);
@@ -860,7 +919,9 @@ async function verifySellerCatalogFilters(browser, qualification = null) {
           history[method] = function (...args) { effects.history += 1; return Reflect.apply(original, this, args); };
         }
       });
+      if (contextDrain) contextDrain.ordering.navigation('ORDERING', 'BEGIN');
       mode = 'ordering'; await page.reload({ waitUntil: 'domcontentloaded' });
+      if (contextDrain) contextDrain.ordering.navigation('ORDERING', 'END');
       const generalIds = generalRules.map(item => item.id);
       const orderingEntries = [...orderingOriginal, ...generalIds];
       const currencyValues = () => currency.locator('option').evaluateAll(nodes => nodes.map(node => node.value));
@@ -959,13 +1020,17 @@ async function verifySellerCatalogFilters(browser, qualification = null) {
       assert.equal(await page.evaluate(() => typeof window.ethereum), 'undefined', 'catalog controls must not create a wallet provider');
       // All four controls also reset on a fresh load and a different seller URL.
       await currency.selectOption('USD'); await order.selectOption('price-desc'); await category.selectOption('category:Coffee'); await search.fill('equal');
+      if (contextDrain) contextDrain.ordering.navigation('RESET4', 'BEGIN');
       await page.reload({ waitUntil: 'domcontentloaded' });
+      if (contextDrain) contextDrain.ordering.navigation('RESET4', 'END');
       await page.getByText(`Showing ${orderingTotal} of ${orderingTotal} catalog entries.`, { exact: true }).waitFor();
       assert.equal(await search.inputValue(), ''); assert.equal(await category.inputValue(), 'all');
       assert.equal(await currency.inputValue(), 'all'); assert.equal(await order.inputValue(), 'original');
       await expectOrdering(orderingOriginal);
       await currency.selectOption('USD'); await order.selectOption('price-desc'); await category.selectOption('category:Coffee'); await search.fill('equal');
+      if (contextDrain) contextDrain.ordering.navigation('SECOND_SELLER', 'BEGIN');
       await page.goto(`${catalogOrigin}/s/${secondBusiness.slug}`, { waitUntil: 'domcontentloaded' });
+      if (contextDrain) contextDrain.ordering.navigation('SECOND_SELLER', 'END');
       await page.getByText('Showing 3 of 3 catalog entries.', { exact: true }).waitFor();
       assert.equal(await search.inputValue(), ''); assert.equal(await category.inputValue(), 'all');
       assert.equal(await currency.inputValue(), 'all'); assert.equal(await order.inputValue(), 'original');
@@ -973,25 +1038,37 @@ async function verifySellerCatalogFilters(browser, qualification = null) {
       assert.deepEqual(await currencyValues(), ['all', 'USD', 'JPY'], 'seller change must derive only that seller currency choices');
       assert.equal(await page.locator(`[data-catalog-entry="${secondRules[0].id}"] a[href*="offer="]`).getAttribute('href'), `/?seller=${secondBusiness.slug}&offer=${secondRules[0].id}#customer-pass`);
       await capture('second-seller');
+      if (contextDrain) contextDrain.ordering.navigation('RETURN_PRIMARY', 'BEGIN');
       mode = 'ready'; await page.goto(url, { waitUntil: 'domcontentloaded' });
+      if (contextDrain) contextDrain.ordering.navigation('RETURN_PRIMARY', 'END');
       await page.getByText('Showing 5 of 5 catalog entries.', { exact: true }).waitFor();
       await search.fill('not-restored-after-reload'); await category.selectOption('general');
+      if (contextDrain) contextDrain.ordering.navigation('RESET2', 'BEGIN');
       await page.reload({ waitUntil: 'domcontentloaded' });
+      if (contextDrain) contextDrain.ordering.navigation('RESET2', 'END');
       await page.getByText('Showing 5 of 5 catalog entries.', { exact: true }).waitFor();
       assert.equal(await search.inputValue(), ''); assert.equal(await category.inputValue(), 'all');
+      if (contextDrain) contextDrain.ordering.navigation('EMPTY', 'BEGIN');
       mode = 'empty'; await page.reload({ waitUntil: 'domcontentloaded' });
+      if (contextDrain) contextDrain.ordering.navigation('EMPTY', 'END');
       await page.getByRole('heading', { name: 'No public offers yet', exact: true }).waitFor();
       assert.equal(await search.count(), 0); assert.equal(await page.getByRole('heading', { name: 'No matching catalog entries', exact: true }).count(), 0);
       await capture('empty');
+      if (contextDrain) contextDrain.ordering.navigation('ERROR', 'BEGIN');
       mode = 'error'; await page.reload({ waitUntil: 'domcontentloaded' });
+      if (contextDrain) contextDrain.ordering.navigation('ERROR', 'END');
       await page.getByText('Catalog fixture temporarily unavailable', { exact: true }).waitFor();
       assert.equal(await search.count(), 0); assert.equal(await page.getByText('No public offers yet', { exact: true }).count(), 0);
       await capture('load-error');
       if (viewport.width === 390) {
+        if (contextDrain) contextDrain.ordering.navigation('MOBILE_READY', 'BEGIN');
         mode = 'ready'; await page.reload({ waitUntil: 'domcontentloaded' });
+        if (contextDrain) contextDrain.ordering.navigation('MOBILE_READY', 'END');
         await search.fill('loyalty');
         await page.getByText('Showing 1 of 5 catalog entries.', { exact: true }).waitFor();
+        if (contextDrain) contextDrain.ordering.navigation('MOBILE_OFFER', 'BEGIN');
         await page.locator('[data-catalog-rule="catalog-rule-loyalty"]').getByRole('link', { name: 'Use this offer', exact: true }).tap();
+        if (contextDrain) contextDrain.ordering.navigation('MOBILE_OFFER', 'END');
         await waitForLocation(page, '/', '#customer-pass');
         assert.equal(new URL(page.url()).searchParams.get('seller'), business.slug);
         assert.equal(new URL(page.url()).searchParams.get('offer'), coffeeRules[1].id);

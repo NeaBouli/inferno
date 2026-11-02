@@ -394,6 +394,8 @@ Catalog -> Evidence : drain-entry counts before unchanged close barrier
 Mode -> Evidence : original 300s abort snapshot; at most16 sanitized samples total
 Mode -> Evidence : outer300s private browser-keyed ready-proof handoff before original close
 note over Mode,Evidence : Fixed OUTER/INNER_WORK_DEADLINE labels; inner flag/clocks unchanged.
+Catalog -> Evidence : bounded failed request/body ordering joined to fixed navigation/close stamps
+note over Catalog,Evidence : Failure-time state frozen separately from cleanup; no new waits or validation changes.
 note over Catalog,Evidence : Diagnostic only; observer failure cannot block original abort/wake/close.
 Mode -> Renderer : current-build manifest hash after
 Mode -> Evidence : source/build/runtime/cleanup receipt

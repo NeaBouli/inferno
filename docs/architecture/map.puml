@@ -427,5 +427,7 @@ left to right direction
 *** Observer failures do not interrupt cleanup; no acceptance or cause claim
 *** Outer300s -> browser-keyed private observer -> bounded snapshot -> original close
 *** Fixed outer/inner trigger labels; same clocks and identity-safe handoff cleanup
+*** Actual fixture request/body/terminal -> fixed navigation/close stamps -> at most16 failed ordering records
+*** Failure-time state separate from later cleanup; private16KiB receipt; no waits or oracle changes
 ** Root native execution and direct image review pending
 @endmindmap
