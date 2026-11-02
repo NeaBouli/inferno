@@ -22,6 +22,24 @@ No product source or live provider interaction added.
 end note
 @enduml
 
+@startuml benefits_public_catalog_ordering_flow_419
+actor Visitor
+participant SellerCatalogClient as Catalog
+participant "api public catalog GETs" as API
+participant "Local filtered product groups" as Groups
+participant "Existing offer cards" as Cards
+Visitor -> Catalog : open seller catalog
+Catalog -> API : existing products and rules requests
+API --> Catalog : product minor strings / currency and original rules
+Visitor -> Catalog : transient search/category/currency/order selection
+Catalog -> Groups : filter products; copy and stably order within each group
+note over Groups
+  Price order requires explicit currency and canonical minor strings.
+  General-rule search/category behavior stays separate.
+end note
+Groups -> Cards : preserve groups, attached rules and exact selection links
+@enduml
+
 @startuml
 title Verification/authorization trace (main path)
 actor User
@@ -358,4 +376,32 @@ alt mounted selection remains current and permitted
 else owner/selection/busy guard refuses
   Probe --> Page : request not sent
 end
+@enduml
+
+@startuml catalog_production_qualification_419
+actor Root
+participant "Existing loopback next-start" as Renderer
+participant "Catalog-only test entry" as Mode
+participant "Same verifySellerCatalogFilters" as Catalog
+participant "Private evidence" as Evidence
+Root -> Renderer : own production build / preview admission
+Root -> Mode : explicit --catalog-production-only
+Mode -> Renderer : current-build manifest hash before
+Mode -> Catalog : closed fixtures / own fresh contexts
+Catalog -> Renderer : ordinary page and current static assets
+Catalog -> Evidence : 18 images / layout and loaded-asset hashes
+Catalog -> Evidence : drain-entry counts before unchanged close barrier
+Mode -> Evidence : original 300s abort snapshot; at most16 sanitized samples total
+Mode -> Evidence : outer300s private browser-keyed ready-proof handoff before original close
+note over Mode,Evidence : Fixed OUTER/INNER_WORK_DEADLINE labels; inner flag/clocks unchanged.
+Catalog -> Evidence : bounded failed request/body ordering joined to fixed navigation/close stamps
+note over Catalog,Evidence : Failure-time state frozen separately from cleanup; no new waits or validation changes.
+Catalog -> Catalog : same private drain before eight document replacements / NAV-BEGIN / mode change
+note over Catalog : Known work only; initial/loading/SPA/default unchanged; no atomic-quiescence claim.
+note over Catalog,Evidence : Diagnostic only; observer failure cannot block original abort/wake/close.
+Mode -> Renderer : current-build manifest hash after
+Mode -> Evidence : source/build/runtime/cleanup receipt
+Root -> Catalog : import-only fixed live critical scope after release GO
+Catalog -> Evidence : actual-CID assets / 1440+390 / four images
+note over Root,Evidence : Native PASS and visual acceptance require execution and Root review.
 @enduml

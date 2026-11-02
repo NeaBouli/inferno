@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased] — 2026-11-02 — Currency-safe seller catalog ordering (#419)
+
+### Added
+
+- Public single-seller catalogs can order products by name or exact reference price within each category.
+  Price ordering requires an explicit currency, with no conversion; filters, attached offers and exact-offer links are preserved.
+
 ## [Unreleased] — 2026-10-09 — Copilot supply API: only CV-01 counts as permanently lost (CWA-02)
 
 ### Changed (public API)

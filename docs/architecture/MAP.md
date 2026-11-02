@@ -1524,13 +1524,27 @@ application CI and exact-source version4 Full52 remain release gates.
 
 Module: existing `SellerCatalogClient.tsx` public catalog. Hop: its existing
 `useEffect` -> `api::getBusinessProducts/getBusinessRules` -> existing public GET
-products/rules -> local category/entry filtering -> unchanged offer cards.
+products/rules -> local category/entry filtering -> copied within-category
+product ordering -> unchanged offer cards.
 Data: loaded product names/descriptions, attached/general rule labels and original
 product categories. Search/category state is transient; category values distinguish
 product categories from the existing general-offer group. Matching product entries
 keep all their original rules. Count/reset preserve entry ordering and exact
 price, lock eligibility and seller/rule selection bindings. No backend, request,
 storage, telemetry or dependency path is added.
+
+Issue419 extends only that local render hop with transient reference-price
+currency and product-order state. Currency choices come from the whole loaded
+valid-priced catalog; explicit currency selection filters priced products of that
+code. Name ordering uses a fixed English case-insensitive collator, while price
+ordering uses guarded exact BigInt minor units only under an explicit currency.
+Original category order and equal-key source order remain stable in both
+directions. General rules, attached rules, counts and seller/offer links retain
+their existing semantics. Clearing currency resets only price ordering; reset,
+seller change and reload clear all four local controls. The existing toolbar
+owns the added native selects; no money/API/backend/global-style module changes.
+Source preparation is not runtime or responsive visual qualification; Root owns
+the combined exact-source build and affected-surface release gates.
 
 `test-benefits-discovery-ui.js` extends the existing public-catalog handoff suite
 with mixed fixtures, combined filters, count/reset/state isolation, exact bindings
@@ -1731,3 +1745,45 @@ and config, and the module singleton `nativeWalletProbe` from
 `createNativeWalletProbe` owns the finite request lane. Only explicit method
 buttons call `start`; the original `WalletConnectControl::connectWallet` and
 its provider lifecycle remain identical to the restored 683ecea baseline.
+
+## Catalog production qualification (issue419)
+
+Test-only hop adopted before implementation: Root-owned loopback `next start`
+renderer → `scripts/test-benefits-discovery-ui.js --catalog-production-only` →
+the same `verifySellerCatalogFilters` synthetic GET fixtures and layout assertions
+→ 18 bounded screenshots plus source/build/loaded-asset receipts. The normal
+default dev/full runner and the implemented catalog-ordering product hop stay
+separate and unchanged. The qualification mode starts no server or wallet/provider;
+it requires the current `.next/BUILD_ID`, explicit fresh evidence directory and
+current-build served asset hashes before/after. Five real DPR1 viewports retain
+the existing target, focus, contrast, clipping and filter/link checks. Root owns
+runtime admission and image review. Source preparation is not native acceptance.
+The same exported fixture also has one import-only `root-live-critical` scope:
+fixed `https://shop.ifrunit.tech`, explicit Root Main/CID/image/build/post-source
+binding and actual-CID asset hashes. It uses only 1440/390 and four critical
+images. It cannot accept an arbitrary origin or reuse Mac build assets as live
+proof. Root alone admits execution and joins opening/closing deployment evidence.
+The same qualification node has a private diagnostic observer: finally/releaseLoading
+→ drain-entry counts → unchanged request/body drain; original 300s work abort
+→ bounded active counts/phases/samples → unchanged abort/wake/close. At most five
+entry records and one abort record (16KiB each, mode0600) retain only counts,
+fixed phases/method/type/origin classes and at most16 abort samples total with
+pathname hashes. BODY_READ/BYTE_VERIFY project existing stages only. Observer
+failures cannot interrupt abort cleanup. This is diagnostic evidence, not
+acceptance or a proven cause; default52, live export and 300s/60s bounds remain.
+The original outer300s callback also reaches a browser-keyed private ready-proof
+observer before its unchanged forced close. Fixed OUTER_WORK_DEADLINE versus
+INNER_WORK_DEADLINE metadata distinguishes the two clocks without setting the
+inner abort flag early. Missing/throwing observation cannot block close. Proof
+cleanup compares callback identity; runner cleanup touches only its own browser.
+No public seam, timer, delay, retry or qualification policy is added.
+The same node also records bounded actual-fixture body ordering: request/body/terminal
+stamps plus fixed navigation/close marks join at most16 failed requests in one
+private16KiB/mode0600 receipt. Failure-time navigation/lifecycle values are frozen
+separately from later cleanup. This observer adds no wait, drain-before-navigation,
+request, timer or validation change; default execution remains unchanged.
+Qualification alone drains the same known request/body work before eight existing
+document replacements, before their NAV-BEGIN marker and coupled fixture-mode
+mutation. Initial load, loading release, SPA tap and no-proof execution stay
+unchanged. This is not atomic quiescence: later requests can still race navigation.
+No deadline, failure suppression, transport replacement or historical cause claim.

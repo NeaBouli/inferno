@@ -13,8 +13,48 @@ import {
   getBusinessRules,
 } from '@/lib/api';
 import { lockSourceRequirement } from '@/lib/lockSource';
-import { formatProductPrice } from '@/lib/money';
+import { formatProductPrice, productCurrencies, type ProductCurrency } from '@/lib/money';
 import { businessPublicReference } from '@/lib/businessSlug';
+
+type CatalogOrder = 'original' | 'name-asc' | 'name-desc' | 'price-asc' | 'price-desc';
+type CatalogCurrency = 'all' | ProductCurrency;
+
+const productNameCollator = new Intl.Collator('en', { sensitivity: 'base' });
+
+function hasReferencePrice(product: PublicCatalogProduct): product is PublicCatalogProduct & {
+  basePriceMinor: string;
+  currency: ProductCurrency;
+} {
+  return typeof product.basePriceMinor === 'string'
+    && /^(0|[1-9][0-9]{0,17})$/.test(product.basePriceMinor)
+    && product.currency !== null
+    && productCurrencies.includes(product.currency);
+}
+
+function orderCatalogProducts(
+  products: PublicCatalogProduct[],
+  order: CatalogOrder,
+  currency: CatalogCurrency,
+) {
+  if (order === 'original' || (currency === 'all' && (order === 'price-asc' || order === 'price-desc'))) {
+    return products;
+  }
+  return products.map((product, index) => ({ product, index }))
+    .sort((left, right) => {
+      let comparison = 0;
+      if (order === 'name-asc' || order === 'name-desc') {
+        comparison = productNameCollator.compare(left.product.name, right.product.name);
+      } else if (hasReferencePrice(left.product) && hasReferencePrice(right.product)
+        && left.product.currency === currency && right.product.currency === currency) {
+        const leftPrice = BigInt(left.product.basePriceMinor);
+        const rightPrice = BigInt(right.product.basePriceMinor);
+        comparison = leftPrice < rightPrice ? -1 : leftPrice > rightPrice ? 1 : 0;
+      }
+      const direction = order === 'name-desc' || order === 'price-desc' ? -1 : 1;
+      return comparison * direction || left.index - right.index;
+    })
+    .map(({ product }) => product);
+}
 
 export function SellerCatalogClient({ businessId }: { businessId: string }) {
   const eligibility = useIfrLockEligibility();
@@ -26,6 +66,8 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
   const [shareStatus, setShareStatus] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedCurrency, setSelectedCurrency] = useState<CatalogCurrency>('all');
+  const [productOrder, setProductOrder] = useState<CatalogOrder>('original');
 
   useEffect(() => {
     const controller = new AbortController();
@@ -36,6 +78,8 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
     setStandaloneRules([]);
     setSearchQuery('');
     setSelectedCategory('all');
+    setSelectedCurrency('all');
+    setProductOrder('original');
     Promise.all([
       getBusinessProducts(businessId, controller.signal),
       getBusinessRules(businessId, controller.signal),
@@ -63,15 +107,22 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
     }
     return Array.from(grouped.entries());
   }, [products]);
+  const availableCurrencies = useMemo(() => {
+    const currencies = new Set(products.filter(hasReferencePrice).map((product) => product.currency));
+    return productCurrencies.filter((currency) => currencies.has(currency));
+  }, [products]);
   const filteredCatalog = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     const matchingCategories = categories.flatMap(([category, categoryProducts]) => {
       if (selectedCategory !== 'all' && selectedCategory !== `category:${category}`) return [];
       const matchingProducts = categoryProducts.filter((product) => (
-        [product.name, product.description || '', ...product.benefitRules.map((rule) => rule.label)]
+        (selectedCurrency === 'all' || (hasReferencePrice(product) && product.currency === selectedCurrency))
+        && [product.name, product.description || '', ...product.benefitRules.map((rule) => rule.label)]
           .some((text) => text.toLowerCase().includes(query))
       ));
-      return matchingProducts.length ? [[category, matchingProducts] as const] : [];
+      return matchingProducts.length
+        ? [[category, orderCatalogProducts(matchingProducts, productOrder, selectedCurrency)] as const]
+        : [];
     });
     const matchingRules = selectedCategory === 'all' || selectedCategory === 'general'
       ? standaloneRules.filter((rule) => rule.label.toLowerCase().includes(query))
@@ -81,9 +132,10 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
       rules: matchingRules,
       count: matchingCategories.reduce((count, [, items]) => count + items.length, 0) + matchingRules.length,
     };
-  }, [categories, standaloneRules, searchQuery, selectedCategory]);
+  }, [categories, standaloneRules, searchQuery, selectedCategory, selectedCurrency, productOrder]);
   const totalEntries = products.length + standaloneRules.length;
-  const hasFilters = searchQuery.length > 0 || selectedCategory !== 'all';
+  const hasFilters = searchQuery.length > 0 || selectedCategory !== 'all'
+    || selectedCurrency !== 'all' || productOrder !== 'original';
   const publicReference = business ? businessPublicReference(business) : businessId;
 
   async function shareCatalog() {
@@ -180,8 +232,11 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
             <p id="catalog-search-help" className="mt-2 text-sm leading-6 text-stone-300">
               Search product names, descriptions and offer labels. Matching products keep all their offers.
             </p>
-            <div role="search" aria-label="Seller catalog filters" className="mt-4 grid items-end gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,14rem)_auto]">
-              <div className="min-w-0">
+            <p id="catalog-order-help" className="mt-2 text-sm leading-6 text-stone-300">
+              Currency filters product reference prices. Sorting stays within each category; general offers stay separate.
+            </p>
+            <div role="search" aria-label="Seller catalog filters" className="mt-4 grid items-end gap-3 sm:grid-cols-2">
+              <div className="min-w-0 sm:col-span-2">
                 <label className="block text-sm font-bold text-stone-200" htmlFor="catalog-search">Search this catalog</label>
                 <input
                   id="catalog-search"
@@ -210,10 +265,52 @@ export function SellerCatalogClient({ businessId }: { businessId: string }) {
                   {standaloneRules.length > 0 ? <option value="general">General offers only</option> : null}
                 </select>
               </div>
+              <div className="min-w-0">
+                <label className="block text-sm font-bold text-stone-200" htmlFor="catalog-currency">Reference-price currency</label>
+                <select
+                  id="catalog-currency"
+                  value={selectedCurrency}
+                  onChange={(event) => {
+                    const currency = event.target.value as CatalogCurrency;
+                    setSelectedCurrency(currency);
+                    if (currency === 'all' && (productOrder === 'price-asc' || productOrder === 'price-desc')) {
+                      setProductOrder('original');
+                    }
+                  }}
+                  aria-describedby="catalog-order-help"
+                  aria-controls="catalog-results"
+                  className="mt-2 min-h-12 w-full min-w-0 rounded-lg border border-white/15 px-4 py-3 font-normal focus-visible:outline-[#8f3519]"
+                >
+                  <option value="all">All currencies</option>
+                  {availableCurrencies.map((currency) => <option key={currency} value={currency}>{currency}</option>)}
+                </select>
+              </div>
+              <div className="min-w-0">
+                <label className="block text-sm font-bold text-stone-200" htmlFor="catalog-order">Sort products within each category</label>
+                <select
+                  id="catalog-order"
+                  value={productOrder}
+                  onChange={(event) => setProductOrder(event.target.value as CatalogOrder)}
+                  aria-describedby="catalog-order-help"
+                  aria-controls="catalog-results"
+                  className="mt-2 min-h-12 w-full min-w-0 rounded-lg border border-white/15 px-4 py-3 font-normal focus-visible:outline-[#8f3519]"
+                >
+                  <option value="original">Original order</option>
+                  <option value="name-asc">Name A–Z</option>
+                  <option value="name-desc">Name Z–A</option>
+                  <option value="price-asc" disabled={selectedCurrency === 'all'}>Reference price low–high</option>
+                  <option value="price-desc" disabled={selectedCurrency === 'all'}>Reference price high–low</option>
+                </select>
+              </div>
               <button
                 type="button"
                 disabled={!hasFilters}
-                onClick={() => { setSearchQuery(''); setSelectedCategory('all'); }}
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedCategory('all');
+                  setSelectedCurrency('all');
+                  setProductOrder('original');
+                }}
                 className="min-h-12 rounded-full border border-orange-200/40 px-5 py-3 text-sm font-black text-orange-50 disabled:opacity-50 focus-visible:outline-[#8f3519]"
               >
                 Reset filters

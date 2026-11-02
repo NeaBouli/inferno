@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 
 const assert = require('node:assert/strict');
-const { spawn } = require('node:child_process');
+const { spawn, execFileSync } = require('node:child_process');
+const crypto = require('node:crypto');
 const path = require('node:path');
 const fs = require('node:fs');
 const { chromium, devices } = require('playwright');
@@ -11,6 +12,7 @@ const frontend = path.join(root, 'apps', 'benefits-network', 'frontend');
 const port = Number(process.env.BENEFITS_DISCOVERY_UI_PORT || 3212);
 const origin = `http://127.0.0.1:${port}`;
 const NAVIGATION_TIMEOUT_MS = 90_000;
+const catalogProductionOnly = process.argv.length === 3 && process.argv[2] === '--catalog-production-only';
 const sellerWallet = '0x1000000000000000000000000000000000000001';
 const sellerSignature = `0x${'11'.repeat(65)}`;
 const sellerAuthMessage = 'IFR Benefits Network deterministic seller UI authorization';
@@ -215,7 +217,401 @@ async function waitForLocation(page, pathname, hash = '') {
   );
 }
 
-async function verifySellerCatalogFilters(browser) {
+function catalogImagePlan(viewport, state, live) {
+  if (live) return state === 'all' || state === 'combined-order' ? { fullPage: state === 'all' } : null;
+  if (state === 'name-order-all') return { fullPage: true };
+  if (state === 'combined-order') return { fullPage: false };
+  if (state === 'all' && viewport.width !== 320) return { fullPage: true };
+  return viewport.width === 1440 && ['loading', 'empty', 'load-error', 'no-match'].includes(state) ? { fullPage: false } : null;
+}
+function catalogPngSize(bytes) {
+  assert.ok(bytes.length >= 24 && bytes.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]))
+    && bytes.toString('ascii', 12, 16) === 'IHDR', 'catalog PNG header must be valid');
+  return { width: bytes.readUInt32BE(16), height: bytes.readUInt32BE(20) };
+}
+function catalogPublicPath(value) {
+  const decoded = decodeURIComponent(value);
+  assert.ok(decoded.startsWith('/') && !/[\\\0%?#]/.test(decoded)
+    && !decoded.split('/').some(part => part === '.' || part === '..'), 'catalog asset path must be canonical');
+  return decoded;
+}
+const CATALOG_FAILURE_CODES = new Set(['CATALOG_WORK_DEADLINE', 'CATALOG_WEBSOCKET_FORBIDDEN', 'CATALOG_WEBSOCKET_CLOSE_FAILED',
+  'CATALOG_NETWORK_ADMISSION', 'CATALOG_ABORT_FAILED', 'CATALOG_FIXTURE_API', 'CATALOG_FIXTURE_LOGO', 'CATALOG_ASSET_IDENTITY']);
+const CATALOG_FAILURE_STAGES = new Set(['ADMISSION', 'CONTINUE', 'COUNT', 'MAP', 'STATUS', 'HEADER', 'BODY', 'BYTES', 'API', 'LOGO', 'WEBSOCKET', 'ABORT']);
+const CATALOG_RESOURCE_TYPES = new Set(['document', 'stylesheet', 'image', 'media', 'font', 'script', 'texttrack', 'xhr', 'fetch', 'eventsource', 'websocket', 'manifest', 'other']);
+const CATALOG_METHODS = new Set(['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'OTHER']);
+const catalogWorkDeadlineObservers = new WeakMap();
+function catalogFailureSample(code, stage, request, targetOrigin, status) {
+  if (!CATALOG_FAILURE_CODES.has(code) || !CATALOG_FAILURE_STAGES.has(stage)) return null;
+  try {
+    const url = new URL(request.url()); const method = typeof request.method === 'function' ? request.method() : 'OTHER';
+    const type = typeof request.resourceType === 'function' ? request.resourceType() : 'other';
+    let publicPath = url.pathname; try { publicPath = catalogPublicPath(publicPath); } catch { /* Hash only. */ }
+    const sample = { code, stage, method: CATALOG_METHODS.has(method) ? method : 'OTHER', resourceType: CATALOG_RESOURCE_TYPES.has(type) ? type : 'other',
+      originClass: url.origin === targetOrigin ? 'TARGET' : ['http:', 'https:'].includes(url.protocol) ? 'OTHER_HTTP' : 'OTHER',
+      pathSha256: crypto.createHash('sha256').update(publicPath).digest('hex') };
+    if (Number.isInteger(status) && status >= 100 && status <= 599) sample.status = status;
+    return sample;
+  } catch { return null; }
+}
+function catalogCompletionCheckpoint(proof, sourceClosingEqual, buildClosingEqual) {
+  const elapsedMs = performance.now() - proof.started;
+  const count = value => Number.isSafeInteger(value) && value >= 0 ? value : null;
+  const histogram = Object.fromEntries([...CATALOG_FAILURE_CODES, 'UNKNOWN_FAILURE_CODE'].map(code => [code, 0]));
+  for (const code of proof.failures) histogram[CATALOG_FAILURE_CODES.has(code) ? code : 'UNKNOWN_FAILURE_CODE'] += 1;
+  const samples = (proof.failureSamples || []).slice(0, 16).flatMap(sample => {
+    if (!sample || !CATALOG_FAILURE_CODES.has(sample.code) || !CATALOG_FAILURE_STAGES.has(sample.stage)) return [];
+    const safe = { code: sample.code, stage: sample.stage, method: CATALOG_METHODS.has(sample.method) ? sample.method : 'OTHER',
+      resourceType: CATALOG_RESOURCE_TYPES.has(sample.resourceType) ? sample.resourceType : 'other',
+      originClass: ['TARGET', 'OTHER_HTTP', 'OTHER'].includes(sample.originClass) ? sample.originClass : 'OTHER',
+      pathSha256: /^[a-f0-9]{64}$/.test(sample.pathSha256) ? sample.pathSha256 : null };
+    if (Number.isInteger(sample.status) && sample.status >= 100 && sample.status <= 599) safe.status = sample.status;
+    return [safe];
+  });
+  const conditions = { notAborted: !proof.aborted, withinWorkBudget: elapsedMs <= 300000,
+    ownContextsClosed: proof.contexts.size === 0, noRecordedFailures: proof.failures.length === 0,
+    sourceClosingEqual: sourceClosingEqual === true, buildClosingEqual: buildClosingEqual === true };
+  return { schema: 'catalog-completion-checkpoint/v1', status: Object.values(conditions).every(Boolean) ? 'PRE_ASSERT_CHECKPOINT' : 'FAIL',
+    stage: 'BEFORE_COMPLETION_ASSERT', isAcceptance: false, elapsedMs: Number.isFinite(elapsedMs) && elapsedMs >= 0 ? elapsedMs : null, conditions,
+    counts: { failures: count(proof.failures.length), contexts: count(proof.contexts.size), pendingAssetJobs: count(proof.pending.size),
+      assetResponses: count(proof.responseCount), assetResponseBytes: count(proof.responseBytes), verifiedAssets: count(proof.assets.size),
+      images: count(proof.images.length), imageBytes: count(proof.imageBytes), omittedSamples: count(proof.failureSampleOmitted || 0) },
+    knownFailureCodeHistogram: histogram, samples, rawUrlsQueriesErrorsBodiesRetained: false, validationUnchanged: true };
+}
+
+function catalogDrainSample(phase, request, targetOrigin) {
+  if (!['REQUEST_PENDING', 'PRE_BODY_CHECK', 'BODY_READ', 'BYTE_VERIFY'].includes(phase)) return null;
+  // Reuse the closed metadata projection without recording a failure.
+  const sample = catalogFailureSample('CATALOG_ASSET_IDENTITY', 'BODY', request, targetOrigin);
+  return sample ? { phase, method: sample.method, resourceType: sample.resourceType,
+    originClass: sample.originClass, pathSha256: sample.pathSha256 } : null;
+}
+function catalogDrainCheckpoint(proof, event, context = null, trigger = null) {
+  try {
+    if (!['DRAIN_ENTRY', 'WORK_ABORT'].includes(event)
+      || (event === 'DRAIN_ENTRY' ? trigger !== null : !['OUTER_WORK_DEADLINE', 'INNER_WORK_DEADLINE'].includes(trigger))) return false;
+    const contexts = context ? [context] : [...proof.contexts];
+    if (contexts.length > 5) return false;
+    let remaining = event === 'WORK_ABORT' ? 16 : 0;
+    const rows = contexts.map(owned => {
+      const row = proof.contextDrains.get(owned).snapshot(proof.origin, remaining);
+      remaining -= row.samples.length; return row;
+    });
+    const elapsedMs = performance.now() - proof.started;
+    const count = value => Number.isSafeInteger(value) && value >= 0 ? value : null;
+    const receipt = { schema: 'catalog-drain-observation/v1', isAcceptance: false, event, trigger,
+      scriptSha256: /^[a-f0-9]{64}$/.test(proof.source.scriptSha256) ? proof.source.scriptSha256 : null, elapsedMs: Number.isFinite(elapsedMs) && elapsedMs >= 0 ? elapsedMs : null,
+      activeContextCount: count(proof.contexts.size), globalPendingValidationJobCount: count(proof.pending.size), contexts: rows,
+      rawUrlsQueriesErrorsHeadersBodiesRetained: false };
+    if (Buffer.byteLength(JSON.stringify(receipt)) > 16 * 1024) return false;
+    const ordinal = rows[0]?.contextOrdinal;
+    if (event === 'DRAIN_ENTRY' && (!Number.isInteger(ordinal) || ordinal < 1 || ordinal > 5)) return false;
+    proof.write(event === 'DRAIN_ENTRY' ? `catalog-drain-entry-0${ordinal}.json` : 'catalog-drain-work-abort.json', receipt);
+    return true;
+  } catch { return false; } // Observation must never prevent the original abort/wake/close.
+}
+
+const CATALOG_NAVIGATION_SITES = new Set(['INITIAL', 'ORDERING', 'RESET4', 'SECOND_SELLER', 'RETURN_PRIMARY', 'RESET2', 'EMPTY', 'ERROR', 'MOBILE_READY', 'MOBILE_OFFER']);
+function createCatalogBodyOrdering(identity, getLifecycle) {
+  const records = new WeakMap(); let number = 0;
+  let navigation = { epoch: 0, site: null, startMs: null, endMs: null };
+  const closing = { startMs: null, endMs: null };
+  const safe = action => { try { return action(); } catch { return null; } };
+  const time = () => { const value = performance.now() - identity.started; return Number.isFinite(value) && value >= 0 ? value : null; };
+  const count = value => Number.isSafeInteger(value) && value >= 0 ? value : null;
+  const terminal = row => ({ kind: ['FINISHED', 'FAILED'].includes(row?.terminalKind) ? row.terminalKind : 'MISSING', atMs: row?.terminalAtMs ?? null });
+  return {
+    request: request => safe(() => { records.set(request, { number: ++number, requestMs: time(), responseMs: null, bodyMs: null,
+      requestEpoch: navigation.epoch, bodyEpoch: null, requestNavigation: Object.freeze({ ...navigation }), bodyNavigation: null,
+      bodyReturned: false, bodyReturnedMs: null, terminalKind: 'MISSING', terminalAtMs: null }); }),
+    terminal: (request, kind) => safe(() => { const row = records.get(request); if (row) { row.terminalKind = kind; row.terminalAtMs = time(); } }),
+    response: response => safe(() => { const row = records.get(response.request()); if (row) row.responseMs = time(); return row || null; }),
+    body: row => safe(() => { if (row) { row.bodyMs = time(); row.bodyEpoch = navigation.epoch; row.bodyNavigation = Object.freeze({ ...navigation }); } }),
+    returned: row => safe(() => { if (row) { row.bodyReturned = true; row.bodyReturnedMs = time(); } }),
+    navigation: (site, phase) => safe(() => {
+      if (!CATALOG_NAVIGATION_SITES.has(site)) return;
+      if (phase === 'BEGIN') navigation = { epoch: navigation.epoch + 1, site, startMs: time(), endMs: null };
+      else if (phase === 'END' && navigation.site === site) navigation.endMs = time();
+    }),
+    close: phase => safe(() => { if (phase === 'BEGIN') closing.startMs = time(); else if (phase === 'END') closing.endMs = time(); }),
+    failure: (row, stage, response) => safe(() => {
+      const collector = identity.ordering; if (!collector) return;
+      collector.observed += 1;
+      if (collector.records.length >= 16) { collector.omitted += 1; return; }
+      const sample = catalogFailureSample('CATALOG_ASSET_IDENTITY', stage, response.request(), identity.origin, response.status());
+      if (!sample) { collector.omitted += 1; return; }
+      const lifecycle = getLifecycle();
+      const captured = Object.freeze({ contextOrdinal: [1, 2, 3, 4, 5].includes(identity.ordinal) ? identity.ordinal : null, requestOrdinal: count(row?.number),
+        method: sample.method, resourceType: sample.resourceType, originClass: sample.originClass, pathSha256: sample.pathSha256,
+        status: sample.status ?? null, stage: sample.stage, requestMs: row?.requestMs ?? null, responseMs: row?.responseMs ?? null,
+        bodyMs: row?.bodyMs ?? null, bodyReturned: row?.bodyReturned === true, bodyReturnedMs: row?.bodyReturnedMs ?? null,
+        requestNavigation: row?.requestNavigation ?? null, bodyNavigation: row?.bodyNavigation ?? null, failureMs: time(), requestEpoch: row?.requestEpoch ?? null, bodyEpoch: row?.bodyEpoch ?? null,
+        navigation: Object.freeze({ ...navigation }), lifecyclePhase: ['PRE_CLOSE', 'CONTEXT_CLOSE', 'POST_CLOSE'].includes(lifecycle) ? lifecycle : 'UNKNOWN', terminal: Object.freeze(terminal(row)), closing: Object.freeze({ ...closing }) });
+      collector.records.push({ captured, later: () => ({ terminal: terminal(row), closing: { ...closing } }) });
+    }),
+  };
+}
+function catalogBodyOrderingCheckpoint(proof, point) {
+  try {
+    if (!['COMPLETION', 'WORK_ABORT'].includes(point)) return false;
+    const collector = proof.bodyOrdering;
+    const receipt = { schema: 'catalog-body-ordering/v1', isAcceptance: false, capturePoint: point, scriptSha256: /^[a-f0-9]{64}$/.test(proof.source.scriptSha256) ? proof.source.scriptSha256 : null,
+      observedFailures: collector.observed, omittedRecords: Math.max(collector.omitted, collector.observed - collector.records.length),
+      failures: collector.records.slice(0, 16).map(entry => ({ atFailure: entry.captured, laterObservation: entry.later() })),
+      rawUrlsQueriesHeadersBodiesErrorsRetained: false };
+    while (Buffer.byteLength(JSON.stringify(receipt, null, 2) + '\n') > 16 * 1024 && receipt.failures.length) { receipt.failures.pop(); receipt.omittedRecords += 1; }
+    if (Buffer.byteLength(JSON.stringify(receipt, null, 2) + '\n') > 16 * 1024) return false;
+    proof.write('catalog-body-ordering.json', receipt); return true;
+  } catch { return false; }
+}
+
+function createCatalogContextDrain(context, isAborted, identity = {}) {
+  const requests = new Set(); const jobs = new Set(); const waiters = new Set(); const observations = new Map();
+  const never = new Promise(() => {}); let revision = 0; let rejected = false; let rejection; let lifecyclePhase = 'PRE_CLOSE';
+  const ordering = createCatalogBodyOrdering(identity, () => lifecyclePhase);
+  const wake = () => { revision += 1; for (const resume of waiters) resume(); };
+  context.on('request', request => { requests.add(request); wake(); ordering.request(request); });
+  const terminal = (request, kind) => { requests.delete(request); wake(); ordering.terminal(request, kind); };
+  context.on('requestfinished', request => terminal(request, 'FINISHED')); context.on('requestfailed', request => terminal(request, 'FAILED')); context.on('close', wake);
+  const wait = async promise => {
+    let resume; const changed = new Promise(resolve => { resume = resolve; waiters.add(resolve); });
+    try { await Promise.race([promise, changed]); } finally { waiters.delete(resume); }
+  };
+  const drain = async () => {
+    for (;;) {
+      assert.ok(!isAborted(), 'catalog context drain stays inside the original work budget');
+      if (rejected) throw rejection;
+      const observed = revision;
+      await wait(Promise.all([...jobs]));
+      if (requests.size === 0 && jobs.size === 0 && revision === observed) {
+        // Let already queued protocol events register before the close handoff.
+        await wait(new Promise(resolve => setImmediate(resolve)));
+        if (requests.size === 0 && jobs.size === 0 && revision === observed) return;
+      } else if (jobs.size === 0 && requests.size > 0) await wait(never);
+    }
+  };
+  return {
+    drain,
+    ordering,
+    wake,
+    track(job, observation = null) {
+      jobs.add(job); if (observation) observations.set(job, observation); wake();
+      void job.then(() => { jobs.delete(job); observations.delete(job); wake(); }, error => { rejected = true; rejection = error; jobs.delete(job); observations.delete(job); wake(); });
+      return job;
+    },
+    snapshot(targetOrigin, sampleLimit = 0) {
+      const count = value => Number.isSafeInteger(value) && value >= 0 ? value : null;
+      const limit = Number.isInteger(sampleLimit) ? Math.max(0, Math.min(16, sampleLimit)) : 0;
+      const samples = [], bodyPhases = { PRE_BODY_CHECK: 0, BODY_READ: 0, BYTE_VERIFY: 0, UNKNOWN: 0 };
+      let unavailableMetadataCount = 0;
+      const sample = (phase, request) => {
+        if (samples.length >= limit) return;
+        try {
+          const projected = catalogDrainSample(phase, typeof request === 'function' ? request() : request, targetOrigin);
+          if (projected) samples.push(projected); else unavailableMetadataCount += 1;
+        } catch { unavailableMetadataCount += 1; }
+      };
+      for (const job of jobs) {
+        try {
+          const observation = observations.get(job); const phase = observation?.phase();
+          if (['PRE_BODY_CHECK', 'BODY_READ', 'BYTE_VERIFY'].includes(phase)) {
+            bodyPhases[phase] += 1; sample(phase, () => observation.request());
+          } else { bodyPhases.UNKNOWN += 1; unavailableMetadataCount += 1; }
+        } catch { bodyPhases.UNKNOWN += 1; unavailableMetadataCount += 1; }
+      }
+      for (const request of requests) sample('REQUEST_PENDING', request);
+      let aborted = null; try { aborted = isAborted() === true; } catch { unavailableMetadataCount += 1; }
+      return { contextOrdinal: count(identity.ordinal), viewportWidth: [1440, 1180, 820, 390, 320].includes(identity.viewportWidth) ? identity.viewportWidth : null,
+        lifecyclePhase, aborted, revision: count(revision), pendingRequestCount: count(requests.size), pendingValidationJobCount: count(jobs.size),
+        bodyPhases, samples, omittedSampleCount: count(requests.size + jobs.size - samples.length), unavailableMetadataCount: count(unavailableMetadataCount) };
+    },
+    async close() {
+      do { await drain(); } while (requests.size || jobs.size);
+      lifecyclePhase = 'CONTEXT_CLOSE'; ordering.close('BEGIN'); await context.close(); lifecyclePhase = 'POST_CLOSE'; ordering.close('END');
+      await drain(); // Late close-time work is validated, never discarded.
+    },
+  };
+}
+
+async function prepareCatalogQualification(options, browser) {
+  const qualificationStarted = performance.now();
+  assert.equal(Number(process.versions.node.split('.')[0]), 22, 'catalog qualification requires Node22');
+  assert.equal(require('playwright/package.json').version, '1.64.1', 'catalog qualification uses the admitted Playwright');
+  assert.ok(chromium.executablePath().includes('chromium-1248'), 'catalog qualification uses the admitted Chromium revision');
+  assert.ok(options && Object.keys(options).every(key => ['scope', 'evidenceDir', 'binding'].includes(key)), 'closed catalog qualification input required');
+  const live = options.scope === 'root-live-critical';
+  assert.ok(live || (options.scope === 'loopback-production' && catalogProductionOnly), 'catalog qualification scope is closed');
+  assert.ok(path.isAbsolute(options.evidenceDir || '') && !fs.existsSync(options.evidenceDir), 'fresh absolute catalog evidence directory required');
+  const directory = path.resolve(options.evidenceDir); fs.mkdirSync(directory, { mode: 0o700 });
+  assert.equal(fs.realpathSync(directory), directory, 'catalog evidence path must not use symlinks');
+  const digest = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
+  const fileBytes = (file, maximum) => {
+    const stat = fs.lstatSync(file);
+    assert.ok(stat.isFile() && !stat.isSymbolicLink() && stat.nlink === 1 && stat.size <= maximum, 'bounded regular catalog artifact required');
+    return fs.readFileSync(file);
+  };
+  const sourceSnapshot = () => {
+    const gitIds = execFileSync('git', ['-c', 'core.fsmonitor=false', '-C', root, 'rev-parse', 'HEAD', 'HEAD:apps/benefits-network/frontend'],
+    { encoding: 'utf8', timeout: 5000, maxBuffer: 4096 }).trim().split('\n');
+  assert.ok(gitIds.length === 2 && gitIds.every(value => /^[a-f0-9]{40}$/.test(value)), 'catalog source Git identity required');
+    return { sourceCommit: gitIds[0], frontendTree: gitIds[1], scriptSha256: digest(fileBytes(__filename, 512 * 1024)),
+    componentSha256: digest(fileBytes(path.join(frontend, 'src/app/s/[businessId]/SellerCatalogClient.tsx'), 256 * 1024)),
+    packageSha256: digest(fileBytes(path.join(frontend, 'package.json'), 128 * 1024)),
+    lockSha256: digest(fileBytes(path.join(frontend, 'package-lock.json'), 4 * 1024 * 1024)) };
+  };
+  const source = sourceSnapshot();
+  const expected = new Map(); let buildId; let binding = null;
+  if (live) {
+    binding = options.binding;
+    const bindingKeys = ['releasedMain', 'sourceCommit', 'frontendTree', 'containerId', 'imageId', 'state', 'observedUtc', 'buildId', 'assets', 'postSourceKind', 'buildReceiptSha256', 'postSourceReceiptSha256', 'postSource'];
+    assert.ok(binding && Object.keys(binding).length === bindingKeys.length && bindingKeys.every(key => Object.hasOwn(binding, key)), 'closed Root deployment binding required');
+    assert.ok(binding && binding.state?.status === 'running' && binding.state.health === 'healthy' && binding.state.stableThroughRead === true, 'Root stable healthy deployment binding required');
+    const age = Date.now() - Date.parse(binding.observedUtc);
+    assert.ok(Number.isFinite(age) && age >= 0 && age <= 300000, 'Root opening deployment proof must be fresh');
+    assert.ok(binding.postSourceKind === 'ROOT_SUPPLIED_VERIFIED_SOURCE'
+      && /^[a-f0-9]{64}$/.test(binding.buildReceiptSha256 || '') && /^[a-f0-9]{64}$/.test(binding.postSourceReceiptSha256 || ''), 'Root verified source/build receipt hashes required');
+    assert.ok(binding.releasedMain === source.sourceCommit && binding.sourceCommit === source.sourceCommit
+      && binding.frontendTree === source.frontendTree, 'Root released Main and local imported source must match');
+    assert.ok(/^[a-f0-9]{64}$/.test(binding.containerId || '') && /^sha256:[a-f0-9]{64}$/.test(binding.imageId || ''), 'Root actual CID/image required');
+    const post = binding.postSource;
+    const postKeys = ['sourceCommit', 'frontendTree', 'containerId', 'imageId', 'componentSha256', 'packageSha256', 'lockSha256'];
+    assert.ok(post && Object.keys(post).length === postKeys.length && postKeys.every(key => Object.hasOwn(post, key))
+      && post.sourceCommit === binding.sourceCommit && post.frontendTree === binding.frontendTree
+      && post.containerId === binding.containerId && post.imageId === binding.imageId
+      && ['componentSha256', 'packageSha256', 'lockSha256'].every(key => post[key] === source[key]), 'Root post-source frame must join exact deployment/source inputs');
+    assert.ok(Array.isArray(binding.assets) && binding.assets.length > 0 && binding.assets.length <= 4096, 'Root actual-CID asset map required');
+    for (const asset of binding.assets) {
+      const publicPath = catalogPublicPath(asset.path);
+      assert.ok(!expected.has(publicPath) && Number.isSafeInteger(asset.bytes) && asset.bytes >= 0 && asset.bytes <= 16 * 1024 * 1024 && /^[a-f0-9]{64}$/.test(asset.sha256), 'bounded unique actual-CID asset record required');
+      expected.set(publicPath, { bytes: asset.bytes, sha256: asset.sha256 });
+    }
+    buildId = binding.buildId;
+  } else {
+    assert.equal(options.binding, undefined, 'local production uses its own artifact, not a live binding');
+    buildId = fileBytes(path.join(frontend, '.next/BUILD_ID'), 512).toString('utf8').trim();
+  }
+  assert.ok(typeof buildId === 'string' && /^[A-Za-z0-9_-]{1,512}$/.test(buildId), 'production BUILD_ID required');
+  const targetOrigin = live ? 'https://shop.ifrunit.tech' : origin;
+  if (!live) assert.ok(Number.isInteger(port) && port >= 1024 && port <= 65535, 'fixed loopback port required');
+  const assetRecord = pathname => {
+    const publicPath = catalogPublicPath(pathname);
+    if (!expected.has(publicPath) && !live) {
+      const isNext = publicPath.startsWith('/_next/static/');
+      const base = path.join(frontend, isNext ? '.next/static' : 'public');
+      const relative = isNext ? publicPath.slice('/_next/static/'.length) : publicPath.slice(1);
+      const file = path.join(base, relative); const realBase = fs.realpathSync(base); const realFile = fs.realpathSync(file);
+      assert.ok(realFile.startsWith(realBase + path.sep), 'catalog asset must stay inside the current artifact');
+      const bytes = fileBytes(file, 16 * 1024 * 1024);
+      expected.set(publicPath, { bytes: bytes.length, sha256: digest(bytes) });
+    }
+    assert.ok(expected.has(publicPath), 'served catalog asset must exist in the bound artifact map');
+    return { path: publicPath, ...expected.get(publicPath) };
+  };
+  const manifestPath = `/_next/static/${buildId}/_buildManifest.js`;
+  const servedBuild = async () => {
+    const expectedManifest = assetRecord(manifestPath);
+    const response = await fetch(targetOrigin + manifestPath, { redirect: 'error', signal: AbortSignal.timeout(5000) });
+    assert.equal(response.status, 200, 'bound production build manifest must be served');
+    const declared = response.headers.get('content-length');
+    if (declared !== null) assert.ok(Number(declared) <= 16 * 1024 * 1024, 'production manifest response must be bounded');
+    const bytes = Buffer.from(await response.arrayBuffer());
+    assert.ok(bytes.length === expectedManifest.bytes && digest(bytes) === expectedManifest.sha256, 'served production BUILD_ID manifest must match bound artifact');
+    if (!live) assert.equal(fileBytes(path.join(frontend, '.next/BUILD_ID'), 512).toString('utf8').trim(), buildId, 'current production build must remain unchanged');
+    return expectedManifest;
+  };
+  const proof = { live, origin: targetOrigin, directory, source, buildId, bindingSha256: binding ? digest(Buffer.from(JSON.stringify(binding))) : null,
+    failures: [], bodyOrdering: { observed: 0, omitted: 0, records: [] }, images: [], imageBytes: 0, assets: new Map(), pending: new Set(), contexts: new Set(), contextDrains: new Map(), responseCount: 0, responseBytes: 0, started: qualificationStarted, aborted: false };
+  proof.opening = await servedBuild();
+  const observeOuterWorkDeadline = () => { catalogBodyOrderingCheckpoint(proof, 'WORK_ABORT'); return catalogDrainCheckpoint(proof, 'WORK_ABORT', null, 'OUTER_WORK_DEADLINE'); };
+  let wakeAbort; const workAborted = new Promise(resolve => { wakeAbort = resolve; });
+  proof.timer = setTimeout(() => { proof.aborted = true; proof.failures.push('CATALOG_WORK_DEADLINE'); catalogBodyOrderingCheckpoint(proof, 'WORK_ABORT'); catalogDrainCheckpoint(proof, 'WORK_ABORT', null, 'INNER_WORK_DEADLINE'); wakeAbort();
+    for (const context of proof.contexts) { proof.contextDrains.get(context)?.wake(); void context.close().catch(() => {}); }
+  }, Math.max(1, 300000 - (performance.now() - qualificationStarted))); proof.timer.unref();
+  proof.write = (name, value) => { const file = path.join(directory, name); fs.writeFileSync(file, JSON.stringify(value, null, 2) + '\n', { flag: 'wx', mode: 0o600 }); };
+  proof.runtime = { node: process.version, playwright: require('playwright/package.json').version, browser: browser.version(), declaredExecutable: chromium.executablePath() };
+  proof.write('catalog-opening.json', { schema: 'catalog-production-opening/v1', source, buildId, origin: targetOrigin,
+    runtime: proof.runtime,
+    binding: binding ? { releasedMain: binding.releasedMain, sourceCommit: binding.sourceCommit, frontendTree: binding.frontendTree, containerId: binding.containerId, imageId: binding.imageId,
+      state: binding.state, observedUtc: binding.observedUtc, postSourceKind: binding.postSourceKind, buildReceiptSha256: binding.buildReceiptSha256, postSourceReceiptSha256: binding.postSourceReceiptSha256 } : null,
+    bindingSha256: proof.bindingSha256, servedBuild: proof.opening });
+  proof.failureSamples = []; proof.failureSampleKeys = new Set(); proof.failureSampleOmitted = 0;
+  proof.sampleFailure = (code, stage, request, status) => {
+    try {
+      const sample = catalogFailureSample(code, stage, typeof request === 'function' ? request() : request, targetOrigin, typeof status === 'function' ? status() : status);
+      if (!sample) return;
+      const key = JSON.stringify(sample); if (proof.failureSampleKeys.has(key)) return;
+      if (proof.failureSamples.length >= 16) { proof.failureSampleOmitted += 1; return; }
+      proof.failureSampleKeys.add(key); proof.failureSamples.push(sample);
+    } catch { /* Metadata must not replace the existing validation outcome. */ }
+  };
+  proof.admittedAssets = new Set();
+  proof.admit = request => {
+    const url = new URL(request.url());
+    assert.ok(request.method() === 'GET' && url.origin === targetOrigin, 'catalog network is fixed-origin GET only');
+    const publicPath = catalogPublicPath(url.pathname);
+    const appRoute = ['/', '/guide', '/support', '/privacy', '/s/catalog-filter-fixture', '/s/catalog-second-fixture'].includes(publicPath);
+    if (!appRoute) { assetRecord(publicPath); proof.admittedAssets.add(publicPath); }
+  };
+  proof.abort = async (route, code, stage = 'ABORT') => {
+    proof.failures.push(code); proof.sampleFailure(code, stage, () => route.request());
+    try { await route.abort(); }
+    catch { proof.failures.push('CATALOG_ABORT_FAILED'); proof.sampleFailure('CATALOG_ABORT_FAILED', 'ABORT', () => route.request()); }
+  };
+  proof.response = (response, contextDrain = null) => {
+    const orderingRecord = contextDrain ? contextDrain.ordering.response(response) : null;
+    let failureStage = 'MAP';
+    const job = (async () => {
+      const url = new URL(response.url());
+      if (url.origin !== targetOrigin) return; // The only external fixture logo is fulfilled locally by the owning fixture.
+      if (!proof.admittedAssets.has(catalogPublicPath(url.pathname))) return;
+      failureStage = 'COUNT'; assert.ok(++proof.responseCount <= 2048, 'catalog asset response count must be bounded');
+      failureStage = 'MAP'; const record = assetRecord(url.pathname);
+      failureStage = 'STATUS'; assert.equal(response.status(), 200, 'loaded catalog asset must be served successfully');
+      failureStage = 'HEADER'; const length = response.headers()['content-length']; if (length !== undefined) assert.ok(Number(length) <= 16 * 1024 * 1024, 'loaded catalog asset header must be bounded');
+      failureStage = 'BODY'; if (contextDrain) contextDrain.ordering.body(orderingRecord); const bytes = await response.body();
+      if (contextDrain) contextDrain.ordering.returned(orderingRecord);
+      proof.responseBytes += bytes.length;
+      failureStage = 'BYTES';
+      assert.ok(bytes.length === record.bytes && digest(bytes) === record.sha256 && proof.responseBytes <= 256 * 1024 * 1024, 'loaded catalog asset bytes must match the bound artifact');
+      proof.assets.set(record.path, { ...record, responses: (proof.assets.get(record.path)?.responses || 0) + 1 });
+    })().catch(() => { proof.failures.push('CATALOG_ASSET_IDENTITY'); proof.sampleFailure('CATALOG_ASSET_IDENTITY', failureStage, () => response.request(), () => response.status());
+      if (contextDrain) contextDrain.ordering.failure(orderingRecord, failureStage, response); });
+    proof.pending.add(job); void job.finally(() => proof.pending.delete(job));
+    if (contextDrain) contextDrain.track(job, { request: () => response.request(),
+      phase: () => failureStage === 'BODY' ? 'BODY_READ' : failureStage === 'BYTES' ? 'BYTE_VERIFY' : 'PRE_BODY_CHECK' });
+  };
+  proof.flush = async () => {
+    while (proof.pending.size) {
+      assert.ok(!proof.aborted, 'catalog asset drain stays inside the original work budget');
+      await Promise.race([Promise.all([...proof.pending]), workAborted]);
+    }
+    assert.ok(!proof.aborted, 'catalog asset drain stays inside the original work budget');
+  };
+  proof.finish = async () => {
+    await proof.flush(); const closing = await servedBuild();
+    const closingSource = sourceSnapshot();
+    assert.deepEqual(closingSource, source, 'catalog source Git/script/component/package/lock identity must remain unchanged');
+    clearTimeout(proof.timer);
+    if (catalogWorkDeadlineObservers.get(browser) === observeOuterWorkDeadline) catalogWorkDeadlineObservers.delete(browser);
+    catalogBodyOrderingCheckpoint(proof, 'COMPLETION');
+    proof.write('catalog-completion-checkpoint.json', catalogCompletionCheckpoint(proof, true,
+      closing.sha256 === proof.opening.sha256 && closing.bytes === proof.opening.bytes));
+    assert.ok(!proof.aborted && performance.now() - proof.started <= 300000 && proof.contexts.size === 0 && proof.failures.length === 0, 'catalog qualification/owned context cleanup must complete');
+    assert.equal(proof.images.length, live ? 4 : 18, 'complete catalog screenshot matrix required');
+    assert.ok(proof.assets.size > 0 && [...proof.assets.keys()].some(value => value.endsWith('.css'))
+      && [...proof.assets.keys()].some(value => value.includes('/app/s/') && value.endsWith('.js')), 'actual catalog route chunk and CSS identity required');
+    const receipt = { schema: 'catalog-production-qualification/v1', status: 'PASS', scope: live ? 'root-live-critical' : 'loopback-production', source, buildId, origin: targetOrigin,
+      runtime: proof.runtime, bindingSha256: proof.bindingSha256, opening: proof.opening, closing, closingSource, assets: [...proof.assets.values()], images: proof.images, imageBytes: proof.imageBytes,
+      elapsedMs: performance.now() - proof.started, ownContextsClosed: true, rawBodiesRetained: false, sourceBuildJoinRequiresRootBuildReceipt: !live, invokerBrowserCleanup: 'REQUIRED_SEPARATELY', visualReviewByRoot: 'PENDING' };
+    proof.write('catalog-production-result.json', receipt); return receipt;
+  };
+  catalogWorkDeadlineObservers.set(browser, observeOuterWorkDeadline);
+  return proof;
+}
+
+async function verifySellerCatalogFilters(browser, qualification = null) {
+  const proof = qualification ? await prepareCatalogQualification(qualification, browser) : null;
+  const catalogOrigin = proof ? proof.origin : origin;
   const stamp = '2026-10-28T00:00:00.000Z';
   const business = { ...offer.business, id: 'catalog-filter-seller', slug: 'catalog-filter-fixture',
     name: 'Independent neighbourhood market and member services', categories: ['Coffee', 'Services', 'General offers'] };
@@ -248,57 +644,122 @@ async function verifySellerCatalogFilters(browser) {
     product('catalog-product-cup', 'Reusable member cup', 'General offers', 'A listed item without an attached discount.', [], '900719925474099313', 'USD'),
   ];
   const rules = [...coffeeRules, serviceRule, ...generalRules];
+  // Separate ordering fixtures keep every original search fixture/assertion intact.
+  const usdHigh = product('catalog-order-usd-high', 'Equal member item', 'Coffee', 'Exact upper neighbouring reference price.', [], '900719925474099314', 'USD');
+  const usdLow = product('catalog-order-usd-low', 'equal MEMBER item', 'Coffee', 'Exact lower neighbouring reference price.', [], '900719925474099313', 'USD');
+  const usdTie = product('catalog-order-usd-tie', 'Zulu member item', 'Coffee', 'Equal price preserves its source position.', [], '900719925474099313', 'USD');
+  const usdZero = product('catalog-order-usd-zero', 'Alpha zero item', 'Coffee', 'A genuine free reference price.', [], '0', 'USD');
+  const eurHigh = product('catalog-order-eur-high', 'Beta euro item', 'Services', 'Euro upper price.', [], '2000', 'EUR');
+  const eurLow = product('catalog-order-eur-low', 'Alpha euro item', 'Services', 'Euro lower price.', [], '1998', 'EUR');
+  const jpyHigh = product('catalog-order-jpy-high', 'Kyoto high item', 'Services', 'JPY has no fractional minor digits.', [], '1000', 'JPY');
+  const jpyLow = product('catalog-order-jpy-low', 'Kyoto low item', 'Services', 'JPY lower reference price.', [], '999', 'JPY');
+  const invalidPairs = [[null, null], [null, 'USD'], ['100', null], ['01', 'USD'],
+    ['-1', 'USD'], ['1e2', 'EUR'], ['1000000000000000000', 'JPY'], ['100', 'ZZZ']];
+  const invalidProducts = invalidPairs.map(([price, currency], index) => product(`catalog-order-invalid-${index}`,
+    `Unpriced defensive item ${index}`, 'Coffee', 'Invalid price/currency pairs must not become a zero price.', [], price, currency));
+  const orderingProducts = [...products, usdHigh, usdLow, usdTie, usdZero, eurHigh, eurLow, jpyHigh, jpyLow, ...invalidProducts];
+  const coffeeOrder = [products[0], usdHigh, usdLow, usdTie, usdZero, ...invalidProducts];
+  const servicesOrder = [products[1], eurHigh, eurLow, jpyHigh, jpyLow];
+  const orderingOriginal = [...coffeeOrder, ...servicesOrder, products[2]].map(item => item.id);
+  const orderingTotal = orderingProducts.length + generalRules.length;
+  const secondBusiness = { ...business, id: 'catalog-second-seller', slug: 'catalog-second-fixture', name: 'Second independent seller' };
+  const secondProducts = [{ ...usdZero, id: 'catalog-second-zero', businessId: secondBusiness.id },
+    { ...jpyLow, id: 'catalog-second-jpy', businessId: secondBusiness.id }];
+  const secondRules = [rule('catalog-second-general', 'Second seller member benefit', null, 'Second seller membership', { businessId: secondBusiness.id })];
+  const combinedQueryMatches = orderingProducts.filter(item => item.category === 'Coffee' && item.currency === 'USD'
+    && typeof item.basePriceMinor === 'string' && /^(0|[1-9][0-9]{0,17})$/.test(item.basePriceMinor)
+    && [item.name, item.description || '', ...item.benefitRules.map(offer => offer.label)]
+      .some(text => text.toLowerCase().includes('equal')));
+  assert.deepEqual(combinedQueryMatches.map(item => item.id), [usdHigh.id, usdLow.id, usdTie.id], 'combined fixture query must retain name and description matches');
   const viewports = [
     { width: 1440, height: 1000 }, { width: 1180, height: 820 }, { width: 820, height: 1180 },
     { width: 390, height: 844 }, { width: 320, height: 844 },
   ];
-  const evidenceDir = process.env.BENEFITS_CATALOG_EVIDENCE_DIR;
+  const evidenceDir = proof ? proof.directory : process.env.BENEFITS_CATALOG_EVIDENCE_DIR;
   const metrics = [];
   if (evidenceDir) fs.mkdirSync(path.join(evidenceDir, 'screenshots'), { recursive: true });
 
-  for (const viewport of viewports) {
+  for (const viewport of viewports.filter(value => !proof?.live || value.width === 1440 || value.width === 390)) {
+    assert.ok(!proof?.aborted, 'catalog work deadline must not start another context');
     const context = await browser.newContext({ viewport, deviceScaleFactor: 1,
       isMobile: viewport.width <= 390, hasTouch: viewport.width <= 390, serviceWorkers: 'block' });
+    const contextDrain = proof ? createCatalogContextDrain(context, () => proof.aborted,
+      { ordinal: viewports.findIndex(value => value.width === viewport.width) + 1, viewportWidth: viewport.width,
+        started: proof.started, origin: proof.origin, ordering: proof.bodyOrdering }) : null;
+    if (proof) {
+      proof.contexts.add(context); proof.contextDrains.set(context, contextDrain);
+      context.on('response', response => proof.response(response, contextDrain));
+      await context.routeWebSocket('**/*', async socket => {
+        proof.failures.push('CATALOG_WEBSOCKET_FORBIDDEN');
+        const metadata = { url: () => socket.url(), method: () => 'GET', resourceType: () => 'websocket' };
+        proof.sampleFailure('CATALOG_WEBSOCKET_FORBIDDEN', 'WEBSOCKET', metadata);
+        try { await socket.close(); } catch { proof.failures.push('CATALOG_WEBSOCKET_CLOSE_FAILED'); proof.sampleFailure('CATALOG_WEBSOCKET_CLOSE_FAILED', 'WEBSOCKET', metadata); }
+      });
+      await context.route('**/*', async route => {
+        let stage = 'ADMISSION';
+        try { proof.admit(route.request()); stage = 'CONTINUE'; await route.continue(); }
+        catch { await proof.abort(route, 'CATALOG_NETWORK_ADMISSION', stage); }
+      });
+    }
     let mode = viewport.width === 1440 ? 'loading' : 'ready';
     let releaseLoading;
     const loadingGate = new Promise(resolve => { releaseLoading = resolve; });
     const catalogRequests = [];
     const pageErrors = [];
     await context.route('**/api/**', async route => {
+      try {
       const request = route.request();
       const url = new URL(request.url());
+      if (proof) assert.equal(url.origin, catalogOrigin, 'catalog fixture API stays on the fixed renderer origin');
       assert.equal(request.method(), 'GET', 'public catalog fixture must never mutate data');
-      const isProducts = url.pathname === `/api/businesses/${business.slug}/products`;
-      const isRules = url.pathname === `/api/businesses/${business.slug}/rules`;
+      const second = url.pathname.startsWith(`/api/businesses/${secondBusiness.slug}/`);
+      const selectedBusiness = second ? secondBusiness : business;
+      const selectedProducts = second ? secondProducts : mode === 'ordering' ? orderingProducts : products;
+      const selectedRules = second ? secondRules : rules;
+      const isProducts = url.pathname === `/api/businesses/${selectedBusiness.slug}/products`;
+      const isRules = url.pathname === `/api/businesses/${selectedBusiness.slug}/rules`;
       if (isProducts || isRules) {
         catalogRequests.push(url.pathname);
         if (mode === 'loading') await loadingGate;
-        if (mode === 'error') return route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'Catalog fixture temporarily unavailable' }) });
-        return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(isProducts
-          ? { business, products: mode === 'empty' ? [] : products }
-          : { rules: mode === 'empty' ? [] : rules }) });
+        if (mode === 'error') return await route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'Catalog fixture temporarily unavailable' }) });
+        return await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(isProducts
+          ? { business: selectedBusiness, products: mode === 'empty' ? [] : selectedProducts }
+          : { rules: mode === 'empty' ? [] : selectedRules }) });
       }
-      if (url.pathname === `/api/businesses/${business.slug}`) return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(business) });
-      if (url.pathname === '/api/businesses') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(discoveryResponse([])) });
-      if (url.pathname === '/api/ready') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'ready', chainId: 1, database: 'ok', rateLimitStore: 'ok' }) });
+      if (url.pathname === `/api/businesses/${secondBusiness.slug}`) return await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(secondBusiness) });
+      if (url.pathname === `/api/businesses/${business.slug}`) return await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(business) });
+      if (url.pathname === '/api/businesses') return await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(discoveryResponse([])) });
+      if (url.pathname === '/api/ready') return await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'ready', chainId: 1, database: 'ok', rateLimitStore: 'ok' }) });
       throw new Error(`Unexpected catalog fixture request ${url.pathname}`);
+      } catch (error) {
+        if (!proof) throw error;
+        await proof.abort(route, 'CATALOG_FIXTURE_API', 'API');
+      }
     });
-    await context.route('https://assets.example.com/ifr-seller-logo.png', route => route.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64') }));
+    await context.route('https://assets.example.com/ifr-seller-logo.png', async route => {
+      try {
+        assert.equal(route.request().method(), 'GET', 'synthetic catalog logo must not mutate data');
+        await route.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64') });
+      } catch (error) { if (!proof) throw error; await proof.abort(route, 'CATALOG_FIXTURE_LOGO', 'LOGO'); }
+    });
     const page = await context.newPage();
     page.setDefaultNavigationTimeout(NAVIGATION_TIMEOUT_MS);
     page.on('pageerror', error => pageErrors.push(error.message));
-    const url = `${origin}/s/${business.slug}`;
+    const url = `${catalogOrigin}/s/${business.slug}`;
     const entries = () => page.locator('[data-catalog-entry]').evaluateAll(nodes => nodes.map(node => node.getAttribute('data-catalog-entry')));
     const search = page.getByRole('searchbox', { name: 'Search this catalog', exact: true });
     const category = page.getByLabel('Category', { exact: true });
     const reset = page.getByRole('button', { name: 'Reset filters', exact: true });
+    const currency = page.getByLabel('Reference-price currency', { exact: true });
+    const order = page.getByLabel('Sort products within each category', { exact: true });
     const resetFilters = async () => {
       if (await reset.isEnabled()) {
         if (viewport.width <= 390) await reset.tap(); else await reset.click();
       }
       await page.waitForFunction(() => document.querySelector('[data-catalog-result-count]')?.textContent?.trim() === 'Showing 5 of 5 catalog entries.');
     };
-    const capture = async state => {
+    const capture = async (state, focusId = 'catalog-search') => {
+      if (proof) await page.evaluate(async () => { await document.fonts.ready; await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))); });
       const contrastRatio = (foreground, background) => {
         const fg = foreground.match(/[\d.]+/g).map(Number);
         let bg = background.match(/[\d.]+/g).map(Number);
@@ -309,7 +770,7 @@ async function verifySellerCatalogFilters(browser) {
         const b = luminance(bg);
         return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
       };
-      const layout = await page.evaluate(() => {
+      const layout = await page.evaluate(focusId => {
         const filters = document.querySelector('[data-catalog-filters]');
         const cards = [...document.querySelectorAll('[data-catalog-entry]')];
         const targets = filters ? [...filters.querySelectorAll('input,select,button')] : [];
@@ -335,12 +796,12 @@ async function verifySellerCatalogFilters(browser) {
         const outsideCards = cards.filter(node => {
           const b = node.getBoundingClientRect(); return b.left < -1 || b.right > innerWidth + 1 || node.scrollWidth > node.clientWidth + 1;
         }).map(node => node.getAttribute('data-catalog-entry'));
-        const input = document.querySelector('#catalog-search');
+        const input = document.getElementById(focusId);
         const style = input ? getComputedStyle(input) : null;
         return { viewport: { width: innerWidth, height: innerHeight }, scrollWidth: document.documentElement.scrollWidth,
           controls: boxes, overlaps, clippedText, outsideCards, entryCount: cards.length,
           focus: input ? { visible: input.matches(':focus-visible'), outlineWidth: style.outlineWidth, outlineColor: style.outlineColor } : null };
-      });
+      }, focusId);
       metrics.push({ state, ...layout, catalogRequests: catalogRequests.length });
       assert.ok(layout.scrollWidth <= viewport.width, `${state} must not cause document overflow at ${viewport.width}`);
       assert.deepEqual(layout.overlaps, [], `${state}: controls must not overlap`);
@@ -355,21 +816,45 @@ async function verifySellerCatalogFilters(browser) {
         assert.ok(parseFloat(layout.focus.outlineWidth) >= 2, 'keyboard focus outline must be measurable');
         assert.ok(contrastRatio(layout.focus.outlineColor, input.background) >= 3, 'keyboard focus must contrast with the field');
       }
+      if (state === 'currency-focus' || state === 'order-focus' || state === 'combined-order') {
+        const control = layout.controls.find(control => control.id === focusId);
+        assert.ok(control && layout.focus.visible, 'new catalog select must retain visible keyboard focus');
+        assert.ok(parseFloat(layout.focus.outlineWidth) >= 2, 'new select focus outline must be measurable');
+        assert.ok(contrastRatio(layout.focus.outlineColor, control.background) >= 3, 'new select focus must contrast with its field');
+      }
       for (const control of layout.controls.filter(control => !control.disabled)) {
         assert.ok(contrastRatio(control.color, control.background) >= 4.5, `${control.id}: readable control text contrast`);
       }
-      if (evidenceDir) {
+      const imagePlan = proof ? catalogImagePlan(viewport, state, proof.live) : { fullPage: state === 'all' };
+      if (evidenceDir && imagePlan) {
         await page.evaluate(full => {
           const target = document.querySelector('[data-catalog-filters]') || document.querySelector('#catalog-results');
           const header = document.querySelector('.shop-header');
           const top = full ? 0 : Math.max(0, target.getBoundingClientRect().top + scrollY - header.getBoundingClientRect().height - 16);
           window.scrollTo({ top, behavior: 'instant' });
-        }, state === 'all');
-        await page.screenshot({ path: path.join(evidenceDir, 'screenshots', `${viewport.width}x${viewport.height}-${state}.png`), fullPage: state === 'all' });
+        }, imagePlan.fullPage);
+        const coverage = proof ? await page.evaluate(() => ({ width: innerWidth, height: innerHeight, dpr: devicePixelRatio, scrollX, scrollY,
+          documentHeight: Math.max(document.documentElement.scrollHeight, document.body.scrollHeight), scale: visualViewport?.scale, zoom: getComputedStyle(document.documentElement).zoom })) : null;
+        const imagePath = path.join(evidenceDir, 'screenshots', `${viewport.width}x${viewport.height}-${state}.png`);
+        if (proof) assert.equal(fs.existsSync(imagePath), false, 'new catalog proof must not overwrite a capture');
+        await page.screenshot({ path: imagePath, fullPage: imagePlan.fullPage });
+        if (proof) {
+          fs.chmodSync(imagePath, 0o600); const bytes = fs.readFileSync(imagePath); const size = catalogPngSize(bytes);
+          assert.ok(bytes.length <= 4 * 1024 * 1024 && size.width * size.height <= 30 * 1000 * 1000, 'catalog PNG must meet byte/pixel budgets');
+          assert.ok(coverage.width === viewport.width && coverage.height === viewport.height && coverage.dpr === 1 && coverage.scale === 1 && ['1', 'normal'].includes(coverage.zoom), 'catalog proof must use the actual DPR1 viewport without zoom');
+          assert.equal(size.width, viewport.width);
+          assert.ok(Math.abs(size.height - (imagePlan.fullPage ? coverage.documentHeight : viewport.height)) <= 1, 'catalog PNG must cover its complete measured document/viewport');
+          if (imagePlan.fullPage) assert.ok(Math.abs(coverage.scrollY) <= 1 && Math.abs(coverage.scrollX) <= 1, 'full-page catalog capture starts at the top');
+          proof.imageBytes += bytes.length; assert.ok(proof.imageBytes <= 48 * 1024 * 1024, 'catalog image matrix must meet total byte budget');
+          proof.images.push({ file: path.relative(evidenceDir, imagePath), state, viewport, fullPage: imagePlan.fullPage, coverage, ...size, bytes: bytes.length,
+            sha256: crypto.createHash('sha256').update(bytes).digest('hex') });
+        }
       }
     };
     try {
+      if (contextDrain) contextDrain.ordering.navigation('INITIAL', 'BEGIN');
       await page.goto(url, { waitUntil: 'domcontentloaded' });
+      if (contextDrain) contextDrain.ordering.navigation('INITIAL', 'END');
       if (mode === 'loading') {
         await page.getByText('Loading active catalog...', { exact: true }).waitFor();
         assert.equal(await page.getByText('No public offers yet', { exact: true }).count(), 0);
@@ -427,23 +912,177 @@ async function verifySellerCatalogFilters(browser) {
       assert.deepEqual(await page.locator('#catalog-results a[href*="offer="]').evaluateAll(nodes => nodes.map(node => node.getAttribute('href'))), originalLinks, 'reset preserves exact seller/rule bindings');
       assert.equal(new URL(page.url()).search, '', 'local filters must not change the shared seller URL');
       assert.equal(catalogRequests.length, requestsBeforeFiltering, 'keystrokes, category and reset make no catalog requests');
-      await search.fill('not-restored-after-reload'); await category.selectOption('general');
+      // New reference-price/order controls: same owning fixture, no new runner mode.
+      await page.addInitScript(() => {
+        const effects = { storage: 0, history: 0 };
+        Object.defineProperty(window, '__catalogOrderingEffects', { value: effects });
+        for (const method of ['setItem', 'removeItem', 'clear']) {
+          const original = Storage.prototype[method];
+          Storage.prototype[method] = function (...args) { effects.storage += 1; return Reflect.apply(original, this, args); };
+        }
+        for (const method of ['pushState', 'replaceState']) {
+          const original = history[method];
+          history[method] = function (...args) { effects.history += 1; return Reflect.apply(original, this, args); };
+        }
+      });
+      if (contextDrain) await contextDrain.drain();
+      if (contextDrain) contextDrain.ordering.navigation('ORDERING', 'BEGIN');
+      mode = 'ordering'; await page.reload({ waitUntil: 'domcontentloaded' });
+      if (contextDrain) contextDrain.ordering.navigation('ORDERING', 'END');
+      const generalIds = generalRules.map(item => item.id);
+      const orderingEntries = [...orderingOriginal, ...generalIds];
+      const currencyValues = () => currency.locator('option').evaluateAll(nodes => nodes.map(node => node.value));
+      const checkBindings = async productIds => {
+        for (const id of productIds) {
+          const fixture = orderingProducts.find(item => item.id === id);
+          const card = page.locator(`[data-catalog-entry="${id}"]`);
+          assert.deepEqual(await card.locator('[data-catalog-rule]').evaluateAll(nodes => nodes.map(node => node.getAttribute('data-catalog-rule'))), fixture.benefitRules.map(item => item.id), `${id}: every original child rule stays attached`);
+          assert.deepEqual(await card.locator('a[href*="offer="]').evaluateAll(nodes => nodes.map(node => node.getAttribute('href'))), fixture.benefitRules.map(item => `/?seller=${business.slug}&offer=${item.id}#customer-pass`), `${id}: exact offer links stay attached`);
+        }
+      };
+      const expectOrdering = async (productIds, standalone = generalIds) => {
+        const expected = [...productIds, ...standalone];
+        await page.waitForFunction(expected => JSON.stringify([...document.querySelectorAll('[data-catalog-entry]')].map(node => node.getAttribute('data-catalog-entry'))) === JSON.stringify(expected), expected);
+        assert.deepEqual(await entries(), expected);
+        await page.getByText(`Showing ${expected.length} of ${orderingTotal} catalog entries.`, { exact: true }).waitFor();
+        await checkBindings(productIds);
+        for (const id of standalone) assert.equal(await page.locator(`[data-catalog-entry="${id}"] a[href*="offer="]`).getAttribute('href'), `/?seller=${business.slug}&offer=${id}#customer-pass`);
+      };
+      const resetOrdering = async () => {
+        if (await reset.isEnabled()) { if (viewport.width <= 390) await reset.tap(); else await reset.click(); }
+        assert.equal(await search.inputValue(), ''); assert.equal(await category.inputValue(), 'all');
+        assert.equal(await currency.inputValue(), 'all'); assert.equal(await order.inputValue(), 'original');
+        await expectOrdering(orderingOriginal);
+      };
+      await expectOrdering(orderingOriginal);
+      assert.deepEqual(await currencyValues(), ['all', 'USD', 'EUR', 'JPY'], 'options come from the entire valid priced catalog in allowlist order');
+      assert.deepEqual(await order.locator('option').evaluateAll(nodes => nodes.map(node => node.value)), ['original', 'name-asc', 'name-desc', 'price-asc', 'price-desc']);
+      for (const value of ['price-asc', 'price-desc']) assert.equal(await order.locator(`option[value="${value}"]`).isDisabled(), true, 'All currencies cannot enable price comparisons');
+      await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+      const effectsBefore = await page.evaluate(() => ({ ...window.__catalogOrderingEffects }));
+      assert.equal(await page.evaluate(() => typeof window.ethereum), 'undefined', 'catalog qualification must not install a wallet provider');
+      const orderingRequests = catalogRequests.length; const orderingUrl = page.url();
+      // A forged disabled-option event must still never sort across currencies.
+      await order.evaluate(node => { node.value = 'price-asc'; node.dispatchEvent(new Event('change', { bubbles: true })); });
+      await expectOrdering(orderingOriginal); await resetOrdering();
+      if (viewport.width <= 390) { await currency.tap(); await page.keyboard.press('Escape'); }
+      await currency.selectOption('USD');
+      for (const value of ['price-asc', 'price-desc']) assert.equal(await order.locator(`option[value="${value}"]`).isDisabled(), false);
+      const usdOriginal = [usdHigh.id, usdLow.id, usdTie.id, usdZero.id, products[2].id];
+      await expectOrdering(usdOriginal);
+      assert.equal(await page.locator('[data-catalog-entry^="catalog-order-invalid-"]').count(), 0, 'null/malformed/unknown pairs never enter an explicit currency');
+      await page.locator(`[data-catalog-entry="${usdZero.id}"]`).getByText('Reference price: USD 0.00', { exact: true }).waitFor();
+      await page.locator(`[data-catalog-entry="${usdHigh.id}"]`).getByText('Reference price: USD 9,007,199,254,740,993.14', { exact: true }).waitFor();
+      await page.locator(`[data-catalog-entry="${usdLow.id}"]`).getByText('Reference price: USD 9,007,199,254,740,993.13', { exact: true }).waitFor();
+      await currency.focus(); await page.keyboard.press('Tab'); await page.keyboard.press('Shift+Tab');
+      assert.equal(await currency.evaluate(node => node.matches(':focus-visible')), true);
+      const currencyId = await currency.getAttribute('id'); assert.ok(currencyId);
+      await capture('currency-focus', currencyId);
+      if (viewport.width <= 390) { await order.tap(); await page.keyboard.press('Escape'); }
+      await order.selectOption('name-asc');
+      await expectOrdering([usdZero.id, usdHigh.id, usdLow.id, usdTie.id, products[2].id]);
+      await order.selectOption('name-desc');
+      await expectOrdering([usdTie.id, usdHigh.id, usdLow.id, usdZero.id, products[2].id]);
+      await order.selectOption('price-asc');
+      await expectOrdering([usdZero.id, usdLow.id, usdTie.id, usdHigh.id, products[2].id]);
+      await order.selectOption('price-desc');
+      await expectOrdering([usdHigh.id, usdLow.id, usdTie.id, usdZero.id, products[2].id]);
+      await order.focus(); await page.keyboard.press('Tab'); await page.keyboard.press('Shift+Tab');
+      assert.equal(await order.evaluate(node => node.matches(':focus-visible')), true, 'reordering retains focus on the active select');
+      const orderId = await order.getAttribute('id'); assert.ok(orderId);
+      await capture('order-focus', orderId);
+      await currency.selectOption('EUR'); assert.equal(await order.inputValue(), 'price-desc', 'explicit currency changes preserve direction');
+      await expectOrdering([products[0].id, eurHigh.id, products[1].id, eurLow.id]);
+      await order.selectOption('price-asc'); await expectOrdering([products[0].id, eurLow.id, products[1].id, eurHigh.id]);
+      await currency.selectOption('JPY'); assert.equal(await order.inputValue(), 'price-asc');
+      await expectOrdering([jpyLow.id, jpyHigh.id]);
+      await page.locator(`[data-catalog-entry="${jpyHigh.id}"]`).getByText('Reference price: JPY 1,000', { exact: true }).waitFor();
+      await page.locator(`[data-catalog-entry="${jpyLow.id}"]`).getByText('Reference price: JPY 999', { exact: true }).waitFor();
+      await order.selectOption('price-desc'); await expectOrdering([jpyHigh.id, jpyLow.id]);
+      await currency.selectOption('all'); assert.equal(await order.inputValue(), 'original', 'clearing currency resets price order only');
+      await expectOrdering(orderingOriginal);
+      await currency.selectOption('USD'); await order.selectOption('name-desc'); await currency.selectOption('all');
+      assert.equal(await order.inputValue(), 'name-desc', 'clearing currency preserves name order');
+      await expectOrdering([usdTie.id, ...invalidProducts.map(item => item.id).reverse(), usdHigh.id, usdLow.id, products[0].id, usdZero.id,
+        products[1].id, jpyLow.id, jpyHigh.id, eurHigh.id, eurLow.id, products[2].id]);
+      await capture('name-order-all'); await resetOrdering();
+      await currency.selectOption('USD'); await order.selectOption('price-desc'); await category.selectOption('category:Coffee'); await search.fill('equal');
+      await expectOrdering([usdHigh.id, usdLow.id, usdTie.id], []);
+      await order.selectOption('price-asc'); await expectOrdering([usdLow.id, usdTie.id, usdHigh.id], []);
+      assert.deepEqual(await currencyValues(), ['all', 'USD', 'EUR', 'JPY'], 'search/category must not narrow currency choices');
+      await order.focus(); await page.keyboard.press('Tab'); await page.keyboard.press('Shift+Tab');
+      await capture('combined-order', orderId);
+      await search.fill('loyalty'); await currency.selectOption('EUR');
+      await expectOrdering([products[0].id], []);
+      assert.equal(await page.locator('[data-catalog-rule]').count(), 3, 'currency/search ordering preserves all child offer rules');
+      await resetOrdering(); await currency.selectOption('JPY'); await order.selectOption('price-desc'); await category.selectOption('general');
+      await expectOrdering([], generalIds);
+      await search.fill('community'); await expectOrdering([], [generalRules[0].id]);
+      await resetOrdering(); await currency.selectOption('USD'); await order.selectOption('price-asc'); await category.selectOption('category:General offers');
+      await expectOrdering([products[2].id], []);
+      await resetOrdering();
+      assert.equal(catalogRequests.length, orderingRequests, 'currency/order/search/category/reset add no catalog GETs');
+      assert.equal(page.url(), orderingUrl, 'all four transient controls leave the shared URL unchanged');
+      assert.deepEqual(await page.evaluate(() => ({ ...window.__catalogOrderingEffects })), effectsBefore, 'control changes must not write storage/history');
+      assert.equal(await page.evaluate(() => typeof window.ethereum), 'undefined', 'catalog controls must not create a wallet provider');
+      // All four controls also reset on a fresh load and a different seller URL.
+      await currency.selectOption('USD'); await order.selectOption('price-desc'); await category.selectOption('category:Coffee'); await search.fill('equal');
+      if (contextDrain) await contextDrain.drain();
+      if (contextDrain) contextDrain.ordering.navigation('RESET4', 'BEGIN');
       await page.reload({ waitUntil: 'domcontentloaded' });
+      if (contextDrain) contextDrain.ordering.navigation('RESET4', 'END');
+      await page.getByText(`Showing ${orderingTotal} of ${orderingTotal} catalog entries.`, { exact: true }).waitFor();
+      assert.equal(await search.inputValue(), ''); assert.equal(await category.inputValue(), 'all');
+      assert.equal(await currency.inputValue(), 'all'); assert.equal(await order.inputValue(), 'original');
+      await expectOrdering(orderingOriginal);
+      await currency.selectOption('USD'); await order.selectOption('price-desc'); await category.selectOption('category:Coffee'); await search.fill('equal');
+      if (contextDrain) await contextDrain.drain();
+      if (contextDrain) contextDrain.ordering.navigation('SECOND_SELLER', 'BEGIN');
+      await page.goto(`${catalogOrigin}/s/${secondBusiness.slug}`, { waitUntil: 'domcontentloaded' });
+      if (contextDrain) contextDrain.ordering.navigation('SECOND_SELLER', 'END');
+      await page.getByText('Showing 3 of 3 catalog entries.', { exact: true }).waitFor();
+      assert.equal(await search.inputValue(), ''); assert.equal(await category.inputValue(), 'all');
+      assert.equal(await currency.inputValue(), 'all'); assert.equal(await order.inputValue(), 'original');
+      assert.deepEqual(await entries(), [...secondProducts.map(item => item.id), ...secondRules.map(item => item.id)]);
+      assert.deepEqual(await currencyValues(), ['all', 'USD', 'JPY'], 'seller change must derive only that seller currency choices');
+      assert.equal(await page.locator(`[data-catalog-entry="${secondRules[0].id}"] a[href*="offer="]`).getAttribute('href'), `/?seller=${secondBusiness.slug}&offer=${secondRules[0].id}#customer-pass`);
+      await capture('second-seller');
+      if (contextDrain) await contextDrain.drain();
+      if (contextDrain) contextDrain.ordering.navigation('RETURN_PRIMARY', 'BEGIN');
+      mode = 'ready'; await page.goto(url, { waitUntil: 'domcontentloaded' });
+      if (contextDrain) contextDrain.ordering.navigation('RETURN_PRIMARY', 'END');
+      await page.getByText('Showing 5 of 5 catalog entries.', { exact: true }).waitFor();
+      await search.fill('not-restored-after-reload'); await category.selectOption('general');
+      if (contextDrain) await contextDrain.drain();
+      if (contextDrain) contextDrain.ordering.navigation('RESET2', 'BEGIN');
+      await page.reload({ waitUntil: 'domcontentloaded' });
+      if (contextDrain) contextDrain.ordering.navigation('RESET2', 'END');
       await page.getByText('Showing 5 of 5 catalog entries.', { exact: true }).waitFor();
       assert.equal(await search.inputValue(), ''); assert.equal(await category.inputValue(), 'all');
+      if (contextDrain) await contextDrain.drain();
+      if (contextDrain) contextDrain.ordering.navigation('EMPTY', 'BEGIN');
       mode = 'empty'; await page.reload({ waitUntil: 'domcontentloaded' });
+      if (contextDrain) contextDrain.ordering.navigation('EMPTY', 'END');
       await page.getByRole('heading', { name: 'No public offers yet', exact: true }).waitFor();
       assert.equal(await search.count(), 0); assert.equal(await page.getByRole('heading', { name: 'No matching catalog entries', exact: true }).count(), 0);
       await capture('empty');
+      if (contextDrain) await contextDrain.drain();
+      if (contextDrain) contextDrain.ordering.navigation('ERROR', 'BEGIN');
       mode = 'error'; await page.reload({ waitUntil: 'domcontentloaded' });
+      if (contextDrain) contextDrain.ordering.navigation('ERROR', 'END');
       await page.getByText('Catalog fixture temporarily unavailable', { exact: true }).waitFor();
       assert.equal(await search.count(), 0); assert.equal(await page.getByText('No public offers yet', { exact: true }).count(), 0);
       await capture('load-error');
       if (viewport.width === 390) {
+        if (contextDrain) await contextDrain.drain();
+        if (contextDrain) contextDrain.ordering.navigation('MOBILE_READY', 'BEGIN');
         mode = 'ready'; await page.reload({ waitUntil: 'domcontentloaded' });
+        if (contextDrain) contextDrain.ordering.navigation('MOBILE_READY', 'END');
         await search.fill('loyalty');
         await page.getByText('Showing 1 of 5 catalog entries.', { exact: true }).waitFor();
+        if (contextDrain) contextDrain.ordering.navigation('MOBILE_OFFER', 'BEGIN');
         await page.locator('[data-catalog-rule="catalog-rule-loyalty"]').getByRole('link', { name: 'Use this offer', exact: true }).tap();
+        if (contextDrain) contextDrain.ordering.navigation('MOBILE_OFFER', 'END');
         await waitForLocation(page, '/', '#customer-pass');
         assert.equal(new URL(page.url()).searchParams.get('seller'), business.slug);
         assert.equal(new URL(page.url()).searchParams.get('offer'), coffeeRules[1].id);
@@ -453,11 +1092,14 @@ async function verifySellerCatalogFilters(browser) {
       assert.deepEqual(pageErrors, []);
     } finally {
       releaseLoading();
-      await context.close();
-      if (evidenceDir) fs.writeFileSync(path.join(evidenceDir, 'catalog-layout-metrics.json'), JSON.stringify({ fixtureOnly: true, viewports, metrics }, null, 2));
+      if (contextDrain) { catalogDrainCheckpoint(proof, 'DRAIN_ENTRY', context); await contextDrain.close(); } else await context.close();
+      if (proof) { proof.contexts.delete(context); proof.contextDrains.delete(context); }
+      if (evidenceDir) fs.writeFileSync(path.join(evidenceDir, 'catalog-layout-metrics.json'), JSON.stringify({ fixtureOnly: true, viewports: viewports.filter(value => !proof?.live || value.width === 1440 || value.width === 390), metrics }, null, 2), { mode: proof ? 0o600 : 0o644 });
     }
   }
-  console.log('[seller-catalog-search] PASS - product/rule/description search, combined categories, entry counts, reset, exact bindings and five responsive viewports');
+  const qualificationReceipt = proof ? await proof.finish() : null;
+  console.log('[seller-catalog-search] PASS - search/categories, exact currency-safe within-group ordering, transient state, exact bindings and responsive viewports');
+  return qualificationReceipt;
 }
 
 async function verifyOfferDiscoveryRecovery(browser) {
@@ -686,6 +1328,53 @@ async function verifyOfferDiscoveryRecovery(browser) {
     }
   }
   console.log('[offer-discovery-recovery] PASS - paging, user recovery, retained filters/facets, focus-only moves, bounded requests, stale response and five responsive viewports');
+}
+
+async function runCatalogProductionOnly() {
+  const evidenceDir = process.env.BENEFITS_CATALOG_EVIDENCE_DIR;
+  assert.ok(path.isAbsolute(evidenceDir || '') && !fs.existsSync(evidenceDir), 'fresh catalog evidence directory required before launch');
+  assert.ok(fs.existsSync(path.join(frontend, '.next/BUILD_ID')), 'production artifact required before launch');
+  let browser; let receipt; let failure = false; let closed = false;
+  const started = performance.now();
+  let workExpired = false;
+  const workDeadline = setTimeout(() => {
+    workExpired = true;
+    if (browser) {
+      try { catalogWorkDeadlineObservers.get(browser)?.(); } catch { /* Observation cannot prevent the original forced close. */ }
+      void browser.close().catch(() => {});
+    }
+  }, 300000);
+  const deadline = setTimeout(() => {
+    process.stdout.write('BENEFITS_CATALOG_PRODUCTION {"status":"FAIL","failureCode":"OUTER_DEADLINE","ownedBrowserOutcome":"UNKNOWN"}\n');
+    process.exit(1);
+  }, 360000);
+  try {
+    browser = await chromium.launch({ headless: true, timeout: 30000 });
+    receipt = await verifySellerCatalogFilters(browser, { scope: 'loopback-production', evidenceDir });
+  } catch (error) {
+    failure = { kind: ['AssertionError', 'TimeoutError', 'Error'].includes(error?.name) ? error.name : 'OTHER',
+      messageSha256: crypto.createHash('sha256').update(typeof error?.message === 'string' ? error.message : '').digest('hex') };
+  }
+  finally {
+    clearTimeout(workDeadline);
+    if (browser) {
+      catalogWorkDeadlineObservers.delete(browser); // Only this runner's privately created browser.
+      let timer;
+      closed = await Promise.race([browser.close().then(() => true, () => false),
+        new Promise(resolve => { timer = setTimeout(() => resolve(false), 60000); })]);
+      clearTimeout(timer);
+    }
+    clearTimeout(deadline);
+  }
+  const result = { schema: 'catalog-production-runner/v1', status: !failure && !workExpired && receipt && closed ? 'PASS' : 'FAIL',
+    scope: 'loopback-production', elapsedMs: performance.now() - started, fixtureReceipt: receipt ? 'catalog-production-result.json' : null,
+    failure: failure || null, workExpired,
+    ownedBrowserClose: closed ? 'PASS' : 'UNPROVEN', processOutcomeUnknown: Boolean(browser && !closed), images: receipt?.images.length || 0,
+    realWalletProviderAcceptance: false, visualReviewByRoot: 'PENDING' };
+  if (fs.existsSync(evidenceDir)) fs.writeFileSync(path.join(evidenceDir, 'catalog-production-runner.json'), JSON.stringify(result, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
+  process.stdout.write('BENEFITS_CATALOG_PRODUCTION ' + JSON.stringify(result) + '\n');
+  if (result.status !== 'PASS') process.exitCode = 1;
+  if (browser && !closed) process.exit(1); // Bounded failure; do not claim an unproved child cleanup.
 }
 
 async function run() {
@@ -1480,7 +2169,11 @@ async function run() {
   }
 }
 
-run().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+module.exports = Object.freeze({ verifySellerCatalogFilters });
+if (require.main === module) {
+  (catalogProductionOnly ? runCatalogProductionOnly() : run()).catch((error) => {
+    if (catalogProductionOnly) console.error('[catalog-production] FAIL - qualification control');
+    else console.error(error);
+    process.exitCode = 1;
+  });
+}

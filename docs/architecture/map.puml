@@ -85,6 +85,23 @@ package "rate limit" {
 [src/index.js message guard] --> [services/onChainReader.js] : determineTier (live)
 @enduml
 
+@startmindmap benefits_public_catalog_ordering_419
+* Public seller catalog
+** SellerCatalogClient local render
+*** Search and category filtering
+*** Explicit reference-price currency
+*** Stable copied product ordering within categories
+*** Existing cards, attached rules and general rules
+@endmindmap
+
+@startuml benefits_public_catalog_ordering_components_419
+[SellerCatalogClient useEffect] --> [api getBusinessProducts / getBusinessRules] : existing public GETs
+[api getBusinessProducts / getBusinessRules] --> [Loaded product categories and general rules] : existing public DTOs
+[Loaded product categories and general rules] --> [Local product filtering and ordering] : transient four-control state
+[Local product filtering and ordering] --> [Existing offer cards] : stable groups; exact prices and seller/offer links
+[Loaded product categories and general rules] --> [Existing general-rule cards] : unchanged search/category behavior
+@enduml
+
 @startmindmap
 * Root development tooling candidate
 ** Existing section15 root dependency node
@@ -393,3 +410,27 @@ left to right direction
 [Selected native connector] --> [Same native provider] : original request receiver
 [Same native provider] --> [Fixed RAM snapshot] : shape/count/status/timing only
 @enduml
+
+@startmindmap catalog_production_qualification_419
+* Catalog-only production qualification
+** Root-owned loopback next-start renderer
+*** Current BUILD_ID and served artifact hashes
+** Same verifySellerCatalogFilters
+*** Closed synthetic GET fixtures; no wallet/provider
+*** Five DPR1 viewports; 18 bounded images
+** Import-only fixed deployed critical scope
+*** shop.ifrunit.tech; Root Main/CID/image/build/post-source binding
+*** Actual-CID asset map; 1440/390; four critical images
+** Private request/body drain metadata (diagnostic only)
+*** Entry counts -> unchanged drain; original 300s abort -> bounded snapshot -> unchanged cleanup
+*** At most16 abort samples total; fixed metadata/path hashes; no raw request data
+*** Observer failures do not interrupt cleanup; no acceptance or cause claim
+*** Outer300s -> browser-keyed private observer -> bounded snapshot -> original close
+*** Fixed outer/inner trigger labels; same clocks and identity-safe handoff cleanup
+*** Actual fixture request/body/terminal -> fixed navigation/close stamps -> at most16 failed ordering records
+*** Failure-time state separate from later cleanup; private16KiB receipt; no waits or oracle changes
+** Qualification known-work barrier before eight document replacements
+*** Same private drain before NAV-BEGIN/mode mutation; initial/loading/SPA/default unchanged
+*** Future requests remain possible; no atomic-quiescence or historical-cause claim
+** Root native execution and direct image review pending
+@endmindmap
