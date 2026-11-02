@@ -6,19 +6,6 @@ YouTube x IFR Lock Bridge — Hybrid Model B
 Open-source bridge for creators who want to offer YouTube Membership AND IFR Lock
 as access requirements for premium content.
 
-## Runtime and Google client
-
-Node.js 22 or later is required. The gateway pins googleapis 178.1.1; its supported
-Google client parents replace the obsolete filesystem traversal dependency chain.
-The existing Creator CI and container recipe use Node 22. `npm test` includes the
-real-module offline transport/privacy checks; they do not establish Google project
-eligibility, membership scope, refresh-token readiness or a production deployment.
-
-Leave `GOOGLE_SDK_NODE_LOGGING` unset. Enabling the auth namespace or a wildcard
-prints request/response payloads, including token responses, even at DEBUG severity.
-Do not enable a Google logging backend with provider credentials without a separate
-privacy review; this migration does not introduce or enable a logging backend.
-
 ## Quick Start
 ```bash
 cp .env.example .env
@@ -52,3 +39,16 @@ in [CREATOR_GATEWAY_DEPLOY.md](../../docs/CREATOR_GATEWAY_DEPLOY.md).
 - OR: YouTube Member OR IFR Lock >= minIFR
 - AND: YouTube Member AND IFR Lock >= minIFR
 - Configurable via src/services/entitlement.ts
+
+## Runtime and Google client
+
+Node.js 22 or later is required. The gateway pins googleapis 178.1.1; its supported
+Google client parents replace the obsolete filesystem traversal dependency chain.
+The existing Creator CI and container recipe use Node 22. `npm test` includes the
+real-module offline transport/privacy checks; they do not establish Google project
+eligibility, membership scope, refresh-token readiness or a production deployment.
+
+Leave `GOOGLE_SDK_NODE_LOGGING` unset. Enabling the auth namespace or a wildcard
+prints request/response payloads, including token responses, even at DEBUG severity.
+Do not enable a Google logging backend with provider credentials without a separate
+privacy review; this migration does not introduce or enable a logging backend.
