@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
+import { Agent, createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { type AddressInfo } from 'node:net';
 import { spawnSync } from 'node:child_process';
 import { dirname, relative, resolve } from 'node:path';
@@ -18,19 +18,17 @@ const selectedAuthSha256 = createHash('sha256').update(readFileSync(selectedAuth
 // Deliberately use the installed modules, not the application tests' googleapis mock.
 const viewerId = `UC${'v'.repeat(22)}`;
 const creatorId = `UC${'c'.repeat(22)}`;
-const paths = new Set(['/token', '/youtube/v3/channels', '/youtube/v3/members', '/error', '/timeout']);
+const paths = new Set(['/token', '/youtube/v3/channels', '/youtube/v3/members', '/error', '/timeout', '/redirect']);
 const calls: { path: string; method: string; authorization?: string; query: URLSearchParams; form: URLSearchParams }[] = [];
 let origin: string;
 let fixtureFailures = 0;
 
-const closedFetch: typeof fetch = (input, init) => {
-  const url = new URL(input instanceof Request ? input.url : input.toString());
-  const method = init?.method ?? (input instanceof Request ? input.method : 'GET');
-  if (url.origin !== origin || !paths.has(url.pathname) ||
-      (url.pathname === '/token' ? method !== 'POST' : method !== 'GET')) {
-    return Promise.reject(new Error('OFFLINE_TARGET_DENIED'));
-  }
-  return fetch(input, { ...init, redirect: 'error' });
+const ownAgent = new Agent({ keepAlive: false, maxSockets: 1 });
+let agentHits = 0;
+const closedAgent = (url: URL) => {
+  if (url.origin !== origin || !paths.has(url.pathname)) throw new Error('OFFLINE_TARGET_DENIED');
+  agentHits += 1;
+  return ownAgent;
 };
 
 async function serve(request: IncomingMessage, response: ServerResponse): Promise<void> {
@@ -45,6 +43,11 @@ async function serve(request: IncomingMessage, response: ServerResponse): Promis
     query: url.searchParams, form });
   if (!paths.has(url.pathname)) throw new Error('FIXTURE_PATH_DENIED');
   if (url.pathname === '/timeout') return;
+  if (url.pathname === '/redirect') {
+    response.writeHead(302, { Location: 'https://not-a-provider.invalid/' });
+    response.end();
+    return;
+  }
   response.setHeader('Content-Type', 'application/json');
   if (url.pathname === '/token') {
     const owner = form.get('grant_type') === 'refresh_token' ? 'creator' : 'viewer';
@@ -69,9 +72,21 @@ const server = createServer((request, response) => {
 });
 
 function client() {
-  return new google.auth.OAuth2({ clientId: 'fixture-client', clientSecret: 'fixture-client-secret',
+  const auth = new google.auth.OAuth2({ clientId: 'fixture-client', clientSecret: 'fixture-client-secret',
     redirectUri: `${origin}/callback`, endpoints: { oauth2TokenUrl: `${origin}/token` },
-    transporterOptions: { timeout: 5_000, retry: false, fetchImplementation: closedFetch } });
+    transporterOptions: { timeout: 5_000, retry: false, agent: closedAgent, redirect: 'error' } });
+  auth.transporter.interceptors.request.add({ resolved: async config => {
+    const url = new URL(config.url);
+    const method = (config.method ?? 'GET').toUpperCase();
+    if (url.origin !== origin || !paths.has(url.pathname) ||
+        (url.pathname === '/token' ? method !== 'POST' : method !== 'GET') ||
+        config.redirect !== 'error' || config.agent !== closedAgent ||
+        config.fetchImplementation !== undefined || config.adapter !== undefined) {
+      throw new Error('OFFLINE_TARGET_DENIED');
+    }
+    return config;
+  } });
+  return auth;
 }
 
 function failureFields(error: unknown): { code: unknown; status: unknown } {
@@ -84,9 +99,10 @@ beforeAll(async () => {
   await new Promise<void>(resolve => server.listen(0, '127.0.0.1', resolve));
   origin = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
 });
-beforeEach(() => { calls.length = 0; fixtureFailures = 0; });
+beforeEach(() => { calls.length = 0; fixtureFailures = 0; agentHits = 0; });
 afterAll(async () => {
   server.closeAllConnections();
+  ownAgent.destroy();
   await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
 });
 
@@ -95,6 +111,10 @@ describe('installed Google client compatibility with closed offline HTTP', () =>
     const metadata = JSON.parse(readFileSync(googleRequire.resolve('google-auth-library/package.json'), 'utf8'));
     const lock = JSON.parse(readFileSync('package-lock.json', 'utf8'));
     expect(google.auth.OAuth2 === selectedAuth.OAuth2Client).toBe(true);
+    expect('window' in globalThis).toBe(false);
+    expect('Bun' in globalThis).toBe(false);
+    expect(client().transporter.defaults.fetchImplementation).toBeUndefined();
+    expect(client().transporter.defaults.adapter).toBeUndefined();
     expect(selectedAuthRelative).toBe('node_modules/google-auth-library/build/src/index.js');
     expect(metadata.version).toBe('11.3.2');
     expect(lock.packages['node_modules/google-auth-library'].version).toBe(metadata.version);
@@ -106,12 +126,12 @@ describe('installed Google client compatibility with closed offline HTTP', () =>
     viewer.setCredentials(tokens);
     const youtube = google.youtube({ version: 'v3', rootUrl: origin });
     const channels = await youtube.channels.list({ auth: viewer, part: ['id'], mine: true },
-      { timeout: 5_000, retry: false, fetchImplementation: closedFetch });
+      { timeout: 5_000, retry: false });
     const creator = client();
     creator.setCredentials({ refresh_token: 'fixture-creator-refresh' });
     const members = await youtube.members.list({ auth: creator, part: ['snippet'], mode: 'all_current',
       filterByMemberChannelId: viewerId, maxResults: 1 },
-      { timeout: 5_000, retry: false, fetchImplementation: closedFetch });
+      { timeout: 5_000, retry: false });
 
     expect(channels.data.items?.map(item => item.id)).toEqual([viewerId]);
     expect(members.data.items?.[0]?.snippet?.creatorChannelId).toBe(creatorId);
@@ -122,6 +142,7 @@ describe('installed Google client compatibility with closed offline HTTP', () =>
     expect(channels.config.retry).toBe(false);
     expect(members.config.timeout).toBe(5_000);
     expect(members.config.retry).toBe(false);
+    expect(agentHits).toBe(4); // Only node-fetch invokes this supported callback; global fetch ignores it.
     expect(calls.map(call => [call.method, call.path])).toEqual([
       ['POST', '/token'], ['GET', '/youtube/v3/channels'], ['POST', '/token'], ['GET', '/youtube/v3/members'],
     ]);
@@ -143,6 +164,7 @@ describe('installed Google client compatibility with closed offline HTTP', () =>
     catch (error) { failure = error; }
     expect(failureFields(failure).status).toBe(503);
     expect(calls.filter(call => call.path === '/error')).toHaveLength(1);
+    expect(agentHits).toBe(1);
     expect(fixtureFailures).toBe(0);
   });
 
@@ -154,12 +176,23 @@ describe('installed Google client compatibility with closed offline HTTP', () =>
     expect(failureFields(failure).code).toBe('TimeoutError');
     expect(performance.now() - started).toBeLessThan(1_500);
     expect(calls.filter(call => call.path === '/timeout')).toHaveLength(1);
+    expect(agentHits).toBe(1);
     expect(fixtureFailures).toBe(0);
   });
 
-  it('refuses a nonfixture destination before any fetch', async () => {
-    await expect(closedFetch('https://not-a-provider.invalid/')).rejects.toThrow('OFFLINE_TARGET_DENIED');
+  it('rejects nonfixture targets, wrong methods and redirects without extra wire requests', async () => {
+    await expect(client().transporter.request({ url: 'https://not-a-provider.invalid/' }))
+      .rejects.toThrow('OFFLINE_TARGET_DENIED');
+    await expect(client().transporter.request({ url: `${origin}/error`, method: 'POST' }))
+      .rejects.toThrow('OFFLINE_TARGET_DENIED');
     expect(calls).toHaveLength(0);
+    expect(agentHits).toBe(0);
+    let redirectFailure: unknown;
+    try { await client().transporter.request({ url: `${origin}/redirect`, retry: false }); }
+    catch (error) { redirectFailure = error; }
+    expect(redirectFailure instanceof Error).toBe(true);
+    expect(calls.map(call => call.path)).toEqual(['/redirect']);
+    expect(agentHits).toBe(1);
   });
 });
 
@@ -167,7 +200,7 @@ describe('installed Google client compatibility with closed offline HTTP', () =>
 // synthetic payload logs stay in bounded RAM and are never forwarded to test output.
 const privacyProgram = String.raw`
 'use strict';
-const {createServer} = require('node:http');
+const {Agent,createServer} = require('node:http');
 const parentRequire = require('node:module').createRequire(require.resolve('googleapis'));
 const {OAuth2Client} = parentRequire('google-auth-library');
 const authPath = parentRequire.resolve('google-auth-library');
@@ -175,7 +208,8 @@ const authVersion = parentRequire('google-auth-library/package.json').version;
 const authRelative = require('node:path').relative(process.cwd(), authPath);
 const authSha256 = require('node:crypto').createHash('sha256').update(require('node:fs').readFileSync(authPath)).digest('hex');
 const marker = 'SYNTHETIC_GOOGLE_PRIVACY_SENTINEL';
-let origin; let requests = 0;
+let origin; let requests = 0; let agentHits = 0;
+const ownAgent = new Agent({keepAlive:false,maxSockets:1});
 const server = createServer((req, res) => {
   requests += 1; req.resume(); res.setHeader('Content-Type', 'application/json');
   if (req.url === '/token') res.end(JSON.stringify({access_token: marker, expires_in:3600, token_type:'Bearer'}));
@@ -187,21 +221,30 @@ const server = createServer((req, res) => {
   try {
     await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
     origin='http://127.0.0.1:'+server.address().port;
-    const closedFetch=(input,init)=>{
-      const u=new URL(input instanceof Request?input.url:String(input));
-      if(u.origin!==origin || !['/token','/ok','/error'].includes(u.pathname)) throw new Error('OFFLINE_TARGET_DENIED');
-      return fetch(input,{...init,redirect:'error'});
+    if('window' in globalThis || 'Bun' in globalThis) throw new Error('NODE_DEFAULT_REQUIRED');
+    const allowed=new Set(['/token','/ok','/error']);
+    const closedAgent=(url)=>{
+      if(url.origin!==origin || !allowed.has(url.pathname)) throw new Error('OFFLINE_TARGET_DENIED');
+      agentHits+=1;return ownAgent;
     };
     const auth=new OAuth2Client({clientId:'fixture-client',clientSecret:marker,
-      endpoints:{oauth2TokenUrl:origin+'/token'},transporterOptions:{timeout:1000,retry:false,fetchImplementation:closedFetch}});
+      endpoints:{oauth2TokenUrl:origin+'/token'},transporterOptions:{timeout:1000,retry:false,agent:closedAgent,redirect:'error'}});
+    auth.transporter.interceptors.request.add({resolved:async config=>{
+      const url=new URL(config.url),method=(config.method||'GET').toUpperCase();
+      if(url.origin!==origin || !allowed.has(url.pathname) ||
+        (url.pathname==='/token'?method!=='POST':method!=='GET') || config.redirect!=='error' ||
+        config.agent!==closedAgent || config.fetchImplementation!==undefined || config.adapter!==undefined)
+        throw new Error('OFFLINE_TARGET_DENIED');
+      return config;
+    }});
     const {tokens}=await auth.getToken('fixture-code'); auth.setCredentials(tokens);
     await auth.request({url:origin+'/ok',retry:false});
     let rejected=false;
     try {await auth.request({url:origin+'/error',retry:false});} catch(e) {rejected=e.response?.status===400;}
-    if(!rejected || requests!==3) throw new Error('FIXTURE_CONTRACT');
-    process.stdout.write(JSON.stringify({status:'PASS',requests,authVersion,authRelative,authSha256})+'\n');
+    if(!rejected || requests!==3 || agentHits!==3) throw new Error('FIXTURE_CONTRACT');
+    process.stdout.write(JSON.stringify({status:'PASS',requests,agentHits,authVersion,authRelative,authSha256})+'\n');
   } catch {process.exitCode=1; process.stdout.write('FIXED_PRIVACY_CONTROL_FAIL\n');}
-  finally {server.closeAllConnections(); await new Promise(resolve=>server.close(resolve));}
+  finally {server.closeAllConnections(); ownAgent.destroy(); await new Promise(resolve=>server.close(resolve));}
 })();
 `;
 
@@ -216,7 +259,7 @@ it.each(['unset', 'unrelated', 'auth'] as const)('qualifies actual default loggi
     cwd: process.cwd(), env, encoding: 'utf8', timeout: 3_500, maxBuffer: 16_384, killSignal: 'SIGKILL',
   });
   const spawnFailure = result.error === undefined ? null : (failureFields(result.error).code ?? 'UNCLASSIFIED');
-  const expected = { status: 'PASS', requests: 3, authVersion: '11.3.2',
+  const expected = { status: 'PASS', requests: 3, agentHits: 3, authVersion: '11.3.2',
     authRelative: selectedAuthRelative, authSha256: selectedAuthSha256 };
   let metadata: unknown;
   try { metadata = JSON.parse(result.stdout); } catch { metadata = null; }
