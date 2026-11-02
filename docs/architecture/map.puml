@@ -152,6 +152,13 @@ component "session-store.ts\nvisitor tokens + verified channel ID" as CreatorSes
 component "youtube-checker.ts\nisMember(visitor ID, creator ID)" as MembershipCheck
 component "separate creator OAuth client" as CreatorOAuth
 component "Google members.list" as MembersAPI
+component "googleapis 178.1.1\nNode >=22" as CreatorGoogleClient
+component "common 9.3.1 / auth 11.3.2\nGaxios 8.3.2" as CreatorGoogleTransport
+component "google-client-compat.test.ts\nclosed offline qualification" as CreatorGoogleParentQualification
+CreatorCallback ..> CreatorGoogleClient : existing viewer client dependency
+CreatorOAuth ..> CreatorGoogleClient : existing creator client dependency
+CreatorGoogleClient --> CreatorGoogleTransport : supported parent ranges
+CreatorGoogleParentQualification ..> CreatorGoogleTransport : real-module privacy / transport controls
 CreatorConfig --> CreatorPolicy : validated decimal string; default 1000
 CreatorPolicy --> CreatorAccess : shared startup policy
 CreatorAccess --> CreatorCheck : authenticated wallet + stored visitor ID

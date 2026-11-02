@@ -29,6 +29,19 @@ product change before a production release can be approved.
 
 ## Image and Compose insertion
 
+The gateway declares Node >=22 and pins googleapis 178.1.1. The supported Google
+parents remove the former Gaxios/rimraf/glob/minimatch branch; the existing Node 22
+CI and image recipe qualify that runtime, without a Node 20 compatibility claim.
+The real-module offline tests use synthetic credentials and closed loopback HTTP;
+they do not establish Google allowlisting, scopes, refresh readiness or membership
+eligibility.
+
+Keep `GOOGLE_SDK_NODE_LOGGING` unset for this default privacy contract. The new
+auth library emits request/response and error payloads at DEBUG when its logging
+namespace or a wildcard is enabled; the built-in backend does not filter DEBUG by
+severity. Do not enable Google logging backends with provider credentials without
+a separate review. The gateway adds no logging backend or payload logging.
+
 The multi-stage Dockerfile uses the same digest-pinned Node 22 Alpine base as
 the hardened Benefits images, omits development dependencies from the runner,
 copies only application artifacts and runs as UID 1000 (`node`). No environment
