@@ -1771,3 +1771,9 @@ fixed phases/method/type/origin classes and at most16 abort samples total with
 pathname hashes. BODY_READ/BYTE_VERIFY project existing stages only. Observer
 failures cannot interrupt abort cleanup. This is diagnostic evidence, not
 acceptance or a proven cause; default52, live export and 300s/60s bounds remain.
+The original outer300s callback also reaches a browser-keyed private ready-proof
+observer before its unchanged forced close. Fixed OUTER_WORK_DEADLINE versus
+INNER_WORK_DEADLINE metadata distinguishes the two clocks without setting the
+inner abort flag early. Missing/throwing observation cannot block close. Proof
+cleanup compares callback identity; runner cleanup touches only its own browser.
+No public seam, timer, delay, retry or qualification policy is added.

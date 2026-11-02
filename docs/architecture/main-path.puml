@@ -392,6 +392,8 @@ Catalog -> Renderer : ordinary page and current static assets
 Catalog -> Evidence : 18 images / layout and loaded-asset hashes
 Catalog -> Evidence : drain-entry counts before unchanged close barrier
 Mode -> Evidence : original 300s abort snapshot; at most16 sanitized samples total
+Mode -> Evidence : outer300s private browser-keyed ready-proof handoff before original close
+note over Mode,Evidence : Fixed OUTER/INNER_WORK_DEADLINE labels; inner flag/clocks unchanged.
 note over Catalog,Evidence : Diagnostic only; observer failure cannot block original abort/wake/close.
 Mode -> Renderer : current-build manifest hash after
 Mode -> Evidence : source/build/runtime/cleanup receipt

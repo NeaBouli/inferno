@@ -240,6 +240,7 @@ const CATALOG_FAILURE_CODES = new Set(['CATALOG_WORK_DEADLINE', 'CATALOG_WEBSOCK
 const CATALOG_FAILURE_STAGES = new Set(['ADMISSION', 'CONTINUE', 'COUNT', 'MAP', 'STATUS', 'HEADER', 'BODY', 'BYTES', 'API', 'LOGO', 'WEBSOCKET', 'ABORT']);
 const CATALOG_RESOURCE_TYPES = new Set(['document', 'stylesheet', 'image', 'media', 'font', 'script', 'texttrack', 'xhr', 'fetch', 'eventsource', 'websocket', 'manifest', 'other']);
 const CATALOG_METHODS = new Set(['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'OTHER']);
+const catalogWorkDeadlineObservers = new WeakMap();
 function catalogFailureSample(code, stage, request, targetOrigin, status) {
   if (!CATALOG_FAILURE_CODES.has(code) || !CATALOG_FAILURE_STAGES.has(stage)) return null;
   try {
@@ -285,9 +286,10 @@ function catalogDrainSample(phase, request, targetOrigin) {
   return sample ? { phase, method: sample.method, resourceType: sample.resourceType,
     originClass: sample.originClass, pathSha256: sample.pathSha256 } : null;
 }
-function catalogDrainCheckpoint(proof, event, context = null) {
+function catalogDrainCheckpoint(proof, event, context = null, trigger = null) {
   try {
-    if (!['DRAIN_ENTRY', 'WORK_ABORT'].includes(event)) return false;
+    if (!['DRAIN_ENTRY', 'WORK_ABORT'].includes(event)
+      || (event === 'DRAIN_ENTRY' ? trigger !== null : !['OUTER_WORK_DEADLINE', 'INNER_WORK_DEADLINE'].includes(trigger))) return false;
     const contexts = context ? [context] : [...proof.contexts];
     if (contexts.length > 5) return false;
     let remaining = event === 'WORK_ABORT' ? 16 : 0;
@@ -297,7 +299,7 @@ function catalogDrainCheckpoint(proof, event, context = null) {
     });
     const elapsedMs = performance.now() - proof.started;
     const count = value => Number.isSafeInteger(value) && value >= 0 ? value : null;
-    const receipt = { schema: 'catalog-drain-observation/v1', isAcceptance: false, event,
+    const receipt = { schema: 'catalog-drain-observation/v1', isAcceptance: false, event, trigger,
       scriptSha256: /^[a-f0-9]{64}$/.test(proof.source.scriptSha256) ? proof.source.scriptSha256 : null, elapsedMs: Number.isFinite(elapsedMs) && elapsedMs >= 0 ? elapsedMs : null,
       activeContextCount: count(proof.contexts.size), globalPendingValidationJobCount: count(proof.pending.size), contexts: rows,
       rawUrlsQueriesErrorsHeadersBodiesRetained: false };
@@ -463,8 +465,9 @@ async function prepareCatalogQualification(options, browser) {
   const proof = { live, origin: targetOrigin, directory, source, buildId, bindingSha256: binding ? digest(Buffer.from(JSON.stringify(binding))) : null,
     failures: [], images: [], imageBytes: 0, assets: new Map(), pending: new Set(), contexts: new Set(), contextDrains: new Map(), responseCount: 0, responseBytes: 0, started: qualificationStarted, aborted: false };
   proof.opening = await servedBuild();
+  const observeOuterWorkDeadline = () => catalogDrainCheckpoint(proof, 'WORK_ABORT', null, 'OUTER_WORK_DEADLINE');
   let wakeAbort; const workAborted = new Promise(resolve => { wakeAbort = resolve; });
-  proof.timer = setTimeout(() => { proof.aborted = true; proof.failures.push('CATALOG_WORK_DEADLINE'); catalogDrainCheckpoint(proof, 'WORK_ABORT'); wakeAbort();
+  proof.timer = setTimeout(() => { proof.aborted = true; proof.failures.push('CATALOG_WORK_DEADLINE'); catalogDrainCheckpoint(proof, 'WORK_ABORT', null, 'INNER_WORK_DEADLINE'); wakeAbort();
     for (const context of proof.contexts) { proof.contextDrains.get(context)?.wake(); void context.close().catch(() => {}); }
   }, Math.max(1, 300000 - (performance.now() - qualificationStarted))); proof.timer.unref();
   proof.write = (name, value) => { const file = path.join(directory, name); fs.writeFileSync(file, JSON.stringify(value, null, 2) + '\n', { flag: 'wx', mode: 0o600 }); };
@@ -528,6 +531,7 @@ async function prepareCatalogQualification(options, browser) {
     const closingSource = sourceSnapshot();
     assert.deepEqual(closingSource, source, 'catalog source Git/script/component/package/lock identity must remain unchanged');
     clearTimeout(proof.timer);
+    if (catalogWorkDeadlineObservers.get(browser) === observeOuterWorkDeadline) catalogWorkDeadlineObservers.delete(browser);
     proof.write('catalog-completion-checkpoint.json', catalogCompletionCheckpoint(proof, true,
       closing.sha256 === proof.opening.sha256 && closing.bytes === proof.opening.bytes));
     assert.ok(!proof.aborted && performance.now() - proof.started <= 300000 && proof.contexts.size === 0 && proof.failures.length === 0, 'catalog qualification/owned context cleanup must complete');
@@ -539,6 +543,7 @@ async function prepareCatalogQualification(options, browser) {
       elapsedMs: performance.now() - proof.started, ownContextsClosed: true, rawBodiesRetained: false, sourceBuildJoinRequiresRootBuildReceipt: !live, invokerBrowserCleanup: 'REQUIRED_SEPARATELY', visualReviewByRoot: 'PENDING' };
     proof.write('catalog-production-result.json', receipt); return receipt;
   };
+  catalogWorkDeadlineObservers.set(browser, observeOuterWorkDeadline);
   return proof;
 }
 
@@ -1241,7 +1246,13 @@ async function runCatalogProductionOnly() {
   let browser; let receipt; let failure = false; let closed = false;
   const started = performance.now();
   let workExpired = false;
-  const workDeadline = setTimeout(() => { workExpired = true; if (browser) void browser.close().catch(() => {}); }, 300000);
+  const workDeadline = setTimeout(() => {
+    workExpired = true;
+    if (browser) {
+      try { catalogWorkDeadlineObservers.get(browser)?.(); } catch { /* Observation cannot prevent the original forced close. */ }
+      void browser.close().catch(() => {});
+    }
+  }, 300000);
   const deadline = setTimeout(() => {
     process.stdout.write('BENEFITS_CATALOG_PRODUCTION {"status":"FAIL","failureCode":"OUTER_DEADLINE","ownedBrowserOutcome":"UNKNOWN"}\n');
     process.exit(1);
@@ -1256,6 +1267,7 @@ async function runCatalogProductionOnly() {
   finally {
     clearTimeout(workDeadline);
     if (browser) {
+      catalogWorkDeadlineObservers.delete(browser); // Only this runner's privately created browser.
       let timer;
       closed = await Promise.race([browser.close().then(() => true, () => false),
         new Promise(resolve => { timer = setTimeout(() => resolve(false), 60000); })]);

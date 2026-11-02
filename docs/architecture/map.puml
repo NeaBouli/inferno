@@ -425,5 +425,7 @@ left to right direction
 *** Entry counts -> unchanged drain; original 300s abort -> bounded snapshot -> unchanged cleanup
 *** At most16 abort samples total; fixed metadata/path hashes; no raw request data
 *** Observer failures do not interrupt cleanup; no acceptance or cause claim
+*** Outer300s -> browser-keyed private observer -> bounded snapshot -> original close
+*** Fixed outer/inner trigger labels; same clocks and identity-safe handoff cleanup
 ** Root native execution and direct image review pending
 @endmindmap
