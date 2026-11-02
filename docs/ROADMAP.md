@@ -109,7 +109,13 @@ with their audit, testnet and on-chain authorization gates, are tracked in the
       implemented in source on 28 October 2026 ([#390](https://github.com/NeaBouli/inferno/issues/390))
   - Uses the loaded public catalog and preserves attached offers, prices,
     eligibility requirements and exact-offer links. The issue tracks qualification
-    and deployment evidence; advanced discovery, sorting and inventory remain open.
+    and deployment evidence; further discovery and inventory, and sorting beyond
+    the bounded single-seller #419 controls, remain open.
+- [x] Single-seller catalog name and currency-safe reference-price ordering
+      qualified before merge ([#419](https://github.com/NeaBouli/inferno/issues/419))
+  - Orders products within existing categories; exact price order requires an
+    explicit currency, with no conversion. General offers and exact-offer
+    bindings are preserved. Deployment and post-deploy verification are pending.
 - [x] Recoverable public offer paging implemented in source on 29 October 2026
       ([#392](https://github.com/NeaBouli/inferno/issues/392))
   - User-operated return to page 1 preserves filters after catalog changes,

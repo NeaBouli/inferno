@@ -79,8 +79,21 @@ requirements and exact-offer links keep their existing bindings. Filters use
 the loaded catalog for one seller and are not persisted.
 
 The issue above tracks qualification and deployment evidence for this source
-checkpoint. Advanced catalog discovery, sorting and inventory remain roadmap work;
-physical-device and wallet acceptance remain separate open follow-ups.
+checkpoint. Further catalog discovery, sorting beyond the bounded #419 controls
+below, and inventory remain roadmap work; physical-device and wallet acceptance
+remain separate open follow-ups.
+
+### Seller catalog ordering source checkpoint — 2 November 2026
+
+Qualified before merge for [#419](https://github.com/NeaBouli/inferno/issues/419):
+the public single-seller catalog supports transient name ordering and exact
+reference-price ordering within each existing category. Price ordering requires
+an explicit currency; currency selection filters priced products of that code
+without conversion or treating missing prices as zero. General offers, attached
+offers, eligibility requirements, counts and exact-offer links retain their
+existing behavior. Reset and seller changes clear the local controls.
+
+Production deployment and post-deploy UI/asset verification are pending.
 
 ### Offer discovery source checkpoint — 29 October 2026
 
