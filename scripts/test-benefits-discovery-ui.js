@@ -1264,14 +1264,17 @@ async function verifyOfferDiscoveryRecovery(browser, qualification = null) {
         || ([1440, 390].includes(viewport.width) && ['sort-oldest-loading', 'sort-oldest-error', 'sort-oldest-missing-page'].includes(state));
       if (evidenceDir && (!proof || requiredImage)) {
         // Keep the sticky site header at document top, outside this section's document-coordinate capture.
-        await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
-        const clip = await root.evaluate(section => { const r = section.getBoundingClientRect();
-          return { x: r.left + scrollX, y: r.top + scrollY, width: r.width, height: r.height }; }); assert.ok(clip);
-        metrics.at(-1).documentClip = clip;
+        const { clip, coverage } = await root.evaluate((section, withProof) => {
+          window.scrollTo({ top: 0, behavior: 'instant' });
+          const r = section.getBoundingClientRect();
+          return { clip: { x: r.left + scrollX, y: r.top + scrollY, width: r.width, height: r.height },
+            coverage: withProof ? { width: innerWidth, height: innerHeight, dpr: devicePixelRatio, scrollX, scrollY,
+              documentHeight: Math.max(document.documentElement.scrollHeight, document.body.scrollHeight), scale: visualViewport?.scale, zoom: getComputedStyle(document.documentElement).zoom } : null };
+        }, Boolean(proof));
+        metrics.at(-1).captureCoverage = coverage;
+        assert.ok(clip); metrics.at(-1).documentClip = clip;
         const imagePath = path.join(evidenceDir, 'screenshots', `${viewport.width}x${viewport.height}-${state}.png`);
         if (proof) assert.equal(fs.existsSync(imagePath), false, 'offer proof must not overwrite a capture');
-        const coverage = proof ? await page.evaluate(() => ({ width: innerWidth, height: innerHeight, dpr: devicePixelRatio, scrollX, scrollY,
-          documentHeight: Math.max(document.documentElement.scrollHeight, document.body.scrollHeight), scale: visualViewport?.scale, zoom: getComputedStyle(document.documentElement).zoom })) : null;
         await page.screenshot({ path: imagePath, fullPage: true, ...(proof ? {} : { clip }) });
         if (proof) {
           fs.chmodSync(imagePath, 0o600); const bytes = fs.readFileSync(imagePath); const size = catalogPngSize(bytes);
