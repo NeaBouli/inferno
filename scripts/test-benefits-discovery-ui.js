@@ -433,14 +433,17 @@ function createCatalogContextDrain(context, isAborted, identity = {}) {
   };
 }
 
-async function prepareCatalogQualification(options, browser) {
+async function prepareCatalogQualification(options, browser, surface = 'seller-catalog') {
+  assert.ok(surface === 'seller-catalog' || surface === 'offer-discovery', 'qualification surface is closed');
+  const offerDiscovery = surface === 'offer-discovery';
+  const identity = offerDiscovery ? 'offer-discovery' : 'catalog';
   const qualificationStarted = performance.now();
   assert.equal(Number(process.versions.node.split('.')[0]), 22, 'catalog qualification requires Node22');
   assert.equal(require('playwright/package.json').version, '1.64.1', 'catalog qualification uses the admitted Playwright');
   assert.ok(chromium.executablePath().includes('chromium-1248'), 'catalog qualification uses the admitted Chromium revision');
   assert.ok(options && Object.keys(options).every(key => ['scope', 'evidenceDir', 'binding'].includes(key)), 'closed catalog qualification input required');
   const live = options.scope === 'root-live-critical';
-  assert.ok(live || (options.scope === 'loopback-production' && catalogProductionOnly), 'catalog qualification scope is closed');
+  assert.ok(live || (options.scope === 'loopback-production' && (offerDiscovery || catalogProductionOnly)), 'catalog qualification scope is closed');
   assert.ok(path.isAbsolute(options.evidenceDir || '') && !fs.existsSync(options.evidenceDir), 'fresh absolute catalog evidence directory required');
   const directory = path.resolve(options.evidenceDir); fs.mkdirSync(directory, { mode: 0o700 });
   assert.equal(fs.realpathSync(directory), directory, 'catalog evidence path must not use symlinks');
@@ -455,7 +458,7 @@ async function prepareCatalogQualification(options, browser) {
     { encoding: 'utf8', timeout: 5000, maxBuffer: 4096 }).trim().split('\n');
   assert.ok(gitIds.length === 2 && gitIds.every(value => /^[a-f0-9]{40}$/.test(value)), 'catalog source Git identity required');
     return { sourceCommit: gitIds[0], frontendTree: gitIds[1], scriptSha256: digest(fileBytes(__filename, 512 * 1024)),
-    componentSha256: digest(fileBytes(path.join(frontend, 'src/app/s/[businessId]/SellerCatalogClient.tsx'), 256 * 1024)),
+    componentSha256: digest(fileBytes(path.join(frontend, offerDiscovery ? 'src/components/OfferDiscovery.tsx' : 'src/app/s/[businessId]/SellerCatalogClient.tsx'), 256 * 1024)),
     packageSha256: digest(fileBytes(path.join(frontend, 'package.json'), 128 * 1024)),
     lockSha256: digest(fileBytes(path.join(frontend, 'package-lock.json'), 4 * 1024 * 1024)) };
   };
@@ -527,7 +530,9 @@ async function prepareCatalogQualification(options, browser) {
   proof.timer = setTimeout(() => { proof.aborted = true; proof.failures.push('CATALOG_WORK_DEADLINE'); catalogBodyOrderingCheckpoint(proof, 'WORK_ABORT'); catalogDrainCheckpoint(proof, 'WORK_ABORT', null, 'INNER_WORK_DEADLINE'); wakeAbort();
     for (const context of proof.contexts) { proof.contextDrains.get(context)?.wake(); void context.close().catch(() => {}); }
   }, Math.max(1, 300000 - (performance.now() - qualificationStarted))); proof.timer.unref();
-  proof.write = (name, value) => { const file = path.join(directory, name); fs.writeFileSync(file, JSON.stringify(value, null, 2) + '\n', { flag: 'wx', mode: 0o600 }); };
+  proof.write = (name, value) => { const file = path.join(directory, offerDiscovery ? name.replace(/^catalog-/, 'offer-discovery-') : name);
+    const receipt = offerDiscovery && typeof value.schema === 'string' ? { ...value, schema: value.schema.replace(/^catalog-/, 'offer-discovery-') } : value;
+    fs.writeFileSync(file, JSON.stringify(receipt, null, 2) + '\n', { flag: 'wx', mode: 0o600 }); };
   proof.runtime = { node: process.version, playwright: require('playwright/package.json').version, browser: browser.version(), declaredExecutable: chromium.executablePath() };
   proof.write('catalog-opening.json', { schema: 'catalog-production-opening/v1', source, buildId, origin: targetOrigin,
     runtime: proof.runtime,
@@ -549,7 +554,7 @@ async function prepareCatalogQualification(options, browser) {
     const url = new URL(request.url());
     assert.ok(request.method() === 'GET' && url.origin === targetOrigin, 'catalog network is fixed-origin GET only');
     const publicPath = catalogPublicPath(url.pathname);
-    const appRoute = ['/', '/guide', '/support', '/privacy', '/s/catalog-filter-fixture', '/s/catalog-second-fixture'].includes(publicPath);
+    const appRoute = ['/', '/guide', '/support', '/privacy', ...(!offerDiscovery ? ['/s/catalog-filter-fixture', '/s/catalog-second-fixture'] : [])].includes(publicPath);
     if (!appRoute) { assetRecord(publicPath); proof.admittedAssets.add(publicPath); }
   };
   proof.abort = async (route, code, stage = 'ABORT') => {
@@ -597,10 +602,10 @@ async function prepareCatalogQualification(options, browser) {
     proof.write('catalog-completion-checkpoint.json', catalogCompletionCheckpoint(proof, true,
       closing.sha256 === proof.opening.sha256 && closing.bytes === proof.opening.bytes));
     assert.ok(!proof.aborted && performance.now() - proof.started <= 300000 && proof.contexts.size === 0 && proof.failures.length === 0, 'catalog qualification/owned context cleanup must complete');
-    assert.equal(proof.images.length, live ? 4 : 18, 'complete catalog screenshot matrix required');
+    assert.equal(proof.images.length, offerDiscovery ? 21 : live ? 4 : 18, 'complete qualification screenshot matrix required');
     assert.ok(proof.assets.size > 0 && [...proof.assets.keys()].some(value => value.endsWith('.css'))
-      && [...proof.assets.keys()].some(value => value.includes('/app/s/') && value.endsWith('.js')), 'actual catalog route chunk and CSS identity required');
-    const receipt = { schema: 'catalog-production-qualification/v1', status: 'PASS', scope: live ? 'root-live-critical' : 'loopback-production', source, buildId, origin: targetOrigin,
+      && [...proof.assets.keys()].some(value => value.includes(offerDiscovery ? '/app/page-' : '/app/s/') && value.endsWith('.js')), 'actual catalog route chunk and CSS identity required');
+    const receipt = { schema: `${identity}-production-qualification/v1`, status: 'PASS', scope: live ? 'root-live-critical' : 'loopback-production', source, buildId, origin: targetOrigin,
       runtime: proof.runtime, bindingSha256: proof.bindingSha256, opening: proof.opening, closing, closingSource, assets: [...proof.assets.values()], images: proof.images, imageBytes: proof.imageBytes,
       elapsedMs: performance.now() - proof.started, ownContextsClosed: true, rawBodiesRetained: false, sourceBuildJoinRequiresRootBuildReceipt: !live, invokerBrowserCleanup: 'REQUIRED_SEPARATELY', visualReviewByRoot: 'PENDING' };
     proof.write('catalog-production-result.json', receipt); return receipt;
@@ -1102,8 +1107,10 @@ async function verifySellerCatalogFilters(browser, qualification = null) {
   return qualificationReceipt;
 }
 
-async function verifyOfferDiscoveryRecovery(browser) {
-  const evidenceDir = process.env.BENEFITS_DISCOVERY_RECOVERY_EVIDENCE_DIR;
+async function verifyOfferDiscoveryRecovery(browser, qualification = null) {
+  const proof = qualification ? await prepareCatalogQualification(qualification, browser, 'offer-discovery') : null;
+  const discoveryOrigin = proof ? proof.origin : origin;
+  const evidenceDir = proof ? proof.directory : process.env.BENEFITS_DISCOVERY_RECOVERY_EVIDENCE_DIR;
   const viewports = [{ width: 1440, height: 1000 }, { width: 1180, height: 820 },
     { width: 820, height: 1180 }, { width: 390, height: 844 }, { width: 320, height: 844 }];
   const fixtures = Array.from({ length: 17 }, (_, index) => ({ ...offer,
@@ -1111,48 +1118,82 @@ async function verifyOfferDiscoveryRecovery(browser) {
     productName: `Member item ${String(index + 1).padStart(2, '0')} ${index === 0 ? 'Neighbourhood'.repeat(5) : 'coffee'}`,
     product: { ...offer.product, id: `recovery-product-${index + 1}`, description: `Recovery fixture ${'Extraordinary'.repeat(4)}` },
   }));
+  // Explicit API-order oracles: the browser does not reimplement database sorting.
+  const newestOrder = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
+  const oldestOrder = [17, 15, 16, 13, 14, 11, 12, 9, 10, 7, 8, 5, 6, 3, 4, 1, 2];
+  const orderedIds = numbers => numbers.map(number => `discovery-recovery-${number}`);
   const metrics = [], requestEvidence = [];
   if (evidenceDir) fs.mkdirSync(path.join(evidenceDir, 'screenshots'), { recursive: true });
   for (const viewport of viewports) {
+    assert.ok(!proof?.aborted, 'offer qualification deadline must not start another context');
     const context = await browser.newContext({ viewport, deviceScaleFactor: 1, serviceWorkers: 'block',
       isMobile: viewport.width <= 390, hasTouch: viewport.width <= 390 });
-    let size = 17, failure = false, inconsistent = false, holdRecovery = false, releaseLate, facetMode = 'normal';
+    const contextDrain = proof ? createCatalogContextDrain(context, () => proof.aborted,
+      { ordinal: viewports.findIndex(value => value.width === viewport.width) + 1, viewportWidth: viewport.width,
+        started: proof.started, origin: proof.origin, ordering: proof.bodyOrdering }) : null;
+    if (proof) {
+      proof.contexts.add(context); proof.contextDrains.set(context, contextDrain);
+      context.on('response', response => proof.response(response, contextDrain));
+      await context.routeWebSocket('**/*', async socket => {
+        proof.failures.push('CATALOG_WEBSOCKET_FORBIDDEN');
+        try { await socket.close(); } catch { proof.failures.push('CATALOG_WEBSOCKET_CLOSE_FAILED'); }
+      });
+      await context.route('**/*', async route => {
+        let stage = 'ADMISSION';
+        try { proof.admit(route.request()); stage = 'CONTINUE'; await route.continue(); }
+        catch { await proof.abort(route, 'CATALOG_NETWORK_ADMISSION', stage); }
+      });
+    }
+    let size = 17, failure = false, inconsistent = false, holdRecovery = false, releaseLate, facetMode = 'normal', orderingMode = false;
     let lateGate = new Promise(resolve => { releaseLate = resolve; });
     const requests = [], errors = [];
     await context.route('**/api/**', async route => {
+      try {
       const request = route.request(), url = new URL(request.url());
       assert.equal(request.method(), 'GET', 'discovery recovery fixture must never mutate data');
+      if (proof) assert.equal(url.origin, discoveryOrigin, 'offer fixture API uses the admitted origin');
       if (url.pathname === '/api/businesses') {
         const page = Number(url.searchParams.get('page') || 1), query = url.searchParams.get('query') || '';
-        const snapshot = { page, query, category: url.searchParams.get('category') || '',
+        const sort = url.searchParams.get('sort');
+        assert.ok(sort === 'newest' || sort === 'oldest', 'UI sends the supported selected order');
+        assert.equal(url.searchParams.getAll('sort').length, 1);
+        const snapshot = { page, query, sort, category: url.searchParams.get('category') || '',
           serviceArea: url.searchParams.get('serviceArea') || '', size, failure, inconsistent, held: holdRecovery, facetMode };
         requests.push(snapshot);
         const total = query === 'no-match' || (facetMode === 'removed' && snapshot.category === 'Coffee') ? 0 : query === 'current' ? 1 : size;
-        const selected = query === 'current' ? [fixtures[16]] : fixtures.slice(0, size);
+        const ordered = (sort === 'oldest' ? oldestOrder : newestOrder).filter(number => number <= size).map(number => fixtures[number - 1]);
+        const selected = query === 'current' ? [fixtures[16]] : orderingMode ? ordered : fixtures.slice(0, size);
         const items = inconsistent || total === 0 ? [] : selected.slice((page - 1) * 8, page * 8);
         const categories = size === 0 ? [] : facetMode === 'removed' ? ['Services'] : ['Coffee'];
         const serviceAreas = size === 0 ? [] : facetMode === 'removed' ? ['Local'] : ['Online'];
         if (snapshot.held) await lateGate;
-        if (snapshot.failure) return route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'Discovery fixture temporarily unavailable' }) });
-        return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
+        if (snapshot.failure) return await route.fulfill({ status: 503, contentType: 'application/json', body: JSON.stringify({ error: 'Discovery fixture temporarily unavailable' }) });
+        return await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({
           offers: items, categories, serviceAreas,
           pagination: { page, limit: 8, total, totalPages: total === 0 ? 0 : Math.ceil(total / 8), hasNext: page * 8 < total },
         }) });
       }
-      if (url.pathname === '/api/ready') return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'ready', chainId: 1, database: 'ok', rateLimitStore: 'ok' }) });
-      return route.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ error: 'Unknown recovery fixture route' }) });
+      if (url.pathname === '/api/ready') return await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'ready', chainId: 1, database: 'ok', rateLimitStore: 'ok' }) });
+      return await route.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ error: 'Unknown recovery fixture route' }) });
+      } catch (error) { if (!proof) throw error; await proof.abort(route, 'CATALOG_FIXTURE_API', 'API'); }
     });
-    await context.route('https://assets.example.com/ifr-seller-logo.png', route => route.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64') }));
+    await context.route('https://assets.example.com/ifr-seller-logo.png', async route => {
+      try { await route.fulfill({ status: 200, contentType: 'image/png', body: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64') }); }
+      catch (error) { if (!proof) throw error; await proof.abort(route, 'CATALOG_FIXTURE_LOGO', 'LOGO'); }
+    });
     const page = await context.newPage(); page.setDefaultNavigationTimeout(NAVIGATION_TIMEOUT_MS);
     page.on('pageerror', error => errors.push(error.message));
     const root = page.locator('#offers'), search = root.locator('input[type="search"]');
     const category = root.locator('select').nth(0), area = root.locator('select').nth(1);
+    const sort = root.getByLabel('Sort offers', { exact: true });
+    const reset = root.getByRole('button', { name: 'Reset offer search', exact: true });
     const next = root.getByRole('button', { name: 'Next', exact: true });
     const previous = root.getByRole('button', { name: 'Previous', exact: true });
     const recovery = root.getByRole('button', { name: 'Return to first page', exact: true });
     const launch = root.getByText('The first public seller offers are still being prepared.', { exact: true });
     const noMatch = root.getByText('No offers match these filters', { exact: true });
     const ids = () => root.locator('article a[href*="offer="]').evaluateAll(nodes => nodes.map(n => new URL(n.href).searchParams.get('offer')));
+    const waitIds = numbers => page.waitForFunction(expected => JSON.stringify([...document.querySelectorAll('#offers article a[href*="offer="]')].map(node => new URL(node.href).searchParams.get('offer'))) === JSON.stringify(expected), orderedIds(numbers));
     const waitCount = value => root.getByText(`${value} active offer${value === 1 ? '' : 's'}`, { exact: true }).waitFor();
     const waitRequests = async count => {
       const deadline = Date.now() + 5000;
@@ -1210,21 +1251,41 @@ async function verifyOfferDiscoveryRecovery(browser) {
         assert.ok(control.padding.every(n => n >= 12), `${state}: control padding`);
         if (!control.disabled) assert.ok(control.contrast >= 4.5, `${state}: control contrast`);
       }
+      if (state === 'sort-oldest-filtered-page1') {
+        const control = layout.controls.find(n => n.name === 'Newest firstOldest first');
+        assert.ok(control?.focusVisible && control.outlineWidth >= 2 && control.focusContrast >= 3, 'sort has a visible contrasting keyboard outline');
+      }
       if (state === 'unavailable-9') {
         const button = layout.controls.find(n => n.name === 'Return to first page');
         assert.ok(button.focusVisible && button.outlineWidth >= 2 && button.focusContrast >= 3, 'recovery has a visible contrasting keyboard outline');
       }
-      if (evidenceDir) {
+      const requiredImage = ['sort-newest-page1', 'sort-oldest-filtered-page1', 'sort-oldest-page2'].includes(state)
+        || ([1440, 390].includes(viewport.width) && ['sort-oldest-loading', 'sort-oldest-error', 'sort-oldest-missing-page'].includes(state));
+      if (evidenceDir && (!proof || requiredImage)) {
         // Keep the sticky site header at document top, outside this section's document-coordinate capture.
         await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
         const clip = await root.evaluate(section => { const r = section.getBoundingClientRect();
           return { x: r.left + scrollX, y: r.top + scrollY, width: r.width, height: r.height }; }); assert.ok(clip);
         metrics.at(-1).documentClip = clip;
-        await page.screenshot({ path: path.join(evidenceDir, 'screenshots', `${viewport.width}x${viewport.height}-${state}.png`), fullPage: true, clip });
+        const imagePath = path.join(evidenceDir, 'screenshots', `${viewport.width}x${viewport.height}-${state}.png`);
+        if (proof) assert.equal(fs.existsSync(imagePath), false, 'offer proof must not overwrite a capture');
+        const coverage = proof ? await page.evaluate(() => ({ width: innerWidth, height: innerHeight, dpr: devicePixelRatio, scrollX, scrollY,
+          documentHeight: Math.max(document.documentElement.scrollHeight, document.body.scrollHeight), scale: visualViewport?.scale, zoom: getComputedStyle(document.documentElement).zoom })) : null;
+        await page.screenshot({ path: imagePath, fullPage: true, ...(proof ? {} : { clip }) });
+        if (proof) {
+          fs.chmodSync(imagePath, 0o600); const bytes = fs.readFileSync(imagePath); const size = catalogPngSize(bytes);
+          assert.ok(bytes.length <= 4 * 1024 * 1024 && size.width * size.height <= 30 * 1000 * 1000, 'offer PNG must meet byte/pixel budgets');
+          assert.ok(coverage.width === viewport.width && coverage.height === viewport.height && coverage.dpr === 1 && coverage.scale === 1 && ['1', 'normal'].includes(coverage.zoom), 'offer proof uses actual DPR1 viewport without zoom');
+          assert.equal(size.width, viewport.width); assert.ok(Math.abs(size.height - coverage.documentHeight) <= 1, 'offer PNG covers the complete measured document');
+          assert.ok(Math.abs(coverage.scrollY) <= 1 && Math.abs(coverage.scrollX) <= 1, 'offer full-page capture starts at the top');
+          proof.imageBytes += bytes.length; assert.ok(proof.imageBytes <= 48 * 1024 * 1024, 'offer image matrix stays bounded');
+          proof.images.push({ file: path.relative(evidenceDir, imagePath), state, viewport, fullPage: true, coverage, ...size, bytes: bytes.length,
+            sha256: crypto.createHash('sha256').update(bytes).digest('hex') });
+        }
       }
     };
     try {
-      await page.goto(`${origin}/#offers`, { waitUntil: 'domcontentloaded' }); await waitCount(17);
+      await page.goto(`${discoveryOrigin}/#offers`, { waitUntil: 'domcontentloaded' }); await waitCount(17);
       assert.deepEqual(await ids(), fixtures.slice(0, 8).map(n => n.id));
       await activate(next); await page.waitForFunction(() => document.querySelector('#offers article a[href*="offer="]')?.getAttribute('href').includes('discovery-recovery-9'));
       size = 9; await activate(next); await waitCount(9);
@@ -1321,13 +1382,103 @@ async function verifyOfferDiscoveryRecovery(browser) {
       assert.deepEqual({ query: requests.at(-1).query, category: requests.at(-1).category, serviceArea: requests.at(-1).serviceArea },
         { query: '', category: '', serviceArea: '' });
       assert.equal(requests.length, beforeClear + 1, 'clear makes exactly one request and removes retained selections');
+      assert.equal(await sort.inputValue(), 'newest');
+      assert.equal(await reset.isDisabled(), true);
+
+      // The same recovery fixture now exercises server-ordered pages, not a local sort.
+      orderingMode = true; facetMode = 'normal'; size = 17;
+      await search.fill('  member  '); await waitIds(newestOrder.slice(0, 8));
+      assert.equal(requests.at(-1).sort, 'newest');
+      await capture('sort-newest-page1');
+      await category.selectOption('Coffee'); await area.selectOption('Online');
+      await waitIds(newestOrder.slice(0, 8));
+      await activate(next); await waitIds(newestOrder.slice(8, 16));
+      await sort.selectOption('oldest'); await waitIds(oldestOrder.slice(0, 8));
+      assert.equal(requests.at(-1).page, 1, 'changing order returns to page one');
+      assert.deepEqual({ query: requests.at(-1).query, category: requests.at(-1).category, serviceArea: requests.at(-1).serviceArea, sort: requests.at(-1).sort },
+        { query: 'member', category: 'Coffee', serviceArea: 'Online', sort: 'oldest' });
+      assert.equal(await search.inputValue(), '  member  ');
+      assert.equal(await category.inputValue(), 'Coffee'); assert.equal(await area.inputValue(), 'Online');
+      await area.focus(); await page.keyboard.press('Tab');
+      assert.equal(await sort.evaluate(node => node === document.activeElement), true);
+      await capture('sort-oldest-filtered-page1');
+      await activate(next); await waitIds(oldestOrder.slice(8, 16));
+      assert.equal(requests.at(-1).page, 2);
+      assert.deepEqual(await root.locator('article a[href*="offer="]').evaluateAll(nodes => nodes.map(node => node.getAttribute('href'))),
+        oldestOrder.slice(8, 16).map(number => `/?seller=${offer.business.slug}&offer=discovery-recovery-${number}#customer-pass`));
+      await capture('sort-oldest-page2');
+      await sort.selectOption('newest'); await waitIds(newestOrder.slice(0, 8));
+      assert.equal(requests.at(-1).page, 1);
+      assert.equal(await category.inputValue(), 'Coffee'); assert.equal(await area.inputValue(), 'Online');
+      await activate(reset); await waitIds(newestOrder.slice(0, 8));
+      assert.equal(await search.inputValue(), ''); assert.equal(await category.inputValue(), ''); assert.equal(await area.inputValue(), '');
+      assert.equal(await sort.inputValue(), 'newest'); assert.equal(await reset.isDisabled(), true);
+      await sort.selectOption('oldest'); await waitIds(oldestOrder.slice(0, 8));
+      assert.equal(await reset.isDisabled(), false, 'order alone can be reset with results visible');
+      const beforeOrderReset = requests.length;
+      await activate(reset); await waitIds(newestOrder.slice(0, 8));
+      assert.equal(requests.length, beforeOrderReset + 1);
+      assert.equal(await sort.inputValue(), 'newest'); assert.equal(await reset.isDisabled(), true);
+
+      // A selected oldest order survives missing-page recovery, pending state and retry.
+      if (viewport.width === 1440 || viewport.width === 390) {
+        await search.fill('member'); await category.selectOption('Coffee'); await area.selectOption('Online');
+        await sort.selectOption('oldest'); await waitIds(oldestOrder.slice(0, 8));
+        await activate(next); await waitIds(oldestOrder.slice(8, 16));
+        size = 9; await activate(next); await waitCount(9); await recovery.waitFor();
+        assert.equal(await sort.inputValue(), 'oldest'); await capture('sort-oldest-missing-page');
+        size = 17; holdRecovery = true; lateGate = new Promise(resolve => { releaseLate = resolve; });
+        const beforeHeld = requests.length;
+        await activate(recovery); await waitRequests(beforeHeld + 1);
+        await root.getByText('Loading...', { exact: true }).waitFor();
+        assert.deepEqual(await ids(), [], 'pending oldest recovery hides stale cards');
+        assert.equal(await sort.inputValue(), 'oldest'); await capture('sort-oldest-loading');
+        holdRecovery = false; releaseLate(); await waitIds(oldestOrder.slice(0, 8));
+        assert.equal(requests.at(-1).page, 1); assert.equal(requests.at(-1).sort, 'oldest');
+        assert.equal(await search.inputValue(), 'member'); assert.equal(await category.inputValue(), 'Coffee'); assert.equal(await area.inputValue(), 'Online');
+        failure = true; await search.fill('oldest-error');
+        await root.getByText('Discovery fixture temporarily unavailable', { exact: true }).waitFor();
+        assert.deepEqual(await ids(), []); assert.equal(await sort.inputValue(), 'oldest'); await capture('sort-oldest-error');
+        failure = false; await activate(root.getByRole('button', { name: 'Try again', exact: true }));
+        await waitIds(oldestOrder.slice(0, 8)); assert.equal(requests.at(-1).sort, 'oldest');
+      }
+
+      // Old successful and failed requests cannot replace the newer selected order.
+      for (const staleFailure of [false, true]) {
+        await activate(reset); await waitIds(newestOrder.slice(0, 8));
+        holdRecovery = true; failure = staleFailure; lateGate = new Promise(resolve => { releaseLate = resolve; });
+        const beforeStale = requests.length;
+        const staleResponse = page.waitForResponse(response => {
+          const url = new URL(response.url());
+          return url.pathname === '/api/businesses' && url.searchParams.get('sort') === 'oldest';
+        });
+        await sort.selectOption('oldest'); await waitRequests(beforeStale + 1);
+        holdRecovery = false; failure = false;
+        await sort.selectOption('newest'); await waitIds(newestOrder.slice(0, 8));
+        releaseLate(); await (await staleResponse).finished(); await page.waitForTimeout(350);
+        assert.deepEqual(await ids(), orderedIds(newestOrder.slice(0, 8)), 'late result cannot replace newest order');
+        assert.equal(await sort.inputValue(), 'newest');
+        assert.equal(requests.length, beforeStale + 2, 'two order changes make two requests without automatic retry');
+        assert.equal(await root.getByText('Discovery fixture temporarily unavailable', { exact: true }).count(), 0);
+      }
+      // Sorting alone does not turn the empty network into a filtered no-match state.
+      size = 0; await sort.selectOption('oldest'); await launch.waitFor();
+      assert.equal(await noMatch.count(), 0); assert.equal(await sort.inputValue(), 'oldest');
+      await search.fill('no-match'); await noMatch.waitFor();
+      await activate(root.getByRole('button', { name: 'Clear filters', exact: true })); await launch.waitFor();
+      assert.equal(await sort.inputValue(), 'newest'); assert.equal(await reset.isDisabled(), true);
       assert.deepEqual(errors, []);
     } finally {
-      releaseLate(); await context.close(); requestEvidence.push({ viewport, requests });
-      if (evidenceDir) fs.writeFileSync(path.join(evidenceDir, 'discovery-recovery-metrics.json'), JSON.stringify({ fixtureOnly: true, viewports, metrics, requestEvidence }, null, 2));
+      releaseLate();
+      if (contextDrain) { catalogDrainCheckpoint(proof, 'DRAIN_ENTRY', context); await contextDrain.close(); } else await context.close();
+      if (proof) { proof.contexts.delete(context); proof.contextDrains.delete(context); }
+      requestEvidence.push({ viewport, requests });
+      if (evidenceDir) fs.writeFileSync(path.join(evidenceDir, 'discovery-recovery-metrics.json'), JSON.stringify({ fixtureOnly: true, viewports, metrics, requestEvidence }, null, 2), { mode: proof ? 0o600 : 0o644 });
     }
   }
-  console.log('[offer-discovery-recovery] PASS - paging, user recovery, retained filters/facets, focus-only moves, bounded requests, stale response and five responsive viewports');
+  const qualificationReceipt = proof ? await proof.finish() : null;
+  console.log('[offer-discovery-recovery] PASS - global order/paging, reset, user recovery, retained filters/facets, focus-only moves, bounded requests, stale response and five responsive viewports');
+  return qualificationReceipt;
 }
 
 async function runCatalogProductionOnly() {
@@ -2169,7 +2320,7 @@ async function run() {
   }
 }
 
-module.exports = Object.freeze({ verifySellerCatalogFilters });
+module.exports = Object.freeze({ verifySellerCatalogFilters, verifyOfferDiscoveryRecovery });
 if (require.main === module) {
   (catalogProductionOnly ? runCatalogProductionOnly() : run()).catch((error) => {
     if (catalogProductionOnly) console.error('[catalog-production] FAIL - qualification control');

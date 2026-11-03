@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { BusinessLogo } from '@/components/BusinessLogo';
 import { EligibilityLiveSummary, OfferEligibility, useIfrLockEligibility } from '@/components/OfferEligibility';
-import { discoverOffers, type PublicOffer } from '@/lib/api';
+import { discoverOffers, type PublicOffer, type PublicOfferSort } from '@/lib/api';
 import { lockSourceRequirement } from '@/lib/lockSource';
 import { formatProductPrice } from '@/lib/money';
 import { businessPublicReference } from '@/lib/businessSlug';
@@ -21,6 +21,7 @@ export function OfferDiscovery({ mode, onOpenSellerTools }: OfferDiscoveryProps)
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState('');
   const [serviceArea, setServiceArea] = useState('');
+  const [sort, setSort] = useState<PublicOfferSort>('newest');
   const [offers, setOffers] = useState<PublicOffer[]>([]);
   const [categories, setCategories] = useState<string[]>([]);
   const [serviceAreas, setServiceAreas] = useState<string[]>([]);
@@ -43,6 +44,7 @@ export function OfferDiscovery({ mode, onOpenSellerTools }: OfferDiscoveryProps)
           query: query.trim(),
           category,
           serviceArea,
+          sort,
           page,
           limit: PAGE_SIZE,
         });
@@ -65,7 +67,7 @@ export function OfferDiscovery({ mode, onOpenSellerTools }: OfferDiscoveryProps)
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [query, category, serviceArea, page, reloadKey]);
+  }, [query, category, serviceArea, sort, page, reloadKey]);
 
   useEffect(() => {
     // Respect a later focus choice, including controls outside the discovery section.
@@ -109,16 +111,25 @@ export function OfferDiscovery({ mode, onOpenSellerTools }: OfferDiscoveryProps)
     setPage(1);
   }
 
+  function updateSort(value: PublicOfferSort) {
+    focusAfterRecovery.current = false;
+    setLoading(true);
+    setSort(value);
+    setPage(1);
+  }
+
   function clearFilters() {
     focusAfterRecovery.current = false;
     setLoading(true);
     setQuery('');
     setCategory('');
     setServiceArea('');
+    setSort('newest');
     setPage(1);
   }
 
   const hasActiveFilters = Boolean(query.trim() || category || serviceArea);
+  const hasNonDefaultControls = Boolean(query || category || serviceArea || sort !== 'newest' || page !== 1);
   const categoryOptions = [...new Set([...categories, ...(category ? [category] : [])])];
   const serviceAreaOptions = [...new Set([...serviceAreas, ...(serviceArea ? [serviceArea] : [])])];
   const lastPage = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -139,7 +150,7 @@ export function OfferDiscovery({ mode, onOpenSellerTools }: OfferDiscoveryProps)
           <p ref={resultStatusRef} data-discovery-result-status role="status" aria-live="polite" tabIndex={-1} className="font-mono text-sm text-stone-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#51281d]">{loading ? 'Loading...' : error ? 'Offers unavailable' : `${total} active offer${total === 1 ? '' : 's'}`}</p>
         </div>
 
-        <div className="mt-6 grid gap-3 md:grid-cols-[minmax(0,1fr)_14rem_14rem]">
+        <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_12rem_12rem_12rem]">
           <label className="grid gap-2 text-xs font-black uppercase tracking-[0.14em] text-stone-300">
             Search offers
             <input
@@ -173,6 +184,22 @@ export function OfferDiscovery({ mode, onOpenSellerTools }: OfferDiscoveryProps)
               {serviceAreaOptions.map((item) => <option key={item} value={item}>{item}</option>)}
             </select>
           </label>
+          <label className="grid gap-2 text-xs font-black uppercase tracking-[0.14em] text-stone-300">
+            Sort offers
+            <select
+              value={sort}
+              onChange={(event) => updateSort(event.target.value === 'oldest' ? 'oldest' : 'newest')}
+              className="h-12 min-w-0 rounded-2xl border border-white/10 bg-[#160f0b] px-4 py-3 text-sm font-medium normal-case tracking-[0] text-white outline-none transition focus:border-orange-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#51281d]"
+            >
+              <option value="newest">Newest first</option>
+              <option value="oldest">Oldest first</option>
+            </select>
+          </label>
+        </div>
+        <div className="mt-3 flex justify-end">
+          <button type="button" aria-label="Reset offer search" onClick={clearFilters} disabled={!hasNonDefaultControls} className="h-12 rounded-full border border-white/15 px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-stone-100 disabled:opacity-35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#51281d]">
+            Reset
+          </button>
         </div>
 
         {error ? (
@@ -186,7 +213,7 @@ export function OfferDiscovery({ mode, onOpenSellerTools }: OfferDiscoveryProps)
           <div data-discovery-recovery role="status" aria-live="polite" className="mt-8 border-l-2 border-orange-300 pl-5">
             <h3 className="text-xl font-black text-white">{page > 1 ? 'This page is no longer available' : 'Offers could not be shown on this page'}</h3>
             <p className="mt-2 text-sm leading-6 text-stone-300">
-              Return to the first page to reload the current offers. Your search, category and area will stay selected.
+              Return to the first page to reload the current offers. Your search, category, area and order will stay selected.
             </p>
             <button type="button" onClick={returnToFirstPage} className="mt-4 h-12 rounded-full border border-orange-200/40 px-4 py-3 text-xs font-black uppercase tracking-[0.12em] text-orange-50 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#51281d]">
               Return to first page
@@ -198,7 +225,7 @@ export function OfferDiscovery({ mode, onOpenSellerTools }: OfferDiscoveryProps)
           <div role="status" className="mt-8 border-l-2 border-orange-300 pl-5">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-orange-200/80">Search result</p>
             <h3 className="mt-2 text-xl font-black text-white">No offers match these filters</h3>
-            <p className="mt-2 text-sm text-stone-300">Clear the search, category and area to see every active offer.</p>
+            <p className="mt-2 text-sm text-stone-300">Clear the search, category and area to see every active offer, newest first.</p>
             <button
               type="button"
               onClick={clearFilters}

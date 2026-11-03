@@ -1588,7 +1588,28 @@ user recovery, filter preservation, inconsistent metadata and late-response
 isolation. Focus-only moves within/outside discovery, empty facets and removal of
 only the selected facet have explicit regression coverage. Responsive computed
 layout/screenshots cover the discovery states.
-No backend, API, schema, wallet, dependency, persistence or retention path changes.
+The original recovery change did not alter backend, API, schema, wallet,
+dependency, persistence or retention paths.
+
+Issue425 extends this same offer-discovery hop with transient newest/oldest
+selection: `OfferDiscovery` effect -> optional `api::discoverOffers(sort)` ->
+`GET /api/businesses` scalar validation -> static Prisma `createdAt` direction
+and `id asc` tie-breaker before `skip/take`. Omitted order remains newest;
+unsupported or malformed values use the existing 400 filter response. Membership,
+visibility, facets, prices and the response shape are unchanged. Changing order
+returns to page 1 while retaining filters; Reset clears controls and restores
+newest. Existing loading, stale-response and user recovery/focus contracts remain.
+Real SQLite/API expected-ID tests cover global ordering across page boundaries,
+ties and unchanged membership. The same browser recovery fixture covers serialized
+order, reset, delayed responses and five responsive viewports. Source preparation
+is separate from Root-owned CI, release and live acceptance; no snapshot guarantee
+is added for concurrent catalog mutations.
+The same import-only recovery function accepts a closed optional production
+qualification using the existing catalog artifact/asset/source/deadline helper.
+Its internal surface selects `OfferDiscovery.tsx`, the root page chunk and the
+complete five-viewport 21-image matrix; fixed loopback or the fixed Shop origin
+are the only targets. SellerCatalog419 retains its default component and 18/4
+image contracts. No CLI origin, fixture copy or alternate product path is added.
 
 ## Generic IFRLock guidance versus exact checkout eligibility — 2026-10-29
 

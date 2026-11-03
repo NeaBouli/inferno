@@ -28,6 +28,8 @@ router.get('/', discoveryRateLimiter, async (req, res, next) => {
   try {
     const page = parsePositiveInteger(req.query.page, 1, 1_000);
     const limit = parsePositiveInteger(req.query.limit, 12, 24);
+    const sort = req.query.sort === undefined ? 'newest' : req.query.sort;
+    const invalidSort = typeof sort !== 'string' || (sort !== 'newest' && sort !== 'oldest');
     const query = typeof req.query.query === 'string' ? req.query.query.trim() : '';
     const category = typeof req.query.category === 'string' ? req.query.category.trim() : '';
     const businessId = typeof req.query.businessId === 'string' ? req.query.businessId.trim() : '';
@@ -41,7 +43,7 @@ router.get('/', discoveryRateLimiter, async (req, res, next) => {
       (req.query.serviceArea !== undefined && typeof req.query.serviceArea !== 'string');
 
     if (
-      !page || !limit || invalidTextFilter || query.length > 80 || category.length > 80 ||
+      !page || !limit || invalidTextFilter || invalidSort || query.length > 80 || category.length > 80 ||
       businessId.length > 80 || (businessId && !/^[A-Za-z0-9_-]+$/.test(businessId)) ||
       serviceAreaInput.length > MAX_BUSINESS_SERVICE_AREA_LENGTH || (serviceAreaInput.trim() && !serviceArea)
     ) {
@@ -91,7 +93,7 @@ router.get('/', discoveryRateLimiter, async (req, res, next) => {
       prisma.benefitRule.count({ where: visibleOfferFilter }),
       prisma.benefitRule.findMany({
         where: visibleOfferFilter,
-        orderBy: [{ createdAt: 'desc' }, { id: 'asc' }],
+        orderBy: [{ createdAt: sort === 'oldest' ? 'asc' : 'desc' }, { id: 'asc' }],
         skip: (page - 1) * limit,
         take: limit,
         select: {

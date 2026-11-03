@@ -1538,6 +1538,106 @@ describe('Seller catalog routes', () => {
     expect((await fetch(`${baseUrl()}/api/businesses?businessId=one&businessId=two`)).status).toBe(400);
   });
 
+  it('orders the complete filtered public set before paging, with stable timestamp ties', async () => {
+    await prisma.business.updateMany({
+      where: { id: { in: [businessId, otherBusinessId] } },
+      data: { serviceArea: 'Online', serviceAreaKey: 'online' },
+    });
+    const priced = await prisma.product.create({ data: {
+      businessId, name: 'Chronology member coffee', category: 'Coffee',
+      basePriceMinor: '9007199254740993', currency: 'EUR',
+    } });
+    // Insert in the opposite ID order; each timestamp tie crosses a three-item page boundary.
+    for (let number = 18; number >= 1; number -= 1) {
+      await prisma.benefitRule.create({ data: {
+        id: `chronology-${String(number).padStart(2, '0')}`,
+        businessId: number % 2 ? businessId : otherBusinessId,
+        productId: number === 1 ? priced.id : null,
+        label: 'Chronology member benefit', category: 'Coffee', productName: 'Member coffee',
+        discountPercent: 10, requiredLockIFR: 1000,
+        createdAt: new Date(`2026-01-${String(Math.ceil(number / 2)).padStart(2, '0')}T12:00:00Z`),
+      } });
+    }
+    const inactiveBusiness = await prisma.business.create({ data: {
+      name: 'Hidden chronology', ownerAddress: owner.address, active: false,
+      discountPercent: 10, requiredLockIFR: 1000, serviceArea: 'Online', serviceAreaKey: 'online',
+    } });
+    const ownerless = await prisma.business.create({ data: {
+      name: 'Ownerless chronology', discountPercent: 10, requiredLockIFR: 1000,
+      serviceArea: 'Online', serviceAreaKey: 'online',
+    } });
+    const archived = await prisma.product.create({ data: {
+      businessId, name: 'Archived chronology', category: 'Coffee', active: false,
+    } });
+    for (const [id, seller, productId, active, category] of [
+      ['inactive-rule', businessId, null, false, 'Coffee'],
+      ['inactive-seller', inactiveBusiness.id, null, true, 'Coffee'],
+      ['ownerless-seller', ownerless.id, null, true, 'Coffee'],
+      ['archived-product', businessId, archived.id, true, 'Coffee'],
+      ['other-category', businessId, null, true, 'Services'],
+    ] as const) {
+      await prisma.benefitRule.create({ data: {
+        id, businessId: seller, productId, active, category,
+        label: 'Chronology member benefit', productName: 'Member coffee',
+        discountPercent: 10, requiredLockIFR: 1000, createdAt: new Date('2026-12-31T12:00:00Z'),
+      } });
+    }
+    const oldest = [
+      'chronology-01', 'chronology-02', 'chronology-03', 'chronology-04', 'chronology-05', 'chronology-06',
+      'chronology-07', 'chronology-08', 'chronology-09', 'chronology-10', 'chronology-11', 'chronology-12',
+      'chronology-13', 'chronology-14', 'chronology-15', 'chronology-16', 'chronology-17', 'chronology-18',
+    ];
+    const newest = [
+      'chronology-17', 'chronology-18', 'chronology-15', 'chronology-16', 'chronology-13', 'chronology-14',
+      'chronology-11', 'chronology-12', 'chronology-09', 'chronology-10', 'chronology-07', 'chronology-08',
+      'chronology-05', 'chronology-06', 'chronology-03', 'chronology-04', 'chronology-01', 'chronology-02',
+    ];
+    type Discovery = {
+      offers: Array<{ id: string; business: { id: string }; product: null | { basePriceMinor: string; currency: string } }>;
+      categories: string[]; serviceAreas: string[];
+      pagination: { page: number; limit: number; total: number; totalPages: number; hasNext: boolean };
+    };
+    const headers = { 'x-forwarded-for': '203.0.113.85' };
+    const read = async (parameters: string) => {
+      const response = await fetch(`${baseUrl()}/api/businesses?${parameters}`, { headers });
+      expect(response.status).toBe(200);
+      return response.json() as Promise<Discovery>;
+    };
+    await expectNoDatabaseWrites(async () => {
+      const filter = 'query=Chronology&category=Coffee&serviceArea=ONLINE&limit=3';
+      for (const [sort, expected] of [['newest', newest], ['oldest', oldest]] as const) {
+        const actual: string[] = [];
+        for (let page = 1; page <= 6; page += 1) {
+          const body = await read(`${filter}&sort=${sort}&page=${page}`);
+          expect(body.offers.map(item => item.id)).toEqual(expected.slice((page - 1) * 3, page * 3));
+          expect(body.pagination).toEqual({ page, limit: 3, total: 18, totalPages: 6, hasNext: page < 6 });
+          expect(body.categories).toEqual(['Coffee', 'Services']);
+          expect(body.serviceAreas).toEqual(['Online']);
+          actual.push(...body.offers.map(item => item.id));
+        }
+        expect(actual).toEqual(expected);
+        expect(new Set(actual).size).toBe(18);
+      }
+      expect(await read(`${filter}&page=1`)).toEqual(await read(`${filter}&sort=newest&page=1`));
+      const unfiltered = await read('sort=oldest&limit=24');
+      expect(unfiltered.offers.map(item => item.id)).toEqual([...oldest, 'other-category']);
+      expect(unfiltered.offers[0].product).toEqual(expect.objectContaining({ basePriceMinor: '9007199254740993', currency: 'EUR' }));
+      const seller = await read(`query=Chronology&category=Coffee&serviceArea=ONLINE&sort=oldest&businessId=${businessId}&limit=24`);
+      expect(seller.offers.map(item => item.id)).toEqual(oldest.filter((_, index) => index % 2 === 0));
+      expect(seller.offers.every(item => item.business.id === businessId)).toBe(true);
+      for (const invalid of ['', 'sideways', 'Newest', '%20oldest', 'oldest%20', 'newest&sort=oldest', 'oldest&sort=oldest']) {
+        const response = await fetch(`${baseUrl()}/api/businesses?sort=${invalid}`, { headers });
+        expect(response.status).toBe(400);
+        expect(await response.json()).toEqual({ error: 'Invalid discovery filters' });
+      }
+      const object = await fetch(`${baseUrl()}/api/businesses?sort[key]=oldest`, { headers });
+      expect(object.status).toBe(400);
+      expect(await object.json()).toEqual({ error: 'Invalid discovery filters' });
+    });
+    expect(mockCheckLock).not.toHaveBeenCalled();
+    expect(mockCheckBenefitEligibility).not.toHaveBeenCalled();
+  });
+
   it('rate limits public offer discovery by client IP', async () => {
     const headers = { 'x-forwarded-for': '203.0.113.81' };
     for (let request = 0; request < 60; request += 1) {
