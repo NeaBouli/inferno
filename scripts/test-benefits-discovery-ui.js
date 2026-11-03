@@ -1174,6 +1174,7 @@ async function verifyOfferDiscoveryRecovery(browser, qualification = null) {
         }) });
       }
       if (url.pathname === '/api/ready') return await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify({ status: 'ready', chainId: 1, database: 'ok', rateLimitStore: 'ok' }) });
+      if (proof) return await proof.abort(route, 'CATALOG_FIXTURE_API', 'API');
       return await route.fulfill({ status: 404, contentType: 'application/json', body: JSON.stringify({ error: 'Unknown recovery fixture route' }) });
       } catch (error) { if (!proof) throw error; await proof.abort(route, 'CATALOG_FIXTURE_API', 'API'); }
     });

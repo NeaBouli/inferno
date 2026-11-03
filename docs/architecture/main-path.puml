@@ -448,5 +448,5 @@ Route -> DB : complete filtered set ordered by createdAt, id asc before paging
 DB --> UI : unchanged response and exact offer bindings
 Customer -> UI : Reset (newest + cleared filters + page1)
 note over UI,DB : Existing recovery/focus remain; no concurrent-mutation snapshot claim.
-note bottom : Same closed qualifier: OfferDiscovery/root chunk/21 images; Catalog default18/4 unchanged.
+note over UI,DB : Same closed qualifier: OfferDiscovery/root chunk/21 images; Catalog default18/4 unchanged.
 @enduml
