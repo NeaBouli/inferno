@@ -1186,7 +1186,7 @@ async function verifyOfferDiscoveryRecovery(browser, qualification = null) {
     page.on('pageerror', error => errors.push(error.message));
     const root = page.locator('#offers'), search = root.locator('input[type="search"]');
     const category = root.locator('select').nth(0), area = root.locator('select').nth(1);
-    const sort = root.getByLabel('Sort offers', { exact: true });
+    const sort = root.getByRole('combobox', { name: 'Sort offers', exact: true });
     const reset = root.getByRole('button', { name: 'Reset offer search', exact: true });
     const next = root.getByRole('button', { name: 'Next', exact: true });
     const previous = root.getByRole('button', { name: 'Previous', exact: true });
@@ -1287,6 +1287,9 @@ async function verifyOfferDiscoveryRecovery(browser, qualification = null) {
     };
     try {
       await page.goto(`${discoveryOrigin}/#offers`, { waitUntil: 'domcontentloaded' }); await waitCount(17);
+      assert.equal(await sort.count(), 1, 'the exact named native sort control is unique');
+      assert.deepEqual(await sort.locator('option').evaluateAll(nodes => nodes.map(node => ({ value: node.value, label: node.textContent }))),
+        [{ value: 'newest', label: 'Newest first' }, { value: 'oldest', label: 'Oldest first' }]);
       assert.deepEqual(await ids(), fixtures.slice(0, 8).map(n => n.id));
       await activate(next); await page.waitForFunction(() => document.querySelector('#offers article a[href*="offer="]')?.getAttribute('href').includes('discovery-recovery-9'));
       size = 9; await activate(next); await waitCount(9);
