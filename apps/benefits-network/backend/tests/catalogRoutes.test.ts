@@ -1547,7 +1547,7 @@ describe('Seller catalog routes', () => {
       businessId, name: 'Chronology member coffee', category: 'Coffee',
       basePriceMinor: '9007199254740993', currency: 'EUR',
     } });
-    // Insert in the opposite ID order; each timestamp tie crosses a three-item page boundary.
+    // Insert in the opposite ID order; timestamp ties include three-item page boundaries.
     for (let number = 18; number >= 1; number -= 1) {
       await prisma.benefitRule.create({ data: {
         id: `chronology-${String(number).padStart(2, '0')}`,

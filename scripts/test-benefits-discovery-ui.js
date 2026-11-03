@@ -1252,7 +1252,7 @@ async function verifyOfferDiscoveryRecovery(browser, qualification = null) {
         if (!control.disabled) assert.ok(control.contrast >= 4.5, `${state}: control contrast`);
       }
       if (state === 'sort-oldest-filtered-page1') {
-        const control = layout.controls.find(n => n.name === 'Newest firstOldest first');
+        const control = layout.controls.find(n => n.name.includes('Newest first') && n.name.includes('Oldest first'));
         assert.ok(control?.focusVisible && control.outlineWidth >= 2 && control.focusContrast >= 3, 'sort has a visible contrasting keyboard outline');
       }
       if (state === 'unavailable-9') {
@@ -1445,7 +1445,8 @@ async function verifyOfferDiscoveryRecovery(browser, qualification = null) {
 
       // Old successful and failed requests cannot replace the newer selected order.
       for (const staleFailure of [false, true]) {
-        await activate(reset); await waitIds(newestOrder.slice(0, 8));
+        if (!(await reset.isDisabled())) await activate(reset);
+        await waitIds(newestOrder.slice(0, 8));
         holdRecovery = true; failure = staleFailure; lateGate = new Promise(resolve => { releaseLate = resolve; });
         const beforeStale = requests.length;
         const staleResponse = page.waitForResponse(response => {
