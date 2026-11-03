@@ -466,7 +466,10 @@ export function getBusiness(id: string) {
   return fetchJSON<BusinessInfo>(`/api/businesses/${encodeURIComponent(id)}`);
 }
 
+export type PublicOfferSort = 'newest' | 'oldest';
+
 export function discoverOffers(filters: {
+  sort?: PublicOfferSort;
   businessId?: string;
   query?: string;
   category?: string;
@@ -475,6 +478,7 @@ export function discoverOffers(filters: {
   limit?: number;
 } = {}) {
   const query = new URLSearchParams();
+  if (filters.sort !== undefined) query.set('sort', filters.sort);
   if (filters.businessId) query.set('businessId', filters.businessId);
   if (filters.query) query.set('query', filters.query);
   if (filters.category) query.set('category', filters.category);
