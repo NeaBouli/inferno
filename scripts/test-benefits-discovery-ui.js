@@ -554,7 +554,7 @@ async function prepareCatalogQualification(options, browser, surface = 'seller-c
     const url = new URL(request.url());
     assert.ok(request.method() === 'GET' && url.origin === targetOrigin, 'catalog network is fixed-origin GET only');
     const publicPath = catalogPublicPath(url.pathname);
-    const appRoute = ['/', '/guide', '/support', '/privacy', ...(!offerDiscovery ? ['/s/catalog-filter-fixture', '/s/catalog-second-fixture'] : [])].includes(publicPath);
+    const appRoute = ['/', '/guide', '/support', '/privacy', ...(offerDiscovery ? ['/s/ifr-test-cafe'] : ['/s/catalog-filter-fixture', '/s/catalog-second-fixture'])].includes(publicPath);
     if (!appRoute) { assetRecord(publicPath); proof.admittedAssets.add(publicPath); }
   };
   proof.abort = async (route, code, stage = 'ABORT') => {
