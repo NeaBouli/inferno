@@ -452,3 +452,18 @@ left to right direction
 *** Existing source/compile tests -> solc0.8.20 / OZ5.6.1 / docs parity
 *** solc declared leaf range unchanged; no deployed compiler/service claim
 @endmindmap
+
+@startuml public_offer_ordering_425
+component "OfferDiscovery state / effect" as UI
+component "api.discoverOffers" as API
+component "GET /api/businesses" as Route
+database "Existing Prisma BenefitRule" as DB
+UI --> API : filters / sort newest|oldest / page
+API --> Route : optional scalar sort (omitted = newest)
+Route --> DB : visibility + filters / createdAt direction, id asc / skip,take
+DB --> UI : unchanged offers, facets and pagination
+note bottom of UI
+  Order resets page1; Reset restores defaults. No schema or wallet/provider change.
+  Same closed qualifier: OfferDiscovery/root chunk/21 images; Catalog default18/4 unchanged.
+end note
+@enduml
