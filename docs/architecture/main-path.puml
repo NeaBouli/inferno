@@ -432,3 +432,21 @@ G --> S : local filesystem/compiler only
 S --> F : existing ^1.12.1
 note bottom : Lock-only maintenance; no bot/provider/RPC/deployment or SDK publish.
 @enduml
+
+@startuml public_offer_ordering_425
+actor Customer
+participant OfferDiscovery as UI
+participant "api.discoverOffers" as API
+participant "GET /api/businesses" as Route
+database Prisma as DB
+Customer -> UI : select Newest first / Oldest first
+UI -> UI : page1 / retain filters / existing debounce and stale guard
+UI -> API : sort + filters + bounded page
+API -> Route : optional sort=newest|oldest
+Route -> Route : reject malformed/unsupported sort with existing400
+Route -> DB : complete filtered set ordered by createdAt, id asc before paging
+DB --> UI : unchanged response and exact offer bindings
+Customer -> UI : Reset (newest + cleared filters + page1)
+note over UI,DB : Existing recovery/focus remain; no concurrent-mutation snapshot claim.
+note over UI,DB : Same closed qualifier: OfferDiscovery/root chunk/21 images; Catalog default18/4 unchanged.
+@enduml
