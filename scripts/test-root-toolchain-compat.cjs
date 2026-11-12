@@ -173,6 +173,7 @@ async function main() {
   assert.equal(process.platform, "linux");
   assert.equal(Number(process.versions.node.split(".")[0]), 22);
   assert.equal(process.argv.length, 2);
+  deadline = performance.now() + OVERALL_MS;
   // Remains UNBOUND until an actual census permits only this metadata change.
   for (const [file, current, previous, frozen] of [
     ["scripts/check-markdownlint-baseline.cjs", 'const expectedToolVersion = "0.50.0";', 'const expectedToolVersion = "0.49.1";', "81fb214c8d25cc65d2cf762a384b0882eeb83b1221505f213701332c5ef20c33"],
@@ -182,7 +183,6 @@ async function main() {
     assert.equal(bytes.split(current).length, 2, "MARKDOWN_METADATA_UNBOUND");
     assert.equal(digest(bytes.replace(current, previous)), frozen, "MARKDOWN_NON_METADATA_CHANGE");
   }
-  deadline = performance.now() + OVERALL_MS;
   const runnerTemp = fs.realpathSync(process.env.RUNNER_TEMP || os.tmpdir());
   const proposedOutput = path.join(runnerTemp, "root-toolchain-compat-evidence");
   fs.mkdirSync(proposedOutput, { mode: 0o700 }); // Refuse without writing to an existing directory.

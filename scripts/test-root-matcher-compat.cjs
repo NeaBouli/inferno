@@ -458,6 +458,7 @@ async function main() {
   const baselineRoot = fs.realpathSync(args["--baseline-root"]);
   const candidateRoot = fs.realpathSync(args["--candidate-root"]);
   demand(baselineRoot !== candidateRoot, "DISTINCT_INSTALLED_ROOTS_REQUIRED");
+  deadline = Date.now() + WORK_MS;
   const wrapperPath = path.join(candidateRoot, "scripts/check-markdownlint-baseline.cjs");
   const baselinePath = path.join(candidateRoot, "audit/markdownlint-baseline.json");
   const originalBaseline = fs.readFileSync(baselinePath);
@@ -475,7 +476,6 @@ async function main() {
   demand(output !== baselineRoot && output !== candidateRoot, "OUTPUT_MUST_BE_OWNED_DIRECTORY");
   fs.mkdirSync(output, { recursive: true });
   demand(!fs.existsSync(path.join(output, "matcher-compat.json")), "REFUSE_EVIDENCE_OVERWRITE");
-  deadline = Date.now() + WORK_MS;
   work = fs.mkdtempSync(path.join(os.tmpdir(), "inferno-matcher-compat-"));
   report = { schema: "root-matcher-compat/v1", status: "RUNNING", limits: { total_work_ms: WORK_MS, own_child_output_bytes: OUTPUT_LIMIT }, checks, full_markdown_wrapper_gate: "REQUIRED_SEPARATELY_IN_DOCS_CI", full_contract_gate: "REQUIRED_SEPARATELY_IN_CONTRACT_CI", cleanup: "PENDING" };
   const acceptedBaseline = parseJSON(originalBaseline, "MARKDOWN_BASELINE_JSON");
