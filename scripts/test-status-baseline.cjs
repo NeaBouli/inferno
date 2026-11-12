@@ -25,8 +25,8 @@ const packageJson = JSON.parse(read("package.json"));
 const packageLock = JSON.parse(read("package-lock.json"));
 assert.equal(packageJson.engines?.node, ">=22.13.0");
 assert.equal(packageJson.dependencies?.ethers, "6.17.0");
-assert.equal(packageJson.devDependencies?.hardhat, "3.21.1");
-assert.equal(packageJson.devDependencies?.["@nomicfoundation/hardhat-ethers"], "4.2.1");
+assert.equal(packageJson.devDependencies?.hardhat, "3.21.2");
+assert.equal(packageJson.devDependencies?.["@nomicfoundation/hardhat-ethers"], "4.2.2");
 assert.equal(packageJson.devDependencies?.["@nomicfoundation/hardhat-verify"], "3.1.4");
 assert.equal(packageJson.devDependencies?.dotenv, "^18.0.9");
 assert.equal(packageJson.overrides?.["serialize-javascript"], "7.1.3");
@@ -39,10 +39,10 @@ assert.equal(
   packageJson.scripts?.["test:mocha-serializer"],
   "mocha --parallel --jobs 2 test/mocha-serializer-compat.test.cjs"
 );
-assert.equal(packageLock.packages?.["node_modules/hardhat"]?.version, "3.21.1");
+assert.equal(packageLock.packages?.["node_modules/hardhat"]?.version, "3.21.2");
 assert.equal(
   packageLock.packages?.["node_modules/@nomicfoundation/hardhat-ethers"]?.version,
-  "4.2.1"
+  "4.2.2"
 );
 assert.equal(
   packageLock.packages?.["node_modules/@nomicfoundation/hardhat-verify"]?.version,

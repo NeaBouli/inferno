@@ -119,7 +119,7 @@
     "test:data-api-retirement": "node scripts/test-data-api-retirement.cjs"
   },
   "devDependencies": {
-    "@nomicfoundation/hardhat-ethers": "4.2.1",
+    "@nomicfoundation/hardhat-ethers": "4.2.2",
     "@nomicfoundation/hardhat-ethers-chai-matchers": "3.0.13",
     "@nomicfoundation/hardhat-mocha": "4.0.1",
     "@nomicfoundation/hardhat-verify": "3.1.4",
@@ -129,7 +129,7 @@
     "chai": "6.3.0",
     "dotenv": "^18.0.9",
     "fast-uri": "3.1.9",
-    "hardhat": "3.21.1",
+    "hardhat": "3.21.2",
     "markdownlint-cli": "0.49.1",
     "mocha": "12.0.3",
     "sirv-cli": "3.0.1"

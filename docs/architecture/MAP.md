@@ -1167,18 +1167,21 @@ reachability was established; this is preventive dependency hygiene.
 The root overrides now also pin zod 4.6.7 for every dependent, and a
 project-owned root postinstall adapter bounds the only observed Zod3-only
 compiled consumer: the installed `@nomicfoundation/hardhat-zod-utils@3.0.5`
-helper used by Hardhat 3.21.1 config validation. This is a repository-local
+helper used by Hardhat 3.21.2 config validation. This is a repository-local
 compiled-JS compatibility boundary, not an upstream Zod4 or TypeScript
 support claim.
 
 The lock also carries the separately reviewed PR366 Undici 7.30.1 leaf.
 Its direct consumers are installed hardhat-utils copies requiring ^7.29.0.
 
-The current root toolchain pins are Hardhat 3.21.1, hardhat-ethers 4.2.1,
+The current root toolchain pins are Hardhat 3.21.2, hardhat-ethers 4.2.2,
 hardhat-verify 3.1.4 and dotenv 18.0.9. The existing `hardhat.config.js`
 dotenv/config import, plugins and local EDR path are unchanged. The guarded
 helper remains 3.0.5 and Zod remains 4.6.7; dated status reports retain their
 original versions, test counts and run IDs.
+These exact pins do not by themselves establish runtime compatibility. Each
+candidate is gated by fresh exact-head install, adapter/runtime and owning
+contract/tooling CI qualification; dated results remain bound to their sources.
 
 ### 15.2 Trace
 
@@ -1192,7 +1195,7 @@ original versions, test counts and run IDs.
    `mocha/lib/nodejs/buffered-worker-pool.cjs::serializeOptions`
    (`unsafe: true, ignoreFunction: true`); Mocha parallel workers preserved.
 3. `package.json::overrides.zod` 4.6.7 -> `node_modules/zod@4.6.7` (single
-   hoisted copy) <- every root dependent, including `hardhat@3.21.1` and
+   hoisted copy) <- every root dependent, including `hardhat@3.21.2` and
    `@nomicfoundation/hardhat-zod-utils@3.0.5`.
 4. `package.json::scripts.postinstall` ->
    `scripts/apply-hardhat-zod4-compat.cjs` (verifies helper version 3.0.5 and

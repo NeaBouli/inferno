@@ -7,20 +7,21 @@ and declarations (`dist/src/index.d.ts`, `ZodTypeDef`/`ZodEffects` generics)
 remain Zod3-specific and are left byte-identical to the original package.
 `zod/v3` routing is not used.
 
-## Current root toolchain pins — 30 October 2026
+## Current root toolchain pins - 12 November 2026
 
 | Package | Manifest / locked version |
 | --- | --- |
-| Hardhat | `3.21.1` |
-| Hardhat ethers plugin | `4.2.1` |
+| Hardhat | `3.21.2` |
+| Hardhat ethers plugin | `4.2.2` |
 | Hardhat verify plugin | `3.1.4` |
 | dotenv | `^18.0.9` / `18.0.9` |
 
-The local verification runtime is Node `22.22.2`. The existing adapter,
+The retained verification runtime is Node `22.22.2`. The existing adapter,
 `hardhat-zod-utils@3.0.5`, Zod `4.6.7` and both compiled-source hash guards
-remain unchanged. The adapter was introduced for Hardhat `3.20.0`; the current
-graph is qualified through the same guarded runtime and local contract/tooling
-checks below. This adds no upstream Zod4 or TypeScript support claim.
+remain unchanged. The adapter was introduced for Hardhat `3.20.0`. The table
+records exact source inputs; runtime compatibility is gated by fresh exact-head
+qualification through the guarded runtime and local contract/tooling checks below.
+This adds no upstream Zod4 or TypeScript support claim.
 
 The dated 27 October status reports, their `700/700` contract and `85/85`
 browser evidence, and their original run IDs are retained unchanged. They are
@@ -36,7 +37,7 @@ package.json -> root postinstall adapter -> installed helper -> Hardhat validati
 ```
 
 1. `package.json::overrides.zod` pins a single hoisted `zod@4.6.7` for every
-   root dependent (`hardhat@3.21.1`, `@nomicfoundation/hardhat-zod-utils@3.0.5`).
+   root dependent (`hardhat@3.21.2`, `@nomicfoundation/hardhat-zod-utils@3.0.5`).
 2. `package.json::scripts.postinstall` runs
    `scripts/apply-hardhat-zod4-compat.cjs`.
 3. The adapter patches exactly one file:
