@@ -143,10 +143,6 @@
     "elliptic": "6.6.1",
     "fast-uri": "3.1.9",
     "glob": "14.0.2",
-    "markdownlint-cli": {
-      "js-yaml": "5.4.2",
-      "smol-toml": "1.9.0"
-    },
     "micromark-extension-math": {
       "katex": "0.18.2"
     },
