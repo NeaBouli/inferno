@@ -39,6 +39,13 @@
     setExpanded(false);
   }
 
+  // Keep legacy address-panel URLs as plain card anchors, without row disclosures.
+  document.querySelectorAll('[data-landing-address], #contracts .contract-row').forEach(card => {
+    const mainToken = card.querySelector('[data-addr="0x77e99917Eca8539c62F509ED1193ac36580A6e7B"], a[href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B"]');
+    if (mainToken || card.id) return;
+    card.id = `landing-address-${++sequence}-panel`;
+  });
+
   const alwaysOpen = new Set(['wizard', 'token-flow', 'roadmap']);
   document.querySelectorAll('main > section:not(.hero)').forEach(section => {
     if (alwaysOpen.has(section.id)) return;

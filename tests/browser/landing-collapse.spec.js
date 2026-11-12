@@ -137,14 +137,25 @@ test('Enter and Space toggle the same accessible header and preserve focus', asy
   await expect(toggle).toBeFocused();
 });
 
-for (const hash of ['how', 'live-distribution', 'dao-governance', 'contracts']) {
+for (const hash of ['how', 'live-distribution', 'dao-governance', 'contracts', 'landing-address-1-panel']) {
   test(`initial deep link #${hash} expands its section`, async ({ page }) => {
     await page.goto(`/#${hash}`);
     const target = page.locator(`#${hash}`);
     await expect(target).toBeVisible();
     const section = hash === 'how' ? 'how' : hash === 'dao-governance' ? 'governance' : hash === 'contracts' ? 'contracts' : 'tokenomics';
     await expect(page.locator(`#${section} > .landing-collapse-heading > button`)).toHaveAttribute('aria-expanded', 'true');
-    await expect.poll(() => target.evaluate(element => Math.abs(element.getBoundingClientRect().top - 150))).toBeLessThan(8);
+    if (hash === 'landing-address-1-panel') {
+      await expect(target).toContainText('LP Reserve Safe');
+      await expect(target.locator('a[href="https://etherscan.io/address/0x5D93E7919a71d725054e31017eCA86B026F86C04"]')).toBeVisible();
+      await expect(target.locator('.landing-collapse-heading, .landing-collapse-toggle, [aria-expanded]')).toHaveCount(0);
+      await expect.poll(async () => {
+        const navBottom = await page.locator('nav').first().evaluate(element => element.getBoundingClientRect().bottom);
+        const box = await target.boundingBox();
+        return box && box.y >= navBottom && box.y + box.height <= page.viewportSize().height;
+      }).toBe(true);
+    } else {
+      await expect.poll(() => target.evaluate(element => Math.abs(element.getBoundingClientRect().top - 150))).toBeLessThan(8);
+    }
   });
 }
 

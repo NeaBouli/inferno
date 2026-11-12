@@ -303,14 +303,19 @@ async function main() {
       },
       setAttribute(name, value) { this.attributes[name] = value; },
       getAttribute(name) { return this.attributes[name]; },
+      scrollIntoView(options) { this.scrolled = options; },
       querySelector(selector) {
+        if (selector.startsWith('[data-addr=')) {
+          assert.equal(selector, '[data-addr="0x77e99917Eca8539c62F509ED1193ac36580A6e7B"], a[href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B"]');
+          return this.mainToken ? this : null;
+        }
         return this.childNodes.find(child => selector === 'h2' ? child.tagName === 'h2'
           : selector === '.section-label, [data-landing-label]' ? child.className === 'section-label'
           : selector === ':scope > .landing-collapse-panel' && child.className === 'landing-collapse-panel') || null;
       },
     });
   }
-  const sections = ['contracts', 'tokenomics'].map(id => {
+  const sections = ['tokenomics', 'contracts'].map(id => {
     const section = node('section'), label = node('p'), title = node('h2');
     section.id = id;
     label.className = 'section-label';
@@ -318,13 +323,26 @@ async function main() {
     section.append(label, title, ...rows);
     return { section, rows, label, title };
   });
+  const mainTokenCard = sections[1].rows[0];
+  mainTokenCard.mainToken = true;
+  const existingCard = node('div');
+  existingCard.id = 'keep-existing-card';
+  const orderedCards = sections.flatMap(item => item.rows);
+  const addressCards = [orderedCards[0], existingCard, ...orderedCards.slice(1)];
   disclosure.document.createElement = node;
-  disclosure.document.getElementById = () => null;
+  disclosure.document.getElementById = id => [...sections.flatMap(item => [item.section, ...item.rows, ...item.section.childNodes]), existingCard].find(item => item.id === id) || null;
   disclosure.document.querySelectorAll = selector => {
-    assert.equal(selector, 'main > section:not(.hero)', 'address rows must never become disclosures');
+    if (selector === '[data-landing-address], #contracts .contract-row') return addressCards;
+    assert.equal(selector, 'main > section:not(.hero)', 'only existing address anchors and section disclosures are selected');
     return sections.map(item => item.section);
   };
   vm.runInContext(collapseSource, disclosure.context);
+  const anchoredCards = addressCards.filter(card => card !== mainTokenCard && card !== existingCard);
+  assert.equal(anchoredCards.length, 32);
+  anchoredCards.forEach((card, index) => assert.equal(card.id, `landing-address-${index + 1}-panel`, 'retain old union-selection order without row panels'));
+  assert.equal(mainTokenCard.id, undefined, 'Main token keeps its historical numbering exception');
+  assert.equal(existingCard.id, 'keep-existing-card', 'never overwrite existing card IDs or consume a generated number');
+  assert.equal(disclosure.document.getElementById('landing-address-1-panel'), sections[0].rows[0], 'old first-panel URL names the first Tokenomics card');
   for (const { section, rows, label, title } of sections) {
     const [heading, panel] = section.childNodes;
     assert.equal(section.childNodes.length, 2, 'exactly one common heading and body');
@@ -346,6 +364,12 @@ async function main() {
     assert.equal(button.getAttribute('aria-expanded'), 'false');
     assert.ok(rows.every(row => row.childNodes.length === 0), 'no row-level headers or buttons are injected');
   }
+  disclosure.context.location.hash = '#landing-address-1-panel';
+  disclosure.window.emit('hashchange');
+  assert.equal(sections[0].section.childNodes[1].hidden, false, 'legacy card URL opens the existing Tokenomics ancestor');
+  assert.equal(sections[0].section.childNodes[0].childNodes[2].getAttribute('aria-expanded'), 'true');
+  disclosure.frame();
+  assert.equal(anchoredCards[0].scrolled.block, 'start', 'unchanged hash handler scrolls the existing card');
   const contractsMarkup = html.match(/<section id="contracts"[\s\S]*?<\/section>/)[0];
   const rowStyles = [...contractsMarkup.matchAll(/class="contract-row" style="([^"]+)"/g)].map(match => match[1]);
   assert.equal(rowStyles.length, 19, '18 canonical components plus the external LP Pair row');
@@ -353,7 +377,7 @@ async function main() {
   assert.equal((contractsMarkup.match(/class="copy-btn" data-addr=/g) || []).length, 19);
   assert.ok(contractsMarkup.includes('data-addr="0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0"'));
   assert.ok(contractsMarkup.includes('href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B"'));
-  assert.ok(html.includes('assets/landing-collapse.js?v=20261112-contracts-v2'), 'changed helper has a new cache key');
+  assert.ok(html.includes('assets/landing-collapse.js?v=20261112-contracts-v3'), 'changed helper has a new cache key');
   assert.ok(html.includes('assets/landing-collapse.css?v=20261112-contracts-v2'), 'changed target geometry has a new CSS cache key');
   assert.ok(collapseStyle.includes('#contracts .contract-row button {\n  min-width: 44px;\n  min-height: 44px;\n}'), 'every contracts row button, not only Copy or LP, has a scoped44px target');
   assert.equal((contractsMarkup.match(/<button\b/g) || []).length, 20, 'target rule covers19 Copy controls plus MetaMask');
