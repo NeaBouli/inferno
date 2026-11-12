@@ -199,8 +199,12 @@ with their audit, testnet and on-chain authorization gates, are tracked in the
 - [ ] Community grants program
 - [x] CEX fee-exemption policy approved (26.08.2026, 00:17 MET, vote 4-1)
 - [ ] Per-exchange address verification and governance activation (no CEX address active yet)
-- [ ] Exchange IFR incentives and any exchange governance role (EX-01/EX-02):
-      undated Council discussion drafts, not approved policy
+- [x] EX-01 approved on 4 October 2026: no IFR incentives from any project pool
+      for exchanges. This policy grants no address, liquidity or governance
+      activation authority.
+- [ ] EX-02 exchange governance role remains open; no Safe permissions are
+      granted. Individual address and liquidity actions still require separate
+      governance decisions.
 - [ ] Ecosystem fund
 
 ---
@@ -211,4 +215,4 @@ with their audit, testnet and on-chain authorization gates, are tracked in the
 See [Mainnet Checklist](MAINNET_CHECKLIST.md) for detailed progress.
 
 ---
-*Last updated: 28 September 2026*
+*Roadmap schedule baseline: 28 September 2026; EX-01/EX-02 documentation reconciled 12 November 2026.*
