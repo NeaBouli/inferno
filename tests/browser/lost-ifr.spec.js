@@ -5,7 +5,7 @@
 // that still adds it may change the figure, and it never renders 0 or "Unavailable". All network access is
 // intercepted; values are fixtures pinned to Mainnet block 26151369 where stated.
 const { test, expect } = require("@playwright/test");
-const { expandLandingSections, expandLandingAddresses } = require("./helpers/landing-collapse");
+const { expandLandingSections } = require("./helpers/landing-collapse");
 
 const PROXY = "https://copilot-api.ifrunit.tech";
 test.describe.configure({ timeout: 60000 });
@@ -295,7 +295,7 @@ test("unavailable balances render N/A, not 0, and the chart shows a partially un
   }
   await expect(page.locator('[data-live-key="protocol-locked"]').first()).toHaveText("N/A");
   await expect(page.locator('[data-live-key="lending-available-stat"]').first()).toHaveText("N/A");
-  await expandLandingAddresses(page, '[data-live-key="card-vesting"]');
+  await expect(page.locator('[data-live-key="card-vesting"]').first()).toBeVisible();
   await expect(page.locator('[data-live-key="card-vesting"]').first()).not.toHaveText(/^0/);
   await expect(page.locator(".live-status").first()).toContainText("Partially live");
   // Dead segment and live supply still use the exact values that are available (CV-01 only).

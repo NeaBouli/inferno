@@ -1286,6 +1286,7 @@
     [data-flow-motion="running"] [data-flow-particle] { display: inline; }
     .flow-pulse { transform-box: fill-box; transform-origin: center; animation: flow-pulse 3s ease-in-out infinite; animation-play-state: paused; }
     [data-flow-motion="running"] .flow-pulse { animation-play-state: running; }
+    [data-flow-motion="paused"] .flow-pulse { animation-play-state: paused !important; }
     @keyframes flow-pulse { 0%, 100% { transform: scale(.946); } 50% { transform: scale(1.054); } }
     @media (prefers-reduced-motion: reduce) { [data-flow-particle] { display: none !important; } }
     /* Keep each contract name clear of its address on narrow screens (T-258). */
@@ -1446,8 +1447,8 @@
   <link rel="stylesheet" href="assets/redesign-skin.css?v=20261023-p1">
   <script defer src="assets/page-motion.js?v=20261023-p1"></script>
   <link rel="stylesheet" href="assets/landing-header-template.css?v=20261023-p1">
-  <link rel="stylesheet" href="assets/landing-collapse.css?v=20261023-p1">
-  <script defer src="assets/landing-collapse.js?v=20261023-p1"></script>
+  <link rel="stylesheet" href="assets/landing-collapse.css?v=20261112-contracts-v2">
+  <script defer src="assets/landing-collapse.js?v=20261112-contracts-v3"></script>
   <noscript><style>.reveal { opacity: 1; transform: none; }</style></noscript>
 </head>
 <body id="top">
@@ -3219,7 +3220,7 @@ if (isLocked) {
       <p class="section-label">Open Source</p>
       <h2 class="section-title">Project Continuity</h2>
       <p class="section-desc" style="margin:0 auto 28px;max-width:640px;">
-        Published code, documentation and the public handover let new maintainers continue development from a reviewed commit. Hosted apps and APIs still require operators; Points and Benefits retain central backend state while wallets remain self-custodial. Privileged actions remain governed by the existing Governance and Safe controls &mdash; public source availability grants no signing authority or Safe control. See the <a href="CURRENT_FUNCTIONALITY_STATUS.md">current software and acceptance status</a>: automated release gates are complete; the full physical device/wallet matrix remains pending.
+        Published code, documentation and the public handover let new maintainers continue development from a reviewed commit. Hosted apps and APIs still require operators; Points and Benefits retain central backend state while wallets remain self-custodial. Privileged actions remain governed by the existing Governance and Safe controls &mdash; public source availability grants no signing authority or Safe control. See the <a href="CURRENT_FUNCTIONALITY_STATUS.md">current software and acceptance status</a>: Release-gate evidence is recorded per commit; current dependency-security remediation and the full physical device/wallet matrix remain pending.
       </p>
       <p style="margin:0;">
         <a class="btn btn-secondary" href="wiki/multisig.html#project-continuity">Read the continuity policy &rarr;</a>
@@ -3245,7 +3246,7 @@ if (isLocked) {
       <span style="background:#1a1a1a; border:1px solid #ff6b35; border-radius:8px; padding:0.4rem 0.9rem; font-size:0.85rem; color:#888;">Social: <strong style="color:#b3300b;">$IFRp</strong></span>
       <span style="background:#1a1a1a; border:1px solid #333; border-radius:8px; padding:0.4rem 0.9rem; font-size:0.85rem; color:#888;">Decimals: <strong style="color:#fff;">9</strong></span>
     </div>
-    <div class="reveal" style="max-width:720px;margin:40px auto 0;display:flex;flex-direction:column;gap:8px;">
+    <div style="max-width:720px;margin:40px auto 0;display:flex;flex-direction:column;gap:8px;">
       <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
         <div><img src="assets/ifr_icon_64.png" alt="IFR" width="20" height="20" loading="lazy" decoding="async" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">InfernoToken</span></div>
         <div style="display:flex;align-items:center;gap:8px;">
@@ -3375,7 +3376,15 @@ if (isLocked) {
       </div>
       <div style="margin-top:12px;font-size:13px;color:var(--text-muted);border-top:1px solid var(--border);padding-top:10px;line-height:1.8;">
         <strong style="color:var(--text);">15 deployed contracts + 3 Gnosis Safes = 18 on-chain components</strong><br>
-        <div data-landing-address><span data-landing-address-title><span style="display:inline-block;background:rgba(34,197,94,0.15);color:#166534;font-size:11px;padding:1px 6px;border-radius:4px;margin-right:4px;">live</span> Uniswap V2 LP Pair</span> &mdash; <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="color:#166534;word-break:break-all;">0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</a></div>
+      </div>
+      <div data-landing-address class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
+        <div data-landing-address-title><img src="assets/ifr_icon_64.png" alt="IFR" width="20" height="20" loading="lazy" decoding="async" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;"><span style="display:inline-block;background:rgba(34,197,94,0.15);color:#166534;font-size:11px;padding:1px 6px;border-radius:4px;margin-right:4px;">live</span> Uniswap V2 LP Pair</span></div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <a href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B" target="_blank" rel="noopener" style="color:#166534;word-break:break-all;"><code style="font-size:12px;color:var(--accent);word-break:break-all;">0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0</code></a>
+          <button class="copy-btn" data-addr="0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0" title="Copy address" style="background:none;border:1px solid var(--border);border-radius:4px;padding:4px 8px;cursor:pointer;color:var(--text-muted);font-size:12px;">Copy</button>
+        </div>
+      </div>
+      <div style="font-size:13px;color:var(--text-muted);line-height:1.8;">
         <span style="display:inline-block;background:rgba(107,114,128,0.2);color:#4b5563;font-size:11px;padding:1px 6px;border-radius:4px;margin-right:4px;">Phase 4</span> RatVoting.sol &mdash; Council Governance<br>
         <span style="display:inline-block;background:rgba(107,114,128,0.2);color:#4b5563;font-size:11px;padding:1px 6px;border-radius:4px;margin-right:4px;">Phase 4</span> ForumVoting.sol &mdash; Community Governance<br>
         <span style="display:inline-block;background:rgba(107,114,128,0.2);color:#4b5563;font-size:11px;padding:1px 6px;border-radius:4px;margin-right:4px;">Phase 4</span> IFRSpamProtection.sol &mdash; Proposal Spam Protection
@@ -4486,7 +4495,7 @@ return { start, stop };
   const reduced = mediaQuery('(prefers-reduced-motion: reduce)');
   const compact = mediaQuery('(max-width: 1024px)');
   const limitedHardware = typeof navigator !== 'undefined' &&
-    (navigator.hardwareConcurrency <= 4 || navigator.deviceMemory <= 4);
+    (navigator.hardwareConcurrency <= 4 && navigator.deviceMemory <= 4);
   let visible = false, started = false;
   function sync() {
     const active = visible && !document.hidden && !reduced.matches && !compact.matches && !limitedHardware;

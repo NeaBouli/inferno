@@ -5,6 +5,8 @@ const path = require('node:path');
 const vm = require('node:vm');
 const html = fs.readFileSync(path.join(__dirname, '../docs/index.html'), 'utf8');
 const motionSource = fs.readFileSync(path.join(__dirname, '../docs/assets/page-motion.js'), 'utf8');
+const collapseSource = fs.readFileSync(path.join(__dirname, '../docs/assets/landing-collapse.js'), 'utf8');
+const collapseStyle = fs.readFileSync(path.join(__dirname, '../docs/assets/landing-collapse.css'), 'utf8');
 
 function classList() {
   const values = new Set();
@@ -88,7 +90,7 @@ function environment() {
   });
   return { context, document, window, hero, nodes, observers, mutations, frames, timers, fills,
     ready: resolveFonts, stats: () => ({ contexts, draws, stars }),
-    setMedia(query, matches) { const item = media.get(query); item.matches = matches; item.emit('change'); },
+    setMedia(query, matches) { const item = window.matchMedia(query); item.matches = matches; item.emit('change'); },
     frame(now = 100) { const [id, callback] = frames.entries().next().value; frames.delete(id); callback(now); },
   };
 }
@@ -287,18 +289,114 @@ async function main() {
   donut.document.emit('visibilitychange');
   assert.deepEqual(donut.fills, ['unavailable', 'rest'], 'resuming paints current data');
 
+  // Minimal DOM interface fixture: execute the shipped disclosure, preserving node identity.
+  const disclosure = environment();
+  function node(tagName) {
+    return Object.assign(eventTarget(), {
+      tagName, childNodes: [], classList: classList(), attributes: {},
+      append(...children) {
+        for (const child of children) {
+          if (child.parentElement) child.parentElement.childNodes.splice(child.parentElement.childNodes.indexOf(child), 1);
+          child.parentElement = this;
+          this.childNodes.push(child);
+        }
+      },
+      setAttribute(name, value) { this.attributes[name] = value; },
+      getAttribute(name) { return this.attributes[name]; },
+      scrollIntoView(options) { this.scrolled = options; },
+      querySelector(selector) {
+        if (selector.startsWith('[data-addr=')) {
+          assert.equal(selector, '[data-addr="0x77e99917Eca8539c62F509ED1193ac36580A6e7B"], a[href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B"]');
+          return this.mainToken ? this : null;
+        }
+        return this.childNodes.find(child => selector === 'h2' ? child.tagName === 'h2'
+          : selector === '.section-label, [data-landing-label]' ? child.className === 'section-label'
+          : selector === ':scope > .landing-collapse-panel' && child.className === 'landing-collapse-panel') || null;
+      },
+    });
+  }
+  const sections = ['tokenomics', 'contracts'].map(id => {
+    const section = node('section'), label = node('p'), title = node('h2');
+    section.id = id;
+    label.className = 'section-label';
+    const rows = Array.from({ length: id === 'contracts' ? 19 : 14 }, () => node('div'));
+    section.append(label, title, ...rows);
+    return { section, rows, label, title };
+  });
+  const mainTokenCard = sections[1].rows[0];
+  mainTokenCard.mainToken = true;
+  const existingCard = node('div');
+  existingCard.id = 'keep-existing-card';
+  const orderedCards = sections.flatMap(item => item.rows);
+  const addressCards = [orderedCards[0], existingCard, ...orderedCards.slice(1)];
+  disclosure.document.createElement = node;
+  disclosure.document.getElementById = id => [...sections.flatMap(item => [item.section, ...item.rows, ...item.section.childNodes]), existingCard].find(item => item.id === id) || null;
+  disclosure.document.querySelectorAll = selector => {
+    if (selector === '[data-landing-address], #contracts .contract-row') return addressCards;
+    assert.equal(selector, 'main > section:not(.hero)', 'only existing address anchors and section disclosures are selected');
+    return sections.map(item => item.section);
+  };
+  vm.runInContext(collapseSource, disclosure.context);
+  const anchoredCards = addressCards.filter(card => card !== mainTokenCard && card !== existingCard);
+  assert.equal(anchoredCards.length, 32);
+  anchoredCards.forEach((card, index) => assert.equal(card.id, `landing-address-${index + 1}-panel`, 'retain old union-selection order without row panels'));
+  assert.equal(mainTokenCard.id, undefined, 'Main token keeps its historical numbering exception');
+  assert.equal(existingCard.id, 'keep-existing-card', 'never overwrite existing card IDs or consume a generated number');
+  assert.equal(disclosure.document.getElementById('landing-address-1-panel'), sections[0].rows[0], 'old first-panel URL names the first Tokenomics card');
+  for (const { section, rows, label, title } of sections) {
+    const [heading, panel] = section.childNodes;
+    assert.equal(section.childNodes.length, 2, 'exactly one common heading and body');
+    assert.equal(panel.className, 'landing-collapse-panel');
+    assert.deepEqual(panel.childNodes, rows, 'all original rows move together, never clone or nest');
+    assert.equal(heading.childNodes[0], label);
+    assert.equal(heading.childNodes[1], title);
+    const button = heading.childNodes[2];
+    assert.equal(button.tagName, 'button');
+    assert.equal(button.type, 'button', 'retain native keyboard behavior');
+    assert.equal(button.getAttribute('aria-controls'), `${section.id}-panel`);
+    assert.equal(button.getAttribute('aria-labelledby'), `${label.id} ${title.id}`);
+    assert.equal(panel.hidden, true);
+    button.emit('click');
+    assert.equal(panel.hidden, false, 'one toggle reveals the entire address inventory');
+    assert.equal(button.getAttribute('aria-expanded'), 'true');
+    button.emit('click');
+    assert.equal(panel.hidden, true, 'one toggle hides the entire address inventory');
+    assert.equal(button.getAttribute('aria-expanded'), 'false');
+    assert.ok(rows.every(row => row.childNodes.length === 0), 'no row-level headers or buttons are injected');
+  }
+  disclosure.context.location.hash = '#landing-address-1-panel';
+  disclosure.window.emit('hashchange');
+  assert.equal(sections[0].section.childNodes[1].hidden, false, 'legacy card URL opens the existing Tokenomics ancestor');
+  assert.equal(sections[0].section.childNodes[0].childNodes[2].getAttribute('aria-expanded'), 'true');
+  disclosure.frame();
+  assert.equal(anchoredCards[0].scrolled.block, 'start', 'unchanged hash handler scrolls the existing card');
+  const contractsMarkup = html.match(/<section id="contracts"[\s\S]*?<\/section>/)[0];
+  const rowStyles = [...contractsMarkup.matchAll(/class="contract-row" style="([^"]+)"/g)].map(match => match[1]);
+  assert.equal(rowStyles.length, 19, '18 canonical components plus the external LP Pair row');
+  assert.equal(new Set(rowStyles).size, 1, 'LP Pair reuses exactly the existing row style');
+  assert.equal((contractsMarkup.match(/class="copy-btn" data-addr=/g) || []).length, 19);
+  assert.ok(contractsMarkup.includes('data-addr="0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0"'));
+  assert.ok(contractsMarkup.includes('href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B"'));
+  assert.ok(html.includes('assets/landing-collapse.js?v=20261112-contracts-v3'), 'changed helper has a new cache key');
+  assert.ok(html.includes('assets/landing-collapse.css?v=20261112-contracts-v2'), 'changed target geometry has a new CSS cache key');
+  assert.ok(collapseStyle.includes('#contracts .contract-row button {\n  min-width: 44px;\n  min-height: 44px;\n}'), 'every contracts row button, not only Copy or LP, has a scoped44px target');
+  assert.equal((contractsMarkup.match(/<button\b/g) || []).length, 20, 'target rule covers19 Copy controls plus MetaMask');
+  assert.ok(contractsMarkup.includes('<div style="max-width:720px;margin:40px auto 0;display:flex;flex-direction:column;gap:8px;">'), 'the tall address list must not depend on reveal intersection');
+  assert.ok(html.includes('[data-flow-motion="paused"] .flow-pulse { animation-play-state: paused !important; }'), 'paused pulse must override the reduced-motion animation shorthand reset');
+  assert.ok(html.includes('*, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }'), 'global reduced-motion suppression remains intact');
+
   const flowSource = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)]
     .map(match => match[1]).find(source => source.includes('// Token-flow SMIL'));
   assert.ok(flowSource, 'test the shipped token-flow motion controller');
   function flowEnvironment() {
     const env = environment();
-    let starts = 0, paused;
-    const svg = { dataset: {}, getBoundingClientRect: () => ({ top: 0, bottom: 540 }),
+    let starts = 0, paused, rect = { top: 0, bottom: 540 };
+    const svg = { dataset: {}, getBoundingClientRect: () => rect,
       pauseAnimations() { paused = true; }, unpauseAnimations() { paused = false; },
       querySelectorAll: () => [{ dataset: { motionDelay: '0.7' }, beginElementAt(delay) { assert.equal(delay, 0.7); starts++; } }],
     };
     env.document.querySelector = () => svg;
-    return { ...env, svg, starts: () => starts, paused: () => paused };
+    return { ...env, svg, starts: () => starts, paused: () => paused, setRect(value) { rect = value; } };
   }
   const flow = flowEnvironment();
   vm.runInContext(flowSource, flow.context);
@@ -321,13 +419,71 @@ async function main() {
   flow.setMedia('(prefers-reduced-motion: reduce)', true);
   assert.equal(flow.paused(), true, 'reduced motion stops SMIL');
   flow.setMedia('(prefers-reduced-motion: reduce)', false);
+  assert.equal(flow.paused(), false, 'SMIL resumes after reduced motion is disabled');
   flow.setMedia('(max-width: 1024px)', true);
   assert.equal(flow.paused(), true, 'compact screens skip SMIL');
-  const limitedFlow = flowEnvironment();
-  limitedFlow.context.navigator.deviceMemory = 4;
-  vm.runInContext(flowSource, limitedFlow.context);
-  limitedFlow.observers[0].emit(true);
-  assert.equal(limitedFlow.starts(), 0, 'low-end hardware skips SMIL');
+  flow.setMedia('(max-width: 1024px)', false);
+  assert.equal(flow.paused(), false, 'desktop motion resumes after leaving compact mode');
+  assert.equal(flow.starts(), 1, 'compact transitions preserve the original SMIL start');
+  for (const [cores, memory, width] of [[4, 32, 1440], [4, 8, 1440], [8, 4, 1440], [2, 32, 1440], [4, undefined, 1440], [undefined, 4, 1440]]) {
+    const limitedFlow = flowEnvironment();
+    Object.assign(limitedFlow.context.navigator, { hardwareConcurrency: cores, deviceMemory: memory });
+    limitedFlow.window.innerWidth = width;
+    limitedFlow.setMedia('(max-width: 1024px)', width <= 1024);
+    vm.runInContext(flowSource, limitedFlow.context);
+    assert.equal(limitedFlow.starts(), 0, 'desktop hardware still waits for actual visibility');
+    limitedFlow.observers[0].emit(true);
+    assert.equal(limitedFlow.starts(), 1, `visible ${width}px/${cores} cores/${memory}GB starts SMIL`);
+    assert.equal(limitedFlow.paused(), false);
+    limitedFlow.setMedia('(prefers-reduced-motion: reduce)', true);
+    assert.equal(limitedFlow.paused(), true, 'permitted desktop motion still respects reduced preference');
+    limitedFlow.document.hidden = true;
+    limitedFlow.document.emit('visibilitychange');
+    limitedFlow.setMedia('(prefers-reduced-motion: reduce)', false);
+    assert.equal(limitedFlow.paused(), true, 'preference change cannot resume a hidden document');
+    limitedFlow.observers[0].emit(false);
+    limitedFlow.document.hidden = false;
+    limitedFlow.document.emit('visibilitychange');
+    assert.equal(limitedFlow.paused(), true, 'visible document cannot resume offscreen motion');
+    limitedFlow.observers[0].emit(true);
+    assert.equal(limitedFlow.paused(), false);
+    assert.equal(limitedFlow.starts(), 1, 'all pause/resume combinations preserve start-once SMIL');
+  }
+  for (const [cores, memory, width] of [[8, 8, 390], [4, 32, 820], [4, 4, 1440], [2, 2, 1440], [4, 4, 390]]) {
+    const guardedFlow = flowEnvironment();
+    Object.assign(guardedFlow.context.navigator, { hardwareConcurrency: cores, deviceMemory: memory });
+    guardedFlow.window.innerWidth = width;
+    guardedFlow.setMedia('(max-width: 1024px)', width <= 1024);
+    vm.runInContext(flowSource, guardedFlow.context);
+    guardedFlow.observers[0].emit(true);
+    assert.equal(guardedFlow.paused(), true, `compact or both-low hardware remains paused (${width}px/${cores}/${memory})`);
+    assert.equal(guardedFlow.starts(), 0, 'guarded environments never start SMIL');
+    guardedFlow.setMedia('(prefers-reduced-motion: reduce)', true);
+    guardedFlow.setMedia('(prefers-reduced-motion: reduce)', false);
+    assert.equal(guardedFlow.starts(), 0, 'preference changes cannot bypass compact/hardware guards');
+    guardedFlow.setMedia('(max-width: 1024px)', false);
+    const weak = cores <= 4 && memory <= 4;
+    assert.equal(guardedFlow.paused(), weak, 'leaving compact resumes only hardware permitted by the AND policy');
+    assert.equal(guardedFlow.starts(), weak ? 0 : 1);
+    guardedFlow.setMedia('(max-width: 1024px)', true);
+    assert.equal(guardedFlow.paused(), true, 'restored compact listener pauses on live width changes');
+    assert.equal(guardedFlow.starts(), weak ? 0 : 1);
+  }
+  const reducedFlow = flowEnvironment();
+  reducedFlow.setMedia('(prefers-reduced-motion: reduce)', true);
+  vm.runInContext(flowSource, reducedFlow.context);
+  reducedFlow.observers[0].emit(true);
+  assert.equal(reducedFlow.starts(), 0, 'initial reduced preference prevents the first start');
+  reducedFlow.setMedia('(prefers-reduced-motion: reduce)', false);
+  assert.equal(reducedFlow.starts(), 1);
+  const hiddenFlow = flowEnvironment();
+  hiddenFlow.document.hidden = true;
+  vm.runInContext(flowSource, hiddenFlow.context);
+  hiddenFlow.observers[0].emit(true);
+  assert.equal(hiddenFlow.starts(), 0, 'initially hidden documents cannot start SMIL');
+  hiddenFlow.document.hidden = false;
+  hiddenFlow.document.emit('visibilitychange');
+  assert.equal(hiddenFlow.starts(), 1);
   const fallbackFlow = flowEnvironment();
   delete fallbackFlow.context.navigator;
   fallbackFlow.window.IntersectionObserver = undefined;
@@ -335,6 +491,16 @@ async function main() {
   vm.runInContext(flowSource, fallbackFlow.context);
   fallbackFlow.frame();
   assert.equal(fallbackFlow.paused(), false, 'SMIL runs without optional browser APIs');
+  fallbackFlow.setRect({ top: 1200, bottom: 1740 });
+  for (let i = 0; i < 10; i++) fallbackFlow.window.emit('scroll');
+  assert.equal(fallbackFlow.frames.size, 1, 'fallback scroll work stays throttled');
+  fallbackFlow.frame();
+  assert.equal(fallbackFlow.paused(), true, 'fallback intersection still pauses offscreen SMIL');
+  fallbackFlow.setRect({ top: 0, bottom: 540 });
+  fallbackFlow.window.emit('resize');
+  fallbackFlow.frame();
+  assert.equal(fallbackFlow.paused(), false);
+  assert.equal(fallbackFlow.starts(), 1, 'fallback resume also preserves start-once SMIL');
 
   for (const source of [html, ...fs.readdirSync(path.join(__dirname, '../docs/wiki'))
     .filter(file => file.endsWith('.html')).map(file => fs.readFileSync(path.join(__dirname, '../docs/wiki', file), 'utf8'))]
@@ -342,6 +508,6 @@ async function main() {
     assert.match(source, /<script defer src="(?:\.\.\/)?assets\/page-motion\.js\?v=20261023-p1"><\/script>/,
       'landing and wiki pages using the shared skin load its motion lifecycle');
   }
-  console.log('[landing-performance] PASS deferred setup, visibility, tabs, preferences, resize, passive/throttled scroll, batched layout reads, CSS/SMIL lifecycle, low-end reduction, optional API fallbacks, asset registration and latest chart snapshot');
+  console.log('[landing-performance] PASS deferred setup, visibility, tabs, preferences, resize, passive/throttled scroll, batched layout reads, CSS/SMIL lifecycle, unchanged compact veto, both-low hardware AND policy, common address disclosure, LP row style, optional API fallbacks, asset registration and latest chart snapshot');
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

@@ -39,15 +39,14 @@
     setExpanded(false);
   }
 
-  // Both address inventories use the same disclosure as the main sections.
+  // Keep legacy address-panel URLs as plain card anchors, without row disclosures.
   document.querySelectorAll('[data-landing-address], #contracts .contract-row').forEach(card => {
     const mainToken = card.querySelector('[data-addr="0x77e99917Eca8539c62F509ED1193ac36580A6e7B"], a[href="https://etherscan.io/address/0x77e99917Eca8539c62F509ED1193ac36580A6e7B"]');
-    if (mainToken) return;
-    card.classList.add('landing-address-collapse');
-    addDisclosure(card, [card.querySelector('[data-landing-address-title]') || card.firstElementChild]);
+    if (mainToken || card.id) return;
+    card.id = `landing-address-${++sequence}-panel`;
   });
 
-  const alwaysOpen = new Set(['wizard', 'token-flow', 'roadmap', 'contracts']);
+  const alwaysOpen = new Set(['wizard', 'token-flow', 'roadmap']);
   document.querySelectorAll('main > section:not(.hero)').forEach(section => {
     if (alwaysOpen.has(section.id)) return;
     const title = section.querySelector('h2');
@@ -62,8 +61,7 @@
     try { id = decodeURIComponent(hash.slice(1)); } catch { return; }
     const target = document.getElementById(id);
     if (!target) return;
-    // A section hash refers to its own panel; a descendant may also be inside
-    // an address tile. Open every ancestor before the browser scrolls.
+    // Open the section panel and any ancestors before the browser scrolls.
     let node = target;
     while (node) {
       const panel = node.querySelector(':scope > .landing-collapse-panel');

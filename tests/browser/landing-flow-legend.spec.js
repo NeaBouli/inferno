@@ -6,7 +6,7 @@
 // - The Dante quote carries a DOCS button to the Wiki start page.
 // All network access is intercepted: the RPC and copilot-api answers are test fixtures, not chain facts.
 const { test, expect } = require("@playwright/test");
-const { expandLandingSections, expandLandingAddresses } = require("./helpers/landing-collapse");
+const { expandLandingSections } = require("./helpers/landing-collapse");
 const { ethers } = require("ethers");
 
 test.describe.configure({ timeout: 60000 });
@@ -124,7 +124,7 @@ test("legend: an empty BurnReserve after executed buybacks shows the live histor
   await expect(legend.locator('[data-dist-cat="buyback"]')).toHaveCount(0);
   await expect(legend).not.toContainText("Buyback Vault");
   await expect(page.locator('[data-live-key="card-buyback"]')).toHaveCount(0);
-  await expandLandingAddresses(page, '[data-live-key="card-burnres"]');
+  await expect(page.locator('[data-live-key="card-burnres"]')).toBeVisible();
   await expect(page.locator('[data-live-key="card-burnres"]')).toHaveText("0 IFR held · buybacks executed: 3 · burned via reserve: 1.5M IFR");
   await expect(page.locator('#token-flow [data-live-key="flow-burnres"]')).toHaveText("0 IFR · 3 buybacks");
 });
@@ -160,6 +160,43 @@ async function openFlow(page, calls) {
   const flow = page.locator("#token-flow");
   await flow.scrollIntoViewIfNeeded();
   return flow;
+}
+
+for (const [width, cores, memory, active] of [[390, 4, 32, false], [820, 4, 32, false], [1440, 4, 32, true], [1440, 8, 4, true], [1440, 4, 4, false]]) {
+  test(`token flow respects compact and both-low hardware policy (${width}px/${cores} cores/${memory}GB)`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 1000 });
+    await page.addInitScript(({ cores, memory }) => Object.defineProperties(navigator, {
+      hardwareConcurrency: { configurable: true, get: () => cores },
+      deviceMemory: { configurable: true, get: () => memory },
+    }), { cores, memory });
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    const flow = await openFlow(page, FEE_CALLS);
+    const svg = flow.locator('svg[data-flow-motion]');
+    if (!active) {
+      await expect(svg).toHaveAttribute('data-flow-motion', 'paused');
+      await expect(svg.locator('.flow-pulse')).toHaveCSS('animation-play-state', 'paused');
+      expect(await svg.evaluate(element => element.animationsPaused())).toBe(true);
+      return;
+    }
+    await expect(svg).toHaveAttribute('data-flow-motion', 'running');
+    await expect(svg.locator('.flow-pulse')).toHaveCSS('animation-play-state', 'running');
+    expect(await svg.evaluate(element => element.animationsPaused())).toBe(false);
+    const time = await svg.evaluate(element => element.getCurrentTime());
+    await expect.poll(() => svg.evaluate(element => element.getCurrentTime())).toBeGreaterThan(time + 0.05);
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await expect(svg).toHaveAttribute('data-flow-motion', 'paused');
+    await expect(svg.locator('.flow-pulse')).toHaveCSS('animation-play-state', 'paused');
+    await expect(svg.locator('.flow-pulse')).toHaveCSS('animation-name', 'none');
+    expect(await svg.evaluate(element => element.animationsPaused())).toBe(true);
+    await page.locator('footer').scrollIntoViewIfNeeded();
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await expect(svg).toHaveAttribute('data-flow-motion', 'paused');
+    await expect(svg.locator('.flow-pulse')).toHaveCSS('animation-play-state', 'paused');
+    await flow.scrollIntoViewIfNeeded();
+    await expect(svg).toHaveAttribute('data-flow-motion', 'running');
+    await expect(svg.locator('.flow-pulse')).toHaveCSS('animation-play-state', 'running');
+    expect(await svg.evaluate(element => element.animationsPaused())).toBe(false);
+  });
 }
 
 async function routeState(flow, name) {

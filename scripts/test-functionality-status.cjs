@@ -91,6 +91,25 @@ assert.ok(landing.includes("ALL 81 QUESTIONS &amp; ANSWERS"));
 assert.ok(landing.includes("wiki/liquidity.html"));
 assert.ok(!landing.includes("ALL 61 QUESTIONS &amp; ANSWERS"));
 
+// Scope current release wording to this paragraph, not historical audit records.
+const releaseCopy = "Release-gate evidence is recorded per commit; current dependency-security remediation and the full physical device/wallet matrix remain pending.";
+const oldReleaseCopy = "automated release gates are complete; the full physical device/wallet matrix remains pending.";
+const currentStatusLink = '<a href="CURRENT_FUNCTIONALITY_STATUS.md">current software and acceptance status</a>';
+function assertContinuityReleaseCopy(html) {
+  const section = html.match(/<section id="project-continuity"[^>]*>([\s\S]*?)<\/section>/)?.[1];
+  const paragraph = section?.match(/<p class="section-desc"[^>]*>([\s\S]*?)<\/p>/)?.[1];
+  assert.equal(typeof paragraph, "string", "project continuity status paragraph missing");
+  assert.ok(!/automated release gates are complete/i.test(paragraph), "project continuity must not claim blanket release completion");
+  assert.ok(paragraph.includes(releaseCopy), "project continuity must retain per-commit evidence and pending acceptance");
+  assert.ok(paragraph.includes(currentStatusLink), "project continuity must preserve the current-status link and label");
+}
+assertContinuityReleaseCopy(landing);
+assert.throws(() => assertContinuityReleaseCopy(landing.replace(releaseCopy, oldReleaseCopy)), { name: "AssertionError", message: "project continuity must not claim blanket release completion" });
+assert.throws(() => assertContinuityReleaseCopy(landing.replace(releaseCopy, "Release evidence is complete.")), { name: "AssertionError" });
+assert.throws(() => assertContinuityReleaseCopy(landing.replace(currentStatusLink, "current software and acceptance status")), { name: "AssertionError" });
+assert.throws(() => assertContinuityReleaseCopy(landing.replace('id="project-continuity"', 'id="other-section"')), { name: "AssertionError" });
+assertContinuityReleaseCopy(landing + `<p>${oldReleaseCopy}</p>`);
+
 
 
 // T-271: V1 is retired (3 October 2026); the borrower path is permanently disabled, not "future".
