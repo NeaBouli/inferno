@@ -95,7 +95,7 @@ function stopGroup(record) {
   command('/usr/bin/sudo', ['-n', '/bin/kill', '-KILL', '--', String(-record.pgid)], 1000);
 }
 function show(unit) {
-  const fields = ['Id', 'Description', 'LoadState', 'ActiveState', 'SubState', 'InvocationID', 'MainPID', 'ControlGroup', 'BindReadOnlyPaths', ...Object.keys(UNIT_PROPERTIES).filter(k => !['CPUQuota', 'RuntimeMaxSec', 'TimeoutStopSec'].includes(k)), 'CPUQuotaPerSecUSec', 'RuntimeMaxUSec', 'TimeoutStopUSec'];
+  const fields = ['Id', 'Description', 'LoadState', 'ActiveState', 'SubState', 'Result', 'ExecMainCode', 'ExecMainStatus', 'StatusErrno', 'InvocationID', 'MainPID', 'ControlGroup', 'BindReadOnlyPaths', ...Object.keys(UNIT_PROPERTIES).filter(k => !['CPUQuota', 'RuntimeMaxSec', 'TimeoutStopSec'].includes(k)), 'CPUQuotaPerSecUSec', 'RuntimeMaxUSec', 'TimeoutStopUSec'];
   let output, status = 0; try { output = command('/usr/bin/systemctl', ['show', unit, '--no-pager', ...fields.flatMap(k => ['--property', k])], 1000); } catch (error) { ensure(error.status === 1 && Buffer.isBuffer(error.stdout), 'SYSTEMCTL_SHOW_UNAVAILABLE'); output = error.stdout; status = 1; }
   const info = Object.fromEntries(output.toString('utf8').trim().split('\n').map(line => { const i = line.indexOf('='); ensure(i > 0, 'SYSTEMCTL_SHOW_SCHEMA'); return [line.slice(0, i), line.slice(i + 1)]; }));
   ensure(info.Id === unit && info.LoadState && (!status || info.LoadState === 'not-found'), 'SYSTEMCTL_SHOW_NOT_PROOF'); return info;
@@ -113,6 +113,24 @@ function kernelLimits(cgroup) {
   const base = '/sys/fs/cgroup' + cgroup, read = name => fs.readFileSync(path.join(base, name), 'utf8').trim(), cpu = read('cpu.max').split(' ').map(Number);
   ensure(read('memory.max') === String(768 * 1024 ** 2) && read('pids.max') === '32' && cpu.length === 2 && cpu[0] / cpu[1] === 2, 'CGROUP_KERNEL_LIMITS');
   return { memoryMax: read('memory.max'), pidsMax: read('pids.max'), cpuMax: read('cpu.max') };
+}
+function setupFailureEvidence(unit) {
+  ensure(unit.name === `inferno-pr405-${token}-probe.service` && unit.description === `ifr405-owned-${token}`, 'OWN_SETUP_OBSERVATION');
+  const observation = { unit: unit.name, beforeExplicitTeardown: true, alreadyCollectedPossible: true };
+  try { const info = show(unit.name); ensure(info.LoadState === 'not-found' || info.Description === unit.description, 'OBSERVATION_UNIT_OWNER');
+    observation.unitMetadata = info.LoadState === 'not-found' ? { available: false, Id: info.Id, LoadState: info.LoadState } : { available: true, ...Object.fromEntries(['Id', 'Description', 'LoadState', 'ActiveState', 'SubState', 'Result', 'ExecMainCode', 'ExecMainStatus', 'StatusErrno', 'InvocationID'].filter(key => Object.hasOwn(info, key)).map(key => [key, info[key]])) };
+  } catch { observation.unitMetadata = { available: false }; }
+  const fields = ['MESSAGE', 'UNIT', '_SYSTEMD_UNIT', 'OBJECT_SYSTEMD_UNIT', 'RESULT', 'EXIT_CODE', 'EXIT_STATUS', '__REALTIME_TIMESTAMP'], left = workDeadline - Date.now();
+  observation.journal = { available: false, reason: 'NO_WORK_BUDGET' };
+  if (left > 0) { const result = cp.spawnSync('/usr/bin/journalctl', ['--no-pager', '--quiet', '--boot=0', '--unit=' + unit.name, '--since=@' + Math.floor(begin / 1000), '--until=@' + Math.ceil(Date.now() / 1000), '--lines=16', '--output=json', '--output-fields=' + fields.join(',')], { env: safeEnv(path.join(root, 'home')), timeout: Math.min(750, left), maxBuffer: 65536, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
+    observation.journal = { available: false, status: result.status, errorCode: result.error?.code || null };
+    if (!result.error && result.status === 0) { try { const rows = result.stdout.trim().split('\n').filter(Boolean).map(strictJson);
+      ensure(rows.length <= 16 && rows.every(row => row && !Array.isArray(row) && typeof row === 'object'), 'BOUNDED_JOURNAL_SCHEMA');
+      const owned = rows.filter(row => ['UNIT', '_SYSTEMD_UNIT', 'OBJECT_SYSTEMD_UNIT'].some(key => row[key] === unit.name));
+      observation.journal = { available: owned.length > 0, filteredEntries: rows.length - owned.length, entries: owned.map(row => Object.fromEntries(fields.filter(key => typeof row[key] === 'string').map(key => [key, row[key]]))) };
+    } catch { observation.journal = { available: false, reason: 'INVALID_BOUNDED_UNIT_JOURNAL' }; } }
+  }
+  put('PROBE-SETUP-OBSERVABILITY.json', observation);
 }
 function closeUnit(record) {
   if (record.closed) return Promise.resolve(); if (closers.has(record.name)) return closers.get(record.name);
@@ -138,6 +156,7 @@ async function capture(label, file, args, milliseconds, outcap, options = {}) {
   child.stdin.on('error', failure => { error = failure; abortOwned('OWNER_PIPE_FAILURE'); });
   const code = await new Promise(resolve => { child.on('error', failure => { error = failure; abortOwned('SPAWN_FAILURE'); }); child.on('close', resolve); if (error) abortOwned(error.message); }).finally(() => clearTimeout(timer));
   result.code = code; result.stdout = Buffer.concat(chunks[0]); result.stderr = Buffer.concat(chunks[1]);
+  if (options.unit && label === 'PROBE' && !accepted && !stopping) { try { setupFailureEvidence(options.unit); } catch (failure) { error ||= failure; } }
   if (options.unit) await closeUnit(options.unit);
   if (!groupAbsent(group.pgid)) stopGroup(group); const until = Date.now() + 1000; while (!groupAbsent(group.pgid) && Date.now() < until) await sleep(20); group.absent = groupAbsent(group.pgid);
   put(label + '.stdout', result.stdout); put(label + '.stderr', result.stderr); put(label + '.json', { code, expired, complete: !error && !expired, bytes: counts, group, unit: options.unit || null, argv: [file, ...args], rawSha256: [sha(result.stdout), sha(result.stderr)] });
@@ -204,6 +223,7 @@ async function controller() {
     ensure(npmVersion === '10.9.7' && /^[0-9a-f]{64}$/.test(tool.expectedLinuxNodeSha256) && nodeSha256 === tool.expectedLinuxNodeSha256, 'TOOL_ADMISSION_DELTA_BEFORE_ACQUISITION');
     ensure(git('rev-parse', 'HEAD').toString().trim() === process.env.QA_HEAD, 'QA_EXACT_HEAD'); git('merge-base', '--is-ancestor', SOURCE, 'HEAD'); assert.deepEqual(git('diff', '--name-only', SOURCE, 'HEAD').toString().trim().split('\n'), ['.github/workflows/pr405-linux-census-qa.yml', 'scripts/qa-pr405-linux-census.cjs']); git('diff', '--exit-code', 'HEAD'); const manifest = snapshot(), graph = lockGraph(); publicReadOnly(payload); publicReadOnly(path.join(acquire, 'node_modules')); const sourceBefore = tree(payload);
     const proof = await unitRun('PROBE', 'inside-probe', nodeSha256); ensure(proof.code === 0 && strictJson(proof.stdout.toString('utf8')).tcpDenied === true && strictJson(proof.stdout.toString('utf8')).writeDenied === true, 'TRUSTED_OS_CONTROLS');
+    fail('DIAGNOSTIC_ONLY_NO_ACQUISITION');
     const emptyModules = path.join(acquire, 'node_modules'); ensure(units.at(-1).closed && fs.lstatSync(emptyModules).isDirectory() && fs.readdirSync(emptyModules).length === 0, 'POST_PROBE_OWNED_EMPTY_MODULES'); fs.chmodSync(emptyModules, 0o700);
     for (const name of ['package.json', 'package-lock.json']) fs.copyFileSync(path.join(payload, name), path.join(acquire, name), fs.constants.COPYFILE_EXCL);
     for (const name of ['.npmrc', 'USER.npmrc', 'GLOBAL.npmrc']) fs.writeFileSync(path.join(acquire, name), '', { flag: 'wx', mode: 0o600 });
