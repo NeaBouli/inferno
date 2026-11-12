@@ -6,6 +6,7 @@ const vm = require('node:vm');
 const html = fs.readFileSync(path.join(__dirname, '../docs/index.html'), 'utf8');
 const motionSource = fs.readFileSync(path.join(__dirname, '../docs/assets/page-motion.js'), 'utf8');
 const collapseSource = fs.readFileSync(path.join(__dirname, '../docs/assets/landing-collapse.js'), 'utf8');
+const collapseStyle = fs.readFileSync(path.join(__dirname, '../docs/assets/landing-collapse.css'), 'utf8');
 
 function classList() {
   const values = new Set();
@@ -353,6 +354,9 @@ async function main() {
   assert.ok(contractsMarkup.includes('data-addr="0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0"'));
   assert.ok(contractsMarkup.includes('href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B"'));
   assert.ok(html.includes('assets/landing-collapse.js?v=20261112-contracts-v2'), 'changed helper has a new cache key');
+  assert.ok(html.includes('assets/landing-collapse.css?v=20261112-contracts-v2'), 'changed target geometry has a new CSS cache key');
+  assert.ok(collapseStyle.includes('#contracts .contract-row button {\n  min-width: 44px;\n  min-height: 44px;\n}'), 'every contracts row button, not only Copy or LP, has a scoped44px target');
+  assert.equal((contractsMarkup.match(/<button\b/g) || []).length, 20, 'target rule covers19 Copy controls plus MetaMask');
 
   const flowSource = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)]
     .map(match => match[1]).find(source => source.includes('// Token-flow SMIL'));

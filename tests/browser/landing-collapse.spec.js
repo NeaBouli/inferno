@@ -49,6 +49,15 @@ for (const [width, height] of [[375, 812], [390, 844], [820, 1180], [1180, 820],
     await page.screenshot({ path: testInfo.outputPath(`landing-collapsed-${width}.png`) });
     await expandLandingSections(page, ...COLLAPSED);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    const targets = await page.locator('#contracts .contract-row button').evaluateAll(buttons => buttons.map(button => {
+      const box = button.getBoundingClientRect();
+      return { label: button.textContent.trim(), width: box.width, height: box.height };
+    }));
+    expect(targets).toHaveLength(20);
+    for (const target of targets) {
+      expect(target.width, `${target.label} target width at ${width}px`).toBeGreaterThanOrEqual(44);
+      expect(target.height, `${target.label} target height at ${width}px`).toBeGreaterThanOrEqual(44);
+    }
     const pair = page.locator('#contracts .contract-row').filter({ hasText: 'Uniswap V2 LP Pair' });
     await expect(pair.locator('code')).toBeVisible();
     expect(await pair.evaluate(row => {

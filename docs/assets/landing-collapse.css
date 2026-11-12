@@ -70,6 +70,10 @@ section.landing-collapsible > .landing-collapse-panel { padding-bottom: 24px; }
 #contracts .contract-row { flex-wrap: wrap; gap: 8px; }
 #contracts .contract-row > div,
 #contracts .contract-row .landing-collapse-panel > div { min-width: 0; flex-wrap: wrap; }
+#contracts .contract-row button {
+  min-width: 44px;
+  min-height: 44px;
+}
 .landing-collapse-panel[hidden] { display: none !important; }
 .landing-collapse-panel [id] { scroll-margin-top: 150px; }
 
