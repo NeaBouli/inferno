@@ -32,7 +32,7 @@ assert.equal(packageJson.devDependencies?.dotenv, "^18.0.9");
 assert.equal(packageJson.overrides?.["serialize-javascript"], "7.1.3");
 assert.equal(packageJson.devDependencies?.chai, "6.3.0");
 assert.equal(packageJson.devDependencies?.mocha, "12.0.3");
-assert.equal(packageJson.devDependencies?.ajv, "8.18.0");
+assert.equal(packageJson.devDependencies?.ajv, "8.20.0");
 assert.equal(packageJson.devDependencies?.["fast-uri"], "3.1.9");
 assert.equal(packageJson.overrides?.["fast-uri"], "3.1.9");
 assert.equal(
@@ -50,7 +50,7 @@ assert.equal(
 );
 assert.equal(packageLock.packages?.["node_modules/dotenv"]?.version, "18.0.9");
 assert.equal(packageLock.packages?.["node_modules/adm-zip"]?.version, "0.6.1");
-assert.equal(packageLock.packages?.["node_modules/ajv"]?.version, "8.18.0");
+assert.equal(packageLock.packages?.["node_modules/ajv"]?.version, "8.20.0");
 assert.equal(packageLock.packages?.["node_modules/fast-uri"]?.version, "3.1.9");
 assert.equal(packageLock.packages?.["node_modules/js-yaml"]?.version, "5.4.2");
 assert.equal(
