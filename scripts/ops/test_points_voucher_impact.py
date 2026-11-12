@@ -14,6 +14,7 @@ import unittest
 from contextlib import redirect_stderr
 from pathlib import Path
 from typing import Any, Optional, Sequence
+from unittest.mock import patch
 
 _PATH = Path(__file__).with_name("points-voucher-impact.py")
 _SPEC = importlib.util.spec_from_file_location("points_voucher_impact", _PATH)
@@ -28,6 +29,7 @@ DAY = 86_400_000
 PAUSE = mod.PAUSE_MS
 SECRET_WALLETS = [f"0x{i:040x}" for i in range(1, 9)]
 SECRET_NONCES = [f"9{i:030d}" for i in range(1, 30)]
+SECRET_EVENT_FIELDS = ["T12_UNPARSEABLE_DATE_SENTINEL", "T12_EVENT_ID_SENTINEL", "T12_PROOF_REF_SENTINEL"]
 
 
 def snapshot(directory: Path) -> dict[str, tuple[str, int]]:
@@ -68,7 +70,10 @@ class Db:
         self.conn.close()
 
     def close(self) -> None:
-        self.tmp.cleanup()
+        try:
+            self.conn.close()
+        finally:
+            self.tmp.cleanup()
 
 
 def fake_run(source: str, name: str = "/inferno-points-backend", running: bool = True,
@@ -92,10 +97,12 @@ def fake_run(source: str, name: str = "/inferno-points-backend", running: bool =
 
 class ImpactTests(unittest.TestCase):
     def setUp(self) -> None:
+        guard = patch.object(mod.subprocess, "run", side_effect=AssertionError("real subprocess forbidden"))
+        process_run = guard.start()
+        self.addCleanup(guard.stop)
+        self.addCleanup(process_run.assert_not_called)
         self.db = Db()
-
-    def tearDown(self) -> None:
-        self.db.close()
+        self.addCleanup(lambda: self.db.close())
 
     def run_main(self, run: Any = None, localtime: Optional[bool] = False) -> tuple[int, dict[str, str], list[str]]:
         lines: list[str] = []
@@ -114,7 +121,7 @@ class ImpactTests(unittest.TestCase):
 
     def assertNoLeak(self, lines: list[str]) -> None:
         text = "\n".join(lines)
-        for s in SECRET_WALLETS + SECRET_NONCES:
+        for s in SECRET_WALLETS + SECRET_NONCES + SECRET_EVENT_FIELDS:
             self.assertNotIn(s, text)
         for i in range(len(SECRET_WALLETS)):
             self.assertNotIn(f"=w{i}\n", text + "\n")
@@ -135,6 +142,7 @@ class ImpactTests(unittest.TestCase):
         self.assertEqual(kv["q3_points_debited"], "400")
         self.assertEqual(kv["q3_debit_events"], "4")
         self.assertEqual(kv["q3_debit_events_linked_to_voucher"], "4")
+        self.assertEqual(kv["q3_debit_events_created_unknown"], "0")
         self.assertEqual(kv["q4_vouchers_expired"], "1")
         self.assertEqual(kv["q4_vouchers_unexpired"], "4")
         self.assertEqual(kv["q4_vouchers_expiry_unknown"], "0")
@@ -150,6 +158,69 @@ class ImpactTests(unittest.TestCase):
         self.assertEqual(kv["exit"], "0")
         self.assertEqual(kv["weekly"], "withheld_small_cells")
         self.assertFalse([line for line in lines if line.startswith("week=")])
+        self.assertNoLeak(lines)
+
+    def test_q3_unknown_event_time_is_global_and_preserves_linked_count(self) -> None:
+        self.db.voucher(0, PAUSE - DAY, PAUSE + DAY)
+        self.db.conn.execute('UPDATE "PointEvent" SET "createdAt" = ?', (SECRET_EVENT_FIELDS[0],))
+        self.db.conn.execute(
+            'INSERT INTO "PointEvent"(id,walletId,type,points,proofRef,createdAt) VALUES (?,?,?,?,?,?)',
+            (SECRET_EVENT_FIELDS[1], "w0", "voucher_redemption", 100,
+             SECRET_EVENT_FIELDS[2], SECRET_EVENT_FIELDS[0]))
+        self.db.commit()
+        code, kv, lines = self.run_main()
+        self.assertEqual(code, 0)
+        self.assertEqual(kv["q3_debit_events_created_unknown"], "2")
+        self.assertEqual(kv["q3_debit_events"], "0")
+        self.assertEqual(kv["q3_points_debited"], "0")
+        self.assertEqual(kv["q3_debit_events_linked_to_voucher"], "1")
+        self.assertEqual(kv["q1_vouchers_issued"], "1")
+        self.assertEqual(kv["voucher_timestamp_unparseable"], "0")
+        self.assertNoLeak(lines)
+        with patch.object(mod, "MAINNET_START_MS", PAUSE - DAY // 2):
+            code, bounded, lines = self.run_main()
+        self.assertEqual(code, 0)
+        self.assertEqual(bounded["q3_debit_events_created_unknown"], "2")
+        self.assertEqual(bounded["q3_debit_events_linked_to_voucher"], "0")
+        self.assertEqual(bounded["q1_vouchers_issued"], "0")
+        self.assertNoLeak(lines)
+
+    def test_q3_unknown_counter_ignores_unrelated_types(self) -> None:
+        self.db.voucher(0, PAUSE - DAY, PAUSE + DAY)
+        for i, kind in enumerate(("daily_checkin", "voucher_redemption_extra")):
+            self.db.conn.execute(
+                'INSERT INTO "PointEvent"(id,walletId,type,points,proofRef,createdAt) VALUES (?,?,?,?,?,?)',
+                (f"other{i}", "w0", kind, -100, SECRET_EVENT_FIELDS[2], SECRET_EVENT_FIELDS[0]))
+        self.db.commit()
+        code, kv, lines = self.run_main()
+        self.assertEqual(code, 0)
+        self.assertEqual(kv["q3_debit_events_created_unknown"], "0")
+        self.assertEqual(kv["q3_debit_events"], "1")
+        self.assertEqual(kv["q3_points_debited"], "100")
+        self.assertEqual(kv["q3_debit_events_linked_to_voucher"], "1")
+        self.assertNoLeak(lines)
+
+    def test_q3_valid_event_time_boundaries_unchanged(self) -> None:
+        for i, created in enumerate((-1, 0, PAUSE - 1, PAUSE, PAUSE + 1,
+                                     "2026-10-08 21:54:59", "2026-10-08 21:55:00", "2026-10-08 21:55:01")):
+            self.db.voucher(i, created, PAUSE + DAY)
+        self.db.commit()
+        code, kv, lines = self.run_main()
+        self.assertEqual(code, 0)
+        self.assertEqual(kv["q3_debit_events_created_unknown"], "0")
+        self.assertEqual(kv["q3_debit_events"], "3")
+        self.assertEqual(kv["q3_points_debited"], "300")
+        self.assertEqual(kv["q3_debit_events_linked_to_voucher"], "3")
+        self.assertEqual(kv["q1_vouchers_issued"], "3")
+        self.assertEqual(kv["vouchers_at_or_after_pause"], "4")
+        self.assertNoLeak(lines)
+        with patch.object(mod, "MAINNET_START_MS", PAUSE - 1):
+            code, bounded, lines = self.run_main()
+        self.assertEqual(code, 0)
+        self.assertEqual(bounded["q3_debit_events_created_unknown"], "0")
+        self.assertEqual(bounded["q3_debit_events"], "1")
+        self.assertEqual(bounded["q3_points_debited"], "100")
+        self.assertEqual(bounded["q3_debit_events_linked_to_voucher"], "1")
         self.assertNoLeak(lines)
 
     def test_weekly_table_rejects_any_small_cell(self) -> None:
@@ -284,6 +355,7 @@ class ImpactTests(unittest.TestCase):
         self.assertEqual(kv["voucher_timestamp_unparseable"], "1")
         self.assertEqual(kv["q1_vouchers_issued"], "0")
         self.assertEqual(kv["q1_vouchers_created_unknown"], "1")
+        self.assertEqual(kv["q3_debit_events_created_unknown"], "1")
         self.assertNoLeak(lines)
 
     def test_database_is_opened_read_only(self) -> None:
