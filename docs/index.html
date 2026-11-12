@@ -1286,6 +1286,7 @@
     [data-flow-motion="running"] [data-flow-particle] { display: inline; }
     .flow-pulse { transform-box: fill-box; transform-origin: center; animation: flow-pulse 3s ease-in-out infinite; animation-play-state: paused; }
     [data-flow-motion="running"] .flow-pulse { animation-play-state: running; }
+    [data-flow-motion="paused"] .flow-pulse { animation-play-state: paused !important; }
     @keyframes flow-pulse { 0%, 100% { transform: scale(.946); } 50% { transform: scale(1.054); } }
     @media (prefers-reduced-motion: reduce) { [data-flow-particle] { display: none !important; } }
     /* Keep each contract name clear of its address on narrow screens (T-258). */
@@ -3245,7 +3246,7 @@ if (isLocked) {
       <span style="background:#1a1a1a; border:1px solid #ff6b35; border-radius:8px; padding:0.4rem 0.9rem; font-size:0.85rem; color:#888;">Social: <strong style="color:#b3300b;">$IFRp</strong></span>
       <span style="background:#1a1a1a; border:1px solid #333; border-radius:8px; padding:0.4rem 0.9rem; font-size:0.85rem; color:#888;">Decimals: <strong style="color:#fff;">9</strong></span>
     </div>
-    <div class="reveal" style="max-width:720px;margin:40px auto 0;display:flex;flex-direction:column;gap:8px;">
+    <div style="max-width:720px;margin:40px auto 0;display:flex;flex-direction:column;gap:8px;">
       <div class="contract-row" style="display:flex;align-items:center;justify-content:space-between;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);padding:12px 16px;">
         <div><img src="assets/ifr_icon_64.png" alt="IFR" width="20" height="20" loading="lazy" decoding="async" style="width:20px;height:20px;vertical-align:middle;margin-right:6px;"><span style="color:var(--text-muted);font-size:13px;">InfernoToken</span></div>
         <div style="display:flex;align-items:center;gap:8px;">

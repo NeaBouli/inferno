@@ -381,6 +381,9 @@ async function main() {
   assert.ok(html.includes('assets/landing-collapse.css?v=20261112-contracts-v2'), 'changed target geometry has a new CSS cache key');
   assert.ok(collapseStyle.includes('#contracts .contract-row button {\n  min-width: 44px;\n  min-height: 44px;\n}'), 'every contracts row button, not only Copy or LP, has a scoped44px target');
   assert.equal((contractsMarkup.match(/<button\b/g) || []).length, 20, 'target rule covers19 Copy controls plus MetaMask');
+  assert.ok(contractsMarkup.includes('<div style="max-width:720px;margin:40px auto 0;display:flex;flex-direction:column;gap:8px;">'), 'the tall address list must not depend on reveal intersection');
+  assert.ok(html.includes('[data-flow-motion="paused"] .flow-pulse { animation-play-state: paused !important; }'), 'paused pulse must override the reduced-motion animation shorthand reset');
+  assert.ok(html.includes('*, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }'), 'global reduced-motion suppression remains intact');
 
   const flowSource = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)]
     .map(match => match[1]).find(source => source.includes('// Token-flow SMIL'));

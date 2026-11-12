@@ -60,6 +60,13 @@ for (const [width, height] of [[375, 812], [390, 844], [820, 1180], [1180, 820],
     }
     const pair = page.locator('#contracts .contract-row').filter({ hasText: 'Uniswap V2 LP Pair' });
     await expect(pair.locator('code')).toBeVisible();
+    for (const row of [page.locator('#contracts .contract-row').first(), pair]) {
+      await expect.poll(() => row.evaluate(element => {
+        let opacity = 1;
+        for (let node = element; node; node = node.parentElement) opacity *= Number(getComputedStyle(node).opacity);
+        return opacity;
+      })).toBe(1);
+    }
     expect(await pair.evaluate(row => {
       const box = row.getBoundingClientRect();
       return [...row.querySelectorAll('span, code, a, button')].every(element => {
@@ -137,16 +144,28 @@ test('Enter and Space toggle the same accessible header and preserve focus', asy
   await expect(toggle).toBeFocused();
 });
 
-for (const hash of ['how', 'live-distribution', 'dao-governance', 'contracts', 'landing-address-1-panel']) {
+for (const hash of ['how', 'live-distribution', 'dao-governance', 'contracts', 'landing-address-1-panel', 'landing-address-32-panel']) {
   test(`initial deep link #${hash} expands its section`, async ({ page }) => {
+    const addressHash = hash.startsWith('landing-address-');
+    if (addressHash) await page.setViewportSize({ width: 375, height: 812 });
     await page.goto(`/#${hash}`);
     const target = page.locator(`#${hash}`);
     await expect(target).toBeVisible();
-    const section = hash === 'how' ? 'how' : hash === 'dao-governance' ? 'governance' : hash === 'contracts' ? 'contracts' : 'tokenomics';
+    const section = hash === 'how' ? 'how' : hash === 'dao-governance' ? 'governance' : (hash === 'contracts' || hash === 'landing-address-32-panel') ? 'contracts' : 'tokenomics';
     await expect(page.locator(`#${section} > .landing-collapse-heading > button`)).toHaveAttribute('aria-expanded', 'true');
-    if (hash === 'landing-address-1-panel') {
-      await expect(target).toContainText('LP Reserve Safe');
-      await expect(target.locator('a[href="https://etherscan.io/address/0x5D93E7919a71d725054e31017eCA86B026F86C04"]')).toBeVisible();
+    if (addressHash) {
+      if (hash === 'landing-address-1-panel') {
+        await expect(target).toContainText('LP Reserve Safe');
+        await expect(target.locator('a[href="https://etherscan.io/address/0x5D93E7919a71d725054e31017eCA86B026F86C04"]')).toBeVisible();
+      } else {
+        await expect(target).toContainText('Uniswap V2 LP Pair');
+        await expect(target.locator('code')).toHaveText('0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0');
+      }
+      await expect.poll(() => target.evaluate(element => {
+        let opacity = 1;
+        for (let node = element; node; node = node.parentElement) opacity *= Number(getComputedStyle(node).opacity);
+        return opacity;
+      })).toBe(1);
       await expect(target.locator('.landing-collapse-heading, .landing-collapse-toggle, [aria-expanded]')).toHaveCount(0);
       await expect.poll(async () => {
         const navBottom = await page.locator('nav').first().evaluate(element => element.getBoundingClientRect().bottom);

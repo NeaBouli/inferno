@@ -186,12 +186,15 @@ for (const [width, cores, memory, active] of [[390, 4, 32, false], [820, 4, 32, 
     await page.emulateMedia({ reducedMotion: 'reduce' });
     await expect(svg).toHaveAttribute('data-flow-motion', 'paused');
     await expect(svg.locator('.flow-pulse')).toHaveCSS('animation-play-state', 'paused');
+    await expect(svg.locator('.flow-pulse')).toHaveCSS('animation-name', 'none');
     expect(await svg.evaluate(element => element.animationsPaused())).toBe(true);
     await page.locator('footer').scrollIntoViewIfNeeded();
     await page.emulateMedia({ reducedMotion: 'no-preference' });
     await expect(svg).toHaveAttribute('data-flow-motion', 'paused');
+    await expect(svg.locator('.flow-pulse')).toHaveCSS('animation-play-state', 'paused');
     await flow.scrollIntoViewIfNeeded();
     await expect(svg).toHaveAttribute('data-flow-motion', 'running');
+    await expect(svg.locator('.flow-pulse')).toHaveCSS('animation-play-state', 'running');
     expect(await svg.evaluate(element => element.animationsPaused())).toBe(false);
   });
 }
