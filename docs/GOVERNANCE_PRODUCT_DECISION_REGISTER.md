@@ -5,6 +5,11 @@ records what is true today and what still has to be decided. It is not a
 Council decision, a vote, a funding allocation or an authorization for any
 on-chain, signer, treasury, deployment or publication action.
 
+Scoped documentation reconciliation, 12 November 2026: SDK publication and
+the dated Sepolia advisory slice below are delivered evidence. Other dated
+chain figures and open governance or activation decisions are not freshly
+reverified by this update.
+
 Scope and sources: [Governance Constitution](GOVERNANCE_CONSTITUTION.md),
 [Governance concept](IFR_GOVERNANCE_KONZEPT.md), [Roadmap](ROADMAP.md),
 [current functionality status](CURRENT_FUNCTIONALITY_STATUS.md), the
@@ -271,8 +276,10 @@ remains the only place where agenda items and vote outcomes are published.
 
 - **Current truth:** production Benefits uses external self-custody wallets.
   The embedded wallet is an isolated Sepolia prototype only
-  ([decision](ifrp-commerce-app/EMBEDDED_WALLET_DECISION.md)). `ifr-sdk` is a
-  tested local package and is not published
+  ([decision](ifrp-commerce-app/EMBEDDED_WALLET_DECISION.md)). `ifr-sdk` 0.4.1
+  was published on 10 October 2026 with provenance through Trusted Publishing;
+  0.4.0 was the provenance-free one-time bootstrap. Later versions retain the
+  separate npm release gate
   ([runbook](runbooks/IFR_SDK_NPM_RELEASE.md)). Creator Gateway source exists
   in the repository; no production deployment record exists
   ([spec](CREATOR_GATEWAY.md)).
@@ -326,16 +333,24 @@ remains the only place where agenda items and vote outcomes are published.
     are posted by the project bot in the dedicated Telegram announcement chat;
     only the bot posts there. The **Dev** and **Council** areas are restricted to
     Safe signers and Council-authorized members.
-- **Current truth:** not live. The verifier, the disabled synthetic view and the
-  chain-evidence source are dummy-tested; no collector, API, UI or Telegram
-  announcement path exists yet.
+- **Current truth:** dated first-slice evidence: verifier, collector,
+  chain-evidence tooling, ballot page and Telegram announcement support are
+  implemented. The Sepolia test ballot `FB-SEP-0001` ran in October 2026; its
+  advisory tally was published and the result announcement was confirmed on
+  19 October 2026. See the [retained result](https://github.com/NeaBouli/inferno/blob/fcecb7a9837e4da908b3d962e4f056359635b884/apps/telegram/telegram-bot/forum-results/FB-SEP-0001.json).
+  This is not a public Mainnet Forum, binding authority or automatic Safe
+  execution. Decentralized discussion/storage design remains separate; this
+  slice does not authorize a new central Forum service.
 - **Scope of the first slice:** proposal intake with a frozen text hash, signed
-  vote collection, public re-tallyable result; Sepolia only and disabled until
-  the owner accepts it.
+  vote collection and a public re-tallyable result; Sepolia only. Acceptance
+  of that slice does not ratify later Forum design or activate Mainnet.
 - **Decision needed:** binding effect of Forum results (O1 ratification
   body); ballot duration and threshold values per proposal type; Mainnet
   activation.
 - **Production gate:** separate recorded owner decision before the first Mainnet
   ballot; threat model and independent review per IFR-DIP-01 §15.
-- **Next evidence:** collector and announcement design (architecture map),
-  then a Sepolia staging ballot with test wallets.
+- **Next evidence:** remaining decentralized discussion/storage design,
+  binding-authority and ballot-policy decisions, threat model and independent
+  review, followed by separately authorized Mainnet activation evidence.
+  The completed Sepolia test is dated advisory evidence, not a new unexecuted
+  prerequisite or authority to execute TreasurySafe/Governance actions.

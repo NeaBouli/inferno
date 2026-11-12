@@ -49,8 +49,52 @@ assert.ok(!/0x[0-9a-fA-F]{40}/.test(register), "Decision register must not conta
 for (const relative of ["docs/ROADMAP.md", "docs/wiki/roadmap.html", "docs/wiki/governance.html"]) {
   assert.ok(read(relative).includes("GOVERNANCE_PRODUCT_DECISION_REGISTER.md"), `${relative} must link the decision register`);
 }
-assert.ok(roadmap.includes("(EX-01/EX-02):\n      undated Council discussion drafts, not approved policy"));
-assert.ok(wiki.includes("(EX-01/EX-02) &mdash; undated Council discussion drafts, not approved policy"));
+function assertExchangePolicy(copy, format) {
+  const prose = text => text.replace(/<[^>]*>/g, " ").replace(/&mdash;/g, "-").replace(/[*`]/g, "").replace(/\s+/g, " ").trim();
+  assert.ok(!/\(EX-01\/EX-02\)\s*(?::|-)\s*undated Council discussion drafts, not approved policy/i.test(prose(copy)), `${format}: stale combined exchange claim`);
+  const pattern = format === "Markdown"
+    ? /^- \[([ x])\] (EX-0[12]\b[^\n]*(?:\n {6}[^\n]+)*)/gm
+    : /<li class="(check-item|pending-item)">\s*(EX-0[12]\b[\s\S]*?)<\/li>/g;
+  const items = [...copy.matchAll(pattern)].map((match) => ({ state: match[1], text: prose(match[2]) }));
+  assert.equal(items.length, 2, `${format}: exactly two separate exchange policy items`);
+  const approved = items.find(item => item.text.startsWith("EX-01 "));
+  const pending = items.find(item => item.text.startsWith("EX-02 "));
+  assert.ok(approved && pending, `${format}: EX-01 and EX-02 must be separate`);
+  assert.ok(approved.state === (format === "Markdown" ? "x" : "check-item"), `${format}: EX-01 approved state`);
+  assert.ok(pending.state === (format === "Markdown" ? " " : "pending-item"), `${format}: EX-02 open state`);
+  for (const marker of ["EX-01 approved on 4 October 2026", "no IFR incentives from any project pool", "policy grants no address, liquidity or governance activation authority"]) {
+    assert.ok(approved.text.includes(marker), `${format}: EX-01 must retain ${marker}`);
+  }
+  for (const marker of ["EX-02 exchange governance role remains open", "no Safe permissions are granted", "Individual address and liquidity actions still require separate governance decisions"]) {
+    assert.ok(pending.text.includes(marker), `${format}: EX-02 must retain ${marker}`);
+  }
+}
+let exchangeNegatives = 0;
+for (const [format, copy] of [["Markdown", roadmap], ["HTML", wiki]]) {
+  assertExchangePolicy(copy, format);
+  const stale = format === "Markdown"
+    ? "(EX-01/EX-02):\n      undated Council discussion drafts, not approved policy"
+    : "(EX-01/EX-02) &mdash; undated Council discussion drafts, not approved policy";
+  const wrongApproved = format === "Markdown"
+    ? copy.replace("- [x] EX-01", "- [ ] EX-01")
+    : copy.replace('<li class="check-item">EX-01', '<li class="pending-item">EX-01');
+  const wrongPending = format === "Markdown"
+    ? copy.replace("- [ ] EX-02", "- [x] EX-02")
+    : copy.replace('<li class="pending-item">EX-02', '<li class="check-item">EX-02');
+  for (const [fixture, message] of [
+    [`${copy}\n${stale}`, `${format}: stale combined exchange claim`],
+    [wrongApproved, `${format}: EX-01 approved state`],
+    [wrongPending, `${format}: EX-02 open state`],
+    [copy.replace("EX-01 approved on 4 October 2026", "EX-01 proposed policy"), `${format}: EX-01 must retain EX-01 approved on 4 October 2026`],
+    [copy.replace("no IFR incentives from any project pool", "IFR incentives from any project pool"), `${format}: EX-01 must retain no IFR incentives from any project pool`],
+    [copy.replace(/no Safe permissions are\s+granted/, "Safe permissions are granted"), `${format}: EX-02 must retain no Safe permissions are granted`],
+  ]) {
+    assert.notEqual(fixture, copy, `${format}: negative fixture must change source`);
+    assert.throws(() => assertExchangePolicy(fixture, format), { name: "AssertionError", message });
+    exchangeNegatives++;
+  }
+}
+console.log(`[exchange-policy] PASS both surfaces / ${exchangeNegatives} negative fixtures`);
 assert.ok(!wiki.includes("Creator Rewards live (automated)"));
 const daoWiki = read("docs/wiki/dao-governance.html");
 for (const stale of [

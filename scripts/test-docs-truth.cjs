@@ -328,4 +328,69 @@ for (const [relative, markers] of requiredClaimBoundaries) {
   const content = read(relative);
   for (const marker of markers) assert.ok(content.includes(marker), `${relative} must retain claim boundary: ${marker}`);
 }
+// Reconcile only current sections; dated historical audit/build records stay outside this guard.
+const datedDocRules = [
+  {
+    name: "OPS-001", path: "docs/KNOWN-ISSUES.md", heading: "## OPS-001 --",
+    markers: ["permanently retire LendingVault V1 creation/increase and new borrowing", "regardless of price", "underlying contract functions are not removed", "full-available lender withdrawal", "existing-loan repayment/top-up"],
+    stale: ["Lenders can create and withdraw offers."],
+    forbidden: /Lenders can create and withdraw offers/i,
+  },
+  {
+    name: "OPS-007", path: "docs/KNOWN-ISSUES.md", heading: "## OPS-007 --",
+    markers: ["2026-10-01", "historical, not a current zero-vulnerability claim", "12 November 2026", "source and lockfile", "FULL/production scope", "Zod3 advisories", "production exploitation"],
+    stale: ["Root dependency audit reports 0 vulnerabilities since 2026-10-01.", "Runtime frontends and the Benefits backend report zero audit findings."],
+    forbidden: /Root dependency audit reports 0 vulnerabilities since|Runtime frontends and the Benefits backend report zero audit findings/i,
+  },
+  {
+    name: "OPS-008", path: "docs/KNOWN-ISSUES.md", heading: "## OPS-008 --",
+    markers: ["12 November 2026", "127c148be108d9bbbf1a8d0775bcbe9fdb649bc0", "FULL and production metadata audits", "18 High and 3 Low package entries", "not distinct-advisory counts", "application and bundle-boundary tests were skipped", "prototype remains isolated from production"],
+    stale: ["The token dashboard and prototype report zero audit vulnerabilities."],
+    forbidden: /report zero audit vulnerabilities/i,
+  },
+  {
+    name: "SDK delivery", path: "docs/GOVERNANCE_PRODUCT_DECISION_REGISTER.md", heading: "## Lane 7",
+    markers: ["0.4.1", "10 October 2026", "provenance through Trusted Publishing", "0.4.0 was the provenance-free one-time bootstrap", "separate npm release gate", "external self-custody wallets", "optional self-hosting only"],
+    stale: ["ifr-sdk is a tested local package and is not published."],
+    forbidden: /tested local package and is not published/i,
+  },
+  {
+    name: "Sepolia slice", path: "docs/GOVERNANCE_PRODUCT_DECISION_REGISTER.md", heading: "## Lane 8",
+    markers: ["implemented", "FB-SEP-0001", "19 October 2026", "advisory", "not a public Mainnet Forum", "does not authorize a new central Forum service", "binding effect", "separate recorded owner decision"],
+    stale: ["no collector, API, UI or Telegram announcement path exists yet."],
+    forbidden: /no collector, API, UI or Telegram announcement path exists yet/i,
+  },
+  {
+    name: "EX-01/EX-02", path: "docs/ROADMAP.md", heading: "## Phase 5:",
+    markers: ["EX-01 approved on 4 October 2026", "no IFR incentives from any project pool", "policy grants no address, liquidity or governance activation authority", "EX-02 exchange governance role remains open", "no Safe permissions are granted", "Individual address and liquidity actions still require separate governance decisions"],
+    stale: ["Exchange IFR incentives and any exchange governance role (EX-01/EX-02): undated Council discussion drafts, not approved policy"],
+    forbidden: /Exchange IFR incentives and any exchange governance role \(EX-01\/EX-02\): undated Council discussion drafts, not approved policy/i,
+  },
+];
+function currentMarkdownSection(copy, heading) {
+  const start = copy.indexOf(heading);
+  assert.ok(start >= 0, `current section missing: ${heading}`);
+  const end = copy.indexOf("\n## ", start + heading.length);
+  return copy.slice(start, end < 0 ? undefined : end);
+}
+function assertDatedDocSection(section, rule) {
+  const prose = section.replace(/[*`]/g, "").replace(/\s+/g, " ");
+  for (const marker of rule.markers) assert.ok(prose.includes(marker), `${rule.name}: missing ${marker}`);
+  assert.ok(!rule.forbidden.test(prose), `${rule.name}: superseded current claim`);
+}
+let datedDocNegatives = 0;
+for (const rule of datedDocRules) {
+  const section = currentMarkdownSection(read(rule.path), rule.heading);
+  assertDatedDocSection(section, rule);
+  for (const stale of rule.stale) {
+    for (const variant of [stale, stale.replace(/ /g, "\n"), `**${stale}**`]) {
+      assert.throws(() => assertDatedDocSection(`${section}\n${variant}`, rule), { name: "AssertionError", message: `${rule.name}: superseded current claim` });
+      datedDocNegatives++;
+    }
+  }
+  const normalized = section.replace(/[*`]/g, "").replace(/\s+/g, " ");
+  assert.throws(() => assertDatedDocSection(normalized.replace(rule.markers[0], "[missing]"), rule), { name: "AssertionError", message: `${rule.name}: missing ${rule.markers[0]}` });
+  datedDocNegatives++;
+}
+console.log(`[docs-truth-followup] PASS ${datedDocRules.length} scoped sections / ${datedDocNegatives} negative fixtures`);
 console.log("[docs-truth] PASS - 15 contracts + 3 Safes = 18; 700 contract tests; dated browser evidence; Forum advisory boundary; historical coverage labelled; 7 deployment units; public launch, buyback, capability and pseudonymous-data boundaries");
