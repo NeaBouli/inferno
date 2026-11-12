@@ -1179,8 +1179,9 @@ hardhat-verify 3.1.4 and dotenv 18.0.9. The existing `hardhat.config.js`
 dotenv/config import, plugins and local EDR path are unchanged. The guarded
 helper remains 3.0.5 and Zod remains 4.6.7; dated status reports retain their
 original versions, test counts and run IDs.
-The 3.21.2/4.2.2 pair is source-prepared only. Fresh exact-head install,
-adapter/runtime and owning contract/tooling CI qualification remain required.
+These exact pins do not by themselves establish runtime compatibility. Each
+candidate is gated by fresh exact-head install, adapter/runtime and owning
+contract/tooling CI qualification; dated results remain bound to their sources.
 
 ### 15.2 Trace
 
