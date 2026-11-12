@@ -154,7 +154,11 @@ postcss-selector-parser, source-map-js) runs at build time on trusted CSS only.
 
 Web3 browser runtime trace (`docs/web3/index.html`, landing + wiki pages):
 
-Issue #382 diagnostic qualification (2026-10-31; test-only, runtime not yet run):
+Issue #382 isolated diagnostic accepted on 2026-10-31
+([PR #418](https://github.com/NeaBouli/inferno/pull/418);
+[CI2 run 41239848840](https://github.com/NeaBouli/inferno/actions/runs/41239848840)).
+Historical cause UNKNOWN; Issue #382 remains OPEN, with no current Main runtime,
+real-wallet, provider or live acceptance established by this dated qualification.
 `tests/browser/web3-write.spec.js::preparePage/newRoutedContext` →
 `docs/web3/index.html::lockIFR` → `approveTx.wait` → `assertV2Open` →
 `commitmentV2.lock`. The historical T-273 failure reached the post-approval
@@ -238,7 +242,7 @@ Points voucher trace (`apps/points-backend`):
 | benefits session service | session status read, checkout-proof text, attest = single redemption | `apps/benefits-network/backend/src/services/sessionService.ts` | gebaut |
 | benefits public rate limits | per-IP limits for public reads and polling | `apps/benefits-network/backend/src/middleware/rateLimiter.ts` | gebaut |
 | web3 wallet core (dApp) | provider discovery, WalletConnect v2 session lifecycle, mainnet fail-closed connect | `docs/web3-wallet-core.js::IFRWallet` | gebaut |
-| Web3 vault isolation qualifier (test only) | compare unchanged T-273 selections and a separately labelled bounded observer run; retain independent failures without asserting a cause | `scripts/test-web3-vault-isolation.cjs` → `tests/browser/web3-write.spec.js::preparePage` | source preparation; runtime qualification pending |
+| Web3 vault isolation qualifier (test only) | compare unchanged T-273 selections and a separately labelled bounded observer run; retain independent failures without asserting a cause | `scripts/test-web3-vault-isolation.cjs` → `tests/browser/web3-write.spec.js::preparePage` | isolated diagnostic accepted 2026-10-31 (PR418/CI2); historical cause UNKNOWN; Issue #382 OPEN |
 | wallet core (landing/wiki) | shared minimalist wallet connect, desktop-only policy | `docs/assets/wallet-core.js::IFRWallet` | gebaut |
 | walletconnect provider artifact | pinned, repository-owned, hash-gated WC provider bundle served same-origin | `docs/assets/vendor/walletconnect-ethereum-provider-2.25.0.esm.js` | gebaut |
 | web3 site release | operator-run exact-SHA release of the `docs/` tree + infra/web3 anchors and CSP to the web3.ifrunit.tech nginx docroot, with backup, `nginx -t`, reload, public hash verify, rollback | `scripts/deploy-web3-site.sh` + `scripts/web3-release.cjs` | gebaut (not yet executed; runbook `docs/WEB3_SITE_RELEASE.md`) |
