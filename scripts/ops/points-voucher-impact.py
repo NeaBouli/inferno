@@ -211,6 +211,10 @@ def report(conn: sqlite3.Connection, out: Out, day_is_utc: Optional[bool] = True
     debits, points = q(
         f'SELECT COUNT(*), COALESCE(SUM("points"), 0) FROM "PointEvent" WHERE "type" = \'voucher_redemption\' '
         f'AND {win}', args).fetchone()
+    # Global unknowns cannot be assigned to the historical window or mainnet cohort.
+    debit_created_unknown = q(
+        f'SELECT COUNT(*) FROM "PointEvent" WHERE "type" = \'voucher_redemption\' '
+        f'AND {c} IS NULL').fetchone()[0]
     linked = q(
         f'SELECT COUNT(*) FROM "PointEvent" p JOIN "Voucher" v ON p."proofRef" = v."nonce" '
         f'WHERE p."type" = \'voucher_redemption\' AND {_ms("v.\"createdAt\"")} >= ? AND {_ms("v.\"createdAt\"")} < ?',
@@ -218,6 +222,7 @@ def report(conn: sqlite3.Connection, out: Out, day_is_utc: Optional[bool] = True
     out(f"q3_points_debited={-points}")
     out(f"q3_debit_events={debits}")
     out(f"q3_debit_events_linked_to_voucher={linked}")
+    out(f"q3_debit_events_created_unknown={debit_created_unknown}")
     out("q4_as_of=2026-10-08T21:55:00Z")
     out(f"q4_vouchers_expired={expired}")
     out(f"q4_vouchers_unexpired={unexpired}")
