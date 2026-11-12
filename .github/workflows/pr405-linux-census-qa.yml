@@ -1,0 +1,38 @@
+name: Temporary PR405 Isolated Linux Census
+
+on:
+  pull_request:
+    types: [opened]
+    paths:
+      - '.github/workflows/pr405-linux-census-qa.yml'
+      - 'scripts/qa-pr405-linux-census.cjs'
+
+permissions:
+  contents: read
+
+jobs:
+  census:
+    if: >-
+      github.repository == 'NeaBouli/inferno' &&
+      github.event.repository.private == false &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.head_ref == 'agent/codex/pr405-linux-census-qa-20261112'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # Existing v7.0.1 pin
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # Existing v7 pin
+        with:
+          node-version: '22.22.2'
+          check-latest: false
+          package-manager-cache: false
+      - name: Isolated one-use census; bounded ordinary job logs only
+        env:
+          QA_HEAD: ${{ github.event.pull_request.head.sha }}
+          QA_PUBLIC: ${{ !github.event.repository.private }}
+          EXPECTED_LINUX_NODE_SHA256: '81925c0995b5c1427b5d538e6a90ca2fdc4daffb786b09af749beaf7369d4e90'
+        run: node --max-old-space-size=512 --no-addons scripts/qa-pr405-linux-census.cjs
