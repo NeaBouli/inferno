@@ -1678,16 +1678,17 @@ Current-source note (2026-11-12, PR430/PR405 candidates): the explicit developme
 Ajv input is 8.20.0; current status-baseline assertions require that exact
 manifest/lock pin. Local URN/serializer controls remain unchanged. This updates
 source expectations only, not dated qualification or runtime/deployment acceptance.
-PR405 source WIP advances only current CLI expectations to 0.50.0 with the existing
-global Minimatch 11.0.1, outside the CLI's declared ~10.2.6 range. The same matcher
-harness adds eight real CLI directory/glob-ignore, dot, overlap and YAML/TOML cases,
-positive MD018 file identities, observed per-arm versions and exact caller/API
-source bindings. Closed normalized fields remain equal except separately checked
-observed 0.49/0.50 labels; frozen 0.49/min10 comparison inputs remain unchanged.
-The baseline JSON is still 0.49 and UNBOUND: literal-reversal guards require the
-old exact wrapper/baseline hashes after only approved version metadata changes.
-Actual equal-fingerprint census, runtime qualification and Parent binding remain
-owed; this source WIP is not executable/admitted, vendor support or an audit waiver.
+The PR405 candidate contract requires CLI 0.50.0 and matching current tool metadata
+with the existing global Minimatch 11.0.1, outside the CLI's declared ~10.2.6 range.
+The frozen CLI 0.49.1/Minimatch 10.2.6 comparison arm remains unchanged. The matcher
+harness requires eight real CLI ignore/YAML/TOML cases, positive MD018 identities,
+observed per-arm versions, exact caller/API bindings and a closed normalized field
+set. Only approved version metadata may differ: reversing those exact literals
+must recover the byte-identical old wrapper and baseline under their frozen
+SHA-256 guards, with zero semantic finding delta and unchanged rules/file coverage.
+This is project compatibility qualification, not vendor semver support or an audit
+waiver. Actual census, runtime, CI and publication acceptance each require a
+separate source-bound receipt.
 
 The existing Docs Markdown and Mythril root-dependency install steps select
 Node 22.22.2. Their locked markdownlint-cli 0.49.1 -> run-con 1.3.3 -> ini 7.0.0
