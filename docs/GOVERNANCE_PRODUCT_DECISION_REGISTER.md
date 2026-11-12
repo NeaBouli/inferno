@@ -333,7 +333,7 @@ remains the only place where agenda items and vote outcomes are published.
     are posted by the project bot in the dedicated Telegram announcement chat;
     only the bot posts there. The **Dev** and **Council** areas are restricted to
     Safe signers and Council-authorized members.
-- **Current truth (dated first-slice evidence):** verifier, collector,
+- **Current truth:** dated first-slice evidence: verifier, collector,
   chain-evidence tooling, ballot page and Telegram announcement support are
   implemented. The Sepolia test ballot `FB-SEP-0001` ran in October 2026; its
   advisory tally was published and the result announcement was confirmed on
