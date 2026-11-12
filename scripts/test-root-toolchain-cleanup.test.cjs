@@ -21,7 +21,7 @@ const FROZEN = {
 const INPUTS = ["package.json", "package-lock.json", "playwright.config.js", CALLER,
   "scripts/test-root-matcher-compat.cjs", "scripts/test-docs-server-compat.cjs",
   "scripts/check-markdownlint-baseline.cjs", "audit/markdownlint-baseline.json"];
-const PACKAGES = { mocha: "12.0.3", "markdownlint-cli": "0.49.1",
+const PACKAGES = { mocha: "12.0.3", "markdownlint-cli": "0.50.0",
   glob: "14.0.2", minimatch: "11.0.1", "sirv-cli": "3.0.1" };
 const sha = (bytes) => createHash("sha256").update(bytes).digest("hex");
 let activeCallers = 0;

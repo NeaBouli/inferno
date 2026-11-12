@@ -9,7 +9,7 @@ const root = path.resolve(__dirname, "..");
 const baselinePath = path.join(root, "audit", "markdownlint-baseline.json");
 const markdownlintBin = path.join(root, "node_modules", ".bin", "markdownlint");
 const disabledRules = ["MD013", "MD033", "MD041", "MD024", "MD036", "MD040"];
-const expectedToolVersion = "0.49.1";
+const expectedToolVersion = "0.50.0";
 
 function run(command, args, options = {}) {
   const result = spawnSync(command, args, {

@@ -173,6 +173,15 @@ async function main() {
   assert.equal(process.platform, "linux");
   assert.equal(Number(process.versions.node.split(".")[0]), 22);
   assert.equal(process.argv.length, 2);
+  // Remains UNBOUND until an actual census permits only this metadata change.
+  for (const [file, current, previous, frozen] of [
+    ["scripts/check-markdownlint-baseline.cjs", 'const expectedToolVersion = "0.50.0";', 'const expectedToolVersion = "0.49.1";', "81fb214c8d25cc65d2cf762a384b0882eeb83b1221505f213701332c5ef20c33"],
+    ["audit/markdownlint-baseline.json", '  "tool": "markdownlint-cli@0.50.0",', '  "tool": "markdownlint-cli@0.49.1",', "6586e2b4c51aa86ce14660021c0eecc5c5c1d6d34758ca2e74e1aef6befa610c"],
+  ]) {
+    const bytes = fs.readFileSync(path.join(ROOT, file), "utf8");
+    assert.equal(bytes.split(current).length, 2, "MARKDOWN_METADATA_UNBOUND");
+    assert.equal(digest(bytes.replace(current, previous)), frozen, "MARKDOWN_NON_METADATA_CHANGE");
+  }
   deadline = performance.now() + OVERALL_MS;
   const runnerTemp = fs.realpathSync(process.env.RUNNER_TEMP || os.tmpdir());
   const proposedOutput = path.join(runnerTemp, "root-toolchain-compat-evidence");
@@ -181,7 +190,7 @@ async function main() {
   const candidateFiles = ["package.json", "package-lock.json", "playwright.config.js", "scripts/test-root-toolchain-compat.cjs", "scripts/test-root-matcher-compat.cjs",
     "scripts/test-docs-server-compat.cjs", "scripts/check-markdownlint-baseline.cjs", "audit/markdownlint-baseline.json"];
   for (const file of candidateFiles) source.candidateFiles[file] = digest(fs.readFileSync(path.join(ROOT, file)));
-  source.candidatePackages = assertPackages(ROOT, { mocha: "12.0.3", "markdownlint-cli": "0.49.1", glob: "14.0.2",
+  source.candidatePackages = assertPackages(ROOT, { mocha: "12.0.3", "markdownlint-cli": "0.50.0", glob: "14.0.2",
     minimatch: "11.0.1", "sirv-cli": "3.0.1" });
   temporary = fs.mkdtempSync(path.join(runnerTemp, "inferno-root-toolchain-"));
   ownerToken = randomUUID();
