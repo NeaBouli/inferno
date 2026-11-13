@@ -7,9 +7,10 @@ const lock = JSON.parse(
 
 const minimumVersions = {
   axios: '1.20.0',
-  'decode-uri-component': '0.5.0',
+  'decode-uri-component': '0.5.1',
   'query-string': '9.5.1',
   uuid: '11.1.1',
+  vite: '6.4.5',
 };
 
 function compareVersions(left, right) {
