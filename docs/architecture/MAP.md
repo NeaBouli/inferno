@@ -1674,10 +1674,21 @@ fast-uri. Because serve previously supplied them only transitively, exact
 Ajv8.18.0 and fast-uri3.1.9 become explicit development test inputs when serve
 is removed; their existing assertions and fast-uri override stay unchanged.
 
-Current-source note (2026-11-12, PR430 candidate): the explicit development
+Current-source note (2026-11-12, PR430/PR405 candidates): the explicit development
 Ajv input is 8.20.0; current status-baseline assertions require that exact
 manifest/lock pin. Local URN/serializer controls remain unchanged. This updates
 source expectations only, not dated qualification or runtime/deployment acceptance.
+The PR405 candidate contract requires CLI 0.50.0 and matching current tool metadata
+with the existing global Minimatch 11.0.1, outside the CLI's declared ~10.2.6 range.
+The frozen CLI 0.49.1/Minimatch 10.2.6 comparison arm remains unchanged. The matcher
+harness requires eight real CLI ignore/YAML/TOML cases, positive MD018 identities,
+observed per-arm versions, exact caller/API bindings and a closed normalized field
+set. Only approved version metadata may differ: reversing those exact literals
+must recover the byte-identical old wrapper and baseline under their frozen
+SHA-256 guards, with zero semantic finding delta and unchanged rules/file coverage.
+This is project compatibility qualification, not vendor semver support or an audit
+waiver. Actual census, runtime, CI and publication acceptance each require a
+separate source-bound receipt.
 
 The existing Docs Markdown and Mythril root-dependency install steps select
 Node 22.22.2. Their locked markdownlint-cli 0.49.1 -> run-con 1.3.3 -> ini 7.0.0

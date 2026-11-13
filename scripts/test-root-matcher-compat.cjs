@@ -12,6 +12,10 @@ const { spawn } = require("node:child_process");
 
 const WORK_MS = 170000; // Reserve cleanup time inside the orchestrator's 180s bound.
 const OUTPUT_LIMIT = 2 * 1024 * 1024;
+const MARKDOWN_CALLER_FILES = [
+  "markdown-caller/keep.md", "markdown-caller/skip/a.md", "markdown-caller/skip/nested/b.md",
+  "markdown-caller/space dir/c.md", "markdown-caller/bracket[one].md", "markdown-caller/.hidden/d.md",
+];
 const children = new Set();
 const checks = [];
 let deadline;
@@ -65,7 +69,7 @@ function packageAt(root, name) {
 function binding(root, kind) {
   const expected = kind === "baseline"
     ? { mocha: "12.0.3", "markdownlint-cli": "0.49.1", glob: "13.0.6", minimatch: "10.2.6" }
-    : { mocha: "12.0.3", "markdownlint-cli": "0.49.1", glob: "14.0.2", minimatch: "11.0.1" };
+    : { mocha: "12.0.3", "markdownlint-cli": "0.50.0", glob: "14.0.2", minimatch: "11.0.1" };
   const packages = {};
   for (const [name, version] of Object.entries(expected)) {
     const pkg = packageAt(root, name);
@@ -86,9 +90,25 @@ function binding(root, kind) {
       consumerResolution[owner].glob = globFile;
     }
   }
+  const cliSource = fs.readFileSync(path.join(packages["markdownlint-cli"].directory, "markdownlint.js"));
+  const callerSource = { sha256: digest(cliSource) };
+  if (kind === "candidate") {
+    demand(callerSource.sha256 === "fa97eeeb30201fb0417570701068858eef6e6c6b52475b953e28cf5b868eb529", "MARKDOWN_CLI_SOURCE_CHANGED");
+    const lines = cliSource.toString("utf8").split("\n");
+    for (const line of [116, 125]) {
+      demand(lines[line - 1].includes("new minimatch.Minimatch(") && lines[line].includes("matcher.match(fileInfo.absolute)"), "MARKDOWN_CALLER_API_CHANGED");
+    }
+    const api = fs.realpathSync(path.join(path.dirname(consumerResolution["markdownlint-cli"].minimatch), "dist/esm/index.js"));
+    demand(inside(path.join(root, "node_modules"), api), "CONSUMER_MODULE_OUTSIDE_ROOT");
+    callerSource.minimatch_esm_sha256 = digest(fs.readFileSync(api));
+    demand(callerSource.minimatch_esm_sha256 === "c2ac65e82b196476009b53e1939811c788cb001d910304c6108a1f665fac3c3d", "MINIMATCH_CALLER_API_SOURCE_CHANGED");
+    callerSource.constructor_lines = [116, 125];
+    callerSource.match_lines = [117, 126];
+  }
   return {
     root,
     kind,
+    markdown_cli_source: callerSource,
     consumer_resolution: consumerResolution,
     package_sha256: digest(fs.readFileSync(path.join(root, "package.json"))),
     lock_sha256: digest(fs.readFileSync(path.join(root, "package-lock.json"))),
@@ -213,7 +233,7 @@ function put(relative, bytes) {
 function testSource(id) {
   return `const assert = require('node:assert/strict');\ndescribe('fixture', function () { it(${JSON.stringify(id)}, function () { assert.equal(2 + 2, 4); if (process.env.MATCHER_PARALLEL === '1') assert.notEqual(process.env.MOCHA_WORKER_ID, undefined); }); });\n`;
 }
-function fixtures() {
+function fixtures(disabledRules) {
   put("package.json", '{"type":"commonjs","private":true}\n');
   const definitions = {
     "cases/basic/alpha.test.cjs": "alpha",
@@ -233,6 +253,9 @@ function fixtures() {
   put("markdown/good.md", "# Fixture heading\n\nA compact paragraph.\n");
   put("markdown/bad.md", "#Bad heading\n\n- first\n- second  \n\n## Lower heading\n\n# Fixture heading\n");
   put("markdown/space [one].md", "# Another heading\n\n\nText with  trailing spaces.  \n");
+  for (const file of MARKDOWN_CALLER_FILES) put(file, "#Bad heading\n");
+  put("markdown-caller/config.yaml", disabledRules.map((rule) => `${rule}: false\n`).join(""));
+  put("markdown-caller/config.toml", disabledRules.map((rule) => `${rule} = false\n`).join(""));
   return definitions;
 }
 function parseJSON(text, code) {
@@ -401,18 +424,32 @@ async function watchCase(bound) {
     if (failed) report.failed_process = receipt(child, await child.closed, true);
   }
 }
-async function markdownCase(bound, wrapper, disabledRules) {
+async function markdownCase(bound, wrapper, disabledRules, scenario) {
   report.active_installation = bound.kind;
   report.active_operation = "markdown-cli-fixture";
   delete report.active_fixture_pattern;
-  const files = ["markdown/good.md", "markdown/bad.md", "markdown/space [one].md"];
+  const files = scenario ? MARKDOWN_CALLER_FILES : ["markdown/good.md", "markdown/bad.md", "markdown/space [one].md"];
   const cli = path.join(bound.packages["markdownlint-cli"].directory, "markdownlint.js");
-  const child = await run(process.execPath, [cli, "--json", "--disable", ...disabledRules, "--", ...files], work, 25000, {}, [0, 1]);
+  const child = await run(process.execPath, [cli, "--json", ...(scenario?.args || []), "--disable", ...disabledRules, "--", ...files], work, 25000, {}, [0, 1]);
   const issues = wrapper.parseMarkdownlintResult({ status: child.receipt.exit, stdout: child.stdout, stderr: child.stderr });
-  demand(Array.isArray(issues) && issues.length > 0, "MARKDOWN_POSITIVE_FINDING_CONTROL");
+  demand(Array.isArray(issues), "MARKDOWN_FINDING_ARRAY_REQUIRED");
+  if (scenario) {
+    const selected = issues.map((issue) => {
+      demand(issue.ruleNames?.[0] === "MD018" && issue.lineNumber === 1 && typeof issue.fileName === "string", "MARKDOWN_POSITIVE_MD018_IDENTITY");
+      const absolute = path.resolve(work, issue.fileName);
+      demand(inside(work, absolute), "MARKDOWN_FILE_OUTSIDE_FIXTURE");
+      return path.relative(work, absolute).split(path.sep).join("/");
+    }).sort();
+    same(selected, [...scenario.expected].sort(), "MARKDOWN_EXPECTED_SELECTED_IDENTITIES");
+    demand(child.receipt.exit === (scenario.expected.length ? 1 : 0), "MARKDOWN_EXPECTED_EXIT");
+  } else demand(issues.length > 0, "MARKDOWN_POSITIVE_FINDING_CONTROL");
   const loader = (file) => fs.readFileSync(path.isAbsolute(file) ? file : path.join(work, file), "utf8");
-  const normalized = wrapper.createBaseline(files, issues, loader);
-  demand(normalized.filesScanned === files.length && normalized.disabledRules.length === disabledRules.length, "MARKDOWN_WRAPPER_SHAPE");
+  const selectedFiles = scenario ? scenario.expected : files;
+  const current = wrapper.createBaseline(selectedFiles, issues, loader);
+  demand(current.tool === "markdownlint-cli@0.50.0", "MARKDOWN_CURRENT_WRAPPER_PIN");
+  // Fingerprints use the unchanged shared algorithm; arm metadata uses observed --version.
+  const normalized = { ...current, tool: `markdownlint-cli@${bound.cli_version.observed}` };
+  demand(normalized.filesScanned === selectedFiles.length && normalized.disabledRules.length === disabledRules.length, "MARKDOWN_WRAPPER_SHAPE");
   return { normalized, process: child.receipt };
 }
 
@@ -421,17 +458,43 @@ async function main() {
   const baselineRoot = fs.realpathSync(args["--baseline-root"]);
   const candidateRoot = fs.realpathSync(args["--candidate-root"]);
   demand(baselineRoot !== candidateRoot, "DISTINCT_INSTALLED_ROOTS_REQUIRED");
+  deadline = Date.now() + WORK_MS;
+  const wrapperPath = path.join(candidateRoot, "scripts/check-markdownlint-baseline.cjs");
+  const baselinePath = path.join(candidateRoot, "audit/markdownlint-baseline.json");
+  const originalBaseline = fs.readFileSync(baselinePath);
+  const wrapperBytes = fs.readFileSync(wrapperPath);
+  // No package binding/execution until the actual census permits metadata alone.
+  for (const [bytes, current, previous, frozen] of [
+    [wrapperBytes, 'const expectedToolVersion = "0.50.0";', 'const expectedToolVersion = "0.49.1";', "81fb214c8d25cc65d2cf762a384b0882eeb83b1221505f213701332c5ef20c33"],
+    [originalBaseline, '  "tool": "markdownlint-cli@0.50.0",', '  "tool": "markdownlint-cli@0.49.1",', "6586e2b4c51aa86ce14660021c0eecc5c5c1d6d34758ca2e74e1aef6befa610c"],
+  ]) {
+    const text = bytes.toString("utf8");
+    demand(text.split(current).length === 2, "MARKDOWN_METADATA_UNBOUND");
+    demand(digest(text.replace(current, previous)) === frozen, "MARKDOWN_NON_METADATA_CHANGE");
+  }
   output = path.resolve(args["--output"]);
   demand(output !== baselineRoot && output !== candidateRoot, "OUTPUT_MUST_BE_OWNED_DIRECTORY");
   fs.mkdirSync(output, { recursive: true });
   demand(!fs.existsSync(path.join(output, "matcher-compat.json")), "REFUSE_EVIDENCE_OVERWRITE");
-  deadline = Date.now() + WORK_MS;
   work = fs.mkdtempSync(path.join(os.tmpdir(), "inferno-matcher-compat-"));
   report = { schema: "root-matcher-compat/v1", status: "RUNNING", limits: { total_work_ms: WORK_MS, own_child_output_bytes: OUTPUT_LIMIT }, checks, full_markdown_wrapper_gate: "REQUIRED_SEPARATELY_IN_DOCS_CI", full_contract_gate: "REQUIRED_SEPARATELY_IN_CONTRACT_CI", cleanup: "PENDING" };
+  const acceptedBaseline = parseJSON(originalBaseline, "MARKDOWN_BASELINE_JSON");
+  const wrapper = require(wrapperPath);
+  const disabledRules = wrapper.disabledRules;
+  demand(Array.isArray(disabledRules), "MARKDOWN_RULE_CONTRACT_MISSING");
+  same(disabledRules, acceptedBaseline.disabledRules, "MARKDOWN_ACCEPTED_RULES_CHANGED");
   const baseline = binding(baselineRoot, "baseline");
   const candidate = binding(candidateRoot, "candidate");
   report.bindings = { baseline, candidate, harness_sha256: digest(fs.readFileSync(__filename)) };
-  fixtures();
+  for (const bound of [baseline, candidate]) {
+    report.active_installation = bound.kind;
+    report.active_operation = "markdown-cli-version";
+    const cli = path.join(bound.packages["markdownlint-cli"].directory, "markdownlint.js");
+    const version = await run(process.execPath, [cli, "--version"], work, 25000);
+    demand(version.stdout.trim() === bound.packages["markdownlint-cli"].version && version.stderr.trim() === "", "MARKDOWN_OBSERVED_TOOL_VERSION");
+    bound.cli_version = { observed: version.stdout.trim(), process: version.receipt };
+  }
+  fixtures(disabledRules);
   const scenarios = [
     { id: "nested-default-dot", args: ["cases/**/*.test.cjs"], ids: ["alpha", "beta", "space-name", "bracket-name", "ignored"] },
     { id: "ignore-rule", args: ["cases/**/*.test.cjs", "--ignore", "**/ignored.test.cjs"], ids: ["alpha", "beta", "space-name", "bracket-name"] },
@@ -461,25 +524,35 @@ async function main() {
   const watchAfter = await watchCase(candidate);
   same(watchBefore, watchAfter, "WATCH_BASELINE_CANDIDATE_CHANGED");
   checks.push({ id: report.stage, status: "PASS", baseline: watchBefore, candidate: watchAfter });
-  report.stage = "markdown-cli-wrapper-fixture-fingerprints";
-  const wrapperPath = path.join(candidateRoot, "scripts/check-markdownlint-baseline.cjs");
-  const baselinePath = path.join(candidateRoot, "audit/markdownlint-baseline.json");
-  const originalBaseline = fs.readFileSync(baselinePath);
-  const wrapperBytes = fs.readFileSync(wrapperPath);
-  demand(digest(wrapperBytes) === "81fb214c8d25cc65d2cf762a384b0882eeb83b1221505f213701332c5ef20c33", "MARKDOWN_WRAPPER_SOURCE_CHANGED");
-  demand(digest(originalBaseline) === "6586e2b4c51aa86ce14660021c0eecc5c5c1d6d34758ca2e74e1aef6befa610c", "MARKDOWN_ACCEPTED_BASELINE_CHANGED");
-  const acceptedBaseline = parseJSON(originalBaseline, "MARKDOWN_BASELINE_JSON");
-  const wrapper = require(wrapperPath);
-  const disabledRules = wrapper.disabledRules;
-  demand(Array.isArray(disabledRules), "MARKDOWN_RULE_CONTRACT_MISSING");
-  same(disabledRules, acceptedBaseline.disabledRules, "MARKDOWN_ACCEPTED_RULES_CHANGED");
   report.markdown_owning_baseline = { files: acceptedBaseline.filesScanned, findings: acceptedBaseline.baselineIssues, tool: acceptedBaseline.tool, full_wrapper_result: "REQUIRED_SEPARATELY_IN_DOCS_CI" };
-  const markdownBefore = await markdownCase(baseline, wrapper, disabledRules);
-  const markdownAfter = await markdownCase(candidate, wrapper, disabledRules);
-  same(markdownBefore.normalized, markdownAfter.normalized, "MARKDOWN_FIXTURE_FINGERPRINTS_CHANGED");
-  demand(wrapper.compareBaseline(markdownBefore.normalized.fingerprints, markdownAfter.normalized.fingerprints).length === 0, "MARKDOWN_WRAPPER_COMPARISON_CHANGED");
+  const [keep, , , space, bracket, hidden] = MARKDOWN_CALLER_FILES;
+  const markdownScenarios = [
+    { id: "markdown-caller-positive-control", args: [], expected: MARKDOWN_CALLER_FILES },
+    { id: "markdown-caller-directory-ignore", args: ["--ignore", "markdown-caller/skip"], expected: [keep, space, bracket, hidden] },
+    { id: "markdown-caller-glob-ignore", args: ["--ignore", "markdown-caller/skip/**/*.md"], expected: [keep, space, bracket, hidden] },
+    { id: "markdown-caller-dot-default", args: ["--ignore", "markdown-caller/**/*.md"], expected: [hidden] },
+    { id: "markdown-caller-dot-on", args: ["--dot", "--ignore", "markdown-caller/**/*.md"], expected: [] },
+    { id: "markdown-caller-overlap-ignore", args: ["--ignore", "markdown-caller/skip", "markdown-caller/skip/**/*.md", "markdown-caller/space dir", "markdown-caller/bracket[[]one].md", "markdown-caller/**/absent*.md"], expected: [keep, hidden] },
+    { id: "markdown-caller-yaml", args: ["--config", "markdown-caller/config.yaml"], expected: MARKDOWN_CALLER_FILES },
+    { id: "markdown-caller-toml", args: ["--config", "markdown-caller/config.toml"], expected: MARKDOWN_CALLER_FILES },
+  ];
+  const semanticKeys = ["baselineIssues", "disabledRules", "filesScanned", "fingerprints", "schemaVersion", "tool"];
+  for (const scenario of [null, ...markdownScenarios]) {
+    report.stage = scenario?.id || "markdown-cli-wrapper-fixture-fingerprints";
+    const markdownBefore = await markdownCase(baseline, wrapper, disabledRules, scenario);
+    const markdownAfter = await markdownCase(candidate, wrapper, disabledRules, scenario);
+    same(Object.keys(markdownBefore.normalized).sort(), semanticKeys, "MARKDOWN_CLOSED_NORMALIZED_KEYS");
+    same(Object.keys(markdownAfter.normalized).sort(), semanticKeys, "MARKDOWN_CLOSED_NORMALIZED_KEYS");
+    for (const key of semanticKeys) {
+      if (key === "tool") same([markdownBefore.normalized.tool, markdownAfter.normalized.tool],
+        ["markdownlint-cli@0.49.1", "markdownlint-cli@0.50.0"], "MARKDOWN_OBSERVED_ARM_LABELS");
+      else same(markdownBefore.normalized[key], markdownAfter.normalized[key], "MARKDOWN_FIXTURE_FINGERPRINTS_CHANGED");
+    }
+    demand(wrapper.compareBaseline(markdownBefore.normalized.fingerprints, markdownAfter.normalized.fingerprints).length === 0, "MARKDOWN_WRAPPER_COMPARISON_CHANGED");
+    checks.push({ id: report.stage, status: "PASS", baseline: markdownBefore, candidate: markdownAfter,
+      ...(scenario ? { expected_selected_files: scenario.expected } : {}), wrapper_sha256: digest(fs.readFileSync(wrapperPath)), repository_baseline_sha256: digest(originalBaseline), repository_baseline_regenerated: false });
+  }
   same(digest(fs.readFileSync(baselinePath)), digest(originalBaseline), "REPOSITORY_MARKDOWN_BASELINE_MUTATED");
-  checks.push({ id: report.stage, status: "PASS", baseline: markdownBefore, candidate: markdownAfter, wrapper_sha256: digest(fs.readFileSync(wrapperPath)), repository_baseline_sha256: digest(originalBaseline), repository_baseline_regenerated: false });
   report.status = "PASS";
   delete report.stage;
   delete report.active_installation;

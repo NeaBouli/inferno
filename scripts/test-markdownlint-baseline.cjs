@@ -55,14 +55,14 @@ assert.throws(() => parseMarkdownlintResult({ status: 2, stdout: "", stderr: "us
 
 const generated = createBaseline(["README.md"], [fixture({ lineNumber: 3 })], sourceLoader);
 assert.equal(generated.schemaVersion, 2);
-assert.equal(generated.tool, "markdownlint-cli@0.49.1");
+assert.equal(generated.tool, "markdownlint-cli@0.50.0");
 assert.deepEqual(generated.disabledRules, disabledRules);
 assert.equal(generated.filesScanned, 1);
 assert.equal(generated.baselineIssues, 1);
 
-assert.equal(packageJson.devDependencies["markdownlint-cli"], "0.49.1");
+assert.equal(packageJson.devDependencies["markdownlint-cli"], "0.50.0");
 assert.equal(baseline.schemaVersion, 2);
-assert.equal(baseline.tool, "markdownlint-cli@0.49.1");
+assert.equal(baseline.tool, "markdownlint-cli@0.50.0", "UNBOUND until actual census approval");
 assert.deepEqual(baseline.disabledRules, disabledRules);
 assert.ok(baseline.filesScanned > 0);
 assert.ok(baseline.baselineIssues > 0, "historical findings must be represented honestly");
