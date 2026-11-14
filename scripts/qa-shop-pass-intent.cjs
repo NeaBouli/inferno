@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 'use strict';
 
-// Source correction only; a second hosted run requires fresh review/admission.
+// Parent admits one corrected second hosted run after independent source review.
 // The final helper004 test is bound below; 7a is not an executable alternative.
-const RUNTIME_ADMITTED = false;
+const RUNTIME_ADMITTED = true;
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
