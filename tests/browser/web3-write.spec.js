@@ -856,6 +856,89 @@ test("wallet chooser is the only initial connect surface on desktop, iPad and An
   }
 });
 
+for (const [width, height] of [[375, 812], [390, 844], [820, 1180], [1180, 820], [1440, 1000]]) {
+  test(`Web3 audience tabs preserve keyboard, ARIA and read-only behavior at ${width}x${height}`, async ({ browser }) => {
+    const { context, page, writes, pageErrors } = await preparePage(browser, {
+      contextOptions: { viewport: { width, height } },
+    });
+    const audiences = [
+      { key: "users", title: "Lock once. Use across the ecosystem.", copy: "IFRLock", actions: ["Access lock", "Commitment lock", "Withdraw offer", "Loans (borrowing closed)", "Buy IFR", "Use IFR Benefits", "Track pool"], hrefs: ["https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B", "https://shop.ifrunit.tech/", "https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0"] },
+      { key: "builders", title: "Add IFR-gated access to real products.", copy: "Builders should use the Wiki", actions: ["Integration guide", "Business onboarding", "Ecosystem"], hrefs: ["/wiki/integration.html", "/wiki/business-onboarding.html", "/wiki/ecosystem.html"] },
+      { key: "developers", title: "Verify the surface before integrating.", copy: "Developers should leave the user execution flow", actions: ["Smart contracts", "Integration guide", "Wallet guide"], hrefs: ["/wiki/contracts.html", "/wiki/integration.html", "/wiki/wallet-guide.html"] },
+      { key: "community", title: "A cleaner front door for the protocol.", copy: "Community members can use Web3", actions: ["Governance", "Signer expansion", "Transparency"], hrefs: ["/wiki/governance.html", "/wiki/community-signer-expansion.html", "/wiki/transparency.html"] },
+    ];
+    try {
+      await page.goto("/web3/", { waitUntil: "domcontentloaded" });
+      const tablist = page.locator('[role="tablist"][aria-label="Audience selector"]');
+      const tabs = tablist.locator('[role="tab"]');
+      const panel = page.locator('[role="tabpanel"][data-audience-panel]');
+      await expect(tabs).toHaveCount(4);
+      await expect(page.locator('[role="tabpanel"]')).toHaveCount(1);
+      for (const audience of audiences) {
+        await expect(page.locator(`#audience-tab-${audience.key}`)).toHaveCount(1);
+        await expect(page.locator(`#audience-tab-${audience.key}`)).toHaveAttribute("aria-controls", "audience-panel");
+      }
+      async function assertAudience(index, focused = true) {
+        const audience = audiences[index];
+        await expect(tablist.locator('[role="tab"][aria-selected="true"]')).toHaveCount(1);
+        await expect(tablist.locator('[role="tab"][tabindex="0"]')).toHaveCount(1);
+        for (let i = 0; i < audiences.length; i++) {
+          await expect(tabs.nth(i)).toHaveAttribute("aria-selected", String(i === index));
+          await expect(tabs.nth(i)).toHaveAttribute("tabindex", i === index ? "0" : "-1");
+        }
+        await expect(panel).toHaveAttribute("id", "audience-panel");
+        await expect(panel).toHaveAttribute("aria-labelledby", `audience-tab-${audience.key}`);
+        await expect(panel.locator("[data-audience-title]")).toHaveText(audience.title);
+        await expect(panel.locator("[data-audience-copy]")).toContainText(audience.copy);
+        await expect(panel.locator("[data-audience-list] li")).toHaveCount(3);
+        await expect(panel.locator("[data-audience-actions] > *")).toHaveText(audience.actions);
+        expect(await panel.locator("[data-audience-actions] a").evaluateAll((links) => links.map((link) => link.getAttribute("href")))).toEqual(audience.hrefs);
+        if (focused) await expect(tabs.nth(index)).toBeFocused();
+      }
+      await assertAudience(0, false);
+      await tabs.nth(1).click();
+      await assertAudience(1);
+      await tabs.nth(1).press("ArrowRight");
+      await assertAudience(2);
+      await tabs.nth(2).press("ArrowRight");
+      await assertAudience(3);
+      await tabs.nth(3).press("ArrowRight");
+      await assertAudience(0);
+      await tabs.nth(0).press("ArrowLeft");
+      await assertAudience(3);
+      await tabs.nth(3).press("Home");
+      await assertAudience(0);
+      await tabs.nth(0).press("End");
+      await assertAudience(3);
+      await tabs.nth(3).press("Tab");
+      await expect(panel.locator("[data-audience-actions] a").first()).toBeFocused();
+      await page.keyboard.press("Shift+Tab");
+      await expect(tabs.nth(3)).toBeFocused();
+      // A programmatic click isolates the handler from native pointer focus.
+      await tabs.nth(0).focus();
+      await tabs.nth(1).evaluate((tab) => tab.click());
+      await assertAudience(1, false);
+      await expect(tabs.nth(0)).toBeFocused();
+      await tabs.nth(2).focus();
+      await tabs.nth(2).press("Enter");
+      await assertAudience(2);
+      await tabs.nth(0).focus();
+      await tabs.nth(0).press("Space");
+      await assertAudience(0);
+      const requests = await page.evaluate(() => window.__web3RequestCounts);
+      for (const method of ["eth_accounts", "eth_requestAccounts", "personal_sign", "eth_sign", "eth_signTransaction", "eth_signTypedData", "eth_signTypedData_v3", "eth_signTypedData_v4", "eth_sendTransaction", "eth_sendRawTransaction", "wallet_switchEthereumChain", "wallet_watchAsset"]) {
+        expect(requests[method] ?? 0, `${method} must not be requested by audience selection`).toBe(0);
+      }
+      expect(writes).toEqual([]);
+      expect(await page.evaluate(() => window.IFRWallet.isConnected())).toBe(false);
+      await expect(page.locator('[data-wallet-chooser][aria-hidden="false"], [data-wallet-dialog][aria-hidden="false"], .protocol-dialog[aria-hidden="false"]')).toHaveCount(0);
+      expect(pageErrors).toEqual([]);
+    } finally {
+      await context.close();
+    }
+  });
+}
+
 test("Web3 header stays compact and non-overlapping before and after wallet connection", async ({ browser }) => {
   const surfaces = [
     { name: "desktop", contextOptions: { viewport: { width: 1280, height: 800 } } },

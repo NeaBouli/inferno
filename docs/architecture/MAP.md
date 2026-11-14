@@ -154,6 +154,12 @@ postcss-selector-parser, source-map-js) runs at build time on trusted CSS only.
 
 Web3 browser runtime trace (`docs/web3/index.html`, landing + wiki pages):
 
+Audience presentation sub-hop: `docs/web3/index.html` `[data-audience]`
+click/keydown -> `activateAudience` -> title/copy/list + `renderAudienceActions`.
+Selection updates the shared tabpanel label and roving tab stop synchronously;
+ArrowLeft/Right (wrapping) and Home/End move keyboard focus only. This existing
+presentation hop does not call the wallet/provider or execute its rendered actions.
+
 Issue #382 isolated diagnostic accepted on 2026-10-31
 ([PR #418](https://github.com/NeaBouli/inferno/pull/418);
 [CI2 run 41239848840](https://github.com/NeaBouli/inferno/actions/runs/41239848840)).
