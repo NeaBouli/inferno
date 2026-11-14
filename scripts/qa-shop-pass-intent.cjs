@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 'use strict';
 
-// Parent and independent source review admitted one focused hosted qualification.
+// Source correction only; a second hosted run requires fresh review/admission.
 // The final helper004 test is bound below; 7a is not an executable alternative.
-const RUNTIME_ADMITTED = true;
+const RUNTIME_ADMITTED = false;
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -33,7 +33,7 @@ const LOCK_INPUTS = [
 const MARKER = '[benefits-customer-pass-ui] PASS - create -> bind -> exact-offer proof redeems once';
 const LOG_CAP = 16 * 1024 * 1024;
 const DIAGNOSTIC_ERRORS = new Set(`
-  UNKNOWN_FAILURE DIAGNOSTIC_WRITE_FAILED FORMAT_HOLD BOOTSTRAP_FAILED NAMESPACE_EXIT_FAILURE CHILD_SIGNALLED
+  UNKNOWN_FAILURE DIAGNOSTIC_WRITE_FAILED FORMAT_HOLD BOOTSTRAP_FAILED NAMESPACE_EXIT_FAILURE CHILD_SIGNALLED ERR_UNKNOWN_SIGNAL
   ENOENT EACCES EPERM ENOSPC EEXIST EIO ENOMEM EROFS EISDIR ENOTDIR ESRCH EPIPE EINVAL ETIMEDOUT EADDRINUSE
   NO_ARBITRARY_ARGUMENTS HOST_TOOLCHAIN HOSTED_CI_ONLY PARENT_AND_INDEPENDENT_REVIEW_REQUIRED
   HELPER_DIGEST GIT_DATA_OPERATION_FAILED LOCK_SCHEMA LOCK_LINK NON_OFFICIAL_LOCK_RECORD
@@ -166,7 +166,9 @@ function signalGroup(id, signal) {
       insist(false, 'PRIVILEGED_SIGNAL_FAILED');
     }
   } else {
-    try { process.kill(-id, signal); } catch (error) { if (error.code !== 'ESRCH') throw error; }
+    const nodeSignal = signal === 'TERM' ? 'SIGTERM' : signal === 'KILL' ? 'SIGKILL' : null;
+    insist(nodeSignal !== null, 'ERR_UNKNOWN_SIGNAL');
+    try { process.kill(-id, nodeSignal); } catch (error) { if (error.code !== 'ESRCH') throw error; }
   }
 }
 async function reap(id, seen, namespaceExit = false) {
@@ -195,12 +197,17 @@ async function command(label, binary, args, milliseconds, cwd, env = cleanEnv(),
   let diagnosticStdout = '';
   let exit = { code: null, signal: null };
   let cleanup;
+  const cleanupErrors = [];
   let poll;
   let timer;
   let killing = false;
   const stop = code => {
     failure ||= code;
-    if (!killing) { killing = true; try { signalGroup(child.pid, 'KILL'); } catch { failure = 'SIGNAL_FAILED'; } }
+    if (!killing) {
+      killing = true;
+      try { signalGroup(child.pid, 'KILL'); }
+      catch (error) { cleanupErrors.push({ stage: 'SIGNAL', errorCode: diagnosticCode(error) }); }
+    }
   };
   const capture = (chunk, stdout) => {
     usedBytes += chunk.length;
@@ -232,10 +239,11 @@ async function command(label, binary, args, milliseconds, cwd, env = cleanEnv(),
     clearInterval(poll); clearTimeout(timer);
     if (child && owned.has(child.pid)) {
       try { cleanup = await reap(child.pid, seen, namespaceExit); }
-      catch (error) { failure = diagnosticCode(error); }
+      catch (error) { cleanupErrors.push({ stage: 'REAP', errorCode: diagnosticCode(error) }); }
     }
-    try { fs.closeSync(fd); } catch { failure = 'DIAGNOSTIC_WRITE_FAILED'; }
+    try { fs.closeSync(fd); } catch { cleanupErrors.push({ stage: 'LOG_CLOSE', errorCode: 'DIAGNOSTIC_WRITE_FAILED' }); }
   }
+  const primaryError = failure || (exit.code !== 0 || exit.signal !== null ? 'COMMAND_FAILED' : null);
   // No diagnostic I/O or exception can bypass the owned-process reap above.
   if (namespaceExit) {
     const receipt = namespaceDiagnostic(diagnosticStdout, exit);
@@ -245,11 +253,11 @@ async function command(label, binary, args, milliseconds, cwd, env = cleanEnv(),
       if (!receipt.retained) writeFailure('bootstrap-failure.json', receipt.stage, { code: receipt.errorCode }, receipt.exitCode);
     }
   }
-  const result = { label, ...exit, bytes: fs.statSync(log).size, sha256: digest(log), cleanup };
+  const result = { label, ...exit, bytes: fs.statSync(log).size, sha256: digest(log), primaryError, cleanup: cleanup || null, cleanupErrors };
   write(path.join(root, 'public', `${label}.json`), result);
-  if (failure || exit.code !== 0 || exit.signal !== null) {
-    const code = failure || 'COMMAND_FAILED';
-    throw Object.assign(new Error(code), { code, exitCode: diagnosticExit(exit.code) });
+  if (failure || primaryError || cleanupErrors.length) {
+    const code = failure || primaryError || cleanupErrors[0].errorCode;
+    throw Object.assign(new Error(code), { code, exitCode: diagnosticExit(exit.code), primaryError, cleanupErrors });
   }
   return { ...result, output };
 }
@@ -522,6 +530,8 @@ async function main() {
   mkdir(root);
   for (const name of ['public', 'raw', 'home', 'tmp', 'cache', 'browsers']) mkdir(path.join(root, name));
   let failure;
+  let primaryError = null;
+  const cleanupErrors = [];
   let complete = false;
   try {
     selfPin();
@@ -559,15 +569,25 @@ async function main() {
     complete = true;
   } catch (error) {
     failure = diagnosticCode(error);
+    primaryError = error.primaryError === null ? null : diagnosticCode({ code: error.primaryError || error.code });
+    for (const item of Array.isArray(error.cleanupErrors) ? error.cleanupErrors : []) {
+      cleanupErrors.push({
+        stage: ['SIGNAL', 'REAP', 'LOG_CLOSE'].includes(item?.stage) ? item.stage : 'UNKNOWN',
+        errorCode: diagnosticCode({ code: item?.errorCode }),
+      });
+    }
   } finally {
     const cleanup = [];
     for (const id of owned.keys()) {
       try { cleanup.push(await reap(id, descendants(id), true)); }
-      catch { failure = 'FINAL_CLEANUP_UNCERTAIN'; }
+      catch (error) {
+        cleanupErrors.push({ stage: 'FINAL_REAP', errorCode: diagnosticCode(error) });
+        failure ||= 'FINAL_CLEANUP_UNCERTAIN';
+      }
     }
-    write(path.join(root, 'public', 'result.json'), { schema: 'qa-shop-pass-intent-v1', state: complete && !failure ? 'FOCUSED_PASS_ONLY' : 'NOT_ACCEPTED', runtimeAdmitted: RUNTIME_ADMITTED, candidate: CANDIDATE, candidateTree: TARGET_TREE, patchSha256: PATCH_SHA256, failure: failure || null, outputBytes: usedBytes, cleanup, noW02Entry: true, noBackend: true, noProductionBuild: true, sourceReviewStillRequired: true });
+    write(path.join(root, 'public', 'result.json'), { schema: 'qa-shop-pass-intent-v1', state: complete && !failure && cleanupErrors.length === 0 ? 'FOCUSED_PASS_ONLY' : 'NOT_ACCEPTED', runtimeAdmitted: RUNTIME_ADMITTED, candidate: CANDIDATE, candidateTree: TARGET_TREE, patchSha256: PATCH_SHA256, failure: failure || null, primaryError, outputBytes: usedBytes, cleanup, cleanupErrors, noW02Entry: true, noBackend: true, noProductionBuild: true, sourceReviewStillRequired: true });
   }
-  insist(complete && !failure, failure || 'NOT_ACCEPTED');
+  insist(complete && !failure && cleanupErrors.length === 0, failure || 'NOT_ACCEPTED');
 }
 for (const name of ['SIGTERM', 'SIGINT']) process.on(name, () => {
   stopped = true;

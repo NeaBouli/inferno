@@ -1,6 +1,6 @@
 name: QA Shop Pass Intent
 
-# Inert final 5cb9a1d fixture; one Parent-admitted focused qualification.
+# Inert final 5cb9a1d fixture; correction gate OFF pending fresh review/admission.
 # No app/pass-suite source is changed by this QA branch.
 on:
   pull_request:
@@ -33,7 +33,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      QA_SHOP_HELPER_SHA256: 0b3b7c1f0722a4ae55b7df0cfa21b81962a474a0f32389ff6b40b7f982a39c87
+      QA_SHOP_HELPER_SHA256: fea04cd065a019c443ce75d3f555480573d186b1daca453237d4bbc572850ea9
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
