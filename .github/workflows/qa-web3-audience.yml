@@ -63,8 +63,8 @@ jobs:
           exit "$code"
       - name: Sanitized audience images and state, not visual approval
         if: always()
-        # HOLD: Parent must supply the already-reviewed literal artifact action SHA.
-        uses: actions/upload-artifact@UNBOUND_PARENT_PIN_REQUIRED
+        # v7.0.2; Parent reviewed official release, tag-ref commit and action.yml.
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: web3-audience-visual-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/web3-audience-${{ github.run_id }}-${{ github.run_attempt }}/out
