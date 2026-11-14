@@ -157,8 +157,8 @@ Web3 browser runtime trace (`docs/web3/index.html`, landing + wiki pages):
 Audience presentation sub-hop: `docs/web3/index.html` `[data-audience]`
 click/keydown -> `activateAudience` -> title/copy/list + `renderAudienceActions`.
 Selection updates the shared tabpanel label and roving tab stop synchronously;
-ArrowLeft/Right (wrapping) and Home/End move keyboard focus only. This existing
-presentation hop does not call the wallet/provider or execute its rendered actions.
+ArrowLeft/Right (wrapping) and Home/End auto-activate the target audience and move
+keyboard focus. This hop does not call the wallet/provider or execute rendered actions.
 
 Issue #382 isolated diagnostic accepted on 2026-10-31
 ([PR #418](https://github.com/NeaBouli/inferno/pull/418);

@@ -867,6 +867,33 @@ for (const [width, height] of [[375, 812], [390, 844], [820, 1180], [1180, 820],
       { key: "developers", title: "Verify the surface before integrating.", copy: "Developers should leave the user execution flow", actions: ["Smart contracts", "Integration guide", "Wallet guide"], hrefs: ["/wiki/contracts.html", "/wiki/integration.html", "/wiki/wallet-guide.html"] },
       { key: "community", title: "A cleaner front door for the protocol.", copy: "Community members can use Web3", actions: ["Governance", "Signer expansion", "Transparency"], hrefs: ["/wiki/governance.html", "/wiki/community-signer-expansion.html", "/wiki/transparency.html"] },
     ];
+    const initialUserItems = [
+      "Check wallet, IFR balance, and lock state.",
+      "Buy IFR on the live Uniswap V2 pool.",
+      "Use IFRLock for simple access or CommitmentVault for time tranches; LendingVault V1 new business is retired, while available-offer withdrawal and existing-loan repayment/top-up remain.",
+    ];
+    const audienceItems = {
+      users: [
+        "Use the access terminal for wallet, IFR balance, lock state, and token import.",
+        "Buy IFR on Uniswap or track the live pool without leaving the user flow.",
+        "Use IFRLock for simple access or CommitmentVault for time tranches; LendingVault V1 new business is retired, while available-offer withdrawal and existing-loan repayment/top-up remain.",
+      ],
+      builders: [
+        "Use verified Mainnet contracts as the source of truth.",
+        "Design product tiers around lock status and wallet proof.",
+        "Route builders to integration docs and business onboarding before implementation.",
+      ],
+      developers: [
+        "Check Etherscan-verified contracts.",
+        "Read the integration guide and wallet/contract guide.",
+        "Keep dynamic API usage explicit for web3.ifrunit.tech before shipping integrations.",
+      ],
+      community: [
+        "Understand what IFR does in one screen.",
+        "Find governance, signer expansion, and transparency references.",
+        "Share the dedicated Web3 URL for users and the Wiki for deeper context.",
+      ],
+    };
     try {
       await page.goto("/web3/", { waitUntil: "domcontentloaded" });
       const tablist = page.locator('[role="tablist"][aria-label="Audience selector"]');
@@ -878,7 +905,7 @@ for (const [width, height] of [[375, 812], [390, 844], [820, 1180], [1180, 820],
         await expect(page.locator(`#audience-tab-${audience.key}`)).toHaveCount(1);
         await expect(page.locator(`#audience-tab-${audience.key}`)).toHaveAttribute("aria-controls", "audience-panel");
       }
-      async function assertAudience(index, focused = true) {
+      async function assertAudience(index, focused = true, expectedItems = audienceItems[audiences[index].key]) {
         const audience = audiences[index];
         await expect(tablist.locator('[role="tab"][aria-selected="true"]')).toHaveCount(1);
         await expect(tablist.locator('[role="tab"][tabindex="0"]')).toHaveCount(1);
@@ -890,12 +917,12 @@ for (const [width, height] of [[375, 812], [390, 844], [820, 1180], [1180, 820],
         await expect(panel).toHaveAttribute("aria-labelledby", `audience-tab-${audience.key}`);
         await expect(panel.locator("[data-audience-title]")).toHaveText(audience.title);
         await expect(panel.locator("[data-audience-copy]")).toContainText(audience.copy);
-        await expect(panel.locator("[data-audience-list] li")).toHaveCount(3);
+        await expect(panel.locator("[data-audience-list] li")).toHaveText(expectedItems);
         await expect(panel.locator("[data-audience-actions] > *")).toHaveText(audience.actions);
         expect(await panel.locator("[data-audience-actions] a").evaluateAll((links) => links.map((link) => link.getAttribute("href")))).toEqual(audience.hrefs);
         if (focused) await expect(tabs.nth(index)).toBeFocused();
       }
-      await assertAudience(0, false);
+      await assertAudience(0, false, initialUserItems);
       await tabs.nth(1).click();
       await assertAudience(1);
       await tabs.nth(1).press("ArrowRight");
