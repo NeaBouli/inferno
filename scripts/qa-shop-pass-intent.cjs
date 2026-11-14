@@ -33,7 +33,7 @@ const LOCK_INPUTS = [
 const MARKER = '[benefits-customer-pass-ui] PASS - create -> bind -> exact-offer proof redeems once';
 const LOG_CAP = 16 * 1024 * 1024;
 const DIAGNOSTIC_ERRORS = new Set(`
-  UNKNOWN_FAILURE DIAGNOSTIC_WRITE_FAILED NAMESPACE_EXIT_FAILURE CHILD_SIGNALLED
+  UNKNOWN_FAILURE DIAGNOSTIC_WRITE_FAILED FORMAT_HOLD BOOTSTRAP_FAILED NAMESPACE_EXIT_FAILURE CHILD_SIGNALLED
   ENOENT EACCES EPERM ENOSPC EEXIST EIO ENOMEM EROFS EISDIR ENOTDIR ESRCH EPIPE EINVAL ETIMEDOUT EADDRINUSE
   NO_ARBITRARY_ARGUMENTS HOST_TOOLCHAIN HOSTED_CI_ONLY PARENT_AND_INDEPENDENT_REVIEW_REQUIRED
   HELPER_DIGEST GIT_DATA_OPERATION_FAILED LOCK_SCHEMA LOCK_LINK NON_OFFICIAL_LOCK_RECORD
@@ -47,13 +47,9 @@ const DIAGNOSTIC_ERRORS = new Set(`
   NAMESPACE_PORT_ALREADY_USED OUTER_DEADLINE SPAWN_FAILED UNOWNED_PROCESS_GROUP PROCESS_COUNT_CAP
   PRIVILEGED_SIGNAL_FAILED OWNED_PROCESS_REAP_UNCERTAIN CHILD_DEADLINE OUTPUT_CAP
   PROCESS_OBSERVATION_FAILED SIGNAL_FAILED COMMAND_FAILED PASS_FIXTURE_MARKER LISTENER_NOT_REAPED
+  PRELOAD_TARGET UNEXPECTED_BROWSER_OPTIONS CONTEXT_POLICY UNSANDBOXED_BROWSER
 `.trim().split(/\s+/));
-const BOOTSTRAP_MARKERS = new Map([
-  ['QA_SHOP_STAGE_BOOTSTRAP_PRIVATE', 'BOOTSTRAP_PRIVATE'],
-  ['QA_SHOP_STAGE_RO_MOUNT', 'RO_MOUNT'],
-  ['QA_SHOP_STAGE_TMP_SHM', 'TMP_SHM'],
-  ['QA_SHOP_STAGE_UID_DROP', 'UID_DROP'],
-]);
+const FAILURE_NAMES = ['bootstrap-failure.json', 'worker-failure.json', 'preload-failure.json'];
 const owned = new Map();
 let usedBytes = 0;
 let stopped = false;
@@ -68,14 +64,62 @@ function write(file, value) { fs.writeFileSync(file, `${JSON.stringify(value, nu
 function diagnosticCode(error) { return DIAGNOSTIC_ERRORS.has(error?.code) ? error.code : 'UNKNOWN_FAILURE'; }
 function diagnosticExit(code) { return Number.isInteger(code) && code >= 1 && code <= 255 ? code : 1; }
 function writeFailure(name, stage, error, exitCode) {
-  insist(name === 'bootstrap-failure.json' || name === 'worker-failure.json', 'DIAGNOSTIC_WRITE_FAILED');
-  const stages = new Set(['BOOTSTRAP_UNKNOWN', 'BOOTSTRAP_PRIVATE', 'RO_MOUNT', 'TMP_SHM', 'UID_DROP', 'WORKER']);
-  write(path.join(root, 'public', name), { stage: stages.has(stage) ? stage : 'BOOTSTRAP_UNKNOWN', errorCode: diagnosticCode(error), exitCode: diagnosticExit(exitCode) });
+  insist(FAILURE_NAMES.includes(name), 'DIAGNOSTIC_WRITE_FAILED');
+  const directory = path.join(root, 'public');
+  insist(process.getuid() !== 0 && fs.statSync(directory).uid === process.getuid(), 'DIAGNOSTIC_WRITE_FAILED');
+  const stages = new Set(['BOOTSTRAP_PRIVATE', 'RO_MOUNT', 'TMP_SHM', 'UID_DROP', 'WORKER', 'PRELOAD', 'DIAGNOSTIC']);
+  const receipt = stages.has(stage)
+    ? { stage, errorCode: diagnosticCode(error), exitCode: diagnosticExit(exitCode) }
+    : { stage: 'DIAGNOSTIC', errorCode: 'FORMAT_HOLD', exitCode: 1 };
+  const fd = fs.openSync(path.join(directory, name), 'wx', 0o600);
+  try {
+    const stat = fs.fstatSync(fd);
+    insist(stat.uid === process.getuid() && (stat.mode & 0o777) === 0o600, 'DIAGNOSTIC_WRITE_FAILED');
+    fs.writeFileSync(fd, `${JSON.stringify(receipt)}\n`);
+  } finally { fs.closeSync(fd); }
 }
-function bootstrapStage(output) {
-  let stage = 'BOOTSTRAP_UNKNOWN';
-  for (const line of output.split('\n')) if (BOOTSTRAP_MARKERS.has(line)) stage = BOOTSTRAP_MARKERS.get(line);
-  return stage;
+function failureNames() {
+  return FAILURE_NAMES.filter(name => {
+    try { fs.lstatSync(path.join(root, 'public', name)); return true; }
+    catch (error) { if (error.code === 'ENOENT') return false; throw error; }
+  });
+}
+function readOwnedFailure(name) {
+  let fd;
+  try {
+    fd = fs.openSync(path.join(root, 'public', name), fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW | fs.constants.O_NONBLOCK);
+    const stat = fs.fstatSync(fd);
+    if (!stat.isFile() || stat.nlink !== 1 || stat.uid !== process.getuid() || (stat.mode & 0o777) !== 0o600 || stat.size > 512) return null;
+    const bytes = Buffer.alloc(513);
+    const count = fs.readSync(fd, bytes, 0, bytes.length, 0);
+    if (count > 512) return null;
+    const value = JSON.parse(bytes.subarray(0, count).toString('utf8'));
+    if (!value || JSON.stringify(Object.keys(value).sort()) !== '["errorCode","exitCode","stage"]') return null;
+    const expected = name === 'worker-failure.json' ? 'WORKER' : name === 'preload-failure.json' ? 'PRELOAD' : null;
+    if (!expected || (value.stage !== expected && !(value.stage === 'DIAGNOSTIC' && value.errorCode === 'FORMAT_HOLD'))) return null;
+    return DIAGNOSTIC_ERRORS.has(value.errorCode) && diagnosticExit(value.exitCode) === value.exitCode ? value : null;
+  } catch { return null; }
+  finally { if (fd !== undefined) fs.closeSync(fd); }
+}
+function quarantineFailures(names) {
+  if (!names.length) return;
+  const directory = fs.mkdtempSync(path.join(root, 'raw', 'diagnostic-hold-'));
+  for (const name of names) fs.renameSync(path.join(root, 'public', name), path.join(directory, name));
+}
+function namespaceDiagnostic(stdout, exit) {
+  const names = failureNames();
+  const failed = exit.code !== 0 || exit.signal !== null;
+  if (stdout === '' && names.length === 0 && !failed) return null;
+  if (stdout === '' && names.length === 1 && failed) {
+    const value = readOwnedFailure(names[0]);
+    if (value) return { ...value, retained: true };
+  }
+  const match = /^QA_SHOP_DIAGNOSTIC\|(BOOTSTRAP_PRIVATE|RO_MOUNT|TMP_SHM|UID_DROP)\|BOOTSTRAP_FAILED\|([1-9][0-9]{0,2})\n$/.exec(stdout);
+  if (names.length === 0 && match?.[0] === stdout && failed && exit.signal === null && Number(match[2]) <= 255 && exit.code === Number(match[2])) {
+    return { stage: match[1], errorCode: 'BOOTSTRAP_FAILED', exitCode: Number(match[2]) };
+  }
+  quarantineFailures(names);
+  return { stage: 'DIAGNOSTIC', errorCode: 'FORMAT_HOLD', exitCode: 1 };
 }
 function digest(file) { return sha(fs.readFileSync(file)); }
 function mkdir(directory) { fs.mkdirSync(directory, { mode: 0o700 }); }
@@ -144,45 +188,63 @@ async function command(label, binary, args, milliseconds, cwd, env = cleanEnv(),
   insist(!stopped && Date.now() < endAt, 'OUTER_DEADLINE');
   const log = path.join(root, 'raw', `${label}.log`);
   const fd = fs.openSync(log, 'wx', 0o600);
-  const child = spawn(binary, args, { cwd, env, detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
-  insist(Number.isInteger(child.pid), 'SPAWN_FAILED');
-  owned.set(child.pid, true);
+  let child;
   const seen = new Map();
   let failure;
   let output = '';
+  let diagnosticStdout = '';
+  let exit = { code: null, signal: null };
+  let cleanup;
+  let poll;
+  let timer;
   let killing = false;
   const stop = code => {
     failure ||= code;
     if (!killing) { killing = true; try { signalGroup(child.pid, 'KILL'); } catch { failure = 'SIGNAL_FAILED'; } }
   };
-  const poll = setInterval(() => {
-    try { for (const [pid, item] of descendants(child.pid)) seen.set(pid, item); }
-    catch { stop('PROCESS_OBSERVATION_FAILED'); }
-  }, 50);
-  const timer = setTimeout(() => stop('CHILD_DEADLINE'), Math.min(milliseconds, endAt - Date.now()));
-  const capture = chunk => {
+  const capture = (chunk, stdout) => {
     usedBytes += chunk.length;
     if (usedBytes > LOG_CAP) { stop('OUTPUT_CAP'); return; }
-    fs.writeSync(fd, chunk);
+    try { fs.writeSync(fd, chunk); }
+    catch { stop('DIAGNOSTIC_WRITE_FAILED'); return; }
     output += chunk.toString('utf8');
+    if (namespaceExit && stdout && diagnosticStdout.length <= 256) diagnosticStdout += chunk.toString('utf8');
   };
-  child.stdout.on('data', capture); child.stderr.on('data', capture);
-  let exit;
   try {
+    child = spawn(binary, args, { cwd, env, detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
+    if (Number.isInteger(child.pid)) {
+      owned.set(child.pid, true);
+      poll = setInterval(() => {
+        try { for (const [pid, item] of descendants(child.pid)) seen.set(pid, item); }
+        catch { stop('PROCESS_OBSERVATION_FAILED'); }
+      }, 50);
+      timer = setTimeout(() => stop('CHILD_DEADLINE'), Math.min(milliseconds, endAt - Date.now()));
+    } else failure = 'SPAWN_FAILED';
+    child.stdout?.on('data', chunk => capture(chunk, true));
+    child.stderr?.on('data', chunk => capture(chunk, false));
     exit = await new Promise((resolve, reject) => {
-      child.once('error', reject);
+      child.once('error', error => { failure ||= diagnosticCode(error); });
       child.once('close', (code, signal) => resolve({ code, signal }));
     });
   } catch (error) {
-    if (namespaceExit) writeFailure('bootstrap-failure.json', bootstrapStage(output), error, 1);
-    throw error;
+    failure ||= diagnosticCode(error);
   } finally {
-    clearInterval(poll); clearTimeout(timer); fs.closeSync(fd);
+    clearInterval(poll); clearTimeout(timer);
+    if (child && owned.has(child.pid)) {
+      try { cleanup = await reap(child.pid, seen, namespaceExit); }
+      catch (error) { failure = diagnosticCode(error); }
+    }
+    try { fs.closeSync(fd); } catch { failure = 'DIAGNOSTIC_WRITE_FAILED'; }
   }
-  if (namespaceExit && (failure || exit.code !== 0 || exit.signal !== null)) {
-    writeFailure('bootstrap-failure.json', bootstrapStage(output), { code: failure || (exit.signal ? 'CHILD_SIGNALLED' : 'NAMESPACE_EXIT_FAILURE') }, exit.code);
+  // No diagnostic I/O or exception can bypass the owned-process reap above.
+  if (namespaceExit) {
+    const receipt = namespaceDiagnostic(diagnosticStdout, exit);
+    if (receipt) {
+      failure ||= receipt.errorCode;
+      if (receipt.errorCode === 'FORMAT_HOLD') failure = 'FORMAT_HOLD';
+      if (!receipt.retained) writeFailure('bootstrap-failure.json', receipt.stage, { code: receipt.errorCode }, receipt.exitCode);
+    }
   }
-  const cleanup = await reap(child.pid, seen, namespaceExit);
   const result = { label, ...exit, bytes: fs.statSync(log).size, sha256: digest(log), cleanup };
   write(path.join(root, 'public', `${label}.json`), result);
   if (failure || exit.code !== 0 || exit.signal !== null) {
@@ -375,7 +437,19 @@ async function worker() {
 const NAMESPACE_SCRIPT = String.raw`
 set -eu
 umask 077
-printf '%s\n' 'QA_SHOP_STAGE_BOOTSTRAP_PRIVATE'
+diagnostic_stage=BOOTSTRAP_PRIVATE
+bootstrap_exit() {
+  diagnostic_exit=$1
+  trap - 0
+  if [ "$diagnostic_exit" -ne 0 ]; then
+    case "$diagnostic_stage" in BOOTSTRAP_PRIVATE|RO_MOUNT|TMP_SHM|UID_DROP) ;; *) diagnostic_stage=BOOTSTRAP_UNKNOWN ;; esac
+    case "$diagnostic_exit" in ''|*[!0-9]*) diagnostic_exit=1 ;; esac
+    if [ "$diagnostic_exit" -lt 1 ] || [ "$diagnostic_exit" -gt 255 ]; then diagnostic_exit=1; fi
+    printf 'QA_SHOP_DIAGNOSTIC|%s|BOOTSTRAP_FAILED|%s\n' "$diagnostic_stage" "$diagnostic_exit"
+  fi
+  exit "$diagnostic_exit"
+}
+trap 'bootstrap_exit "$?"' 0
 test "$#" -eq 12
 test "$$" -eq 1
 uid=$1; gid=$2; runtime_path=$3; scratch=$4
@@ -393,7 +467,7 @@ exec 9< "$scratch"
 work_id=$(/usr/bin/awk '$1 == "mnt_id:" { print $2; found=1 } END { if (!found) exit 1 }' /proc/self/fdinfo/9)
 exec 9<&-
 test -n "$work_id"
-printf '%s\n' 'QA_SHOP_STAGE_RO_MOUNT'
+diagnostic_stage=RO_MOUNT
 /usr/bin/awk -v work="$work_id" '
   NR > 4096 || NF < 10 || $5 !~ /^\// || $5 ~ /\\/ { exit 1 }
   { for (i=7; i<=NF && $i!="-"; i++) if ($i ~ /^(shared|master|propagate_from):/) exit 1 }
@@ -408,7 +482,7 @@ done < "$scratch/read-only-mounts"
   $1 != work && ("," $6 ",") !~ /,ro,/ { exit 1 }
   $1 == work && ("," $6 ",") !~ /,rw,/ { exit 1 }
 ' /proc/self/mountinfo
-printf '%s\n' 'QA_SHOP_STAGE_TMP_SHM'
+diagnostic_stage=TMP_SHM
 /usr/bin/mount -o remount,bind,rw,nosuid,nodev "$scratch"
 /usr/bin/mount --bind "$scratch/tmp" /tmp
 /usr/bin/mount -o remount,bind,rw,nosuid,nodev /tmp
@@ -434,9 +508,9 @@ test "$(/usr/bin/stat -Lc '%d:%i' "$scratch/tmp")" = "$(/usr/bin/stat -Lc '%d:%i
   ("," $6 ",") !~ /,ro,/ { exit 1 }
   END { if (writable != 3) exit 1 }
 ' /proc/self/mountinfo
-printf '%s\n' 'QA_SHOP_STAGE_BOOTSTRAP_PRIVATE'
+diagnostic_stage=BOOTSTRAP_PRIVATE
 /usr/sbin/ip link set dev lo up
-printf '%s\n' 'QA_SHOP_STAGE_UID_DROP'
+diagnostic_stage=UID_DROP
 exec /usr/bin/setpriv --reuid="$uid" --regid="$gid" --clear-groups --bounding-set=-all --inh-caps=-all --ambient-caps=-all --no-new-privs /usr/bin/env -i PATH="$runtime_path" HOME="$scratch/home" TMPDIR="$scratch/tmp" LANG=C.UTF-8 CI=1 NEXT_TELEMETRY_DISABLED=1 BENEFITS_PASS_UI_PORT=3210 NEXT_PUBLIC_API_URL= NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID= PLAYWRIGHT_BROWSERS_PATH="$scratch/browsers" QA_SHOP_ROOT="$scratch" QA_SHOP_NONCE="$nonce" QA_SHOP_HELPER_SHA256="$helper_sha" "$node" "$helper" --namespace-worker
 `;
 async function main() {
@@ -499,11 +573,22 @@ for (const name of ['SIGTERM', 'SIGINT']) process.on(name, () => {
   stopped = true;
   for (const id of owned.keys()) { try { signalGroup(id, 'KILL'); } catch { /* Final receipt refuses uncertain cleanup. */ } }
 });
-if (require.main !== module) installBrowserPolicy();
+if (require.main !== module) {
+  try { installBrowserPolicy(); }
+  catch (error) {
+    try { writeFailure('preload-failure.json', 'PRELOAD', error, 1); } catch { /* Missing receipt is FORMAT_HOLD at the supervisor. */ }
+    process.exit(1);
+  }
+}
 else if (process.argv.length === 3 && process.argv[2] === '--namespace-worker') {
   worker().catch(error => {
-    try { writeFailure('worker-failure.json', 'WORKER', error, error?.exitCode); }
-    catch { process.stderr.write('{"stage":"WORKER","errorCode":"DIAGNOSTIC_WRITE_FAILED","exitCode":1}\n'); }
+    try {
+      const names = failureNames();
+      if (!(names.length === 1 && names[0] === 'preload-failure.json' && readOwnedFailure(names[0]))) {
+        quarantineFailures(names);
+        writeFailure('worker-failure.json', names.length ? 'DIAGNOSTIC' : 'WORKER', { code: names.length ? 'FORMAT_HOLD' : diagnosticCode(error) }, error?.exitCode);
+      }
+    } catch { /* Missing or invalid receipt becomes FORMAT_HOLD at the supervisor. */ }
     process.exitCode = 1;
   });
 } else main().catch(() => { console.error('[qa-shop-pass-intent] NOT_ACCEPTED; sanitized receipt only'); process.exitCode = 1; });
