@@ -17,6 +17,7 @@ const TARGET_TREE = 'd9a084b687b340a6ca2f746519920712a73aaed5';
 const PATCH_SHA256 = '552304e60d7b54fb45d4f06bc9e439d262b2d5b3d83a8e311b6d75aff9514616';
 const QA_PATHS = ['.github/workflows/qa-shop-pass-intent.yml', 'scripts/qa-shop-pass-intent.cjs', 'tests/fixtures/qa-shop-pass-intent-20261114.patch'];
 const FRONTEND = 'apps/benefits-network/frontend';
+const OMIT_ENV_TEMPLATES = [`${FRONTEND}/.env.example`, `${FRONTEND}/.env.local.example`];
 const PASS = 'scripts/test-benefits-customer-pass-ui.js';
 const FILES = [
   ['apps/benefits-network/frontend/src/components/CustomerCheckoutPass.tsx', 'dc7f9117a0d2c790dd24e243e01cfb35f913f10c', '4606c38561d5d7d35b56342f94c38060348c0fc5'],
@@ -186,13 +187,25 @@ function stage(repo) {
   for (const [file, , blob] of FILES) insist(git(repo, ['ls-files', '--stage', '--', file], env).toString().startsWith(`100644 ${blob} 0\t`), 'FINAL_BLOB_MISMATCH');
   const source = path.join(root, 'source'); mkdir(source);
   const inputs = [];
+  const omittedEnvironmentTemplates = [];
   const rows = git(repo, ['ls-files', '--stage', '-z'], env).toString().split('\0').filter(Boolean);
+  const selected = [];
   for (const row of rows) {
     const match = /^(100644|100755) ([a-f0-9]{40}) 0\t(.+)$/.exec(row);
     insist(match, 'UNSUPPORTED_GIT_ENTRY');
     const [, mode, blob, file] = match;
     if (!(file.startsWith(`${FRONTEND}/`) || FILES.some(item => item[0] === file) || LOCK_INPUTS.some(item => item[0] === file))) continue;
-    insist(!path.basename(file).startsWith('.env') && !file.includes('node_modules/') && !file.includes('/.next/'), 'UNEXPECTED_SOURCE_INPUT');
+    if (OMIT_ENV_TEMPLATES.includes(file)) {
+      insist(mode === '100644', 'ENV_TEMPLATE_MODE');
+      omittedEnvironmentTemplates.push({ path: file, blob });
+      continue;
+    }
+    insist(!file.split('/').some(part => part.startsWith('.env')) && !file.includes('node_modules/') && !file.includes('/.next/'), 'UNEXPECTED_SOURCE_INPUT');
+    selected.push({ mode, blob, file });
+  }
+  insist(omittedEnvironmentTemplates.length === 2 && OMIT_ENV_TEMPLATES.every(file => omittedEnvironmentTemplates.some(item => item.path === file)), 'ENV_TEMPLATE_PATH_SET');
+  // Only names and index blob IDs above are inspected for the two templates.
+  for (const { mode, blob, file } of selected) {
     const destination = path.resolve(source, file);
     insist(destination.startsWith(`${source}/`) && !file.split('/').includes('..'), 'SOURCE_PATH');
     fs.mkdirSync(path.dirname(destination), { recursive: true, mode: 0o700 });
@@ -203,7 +216,7 @@ function stage(repo) {
   officialLock(path.join(source, 'package-lock.json'));
   officialLock(path.join(source, FRONTEND, 'package-lock.json'));
   write(path.join(root, 'inputs.json'), inputs);
-  write(path.join(root, 'public', 'source.json'), { qaHead, base: BASE, baseTree: BASE_TREE, candidate: CANDIDATE, candidateTree: TARGET_TREE, patchSha256: PATCH_SHA256, files: FILES, inputs });
+  write(path.join(root, 'public', 'source.json'), { qaHead, base: BASE, baseTree: BASE_TREE, candidate: CANDIDATE, candidateTree: TARGET_TREE, patchSha256: PATCH_SHA256, files: FILES, omittedEnvironmentTemplates, inputs });
   return source;
 }
 function unchanged(source) {
@@ -212,15 +225,49 @@ function unchanged(source) {
     insist(fs.lstatSync(file).isFile() && digest(file) === item.sha256, 'TRACKED_INPUT_DRIFT');
   }
 }
+function mountId(directory) {
+  const fd = fs.openSync(directory, 'r');
+  try {
+    const match = /^mnt_id:\s+(\d+)$/m.exec(fs.readFileSync(`/proc/self/fdinfo/${fd}`, 'utf8'));
+    insist(match, 'MOUNT_ID_UNAVAILABLE');
+    return match[1];
+  } finally { fs.closeSync(fd); }
+}
+function assertWriteBoundary() {
+  const allowed = new Map([[mountId(root), root], [mountId('/tmp'), '/tmp'], [mountId('/dev/shm'), '/dev/shm']]);
+  insist(allowed.size === 3, 'SCRATCH_MOUNTS_NOT_DISTINCT');
+  const text = fs.readFileSync('/proc/self/mountinfo', 'utf8');
+  const rows = text.trim().split('\n');
+  insist(rows.length > 3 && rows.length <= 4096, 'MOUNT_COUNT');
+  let writable = 0;
+  for (const line of rows) {
+    const fields = line.split(' ');
+    const separator = fields.indexOf('-');
+    insist(separator >= 6 && fields[4].startsWith('/') && !fields[4].includes('\\'), 'MOUNTINFO_SHAPE');
+    insist(!fields.slice(6, separator).some(field => /^(shared|master|propagate_from):/.test(field)), 'MOUNT_PROPAGATION');
+    const options = new Set(fields[5].split(','));
+    if (allowed.has(fields[0])) {
+      insist(fields[4] === allowed.get(fields[0]) && options.has('rw') && !options.has('ro') && options.has('nosuid') && options.has('nodev'), 'SCRATCH_MOUNT_FLAGS');
+      if (fields[4] === '/dev/shm') insist(fields[separator + 1] === 'tmpfs' && options.has('noexec'), 'PRIVATE_SHM_FLAGS');
+      writable += 1;
+    } else insist(options.has('ro') && !options.has('rw'), 'HOST_MOUNT_WRITABLE');
+  }
+  const tmp = fs.statSync('/tmp');
+  const backing = fs.statSync(path.join(root, 'tmp'));
+  insist(writable === 3 && tmp.dev === backing.dev && tmp.ino === backing.ino, 'PRIVATE_TMP_BIND');
+  return { policy: 'T_AND_PRIVATE_TMP_SHM_ONLY', mountCount: rows.length, writableMountCount: writable, mountInfoSha256: sha(text), rootSetupVerifiedBeforeUidDrop: true, workerRevalidated: true };
+}
 function assertNamespace() {
   insist(process.platform === 'linux' && process.getuid() !== 0, 'RUNTIME_PRIVILEGE');
   const context = json(path.join(root, 'context.json'));
   insist(fs.readlinkSync('/proc/self/ns/net') !== context.hostNet && fs.readlinkSync('/proc/self/ns/pid') !== context.hostPid, 'NAMESPACE_NOT_ISOLATED');
+  insist(fs.readlinkSync('/proc/self/ns/mnt') !== context.hostMount && fs.readlinkSync('/proc/self/ns/ipc') !== context.hostIpc, 'MOUNT_IPC_NAMESPACE_NOT_ISOLATED');
   const status = fs.readFileSync('/proc/self/status', 'utf8');
   insist(/^NoNewPrivs:\s+1$/m.test(status) && /^CapEff:\s+0+$/m.test(status), 'CAPABILITIES_NOT_DROPPED');
   const devices = fs.readFileSync('/proc/net/dev', 'utf8').split('\n').filter(line => line.includes(':')).map(line => line.split(':')[0].trim());
   insist(devices.length === 1 && devices[0] === 'lo', 'NETWORK_INTERFACE_NOT_LOOPBACK_ONLY');
   insist(process.env.QA_SHOP_NONCE === context.nonce && process.getuid() === context.uid && process.getgid() === context.gid, 'WORKER_IDENTITY');
+  return assertWriteBoundary();
 }
 function listenPorts() {
   return ['tcp', 'tcp6'].flatMap(name => fs.readFileSync(`/proc/net/${name}`, 'utf8').trim().split('\n').slice(1)
@@ -264,7 +311,8 @@ function installBrowserPolicy() {
 }
 async function worker() {
   root = process.env.QA_SHOP_ROOT;
-  assertNamespace(); selfPin();
+  const writeBoundary = assertNamespace(); selfPin();
+  write(path.join(root, 'public', 'write-boundary.json'), writeBoundary);
   const context = json(path.join(root, 'context.json'));
   endAt = context.endAt;
   const source = path.join(root, 'source');
@@ -279,7 +327,70 @@ async function worker() {
   insist(listenPorts().length === 0, 'LISTENER_NOT_REAPED');
   write(path.join(root, 'public', 'runtime.json'), { candidate: CANDIDATE, candidateTree: TARGET_TREE, testBlob: FILES[1][2], marker: MARKER, markerObservedOnce: true, typecheckExit: 0, passExit: 0, port3210Closed: true, network: fs.readlinkSync('/proc/self/ns/net'), pidNamespace: fs.readlinkSync('/proc/self/ns/pid'), uid: process.getuid(), noNewPrivileges: true, productionBuild: 'NOT_RUN', backendReplay: 'NOT_PROVEN', physicalWallet: 'NOT_RUN', kernelReap: 'AWAIT_OUTER_NAMESPACE_EXIT' });
 }
-const NAMESPACE_SCRIPT = 'set -eu; test "$$" -eq 1; /usr/sbin/ip link set dev lo up; exec /usr/bin/setpriv --reuid="$1" --regid="$2" --clear-groups --bounding-set=-all --inh-caps=-all --ambient-caps=-all --no-new-privs /usr/bin/env -i PATH="$3" HOME="$4/home" TMPDIR="$4/tmp" LANG=C.UTF-8 CI=1 NEXT_TELEMETRY_DISABLED=1 BENEFITS_PASS_UI_PORT=3210 NEXT_PUBLIC_API_URL= NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID= PLAYWRIGHT_BROWSERS_PATH="$4/browsers" QA_SHOP_ROOT="$4" QA_SHOP_NONCE="$5" QA_SHOP_HELPER_SHA256="$6" "$7" "$8" --namespace-worker';
+// All remounts use per-mount bind flags inside the private namespace, never a
+// superblock/global-host remount. Unsupported mount topology is a hard refusal.
+const NAMESPACE_SCRIPT = String.raw`
+set -eu
+umask 077
+test "$#" -eq 12
+test "$$" -eq 1
+uid=$1; gid=$2; runtime_path=$3; scratch=$4
+nonce=$5; helper_sha=$6; node=$7; helper=$8
+shift 8
+test "$(/usr/bin/readlink /proc/self/ns/mnt)" != "$1"
+test "$(/usr/bin/readlink /proc/self/ns/net)" != "$2"
+test "$(/usr/bin/readlink /proc/self/ns/pid)" != "$3"
+test "$(/usr/bin/readlink /proc/self/ns/ipc)" != "$4"
+test "$(/usr/bin/readlink -e "$scratch")" = "$scratch"
+test "$(/usr/bin/readlink -e "$scratch/tmp")" = "$scratch/tmp"
+/usr/bin/mount --make-rprivate /
+/usr/bin/mount --bind "$scratch" "$scratch"
+exec 9< "$scratch"
+work_id=$(/usr/bin/awk '$1 == "mnt_id:" { print $2; found=1 } END { if (!found) exit 1 }' /proc/self/fdinfo/9)
+exec 9<&-
+test -n "$work_id"
+/usr/bin/awk -v work="$work_id" '
+  NR > 4096 || NF < 10 || $5 !~ /^\// || $5 ~ /\\/ { exit 1 }
+  { for (i=7; i<=NF && $i!="-"; i++) if ($i ~ /^(shared|master|propagate_from):/) exit 1 }
+  $1 == work && ("," $6 ",") ~ /,noexec,/ { exit 1 }
+  $1 != work && ("," $6 ",") ~ /,rw,/ { print length($5), $5 }
+' /proc/self/mountinfo > "$scratch/read-only-mounts.unsorted"
+/usr/bin/sort -rn "$scratch/read-only-mounts.unsorted" > "$scratch/read-only-mounts"
+while IFS=' ' read -r length target; do
+  /usr/bin/mount -o remount,bind,ro "$target"
+done < "$scratch/read-only-mounts"
+/usr/bin/awk -v work="$work_id" '
+  $1 != work && ("," $6 ",") !~ /,ro,/ { exit 1 }
+  $1 == work && ("," $6 ",") !~ /,rw,/ { exit 1 }
+' /proc/self/mountinfo
+/usr/bin/mount -o remount,bind,rw,nosuid,nodev "$scratch"
+/usr/bin/mount --bind "$scratch/tmp" /tmp
+/usr/bin/mount -o remount,bind,rw,nosuid,nodev /tmp
+/usr/bin/mount -t tmpfs -o rw,nosuid,nodev,noexec,size=256m,mode=1777 qa-shop-pass-shm /dev/shm
+exec 8< /tmp
+tmp_id=$(/usr/bin/awk '$1 == "mnt_id:" { print $2; found=1 } END { if (!found) exit 1 }' /proc/self/fdinfo/8)
+exec 8<&-
+exec 7< /dev/shm
+shm_id=$(/usr/bin/awk '$1 == "mnt_id:" { print $2; found=1 } END { if (!found) exit 1 }' /proc/self/fdinfo/7)
+exec 7<&-
+test -n "$tmp_id"; test -n "$shm_id"
+test "$work_id" != "$tmp_id"; test "$work_id" != "$shm_id"; test "$tmp_id" != "$shm_id"
+test "$(/usr/bin/stat -Lc '%d:%i' "$scratch/tmp")" = "$(/usr/bin/stat -Lc '%d:%i' /tmp)"
+/usr/bin/awk -v work="$work_id" -v tmp="$tmp_id" -v shm="$shm_id" -v scratch="$scratch" '
+  NR > 4096 || NF < 10 || $5 !~ /^\// || $5 ~ /\\/ { exit 1 }
+  { for (i=7; i<=NF && $i!="-"; i++) if ($i ~ /^(shared|master|propagate_from):/) exit 1 }
+  $1 == work || $1 == tmp || $1 == shm {
+    if (($1 == work && $5 != scratch) || ($1 == tmp && $5 != "/tmp") || ($1 == shm && $5 != "/dev/shm")) exit 1
+    if (("," $6 ",") !~ /,rw,/ || ("," $6 ",") !~ /,nosuid,/ || ("," $6 ",") !~ /,nodev,/) exit 1
+    if ($1 == shm && (("," $6 ",") !~ /,noexec,/ || $(i+1) != "tmpfs")) exit 1
+    writable++; next
+  }
+  ("," $6 ",") !~ /,ro,/ { exit 1 }
+  END { if (writable != 3) exit 1 }
+' /proc/self/mountinfo
+/usr/sbin/ip link set dev lo up
+exec /usr/bin/setpriv --reuid="$uid" --regid="$gid" --clear-groups --bounding-set=-all --inh-caps=-all --ambient-caps=-all --no-new-privs /usr/bin/env -i PATH="$runtime_path" HOME="$scratch/home" TMPDIR="$scratch/tmp" LANG=C.UTF-8 CI=1 NEXT_TELEMETRY_DISABLED=1 BENEFITS_PASS_UI_PORT=3210 NEXT_PUBLIC_API_URL= NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID= PLAYWRIGHT_BROWSERS_PATH="$scratch/browsers" QA_SHOP_ROOT="$scratch" QA_SHOP_NONCE="$nonce" QA_SHOP_HELPER_SHA256="$helper_sha" "$node" "$helper" --namespace-worker
+`;
 async function main() {
   insist(process.argv.length === 2, 'NO_ARBITRARY_ARGUMENTS');
   insist(process.platform === 'linux' && process.arch === 'x64' && process.version === 'v22.22.2' && process.getuid() !== 0, 'HOST_TOOLCHAIN');
@@ -307,7 +418,7 @@ async function main() {
     const versions = [[source, 'playwright', '1.64.1'], [source, 'axe-core', '4.14.0'], [path.join(source, FRONTEND), 'next', '15.5.28'], [path.join(source, FRONTEND), 'typescript', '5.9.3']];
     for (const [cwd, name, expected] of versions) insist(json(path.join(cwd, 'node_modules', name, 'package.json')).version === expected, 'INSTALLED_VERSION_MISMATCH');
     await command('chromium-install', process.execPath, [path.join(source, 'node_modules/playwright/cli.js'), 'install', '--with-deps', 'chromium'], 180_000, source);
-    const utilities = ['/usr/bin/sudo', '/usr/bin/unshare', '/usr/bin/setpriv', '/usr/sbin/ip', '/bin/sh', '/bin/kill', '/usr/bin/env'];
+    const utilities = ['/usr/bin/sudo', '/usr/bin/unshare', '/usr/bin/setpriv', '/usr/sbin/ip', '/bin/sh', '/bin/kill', '/usr/bin/env', '/usr/bin/mount', '/usr/bin/awk', '/usr/bin/sort', '/usr/bin/stat', '/usr/bin/readlink'];
     const tools = utilities.map(file => {
       const resolved = fs.realpathSync(file);
       const stat = fs.statSync(resolved);
@@ -317,10 +428,10 @@ async function main() {
     insist(digest(process.execPath) === nodeSha, 'NODE_EXECUTABLE_DRIFT');
     unchanged(source); selfPin();
     write(path.join(root, 'public', 'tools.json'), { node: process.version, nodeSha256: nodeSha, npm: npmVersion, tools, versions: versions.map(([, name, version]) => ({ name, version })), browserManifestSha256: digest(path.join(source, 'node_modules/playwright-core/browsers.json')) });
-    const context = { uid: process.getuid(), gid: process.getgid(), hostNet: fs.readlinkSync('/proc/self/ns/net'), hostPid: fs.readlinkSync('/proc/self/ns/pid'), nonce: crypto.randomBytes(24).toString('hex'), endAt };
+    const context = { uid: process.getuid(), gid: process.getgid(), hostNet: fs.readlinkSync('/proc/self/ns/net'), hostPid: fs.readlinkSync('/proc/self/ns/pid'), hostMount: fs.readlinkSync('/proc/self/ns/mnt'), hostIpc: fs.readlinkSync('/proc/self/ns/ipc'), nonce: crypto.randomBytes(24).toString('hex'), endAt };
     write(path.join(root, 'context.json'), context);
     privileged = true;
-    await command('namespace', '/usr/bin/sudo', ['-n', '/usr/bin/unshare', '--mount', '--net', '--pid', '--fork', '--mount-proc', '--kill-child=SIGKILL', '/bin/sh', '-c', NAMESPACE_SCRIPT, 'qa-shop-pass-intent', String(context.uid), String(context.gid), cleanEnv().PATH, root, context.nonce, process.env.QA_SHOP_HELPER_SHA256, process.execPath, __filename], 670_000, source, cleanEnv(), true);
+    await command('namespace', '/usr/bin/sudo', ['-n', '/usr/bin/unshare', '--mount', '--net', '--ipc', '--pid', '--fork', '--mount-proc', '--kill-child=SIGKILL', '/bin/sh', '-c', NAMESPACE_SCRIPT, 'qa-shop-pass-intent', String(context.uid), String(context.gid), cleanEnv().PATH, root, context.nonce, process.env.QA_SHOP_HELPER_SHA256, process.execPath, __filename, context.hostMount, context.hostNet, context.hostPid, context.hostIpc], 670_000, source, cleanEnv(), true);
     insist(json(path.join(root, 'public', 'runtime.json')).markerObservedOnce === true, 'RUNTIME_RECEIPT_MISSING');
     unchanged(source);
     complete = true;
