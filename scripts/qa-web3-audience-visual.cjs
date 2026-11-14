@@ -124,14 +124,20 @@ async function namespace() {
     try { const status = fs.readFileSync('/proc/' + pid + '/status', 'utf8'); return [{ pid: Number(pid), state: /^State:\s+(\w)/m.exec(status)?.[1], rss: Number(/^VmRSS:\s+(\d+)/m.exec(status)?.[1] || 0) * 1024 }]; } catch { return []; }
   });
   const signalAll = signal => { for (const p of processes()) try { process.kill(p.pid, signal); } catch (e) { if (e.code !== 'ESRCH') throw e; } };
-  const stop = reason => { failure ||= reason; signalAll('SIGTERM'); };
+  let killTimer;
+  const stop = reason => {
+    failure ||= reason;
+    if (killTimer !== undefined) return;
+    killTimer = setTimeout(() => signalAll('SIGKILL'), 2000);
+    signalAll('SIGTERM');
+  };
   for (const stream of [child.stdout, child.stderr]) stream.on('data', b => { cap += b.length; if (cap > 2 * 1024 * 1024) stop('LOG_CAP'); });
   const timer = setTimeout(() => stop('RUNTIME_DEADLINE'), 180000);
   const monitor = setInterval(() => { const p = processes(); const rss = p.reduce((n, x) => n + x.rss, 0); maxRSS = Math.max(maxRSS, rss); if (rss > 2 * 1024 ** 3 || p.length > 128) stop('RESOURCE_CAP'); }, 500);
   process.once('SIGTERM', () => stop('OUTER_TERM'));
   process.once('SIGINT', () => stop('OUTER_INT'));
-  const code = await new Promise(resolve => { child.once('error', () => { failure ||= 'CHILD_SPAWN'; resolve(2); }); child.once('close', (c, s) => resolve(s ? 2 : c)); });
-  clearTimeout(timer); clearInterval(monitor);
+  const code = await new Promise(resolve => { child.once('error', () => stop('CHILD_SPAWN')); child.once('close', (c, s) => resolve(s ? 2 : c)); });
+  clearTimeout(timer); clearTimeout(killTimer); clearInterval(monitor);
   signalAll('SIGTERM'); await new Promise(r => setTimeout(r, 2000)); signalAll('SIGKILL');
   const remaining = processes();
   for (const dir of ['tmp', 'home', 'shm']) for (const name of fs.readdirSync(path.join(T, dir))) fs.rmSync(path.join(T, dir, name), { recursive: true, force: true });
@@ -158,7 +164,7 @@ async function runtime() {
   const allowed = new Map(prepared.docs.map(r => [r.name.slice(5), r]));
   const types = { '.html': 'text/html; charset=utf-8', '.js': 'application/javascript', '.mjs': 'application/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml', '.webmanifest': 'application/manifest+json' };
   let server, browser, context, port, failed = null, outputBytes = 0;
-  const observations = [], resources = [], blocked = [], pageErrors = [], effects = [];
+  const observations = [], focusObservations = [], resources = [], blocked = [], pageErrors = [], effects = [];
   try {
     server = http.createServer((req, res) => {
       if (!['GET', 'HEAD'].includes(req.method)) { res.writeHead(405).end(); return; }
@@ -199,6 +205,59 @@ async function runtime() {
       assert.deepEqual(await page.evaluate(() => [innerWidth, innerHeight, devicePixelRatio, typeof window.ethereum, localStorage.length, sessionStorage.length]), [width, height, 1, 'undefined', 0, 0]);
       const tabs = page.locator('[role="tablist"][aria-label="Audience selector"] [role="tab"]'), panel = page.locator('#audience-panel');
       check(await tabs.count() === 4 && await page.locator('[role="tabpanel"]').count() === 1, 'AUDIENCE_STRUCTURE');
+      const region = page.locator('#use-cases > .shell');
+      const observeScope = () => region.evaluate(root => {
+        const box = e => { const b = e.getBoundingClientRect(); return { left: b.left, right: b.right, top: b.top, bottom: b.bottom, width: b.width, height: b.height }; };
+        const topbar = box(document.querySelector('.topbar')), heading = box(root.querySelector('.section-head')), tablist = box(root.querySelector('.audience-tabs')), panel = box(root.querySelector('#audience-panel'));
+        const texts = [...root.querySelectorAll('button,a,h2,h3,p,li')], canvas = new OffscreenCanvas(1, 1), ctx = canvas.getContext('2d');
+        const color = value => { ctx.clearRect(0, 0, 1, 1); ctx.fillStyle = value; ctx.fillRect(0, 0, 1, 1); const c = [...ctx.getImageData(0, 0, 1, 1).data]; c[3] /= 255; return c; };
+        const over = (a, b) => { const alpha = a[3] + b[3] * (1 - a[3]); return [...a.slice(0, 3).map((v, i) => alpha ? (v * a[3] + b[i] * b[3] * (1 - a[3])) / alpha : 0), alpha]; };
+        const background = e => {
+          let value = [0, 0, 0, 0];
+          for (let n = e; n; n = n.parentElement) {
+            const s = getComputedStyle(n);
+            if (s.backgroundImage !== 'none' || Number(s.opacity) !== 1) throw new Error('UNSUPPORTED_CONTRAST_COMPOSITE');
+            value = over(value, color(s.backgroundColor));
+            if (value[3] === 1) return value;
+          }
+          throw new Error('UNKNOWN_CANVAS_BACKGROUND');
+        };
+        const luminance = c => c.slice(0, 3).map(v => v / 255).map(v => v <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4).reduce((n, v, i) => n + v * [0.2126, 0.7152, 0.0722][i], 0);
+        const contrast = (a, b) => (Math.max(luminance(a), luminance(b)) + 0.05) / (Math.min(luminance(a), luminance(b)) + 0.05);
+        const normalContrast = [], lines = [], occluded = [];
+        for (const e of texts) {
+          const s = getComputedStyle(e), b = box(e), bg = background(e), fg = over(color(s.color), bg), range = document.createRange();
+          range.selectNodeContents(e);
+          const rects = [...range.getClientRects()].filter(r => r.width > 0 && r.height > 0);
+          const minimum = parseFloat(s.fontSize) >= 24 || parseFloat(s.fontSize) >= 18.667 && Number(s.fontWeight) >= 700 ? 3 : 4.5;
+          normalContrast.push({ tag: e.tagName, text: e.textContent.trim().slice(0, 100), foreground: fg, background: bg, ratio: contrast(fg, bg), minimum });
+          for (const r of rects) {
+            lines.push({ fits: r.left >= b.left - 1 && r.right <= b.right + 1 && r.top >= b.top - 1 && r.bottom <= b.bottom + 1, belowNav: r.top >= topbar.bottom, left: r.left, right: r.right, top: r.top, bottom: r.bottom });
+            if (r.bottom > 0 && r.top < innerHeight && r.right > 0 && r.left < innerWidth) {
+              const y = (Math.max(0, r.top) + Math.min(innerHeight, r.bottom)) / 2;
+              for (const x of [Math.max(0, r.left) + 0.5, (Math.max(0, r.left) + Math.min(innerWidth, r.right)) / 2, Math.min(innerWidth, r.right) - 0.5]) {
+                const hit = document.elementFromPoint(x, y);
+                if (!hit || hit !== e && !e.contains(hit)) occluded.push({ tag: e.tagName, x, y });
+              }
+            }
+          }
+        }
+        const active = document.activeElement;
+        let focus = null;
+        if (root.contains(active)) {
+          const s = getComputedStyle(active), bg = background(active), adjacent = parseFloat(s.outlineOffset) < 0 ? bg : background(active.parentElement), ink = color(s.outlineColor);
+          focus = { id: active.id, tag: active.tagName, focusVisible: active.matches(':focus-visible'), outlineStyle: s.outlineStyle, outlineWidth: parseFloat(s.outlineWidth), outlineOffset: parseFloat(s.outlineOffset), outlineAlpha: ink[3], ringContrast: contrast(over(ink, adjacent), adjacent), textContrast: contrast(over(color(s.color), bg), bg) };
+        }
+        return { overflow: document.documentElement.scrollWidth > innerWidth + 1, panelBelowTabs: panel.top >= tablist.bottom, navAboveTabs: tablist.top >= topbar.bottom, headingBeforeTabs: heading.bottom <= tablist.top + 1, scopeBelowNav: box(root).top >= topbar.bottom, textFits: lines.length > 0 && lines.every(r => r.fits), allTextBelowNav: lines.every(r => r.belowNav), occluded, targets: [...root.querySelectorAll('button,a')].map(box), normalContrast, focus, topbar, heading, tablist, panel, scope: box(root), scrollY, viewport: { width: innerWidth, height: innerHeight }, lineCount: lines.length };
+      });
+      const geometryPass = layout => !layout.overflow && layout.panelBelowTabs && layout.navAboveTabs && layout.headingBeforeTabs && layout.scopeBelowNav && layout.textFits && layout.allTextBelowNav && layout.occluded.length === 0;
+      const assertContrast = layout => check(layout.normalContrast.every(c => c.ratio >= c.minimum), 'NORMAL_OR_FOCUSED_TEXT_CONTRAST');
+      const assertKeyboardFocus = async (observed = null) => {
+        const layout = observed || await observeScope(), f = layout.focus;
+        assertContrast(layout);
+        check(f && f.focusVisible && f.outlineWidth >= 1 && !['none', 'hidden'].includes(f.outlineStyle) && f.outlineAlpha > 0 && f.ringContrast >= 3 && f.textContrast >= 4.5, 'VISIBLE_KEYBOARD_FOCUS');
+        focusObservations.push({ viewport: { width, height }, ...f, nativeOutlineEvidence: true });
+      };
       const assertAudience = async (index, focused = true, initial = false) => {
         const data = AUDIENCES[index];
         const state = await page.evaluate(() => ({ selected: [...document.querySelectorAll('[role="tab"]')].map(t => [t.id, t.getAttribute('aria-selected'), t.tabIndex, t.getAttribute('aria-controls')]), label: document.querySelector('#audience-panel').getAttribute('aria-labelledby'), title: document.querySelector('[data-audience-title]').textContent.trim(), copy: document.querySelector('[data-audience-copy]').textContent, items: [...document.querySelectorAll('[data-audience-list] li')].map(n => n.textContent.trim()), actions: [...document.querySelector('[data-audience-actions]').children].map(n => n.textContent.trim()), hrefs: [...document.querySelectorAll('[data-audience-actions] a')].map(n => n.getAttribute('href')), focus: document.activeElement.id }));
@@ -211,14 +270,15 @@ async function runtime() {
       await assertAudience(0, false, true);
       for (let i = 0; i < 4; i++) {
         await tabs.nth(i).click(); await assertAudience(i);
+        await page.keyboard.press('ArrowRight'); await assertAudience((i + 1) % 4);
+        await page.keyboard.press('ArrowLeft'); await assertAudience(i); await assertKeyboardFocus();
         await page.evaluate(async () => { await document.fonts.ready; });
-        const layout = await page.locator('#use-cases > .shell').evaluate(root => {
-          const box = e => { const b = e.getBoundingClientRect(); return { left: b.left, right: b.right, top: b.top, bottom: b.bottom, width: b.width, height: b.height }; };
-          const topbar = document.querySelector('.topbar'), tablist = root.querySelector('.audience-tabs'), panel = root.querySelector('#audience-panel');
-          const texts = [...root.querySelectorAll('button,a,h2,h3,p,li')];
-          return { overflow: document.documentElement.scrollWidth > innerWidth + 1, panelBelowTabs: box(panel).top >= box(tablist).bottom, navAboveTabs: box(tablist).top >= box(topbar).bottom, targets: [...root.querySelectorAll('button,a')].map(e => box(e)), textFits: texts.every(e => { const r = document.createRange(); r.selectNodeContents(e); const p = box(e); return [...r.getClientRects()].every(b => b.left >= p.left - 1 && b.right <= p.right + 1); }) };
+        await region.evaluate(root => {
+          const nav = document.querySelector('.topbar').getBoundingClientRect();
+          window.scrollBy({ top: root.getBoundingClientRect().top - nav.bottom - 12, behavior: 'instant' });
         });
-        check(!layout.overflow && layout.panelBelowTabs && layout.navAboveTabs && layout.textFits, 'AUDIENCE_LAYOUT');
+        const layout = await observeScope();
+        check(geometryPass(layout), 'AUDIENCE_LAYOUT'); assertContrast(layout);
         check(layout.targets.every(b => b.width >= 44 && b.height >= 44), 'TARGET_44');
         await cdp.send('DOM.enable'); await cdp.send('CSS.enable');
         const doc = await cdp.send('DOM.getDocument'); const renderedFonts = [];
@@ -228,25 +288,31 @@ async function runtime() {
           check(used.some(f => f.isCustomFont && f.glyphCount > 0), 'CUSTOM_FONT_REQUIRED');
           renderedFonts.push({ selector, fonts: used.map(f => ({ familyName: f.familyName, isCustomFont: f.isCustomFont, glyphCount: f.glyphCount })) });
         }
-        const region = page.locator('#use-cases > .shell'), bounds = await region.boundingBox();
+        const bounds = await region.boundingBox();
         const png = await region.screenshot({ type: 'png', animations: 'disabled' });
+        const afterCapture = await observeScope();
         check(png.length < 4 * 1024 * 1024 && png.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])), 'PNG_HEADER_OR_CAP');
         const pixel = await page.evaluate(async bytes => { const bitmap = await createImageBitmap(new Blob([new Uint8Array(bytes)], { type: 'image/png' })); const canvas = new OffscreenCanvas(bitmap.width, bitmap.height); const ctx = canvas.getContext('2d'); ctx.drawImage(bitmap, 0, 0); const data = ctx.getImageData(0, 0, bitmap.width, bitmap.height).data, colors = new Set(); for (let j = 0; j < data.length; j += Math.max(4, Math.floor(data.length / 20000 / 4) * 4)) colors.add([data[j], data[j + 1], data[j + 2], data[j + 3]].join(',')); return { width: bitmap.width, height: bitmap.height, colors: colors.size }; }, [...png]);
         check(Math.abs(pixel.width - bounds.width) <= 2 && Math.abs(pixel.height - bounds.height) <= 2 && png.readUInt32BE(16) === pixel.width && png.readUInt32BE(20) === pixel.height && pixel.colors > 16, 'PNG_DIMENSIONS_OR_BLANK');
         outputBytes += png.length; check(outputBytes <= 64 * 1024 * 1024, 'ARTIFACT_CAP');
         const name = `audience-${width}x${height}-${AUDIENCES[i].key}.png`;
         fs.writeFileSync(path.join(OUT, name), png, { flag: 'wx', mode: 0o600 });
-        observations.push({ viewport: { width, height }, audience: AUDIENCES[i].key, layout, renderedFonts, screenshot: { name, bytes: png.length, sha256: sha(png), ...pixel, captureScope: 'complete-audience-shell-not-entire-viewport' } });
+        observations.push({ viewport: { width, height }, audience: AUDIENCES[i].key, layout, afterCapture, captureGeometryPassed: geometryPass(afterCapture), renderedFonts, screenshot: { name, bytes: png.length, sha256: sha(png), ...pixel, captureScope: 'complete-audience-shell-not-entire-viewport' } });
+        check(geometryPass(afterCapture), 'POST_CAPTURE_HEADING_TAB_PANEL_OCCLUSION'); assertContrast(afterCapture);
+        check(afterCapture.targets.every(b => b.width >= 44 && b.height >= 44), 'POST_CAPTURE_TARGET_44');
+        check(afterCapture.viewport.width === width && afterCapture.viewport.height === height, 'POST_CAPTURE_VIEWPORT');
+        await assertKeyboardFocus(afterCapture);
       }
       await tabs.nth(0).focus();
-      for (const [key, index] of [['ArrowLeft', 3], ['ArrowRight', 0], ['End', 3], ['Home', 0], ['ArrowRight', 1], ['ArrowRight', 2]]) { await page.keyboard.press(key); await assertAudience(index); }
+      for (const [key, index] of [['ArrowLeft', 3], ['ArrowRight', 0], ['End', 3], ['Home', 0], ['ArrowRight', 1], ['ArrowRight', 2]]) { await page.keyboard.press(key); await assertAudience(index); await assertKeyboardFocus(); }
       await page.keyboard.press('End'); await page.keyboard.press('Tab');
       check(await panel.locator('[data-audience-actions] a').first().evaluate(e => e === document.activeElement), 'TAB_EXIT');
-      await page.keyboard.press('Shift+Tab'); await assertAudience(3);
+      await assertKeyboardFocus();
+      await page.keyboard.press('Shift+Tab'); await assertAudience(3); await assertKeyboardFocus();
       await tabs.nth(0).focus(); await tabs.nth(1).evaluate(t => t.click()); await assertAudience(1, false);
       check(await tabs.nth(0).evaluate(t => t === document.activeElement), 'NO_FORCED_POINTER_FOCUS');
-      await tabs.nth(2).focus(); await page.keyboard.press('Enter'); await assertAudience(2);
-      await tabs.nth(0).focus(); await page.keyboard.press('Space'); await assertAudience(0);
+      await tabs.nth(2).focus(); await page.keyboard.press('Enter'); await assertAudience(2); await assertKeyboardFocus();
+      await tabs.nth(0).focus(); await page.keyboard.press('Space'); await assertAudience(0); await assertKeyboardFocus();
       check(await page.evaluate(() => typeof window.ethereum === 'undefined' && !window.IFRWallet.isConnected()), 'NO_WALLET');
       check(await page.locator('[data-wallet-chooser][aria-hidden="false"], [data-wallet-dialog][aria-hidden="false"], .protocol-dialog[aria-hidden="false"]').count() === 0, 'NO_DIALOG');
       check(pageErrors.length === 0 && effects.length === 0, 'PAGE_ERROR_OR_EFFECT');
@@ -257,7 +323,7 @@ async function runtime() {
     if (context) await context.close().catch(() => { failed ||= 'CONTEXT_CLOSE'; });
     if (browser) await browser.close().catch(() => { failed ||= 'BROWSER_CLOSE'; });
     if (server) { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); }
-    save('RESULT.json', { source: SOURCE, status: failed ? 'HOLD' : 'ASSERTIONS_COMPLETE_VISUAL_REVIEW_PENDING', reason: failed, screenshots: observations, resources, blocked, pageErrors, effects, port, listenerClosed: server ? !server.listening : true, visualAccepted: false, totalPNGBytes: outputBytes });
+    save('RESULT.json', { source: SOURCE, status: failed ? 'HOLD' : 'ASSERTIONS_COMPLETE_VISUAL_REVIEW_PENDING', reason: failed, screenshots: observations, focusObservations, resources, blocked, pageErrors, effects, port, listenerClosed: server ? !server.listening : true, visualAccepted: false, totalPNGBytes: outputBytes, effectEvidenceLayers: { observer: 'fresh empty context; no injected provider; no action-destination activation; no wallet/dialog; owned-origin-only transport', owningRegression: 'tests/browser/web3-write.spec.js audience cases at frozen C8bec assert zero account/signature/transaction/network-switch/watchAsset methods', owningRegressionRunHere: false, clipboardAndFormInstrumentationClaimed: false } });
   }
   check(!failed && observations.length === 20, failed || 'IMAGE_COUNT');
 }
