@@ -1,0 +1,45 @@
+name: QA Shop Pass Intent
+
+# Inert final 5cb9a1d fixture; source-review gate in the helper is OFF.
+# No app/pass-suite source is changed by this QA branch.
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/qa-shop-pass-intent.yml'
+      - 'scripts/qa-shop-pass-intent.cjs'
+      - 'tests/fixtures/qa-shop-pass-intent-20261114.patch'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: qa-shop-pass-intent-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  focused:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      QA_SHOP_HELPER_SHA256: dae45c8844cccad39fdae459dca1418ef4101c9351ce6b7bf2e29fd973646f3c
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '22.22.2'
+          package-manager-cache: false
+      - name: Frozen candidate only; Parent review gate before acquisition
+        run: node scripts/qa-shop-pass-intent.cjs
+      - name: Sanitized source, tool, result and cleanup receipts only
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: qa-shop-pass-intent-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/qa-shop-pass-intent-${{ github.run_id }}-${{ github.run_attempt }}/public/*.json
+          retention-days: 1
+          if-no-files-found: warn
+          include-hidden-files: false

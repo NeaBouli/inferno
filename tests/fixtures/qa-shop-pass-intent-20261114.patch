@@ -1,0 +1,995 @@
+diff --git a/apps/benefits-network/frontend/src/components/CustomerCheckoutPass.tsx b/apps/benefits-network/frontend/src/components/CustomerCheckoutPass.tsx
+index dc7f9117a0d2c790dd24e243e01cfb35f913f10c..4606c38561d5d7d35b56342f94c38060348c0fc5 100644
+--- a/apps/benefits-network/frontend/src/components/CustomerCheckoutPass.tsx
++++ b/apps/benefits-network/frontend/src/components/CustomerCheckoutPass.tsx
+@@ -1,8 +1,8 @@
+ 'use client';
+ 
+-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
++import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+ import { useSearchParams } from 'next/navigation';
+-import { useSignMessage } from 'wagmi';
++import { useConfig, useSignMessage } from 'wagmi';
+ import QRCode from 'react-qr-code';
+ import { Countdown } from '@/components/Countdown';
+ import { BusinessLogo } from '@/components/BusinessLogo';
+@@ -31,21 +31,81 @@ const CLOSED_CHECKOUT = new Set(['REDEEMED', 'REJECTED', 'EXPIRED']);
+ // pass creation and stores no wallet at all (owner decision B, T-231b).
+ type StoredPass = CustomerPassCreated & { walletAddress: string };
+ type SelectedOffer = { businessId: string; sellerName: string; sellerLogoUrl: string | null; rule: BenefitRule };
++type OfferIntent = { key: string };
++type OfferLookup = { intent: OfferIntent; offer: SelectedOffer | null; message: string };
++
++function readOfferSelection(params: Pick<URLSearchParams, 'get'> | null) {
++  const seller = params?.get('seller') || '';
++  const rule = params?.get('offer') || '';
++  return { seller, rule, key: JSON.stringify([seller, rule]) };
++}
++
++function checkoutKey(status: CustomerPassControlStatus | null) {
++  const checkout = status?.checkout;
++  const benefit = checkout?.benefit;
++  return JSON.stringify([
++    status?.status, status?.expiresAt, checkout?.status, checkout?.expiresAt,
++    checkout?.businessId, checkout?.benefitRuleId,
++    benefit?.label, benefit?.productName, benefit?.basePriceMinor, benefit?.currency,
++    benefit?.discountPercent, benefit?.requiredLockIFR, benefit?.minIFRHeld, benefit?.lockSource,
++  ]);
++}
+ 
+ export function CustomerCheckoutPass() {
+-  const { address, isConnected } = useHydratedAccount();
++  const { address, isConnected, chainId, connector } = useHydratedAccount();
++  const config = useConfig();
+   const { signMessageAsync } = useSignMessage();
+   const searchParams = useSearchParams();
++  const [clearedSearchParams, setClearedSearchParams] = useState<typeof searchParams | null>(null);
++  const { seller, rule: ruleId, key: intentKey } = readOfferSelection(
++    searchParams === clearedSearchParams ? null : searchParams
++  );
++  const hasOfferSelection = Boolean(seller || ruleId);
++  const validOfferSelection = /^[A-Za-z0-9_-]{1,80}$/.test(seller) && /^[A-Za-z0-9_-]{1,80}$/.test(ruleId);
++  const [intent, setIntent] = useState<OfferIntent>(() => ({ key: intentKey }));
++  // Each rendered query transition creates a new identity, including A -> B -> A.
++  if (intent.key !== intentKey) setIntent({ key: intentKey });
++  if (clearedSearchParams && searchParams !== clearedSearchParams) setClearedSearchParams(null);
++
+   const [pass, setPass] = useState<StoredPass | null>(null);
+   const [status, setStatus] = useState<CustomerPassControlStatus | null>(null);
+   const [origin, setOrigin] = useState('https://shop.ifrunit.tech');
+   const [loading, setLoading] = useState(false);
+   const [error, setError] = useState('');
+   const [message, setMessage] = useState('Connect the IFR wallet you want the seller to verify.');
+-  const [selectedOffer, setSelectedOffer] = useState<SelectedOffer | null>(null);
+-  const [offerMessage, setOfferMessage] = useState('');
++  const [offerLookup, setOfferLookup] = useState<OfferLookup | null>(null);
++  const [expiredDeadline, setExpiredDeadline] = useState<number | null>(null);
++  const activeIntentRef = useRef<OfferIntent | null>(null);
+   const activePassRef = useRef<StoredPass | null>(null);
++  const statusRef = useRef<CustomerPassControlStatus | null>(null);
+   const passRequestRef = useRef(0);
++  const confirmationRevisionRef = useRef(0);
++
++  // Invalidate on wallet-store changes even if React batches away the intermediate render.
++  useLayoutEffect(() => {
++    const invalidate = () => { confirmationRevisionRef.current += 1; };
++    const unsubscribe = config.subscribe(({ current, connections, status }) => {
++      const connection = current ? connections.get(current) : undefined;
++      return JSON.stringify([current, status, connection?.accounts[0]?.toLowerCase(), connection?.chainId]);
++    }, invalidate);
++    window.addEventListener('pagehide', invalidate);
++    return () => {
++      unsubscribe();
++      window.removeEventListener('pagehide', invalidate);
++      invalidate();
++    };
++  }, [config]);
++
++  useLayoutEffect(() => {
++    activeIntentRef.current = intent;
++    return () => { activeIntentRef.current = null; };
++  }, [intent]);
++
++  const replaceStatus = useCallback((next: CustomerPassControlStatus | null) => {
++    if (checkoutKey(statusRef.current) !== checkoutKey(next)) confirmationRevisionRef.current += 1;
++    statusRef.current = next;
++    setStatus(next);
++  }, []);
+ 
+   useEffect(() => {
+     setOrigin(window.location.origin);
+@@ -62,34 +122,33 @@ export function CustomerCheckoutPass() {
+   }, []);
+ 
+   useEffect(() => {
+-    const businessId = searchParams.get('seller') || '';
+-    const ruleId = searchParams.get('offer') || '';
+-    setSelectedOffer(null);
+-    setOfferMessage('');
+-    if (!businessId && !ruleId) return;
+-    if (!/^[A-Za-z0-9_-]{1,80}$/.test(businessId) || !/^[A-Za-z0-9_-]{1,80}$/.test(ruleId)) {
+-      setOfferMessage('This offer link is invalid. Browse the current public offers below.');
+-      return;
+-    }
++    if (!validOfferSelection) return;
+     const controller = new AbortController();
+-    setOfferMessage('Checking the selected public offer...');
+-    Promise.all([getBusiness(businessId), getBusinessRules(businessId, controller.signal)])
++    const lookupIsCurrent = () => !controller.signal.aborted && activeIntentRef.current === intent &&
++      readOfferSelection(new URLSearchParams(window.location.search)).key === intent.key;
++    Promise.all([getBusiness(seller), getBusinessRules(seller, controller.signal)])
+       .then(([business, result]) => {
+-        const rule = result.rules.find((candidate) => candidate.id === ruleId && candidate.active);
++        if (!lookupIsCurrent()) return;
++        const rule = result.rules.find((candidate) =>
++          candidate.id === ruleId && candidate.active && candidate.businessId === business.id
++        );
+         if (!rule) throw new Error('Selected offer is no longer active.');
+-        setSelectedOffer({
+-          businessId: business.id,
+-          sellerName: business.name,
+-          sellerLogoUrl: business.logoUrl,
+-          rule,
++        setOfferLookup({
++          intent,
++          offer: { businessId: business.id, sellerName: business.name, sellerLogoUrl: business.logoUrl, rule },
++          message: 'Offer verified. The seller still binds it and you approve the exact checkout snapshot.',
+         });
+-        setOfferMessage('Offer verified. The seller still binds it and you approve the exact checkout snapshot.');
+       })
+-      .catch((err: Error) => {
+-        if (err.name !== 'AbortError') setOfferMessage(err.message || 'Selected offer could not be verified.');
++      .catch((err: unknown) => {
++        if (!lookupIsCurrent()) return;
++        setOfferLookup({
++          intent,
++          offer: null,
++          message: err instanceof Error && err.message ? err.message : 'Selected offer could not be verified.',
++        });
+       });
+     return () => controller.abort();
+-  }, [searchParams]);
++  }, [intent, ruleId, seller, validOfferSelection]);
+ 
+   const refresh = useCallback(async (activePass: StoredPass, announce = false) => {
+     const requestId = ++passRequestRef.current;
+@@ -104,7 +163,7 @@ export function CustomerCheckoutPass() {
+       ) {
+         return null;
+       }
+-      setStatus(next);
++      replaceStatus(next);
+       if (announce) setMessage(`Pass refreshed: ${next.checkout?.status || next.status}`);
+       return next;
+     } catch (err) {
+@@ -119,7 +178,7 @@ export function CustomerCheckoutPass() {
+       }
+       throw err;
+     }
+-  }, []);
++  }, [replaceStatus]);
+ 
+   useEffect(() => {
+     if (!pass) return;
+@@ -136,17 +195,41 @@ export function CustomerCheckoutPass() {
+   }, [pass, refresh, status]);
+ 
+   const qrUrl = useMemo(() => pass ? `${origin}${pass.qrUrl}` : '', [origin, pass]);
+-  const walletMatches = Boolean(address && pass && address.toLowerCase() === pass.walletAddress.toLowerCase());
++  const wallet = isConnected ? address?.toLowerCase() : undefined;
++  const walletMatches = Boolean(wallet && pass && wallet === pass.walletAddress.toLowerCase());
++  const currentLookup = offerLookup?.intent === intent && intent.key === intentKey ? offerLookup : null;
++  const selectedOffer = currentLookup?.offer;
++  const offerMessage = currentLookup?.message ?? (
++    validOfferSelection ? 'Checking the selected public offer...' : 'This offer link is invalid. Browse the current public offers below.'
++  );
+   const selectedOfferMismatch = Boolean(
+     selectedOffer && status?.checkout && (
+       status.checkout.businessId !== selectedOffer.businessId ||
+       status.checkout.benefitRuleId !== selectedOffer.rule.id
+     )
+   );
++  const deadline = status?.status === 'BOUND' && status.checkout?.status === 'PENDING'
++    ? Math.min(Date.parse(status.expiresAt), Date.parse(status.checkout.expiresAt))
++    : null;
++  useEffect(() => {
++    if (deadline === null || !Number.isFinite(deadline)) return;
++    const timer = window.setTimeout(() => setExpiredDeadline(deadline), Math.max(0, deadline - Date.now()));
++    return () => window.clearTimeout(timer);
++  }, [deadline]);
++
+   const canConfirm = Boolean(
+-    walletMatches && status?.status === 'BOUND' && status.checkout?.status === 'PENDING' &&
+-    !selectedOfferMismatch
++    walletMatches && deadline !== null && expiredDeadline !== deadline && deadline > Date.now() &&
++    (!hasOfferSelection || (selectedOffer && !selectedOfferMismatch))
+   );
++  const binding = checkoutKey(status);
++  const confirmationContext = useMemo(() => (
++    canConfirm ? { intent, pass, binding, wallet, chainId, connector, deadline } : null
++  ), [canConfirm, intent, pass, binding, wallet, chainId, connector, deadline]);
++  const committedConfirmationRef = useRef<typeof confirmationContext>(null);
++  useLayoutEffect(() => {
++    committedConfirmationRef.current = confirmationContext;
++    return () => { committedConfirmationRef.current = null; };
++  }, [confirmationContext]);
+   const checkoutClosed = Boolean(status?.checkout && CLOSED_CHECKOUT.has(status.checkout.status));
+   const mustCancelBeforeReset = status !== null && (
+     (status.status === 'OPEN' || status.status === 'BOUND') && !checkoutClosed
+@@ -157,6 +240,7 @@ export function CustomerCheckoutPass() {
+ 
+   function remember(next: StoredPass | null) {
+     passRequestRef.current += 1;
++    confirmationRevisionRef.current += 1;
+     activePassRef.current = next;
+     setPass(next);
+     try {
+@@ -178,7 +262,7 @@ export function CustomerCheckoutPass() {
+       const created = await createCustomerPass();
+       const next = { ...created, walletAddress: address };
+       remember(next);
+-      setStatus({ status: 'OPEN', expiresAt: created.expiresAt, checkout: null });
++      replaceStatus({ status: 'OPEN', expiresAt: created.expiresAt, checkout: null });
+       setMessage('Pass ready. Let the seller scan this QR, then review the exact offer here.');
+     } catch (err) {
+       setError(err instanceof Error ? err.message : 'Could not create checkout pass.');
+@@ -188,13 +272,27 @@ export function CustomerCheckoutPass() {
+   }
+ 
+   async function confirm() {
+-    if (!pass || !canConfirm) return;
++    if (!pass || !address || !confirmationContext || deadline === null || loading) return;
++    const revision = confirmationRevisionRef.current;
++    const stillCurrent = () => {
++      const { current, connections, status: walletStatus } = config.state;
++      const connection = current ? connections.get(current) : undefined;
++      return committedConfirmationRef.current === confirmationContext &&
++        confirmationRevisionRef.current === revision &&
++        activeIntentRef.current === intent && activePassRef.current === pass &&
++        checkoutKey(statusRef.current) === binding && Date.now() < deadline &&
++        walletStatus === 'connected' && connection?.accounts[0]?.toLowerCase() === wallet &&
++        connection?.chainId === chainId && connection?.connector.uid === connector?.uid &&
++        readOfferSelection(new URLSearchParams(window.location.search)).key === intent.key;
++    };
++    if (!stillCurrent()) return;
+     setLoading(true);
+     setError('');
+     try {
+-      if (!address) throw new Error('Connect your customer wallet first.');
+       const challenge = await getCustomerPassConfirmationChallenge(pass.passId, pass.controlToken, address);
++      if (!stillCurrent()) return;
+       const signature = await signMessageAsync({ message: challenge.message });
++      if (!stillCurrent()) return;
+       const result = await confirmCustomerPass(pass.passId, pass.controlToken, address, signature);
+       setMessage(result.status === 'REDEEMED'
+         ? 'Checkout redeemed once. Show this screen to the seller; their console shows the same result.'
+@@ -220,7 +318,7 @@ export function CustomerCheckoutPass() {
+       }
+       await refresh(pass);
+     } catch (err) {
+-      setError(err instanceof Error ? err.message : 'Could not confirm checkout.');
++      if (stillCurrent()) setError(err instanceof Error ? err.message : 'Could not confirm checkout.');
+     } finally {
+       setLoading(false);
+     }
+@@ -235,10 +333,11 @@ export function CustomerCheckoutPass() {
+       passRequestRef.current += 1;
+       if (startNewPass) {
+         remember(null);
+-        setStatus(null);
++        replaceStatus(null);
+         setMessage('Previous pass cancelled. You can create a new customer QR.');
+       } else {
+-        setStatus((current) => ({
++        const current = statusRef.current;
++        replaceStatus({
+           status: 'CANCELLED',
+           expiresAt: current?.expiresAt || pass.expiresAt,
+           checkout: current?.checkout ? {
+@@ -246,7 +345,7 @@ export function CustomerCheckoutPass() {
+             status: 'REJECTED',
+             reason: 'Customer cancelled checkout confirmation.',
+           } : null,
+-        }));
++        });
+         setMessage('Checkout pass cancelled. It cannot be bound or approved.');
+       }
+     } catch (err) {
+@@ -259,18 +358,24 @@ export function CustomerCheckoutPass() {
+ 
+   function clearClosedPass() {
+     remember(null);
+-    setStatus(null);
++    replaceStatus(null);
+     setError('');
+     setMessage('Connect the IFR wallet you want the seller to verify.');
+   }
+ 
+   function clearSelectedOffer() {
+     const url = new URL(window.location.href);
++    confirmationRevisionRef.current += 1;
++    activeIntentRef.current = null;
+     url.searchParams.delete('seller');
+     url.searchParams.delete('offer');
+-    window.history.replaceState(window.history.state, '', `${url.pathname}${url.search}${url.hash}`);
+-    setSelectedOffer(null);
+-    setOfferMessage('Offer selection cleared. You can still create a general customer QR.');
++    // Pass user state only so Next's patched history method publishes the new search params.
++    const routerState = { ...window.history.state };
++    delete routerState.__NA;
++    delete routerState._N;
++    window.history.replaceState(routerState, '', `${url.pathname}${url.search}${url.hash}`);
++    setClearedSearchParams(searchParams);
++    setMessage('Offer selection cleared. You can still create a general customer QR.');
+   }
+ 
+   return (
+@@ -305,12 +410,16 @@ export function CustomerCheckoutPass() {
+                 </p>
+               </div>
+             </div>
+-            <button type="button" onClick={clearSelectedOffer} className="text-xs font-black uppercase tracking-[0.12em] text-orange-100">Clear</button>
+           </div>
+           <p className="mt-3 text-xs leading-5 text-stone-400">Show this selection to the seller. Your QR does not grant it automatically; approve only after the same offer appears below.</p>
+         </div>
+       ) : null}
+-      {offerMessage ? <p className="mt-3 text-xs leading-5 text-stone-400" aria-live="polite">{offerMessage}</p> : null}
++      {hasOfferSelection ? (
++        <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
++          <p className="text-xs leading-5 text-stone-400" aria-live="polite">{offerMessage}</p>
++          <button type="button" onClick={clearSelectedOffer} className="min-h-11 px-3 text-xs font-black uppercase tracking-[0.12em] text-orange-100">Clear</button>
++        </div>
++      ) : null}
+ 
+       {!pass ? (
+         <button
+diff --git a/docs/architecture/MAP.md b/docs/architecture/MAP.md
+index 3cc436e9a88630b4ca6d7b560e772239bf84e04a..5af9b19bdb0777892473a289d2064d7354e7125d 100644
+--- a/docs/architecture/MAP.md
++++ b/docs/architecture/MAP.md
+@@ -1618,6 +1618,20 @@ complete five-viewport 21-image matrix; fixed loopback or the fixed Shop origin
+ are the only targets. SellerCatalog419 retains its default component and 18/4
+ image contracts. No CLI origin, fixture copy or alternate product path is added.
+ 
++## Customer-pass exact-offer confirmation — 2026-11-14
++
++Module: Benefits homepage customer checkout pass. Hop: catalog seller/offer
++query → `CustomerCheckoutPass` public seller/rule lookup → current bound pass
++status → challenge → wallet signature → confirm. Each observed selection change
++starts a new lookup generation. With an explicit selection, confirmation requires
++the current lookup to resolve to the bound canonical seller and rule. Clear
++removes selection only and invalidates in-flight confirmation.
++
++The confirmation rechecks the current pass, checkout, wallet, selection, and
++deadline before each action. Equivalent control polls preserve the action.
++`test-benefits-customer-pass-ui.js` adds synthetic delayed responses to the
++existing checkout fixture. Physical wallet and release acceptance are separate.
++
+ ## Generic IFRLock guidance versus exact checkout eligibility — 2026-10-29
+ 
+ Module: Benefits homepage customer workspace -> `WalletStatus.tsx` generic balance
+diff --git a/scripts/test-benefits-customer-pass-ui.js b/scripts/test-benefits-customer-pass-ui.js
+index 776bc25813d2c19365096568be97c39d050ae419..006f2de2851f80327a28ef2e607d07de99cb51eb 100644
+--- a/scripts/test-benefits-customer-pass-ui.js
++++ b/scripts/test-benefits-customer-pass-ui.js
+@@ -37,6 +37,8 @@ const customerWallet = '0x1111111111111111111111111111111111111111';
+ const sellerWallet = '0x2222222222222222222222222222222222222222';
+ const passId = 'P'.repeat(32);
+ const controlToken = 'control-token-ui-e2e';
++const replacementPassId = 'Q'.repeat(32);
++const replacementControlToken = 'replacement-control-token-ui-e2e';
+ const businessId = 'business-ui-e2e';
+ const ruleId = 'rule-ui-e2e';
+ const sessionId = 'session-ui-e2e';
+@@ -47,6 +49,8 @@ const benefit = {
+   label: 'Premium checkout',
+   category: 'Retail',
+   productName: 'IFR member purchase',
++  basePriceMinor: '450',
++  currency: 'EUR',
+   discountPercent: 15,
+   requiredLockIFR: 5000,
+   minIFRHeld: 0,
+@@ -79,17 +83,30 @@ const rule = {
+   createdAt: new Date().toISOString(),
+   updatedAt: new Date().toISOString(),
+ };
++const otherRule = {
++  ...rule,
++  id: 'other-ui-rule',
++  label: 'Other checkout',
++  productName: 'Other member purchase',
++  basePriceMinor: '700',
++};
++const otherBusiness = { ...business, id: 'other-ui-business', slug: 'other-ui-seller', name: 'Other UI Seller' };
++const sellerBindMessage = `passes:bind ${passId}:${ruleId}`;
+ 
+ const checkoutTermsDigest = `sha256:${'a'.repeat(64)}`;
+ // Mirrors the backend proof v2 text: the claimed wallet is bound inside the signed message.
+-const checkoutProofMessage = [
+-  'IFR Benefits Network - Checkout Proof',
+-  'Version: ifr-benefits/checkout-proof/2',
+-  `Wallet: ${customerWallet}`,
+-  `Shop: ${businessId}`,
+-  `Session: ${sessionId}`,
+-  `Terms Digest: ${checkoutTermsDigest}`,
+-].join('\n');
++function checkoutProofMessage(generalRule = false) {
++  return [
++    'IFR Benefits Network - Checkout Proof',
++    'Version: ifr-benefits/checkout-proof/2',
++    `Wallet: ${customerWallet}`,
++    `Shop: ${businessId}`,
++    `Session: ${sessionId}`,
++    `Benefit Rule: ${generalRule ? 'business-default' : ruleId}`,
++    `Reference Price: ${benefit.currency} ${benefit.basePriceMinor} minor units`,
++    `Terms Digest: ${checkoutTermsDigest}`,
++  ].join('\n');
++}
+ 
+ function json(route, body, status = 200) {
+   return route.fulfill({
+@@ -108,6 +125,14 @@ function deferred() {
+   return { promise, resolve };
+ }
+ 
++async function mockHeldResponse(route, hold, body) {
++  if (!hold) return json(route, body);
++  hold.request = route.request();
++  hold.started.resolve();
++  await hold.release.promise;
++  await json(route, hold.error ? { error: hold.error } : body, hold.error ? 503 : 200);
++}
++
+ function sessionStatus(state) {
+   return {
+     status: state.checkout,
+@@ -129,11 +154,16 @@ function controlStatus(state) {
+     checkout: state.pass === 'OPEN' ? null : {
+       status: state.checkout,
+       expiresAt,
++      businessId,
++      benefitRuleId: state.generalRule ? null : ruleId,
+       sellerName: business.name,
++      sellerLogoUrl: null,
+       benefit: {
+         label: benefit.label,
+         category: benefit.category,
+         productName: benefit.productName,
++        basePriceMinor: state.checkoutPriceMinor ?? benefit.basePriceMinor,
++        currency: benefit.currency,
+         discountPercent: benefit.discountPercent,
+         requiredLockIFR: benefit.requiredLockIFR,
+         minIFRHeld: benefit.minIFRHeld,
+@@ -169,20 +199,14 @@ function installApiMock(context, state, calls) {
+         pagination: { page: 1, limit: 8, total: 0, totalPages: 0, hasNext: false },
+       });
+     }
+-    if (
+-      method === 'GET' &&
+-      (pathname === `/api/businesses/${businessId}` || pathname === `/api/businesses/${business.slug}`)
+-    ) {
+-      return json(route, business);
+-    }
+-    if (
+-      method === 'GET' &&
+-      (
+-        pathname === `/api/businesses/${businessId}/rules` ||
+-        pathname === `/api/businesses/${business.slug}/rules`
+-      )
+-    ) {
+-      return json(route, { rules: [rule] });
++    for (const profile of [business, otherBusiness]) {
++      const [match, reference, resource] = /^\/api\/businesses\/([^/]+)(\/rules)?$/.exec(pathname) || [];
++      if (method !== 'GET' || !match || ![profile.id, profile.slug].includes(reference)) continue;
++      const hold = state.offerHolds?.get(pathname);
++      state.offerHolds?.delete(pathname);
++      return mockHeldResponse(route, hold, resource
++        ? { rules: [{ ...rule, businessId: profile.id }, { ...otherRule, businessId: profile.id }] }
++        : profile);
+     }
+     if (method === 'POST' && pathname === '/api/passes/challenge') {
+       // Owner decision B (T-231b): pass creation needs no wallet signature; the route is gone.
+@@ -192,8 +216,20 @@ function installApiMock(context, state, calls) {
+       // The pass is an opaque device-held capability: no wallet, nonce or signature is sent.
+       assert.deepEqual(request.postDataJSON(), {}, 'pass creation must not send wallet data');
+       state.pass = 'OPEN';
++      if (state.createReplacementPass) {
++        return json(route, {
++          passId: replacementPassId,
++          controlToken: replacementControlToken,
++          expiresAt,
++          qrUrl: `/p/${replacementPassId}`,
++        }, 201);
++      }
+       return json(route, { passId, controlToken, expiresAt, qrUrl: `/p/${passId}` }, 201);
+     }
++    if (method === 'GET' && pathname === `/api/passes/${replacementPassId}/control`) {
++      assert.equal(request.headers().authorization, `Bearer ${replacementControlToken}`);
++      return json(route, { status: 'OPEN', expiresAt, checkout: null });
++    }
+     if (method === 'GET' && pathname === `/api/passes/${passId}/control`) {
+       assert.equal(request.headers().authorization, `Bearer ${controlToken}`);
+       const snapshot = controlStatus(state);
+@@ -225,7 +261,7 @@ function installApiMock(context, state, calls) {
+       // Wallet-free challenge (owner decision B): no wallet in the challenge URL.
+       assert.equal(url.searchParams.has('walletAddress'), false, 'the challenge URL carries no wallet');
+       assert.ok(!/0x[0-9a-f]{40}/i.test(url.search), 'no address-shaped text in the challenge URL');
+-      return json(route, { message: `${action} ${scope}`, timestamp: new Date().toISOString(), nonce, expiresAt });
++      return json(route, { message: sellerBindMessage, timestamp: new Date().toISOString(), nonce, expiresAt });
+     }
+     if (method === 'POST' && pathname === `/api/passes/${passId}/bind`) {
+       assertSellerHeaders(request, 'pass-bind-nonce');
+@@ -254,7 +290,9 @@ function installApiMock(context, state, calls) {
+     if (method === 'POST' && pathname === `/api/passes/${passId}/challenge`) {
+       assert.equal(request.headers().authorization, `Bearer ${controlToken}`);
+       assert.equal(request.postDataJSON().walletAddress?.toLowerCase(), customerWallet.toLowerCase());
+-      return json(route, { message: checkoutProofMessage });
++      const hold = state.challengeHold;
++      state.challengeHold = null;
++      return mockHeldResponse(route, hold, { message: checkoutProofMessage(state.generalRule) });
+     }
+     if (method === 'POST' && pathname === `/api/passes/${passId}/confirm`) {
+       assert.equal(request.headers().authorization, `Bearer ${controlToken}`);
+@@ -278,7 +316,7 @@ function installApiMock(context, state, calls) {
+           sessionId,
+           businessId,
+           termsDigest: checkoutTermsDigest,
+-          message: checkoutProofMessage,
++          message: checkoutProofMessage(state.generalRule),
+           selfRedemption: false,
+         },
+       });
+@@ -303,22 +341,53 @@ function installApiMock(context, state, calls) {
+   });
+ }
+ 
+-function installWallet(context, account) {
+-  return context.addInitScript(({ account, signature }) => {
++async function installWallet(context, account, onSign = () => {}, proofMessage = checkoutProofMessage) {
++  await context.exposeFunction('signFixtureMessage', async (message, signer) => {
++    const expectedMessage = account === customerWallet ? proofMessage() : sellerBindMessage;
++    await onSign();
++    assert.equal(signer?.toLowerCase(), account.toLowerCase(), 'the request must name the connected fixture wallet');
++    assert.equal(message, `0x${Buffer.from(expectedMessage, 'utf8').toString('hex')}`, 'the wallet must receive the exact challenge');
++    return dummySignature;
++  });
++  await context.addInitScript(({ account }) => {
+     const listeners = new Map();
+     let connected = false;
++    let currentAccount = account;
++    let currentChain = '0x1';
++    let finishedSigns = 0;
++    Object.defineProperty(window, '__ifrPassFixtureWallet', {
++      value: {
++        account(next) {
++          currentAccount = next;
++          for (const listener of listeners.get('accountsChanged') || []) listener([next]);
++        },
++        chain(next) {
++          currentChain = next;
++          for (const listener of listeners.get('chainChanged') || []) listener(next);
++        },
++        get finishedSigns() { return finishedSigns; },
++      },
++    });
++    async function sign(message, signer) {
++      try {
++        return await window.signFixtureMessage(message, signer);
++      } finally {
++        finishedSigns += 1;
++      }
++    }
+     const provider = {
+       isMetaMask: true,
+       providers: [],
+-      request: async ({ method }) => {
++      request: async ({ method, params }) => {
+         if (method === 'eth_requestAccounts') {
+           connected = true;
+-          return [account];
++          return [currentAccount];
+         }
+-        if (method === 'eth_accounts') return connected ? [account] : [];
+-        if (method === 'eth_chainId') return '0x1';
+-        if (method === 'net_version') return '1';
+-        if (method === 'personal_sign' || method === 'eth_sign') return signature;
++        if (method === 'eth_accounts') return connected ? [currentAccount] : [];
++        if (method === 'eth_chainId') return currentChain;
++        if (method === 'net_version') return String(Number.parseInt(currentChain, 16));
++        if (method === 'personal_sign') return sign(params?.[0], params?.[1]);
++        if (method === 'eth_sign') return sign(params?.[1], params?.[0]);
+         if (method === 'wallet_switchEthereumChain' || method === 'wallet_requestPermissions') return null;
+         if (method === 'wallet_getPermissions') {
+           return connected ? [{ parentCapability: 'eth_accounts' }] : [];
+@@ -341,7 +410,7 @@ function installWallet(context, account) {
+     provider.providers = [provider];
+     Object.defineProperty(window, 'ethereum', { configurable: true, value: provider });
+     window.dispatchEvent(new Event('ethereum#initialized'));
+-  }, { account, signature: dummySignature });
++  }, { account });
+ }
+ 
+ async function waitForServer(child) {
+@@ -366,6 +435,373 @@ async function waitForEnabled(locator, timeoutMs = 90_000) {
+   assert.equal(await locator.isEnabled(), true, 'Timed out waiting for enabled control');
+ }
+ 
++function heldStep(error) {
++  return { started: deferred(), release: deferred(), error };
++}
++
++function waitForHold(hold) {
++  let timeout;
++  return Promise.race([
++    hold.started.promise,
++    new Promise((_, reject) => {
++      timeout = setTimeout(() => reject(new Error('Expected fixture request did not start')), 10_000);
++    }),
++  ]).finally(() => clearTimeout(timeout));
++}
++
++async function verifySelectedOfferIntent(browser) {
++  const context = await browser.newContext({ serviceWorkers: 'block' });
++  const calls = [];
++  const state = {
++    pass: 'OPEN', checkout: 'PENDING', confirmAttempts: 0, offerHolds: new Map(), challengeHold: null,
++  };
++  let signAttempts = 0;
++  let signHold;
++  const holds = [];
++  const holdStep = (error) => {
++    const hold = heldStep(error);
++    holds.push(hold);
++    return hold;
++  };
++  const challengePath = `/api/passes/${passId}/challenge`;
++  const challengeCount = () => calls.filter((call) => call === `POST ${challengePath}`).length;
++  const assertCalls = (challenges, signatures, confirmations, detail) => {
++    assert.deepEqual([challengeCount(), signAttempts, state.confirmAttempts], [challenges, signatures, confirmations], detail);
++  };
++  const profilePath = `/api/businesses/${business.slug}`;
++  const rulesPath = `${profilePath}/rules`;
++  const matchQuery = `?seller=${business.slug}&offer=${ruleId}`;
++  const wrongRuleQuery = `?seller=${business.slug}&offer=${otherRule.id}`;
++  const wrongBusinessQuery = `?seller=${otherBusiness.slug}&offer=${ruleId}`;
++  try {
++    await installApiMock(context, state, calls);
++    await installWallet(context, customerWallet, async () => {
++      signAttempts += 1;
++      const hold = signHold;
++      signHold = null;
++      if (hold) {
++        hold.started.resolve();
++        await hold.release.promise;
++      }
++    }, () => checkoutProofMessage(state.generalRule));
++    const page = await context.newPage();
++    const pageErrors = [];
++    page.on('pageerror', (error) => pageErrors.push(error.message));
++    const panel = page.locator('#customer-pass');
++    const confirm = panel.getByRole('button', { name: 'Confirm this seller and offer', exact: true });
++    const refresh = panel.getByRole('button', { name: 'Refresh', exact: true });
++    const clear = panel.getByRole('button', { name: 'Clear', exact: true });
++    const mismatch = panel.getByText('The seller bound a different offer', { exact: false });
++    const match = panel.getByText('The bound checkout matches your selected public offer.', { exact: true });
++    const checking = panel.getByText('Checking the selected public offer...', { exact: true });
++    const connected = () => page.getByRole('button', { name: 'Disconnect', exact: true }).first();
++    const connect = async () => {
++      await page.getByText('MetaMask provider', { exact: true }).waitFor();
++      await page.getByRole('button', { name: 'Connect wallet', exact: true }).first().click();
++      await connected().waitFor();
++    };
++    const select = (search) => page.evaluate((query) => {
++      window.history.pushState(null, '', `/${query}#customer-pass`);
++    }, search);
++    const assertBlocked = async (detail) => {
++      assert.equal(await confirm.count(), 0, detail);
++      assertCalls(0, 0, 0, detail);
++    };
++    const releaseResponse = async (hold) => {
++      const response = page.waitForResponse((res) => res.request() === hold.request);
++      hold.release.resolve();
++      await (await response).finished();
++      await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
++    };
++
++    await page.goto(`${origin}/${wrongRuleQuery}#customer-pass`, { waitUntil: 'domcontentloaded' });
++    await connect();
++    await panel.getByRole('button', { name: 'Create customer QR', exact: true }).click();
++    await panel.getByText('Pass ready.', { exact: false }).waitFor();
++    await panel.getByText('Offer verified.', { exact: false }).waitFor();
++    state.pass = 'BOUND';
++    const profileHold = holdStep();
++    const rulesHold = holdStep();
++    await connected().click();
++    await page.getByRole('button', { name: 'Connect wallet', exact: true }).first().waitFor();
++    state.offerHolds.set(profilePath, profileHold);
++    state.offerHolds.set(rulesPath, rulesHold);
++    await page.reload({ waitUntil: 'domcontentloaded' });
++    await Promise.all([waitForHold(profileHold), waitForHold(rulesHold)]);
++    await connect();
++    await panel.getByText('PENDING', { exact: true }).first().waitFor();
++    await checking.waitFor();
++    await assertBlocked('restored BOUND/PENDING checkout must wait for the selected offer');
++    await releaseResponse(rulesHold);
++    await assertBlocked('rules alone cannot authorize a checkout');
++    await releaseResponse(profileHold);
++    await mismatch.waitFor();
++    await assertBlocked('same seller, different rule must stay blocked');
++
++    // A second seller exposes the same rule ID in this fixture to isolate the canonical business check.
++    await select(wrongBusinessQuery);
++    await panel.getByText(otherBusiness.name, { exact: false }).first().waitFor();
++    await mismatch.waitFor();
++    await assertBlocked('same rule ID, different canonical seller must stay blocked');
++    await page.goBack({ waitUntil: 'domcontentloaded' });
++    await panel.getByText(`${otherRule.productName} · ${business.name}`, { exact: true }).waitFor();
++    await mismatch.waitFor();
++    await assertBlocked('Back restores the wrong-rule intent');
++
++    await select('?seller=bad%21');
++    await panel.getByText('This offer link is invalid.', { exact: false }).waitFor();
++    await assertBlocked('partial or malformed intent is distinct from the general flow');
++    const failedProfile = holdStep('Fixture offer lookup unavailable');
++    state.offerHolds.set(profilePath, failedProfile);
++    await select(`${matchQuery}&fixture=keep`);
++    await waitForHold(failedProfile);
++    await releaseResponse(failedProfile);
++    await panel.getByText(failedProfile.error, { exact: true }).waitFor();
++    await assertBlocked('a failed lookup must not fall back to general confirmation');
++    await clear.click();
++    await confirm.waitFor();
++    assert.equal(new URL(page.url()).search, '?fixture=keep', 'Clear must remove only the query intent');
++    assert.equal(new URL(page.url()).hash, '#customer-pass');
++    assert.equal(state.pass, 'BOUND');
++
++    // Let the first A rules response settle while its profile is delayed. Revisit A with new gates.
++    const oldProfile = holdStep();
++    const oldRules = holdStep();
++    state.offerHolds.set(profilePath, oldProfile);
++    state.offerHolds.set(rulesPath, oldRules);
++    await select(matchQuery);
++    await Promise.all([waitForHold(oldProfile), waitForHold(oldRules)]);
++    await releaseResponse(oldRules);
++    await select(wrongBusinessQuery);
++    await panel.getByText(otherBusiness.name, { exact: false }).first().waitFor();
++    const newRules = holdStep();
++    state.offerHolds.set(rulesPath, newRules);
++    await select(matchQuery);
++    await waitForHold(newRules);
++    await releaseResponse(oldProfile);
++    await checking.waitFor();
++    await assertBlocked('obsolete A success cannot authorize a later A generation');
++    await releaseResponse(newRules);
++    await match.waitFor();
++    await confirm.waitFor();
++
++    const obsoleteError = holdStep('Obsolete fixture lookup failure');
++    const otherProfilePath = `/api/businesses/${otherBusiness.slug}`;
++    state.offerHolds.set(otherProfilePath, obsoleteError);
++    await select(wrongBusinessQuery);
++    await waitForHold(obsoleteError);
++    await assertBlocked('old matching result cannot authorize the changed query');
++    await clear.click();
++    await confirm.waitFor();
++    await releaseResponse(obsoleteError);
++    assert.equal(await panel.getByText(obsoleteError.error, { exact: true }).count(), 0);
++    assertCalls(0, 0, 0, 'Clear only authorizes review, it does not sign or submit');
++
++    await select(matchQuery);
++    await match.waitFor();
++    const challenge = holdStep();
++    state.challengeHold = challenge;
++    await confirm.click();
++    await waitForHold(challenge);
++    await select(wrongRuleQuery);
++    await mismatch.waitFor();
++    await page.goBack({ waitUntil: 'domcontentloaded' });
++    await match.waitFor();
++    assert.equal(await refresh.isDisabled(), true, 'the held challenge must still be in progress');
++    await releaseResponse(challenge);
++    await confirm.waitFor();
++    await waitForEnabled(refresh, 10_000);
++    assertCalls(1, 0, 0, 'challenge from before A -> B -> A must never reach the wallet');
++
++    const signing = holdStep();
++    signHold = signing;
++    await confirm.click();
++    await waitForHold(signing);
++    await select(wrongBusinessQuery);
++    await mismatch.waitFor();
++    assert.equal(await refresh.isDisabled(), true, 'the held signing operation must still be in progress');
++    signing.release.resolve();
++    await waitForEnabled(refresh, 10_000);
++    assertCalls(2, 1, 0, 'changed intent during signing must never submit a stale proof');
++
++    await select(matchQuery);
++    await match.waitFor();
++    const walletChallenge = holdStep();
++    state.challengeHold = walletChallenge;
++    await confirm.click();
++    await waitForHold(walletChallenge);
++    await connected().click();
++    await confirm.waitFor({ state: 'detached' });
++    await connect();
++    await releaseResponse(walletChallenge);
++    await waitForEnabled(refresh, 10_000);
++    assertCalls(3, 1, 0, 'disconnect and reconnect of the same wallet must invalidate the held challenge');
++
++    const matchingSign = holdStep();
++    signHold = matchingSign;
++    await confirm.click();
++    await waitForHold(matchingSign);
++    const healthyPoll = await page.waitForResponse((res) =>
++      new URL(res.url()).pathname === `/api/passes/${passId}/control`
++    );
++    await healthyPoll.finished();
++    await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
++    matchingSign.release.resolve();
++    await panel.getByText('Checkout redeemed once.', { exact: false }).waitFor();
++    await confirm.waitFor({ state: 'detached' });
++    assertCalls(4, 2, 1, 'a matching canonical selection survives an equivalent healthy poll and redeems once');
++
++    // A fresh pass preserves the legacy general flow, including two explicitly empty query values.
++    await panel.getByRole('button', { name: 'New pass', exact: true }).click();
++    await select('?seller=&offer=');
++    await panel.getByRole('button', { name: 'Create customer QR', exact: true }).click();
++    await panel.getByText('Pass ready.', { exact: false }).waitFor();
++    state.generalRule = true;
++    state.pass = 'BOUND';
++    state.checkout = 'PENDING';
++    await refresh.click();
++    await confirm.waitFor();
++    assert.equal(await clear.count(), 0, 'the two normalized empty query values do not create an intent');
++    await select(wrongRuleQuery);
++    await mismatch.waitFor();
++    assert.equal(await confirm.count(), 0, 'a selected offer cannot match a general checkout with a null rule');
++    await clear.click();
++    await confirm.waitFor();
++    await confirm.click();
++    await panel.getByText('Checkout redeemed once.', { exact: false }).waitFor();
++    assertCalls(5, 3, 2, 'explicit Clear permits one confirmation of the general checkout with a nullable rule');
++
++    const startChallenge = async () => {
++      const hold = holdStep();
++      state.challengeHold = hold;
++      await confirm.click();
++      await waitForHold(hold);
++      return hold;
++    };
++    const startSigning = async () => {
++      const hold = holdStep();
++      signHold = hold;
++      await confirm.click();
++      await waitForHold(hold);
++      return hold;
++    };
++    const nextControlPoll = async (matchesCheckout) => {
++      const response = await page.waitForResponse(async (res) =>
++        new URL(res.url()).pathname === `/api/passes/${passId}/control` &&
++        res.ok() && matchesCheckout((await res.json()).checkout)
++      );
++      await response.finished();
++    };
++    const finishSigning = async (hold) => {
++      const previous = await page.evaluate(() => window.__ifrPassFixtureWallet.finishedSigns);
++      hold.release.resolve();
++      await page.waitForFunction((count) => window.__ifrPassFixtureWallet.finishedSigns === count + 1, previous);
++      // Allow the app to consume the provider result, including when the old panel is gone.
++      await page.evaluate(() => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))));
++    };
++
++    await panel.getByRole('button', { name: 'New pass', exact: true }).click();
++    await select(matchQuery);
++    await panel.getByRole('button', { name: 'Create customer QR', exact: true }).click();
++    await panel.getByText('Pass ready.', { exact: false }).waitFor();
++    state.generalRule = false;
++    state.pass = 'BOUND';
++    state.checkout = 'PENDING';
++    await refresh.click();
++    await match.waitFor();
++
++    const accountChallenge = await startChallenge();
++    const wrongWallet = panel.getByText('Reconnect the wallet that created this pass before confirming it.', { exact: true });
++    await page.evaluate((account) => window.__ifrPassFixtureWallet.account(account), sellerWallet);
++    await wrongWallet.waitFor();
++    await page.evaluate((account) => window.__ifrPassFixtureWallet.account(account), customerWallet);
++    await wrongWallet.waitFor({ state: 'hidden' });
++    await releaseResponse(accountChallenge);
++    await waitForEnabled(refresh, 10_000);
++    assertCalls(6, 3, 2, 'changing the account away and back must invalidate the original challenge');
++
++    const chainSign = await startSigning();
++    const wrongChain = page.getByText('The connected wallet is on chain 11155111.', { exact: false });
++    await page.evaluate(() => window.__ifrPassFixtureWallet.chain('0xaa36a7'));
++    await wrongChain.waitFor();
++    await page.evaluate(() => window.__ifrPassFixtureWallet.chain('0x1'));
++    await wrongChain.waitFor({ state: 'hidden' });
++    await finishSigning(chainSign);
++    await waitForEnabled(refresh, 10_000);
++    assertCalls(7, 4, 2, 'changing the chain away and back must invalidate the original signature');
++
++    const statusChallenge = await startChallenge();
++    const approvedPoll = nextControlPoll((checkout) => checkout?.status === 'APPROVED');
++    state.checkout = 'APPROVED';
++    await approvedPoll;
++    await panel.getByText('APPROVED', { exact: true }).first().waitFor();
++    const pendingPoll = nextControlPoll((checkout) => checkout?.status === 'PENDING');
++    state.checkout = 'PENDING';
++    await pendingPoll;
++    await panel.getByText('PENDING', { exact: true }).first().waitFor();
++    await releaseResponse(statusChallenge);
++    await waitForEnabled(refresh, 10_000);
++    assertCalls(8, 4, 2, 'a temporary non-PENDING state must invalidate a held challenge');
++
++    const priceSign = await startSigning();
++    const updatedPricePoll = nextControlPoll((checkout) => checkout?.benefit.basePriceMinor === '725');
++    state.checkoutPriceMinor = '725';
++    await updatedPricePoll;
++    await panel.getByText('EUR 7.25', { exact: true }).waitFor();
++    await finishSigning(priceSign);
++    await waitForEnabled(refresh, 10_000);
++    assertCalls(9, 5, 2, 'a changed price with the same seller and rule IDs must invalidate a held signature');
++    const restoredPricePoll = nextControlPoll((checkout) => checkout?.benefit.basePriceMinor === benefit.basePriceMinor);
++    delete state.checkoutPriceMinor;
++    await restoredPricePoll;
++    await panel.getByText('EUR 4.50', { exact: true }).waitFor();
++
++    const expiringSign = await startSigning();
++    await page.clock.setFixedTime(new Date(Date.parse(expiresAt) + 1));
++    await finishSigning(expiringSign);
++    await waitForEnabled(refresh, 10_000);
++    await confirm.waitFor({ state: 'detached' });
++    assert.equal(state.checkout, 'PENDING', 'the server fixture must not expire or redeem this checkout');
++    assertCalls(10, 6, 2, 'crossing the checkout deadline during signing must prevent submission');
++    await page.clock.setFixedTime(new Date());
++    await refresh.click();
++
++    const sellerMode = page.locator('#choose-mode').getByRole('button', { name: /Offer discounts/ });
++    const customerMode = page.locator('#choose-mode').getByRole('button', { name: /Unlock benefits/ });
++    const unmountedSign = await startSigning();
++    await sellerMode.click();
++    await panel.waitFor({ state: 'detached' });
++    assert.equal(new URL(page.url()).search, matchQuery, 'changing mode must preserve the selected offer for this test');
++    await customerMode.click();
++    await match.waitFor();
++    await confirm.waitFor();
++    assert.equal(await confirm.isEnabled(), true, 'the remounted panel must accept a fresh confirmation');
++    await finishSigning(unmountedSign);
++    assertCalls(11, 7, 2, 'remounting with the same pass, wallet and offer cannot revive an old signature');
++
++    const replacedChallenge = await startChallenge();
++    await sellerMode.click();
++    await panel.waitFor({ state: 'detached' });
++    await customerMode.click();
++    await match.waitFor();
++    await panel.getByRole('button', { name: 'Cancel & new pass', exact: true }).click();
++    await panel.getByText('Previous pass cancelled.', { exact: false }).waitFor();
++    assert.equal(state.cancelAttempts, 1, 'the old pass must be cancelled before replacement');
++    state.createReplacementPass = true;
++    await panel.getByRole('button', { name: 'Create customer QR', exact: true }).click();
++    await panel.getByText(`${origin}/p/${replacementPassId}`, { exact: true }).waitFor();
++    await releaseResponse(replacedChallenge);
++    assertCalls(12, 7, 2, 'the old pass challenge must not reach the wallet after pass replacement');
++    assert.ok(!calls.includes(`POST /api/passes/${replacementPassId}/challenge`), 'replacement pass must not start a challenge');
++    assert.ok(!calls.includes(`POST /api/passes/${replacementPassId}/confirm`), 'replacement pass must not submit a proof');
++    assert.equal(await confirm.count(), 0, 'the replacement pass remains OPEN');
++    assert.deepEqual(pageErrors, []);
++  } finally {
++    for (const hold of holds) hold.release.resolve();
++    await context.close();
++  }
++}
++
+ async function run() {
+   const serverOutput = [];
+   const server = spawn(process.execPath, [path.join(frontend, 'node_modules', 'next', 'dist', 'bin', 'next'), 'dev', '--hostname', '127.0.0.1', '--port', String(port)], {
+@@ -602,6 +1038,7 @@ async function run() {
+     }
+     assert.deepEqual(pageErrors, []);
+     await Promise.all([customerContext.close(), sellerContext.close()]);
++    await verifySelectedOfferIntent(browser);
+     console.log('[benefits-customer-pass-ui] PASS - create -> bind -> exact-offer proof redeems once');
+   } finally {
+     if (browser) await browser.close();
