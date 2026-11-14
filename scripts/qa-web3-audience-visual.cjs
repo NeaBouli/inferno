@@ -1,0 +1,272 @@
+'use strict';
+
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const https = require('node:https');
+const http = require('node:http');
+const { createHash } = require('node:crypto');
+const { spawn, execFileSync } = require('node:child_process');
+const { performance } = require('node:perf_hooks');
+
+const SOURCE = { head: '8bec16dbcd44edf4ed9d7c9feb4c0d889e23fdae', tree: '5bbbf3e1d78122323d7a1360262b3c16d091d29b', docsTree: '6fd5fa86cf867e05d2fbebd31b288d6ae92809a9', manifestSHA256: '141c85d9aa65525b20bdeef4819b6cb07a910c24d58d44cd833a2c151a4625bd', count: 324, bytes: 24374988, htmlSHA256: '3a552de1fbcacb8c25f809151647d8c2ed836fac142d43ee9e294f9e0778f103' };
+const FONT_SHA = '8bff039ebb639dfbc1902204faab9eea67eb20c2f2c8c2524f588a7ee08f400d';
+const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.86 Safari/537.36';
+const ROOT = path.resolve(__dirname, '..');
+const T = path.resolve(process.argv[3] || '/');
+const OUT = path.join(T, 'out');
+const MODE = process.argv[2];
+const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+const check = (ok, code) => { if (!ok) throw Object.assign(new Error(code), { code }); };
+const save = (name, value) => fs.writeFileSync(path.join(OUT, name), JSON.stringify(value, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
+const clean = { PATH: '/usr/bin:/bin', HOME: path.join(T, 'home'), TMPDIR: path.join(T, 'tmp'), PLAYWRIGHT_BROWSERS_PATH: path.join(T, 'browsers'), LANG: 'C.UTF-8', LC_ALL: 'C.UTF-8', TZ: 'UTC' };
+const coreRun = (file, args) => execFileSync(file, args, { cwd: ROOT, env: clean, timeout: 10000, maxBuffer: 20 * 1024 * 1024 });
+const git = (...args) => execFileSync('/usr/bin/git', ['-c', 'core.fsmonitor=false', '-c', 'protocol.allow=never', ...args], { cwd: ROOT, env: { ...clean, GIT_NO_LAZY_FETCH: '1', GIT_OPTIONAL_LOCKS: '0', GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null', GIT_NO_REPLACE_OBJECTS: '1', GIT_TERMINAL_PROMPT: '0' }, timeout: 10000, maxBuffer: 20 * 1024 * 1024 });
+function regular(file, directory = false) {
+  const stat = fs.lstatSync(file);
+  check(!stat.isSymbolicLink() && (directory ? stat.isDirectory() : stat.isFile()), 'NONREGULAR_INPUT');
+  check(fs.realpathSync(file) === file, 'SYMLINK_PARENT');
+  return stat;
+}
+function fonts() {
+  const rows = JSON.parse(fs.readFileSync(path.join(ROOT, 'tests/fixtures/web3-audience-fonts-20261114.json'), 'utf8'));
+  check(Array.isArray(rows) && rows.length === 28 && sha(JSON.stringify(rows)) === FONT_SHA, 'FONT_MANIFEST_BINDING');
+  check(rows.reduce((n, r) => n + r.bytes, 0) === 509510 && new Set(rows.map(r => r.url)).size === 28, 'FONT_TOTAL');
+  rows.forEach((r, i) => {
+    check(Object.keys(r).join(',') === 'url,bytes,type,sha256', 'FONT_KEYS');
+    const u = new URL(r.url);
+    check(u.href === r.url && !u.username && !u.password && !u.hash && /^[0-9a-f]{64}$/.test(r.sha256), 'FONT_URL');
+    check(i === 0 ? u.origin === 'https://fonts.googleapis.com' && u.pathname === '/css2' && r.type === 'text/css' && r.bytes <= 131072 : u.origin === 'https://fonts.gstatic.com' && !u.search && /^\/s\/[A-Za-z0-9/_-]+\.woff2$/.test(u.pathname) && r.type === 'font/woff2' && r.bytes <= 524288, 'FONT_SCOPE');
+  });
+  return rows;
+}
+function fetchFont(row, deadline) {
+  return new Promise((resolve, reject) => {
+    const chunks = []; let count = 0;
+    const ms = Math.min(15000, deadline - performance.now());
+    if (ms <= 0) { reject(Object.assign(new Error('FONT_DEADLINE'), { code: 'FONT_DEADLINE' })); return; }
+    const req = https.get(row.url, { agent: false, headers: { 'User-Agent': UA, 'Accept-Encoding': 'identity' } }, res => {
+      if (res.statusCode !== 200 || String(res.headers['content-type']).split(';')[0] !== row.type) { res.destroy(); req.destroy(new Error('FONT_STATUS_OR_TYPE')); return; }
+      res.on('data', bytes => { count += bytes.length; if (count > row.bytes) req.destroy(new Error('FONT_SIZE')); else chunks.push(bytes); });
+      res.on('error', reject);
+      res.on('end', () => {
+        try {
+          const body = Buffer.concat(chunks);
+          check(body.length === row.bytes && sha(body) === row.sha256, 'FONT_BODY_IDENTITY');
+          if (row.type === 'font/woff2') check(body.toString('ascii', 0, 4) === 'wOF2' && body.readUInt32BE(8) === body.length, 'WOFF2_HEADER');
+          resolve(body);
+        } catch (error) { reject(error); }
+      });
+    });
+    const timer = setTimeout(() => req.destroy(new Error('FONT_DEADLINE')), ms);
+    req.once('error', reject); req.once('close', () => clearTimeout(timer));
+  });
+}
+
+async function setup() {
+  check(process.getuid() !== 0, 'SETUP_MUST_BE_UNPRIVILEGED');
+  check(git('rev-parse', SOURCE.head + '^{tree}').toString().trim() === SOURCE.tree && git('rev-parse', SOURCE.head + ':docs').toString().trim() === SOURCE.docsTree, 'GIT_SOURCE');
+  const entries = git('ls-tree', '-rz', '--full-tree', SOURCE.head, '--', 'docs').toString().split('\0').filter(Boolean);
+  check(entries.length === SOURCE.count, 'DOCS_COUNT');
+  const rows = [];
+  for (const entry of entries) {
+    const m = /^(100644) blob ([a-f0-9]{40})\t(docs\/[^\n\r\\]+)$/.exec(entry);
+    check(m && !m[3].split('/').some(p => ['', '.', '..'].includes(p)), 'DOCS_REGULAR_PATH');
+    const body = git('cat-file', 'blob', m[2]);
+    check(body.length <= 20 * 1024 * 1024, 'BLOB_CAP');
+    rows.push({ name: m[3], blob: m[2], bytes: body.length, sha256: sha(body) });
+    check(rows.reduce((n, r) => n + r.bytes, 0) <= SOURCE.bytes, 'DOCS_BYTE_CAP');
+    const file = path.join(T, 'input', m[3]);
+    fs.mkdirSync(path.dirname(file), { recursive: true, mode: 0o700 });
+    fs.writeFileSync(file, body, { flag: 'wx', mode: 0o600 });
+  }
+  rows.sort((a, b) => Buffer.compare(Buffer.from(a.name), Buffer.from(b.name)));
+  check(sha(JSON.stringify(rows)) === SOURCE.manifestSHA256 && rows.reduce((n, r) => n + r.bytes, 0) === SOURCE.bytes, 'DOCS_MANIFEST');
+  const bank = fonts(), until = performance.now() + 90000;
+  for (const row of bank) fs.writeFileSync(path.join(T, 'fonts', row.sha256), await fetchFont(row, until), { flag: 'wx', mode: 0o600 });
+  const packageInfo = JSON.parse(fs.readFileSync(require.resolve('playwright/package.json'), 'utf8'));
+  check(packageInfo.version === '1.64.1', 'PLAYWRIGHT_VERSION');
+  const browser = require('playwright').chromium.executablePath();
+  regular(browser);
+  const prepared = { source: SOURCE, docs: rows, node: process.execPath, nodeSHA256: sha(fs.readFileSync(process.execPath)), browser, browserSHA256: sha(fs.readFileSync(browser)), uid: process.getuid(), gid: process.getgid(), namespaces: Object.fromEntries(['net', 'mnt', 'pid'].map(n => [n, fs.readlinkSync('/proc/self/ns/' + n)])), runnerSHA256: sha(fs.readFileSync(__filename)) };
+  fs.writeFileSync(path.join(T, 'prepared.json'), JSON.stringify(prepared), { flag: 'wx', mode: 0o600 });
+  save('FONTS.json', { source: SOURCE.head, records: bank, totalBytes: 509510, status: 'HASH_VERIFIED_DATA_ONLY' });
+  save('SETUP.json', { source: SOURCE, node: process.version, playwright: packageInfo.version, nodeSHA256: prepared.nodeSHA256, browserSHA256: prepared.browserSHA256, fonts: bank.length, bytes: 509510, status: 'PREPARED_NOT_RENDERED' });
+}
+
+async function namespace() {
+  check(process.getuid() === 0 && process.pid === 1, 'PRIVATE_PID_NAMESPACE_REQUIRED');
+  const prepared = JSON.parse(fs.readFileSync(path.join(T, 'prepared.json'), 'utf8'));
+  for (const n of ['net', 'mnt', 'pid']) check(fs.readlinkSync('/proc/self/ns/' + n) !== prepared.namespaces[n], 'NAMESPACE_NOT_NEW');
+  check(JSON.stringify(fs.readdirSync('/sys/class/net').sort()) === '["lo"]', 'NON_LOOPBACK_INTERFACE');
+  check(prepared.uid >= 1000 && prepared.gid >= 1000 && prepared.node === process.execPath && prepared.runnerSHA256 === sha(fs.readFileSync(__filename)), 'BOOTSTRAP_IDENTITY');
+  coreRun('/usr/sbin/ip', ['link', 'set', 'dev', 'lo', 'up']);
+  coreRun('/usr/bin/mount', ['--make-rprivate', '/']);
+  for (const [source, target] of [[T, T], [path.join(T, 'tmp'), '/tmp'], [path.join(T, 'tmp'), '/var/tmp'], [path.join(T, 'shm'), '/dev/shm']]) coreRun('/usr/bin/mount', ['--bind', source, target]);
+  const mounts = JSON.parse(coreRun('/usr/bin/findmnt', ['--json', '--list', '--output', 'TARGET']).toString()).filesystems.map(m => m.target);
+  const readonly = target => { coreRun('/usr/bin/mount', ['--bind', target, target]); coreRun('/usr/bin/mount', ['-o', 'remount,bind,ro', target]); };
+  for (const target of [...new Set(mounts)].sort((a, b) => b.length - a.length)) {
+    check(path.isAbsolute(target), 'MOUNT_PATH');
+    if (target === T || target.startsWith(T + '/') || target === '/proc' || target.startsWith('/proc/') || ['/tmp', '/var/tmp', '/dev/shm'].includes(target)) continue;
+    readonly(target);
+  }
+  for (const target of [path.join(T, 'input'), path.join(T, 'fonts'), '/proc/sys']) readonly(target);
+  const verified = JSON.parse(coreRun('/usr/bin/findmnt', ['--json', '--list', '--output', 'TARGET,OPTIONS']).toString()).filesystems;
+  for (const m of verified) {
+    if (m.target === T || m.target.startsWith(T + '/') || m.target === '/proc' || m.target.startsWith('/proc/') || ['/tmp', '/var/tmp', '/dev/shm'].includes(m.target)) continue;
+    check(m.options.split(',').includes('ro'), 'WRITABLE_HOST_MOUNT');
+  }
+  for (const dir of ['input', 'fonts']) check(verified.some(m => m.target === path.join(T, dir) && m.options.split(',').includes('ro')), 'IMMUTABLE_INPUT_MOUNT');
+  save('ISOLATION.json', { status: 'BOUND_BEFORE_PRODUCT_RUNTIME', privateNet: true, interfaces: ['lo'], privatePID: true, readonlyMounts: verified.length, immutableSourceAndFonts: true, uid: prepared.uid, filesystemWriteRoots: ['private-attempt', 'private-tmp', 'private-shm', 'private-process-proc'], namespaceExitKillsDescendants: true });
+  const child = spawn('/usr/bin/setpriv', ['--reuid=' + prepared.uid, '--regid=' + prepared.gid, '--clear-groups', '--bounding-set=-all', '--inh-caps=-all', '--ambient-caps=-all', '--no-new-privs', '/usr/bin/env', '-i', ...Object.entries(clean).map(([k, v]) => k + '=' + v), process.execPath, '--no-addons', __filename, 'runtime', T], { cwd: ROOT, env: clean, stdio: ['ignore', 'pipe', 'pipe'] });
+  let cap = 0, failure = null, maxRSS = 0;
+  const processes = () => fs.readdirSync('/proc').filter(n => /^\d+$/.test(n) && n !== '1').flatMap(pid => {
+    try { const status = fs.readFileSync('/proc/' + pid + '/status', 'utf8'); return [{ pid: Number(pid), state: /^State:\s+(\w)/m.exec(status)?.[1], rss: Number(/^VmRSS:\s+(\d+)/m.exec(status)?.[1] || 0) * 1024 }]; } catch { return []; }
+  });
+  const signalAll = signal => { for (const p of processes()) try { process.kill(p.pid, signal); } catch (e) { if (e.code !== 'ESRCH') throw e; } };
+  const stop = reason => { failure ||= reason; signalAll('SIGTERM'); };
+  for (const stream of [child.stdout, child.stderr]) stream.on('data', b => { cap += b.length; if (cap > 2 * 1024 * 1024) stop('LOG_CAP'); });
+  const timer = setTimeout(() => stop('RUNTIME_DEADLINE'), 180000);
+  const monitor = setInterval(() => { const p = processes(); const rss = p.reduce((n, x) => n + x.rss, 0); maxRSS = Math.max(maxRSS, rss); if (rss > 2 * 1024 ** 3 || p.length > 128) stop('RESOURCE_CAP'); }, 500);
+  process.once('SIGTERM', () => stop('OUTER_TERM'));
+  process.once('SIGINT', () => stop('OUTER_INT'));
+  const code = await new Promise(resolve => { child.once('error', () => { failure ||= 'CHILD_SPAWN'; resolve(2); }); child.once('close', (c, s) => resolve(s ? 2 : c)); });
+  clearTimeout(timer); clearInterval(monitor);
+  signalAll('SIGTERM'); await new Promise(r => setTimeout(r, 2000)); signalAll('SIGKILL');
+  const remaining = processes();
+  for (const dir of ['tmp', 'home', 'shm']) for (const name of fs.readdirSync(path.join(T, dir))) fs.rmSync(path.join(T, dir, name), { recursive: true, force: true });
+  save('CLEANUP.json', { childCloseObserved: true, childExit: code, failure, maxRSS, capturedBytes: cap, remainingBeforePIDNamespaceExit: remaining.map(p => ({ pid: p.pid, state: p.state })), liveRemaining: remaining.filter(p => p.state !== 'Z').length, profileContentsRemoved: true, pidNamespaceExitIsFinalReapBoundary: true });
+  process.exit(code === 0 && !failure && remaining.every(p => p.state === 'Z') ? 0 : 2);
+}
+
+const AUDIENCES = [
+  { key: 'users', title: 'Lock once. Use across the ecosystem.', copy: 'IFRLock', actions: ['Access lock', 'Commitment lock', 'Withdraw offer', 'Loans (borrowing closed)', 'Buy IFR', 'Use IFR Benefits', 'Track pool'], hrefs: ['https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B', 'https://shop.ifrunit.tech/', 'https://www.geckoterminal.com/eth/pools/0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0'], items: ['Use the access terminal for wallet, IFR balance, lock state, and token import.', 'Buy IFR on Uniswap or track the live pool without leaving the user flow.', 'Use IFRLock for simple access or CommitmentVault for time tranches; LendingVault V1 new business is retired, while available-offer withdrawal and existing-loan repayment/top-up remain.'] },
+  { key: 'builders', title: 'Add IFR-gated access to real products.', copy: 'Builders should use the Wiki', actions: ['Integration guide', 'Business onboarding', 'Ecosystem'], hrefs: ['/wiki/integration.html', '/wiki/business-onboarding.html', '/wiki/ecosystem.html'], items: ['Use verified Mainnet contracts as the source of truth.', 'Design product tiers around lock status and wallet proof.', 'Route builders to integration docs and business onboarding before implementation.'] },
+  { key: 'developers', title: 'Verify the surface before integrating.', copy: 'Developers should leave the user execution flow', actions: ['Smart contracts', 'Integration guide', 'Wallet guide'], hrefs: ['/wiki/contracts.html', '/wiki/integration.html', '/wiki/wallet-guide.html'], items: ['Check Etherscan-verified contracts.', 'Read the integration guide and wallet/contract guide.', 'Keep dynamic API usage explicit for web3.ifrunit.tech before shipping integrations.'] },
+  { key: 'community', title: 'A cleaner front door for the protocol.', copy: 'Community members can use Web3', actions: ['Governance', 'Signer expansion', 'Transparency'], hrefs: ['/wiki/governance.html', '/wiki/community-signer-expansion.html', '/wiki/transparency.html'], items: ['Understand what IFR does in one screen.', 'Find governance, signer expansion, and transparency references.', 'Share the dedicated Web3 URL for users and the Wiki for deeper context.'] },
+];
+
+async function runtime() {
+  check(process.getuid() !== 0 && process.getuid() >= 1000, 'UNPRIVILEGED_RUNTIME');
+  const capabilities = fs.readFileSync('/proc/self/status', 'utf8');
+  check(/^CapEff:\s+0+$/m.test(capabilities) && /^NoNewPrivs:\s+1$/m.test(capabilities), 'PRIVILEGE_DROP');
+  check(JSON.stringify(fs.readdirSync('/sys/class/net').sort()) === '["lo"]', 'RUNTIME_NETWORK_NAMESPACE');
+  const prepared = JSON.parse(fs.readFileSync(path.join(T, 'prepared.json'), 'utf8'));
+  check(prepared.nodeSHA256 === sha(fs.readFileSync(process.execPath)) && prepared.browserSHA256 === sha(fs.readFileSync(prepared.browser)), 'RUNTIME_TOOL_IDENTITY');
+  check(prepared.source.head === SOURCE.head && sha(JSON.stringify(prepared.docs)) === SOURCE.manifestSHA256, 'RUNTIME_SOURCE_BINDING');
+  const bank = fonts(), bodies = new Map(bank.map(r => { const bytes = fs.readFileSync(path.join(T, 'fonts', r.sha256)); check(bytes.length === r.bytes && sha(bytes) === r.sha256, 'RUNTIME_FONT_IDENTITY'); return [r.url, { ...r, body: bytes }]; }));
+  const allowed = new Map(prepared.docs.map(r => [r.name.slice(5), r]));
+  const types = { '.html': 'text/html; charset=utf-8', '.js': 'application/javascript', '.mjs': 'application/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml', '.webmanifest': 'application/manifest+json' };
+  let server, browser, context, port, failed = null, outputBytes = 0;
+  const observations = [], resources = [], blocked = [], pageErrors = [], effects = [];
+  try {
+    server = http.createServer((req, res) => {
+      if (!['GET', 'HEAD'].includes(req.method)) { res.writeHead(405).end(); return; }
+      let name;
+      try { name = decodeURIComponent(new URL(req.url, 'http://127.0.0.1').pathname).slice(1); if (name.endsWith('/')) name += 'index.html'; } catch { res.writeHead(400).end(); return; }
+      const row = allowed.get(name);
+      if (!row) { res.writeHead(404).end(); return; }
+      const file = path.join(T, 'input/docs', name); regular(file);
+      const bytes = fs.readFileSync(file); check(bytes.length === row.bytes && sha(bytes) === row.sha256, 'SERVED_BYTES');
+      res.writeHead(200, { 'Content-Type': types[path.extname(file)] || 'application/octet-stream', 'Cache-Control': 'no-store', 'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'none'; frame-src 'none'; form-action 'none'; base-uri 'none'; worker-src 'none'" });
+      resources.push({ method: req.method, path: '/' + name, status: 200, sha256: row.sha256 });
+      res.end(req.method === 'HEAD' ? undefined : bytes);
+    });
+    await new Promise((resolve, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', resolve); });
+    port = server.address().port; const origin = 'http://127.0.0.1:' + port;
+    const { chromium } = require('playwright');
+    browser = await chromium.launch({ executablePath: prepared.browser, headless: true, chromiumSandbox: true, timeout: 30000 });
+    const browserCDP = await browser.newBrowserCDPSession();
+    const command = await browserCDP.send('Browser.getBrowserCommandLine');
+    check(!command.arguments.includes('--no-sandbox'), 'CHROMIUM_SANDBOX_DISABLED');
+    for (const [width, height] of [[375, 812], [390, 844], [820, 1180], [1180, 820], [1440, 1000]]) {
+      context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: 1, reducedMotion: 'reduce', serviceWorkers: 'block', acceptDownloads: false, storageState: { cookies: [], origins: [] } });
+      context.setDefaultTimeout(5000); context.setDefaultNavigationTimeout(15000);
+      const page = await context.newPage();
+      const cdp = await context.newCDPSession(page);
+      await cdp.send('Network.enable'); await cdp.send('Network.setCacheDisabled', { cacheDisabled: true }); await cdp.send('Network.setBypassServiceWorker', { bypass: true });
+      context.on('page', p => { if (p !== page) { effects.push('POPUP'); p.close().catch(() => {}); } });
+      page.on('worker', w => { effects.push('WORKER'); w.evaluate(() => self.close()).catch(() => {}); });
+      page.on('pageerror', () => pageErrors.push('PAGE_ERROR'));
+      await context.routeWebSocket('**/*', route => { effects.push('WEBSOCKET'); route.close(); });
+      await context.route('**/*', async route => {
+        const request = route.request(), url = new URL(request.url()), font = bodies.get(url.href);
+        if (request.method() === 'GET' && font) { await route.fulfill({ status: 200, contentType: font.type, body: font.body }); return; }
+        if (url.origin === origin && ['GET', 'HEAD'].includes(request.method())) { await route.continue(); return; }
+        blocked.push({ method: request.method(), origin: url.origin, path: url.pathname }); await route.abort('blockedbyclient');
+      });
+      await page.goto(origin + '/web3/', { waitUntil: 'domcontentloaded' });
+      assert.deepEqual(await page.evaluate(() => [innerWidth, innerHeight, devicePixelRatio, typeof window.ethereum, localStorage.length, sessionStorage.length]), [width, height, 1, 'undefined', 0, 0]);
+      const tabs = page.locator('[role="tablist"][aria-label="Audience selector"] [role="tab"]'), panel = page.locator('#audience-panel');
+      check(await tabs.count() === 4 && await page.locator('[role="tabpanel"]').count() === 1, 'AUDIENCE_STRUCTURE');
+      const assertAudience = async (index, focused = true, initial = false) => {
+        const data = AUDIENCES[index];
+        const state = await page.evaluate(() => ({ selected: [...document.querySelectorAll('[role="tab"]')].map(t => [t.id, t.getAttribute('aria-selected'), t.tabIndex, t.getAttribute('aria-controls')]), label: document.querySelector('#audience-panel').getAttribute('aria-labelledby'), title: document.querySelector('[data-audience-title]').textContent.trim(), copy: document.querySelector('[data-audience-copy]').textContent, items: [...document.querySelectorAll('[data-audience-list] li')].map(n => n.textContent.trim()), actions: [...document.querySelector('[data-audience-actions]').children].map(n => n.textContent.trim()), hrefs: [...document.querySelectorAll('[data-audience-actions] a')].map(n => n.getAttribute('href')), focus: document.activeElement.id }));
+        assert.deepEqual(state.selected, AUDIENCES.map((a, i) => ['audience-tab-' + a.key, String(i === index), i === index ? 0 : -1, 'audience-panel']));
+        check(state.label === 'audience-tab-' + data.key && state.title === data.title && state.copy.includes(data.copy), 'AUDIENCE_TEXT_BINDING');
+        const initialItems = ['Check wallet, IFR balance, and lock state.', 'Buy IFR on the live Uniswap V2 pool.', AUDIENCES[0].items[2]];
+        assert.deepEqual(state.items, initial ? initialItems : data.items); assert.deepEqual(state.actions, data.actions); assert.deepEqual(state.hrefs, data.hrefs);
+        if (focused) check(state.focus === 'audience-tab-' + data.key, 'AUDIENCE_FOCUS');
+      };
+      await assertAudience(0, false, true);
+      for (let i = 0; i < 4; i++) {
+        await tabs.nth(i).click(); await assertAudience(i);
+        await page.evaluate(async () => { await document.fonts.ready; });
+        const layout = await page.locator('#use-cases > .shell').evaluate(root => {
+          const box = e => { const b = e.getBoundingClientRect(); return { left: b.left, right: b.right, top: b.top, bottom: b.bottom, width: b.width, height: b.height }; };
+          const topbar = document.querySelector('.topbar'), tablist = root.querySelector('.audience-tabs'), panel = root.querySelector('#audience-panel');
+          const texts = [...root.querySelectorAll('button,a,h2,h3,p,li')];
+          return { overflow: document.documentElement.scrollWidth > innerWidth + 1, panelBelowTabs: box(panel).top >= box(tablist).bottom, navAboveTabs: box(tablist).top >= box(topbar).bottom, targets: [...root.querySelectorAll('button,a')].map(e => box(e)), textFits: texts.every(e => { const r = document.createRange(); r.selectNodeContents(e); const p = box(e); return [...r.getClientRects()].every(b => b.left >= p.left - 1 && b.right <= p.right + 1); }) };
+        });
+        check(!layout.overflow && layout.panelBelowTabs && layout.navAboveTabs && layout.textFits, 'AUDIENCE_LAYOUT');
+        check(layout.targets.every(b => b.width >= 44 && b.height >= 44), 'TARGET_44');
+        await cdp.send('DOM.enable'); await cdp.send('CSS.enable');
+        const doc = await cdp.send('DOM.getDocument'); const renderedFonts = [];
+        for (const selector of ['#audience-tab-' + AUDIENCES[i].key, '[data-audience-title]', '[data-audience-copy]']) {
+          const { nodeId } = await cdp.send('DOM.querySelector', { nodeId: doc.root.nodeId, selector });
+          const { fonts: used } = await cdp.send('CSS.getPlatformFontsForNode', { nodeId });
+          check(used.some(f => f.isCustomFont && f.glyphCount > 0), 'CUSTOM_FONT_REQUIRED');
+          renderedFonts.push({ selector, fonts: used.map(f => ({ familyName: f.familyName, isCustomFont: f.isCustomFont, glyphCount: f.glyphCount })) });
+        }
+        const region = page.locator('#use-cases > .shell'), bounds = await region.boundingBox();
+        const png = await region.screenshot({ type: 'png', animations: 'disabled' });
+        check(png.length < 4 * 1024 * 1024 && png.subarray(0, 8).equals(Buffer.from([137, 80, 78, 71, 13, 10, 26, 10])), 'PNG_HEADER_OR_CAP');
+        const pixel = await page.evaluate(async bytes => { const bitmap = await createImageBitmap(new Blob([new Uint8Array(bytes)], { type: 'image/png' })); const canvas = new OffscreenCanvas(bitmap.width, bitmap.height); const ctx = canvas.getContext('2d'); ctx.drawImage(bitmap, 0, 0); const data = ctx.getImageData(0, 0, bitmap.width, bitmap.height).data, colors = new Set(); for (let j = 0; j < data.length; j += Math.max(4, Math.floor(data.length / 20000 / 4) * 4)) colors.add([data[j], data[j + 1], data[j + 2], data[j + 3]].join(',')); return { width: bitmap.width, height: bitmap.height, colors: colors.size }; }, [...png]);
+        check(Math.abs(pixel.width - bounds.width) <= 2 && Math.abs(pixel.height - bounds.height) <= 2 && png.readUInt32BE(16) === pixel.width && png.readUInt32BE(20) === pixel.height && pixel.colors > 16, 'PNG_DIMENSIONS_OR_BLANK');
+        outputBytes += png.length; check(outputBytes <= 64 * 1024 * 1024, 'ARTIFACT_CAP');
+        const name = `audience-${width}x${height}-${AUDIENCES[i].key}.png`;
+        fs.writeFileSync(path.join(OUT, name), png, { flag: 'wx', mode: 0o600 });
+        observations.push({ viewport: { width, height }, audience: AUDIENCES[i].key, layout, renderedFonts, screenshot: { name, bytes: png.length, sha256: sha(png), ...pixel, captureScope: 'complete-audience-shell-not-entire-viewport' } });
+      }
+      await tabs.nth(0).focus();
+      for (const [key, index] of [['ArrowLeft', 3], ['ArrowRight', 0], ['End', 3], ['Home', 0], ['ArrowRight', 1], ['ArrowRight', 2]]) { await page.keyboard.press(key); await assertAudience(index); }
+      await page.keyboard.press('End'); await page.keyboard.press('Tab');
+      check(await panel.locator('[data-audience-actions] a').first().evaluate(e => e === document.activeElement), 'TAB_EXIT');
+      await page.keyboard.press('Shift+Tab'); await assertAudience(3);
+      await tabs.nth(0).focus(); await tabs.nth(1).evaluate(t => t.click()); await assertAudience(1, false);
+      check(await tabs.nth(0).evaluate(t => t === document.activeElement), 'NO_FORCED_POINTER_FOCUS');
+      await tabs.nth(2).focus(); await page.keyboard.press('Enter'); await assertAudience(2);
+      await tabs.nth(0).focus(); await page.keyboard.press('Space'); await assertAudience(0);
+      check(await page.evaluate(() => typeof window.ethereum === 'undefined' && !window.IFRWallet.isConnected()), 'NO_WALLET');
+      check(await page.locator('[data-wallet-chooser][aria-hidden="false"], [data-wallet-dialog][aria-hidden="false"], .protocol-dialog[aria-hidden="false"]').count() === 0, 'NO_DIALOG');
+      check(pageErrors.length === 0 && effects.length === 0, 'PAGE_ERROR_OR_EFFECT');
+      await context.close(); context = null;
+    }
+  } catch (error) { failed = /^[A-Z0-9_]+$/.test(error.code || '') ? error.code : 'ASSERTION_OR_BROWSER_FAILURE'; }
+  finally {
+    if (context) await context.close().catch(() => { failed ||= 'CONTEXT_CLOSE'; });
+    if (browser) await browser.close().catch(() => { failed ||= 'BROWSER_CLOSE'; });
+    if (server) { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); }
+    save('RESULT.json', { source: SOURCE, status: failed ? 'HOLD' : 'ASSERTIONS_COMPLETE_VISUAL_REVIEW_PENDING', reason: failed, screenshots: observations, resources, blocked, pageErrors, effects, port, listenerClosed: server ? !server.listening : true, visualAccepted: false, totalPNGBytes: outputBytes });
+  }
+  check(!failed && observations.length === 20, failed || 'IMAGE_COUNT');
+}
+
+process.umask(0o077);
+check(process.platform === 'linux' && process.version === 'v22.22.2' && process.argv.length === 4, 'HOSTED_NODE_ONLY');
+check(/^\/home\/runner\/work\/_temp\/web3-audience-\d+-1$/.test(T), 'ONE_USE_HOSTED_ROOT');
+regular(T, true); regular(OUT, true);
+({ setup, namespace, runtime }[MODE] || (() => { throw new Error('MODE'); }))().catch(error => {
+  try { save('FAILURE-' + MODE + '.json', { status: 'HOLD', mode: MODE, code: /^[A-Z0-9_]+$/.test(error.code || '') ? error.code : 'PREPARATION_OR_RUNTIME_FAILURE', source: SOURCE }); } catch {}
+  process.exitCode = 2;
+});

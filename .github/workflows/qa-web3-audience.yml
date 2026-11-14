@@ -1,0 +1,72 @@
+name: QA Web3 Audience Visual
+
+on:
+  pull_request:
+    types: [opened]
+    paths:
+      - '.github/workflows/qa-web3-audience.yml'
+      - 'scripts/qa-web3-audience-visual.cjs'
+      - 'tests/fixtures/web3-audience-fonts-20261114.json'
+
+permissions:
+  contents: read
+
+jobs:
+  audience-visual:
+    if: >-
+      github.repository == 'NeaBouli/inferno' &&
+      github.event.repository.private == false &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.head_ref == 'agent/codex/web3-tabs-visual-qa-20261114' &&
+      github.event.pull_request.draft == true && github.run_attempt == 1
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1
+        with:
+          node-version: '22.22.2'
+          check-latest: false
+          package-manager-cache: false
+      - name: Fresh private attempt and bounded toolchain setup
+        timeout-minutes: 7
+        shell: bash
+        env:
+          QA_ROOT: ${{ runner.temp }}/web3-audience-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          umask 077
+          test ! -e "$QA_ROOT"
+          mkdir -m 700 "$QA_ROOT"
+          mkdir -m 700 "$QA_ROOT"/{out,home,tmp,fonts,input,shm}
+          printf '%s\n' '{"status":"SETUP_INCOMPLETE","runtime":"NOT_RUN"}' > "$QA_ROOT/out/SETUP-STARTED.json"
+          N="$(command -v node)"
+          timeout --signal=TERM --kill-after=5s 180s env -i PATH="$PATH" HOME="$QA_ROOT/home" TMPDIR="$QA_ROOT/tmp" npm_config_userconfig=/dev/null npm_config_globalconfig=/dev/null npm_config_cache="$QA_ROOT/npm-cache" npm_config_fetch_retries=0 PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci --ignore-scripts --no-audit --no-fund
+          timeout --signal=TERM --kill-after=5s 210s env -i PATH="$PATH" HOME="$QA_ROOT/home" TMPDIR="$QA_ROOT/tmp" PLAYWRIGHT_BROWSERS_PATH="$QA_ROOT/browsers" PLAYWRIGHT_DOWNLOAD_CONNECTION_TIMEOUT=15000 "$N" node_modules/playwright/cli.js install --with-deps --no-shell chromium
+          timeout --signal=TERM --kill-after=5s 100s env -i PATH=/usr/bin:/bin HOME="$QA_ROOT/home" TMPDIR="$QA_ROOT/tmp" PLAYWRIGHT_BROWSERS_PATH="$QA_ROOT/browsers" LANG=C.UTF-8 LC_ALL=C.UTF-8 TZ=UTC "$N" --no-addons scripts/qa-web3-audience-visual.cjs setup "$QA_ROOT"
+      - name: ONE isolated unprivileged audience runtime
+        timeout-minutes: 4
+        shell: bash
+        env:
+          QA_ROOT: ${{ runner.temp }}/web3-audience-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          set -euo pipefail
+          N="$(command -v node)"
+          set +e
+          sudo -n /usr/bin/env -i PATH=/usr/bin:/bin HOME="$QA_ROOT/home" TMPDIR="$QA_ROOT/tmp" PLAYWRIGHT_BROWSERS_PATH="$QA_ROOT/browsers" LANG=C.UTF-8 LC_ALL=C.UTF-8 TZ=UTC /usr/bin/timeout --signal=TERM --kill-after=5s 210s /usr/bin/unshare --net --mount --pid --fork --mount-proc --kill-child "$N" --no-addons "$GITHUB_WORKSPACE/scripts/qa-web3-audience-visual.cjs" namespace "$QA_ROOT"
+          code=$?
+          printf '{"namespaceOwnerReaped":true,"exitCode":%d,"automaticRetry":false}\n' "$code" > "$QA_ROOT/out/NAMESPACE-EXIT.json"
+          exit "$code"
+      - name: Sanitized audience images and state, not visual approval
+        if: always()
+        # HOLD: Parent must supply the already-reviewed literal artifact action SHA.
+        uses: actions/upload-artifact@UNBOUND_PARENT_PIN_REQUIRED
+        with:
+          name: web3-audience-visual-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/web3-audience-${{ github.run_id }}-${{ github.run_attempt }}/out
+          if-no-files-found: error
+          retention-days: 3
