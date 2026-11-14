@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 'use strict';
 
-// Source preparation only. Parent and independent review must enable this gate.
+// Parent and independent source review admitted one focused hosted qualification.
 // The final helper004 test is bound below; 7a is not an executable alternative.
-const RUNTIME_ADMITTED = false;
+const RUNTIME_ADMITTED = true;
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
