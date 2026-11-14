@@ -1,4 +1,4 @@
-name: QA Web3 Audience Visual
+name: QA Web3 Audience DIAGNOSTIC ONLY - No App or Browser
 
 on:
   pull_request:
@@ -13,6 +13,7 @@ permissions:
 
 jobs:
   audience-visual:
+    name: Third control diagnostic only - no app/browser or visual qualification
     if: >-
       github.repository == 'NeaBouli/inferno' &&
       github.event.repository.private == false &&
@@ -50,7 +51,7 @@ jobs:
           timeout --signal=TERM --kill-after=5s 180s env -i PATH="$PATH" HOME="$QA_ROOT/home" TMPDIR="$QA_ROOT/tmp" npm_config_userconfig="$QA_ROOT/user.npmrc" npm_config_globalconfig="$QA_ROOT/global.npmrc" npm_config_cache="$QA_ROOT/npm-cache" npm_config_fetch_retries=0 PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci --ignore-scripts --no-audit --no-fund
           timeout --signal=TERM --kill-after=5s 210s env -i PATH="$PATH" HOME="$QA_ROOT/home" TMPDIR="$QA_ROOT/tmp" PLAYWRIGHT_BROWSERS_PATH="$QA_ROOT/browsers" PLAYWRIGHT_DOWNLOAD_CONNECTION_TIMEOUT=15000 "$N" node_modules/playwright/cli.js install --with-deps --no-shell chromium
           timeout --signal=TERM --kill-after=5s 100s env -i PATH=/usr/bin:/bin HOME="$QA_ROOT/home" TMPDIR="$QA_ROOT/tmp" PLAYWRIGHT_BROWSERS_PATH="$QA_ROOT/browsers" LANG=C.UTF-8 LC_ALL=C.UTF-8 TZ=UTC "$N" --no-addons scripts/qa-web3-audience-visual.cjs setup "$QA_ROOT"
-      - name: ONE isolated unprivileged audience runtime
+      - name: ONE isolated CONTROL_ONLY diagnostic - no app or browser
         timeout-minutes: 4
         shell: bash
         env:
@@ -63,12 +64,12 @@ jobs:
           code=$?
           printf '{"namespaceOwnerReaped":true,"exitCode":%d,"automaticRetry":false}\n' "$code" > "$QA_ROOT/out/NAMESPACE-EXIT.json"
           exit "$code"
-      - name: Sanitized audience images and state, not visual approval
+      - name: Sanitized control diagnostics only - no images or visual approval
         if: always()
         # v7.0.2; Parent reviewed official release, tag-ref commit and action.yml.
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: web3-audience-visual-${{ github.run_id }}-${{ github.run_attempt }}
+          name: web3-audience-control-only-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/web3-audience-${{ github.run_id }}-${{ github.run_attempt }}/out
           if-no-files-found: error
           retention-days: 3

@@ -11,6 +11,7 @@ const { performance } = require('node:perf_hooks');
 
 const SOURCE = { head: '8bec16dbcd44edf4ed9d7c9feb4c0d889e23fdae', tree: '5bbbf3e1d78122323d7a1360262b3c16d091d29b', docsTree: '6fd5fa86cf867e05d2fbebd31b288d6ae92809a9', manifestSHA256: '141c85d9aa65525b20bdeef4819b6cb07a910c24d58d44cd833a2c151a4625bd', count: 324, bytes: 24374988, htmlSHA256: '3a552de1fbcacb8c25f809151647d8c2ed836fac142d43ee9e294f9e0778f103' };
 const FONT_SHA = '8bff039ebb639dfbc1902204faab9eea67eb20c2f2c8c2524f588a7ee08f400d';
+const CONTROL_ONLY = true;
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.86 Safari/537.36';
 const ROOT = path.resolve(__dirname, '..');
 const T = path.resolve(process.argv[3] || '/');
@@ -18,9 +19,55 @@ const OUT = path.join(T, 'out');
 const MODE = process.argv[2];
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const check = (ok, code) => { if (!ok) throw Object.assign(new Error(code), { code }); };
-const save = (name, value) => fs.writeFileSync(path.join(OUT, name), JSON.stringify(value, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
+const PHASE_CODES = Object.freeze({
+  ENTRY: 'MODE', HOST: 'HOSTED_NODE_ONLY', ROOT: 'ONE_USE_HOSTED_ROOT', OUTPUT: 'NONREGULAR_INPUT', SETUP: 'SETUP_FAILED', OUTPUT_OWNER: 'OUTPUT_OWNER_BINDING',
+  NAMESPACE_PID: 'PRIVATE_PID_NAMESPACE_REQUIRED', NAMESPACE_NET: 'NAMESPACE_NOT_NEW', NAMESPACE_MNT: 'NAMESPACE_NOT_NEW', NAMESPACE_PID_NEW: 'NAMESPACE_NOT_NEW', NETWORK: 'NON_LOOPBACK_INTERFACE', BOOTSTRAP: 'BOOTSTRAP_IDENTITY',
+  LOOPBACK: 'LOOPBACK_FAILED', MOUNT_PRIVATE: 'MOUNT_PRIVATE_FAILED', MOUNT_BIND: 'MOUNT_BIND_FAILED', MOUNT_INVENTORY: 'MOUNT_INVENTORY_FAILED', MOUNT_HOST_RO: 'MOUNT_PATH', MOUNT_INPUT_RO: 'MOUNT_INPUT_RO_FAILED', MOUNT_VERIFY: 'WRITABLE_HOST_MOUNT', MOUNT_INPUT_VERIFY: 'IMMUTABLE_INPUT_MOUNT', ISOLATION_RECORD: 'ISOLATION_RECORD_FAILED',
+  CHILD: 'CHILD_SPAWN', RESOURCE: 'RESOURCE_CAP', CHILD_WAIT: 'CHILD_EXIT', STOP: 'LOG_CAP', CLEANUP_SIGNAL: 'CLEANUP_SIGNAL_FAILED', CLEANUP_PROFILE: 'CLEANUP_PROFILE_FAILED', CLEANUP_RECORD: 'CLEANUP_RECORD_FAILED',
+  RUNTIME_UID: 'UNPRIVILEGED_RUNTIME', RUNTIME_CAPS: 'PRIVILEGE_DROP', RUNTIME_NETWORK: 'RUNTIME_NETWORK_NAMESPACE', RUNTIME_TOOLS: 'RUNTIME_TOOL_IDENTITY', RUNTIME_SOURCE: 'RUNTIME_SOURCE_BINDING', RUNTIME_FONTS: 'RUNTIME_FONT_IDENTITY', CONTROL: 'CONTROL_ONLY_NO_APP_BROWSER'
+});
+const DIAGNOSTIC_CODES = new Set(['ENTER', 'OPERATION_FAILED', 'FAILURE_RECORD_FAILED', 'DIAGNOSTIC_PROTOCOL', 'OUTPUT_OWNER_BINDING', 'OUTPUT_FILE_BINDING', 'RUNTIME_DEADLINE', 'OUTER_TERM', 'OUTER_INT', ...Object.values(PHASE_CODES)]);
+let phase = 'ENTRY', outputOwner;
+const diagnostic = (next, code = 'ENTER') => {
+  check(Object.hasOwn(PHASE_CODES, next) && DIAGNOSTIC_CODES.has(code), 'DIAGNOSTIC_PROTOCOL');
+  process.stdout.write(JSON.stringify({ phase: next, code }) + '\n');
+};
+const mark = next => { diagnostic(next); phase = next; };
+function save(name, value) {
+  check(/^[A-Za-z][A-Za-z0-9-]*\.json$/.test(name), 'OUTPUT_FILE_BINDING');
+  const owner = outputOwner || (process.getuid() !== 0 ? { uid: process.getuid(), gid: process.getgid() } : null);
+  check(owner && owner.uid >= 1000 && owner.gid >= 1000, 'OUTPUT_OWNER_BINDING');
+  const before = regular(OUT, true);
+  const dir = fs.openSync(OUT, fs.constants.O_RDONLY | fs.constants.O_DIRECTORY | fs.constants.O_NOFOLLOW);
+  try {
+    const stat = fs.fstatSync(dir);
+    check(stat.dev === before.dev && stat.ino === before.ino && stat.uid === owner.uid && stat.gid === owner.gid && (stat.mode & 0o7777) === 0o700, 'OUTPUT_OWNER_BINDING');
+    const fd = fs.openSync('/proc/self/fd/' + dir + '/' + name, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL | fs.constants.O_NOFOLLOW, 0o600);
+    try {
+      const file = fs.fstatSync(fd);
+      check(file.isFile() && file.nlink === 1 && (file.mode & 0o7777) === 0o600, 'OUTPUT_FILE_BINDING');
+      if (process.getuid() === 0) fs.fchownSync(fd, owner.uid, owner.gid);
+      const owned = fs.fstatSync(fd);
+      check(owned.uid === owner.uid && owned.gid === owner.gid && (owned.mode & 0o7777) === 0o600, 'OUTPUT_OWNER_BINDING');
+      fs.writeFileSync(fd, JSON.stringify(value, null, 2) + '\n');
+    } finally { fs.closeSync(fd); }
+  } finally { fs.closeSync(dir); }
+}
+function readPrepared() {
+  const file = path.join(T, 'prepared.json'), before = regular(file);
+  const fd = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
+  try {
+    const stat = fs.fstatSync(fd), prepared = JSON.parse(fs.readFileSync(fd, 'utf8'));
+    check(stat.isFile() && stat.nlink === 1 && stat.dev === before.dev && stat.ino === before.ino && (stat.mode & 0o7777) === 0o600, 'OUTPUT_OWNER_BINDING');
+    check([prepared.uid, prepared.gid].every(n => Number.isSafeInteger(n) && n >= 1000 && n < 4294967295) && stat.uid === prepared.uid && stat.gid === prepared.gid, 'OUTPUT_OWNER_BINDING');
+    for (const dir of [T, OUT]) { const s = regular(dir, true); check(s.uid === prepared.uid && s.gid === prepared.gid && (s.mode & 0o7777) === 0o700, 'OUTPUT_OWNER_BINDING'); }
+    check(prepared.node === process.execPath && prepared.runnerSHA256 === sha(fs.readFileSync(__filename)), 'BOOTSTRAP_IDENTITY');
+    outputOwner = { uid: prepared.uid, gid: prepared.gid };
+    return prepared;
+  } finally { fs.closeSync(fd); }
+}
 const clean = { PATH: '/usr/bin:/bin', HOME: path.join(T, 'home'), TMPDIR: path.join(T, 'tmp'), PLAYWRIGHT_BROWSERS_PATH: path.join(T, 'browsers'), LANG: 'C.UTF-8', LC_ALL: 'C.UTF-8', TZ: 'UTC' };
-const coreRun = (file, args) => execFileSync(file, args, { cwd: ROOT, env: clean, timeout: 10000, maxBuffer: 20 * 1024 * 1024 });
+const coreRun = (file, args) => execFileSync(file, args, { cwd: ROOT, env: clean, stdio: ['ignore', 'pipe', 'pipe'], timeout: 10000, maxBuffer: 20 * 1024 * 1024 });
 const git = (...args) => execFileSync('/usr/bin/git', ['-c', 'core.fsmonitor=false', '-c', 'protocol.allow=never', ...args], { cwd: ROOT, env: { ...clean, GIT_NO_LAZY_FETCH: '1', GIT_OPTIONAL_LOCKS: '0', GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null', GIT_NO_REPLACE_OBJECTS: '1', GIT_TERMINAL_PROMPT: '0' }, timeout: 10000, maxBuffer: 20 * 1024 * 1024 });
 function regular(file, directory = false) {
   const stat = fs.lstatSync(file);
@@ -95,29 +142,40 @@ async function setup() {
 }
 
 async function namespace() {
+  mark('OUTPUT_OWNER');
+  const prepared = readPrepared();
+  mark('NAMESPACE_PID');
   check(process.getuid() === 0 && process.pid === 1, 'PRIVATE_PID_NAMESPACE_REQUIRED');
-  const prepared = JSON.parse(fs.readFileSync(path.join(T, 'prepared.json'), 'utf8'));
-  for (const n of ['net', 'mnt', 'pid']) check(fs.readlinkSync('/proc/self/ns/' + n) !== prepared.namespaces[n], 'NAMESPACE_NOT_NEW');
+  for (const [n, stage] of [['net', 'NAMESPACE_NET'], ['mnt', 'NAMESPACE_MNT'], ['pid', 'NAMESPACE_PID_NEW']]) { mark(stage); check(fs.readlinkSync('/proc/self/ns/' + n) !== prepared.namespaces[n], 'NAMESPACE_NOT_NEW'); }
+  mark('NETWORK');
   check(JSON.stringify(fs.readdirSync('/sys/class/net').sort()) === '["lo"]', 'NON_LOOPBACK_INTERFACE');
+  mark('BOOTSTRAP');
   check(prepared.uid >= 1000 && prepared.gid >= 1000 && prepared.node === process.execPath && prepared.runnerSHA256 === sha(fs.readFileSync(__filename)), 'BOOTSTRAP_IDENTITY');
+  mark('LOOPBACK');
   coreRun('/usr/sbin/ip', ['link', 'set', 'dev', 'lo', 'up']);
+  mark('MOUNT_PRIVATE');
   coreRun('/usr/bin/mount', ['--make-rprivate', '/']);
-  for (const [source, target] of [[T, T], [path.join(T, 'tmp'), '/tmp'], [path.join(T, 'tmp'), '/var/tmp'], [path.join(T, 'shm'), '/dev/shm']]) coreRun('/usr/bin/mount', ['--bind', source, target]);
+  for (const [source, target] of [[T, T], [path.join(T, 'tmp'), '/tmp'], [path.join(T, 'tmp'), '/var/tmp'], [path.join(T, 'shm'), '/dev/shm']]) { mark('MOUNT_BIND'); coreRun('/usr/bin/mount', ['--bind', source, target]); }
+  mark('MOUNT_INVENTORY');
   const mounts = JSON.parse(coreRun('/usr/bin/findmnt', ['--json', '--list', '--output', 'TARGET']).toString()).filesystems.map(m => m.target);
   const readonly = target => { coreRun('/usr/bin/mount', ['--bind', target, target]); coreRun('/usr/bin/mount', ['-o', 'remount,bind,ro', target]); };
   for (const target of [...new Set(mounts)].sort((a, b) => b.length - a.length)) {
+    mark('MOUNT_HOST_RO');
     check(path.isAbsolute(target), 'MOUNT_PATH');
     if (target === T || target.startsWith(T + '/') || target === '/proc' || target.startsWith('/proc/') || ['/tmp', '/var/tmp', '/dev/shm'].includes(target)) continue;
     readonly(target);
   }
-  for (const target of [path.join(T, 'input'), path.join(T, 'fonts'), '/proc/sys']) readonly(target);
+  for (const target of [path.join(T, 'input'), path.join(T, 'fonts'), '/proc/sys']) { mark('MOUNT_INPUT_RO'); readonly(target); }
+  mark('MOUNT_VERIFY');
   const verified = JSON.parse(coreRun('/usr/bin/findmnt', ['--json', '--list', '--output', 'TARGET,OPTIONS']).toString()).filesystems;
   for (const m of verified) {
     if (m.target === T || m.target.startsWith(T + '/') || m.target === '/proc' || m.target.startsWith('/proc/') || ['/tmp', '/var/tmp', '/dev/shm'].includes(m.target)) continue;
     check(m.options.split(',').includes('ro'), 'WRITABLE_HOST_MOUNT');
   }
-  for (const dir of ['input', 'fonts']) check(verified.some(m => m.target === path.join(T, dir) && m.options.split(',').includes('ro')), 'IMMUTABLE_INPUT_MOUNT');
+  for (const dir of ['input', 'fonts']) { mark('MOUNT_INPUT_VERIFY'); check(verified.some(m => m.target === path.join(T, dir) && m.options.split(',').includes('ro')), 'IMMUTABLE_INPUT_MOUNT'); }
+  mark('ISOLATION_RECORD');
   save('ISOLATION.json', { status: 'BOUND_BEFORE_PRODUCT_RUNTIME', privateNet: true, interfaces: ['lo'], privatePID: true, readonlyMounts: verified.length, immutableSourceAndFonts: true, uid: prepared.uid, filesystemWriteRoots: ['private-attempt', 'private-tmp', 'private-shm', 'private-process-proc'], namespaceExitKillsDescendants: true });
+  mark('CHILD');
   const child = spawn('/usr/bin/setpriv', ['--reuid=' + prepared.uid, '--regid=' + prepared.gid, '--clear-groups', '--bounding-set=-all', '--inh-caps=-all', '--ambient-caps=-all', '--no-new-privs', '/usr/bin/env', '-i', ...Object.entries(clean).map(([k, v]) => k + '=' + v), process.execPath, '--no-addons', __filename, 'runtime', T], { cwd: ROOT, env: clean, stdio: ['ignore', 'pipe', 'pipe'] });
   let cap = 0, failure = null, maxRSS = 0;
   const processes = () => fs.readdirSync('/proc').filter(n => /^\d+$/.test(n) && n !== '1').flatMap(pid => {
@@ -129,18 +187,34 @@ async function namespace() {
     failure ||= reason;
     if (killTimer !== undefined) return;
     killTimer = setTimeout(() => signalAll('SIGKILL'), 2000);
+    diagnostic('STOP', DIAGNOSTIC_CODES.has(reason) ? reason : 'OPERATION_FAILED');
     signalAll('SIGTERM');
   };
   for (const stream of [child.stdout, child.stderr]) stream.on('data', b => { cap += b.length; if (cap > 2 * 1024 * 1024) stop('LOG_CAP'); });
+  let pending = '';
+  child.stdout.on('data', b => {
+    pending += b.toString('utf8');
+    if (pending.length > 4096) { pending = ''; stop('DIAGNOSTIC_PROTOCOL'); return; }
+    const lines = pending.split('\n'); pending = lines.pop();
+    for (const line of lines) {
+      try { const row = JSON.parse(line); check(Object.keys(row).join(',') === 'phase,code', 'DIAGNOSTIC_PROTOCOL'); diagnostic(row.phase, row.code); }
+      catch { stop('DIAGNOSTIC_PROTOCOL'); return; }
+    }
+  });
+  mark('RESOURCE');
   const timer = setTimeout(() => stop('RUNTIME_DEADLINE'), 180000);
   const monitor = setInterval(() => { const p = processes(); const rss = p.reduce((n, x) => n + x.rss, 0); maxRSS = Math.max(maxRSS, rss); if (rss > 2 * 1024 ** 3 || p.length > 128) stop('RESOURCE_CAP'); }, 500);
   process.once('SIGTERM', () => stop('OUTER_TERM'));
   process.once('SIGINT', () => stop('OUTER_INT'));
+  mark('CHILD_WAIT');
   const code = await new Promise(resolve => { child.once('error', () => stop('CHILD_SPAWN')); child.once('close', (c, s) => resolve(s ? 2 : c)); });
   clearTimeout(timer); clearTimeout(killTimer); clearInterval(monitor);
+  mark('CLEANUP_SIGNAL');
   signalAll('SIGTERM'); await new Promise(r => setTimeout(r, 2000)); signalAll('SIGKILL');
   const remaining = processes();
+  mark('CLEANUP_PROFILE');
   for (const dir of ['tmp', 'home', 'shm']) for (const name of fs.readdirSync(path.join(T, dir))) fs.rmSync(path.join(T, dir, name), { recursive: true, force: true });
+  mark('CLEANUP_RECORD');
   save('CLEANUP.json', { childCloseObserved: true, childExit: code, failure, maxRSS, capturedBytes: cap, remainingBeforePIDNamespaceExit: remaining.map(p => ({ pid: p.pid, state: p.state })), liveRemaining: remaining.filter(p => p.state !== 'Z').length, profileContentsRemoved: true, pidNamespaceExitIsFinalReapBoundary: true });
   process.exit(code === 0 && !failure && remaining.every(p => p.state === 'Z') ? 0 : 2);
 }
@@ -153,14 +227,27 @@ const AUDIENCES = [
 ];
 
 async function runtime() {
+  mark('RUNTIME_UID');
   check(process.getuid() !== 0 && process.getuid() >= 1000, 'UNPRIVILEGED_RUNTIME');
+  mark('RUNTIME_CAPS');
   const capabilities = fs.readFileSync('/proc/self/status', 'utf8');
   check(/^CapEff:\s+0+$/m.test(capabilities) && /^NoNewPrivs:\s+1$/m.test(capabilities), 'PRIVILEGE_DROP');
+  mark('RUNTIME_NETWORK');
   check(JSON.stringify(fs.readdirSync('/sys/class/net').sort()) === '["lo"]', 'RUNTIME_NETWORK_NAMESPACE');
-  const prepared = JSON.parse(fs.readFileSync(path.join(T, 'prepared.json'), 'utf8'));
+  mark('OUTPUT_OWNER');
+  const prepared = readPrepared();
+  mark('RUNTIME_TOOLS');
   check(prepared.nodeSHA256 === sha(fs.readFileSync(process.execPath)) && prepared.browserSHA256 === sha(fs.readFileSync(prepared.browser)), 'RUNTIME_TOOL_IDENTITY');
+  mark('RUNTIME_SOURCE');
   check(prepared.source.head === SOURCE.head && sha(JSON.stringify(prepared.docs)) === SOURCE.manifestSHA256, 'RUNTIME_SOURCE_BINDING');
+  mark('RUNTIME_FONTS');
   const bank = fonts(), bodies = new Map(bank.map(r => { const bytes = fs.readFileSync(path.join(T, 'fonts', r.sha256)); check(bytes.length === r.bytes && sha(bytes) === r.sha256, 'RUNTIME_FONT_IDENTITY'); return [r.url, { ...r, body: bytes }]; }));
+  if (CONTROL_ONLY) {
+    mark('CONTROL');
+    save('CONTROL-ONLY.json', { status: 'CONTROL_ONLY_NO_APP_BROWSER', source: SOURCE, applicationRuntime: 'NOT_RUN', browser: 'NOT_RUN', visualAccepted: false });
+    diagnostic('CONTROL', 'CONTROL_ONLY_NO_APP_BROWSER');
+    return;
+  }
   const allowed = new Map(prepared.docs.map(r => [r.name.slice(5), r]));
   const types = { '.html': 'text/html; charset=utf-8', '.js': 'application/javascript', '.mjs': 'application/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml', '.webmanifest': 'application/manifest+json' };
   let server, browser, context, port, failed = null, outputBytes = 0;
@@ -329,10 +416,17 @@ async function runtime() {
 }
 
 process.umask(0o077);
-check(process.platform === 'linux' && process.version === 'v22.22.2' && process.argv.length === 4, 'HOSTED_NODE_ONLY');
-check(/^\/home\/runner\/work\/_temp\/web3-audience-\d+-1$/.test(T), 'ONE_USE_HOSTED_ROOT');
-regular(T, true); regular(OUT, true);
-({ setup, namespace, runtime }[MODE] || (() => { throw new Error('MODE'); }))().catch(error => {
-  try { save('FAILURE-' + MODE + '.json', { status: 'HOLD', mode: MODE, code: /^[A-Z0-9_]+$/.test(error.code || '') ? error.code : 'PREPARATION_OR_RUNTIME_FAILURE', source: SOURCE }); } catch {}
+(async () => {
+  mark('ENTRY'); check(['setup', 'namespace', 'runtime'].includes(MODE), 'MODE');
+  mark('HOST'); check(process.platform === 'linux' && process.version === 'v22.22.2' && process.argv.length === 4, 'HOSTED_NODE_ONLY');
+  mark('ROOT'); check(/^\/home\/runner\/work\/_temp\/web3-audience-\d+-1$/.test(T), 'ONE_USE_HOSTED_ROOT');
+  mark('OUTPUT'); regular(T, true); regular(OUT, true);
+  if (MODE === 'setup') mark('SETUP');
+  await ({ setup, namespace, runtime }[MODE])();
+})().catch(error => {
+  const code = DIAGNOSTIC_CODES.has(error?.code) ? error.code : 'OPERATION_FAILED';
+  diagnostic(phase, code);
+  try { if (['setup', 'namespace', 'runtime'].includes(MODE)) save('FAILURE-' + MODE + '.json', { status: 'HOLD', phase, code }); }
+  catch { diagnostic(phase, 'FAILURE_RECORD_FAILED'); }
   process.exitCode = 2;
 });
