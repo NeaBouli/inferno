@@ -32,6 +32,28 @@ const LOCK_INPUTS = [
 ];
 const MARKER = '[benefits-customer-pass-ui] PASS - create -> bind -> exact-offer proof redeems once';
 const LOG_CAP = 16 * 1024 * 1024;
+const DIAGNOSTIC_ERRORS = new Set(`
+  UNKNOWN_FAILURE DIAGNOSTIC_WRITE_FAILED NAMESPACE_EXIT_FAILURE CHILD_SIGNALLED
+  ENOENT EACCES EPERM ENOSPC EEXIST EIO ENOMEM EROFS EISDIR ENOTDIR ESRCH EPIPE EINVAL ETIMEDOUT EADDRINUSE
+  NO_ARBITRARY_ARGUMENTS HOST_TOOLCHAIN HOSTED_CI_ONLY PARENT_AND_INDEPENDENT_REVIEW_REQUIRED
+  HELPER_DIGEST GIT_DATA_OPERATION_FAILED LOCK_SCHEMA LOCK_LINK NON_OFFICIAL_LOCK_RECORD
+  QA_BRANCH_NOT_BASELINE_ONLY BASE_BLOB_MISMATCH PATCH_DIGEST CANDIDATE_TREE_MISMATCH FINAL_BLOB_MISMATCH
+  UNSUPPORTED_GIT_ENTRY ENV_TEMPLATE_MODE UNEXPECTED_SOURCE_INPUT ENV_TEMPLATE_PATH_SET SOURCE_PATH
+  TRACKED_INPUT_DRIFT NPM_TOOLCHAIN INSTALLED_VERSION_MISMATCH SYSTEM_TOOL_OWNERSHIP NODE_EXECUTABLE_DRIFT
+  RUNTIME_RECEIPT_MISSING FINAL_CLEANUP_UNCERTAIN NOT_ACCEPTED RUNTIME_PRIVILEGE NAMESPACE_NOT_ISOLATED
+  MOUNT_IPC_NAMESPACE_NOT_ISOLATED CAPABILITIES_NOT_DROPPED NETWORK_INTERFACE_NOT_LOOPBACK_ONLY
+  WORKER_IDENTITY MOUNT_ID_UNAVAILABLE SCRATCH_MOUNTS_NOT_DISTINCT MOUNT_COUNT MOUNTINFO_SHAPE
+  MOUNT_PROPAGATION SCRATCH_MOUNT_FLAGS PRIVATE_SHM_FLAGS HOST_MOUNT_WRITABLE PRIVATE_TMP_BIND
+  NAMESPACE_PORT_ALREADY_USED OUTER_DEADLINE SPAWN_FAILED UNOWNED_PROCESS_GROUP PROCESS_COUNT_CAP
+  PRIVILEGED_SIGNAL_FAILED OWNED_PROCESS_REAP_UNCERTAIN CHILD_DEADLINE OUTPUT_CAP
+  PROCESS_OBSERVATION_FAILED SIGNAL_FAILED COMMAND_FAILED PASS_FIXTURE_MARKER LISTENER_NOT_REAPED
+`.trim().split(/\s+/));
+const BOOTSTRAP_MARKERS = new Map([
+  ['QA_SHOP_STAGE_BOOTSTRAP_PRIVATE', 'BOOTSTRAP_PRIVATE'],
+  ['QA_SHOP_STAGE_RO_MOUNT', 'RO_MOUNT'],
+  ['QA_SHOP_STAGE_TMP_SHM', 'TMP_SHM'],
+  ['QA_SHOP_STAGE_UID_DROP', 'UID_DROP'],
+]);
 const owned = new Map();
 let usedBytes = 0;
 let stopped = false;
@@ -43,6 +65,18 @@ function insist(condition, code) { if (!condition) throw Object.assign(new Error
 function sha(bytes) { return crypto.createHash('sha256').update(bytes).digest('hex'); }
 function json(file) { return JSON.parse(fs.readFileSync(file, 'utf8')); }
 function write(file, value) { fs.writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`, { flag: 'wx', mode: 0o600 }); }
+function diagnosticCode(error) { return DIAGNOSTIC_ERRORS.has(error?.code) ? error.code : 'UNKNOWN_FAILURE'; }
+function diagnosticExit(code) { return Number.isInteger(code) && code >= 1 && code <= 255 ? code : 1; }
+function writeFailure(name, stage, error, exitCode) {
+  insist(name === 'bootstrap-failure.json' || name === 'worker-failure.json', 'DIAGNOSTIC_WRITE_FAILED');
+  const stages = new Set(['BOOTSTRAP_UNKNOWN', 'BOOTSTRAP_PRIVATE', 'RO_MOUNT', 'TMP_SHM', 'UID_DROP', 'WORKER']);
+  write(path.join(root, 'public', name), { stage: stages.has(stage) ? stage : 'BOOTSTRAP_UNKNOWN', errorCode: diagnosticCode(error), exitCode: diagnosticExit(exitCode) });
+}
+function bootstrapStage(output) {
+  let stage = 'BOOTSTRAP_UNKNOWN';
+  for (const line of output.split('\n')) if (BOOTSTRAP_MARKERS.has(line)) stage = BOOTSTRAP_MARKERS.get(line);
+  return stage;
+}
 function digest(file) { return sha(fs.readFileSync(file)); }
 function mkdir(directory) { fs.mkdirSync(directory, { mode: 0o700 }); }
 function cleanEnv() {
@@ -139,13 +173,22 @@ async function command(label, binary, args, milliseconds, cwd, env = cleanEnv(),
       child.once('error', reject);
       child.once('close', (code, signal) => resolve({ code, signal }));
     });
+  } catch (error) {
+    if (namespaceExit) writeFailure('bootstrap-failure.json', bootstrapStage(output), error, 1);
+    throw error;
   } finally {
     clearInterval(poll); clearTimeout(timer); fs.closeSync(fd);
+  }
+  if (namespaceExit && (failure || exit.code !== 0 || exit.signal !== null)) {
+    writeFailure('bootstrap-failure.json', bootstrapStage(output), { code: failure || (exit.signal ? 'CHILD_SIGNALLED' : 'NAMESPACE_EXIT_FAILURE') }, exit.code);
   }
   const cleanup = await reap(child.pid, seen, namespaceExit);
   const result = { label, ...exit, bytes: fs.statSync(log).size, sha256: digest(log), cleanup };
   write(path.join(root, 'public', `${label}.json`), result);
-  insist(!failure && exit.code === 0 && exit.signal === null, failure || 'COMMAND_FAILED');
+  if (failure || exit.code !== 0 || exit.signal !== null) {
+    const code = failure || 'COMMAND_FAILED';
+    throw Object.assign(new Error(code), { code, exitCode: diagnosticExit(exit.code) });
+  }
   return { ...result, output };
 }
 function git(repo, args, env, input) {
@@ -332,6 +375,7 @@ async function worker() {
 const NAMESPACE_SCRIPT = String.raw`
 set -eu
 umask 077
+printf '%s\n' 'QA_SHOP_STAGE_BOOTSTRAP_PRIVATE'
 test "$#" -eq 12
 test "$$" -eq 1
 uid=$1; gid=$2; runtime_path=$3; scratch=$4
@@ -349,6 +393,7 @@ exec 9< "$scratch"
 work_id=$(/usr/bin/awk '$1 == "mnt_id:" { print $2; found=1 } END { if (!found) exit 1 }' /proc/self/fdinfo/9)
 exec 9<&-
 test -n "$work_id"
+printf '%s\n' 'QA_SHOP_STAGE_RO_MOUNT'
 /usr/bin/awk -v work="$work_id" '
   NR > 4096 || NF < 10 || $5 !~ /^\// || $5 ~ /\\/ { exit 1 }
   { for (i=7; i<=NF && $i!="-"; i++) if ($i ~ /^(shared|master|propagate_from):/) exit 1 }
@@ -363,6 +408,7 @@ done < "$scratch/read-only-mounts"
   $1 != work && ("," $6 ",") !~ /,ro,/ { exit 1 }
   $1 == work && ("," $6 ",") !~ /,rw,/ { exit 1 }
 ' /proc/self/mountinfo
+printf '%s\n' 'QA_SHOP_STAGE_TMP_SHM'
 /usr/bin/mount -o remount,bind,rw,nosuid,nodev "$scratch"
 /usr/bin/mount --bind "$scratch/tmp" /tmp
 /usr/bin/mount -o remount,bind,rw,nosuid,nodev /tmp
@@ -388,7 +434,9 @@ test "$(/usr/bin/stat -Lc '%d:%i' "$scratch/tmp")" = "$(/usr/bin/stat -Lc '%d:%i
   ("," $6 ",") !~ /,ro,/ { exit 1 }
   END { if (writable != 3) exit 1 }
 ' /proc/self/mountinfo
+printf '%s\n' 'QA_SHOP_STAGE_BOOTSTRAP_PRIVATE'
 /usr/sbin/ip link set dev lo up
+printf '%s\n' 'QA_SHOP_STAGE_UID_DROP'
 exec /usr/bin/setpriv --reuid="$uid" --regid="$gid" --clear-groups --bounding-set=-all --inh-caps=-all --ambient-caps=-all --no-new-privs /usr/bin/env -i PATH="$runtime_path" HOME="$scratch/home" TMPDIR="$scratch/tmp" LANG=C.UTF-8 CI=1 NEXT_TELEMETRY_DISABLED=1 BENEFITS_PASS_UI_PORT=3210 NEXT_PUBLIC_API_URL= NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID= PLAYWRIGHT_BROWSERS_PATH="$scratch/browsers" QA_SHOP_ROOT="$scratch" QA_SHOP_NONCE="$nonce" QA_SHOP_HELPER_SHA256="$helper_sha" "$node" "$helper" --namespace-worker
 `;
 async function main() {
@@ -436,7 +484,7 @@ async function main() {
     unchanged(source);
     complete = true;
   } catch (error) {
-    failure = /^[A-Z0-9_]{1,80}$/.test(error.code || '') ? error.code : 'QUALIFICATION_FAILED';
+    failure = diagnosticCode(error);
   } finally {
     const cleanup = [];
     for (const id of owned.keys()) {
@@ -453,5 +501,9 @@ for (const name of ['SIGTERM', 'SIGINT']) process.on(name, () => {
 });
 if (require.main !== module) installBrowserPolicy();
 else if (process.argv.length === 3 && process.argv[2] === '--namespace-worker') {
-  worker().catch(() => { process.exitCode = 1; });
+  worker().catch(error => {
+    try { writeFailure('worker-failure.json', 'WORKER', error, error?.exitCode); }
+    catch { process.stderr.write('{"stage":"WORKER","errorCode":"DIAGNOSTIC_WRITE_FAILED","exitCode":1}\n'); }
+    process.exitCode = 1;
+  });
 } else main().catch(() => { console.error('[qa-shop-pass-intent] NOT_ACCEPTED; sanitized receipt only'); process.exitCode = 1; });
