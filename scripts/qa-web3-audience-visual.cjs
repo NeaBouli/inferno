@@ -11,7 +11,9 @@ const { performance } = require('node:perf_hooks');
 
 const SOURCE = { head: '8bec16dbcd44edf4ed9d7c9feb4c0d889e23fdae', tree: '5bbbf3e1d78122323d7a1360262b3c16d091d29b', docsTree: '6fd5fa86cf867e05d2fbebd31b288d6ae92809a9', manifestSHA256: '141c85d9aa65525b20bdeef4819b6cb07a910c24d58d44cd833a2c151a4625bd', count: 324, bytes: 24374988, htmlSHA256: '3a552de1fbcacb8c25f809151647d8c2ed836fac142d43ee9e294f9e0778f103' };
 const FONT_SHA = '8bff039ebb639dfbc1902204faab9eea67eb20c2f2c8c2524f588a7ee08f400d';
-const CONTROL_ONLY = true;
+// Source preparation only; Parent admission must not resume exhausted controls.
+const APPLICATION_ADMITTED = false;
+const CONTROL_ONLY = false;
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.86 Safari/537.36';
 const ROOT = path.resolve(__dirname, '..');
 const T = path.resolve(process.argv[3] || '/');
@@ -20,7 +22,7 @@ const MODE = process.argv[2];
 const sha = bytes => createHash('sha256').update(bytes).digest('hex');
 const check = (ok, code) => { if (!ok) throw Object.assign(new Error(code), { code }); };
 const PHASE_CODES = Object.freeze({
-  ENTRY: 'MODE', HOST: 'HOSTED_NODE_ONLY', ROOT: 'ONE_USE_HOSTED_ROOT', OUTPUT: 'NONREGULAR_INPUT', SETUP: 'SETUP_FAILED', OUTPUT_OWNER: 'OUTPUT_OWNER_BINDING',
+  ENTRY: 'MODE', ADMISSION: 'APPLICATION_NOT_ADMITTED', HOST: 'HOSTED_NODE_ONLY', ROOT: 'ONE_USE_HOSTED_ROOT', OUTPUT: 'NONREGULAR_INPUT', SETUP: 'SETUP_FAILED', OUTPUT_OWNER: 'OUTPUT_OWNER_BINDING',
   NAMESPACE_PID: 'PRIVATE_PID_NAMESPACE_REQUIRED', NAMESPACE_NET: 'NAMESPACE_NOT_NEW', NAMESPACE_MNT: 'NAMESPACE_NOT_NEW', NAMESPACE_PID_NEW: 'NAMESPACE_NOT_NEW', NETWORK: 'NON_LOOPBACK_INTERFACE', BOOTSTRAP: 'BOOTSTRAP_IDENTITY',
   LOOPBACK: 'LOOPBACK_FAILED', MOUNT_PRIVATE: 'MOUNT_PRIVATE_FAILED', MOUNT_BIND: 'MOUNT_BIND_FAILED', MOUNT_INVENTORY: 'MOUNT_INVENTORY_FAILED', MOUNT_HOST_RO: 'MOUNT_PATH', MOUNT_INPUT_RO: 'MOUNT_INPUT_RO_FAILED', MOUNT_VERIFY: 'WRITABLE_HOST_MOUNT', MOUNT_INPUT_VERIFY: 'IMMUTABLE_INPUT_MOUNT', ISOLATION_RECORD: 'ISOLATION_RECORD_FAILED',
   CHILD: 'CHILD_SPAWN', RESOURCE: 'RESOURCE_CAP', CHILD_WAIT: 'CHILD_EXIT', STOP: 'LOG_CAP', CLEANUP_SIGNAL: 'CLEANUP_SIGNAL_FAILED', CLEANUP_PROFILE: 'CLEANUP_PROFILE_FAILED', CLEANUP_RECORD: 'CLEANUP_RECORD_FAILED',
@@ -510,6 +512,7 @@ async function runtime() {
 process.umask(0o077);
 (async () => {
   mark('ENTRY'); check(['setup', 'namespace', 'runtime'].includes(MODE), 'MODE');
+  mark('ADMISSION'); check(APPLICATION_ADMITTED && !CONTROL_ONLY, 'APPLICATION_NOT_ADMITTED');
   mark('HOST'); check(process.platform === 'linux' && process.version === 'v22.22.2' && process.argv.length === 4, 'HOSTED_NODE_ONLY');
   mark('ROOT'); check(/^\/home\/runner\/work\/_temp\/web3-audience-\d+-1$/.test(T), 'ONE_USE_HOSTED_ROOT');
   mark('OUTPUT'); regular(T, true); regular(OUT, true);

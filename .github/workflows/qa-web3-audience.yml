@@ -1,4 +1,6 @@
-name: QA Web3 Audience ISOLATION CONTROL 2 OF 3
+name: QA Web3 Audience APPLICATION SOURCE HOLD
+
+# Admission OFF. Future first application-only qualification is separate from exhausted controls.
 
 on:
   pull_request:
@@ -13,8 +15,9 @@ permissions:
 
 jobs:
   audience-visual:
-    name: Second bounded readonly-mount control - no app/browser
+    name: First application-only qualification - NOT ADMITTED
     if: >-
+      false &&
       github.repository == 'NeaBouli/inferno' &&
       github.event.repository.private == false &&
       github.event.pull_request.head.repo.full_name == github.repository &&
@@ -51,7 +54,7 @@ jobs:
           timeout --signal=TERM --kill-after=5s 180s env -i PATH="$PATH" HOME="$QA_ROOT/home" TMPDIR="$QA_ROOT/tmp" npm_config_userconfig="$QA_ROOT/user.npmrc" npm_config_globalconfig="$QA_ROOT/global.npmrc" npm_config_cache="$QA_ROOT/npm-cache" npm_config_fetch_retries=0 PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci --ignore-scripts --no-audit --no-fund
           timeout --signal=TERM --kill-after=5s 210s env -i PATH="$PATH" HOME="$QA_ROOT/home" TMPDIR="$QA_ROOT/tmp" PLAYWRIGHT_BROWSERS_PATH="$QA_ROOT/browsers" PLAYWRIGHT_DOWNLOAD_CONNECTION_TIMEOUT=15000 "$N" node_modules/playwright/cli.js install --with-deps --no-shell chromium
           timeout --signal=TERM --kill-after=5s 100s env -i PATH=/usr/bin:/bin HOME="$QA_ROOT/home" TMPDIR="$QA_ROOT/tmp" PLAYWRIGHT_BROWSERS_PATH="$QA_ROOT/browsers" LANG=C.UTF-8 LC_ALL=C.UTF-8 TZ=UTC "$N" --no-addons scripts/qa-web3-audience-visual.cjs setup "$QA_ROOT"
-      - name: ONE isolated CONTROL_ONLY readonly-mount control
+      - name: ONE first isolated application-only observer - admission required
         timeout-minutes: 4
         shell: bash
         env:
@@ -64,12 +67,12 @@ jobs:
           code=$?
           printf '{"namespaceOwnerReaped":true,"exitCode":%d,"automaticRetry":false}\n' "$code" > "$QA_ROOT/out/NAMESPACE-EXIT.json"
           exit "$code"
-      - name: Sanitized control diagnostics only - no images or visual approval
+      - name: Sanitized application evidence - independent visual review required
         if: always()
         # v7.0.2; Parent reviewed official release, tag-ref commit and action.yml.
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: web3-audience-control-only-${{ github.run_id }}-${{ github.run_attempt }}
+          name: web3-audience-application-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/web3-audience-${{ github.run_id }}-${{ github.run_attempt }}/out
           if-no-files-found: error
           retention-days: 3
