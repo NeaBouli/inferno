@@ -74,6 +74,69 @@ function assertLoopbackLinks(links, code) {
     link.ifname === 'lo' && link.link_type === 'loopback' &&
     Array.isArray(link.flags) && link.flags.includes('LOOPBACK'), code);
 }
+function mountControlTrace(rows, refused) {
+  check(process.platform === 'linux' && process.arch === 'x64' && Array.isArray(rows) && rows.length > 0 && rows.length <= 4096, 'MOUNT_TRACE_FORMAT');
+  const mountId = value => {
+    check(typeof value === 'number' || typeof value === 'string' && /^(0|[1-9][0-9]*)$/.test(value), 'MOUNT_TRACE_FORMAT');
+    const id = Number(value);
+    check(Number.isSafeInteger(id) && id >= 0, 'MOUNT_TRACE_FORMAT');
+    return id;
+  };
+  const refs = new Map(), groups = new Map();
+  for (const row of rows) {
+    const id = mountId(row.id);
+    check(id > 0 && !refs.has(id) && typeof row.target === 'string' && path.isAbsolute(row.target) && !row.target.includes('\0'), 'MOUNT_TRACE_FORMAT');
+    refs.set(id, refs.size + 1);
+    if (!groups.has(row.target)) groups.set(row.target, groups.size + 1);
+  }
+  const targetClass = target => target === '/' ? 'ROOT' : target === T || target.startsWith(T + '/') ? 'SCRATCH' :
+    target === '/proc' || target.startsWith('/proc/') ? 'PROC' : target === '/sys' || target.startsWith('/sys/') ? 'SYS' :
+    target === '/dev' || target.startsWith('/dev/') ? 'DEV' : target === ROOT || target.startsWith(ROOT + '/') ? 'WORKSPACE' : 'OTHER';
+  const record = row => {
+    check(typeof row['vfs-options'] === 'string' && typeof row['fs-options'] === 'string', 'MOUNT_TRACE_FORMAT');
+    return { mountRef: refs.get(mountId(row.id)), parentRef: refs.get(mountId(row.parent)) || null,
+      groupRef: groups.get(row.target), targetClass: targetClass(row.target),
+      vfsReadOnly: row['vfs-options'].split(',').includes('ro'), superblockReadOnly: row['fs-options'].split(',').includes('ro') };
+  };
+  // Linux UAPI O_PATH: metadata handles cannot open mounted devices for I/O.
+  const O_PATH = 0o10000000, O_CLOEXEC = 0o2000000;
+  const descriptor = fd => {
+    const info = fs.readFileSync('/proc/self/fdinfo/' + fd, 'utf8');
+    const ids = [...info.matchAll(/^mnt_id:\s+([0-9]+)$/gm)], flags = [...info.matchAll(/^flags:\s+([0-7]+)$/gm)];
+    check(ids.length === 1 && flags.length === 1, 'MOUNT_TRACE_FORMAT');
+    const id = mountId(ids[0][1]), mode = Number.parseInt(flags[0][1], 8);
+    check(Number.isSafeInteger(mode) && mode >= 0, 'MOUNT_TRACE_FORMAT');
+    return { mountRef: refs.get(id) || null, accessMode: ['READ', 'WRITE', 'READ_WRITE', 'INVALID'][mode & 3], pathOnly: (mode & O_PATH) !== 0 };
+  };
+  const handle = (name, magicLink = false) => {
+    const fd = fs.openSync(name, O_PATH | O_CLOEXEC | (magicLink ? fs.constants.O_DIRECTORY : fs.constants.O_NOFOLLOW));
+    try {
+      const stat = fs.fstatSync(fd);
+      check(!stat.isSymbolicLink() && (!magicLink || stat.isDirectory()), 'MOUNT_TRACE_FORMAT');
+      const value = descriptor(fd);
+      check(value.mountRef !== null, 'MOUNT_TRACE_FORMAT');
+      return value;
+    } finally { fs.closeSync(fd); }
+  };
+  const names = fs.readdirSync('/proc/self/fd');
+  check(names.length <= 128 && names.every(name => /^(0|[1-9][0-9]*)$/.test(name)), 'MOUNT_TRACE_FORMAT');
+  const inherited = []; let vanished = 0;
+  for (const name of names) {
+    const fd = Number(name);
+    try {
+      const stat = fs.fstatSync(fd), kind = stat.isDirectory() ? 'DIRECTORY' : stat.isFile() ? 'FILE' : stat.isFIFO() ? 'PIPE' :
+        stat.isSocket() ? 'SOCKET' : stat.isCharacterDevice() ? 'CHARACTER' : stat.isBlockDevice() ? 'BLOCK' : 'OTHER';
+      inherited.push({ fd, kind, ...descriptor(fd) });
+    } catch (error) {
+      if (error.code === 'EBADF' || error.code === 'ENOENT') { vanished++; continue; }
+      throw error;
+    }
+  }
+  check(rows.includes(refused), 'MOUNT_TRACE_FORMAT');
+  return { status: 'DIAGNOSTIC_ONLY', applicationRuntime: 'NOT_RUN', rawIdsOrPathsIncluded: false,
+    records: rows.map(record), refused: record(refused), visibleAtRefusedTarget: handle(refused.target),
+    processRoot: handle('/proc/self/root', true), processCwd: handle('/proc/self/cwd', true), inheritedDescriptors: inherited, vanishedDescriptors: vanished };
+}
 const git = (...args) => execFileSync('/usr/bin/git', ['-c', 'core.fsmonitor=false', '-c', 'protocol.allow=never', ...args], { cwd: ROOT, env: { ...clean, GIT_NO_LAZY_FETCH: '1', GIT_OPTIONAL_LOCKS: '0', GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null', GIT_NO_REPLACE_OBJECTS: '1', GIT_TERMINAL_PROMPT: '0' }, timeout: 10000, maxBuffer: 20 * 1024 * 1024 });
 function regular(file, directory = false) {
   const stat = fs.lstatSync(file);
@@ -178,9 +241,15 @@ async function namespace() {
   }
   for (const target of [path.join(T, 'input'), path.join(T, 'fonts'), '/proc/sys']) { mark('MOUNT_INPUT_RO'); readonly(target); }
   mark('MOUNT_VERIFY');
-  const verified = JSON.parse(coreRun('/usr/bin/findmnt', ['--json', '--list', '--output', 'TARGET,OPTIONS']).toString()).filesystems;
+  const verified = JSON.parse(coreRun('/usr/bin/findmnt', ['--json', '--list', '--output', 'ID,PARENT,TARGET,OPTIONS,VFS-OPTIONS,FS-OPTIONS']).toString()).filesystems;
   for (const m of verified) {
     if (m.target === T || m.target.startsWith(T + '/') || m.target === '/proc' || m.target.startsWith('/proc/') || ['/tmp', '/var/tmp', '/dev/shm'].includes(m.target)) continue;
+    if (!m.options.split(',').includes('ro')) {
+      let trace;
+      try { trace = mountControlTrace(verified, m); }
+      catch { trace = { status: 'TRACE_INCOMPLETE', code: 'MOUNT_IDENTITY_UNAVAILABLE', applicationRuntime: 'NOT_RUN' }; }
+      save('MOUNT-CONTROL.json', trace);
+    }
     check(m.options.split(',').includes('ro'), 'WRITABLE_HOST_MOUNT');
   }
   for (const dir of ['input', 'fonts']) { mark('MOUNT_INPUT_VERIFY'); check(verified.some(m => m.target === path.join(T, dir) && m.options.split(',').includes('ro')), 'IMMUTABLE_INPUT_MOUNT'); }
