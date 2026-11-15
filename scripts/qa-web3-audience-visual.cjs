@@ -25,10 +25,11 @@ const PHASE_CODES = Object.freeze({
   NAMESPACE_PID: 'PRIVATE_PID_NAMESPACE_REQUIRED', NAMESPACE_NET: 'NAMESPACE_NOT_NEW', NAMESPACE_MNT: 'NAMESPACE_NOT_NEW', NAMESPACE_PID_NEW: 'NAMESPACE_NOT_NEW', NETWORK: 'NON_LOOPBACK_INTERFACE', BOOTSTRAP: 'BOOTSTRAP_IDENTITY',
   LOOPBACK: 'LOOPBACK_FAILED', MOUNT_PRIVATE: 'MOUNT_PRIVATE_FAILED', MOUNT_BIND: 'MOUNT_BIND_FAILED', MOUNT_INVENTORY: 'MOUNT_INVENTORY_FAILED', MOUNT_HOST_RO: 'MOUNT_PATH', MOUNT_INPUT_RO: 'MOUNT_INPUT_RO_FAILED', MOUNT_VERIFY: 'WRITABLE_HOST_MOUNT', MOUNT_INPUT_VERIFY: 'IMMUTABLE_INPUT_MOUNT', ISOLATION_RECORD: 'ISOLATION_RECORD_FAILED',
   CHILD: 'CHILD_SPAWN', RESOURCE: 'RESOURCE_CAP', CHILD_WAIT: 'CHILD_EXIT', STOP: 'LOG_CAP', CLEANUP_SIGNAL: 'CLEANUP_SIGNAL_FAILED', CLEANUP_PROFILE: 'CLEANUP_PROFILE_FAILED', CLEANUP_RECORD: 'CLEANUP_RECORD_FAILED',
-  RUNTIME_UID: 'UNPRIVILEGED_RUNTIME', RUNTIME_CAPS: 'PRIVILEGE_DROP', RUNTIME_NETWORK: 'RUNTIME_NETWORK_NAMESPACE', RUNTIME_TOOLS: 'RUNTIME_TOOL_IDENTITY', RUNTIME_SOURCE: 'RUNTIME_SOURCE_BINDING', RUNTIME_FONTS: 'RUNTIME_FONT_IDENTITY', CONTROL: 'CONTROL_ONLY_NO_APP_BROWSER'
+  RUNTIME_UID: 'UNPRIVILEGED_RUNTIME', RUNTIME_CAPS: 'PRIVILEGE_DROP', RUNTIME_NETWORK: 'RUNTIME_NETWORK_NAMESPACE', RUNTIME_TOOLS: 'RUNTIME_TOOL_IDENTITY', RUNTIME_SOURCE: 'RUNTIME_SOURCE_BINDING', RUNTIME_FONTS: 'RUNTIME_FONT_IDENTITY', CONTROL: 'CONTROL_ONLY_NO_APP_BROWSER',
+  SERVER: 'APP_OPERATION_FAILED', PW_LOAD: 'APP_OPERATION_FAILED', BROWSER_LAUNCH: 'APP_OPERATION_FAILED', BROWSER_CONTROL: 'APP_OPERATION_FAILED', CONTEXT_PAGE: 'APP_OPERATION_FAILED', POLICY: 'APP_OPERATION_FAILED', NAVIGATE: 'APP_OPERATION_FAILED', ASSERTIONS: 'APP_OPERATION_FAILED', APP_CLEANUP: 'APP_CLEANUP_FAILED'
 });
-const DIAGNOSTIC_CODES = new Set(['ENTER', 'OPERATION_FAILED', 'FAILURE_RECORD_FAILED', 'DIAGNOSTIC_PROTOCOL', 'OUTPUT_OWNER_BINDING', 'OUTPUT_FILE_BINDING', 'RUNTIME_DEADLINE', 'OUTER_TERM', 'OUTER_INT', ...Object.values(PHASE_CODES)]);
-let phase = 'ENTRY', outputOwner;
+const DIAGNOSTIC_CODES = new Set(['ENTER', 'OPERATION_FAILED', 'FAILURE_RECORD_FAILED', 'DIAGNOSTIC_PROTOCOL', 'OUTPUT_OWNER_BINDING', 'OUTPUT_FILE_BINDING', 'RUNTIME_DEADLINE', 'OUTER_TERM', 'OUTER_INT', 'APP_CLEANUP_DIAGNOSTIC_FAILED', 'APP_CONTEXT_CLOSE_FAILED', 'APP_BROWSER_CLOSE_FAILED', 'APP_SERVER_CLOSE_FAILED', 'APP_RESULT_RECORD_FAILED', ...Object.values(PHASE_CODES)]);
+let phase = 'ENTRY', outputOwner, runtimeFailure = null;
 const diagnostic = (next, code = 'ENTER') => {
   check(Object.hasOwn(PHASE_CODES, next) && DIAGNOSTIC_CODES.has(code), 'DIAGNOSTIC_PROTOCOL');
   process.stdout.write(JSON.stringify({ phase: next, code }) + '\n');
@@ -343,9 +344,11 @@ async function runtime() {
   }
   const allowed = new Map(prepared.docs.map(r => [r.name.slice(5), r]));
   const types = { '.html': 'text/html; charset=utf-8', '.js': 'application/javascript', '.mjs': 'application/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml', '.webmanifest': 'application/manifest+json' };
-  let server, browser, context, port, failed = null, outputBytes = 0;
+  let server, browser, context, port, outputBytes = 0;
+  const secondaryCodes = [];
   const observations = [], focusObservations = [], resources = [], blocked = [], pageErrors = [], effects = [];
   try {
+    mark('SERVER');
     server = http.createServer((req, res) => {
       if (!['GET', 'HEAD'].includes(req.method)) { res.writeHead(405).end(); return; }
       let name;
@@ -360,16 +363,21 @@ async function runtime() {
     });
     await new Promise((resolve, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', resolve); });
     port = server.address().port; const origin = 'http://127.0.0.1:' + port;
+    mark('PW_LOAD');
     const { chromium } = require('playwright');
+    mark('BROWSER_LAUNCH');
     browser = await chromium.launch({ executablePath: prepared.browser, headless: true, chromiumSandbox: true, timeout: 30000 });
+    mark('BROWSER_CONTROL');
     const browserCDP = await browser.newBrowserCDPSession();
     const command = await browserCDP.send('Browser.getBrowserCommandLine');
     check(!command.arguments.includes('--no-sandbox'), 'CHROMIUM_SANDBOX_DISABLED');
     for (const [width, height] of [[375, 812], [390, 844], [820, 1180], [1180, 820], [1440, 1000]]) {
+      mark('CONTEXT_PAGE');
       context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: 1, reducedMotion: 'reduce', serviceWorkers: 'block', acceptDownloads: false, storageState: { cookies: [], origins: [] } });
       context.setDefaultTimeout(5000); context.setDefaultNavigationTimeout(15000);
       const page = await context.newPage();
       const cdp = await context.newCDPSession(page);
+      mark('POLICY');
       await cdp.send('Network.enable'); await cdp.send('Network.setCacheDisabled', { cacheDisabled: true }); await cdp.send('Network.setBypassServiceWorker', { bypass: true });
       context.on('page', p => { if (p !== page) { effects.push('POPUP'); p.close().catch(() => {}); } });
       page.on('worker', w => { effects.push('WORKER'); w.evaluate(() => self.close()).catch(() => {}); });
@@ -381,7 +389,9 @@ async function runtime() {
         if (url.origin === origin && ['GET', 'HEAD'].includes(request.method())) { await route.continue(); return; }
         blocked.push({ method: request.method(), origin: url.origin, path: url.pathname }); await route.abort('blockedbyclient');
       });
+      mark('NAVIGATE');
       await page.goto(origin + '/web3/', { waitUntil: 'domcontentloaded' });
+      mark('ASSERTIONS');
       assert.deepEqual(await page.evaluate(() => [innerWidth, innerHeight, devicePixelRatio, typeof window.ethereum, localStorage.length, sessionStorage.length]), [width, height, 1, 'undefined', 0, 0]);
       const tabs = page.locator('[role="tablist"][aria-label="Audience selector"] [role="tab"]'), panel = page.locator('#audience-panel');
       check(await tabs.count() === 4 && await page.locator('[role="tabpanel"]').count() === 1, 'AUDIENCE_STRUCTURE');
@@ -496,16 +506,26 @@ async function runtime() {
       check(await page.evaluate(() => typeof window.ethereum === 'undefined' && !window.IFRWallet.isConnected()), 'NO_WALLET');
       check(await page.locator('[data-wallet-chooser][aria-hidden="false"], [data-wallet-dialog][aria-hidden="false"], .protocol-dialog[aria-hidden="false"]').count() === 0, 'NO_DIALOG');
       check(pageErrors.length === 0 && effects.length === 0, 'PAGE_ERROR_OR_EFFECT');
+      mark('APP_CLEANUP');
       await context.close(); context = null;
     }
-  } catch (error) { failed = /^[A-Z0-9_]+$/.test(error.code || '') ? error.code : 'ASSERTION_OR_BROWSER_FAILURE'; }
+    mark('ASSERTIONS');
+    check(observations.length === 20, 'IMAGE_COUNT');
+  } catch { runtimeFailure = { phase, code: 'APP_OPERATION_FAILED', secondaryCodes }; }
   finally {
-    if (context) await context.close().catch(() => { failed ||= 'CONTEXT_CLOSE'; });
-    if (browser) await browser.close().catch(() => { failed ||= 'BROWSER_CLOSE'; });
-    if (server) { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); }
-    save('RESULT.json', { source: SOURCE, status: failed ? 'HOLD' : 'ASSERTIONS_COMPLETE_VISUAL_REVIEW_PENDING', reason: failed, screenshots: observations, focusObservations, resources, blocked, pageErrors, effects, port, listenerClosed: server ? !server.listening : true, visualAccepted: false, totalPNGBytes: outputBytes, effectEvidenceLayers: { observer: 'fresh empty context; no injected provider; no action-destination activation; no wallet/dialog; owned-origin-only transport', owningRegression: 'tests/browser/web3-write.spec.js audience cases at frozen C8bec assert zero account/signature/transaction/network-switch/watchAsset methods', owningRegressionRunHere: false, clipboardAndFormInstrumentationClaimed: false } });
+    try { mark('APP_CLEANUP'); } catch { secondaryCodes.push('APP_CLEANUP_DIAGNOSTIC_FAILED'); }
+    try { if (context) await context.close(); } catch { secondaryCodes.push('APP_CONTEXT_CLOSE_FAILED'); }
+    try { if (browser) await browser.close(); } catch { secondaryCodes.push('APP_BROWSER_CLOSE_FAILED'); }
+    try { if (server) { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); } } catch { secondaryCodes.push('APP_SERVER_CLOSE_FAILED'); }
+    if (!runtimeFailure && secondaryCodes.length) runtimeFailure = { phase: 'APP_CLEANUP', code: 'APP_CLEANUP_FAILED', secondaryCodes };
+    try {
+      save('RESULT.json', { source: SOURCE, status: runtimeFailure ? 'HOLD' : 'ASSERTIONS_COMPLETE_VISUAL_REVIEW_PENDING', reason: runtimeFailure?.code || null, phase: runtimeFailure?.phase || phase, code: runtimeFailure?.code || null, secondaryCodes, screenshots: observations, focusObservations, resources, blocked, pageErrors, effects, port, listenerClosed: server ? !server.listening : true, visualAccepted: false, totalPNGBytes: outputBytes, effectEvidenceLayers: { observer: 'fresh empty context; no injected provider; no action-destination activation; no wallet/dialog; owned-origin-only transport', owningRegression: 'tests/browser/web3-write.spec.js audience cases at frozen C8bec assert zero account/signature/transaction/network-switch/watchAsset methods', owningRegressionRunHere: false, clipboardAndFormInstrumentationClaimed: false } });
+    } catch {
+      secondaryCodes.push('APP_RESULT_RECORD_FAILED');
+      runtimeFailure ||= { phase: 'APP_CLEANUP', code: 'APP_RESULT_RECORD_FAILED', secondaryCodes };
+    }
   }
-  check(!failed && observations.length === 20, failed || 'IMAGE_COUNT');
+  check(!runtimeFailure, runtimeFailure?.code || 'APP_OPERATION_FAILED');
 }
 
 process.umask(0o077);
@@ -518,9 +538,11 @@ process.umask(0o077);
   if (MODE === 'setup') mark('SETUP');
   await ({ setup, namespace, runtime }[MODE])();
 })().catch(error => {
-  const code = DIAGNOSTIC_CODES.has(error?.code) ? error.code : 'OPERATION_FAILED';
-  diagnostic(phase, code);
-  try { if (['setup', 'namespace', 'runtime'].includes(MODE)) save('FAILURE-' + MODE + '.json', { status: 'HOLD', phase, code }); }
-  catch { diagnostic(phase, 'FAILURE_RECORD_FAILED'); }
+  const failurePhase = runtimeFailure?.phase || phase;
+  const code = runtimeFailure?.code || (DIAGNOSTIC_CODES.has(error?.code) ? error.code : 'OPERATION_FAILED');
+  diagnostic(failurePhase, code);
+  for (const secondaryCode of runtimeFailure?.secondaryCodes || []) diagnostic('APP_CLEANUP', secondaryCode);
+  try { if (['setup', 'namespace', 'runtime'].includes(MODE)) save('FAILURE-' + MODE + '.json', { status: 'HOLD', phase: failurePhase, code, ...(runtimeFailure ? { secondaryCodes: runtimeFailure.secondaryCodes } : {}) }); }
+  catch { diagnostic(failurePhase, 'FAILURE_RECORD_FAILED'); }
   process.exitCode = 2;
 });
