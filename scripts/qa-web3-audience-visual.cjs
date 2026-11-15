@@ -377,7 +377,7 @@ async function collectSandboxPrerequisites() {
   try {
     if (uid >= 1000 && gid >= 1000 && before.noNewPrivs === 'ONE' && before.effectiveCaps === 'ZERO' && descriptorCleanup === 'CLOSED') {
       for (const file of ['/usr/bin/unshare', '/usr/bin/true']) {
-        const fd = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
+        const fd = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW | fs.constants.O_NONBLOCK);
         const handle = { file, fd }; handles.push(handle);
         handle.stat = fs.fstatSync(fd);
         const stat = handle.stat, named = fs.lstatSync(file);
