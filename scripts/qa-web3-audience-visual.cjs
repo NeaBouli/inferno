@@ -11,8 +11,8 @@ const { performance } = require('node:perf_hooks');
 
 const SOURCE = { head: '8bec16dbcd44edf4ed9d7c9feb4c0d889e23fdae', tree: '5bbbf3e1d78122323d7a1360262b3c16d091d29b', docsTree: '6fd5fa86cf867e05d2fbebd31b288d6ae92809a9', manifestSHA256: '141c85d9aa65525b20bdeef4819b6cb07a910c24d58d44cd833a2c151a4625bd', count: 324, bytes: 24374988, htmlSHA256: '3a552de1fbcacb8c25f809151647d8c2ed836fac142d43ee9e294f9e0778f103' };
 const FONT_SHA = '8bff039ebb639dfbc1902204faab9eea67eb20c2f2c8c2524f588a7ee08f400d';
-// Parent-bound first application qualification; no control retry or automatic rerun.
-const CONTROL_ONLY = false;
+// One technically qualified sandbox-prerequisite control; no app or automatic retry.
+const CONTROL_ONLY = true;
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.86 Safari/537.36';
 const ROOT = path.resolve(__dirname, '..');
 const T = path.resolve(process.argv[3] || '/');
@@ -320,6 +320,123 @@ const AUDIENCES = [
   { key: 'community', title: 'A cleaner front door for the protocol.', copy: 'Community members can use Web3', actions: ['Governance', 'Signer expansion', 'Transparency'], hrefs: ['/wiki/governance.html', '/wiki/community-signer-expansion.html', '/wiki/transparency.html'], items: ['Understand what IFR does in one screen.', 'Find governance, signer expansion, and transparency references.', 'Share the dedicated Web3 URL for users and the Wiki for deeper context.'] },
 ];
 
+async function collectSandboxPrerequisites() {
+  let descriptorCleanup = 'CLOSED';
+  const read = (file, limit) => {
+    let fd, result = { state: 'UNREADABLE' };
+    try {
+      fd = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW | fs.constants.O_NONBLOCK);
+      if (!fs.fstatSync(fd).isFile()) result = { state: 'INVALID' };
+      else {
+        const bytes = Buffer.alloc(limit); let total = 0;
+        while (total < limit) {
+          const count = fs.readSync(fd, bytes, total, limit - total, null);
+          if (count === 0) break;
+          total += count;
+        }
+        result = total === limit ? { state: 'INVALID' } : { state: 'READ', text: bytes.toString('utf8', 0, total) };
+      }
+    } catch (error) { result = { state: error?.code === 'ENOENT' ? 'MISSING' : 'UNREADABLE' }; }
+    finally {
+      if (fd !== undefined) try { fs.closeSync(fd); } catch { descriptorCleanup = 'UNCERTAIN'; result = { state: 'UNREADABLE' }; }
+    }
+    return result;
+  };
+  const decimal = row => {
+    if (row.state !== 'READ') return row.state;
+    const value = /^(0|[1-9][0-9]*)\n?$/.exec(row.text);
+    return value && value[0].length === row.text.length ? value[1] === '0' ? 'ZERO' : 'NONZERO' : 'INVALID';
+  };
+  const status = () => {
+    const row = read('/proc/self/status', 4096);
+    const field = name => {
+      if (row.state !== 'READ') return { state: row.state };
+      const matches = [...row.text.matchAll(new RegExp('^' + name + ':[\\t ]*([^\\n]*)$', 'gm'))];
+      return matches.length === 1 ? { state: 'READ', text: matches[0][1].trim() } : { state: matches.length ? 'INVALID' : 'MISSING' };
+    };
+    const nnp = field('NoNewPrivs'), caps = field('CapEff'), seccomp = field('Seccomp');
+    return {
+      readState: row.state,
+      noNewPrivs: nnp.state !== 'READ' ? nnp.state : nnp.text === '1' ? 'ONE' : nnp.text === '0' ? 'ZERO' : 'INVALID',
+      effectiveCaps: caps.state !== 'READ' ? caps.state : /^[0-9a-f]{1,16}$/i.test(caps.text) ? /^0+$/.test(caps.text) ? 'ZERO' : 'NONZERO' : 'INVALID',
+      seccomp: seccomp.state !== 'READ' ? seccomp.state : seccomp.text === '0' ? 'DISABLED' : seccomp.text === '1' ? 'STRICT' : seccomp.text === '2' ? 'FILTER' : 'INVALID',
+      seccompFilters: decimal(field('Seccomp_filters'))
+    };
+  };
+  const uid = process.getuid(), gid = process.getgid(), before = status();
+  const apparmor = read('/sys/module/apparmor/parameters/enabled', 128);
+  const policy = {
+    maxUserNamespaces: decimal(read('/proc/sys/user/max_user_namespaces', 128)),
+    unprivilegedUsernsClone: decimal(read('/proc/sys/kernel/unprivileged_userns_clone', 128)),
+    apparmorRestrictUnprivilegedUserns: decimal(read('/proc/sys/kernel/apparmor_restrict_unprivileged_userns', 128)),
+    apparmorAvailability: apparmor.state !== 'READ' ? apparmor.state : ['Y', 'Y\n'].includes(apparmor.text) ? 'ENABLED' : ['N', 'N\n'].includes(apparmor.text) ? 'DISABLED' : 'INVALID'
+  };
+  let binding = 'UNAVAILABLE', outcome = 'NOT_ATTEMPTED', cleanup = 'NOT_ATTEMPTED';
+  const handles = [];
+  const same = (a, b) => ['dev', 'ino', 'mode', 'uid', 'gid', 'size', 'mtimeMs', 'ctimeMs'].every(key => a[key] === b[key]);
+  try {
+    if (uid >= 1000 && gid >= 1000 && before.noNewPrivs === 'ONE' && before.effectiveCaps === 'ZERO' && descriptorCleanup === 'CLOSED') {
+      for (const file of ['/usr/bin/unshare', '/usr/bin/true']) {
+        const fd = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
+        const handle = { file, fd }; handles.push(handle);
+        handle.stat = fs.fstatSync(fd);
+        const stat = handle.stat, named = fs.lstatSync(file);
+        if (!stat.isFile() || !named.isFile() || !same(stat, named) || fs.realpathSync(file) !== file ||
+          stat.uid !== 0 || (stat.mode & 0o6022) !== 0 || (stat.mode & 0o111) === 0 || !Number.isSafeInteger(stat.size) || stat.size <= 0) throw new Error('UTILITY_BINDING');
+      }
+      binding = 'BOUND';
+      const result = await new Promise(resolve => {
+        let child, pid, finished = false, failure = null, bytes = 0, signalUncertain = false;
+        const killOwned = () => {
+          if (!Number.isSafeInteger(pid) || pid <= 1) { signalUncertain = true; return; }
+          try { process.kill(-pid, 'SIGKILL'); } catch (error) { if (error?.code !== 'ESRCH') signalUncertain = true; }
+        };
+        const finish = (closed, code, signal) => {
+          if (finished) return;
+          finished = true; clearTimeout(stopTimer); clearTimeout(deadlineTimer);
+          let absent = false;
+          if (Number.isSafeInteger(pid) && pid > 1) {
+            killOwned();
+            try { process.kill(-pid, 0); } catch (error) { if (error?.code === 'ESRCH') absent = true; else signalUncertain = true; }
+          }
+          if (!closed) {
+            for (const stream of [child.stdout, child.stderr]) try { stream.destroy(); } catch { signalUncertain = true; }
+            try { child.unref(); } catch { signalUncertain = true; }
+          }
+          resolve({ outcome: failure || (!signal && code === 0 ? 'CREATED' : !signal && code === 1 ? 'REFUSED' : 'UNKNOWN'),
+            cleanup: closed && absent && !signalUncertain ? 'REAPED_ABSENT' : 'UNCERTAIN' });
+        };
+        const fail = code => { if (finished) return; failure ||= code; killOwned(); };
+        try {
+          child = spawn('/usr/bin/unshare', ['--user', '--map-root-user', '--fork', '/usr/bin/true'],
+            { cwd: T, env: clean, shell: false, detached: true, stdio: ['ignore', 'pipe', 'pipe'] });
+          pid = child.pid;
+        } catch { resolve({ outcome: 'EXEC_ERROR', cleanup: 'UNCERTAIN' }); return; }
+        const stopTimer = setTimeout(() => fail('TIMEOUT'), 2000);
+        const deadlineTimer = setTimeout(() => { failure ||= 'TIMEOUT'; finish(false); }, 3000);
+        for (const stream of [child.stdout, child.stderr]) {
+          stream.on('data', chunk => { bytes += chunk.length; if (bytes > 4096) fail('OUTPUT_LIMIT'); });
+          stream.on('error', () => fail('UNKNOWN'));
+        }
+        child.once('error', () => { failure ||= 'EXEC_ERROR'; });
+        child.once('close', (code, signal) => finish(true, code, signal));
+      });
+      outcome = result.outcome; cleanup = result.cleanup;
+      binding = handles.every(h => same(h.stat, fs.fstatSync(h.fd)) && same(h.stat, fs.lstatSync(h.file)) && fs.realpathSync(h.file) === h.file) ? 'MATCHED' : 'CHANGED';
+    }
+  } catch { binding = 'UNKNOWN'; }
+  finally {
+    for (const handle of handles) try { fs.closeSync(handle.fd); } catch { descriptorCleanup = 'UNCERTAIN'; }
+  }
+  const after = status();
+  const parentIdentity = process.getuid() === uid && process.getgid() === gid && uid >= 1000 && gid >= 1000 ? 'UNCHANGED_UNPRIVILEGED' : 'CHANGED_OR_UNKNOWN';
+  const recorded = parentIdentity === 'UNCHANGED_UNPRIVILEGED' && before.noNewPrivs === 'ONE' && before.effectiveCaps === 'ZERO' &&
+    after.noNewPrivs === 'ONE' && after.effectiveCaps === 'ZERO' && descriptorCleanup === 'CLOSED' && binding === 'MATCHED' &&
+    ['CREATED', 'REFUSED'].includes(outcome) && cleanup === 'REAPED_ABSENT';
+  return { status: 'NOT_APP_BROWSER_ACCEPTANCE', qualification: recorded ? 'RECORDED' : 'HOLD', parentIdentity,
+    parentBefore: before, policy, utility: { binding, outcome, cleanup }, parentAfter: after, descriptorCleanup };
+}
+
 async function runtime() {
   mark('RUNTIME_UID');
   check(process.getuid() !== 0 && process.getuid() >= 1000, 'UNPRIVILEGED_RUNTIME');
@@ -338,8 +455,11 @@ async function runtime() {
   const bank = fonts(), bodies = new Map(bank.map(r => { const bytes = fs.readFileSync(path.join(T, 'fonts', r.sha256)); check(bytes.length === r.bytes && sha(bytes) === r.sha256, 'RUNTIME_FONT_IDENTITY'); return [r.url, { ...r, body: bytes }]; }));
   if (CONTROL_ONLY) {
     mark('CONTROL');
-    save('CONTROL-ONLY.json', { status: 'CONTROL_ONLY_NO_APP_BROWSER', source: SOURCE, applicationRuntime: 'NOT_RUN', browser: 'NOT_RUN', visualAccepted: false });
+    const prerequisites = await collectSandboxPrerequisites();
+    save('SANDBOX-PREREQUISITES.json', { source: SOURCE, ...prerequisites });
+    save('CONTROL-ONLY.json', { status: prerequisites.status, qualification: prerequisites.qualification, source: SOURCE, applicationRuntime: 'NOT_RUN', browser: 'NOT_RUN', visualAccepted: false });
     diagnostic('CONTROL', 'CONTROL_ONLY_NO_APP_BROWSER');
+    check(prerequisites.qualification === 'RECORDED', 'CONTROL_ONLY_NO_APP_BROWSER');
     return;
   }
   const allowed = new Map(prepared.docs.map(r => [r.name.slice(5), r]));
@@ -549,7 +669,7 @@ async function runtime() {
 process.umask(0o077);
 (async () => {
   mark('ENTRY'); check(['setup', 'namespace', 'runtime'].includes(MODE), 'MODE');
-  mark('ADMISSION'); check(!CONTROL_ONLY, 'APPLICATION_MODE_REQUIRED');
+  mark('ADMISSION'); check(CONTROL_ONLY, 'CONTROL_ONLY_NO_APP_BROWSER');
   mark('HOST'); check(process.platform === 'linux' && process.version === 'v22.22.2' && process.argv.length === 4, 'HOSTED_NODE_ONLY');
   mark('ROOT'); check(/^\/home\/runner\/work\/_temp\/web3-audience-\d+-1$/.test(T), 'ONE_USE_HOSTED_ROOT');
   mark('OUTPUT'); regular(T, true); regular(OUT, true);
