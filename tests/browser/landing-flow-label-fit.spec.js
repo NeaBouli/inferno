@@ -253,7 +253,7 @@ for (const [width, height] of [[375, 812], [390, 844], [820, 1180], [1180, 820],
           const saved = await pool.evaluate(element => ({ style: element.getAttribute('style'), text: element.textContent, size: element.getAttribute('font-size') }));
           try {
             await pool.evaluate((element, kind) => {
-              if (kind === 'hide') element.style.visibility = 'hidden';
+              if (kind === 'hide') element.style.setProperty('visibility', 'hidden', 'important');
               if (kind === 'truncate') element.textContent = element.textContent.slice(0, -1);
               if (kind === 'shrink') element.setAttribute('font-size', '7');
             }, mutation);
