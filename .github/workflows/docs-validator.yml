@@ -40,6 +40,7 @@ on:
       - 'scripts/test-content-trust.cjs'
       - 'scripts/test-status-baseline.cjs'
       - 'scripts/test-functionality-status.cjs'
+      - 'scripts/test-landing-performance.cjs'
       - 'scripts/check-cwa-remediation-register.cjs'
       - 'scripts/test-cwa-content-coherence.cjs'
       - 'scripts/test-docs-truth.cjs'
@@ -140,6 +141,7 @@ on:
       - 'scripts/test-content-trust.cjs'
       - 'scripts/test-status-baseline.cjs'
       - 'scripts/test-functionality-status.cjs'
+      - 'scripts/test-landing-performance.cjs'
       - 'scripts/check-cwa-remediation-register.cjs'
       - 'scripts/test-cwa-content-coherence.cjs'
       - 'scripts/test-docs-truth.cjs'
@@ -339,6 +341,9 @@ jobs:
 
       - name: Check current functionality matrix
         run: npm run test:functionality-status
+
+      - name: Verify offline Landing lifecycle and disclosure contracts
+        run: node scripts/test-landing-performance.cjs
 
       - name: Check CWA remediation register and public audit evidence
         run: npm run test:cwa-register

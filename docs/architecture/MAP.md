@@ -874,6 +874,10 @@ header geometry/hit tests, native keyboard close, render-source hashes and font
 response hashes, plus scoped PNGs/JSON retained by the pinned artifact action.
 This source/evidence gate adds no production endpoint or browser wallet action;
 Parent must inspect every image and repeat critical live checks before closure.
+The offline `scripts/test-landing-performance.cjs` fixture additionally models
+the actual CustomEvent/dispatch, ancestor lookup and nonzero SVG rectangles;
+Docs CI executes it and watches its path. The workflow contract requires this
+command/path so an offline owning regression cannot silently remain unrun.
 
 #### Wiki continuity anchor clearance (2026-10-26)
 
