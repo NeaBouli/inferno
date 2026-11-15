@@ -248,6 +248,7 @@ async function namespace() {
     mark('MOUNT_HOST_RO');
     check(path.isAbsolute(target), 'MOUNT_PATH');
     if (target === T || target.startsWith(T + '/') || target === '/proc' || target.startsWith('/proc/') || ['/tmp', '/var/tmp', '/dev/shm'].includes(target)) continue;
+    coreRun('/usr/bin/mount', ['-o', 'remount,bind,ro', target]);
     readonly(target);
   }
   for (const target of [path.join(T, 'input'), path.join(T, 'fonts'), '/proc/sys']) { mark('MOUNT_INPUT_RO'); readonly(target); }
