@@ -879,6 +879,87 @@ the actual CustomEvent/dispatch, ancestor lookup and nonzero SVG rectangles;
 Docs CI executes it and watches its path. The workflow contract requires this
 command/path so an offline owning regression cannot silently remain unrun.
 
+#### Token Flow edge-label conditional qualification (2026-11-15)
+
+Private source candidate on `80dc08e6`, not an accepted fix: only
+`docs/index.html::text[data-live-key="flow-pool-edge"]` changes from original
+x406/y324/default-start to conditional x394/y313/text-anchor=end, superseding
+the rejected x406/y310 and x406/y313 candidates. Only that opening tag changes.
+Hop: independent `feeFlow` reads -> unchanged `renderFeeFlow` / `setLive`
+complete text -> existing 8px SVG label near Uniswap. End-anchored clearance
+across the matrix and live applicability remain UNKNOWN/unmeasured.
+No strings, rates/caps, receiver/route validation, controller, motion, fonts,
+visibility policy or source outside those three HTML geometry attributes is changed.
+
+First ordinary CI run `43721288405`, job `132833625423`, head `64ec5d20`,
+stopped at loading375x812: baseline324 fits; candidate310's measured label
+BBox intersects the token-circle stroke envelope. Loaded IBM Plex Sans8 gives
+x406..490.2105255, y301.57894897..312.80701923 at310; circle400/260/r43 has
+clearance -0.990370. The Uniswap stroke top is317.25. These observed-font
+vertical constraints imply strictly311.000389 < y <314.442981, so313 is a
+cause-bound conditional candidate, not an observed all-state fit. This first
+failure proves neither failure of the other44 cases nor a long-label324
+Uniswap collision. The retained private receipt is
+`label453-attempt1-64ec/landing-flow-label-fit-fee-f10d0--control-loading-at-375x812/observations.json`.
+
+Second qualification at `77c21cb`, retained under `label453-attempt2-77c2`,
+measured all nine375x812 states: eight fit x406/y313/default-start; the valid
+long case alone intersects connection-1. Its loaded IBM Plex Sans8 BBox is
+x406..588.0175476074219/y304.5789489746094..315.8070192337036, width182.0175476;
+circle clearance is+1.9809147492670007. Connection-1 is x580/y200..318/stroke1.
+That case's original324 control also hits Uniswap. Other widths and the new
+anchor remain unmeasured. The reviewed architecture checkpoint conditionally
+reserves space left of the unchanged x400/stroke1.5 route: exact x394 and
+computed anchor=end are pinned separately; actual bbox.right MUST be <399.25
+and left>=0, with all other strict geometry predicates unchanged. No artificial
+nominal bbox.right<=394, epsilon or collision tolerance is introduced.
+
+`landing-flow-legend.spec.js` retains all semantic/node-fit assertions and
+reuses its existing, unchanged RPC/proxy fixture block through the genuinely
+shared `helpers/token-flow-rpc-fixture.js`; no spec imports another spec.
+`landing-flow-label-fit.spec.js` defines nine states at the existing five
+viewports: actual held reads/loading, canonical, independently failed pool/ETH,
+both failed/no-provider-equivalent, changed receivers, zero, unavailable rates
+and valid near-cap long labels. Synthetic data stays intercepted; only the
+existing Google-font allowlist is used for actual font-face/body-hash evidence.
+
+The focused spec maps getBBox through getScreenCTM into common SVG space,
+checks both complete edge labels, base typography and SVG containment against
+17 explicit protocol rectangles with stroke, the central circle with stroke
+and connection strokes. Background frames/legend/particles are not nodes.
+Fixed same-turn geometry tuples are candidate394/313/end, baseline406/324 with
+ABSENT anchor, rejected406/310/ABSENT and rejected406/313/ABSENT. Exact x/y/anchor
+presence and computed end/start are checked. Only those three attributes on
+that one label are normalized; all other nodes/attributes/text remain in DOM
+identity. Each original attribute presence/value is restored in finally, even
+on failure. BEFORE the first geometry probe, the normal rendered attributes,
+their presence and computed anchor are stored as `initialGeometry` and checked
+against literal394/313/end. Later probes/screenshot cleanup cannot substitute
+for this untouched runtime-pose evidence. Old324 must reproduce
+the long/unavailable Uniswap collision or refuse qualification as UNKNOWN.
+Canonical/loading countercases must fit at324. The same owning assertion must
+reject reversion, hiding, truncation, shrink and unconfirmed-route activation.
+Baseline/candidate scoped PNGs and observations are defined for all45 cases;
+the two retained failures above are distinct from this source-only correction.
+Each loading viewport additionally samples rejected310 in the same turn,
+records `observations.rejected310`, requires its token-circle collision and
+rejection by unchanged `assertFit`. At375x812 long-valid only, rejected313 must
+reproduce connection-1; no other-width313 collision is presumed. Baseline PNG
+cleanup restores the FULL candidate tuple; PNG names/observations bind the
+tuple. Exact style/text/font/route restoration, actual final candidate tuple,
+fit and bbox equality are asserted. No new measurement or PNG is produced here.
+The existing Docs Wallet Browser capture command/artifact path is extended,
+with an owning workflow assertion; no new job, package or framework. The frozen
+baseline HTML hash is rebound to accepted FAQ Main `008b4e98` (HTML `55ccc14d`);
+Reversing only the candidate opening tag to literal x406/y324/ABSENT anchor
+must reproduce that ENTIRE source. The focused command is
+fail-fast at its first failing case; no automatic retry or failed-case fanout.
+Parent owns actual tests, font/image inspection, independent causal review and
+any adoption/live gate. Held Shop/Web3/W02/405/433/425/434 lanes stay separate.
+No third qualification is authorized by this source packet. Parent review and
+independent review precede at most one admitted fail-fast third run; a third
+failure invokes3xSTOP, with no automatic fourth or adoption.
+
 #### Landing FAQ-last source order (2026-11-15)
 
 Source-only scope, based on `80dc08e6`: `docs/index.html::main` now places the

@@ -85,4 +85,10 @@ for (const command of [
   );
 }
 
+const walletJob = workflow.slice(workflow.indexOf("  validate-wallet-browser:"), workflow.indexOf("  docs-summary:"));
+assert.ok(walletJob.includes('run: ./node_modules/.bin/playwright test tests/browser/landing-disclosure-followup.spec.js tests/browser/landing-flow-label-fit.spec.js --workers=1 --max-failures=1 --output "$RUNNER_TEMP/landing-disclosures-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"'),
+  "the existing Wallet Browser job must run both scoped real-font suites in the existing artifact directory");
+assert.ok(walletJob.includes('${{ runner.temp }}/landing-disclosures-${{ github.run_id }}-${{ github.run_attempt }}/**/*.png'));
+assert.ok(walletJob.includes('${{ runner.temp }}/landing-disclosures-${{ github.run_id }}-${{ github.run_attempt }}/**/observations.json'));
+
 console.log("[docs-workflow-contract] PASS");
