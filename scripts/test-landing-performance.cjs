@@ -25,7 +25,12 @@ function eventTarget() {
       if (!listeners.has(type)) listeners.set(type, []);
       listeners.get(type).push({ callback, options });
     },
-    emit(type) { for (const { callback } of listeners.get(type) || []) callback(); },
+    dispatchEvent(event) {
+      event.target = this;
+      for (const { callback } of listeners.get(event.type) || []) callback.call(this, event);
+      return !event.defaultPrevented;
+    },
+    emit(type) { return this.dispatchEvent({ type }); },
     listeners,
   };
 }
@@ -82,6 +87,9 @@ function environment() {
     emit(addedNodes = [], removedNodes = []) { this.callback([{ addedNodes, removedNodes }]); }
   };
   const context = vm.createContext({ document, window, navigator, IntersectionObserver, MutationObserver,
+    CustomEvent: class {
+      constructor(type, options = {}) { this.type = type; this.detail = options.detail ?? null; }
+    },
     location: { hash: '' },
     requestAnimationFrame: callback => { const id = ++sequence; frames.set(id, callback); return id; },
     cancelAnimationFrame: id => frames.delete(id),
@@ -318,6 +326,13 @@ async function main() {
   const sections = ['tokenomics', 'contracts'].map(id => {
     const section = node('section'), label = node('p'), title = node('h2');
     section.id = id;
+    section.events = [];
+    section.addEventListener('landing:disclosurechange', event => {
+      assert.equal(event.target, section, 'disclosure events stay on their owning section');
+      assert.equal(section.childNodes[1].hidden, !event.detail.expanded, 'hidden state is updated before dispatch');
+      assert.equal(section.childNodes[0].childNodes[2].getAttribute('aria-expanded'), String(event.detail.expanded));
+      section.events.push(event.detail.expanded);
+    });
     label.className = 'section-label';
     const rows = Array.from({ length: id === 'contracts' ? 19 : 14 }, () => node('div'));
     section.append(label, title, ...rows);
@@ -356,18 +371,22 @@ async function main() {
     assert.equal(button.getAttribute('aria-controls'), `${section.id}-panel`);
     assert.equal(button.getAttribute('aria-labelledby'), `${label.id} ${title.id}`);
     assert.equal(panel.hidden, true);
+    assert.deepEqual(section.events, [false], 'initial closed state emits its actual event detail');
     button.emit('click');
     assert.equal(panel.hidden, false, 'one toggle reveals the entire address inventory');
     assert.equal(button.getAttribute('aria-expanded'), 'true');
+    assert.deepEqual(section.events, [false, true]);
     button.emit('click');
     assert.equal(panel.hidden, true, 'one toggle hides the entire address inventory');
     assert.equal(button.getAttribute('aria-expanded'), 'false');
+    assert.deepEqual(section.events, [false, true, false], 'click events preserve open and closed transitions');
     assert.ok(rows.every(row => row.childNodes.length === 0), 'no row-level headers or buttons are injected');
   }
   disclosure.context.location.hash = '#landing-address-1-panel';
   disclosure.window.emit('hashchange');
   assert.equal(sections[0].section.childNodes[1].hidden, false, 'legacy card URL opens the existing Tokenomics ancestor');
   assert.equal(sections[0].section.childNodes[0].childNodes[2].getAttribute('aria-expanded'), 'true');
+  assert.equal(sections[0].section.events.at(-1), true, 'deep-link opening also dispatches its actual state');
   disclosure.frame();
   assert.equal(anchoredCards[0].scrolled.block, 'start', 'unchanged hash handler scrolls the existing card');
   const contractsMarkup = html.match(/<section id="contracts"[\s\S]*?<\/section>/)[0];
@@ -377,7 +396,7 @@ async function main() {
   assert.equal((contractsMarkup.match(/class="copy-btn" data-addr=/g) || []).length, 19);
   assert.ok(contractsMarkup.includes('data-addr="0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0"'));
   assert.ok(contractsMarkup.includes('href="https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B"'));
-  assert.ok(html.includes('assets/landing-collapse.js?v=20261112-contracts-v3'), 'changed helper has a new cache key');
+  assert.ok(html.includes('assets/landing-collapse.js?v=20261115-disclosures-v1'), 'changed helper has a new cache key');
   assert.ok(html.includes('assets/landing-collapse.css?v=20261112-contracts-v2'), 'changed target geometry has a new CSS cache key');
   assert.ok(collapseStyle.includes('#contracts .contract-row button {\n  min-width: 44px;\n  min-height: 44px;\n}'), 'every contracts row button, not only Copy or LP, has a scoped44px target');
   assert.equal((contractsMarkup.match(/<button\b/g) || []).length, 20, 'target rule covers19 Copy controls plus MetaMask');
@@ -390,13 +409,25 @@ async function main() {
   assert.ok(flowSource, 'test the shipped token-flow motion controller');
   function flowEnvironment() {
     const env = environment();
-    let starts = 0, paused, rect = { top: 0, bottom: 540 };
-    const svg = { dataset: {}, getBoundingClientRect: () => rect,
+    const section = eventTarget(), panel = { hidden: false };
+    let starts = 0, paused, rect = { width: 800, height: 540, top: 0, bottom: 540 };
+    const svg = { dataset: {},
+      closest(selector) {
+        if (selector === '.landing-collapse-panel') return panel;
+        assert.equal(selector, '#token-flow');
+        return section;
+      },
+      getBoundingClientRect: () => panel.hidden ? { width: 0, height: 0, top: 0, bottom: 0 } : rect,
       pauseAnimations() { paused = true; }, unpauseAnimations() { paused = false; },
       querySelectorAll: () => [{ dataset: { motionDelay: '0.7' }, beginElementAt(delay) { assert.equal(delay, 0.7); starts++; } }],
     };
     env.document.querySelector = () => svg;
-    return { ...env, svg, starts: () => starts, paused: () => paused, setRect(value) { rect = value; } };
+    return { ...env, svg, panel, starts: () => starts, paused: () => paused, setRect(value) { rect = value; },
+      setExpanded(expanded) {
+        panel.hidden = !expanded;
+        section.dispatchEvent(new env.context.CustomEvent('landing:disclosurechange', { detail: { expanded } }));
+      },
+    };
   }
   const flow = flowEnvironment();
   vm.runInContext(flowSource, flow.context);
@@ -425,6 +456,18 @@ async function main() {
   flow.setMedia('(max-width: 1024px)', false);
   assert.equal(flow.paused(), false, 'desktop motion resumes after leaving compact mode');
   assert.equal(flow.starts(), 1, 'compact transitions preserve the original SMIL start');
+  flow.setExpanded(false);
+  assert.equal(flow.paused(), true, 'collapse events pause SMIL immediately');
+  assert.equal(flow.svg.dataset.flowMotion, 'paused');
+  flow.observers[0].emit(true);
+  assert.equal(flow.paused(), true, 'stale visible observations cannot bypass a closed panel');
+  flow.setExpanded(true);
+  assert.equal(flow.paused(), false, 'visible permitted reopen resumes through the shipped event handler');
+  assert.equal(flow.starts(), 1, 'disclosure transitions preserve start-once SMIL');
+  flow.setMedia('(prefers-reduced-motion: reduce)', true);
+  flow.setExpanded(false);
+  flow.setExpanded(true);
+  assert.equal(flow.paused(), true, 'reopen cannot bypass reduced motion');
   for (const [cores, memory, width] of [[4, 32, 1440], [4, 8, 1440], [8, 4, 1440], [2, 32, 1440], [4, undefined, 1440], [undefined, 4, 1440]]) {
     const limitedFlow = flowEnvironment();
     Object.assign(limitedFlow.context.navigator, { hardwareConcurrency: cores, deviceMemory: memory });
@@ -457,6 +500,9 @@ async function main() {
     vm.runInContext(flowSource, guardedFlow.context);
     guardedFlow.observers[0].emit(true);
     assert.equal(guardedFlow.paused(), true, `compact or both-low hardware remains paused (${width}px/${cores}/${memory})`);
+    guardedFlow.setExpanded(false);
+    guardedFlow.setExpanded(true);
+    assert.equal(guardedFlow.paused(), true, 'reopen cannot bypass compact or both-low hardware');
     assert.equal(guardedFlow.starts(), 0, 'guarded environments never start SMIL');
     guardedFlow.setMedia('(prefers-reduced-motion: reduce)', true);
     guardedFlow.setMedia('(prefers-reduced-motion: reduce)', false);
@@ -491,12 +537,22 @@ async function main() {
   vm.runInContext(flowSource, fallbackFlow.context);
   fallbackFlow.frame();
   assert.equal(fallbackFlow.paused(), false, 'SMIL runs without optional browser APIs');
-  fallbackFlow.setRect({ top: 1200, bottom: 1740 });
+  fallbackFlow.setExpanded(false);
+  assert.equal(fallbackFlow.paused(), true, 'fallback collapse pauses without waiting for scroll');
+  fallbackFlow.setExpanded(true);
+  assert.equal(fallbackFlow.paused(), false, 'fallback visible reopen resumes without waiting for resize');
+  fallbackFlow.setRect({ width: 0, height: 0, top: 0, bottom: 0 });
+  fallbackFlow.setExpanded(true);
+  assert.equal(fallbackFlow.paused(), true, 'zero-area geometry never counts as visible');
+  fallbackFlow.setRect({ width: 800, height: 540, top: 1200, bottom: 1740 });
   for (let i = 0; i < 10; i++) fallbackFlow.window.emit('scroll');
   assert.equal(fallbackFlow.frames.size, 1, 'fallback scroll work stays throttled');
   fallbackFlow.frame();
   assert.equal(fallbackFlow.paused(), true, 'fallback intersection still pauses offscreen SMIL');
-  fallbackFlow.setRect({ top: 0, bottom: 540 });
+  fallbackFlow.setExpanded(false);
+  fallbackFlow.setExpanded(true);
+  assert.equal(fallbackFlow.paused(), true, 'fallback reopen cannot bypass offscreen geometry');
+  fallbackFlow.setRect({ width: 800, height: 540, top: 0, bottom: 540 });
   fallbackFlow.window.emit('resize');
   fallbackFlow.frame();
   assert.equal(fallbackFlow.paused(), false);

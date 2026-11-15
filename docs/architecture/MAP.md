@@ -840,6 +840,45 @@ policy; the Wiki section and handover were already public. Diagrams remain
 the section-11 files above; this addendum adds no runtime path. Contracts,
 wallet, backend, CI, diagrams and navigation stay untouched.
 
+#### Landing disclosure followup (2026-11-15)
+
+Source-only scope, based on `d516a896`: the existing Landing disclosure module
+keeps `#ecosystem` (use cases/integration) separate from `#partners` (directory
+placeholders). Only the latter's eyebrow/H2 become "Directory" / "Builders &
+Creators". Complete `#token-flow` and `#roadmap` sections now use the existing
+single, initially closed disclosure; their content, IDs, links and deep-link
+opening remain intact. Without JavaScript their original content stays readable.
+
+Hop: `docs/assets/landing-collapse.js::setExpanded` updates `panel.hidden` and
+emits the section-local `landing:disclosurechange` event. The existing
+`docs/index.html` Token Flow controller recalculates SVG visibility and calls
+its existing `sync`, for both IntersectionObserver and geometry fallback.
+The hidden-panel guard pauses CSS/SMIL immediately; reopening cannot bypass
+document visibility, offscreen, reduced-motion, <=1024px or both-low hardware
+(<=4 cores AND <=4GB) restrictions. Live-read scheduling is unchanged; closed
+does not mean zero RPC or stopped data refresh. The changed disclosure asset
+is cache-versioned `20261115-disclosures-v1`.
+
+Owning regressions: `tests/browser/landing-collapse.spec.js` (15 panels, unique
+names, whole-section keyboard/pointer controls, five viewports, deep links,
+print/no-JS) and `tests/browser/landing-flow-legend.spec.js` (explicit opening,
+collapse/reopen, IO/no-IO motion, preferences and hardware policy). The existing
+`tests/browser/helpers/landing-collapse.js` is reused without changes. Syntax
+checks alone do not qualify browser behavior, visual layout or live acceptance;
+Parent owns those gates. No wallet, provider, data-read or deployment change.
+
+Focused visual-acceptance hop: the existing Docs Validator Wallet Browser job
+runs `landing-disclosure-followup.spec.js` at the five existing viewport sizes,
+with remote data blocked and real Google fonts explicitly allowed. It records
+header geometry/hit tests, native keyboard close, render-source hashes and font
+response hashes, plus scoped PNGs/JSON retained by the pinned artifact action.
+This source/evidence gate adds no production endpoint or browser wallet action;
+Parent must inspect every image and repeat critical live checks before closure.
+The offline `scripts/test-landing-performance.cjs` fixture additionally models
+the actual CustomEvent/dispatch, ancestor lookup and nonzero SVG rectangles;
+Docs CI executes it and watches its path. The workflow contract requires this
+command/path so an offline owning regression cannot silently remain unrun.
+
 #### Wiki continuity anchor clearance (2026-10-26)
 
 Module: existing Wiki continuity policy. Hop: the Landing policy link or a native
