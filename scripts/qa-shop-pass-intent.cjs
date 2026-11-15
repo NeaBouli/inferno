@@ -1,9 +1,10 @@
 #!/usr/bin/env node
 'use strict';
 
-// Parent admits one corrected second hosted run after independent source review.
+// CONTROL_ONLY source preparation; no third Shop run is admitted.
 // The final helper004 test is bound below; 7a is not an executable alternative.
-const RUNTIME_ADMITTED = true;
+const RUNTIME_ADMITTED = false;
+const CONTROL_ONLY = true;
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -34,13 +35,14 @@ const MARKER = '[benefits-customer-pass-ui] PASS - create -> bind -> exact-offer
 const LOG_CAP = 16 * 1024 * 1024;
 const DIAGNOSTIC_ERRORS = new Set(`
   UNKNOWN_FAILURE DIAGNOSTIC_WRITE_FAILED FORMAT_HOLD BOOTSTRAP_FAILED NAMESPACE_EXIT_FAILURE CHILD_SIGNALLED ERR_UNKNOWN_SIGNAL
+  RO_TARGET_ROOT RO_TARGET_PROC RO_TARGET_SYS RO_TARGET_DEV RO_TARGET_WORKSPACE RO_TARGET_OTHER RO_TARGET_UNKNOWN
   ENOENT EACCES EPERM ENOSPC EEXIST EIO ENOMEM EROFS EISDIR ENOTDIR ESRCH EPIPE EINVAL ETIMEDOUT EADDRINUSE
   NO_ARBITRARY_ARGUMENTS HOST_TOOLCHAIN HOSTED_CI_ONLY PARENT_AND_INDEPENDENT_REVIEW_REQUIRED
   HELPER_DIGEST GIT_DATA_OPERATION_FAILED LOCK_SCHEMA LOCK_LINK NON_OFFICIAL_LOCK_RECORD
   QA_BRANCH_NOT_BASELINE_ONLY BASE_BLOB_MISMATCH PATCH_DIGEST CANDIDATE_TREE_MISMATCH FINAL_BLOB_MISMATCH
   UNSUPPORTED_GIT_ENTRY ENV_TEMPLATE_MODE UNEXPECTED_SOURCE_INPUT ENV_TEMPLATE_PATH_SET SOURCE_PATH
   TRACKED_INPUT_DRIFT NPM_TOOLCHAIN INSTALLED_VERSION_MISMATCH SYSTEM_TOOL_OWNERSHIP NODE_EXECUTABLE_DRIFT
-  RUNTIME_RECEIPT_MISSING FINAL_CLEANUP_UNCERTAIN NOT_ACCEPTED RUNTIME_PRIVILEGE NAMESPACE_NOT_ISOLATED
+  RUNTIME_RECEIPT_MISSING CONTROL_RECEIPT_MISSING FINAL_CLEANUP_UNCERTAIN NOT_ACCEPTED RUNTIME_PRIVILEGE NAMESPACE_NOT_ISOLATED
   MOUNT_IPC_NAMESPACE_NOT_ISOLATED CAPABILITIES_NOT_DROPPED NETWORK_INTERFACE_NOT_LOOPBACK_ONLY
   WORKER_IDENTITY MOUNT_ID_UNAVAILABLE SCRATCH_MOUNTS_NOT_DISTINCT MOUNT_COUNT MOUNTINFO_SHAPE
   MOUNT_PROPAGATION SCRATCH_MOUNT_FLAGS PRIVATE_SHM_FLAGS HOST_MOUNT_WRITABLE PRIVATE_TMP_BIND
@@ -67,7 +69,7 @@ function writeFailure(name, stage, error, exitCode) {
   insist(FAILURE_NAMES.includes(name), 'DIAGNOSTIC_WRITE_FAILED');
   const directory = path.join(root, 'public');
   insist(process.getuid() !== 0 && fs.statSync(directory).uid === process.getuid(), 'DIAGNOSTIC_WRITE_FAILED');
-  const stages = new Set(['BOOTSTRAP_PRIVATE', 'RO_MOUNT', 'TMP_SHM', 'UID_DROP', 'WORKER', 'PRELOAD', 'DIAGNOSTIC']);
+  const stages = new Set(['BOOTSTRAP_PRIVATE', 'RO_SCAN', 'RO_SORT', 'RO_REMOUNT', 'RO_VERIFY', 'TMP_SHM', 'UID_DROP', 'WORKER', 'PRELOAD', 'DIAGNOSTIC']);
   const receipt = stages.has(stage)
     ? { stage, errorCode: diagnosticCode(error), exitCode: diagnosticExit(exitCode) }
     : { stage: 'DIAGNOSTIC', errorCode: 'FORMAT_HOLD', exitCode: 1 };
@@ -114,9 +116,10 @@ function namespaceDiagnostic(stdout, exit) {
     const value = readOwnedFailure(names[0]);
     if (value) return { ...value, retained: true };
   }
-  const match = /^QA_SHOP_DIAGNOSTIC\|(BOOTSTRAP_PRIVATE|RO_MOUNT|TMP_SHM|UID_DROP)\|BOOTSTRAP_FAILED\|([1-9][0-9]{0,2})\n$/.exec(stdout);
-  if (names.length === 0 && match?.[0] === stdout && failed && exit.signal === null && Number(match[2]) <= 255 && exit.code === Number(match[2])) {
-    return { stage: match[1], errorCode: 'BOOTSTRAP_FAILED', exitCode: Number(match[2]) };
+  const match = /^QA_SHOP_DIAGNOSTIC\|(BOOTSTRAP_PRIVATE|RO_SCAN|RO_SORT|RO_REMOUNT|RO_VERIFY|TMP_SHM|UID_DROP)\|(BOOTSTRAP_FAILED|RO_TARGET_ROOT|RO_TARGET_PROC|RO_TARGET_SYS|RO_TARGET_DEV|RO_TARGET_WORKSPACE|RO_TARGET_OTHER|RO_TARGET_UNKNOWN)\|([1-9][0-9]{0,2})\n$/.exec(stdout);
+  const validCode = match && (match[1] === 'RO_REMOUNT' ? match[2] !== 'BOOTSTRAP_FAILED' : match[2] === 'BOOTSTRAP_FAILED');
+  if (names.length === 0 && match?.[0] === stdout && validCode && failed && exit.signal === null && Number(match[3]) <= 255 && exit.code === Number(match[3])) {
+    return { stage: match[1], errorCode: match[2], exitCode: Number(match[3]) };
   }
   quarantineFailures(names);
   return { stage: 'DIAGNOSTIC', errorCode: 'FORMAT_HOLD', exitCode: 1 };
@@ -431,6 +434,10 @@ async function worker() {
   const source = path.join(root, 'source');
   insist(listenPorts().length === 0, 'NAMESPACE_PORT_ALREADY_USED');
   unchanged(source);
+  if (CONTROL_ONLY) {
+    write(path.join(root, 'public', 'control-only.json'), { mode: 'CONTROL_ONLY', candidate: CANDIDATE, candidateTree: TARGET_TREE, sourceChecksPassed: true, namespaceChecksPassed: true, port3210Closed: true, acquisition: 'NOT_RUN', passSuite: 'NOT_RUN', typecheck: 'NOT_RUN', browser: 'NOT_RUN', kernelReap: 'AWAIT_OUTER_NAMESPACE_EXIT' });
+    return;
+  }
   const env = { ...cleanEnv(), QA_SHOP_ROOT: root, QA_SHOP_NONCE: context.nonce, QA_SHOP_HELPER_SHA256: process.env.QA_SHOP_HELPER_SHA256 };
   const pass = await command('pass', process.execPath, ['--require', __filename, path.join(source, PASS)], 480_000, source, env);
   insist(pass.output.split(MARKER).length === 2, 'PASS_FIXTURE_MARKER');
@@ -446,14 +453,20 @@ const NAMESPACE_SCRIPT = String.raw`
 set -eu
 umask 077
 diagnostic_stage=BOOTSTRAP_PRIVATE
+diagnostic_code=BOOTSTRAP_FAILED
 bootstrap_exit() {
   diagnostic_exit=$1
   trap - 0
   if [ "$diagnostic_exit" -ne 0 ]; then
-    case "$diagnostic_stage" in BOOTSTRAP_PRIVATE|RO_MOUNT|TMP_SHM|UID_DROP) ;; *) diagnostic_stage=BOOTSTRAP_UNKNOWN ;; esac
+    case "$diagnostic_stage" in BOOTSTRAP_PRIVATE|RO_SCAN|RO_SORT|RO_REMOUNT|RO_VERIFY|TMP_SHM|UID_DROP) ;; *) diagnostic_stage=BOOTSTRAP_UNKNOWN ;; esac
+    case "$diagnostic_stage:$diagnostic_code" in
+      RO_REMOUNT:RO_TARGET_ROOT|RO_REMOUNT:RO_TARGET_PROC|RO_REMOUNT:RO_TARGET_SYS|RO_REMOUNT:RO_TARGET_DEV|RO_REMOUNT:RO_TARGET_WORKSPACE|RO_REMOUNT:RO_TARGET_OTHER|RO_REMOUNT:RO_TARGET_UNKNOWN) ;;
+      RO_REMOUNT:*) diagnostic_code=RO_TARGET_UNKNOWN ;;
+      *) diagnostic_code=BOOTSTRAP_FAILED ;;
+    esac
     case "$diagnostic_exit" in ''|*[!0-9]*) diagnostic_exit=1 ;; esac
     if [ "$diagnostic_exit" -lt 1 ] || [ "$diagnostic_exit" -gt 255 ]; then diagnostic_exit=1; fi
-    printf 'QA_SHOP_DIAGNOSTIC|%s|BOOTSTRAP_FAILED|%s\n' "$diagnostic_stage" "$diagnostic_exit"
+    printf 'QA_SHOP_DIAGNOSTIC|%s|%s|%s\n' "$diagnostic_stage" "$diagnostic_code" "$diagnostic_exit"
   fi
   exit "$diagnostic_exit"
 }
@@ -475,17 +488,30 @@ exec 9< "$scratch"
 work_id=$(/usr/bin/awk '$1 == "mnt_id:" { print $2; found=1 } END { if (!found) exit 1 }' /proc/self/fdinfo/9)
 exec 9<&-
 test -n "$work_id"
-diagnostic_stage=RO_MOUNT
+diagnostic_stage=RO_SCAN
 /usr/bin/awk -v work="$work_id" '
   NR > 4096 || NF < 10 || $5 !~ /^\// || $5 ~ /\\/ { exit 1 }
   { for (i=7; i<=NF && $i!="-"; i++) if ($i ~ /^(shared|master|propagate_from):/) exit 1 }
   $1 == work && ("," $6 ",") ~ /,noexec,/ { exit 1 }
   $1 != work && ("," $6 ",") ~ /,rw,/ { print length($5), $5 }
 ' /proc/self/mountinfo > "$scratch/read-only-mounts.unsorted"
+diagnostic_stage=RO_SORT
 /usr/bin/sort -rn "$scratch/read-only-mounts.unsorted" > "$scratch/read-only-mounts"
+diagnostic_stage=RO_REMOUNT
+diagnostic_code=RO_TARGET_UNKNOWN
 while IFS=' ' read -r length target; do
+  case "$target" in
+    /) diagnostic_code=RO_TARGET_ROOT ;;
+    /proc|/proc/*) diagnostic_code=RO_TARGET_PROC ;;
+    /sys|/sys/*) diagnostic_code=RO_TARGET_SYS ;;
+    /dev|/dev/*) diagnostic_code=RO_TARGET_DEV ;;
+    /home|/home/*|/workspace|/workspace/*) diagnostic_code=RO_TARGET_WORKSPACE ;;
+    *) diagnostic_code=RO_TARGET_OTHER ;;
+  esac
   /usr/bin/mount -o remount,bind,ro "$target"
 done < "$scratch/read-only-mounts"
+diagnostic_stage=RO_VERIFY
+diagnostic_code=BOOTSTRAP_FAILED
 /usr/bin/awk -v work="$work_id" '
   $1 != work && ("," $6 ",") !~ /,ro,/ { exit 1 }
   $1 == work && ("," $6 ",") !~ /,rw,/ { exit 1 }
@@ -540,16 +566,20 @@ async function main() {
     const repo = path.resolve(__dirname, '..');
     const source = stage(repo);
     const nodeSha = digest(process.execPath);
-    const npm = fs.realpathSync(path.join(path.dirname(process.execPath), '..', 'lib/node_modules/npm/bin/npm-cli.js'));
-    const version = await command('npm-version', process.execPath, [npm, '--version'], 10_000, source);
-    const npmVersion = version.output.trim();
-    insist(/^10\.\d+\.\d+$/.test(npmVersion), 'NPM_TOOLCHAIN');
-    for (const [label, cwd] of [['root-ci', source], ['frontend-ci', path.join(source, FRONTEND)]]) {
-      await command(label, process.execPath, [npm, 'ci', '--ignore-scripts', '--no-audit', '--no-fund', '--fetch-retries=0', '--fetch-timeout=10000', '--registry=https://registry.npmjs.org'], 120_000, cwd);
+    let acquisition = null;
+    if (!CONTROL_ONLY) {
+      const npm = fs.realpathSync(path.join(path.dirname(process.execPath), '..', 'lib/node_modules/npm/bin/npm-cli.js'));
+      const version = await command('npm-version', process.execPath, [npm, '--version'], 10_000, source);
+      const npmVersion = version.output.trim();
+      insist(/^10\.\d+\.\d+$/.test(npmVersion), 'NPM_TOOLCHAIN');
+      for (const [label, cwd] of [['root-ci', source], ['frontend-ci', path.join(source, FRONTEND)]]) {
+        await command(label, process.execPath, [npm, 'ci', '--ignore-scripts', '--no-audit', '--no-fund', '--fetch-retries=0', '--fetch-timeout=10000', '--registry=https://registry.npmjs.org'], 120_000, cwd);
+      }
+      const versions = [[source, 'playwright', '1.64.1'], [source, 'axe-core', '4.14.0'], [path.join(source, FRONTEND), 'next', '15.5.28'], [path.join(source, FRONTEND), 'typescript', '5.9.3']];
+      for (const [cwd, name, expected] of versions) insist(json(path.join(cwd, 'node_modules', name, 'package.json')).version === expected, 'INSTALLED_VERSION_MISMATCH');
+      await command('chromium-install', process.execPath, [path.join(source, 'node_modules/playwright/cli.js'), 'install', '--with-deps', 'chromium'], 180_000, source);
+      acquisition = { npm: npmVersion, versions: versions.map(([, name, version]) => ({ name, version })), browserManifestSha256: digest(path.join(source, 'node_modules/playwright-core/browsers.json')) };
     }
-    const versions = [[source, 'playwright', '1.64.1'], [source, 'axe-core', '4.14.0'], [path.join(source, FRONTEND), 'next', '15.5.28'], [path.join(source, FRONTEND), 'typescript', '5.9.3']];
-    for (const [cwd, name, expected] of versions) insist(json(path.join(cwd, 'node_modules', name, 'package.json')).version === expected, 'INSTALLED_VERSION_MISMATCH');
-    await command('chromium-install', process.execPath, [path.join(source, 'node_modules/playwright/cli.js'), 'install', '--with-deps', 'chromium'], 180_000, source);
     const utilities = ['/usr/bin/sudo', '/usr/bin/unshare', '/usr/bin/setpriv', '/usr/sbin/ip', '/bin/sh', '/bin/kill', '/usr/bin/env', '/usr/bin/mount', '/usr/bin/awk', '/usr/bin/sort', '/usr/bin/stat', '/usr/bin/readlink'];
     const tools = utilities.map(file => {
       const resolved = fs.realpathSync(file);
@@ -559,12 +589,15 @@ async function main() {
     });
     insist(digest(process.execPath) === nodeSha, 'NODE_EXECUTABLE_DRIFT');
     unchanged(source); selfPin();
-    write(path.join(root, 'public', 'tools.json'), { node: process.version, nodeSha256: nodeSha, npm: npmVersion, tools, versions: versions.map(([, name, version]) => ({ name, version })), browserManifestSha256: digest(path.join(source, 'node_modules/playwright-core/browsers.json')) });
+    write(path.join(root, 'public', 'tools.json'), { mode: CONTROL_ONLY ? 'CONTROL_ONLY' : 'APP_AND_TYPECHECK', node: process.version, nodeSha256: nodeSha, tools, acquisition });
     const context = { uid: process.getuid(), gid: process.getgid(), hostNet: fs.readlinkSync('/proc/self/ns/net'), hostPid: fs.readlinkSync('/proc/self/ns/pid'), hostMount: fs.readlinkSync('/proc/self/ns/mnt'), hostIpc: fs.readlinkSync('/proc/self/ns/ipc'), nonce: crypto.randomBytes(24).toString('hex'), endAt };
     write(path.join(root, 'context.json'), context);
     privileged = true;
     await command('namespace', '/usr/bin/sudo', ['-n', '/usr/bin/unshare', '--mount', '--net', '--ipc', '--pid', '--fork', '--mount-proc', '--kill-child=SIGKILL', '/bin/sh', '-c', NAMESPACE_SCRIPT, 'qa-shop-pass-intent', String(context.uid), String(context.gid), cleanEnv().PATH, root, context.nonce, process.env.QA_SHOP_HELPER_SHA256, process.execPath, __filename, context.hostMount, context.hostNet, context.hostPid, context.hostIpc], 670_000, source, cleanEnv(), true);
-    insist(json(path.join(root, 'public', 'runtime.json')).markerObservedOnce === true, 'RUNTIME_RECEIPT_MISSING');
+    if (CONTROL_ONLY) {
+      const control = json(path.join(root, 'public', 'control-only.json'));
+      insist(control.mode === 'CONTROL_ONLY' && control.candidate === CANDIDATE && control.candidateTree === TARGET_TREE && control.sourceChecksPassed === true && control.namespaceChecksPassed === true, 'CONTROL_RECEIPT_MISSING');
+    } else insist(json(path.join(root, 'public', 'runtime.json')).markerObservedOnce === true, 'RUNTIME_RECEIPT_MISSING');
     unchanged(source);
     complete = true;
   } catch (error) {
@@ -585,7 +618,7 @@ async function main() {
         failure ||= 'FINAL_CLEANUP_UNCERTAIN';
       }
     }
-    write(path.join(root, 'public', 'result.json'), { schema: 'qa-shop-pass-intent-v1', state: complete && !failure && cleanupErrors.length === 0 ? 'FOCUSED_PASS_ONLY' : 'NOT_ACCEPTED', runtimeAdmitted: RUNTIME_ADMITTED, candidate: CANDIDATE, candidateTree: TARGET_TREE, patchSha256: PATCH_SHA256, failure: failure || null, primaryError, outputBytes: usedBytes, cleanup, cleanupErrors, noW02Entry: true, noBackend: true, noProductionBuild: true, sourceReviewStillRequired: true });
+    write(path.join(root, 'public', 'result.json'), { schema: 'qa-shop-pass-intent-v1', state: complete && !failure && cleanupErrors.length === 0 ? (CONTROL_ONLY ? 'CONTROL_ONLY_PASS' : 'FOCUSED_PASS_ONLY') : 'NOT_ACCEPTED', mode: CONTROL_ONLY ? 'CONTROL_ONLY' : 'APP_AND_TYPECHECK', runtimeAdmitted: RUNTIME_ADMITTED, candidate: CANDIDATE, candidateTree: TARGET_TREE, patchSha256: PATCH_SHA256, failure: failure || null, primaryError, outputBytes: usedBytes, cleanup, cleanupErrors, noW02Entry: true, noBackend: true, noProductionBuild: true, sourceReviewStillRequired: true });
   }
   insist(complete && !failure && cleanupErrors.length === 0, failure || 'NOT_ACCEPTED');
 }

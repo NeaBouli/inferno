@@ -1,6 +1,6 @@
-name: QA Shop Pass Intent
+name: QA Shop Pass Intent CONTROL_ONLY
 
-# Inert final 5cb9a1d fixture; one corrected second focused qualification.
+# CONTROL_ONLY source preparation; admission OFF, no third Shop run authorized.
 # No app/pass-suite source is changed by this QA branch.
 on:
   pull_request:
@@ -19,6 +19,7 @@ concurrency:
 
 jobs:
   focused:
+    name: CONTROL_ONLY bootstrap diagnostic
     if: >-
       ${{ github.event_name == 'pull_request' &&
           github.event.action == 'opened' &&
@@ -33,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      QA_SHOP_HELPER_SHA256: f9e03e59d4ba7019fa9d5ba80bcf94af1b92a944d5f8777717bf47b31c38f712
+      QA_SHOP_HELPER_SHA256: 175464c48946e1f6019d8095cefaa927ae2966ef7383ceaa912799594273549a
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -44,7 +45,7 @@ jobs:
         with:
           node-version: '22.22.2'
           package-manager-cache: false
-      - name: Frozen candidate only; Parent review gate before acquisition
+      - name: CONTROL_ONLY source/bootstrap; no package or browser acquisition
         run: node scripts/qa-shop-pass-intent.cjs
       - name: Sanitized source, tool, result and cleanup receipts only
         if: ${{ always() }}
