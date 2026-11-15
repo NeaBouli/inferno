@@ -258,6 +258,12 @@ for (const [width, height] of [[375, 812], [390, 844], [820, 1180], [1180, 820],
         for (const [name, text] of [['flow-pool-edge', state.pool], ['flow-eth-edge', state.eth], ['flow-fee-total', state.total], ['flow-fee-split', state.split], ['flow-feerouter-bps', state.router]]) {
           await expect(flow.locator(`[data-live-key="${name}"]`)).toHaveText(text);
         }
+        const pool = flow.locator('[data-live-key="flow-pool-edge"]');
+        observations.initialGeometry = await pool.evaluate(element => ({ x: element.getAttribute('x'), y: element.getAttribute('y'), anchor: element.getAttribute('text-anchor'),
+          xPresent: element.hasAttribute('x'), yPresent: element.hasAttribute('y'), anchorPresent: element.hasAttribute('text-anchor'), computedAnchor: getComputedStyle(element).textAnchor }));
+        expect(observations.initialGeometry, 'normal rendered pose before any causal geometry probe').toEqual({
+          x: '394', y: '313', anchor: 'end', xPresent: true, yPresent: true, anchorPresent: true, computedAnchor: 'end',
+        });
         const geometryNames = ['baseline', 'candidate'];
         if (state.loading) geometryNames.push('rejected310');
         const rejectHistorical313 = width === 375 && height === 812 && state.name === 'long-valid-near-caps';
@@ -285,7 +291,6 @@ for (const [width, height] of [[375, 812], [390, 844], [820, 1180], [1180, 820],
         }
         const reproduced = baseline.collisions.some(item => item.label === 'flow-pool-edge' && item.target === 'uniswap');
         observations.classification = state.baselineCollision ? reproduced ? 'BASELINE_REPRODUCED_CANDIDATE_PENDING' : 'UNKNOWN_BASELINE_NOT_REPRODUCED' : 'FITTING_BASELINE_COUNTERCASE';
-        const pool = flow.locator('[data-live-key="flow-pool-edge"]');
         try {
           await pool.evaluate(element => {
             element.setAttribute('x', '406'); element.setAttribute('y', '324'); element.removeAttribute('text-anchor');

@@ -932,7 +932,10 @@ ABSENT anchor, rejected406/310/ABSENT and rejected406/313/ABSENT. Exact x/y/anch
 presence and computed end/start are checked. Only those three attributes on
 that one label are normalized; all other nodes/attributes/text remain in DOM
 identity. Each original attribute presence/value is restored in finally, even
-on failure. Old324 must reproduce
+on failure. BEFORE the first geometry probe, the normal rendered attributes,
+their presence and computed anchor are stored as `initialGeometry` and checked
+against literal394/313/end. Later probes/screenshot cleanup cannot substitute
+for this untouched runtime-pose evidence. Old324 must reproduce
 the long/unavailable Uniswap collision or refuse qualification as UNKNOWN.
 Canonical/loading countercases must fit at324. The same owning assertion must
 reject reversion, hiding, truncation, shrink and unconfirmed-route activation.
