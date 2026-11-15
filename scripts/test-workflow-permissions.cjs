@@ -33,6 +33,7 @@ const expectedWorkflowFiles = [
   "governance-dashboard.yml",
   "mythril-analysis.yml",
   "points-backend.yml",
+  "qa-web3-audience.yml",
   "sdk-ci.yml",
   "sdk-publish.yml",
   "security-audit.yml",
