@@ -365,13 +365,17 @@ async function collectSandboxPrerequisites() {
   };
   const uid = process.getuid(), gid = process.getgid(), before = status();
   const apparmor = read('/sys/module/apparmor/parameters/enabled', 128);
+  const activeProfile = read('/proc/self/attr/current', 128);
+  const profileLine = activeProfile.state === 'READ' && /^[^\x00-\x1f\x7f-\x9f\u2028\u2029\ufffd]+\n?$/.exec(activeProfile.text);
   const policy = {
     maxUserNamespaces: decimal(read('/proc/sys/user/max_user_namespaces', 128)),
     unprivilegedUsernsClone: decimal(read('/proc/sys/kernel/unprivileged_userns_clone', 128)),
     apparmorRestrictUnprivilegedUserns: decimal(read('/proc/sys/kernel/apparmor_restrict_unprivileged_userns', 128)),
-    apparmorAvailability: apparmor.state !== 'READ' ? apparmor.state : ['Y', 'Y\n'].includes(apparmor.text) ? 'ENABLED' : ['N', 'N\n'].includes(apparmor.text) ? 'DISABLED' : 'INVALID'
+    apparmorAvailability: apparmor.state !== 'READ' ? apparmor.state : ['Y', 'Y\n'].includes(apparmor.text) ? 'ENABLED' : ['N', 'N\n'].includes(apparmor.text) ? 'DISABLED' : 'INVALID',
+    activeAppArmorProfile: activeProfile.state !== 'READ' ? activeProfile.state : ['unconfined', 'unconfined\n'].includes(activeProfile.text) ? 'UNCONFINED'
+      : profileLine && profileLine[0].length === activeProfile.text.length && /\S/u.test(activeProfile.text) ? 'OTHER' : 'INVALID'
   };
-  let binding = 'UNAVAILABLE', outcome = 'NOT_ATTEMPTED', cleanup = 'NOT_ATTEMPTED';
+  let binding = 'UNAVAILABLE', outcome = 'NOT_ATTEMPTED', cleanup = 'NOT_ATTEMPTED', reportedFailure = 'UNKNOWN';
   const handles = [];
   const same = (a, b) => ['dev', 'ino', 'mode', 'uid', 'gid', 'size', 'mtimeMs', 'ctimeMs'].every(key => a[key] === b[key]);
   try {
@@ -387,6 +391,7 @@ async function collectSandboxPrerequisites() {
       binding = 'BOUND';
       const result = await new Promise(resolve => {
         let child, pid, finished = false, failure = null, bytes = 0, signalUncertain = false;
+        const stderr = Buffer.alloc(4096); let stderrBytes = 0, stdoutBytes = 0;
         const killOwned = () => {
           if (!Number.isSafeInteger(pid) || pid <= 1) { signalUncertain = true; return; }
           try { process.kill(-pid, 'SIGKILL'); } catch (error) { if (error?.code !== 'ESRCH') signalUncertain = true; }
@@ -403,8 +408,14 @@ async function collectSandboxPrerequisites() {
             for (const stream of [child.stdout, child.stderr]) try { stream.destroy(); } catch { signalUncertain = true; }
             try { child.unref(); } catch { signalUncertain = true; }
           }
+          let reported = 'UNKNOWN';
+          if (closed && code === 1 && !signal && !failure && stdoutBytes === 0 && absent && !signalUncertain) {
+            const message = stderr.subarray(0, stderrBytes);
+            if (message.equals(Buffer.from('unshare: unshare failed: Operation not permitted\n', 'ascii'))) reported = 'UNSHARE_CALL_EPERM_REPORTED';
+            else if (message.equals(Buffer.from('unshare: unshare failed: Permission denied\n', 'ascii'))) reported = 'UNSHARE_CALL_EACCES_REPORTED';
+          }
           resolve({ outcome: failure || (!signal && code === 0 ? 'CREATED' : !signal && code === 1 ? 'REFUSED' : 'UNKNOWN'),
-            cleanup: closed && absent && !signalUncertain ? 'REAPED_ABSENT' : 'UNCERTAIN' });
+            cleanup: closed && absent && !signalUncertain ? 'REAPED_ABSENT' : 'UNCERTAIN', reportedFailure: reported });
         };
         const fail = code => { if (finished) return; failure ||= code; killOwned(); };
         try {
@@ -415,13 +426,18 @@ async function collectSandboxPrerequisites() {
         const stopTimer = setTimeout(() => fail('TIMEOUT'), 2000);
         const deadlineTimer = setTimeout(() => { failure ||= 'TIMEOUT'; finish(false); }, 3000);
         for (const stream of [child.stdout, child.stderr]) {
-          stream.on('data', chunk => { bytes += chunk.length; if (bytes > 4096) fail('OUTPUT_LIMIT'); });
+          stream.on('data', chunk => {
+            bytes += chunk.length;
+            if (stream === child.stdout) stdoutBytes += chunk.length;
+            if (bytes > 4096) { fail('OUTPUT_LIMIT'); return; }
+            if (stream === child.stderr) { chunk.copy(stderr, stderrBytes); stderrBytes += chunk.length; }
+          });
           stream.on('error', () => fail('UNKNOWN'));
         }
         child.once('error', () => { failure ||= 'EXEC_ERROR'; });
         child.once('close', (code, signal) => finish(true, code, signal));
       });
-      outcome = result.outcome; cleanup = result.cleanup;
+      outcome = result.outcome; cleanup = result.cleanup; reportedFailure = result.reportedFailure || 'UNKNOWN';
       binding = handles.every(h => same(h.stat, fs.fstatSync(h.fd)) && same(h.stat, fs.lstatSync(h.file)) && fs.realpathSync(h.file) === h.file) ? 'MATCHED' : 'CHANGED';
     }
   } catch { binding = 'UNKNOWN'; }
@@ -434,7 +450,7 @@ async function collectSandboxPrerequisites() {
     after.noNewPrivs === 'ONE' && after.effectiveCaps === 'ZERO' && descriptorCleanup === 'CLOSED' && binding === 'MATCHED' &&
     ['CREATED', 'REFUSED'].includes(outcome) && cleanup === 'REAPED_ABSENT';
   return { status: 'NOT_APP_BROWSER_ACCEPTANCE', qualification: recorded ? 'RECORDED' : 'HOLD', parentIdentity,
-    parentBefore: before, policy, utility: { binding, outcome, cleanup }, parentAfter: after, descriptorCleanup };
+    parentBefore: before, policy, utility: { binding, outcome, cleanup, reportedFailure: recorded ? reportedFailure : 'UNKNOWN' }, parentAfter: after, descriptorCleanup };
 }
 
 async function runtime() {
