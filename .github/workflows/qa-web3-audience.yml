@@ -1,6 +1,6 @@
 name: QA Web3 Audience APPLICATION SOURCE HOLD
 
-# Admission OFF. Future first application-only qualification is separate from exhausted controls.
+# Source OFF via CONTROL_ONLY=true; first application-only qualification is separate from exhausted controls.
 
 on:
   pull_request:
@@ -17,7 +17,6 @@ jobs:
   audience-visual:
     name: First application-only qualification - NOT ADMITTED
     if: >-
-      false &&
       github.repository == 'NeaBouli/inferno' &&
       github.event.repository.private == false &&
       github.event.pull_request.head.repo.full_name == github.repository &&
@@ -50,6 +49,7 @@ jobs:
           install -m 600 /dev/null "$QA_ROOT/user.npmrc"
           install -m 600 /dev/null "$QA_ROOT/global.npmrc"
           printf '%s\n' '{"status":"SETUP_INCOMPLETE","runtime":"NOT_RUN"}' > "$QA_ROOT/out/SETUP-STARTED.json"
+          /usr/bin/grep -Fxq 'const CONTROL_ONLY = false;' scripts/qa-web3-audience-visual.cjs
           N="$(command -v node)"
           timeout --signal=TERM --kill-after=5s 180s env -i PATH="$PATH" HOME="$QA_ROOT/home" TMPDIR="$QA_ROOT/tmp" npm_config_userconfig="$QA_ROOT/user.npmrc" npm_config_globalconfig="$QA_ROOT/global.npmrc" npm_config_cache="$QA_ROOT/npm-cache" npm_config_fetch_retries=0 PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci --ignore-scripts --no-audit --no-fund
           timeout --signal=TERM --kill-after=5s 210s env -i PATH="$PATH" HOME="$QA_ROOT/home" TMPDIR="$QA_ROOT/tmp" PLAYWRIGHT_BROWSERS_PATH="$QA_ROOT/browsers" PLAYWRIGHT_DOWNLOAD_CONNECTION_TIMEOUT=15000 "$N" node_modules/playwright/cli.js install --with-deps --no-shell chromium
