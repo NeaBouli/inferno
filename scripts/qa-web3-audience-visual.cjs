@@ -529,7 +529,12 @@ async function runtime() {
     try { mark('APP_CLEANUP'); } catch { secondaryCodes.push('APP_CLEANUP_DIAGNOSTIC_FAILED'); }
     try { if (context) await context.close(); } catch { secondaryCodes.push('APP_CONTEXT_CLOSE_FAILED'); }
     try { if (browser) await browser.close(); } catch { secondaryCodes.push('APP_BROWSER_CLOSE_FAILED'); }
-    try { if (server) { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); } } catch { secondaryCodes.push('APP_SERVER_CLOSE_FAILED'); }
+    try { if (server) await server.closeAllConnections(); } catch { secondaryCodes.push('APP_SERVER_CLOSE_FAILED'); }
+    try {
+      if (server) await new Promise((resolve, reject) => {
+        Promise.resolve(server.close(error => error ? reject(error) : resolve())).catch(reject);
+      });
+    } catch { secondaryCodes.push('APP_SERVER_CLOSE_FAILED'); }
     if (!runtimeFailure && secondaryCodes.length) runtimeFailure = { phase: 'APP_CLEANUP', code: 'APP_CLEANUP_FAILED', secondaryCodes };
     try {
       save('RESULT.json', { source: SOURCE, status: runtimeFailure ? 'HOLD' : 'ASSERTIONS_COMPLETE_VISUAL_REVIEW_PENDING', reason: runtimeFailure?.code || null, phase: runtimeFailure?.phase || phase, code: runtimeFailure?.code || null, startupSignal: runtimeFailure?.startupSignal || null, secondaryCodes, screenshots: observations, focusObservations, resources, blocked, pageErrors, effects, port, listenerClosed: server ? !server.listening : true, visualAccepted: false, totalPNGBytes: outputBytes, effectEvidenceLayers: { observer: 'fresh empty context; no injected provider; no action-destination activation; no wallet/dialog; owned-origin-only transport', owningRegression: 'tests/browser/web3-write.spec.js audience cases at frozen C8bec assert zero account/signature/transaction/network-switch/watchAsset methods', owningRegressionRunHere: false, clipboardAndFormInstrumentationClaimed: false } });
