@@ -31,6 +31,20 @@ const PHASE_CODES = Object.freeze({
   SERVER: 'APP_OPERATION_FAILED', PW_LOAD: 'APP_OPERATION_FAILED', BROWSER_LAUNCH: 'APP_OPERATION_FAILED', BROWSER_CONTROL: 'APP_OPERATION_FAILED', BROWSER_PROOF: 'BROWSER_PROCESS_PROOF_REQUIRED', CONTEXT_PAGE: 'APP_OPERATION_FAILED', POLICY: 'APP_OPERATION_FAILED', NAVIGATE: 'APP_OPERATION_FAILED', ASSERTIONS: 'APP_OPERATION_FAILED', APP_CLEANUP: 'APP_CLEANUP_FAILED'
 });
 const DIAGNOSTIC_CODES = new Set(['ENTER', 'OPERATION_FAILED', 'FAILURE_RECORD_FAILED', 'DIAGNOSTIC_PROTOCOL', 'OUTPUT_OWNER_BINDING', 'OUTPUT_FILE_BINDING', 'RUNTIME_DEADLINE', 'OUTER_TERM', 'OUTER_INT', 'APP_CLEANUP_DIAGNOSTIC_FAILED', 'APP_CONTEXT_CLOSE_FAILED', 'APP_BROWSER_CLOSE_FAILED', 'APP_SERVER_CLOSE_FAILED', 'APP_RESULT_RECORD_FAILED', ...Object.values(PHASE_CODES)]);
+const BINDING_CODES = new Set(['ROOT', 'OPT', 'VENDOR_DIR', 'CHROME_DIR', 'EXECUTABLE'].flatMap(role =>
+  ['TYPE', 'PATH', 'METADATA', 'OWNER', 'MODE', 'SIZE', 'DIGEST', 'IO', 'CLOSE'].map(kind => role + '_' + kind)));
+const bindingDiagnostics = new Map();
+function bindingFailureFields(detail) {
+  const fields = {};
+  for (const key of ['bindingCode', 'bindingCleanupCode']) {
+    const value = detail?.[key];
+    if (BINDING_CODES.has(value) && (key === 'bindingCode' || value.endsWith('_CLOSE'))) fields[key] = value;
+  }
+  return fields;
+}
+function preserveBindingFailure(error, cleanup) {
+  bindingDiagnostics.set(error, { ...bindingDiagnostics.get(error), bindingCleanupCode: bindingDiagnostics.get(cleanup)?.bindingCode });
+}
 let phase = 'ENTRY', outputOwner, runtimeFailure = null;
 const diagnostic = (next, code = 'ENTER') => {
   check(Object.hasOwn(PHASE_CODES, next) && DIAGNOSTIC_CODES.has(code), 'DIAGNOSTIC_PROTOCOL');
@@ -162,41 +176,64 @@ function regular(file, directory = false) {
 function bindHostedChrome() {
   const code = 'RUNTIME_TOOL_IDENTITY', handles = [];
   const same = (a, b) => ['dev', 'ino', 'mode', 'uid', 'gid', 'nlink', 'size', 'mtimeMs', 'ctimeMs'].every(key => a[key] === b[key]);
+  const bound = (ok, role, kind) => {
+    try { check(ok, code); }
+    catch (error) { bindingDiagnostics.set(error, { bindingCode: role + '_' + kind }); throw error; }
+  };
+  const io = (role, operation) => {
+    try { return operation(); }
+    catch (error) { bindingDiagnostics.set(error, { bindingCode: role + '_IO' }); throw error; }
+  };
   const close = () => {
-    let closed = true;
-    for (const h of handles) try { fs.closeSync(h.fd); } catch { closed = false; }
-    check(closed, code);
+    let failedRole;
+    for (const h of handles) try { fs.closeSync(h.fd); } catch { failedRole ||= h.role; }
+    bound(!failedRole, failedRole, 'CLOSE');
   };
   try {
-    for (const file of ['/', '/opt', '/opt/google', '/opt/google/chrome', HOSTED_CHROME]) {
-      const executable = file === HOSTED_CHROME, before = fs.lstatSync(file);
-      check(!before.isSymbolicLink() && (executable ? before.isFile() : before.isDirectory()) && fs.realpathSync(file) === file, code);
-      const fd = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW | fs.constants.O_NONBLOCK | (executable ? 0 : fs.constants.O_DIRECTORY));
-      const handle = { file, fd }; handles.push(handle);
-      const stat = fs.fstatSync(fd); handle.stat = stat;
-      check(same(before, stat) && same(stat, fs.lstatSync(file)) && stat.uid === 0 && (stat.mode & 0o022) === 0, code);
-      check(executable ? stat.isFile() && (stat.mode & 0o6000) === 0 && (stat.mode & 0o111) !== 0 &&
-        Number.isSafeInteger(stat.size) && stat.size > 0 && stat.size <= 512 * 1024 * 1024 : stat.isDirectory(), code);
+    for (const [role, file] of [['ROOT', '/'], ['OPT', '/opt'], ['VENDOR_DIR', '/opt/google'], ['CHROME_DIR', '/opt/google/chrome'], ['EXECUTABLE', HOSTED_CHROME]]) {
+      const executable = file === HOSTED_CHROME, before = io(role, () => fs.lstatSync(file));
+      bound(!before.isSymbolicLink() && (executable ? before.isFile() : before.isDirectory()), role, 'TYPE');
+      bound(io(role, () => fs.realpathSync(file)) === file, role, 'PATH');
+      const fd = io(role, () => fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW | fs.constants.O_NONBLOCK | (executable ? 0 : fs.constants.O_DIRECTORY)));
+      const handle = { file, fd, role }; handles.push(handle);
+      const stat = io(role, () => fs.fstatSync(fd)); handle.stat = stat;
+      bound(same(before, stat), role, 'METADATA');
+      bound(same(stat, io(role, () => fs.lstatSync(file))), role, 'METADATA');
+      bound(stat.uid === 0, role, 'OWNER');
+      bound((stat.mode & 0o022) === 0, role, 'MODE');
+      if (executable) {
+        bound(stat.isFile(), role, 'TYPE');
+        bound((stat.mode & 0o6000) === 0 && (stat.mode & 0o111) !== 0, role, 'MODE');
+        bound(Number.isSafeInteger(stat.size) && stat.size > 0 && stat.size <= 512 * 1024 * 1024, role, 'SIZE');
+      } else bound(stat.isDirectory(), role, 'TYPE');
     }
     const executable = handles[handles.length - 1];
     const digest = fd => {
-      check(same(executable.stat, fs.fstatSync(fd)), code);
+      bound(same(executable.stat, io('EXECUTABLE', () => fs.fstatSync(fd))), 'EXECUTABLE', 'METADATA');
       const hash = createHash('sha256'), bytes = Buffer.alloc(65536); let total = 0;
       while (total < executable.stat.size) {
-        const count = fs.readSync(fd, bytes, 0, Math.min(bytes.length, executable.stat.size - total), null);
-        check(count > 0, code); total += count; hash.update(bytes.subarray(0, count));
+        const count = io('EXECUTABLE', () => fs.readSync(fd, bytes, 0, Math.min(bytes.length, executable.stat.size - total), null));
+        bound(count > 0, 'EXECUTABLE', 'SIZE'); total += count; hash.update(bytes.subarray(0, count));
       }
-      check(total === executable.stat.size && same(executable.stat, fs.fstatSync(fd)), code);
+      bound(total === executable.stat.size, 'EXECUTABLE', 'SIZE');
+      bound(same(executable.stat, io('EXECUTABLE', () => fs.fstatSync(fd))), 'EXECUTABLE', 'METADATA');
       return hash.digest('hex');
     };
     const revalidate = () => {
-      for (const h of handles) check(same(h.stat, fs.fstatSync(h.fd)) && same(h.stat, fs.lstatSync(h.file)) && fs.realpathSync(h.file) === h.file, code);
+      for (const h of handles) {
+        bound(same(h.stat, io(h.role, () => fs.fstatSync(h.fd))), h.role, 'METADATA');
+        bound(same(h.stat, io(h.role, () => fs.lstatSync(h.file))), h.role, 'METADATA');
+        bound(io(h.role, () => fs.realpathSync(h.file)) === h.file, h.role, 'PATH');
+      }
     };
     const browserSHA256 = digest(executable.fd);
     revalidate();
     return { browser: HOSTED_CHROME, browserKind: BROWSER_KIND, browserSHA256, revalidate,
-      verifyExecutable: fd => { check(digest(fd) === browserSHA256, code); revalidate(); }, close };
-  } catch (error) { close(); throw error; }
+      verifyExecutable: fd => { bound(digest(fd) === browserSHA256, 'EXECUTABLE', 'DIGEST'); revalidate(); }, close };
+  } catch (error) {
+    try { close(); } catch (cleanup) { preserveBindingFailure(error, cleanup); }
+    throw error;
+  }
 }
 function fonts() {
   const rows = JSON.parse(fs.readFileSync(path.join(ROOT, 'tests/fixtures/web3-audience-fonts-20261114.json'), 'utf8'));
@@ -257,12 +294,16 @@ async function setup() {
   const packageInfo = JSON.parse(fs.readFileSync(require.resolve('playwright/package.json'), 'utf8'));
   check(packageInfo.version === '1.64.1', 'PLAYWRIGHT_VERSION');
   const binding = bindHostedChrome();
+  let bindingPrimary;
   try {
     const prepared = { source: SOURCE, docs: rows, node: process.execPath, nodeSHA256: sha(fs.readFileSync(process.execPath)), browser: binding.browser, browserKind: binding.browserKind, browserSHA256: binding.browserSHA256, uid: process.getuid(), gid: process.getgid(), namespaces: Object.fromEntries(['net', 'mnt', 'pid'].map(n => [n, fs.readlinkSync('/proc/self/ns/' + n)])), runnerSHA256: sha(fs.readFileSync(__filename)) };
     fs.writeFileSync(path.join(T, 'prepared.json'), JSON.stringify(prepared), { flag: 'wx', mode: 0o600 });
     save('FONTS.json', { source: SOURCE.head, records: bank, totalBytes: 509510, status: 'HASH_VERIFIED_DATA_ONLY' });
     save('SETUP.json', { source: SOURCE, node: process.version, playwright: packageInfo.version, nodeSHA256: prepared.nodeSHA256, browserKind: prepared.browserKind, browserSHA256: prepared.browserSHA256, fonts: bank.length, bytes: 509510, status: 'PREPARED_NOT_RENDERED' });
-  } finally { binding.close(); }
+  } catch (error) { bindingPrimary = { error }; throw error; }
+  finally {
+    try { binding.close(); } catch (cleanup) { if (!bindingPrimary) throw cleanup; preserveBindingFailure(bindingPrimary.error, cleanup); }
+  }
 }
 
 async function namespace() {
@@ -585,10 +626,14 @@ async function runtime() {
   const prepared = readPrepared();
   mark('RUNTIME_TOOLS');
   const boundBrowser = bindHostedChrome();
+  let bindingPrimary;
   try {
     check(prepared.nodeSHA256 === sha(fs.readFileSync(process.execPath)) && prepared.browser === HOSTED_CHROME &&
       prepared.browserKind === BROWSER_KIND && prepared.browserSHA256 === boundBrowser.browserSHA256, 'RUNTIME_TOOL_IDENTITY');
-  } finally { boundBrowser.close(); }
+  } catch (error) { bindingPrimary = { error }; throw error; }
+  finally {
+    try { boundBrowser.close(); } catch (cleanup) { if (!bindingPrimary) throw cleanup; preserveBindingFailure(bindingPrimary.error, cleanup); }
+  }
   mark('RUNTIME_SOURCE');
   check(prepared.source.head === SOURCE.head && sha(JSON.stringify(prepared.docs)) === SOURCE.manifestSHA256, 'RUNTIME_SOURCE_BINDING');
   mark('RUNTIME_FONTS');
@@ -627,6 +672,7 @@ async function runtime() {
     const { chromium } = require('playwright');
     mark('RUNTIME_TOOLS');
     const launchBinding = bindHostedChrome();
+    let launchPrimary;
     try {
       check(prepared.browser === HOSTED_CHROME && prepared.browserKind === BROWSER_KIND &&
         prepared.browserSHA256 === launchBinding.browserSHA256, 'RUNTIME_TOOL_IDENTITY');
@@ -642,7 +688,10 @@ async function runtime() {
       const proof = browserProcessProof(processInfo, launchBinding), browserVersion = browser.version();
       check(typeof browserVersion === 'string' && browserVersion.length <= 64 && /^[0-9]+(?:\.[0-9]+)+$/.exec(browserVersion)?.[0] === browserVersion, 'BROWSER_PROCESS_PROOF_REQUIRED');
       save('BROWSER-PROOF.json', { browserKind: BROWSER_KIND, browserSHA256: prepared.browserSHA256, browserVersion, ...proof });
-    } finally { launchBinding.close(); }
+    } catch (error) { launchPrimary = { error }; throw error; }
+    finally {
+      try { launchBinding.close(); } catch (cleanup) { if (!launchPrimary) throw cleanup; preserveBindingFailure(launchPrimary.error, cleanup); }
+    }
     for (const [width, height] of [[375, 812], [390, 844], [820, 1180], [1180, 820], [1440, 1000]]) {
       mark('CONTEXT_PAGE');
       context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: 1, reducedMotion: 'reduce', serviceWorkers: 'block', acceptDownloads: false, storageState: { cookies: [], origins: [] } });
@@ -784,7 +833,7 @@ async function runtime() {
     mark('ASSERTIONS');
     check(observations.length === 20, 'IMAGE_COUNT');
   } catch (error) {
-    runtimeFailure = { phase, code: phase === 'BROWSER_PROOF' ? 'BROWSER_PROCESS_PROOF_REQUIRED' : 'APP_OPERATION_FAILED', secondaryCodes, startupSignal: 'UNKNOWN' };
+    runtimeFailure = { phase, code: phase === 'BROWSER_PROOF' ? 'BROWSER_PROCESS_PROOF_REQUIRED' : 'APP_OPERATION_FAILED', secondaryCodes, startupSignal: 'UNKNOWN', binding: bindingDiagnostics.get(error) };
     try {
       const message = error?.message;
       if (typeof message === 'string' && message.length <= 32768) {
@@ -809,7 +858,7 @@ async function runtime() {
     } catch { secondaryCodes.push('APP_SERVER_CLOSE_FAILED'); }
     if (!runtimeFailure && secondaryCodes.length) runtimeFailure = { phase: 'APP_CLEANUP', code: 'APP_CLEANUP_FAILED', secondaryCodes };
     try {
-      save('RESULT.json', { source: SOURCE, status: runtimeFailure ? 'HOLD' : 'ASSERTIONS_COMPLETE_VISUAL_REVIEW_PENDING', reason: runtimeFailure?.code || null, phase: runtimeFailure?.phase || phase, code: runtimeFailure?.code || null, startupSignal: runtimeFailure?.startupSignal || null, secondaryCodes, screenshots: observations, focusObservations, resources, blocked, pageErrors, effects, port, listenerClosed: server ? !server.listening : true, visualAccepted: false, totalPNGBytes: outputBytes, effectEvidenceLayers: { observer: 'fresh empty context; no injected provider; no action-destination activation; no wallet/dialog; owned-origin-only transport', owningRegression: 'tests/browser/web3-write.spec.js audience cases at frozen C8bec assert zero account/signature/transaction/network-switch/watchAsset methods', owningRegressionRunHere: false, clipboardAndFormInstrumentationClaimed: false } });
+      save('RESULT.json', { source: SOURCE, status: runtimeFailure ? 'HOLD' : 'ASSERTIONS_COMPLETE_VISUAL_REVIEW_PENDING', reason: runtimeFailure?.code || null, phase: runtimeFailure?.phase || phase, code: runtimeFailure?.code || null, ...(runtimeFailure ? bindingFailureFields(runtimeFailure.binding) : {}), startupSignal: runtimeFailure?.startupSignal || null, secondaryCodes, screenshots: observations, focusObservations, resources, blocked, pageErrors, effects, port, listenerClosed: server ? !server.listening : true, visualAccepted: false, totalPNGBytes: outputBytes, effectEvidenceLayers: { observer: 'fresh empty context; no injected provider; no action-destination activation; no wallet/dialog; owned-origin-only transport', owningRegression: 'tests/browser/web3-write.spec.js audience cases at frozen C8bec assert zero account/signature/transaction/network-switch/watchAsset methods', owningRegressionRunHere: false, clipboardAndFormInstrumentationClaimed: false } });
     } catch {
       secondaryCodes.push('APP_RESULT_RECORD_FAILED');
       runtimeFailure ||= { phase: 'APP_CLEANUP', code: 'APP_RESULT_RECORD_FAILED', secondaryCodes };
@@ -832,7 +881,7 @@ process.umask(0o077);
   const code = runtimeFailure?.code || (DIAGNOSTIC_CODES.has(error?.code) ? error.code : 'OPERATION_FAILED');
   diagnostic(failurePhase, code);
   for (const secondaryCode of runtimeFailure?.secondaryCodes || []) diagnostic('APP_CLEANUP', secondaryCode);
-  try { if (['setup', 'namespace', 'runtime'].includes(MODE)) save('FAILURE-' + MODE + '.json', { status: 'HOLD', phase: failurePhase, code, ...(runtimeFailure ? { startupSignal: runtimeFailure.startupSignal || null, secondaryCodes: runtimeFailure.secondaryCodes } : {}) }); }
+  try { if (['setup', 'namespace', 'runtime'].includes(MODE)) save('FAILURE-' + MODE + '.json', { status: 'HOLD', phase: failurePhase, code, ...bindingFailureFields(runtimeFailure?.binding || bindingDiagnostics.get(error)), ...(runtimeFailure ? { startupSignal: runtimeFailure.startupSignal || null, secondaryCodes: runtimeFailure.secondaryCodes } : {}) }); }
   catch { diagnostic(failurePhase, 'FAILURE_RECORD_FAILED'); }
   process.exitCode = 2;
 });

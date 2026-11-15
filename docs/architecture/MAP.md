@@ -173,6 +173,14 @@ fallback, custom policy or guard relaxation; the existing 20 audience assertions
 and prior prerequisite collector remain. Parent owns fixtures, independent review,
 fresh one-attempt admission and image review; no app/live acceptance is claimed.
 
+Binding failure diagnostic (2026-11-15, SOURCE_ONLY / NOT_RUN): the same
+`bindHostedChrome` -> setup/runtime -> failure-receipt hop adds allowlisted
+`bindingCode` / `bindingCleanupCode` role/class codes only on failure. I/O is
+classified by call site, never error properties; the primary error survives all
+held-descriptor close attempts. Guards, filesystem reads, helper return ABI,
+stdout and success receipts remain unchanged. Parent owns fixtures, independent
+review and any setup-only admission; no execution or browser acceptance claimed.
+
 Issue #382 isolated diagnostic accepted on 2026-10-31
 ([PR #418](https://github.com/NeaBouli/inferno/pull/418);
 [CI2 run 41239848840](https://github.com/NeaBouli/inferno/actions/runs/41239848840)).
