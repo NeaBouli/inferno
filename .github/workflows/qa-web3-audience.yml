@@ -1,6 +1,6 @@
-name: QA Web3 Audience FIRST APPLICATION QUALIFICATION
+name: QA Web3 Audience RESUMED STARTUP DIAGNOSTIC
 
-# One Parent-bound first application qualification, separate from exhausted controls.
+# One owner-resumed startup diagnostic; no control-budget renewal or automatic retry.
 
 on:
   pull_request:
@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   audience-visual:
-    name: First bounded audience application qualification - ONE attempt
+    name: Resumed audience startup diagnostic - ONE attempt
     if: >-
       github.repository == 'NeaBouli/inferno' &&
       github.event.repository.private == false &&
@@ -54,7 +54,7 @@ jobs:
           timeout --signal=TERM --kill-after=5s 180s env -i PATH="$PATH" HOME="$QA_ROOT/home" TMPDIR="$QA_ROOT/tmp" npm_config_userconfig="$QA_ROOT/user.npmrc" npm_config_globalconfig="$QA_ROOT/global.npmrc" npm_config_cache="$QA_ROOT/npm-cache" npm_config_fetch_retries=0 PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci --ignore-scripts --no-audit --no-fund
           timeout --signal=TERM --kill-after=5s 210s env -i PATH="$PATH" HOME="$QA_ROOT/home" TMPDIR="$QA_ROOT/tmp" PLAYWRIGHT_BROWSERS_PATH="$QA_ROOT/browsers" PLAYWRIGHT_DOWNLOAD_CONNECTION_TIMEOUT=15000 "$N" node_modules/playwright/cli.js install --with-deps --no-shell chromium
           timeout --signal=TERM --kill-after=5s 100s env -i PATH=/usr/bin:/bin HOME="$QA_ROOT/home" TMPDIR="$QA_ROOT/tmp" PLAYWRIGHT_BROWSERS_PATH="$QA_ROOT/browsers" LANG=C.UTF-8 LC_ALL=C.UTF-8 TZ=UTC "$N" --no-addons scripts/qa-web3-audience-visual.cjs setup "$QA_ROOT"
-      - name: ONE first isolated application-only observer
+      - name: ONE isolated resumed startup diagnostic
         timeout-minutes: 4
         shell: bash
         env:
@@ -72,7 +72,7 @@ jobs:
         # v7.0.2; Parent reviewed official release, tag-ref commit and action.yml.
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
-          name: web3-audience-application-${{ github.run_id }}-${{ github.run_attempt }}
+          name: web3-audience-startup-diagnostic-${{ github.run_id }}-${{ github.run_attempt }}
           path: ${{ runner.temp }}/web3-audience-${{ github.run_id }}-${{ github.run_attempt }}/out
           if-no-files-found: error
           retention-days: 3
