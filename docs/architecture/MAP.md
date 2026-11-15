@@ -183,12 +183,18 @@ review and any setup-only admission; no execution or browser acceptance claimed.
 
 Ephemeral hosted-CI bootstrap (SOURCE_ONLY / NOT_RUN): setup-only workflow ->
 unprivileged Node 22.22.2 core-FS qualification (held no-follow/nonblocking FDs for
-root-owned `/`, `/usr`, `/usr/bin`, `/usr/bin/sudo`, `/usr/bin/chmod`, `/opt`) ->
-at most one fixed `sudo -n -- /usr/bin/chmod -- go-w /opt`, only if write bits exist
--> exact held/named metadata recheck -> all close attempts -> private closed JSON.
-No interpreter/source runs as root; only `/opt` mode022 and expected chmod ctime
-may change. Protected ancestors and a fresh dedicated hosted VM with no untrusted
-root writer are mandatory premises, not binary/browser-content provenance.
+all nine root-owned paths: `/`, `/usr`, `/usr/bin`, `/usr/bin/sudo`, `/usr/bin/chmod`,
+`/opt`, `/opt/google`, `/opt/google/chrome`, `/opt/google/chrome/chrome`) ->
+top-down `OPT`/`VENDOR_DIR`/`CHROME_DIR`/`EXECUTABLE` transitions, only after full
+prequalification and held/named recheck with the current parent protected -> at most
+four distinct fixed `sudo -n -- /usr/bin/chmod -- go-w` calls (10s each, no retry) ->
+immediate exact mode-mask/metadata check and strict post-transition ctime baseline ->
+final nine-path recheck -> every reverse close attempt -> private closed JSON.
+Partial failure stays HOLD with verified changed roles and attempted-unverified
+states; no unsafe-bit restoration. No interpreter/source runs as root; only these
+four mode022 masks and their expected chmod ctimes may change. Protected ancestors
+and a fresh dedicated hosted VM with no untrusted root writer are mandatory
+premises, not binary/browser-content provenance or a 40s whole-helper guarantee.
 Strict Chrome binding, runner guards and setup-only scope remain unchanged;
 Parent owns regression fixtures, independent review and execution admission.
 

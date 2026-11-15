@@ -57,8 +57,10 @@ jobs:
           const { spawnSync } = require('node:child_process');
           const same = (a, b, keys) => keys.every(key => a[key] === b[key]);
           const keys = ['dev', 'ino', 'uid', 'gid', 'mode', 'nlink', 'rdev', 'size', 'blksize', 'blocks', 'mtimeNs', 'ctimeNs', 'birthtimeNs'];
+          const targets = [['OPT', '/opt', true], ['VENDOR_DIR', '/opt/google', true], ['CHROME_DIR', '/opt/google/chrome', true], ['EXECUTABLE', '/opt/google/chrome/chrome', false]];
+          const roles = Object.fromEntries(targets.map(([role]) => [role, 'NOT_REACHED'])), changedRoles = [];
           const held = [], statOptions = { bigint: true };
-          let stage = 'CONTEXT', failure = null, cleanupFailed = false, changed = false, output;
+          let stage = 'CONTEXT', role = null, failure = null, failureRole = null, cleanupFailed = false, output;
           try {
             check(process.platform === 'linux' && process.version === 'v22.22.2' && process.getuid() > 0 && process.getuid() === process.geteuid() && process.getgid() === process.getegid());
             check(process.argv.length === 3 && /^\/home\/runner\/work\/_temp\/web3-audience-\d+-1$/.test(process.argv[2]));
@@ -71,47 +73,70 @@ jobs:
             output = process.argv[2] + '/out/OPT-HARDENING.json';
             stage = 'PATH_QUALIFICATION';
             // Fresh dedicated hosted VM, no untrusted root writer; metadata is not content provenance.
-            for (const [path, directory] of [['/', true], ['/usr', true], ['/usr/bin', true], ['/usr/bin/sudo', false], ['/usr/bin/chmod', false], ['/opt', true]]) {
+            for (const [pathRole, path, directory] of [['ROOT', '/', true], ['USR', '/usr', true], ['USR_BIN', '/usr/bin', true], ['SUDO', '/usr/bin/sudo', false], ['CHMOD', '/usr/bin/chmod', false], ...targets]) {
+              role = pathRole;
               const before = fs.lstatSync(path, statOptions);
               check(!before.isSymbolicLink() && (directory ? before.isDirectory() : before.isFile()) && before.uid === 0n && fs.realpathSync(path) === path);
-              if (path !== '/opt') check((before.mode & 0o022n) === 0n);
+              if (!Object.hasOwn(roles, role)) check((before.mode & 0o022n) === 0n);
               if (!directory) check(before.size > 0n && (before.mode & 0o111n) === 0o111n && (before.mode & 0o7000n) === (path === '/usr/bin/sudo' ? 0o4000n : 0n));
               const fd = fs.openSync(path, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW | fs.constants.O_NONBLOCK | (directory ? fs.constants.O_DIRECTORY : 0));
-              held.push({ path, fd, before });
+              held.push({ role, path, fd, before });
+              check(held.slice(0, -1).every(item => item.before.dev !== before.dev || item.before.ino !== before.ino));
               check(same(before, fs.fstatSync(fd, statOptions), keys) && same(before, fs.lstatSync(path, statOptions), keys) && fs.realpathSync(path) === path);
             }
-            for (const { path, fd, before } of held) {
-              check(same(before, fs.fstatSync(fd, statOptions), keys) && same(before, fs.lstatSync(path, statOptions), keys) && fs.realpathSync(path) === path);
-            }
-            changed = (held[held.length - 1].before.mode & 0o022n) !== 0n;
-            if (changed) {
-              stage = 'COREUTILS_CALL';
-              const result = spawnSync('/usr/bin/sudo', ['-n', '--', '/usr/bin/chmod', '--', 'go-w', '/opt'], {
-                shell: false, env: {}, timeout: 10000, killSignal: 'SIGKILL', maxBuffer: 4096, stdio: ['ignore', 'pipe', 'pipe']
-              });
-              check(!result.error && result.status === 0 && result.signal === null && result.stdout.length === 0 && result.stderr.length === 0);
+            for (let index = 5; index < held.length; index++) {
+              const target = held[index], parent = held[index === 5 ? 0 : index - 1];
+              stage = 'PATH_RECHECK';
+              for (const { role: pathRole, path, fd, before } of held) {
+                role = pathRole;
+                check(same(before, fs.fstatSync(fd, statOptions), keys) && same(before, fs.lstatSync(path, statOptions), keys) && fs.realpathSync(path) === path);
+              }
+              role = parent.role;
+              check((parent.before.mode & 0o022n) === 0n);
+              role = target.role;
+              const changed = (target.before.mode & 0o022n) !== 0n;
+              if (changed) {
+                stage = 'COREUTILS_CALL';
+                roles[role] = 'ATTEMPTED_UNVERIFIED';
+                const result = spawnSync('/usr/bin/sudo', ['-n', '--', '/usr/bin/chmod', '--', 'go-w', target.path], {
+                  shell: false, env: {}, timeout: 10000, killSignal: 'SIGKILL', maxBuffer: 4096, stdio: ['ignore', 'pipe', 'pipe']
+                });
+                check(!result.error && result.status === 0 && result.signal === null && result.stdout.length === 0 && result.stderr.length === 0);
+              }
+              stage = 'PATH_RECHECK';
+              for (const item of held) {
+                role = item.role;
+                const { path, fd, before } = item, after = fs.fstatSync(fd, statOptions), named = fs.lstatSync(path, statOptions);
+                const mutable = item === target && changed;
+                check(same(before, after, mutable ? keys.filter(key => key !== 'mode' && key !== 'ctimeNs') : keys));
+                check(after.mode === (item === target ? before.mode & ~0o022n : before.mode));
+                check(same(after, named, keys) && fs.realpathSync(path) === path);
+                if (item === target) {
+                  target.before = after;
+                  roles[role] = changed ? 'CHANGE_VERIFIED' : 'ALREADY_RESTRICTED';
+                  if (changed) changedRoles.push(role);
+                }
+              }
             }
             stage = 'PATH_RECHECK';
-            for (const { path, fd, before } of held) {
-              const after = fs.fstatSync(fd, statOptions), named = fs.lstatSync(path, statOptions);
-              const mutable = path === '/opt' && changed;
-              check(same(before, after, mutable ? keys.filter(key => key !== 'mode' && key !== 'ctimeNs') : keys));
-              check(after.mode === (path === '/opt' ? before.mode & ~0o022n : before.mode));
-              check(same(after, named, keys) && fs.realpathSync(path) === path);
+            for (const { role: pathRole, path, fd, before } of held) {
+              role = pathRole;
+              check((before.mode & 0o022n) === 0n && same(before, fs.fstatSync(fd, statOptions), keys) && same(before, fs.lstatSync(path, statOptions), keys) && fs.realpathSync(path) === path);
             }
-          } catch { failure = stage; }
+          } catch { failure = stage; failureRole = role; }
           finally {
-            for (const { fd } of held.reverse()) {
+            for (const { role: pathRole, fd } of held.reverse()) {
               try { fs.closeSync(fd); }
-              catch { cleanupFailed = true; failure ??= 'FD_CLOSE'; }
+              catch { cleanupFailed = true; if (failure === null) { failure = 'FD_CLOSE'; failureRole = pathRole; } }
             }
           }
           // No raw errors or child streams; an absent/unwritable receipt is also a setup HOLD.
           try {
             check(output !== undefined);
             fs.writeFileSync(output, JSON.stringify({
-              status: failure === null ? 'OPT_RESTRICTED' : 'HOLD',
-              code: failure ?? (changed ? 'ONLY_GROUP_WORLD_WRITE_REMOVED' : 'ALREADY_RESTRICTED'),
+              status: failure === null ? 'CHROME_PATHS_RESTRICTED' : 'HOLD',
+              code: failure ?? (changedRoles.length ? 'ONLY_GROUP_WORLD_WRITE_REMOVED' : 'ALREADY_RESTRICTED'),
+              role: failureRole, roles, changedRoles,
               cleanupCode: cleanupFailed ? 'FD_CLOSE_FAILED' : null
             }) + '\n', { mode: 0o600, flag: fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL | fs.constants.O_NOFOLLOW | fs.constants.O_NONBLOCK });
           } catch { failure ??= 'OUTPUT_WRITE'; }
