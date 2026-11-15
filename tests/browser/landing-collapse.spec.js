@@ -2,7 +2,7 @@ const { test, expect } = require('@playwright/test');
 const { expandLandingSections } = require('./helpers/landing-collapse');
 
 const COLLAPSED = ['about', 'how', 'tokenomics', 'token-flow', 'ecosystem', 'partners', 'architecture', 'trust',
-  'onchain-transparency', 'faq', 'roadmap', 'phase3', 'governance', 'project-continuity', 'contracts'];
+  'onchain-transparency', 'roadmap', 'phase3', 'governance', 'project-continuity', 'contracts', 'faq'];
 const OPEN = ['hero', 'wizard'];
 const MAIN = '0x77e99917Eca8539c62F509ED1193ac36580A6e7B';
 const normalize = (text) => text.replace(/\s+/g, ' ').trim();
@@ -18,6 +18,8 @@ for (const [width, height] of [[375, 812], [390, 844], [820, 1180], [1180, 820],
     page.on('pageerror', error => errors.push(error.message));
     await page.goto('/');
     expect(await page.locator('main > section.landing-collapsible').evaluateAll(sections => sections.map(s => s.id))).toEqual(COLLAPSED);
+    await expect(page.locator('main > section').last()).toHaveAttribute('id', 'faq');
+    await expect(page.locator('main + footer')).toHaveCount(1);
     for (const id of COLLAPSED) {
       const section = page.locator(`#${id}`);
       const toggle = section.locator(':scope > .landing-collapse-heading > button');
@@ -135,6 +137,63 @@ for (const [id, name, content, href] of [
     expect(await panel.evaluate(inventory)).toEqual(before);
   });
 }
+
+test('FAQ is the final content tile and preserves outer and inner native controls', async ({ page }) => {
+  await page.goto('/');
+  const faq = page.locator('#faq');
+  const toggle = faq.locator(':scope > .landing-collapse-heading > button');
+  const panel = faq.locator(':scope > .landing-collapse-panel');
+  expect(await page.locator('main').evaluate(main => {
+    const content = [...main.children].filter(node => !['SCRIPT', 'STYLE', 'TEMPLATE'].includes(node.tagName));
+    return { last: content.at(-1).id, previous: content.at(-2).id, footerNext: main.nextElementSibling.tagName };
+  })).toEqual({ last: 'faq', previous: 'contracts', footerNext: 'FOOTER' });
+  await expect(faq.locator('.landing-collapse-toggle')).toHaveCount(1);
+  await expect(panel).toHaveCount(1);
+  await expect(toggle).toHaveAccessibleName('FREQUENTLY ASKED QUESTIONS');
+  await expect(toggle).toHaveAttribute('aria-controls', 'faq-panel');
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(panel).toBeHidden();
+  const links = await faq.locator('a[href]').evaluateAll(nodes => nodes.map(node => node.getAttribute('href')));
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  await expect(panel).toBeVisible();
+  await expect(faq.locator('.lp-faq-item')).toHaveCount(10);
+  const first = faq.locator('#faq-col-left .lp-faq-q').first();
+  const second = faq.locator('#faq-col-right .lp-faq-q').first();
+  await expect(first.locator('span')).toHaveText('Can I provide IFR and ETH liquidity myself?');
+  await first.click();
+  await expect(first).toHaveAttribute('aria-expanded', 'true');
+  await expect(faq.locator('.lp-faq-item.open')).toHaveCount(1);
+  await expect(faq.locator('.lp-faq-item.open a[href="wiki/liquidity.html"]')).toBeVisible();
+  await second.press('Enter');
+  await expect(first).toHaveAttribute('aria-expanded', 'false');
+  await expect(second).toHaveAttribute('aria-expanded', 'true');
+  await expect(faq.locator('.lp-faq-item.open')).toHaveCount(1);
+  await expect(faq.locator('.lp-faq-item.open a[href="wiki/liquidity.html#risks"]')).toBeVisible();
+  await toggle.press('Space');
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(panel).toBeHidden();
+  await expect(toggle).toBeFocused();
+  await toggle.press('Enter');
+  await expect(panel).toBeVisible();
+  await expect(second).toHaveAttribute('aria-expanded', 'true');
+  expect(await faq.locator('a[href]').evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))).toEqual(links);
+  await toggle.click();
+  await expect(panel).toBeHidden();
+});
+
+test('the original FAQ fragment opens the final tile below navigation', async ({ page }) => {
+  await page.goto('/#faq');
+  const toggle = page.locator('#faq > .landing-collapse-heading > button');
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.locator('#faq-panel')).toBeVisible();
+  await expect(page.locator('#faq-panel a[href="wiki/faq.html"]')).toHaveCount(2);
+  await expect(page.locator('main > section').last()).toHaveAttribute('id', 'faq');
+  await expect.poll(() => toggle.evaluate(button => {
+    const box = button.getBoundingClientRect();
+    return box.top >= document.querySelector('nav').getBoundingClientRect().bottom && box.bottom <= innerHeight;
+  })).toBe(true);
+});
 
 test('one native contracts toggle controls every row including the LP Pair and preserves links', async ({ page }) => {
   await page.goto('/');
@@ -259,6 +318,9 @@ test.describe('without JavaScript', () => {
   test('all source sections and every address remain visible', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('.landing-collapse-toggle')).toHaveCount(0);
+    await expect(page.locator('main > section').last()).toHaveAttribute('id', 'faq');
+    await expect(page.locator('main + footer')).toHaveCount(1);
+    await expect(page.locator('#faq a[href="wiki/faq.html"]')).toHaveCount(2);
     for (const id of COLLAPSED) {
       await expect(page.locator(`#${id} h2`)).toBeVisible();
       for (const reveal of await page.locator(`#${id} .reveal`).all()) await expect(reveal).toHaveCSS('opacity', '1');
