@@ -257,6 +257,7 @@ for (const [width, height] of [[375, 812], [390, 844], [820, 1180], [1180, 820],
               if (kind === 'truncate') element.textContent = element.textContent.slice(0, -1);
               if (kind === 'shrink') element.setAttribute('font-size', '7');
             }, mutation);
+            if (mutation === 'hide') await expect(pool).toHaveCSS('visibility', 'hidden');
             const [negative] = await sample(svg, state);
             expect(negative.violations).toContain(`flow-pool-edge:${{ hide: 'visible', truncate: 'exact-text', shrink: 'font-size' }[mutation]}`);
             expect(() => assertFit(negative)).toThrow();
