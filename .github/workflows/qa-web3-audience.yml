@@ -51,6 +51,72 @@ jobs:
           printf '%s\n' '{"status":"SETUP_INCOMPLETE","runtime":"NOT_RUN"}' > "$QA_ROOT/out/SETUP-STARTED.json"
           /usr/bin/grep -Fxq 'const CONTROL_ONLY = false;' scripts/qa-web3-audience-visual.cjs
           N="$(command -v node)"
+          /usr/bin/env -i PATH=/usr/bin:/bin "$N" --no-addons - "$QA_ROOT" > /dev/null 2>&1 <<'NODE'
+          'use strict';
+          const fs = require('node:fs'), check = ok => { if (!ok) throw 0; };
+          const { spawnSync } = require('node:child_process');
+          const same = (a, b, keys) => keys.every(key => a[key] === b[key]);
+          const keys = ['dev', 'ino', 'uid', 'gid', 'mode', 'nlink', 'rdev', 'size', 'blksize', 'blocks', 'mtimeNs', 'ctimeNs', 'birthtimeNs'];
+          const held = [], statOptions = { bigint: true };
+          let stage = 'CONTEXT', failure = null, cleanupFailed = false, changed = false, output;
+          try {
+            check(process.platform === 'linux' && process.version === 'v22.22.2' && process.getuid() > 0 && process.getuid() === process.geteuid() && process.getgid() === process.getegid());
+            check(process.argv.length === 3 && /^\/home\/runner\/work\/_temp\/web3-audience-\d+-1$/.test(process.argv[2]));
+            check(['O_RDONLY', 'O_DIRECTORY', 'O_NOFOLLOW', 'O_NONBLOCK', 'O_WRONLY', 'O_CREAT', 'O_EXCL'].every(key => Number.isInteger(fs.constants[key])));
+            stage = 'OUTPUT_DIRECTORY';
+            for (const path of [process.argv[2], process.argv[2] + '/out']) {
+              const st = fs.lstatSync(path, statOptions);
+              check(st.isDirectory() && !st.isSymbolicLink() && st.uid === BigInt(process.getuid()) && st.gid === BigInt(process.getgid()) && (st.mode & 0o7777n) === 0o700n && fs.realpathSync(path) === path);
+            }
+            output = process.argv[2] + '/out/OPT-HARDENING.json';
+            stage = 'PATH_QUALIFICATION';
+            // Fresh dedicated hosted VM, no untrusted root writer; metadata is not content provenance.
+            for (const [path, directory] of [['/', true], ['/usr', true], ['/usr/bin', true], ['/usr/bin/sudo', false], ['/usr/bin/chmod', false], ['/opt', true]]) {
+              const before = fs.lstatSync(path, statOptions);
+              check(!before.isSymbolicLink() && (directory ? before.isDirectory() : before.isFile()) && before.uid === 0n && fs.realpathSync(path) === path);
+              if (path !== '/opt') check((before.mode & 0o022n) === 0n);
+              if (!directory) check(before.size > 0n && (before.mode & 0o111n) === 0o111n && (before.mode & 0o7000n) === (path === '/usr/bin/sudo' ? 0o4000n : 0n));
+              const fd = fs.openSync(path, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW | fs.constants.O_NONBLOCK | (directory ? fs.constants.O_DIRECTORY : 0));
+              held.push({ path, fd, before });
+              check(same(before, fs.fstatSync(fd, statOptions), keys) && same(before, fs.lstatSync(path, statOptions), keys) && fs.realpathSync(path) === path);
+            }
+            for (const { path, fd, before } of held) {
+              check(same(before, fs.fstatSync(fd, statOptions), keys) && same(before, fs.lstatSync(path, statOptions), keys) && fs.realpathSync(path) === path);
+            }
+            changed = (held[held.length - 1].before.mode & 0o022n) !== 0n;
+            if (changed) {
+              stage = 'COREUTILS_CALL';
+              const result = spawnSync('/usr/bin/sudo', ['-n', '--', '/usr/bin/chmod', '--', 'go-w', '/opt'], {
+                shell: false, env: {}, timeout: 10000, killSignal: 'SIGKILL', maxBuffer: 4096, stdio: ['ignore', 'pipe', 'pipe']
+              });
+              check(!result.error && result.status === 0 && result.signal === null && result.stdout.length === 0 && result.stderr.length === 0);
+            }
+            stage = 'PATH_RECHECK';
+            for (const { path, fd, before } of held) {
+              const after = fs.fstatSync(fd, statOptions), named = fs.lstatSync(path, statOptions);
+              const mutable = path === '/opt' && changed;
+              check(same(before, after, mutable ? keys.filter(key => key !== 'mode' && key !== 'ctimeNs') : keys));
+              check(after.mode === (path === '/opt' ? before.mode & ~0o022n : before.mode));
+              check(same(after, named, keys) && fs.realpathSync(path) === path);
+            }
+          } catch { failure = stage; }
+          finally {
+            for (const { fd } of held.reverse()) {
+              try { fs.closeSync(fd); }
+              catch { cleanupFailed = true; failure ??= 'FD_CLOSE'; }
+            }
+          }
+          // No raw errors or child streams; an absent/unwritable receipt is also a setup HOLD.
+          try {
+            check(output !== undefined);
+            fs.writeFileSync(output, JSON.stringify({
+              status: failure === null ? 'OPT_RESTRICTED' : 'HOLD',
+              code: failure ?? (changed ? 'ONLY_GROUP_WORLD_WRITE_REMOVED' : 'ALREADY_RESTRICTED'),
+              cleanupCode: cleanupFailed ? 'FD_CLOSE_FAILED' : null
+            }) + '\n', { mode: 0o600, flag: fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL | fs.constants.O_NOFOLLOW | fs.constants.O_NONBLOCK });
+          } catch { failure ??= 'OUTPUT_WRITE'; }
+          process.exitCode = failure === null ? 0 : 2;
+          NODE
           timeout --signal=TERM --kill-after=5s 180s env -i PATH="$PATH" HOME="$QA_ROOT/home" TMPDIR="$QA_ROOT/tmp" npm_config_userconfig="$QA_ROOT/user.npmrc" npm_config_globalconfig="$QA_ROOT/global.npmrc" npm_config_cache="$QA_ROOT/npm-cache" npm_config_fetch_retries=0 PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci --ignore-scripts --no-audit --no-fund
           timeout --signal=TERM --kill-after=5s 100s env -i PATH=/usr/bin:/bin HOME="$QA_ROOT/home" TMPDIR="$QA_ROOT/tmp" PLAYWRIGHT_BROWSERS_PATH="$QA_ROOT/browsers" LANG=C.UTF-8 LC_ALL=C.UTF-8 TZ=UTC "$N" --no-addons scripts/qa-web3-audience-visual.cjs setup "$QA_ROOT"
       - name: Sanitized binding diagnosis evidence - browser not run

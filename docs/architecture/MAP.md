@@ -181,6 +181,17 @@ held-descriptor close attempts. Guards, filesystem reads, helper return ABI,
 stdout and success receipts remain unchanged. Parent owns fixtures, independent
 review and any setup-only admission; no execution or browser acceptance claimed.
 
+Ephemeral hosted-CI bootstrap (SOURCE_ONLY / NOT_RUN): setup-only workflow ->
+unprivileged Node 22.22.2 core-FS qualification (held no-follow/nonblocking FDs for
+root-owned `/`, `/usr`, `/usr/bin`, `/usr/bin/sudo`, `/usr/bin/chmod`, `/opt`) ->
+at most one fixed `sudo -n -- /usr/bin/chmod -- go-w /opt`, only if write bits exist
+-> exact held/named metadata recheck -> all close attempts -> private closed JSON.
+No interpreter/source runs as root; only `/opt` mode022 and expected chmod ctime
+may change. Protected ancestors and a fresh dedicated hosted VM with no untrusted
+root writer are mandatory premises, not binary/browser-content provenance.
+Strict Chrome binding, runner guards and setup-only scope remain unchanged;
+Parent owns regression fixtures, independent review and execution admission.
+
 Issue #382 isolated diagnostic accepted on 2026-10-31
 ([PR #418](https://github.com/NeaBouli/inferno/pull/418);
 [CI2 run 41239848840](https://github.com/NeaBouli/inferno/actions/runs/41239848840)).
