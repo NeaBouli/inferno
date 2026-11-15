@@ -101,7 +101,17 @@ function mountControlTrace(rows, refused) {
   // Linux UAPI O_PATH: metadata handles cannot open mounted devices for I/O.
   const O_PATH = 0o10000000, O_CLOEXEC = 0o2000000;
   const descriptor = fd => {
-    const info = fs.readFileSync('/proc/self/fdinfo/' + fd, 'utf8');
+    const input = fs.openSync('/proc/self/fdinfo/' + fd, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW);
+    let info;
+    try {
+      const bytes = Buffer.alloc(65537); let total = 0, count;
+      do {
+        count = fs.readSync(input, bytes, total, bytes.length - total, null);
+        total += count;
+      } while (count > 0 && total < bytes.length);
+      check(total <= 65536, 'MOUNT_TRACE_FORMAT');
+      info = bytes.subarray(0, total).toString('utf8');
+    } finally { fs.closeSync(input); }
     const ids = [...info.matchAll(/^mnt_id:\s+([0-9]+)$/gm)], flags = [...info.matchAll(/^flags:\s+([0-7]+)$/gm)];
     check(ids.length === 1 && flags.length === 1, 'MOUNT_TRACE_FORMAT');
     const id = mountId(ids[0][1]), mode = Number.parseInt(flags[0][1], 8);
@@ -133,7 +143,8 @@ function mountControlTrace(rows, refused) {
     }
   }
   check(rows.includes(refused), 'MOUNT_TRACE_FORMAT');
-  return { status: 'DIAGNOSTIC_ONLY', applicationRuntime: 'NOT_RUN', rawIdsOrPathsIncluded: false,
+  return { status: vanished === 0 ? 'DIAGNOSTIC_ONLY' : 'TRACE_INCOMPLETE', metadataComplete: vanished === 0,
+    applicationRuntime: 'NOT_RUN', rawIdsOrPathsIncluded: false,
     records: rows.map(record), refused: record(refused), visibleAtRefusedTarget: handle(refused.target),
     processRoot: handle('/proc/self/root', true), processCwd: handle('/proc/self/cwd', true), inheritedDescriptors: inherited, vanishedDescriptors: vanished };
 }
