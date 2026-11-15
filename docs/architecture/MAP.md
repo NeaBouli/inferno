@@ -910,9 +910,31 @@ Baseline/candidate scoped PNGs and observations are defined for all45 cases;
 no measurement, screenshot or causal result has been produced in source prep.
 The existing Docs Wallet Browser capture command/artifact path is extended,
 with an owning workflow assertion; no new job, package or framework. The frozen
-baseline HTML hash must be deliberately rebound by Parent after FAQ integration.
+baseline HTML hash is rebound to accepted FAQ Main `008b4e98` (HTML `55ccc14d`);
+restoring only y324 must reproduce that exact source. The focused command is
+fail-fast at its first failing case; no automatic retry or failed-case fanout.
 Parent owns actual tests, font/image inspection, independent causal review and
 any adoption/live gate. Held Shop/Web3/W02/405/433/425/434 lanes stay separate.
+
+#### Landing FAQ-last source order (2026-11-15)
+
+Source-only scope, based on `80dc08e6`: `docs/index.html::main` now places the
+complete existing `#faq` block after `#contracts`, as the final normal content
+section before the unchanged footer. Its markup, inline question initializer
+and mobile grid rule move together unchanged; all IDs, copy and links remain.
+No CSS ordering, second JavaScript mover, controller or cache revision change.
+
+Hop: source section order -> unchanged `landing-collapse.js::addDisclosure`
+-> the existing initially closed `#faq-panel` and native button -> unchanged
+inner FAQ single-open question handler -> footer. Source/no-JS order, fragment
+opening, keyboard, print and motion policies remain on their existing paths.
+`landing-collapse.spec.js` retains prior coverage and adds final-content/footer
+DOM order, pointer/keyboard/inner-state/link preservation and FAQ fragment
+assertions, including no-JS ordering. The existing real-font five-viewport
+`landing-disclosure-followup.spec.js` additionally defines FAQ closed/open and
+footer-adjacency PNGs, actual used question fonts, target/text/hit geometry and
+footer-boundary observations. These are source assertions/capture definitions,
+not executed browser evidence; Parent owns tests, image review and live gates.
 
 #### Wiki continuity anchor clearance (2026-10-26)
 

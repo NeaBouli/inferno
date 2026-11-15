@@ -41,7 +41,7 @@ for (const [width, height] of [[375, 812], [390, 844], [820, 1180], [1180, 820],
     const inspect = async (id, state, filename) => {
       const usedFonts = await section(id).evaluate(async root => {
         const samples = new Map();
-        for (const element of [document.body, ...root.querySelectorAll('h2,h3,h4,p,li,a')]) {
+        for (const element of [document.body, ...root.querySelectorAll('h2,h3,h4,p,li,a,.lp-faq-q')]) {
           const box = element.getBoundingClientRect();
           if (box.width <= 0 || box.height <= 0) continue;
           const style = getComputedStyle(element), family = style.fontFamily.split(',')[0].trim().replace(/^["']|["']$/g, '');
@@ -76,14 +76,14 @@ for (const [width, height] of [[375, 812], [390, 844], [820, 1180], [1180, 820],
       expect(geometry.overflow).toBe(0); expect(geometry.targetWidth).toBeGreaterThanOrEqual(44);
       expect(geometry.targetHeight).toBeGreaterThanOrEqual(44); expect(geometry.unobstructed).toBe(true);
       expect(geometry.titleFits).toBe(true); expect(geometry.expanded).toBe(String(state)); expect(geometry.panelHidden).toBe(!state);
-      observations.push({ id, usedFonts, ...geometry });
+      observations.push({ id, capture: filename, usedFonts, ...geometry });
       await page.screenshot({ path: info.outputPath(filename), animations: 'disabled' });
     };
     try {
       await page.goto('/');
       const loadedFonts = await page.evaluate(async () => { await document.fonts.ready; return [...document.fonts].filter(font => font.status === 'loaded').length; });
       expect(loadedFonts, 'real Google fonts must load; fallback-only captures are not acceptance').toBeGreaterThan(0);
-      for (const id of ['partners', 'roadmap', 'token-flow']) await expect(toggle(id)).toHaveAttribute('aria-expanded', 'false');
+      for (const id of ['partners', 'roadmap', 'token-flow', 'faq']) await expect(toggle(id)).toHaveAttribute('aria-expanded', 'false');
       await expect(toggle('partners')).toHaveAccessibleName('Directory Builders & Creators');
       await expect(toggle('ecosystem')).toHaveAccessibleName('Ecosystem One Token. Many Products.');
       await inspect('token-flow', false, '00-closed-headers.png');
@@ -96,6 +96,58 @@ for (const [width, height] of [[375, 812], [390, 844], [820, 1180], [1180, 820],
         await expect(toggle(id)).toHaveAttribute('aria-expanded', 'false');
         await expect(section(id).locator(':scope > .landing-collapse-panel')).toBeHidden();
       }
+      await expect(page.locator('main > section').last()).toHaveAttribute('id', 'faq');
+      await expect(page.locator('main + footer')).toHaveCount(1);
+      await expect(toggle('faq')).toHaveAccessibleName('FREQUENTLY ASKED QUESTIONS');
+      await inspect('faq', false, 'faq-closed.png');
+      await toggle('faq').click();
+      await expect(section('faq').locator(':scope > .landing-collapse-panel')).toBeVisible();
+      await expect(section('faq').locator('.lp-faq-q')).toHaveCount(10);
+      const question = section('faq').locator('#faq-col-left .lp-faq-q').first();
+      await question.press('Enter');
+      await expect(question).toHaveAttribute('aria-expanded', 'true');
+      await expect(section('faq').locator('.lp-faq-item.open')).toHaveCount(1);
+      await inspect('faq', true, 'faq-open.png');
+      const questionGeometry = await section('faq').locator('.lp-faq-q').evaluateAll(buttons => buttons.map(button => {
+        const box = button.getBoundingClientRect(), range = document.createRange();
+        range.selectNodeContents(button.querySelector('span'));
+        return { width: box.width, height: box.height, textFits: button.scrollWidth <= button.clientWidth &&
+          [...range.getClientRects()].every(rect => rect.left >= box.left && rect.right <= box.right) };
+      }));
+      expect(questionGeometry).toHaveLength(10);
+      for (const geometry of questionGeometry) {
+        expect(geometry.width).toBeGreaterThanOrEqual(44);
+        expect(geometry.height).toBeGreaterThanOrEqual(44);
+        expect(geometry.textFits).toBe(true);
+      }
+      expect(await question.evaluate(button => {
+        const box = button.getBoundingClientRect(), hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+        return !!hit && (hit === button || button.contains(hit));
+      })).toBe(true);
+      await page.locator('footer').evaluate(footer => window.scrollTo({
+        top: window.scrollY + footer.getBoundingClientRect().top - innerHeight / 2, behavior: 'instant',
+      }));
+      const boundary = await section('faq').evaluate(root => {
+        const main = root.parentElement, footer = document.querySelector('footer');
+        const content = [...main.children].filter(node => !['SCRIPT', 'STYLE', 'TEMPLATE'].includes(node.tagName));
+        const faqBox = root.getBoundingClientRect(), footerBox = footer.getBoundingClientRect();
+        const tail = [...root.querySelectorAll('a[href]')].at(-1).getBoundingClientRect();
+        const navBottom = document.querySelector('nav').getBoundingClientRect().bottom;
+        return { width: innerWidth, height: innerHeight, lastContent: content.at(-1).id,
+          footerNext: main.nextElementSibling === footer, faqBottom: faqBox.bottom, footerTop: footerBox.top,
+          gap: footerBox.top - faqBox.bottom, overflow: document.documentElement.scrollWidth - innerWidth,
+          tailVisible: tail.top >= navBottom && tail.bottom <= innerHeight && tail.left >= 0 && tail.right <= innerWidth,
+          footerStartVisible: footerBox.top >= navBottom && footerBox.top < innerHeight };
+      });
+      expect(boundary.width).toBe(width); expect(boundary.height).toBe(height);
+      expect(boundary.lastContent).toBe('faq'); expect(boundary.footerNext).toBe(true);
+      expect(boundary.gap).toBeGreaterThanOrEqual(-1); expect(boundary.gap).toBeLessThanOrEqual(1);
+      expect(boundary.overflow).toBe(0); expect(boundary.tailVisible).toBe(true); expect(boundary.footerStartVisible).toBe(true);
+      observations.push({ id: 'faq', capture: 'faq-footer-adjacency.png', questionGeometry, ...boundary });
+      await page.screenshot({ path: info.outputPath('faq-footer-adjacency.png'), animations: 'disabled' });
+      await toggle('faq').press('Space');
+      await expect(toggle('faq')).toHaveAttribute('aria-expanded', 'false');
+      await expect(section('faq').locator(':scope > .landing-collapse-panel')).toBeHidden();
       const fonts = await Promise.all(fontTasks);
       expect(fonts.length).toBeGreaterThan(0); expect(fonts.every(font => font.status === 200 && typeof font.sha256 === 'string')).toBe(true);
       expect(fontFailures).toEqual([]);

@@ -9,7 +9,7 @@ test.describe.configure({ timeout: 60000 });
 test.use({ serviceWorkers: 'block', acceptDownloads: false });
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const source = fs.readFileSync(path.join(__dirname, '../../docs/index.html'), 'utf8');
-const baseHash = '671873494169fbb0f236642206b46c27097ba13d3604785b973c72a1355daa41';
+const baseHash = '55ccc14d22a4be613d7e8aef990f7335fee1934d7e4cbd8dd19e7321198320b7';
 const candidateTag = '<text x="406" y="310" fill="#9ca3af" font-size="8" data-flow-rpc data-live-key="flow-pool-edge">';
 const baseTag = candidateTag.replace('y="310"', 'y="324"');
 const key = (contract, signature) => `${contract}:${selector(signature)}`;
