@@ -867,6 +867,14 @@ collapse/reopen, IO/no-IO motion, preferences and hardware policy). The existing
 checks alone do not qualify browser behavior, visual layout or live acceptance;
 Parent owns those gates. No wallet, provider, data-read or deployment change.
 
+Focused visual-acceptance hop: the existing Docs Validator Wallet Browser job
+runs `landing-disclosure-followup.spec.js` at the five existing viewport sizes,
+with remote data blocked and real Google fonts explicitly allowed. It records
+header geometry/hit tests, native keyboard close, render-source hashes and font
+response hashes, plus scoped PNGs/JSON retained by the pinned artifact action.
+This source/evidence gate adds no production endpoint or browser wallet action;
+Parent must inspect every image and repeat critical live checks before closure.
+
 #### Wiki continuity anchor clearance (2026-10-26)
 
 Module: existing Wiki continuity policy. Hop: the Landing policy link or a native
