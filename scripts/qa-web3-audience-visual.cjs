@@ -625,11 +625,12 @@ async function runtime() {
     port = server.address().port; const origin = 'http://127.0.0.1:' + port;
     mark('PW_LOAD');
     const { chromium } = require('playwright');
-    mark('BROWSER_LAUNCH');
+    mark('RUNTIME_TOOLS');
     const launchBinding = bindHostedChrome();
     try {
       check(prepared.browser === HOSTED_CHROME && prepared.browserKind === BROWSER_KIND &&
         prepared.browserSHA256 === launchBinding.browserSHA256, 'RUNTIME_TOOL_IDENTITY');
+      mark('BROWSER_LAUNCH');
       browser = await chromium.launch({ executablePath: HOSTED_CHROME, headless: true, chromiumSandbox: true, timeout: 30000 });
       launchBinding.revalidate();
       mark('BROWSER_CONTROL');
