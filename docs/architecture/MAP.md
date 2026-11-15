@@ -879,6 +879,26 @@ the actual CustomEvent/dispatch, ancestor lookup and nonzero SVG rectangles;
 Docs CI executes it and watches its path. The workflow contract requires this
 command/path so an offline owning regression cannot silently remain unrun.
 
+#### Landing FAQ-last source order (2026-11-15)
+
+Source-only scope, based on `80dc08e6`: `docs/index.html::main` now places the
+complete existing `#faq` block after `#contracts`, as the final normal content
+section before the unchanged footer. Its markup, inline question initializer
+and mobile grid rule move together unchanged; all IDs, copy and links remain.
+No CSS ordering, second JavaScript mover, controller or cache revision change.
+
+Hop: source section order -> unchanged `landing-collapse.js::addDisclosure`
+-> the existing initially closed `#faq-panel` and native button -> unchanged
+inner FAQ single-open question handler -> footer. Source/no-JS order, fragment
+opening, keyboard, print and motion policies remain on their existing paths.
+`landing-collapse.spec.js` retains prior coverage and adds final-content/footer
+DOM order, pointer/keyboard/inner-state/link preservation and FAQ fragment
+assertions, including no-JS ordering. The existing real-font five-viewport
+`landing-disclosure-followup.spec.js` additionally defines FAQ closed/open and
+footer-adjacency PNGs, actual used question fonts, target/text/hit geometry and
+footer-boundary observations. These are source assertions/capture definitions,
+not executed browser evidence; Parent owns tests, image review and live gates.
+
 #### Wiki continuity anchor clearance (2026-10-26)
 
 Module: existing Wiki continuity policy. Hop: the Landing policy link or a native
