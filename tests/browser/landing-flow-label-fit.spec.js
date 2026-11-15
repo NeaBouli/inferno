@@ -10,8 +10,8 @@ test.use({ serviceWorkers: 'block', acceptDownloads: false });
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const source = fs.readFileSync(path.join(__dirname, '../../docs/index.html'), 'utf8');
 const baseHash = '55ccc14d22a4be613d7e8aef990f7335fee1934d7e4cbd8dd19e7321198320b7';
-const candidateTag = '<text x="406" y="310" fill="#9ca3af" font-size="8" data-flow-rpc data-live-key="flow-pool-edge">';
-const baseTag = candidateTag.replace('y="310"', 'y="324"');
+const candidateTag = '<text x="406" y="313" fill="#9ca3af" font-size="8" data-flow-rpc data-live-key="flow-pool-edge">';
+const baseTag = candidateTag.replace('y="313"', 'y="324"');
 const key = (contract, signature) => `${contract}:${selector(signature)}`;
 const rateKeys = ['senderBurnBps()', 'recipientBurnBps()', 'poolFeeBps()'].map(signature => key(TOKEN, signature));
 const protocolKey = key(FEE_ROUTER, 'protocolFeeBps()');
@@ -53,7 +53,7 @@ function assertFit(measurement) {
   expect(measurement.collisions, 'edge glyph bounds must clear protocol-node strokes, the central circle and connection strokes').toEqual([]);
 }
 
-async function sample(svg, state, positions = [310]) {
+async function sample(svg, state, positions = [313]) {
   const result = await svg.evaluate((root, { state, positions }) => {
     const pool = root.querySelector('[data-live-key="flow-pool-edge"]');
     const originalY = pool.getAttribute('y'), inverse = root.getScreenCTM().inverse();
@@ -229,10 +229,17 @@ for (const [width, height] of [[375, 812], [390, 844], [820, 1180], [1180, 820],
         for (const [name, text] of [['flow-pool-edge', state.pool], ['flow-eth-edge', state.eth], ['flow-fee-total', state.total], ['flow-fee-split', state.split], ['flow-feerouter-bps', state.router]]) {
           await expect(flow.locator(`[data-live-key="${name}"]`)).toHaveText(text);
         }
-        const [baseline, candidate] = await sample(svg, state, [324, 310]);
+        const [baseline, candidate, rejected310] = await sample(svg, state, state.loading ? [324, 313, 310] : [324, 313]);
         observations.baseline = baseline; observations.candidate = candidate;
         expect(baseline.normalizedDOMSHA256).toBe(candidate.normalizedDOMSHA256);
         expect(baseline.violations).toEqual([]);
+        if (state.loading) {
+          observations.rejected310 = rejected310;
+          expect(rejected310.normalizedDOMSHA256).toBe(candidate.normalizedDOMSHA256);
+          expect(rejected310.violations).toEqual([]);
+          expect(rejected310.collisions).toContainEqual({ label: 'flow-pool-edge', target: 'token-circle' });
+          expect(() => assertFit(rejected310)).toThrow();
+        }
         const reproduced = baseline.collisions.some(item => item.label === 'flow-pool-edge' && item.target === 'uniswap');
         observations.classification = state.baselineCollision ? reproduced ? 'BASELINE_REPRODUCED_CANDIDATE_PENDING' : 'UNKNOWN_BASELINE_NOT_REPRODUCED' : 'FITTING_BASELINE_COUNTERCASE';
         const pool = flow.locator('[data-live-key="flow-pool-edge"]');
@@ -240,8 +247,8 @@ for (const [width, height] of [[375, 812], [390, 844], [820, 1180], [1180, 820],
         try {
           const png = await svg.screenshot({ path: info.outputPath('baseline-y324.png'), animations: 'disabled' });
           observations.baselinePNG = { bytes: png.length, sha256: hash(png) };
-        } finally { await pool.evaluate(element => element.setAttribute('y', '310')); }
-        const png = await svg.screenshot({ path: info.outputPath('candidate-y310.png'), animations: 'disabled' });
+        } finally { await pool.evaluate(element => element.setAttribute('y', '313')); }
+        const png = await svg.screenshot({ path: info.outputPath('candidate-y313.png'), animations: 'disabled' });
         observations.candidatePNG = { bytes: png.length, sha256: hash(png) };
         if (state.baselineCollision) {
           expect(reproduced, 'old y324 must reproduce the claimed real-font Uniswap collision; otherwise HOLD, not adoption').toBe(true);

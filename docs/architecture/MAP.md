@@ -882,12 +882,24 @@ command/path so an offline owning regression cannot silently remain unrun.
 #### Token Flow edge-label conditional qualification (2026-11-15)
 
 Private source candidate on `80dc08e6`, not an accepted fix: only
-`docs/index.html::text[data-live-key="flow-pool-edge"]` y324 -> y310 changes.
+`docs/index.html::text[data-live-key="flow-pool-edge"]` y324 -> y313 changes
+(superseding the rejected310 candidate).
 Hop: independent `feeFlow` reads -> unchanged `renderFeeFlow` / `setLive`
-complete text -> existing 8px SVG label near Uniswap. The specific real-font
-collision, clearance at310 and live applicability remain UNKNOWN/unmeasured.
+complete text -> existing 8px SVG label near Uniswap. Candidate313 clearance
+across the matrix and live applicability remain UNKNOWN/unmeasured.
 No strings, rates/caps, receiver/route validation, controller, motion, fonts,
 visibility policy or source outside this one HTML attribute is changed.
+
+First ordinary CI run `43721288405`, job `132833625423`, head `64ec5d20`,
+stopped at loading375x812: baseline324 fits; candidate310's measured label
+BBox intersects the token-circle stroke envelope. Loaded IBM Plex Sans8 gives
+x406..490.2105255, y301.57894897..312.80701923 at310; circle400/260/r43 has
+clearance -0.990370. The Uniswap stroke top is317.25. These observed-font
+vertical constraints imply strictly311.000389 < y <314.442981, so313 is a
+cause-bound conditional candidate, not an observed all-state fit. This first
+failure proves neither failure of the other44 cases nor a long-label324
+Uniswap collision. The retained private receipt is
+`label453-attempt1-64ec/landing-flow-label-fit-fee-f10d0--control-loading-at-375x812/observations.json`.
 
 `landing-flow-legend.spec.js` retains all semantic/node-fit assertions and
 reuses its existing, unchanged RPC/proxy fixture block through the genuinely
@@ -907,7 +919,11 @@ the long/unavailable Uniswap collision or refuse qualification as UNKNOWN.
 Canonical/loading countercases must fit at324. The same owning assertion must
 reject reversion, hiding, truncation, shrink and unconfirmed-route activation.
 Baseline/candidate scoped PNGs and observations are defined for all45 cases;
-no measurement, screenshot or causal result has been produced in source prep.
+the first-run evidence above is distinct from this source-only correction.
+Each loading viewport additionally samples rejected310 in the same turn,
+records `observations.rejected310`, requires its token-circle collision and
+rejection by unchanged `assertFit`, then restores313 through the existing
+sampling cleanup. No new measurement or screenshot is produced by this patch.
 The existing Docs Wallet Browser capture command/artifact path is extended,
 with an owning workflow assertion; no new job, package or framework. The frozen
 baseline HTML hash is rebound to accepted FAQ Main `008b4e98` (HTML `55ccc14d`);
