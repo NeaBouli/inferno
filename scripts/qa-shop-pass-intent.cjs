@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 'use strict';
 
-// CONTROL_ONLY source preparation; no third Shop run is admitted.
+// Last-slot CONTROL_ONLY source; actual Parent admission/review is required.
 // The final helper004 test is bound below; 7a is not an executable alternative.
-const RUNTIME_ADMITTED = false;
+const RUNTIME_ADMITTED = true;
 const CONTROL_ONLY = true;
 const fs = require('node:fs');
 const path = require('node:path');

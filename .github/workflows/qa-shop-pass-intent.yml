@@ -1,6 +1,6 @@
-name: QA Shop Pass Intent CONTROL_ONLY
+name: QA Shop Pass Intent LAST CONTROL_ONLY 3 OF 3
 
-# CONTROL_ONLY source preparation; admission OFF, no third Shop run authorized.
+# Last shared-budget slot; no application/package/browser admission.
 # No app/pass-suite source is changed by this QA branch.
 on:
   pull_request:
@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   focused:
-    name: CONTROL_ONLY bootstrap diagnostic
+    name: Last-slot CONTROL_ONLY bootstrap diagnostic
     if: >-
       ${{ github.event_name == 'pull_request' &&
           github.event.action == 'opened' &&
@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      QA_SHOP_HELPER_SHA256: 175464c48946e1f6019d8095cefaa927ae2966ef7383ceaa912799594273549a
+      QA_SHOP_HELPER_SHA256: 55ddb96f9df080109854e412d230415b80da848f7ef47938a02b33346262db68
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
