@@ -372,7 +372,7 @@ async function collectSandboxPrerequisites() {
     unprivilegedUsernsClone: decimal(read('/proc/sys/kernel/unprivileged_userns_clone', 128)),
     apparmorRestrictUnprivilegedUserns: decimal(read('/proc/sys/kernel/apparmor_restrict_unprivileged_userns', 128)),
     apparmorAvailability: apparmor.state !== 'READ' ? apparmor.state : ['Y', 'Y\n'].includes(apparmor.text) ? 'ENABLED' : ['N', 'N\n'].includes(apparmor.text) ? 'DISABLED' : 'INVALID',
-    activeAppArmorProfile: activeProfile.state !== 'READ' ? activeProfile.state : ['unconfined', 'unconfined\n'].includes(activeProfile.text) ? 'UNCONFINED'
+    activeLsmProfile: activeProfile.state !== 'READ' ? activeProfile.state : ['unconfined', 'unconfined\n'].includes(activeProfile.text) ? 'UNCONFINED'
       : profileLine && profileLine[0].length === activeProfile.text.length && /\S/u.test(activeProfile.text) ? 'OTHER' : 'INVALID'
   };
   let binding = 'UNAVAILABLE', outcome = 'NOT_ATTEMPTED', cleanup = 'NOT_ATTEMPTED', reportedFailure = 'UNKNOWN';
