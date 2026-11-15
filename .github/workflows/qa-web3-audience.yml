@@ -1,6 +1,6 @@
-name: QA Web3 Audience APPLICATION SOURCE HOLD
+name: QA Web3 Audience FIRST APPLICATION QUALIFICATION
 
-# Source OFF via CONTROL_ONLY=true; first application-only qualification is separate from exhausted controls.
+# One Parent-bound first application qualification, separate from exhausted controls.
 
 on:
   pull_request:
@@ -15,7 +15,7 @@ permissions:
 
 jobs:
   audience-visual:
-    name: First application-only qualification - NOT ADMITTED
+    name: First bounded audience application qualification - ONE attempt
     if: >-
       github.repository == 'NeaBouli/inferno' &&
       github.event.repository.private == false &&
@@ -54,7 +54,7 @@ jobs:
           timeout --signal=TERM --kill-after=5s 180s env -i PATH="$PATH" HOME="$QA_ROOT/home" TMPDIR="$QA_ROOT/tmp" npm_config_userconfig="$QA_ROOT/user.npmrc" npm_config_globalconfig="$QA_ROOT/global.npmrc" npm_config_cache="$QA_ROOT/npm-cache" npm_config_fetch_retries=0 PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm ci --ignore-scripts --no-audit --no-fund
           timeout --signal=TERM --kill-after=5s 210s env -i PATH="$PATH" HOME="$QA_ROOT/home" TMPDIR="$QA_ROOT/tmp" PLAYWRIGHT_BROWSERS_PATH="$QA_ROOT/browsers" PLAYWRIGHT_DOWNLOAD_CONNECTION_TIMEOUT=15000 "$N" node_modules/playwright/cli.js install --with-deps --no-shell chromium
           timeout --signal=TERM --kill-after=5s 100s env -i PATH=/usr/bin:/bin HOME="$QA_ROOT/home" TMPDIR="$QA_ROOT/tmp" PLAYWRIGHT_BROWSERS_PATH="$QA_ROOT/browsers" LANG=C.UTF-8 LC_ALL=C.UTF-8 TZ=UTC "$N" --no-addons scripts/qa-web3-audience-visual.cjs setup "$QA_ROOT"
-      - name: ONE first isolated application-only observer - admission required
+      - name: ONE first isolated application-only observer
         timeout-minutes: 4
         shell: bash
         env:

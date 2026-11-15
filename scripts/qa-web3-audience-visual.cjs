@@ -11,8 +11,8 @@ const { performance } = require('node:perf_hooks');
 
 const SOURCE = { head: '8bec16dbcd44edf4ed9d7c9feb4c0d889e23fdae', tree: '5bbbf3e1d78122323d7a1360262b3c16d091d29b', docsTree: '6fd5fa86cf867e05d2fbebd31b288d6ae92809a9', manifestSHA256: '141c85d9aa65525b20bdeef4819b6cb07a910c24d58d44cd833a2c151a4625bd', count: 324, bytes: 24374988, htmlSHA256: '3a552de1fbcacb8c25f809151647d8c2ed836fac142d43ee9e294f9e0778f103' };
 const FONT_SHA = '8bff039ebb639dfbc1902204faab9eea67eb20c2f2c8c2524f588a7ee08f400d';
-// Application source preparation only; keep this sole activation literal OFF.
-const CONTROL_ONLY = true;
+// Parent-bound first application qualification; no control retry or automatic rerun.
+const CONTROL_ONLY = false;
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.86 Safari/537.36';
 const ROOT = path.resolve(__dirname, '..');
 const T = path.resolve(process.argv[3] || '/');
