@@ -1,4 +1,4 @@
-name: QA Web3 Audience DIAGNOSTIC ONLY - No App or Browser
+name: QA Web3 Audience OWNER RESUMED CONTROL ONLY
 
 on:
   pull_request:
@@ -13,7 +13,7 @@ permissions:
 
 jobs:
   audience-visual:
-    name: Third control diagnostic only - no app/browser or visual qualification
+    name: Owner-resumed namespace control only - no app/browser
     if: >-
       github.repository == 'NeaBouli/inferno' &&
       github.event.repository.private == false &&

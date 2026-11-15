@@ -68,6 +68,12 @@ function readPrepared() {
 }
 const clean = { PATH: '/usr/bin:/bin', HOME: path.join(T, 'home'), TMPDIR: path.join(T, 'tmp'), PLAYWRIGHT_BROWSERS_PATH: path.join(T, 'browsers'), LANG: 'C.UTF-8', LC_ALL: 'C.UTF-8', TZ: 'UTC' };
 const coreRun = (file, args) => execFileSync(file, args, { cwd: ROOT, env: clean, stdio: ['ignore', 'pipe', 'pipe'], timeout: 10000, maxBuffer: 20 * 1024 * 1024 });
+function assertLoopbackLinks(links, code) {
+  const link = Array.isArray(links) && links.length === 1 ? links[0] : null;
+  check(link && !Array.isArray(link) && Number.isSafeInteger(link.ifindex) && link.ifindex > 0 &&
+    link.ifname === 'lo' && link.link_type === 'loopback' &&
+    Array.isArray(link.flags) && link.flags.includes('LOOPBACK'), code);
+}
 const git = (...args) => execFileSync('/usr/bin/git', ['-c', 'core.fsmonitor=false', '-c', 'protocol.allow=never', ...args], { cwd: ROOT, env: { ...clean, GIT_NO_LAZY_FETCH: '1', GIT_OPTIONAL_LOCKS: '0', GIT_CONFIG_NOSYSTEM: '1', GIT_CONFIG_GLOBAL: '/dev/null', GIT_NO_REPLACE_OBJECTS: '1', GIT_TERMINAL_PROMPT: '0' }, timeout: 10000, maxBuffer: 20 * 1024 * 1024 });
 function regular(file, directory = false) {
   const stat = fs.lstatSync(file);
@@ -148,7 +154,12 @@ async function namespace() {
   check(process.getuid() === 0 && process.pid === 1, 'PRIVATE_PID_NAMESPACE_REQUIRED');
   for (const [n, stage] of [['net', 'NAMESPACE_NET'], ['mnt', 'NAMESPACE_MNT'], ['pid', 'NAMESPACE_PID_NEW']]) { mark(stage); check(fs.readlinkSync('/proc/self/ns/' + n) !== prepared.namespaces[n], 'NAMESPACE_NOT_NEW'); }
   mark('NETWORK');
-  check(JSON.stringify(fs.readdirSync('/sys/class/net').sort()) === '["lo"]', 'NON_LOOPBACK_INTERFACE');
+  const links = JSON.parse(coreRun('/usr/sbin/ip', ['-j', 'link', 'show']).toString('utf8'));
+  assertLoopbackLinks(links, 'NON_LOOPBACK_INTERFACE');
+  const sysfsLinks = fs.readdirSync('/sys/class/net');
+  save('NETWORK-CONTROL.json', { source: 'PROCESS_NAMESPACE_RTNETLINK', loopbackOnly: true,
+    interfaceCount: links.length, inheritedSysfsCount: sysfsLinks.length,
+    sysfsOnlyLoopback: sysfsLinks.length === 1 && sysfsLinks[0] === 'lo', applicationRuntime: 'NOT_RUN' });
   mark('BOOTSTRAP');
   check(prepared.uid >= 1000 && prepared.gid >= 1000 && prepared.node === process.execPath && prepared.runnerSHA256 === sha(fs.readFileSync(__filename)), 'BOOTSTRAP_IDENTITY');
   mark('LOOPBACK');
@@ -233,7 +244,7 @@ async function runtime() {
   const capabilities = fs.readFileSync('/proc/self/status', 'utf8');
   check(/^CapEff:\s+0+$/m.test(capabilities) && /^NoNewPrivs:\s+1$/m.test(capabilities), 'PRIVILEGE_DROP');
   mark('RUNTIME_NETWORK');
-  check(JSON.stringify(fs.readdirSync('/sys/class/net').sort()) === '["lo"]', 'RUNTIME_NETWORK_NAMESPACE');
+  assertLoopbackLinks(JSON.parse(coreRun('/usr/sbin/ip', ['-j', 'link', 'show']).toString('utf8')), 'RUNTIME_NETWORK_NAMESPACE');
   mark('OUTPUT_OWNER');
   const prepared = readPrepared();
   mark('RUNTIME_TOOLS');
