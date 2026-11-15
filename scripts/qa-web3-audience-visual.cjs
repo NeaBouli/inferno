@@ -511,7 +511,20 @@ async function runtime() {
     }
     mark('ASSERTIONS');
     check(observations.length === 20, 'IMAGE_COUNT');
-  } catch { runtimeFailure = { phase, code: 'APP_OPERATION_FAILED', secondaryCodes }; }
+  } catch (error) {
+    runtimeFailure = { phase, code: 'APP_OPERATION_FAILED', secondaryCodes, startupSignal: 'UNKNOWN' };
+    try {
+      const message = error?.message;
+      if (typeof message === 'string' && message.length <= 32768) {
+        runtimeFailure.startupSignal = /No usable sandbox|Failed to move to new namespace|SUID sandbox/i.test(message) ? 'SANDBOX_MESSAGE'
+          : /Executable (?:doesn't|does not) exist|executable (?:is |was )?not found/i.test(message) ? 'EXECUTABLE_MESSAGE'
+          : /error while loading shared libraries|cannot open shared object file/i.test(message) ? 'SHARED_LIBRARY_MESSAGE'
+          : /Cannot find module|Cannot find package|ERR_MODULE_NOT_FOUND/i.test(message) ? 'MODULE_RESOLUTION_MESSAGE'
+          : /Protocol error\b|\b(?:Target|Session|Connection) closed\b/i.test(message) ? 'PROTOCOL_MESSAGE'
+          : /\bTimeout(?:Error)?\b|\btimed out\b/i.test(message) ? 'TIMEOUT_MESSAGE' : 'UNKNOWN';
+      }
+    } catch { runtimeFailure.startupSignal = 'UNKNOWN'; }
+  }
   finally {
     try { mark('APP_CLEANUP'); } catch { secondaryCodes.push('APP_CLEANUP_DIAGNOSTIC_FAILED'); }
     try { if (context) await context.close(); } catch { secondaryCodes.push('APP_CONTEXT_CLOSE_FAILED'); }
@@ -519,7 +532,7 @@ async function runtime() {
     try { if (server) { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); } } catch { secondaryCodes.push('APP_SERVER_CLOSE_FAILED'); }
     if (!runtimeFailure && secondaryCodes.length) runtimeFailure = { phase: 'APP_CLEANUP', code: 'APP_CLEANUP_FAILED', secondaryCodes };
     try {
-      save('RESULT.json', { source: SOURCE, status: runtimeFailure ? 'HOLD' : 'ASSERTIONS_COMPLETE_VISUAL_REVIEW_PENDING', reason: runtimeFailure?.code || null, phase: runtimeFailure?.phase || phase, code: runtimeFailure?.code || null, secondaryCodes, screenshots: observations, focusObservations, resources, blocked, pageErrors, effects, port, listenerClosed: server ? !server.listening : true, visualAccepted: false, totalPNGBytes: outputBytes, effectEvidenceLayers: { observer: 'fresh empty context; no injected provider; no action-destination activation; no wallet/dialog; owned-origin-only transport', owningRegression: 'tests/browser/web3-write.spec.js audience cases at frozen C8bec assert zero account/signature/transaction/network-switch/watchAsset methods', owningRegressionRunHere: false, clipboardAndFormInstrumentationClaimed: false } });
+      save('RESULT.json', { source: SOURCE, status: runtimeFailure ? 'HOLD' : 'ASSERTIONS_COMPLETE_VISUAL_REVIEW_PENDING', reason: runtimeFailure?.code || null, phase: runtimeFailure?.phase || phase, code: runtimeFailure?.code || null, startupSignal: runtimeFailure?.startupSignal || null, secondaryCodes, screenshots: observations, focusObservations, resources, blocked, pageErrors, effects, port, listenerClosed: server ? !server.listening : true, visualAccepted: false, totalPNGBytes: outputBytes, effectEvidenceLayers: { observer: 'fresh empty context; no injected provider; no action-destination activation; no wallet/dialog; owned-origin-only transport', owningRegression: 'tests/browser/web3-write.spec.js audience cases at frozen C8bec assert zero account/signature/transaction/network-switch/watchAsset methods', owningRegressionRunHere: false, clipboardAndFormInstrumentationClaimed: false } });
     } catch {
       secondaryCodes.push('APP_RESULT_RECORD_FAILED');
       runtimeFailure ||= { phase: 'APP_CLEANUP', code: 'APP_RESULT_RECORD_FAILED', secondaryCodes };
@@ -542,7 +555,7 @@ process.umask(0o077);
   const code = runtimeFailure?.code || (DIAGNOSTIC_CODES.has(error?.code) ? error.code : 'OPERATION_FAILED');
   diagnostic(failurePhase, code);
   for (const secondaryCode of runtimeFailure?.secondaryCodes || []) diagnostic('APP_CLEANUP', secondaryCode);
-  try { if (['setup', 'namespace', 'runtime'].includes(MODE)) save('FAILURE-' + MODE + '.json', { status: 'HOLD', phase: failurePhase, code, ...(runtimeFailure ? { secondaryCodes: runtimeFailure.secondaryCodes } : {}) }); }
+  try { if (['setup', 'namespace', 'runtime'].includes(MODE)) save('FAILURE-' + MODE + '.json', { status: 'HOLD', phase: failurePhase, code, ...(runtimeFailure ? { startupSignal: runtimeFailure.startupSignal || null, secondaryCodes: runtimeFailure.secondaryCodes } : {}) }); }
   catch { diagnostic(failurePhase, 'FAILURE_RECORD_FAILED'); }
   process.exitCode = 2;
 });
