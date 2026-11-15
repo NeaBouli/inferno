@@ -10,8 +10,14 @@ test.use({ serviceWorkers: 'block', acceptDownloads: false });
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const source = fs.readFileSync(path.join(__dirname, '../../docs/index.html'), 'utf8');
 const baseHash = '55ccc14d22a4be613d7e8aef990f7335fee1934d7e4cbd8dd19e7321198320b7';
-const candidateTag = '<text x="406" y="313" fill="#9ca3af" font-size="8" data-flow-rpc data-live-key="flow-pool-edge">';
-const baseTag = candidateTag.replace('y="313"', 'y="324"');
+const candidateTag = '<text x="394" y="313" text-anchor="end" fill="#9ca3af" font-size="8" data-flow-rpc data-live-key="flow-pool-edge">';
+const baseTag = '<text x="406" y="324" fill="#9ca3af" font-size="8" data-flow-rpc data-live-key="flow-pool-edge">';
+const GEOMETRIES = {
+  candidate: { x: '394', y: '313', anchor: 'end' },
+  baseline: { x: '406', y: '324', anchor: null },
+  rejected310: { x: '406', y: '310', anchor: null },
+  rejected313: { x: '406', y: '313', anchor: null },
+};
 const key = (contract, signature) => `${contract}:${selector(signature)}`;
 const rateKeys = ['senderBurnBps()', 'recipientBurnBps()', 'poolFeeBps()'].map(signature => key(TOKEN, signature));
 const protocolKey = key(FEE_ROUTER, 'protocolFeeBps()');
@@ -53,10 +59,16 @@ function assertFit(measurement) {
   expect(measurement.collisions, 'edge glyph bounds must clear protocol-node strokes, the central circle and connection strokes').toEqual([]);
 }
 
-async function sample(svg, state, positions = [313]) {
-  const result = await svg.evaluate((root, { state, positions }) => {
+async function sample(svg, state, geometryNames = ['candidate']) {
+  const geometries = geometryNames.map(name => {
+    if (!Object.hasOwn(GEOMETRIES, name)) throw new Error('UNKNOWN_FIXED_GEOMETRY');
+    return { name, ...GEOMETRIES[name] };
+  });
+  const result = await svg.evaluate((root, { state, geometries }) => {
     const pool = root.querySelector('[data-live-key="flow-pool-edge"]');
-    const originalY = pool.getAttribute('y'), inverse = root.getScreenCTM().inverse();
+    const attributes = ['x', 'y', 'text-anchor'];
+    const saved = attributes.map(name => ({ name, present: pool.hasAttribute(name), value: pool.getAttribute(name) }));
+    const inverse = root.getScreenCTM().inverse();
     const matrix = element => {
       const m = inverse.multiply(element.getScreenCTM());
       if (![m.a, m.b, m.c, m.d, m.e, m.f].every(Number.isFinite) || Math.abs(m.a * m.d - m.b * m.c) < 1e-12) throw new Error('INVALID_SVG_MATRIX');
@@ -116,8 +128,14 @@ async function sample(svg, state, positions = [313]) {
       }
       return true;
     };
-    const snapshot = () => {
+    const snapshot = pose => {
       const violations = [], collisions = [], labels = [];
+      const geometry = { x: pool.getAttribute('x'), y: pool.getAttribute('y'), anchor: pool.getAttribute('text-anchor'),
+        xPresent: pool.hasAttribute('x'), yPresent: pool.hasAttribute('y'), anchorPresent: pool.hasAttribute('text-anchor'),
+        computedAnchor: getComputedStyle(pool).textAnchor };
+      if (!geometry.xPresent || !geometry.yPresent || geometry.x !== pose.x || geometry.y !== pose.y ||
+          geometry.anchor !== pose.anchor || geometry.anchorPresent !== (pose.anchor !== null) ||
+          geometry.computedAnchor !== (pose.anchor === null ? 'start' : 'end')) violations.push('flow-pool-edge:geometry');
       for (const [name, expected] of [['flow-pool-edge', state.pool], ['flow-eth-edge', state.eth]]) {
         const element = root.querySelector(`[data-live-key="${name}"]`), style = getComputedStyle(element), box = bounds(element);
         const m = element.getScreenCTM();
@@ -130,6 +148,7 @@ async function sample(svg, state, positions = [313]) {
         if (!visible || box.right <= box.left || box.bottom <= box.top) violations.push(`${name}:visible`);
         if (element.textContent !== expected) violations.push(`${name}:exact-text`);
         if (element.getAttribute('font-size') !== '8' || style.fontSize !== '8px') violations.push(`${name}:font-size`);
+        if (name === 'flow-pool-edge' && pose.name === 'candidate' && !(box.right < 399.25 && box.left >= 0)) violations.push(`${name}:route-reservation`);
         const v = root.viewBox.baseVal;
         if (box.left < v.x || box.top < v.y || box.right > v.x + v.width || box.bottom > v.y + v.height) violations.push(`${name}:svg-containment`);
         if (![m.a, m.b, m.c, m.d, m.e, m.f, box.left, box.right, box.top, box.bottom].every(Number.isFinite) || Math.abs(m.a * m.d - m.b * m.c) < 1e-12) violations.push(`${name}:matrix`);
@@ -152,14 +171,24 @@ async function sample(svg, state, positions = [313]) {
           return { tag: element.tagName, state: routeState, dashed: element.hasAttribute('stroke-dasharray'), visibility: element.getAttribute('visibility') };
         });
       }
-      const clone = root.cloneNode(true); clone.querySelector('[data-live-key="flow-pool-edge"]').removeAttribute('y');
-      return { y: pool.getAttribute('y'), violations, collisions, labels, routes, nodes, circle: { x: center.x, y: center.y, radius },
+      const clone = root.cloneNode(true), normalized = clone.querySelector('[data-live-key="flow-pool-edge"]');
+      attributes.forEach(name => normalized.removeAttribute(name));
+      return { pose: pose.name, geometry, violations, collisions, labels, routes, nodes, circle: { x: center.x, y: center.y, radius },
         connections: lines.map(line => ({ name: line.name, a: { x: line.a.x, y: line.a.y }, b: { x: line.b.x, y: line.b.y }, halfStroke: line.half })),
         markup: clone.outerHTML };
     };
-    try { return positions.map(y => { pool.setAttribute('y', String(y)); return snapshot(); }); }
-    finally { pool.setAttribute('y', originalY); }
-  }, { state: { pool: state.pool, eth: state.eth, poolActive: state.poolActive, ethActive: state.ethActive, loading: !!state.loading }, positions });
+    try {
+      return geometries.map(pose => {
+        pool.setAttribute('x', pose.x); pool.setAttribute('y', pose.y);
+        if (pose.anchor === null) pool.removeAttribute('text-anchor'); else pool.setAttribute('text-anchor', pose.anchor);
+        return snapshot(pose);
+      });
+    } finally {
+      saved.forEach(({ name, present, value }) => {
+        if (present) pool.setAttribute(name, value); else pool.removeAttribute(name);
+      });
+    }
+  }, { state: { pool: state.pool, eth: state.eth, poolActive: state.poolActive, ethActive: state.ethActive, loading: !!state.loading }, geometries });
   return result.map(({ markup, ...measurement }) => ({ ...measurement, normalizedDOMSHA256: hash(markup) }));
 }
 
@@ -229,27 +258,55 @@ for (const [width, height] of [[375, 812], [390, 844], [820, 1180], [1180, 820],
         for (const [name, text] of [['flow-pool-edge', state.pool], ['flow-eth-edge', state.eth], ['flow-fee-total', state.total], ['flow-fee-split', state.split], ['flow-feerouter-bps', state.router]]) {
           await expect(flow.locator(`[data-live-key="${name}"]`)).toHaveText(text);
         }
-        const [baseline, candidate, rejected310] = await sample(svg, state, state.loading ? [324, 313, 310] : [324, 313]);
+        const geometryNames = ['baseline', 'candidate'];
+        if (state.loading) geometryNames.push('rejected310');
+        const rejectHistorical313 = width === 375 && height === 812 && state.name === 'long-valid-near-caps';
+        if (rejectHistorical313) geometryNames.push('rejected313');
+        const measurements = await sample(svg, state, geometryNames);
+        const [baseline, candidate] = measurements;
         observations.baseline = baseline; observations.candidate = candidate;
         expect(baseline.normalizedDOMSHA256).toBe(candidate.normalizedDOMSHA256);
         expect(baseline.violations).toEqual([]);
         if (state.loading) {
+          const rejected310 = measurements.find(measurement => measurement.pose === 'rejected310');
           observations.rejected310 = rejected310;
           expect(rejected310.normalizedDOMSHA256).toBe(candidate.normalizedDOMSHA256);
           expect(rejected310.violations).toEqual([]);
           expect(rejected310.collisions).toContainEqual({ label: 'flow-pool-edge', target: 'token-circle' });
           expect(() => assertFit(rejected310)).toThrow();
         }
+        if (rejectHistorical313) {
+          const rejected313 = measurements.find(measurement => measurement.pose === 'rejected313');
+          observations.rejected313 = rejected313;
+          expect(rejected313.normalizedDOMSHA256).toBe(candidate.normalizedDOMSHA256);
+          expect(rejected313.violations).toEqual([]);
+          expect(rejected313.collisions).toContainEqual({ label: 'flow-pool-edge', target: 'connection-1' });
+          expect(() => assertFit(rejected313)).toThrow();
+        }
         const reproduced = baseline.collisions.some(item => item.label === 'flow-pool-edge' && item.target === 'uniswap');
         observations.classification = state.baselineCollision ? reproduced ? 'BASELINE_REPRODUCED_CANDIDATE_PENDING' : 'UNKNOWN_BASELINE_NOT_REPRODUCED' : 'FITTING_BASELINE_COUNTERCASE';
         const pool = flow.locator('[data-live-key="flow-pool-edge"]');
-        await pool.evaluate(element => element.setAttribute('y', '324'));
         try {
-          const png = await svg.screenshot({ path: info.outputPath('baseline-y324.png'), animations: 'disabled' });
-          observations.baselinePNG = { bytes: png.length, sha256: hash(png) };
-        } finally { await pool.evaluate(element => element.setAttribute('y', '313')); }
-        const png = await svg.screenshot({ path: info.outputPath('candidate-y313.png'), animations: 'disabled' });
-        observations.candidatePNG = { bytes: png.length, sha256: hash(png) };
+          await pool.evaluate(element => {
+            element.setAttribute('x', '406'); element.setAttribute('y', '324'); element.removeAttribute('text-anchor');
+          });
+          const imageGeometry = await pool.evaluate(element => ({ x: element.getAttribute('x'), y: element.getAttribute('y'), anchor: element.getAttribute('text-anchor'),
+            xPresent: element.hasAttribute('x'), yPresent: element.hasAttribute('y'), anchorPresent: element.hasAttribute('text-anchor'), computedAnchor: getComputedStyle(element).textAnchor }));
+          expect(imageGeometry).toEqual(baseline.geometry);
+          const filename = 'baseline-x406-y324-absent-start.png';
+          const png = await svg.screenshot({ path: info.outputPath(filename), animations: 'disabled' });
+          observations.baselinePNG = { filename, geometry: imageGeometry, bytes: png.length, sha256: hash(png) };
+        } finally {
+          await pool.evaluate(element => {
+            element.setAttribute('x', '394'); element.setAttribute('y', '313'); element.setAttribute('text-anchor', 'end');
+          });
+        }
+        const imageGeometry = await pool.evaluate(element => ({ x: element.getAttribute('x'), y: element.getAttribute('y'), anchor: element.getAttribute('text-anchor'),
+          xPresent: element.hasAttribute('x'), yPresent: element.hasAttribute('y'), anchorPresent: element.hasAttribute('text-anchor'), computedAnchor: getComputedStyle(element).textAnchor }));
+        expect(imageGeometry).toEqual(candidate.geometry);
+        const filename = 'candidate-x394-y313-end.png';
+        const png = await svg.screenshot({ path: info.outputPath(filename), animations: 'disabled' });
+        observations.candidatePNG = { filename, geometry: imageGeometry, bytes: png.length, sha256: hash(png) };
         if (state.baselineCollision) {
           expect(reproduced, 'old y324 must reproduce the claimed real-font Uniswap collision; otherwise HOLD, not adoption').toBe(true);
           expect(() => assertFit(baseline)).toThrow();
@@ -275,6 +332,7 @@ for (const [width, height] of [[375, 812], [390, 844], [820, 1180], [1180, 820],
               element.textContent = saved.text; element.setAttribute('font-size', saved.size);
             }, saved);
           }
+          expect(await pool.evaluate(element => ({ style: element.getAttribute('style'), text: element.textContent, size: element.getAttribute('font-size') }))).toEqual(saved);
         }
         const inactive = ['pool', 'eth'].find(name => !state[`${name}Active`]);
         if (inactive) {
@@ -294,9 +352,13 @@ for (const [width, height] of [[375, 812], [390, 844], [820, 1180], [1180, 820],
               if (value === null) element.removeAttribute(name); else element.setAttribute(name, value);
             })), saved);
           }
+          expect(await routes.evaluateAll(elements => elements.map(element => ['data-route-state', 'stroke-dasharray', 'visibility'].map(name => [name, element.getAttribute(name)])))).toEqual(saved);
         }
+        expect(await pool.evaluate(element => ({ x: element.getAttribute('x'), y: element.getAttribute('y'), anchor: element.getAttribute('text-anchor'),
+          xPresent: element.hasAttribute('x'), yPresent: element.hasAttribute('y'), anchorPresent: element.hasAttribute('text-anchor'), computedAnchor: getComputedStyle(element).textAnchor }))).toEqual(candidate.geometry);
         const [restored] = await sample(svg, state); assertFit(restored);
         observations.restored = restored;
+        expect(restored.geometry).toEqual(candidate.geometry);
         expect(restored.labels.map(label => [label.text, label.fontSize, label.attributeFontSize, label.box]))
           .toEqual(candidate.labels.map(label => [label.text, label.fontSize, label.attributeFontSize, label.box]));
         const fonts = await Promise.all(fontTasks);
