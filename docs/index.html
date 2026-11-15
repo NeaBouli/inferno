@@ -1448,7 +1448,7 @@
   <script defer src="assets/page-motion.js?v=20261023-p1"></script>
   <link rel="stylesheet" href="assets/landing-header-template.css?v=20261023-p1">
   <link rel="stylesheet" href="assets/landing-collapse.css?v=20261112-contracts-v2">
-  <script defer src="assets/landing-collapse.js?v=20261112-contracts-v3"></script>
+  <script defer src="assets/landing-collapse.js?v=20261115-disclosures-v1"></script>
   <noscript><style>.reveal { opacity: 1; transform: none; }</style></noscript>
 </head>
 <body id="top">
@@ -2732,8 +2732,8 @@ if (isLocked) {
 <section id="partners" style="padding: 80px 0;">
   <div class="container">
     <div class="reveal" style="text-align:center;">
-      <p class="section-label">Ecosystem</p>
-      <h2 class="section-title">Ecosystem</h2>
+      <p class="section-label">Directory</p>
+      <h2 class="section-title">Builders &amp; Creators</h2>
       <p class="section-desc" style="margin:0 auto;max-width:600px;">
         Builders and creators integrating IFR Lock for premium access and exclusive benefits.
       </p>
@@ -4498,7 +4498,8 @@ return { start, stop };
     (navigator.hardwareConcurrency <= 4 && navigator.deviceMemory <= 4);
   let visible = false, started = false;
   function sync() {
-    const active = visible && !document.hidden && !reduced.matches && !compact.matches && !limitedHardware;
+    const panel = svg.closest('.landing-collapse-panel');
+    const active = visible && !panel?.hidden && !document.hidden && !reduced.matches && !compact.matches && !limitedHardware;
     svg.dataset.flowMotion = active ? 'running' : 'paused';
     if (!active) { svg.pauseAnimations(); return; }
     svg.unpauseAnimations();
@@ -4509,6 +4510,12 @@ return { start, stop };
       });
     }
   }
+  function updateVisibility() {
+    const rect = svg.getBoundingClientRect();
+    visible = rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.top < window.innerHeight;
+    sync();
+  }
+  svg.closest('#token-flow')?.addEventListener('landing:disclosurechange', updateVisibility);
   if (typeof window.IntersectionObserver === 'function') {
     new window.IntersectionObserver(entries => {
       visible = entries[entries.length - 1].isIntersecting;
@@ -4516,16 +4523,13 @@ return { start, stop };
     }).observe(svg);
   } else {
     let pending = false;
-    const update = () => {
-      pending = false;
-      const rect = svg.getBoundingClientRect();
-      visible = rect.bottom > 0 && rect.top < window.innerHeight;
-      sync();
-    };
     const schedule = () => {
       if (pending) return;
       pending = true;
-      requestAnimationFrame(update);
+      requestAnimationFrame(() => {
+        pending = false;
+        updateVisibility();
+      });
     };
     window.addEventListener('scroll', schedule, { passive: true });
     window.addEventListener('resize', schedule);

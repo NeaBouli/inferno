@@ -157,21 +157,36 @@ async function openFlow(page, calls) {
   await answerProxy(page);
   await page.route(RPC_URL, answerRpc(calls));
   await page.goto("/");
+  await expandLandingSections(page, "token-flow");
   const flow = page.locator("#token-flow");
   await flow.scrollIntoViewIfNeeded();
   return flow;
 }
 
-for (const [width, cores, memory, active] of [[390, 4, 32, false], [820, 4, 32, false], [1440, 4, 32, true], [1440, 8, 4, true], [1440, 4, 4, false]]) {
-  test(`token flow respects compact and both-low hardware policy (${width}px/${cores} cores/${memory}GB)`, async ({ page }) => {
+for (const [width, cores, memory, active, noObserver = false] of [
+  [390, 4, 32, false], [820, 4, 32, false], [1440, 4, 32, true], [1440, 8, 4, true], [1440, 4, 4, false],
+  [390, 8, 8, false, true], [1440, 4, 4, false, true],
+]) {
+  test(`token flow respects compact and both-low hardware policy (${width}px/${cores} cores/${memory}GB${noObserver ? ', no IO' : ''})`, async ({ page }) => {
     await page.setViewportSize({ width, height: 1000 });
-    await page.addInitScript(({ cores, memory }) => Object.defineProperties(navigator, {
-      hardwareConcurrency: { configurable: true, get: () => cores },
-      deviceMemory: { configurable: true, get: () => memory },
-    }), { cores, memory });
+    await page.addInitScript(({ cores, memory, noObserver }) => {
+      Object.defineProperties(navigator, {
+        hardwareConcurrency: { configurable: true, get: () => cores },
+        deviceMemory: { configurable: true, get: () => memory },
+      });
+      if (noObserver) Object.defineProperty(window, 'IntersectionObserver', { configurable: true, value: undefined });
+    }, { cores, memory, noObserver });
     await page.emulateMedia({ reducedMotion: 'no-preference' });
     const flow = await openFlow(page, FEE_CALLS);
     const svg = flow.locator('svg[data-flow-motion]');
+    const toggle = flow.locator(':scope > .landing-collapse-heading > button');
+    await expect(svg).toHaveAttribute('data-flow-motion', active ? 'running' : 'paused');
+    await toggle.click();
+    await expect(svg).toHaveAttribute('data-flow-motion', 'paused');
+    await expect(svg.locator('.flow-pulse')).toHaveCSS('animation-play-state', 'paused');
+    expect(await svg.evaluate(element => element.animationsPaused())).toBe(true);
+    await toggle.click();
+    await svg.scrollIntoViewIfNeeded();
     if (!active) {
       await expect(svg).toHaveAttribute('data-flow-motion', 'paused');
       await expect(svg.locator('.flow-pulse')).toHaveCSS('animation-play-state', 'paused');
@@ -188,6 +203,12 @@ for (const [width, cores, memory, active] of [[390, 4, 32, false], [820, 4, 32, 
     await expect(svg.locator('.flow-pulse')).toHaveCSS('animation-play-state', 'paused');
     await expect(svg.locator('.flow-pulse')).toHaveCSS('animation-name', 'none');
     expect(await svg.evaluate(element => element.animationsPaused())).toBe(true);
+    await toggle.click();
+    await toggle.click();
+    await svg.scrollIntoViewIfNeeded();
+    await expect(svg).toHaveAttribute('data-flow-motion', 'paused');
+    await expect(svg.locator('.flow-pulse')).toHaveCSS('animation-play-state', 'paused');
+    expect(await svg.evaluate(element => element.animationsPaused())).toBe(true);
     await page.locator('footer').scrollIntoViewIfNeeded();
     await page.emulateMedia({ reducedMotion: 'no-preference' });
     await expect(svg).toHaveAttribute('data-flow-motion', 'paused');
@@ -195,6 +216,79 @@ for (const [width, cores, memory, active] of [[390, 4, 32, false], [820, 4, 32, 
     await flow.scrollIntoViewIfNeeded();
     await expect(svg).toHaveAttribute('data-flow-motion', 'running');
     await expect(svg.locator('.flow-pulse')).toHaveCSS('animation-play-state', 'running');
+    expect(await svg.evaluate(element => element.animationsPaused())).toBe(false);
+  });
+}
+
+for (const observer of [true, false]) {
+  test(`token flow disclosure pauses immediately and restores only permitted visible motion (IO=${observer})`, async ({ page }) => {
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await page.addInitScript(({ observer }) => {
+      Object.defineProperties(navigator, {
+        hardwareConcurrency: { configurable: true, get: () => 8 },
+        deviceMemory: { configurable: true, get: () => 8 },
+      });
+      if (!observer) Object.defineProperty(window, 'IntersectionObserver', { configurable: true, value: undefined });
+    }, { observer });
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    const flow = await openFlow(page, FEE_CALLS);
+    const svg = flow.locator('svg[data-flow-motion]');
+    const toggle = flow.locator(':scope > .landing-collapse-heading > button');
+    for (let cycle = 0; cycle < 2; cycle++) {
+      await expect(svg).toHaveAttribute('data-flow-motion', 'running');
+      await expect(svg.locator('.flow-pulse')).toHaveCSS('animation-play-state', 'running');
+      expect(await svg.evaluate(element => element.animationsPaused())).toBe(false);
+      const paused = await toggle.evaluate(button => {
+        button.click();
+        const element = document.querySelector('svg[data-flow-motion]');
+        return element.dataset.flowMotion === 'paused' && element.animationsPaused();
+      });
+      expect(paused, 'collapse pauses CSS and SMIL before an observer callback').toBe(true);
+      await expect(flow.locator(':scope > .landing-collapse-panel')).toBeHidden();
+      await expect(svg.locator('.flow-pulse')).toHaveCSS('animation-play-state', 'paused');
+      expect(await svg.evaluate(async element => {
+        const time = element.getCurrentTime();
+        await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        return element.getCurrentTime() === time;
+      })).toBe(true);
+      await toggle.click();
+      await svg.scrollIntoViewIfNeeded();
+    }
+    await expect(svg).toHaveAttribute('data-flow-motion', 'running');
+    await page.evaluate(() => {
+      Object.defineProperties(document, {
+        hidden: { configurable: true, get: () => true },
+        visibilityState: { configurable: true, get: () => 'hidden' },
+      });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    await expect(svg).toHaveAttribute('data-flow-motion', 'paused');
+    expect(await svg.evaluate(element => element.animationsPaused())).toBe(true);
+    await page.evaluate(() => {
+      Reflect.deleteProperty(document, 'hidden');
+      Reflect.deleteProperty(document, 'visibilityState');
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+    await expect(svg).toHaveAttribute('data-flow-motion', 'running');
+    await page.emulateMedia({ reducedMotion: 'reduce' });
+    await toggle.click();
+    await toggle.click();
+    await svg.scrollIntoViewIfNeeded();
+    await expect(svg).toHaveAttribute('data-flow-motion', 'paused');
+    await expect(svg.locator('.flow-pulse')).toHaveCSS('animation-play-state', 'paused');
+    await expect(svg.locator('.flow-pulse')).toHaveCSS('animation-name', 'none');
+    expect(await svg.evaluate(element => element.animationsPaused())).toBe(true);
+    await page.emulateMedia({ reducedMotion: 'no-preference' });
+    await expect(svg).toHaveAttribute('data-flow-motion', 'running');
+    await page.locator('footer').scrollIntoViewIfNeeded();
+    await expect(svg).toHaveAttribute('data-flow-motion', 'paused');
+    await toggle.evaluate(button => button.click());
+    await toggle.evaluate(button => button.click());
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await expect(svg).toHaveAttribute('data-flow-motion', 'paused');
+    expect(await svg.evaluate(element => element.animationsPaused())).toBe(true);
+    await svg.scrollIntoViewIfNeeded();
+    await expect(svg).toHaveAttribute('data-flow-motion', 'running');
     expect(await svg.evaluate(element => element.animationsPaused())).toBe(false);
   });
 }
@@ -270,6 +364,7 @@ for (const width of [375, 1440]) {
       if (withApi) await answerProxy(page);
       if (calls) await page.route(RPC_URL, answerRpc(calls));
       await page.goto("/");
+      await expandLandingSections(page, "token-flow");
       const flow = page.locator("#token-flow");
       await flow.scrollIntoViewIfNeeded();
       await expect(flow.locator('[data-live-key="flow-feerouter-bps"]')).not.toContainText("loading", { timeout: 25000 });
@@ -297,6 +392,7 @@ for (const width of [375, 1440]) {
 test("token flow fails closed to 'unavailable' when every read fails", async ({ page }) => {
   await blockNetwork(page);
   await page.goto("/");
+  await expandLandingSections(page, "token-flow");
   const flow = page.locator("#token-flow");
   await flow.scrollIntoViewIfNeeded();
   for (const k of ["flow-snapshot-supply", "supply-flow", "feerouter-flow", "flow-burnres", "flow-lpreserve", "flow-treasury"]) {
