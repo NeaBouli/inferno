@@ -466,7 +466,7 @@ jobs:
         run: node scripts/test-ifr-benefits-widget.cjs
 
       - name: Capture scoped Landing disclosure acceptance
-        run: ./node_modules/.bin/playwright test tests/browser/landing-disclosure-followup.spec.js --workers=1 --output "$RUNNER_TEMP/landing-disclosures-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+        run: ./node_modules/.bin/playwright test tests/browser/landing-disclosure-followup.spec.js tests/browser/landing-flow-label-fit.spec.js --workers=1 --output "$RUNNER_TEMP/landing-disclosures-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
 
       - name: Retain scoped Landing disclosure images and observations
         if: always()

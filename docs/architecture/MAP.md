@@ -879,6 +879,41 @@ the actual CustomEvent/dispatch, ancestor lookup and nonzero SVG rectangles;
 Docs CI executes it and watches its path. The workflow contract requires this
 command/path so an offline owning regression cannot silently remain unrun.
 
+#### Token Flow edge-label conditional qualification (2026-11-15)
+
+Private source candidate on `80dc08e6`, not an accepted fix: only
+`docs/index.html::text[data-live-key="flow-pool-edge"]` y324 -> y310 changes.
+Hop: independent `feeFlow` reads -> unchanged `renderFeeFlow` / `setLive`
+complete text -> existing 8px SVG label near Uniswap. The specific real-font
+collision, clearance at310 and live applicability remain UNKNOWN/unmeasured.
+No strings, rates/caps, receiver/route validation, controller, motion, fonts,
+visibility policy or source outside this one HTML attribute is changed.
+
+`landing-flow-legend.spec.js` retains all semantic/node-fit assertions and
+reuses its existing, unchanged RPC/proxy fixture block through the genuinely
+shared `helpers/token-flow-rpc-fixture.js`; no spec imports another spec.
+`landing-flow-label-fit.spec.js` defines nine states at the existing five
+viewports: actual held reads/loading, canonical, independently failed pool/ETH,
+both failed/no-provider-equivalent, changed receivers, zero, unavailable rates
+and valid near-cap long labels. Synthetic data stays intercepted; only the
+existing Google-font allowlist is used for actual font-face/body-hash evidence.
+
+The focused spec maps getBBox through getScreenCTM into common SVG space,
+checks both complete edge labels, base typography and SVG containment against
+17 explicit protocol rectangles with stroke, the central circle with stroke
+and connection strokes. Background frames/legend/particles are not nodes.
+Paired same-turn DOM samples must differ only in pool y; old324 must reproduce
+the long/unavailable Uniswap collision or refuse qualification as UNKNOWN.
+Canonical/loading countercases must fit at324. The same owning assertion must
+reject reversion, hiding, truncation, shrink and unconfirmed-route activation.
+Baseline/candidate scoped PNGs and observations are defined for all45 cases;
+no measurement, screenshot or causal result has been produced in source prep.
+The existing Docs Wallet Browser capture command/artifact path is extended,
+with an owning workflow assertion; no new job, package or framework. The frozen
+baseline HTML hash must be deliberately rebound by Parent after FAQ integration.
+Parent owns actual tests, font/image inspection, independent causal review and
+any adoption/live gate. Held Shop/Web3/W02/405/433/425/434 lanes stay separate.
+
 #### Wiki continuity anchor clearance (2026-10-26)
 
 Module: existing Wiki continuity policy. Hop: the Landing policy link or a native
