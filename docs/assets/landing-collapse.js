@@ -33,6 +33,7 @@
     const setExpanded = expanded => {
       button.setAttribute('aria-expanded', String(expanded));
       panel.hidden = !expanded;
+      root.dispatchEvent(new CustomEvent('landing:disclosurechange', { detail: { expanded } }));
     };
     button.addEventListener('click', () => setExpanded(panel.hidden));
     panels.set(panel, setExpanded);
@@ -46,7 +47,7 @@
     card.id = `landing-address-${++sequence}-panel`;
   });
 
-  const alwaysOpen = new Set(['wizard', 'token-flow', 'roadmap']);
+  const alwaysOpen = new Set(['wizard']);
   document.querySelectorAll('main > section:not(.hero)').forEach(section => {
     if (alwaysOpen.has(section.id)) return;
     const title = section.querySelector('h2');

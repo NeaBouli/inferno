@@ -20,6 +20,7 @@ for (const watchedPath of [
   "scripts/test-content-trust.cjs",
   "scripts/test-status-baseline.cjs",
   "scripts/test-functionality-status.cjs",
+  "scripts/test-landing-performance.cjs",
   "scripts/check-cwa-remediation-register.cjs",
   "scripts/test-cwa-content-coherence.cjs",
   "scripts/test-docs-truth.cjs",
@@ -63,6 +64,7 @@ for (const command of [
   "npm run test:content-trust",
   "npm run test:status-baseline",
   "npm run test:functionality-status",
+  "node scripts/test-landing-performance.cjs",
   "npm run test:cwa-register",
   "npm run test:cwa-content",
   "npm run test:docs-truth",
@@ -82,5 +84,11 @@ for (const command of [
     `Docs Validator must run ${command}`
   );
 }
+
+const walletJob = workflow.slice(workflow.indexOf("  validate-wallet-browser:"), workflow.indexOf("  docs-summary:"));
+assert.ok(walletJob.includes('run: ./node_modules/.bin/playwright test tests/browser/landing-disclosure-followup.spec.js tests/browser/landing-flow-label-fit.spec.js --workers=1 --max-failures=1 --output "$RUNNER_TEMP/landing-disclosures-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"'),
+  "the existing Wallet Browser job must run both scoped real-font suites in the existing artifact directory");
+assert.ok(walletJob.includes('${{ runner.temp }}/landing-disclosures-${{ github.run_id }}-${{ github.run_attempt }}/**/*.png'));
+assert.ok(walletJob.includes('${{ runner.temp }}/landing-disclosures-${{ github.run_id }}-${{ github.run_attempt }}/**/observations.json'));
 
 console.log("[docs-workflow-contract] PASS");

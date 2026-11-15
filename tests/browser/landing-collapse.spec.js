@@ -1,9 +1,9 @@
 const { test, expect } = require('@playwright/test');
 const { expandLandingSections } = require('./helpers/landing-collapse');
 
-const COLLAPSED = ['about', 'how', 'tokenomics', 'ecosystem', 'partners', 'architecture', 'trust',
-  'onchain-transparency', 'faq', 'phase3', 'governance', 'project-continuity', 'contracts'];
-const OPEN = ['hero', 'wizard', 'token-flow', 'roadmap'];
+const COLLAPSED = ['about', 'how', 'tokenomics', 'token-flow', 'ecosystem', 'partners', 'architecture', 'trust',
+  'onchain-transparency', 'roadmap', 'phase3', 'governance', 'project-continuity', 'contracts', 'faq'];
+const OPEN = ['hero', 'wizard'];
 const MAIN = '0x77e99917Eca8539c62F509ED1193ac36580A6e7B';
 const normalize = (text) => text.replace(/\s+/g, ' ').trim();
 
@@ -18,6 +18,8 @@ for (const [width, height] of [[375, 812], [390, 844], [820, 1180], [1180, 820],
     page.on('pageerror', error => errors.push(error.message));
     await page.goto('/');
     expect(await page.locator('main > section.landing-collapsible').evaluateAll(sections => sections.map(s => s.id))).toEqual(COLLAPSED);
+    await expect(page.locator('main > section').last()).toHaveAttribute('id', 'faq');
+    await expect(page.locator('main + footer')).toHaveCount(1);
     for (const id of COLLAPSED) {
       const section = page.locator(`#${id}`);
       const toggle = section.locator(':scope > .landing-collapse-heading > button');
@@ -26,6 +28,9 @@ for (const [width, height] of [[375, 812], [390, 844], [820, 1180], [1180, 820],
       await expect(page.locator(`#${panelId}`)).toBeHidden();
       expect(normalize(await section.innerText())).toBe(normalize(await section.locator(':scope > .landing-collapse-heading').innerText()));
       await expect(toggle).toBeVisible();
+      const target = await toggle.boundingBox();
+      expect(target && target.width).toBeGreaterThanOrEqual(44);
+      expect(target && target.height).toBeGreaterThanOrEqual(44);
       const fit = await toggle.evaluate(button => {
         const heading = button.parentElement;
         const rect = heading.getBoundingClientRect();
@@ -80,6 +85,115 @@ for (const [width, height] of [[375, 812], [390, 844], [820, 1180], [1180, 820],
     expect(errors).toEqual([]);
   });
 }
+
+test('Ecosystem and Directory have distinct accessible titles and preserve their content', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#ecosystem > .landing-collapse-heading > button')).toHaveAccessibleName('Ecosystem One Token. Many Products.');
+  await expect(page.locator('#partners > .landing-collapse-heading > button')).toHaveAccessibleName('Directory Builders & Creators');
+  await expandLandingSections(page, 'ecosystem', 'partners');
+  await expect(page.locator('#ecosystem .eco-grid h3')).toHaveText(['Lock-Based Product Access', 'Creator & Channel Access', 'Business & Retail Discounts']);
+  await expect(page.locator('#partners h3')).toHaveText(['Your Business Here', 'Creator Slot', 'Developer Builder']);
+  await expect(page.locator('#partners a[href="wiki/integration.html"]')).toHaveCount(3);
+  await expect(page.locator('#ecosystem a.btn-primary').first()).toHaveAttribute('href', 'https://shop.ifrunit.tech/');
+});
+
+for (const [id, name, content, href] of [
+  ['token-flow', 'Architecture Token Flow', 'svg[data-flow-motion]', 'wiki/protocol-plan.html'],
+  ['roadmap', 'Roadmap From code to ecosystem', '.roadmap-track', 'wiki/roadmap.html'],
+]) {
+  test(`${id} is one complete disclosure with repeatable keyboard and pointer controls`, async ({ page }) => {
+    await page.goto('/');
+    const section = page.locator(`#${id}`);
+    const toggle = section.locator(':scope > .landing-collapse-heading > button');
+    const panel = section.locator(':scope > .landing-collapse-panel');
+    const inventory = element => ({
+      ids: [...element.querySelectorAll('[id]')].map(node => node.id),
+      links: [...element.querySelectorAll('a[href]')].map(node => [node.getAttribute('href'), node.getAttribute('target'), node.getAttribute('rel')]),
+      liveKeys: [...element.querySelectorAll('[data-live-key]')].map(node => node.getAttribute('data-live-key')),
+      phases: [...element.querySelectorAll('.roadmap-item h4')].map(node => node.textContent),
+    });
+    const before = await panel.evaluate(inventory);
+    await expect(section.locator('.landing-collapse-toggle')).toHaveCount(1);
+    await expect(panel).toHaveCount(1);
+    await expect(toggle).toHaveAccessibleName(name);
+    await expect(toggle).toHaveAttribute('aria-controls', `${id}-panel`);
+    await expect(panel).toBeHidden();
+    for (let cycle = 0; cycle < 2; cycle++) {
+      await toggle.focus();
+      await page.keyboard.press('Enter');
+      await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+      await expect(section.locator(content)).toBeVisible();
+      await expect(panel.locator(`a[href="${href}"]`)).toBeVisible();
+      if (id === 'roadmap') await expect(panel.locator('.roadmap-item')).toHaveCount(5);
+      await page.keyboard.press('Space');
+      await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+      await expect(panel).toBeHidden();
+      await expect(toggle).toBeFocused();
+    }
+    await toggle.click();
+    await expect(panel).toBeVisible();
+    await toggle.click();
+    await expect(panel).toBeHidden();
+    expect(await panel.evaluate(inventory)).toEqual(before);
+  });
+}
+
+test('FAQ is the final content tile and preserves outer and inner native controls', async ({ page }) => {
+  await page.goto('/');
+  const faq = page.locator('#faq');
+  const toggle = faq.locator(':scope > .landing-collapse-heading > button');
+  const panel = faq.locator(':scope > .landing-collapse-panel');
+  expect(await page.locator('main').evaluate(main => {
+    const content = [...main.children].filter(node => !['SCRIPT', 'STYLE', 'TEMPLATE'].includes(node.tagName));
+    return { last: content.at(-1).id, previous: content.at(-2).id, footerNext: main.nextElementSibling.tagName };
+  })).toEqual({ last: 'faq', previous: 'contracts', footerNext: 'FOOTER' });
+  await expect(faq.locator('.landing-collapse-toggle')).toHaveCount(1);
+  await expect(panel).toHaveCount(1);
+  await expect(toggle).toHaveAccessibleName('FREQUENTLY ASKED QUESTIONS');
+  await expect(toggle).toHaveAttribute('aria-controls', 'faq-panel');
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(panel).toBeHidden();
+  const links = await faq.locator('a[href]').evaluateAll(nodes => nodes.map(node => node.getAttribute('href')));
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  await expect(panel).toBeVisible();
+  await expect(faq.locator('.lp-faq-item')).toHaveCount(10);
+  const first = faq.locator('#faq-col-left .lp-faq-q').first();
+  const second = faq.locator('#faq-col-right .lp-faq-q').first();
+  await expect(first.locator('span')).toHaveText('Can I provide IFR and ETH liquidity myself?');
+  await first.click();
+  await expect(first).toHaveAttribute('aria-expanded', 'true');
+  await expect(faq.locator('.lp-faq-item.open')).toHaveCount(1);
+  await expect(faq.locator('.lp-faq-item.open a[href="wiki/liquidity.html"]')).toBeVisible();
+  await second.press('Enter');
+  await expect(first).toHaveAttribute('aria-expanded', 'false');
+  await expect(second).toHaveAttribute('aria-expanded', 'true');
+  await expect(faq.locator('.lp-faq-item.open')).toHaveCount(1);
+  await expect(faq.locator('.lp-faq-item.open a[href="wiki/liquidity.html#risks"]')).toBeVisible();
+  await toggle.press('Space');
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(panel).toBeHidden();
+  await expect(toggle).toBeFocused();
+  await toggle.press('Enter');
+  await expect(panel).toBeVisible();
+  await expect(second).toHaveAttribute('aria-expanded', 'true');
+  expect(await faq.locator('a[href]').evaluateAll(nodes => nodes.map(node => node.getAttribute('href')))).toEqual(links);
+  await toggle.click();
+  await expect(panel).toBeHidden();
+});
+
+test('the original FAQ fragment opens the final tile below navigation', async ({ page }) => {
+  await page.goto('/#faq');
+  const toggle = page.locator('#faq > .landing-collapse-heading > button');
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  await expect(page.locator('#faq-panel')).toBeVisible();
+  await expect(page.locator('#faq-panel a[href="wiki/faq.html"]')).toHaveCount(2);
+  await expect(page.locator('main > section').last()).toHaveAttribute('id', 'faq');
+  await expect.poll(() => toggle.evaluate(button => {
+    const box = button.getBoundingClientRect();
+    return box.top >= document.querySelector('nav').getBoundingClientRect().bottom && box.bottom <= innerHeight;
+  })).toBe(true);
+});
 
 test('one native contracts toggle controls every row including the LP Pair and preserves links', async ({ page }) => {
   await page.goto('/');
@@ -144,14 +258,14 @@ test('Enter and Space toggle the same accessible header and preserve focus', asy
   await expect(toggle).toBeFocused();
 });
 
-for (const hash of ['how', 'live-distribution', 'dao-governance', 'contracts', 'landing-address-1-panel', 'landing-address-32-panel']) {
+for (const hash of ['how', 'live-distribution', 'dao-governance', 'contracts', 'landing-address-1-panel', 'landing-address-32-panel', 'token-flow', 'roadmap']) {
   test(`initial deep link #${hash} expands its section`, async ({ page }) => {
     const addressHash = hash.startsWith('landing-address-');
     if (addressHash) await page.setViewportSize({ width: 375, height: 812 });
     await page.goto(`/#${hash}`);
     const target = page.locator(`#${hash}`);
     await expect(target).toBeVisible();
-    const section = hash === 'how' ? 'how' : hash === 'dao-governance' ? 'governance' : (hash === 'contracts' || hash === 'landing-address-32-panel') ? 'contracts' : 'tokenomics';
+    const section = ['how', 'token-flow', 'roadmap'].includes(hash) ? hash : hash === 'dao-governance' ? 'governance' : (hash === 'contracts' || hash === 'landing-address-32-panel') ? 'contracts' : 'tokenomics';
     await expect(page.locator(`#${section} > .landing-collapse-heading > button`)).toHaveAttribute('aria-expanded', 'true');
     if (addressHash) {
       if (hash === 'landing-address-1-panel') {
@@ -192,7 +306,7 @@ test('nav click, hashchange and repeated same-hash in-page links expand and scro
 
 test('print exposes every section and address panel without changing screen state', async ({ page }) => {
   await page.goto('/');
-  await expect(page.locator('.landing-collapse-panel')).toHaveCount(13);
+  await expect(page.locator('.landing-collapse-panel')).toHaveCount(15);
   await page.emulateMedia({ media: 'print' });
   for (const panel of await page.locator('.landing-collapse-panel').all()) await expect(panel).toBeVisible();
   await page.emulateMedia({ media: 'screen' });
@@ -204,6 +318,9 @@ test.describe('without JavaScript', () => {
   test('all source sections and every address remain visible', async ({ page }) => {
     await page.goto('/');
     await expect(page.locator('.landing-collapse-toggle')).toHaveCount(0);
+    await expect(page.locator('main > section').last()).toHaveAttribute('id', 'faq');
+    await expect(page.locator('main + footer')).toHaveCount(1);
+    await expect(page.locator('#faq a[href="wiki/faq.html"]')).toHaveCount(2);
     for (const id of COLLAPSED) {
       await expect(page.locator(`#${id} h2`)).toBeVisible();
       for (const reveal of await page.locator(`#${id} .reveal`).all()) await expect(reveal).toHaveCSS('opacity', '1');

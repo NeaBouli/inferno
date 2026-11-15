@@ -1448,7 +1448,7 @@
   <script defer src="assets/page-motion.js?v=20261023-p1"></script>
   <link rel="stylesheet" href="assets/landing-header-template.css?v=20261023-p1">
   <link rel="stylesheet" href="assets/landing-collapse.css?v=20261112-contracts-v2">
-  <script defer src="assets/landing-collapse.js?v=20261112-contracts-v3"></script>
+  <script defer src="assets/landing-collapse.js?v=20261115-disclosures-v1"></script>
   <noscript><style>.reveal { opacity: 1; transform: none; }</style></noscript>
 </head>
 <body id="top">
@@ -2533,7 +2533,7 @@ render();
         <rect x="340" y="338" width="120" height="42" rx="10" fill="#0d1117" stroke="#fbbf24" stroke-width="1.5"/>
         <text x="400" y="356" text-anchor="middle" fill="#fbbf24" font-size="10" font-weight="bold">BuybackController</text>
         <text x="400" y="372" text-anchor="middle" fill="#9ca3af" font-size="8" data-flow-rpc data-live-key="flow-controller">loading&hellip;</text>
-        <text x="406" y="324" fill="#9ca3af" font-size="8" data-flow-rpc data-live-key="flow-pool-edge">pool fee: loading&hellip;</text>
+        <text x="394" y="313" text-anchor="end" fill="#9ca3af" font-size="8" data-flow-rpc data-live-key="flow-pool-edge">pool fee: loading&hellip;</text>
         <text x="406" y="414" fill="#9ca3af" font-size="8" data-flow-rpc data-live-key="flow-eth-edge">ETH fee: loading&hellip;</text>
         <text x="314" y="410" fill="#9ca3af" font-size="8">&ge;50% buys IFR</text>
         <text x="484" y="376" fill="#9ca3af" font-size="8">&le;50% LP*</text>
@@ -2732,8 +2732,8 @@ if (isLocked) {
 <section id="partners" style="padding: 80px 0;">
   <div class="container">
     <div class="reveal" style="text-align:center;">
-      <p class="section-label">Ecosystem</p>
-      <h2 class="section-title">Ecosystem</h2>
+      <p class="section-label">Directory</p>
+      <h2 class="section-title">Builders &amp; Creators</h2>
       <p class="section-desc" style="margin:0 auto;max-width:600px;">
         Builders and creators integrating IFR Lock for premium access and exclusive benefits.
       </p>
@@ -2938,86 +2938,6 @@ if (isLocked) {
     </div>
   </div>
 </section>
-
-<!-- ── FAQ ────────────────────────────────────────── -->
-<section id="faq" style="background:#0a0a0f;padding:80px 20px;" aid-type="faq">
-  <div style="max-width:1100px;margin:0 auto;">
-
-    <h2 style="text-align:center;font-size:clamp(1.3rem,3vw,1.9rem);color:#fff;margin-bottom:10px;letter-spacing:2px;font-weight:800;">FREQUENTLY ASKED QUESTIONS</h2>
-
-      <p style="text-align:center;color:#888;font-size:0.93rem;margin-bottom:40px;">
-      Quick answers about IFR / $IFRp &mdash;
-      <a href="wiki/faq.html" style="color:#b3300b;text-decoration:none;font-weight:700;">view all 81 questions in the full Wiki FAQ &rarr;</a>
-    </p>
-
-    <!-- 2-column accordion grid -->
-    <div id="lp-faq-grid" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
-      <div id="faq-col-left" style="display:flex;flex-direction:column;gap:10px;min-width:0;"></div>
-      <div id="faq-col-right" style="display:flex;flex-direction:column;gap:10px;min-width:0;"></div>
-    </div>
-
-    <!-- CTA -->
-    <div style="text-align:center;margin-top:44px;display:flex;flex-direction:column;align-items:center;gap:14px;">
-      <a href="wiki/faq.html" style="display:inline-block;padding:14px 40px;background:linear-gradient(135deg,#ff6600,#cc3300);color:#fff;font-size:0.88rem;letter-spacing:1px;border-radius:6px;text-decoration:none;font-weight:700;">ALL 81 QUESTIONS &amp; ANSWERS &rarr;</a>
-      <span style="color:#555;font-size:0.82rem;">Tokenomics &middot; Security &middot; Governance &middot; Bootstrap &middot; DAO &middot; Developer FAQ</span>
-    </div>
-  </div>
-</section>
-
-<script>
-(function(){
-  var faqs=[
-    {q:"Can I provide IFR and ETH liquidity myself?",a:"Yes. Use the existing Ethereum Uniswap V2 pool. Our <a href='wiki/liquidity.html'>liquidity guide and live calculator</a> help you prepare; connect and confirm separately on Uniswap. An approval alone does not add liquidity."},
-    {q:"Are my LP tokens locked, and is a return guaranteed?",a:"Your own LP tokens represent your share of the current pool and can be used to remove liquidity if you hold them. They are separate from the original Bootstrap LP held in its vault, IFRLock access and Builder rewards. Returns are not guaranteed; price changes, fees and impermanent loss can cause losses. <a href='wiki/liquidity.html#risks'>LP risks</a>."},
-    {q:"What is IFR / $IFRp and what makes it deflationary?",
-     a:"IFR is the on-chain token symbol. $IFRp is used for social posts. Fixed supply of 1 billion IFR \u2014 no minting ever. Every standard transfer between non-exempt addresses burns 2.5% of the transferred amount permanently. Verified fee-exempt paths, including the IFR/WETH pair and future activated CEX addresses, bypass the transfer fee. BuybackVault is dormant; no active buyback/burn flywheel is fed by the IFR pool fee. BuybackController execution requires separate ETH funding and its configured execution conditions. Supply can only decrease over time."},
-    {q:"Can the team rug the liquidity?",
-     a:"BootstrapVaultV3 has no admin or LP withdrawal function. Team.Finance was not configured on Mainnet; the LP tokens created by finalise() remain in the vault and are not withdrawable by the team. <a href='wiki/faq.html#rugpull'>Full details \u2192</a>"},
-    {q:"What is the lock mechanism?",
-     a:"Any wallet locks IFR in IFRLock. Locked tokens cannot be sold or transferred. The on-chain lock state is the canonical source for access control, builder discounts, and governance power."},
-    {q:"How does the Bootstrap work?",
-     a:"The 90-day community event ended on 05.06.2026. finalise() paired 0.030 ETH with 100M IFR to create the Uniswap V2 LP and reserved 100M IFR for contributor claims. Fully permissionless, no team action needed."},
-    {q:"Who controls the protocol?",
-     a:"Protocol parameter changes go through Governance proposals with a 48-hour timelock. The deployed Governance contract's ownership itself can be transferred directly by its owner, the Treasury Safe (3-of-5), without that delay (tracked as CWA-25). TreasurySafe can also rotate the guardian through untimelocked setGuardian; the guardian can cancel pending proposals. Bootstrap ENDED 05.06.2026 \u2014 IFR now live on Uniswap V2."},
-    {q:"What is the token distribution?",
-     a:"1B IFR fixed. 6 buckets: 40% DEX Liquidity \u00b7 20% LiqRes (locked) \u00b7 15% Team Vesting (12m cliff) \u00b7 15% Treasury \u00b7 6% Community \u00b7 4% BuilderVault. <a href='wiki/tokenomics.html'>Tokenomics \u2192</a>"},
-    {q:"Is the code open source and audited?",
-     a:"The code is open source and the project publishes full internal audits, static-analysis records and automated test evidence. These do not constitute independent professional certification; a professional third-party audit remains pending. <a href='wiki/open-audit.html'>Audit record \u2192</a>"},
-    {q:"Where can I buy IFR?",
-     a:"IFR is live on Uniswap V2 as of 05.06.2026. Bootstrap ENDED. Social posts use $IFRp, but wallets and DEX pools may show the on-chain symbol IFR. <a href='https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B' target='_blank'>Buy IFR on Uniswap</a>. LP Token: 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0."}
-  ];
-
-  var left=document.getElementById('faq-col-left');
-  var right=document.getElementById('faq-col-right');
-
-  faqs.forEach(function(f,i){
-    var div=document.createElement('div');
-    div.className='lp-faq-item';
-    div.innerHTML='<button class="lp-faq-q" aria-expanded="false">'+
-      '<span>'+f.q+'</span><i class="lp-faq-icon">+</i></button>'+
-      '<div class="lp-faq-a"><div class="lp-faq-a-inner">'+f.a+'</div></div>';
-    div.querySelector('.lp-faq-q').addEventListener('click',function(){
-      var isOpen=div.classList.contains('open');
-      document.querySelectorAll('.lp-faq-item.open').forEach(function(el){
-        el.classList.remove('open');
-        el.querySelector('.lp-faq-q').setAttribute('aria-expanded','false');
-      });
-      if(!isOpen){
-        div.classList.add('open');
-        this.setAttribute('aria-expanded','true');
-      }
-    });
-    (i%2===0 ? left : right).appendChild(div);
-  });
-})();
-</script>
-
-<!-- Mobile: single column -->
-<style>
-@media(max-width:700px){
-  #lp-faq-grid { grid-template-columns:minmax(0,1fr) !important; }
-}
-</style>
 
 
 <!-- ── ROADMAP ────────────────────────────────────── -->
@@ -3398,6 +3318,86 @@ if (isLocked) {
     </p>
   </div>
 </section>
+
+<!-- ── FAQ ────────────────────────────────────────── -->
+<section id="faq" style="background:#0a0a0f;padding:80px 20px;" aid-type="faq">
+  <div style="max-width:1100px;margin:0 auto;">
+
+    <h2 style="text-align:center;font-size:clamp(1.3rem,3vw,1.9rem);color:#fff;margin-bottom:10px;letter-spacing:2px;font-weight:800;">FREQUENTLY ASKED QUESTIONS</h2>
+
+      <p style="text-align:center;color:#888;font-size:0.93rem;margin-bottom:40px;">
+      Quick answers about IFR / $IFRp &mdash;
+      <a href="wiki/faq.html" style="color:#b3300b;text-decoration:none;font-weight:700;">view all 81 questions in the full Wiki FAQ &rarr;</a>
+    </p>
+
+    <!-- 2-column accordion grid -->
+    <div id="lp-faq-grid" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;">
+      <div id="faq-col-left" style="display:flex;flex-direction:column;gap:10px;min-width:0;"></div>
+      <div id="faq-col-right" style="display:flex;flex-direction:column;gap:10px;min-width:0;"></div>
+    </div>
+
+    <!-- CTA -->
+    <div style="text-align:center;margin-top:44px;display:flex;flex-direction:column;align-items:center;gap:14px;">
+      <a href="wiki/faq.html" style="display:inline-block;padding:14px 40px;background:linear-gradient(135deg,#ff6600,#cc3300);color:#fff;font-size:0.88rem;letter-spacing:1px;border-radius:6px;text-decoration:none;font-weight:700;">ALL 81 QUESTIONS &amp; ANSWERS &rarr;</a>
+      <span style="color:#555;font-size:0.82rem;">Tokenomics &middot; Security &middot; Governance &middot; Bootstrap &middot; DAO &middot; Developer FAQ</span>
+    </div>
+  </div>
+</section>
+
+<script>
+(function(){
+  var faqs=[
+    {q:"Can I provide IFR and ETH liquidity myself?",a:"Yes. Use the existing Ethereum Uniswap V2 pool. Our <a href='wiki/liquidity.html'>liquidity guide and live calculator</a> help you prepare; connect and confirm separately on Uniswap. An approval alone does not add liquidity."},
+    {q:"Are my LP tokens locked, and is a return guaranteed?",a:"Your own LP tokens represent your share of the current pool and can be used to remove liquidity if you hold them. They are separate from the original Bootstrap LP held in its vault, IFRLock access and Builder rewards. Returns are not guaranteed; price changes, fees and impermanent loss can cause losses. <a href='wiki/liquidity.html#risks'>LP risks</a>."},
+    {q:"What is IFR / $IFRp and what makes it deflationary?",
+     a:"IFR is the on-chain token symbol. $IFRp is used for social posts. Fixed supply of 1 billion IFR \u2014 no minting ever. Every standard transfer between non-exempt addresses burns 2.5% of the transferred amount permanently. Verified fee-exempt paths, including the IFR/WETH pair and future activated CEX addresses, bypass the transfer fee. BuybackVault is dormant; no active buyback/burn flywheel is fed by the IFR pool fee. BuybackController execution requires separate ETH funding and its configured execution conditions. Supply can only decrease over time."},
+    {q:"Can the team rug the liquidity?",
+     a:"BootstrapVaultV3 has no admin or LP withdrawal function. Team.Finance was not configured on Mainnet; the LP tokens created by finalise() remain in the vault and are not withdrawable by the team. <a href='wiki/faq.html#rugpull'>Full details \u2192</a>"},
+    {q:"What is the lock mechanism?",
+     a:"Any wallet locks IFR in IFRLock. Locked tokens cannot be sold or transferred. The on-chain lock state is the canonical source for access control, builder discounts, and governance power."},
+    {q:"How does the Bootstrap work?",
+     a:"The 90-day community event ended on 05.06.2026. finalise() paired 0.030 ETH with 100M IFR to create the Uniswap V2 LP and reserved 100M IFR for contributor claims. Fully permissionless, no team action needed."},
+    {q:"Who controls the protocol?",
+     a:"Protocol parameter changes go through Governance proposals with a 48-hour timelock. The deployed Governance contract's ownership itself can be transferred directly by its owner, the Treasury Safe (3-of-5), without that delay (tracked as CWA-25). TreasurySafe can also rotate the guardian through untimelocked setGuardian; the guardian can cancel pending proposals. Bootstrap ENDED 05.06.2026 \u2014 IFR now live on Uniswap V2."},
+    {q:"What is the token distribution?",
+     a:"1B IFR fixed. 6 buckets: 40% DEX Liquidity \u00b7 20% LiqRes (locked) \u00b7 15% Team Vesting (12m cliff) \u00b7 15% Treasury \u00b7 6% Community \u00b7 4% BuilderVault. <a href='wiki/tokenomics.html'>Tokenomics \u2192</a>"},
+    {q:"Is the code open source and audited?",
+     a:"The code is open source and the project publishes full internal audits, static-analysis records and automated test evidence. These do not constitute independent professional certification; a professional third-party audit remains pending. <a href='wiki/open-audit.html'>Audit record \u2192</a>"},
+    {q:"Where can I buy IFR?",
+     a:"IFR is live on Uniswap V2 as of 05.06.2026. Bootstrap ENDED. Social posts use $IFRp, but wallets and DEX pools may show the on-chain symbol IFR. <a href='https://app.uniswap.org/swap?outputCurrency=0x77e99917Eca8539c62F509ED1193ac36580A6e7B' target='_blank'>Buy IFR on Uniswap</a>. LP Token: 0xbE495E9c0d8cc2DCf95570cf95B63c4844dF31A0."}
+  ];
+
+  var left=document.getElementById('faq-col-left');
+  var right=document.getElementById('faq-col-right');
+
+  faqs.forEach(function(f,i){
+    var div=document.createElement('div');
+    div.className='lp-faq-item';
+    div.innerHTML='<button class="lp-faq-q" aria-expanded="false">'+
+      '<span>'+f.q+'</span><i class="lp-faq-icon">+</i></button>'+
+      '<div class="lp-faq-a"><div class="lp-faq-a-inner">'+f.a+'</div></div>';
+    div.querySelector('.lp-faq-q').addEventListener('click',function(){
+      var isOpen=div.classList.contains('open');
+      document.querySelectorAll('.lp-faq-item.open').forEach(function(el){
+        el.classList.remove('open');
+        el.querySelector('.lp-faq-q').setAttribute('aria-expanded','false');
+      });
+      if(!isOpen){
+        div.classList.add('open');
+        this.setAttribute('aria-expanded','true');
+      }
+    });
+    (i%2===0 ? left : right).appendChild(div);
+  });
+})();
+</script>
+
+<!-- Mobile: single column -->
+<style>
+@media(max-width:700px){
+  #lp-faq-grid { grid-template-columns:minmax(0,1fr) !important; }
+}
+</style>
 
 </main>
 
@@ -4498,7 +4498,8 @@ return { start, stop };
     (navigator.hardwareConcurrency <= 4 && navigator.deviceMemory <= 4);
   let visible = false, started = false;
   function sync() {
-    const active = visible && !document.hidden && !reduced.matches && !compact.matches && !limitedHardware;
+    const panel = svg.closest('.landing-collapse-panel');
+    const active = visible && !panel?.hidden && !document.hidden && !reduced.matches && !compact.matches && !limitedHardware;
     svg.dataset.flowMotion = active ? 'running' : 'paused';
     if (!active) { svg.pauseAnimations(); return; }
     svg.unpauseAnimations();
@@ -4509,6 +4510,12 @@ return { start, stop };
       });
     }
   }
+  function updateVisibility() {
+    const rect = svg.getBoundingClientRect();
+    visible = rect.width > 0 && rect.height > 0 && rect.bottom > 0 && rect.top < window.innerHeight;
+    sync();
+  }
+  svg.closest('#token-flow')?.addEventListener('landing:disclosurechange', updateVisibility);
   if (typeof window.IntersectionObserver === 'function') {
     new window.IntersectionObserver(entries => {
       visible = entries[entries.length - 1].isIntersecting;
@@ -4516,16 +4523,13 @@ return { start, stop };
     }).observe(svg);
   } else {
     let pending = false;
-    const update = () => {
-      pending = false;
-      const rect = svg.getBoundingClientRect();
-      visible = rect.bottom > 0 && rect.top < window.innerHeight;
-      sync();
-    };
     const schedule = () => {
       if (pending) return;
       pending = true;
-      requestAnimationFrame(update);
+      requestAnimationFrame(() => {
+        pending = false;
+        updateVisibility();
+      });
     };
     window.addEventListener('scroll', schedule, { passive: true });
     window.addEventListener('resize', schedule);
