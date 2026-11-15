@@ -11,8 +11,10 @@ const { performance } = require('node:perf_hooks');
 
 const SOURCE = { head: '8bec16dbcd44edf4ed9d7c9feb4c0d889e23fdae', tree: '5bbbf3e1d78122323d7a1360262b3c16d091d29b', docsTree: '6fd5fa86cf867e05d2fbebd31b288d6ae92809a9', manifestSHA256: '141c85d9aa65525b20bdeef4819b6cb07a910c24d58d44cd833a2c151a4625bd', count: 324, bytes: 24374988, htmlSHA256: '3a552de1fbcacb8c25f809151647d8c2ed836fac142d43ee9e294f9e0778f103' };
 const FONT_SHA = '8bff039ebb639dfbc1902204faab9eea67eb20c2f2c8c2524f588a7ee08f400d';
-// One technically qualified sandbox-prerequisite control; no app or automatic retry.
-const CONTROL_ONLY = true;
+// First qualification of preinstalled hosted Google Chrome; no fallback or retry.
+const CONTROL_ONLY = false;
+const HOSTED_CHROME = '/opt/google/chrome/chrome';
+const BROWSER_KIND = 'PREINSTALLED_GOOGLE_CHROME';
 const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.6778.86 Safari/537.36';
 const ROOT = path.resolve(__dirname, '..');
 const T = path.resolve(process.argv[3] || '/');
@@ -26,7 +28,7 @@ const PHASE_CODES = Object.freeze({
   LOOPBACK: 'LOOPBACK_FAILED', MOUNT_PRIVATE: 'MOUNT_PRIVATE_FAILED', MOUNT_BIND: 'MOUNT_BIND_FAILED', MOUNT_INVENTORY: 'MOUNT_INVENTORY_FAILED', MOUNT_HOST_RO: 'MOUNT_PATH', MOUNT_INPUT_RO: 'MOUNT_INPUT_RO_FAILED', MOUNT_VERIFY: 'WRITABLE_HOST_MOUNT', MOUNT_INPUT_VERIFY: 'IMMUTABLE_INPUT_MOUNT', ISOLATION_RECORD: 'ISOLATION_RECORD_FAILED',
   CHILD: 'CHILD_SPAWN', RESOURCE: 'RESOURCE_CAP', CHILD_WAIT: 'CHILD_EXIT', STOP: 'LOG_CAP', CLEANUP_SIGNAL: 'CLEANUP_SIGNAL_FAILED', CLEANUP_PROFILE: 'CLEANUP_PROFILE_FAILED', CLEANUP_RECORD: 'CLEANUP_RECORD_FAILED',
   RUNTIME_UID: 'UNPRIVILEGED_RUNTIME', RUNTIME_CAPS: 'PRIVILEGE_DROP', RUNTIME_NETWORK: 'RUNTIME_NETWORK_NAMESPACE', RUNTIME_TOOLS: 'RUNTIME_TOOL_IDENTITY', RUNTIME_SOURCE: 'RUNTIME_SOURCE_BINDING', RUNTIME_FONTS: 'RUNTIME_FONT_IDENTITY', CONTROL: 'CONTROL_ONLY_NO_APP_BROWSER',
-  SERVER: 'APP_OPERATION_FAILED', PW_LOAD: 'APP_OPERATION_FAILED', BROWSER_LAUNCH: 'APP_OPERATION_FAILED', BROWSER_CONTROL: 'APP_OPERATION_FAILED', CONTEXT_PAGE: 'APP_OPERATION_FAILED', POLICY: 'APP_OPERATION_FAILED', NAVIGATE: 'APP_OPERATION_FAILED', ASSERTIONS: 'APP_OPERATION_FAILED', APP_CLEANUP: 'APP_CLEANUP_FAILED'
+  SERVER: 'APP_OPERATION_FAILED', PW_LOAD: 'APP_OPERATION_FAILED', BROWSER_LAUNCH: 'APP_OPERATION_FAILED', BROWSER_CONTROL: 'APP_OPERATION_FAILED', BROWSER_PROOF: 'BROWSER_PROCESS_PROOF_REQUIRED', CONTEXT_PAGE: 'APP_OPERATION_FAILED', POLICY: 'APP_OPERATION_FAILED', NAVIGATE: 'APP_OPERATION_FAILED', ASSERTIONS: 'APP_OPERATION_FAILED', APP_CLEANUP: 'APP_CLEANUP_FAILED'
 });
 const DIAGNOSTIC_CODES = new Set(['ENTER', 'OPERATION_FAILED', 'FAILURE_RECORD_FAILED', 'DIAGNOSTIC_PROTOCOL', 'OUTPUT_OWNER_BINDING', 'OUTPUT_FILE_BINDING', 'RUNTIME_DEADLINE', 'OUTER_TERM', 'OUTER_INT', 'APP_CLEANUP_DIAGNOSTIC_FAILED', 'APP_CONTEXT_CLOSE_FAILED', 'APP_BROWSER_CLOSE_FAILED', 'APP_SERVER_CLOSE_FAILED', 'APP_RESULT_RECORD_FAILED', ...Object.values(PHASE_CODES)]);
 let phase = 'ENTRY', outputOwner, runtimeFailure = null;
@@ -157,6 +159,45 @@ function regular(file, directory = false) {
   check(fs.realpathSync(file) === file, 'SYMLINK_PARENT');
   return stat;
 }
+function bindHostedChrome() {
+  const code = 'RUNTIME_TOOL_IDENTITY', handles = [];
+  const same = (a, b) => ['dev', 'ino', 'mode', 'uid', 'gid', 'nlink', 'size', 'mtimeMs', 'ctimeMs'].every(key => a[key] === b[key]);
+  const close = () => {
+    let closed = true;
+    for (const h of handles) try { fs.closeSync(h.fd); } catch { closed = false; }
+    check(closed, code);
+  };
+  try {
+    for (const file of ['/', '/opt', '/opt/google', '/opt/google/chrome', HOSTED_CHROME]) {
+      const executable = file === HOSTED_CHROME, before = fs.lstatSync(file);
+      check(!before.isSymbolicLink() && (executable ? before.isFile() : before.isDirectory()) && fs.realpathSync(file) === file, code);
+      const fd = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW | fs.constants.O_NONBLOCK | (executable ? 0 : fs.constants.O_DIRECTORY));
+      const handle = { file, fd }; handles.push(handle);
+      const stat = fs.fstatSync(fd); handle.stat = stat;
+      check(same(before, stat) && same(stat, fs.lstatSync(file)) && stat.uid === 0 && (stat.mode & 0o022) === 0, code);
+      check(executable ? stat.isFile() && (stat.mode & 0o6000) === 0 && (stat.mode & 0o111) !== 0 &&
+        Number.isSafeInteger(stat.size) && stat.size > 0 && stat.size <= 512 * 1024 * 1024 : stat.isDirectory(), code);
+    }
+    const executable = handles[handles.length - 1];
+    const digest = fd => {
+      check(same(executable.stat, fs.fstatSync(fd)), code);
+      const hash = createHash('sha256'), bytes = Buffer.alloc(65536); let total = 0;
+      while (total < executable.stat.size) {
+        const count = fs.readSync(fd, bytes, 0, Math.min(bytes.length, executable.stat.size - total), null);
+        check(count > 0, code); total += count; hash.update(bytes.subarray(0, count));
+      }
+      check(total === executable.stat.size && same(executable.stat, fs.fstatSync(fd)), code);
+      return hash.digest('hex');
+    };
+    const revalidate = () => {
+      for (const h of handles) check(same(h.stat, fs.fstatSync(h.fd)) && same(h.stat, fs.lstatSync(h.file)) && fs.realpathSync(h.file) === h.file, code);
+    };
+    const browserSHA256 = digest(executable.fd);
+    revalidate();
+    return { browser: HOSTED_CHROME, browserKind: BROWSER_KIND, browserSHA256, revalidate,
+      verifyExecutable: fd => { check(digest(fd) === browserSHA256, code); revalidate(); }, close };
+  } catch (error) { close(); throw error; }
+}
 function fonts() {
   const rows = JSON.parse(fs.readFileSync(path.join(ROOT, 'tests/fixtures/web3-audience-fonts-20261114.json'), 'utf8'));
   check(Array.isArray(rows) && rows.length === 28 && sha(JSON.stringify(rows)) === FONT_SHA, 'FONT_MANIFEST_BINDING');
@@ -215,12 +256,13 @@ async function setup() {
   for (const row of bank) fs.writeFileSync(path.join(T, 'fonts', row.sha256), await fetchFont(row, until), { flag: 'wx', mode: 0o600 });
   const packageInfo = JSON.parse(fs.readFileSync(require.resolve('playwright/package.json'), 'utf8'));
   check(packageInfo.version === '1.64.1', 'PLAYWRIGHT_VERSION');
-  const browser = require('playwright').chromium.executablePath();
-  regular(browser);
-  const prepared = { source: SOURCE, docs: rows, node: process.execPath, nodeSHA256: sha(fs.readFileSync(process.execPath)), browser, browserSHA256: sha(fs.readFileSync(browser)), uid: process.getuid(), gid: process.getgid(), namespaces: Object.fromEntries(['net', 'mnt', 'pid'].map(n => [n, fs.readlinkSync('/proc/self/ns/' + n)])), runnerSHA256: sha(fs.readFileSync(__filename)) };
-  fs.writeFileSync(path.join(T, 'prepared.json'), JSON.stringify(prepared), { flag: 'wx', mode: 0o600 });
-  save('FONTS.json', { source: SOURCE.head, records: bank, totalBytes: 509510, status: 'HASH_VERIFIED_DATA_ONLY' });
-  save('SETUP.json', { source: SOURCE, node: process.version, playwright: packageInfo.version, nodeSHA256: prepared.nodeSHA256, browserSHA256: prepared.browserSHA256, fonts: bank.length, bytes: 509510, status: 'PREPARED_NOT_RENDERED' });
+  const binding = bindHostedChrome();
+  try {
+    const prepared = { source: SOURCE, docs: rows, node: process.execPath, nodeSHA256: sha(fs.readFileSync(process.execPath)), browser: binding.browser, browserKind: binding.browserKind, browserSHA256: binding.browserSHA256, uid: process.getuid(), gid: process.getgid(), namespaces: Object.fromEntries(['net', 'mnt', 'pid'].map(n => [n, fs.readlinkSync('/proc/self/ns/' + n)])), runnerSHA256: sha(fs.readFileSync(__filename)) };
+    fs.writeFileSync(path.join(T, 'prepared.json'), JSON.stringify(prepared), { flag: 'wx', mode: 0o600 });
+    save('FONTS.json', { source: SOURCE.head, records: bank, totalBytes: 509510, status: 'HASH_VERIFIED_DATA_ONLY' });
+    save('SETUP.json', { source: SOURCE, node: process.version, playwright: packageInfo.version, nodeSHA256: prepared.nodeSHA256, browserKind: prepared.browserKind, browserSHA256: prepared.browserSHA256, fonts: bank.length, bytes: 509510, status: 'PREPARED_NOT_RENDERED' });
+  } finally { binding.close(); }
 }
 
 async function namespace() {
@@ -453,6 +495,84 @@ async function collectSandboxPrerequisites() {
     parentBefore: before, policy, utility: { binding, outcome, cleanup, reportedFailure: recorded ? reportedFailure : 'UNKNOWN' }, parentAfter: after, descriptorCleanup };
 }
 
+function browserProcessProof(processInfo, binding) {
+  const code = 'BROWSER_PROCESS_PROOF_REQUIRED';
+  check(Array.isArray(processInfo) && processInfo.length > 0 && processInfo.length <= 128 &&
+    processInfo.every(row => row && typeof row === 'object' && !Array.isArray(row)), code);
+  const browsers = processInfo.filter(row => row.type === 'browser');
+  check(browsers.length === 1 && Number.isSafeInteger(browsers[0].id) && browsers[0].id > 0, code);
+  const root = '/proc/' + browsers[0].id, uid = process.getuid(), gid = process.getgid();
+  check(uid >= 1000 && gid >= 1000, code);
+  const read = (file, limit) => {
+    const fd = fs.openSync(file, fs.constants.O_RDONLY | fs.constants.O_NOFOLLOW | fs.constants.O_NONBLOCK);
+    try {
+      check(fs.fstatSync(fd).isFile(), code);
+      const bytes = Buffer.alloc(limit); let total = 0;
+      while (total < bytes.length) {
+        const count = fs.readSync(fd, bytes, total, bytes.length - total, null);
+        if (count === 0) break;
+        total += count;
+      }
+      check(total > 0 && total < limit, code);
+      return bytes.toString('utf8', 0, total);
+    } finally { fs.closeSync(fd); }
+  };
+  const directory = fs.openSync(root, fs.constants.O_RDONLY | fs.constants.O_DIRECTORY | fs.constants.O_NOFOLLOW | fs.constants.O_NONBLOCK);
+  try {
+    const before = fs.fstatSync(directory);
+    const stableDirectory = () => {
+      const held = fs.fstatSync(directory), named = fs.lstatSync(root);
+      check(before.isDirectory() && held.isDirectory() && named.isDirectory() &&
+        ['dev', 'ino', 'mode', 'uid', 'gid'].every(key => before[key] === held[key] && before[key] === named[key]), code);
+    };
+    const startTick = () => {
+      const stat = read(root + '/stat', 4096), end = stat.lastIndexOf(') ');
+      check(stat.startsWith(browsers[0].id + ' (') && end > 0, code);
+      const fields = stat.slice(end + 2).trim().split(/[\t \n]+/), tick = fields[19];
+      check(typeof tick === 'string' && /^[1-9][0-9]{0,19}$/.exec(tick)?.[0] === tick, code);
+      return tick;
+    };
+    stableDirectory();
+    const tick = startTick(), status = read(root + '/status', 4096);
+    const field = name => {
+      const matches = [...status.matchAll(new RegExp('^' + name + ':[\\t ]*([^\\n]*)$', 'gm'))];
+      check(matches.length === 1, code);
+      return matches[0][1];
+    };
+    for (const [name, expected] of [['Uid', uid], ['Gid', gid]]) {
+      const value = field(name);
+      check(/^(?:0|[1-9][0-9]*)(?:[\t ]+(?:0|[1-9][0-9]*)){3}[\t ]*$/.exec(value)?.[0] === value &&
+        value.trim().split(/[\t ]+/).every(n => Number.isSafeInteger(Number(n)) && Number(n) === expected), code);
+    }
+    check(field('NoNewPrivs') === '1', code);
+    for (const name of ['CapInh', 'CapPrm', 'CapEff', 'CapBnd', 'CapAmb']) {
+      const value = field(name); check(/^0{1,16}$/.exec(value)?.[0] === value, code);
+    }
+    const namespaces = {};
+    for (const name of ['net', 'mnt', 'pid']) {
+      const actual = fs.readlinkSync(root + '/ns/' + name), expected = fs.readlinkSync('/proc/self/ns/' + name);
+      check(new RegExp('^' + name + ':\\[[0-9]+\\]$').exec(actual)?.[0] === actual && actual === expected, code);
+      namespaces[name] = true;
+    }
+    const profile = read(root + '/attr/current', 128);
+    const unconfined = ['chrome (unconfined)', 'chrome (unconfined)\n'].includes(profile);
+    check(unconfined || ['chrome (enforce)', 'chrome (enforce)\n'].includes(profile), code);
+    check(fs.readlinkSync(root + '/exe') === HOSTED_CHROME, code);
+    // Deliberately follow only the checked proc executable link, then bind its held FD.
+    const executable = fs.openSync(root + '/exe', fs.constants.O_RDONLY | fs.constants.O_NONBLOCK);
+    try {
+      binding.verifyExecutable(executable);
+      check(fs.readlinkSync(root + '/exe') === HOSTED_CHROME, code);
+    } finally { fs.closeSync(executable); }
+    check(startTick() === tick, code);
+    stableDirectory(); binding.revalidate();
+    return { status: 'TOOL_CURRENT_CONTEXT_ONLY', processInfo: 'ONE_BROWSER', identity: 'MATCHED_RUNTIME',
+      noNewPrivs: 'ONE', capabilities: 'ZERO', namespaces, stockProfile: unconfined ? 'CHROME_UNCONFINED' : 'CHROME_ENFORCE',
+      executable: 'MATCHED_LAUNCHED_CHROME', processLifetime: 'STABLE_STARTTICK_AND_PROC_DIRECTORY',
+      descriptorCleanup: 'CLOSED', rawProcessDataIncluded: false };
+  } finally { fs.closeSync(directory); }
+}
+
 async function runtime() {
   mark('RUNTIME_UID');
   check(process.getuid() !== 0 && process.getuid() >= 1000, 'UNPRIVILEGED_RUNTIME');
@@ -464,7 +584,11 @@ async function runtime() {
   mark('OUTPUT_OWNER');
   const prepared = readPrepared();
   mark('RUNTIME_TOOLS');
-  check(prepared.nodeSHA256 === sha(fs.readFileSync(process.execPath)) && prepared.browserSHA256 === sha(fs.readFileSync(prepared.browser)), 'RUNTIME_TOOL_IDENTITY');
+  const boundBrowser = bindHostedChrome();
+  try {
+    check(prepared.nodeSHA256 === sha(fs.readFileSync(process.execPath)) && prepared.browser === HOSTED_CHROME &&
+      prepared.browserKind === BROWSER_KIND && prepared.browserSHA256 === boundBrowser.browserSHA256, 'RUNTIME_TOOL_IDENTITY');
+  } finally { boundBrowser.close(); }
   mark('RUNTIME_SOURCE');
   check(prepared.source.head === SOURCE.head && sha(JSON.stringify(prepared.docs)) === SOURCE.manifestSHA256, 'RUNTIME_SOURCE_BINDING');
   mark('RUNTIME_FONTS');
@@ -502,11 +626,22 @@ async function runtime() {
     mark('PW_LOAD');
     const { chromium } = require('playwright');
     mark('BROWSER_LAUNCH');
-    browser = await chromium.launch({ executablePath: prepared.browser, headless: true, chromiumSandbox: true, timeout: 30000 });
-    mark('BROWSER_CONTROL');
-    const browserCDP = await browser.newBrowserCDPSession();
-    const command = await browserCDP.send('Browser.getBrowserCommandLine');
-    check(!command.arguments.includes('--no-sandbox'), 'CHROMIUM_SANDBOX_DISABLED');
+    const launchBinding = bindHostedChrome();
+    try {
+      check(prepared.browser === HOSTED_CHROME && prepared.browserKind === BROWSER_KIND &&
+        prepared.browserSHA256 === launchBinding.browserSHA256, 'RUNTIME_TOOL_IDENTITY');
+      browser = await chromium.launch({ executablePath: HOSTED_CHROME, headless: true, chromiumSandbox: true, timeout: 30000 });
+      launchBinding.revalidate();
+      mark('BROWSER_CONTROL');
+      const browserCDP = await browser.newBrowserCDPSession();
+      const command = await browserCDP.send('Browser.getBrowserCommandLine');
+      check(!command.arguments.includes('--no-sandbox'), 'CHROMIUM_SANDBOX_DISABLED');
+      mark('BROWSER_PROOF');
+      const { processInfo } = await browserCDP.send('SystemInfo.getProcessInfo');
+      const proof = browserProcessProof(processInfo, launchBinding), browserVersion = browser.version();
+      check(typeof browserVersion === 'string' && browserVersion.length <= 64 && /^[0-9]+(?:\.[0-9]+)+$/.exec(browserVersion)?.[0] === browserVersion, 'BROWSER_PROCESS_PROOF_REQUIRED');
+      save('BROWSER-PROOF.json', { browserKind: BROWSER_KIND, browserSHA256: prepared.browserSHA256, browserVersion, ...proof });
+    } finally { launchBinding.close(); }
     for (const [width, height] of [[375, 812], [390, 844], [820, 1180], [1180, 820], [1440, 1000]]) {
       mark('CONTEXT_PAGE');
       context = await browser.newContext({ viewport: { width, height }, deviceScaleFactor: 1, reducedMotion: 'reduce', serviceWorkers: 'block', acceptDownloads: false, storageState: { cookies: [], origins: [] } });
@@ -648,7 +783,7 @@ async function runtime() {
     mark('ASSERTIONS');
     check(observations.length === 20, 'IMAGE_COUNT');
   } catch (error) {
-    runtimeFailure = { phase, code: 'APP_OPERATION_FAILED', secondaryCodes, startupSignal: 'UNKNOWN' };
+    runtimeFailure = { phase, code: phase === 'BROWSER_PROOF' ? 'BROWSER_PROCESS_PROOF_REQUIRED' : 'APP_OPERATION_FAILED', secondaryCodes, startupSignal: 'UNKNOWN' };
     try {
       const message = error?.message;
       if (typeof message === 'string' && message.length <= 32768) {
@@ -685,7 +820,7 @@ async function runtime() {
 process.umask(0o077);
 (async () => {
   mark('ENTRY'); check(['setup', 'namespace', 'runtime'].includes(MODE), 'MODE');
-  mark('ADMISSION'); check(CONTROL_ONLY, 'CONTROL_ONLY_NO_APP_BROWSER');
+  mark('ADMISSION'); check(CONTROL_ONLY === false, 'APPLICATION_MODE_REQUIRED');
   mark('HOST'); check(process.platform === 'linux' && process.version === 'v22.22.2' && process.argv.length === 4, 'HOSTED_NODE_ONLY');
   mark('ROOT'); check(/^\/home\/runner\/work\/_temp\/web3-audience-\d+-1$/.test(T), 'ONE_USE_HOSTED_ROOT');
   mark('OUTPUT'); regular(T, true); regular(OUT, true);

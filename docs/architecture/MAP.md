@@ -160,6 +160,19 @@ Selection updates the shared tabpanel label and roving tab stop synchronously;
 ArrowLeft/Right (wrapping) and Home/End auto-activate the target audience and move
 keyboard focus. This hop does not call the wallet/provider or execute rendered actions.
 
+Audience QA tool hop (2026-11-15, SOURCE_ONLY / NOT_RUN):
+`qa-web3-audience.yml` -> `qa-web3-audience-visual.cjs::setup/bindHostedChrome`
+binds only preinstalled root-owned `/opt/google/chrome/chrome` (held descriptors,
+trusted ancestors, bounded SHA256), then rebinds before the existing sandboxed
+Chromium-engine launch. `SystemInfo.getProcessInfo` -> `browserProcessProof`
+requires one browser, runtime UID/GID, NNP, zero caps, matching net/mnt/pid
+namespaces, exact stock chrome unconfined/enforce label, live executable
+metadata/hash and stable starttick/proc-directory identity. Root file descriptors
+remain held and revalidated through launch and proof. No install,
+fallback, custom policy or guard relaxation; the existing 20 audience assertions
+and prior prerequisite collector remain. Parent owns fixtures, independent review,
+fresh one-attempt admission and image review; no app/live acceptance is claimed.
+
 Issue #382 isolated diagnostic accepted on 2026-10-31
 ([PR #418](https://github.com/NeaBouli/inferno/pull/418);
 [CI2 run 41239848840](https://github.com/NeaBouli/inferno/actions/runs/41239848840)).
