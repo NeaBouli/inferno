@@ -1734,12 +1734,12 @@
           <p class="lead">The Web3 page should stay light: one clear action surface for holders, one entry point for builders, and proof for developers who want to verify the system.</p>
         </div>
         <div class="audience-tabs" role="tablist" aria-label="Audience selector">
-          <button class="audience-tab" type="button" role="tab" aria-selected="true" data-audience="users">Users</button>
-          <button class="audience-tab" type="button" role="tab" aria-selected="false" data-audience="builders">Builders</button>
-          <button class="audience-tab" type="button" role="tab" aria-selected="false" data-audience="developers">Developers</button>
-          <button class="audience-tab" type="button" role="tab" aria-selected="false" data-audience="community">Community</button>
+          <button class="audience-tab" id="audience-tab-users" type="button" role="tab" aria-controls="audience-panel" aria-selected="true" tabindex="0" data-audience="users">Users</button>
+          <button class="audience-tab" id="audience-tab-builders" type="button" role="tab" aria-controls="audience-panel" aria-selected="false" tabindex="-1" data-audience="builders">Builders</button>
+          <button class="audience-tab" id="audience-tab-developers" type="button" role="tab" aria-controls="audience-panel" aria-selected="false" tabindex="-1" data-audience="developers">Developers</button>
+          <button class="audience-tab" id="audience-tab-community" type="button" role="tab" aria-controls="audience-panel" aria-selected="false" tabindex="-1" data-audience="community">Community</button>
         </div>
-        <div class="audience-detail" data-audience-panel>
+        <div class="audience-detail" id="audience-panel" role="tabpanel" aria-labelledby="audience-tab-users" data-audience-panel>
           <div>
             <h3 data-audience-title>Lock once. Use across the ecosystem.</h3>
             <p data-audience-copy>Holders can connect, check IFR balance, use the simple IFRLock access lock, manage CommitmentVault tranches, and withdraw retired LendingVault V1 offers without hunting through the full documentation tree.</p>
@@ -2266,15 +2266,36 @@
           return `<a class="${classes}" href="${action.href}"${target}>${action.label}</a>`;
         }).join("");
       }
-      document.querySelectorAll("[data-audience]").forEach((tab) => {
-        tab.addEventListener("click", () => {
-          const data = audiences[tab.dataset.audience];
-          document.querySelectorAll("[data-audience]").forEach((el) => el.setAttribute("aria-selected", "false"));
-          tab.setAttribute("aria-selected", "true");
-          title.textContent = data.title;
-          copy.textContent = data.copy;
-          list.innerHTML = data.items.map((item) => `<li>${item}</li>`).join("");
-          renderAudienceActions(data.actions || []);
+      const audienceTabs = Array.from(document.querySelectorAll("[data-audience]"));
+      const audiencePanel = document.querySelector("[data-audience-panel]");
+      function activateAudience(tab) {
+        const data = audiences[tab.dataset.audience];
+        audienceTabs.forEach((el) => {
+          const selected = el === tab;
+          el.setAttribute("aria-selected", String(selected));
+          el.tabIndex = selected ? 0 : -1;
+        });
+        audiencePanel.setAttribute("aria-labelledby", tab.id);
+        title.textContent = data.title;
+        copy.textContent = data.copy;
+        list.innerHTML = data.items.map((item) => `<li>${item}</li>`).join("");
+        renderAudienceActions(data.actions || []);
+      }
+      audienceTabs.forEach((tab, index) => {
+        tab.addEventListener("click", () => activateAudience(tab));
+        tab.addEventListener("keydown", (event) => {
+          let nextIndex;
+          switch (event.key) {
+            case "ArrowRight": nextIndex = (index + 1) % audienceTabs.length; break;
+            case "ArrowLeft": nextIndex = (index - 1 + audienceTabs.length) % audienceTabs.length; break;
+            case "Home": nextIndex = 0; break;
+            case "End": nextIndex = audienceTabs.length - 1; break;
+            default: return;
+          }
+          event.preventDefault();
+          const nextTab = audienceTabs[nextIndex];
+          activateAudience(nextTab);
+          nextTab.focus();
         });
       });
 
