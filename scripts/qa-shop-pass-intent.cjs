@@ -608,11 +608,8 @@ while IFS=' ' read -r length target; do
   esac
   /usr/bin/mount -o remount,bind,ro "$target"
 done < "$scratch/read-only-mounts"
-diagnostic_code=RO_TARGET_ROOT
-/usr/bin/mount -o remount,bind,ro=recursive / /
 diagnostic_stage=BOOTSTRAP_PRIVATE
 diagnostic_code=BOOTSTRAP_FAILED
-/usr/bin/mount -o remount,bind,rw "$scratch" "$scratch"
 /usr/bin/mount -t proc -o ro,nosuid,nodev,noexec proc /proc
 diagnostic_stage=RO_VERIFY
 diagnostic_code=RO_VERIFY_META
@@ -628,7 +625,7 @@ canonical_ids_sha=$(
 test "$original_ids_sha" = "$canonical_ids_sha"
 diagnostic_code=RO_VERIFY_IDS
 /usr/bin/awk -v work="$work_id" '
-  # Statuses11..17 are guard diagnostics, not kernel errno.
+  # Guard statuses are finite diagnostics, not kernel errno.
   FILENAME == ARGV[1] {
     if (FNR > 4096 || $0 !~ /^[1-9][0-9]*$/ || length($0) > 20 || original["x" $0]++) { bad=11; exit bad }
     original_count++; next
@@ -638,9 +635,18 @@ diagnostic_code=RO_VERIFY_IDS
     if (current_count > 4096 || NF < 10 || $1 !~ /^[1-9][0-9]*$/ || length($1) > 20 || current["x" $1]++ || $5 !~ /^\// || $5 ~ /\\/) { bad=12; exit bad }
     for (i=7; i<=NF && $i!="-"; i++) if ($i ~ /^(shared|master|propagate_from):/) { bad=13; exit bad }
     if (i < 7 || i + 3 != NF || $i != "-") { bad=12; exit bad }
-    if ((("x" $1) != ("x" work) && ("," $6 ",") ~ /,rw,/) || (("x" $1) == ("x" work) && ("," $6 ",") ~ /,ro,/)) { bad=14; exit bad }
+    if ((("x" $1) != ("x" work) && ("," $6 ",") ~ /,rw,/) || (("x" $1) == ("x" work) && ("," $6 ",") ~ /,ro,/)) {
+      bad=64
+      if (("x" $1) != ("x" work)) {
+        bucket = $5 == "/" ? 0 : $5 ~ /^\/proc(\/|$)/ ? 1 : $5 ~ /^\/sys(\/|$)/ ? 2 : $5 ~ /^\/dev(\/|$)/ ? 3 : $5 ~ /^\/(home|workspace)(\/|$)/ ? 4 : 5
+        kind = $(i+1) == "autofs" ? 0 : $(i+1) == "proc" ? 1 : $(i+1) == "tmpfs" ? 2 : 3
+        bad=80 + 4*bucket + kind
+        if (!(("x" $1) in original)) bad+=32
+      }
+      exit bad
+    }
   }
-  ("x" $1) != ("x" work) && ("," $6 ",") !~ /,ro,/ { bad=14; exit bad }
+  ("x" $1) != ("x" work) && ("," $6 ",") !~ /,ro,/ { bad=65; exit bad }
   ("x" $1) == ("x" work) && ("," $6 ",") !~ /,rw,/ { bad=15; exit bad }
   END {
     if (bad) exit bad
