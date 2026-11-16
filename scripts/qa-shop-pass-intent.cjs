@@ -476,18 +476,44 @@ bootstrap_exit() {
     if [ "$diagnostic_exit" -lt 1 ] || [ "$diagnostic_exit" -gt 255 ]; then diagnostic_exit=1; fi
     if [ "$diagnostic_stage:$diagnostic_code" = RO_REMOUNT:RO_TARGET_PROC ]; then
       diagnostic_sha256=FORMAT_HOLD
-      # Validate the raw digest stream and utility status before shell capture.
+      # Encode raw bytes before awk; no dependence on its embedded-NUL behavior.
       if diagnostic_validated=$({
-        if printf '%s' "$target" | /usr/bin/sha256sum 2>/dev/null; then
-          printf '0\n'
+        if {
+          if printf '%s' "$target" | /usr/bin/sha256sum 2>/dev/null; then
+            printf '0\n'
+          else
+            printf '1\n'
+          fi
+        } | /usr/bin/od -An -v -tx1 2>/dev/null; then
+          printf 'QA_OD_OK\n'
         else
-          printf '1\n'
+          printf 'QA_OD_FAIL\n'
         fi
       } | /usr/bin/awk '
-          NR == 1 && length($0) == 67 && substr($0,65) == "  -" && substr($0,1,64) !~ /[^a-f0-9]/ { hash = substr($0,1,64); next }
-          NR == 2 && $0 == "0" { complete = 1; next }
-          { exit 1 }
-          END { if (NR != 2 || !complete || length(hash) != 64) exit 1; print hash }
+          BEGIN {
+            alphabet["x30"]="0"; alphabet["x31"]="1"; alphabet["x32"]="2"; alphabet["x33"]="3"
+            alphabet["x34"]="4"; alphabet["x35"]="5"; alphabet["x36"]="6"; alphabet["x37"]="7"
+            alphabet["x38"]="8"; alphabet["x39"]="9"; alphabet["x61"]="a"; alphabet["x62"]="b"
+            alphabet["x63"]="c"; alphabet["x64"]="d"; alphabet["x65"]="e"; alphabet["x66"]="f"
+            suffix[65]="20"; suffix[66]="20"; suffix[67]="2d"; suffix[68]="0a"; suffix[69]="30"; suffix[70]="0a"
+          }
+          $0 == "QA_OD_OK" {
+            if (NR != 6 || n != 70 || complete) { bad=1; exit 1 }
+            complete=1; next
+          }
+          {
+            if (complete || NR > 5 || NF != (NR < 5 ? 16 : 6)) { bad=1; exit 1 }
+            for (i=1; i<=NF; i++) {
+              n++; token=$i
+              if (token !~ /^[0-9a-f][0-9a-f]$/) { bad=1; exit 1 }
+              if (n <= 64) {
+                key="x" token
+                if (!(key in alphabet)) { bad=1; exit 1 }
+                hash=hash alphabet[key]
+              } else if (("x" token) != ("x" suffix[n])) { bad=1; exit 1 }
+            }
+          }
+          END { if (bad || NR != 6 || !complete || n != 70 || length(hash) != 64) exit 1; print hash }
       ' 2>/dev/null); then
         diagnostic_sha256=$diagnostic_validated
       fi
@@ -620,7 +646,7 @@ async function main() {
       await command('chromium-install', process.execPath, [path.join(source, 'node_modules/playwright/cli.js'), 'install', '--with-deps', 'chromium'], 180_000, source);
       acquisition = { npm: npmVersion, versions: versions.map(([, name, version]) => ({ name, version })), browserManifestSha256: digest(path.join(source, 'node_modules/playwright-core/browsers.json')) };
     }
-    const utilities = ['/usr/bin/sudo', '/usr/bin/unshare', '/usr/bin/setpriv', '/usr/sbin/ip', '/bin/sh', '/bin/kill', '/usr/bin/env', '/usr/bin/mount', '/usr/bin/awk', '/usr/bin/sort', '/usr/bin/stat', '/usr/bin/readlink', '/usr/bin/sha256sum'];
+    const utilities = ['/usr/bin/sudo', '/usr/bin/unshare', '/usr/bin/setpriv', '/usr/sbin/ip', '/bin/sh', '/bin/kill', '/usr/bin/env', '/usr/bin/mount', '/usr/bin/awk', '/usr/bin/sort', '/usr/bin/stat', '/usr/bin/readlink', '/usr/bin/sha256sum', '/usr/bin/od'];
     const tools = utilities.map(file => {
       const resolved = fs.realpathSync(file);
       const stat = fs.statSync(resolved);
