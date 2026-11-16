@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { test } = require('node:test');
+const { types: { isProxy } } = require('node:util');
 const vm = require('node:vm');
 
 const source = fs.readFileSync(path.join(__dirname, 'qa-web3-audience-visual.cjs'), 'utf8');
@@ -13,8 +14,10 @@ assert.ok(start >= 0 && end > start, 'pure helper boundaries must exist');
 const helperSource = source.slice(start, end);
 // Compile the runner only. Evaluate just the trusted pure helper, never its entry point.
 new vm.Script(source, { filename: 'qa-web3-audience-visual.cjs' });
+// Only isProxy crosses into this trusted unit VM; no require or runner imports.
+// Fixed helper mutations below are trusted test source, not hostile code isolation.
 const loadHelper = text => new vm.Script(text + '\nstartupDiagnostics;').runInNewContext(
-  Object.create(null), { timeout: 1000, contextCodeGeneration: { strings: false, wasm: false } }
+  Object.assign(Object.create(null), { isProxy }), { timeout: 1000, contextCodeGeneration: { strings: false, wasm: false } }
 );
 const classify = loadHelper(helperSource);
 const details = [
@@ -58,6 +61,43 @@ function assertDetailFixtures(helper) {
   assert.deepEqual(closedResult(helper({ message: combined + '\n' + combined })), {
     startupSignal: 'SANDBOX_MESSAGE', startupDetails: detailCodes
   });
+}
+function assertAccessorFixtures(helper) {
+  for (const behavior of ['return', 'throw', 'side-effect']) {
+    let reads = 0;
+    const effects = [];
+    const error = Object.defineProperty({}, 'message', { get() {
+      reads++;
+      if (behavior === 'throw') throw new Error('RAW_SENTINEL');
+      if (behavior === 'side-effect') effects.push('RAW_SENTINEL');
+      return 'Permission denied';
+    } });
+    assert.deepEqual(closedResult(helper(error)), unknown, behavior);
+    assert.equal(reads, 0, behavior + ' getter must never run');
+    assert.deepEqual(effects, [], behavior + ' must have no side effects');
+  }
+  let writes = 0;
+  assert.deepEqual(closedResult(helper(Object.defineProperty({}, 'message', { set() { writes++; } }))), unknown);
+  assert.equal(writes, 0);
+}
+function assertProxyFixtures(helper) {
+  for (const throwing of [false, true]) {
+    const calls = { get: 0, getOwnPropertyDescriptor: 0, has: 0, ownKeys: 0, getPrototypeOf: 0 };
+    const zero = { ...calls };
+    const handler = Object.fromEntries(Object.keys(calls).map(trap => [trap, (...args) => {
+      calls[trap]++;
+      if (throwing) throw new Error('RAW_SENTINEL');
+      return Reflect[trap](...args);
+    }]));
+    const revocable = Proxy.revocable({ message: 'No usable sandbox; Permission denied' }, handler);
+    for (const error of [revocable.proxy, new Proxy(revocable.proxy, handler)]) {
+      assert.deepEqual(closedResult(helper(error)), unknown);
+      assert.deepEqual(calls, zero, 'live proxy traps must never run');
+    }
+    revocable.revoke();
+    assert.deepEqual(closedResult(helper(revocable.proxy)), unknown);
+    assert.deepEqual(calls, zero, 'revoked proxy traps must never run');
+  }
 }
 
 test('all ten observations: individual, case-insensitive, combined, fixed order, deduplicated, max ten', () => {
@@ -112,17 +152,25 @@ test('null, primitives, missing/non-string/boxed messages do not stringify or cl
   assert.deepEqual(closedResult(classify(new Error('Timeout'))), { startupSignal: 'TIMEOUT_MESSAGE', startupDetails: [] });
 });
 
-test('throwing own message getter fails closed; valid own getter is read exactly once', () => {
-  let reads = 0;
-  assert.deepEqual(closedResult(classify({ get message() { reads++; throw new Error('RAW_SENTINEL'); } })), unknown);
-  assert.equal(reads, 1);
-  reads = 0;
-  assert.deepEqual(closedResult(classify({ get message() { reads++; return 'Permission denied'; } })), {
-    startupSignal: 'UNKNOWN', startupDetails: ['PERMISSION_DENIED']
-  });
-  assert.equal(reads, 1);
-  const revoked = Proxy.revocable({}, {}); revoked.revoke();
-  assert.deepEqual(closedResult(classify(revoked.proxy)), unknown);
+test('own returning/throwing/side-effect message accessors fail closed without any calls', () => {
+  assertAccessorFixtures(classify);
+});
+
+test('live, nested and revoked proxies fail closed before any property or reflection traps', () => {
+  assertProxyFixtures(classify);
+});
+
+test('ordinary Error and own primitive data descriptors classify regardless of descriptor flags', () => {
+  const expected = { startupSignal: 'SANDBOX_MESSAGE', startupDetails: ['NO_USABLE_SANDBOX'] };
+  assert.deepEqual(closedResult(classify(new Error('No usable sandbox'))), expected);
+  for (const enumerable of [false, true]) {
+    for (const writable of [false, true]) {
+      for (const configurable of [false, true]) {
+        const error = Object.create(null, { message: { value: 'No usable sandbox', enumerable, writable, configurable } });
+        assert.deepEqual(closedResult(classify(error)), expected);
+      }
+    }
+  }
 });
 
 test('inherited arbitrary properties and all non-message error fields are never inspected', () => {
@@ -170,7 +218,7 @@ test('catch and both receipt joins retain the closed helper fields (source-only)
   assert.match(failure, /startupSignal: runtimeFailure\.startupSignal \|\| null, startupDetails: runtimeFailure\.startupDetails \|\| \[\], secondaryCodes: runtimeFailure\.secondaryCodes/);
 });
 
-test('fixtures reject deletion of each individual detail and raw message/error return mutations', () => {
+test('fixtures reject individual detail deletion, raw returns and accessor/proxy guard mutations', () => {
   for (const code of detailCodes) {
     const mutant = helperSource.replace(new RegExp("^      \\['" + code + "',.*\\n", 'm'), '');
     assert.notEqual(mutant, helperSource, code + ' mutation must change the helper');
@@ -180,5 +228,15 @@ test('fixtures reject deletion of each individual detail and raw message/error r
     const mutant = helperSource.replace('return { startupSignal, startupDetails };', `return { startupSignal, startupDetails, ${raw} };`);
     assert.notEqual(mutant, helperSource, raw + ' mutation must change the helper');
     assert.throws(() => assertDetailFixtures(loadHelper(mutant)), assert.AssertionError, raw + ' return must fail');
+  }
+  for (const [before, after, fixtures] of [
+    ["    if (!descriptor || !Object.hasOwn(descriptor, 'value')) return unknown;\n    const message = descriptor.value;",
+      '    const message = error.message;', assertAccessorFixtures],
+    [' || isProxy(error)', '', assertProxyFixtures],
+    [' || isProxy(error)', ' || (Reflect.ownKeys(error), isProxy(error))', assertProxyFixtures]
+  ]) {
+    const mutant = helperSource.replace(before, after);
+    assert.notEqual(mutant, helperSource, 'guard mutation must change the helper');
+    assert.throws(() => fixtures(loadHelper(mutant)), assert.AssertionError, 'guard mutation must fail');
   }
 });

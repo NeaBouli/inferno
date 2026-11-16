@@ -8,6 +8,7 @@ const http = require('node:http');
 const { createHash } = require('node:crypto');
 const { spawn, execFileSync } = require('node:child_process');
 const { performance } = require('node:perf_hooks');
+const { types: { isProxy } } = require('node:util');
 
 const SOURCE = { head: '3c6ed8301c508e38e8024d03ac144adef80e5c68', tree: '6a224ab0c0b75cbea773daa6b0db2c0a962adfb9', docsTree: '99d0420c1b0d60a63a135f3ad066c35e9becc6f0', manifestSHA256: '6dd5944ce89742736cd52e14c0cf59cc9448216be68313c3f2edbd11dc6c3e31', count: 324, bytes: 24384950, htmlSHA256: '3a552de1fbcacb8c25f809151647d8c2ed836fac142d43ee9e294f9e0778f103' };
 const FONT_SHA = '8bff039ebb639dfbc1902204faab9eea67eb20c2f2c8c2524f588a7ee08f400d';
@@ -48,8 +49,10 @@ function preserveBindingFailure(error, cleanup) {
 function startupDiagnostics(error) {
   const unknown = { startupSignal: 'UNKNOWN', startupDetails: [] };
   try {
-    if (!error || typeof error !== 'object' || !Object.hasOwn(error, 'message')) return unknown;
-    const message = error.message;
+    if (!error || typeof error !== 'object' || isProxy(error)) return unknown;
+    const descriptor = Object.getOwnPropertyDescriptor(error, 'message');
+    if (!descriptor || !Object.hasOwn(descriptor, 'value')) return unknown;
+    const message = descriptor.value;
     if (typeof message !== 'string' || message.length > 32768) return unknown;
     const startupSignal = /No usable sandbox|Failed to move to new namespace|SUID sandbox/i.test(message) ? 'SANDBOX_MESSAGE'
       : /Executable (?:doesn't|does not) exist|executable (?:is |was )?not found/i.test(message) ? 'EXECUTABLE_MESSAGE'
