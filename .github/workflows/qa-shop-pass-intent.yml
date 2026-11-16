@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      QA_SHOP_HELPER_SHA256: 81d8ab19cb0f9920c707ebf008e7c82b29b2b93f3cb026913774a28ed5b73e30
+      QA_SHOP_HELPER_SHA256: 2046bc61691e4db369aa31d4942b29f2d6a867df2f111bdb1656996043a36270
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
