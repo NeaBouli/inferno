@@ -46,6 +46,7 @@ const DIAGNOSTIC_ERRORS = new Set(`
   TRACKED_INPUT_DRIFT NPM_TOOLCHAIN INSTALLED_VERSION_MISMATCH SYSTEM_TOOL_OWNERSHIP NODE_EXECUTABLE_DRIFT
   RUNTIME_RECEIPT_MISSING CONTROL_RECEIPT_MISSING FINAL_CLEANUP_UNCERTAIN NOT_ACCEPTED RUNTIME_PRIVILEGE NAMESPACE_NOT_ISOLATED
   MOUNT_IPC_NAMESPACE_NOT_ISOLATED CAPABILITIES_NOT_DROPPED NETWORK_INTERFACE_NOT_LOOPBACK_ONLY
+  PRIVATE_PROC_MOUNT PRIVATE_PROC_PID
   WORKER_IDENTITY MOUNT_ID_UNAVAILABLE SCRATCH_MOUNTS_NOT_DISTINCT MOUNT_COUNT MOUNTINFO_SHAPE
   MOUNT_PROPAGATION SCRATCH_MOUNT_FLAGS PRIVATE_SHM_FLAGS HOST_MOUNT_WRITABLE PRIVATE_TMP_BIND
   NAMESPACE_PORT_ALREADY_USED OUTER_DEADLINE SPAWN_FAILED UNOWNED_PROCESS_GROUP PROCESS_COUNT_CAP
@@ -359,22 +360,31 @@ function mountId(directory) {
 function assertWriteBoundary() {
   const allowed = new Map([[mountId(root), root], [mountId('/tmp'), '/tmp'], [mountId('/dev/shm'), '/dev/shm']]);
   insist(allowed.size === 3, 'SCRATCH_MOUNTS_NOT_DISTINCT');
+  const procId = mountId('/proc');
+  insist(/^[1-9][0-9]{0,19}$/.test(procId) && !allowed.has(procId), 'PRIVATE_PROC_MOUNT');
   const text = fs.readFileSync('/proc/self/mountinfo', 'utf8');
   const rows = text.trim().split('\n');
   insist(rows.length > 3 && rows.length <= 4096, 'MOUNT_COUNT');
   let writable = 0;
+  let procMounts = 0;
   for (const line of rows) {
     const fields = line.split(' ');
     const separator = fields.indexOf('-');
     insist(separator >= 6 && fields[4].startsWith('/') && !fields[4].includes('\\'), 'MOUNTINFO_SHAPE');
     insist(!fields.slice(6, separator).some(field => /^(shared|master|propagate_from):/.test(field)), 'MOUNT_PROPAGATION');
     const options = new Set(fields[5].split(','));
+    if (fields[0] === procId) {
+      insist(fields[4] === '/proc' && fields[3] === '/' && separator + 4 === fields.length && fields[separator + 1] === 'proc'
+        && options.has('ro') && !options.has('rw') && options.has('nosuid') && options.has('nodev') && options.has('noexec'), 'PRIVATE_PROC_MOUNT');
+      procMounts += 1;
+    }
     if (allowed.has(fields[0])) {
       insist(fields[4] === allowed.get(fields[0]) && options.has('rw') && !options.has('ro') && options.has('nosuid') && options.has('nodev'), 'SCRATCH_MOUNT_FLAGS');
       if (fields[4] === '/dev/shm') insist(fields[separator + 1] === 'tmpfs' && options.has('noexec'), 'PRIVATE_SHM_FLAGS');
       writable += 1;
     } else insist(options.has('ro') && !options.has('rw'), 'HOST_MOUNT_WRITABLE');
   }
+  insist(procMounts === 1, 'PRIVATE_PROC_MOUNT');
   const tmp = fs.statSync('/tmp');
   const backing = fs.statSync(path.join(root, 'tmp'));
   insist(writable === 3 && tmp.dev === backing.dev && tmp.ino === backing.ino, 'PRIVATE_TMP_BIND');
@@ -386,6 +396,8 @@ function assertNamespace() {
   insist(fs.readlinkSync('/proc/self/ns/net') !== context.hostNet && fs.readlinkSync('/proc/self/ns/pid') !== context.hostPid, 'NAMESPACE_NOT_ISOLATED');
   insist(fs.readlinkSync('/proc/self/ns/mnt') !== context.hostMount && fs.readlinkSync('/proc/self/ns/ipc') !== context.hostIpc, 'MOUNT_IPC_NAMESPACE_NOT_ISOLATED');
   const status = fs.readFileSync('/proc/self/status', 'utf8');
+  const namespacePids = status.match(/^NSpid:[^\n]*$/gm);
+  insist(namespacePids?.length === 1 && /^NSpid:[ \t]+([1-9][0-9]*)[ \t]*$/.exec(namespacePids[0])?.[1] === String(process.pid), 'PRIVATE_PROC_PID');
   insist(/^NoNewPrivs:\s+1$/m.test(status) && /^CapEff:\s+0+$/m.test(status), 'CAPABILITIES_NOT_DROPPED');
   const devices = fs.readFileSync('/proc/net/dev', 'utf8').split('\n').filter(line => line.includes(':')).map(line => line.split(':')[0].trim());
   insist(devices.length === 1 && devices[0] === 'lo', 'NETWORK_INTERFACE_NOT_LOOPBACK_ONLY');
@@ -544,6 +556,20 @@ work_id=$(/usr/bin/awk '$1 == "mnt_id:" { print $2; found=1 } END { if (!found) 
 exec 9<&-
 test -n "$work_id"
 diagnostic_stage=RO_SCAN
+# Retain exact decimal IDs, including covered mounts, before changing the proc view.
+test ! -e "$scratch/original-mount-ids"
+test ! -L "$scratch/original-mount-ids"
+(
+  set -C
+  /usr/bin/awk '
+    NR > 4096 || NF < 10 || $1 !~ /^[1-9][0-9]*$/ || length($1) > 20 || seen["x" $1]++ { bad=1; exit 1 }
+    { print $1 }
+    END { if (bad || NR < 1) exit 1 }
+  ' /proc/self/mountinfo > "$scratch/original-mount-ids"
+)
+test "$(/usr/bin/stat -c '%u:%a:%h:%F' "$scratch/original-mount-ids")" = '0:600:1:regular file'
+original_ids_bytes=$(/usr/bin/stat -c '%s' "$scratch/original-mount-ids")
+test "$original_ids_bytes" -ge 1; test "$original_ids_bytes" -le 86016
 /usr/bin/awk -v work="$work_id" '
   NR > 4096 || NF < 10 || $5 !~ /^\// || $5 ~ /\\/ { exit 1 }
   { for (i=7; i<=NF && $i!="-"; i++) if ($i ~ /^(shared|master|propagate_from):/) exit 1 }
@@ -577,12 +603,33 @@ while IFS=' ' read -r length target; do
   esac
   /usr/bin/mount -o remount,bind,ro "$target"
 done < "$scratch/read-only-mounts"
+diagnostic_stage=BOOTSTRAP_PRIVATE
+diagnostic_code=BOOTSTRAP_FAILED
+/usr/bin/mount -t proc -o ro,nosuid,nodev,noexec proc /proc
 diagnostic_stage=RO_VERIFY
 diagnostic_code=BOOTSTRAP_FAILED
+test "$(/usr/bin/stat -c '%u:%a:%h:%F' "$scratch/original-mount-ids")" = '0:600:1:regular file'
+original_ids_bytes=$(/usr/bin/stat -c '%s' "$scratch/original-mount-ids")
+test "$original_ids_bytes" -ge 1; test "$original_ids_bytes" -le 86016
 /usr/bin/awk -v work="$work_id" '
+  FILENAME == ARGV[1] {
+    if (FNR > 4096 || $0 !~ /^[1-9][0-9]*$/ || length($0) > 20 || original["x" $0]++) { bad=1; exit 1 }
+    original_count++; next
+  }
+  {
+    current_count++
+    if (current_count > 4096 || NF < 10 || $1 !~ /^[1-9][0-9]*$/ || length($1) > 20 || current["x" $1]++ || $5 !~ /^\// || $5 ~ /\\/) { bad=1; exit 1 }
+    for (i=7; i<=NF && $i!="-"; i++) if ($i ~ /^(shared|master|propagate_from):/) { bad=1; exit 1 }
+    if (i < 7 || i + 3 != NF || $i != "-") { bad=1; exit 1 }
+    if (($1 != work && ("," $6 ",") ~ /,rw,/) || ($1 == work && ("," $6 ",") ~ /,ro,/)) { bad=1; exit 1 }
+  }
   $1 != work && ("," $6 ",") !~ /,ro,/ { exit 1 }
   $1 == work && ("," $6 ",") !~ /,rw,/ { exit 1 }
-' /proc/self/mountinfo
+  END {
+    if (bad || original_count < 1 || current_count < 1 || !original["x" work]) exit 1
+    for (id in original) if (!(id in current)) exit 1
+  }
+' "$scratch/original-mount-ids" /proc/self/mountinfo
 diagnostic_stage=TMP_SHM
 /usr/bin/mount -o remount,bind,rw,nosuid,nodev "$scratch"
 /usr/bin/mount --bind "$scratch/tmp" /tmp
@@ -660,7 +707,7 @@ async function main() {
     const context = { uid: process.getuid(), gid: process.getgid(), hostNet: fs.readlinkSync('/proc/self/ns/net'), hostPid: fs.readlinkSync('/proc/self/ns/pid'), hostMount: fs.readlinkSync('/proc/self/ns/mnt'), hostIpc: fs.readlinkSync('/proc/self/ns/ipc'), nonce: crypto.randomBytes(24).toString('hex'), endAt };
     write(path.join(root, 'context.json'), context);
     privileged = true;
-    await command('namespace', '/usr/bin/sudo', ['-n', '/usr/bin/unshare', '--mount', '--net', '--ipc', '--pid', '--fork', '--mount-proc', '--kill-child=SIGKILL', '/bin/sh', '-c', NAMESPACE_SCRIPT, 'qa-shop-pass-intent', String(context.uid), String(context.gid), cleanEnv().PATH, root, context.nonce, process.env.QA_SHOP_HELPER_SHA256, process.execPath, __filename, context.hostMount, context.hostNet, context.hostPid, context.hostIpc], 670_000, source, cleanEnv(), true);
+    await command('namespace', '/usr/bin/sudo', ['-n', '/usr/bin/unshare', '--mount', '--net', '--ipc', '--pid', '--fork', '--kill-child=SIGKILL', '/bin/sh', '-c', NAMESPACE_SCRIPT, 'qa-shop-pass-intent', String(context.uid), String(context.gid), cleanEnv().PATH, root, context.nonce, process.env.QA_SHOP_HELPER_SHA256, process.execPath, __filename, context.hostMount, context.hostNet, context.hostPid, context.hostIpc], 670_000, source, cleanEnv(), true);
     if (CONTROL_ONLY) {
       const control = json(path.join(root, 'public', 'control-only.json'));
       insist(control.mode === 'CONTROL_ONLY' && control.candidate === CANDIDATE && control.candidateTree === TARGET_TREE && control.sourceChecksPassed === true && control.namespaceChecksPassed === true, 'CONTROL_RECEIPT_MISSING');
