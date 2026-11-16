@@ -67,15 +67,16 @@ function insist(condition, code) { if (!condition) throw Object.assign(new Error
 function sha(bytes) { return crypto.createHash('sha256').update(bytes).digest('hex'); }
 function json(file) { return JSON.parse(fs.readFileSync(file, 'utf8')); }
 function write(file, value) { fs.writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`, { flag: 'wx', mode: 0o600 }); }
-function diagnosticCode(error) { return DIAGNOSTIC_ERRORS.has(error?.code) ? error.code : 'UNKNOWN_FAILURE'; }
+function diagnosticCode(error) { const code = error?.code; return DIAGNOSTIC_ERRORS.has(code) ? code : 'UNKNOWN_FAILURE'; }
 function diagnosticExit(code) { return Number.isInteger(code) && code >= 1 && code <= 255 ? code : 1; }
 function writeFailure(name, stage, error, exitCode, targetSha256) {
   insist(FAILURE_NAMES.includes(name), 'DIAGNOSTIC_WRITE_FAILED');
   const directory = path.join(root, 'public');
   insist(process.getuid() !== 0 && fs.statSync(directory).uid === process.getuid(), 'DIAGNOSTIC_WRITE_FAILED');
   const stages = new Set(['BOOTSTRAP_PRIVATE', 'RO_SCAN', 'RO_SORT', 'RO_REMOUNT', 'RO_VERIFY', 'TMP_SHM', 'UID_DROP', 'WORKER', 'PRELOAD', 'DIAGNOSTIC']);
-  const receipt = stages.has(stage) && (stage === 'RO_VERIFY' || !['RO_VERIFY_META', 'RO_VERIFY_HASH', 'RO_VERIFY_IDS'].includes(error?.code))
-    ? { stage, errorCode: diagnosticCode(error), exitCode: diagnosticExit(exitCode) }
+  const code = diagnosticCode(error);
+  const receipt = stages.has(stage) && (stage === 'RO_VERIFY' || !['RO_VERIFY_META', 'RO_VERIFY_HASH', 'RO_VERIFY_IDS'].includes(code))
+    ? { stage, errorCode: code, exitCode: diagnosticExit(exitCode) }
     : { stage: 'DIAGNOSTIC', errorCode: 'FORMAT_HOLD', exitCode: 1 };
   if (targetSha256 !== undefined) {
     if (name === 'bootstrap-failure.json' && receipt.stage === 'RO_REMOUNT' && receipt.errorCode === 'RO_TARGET_PROC' && typeof targetSha256 === 'string' && targetSha256.length === 64 && /^[a-f0-9]{64}$/.test(targetSha256)) receipt.targetSha256 = targetSha256;
