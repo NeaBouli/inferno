@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 
-// Last-slot CONTROL_ONLY source; actual Parent admission/review is required.
+// One CONTROL_ONLY source; actual Parent admission/review is required.
 // The final helper004 test is bound below; 7a is not an executable alternative.
 const RUNTIME_ADMITTED = false;
 const CONTROL_ONLY = true;
@@ -67,7 +67,23 @@ let privileged = false;
 function insist(condition, code) { if (!condition) throw Object.assign(new Error(code), { code }); }
 function sha(bytes) { return crypto.createHash('sha256').update(bytes).digest('hex'); }
 function json(file) { return JSON.parse(fs.readFileSync(file, 'utf8')); }
-function write(file, value) { fs.writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`, { flag: 'wx', mode: 0o600 }); }
+function write(file, value) {
+  fs.writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`, { flag: 'wx', mode: 0o600 });
+  emitPublicReceipt(file, value);
+}
+function emitPublicReceipt(file, value) {
+  const name = path.basename(file);
+  if (require.main !== module || process.argv.length !== 2 || file !== path.join(root, 'public', name) ||
+      !['source.json', 'tools.json', 'namespace.json', 'result.json', 'bootstrap-failure.json', 'umount-version.json'].includes(name)) return;
+  const data = name === 'source.json' ? {
+    qaHead: value.qaHead, baseTree: value.baseTree, candidateTree: value.candidateTree, patchSha256: value.patchSha256,
+    files: value.files, omittedEnvironmentTemplates: value.omittedEnvironmentTemplates.map(item => item.path),
+    inputCount: value.inputs.length, inputsSha256: sha(JSON.stringify(value.inputs)),
+  } : value;
+  const line = `QA_SHOP_CONTROL_RECORD_V1|${JSON.stringify({ name, data })}`;
+  insist(Buffer.byteLength(`${line}\n`, 'utf8') <= 16384, 'DIAGNOSTIC_WRITE_FAILED');
+  console.log(line);
+}
 function diagnosticCode(error) { const code = error?.code; return DIAGNOSTIC_ERRORS.has(code) ? code : 'UNKNOWN_FAILURE'; }
 function diagnosticExit(code) { return Number.isInteger(code) && code >= 1 && code <= 255 ? code : 1; }
 function writeFailure(name, stage, error, exitCode, targetSha256) {
@@ -90,6 +106,7 @@ function writeFailure(name, stage, error, exitCode, targetSha256) {
     insist(stat.uid === process.getuid() && (stat.mode & 0o777) === 0o600, 'DIAGNOSTIC_WRITE_FAILED');
     fs.writeFileSync(fd, `${JSON.stringify(receipt)}\n`);
   } finally { fs.closeSync(fd); }
+  emitPublicReceipt(path.join(directory, name), receipt);
 }
 function failureNames() {
   return FAILURE_NAMES.filter(name => {
@@ -210,6 +227,7 @@ async function command(label, binary, args, milliseconds, cwd, env = cleanEnv(),
   let failure;
   let output = '';
   let diagnosticStdout = '';
+  let stderrBytes = 0;
   let exit = { code: null, signal: null };
   let cleanup;
   const cleanupErrors = [];
@@ -226,6 +244,7 @@ async function command(label, binary, args, milliseconds, cwd, env = cleanEnv(),
   };
   const capture = (chunk, stdout) => {
     usedBytes += chunk.length;
+    if (!stdout) stderrBytes += chunk.length;
     if (usedBytes > LOG_CAP) { stop('OUTPUT_CAP'); return; }
     try { fs.writeSync(fd, chunk); }
     catch { stop('DIAGNOSTIC_WRITE_FAILED'); return; }
@@ -258,6 +277,7 @@ async function command(label, binary, args, milliseconds, cwd, env = cleanEnv(),
     }
     try { fs.closeSync(fd); } catch { cleanupErrors.push({ stage: 'LOG_CLOSE', errorCode: 'DIAGNOSTIC_WRITE_FAILED' }); }
   }
+  if (label === 'umount-version' && stderrBytes !== 0) failure ||= 'COMMAND_FAILED';
   const primaryError = failure || (exit.code !== 0 || exit.signal !== null ? 'COMMAND_FAILED' : null);
   // No diagnostic I/O or exception can bypass the owned-process reap above.
   if (namespaceExit) {
@@ -852,6 +872,9 @@ async function main() {
       if (file === '/usr/bin/umount') insist(typeof UMOUNT_ADMITTED_SHA256 === 'string' && /^[a-f0-9]{64}$/.test(UMOUNT_ADMITTED_SHA256) && sha256 === UMOUNT_ADMITTED_SHA256, 'PARENT_AND_INDEPENDENT_REVIEW_REQUIRED');
       return { file, sha256 };
     });
+    const umountVersion = await command('umount-version', '/usr/bin/setpriv', ['--no-new-privs', '--', '/usr/bin/umount', '--version'], 5_000, source);
+    const umountBanner = /^umount from util-linux 2\.41\.3 \(libmount 2\.41\.3(?:: [a-z0-9][a-z0-9 ,+_.-]{0,255})?\)\n?(?![\s\S])/.exec(umountVersion.output);
+    insist(umountBanner?.[0] === umountVersion.output, 'HOST_TOOLCHAIN');
     insist(digest(process.execPath) === nodeSha, 'NODE_EXECUTABLE_DRIFT');
     unchanged(source); selfPin();
     write(path.join(root, 'public', 'tools.json'), { mode: CONTROL_ONLY ? 'CONTROL_ONLY' : 'APP_AND_TYPECHECK', node: process.version, nodeSha256: nodeSha, tools, acquisition });

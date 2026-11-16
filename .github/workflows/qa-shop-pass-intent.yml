@@ -1,6 +1,6 @@
-name: QA Shop Pass Intent LAST CONTROL_ONLY 3 OF 3
+name: QA Shop Pass Intent ONE CONTROL_ONLY TRANSPORT
 
-# Last shared-budget slot; no application/package/browser admission.
+# One-control transport source; no application/package/browser admission.
 # No app/pass-suite source is changed by this QA branch.
 on:
   pull_request:
@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   focused:
-    name: Last-slot CONTROL_ONLY bootstrap diagnostic
+    name: One CONTROL_ONLY bootstrap with structured receipts
     if: >-
       ${{ github.event_name == 'pull_request' &&
           github.event.action == 'opened' &&
@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
-      QA_SHOP_HELPER_SHA256: e99564e243be45f8a4a3baad09537af0976f739927336c3eeb40b99c11503557
+      QA_SHOP_HELPER_SHA256: e0f395acff4030394bd5d5951a8eef07482603a8fad8d12a1619f3db1b79f397
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
@@ -46,14 +46,10 @@ jobs:
           node-version: '22.22.2'
           package-manager-cache: false
       - name: CONTROL_ONLY source/bootstrap; no package or browser acquisition
-        run: node scripts/qa-shop-pass-intent.cjs
-      - name: Sanitized source, tool, result and cleanup receipts only
-        if: ${{ always() }}
-        # New official pin supplied by Parent metadata review; not a repo-existing pin.
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: qa-shop-pass-intent-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/qa-shop-pass-intent-${{ github.run_id }}-${{ github.run_attempt }}/public/*.json
-          retention-days: 1
-          if-no-files-found: warn
-          include-hidden-files: false
+        run: |
+          node="$(command -v node)"
+          test "${node#/}" != "$node"
+          exec /usr/bin/env -i PATH=/usr/bin:/bin LANG=C \
+            GITHUB_ACTIONS="$GITHUB_ACTIONS" RUNNER_TEMP="$RUNNER_TEMP" \
+            GITHUB_RUN_ID="$GITHUB_RUN_ID" GITHUB_RUN_ATTEMPT="$GITHUB_RUN_ATTEMPT" \
+            QA_SHOP_HELPER_SHA256="$QA_SHOP_HELPER_SHA256" "$node" scripts/qa-shop-pass-intent.cjs
