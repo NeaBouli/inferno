@@ -36,6 +36,8 @@ const LOG_CAP = 16 * 1024 * 1024;
 const DIAGNOSTIC_ERRORS = new Set(`
   UNKNOWN_FAILURE DIAGNOSTIC_WRITE_FAILED FORMAT_HOLD BOOTSTRAP_FAILED NAMESPACE_EXIT_FAILURE CHILD_SIGNALLED ERR_UNKNOWN_SIGNAL
   RO_TARGET_ROOT RO_TARGET_PROC RO_TARGET_SYS RO_TARGET_DEV RO_TARGET_WORKSPACE RO_TARGET_OTHER RO_TARGET_UNKNOWN
+  RO_PROC_ROOT RO_PROC_ACPI RO_PROC_BUS RO_PROC_FS RO_PROC_INTERRUPTS RO_PROC_IRQ
+  RO_PROC_KCORE RO_PROC_KEYS RO_PROC_SCSI RO_PROC_SYS RO_PROC_SYSRQ_TRIGGER RO_PROC_TIMER_LIST
   ENOENT EACCES EPERM ENOSPC EEXIST EIO ENOMEM EROFS EISDIR ENOTDIR ESRCH EPIPE EINVAL ETIMEDOUT EADDRINUSE
   NO_ARBITRARY_ARGUMENTS HOST_TOOLCHAIN HOSTED_CI_ONLY PARENT_AND_INDEPENDENT_REVIEW_REQUIRED
   HELPER_DIGEST GIT_DATA_OPERATION_FAILED LOCK_SCHEMA LOCK_LINK NON_OFFICIAL_LOCK_RECORD
@@ -116,7 +118,7 @@ function namespaceDiagnostic(stdout, exit) {
     const value = readOwnedFailure(names[0]);
     if (value) return { ...value, retained: true };
   }
-  const match = /^QA_SHOP_DIAGNOSTIC\|(BOOTSTRAP_PRIVATE|RO_SCAN|RO_SORT|RO_REMOUNT|RO_VERIFY|TMP_SHM|UID_DROP)\|(BOOTSTRAP_FAILED|RO_TARGET_ROOT|RO_TARGET_PROC|RO_TARGET_SYS|RO_TARGET_DEV|RO_TARGET_WORKSPACE|RO_TARGET_OTHER|RO_TARGET_UNKNOWN)\|([1-9][0-9]{0,2})\n$/.exec(stdout);
+  const match = /^QA_SHOP_DIAGNOSTIC\|(BOOTSTRAP_PRIVATE|RO_SCAN|RO_SORT|RO_REMOUNT|RO_VERIFY|TMP_SHM|UID_DROP)\|(BOOTSTRAP_FAILED|RO_TARGET_ROOT|RO_TARGET_PROC|RO_TARGET_SYS|RO_TARGET_DEV|RO_TARGET_WORKSPACE|RO_TARGET_OTHER|RO_TARGET_UNKNOWN|RO_PROC_ROOT|RO_PROC_ACPI|RO_PROC_BUS|RO_PROC_FS|RO_PROC_INTERRUPTS|RO_PROC_IRQ|RO_PROC_KCORE|RO_PROC_KEYS|RO_PROC_SCSI|RO_PROC_SYS|RO_PROC_SYSRQ_TRIGGER|RO_PROC_TIMER_LIST)\|([1-9][0-9]{0,2})\n$/.exec(stdout);
   const validCode = match && (match[1] === 'RO_REMOUNT' ? match[2] !== 'BOOTSTRAP_FAILED' : match[2] === 'BOOTSTRAP_FAILED');
   if (names.length === 0 && match?.[0] === stdout && validCode && failed && exit.signal === null && Number(match[3]) <= 255 && exit.code === Number(match[3])) {
     return { stage: match[1], errorCode: match[2], exitCode: Number(match[3]) };
@@ -461,6 +463,7 @@ bootstrap_exit() {
     case "$diagnostic_stage" in BOOTSTRAP_PRIVATE|RO_SCAN|RO_SORT|RO_REMOUNT|RO_VERIFY|TMP_SHM|UID_DROP) ;; *) diagnostic_stage=BOOTSTRAP_UNKNOWN ;; esac
     case "$diagnostic_stage:$diagnostic_code" in
       RO_REMOUNT:RO_TARGET_ROOT|RO_REMOUNT:RO_TARGET_PROC|RO_REMOUNT:RO_TARGET_SYS|RO_REMOUNT:RO_TARGET_DEV|RO_REMOUNT:RO_TARGET_WORKSPACE|RO_REMOUNT:RO_TARGET_OTHER|RO_REMOUNT:RO_TARGET_UNKNOWN) ;;
+      RO_REMOUNT:RO_PROC_ROOT|RO_REMOUNT:RO_PROC_ACPI|RO_REMOUNT:RO_PROC_BUS|RO_REMOUNT:RO_PROC_FS|RO_REMOUNT:RO_PROC_INTERRUPTS|RO_REMOUNT:RO_PROC_IRQ|RO_REMOUNT:RO_PROC_KCORE|RO_REMOUNT:RO_PROC_KEYS|RO_REMOUNT:RO_PROC_SCSI|RO_REMOUNT:RO_PROC_SYS|RO_REMOUNT:RO_PROC_SYSRQ_TRIGGER|RO_REMOUNT:RO_PROC_TIMER_LIST) ;;
       RO_REMOUNT:*) diagnostic_code=RO_TARGET_UNKNOWN ;;
       *) diagnostic_code=BOOTSTRAP_FAILED ;;
     esac
@@ -502,6 +505,18 @@ diagnostic_code=RO_TARGET_UNKNOWN
 while IFS=' ' read -r length target; do
   case "$target" in
     /) diagnostic_code=RO_TARGET_ROOT ;;
+    /proc) diagnostic_code=RO_PROC_ROOT ;;
+    /proc/acpi) diagnostic_code=RO_PROC_ACPI ;;
+    /proc/bus) diagnostic_code=RO_PROC_BUS ;;
+    /proc/fs) diagnostic_code=RO_PROC_FS ;;
+    /proc/interrupts) diagnostic_code=RO_PROC_INTERRUPTS ;;
+    /proc/irq) diagnostic_code=RO_PROC_IRQ ;;
+    /proc/kcore) diagnostic_code=RO_PROC_KCORE ;;
+    /proc/keys) diagnostic_code=RO_PROC_KEYS ;;
+    /proc/scsi) diagnostic_code=RO_PROC_SCSI ;;
+    /proc/sys) diagnostic_code=RO_PROC_SYS ;;
+    /proc/sysrq-trigger) diagnostic_code=RO_PROC_SYSRQ_TRIGGER ;;
+    /proc/timer_list) diagnostic_code=RO_PROC_TIMER_LIST ;;
     /proc|/proc/*) diagnostic_code=RO_TARGET_PROC ;;
     /sys|/sys/*) diagnostic_code=RO_TARGET_SYS ;;
     /dev|/dev/*) diagnostic_code=RO_TARGET_DEV ;;
