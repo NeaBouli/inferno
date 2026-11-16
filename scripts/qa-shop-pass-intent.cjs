@@ -612,6 +612,12 @@ diagnostic_code=BOOTSTRAP_FAILED
 test "$(/usr/bin/stat -c '%u:%a:%h:%F' "$scratch/original-mount-ids")" = '0:600:1:regular file'
 original_ids_bytes=$(/usr/bin/stat -c '%s' "$scratch/original-mount-ids")
 test "$original_ids_bytes" -ge 1; test "$original_ids_bytes" -le 86016
+original_ids_sha=$(/usr/bin/sha256sum < "$scratch/original-mount-ids")
+canonical_ids_sha=$(
+  { if /usr/bin/awk '{ print }' "$scratch/original-mount-ids"; then :; else printf '!QA_CANONICAL_AWK_FAILED!\n'; fi; } |
+    /usr/bin/sha256sum
+)
+test "$original_ids_sha" = "$canonical_ids_sha"
 /usr/bin/awk -v work="$work_id" '
   FILENAME == ARGV[1] {
     if (FNR > 4096 || $0 !~ /^[1-9][0-9]*$/ || length($0) > 20 || original["x" $0]++) { bad=1; exit 1 }
