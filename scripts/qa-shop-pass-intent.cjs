@@ -35,6 +35,7 @@ const MARKER = '[benefits-customer-pass-ui] PASS - create -> bind -> exact-offer
 const LOG_CAP = 16 * 1024 * 1024;
 const DIAGNOSTIC_ERRORS = new Set(`
   UNKNOWN_FAILURE DIAGNOSTIC_WRITE_FAILED FORMAT_HOLD BOOTSTRAP_FAILED NAMESPACE_EXIT_FAILURE CHILD_SIGNALLED ERR_UNKNOWN_SIGNAL
+  RO_VERIFY_META RO_VERIFY_HASH RO_VERIFY_IDS
   RO_TARGET_ROOT RO_TARGET_PROC RO_TARGET_SYS RO_TARGET_DEV RO_TARGET_WORKSPACE RO_TARGET_OTHER RO_TARGET_UNKNOWN
   RO_PROC_ROOT RO_PROC_ACPI RO_PROC_BUS RO_PROC_FS RO_PROC_INTERRUPTS RO_PROC_IRQ
   RO_PROC_KCORE RO_PROC_KEYS RO_PROC_SCSI RO_PROC_SYS RO_PROC_SYSRQ_TRIGGER RO_PROC_TIMER_LIST
@@ -73,7 +74,7 @@ function writeFailure(name, stage, error, exitCode, targetSha256) {
   const directory = path.join(root, 'public');
   insist(process.getuid() !== 0 && fs.statSync(directory).uid === process.getuid(), 'DIAGNOSTIC_WRITE_FAILED');
   const stages = new Set(['BOOTSTRAP_PRIVATE', 'RO_SCAN', 'RO_SORT', 'RO_REMOUNT', 'RO_VERIFY', 'TMP_SHM', 'UID_DROP', 'WORKER', 'PRELOAD', 'DIAGNOSTIC']);
-  const receipt = stages.has(stage)
+  const receipt = stages.has(stage) && (stage === 'RO_VERIFY' || !['RO_VERIFY_META', 'RO_VERIFY_HASH', 'RO_VERIFY_IDS'].includes(error?.code))
     ? { stage, errorCode: diagnosticCode(error), exitCode: diagnosticExit(exitCode) }
     : { stage: 'DIAGNOSTIC', errorCode: 'FORMAT_HOLD', exitCode: 1 };
   if (targetSha256 !== undefined) {
@@ -106,7 +107,7 @@ function readOwnedFailure(name) {
     if (!value || JSON.stringify(Object.keys(value).sort()) !== '["errorCode","exitCode","stage"]') return null;
     const expected = name === 'worker-failure.json' ? 'WORKER' : name === 'preload-failure.json' ? 'PRELOAD' : null;
     if (!expected || (value.stage !== expected && !(value.stage === 'DIAGNOSTIC' && value.errorCode === 'FORMAT_HOLD'))) return null;
-    return DIAGNOSTIC_ERRORS.has(value.errorCode) && diagnosticExit(value.exitCode) === value.exitCode ? value : null;
+    return DIAGNOSTIC_ERRORS.has(value.errorCode) && !['RO_VERIFY_META', 'RO_VERIFY_HASH', 'RO_VERIFY_IDS'].includes(value.errorCode) && diagnosticExit(value.exitCode) === value.exitCode ? value : null;
   } catch { return null; }
   finally { if (fd !== undefined) fs.closeSync(fd); }
 }
@@ -123,8 +124,8 @@ function namespaceDiagnostic(stdout, exit) {
     const value = readOwnedFailure(names[0]);
     if (value) return { ...value, retained: true };
   }
-  const match = /^QA_SHOP_DIAGNOSTIC\|(BOOTSTRAP_PRIVATE|RO_SCAN|RO_SORT|RO_REMOUNT|RO_VERIFY|TMP_SHM|UID_DROP)\|(BOOTSTRAP_FAILED|RO_TARGET_ROOT|RO_TARGET_PROC|RO_TARGET_SYS|RO_TARGET_DEV|RO_TARGET_WORKSPACE|RO_TARGET_OTHER|RO_TARGET_UNKNOWN|RO_PROC_ROOT|RO_PROC_ACPI|RO_PROC_BUS|RO_PROC_FS|RO_PROC_INTERRUPTS|RO_PROC_IRQ|RO_PROC_KCORE|RO_PROC_KEYS|RO_PROC_SCSI|RO_PROC_SYS|RO_PROC_SYSRQ_TRIGGER|RO_PROC_TIMER_LIST)\|([1-9][0-9]{0,2})(?:\|([a-f0-9]{64}))?\n$/.exec(stdout);
-  const validCode = match && (match[1] === 'RO_REMOUNT' ? match[2] !== 'BOOTSTRAP_FAILED' : match[2] === 'BOOTSTRAP_FAILED');
+  const match = /^QA_SHOP_DIAGNOSTIC\|(BOOTSTRAP_PRIVATE|RO_SCAN|RO_SORT|RO_REMOUNT|RO_VERIFY|TMP_SHM|UID_DROP)\|(BOOTSTRAP_FAILED|RO_VERIFY_META|RO_VERIFY_HASH|RO_VERIFY_IDS|RO_TARGET_ROOT|RO_TARGET_PROC|RO_TARGET_SYS|RO_TARGET_DEV|RO_TARGET_WORKSPACE|RO_TARGET_OTHER|RO_TARGET_UNKNOWN|RO_PROC_ROOT|RO_PROC_ACPI|RO_PROC_BUS|RO_PROC_FS|RO_PROC_INTERRUPTS|RO_PROC_IRQ|RO_PROC_KCORE|RO_PROC_KEYS|RO_PROC_SCSI|RO_PROC_SYS|RO_PROC_SYSRQ_TRIGGER|RO_PROC_TIMER_LIST)\|([1-9][0-9]{0,2})(?:\|([a-f0-9]{64}))?\n$/.exec(stdout);
+  const validCode = match && (['RO_VERIFY_META', 'RO_VERIFY_HASH', 'RO_VERIFY_IDS'].includes(match[2]) ? match[1] === 'RO_VERIFY' : (match[1] === 'RO_REMOUNT' ? match[2] !== 'BOOTSTRAP_FAILED' : match[2] === 'BOOTSTRAP_FAILED'));
   const validTarget = !match?.[4] || (match[1] === 'RO_REMOUNT' && match[2] === 'RO_TARGET_PROC');
   if (names.length === 0 && match?.[0] === stdout && validCode && validTarget && failed && exit.signal === null && Number(match[3]) <= 255 && exit.code === Number(match[3])) {
     return { stage: match[1], errorCode: match[2], exitCode: Number(match[3]), ...(match[4] ? { targetSha256: match[4] } : {}) };
@@ -480,6 +481,8 @@ bootstrap_exit() {
   if [ "$diagnostic_exit" -ne 0 ]; then
     case "$diagnostic_stage" in BOOTSTRAP_PRIVATE|RO_SCAN|RO_SORT|RO_REMOUNT|RO_VERIFY|TMP_SHM|UID_DROP) ;; *) diagnostic_stage=BOOTSTRAP_UNKNOWN ;; esac
     case "$diagnostic_stage:$diagnostic_code" in
+      RO_VERIFY:RO_VERIFY_META|RO_VERIFY:RO_VERIFY_HASH|RO_VERIFY:RO_VERIFY_IDS) ;;
+      *:RO_VERIFY_META|*:RO_VERIFY_HASH|*:RO_VERIFY_IDS) diagnostic_stage=DIAGNOSTIC; diagnostic_code=FORMAT_HOLD ;;
       RO_REMOUNT:RO_TARGET_ROOT|RO_REMOUNT:RO_TARGET_PROC|RO_REMOUNT:RO_TARGET_SYS|RO_REMOUNT:RO_TARGET_DEV|RO_REMOUNT:RO_TARGET_WORKSPACE|RO_REMOUNT:RO_TARGET_OTHER|RO_REMOUNT:RO_TARGET_UNKNOWN) ;;
       RO_REMOUNT:RO_PROC_ROOT|RO_REMOUNT:RO_PROC_ACPI|RO_REMOUNT:RO_PROC_BUS|RO_REMOUNT:RO_PROC_FS|RO_REMOUNT:RO_PROC_INTERRUPTS|RO_REMOUNT:RO_PROC_IRQ|RO_REMOUNT:RO_PROC_KCORE|RO_REMOUNT:RO_PROC_KEYS|RO_REMOUNT:RO_PROC_SCSI|RO_REMOUNT:RO_PROC_SYS|RO_REMOUNT:RO_PROC_SYSRQ_TRIGGER|RO_REMOUNT:RO_PROC_TIMER_LIST) ;;
       RO_REMOUNT:*) diagnostic_code=RO_TARGET_UNKNOWN ;;
@@ -608,16 +611,18 @@ diagnostic_stage=BOOTSTRAP_PRIVATE
 diagnostic_code=BOOTSTRAP_FAILED
 /usr/bin/mount -t proc -o ro,nosuid,nodev,noexec proc /proc
 diagnostic_stage=RO_VERIFY
-diagnostic_code=BOOTSTRAP_FAILED
+diagnostic_code=RO_VERIFY_META
 test "$(/usr/bin/stat -c '%u:%a:%h:%F' "$scratch/original-mount-ids")" = '0:600:1:regular file'
 original_ids_bytes=$(/usr/bin/stat -c '%s' "$scratch/original-mount-ids")
 test "$original_ids_bytes" -ge 1; test "$original_ids_bytes" -le 86016
+diagnostic_code=RO_VERIFY_HASH
 original_ids_sha=$(/usr/bin/sha256sum < "$scratch/original-mount-ids")
 canonical_ids_sha=$(
   { if /usr/bin/awk '{ print }' "$scratch/original-mount-ids"; then :; else printf '!QA_CANONICAL_AWK_FAILED!\n'; fi; } |
     /usr/bin/sha256sum
 )
 test "$original_ids_sha" = "$canonical_ids_sha"
+diagnostic_code=RO_VERIFY_IDS
 /usr/bin/awk -v work="$work_id" '
   FILENAME == ARGV[1] {
     if (FNR > 4096 || $0 !~ /^[1-9][0-9]*$/ || length($0) > 20 || original["x" $0]++) { bad=1; exit 1 }
@@ -638,6 +643,7 @@ test "$original_ids_sha" = "$canonical_ids_sha"
   }
 ' "$scratch/original-mount-ids" /proc/self/mountinfo
 diagnostic_stage=TMP_SHM
+diagnostic_code=BOOTSTRAP_FAILED
 /usr/bin/mount -o remount,bind,rw,nosuid,nodev "$scratch"
 /usr/bin/mount --bind "$scratch/tmp" /tmp
 /usr/bin/mount -o remount,bind,rw,nosuid,nodev /tmp
