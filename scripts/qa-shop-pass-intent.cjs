@@ -497,12 +497,13 @@ bootstrap_exit() {
             alphabet["x63"]="c"; alphabet["x64"]="d"; alphabet["x65"]="e"; alphabet["x66"]="f"
             suffix[65]="20"; suffix[66]="20"; suffix[67]="2d"; suffix[68]="0a"; suffix[69]="30"; suffix[70]="0a"
           }
+          $0 == "" && NR == 6 && n == 70 && !complete && !separator { separator=1; next }
           $0 == "QA_OD_OK" {
-            if (NR != 6 || n != 70 || complete) { bad=1; exit 1 }
+            if (NR != 6 + separator || n != 70 || complete) { bad=1; exit 1 }
             complete=1; next
           }
           {
-            if (complete || NR > 5 || NF != (NR < 5 ? 16 : 6)) { bad=1; exit 1 }
+            if (complete || NR > 5 || $0 ~ /[^0-9a-f ]/ || NF != (NR < 5 ? 16 : 6)) { bad=1; exit 1 }
             for (i=1; i<=NF; i++) {
               n++; token=$i
               if (token !~ /^[0-9a-f][0-9a-f]$/) { bad=1; exit 1 }
@@ -513,7 +514,7 @@ bootstrap_exit() {
               } else if (("x" token) != ("x" suffix[n])) { bad=1; exit 1 }
             }
           }
-          END { if (bad || NR != 6 || !complete || n != 70 || length(hash) != 64) exit 1; print hash }
+          END { if (bad || NR != 6 + separator || !complete || n != 70 || length(hash) != 64) exit 1; print hash }
       ' 2>/dev/null); then
         diagnostic_sha256=$diagnostic_validated
       fi
