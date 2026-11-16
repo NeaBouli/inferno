@@ -396,7 +396,7 @@ function assertNamespace() {
   insist(fs.readlinkSync('/proc/self/ns/net') !== context.hostNet && fs.readlinkSync('/proc/self/ns/pid') !== context.hostPid, 'NAMESPACE_NOT_ISOLATED');
   insist(fs.readlinkSync('/proc/self/ns/mnt') !== context.hostMount && fs.readlinkSync('/proc/self/ns/ipc') !== context.hostIpc, 'MOUNT_IPC_NAMESPACE_NOT_ISOLATED');
   const status = fs.readFileSync('/proc/self/status', 'utf8');
-  const namespacePids = status.match(/^NSpid:[^\n]*$/gm);
+  const namespacePids = status.split('\n').filter(line => line.startsWith('NSpid:'));
   const namespacePid = namespacePids?.length === 1 && /^NSpid:[ \t]+([1-9][0-9]*)[ \t]*$/.exec(namespacePids[0]);
   insist(namespacePid && namespacePid[0] === namespacePids[0] && namespacePid[1] === String(process.pid), 'PRIVATE_PROC_PID');
   insist(/^NoNewPrivs:\s+1$/m.test(status) && /^CapEff:\s+0+$/m.test(status), 'CAPABILITIES_NOT_DROPPED');
