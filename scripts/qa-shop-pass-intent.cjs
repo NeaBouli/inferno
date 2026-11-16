@@ -3,9 +3,9 @@
 
 // One CONTROL_ONLY source; actual Parent admission/review is required.
 // The final helper004 test is bound below; 7a is not an executable alternative.
-const RUNTIME_ADMITTED = false;
+const RUNTIME_ADMITTED = true;
 const CONTROL_ONLY = true;
-const UMOUNT_ADMITTED_SHA256 = null;
+const UMOUNT_ADMITTED_SHA256 = '97fe0c108eb713f7c0de6a09a8d988188da2383782bfa0a2e3f1a3d0b60d9bf8';
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
