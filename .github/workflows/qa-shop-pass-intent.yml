@@ -1,7 +1,7 @@
-name: QA Shop Read-Only Umount Metadata
+name: QA Shop Pass Intent LAST CONTROL_ONLY 3 OF 3
 
-# One metadata event only; no privileged helper or mount operation.
-# Close without merge and recover the entire qualified QA tree afterward.
+# Last shared-budget slot; no application/package/browser admission.
+# No app/pass-suite source is changed by this QA branch.
 on:
   pull_request:
     types: [opened]
@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   focused:
-    name: Read-only stock umount package binding
+    name: Last-slot CONTROL_ONLY bootstrap diagnostic
     if: >-
       ${{ github.event_name == 'pull_request' &&
           github.event.action == 'opened' &&
@@ -32,7 +32,7 @@ jobs:
           github.event.pull_request.draft == true &&
           github.run_attempt == 1 }}
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 20
     env:
       QA_SHOP_HELPER_SHA256: b1d17063fe53ffc6166345e75ec4af108442ae6198f75f21f6ecece44938f863
     steps:
@@ -45,26 +45,15 @@ jobs:
         with:
           node-version: '22.22.2'
           package-manager-cache: false
-      - name: Read-only metadata only; no privileged bootstrap
-        id: metadata
-        run: |
-          set -eu
-          umask 077
-          node_path="$(command -v node)"
-          /usr/bin/env -i PATH=/usr/bin:/bin LANG=C "$node_path" -e 'const f=require("node:fs"),c=require("node:crypto");if(process.platform!=="linux"||process.version!=="v22.22.2"||process.getuid()===0||process.geteuid()===0||c.createHash("sha256").update(f.readFileSync("scripts/qa-shop-umount-metadata.cjs")).digest("hex")!=="a60051080e7316e18f85bccc7b1ac31069f2a3d386d1909b34e4617d91c6a1ef")process.exit(1);'
-          base="$RUNNER_TEMP/qa-shop-pass-intent-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
-          test ! -e "$base"
-          test ! -L "$base"
-          out="$base/public"
-          /usr/bin/install -d -m 700 -- "$base" "$out"
-          test ! -e "$out/umount-metadata.json"
-          test ! -L "$out/umount-metadata.json"
-          set -C
-          exec 9> "$out/umount-metadata.json"
-          inspection_status=0
-          /usr/bin/env -i PATH=/usr/bin:/bin LANG=C ImageOS="${ImageOS-}" ImageVersion="${ImageVersion-}" "$node_path" scripts/qa-shop-umount-metadata.cjs --inspect-umount-readonly-v2 >&9 || inspection_status=$?
-          exec 9>&-
-          filter_status=0
-          /usr/bin/env -i PATH=/usr/bin:/bin LANG=C "$node_path" -e 'const f=require("node:fs");try{const fd=f.openSync(process.argv[1],f.constants.O_RDONLY|f.constants.O_NOFOLLOW|f.constants.O_NONBLOCK);let v;try{const s=f.fstatSync(fd);if(!s.isFile()||s.uid!==process.getuid()||s.nlink!==1||(s.mode&4095)!==384||s.size<1||s.size>12288)throw 0;const b=Buffer.alloc(12289),n=f.readSync(fd,b,0,b.length,0);if(n!==s.size||n>12288||f.fstatSync(fd).size!==n)throw 0;v=JSON.parse(b.subarray(0,n).toString("utf8"));}finally{f.closeSync(fd);}const keys="schema,binding_ok,failure,runtime,os,image,umount,tools,packages,ownership_ok,verify,dpkg_verify_ok,snapshots_match,children_reaped,trust_basis,vendor_proof,prune_executed".split(",").sort();if(!v||JSON.stringify(Object.keys(v).sort())!==JSON.stringify(keys)||v.schema!=="inspect_umount_readonly_v2"||typeof v.binding_ok!=="boolean"||v.vendor_proof!==false||v.prune_executed!==false)throw 0;console.log("QA_SHOP_UMOUNT_METADATA_V2|"+JSON.stringify(v));}catch{process.exitCode=1;}' "$out/umount-metadata.json" || filter_status=$?
-          if test "$inspection_status" -ne 0; then exit "$inspection_status"; fi
-          exit "$filter_status"
+      - name: CONTROL_ONLY source/bootstrap; no package or browser acquisition
+        run: node scripts/qa-shop-pass-intent.cjs
+      - name: Sanitized source, tool, result and cleanup receipts only
+        if: ${{ always() }}
+        # New official pin supplied by Parent metadata review; not a repo-existing pin.
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: qa-shop-pass-intent-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/qa-shop-pass-intent-${{ github.run_id }}-${{ github.run_attempt }}/public/*.json
+          retention-days: 1
+          if-no-files-found: warn
+          include-hidden-files: false
