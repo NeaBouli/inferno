@@ -476,16 +476,20 @@ bootstrap_exit() {
     if [ "$diagnostic_exit" -lt 1 ] || [ "$diagnostic_exit" -gt 255 ]; then diagnostic_exit=1; fi
     if [ "$diagnostic_stage:$diagnostic_code" = RO_REMOUNT:RO_TARGET_PROC ]; then
       diagnostic_sha256=FORMAT_HOLD
-      # The marker preserves the digest utility's exact final newline for validation.
-      if diagnostic_digest=$(printf '%s' "$target" | /usr/bin/sha256sum 2>/dev/null && printf '.'); then
-        if diagnostic_validated=$(printf '%s' "$diagnostic_digest" | /usr/bin/awk '
+      # Validate the raw digest stream and utility status before shell capture.
+      if diagnostic_validated=$({
+        if printf '%s' "$target" | /usr/bin/sha256sum 2>/dev/null; then
+          printf '0\n'
+        else
+          printf '1\n'
+        fi
+      } | /usr/bin/awk '
           NR == 1 && length($0) == 67 && substr($0,65) == "  -" && substr($0,1,64) !~ /[^a-f0-9]/ { hash = substr($0,1,64); next }
-          NR == 2 && $0 == "." { complete = 1; next }
+          NR == 2 && $0 == "0" { complete = 1; next }
           { exit 1 }
           END { if (NR != 2 || !complete || length(hash) != 64) exit 1; print hash }
-        ' 2>/dev/null); then
-          diagnostic_sha256=$diagnostic_validated
-        fi
+      ' 2>/dev/null); then
+        diagnostic_sha256=$diagnostic_validated
       fi
       printf 'QA_SHOP_DIAGNOSTIC|%s|%s|%s|%s\n' "$diagnostic_stage" "$diagnostic_code" "$diagnostic_exit" "$diagnostic_sha256"
     else
