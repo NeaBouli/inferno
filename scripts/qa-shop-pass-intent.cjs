@@ -640,8 +640,8 @@ diagnostic_code=RO_VERIFY_IDS
       if (("x" $1) != ("x" work)) {
         bucket = $5 == "/" ? 0 : $5 ~ /^\/proc(\/|$)/ ? 1 : $5 ~ /^\/sys(\/|$)/ ? 2 : $5 ~ /^\/dev(\/|$)/ ? 3 : $5 ~ /^\/(home|workspace)(\/|$)/ ? 4 : 5
         kind = $(i+1) == "autofs" ? 0 : $(i+1) == "proc" ? 1 : $(i+1) == "tmpfs" ? 2 : 3
-        bad=80 + 4*bucket + kind
-        if (!(("x" $1) in original)) bad+=32
+        bad=72 + 4*bucket + kind
+        if (!(("x" $1) in original)) bad+=24
       }
       exit bad
     }
