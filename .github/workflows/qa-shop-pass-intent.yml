@@ -1,7 +1,7 @@
-name: QA Shop Pass Intent LAST CONTROL_ONLY 3 OF 3
+name: QA Shop Read-Only Umount Metadata
 
-# Last shared-budget slot; no application/package/browser admission.
-# No app/pass-suite source is changed by this QA branch.
+# One metadata event only; no privileged helper or mount operation.
+# Close without merge and recover the entire qualified QA tree afterward.
 on:
   pull_request:
     types: [opened]
@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   focused:
-    name: Last-slot CONTROL_ONLY bootstrap diagnostic
+    name: Read-only stock umount package binding
     if: >-
       ${{ github.event_name == 'pull_request' &&
           github.event.action == 'opened' &&
@@ -32,7 +32,7 @@ jobs:
           github.event.pull_request.draft == true &&
           github.run_attempt == 1 }}
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 5
     env:
       QA_SHOP_HELPER_SHA256: b1d17063fe53ffc6166345e75ec4af108442ae6198f75f21f6ecece44938f863
     steps:
@@ -45,8 +45,21 @@ jobs:
         with:
           node-version: '22.22.2'
           package-manager-cache: false
-      - name: CONTROL_ONLY source/bootstrap; no package or browser acquisition
-        run: node scripts/qa-shop-pass-intent.cjs
+      - name: Read-only metadata only; no privileged bootstrap
+        run: |
+          set -eu
+          umask 077
+          node_path="$(command -v node)"
+          /usr/bin/env -i PATH=/usr/bin:/bin LANG=C "$node_path" -e 'const f=require("node:fs"),c=require("node:crypto");if(process.platform!=="linux"||process.version!=="v22.22.2"||process.getuid()===0||process.geteuid()===0||c.createHash("sha256").update(f.readFileSync("scripts/qa-shop-umount-metadata.cjs")).digest("hex")!=="a60051080e7316e18f85bccc7b1ac31069f2a3d386d1909b34e4617d91c6a1ef")process.exit(1);'
+          base="$RUNNER_TEMP/qa-shop-pass-intent-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          test ! -e "$base"
+          test ! -L "$base"
+          out="$base/public"
+          /usr/bin/install -d -m 700 -- "$base" "$out"
+          test ! -e "$out/umount-metadata.json"
+          test ! -L "$out/umount-metadata.json"
+          set -C
+          /usr/bin/env -i PATH=/usr/bin:/bin LANG=C ImageOS="${ImageOS-}" ImageVersion="${ImageVersion-}" "$node_path" scripts/qa-shop-umount-metadata.cjs --inspect-umount-readonly-v2 > "$out/umount-metadata.json"
       - name: Sanitized source, tool, result and cleanup receipts only
         if: ${{ always() }}
         # New official pin supplied by Parent metadata review; not a repo-existing pin.
