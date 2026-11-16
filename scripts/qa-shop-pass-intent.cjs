@@ -5,6 +5,7 @@
 // The final helper004 test is bound below; 7a is not an executable alternative.
 const RUNTIME_ADMITTED = false;
 const CONTROL_ONLY = true;
+const UMOUNT_ADMITTED_SHA256 = null;
 const fs = require('node:fs');
 const path = require('node:path');
 const crypto = require('node:crypto');
@@ -73,9 +74,10 @@ function writeFailure(name, stage, error, exitCode, targetSha256) {
   insist(FAILURE_NAMES.includes(name), 'DIAGNOSTIC_WRITE_FAILED');
   const directory = path.join(root, 'public');
   insist(process.getuid() !== 0 && fs.statSync(directory).uid === process.getuid(), 'DIAGNOSTIC_WRITE_FAILED');
-  const stages = new Set(['BOOTSTRAP_PRIVATE', 'RO_SCAN', 'RO_SORT', 'RO_REMOUNT', 'RO_VERIFY', 'TMP_SHM', 'UID_DROP', 'WORKER', 'PRELOAD', 'DIAGNOSTIC']);
+  const stages = new Set(['BOOTSTRAP_PRIVATE', 'PROC_PRUNE', 'RO_SCAN', 'RO_SORT', 'RO_REMOUNT', 'RO_VERIFY', 'TMP_SHM', 'UID_DROP', 'WORKER', 'PRELOAD', 'DIAGNOSTIC']);
   const code = diagnosticCode(error);
   const receipt = stages.has(stage) && (stage === 'RO_VERIFY' || !['RO_VERIFY_META', 'RO_VERIFY_HASH', 'RO_VERIFY_IDS'].includes(code))
+    && (stage !== 'PROC_PRUNE' || code === 'BOOTSTRAP_FAILED')
     ? { stage, errorCode: code, exitCode: diagnosticExit(exitCode) }
     : { stage: 'DIAGNOSTIC', errorCode: 'FORMAT_HOLD', exitCode: 1 };
   if (targetSha256 !== undefined) {
@@ -125,7 +127,7 @@ function namespaceDiagnostic(stdout, exit) {
     const value = readOwnedFailure(names[0]);
     if (value) return { ...value, retained: true };
   }
-  const match = /^QA_SHOP_DIAGNOSTIC\|(BOOTSTRAP_PRIVATE|RO_SCAN|RO_SORT|RO_REMOUNT|RO_VERIFY|TMP_SHM|UID_DROP)\|(BOOTSTRAP_FAILED|RO_VERIFY_META|RO_VERIFY_HASH|RO_VERIFY_IDS|RO_TARGET_ROOT|RO_TARGET_PROC|RO_TARGET_SYS|RO_TARGET_DEV|RO_TARGET_WORKSPACE|RO_TARGET_OTHER|RO_TARGET_UNKNOWN|RO_PROC_ROOT|RO_PROC_ACPI|RO_PROC_BUS|RO_PROC_FS|RO_PROC_INTERRUPTS|RO_PROC_IRQ|RO_PROC_KCORE|RO_PROC_KEYS|RO_PROC_SCSI|RO_PROC_SYS|RO_PROC_SYSRQ_TRIGGER|RO_PROC_TIMER_LIST)\|([1-9][0-9]{0,2})(?:\|([a-f0-9]{64}))?\n$/.exec(stdout);
+  const match = /^QA_SHOP_DIAGNOSTIC\|(BOOTSTRAP_PRIVATE|PROC_PRUNE|RO_SCAN|RO_SORT|RO_REMOUNT|RO_VERIFY|TMP_SHM|UID_DROP)\|(BOOTSTRAP_FAILED|RO_VERIFY_META|RO_VERIFY_HASH|RO_VERIFY_IDS|RO_TARGET_ROOT|RO_TARGET_PROC|RO_TARGET_SYS|RO_TARGET_DEV|RO_TARGET_WORKSPACE|RO_TARGET_OTHER|RO_TARGET_UNKNOWN|RO_PROC_ROOT|RO_PROC_ACPI|RO_PROC_BUS|RO_PROC_FS|RO_PROC_INTERRUPTS|RO_PROC_IRQ|RO_PROC_KCORE|RO_PROC_KEYS|RO_PROC_SCSI|RO_PROC_SYS|RO_PROC_SYSRQ_TRIGGER|RO_PROC_TIMER_LIST)\|([1-9][0-9]{0,2})(?:\|([a-f0-9]{64}))?\n$/.exec(stdout);
   const validCode = match && (['RO_VERIFY_META', 'RO_VERIFY_HASH', 'RO_VERIFY_IDS'].includes(match[2]) ? match[1] === 'RO_VERIFY' : (match[1] === 'RO_REMOUNT' ? match[2] !== 'BOOTSTRAP_FAILED' : match[2] === 'BOOTSTRAP_FAILED'));
   const validTarget = !match?.[4] || (match[1] === 'RO_REMOUNT' && match[2] === 'RO_TARGET_PROC');
   if (names.length === 0 && match?.[0] === stdout && validCode && validTarget && failed && exit.signal === null && Number(match[3]) <= 255 && exit.code === Number(match[3])) {
@@ -480,8 +482,10 @@ bootstrap_exit() {
   diagnostic_exit=$1
   trap - 0
   if [ "$diagnostic_exit" -ne 0 ]; then
-    case "$diagnostic_stage" in BOOTSTRAP_PRIVATE|RO_SCAN|RO_SORT|RO_REMOUNT|RO_VERIFY|TMP_SHM|UID_DROP) ;; *) diagnostic_stage=BOOTSTRAP_UNKNOWN ;; esac
+    case "$diagnostic_stage" in BOOTSTRAP_PRIVATE|PROC_PRUNE|RO_SCAN|RO_SORT|RO_REMOUNT|RO_VERIFY|TMP_SHM|UID_DROP) ;; *) diagnostic_stage=BOOTSTRAP_UNKNOWN ;; esac
     case "$diagnostic_stage:$diagnostic_code" in
+      PROC_PRUNE:BOOTSTRAP_FAILED) ;;
+      PROC_PRUNE:*) diagnostic_stage=DIAGNOSTIC; diagnostic_code=FORMAT_HOLD ;;
       RO_VERIFY:RO_VERIFY_META|RO_VERIFY:RO_VERIFY_HASH|RO_VERIFY:RO_VERIFY_IDS) ;;
       *:RO_VERIFY_META|*:RO_VERIFY_HASH|*:RO_VERIFY_IDS) diagnostic_stage=DIAGNOSTIC; diagnostic_code=FORMAT_HOLD ;;
       RO_REMOUNT:RO_TARGET_ROOT|RO_REMOUNT:RO_TARGET_PROC|RO_REMOUNT:RO_TARGET_SYS|RO_REMOUNT:RO_TARGET_DEV|RO_REMOUNT:RO_TARGET_WORKSPACE|RO_REMOUNT:RO_TARGET_OTHER|RO_REMOUNT:RO_TARGET_UNKNOWN) ;;
@@ -560,6 +564,106 @@ exec 9< "$scratch"
 work_id=$(/usr/bin/awk '$1 == "mnt_id:" { print $2; found=1 } END { if (!found) exit 1 }' /proc/self/fdinfo/9)
 exec 9<&-
 test -n "$work_id"
+# Fixed private subtree prune; concrete utility semantics and runtime remain held.
+diagnostic_stage=PROC_PRUNE
+test ! -e "$scratch/proc-prune-inventory"
+test ! -L "$scratch/proc-prune-inventory"
+(
+  set -C
+  LC_ALL=C /usr/bin/awk -v work="$work_id" '
+    function canonical(p) {
+      return p ~ /^\// && p !~ /\\/ && p !~ /\/\// && p !~ /\/\.\.?($|\/)/ && (p == "/" || p !~ /\/$/)
+    }
+    BEGIN {
+      target="/proc/sys/fs/binfmt_misc"
+      if (work !~ /^[1-9][0-9]*$/ || length(work) > 20) { bad=41; exit bad }
+    }
+    {
+      bytes+=length($0)+3
+      if (NR > 4096 || bytes > 4194304 || NF < 10 || $0 ~ /[^ -~]/ ||
+          $1 !~ /^[1-9][0-9]*$/ || length($1) > 20 || $2 !~ /^[1-9][0-9]*$/ || length($2) > 20 ||
+          !canonical($4) || !canonical($5)) { bad=41; exit bad }
+      for (i=7; i<=NF && $i!="-"; i++) if ($i ~ /^(shared|master|propagate_from):/) { bad=41; exit bad }
+      if (i + 3 != NF || $i != "-") { bad=41; exit bad }
+      id="x" $1
+      if (id in rows) { bad=41; exit bad }
+      rows[id]=$0; parent[id]="x" $2; order[++count]=id
+      subtree[id]=($5 == target || index($5, target "/") == 1)
+      if (subtree[id] && $(i+1) != "autofs" && $(i+1) != "binfmt_misc") { bad=42; exit bad }
+      if ($5 == target) {
+        removed[id]=1
+        if ($(i+1) == "autofs" && ("," $6 ",") ~ /,rw,/ && ("," $6 ",") !~ /,ro,/) target_rw=1
+      }
+    }
+    END {
+      if (bad) exit bad
+      if (count < 4 || !(("x" work) in rows) || subtree["x" work] || !target_rw) exit 42
+      # Seed every exact-target overmount, then close over all parent-ID edges.
+      do {
+        added=0
+        for (id in rows) if (!(id in removed) && (parent[id] in removed)) { removed[id]=1; added=1 }
+      } while (added)
+      for (id in rows) {
+        if (subtree[id] != (id in removed)) exit 43
+        if (id in removed) {
+          if (!(parent[id] in rows)) exit 43
+          cursor=id; hops=0
+          while (cursor in removed) {
+            if (++hops > count) exit 43
+            cursor=parent[cursor]
+          }
+        }
+      }
+      for (n=1; n<=count; n++) { id=order[n]; printf "%d\t%s\n", (id in removed), rows[id] }
+    }
+  ' /proc/self/mountinfo > "$scratch/proc-prune-inventory"
+)
+test "$(/usr/bin/stat -c '%u:%a:%h:%F' "$scratch/proc-prune-inventory")" = '0:600:1:regular file'
+prune_bytes=$(/usr/bin/stat -c '%s' "$scratch/proc-prune-inventory")
+test "$prune_bytes" -ge 1; test "$prune_bytes" -le 4194304
+prune_sha=$(/usr/bin/sha256sum < "$scratch/proc-prune-inventory")
+/usr/bin/umount --recursive --no-canonicalize --internal-only --no-mtab -- /proc/sys/fs/binfmt_misc
+test "$(/usr/bin/stat -c '%u:%a:%h:%F' "$scratch/proc-prune-inventory")" = '0:600:1:regular file'
+prune_bytes=$(/usr/bin/stat -c '%s' "$scratch/proc-prune-inventory")
+test "$prune_bytes" -ge 1; test "$prune_bytes" -le 4194304
+test "$(/usr/bin/sha256sum < "$scratch/proc-prune-inventory")" = "$prune_sha"
+LC_ALL=C /usr/bin/awk -v work="$work_id" '
+  function canonical(p) {
+    return p ~ /^\// && p !~ /\\/ && p !~ /\/\// && p !~ /\/\.\.?($|\/)/ && (p == "/" || p !~ /\/$/)
+  }
+  BEGIN { target="/proc/sys/fs/binfmt_misc" }
+  {
+    saved=(FILENAME == ARGV[1])
+    bytes[FILENAME]+=length($0)+1
+    if (FNR > 4096 || bytes[FILENAME] > 4194304) { bad=44; exit bad }
+    if (saved) {
+      if ($0 !~ /^[01]\t/) { bad=44; exit bad }
+      marker=substr($0, 1, 1); $0=substr($0, 3)
+    }
+    if (NF < 10 || $0 ~ /[^ -~]/ || $1 !~ /^[1-9][0-9]*$/ || length($1) > 20 ||
+        $2 !~ /^[1-9][0-9]*$/ || length($2) > 20 || !canonical($4) || !canonical($5)) { bad=44; exit bad }
+    for (i=7; i<=NF && $i!="-"; i++) if ($i ~ /^(shared|master|propagate_from):/) { bad=44; exit bad }
+    if (i + 3 != NF || $i != "-") { bad=44; exit bad }
+    id="x" $1
+    if (seen[FILENAME,id]++) { bad=44; exit bad }
+    inside=($5 == target || index($5, target "/") == 1)
+    if (saved) {
+      if (("x" marker) != (inside ? "x1" : "x0")) { bad=44; exit bad }
+      before[id]=$0
+      if (inside) removed[id]=1
+      before_count++
+    } else {
+      if (inside || !(id in before) || (id in removed) || ("x" $0) != ("x" before[id])) { bad=44; exit bad }
+      current[id]=1; current_count++
+    }
+  }
+  END {
+    if (bad) exit bad
+    if (before_count < 4 || current_count < 1 || !(("x" work) in current) || (("x" work) in removed)) exit 44
+    for (id in before) if (!(id in removed) && !(id in current)) exit 44
+  }
+' "$scratch/proc-prune-inventory" /proc/self/mountinfo
+# End fixed private subtree prune; retain the entire existing bootstrap below.
 diagnostic_stage=RO_SCAN
 # Retain exact decimal IDs, including covered mounts, before changing the proc view.
 test ! -e "$scratch/original-mount-ids"
@@ -719,12 +823,14 @@ async function main() {
       await command('chromium-install', process.execPath, [path.join(source, 'node_modules/playwright/cli.js'), 'install', '--with-deps', 'chromium'], 180_000, source);
       acquisition = { npm: npmVersion, versions: versions.map(([, name, version]) => ({ name, version })), browserManifestSha256: digest(path.join(source, 'node_modules/playwright-core/browsers.json')) };
     }
-    const utilities = ['/usr/bin/sudo', '/usr/bin/unshare', '/usr/bin/setpriv', '/usr/sbin/ip', '/bin/sh', '/bin/kill', '/usr/bin/env', '/usr/bin/mount', '/usr/bin/awk', '/usr/bin/sort', '/usr/bin/stat', '/usr/bin/readlink', '/usr/bin/sha256sum', '/usr/bin/od'];
+    const utilities = ['/usr/bin/sudo', '/usr/bin/unshare', '/usr/bin/setpriv', '/usr/sbin/ip', '/bin/sh', '/bin/kill', '/usr/bin/env', '/usr/bin/mount', '/usr/bin/umount', '/usr/bin/awk', '/usr/bin/sort', '/usr/bin/stat', '/usr/bin/readlink', '/usr/bin/sha256sum', '/usr/bin/od'];
     const tools = utilities.map(file => {
       const resolved = fs.realpathSync(file);
       const stat = fs.statSync(resolved);
       insist(stat.isFile() && stat.uid === 0 && !(stat.mode & 0o022), 'SYSTEM_TOOL_OWNERSHIP');
-      return { file, sha256: digest(resolved) };
+      const sha256 = digest(resolved);
+      if (file === '/usr/bin/umount') insist(typeof UMOUNT_ADMITTED_SHA256 === 'string' && /^[a-f0-9]{64}$/.test(UMOUNT_ADMITTED_SHA256) && sha256 === UMOUNT_ADMITTED_SHA256, 'PARENT_AND_INDEPENDENT_REVIEW_REQUIRED');
+      return { file, sha256 };
     });
     insist(digest(process.execPath) === nodeSha, 'NODE_EXECUTABLE_DRIFT');
     unchanged(source); selfPin();
