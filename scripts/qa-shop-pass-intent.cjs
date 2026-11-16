@@ -608,8 +608,11 @@ while IFS=' ' read -r length target; do
   esac
   /usr/bin/mount -o remount,bind,ro "$target"
 done < "$scratch/read-only-mounts"
+diagnostic_code=RO_TARGET_ROOT
+/usr/bin/mount -o remount,bind,ro=recursive / /
 diagnostic_stage=BOOTSTRAP_PRIVATE
 diagnostic_code=BOOTSTRAP_FAILED
+/usr/bin/mount -o remount,bind,rw "$scratch" "$scratch"
 /usr/bin/mount -t proc -o ro,nosuid,nodev,noexec proc /proc
 diagnostic_stage=RO_VERIFY
 diagnostic_code=RO_VERIFY_META
