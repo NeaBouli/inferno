@@ -590,6 +590,8 @@ test ! -L "$scratch/proc-prune-inventory"
       rows[id]=$0; parent[id]="x" $2; order[++count]=id
       subtree[id]=($5 == target || index($5, target "/") == 1)
       if (subtree[id] && $(i+1) != "autofs" && $(i+1) != "binfmt_misc") { bad=42; exit bad }
+      if (subtree[id] && (($(i+1) == "autofs" && $(i+2) != "systemd-1") ||
+          ($(i+1) == "binfmt_misc" && $(i+2) != "binfmt_misc"))) { bad=42; exit bad }
       if ($5 == target) {
         removed[id]=1
         if ($(i+1) == "autofs" && ("," $6 ",") ~ /,rw,/ && ("," $6 ",") !~ /,ro,/) target_rw=1
@@ -623,6 +625,21 @@ test "$prune_meta" = '0:600:1:regular file'
 prune_bytes=$(/usr/bin/stat -c '%s' "$scratch/proc-prune-inventory")
 test "$prune_bytes" -ge 1; test "$prune_bytes" -le 4194304
 prune_sha=$(/usr/bin/sha256sum < "$scratch/proc-prune-inventory")
+# Stock libmount may consult source names for loop cleanup; prove both are absent here.
+prune_source=$(/usr/bin/readlink -e "$scratch/source")
+test "$prune_source" = "$scratch/source"
+prune_cwd=$(pwd -P)
+test "$prune_cwd" = "$prune_source"
+LC_ALL=C /usr/bin/awk '
+  { bytes+=length($0)+1; if (NR > 256 || bytes > 65536) { bad=1; exit 49 } }
+  $1 == "Uid:" || $1 == "Gid:" {
+    if (NF != 5 || ++seen[$1] != 1) bad=1
+    for (i=2; i<=5; i++) if (("x" $i) != "x0") bad=1
+  }
+  END { if (bad || seen["Uid:"] != 1 || seen["Gid:"] != 1) exit 49 }
+' /proc/self/status
+test ! -e ./systemd-1; test ! -L ./systemd-1
+test ! -e ./binfmt_misc; test ! -L ./binfmt_misc
 /usr/bin/umount --recursive --no-canonicalize --internal-only --no-mtab -- /proc/sys/fs/binfmt_misc
 prune_meta=$(/usr/bin/stat -c '%u:%a:%h:%F' "$scratch/proc-prune-inventory")
 test "$prune_meta" = '0:600:1:regular file'
