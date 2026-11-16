@@ -618,15 +618,18 @@ test ! -L "$scratch/proc-prune-inventory"
     }
   ' /proc/self/mountinfo > "$scratch/proc-prune-inventory"
 )
-test "$(/usr/bin/stat -c '%u:%a:%h:%F' "$scratch/proc-prune-inventory")" = '0:600:1:regular file'
+prune_meta=$(/usr/bin/stat -c '%u:%a:%h:%F' "$scratch/proc-prune-inventory")
+test "$prune_meta" = '0:600:1:regular file'
 prune_bytes=$(/usr/bin/stat -c '%s' "$scratch/proc-prune-inventory")
 test "$prune_bytes" -ge 1; test "$prune_bytes" -le 4194304
 prune_sha=$(/usr/bin/sha256sum < "$scratch/proc-prune-inventory")
 /usr/bin/umount --recursive --no-canonicalize --internal-only --no-mtab -- /proc/sys/fs/binfmt_misc
-test "$(/usr/bin/stat -c '%u:%a:%h:%F' "$scratch/proc-prune-inventory")" = '0:600:1:regular file'
+prune_meta=$(/usr/bin/stat -c '%u:%a:%h:%F' "$scratch/proc-prune-inventory")
+test "$prune_meta" = '0:600:1:regular file'
 prune_bytes=$(/usr/bin/stat -c '%s' "$scratch/proc-prune-inventory")
 test "$prune_bytes" -ge 1; test "$prune_bytes" -le 4194304
-test "$(/usr/bin/sha256sum < "$scratch/proc-prune-inventory")" = "$prune_sha"
+post_prune_sha=$(/usr/bin/sha256sum < "$scratch/proc-prune-inventory")
+test "$post_prune_sha" = "$prune_sha"
 LC_ALL=C /usr/bin/awk -v work="$work_id" '
   function canonical(p) {
     return p ~ /^\// && p !~ /\\/ && p !~ /\/\// && p !~ /\/\.\.?($|\/)/ && (p == "/" || p !~ /\/$/)
