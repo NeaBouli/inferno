@@ -67,7 +67,7 @@ function json(file) { return JSON.parse(fs.readFileSync(file, 'utf8')); }
 function write(file, value) { fs.writeFileSync(file, `${JSON.stringify(value, null, 2)}\n`, { flag: 'wx', mode: 0o600 }); }
 function diagnosticCode(error) { return DIAGNOSTIC_ERRORS.has(error?.code) ? error.code : 'UNKNOWN_FAILURE'; }
 function diagnosticExit(code) { return Number.isInteger(code) && code >= 1 && code <= 255 ? code : 1; }
-function writeFailure(name, stage, error, exitCode) {
+function writeFailure(name, stage, error, exitCode, targetSha256) {
   insist(FAILURE_NAMES.includes(name), 'DIAGNOSTIC_WRITE_FAILED');
   const directory = path.join(root, 'public');
   insist(process.getuid() !== 0 && fs.statSync(directory).uid === process.getuid(), 'DIAGNOSTIC_WRITE_FAILED');
@@ -75,6 +75,10 @@ function writeFailure(name, stage, error, exitCode) {
   const receipt = stages.has(stage)
     ? { stage, errorCode: diagnosticCode(error), exitCode: diagnosticExit(exitCode) }
     : { stage: 'DIAGNOSTIC', errorCode: 'FORMAT_HOLD', exitCode: 1 };
+  if (targetSha256 !== undefined) {
+    if (name === 'bootstrap-failure.json' && receipt.stage === 'RO_REMOUNT' && receipt.errorCode === 'RO_TARGET_PROC' && typeof targetSha256 === 'string' && targetSha256.length === 64 && /^[a-f0-9]{64}$/.test(targetSha256)) receipt.targetSha256 = targetSha256;
+    else Object.assign(receipt, { stage: 'DIAGNOSTIC', errorCode: 'FORMAT_HOLD', exitCode: 1 });
+  }
   const fd = fs.openSync(path.join(directory, name), 'wx', 0o600);
   try {
     const stat = fs.fstatSync(fd);
@@ -118,10 +122,11 @@ function namespaceDiagnostic(stdout, exit) {
     const value = readOwnedFailure(names[0]);
     if (value) return { ...value, retained: true };
   }
-  const match = /^QA_SHOP_DIAGNOSTIC\|(BOOTSTRAP_PRIVATE|RO_SCAN|RO_SORT|RO_REMOUNT|RO_VERIFY|TMP_SHM|UID_DROP)\|(BOOTSTRAP_FAILED|RO_TARGET_ROOT|RO_TARGET_PROC|RO_TARGET_SYS|RO_TARGET_DEV|RO_TARGET_WORKSPACE|RO_TARGET_OTHER|RO_TARGET_UNKNOWN|RO_PROC_ROOT|RO_PROC_ACPI|RO_PROC_BUS|RO_PROC_FS|RO_PROC_INTERRUPTS|RO_PROC_IRQ|RO_PROC_KCORE|RO_PROC_KEYS|RO_PROC_SCSI|RO_PROC_SYS|RO_PROC_SYSRQ_TRIGGER|RO_PROC_TIMER_LIST)\|([1-9][0-9]{0,2})\n$/.exec(stdout);
+  const match = /^QA_SHOP_DIAGNOSTIC\|(BOOTSTRAP_PRIVATE|RO_SCAN|RO_SORT|RO_REMOUNT|RO_VERIFY|TMP_SHM|UID_DROP)\|(BOOTSTRAP_FAILED|RO_TARGET_ROOT|RO_TARGET_PROC|RO_TARGET_SYS|RO_TARGET_DEV|RO_TARGET_WORKSPACE|RO_TARGET_OTHER|RO_TARGET_UNKNOWN|RO_PROC_ROOT|RO_PROC_ACPI|RO_PROC_BUS|RO_PROC_FS|RO_PROC_INTERRUPTS|RO_PROC_IRQ|RO_PROC_KCORE|RO_PROC_KEYS|RO_PROC_SCSI|RO_PROC_SYS|RO_PROC_SYSRQ_TRIGGER|RO_PROC_TIMER_LIST)\|([1-9][0-9]{0,2})(?:\|([a-f0-9]{64}))?\n$/.exec(stdout);
   const validCode = match && (match[1] === 'RO_REMOUNT' ? match[2] !== 'BOOTSTRAP_FAILED' : match[2] === 'BOOTSTRAP_FAILED');
-  if (names.length === 0 && match?.[0] === stdout && validCode && failed && exit.signal === null && Number(match[3]) <= 255 && exit.code === Number(match[3])) {
-    return { stage: match[1], errorCode: match[2], exitCode: Number(match[3]) };
+  const validTarget = !match?.[4] || (match[1] === 'RO_REMOUNT' && match[2] === 'RO_TARGET_PROC');
+  if (names.length === 0 && match?.[0] === stdout && validCode && validTarget && failed && exit.signal === null && Number(match[3]) <= 255 && exit.code === Number(match[3])) {
+    return { stage: match[1], errorCode: match[2], exitCode: Number(match[3]), ...(match[4] ? { targetSha256: match[4] } : {}) };
   }
   quarantineFailures(names);
   return { stage: 'DIAGNOSTIC', errorCode: 'FORMAT_HOLD', exitCode: 1 };
@@ -255,7 +260,7 @@ async function command(label, binary, args, milliseconds, cwd, env = cleanEnv(),
     if (receipt) {
       failure ||= receipt.errorCode;
       if (receipt.errorCode === 'FORMAT_HOLD') failure = 'FORMAT_HOLD';
-      if (!receipt.retained) writeFailure('bootstrap-failure.json', receipt.stage, { code: receipt.errorCode }, receipt.exitCode);
+      if (!receipt.retained) writeFailure('bootstrap-failure.json', receipt.stage, { code: receipt.errorCode }, receipt.exitCode, receipt.targetSha256);
     }
   }
   const result = { label, ...exit, bytes: fs.statSync(log).size, sha256: digest(log), primaryError, cleanup: cleanup || null, cleanupErrors };
@@ -469,7 +474,23 @@ bootstrap_exit() {
     esac
     case "$diagnostic_exit" in ''|*[!0-9]*) diagnostic_exit=1 ;; esac
     if [ "$diagnostic_exit" -lt 1 ] || [ "$diagnostic_exit" -gt 255 ]; then diagnostic_exit=1; fi
-    printf 'QA_SHOP_DIAGNOSTIC|%s|%s|%s\n' "$diagnostic_stage" "$diagnostic_code" "$diagnostic_exit"
+    if [ "$diagnostic_stage:$diagnostic_code" = RO_REMOUNT:RO_TARGET_PROC ]; then
+      diagnostic_sha256=FORMAT_HOLD
+      # The marker preserves the digest utility's exact final newline for validation.
+      if diagnostic_digest=$(printf '%s' "$target" | /usr/bin/sha256sum 2>/dev/null && printf '.'); then
+        if diagnostic_validated=$(printf '%s' "$diagnostic_digest" | /usr/bin/awk '
+          NR == 1 && length($0) == 67 && substr($0,65) == "  -" && substr($0,1,64) !~ /[^a-f0-9]/ { hash = substr($0,1,64); next }
+          NR == 2 && $0 == "." { complete = 1; next }
+          { exit 1 }
+          END { if (NR != 2 || !complete || length(hash) != 64) exit 1; print hash }
+        ' 2>/dev/null); then
+          diagnostic_sha256=$diagnostic_validated
+        fi
+      fi
+      printf 'QA_SHOP_DIAGNOSTIC|%s|%s|%s|%s\n' "$diagnostic_stage" "$diagnostic_code" "$diagnostic_exit" "$diagnostic_sha256"
+    else
+      printf 'QA_SHOP_DIAGNOSTIC|%s|%s|%s\n' "$diagnostic_stage" "$diagnostic_code" "$diagnostic_exit"
+    fi
   fi
   exit "$diagnostic_exit"
 }
@@ -595,7 +616,7 @@ async function main() {
       await command('chromium-install', process.execPath, [path.join(source, 'node_modules/playwright/cli.js'), 'install', '--with-deps', 'chromium'], 180_000, source);
       acquisition = { npm: npmVersion, versions: versions.map(([, name, version]) => ({ name, version })), browserManifestSha256: digest(path.join(source, 'node_modules/playwright-core/browsers.json')) };
     }
-    const utilities = ['/usr/bin/sudo', '/usr/bin/unshare', '/usr/bin/setpriv', '/usr/sbin/ip', '/bin/sh', '/bin/kill', '/usr/bin/env', '/usr/bin/mount', '/usr/bin/awk', '/usr/bin/sort', '/usr/bin/stat', '/usr/bin/readlink'];
+    const utilities = ['/usr/bin/sudo', '/usr/bin/unshare', '/usr/bin/setpriv', '/usr/sbin/ip', '/bin/sh', '/bin/kill', '/usr/bin/env', '/usr/bin/mount', '/usr/bin/awk', '/usr/bin/sort', '/usr/bin/stat', '/usr/bin/readlink', '/usr/bin/sha256sum'];
     const tools = utilities.map(file => {
       const resolved = fs.realpathSync(file);
       const stat = fs.statSync(resolved);
