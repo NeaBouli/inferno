@@ -45,6 +45,34 @@ function bindingFailureFields(detail) {
 function preserveBindingFailure(error, cleanup) {
   bindingDiagnostics.set(error, { ...bindingDiagnostics.get(error), bindingCleanupCode: bindingDiagnostics.get(cleanup)?.bindingCode });
 }
+function startupDiagnostics(error) {
+  const unknown = { startupSignal: 'UNKNOWN', startupDetails: [] };
+  try {
+    if (!error || typeof error !== 'object' || !Object.hasOwn(error, 'message')) return unknown;
+    const message = error.message;
+    if (typeof message !== 'string' || message.length > 32768) return unknown;
+    const startupSignal = /No usable sandbox|Failed to move to new namespace|SUID sandbox/i.test(message) ? 'SANDBOX_MESSAGE'
+      : /Executable (?:doesn't|does not) exist|executable (?:is |was )?not found/i.test(message) ? 'EXECUTABLE_MESSAGE'
+      : /error while loading shared libraries|cannot open shared object file/i.test(message) ? 'SHARED_LIBRARY_MESSAGE'
+      : /Cannot find module|Cannot find package|ERR_MODULE_NOT_FOUND/i.test(message) ? 'MODULE_RESOLUTION_MESSAGE'
+      : /Protocol error\b|\b(?:Target|Session|Connection) closed\b/i.test(message) ? 'PROTOCOL_MESSAGE'
+      : /\bTimeout(?:Error)?\b|\btimed out\b/i.test(message) ? 'TIMEOUT_MESSAGE' : 'UNKNOWN';
+    // Closed text observations only; none establishes a sandbox or kernel cause.
+    const startupDetails = [
+      ['NO_USABLE_SANDBOX', /No usable sandbox/i],
+      ['NEW_NAMESPACE_FAILED', /Failed to move to new namespace/i],
+      ['SUID_SANDBOX_MESSAGE', /SUID sandbox/i],
+      ['SUID_HELPER_MISCONFIGURED', /SUID sandbox helper binary was found, but is not configured correctly/i],
+      ['PID_NAMESPACES_SUPPORTED', /PID namespaces? supported/i],
+      ['NETWORK_NAMESPACES_SUPPORTED', /Network namespaces? supported/i],
+      ['OPERATION_NOT_PERMITTED', /Operation not permitted/i],
+      ['PERMISSION_DENIED', /Permission denied/i],
+      ['READ_ONLY_FILESYSTEM', /Read-only file system/i],
+      ['CLONE_FAILED', /clone failed/i]
+    ].filter(([, pattern]) => pattern.test(message)).map(([detail]) => detail);
+    return { startupSignal, startupDetails };
+  } catch { return unknown; }
+}
 let phase = 'ENTRY', outputOwner, runtimeFailure = null;
 const diagnostic = (next, code = 'ENTER') => {
   check(Object.hasOwn(PHASE_CODES, next) && DIAGNOSTIC_CODES.has(code), 'DIAGNOSTIC_PROTOCOL');
@@ -833,18 +861,7 @@ async function runtime() {
     mark('ASSERTIONS');
     check(observations.length === 20, 'IMAGE_COUNT');
   } catch (error) {
-    runtimeFailure = { phase, code: phase === 'BROWSER_PROOF' ? 'BROWSER_PROCESS_PROOF_REQUIRED' : 'APP_OPERATION_FAILED', secondaryCodes, startupSignal: 'UNKNOWN', binding: bindingDiagnostics.get(error) };
-    try {
-      const message = error?.message;
-      if (typeof message === 'string' && message.length <= 32768) {
-        runtimeFailure.startupSignal = /No usable sandbox|Failed to move to new namespace|SUID sandbox/i.test(message) ? 'SANDBOX_MESSAGE'
-          : /Executable (?:doesn't|does not) exist|executable (?:is |was )?not found/i.test(message) ? 'EXECUTABLE_MESSAGE'
-          : /error while loading shared libraries|cannot open shared object file/i.test(message) ? 'SHARED_LIBRARY_MESSAGE'
-          : /Cannot find module|Cannot find package|ERR_MODULE_NOT_FOUND/i.test(message) ? 'MODULE_RESOLUTION_MESSAGE'
-          : /Protocol error\b|\b(?:Target|Session|Connection) closed\b/i.test(message) ? 'PROTOCOL_MESSAGE'
-          : /\bTimeout(?:Error)?\b|\btimed out\b/i.test(message) ? 'TIMEOUT_MESSAGE' : 'UNKNOWN';
-      }
-    } catch { runtimeFailure.startupSignal = 'UNKNOWN'; }
+    runtimeFailure = { phase, code: phase === 'BROWSER_PROOF' ? 'BROWSER_PROCESS_PROOF_REQUIRED' : 'APP_OPERATION_FAILED', secondaryCodes, ...startupDiagnostics(error), binding: bindingDiagnostics.get(error) };
   }
   finally {
     try { mark('APP_CLEANUP'); } catch { secondaryCodes.push('APP_CLEANUP_DIAGNOSTIC_FAILED'); }
@@ -858,7 +875,7 @@ async function runtime() {
     } catch { secondaryCodes.push('APP_SERVER_CLOSE_FAILED'); }
     if (!runtimeFailure && secondaryCodes.length) runtimeFailure = { phase: 'APP_CLEANUP', code: 'APP_CLEANUP_FAILED', secondaryCodes };
     try {
-      save('RESULT.json', { source: SOURCE, status: runtimeFailure ? 'HOLD' : 'ASSERTIONS_COMPLETE_VISUAL_REVIEW_PENDING', reason: runtimeFailure?.code || null, phase: runtimeFailure?.phase || phase, code: runtimeFailure?.code || null, ...(runtimeFailure ? bindingFailureFields(runtimeFailure.binding) : {}), startupSignal: runtimeFailure?.startupSignal || null, secondaryCodes, screenshots: observations, focusObservations, resources, blocked, pageErrors, effects, port, listenerClosed: server ? !server.listening : true, visualAccepted: false, totalPNGBytes: outputBytes, effectEvidenceLayers: { observer: 'fresh empty context; no injected provider; no action-destination activation; no wallet/dialog; owned-origin-only transport', owningRegression: 'tests/browser/web3-write.spec.js audience cases at frozen C3c6ed830 assert zero account/signature/transaction/network-switch/watchAsset methods', owningRegressionRunHere: false, clipboardAndFormInstrumentationClaimed: false } });
+      save('RESULT.json', { source: SOURCE, status: runtimeFailure ? 'HOLD' : 'ASSERTIONS_COMPLETE_VISUAL_REVIEW_PENDING', reason: runtimeFailure?.code || null, phase: runtimeFailure?.phase || phase, code: runtimeFailure?.code || null, ...(runtimeFailure ? bindingFailureFields(runtimeFailure.binding) : {}), startupSignal: runtimeFailure?.startupSignal || null, startupDetails: runtimeFailure?.startupDetails || [], secondaryCodes, screenshots: observations, focusObservations, resources, blocked, pageErrors, effects, port, listenerClosed: server ? !server.listening : true, visualAccepted: false, totalPNGBytes: outputBytes, effectEvidenceLayers: { observer: 'fresh empty context; no injected provider; no action-destination activation; no wallet/dialog; owned-origin-only transport', owningRegression: 'tests/browser/web3-write.spec.js audience cases at frozen C3c6ed830 assert zero account/signature/transaction/network-switch/watchAsset methods', owningRegressionRunHere: false, clipboardAndFormInstrumentationClaimed: false } });
     } catch {
       secondaryCodes.push('APP_RESULT_RECORD_FAILED');
       runtimeFailure ||= { phase: 'APP_CLEANUP', code: 'APP_RESULT_RECORD_FAILED', secondaryCodes };
@@ -881,7 +898,7 @@ process.umask(0o077);
   const code = runtimeFailure?.code || (DIAGNOSTIC_CODES.has(error?.code) ? error.code : 'OPERATION_FAILED');
   diagnostic(failurePhase, code);
   for (const secondaryCode of runtimeFailure?.secondaryCodes || []) diagnostic('APP_CLEANUP', secondaryCode);
-  try { if (['setup', 'namespace', 'runtime'].includes(MODE)) save('FAILURE-' + MODE + '.json', { status: 'HOLD', phase: failurePhase, code, ...bindingFailureFields(runtimeFailure?.binding || bindingDiagnostics.get(error)), ...(runtimeFailure ? { startupSignal: runtimeFailure.startupSignal || null, secondaryCodes: runtimeFailure.secondaryCodes } : {}) }); }
+  try { if (['setup', 'namespace', 'runtime'].includes(MODE)) save('FAILURE-' + MODE + '.json', { status: 'HOLD', phase: failurePhase, code, ...bindingFailureFields(runtimeFailure?.binding || bindingDiagnostics.get(error)), ...(runtimeFailure ? { startupSignal: runtimeFailure.startupSignal || null, startupDetails: runtimeFailure.startupDetails || [], secondaryCodes: runtimeFailure.secondaryCodes } : {}) }); }
   catch { diagnostic(failurePhase, 'FAILURE_RECORD_FAILED'); }
   process.exitCode = 2;
 });

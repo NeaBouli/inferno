@@ -205,6 +205,17 @@ Web3 render bytes remain identical to8bec. Only source/provenance literals chang
 the runner; all helpers,20audience assertions and guards stay byte-identical. This is
 source preparation, not browser/visual/live acceptance; separate review/admission required.
 
+Startup diagnostic receipt hop (2026-11-16, SOURCE_ONLY):
+`qa-web3-audience-visual.cjs::startupDiagnostics` -> runtime catch -> `RESULT.json`
+and `FAILURE-runtime.json` preserves the six ordered startup signals and adds only
+ten fixed-order, deduplicated text observations from an own primitive message of
+at most 32768 characters. Invalid/throwing inputs return UNKNOWN/[]; no raw text,
+errno, other error properties or inferred kernel/AppArmor/NNP cause is returned.
+Trusted offline VM fixtures and parser checks cover this source-only change;
+launch, guards, cleanup and the 20 audience assertions remain unchanged. Parent
+owns independent immutable review and any further diagnostic admission; actual462
+remains a BROWSER_LAUNCH HOLD/SANDBOX_MESSAGE with 0 PNGs and cause UNKNOWN.
+
 Issue #382 isolated diagnostic accepted on 2026-10-31
 ([PR #418](https://github.com/NeaBouli/inferno/pull/418);
 [CI2 run 41239848840](https://github.com/NeaBouli/inferno/actions/runs/41239848840)).
