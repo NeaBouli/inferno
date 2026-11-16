@@ -625,22 +625,24 @@ canonical_ids_sha=$(
 test "$original_ids_sha" = "$canonical_ids_sha"
 diagnostic_code=RO_VERIFY_IDS
 /usr/bin/awk -v work="$work_id" '
+  # Statuses11..17 are guard diagnostics, not kernel errno.
   FILENAME == ARGV[1] {
-    if (FNR > 4096 || $0 !~ /^[1-9][0-9]*$/ || length($0) > 20 || original["x" $0]++) { bad=1; exit 1 }
+    if (FNR > 4096 || $0 !~ /^[1-9][0-9]*$/ || length($0) > 20 || original["x" $0]++) { bad=11; exit bad }
     original_count++; next
   }
   {
     current_count++
-    if (current_count > 4096 || NF < 10 || $1 !~ /^[1-9][0-9]*$/ || length($1) > 20 || current["x" $1]++ || $5 !~ /^\// || $5 ~ /\\/) { bad=1; exit 1 }
-    for (i=7; i<=NF && $i!="-"; i++) if ($i ~ /^(shared|master|propagate_from):/) { bad=1; exit 1 }
-    if (i < 7 || i + 3 != NF || $i != "-") { bad=1; exit 1 }
-    if ((("x" $1) != ("x" work) && ("," $6 ",") ~ /,rw,/) || (("x" $1) == ("x" work) && ("," $6 ",") ~ /,ro,/)) { bad=1; exit 1 }
+    if (current_count > 4096 || NF < 10 || $1 !~ /^[1-9][0-9]*$/ || length($1) > 20 || current["x" $1]++ || $5 !~ /^\// || $5 ~ /\\/) { bad=12; exit bad }
+    for (i=7; i<=NF && $i!="-"; i++) if ($i ~ /^(shared|master|propagate_from):/) { bad=13; exit bad }
+    if (i < 7 || i + 3 != NF || $i != "-") { bad=12; exit bad }
+    if ((("x" $1) != ("x" work) && ("," $6 ",") ~ /,rw,/) || (("x" $1) == ("x" work) && ("," $6 ",") ~ /,ro,/)) { bad=14; exit bad }
   }
-  ("x" $1) != ("x" work) && ("," $6 ",") !~ /,ro,/ { exit 1 }
-  ("x" $1) == ("x" work) && ("," $6 ",") !~ /,rw,/ { exit 1 }
+  ("x" $1) != ("x" work) && ("," $6 ",") !~ /,ro,/ { bad=14; exit bad }
+  ("x" $1) == ("x" work) && ("," $6 ",") !~ /,rw,/ { bad=15; exit bad }
   END {
-    if (bad || original_count < 4 || current_count < 4 || !original["x" work]) exit 1
-    for (id in original) if (!(id in current)) exit 1
+    if (bad) exit bad
+    if (original_count < 4 || current_count < 4 || !original["x" work]) exit 16
+    for (id in original) if (!(id in current)) exit 17
   }
 ' "$scratch/original-mount-ids" /proc/self/mountinfo
 diagnostic_stage=TMP_SHM
