@@ -198,6 +198,13 @@ premises, not binary/browser-content provenance or a 40s whole-helper guarantee.
 Strict Chrome binding, runner guards and setup-only scope remain unchanged;
 Parent owns regression fixtures, independent review and execution admission.
 
+Current-product application qualification preparation (2026-11-16): after actual3997
+four-path bootstrap and strict setup passed, restore the original183c namespace/app
+workflow step unchanged. SOURCE pins Product4413c6ed830 including current Main Landing;
+Web3 render bytes remain identical to8bec. Only source/provenance literals change in
+the runner; all helpers,20audience assertions and guards stay byte-identical. This is
+source preparation, not browser/visual/live acceptance; separate review/admission required.
+
 Issue #382 isolated diagnostic accepted on 2026-10-31
 ([PR #418](https://github.com/NeaBouli/inferno/pull/418);
 [CI2 run 41239848840](https://github.com/NeaBouli/inferno/actions/runs/41239848840)).

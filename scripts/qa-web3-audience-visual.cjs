@@ -9,7 +9,7 @@ const { createHash } = require('node:crypto');
 const { spawn, execFileSync } = require('node:child_process');
 const { performance } = require('node:perf_hooks');
 
-const SOURCE = { head: '8bec16dbcd44edf4ed9d7c9feb4c0d889e23fdae', tree: '5bbbf3e1d78122323d7a1360262b3c16d091d29b', docsTree: '6fd5fa86cf867e05d2fbebd31b288d6ae92809a9', manifestSHA256: '141c85d9aa65525b20bdeef4819b6cb07a910c24d58d44cd833a2c151a4625bd', count: 324, bytes: 24374988, htmlSHA256: '3a552de1fbcacb8c25f809151647d8c2ed836fac142d43ee9e294f9e0778f103' };
+const SOURCE = { head: '3c6ed8301c508e38e8024d03ac144adef80e5c68', tree: '6a224ab0c0b75cbea773daa6b0db2c0a962adfb9', docsTree: '99d0420c1b0d60a63a135f3ad066c35e9becc6f0', manifestSHA256: '6dd5944ce89742736cd52e14c0cf59cc9448216be68313c3f2edbd11dc6c3e31', count: 324, bytes: 24384950, htmlSHA256: '3a552de1fbcacb8c25f809151647d8c2ed836fac142d43ee9e294f9e0778f103' };
 const FONT_SHA = '8bff039ebb639dfbc1902204faab9eea67eb20c2f2c8c2524f588a7ee08f400d';
 // First qualification of preinstalled hosted Google Chrome; no fallback or retry.
 const CONTROL_ONLY = false;
@@ -858,7 +858,7 @@ async function runtime() {
     } catch { secondaryCodes.push('APP_SERVER_CLOSE_FAILED'); }
     if (!runtimeFailure && secondaryCodes.length) runtimeFailure = { phase: 'APP_CLEANUP', code: 'APP_CLEANUP_FAILED', secondaryCodes };
     try {
-      save('RESULT.json', { source: SOURCE, status: runtimeFailure ? 'HOLD' : 'ASSERTIONS_COMPLETE_VISUAL_REVIEW_PENDING', reason: runtimeFailure?.code || null, phase: runtimeFailure?.phase || phase, code: runtimeFailure?.code || null, ...(runtimeFailure ? bindingFailureFields(runtimeFailure.binding) : {}), startupSignal: runtimeFailure?.startupSignal || null, secondaryCodes, screenshots: observations, focusObservations, resources, blocked, pageErrors, effects, port, listenerClosed: server ? !server.listening : true, visualAccepted: false, totalPNGBytes: outputBytes, effectEvidenceLayers: { observer: 'fresh empty context; no injected provider; no action-destination activation; no wallet/dialog; owned-origin-only transport', owningRegression: 'tests/browser/web3-write.spec.js audience cases at frozen C8bec assert zero account/signature/transaction/network-switch/watchAsset methods', owningRegressionRunHere: false, clipboardAndFormInstrumentationClaimed: false } });
+      save('RESULT.json', { source: SOURCE, status: runtimeFailure ? 'HOLD' : 'ASSERTIONS_COMPLETE_VISUAL_REVIEW_PENDING', reason: runtimeFailure?.code || null, phase: runtimeFailure?.phase || phase, code: runtimeFailure?.code || null, ...(runtimeFailure ? bindingFailureFields(runtimeFailure.binding) : {}), startupSignal: runtimeFailure?.startupSignal || null, secondaryCodes, screenshots: observations, focusObservations, resources, blocked, pageErrors, effects, port, listenerClosed: server ? !server.listening : true, visualAccepted: false, totalPNGBytes: outputBytes, effectEvidenceLayers: { observer: 'fresh empty context; no injected provider; no action-destination activation; no wallet/dialog; owned-origin-only transport', owningRegression: 'tests/browser/web3-write.spec.js audience cases at frozen C3c6ed830 assert zero account/signature/transaction/network-switch/watchAsset methods', owningRegressionRunHere: false, clipboardAndFormInstrumentationClaimed: false } });
     } catch {
       secondaryCodes.push('APP_RESULT_RECORD_FAILED');
       runtimeFailure ||= { phase: 'APP_CLEANUP', code: 'APP_RESULT_RECORD_FAILED', secondaryCodes };
